@@ -213,7 +213,7 @@ class _AtomArrayBase(object):
         `value` must have same length as `array_length()`.
         """
         if attr == "coord":
-            if not instanceof(value, np.ndarray):
+            if not isinstance(value, np.ndarray):
                 raise TypeError("Value must be ndarray")
             if value.shape[-2] != self._array_length:
                 raise IndexError("Expected array length "
@@ -242,7 +242,8 @@ class _AtomArrayBase(object):
         if isinstance(self, AtomArray):
             new_object = type(self)(length=new_length)
         if isinstance(self, AtomArrayStack):
-            new_object = type(self)(depth=len(coord), length=new_length)
+            new_depth = new_coord.shape[-3]
+            new_object = type(self)(depth=new_depth, length=new_length)
         new_object._coord = new_coord
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
@@ -295,9 +296,9 @@ class _AtomArrayBase(object):
         equality : bool
             True, if the annotation arrays are equal.
         """
-        if not isinstance(item, _AtomarrayBase):
+        if not isinstance(item, _AtomArrayBase):
             return False
-        if equal_annotation_categories(self, item):
+        if not self.equal_annotation_categories(item):
             return False
         for name in self._annot:
             if not np.array_equal(self._annot[name], item._annot[name]):
@@ -319,7 +320,7 @@ class _AtomArrayBase(object):
         equality : bool
             True, if the annotation array names are equal.
         """
-        return self._annot.keys() != item._annot.keys()
+        return self._annot.keys() == item._annot.keys()
     
     def __eq__(self, item):
         """
@@ -327,9 +328,9 @@ class _AtomArrayBase(object):
         --------
         equal_annotations
         """
-        if not np.array_equal(self._coord, item._coord):
+        if not self.equal_annotations(item):
             return False
-        return self.equal_annotations(item)
+        return np.array_equal(self._coord, item._coord)
     
     def __ne__(self, item):
         """
@@ -354,18 +355,22 @@ class _AtomArrayBase(object):
         if type(self) != type(array):
             raise TypeError("Can only concatenate two arrays or two stacks")
         # Create either new array or stack, depending of the own type
-        concat_array = type(self)(length = self._array_length
-                                           + array._array_length)
-        concat_array._coord = np.concatenate(self._coord, array.coord, axis=-2)
+        if isinstance(self, AtomArray):
+            concat = AtomArray(length = self._array_length+array._array_length)
+        if isinstance(self, AtomArrayStack):
+            concat = AtomArrayStack(length = self._array_length
+                                             + array._array_length,
+                                     depth = self.stack_depth())
+        concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
         # Transfer only annotations,
         # which are existent in both operands
         arr_categories = list(array._annot.keys())
         for category in self._annot.keys():
             if category in arr_categories:
                 annot = self._annot[category]
-                a_annot = array._annot[category]
-                concat_array._annot[category] = np.concatenate(annot, a_annot)
-        return concat_array
+                arr_annot = array._annot[category]
+                concat._annot[category] = np.concatenate((annot,arr_annot))
+        return concat
     
 
 class Atom(object):
@@ -440,6 +445,18 @@ class Atom(object):
         for value in self._annot.values():
             string += str(value) + "\t"
         return string + str(self.coord)
+    
+    def __eq__(self, item):
+        if not isinstance(item, Atom):
+            return False
+        if not np.array_equal(self.coord, item.coord):
+            return False
+        if self._annot.keys() != item._annot.keys():
+            return False
+        for name in self._annot:
+            if self._annot[name] != item._annot[name]:
+                return False
+        return True
 
     
 class AtomArray(_AtomArrayBase):
@@ -590,10 +607,10 @@ class AtomArray(_AtomArrayBase):
                 # If first index is "...", just ignore the first index
                 return self.__getitem__(index[1])
             else:
-                raise IndexError("AtomArray cannot take multidimensional"
+                raise IndexError("AtomArray cannot take multidimensional "
                                  "indices")
         else:
-            return self._subarray(new_array, index)
+            return self._subarray(index)
         
     def __setitem__(self, index, atom):
         """
@@ -776,7 +793,7 @@ class AtomArrayStack(_AtomArrayBase):
         array : AtomArray
             AtomArray at position `index`. 
         """
-        array = AtomArray()
+        array = AtomArray(length=self.array_length())
         for name in self._annot:
             array._annot[name] = self._annot[name]
         array._coord = self._coord[index]
@@ -842,7 +859,7 @@ class AtomArrayStack(_AtomArrayBase):
                     new_stack._coord = new_stack._coord[index[0]]
                 return new_stack
         else:
-            new_stack = self._copy_attributes(new_stack)
+            new_stack = self._copy_attributes()
             new_stack._coord = self._coord[index]
             return new_stack
             
@@ -1018,12 +1035,15 @@ def stack(arrays):
           [5 6 7]
           [6 7 8]]]
     """
+    array_count = 0
     for array in arrays:
+        array_count += 1
         # Check if all arrays share equal annotations
-        if not super(AtomArray, array).__eq__(arrays[0]):
+        if not array.equal_annotations(arrays[0]):
             raise ValueError("The arrays atom annotations"
                              "do not fit to each other") 
-    array_stack = AtomArrayStack()
+    array_stack = AtomArrayStack(depth=array_count,
+                                 length=arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays] 
