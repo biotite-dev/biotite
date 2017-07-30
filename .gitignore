@@ -1,0 +1,48 @@
+# Ignore the build directory (and its sub-directories):
+build
+
+# Ignore the distribution directory
+dist
+
+# Ignore backup files from some Unix editors,
+*~
+*.swp
+*.bak
+
+# Ignore patches and any original files created by patch command
+*.diff
+*.patch
+*.orig
+*.rej
+
+# Ignore these hidden files from Mac OS X
+.DS_Store
+
+# Ignore hidden files from Dolphin window manager
+.directory
+
+# Ignore all compiled python files (e.g. from running the unit tests):
+*.pyc
+*.pyo
+*.py{}
+*.py-e
+
+# Ignore all Jython class files (present if using Jython)
+*.class
+
+# Ignore the .tox directory from running tox locally
+.tox/
+
+# Ignore the MANIFEST file created automatically from MANIFEST.in
+MANIFEST
+
+# Ignore potential directory created during install:
+biopython.egg-info
+
+# Ignore IntelliJ IDEA directory and project files
+.idea
+*.iml
+
+# Ignore Eclipse project files
+.project
+.pydevproject
