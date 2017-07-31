@@ -14,12 +14,12 @@ def get_structure(pdbx_file, data_block=None, insertion_code=None,
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
     if model is None:
-        stack = AtomArrayStack()
         # For a stack, the annotation are derived from the first model
         model_dict = _get_model_dict(atom_site_dict, 1)
-        _fill_annotations(stack, model_dict, extra_fields)
         model_count = int(models[-1])
-        model_length = len(stack.chain_id)
+        model_length = len(model_dict["group_PDB"])
+        stack = AtomArrayStack(model_count, model_length)
+        _fill_annotations(stack, model_dict, extra_fields)
         # Check if each model has the same amount of atoms
         # If not, raise exception
         if model_length * model_count != len(models):
@@ -36,10 +36,10 @@ def get_structure(pdbx_file, data_block=None, insertion_code=None,
                                        insertion_code, altloc)
         return stack
     else:
-        array = AtomArray()
         model_dict = _get_model_dict(atom_site_dict, model)
+        model_length = len(model_dict["group_PDB"])
+        array = AtomArray(model_length)
         _fill_annotations(array, model_dict, extra_fields)
-        model_length = len(array.chain_id)
         model_filter = (models == str(model))
         array.coord = np.zeros((model_length, 3), dtype=float)
         array.coord[:,0]= atom_site_dict["Cartn_x"][model_filter].astype(float)
@@ -66,31 +66,39 @@ def _fill_annotations(array, model_dict, extra_fields):
 
 
 def _filter_inscode_altloc(array, model_dict, inscode, altloc):
-    inscode_array = model_dict["pdbx_PDB_ins_code"]
-    altloc_array = model_dict["label_alt_id"]
-    # Default: Filter all atoms with insertion code ".", "?" or "A"
-    inscode_filter = np.in1d(inscode_array, [".","?","A"],
-                             assume_unique=True)
-    # Now correct filter for every given insertion code
-    if inscode is not None:
-        for code in inscode:
-            residue = code[0]
-            insertion = code[1]
-            residue_filter = (array.res_id == residue)
-            # Reset filter for given res_id
-            inscode_filter &= ~residue_filter
-            # Choose atoms of res_id with insertion code
-            inscode_filter |= residue_filter & (inscode_array == insertion)
+    try:
+        inscode_array = model_dict["pdbx_PDB_ins_code"]
+        # Default: Filter all atoms with insertion code ".", "?" or "A"
+        inscode_filter = np.in1d(inscode_array, [".","?","A"],
+                                 assume_unique=True)
+        # Now correct filter for every given insertion code
+        if inscode is not None:
+            for code in inscode:
+                residue = code[0]
+                insertion = code[1]
+                residue_filter = (array.res_id == residue)
+                # Reset (to False) filter for given res_id
+                inscode_filter &= ~residue_filter
+                # Choose atoms of res_id with insertion code
+                inscode_filter |= residue_filter & (inscode_array == insertion)
+    except KeyError:
+        # In case no insertion code column is existent
+        inscode_filter = np.full(array.array_length(), True)
     # Same with altlocs
-    altloc_filter = np.in1d(altloc_array, [".","?","A"],
-                            assume_unique=True)
-    if altloc is not None:
-        for loc in altloc:
-            residue = loc[0]
-            altloc = loc[1]
-            residue_filter = (array.res_id == residue)
-            altloc_filter &= ~residue_filter
-            altloc_filter |= residue_filter & (altloc_array == altloc)
+    try:
+        altloc_array = model_dict["label_alt_id"]
+        altloc_filter = np.in1d(altloc_array, [".","?","A"],
+                                assume_unique=True)
+        if altloc is not None:
+            for loc in altloc:
+                residue = loc[0]
+                altloc = loc[1]
+                residue_filter = (array.res_id == residue)
+                altloc_filter &= ~residue_filter
+                altloc_filter |= residue_filter & (altloc_array == altloc)
+    except KeyError:
+        altloc_filter = np.full(array.array_length(), True)
+        
     # Apply combined filters
     return array[..., inscode_filter & altloc_filter]
     
@@ -118,7 +126,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["id"] = None
     atom_site_dict["type_symbol"] = np.copy(array.element)
     atom_site_dict["label_atom_id"] = np.copy(array.atom_name)
-    atom_site_dict["label_alt_id"] = np.full(array.annotation_length(), ".")
+    atom_site_dict["label_alt_id"] = np.full(array.array_length(), ".")
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
@@ -129,14 +137,14 @@ def set_structure(pdbx_file, array, data_block=None):
         for key, value in atom_site_dict.items():
             atom_site_dict[key] = np.tile(value, reps=len(array))
         coord = np.reshape(array.coord,
-                           (len(array)*array.annotation_length(), 3))
+                           (len(array)*array.array_length(), 3))
         atom_site_dict["Cartn_x"] = coord[:,0].astype(str)
         atom_site_dict["Cartn_y"] = coord[:,1].astype(str)
         atom_site_dict["Cartn_z"] = coord[:,2].astype(str)
         models = np.repeat(np.arange(1, len(coord)+1).astype(str),
-                           repeats=array.annotation_length())
+                           repeats=array.array_length())
         atom_site_dict["pdbx_PDB_model_num"] = models
-        atom_site_dict["id"] = (np.arange(1,array.annotation_length()+1)
+        atom_site_dict["id"] = (np.arange(1,array.array_length()+1)
                            .astype("U6"))
     elif type(array) == AtomArray:
         atom_site_dict["Cartn_x"] = array.coord[:,0].astype(str)

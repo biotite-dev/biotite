@@ -155,7 +155,7 @@ class _AtomArrayBase(object):
             The annotation array.
         """
         if category not in self._annot:
-            raise ValueError("Annotation category '" + annotation +
+            raise ValueError("Annotation category '" + category +
                              "' is not existing")
         return self._annot[category]
     
@@ -240,10 +240,10 @@ class _AtomArrayBase(object):
         new_coord = self._coord[..., index, :]
         new_length = new_coord.shape[-2]
         if isinstance(self, AtomArray):
-            new_object = type(self)(length=new_length)
+            new_object = AtomArray(new_length)
         if isinstance(self, AtomArrayStack):
             new_depth = new_coord.shape[-3]
-            new_object = type(self)(depth=new_depth, length=new_length)
+            new_object = AtomArrayStack(new_depth, new_length)
         new_object._coord = new_coord
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
@@ -272,10 +272,9 @@ class _AtomArrayBase(object):
         
     def _copy_attributes(self):
         if isinstance(self, AtomArray):
-            new_object = type(self)(length=self.array_length())
+            new_object = type(self)(self.array_length())
         if isinstance(self, AtomArrayStack):
-            new_object = type(self)(depth=self.stack_depth(),
-                                    length=self.array_length())
+            new_object = type(self)(self.stack_depth(), self.array_length())
         for name in self._annot:
             new_object._annot[name] = np.copy(self._annot[name])
         new_object._coord = np.copy(self._coord)
@@ -358,9 +357,8 @@ class _AtomArrayBase(object):
         if isinstance(self, AtomArray):
             concat = AtomArray(length = self._array_length+array._array_length)
         if isinstance(self, AtomArrayStack):
-            concat = AtomArrayStack(length = self._array_length
-                                             + array._array_length,
-                                     depth = self.stack_depth())
+            concat = AtomArrayStack(self.stack_depth(),
+                                    self._array_length + array._array_length)
         concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
         # Transfer only annotations,
         # which are existent in both operands
@@ -793,7 +791,7 @@ class AtomArrayStack(_AtomArrayBase):
         array : AtomArray
             AtomArray at position `index`. 
         """
-        array = AtomArray(length=self.array_length())
+        array = AtomArray(self.array_length())
         for name in self._annot:
             array._annot[name] = self._annot[name]
         array._coord = self._coord[index]
@@ -986,7 +984,7 @@ def array(atoms):
             raise ValueError("The atoms do not share the"
                              "same annotation categories")
     # Add all atoms to AtomArray
-    array = AtomArray(length=len(atoms))
+    array = AtomArray(len(atoms))
     for i in range(len(atoms)):
         for name in names:
             array._annot[name][i] = atoms[i]._annot[name]
@@ -1042,8 +1040,7 @@ def stack(arrays):
         if not array.equal_annotations(arrays[0]):
             raise ValueError("The arrays atom annotations"
                              "do not fit to each other") 
-    array_stack = AtomArrayStack(depth=array_count,
-                                 length=arrays[0].array_length())
+    array_stack = AtomArrayStack(array_count, arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays] 

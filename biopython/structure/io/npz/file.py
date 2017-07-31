@@ -28,9 +28,9 @@ class NpzFile(object):
             raise ValueError("The structure of this file has not been loaded or set yet")
         coord = self._data_dict["coord"]
         if len(coord.shape) == 3:
-            array = AtomArrayStack()
+            array = AtomArrayStack(coord.shape[0], coord.shape[1])
         else:
-            array = AtomArray()
+            array = AtomArray(coord.shape[0])
         array.coord = coord
         for key, value in self._data_dict.items():
             if key != "coord":

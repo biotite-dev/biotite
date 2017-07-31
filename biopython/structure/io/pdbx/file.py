@@ -270,7 +270,14 @@ class PDBxFile(object):
     def _process_singlevalued(self, lines):
         category_dict = {}
         for line in lines:
-            parts = shlex.split(line)
+            # In case of "X'" atoms, shlex throws :
+            # ValueError("No closing quotation")
+            # because "'" is recognized as quotation start
+            # Alternative: str.split()
+            try:
+                parts = shlex.split(line)
+            except ValueError:
+                parts = line.split()
             key = parts[0].split(".")[1]
             value = parts[1]
             category_dict[key] = value
@@ -289,13 +296,21 @@ class PDBxFile(object):
             if in_key_lines:
                 key = line.split(".")[1]
                 keys.append(key)
-                # Pessimistic size allocation
+                # Pessimistic array allocation
                 # numpy array filled with strings
                 category_dict[key] = np.zeros(len(lines),
                                               dtype=object)
                 keys_length = len(keys)
             else:
-                for value in shlex.split(line):
+                try:
+                    values = shlex.split(line)
+                except ValueError:
+                    # In case of "X'" atoms, shlex throws :
+                    # ValueError("No closing quotation")
+                    # because "'" is recognized as quotation start
+                    # Alternative: str.split()
+                    values = line.split()
+                for value in values:
                     category_dict[keys[j]][i] = value
                     j += 1
                     if j == keys_length:
