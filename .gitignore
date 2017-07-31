@@ -1,3 +1,6 @@
+# Ignore in data folders of unit tests
+tests/structure/data/
+
 # Ignore the build directory (and its sub-directories):
 build
 
