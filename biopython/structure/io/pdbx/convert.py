@@ -4,6 +4,7 @@
 # as part of this package.
 
 import numpy as np
+import shlex
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from collections import OrderedDict
@@ -53,7 +54,7 @@ def get_structure(pdbx_file, data_block=None, insertion_code=None,
 def _fill_annotations(array, model_dict, extra_fields):
     array.set_annotation("chain_id", model_dict["auth_asym_id"].astype("U3"))
     array.set_annotation("res_id", np.array([-1 if e in [".","?"] else int(e)
-                                             for e in model_dict["label_seq_id"]]))
+                                      for e in model_dict["label_seq_id"]]))
     array.set_annotation("res_name", model_dict["label_comp_id"].astype("U3"))
     array.set_annotation("hetero", (model_dict["group_PDB"] == "HETATM"))
     array.set_annotation("atom_name", model_dict["label_atom_id"].astype("U6"))
@@ -125,7 +126,8 @@ def set_structure(pdbx_file, array, data_block=None):
                                             for e in array.hetero])
     atom_site_dict["id"] = None
     atom_site_dict["type_symbol"] = np.copy(array.element)
-    atom_site_dict["label_atom_id"] = np.copy(array.atom_name)
+    atom_site_dict["label_atom_id"] = np.array([shlex.quote(e)
+                                                for e in array.atom_name])
     atom_site_dict["label_alt_id"] = np.full(array.array_length(), ".")
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
@@ -133,11 +135,19 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_seq_id"] = np.array(["." if e == -1 else str(e)
                                             for e in array.res_id])
     atom_site_dict["auth_asym_id"] = np.copy(array.chain_id)
-    if type(array) == AtomArrayStack:
+    if (  type(array) == AtomArray or
+         (type(array) == AtomArrayStack and array.stack_depth() == 1)  ):
+        # 'ravel' flattens coord without copy
+        # in case of stack with stack_depth = 1
+        atom_site_dict["Cartn_x"] = np.ravel(array.coord[...,0]).astype(str)
+        atom_site_dict["Cartn_y"] = np.ravel(array.coord[...,1]).astype(str)
+        atom_site_dict["Cartn_z"] = np.ravel(array.coord[...,2]).astype(str)
+        atom_site_dict["pdbx_PDB_model_num"]= np.full(array.array_length(),"1")
+    elif type(array) == AtomArrayStack:
         for key, value in atom_site_dict.items():
-            atom_site_dict[key] = np.tile(value, reps=len(array))
+            atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
         coord = np.reshape(array.coord,
-                           (len(array)*array.array_length(), 3))
+                           (array.stack_depth()*array.array_length(), 3))
         atom_site_dict["Cartn_x"] = coord[:,0].astype(str)
         atom_site_dict["Cartn_y"] = coord[:,1].astype(str)
         atom_site_dict["Cartn_z"] = coord[:,2].astype(str)
@@ -145,12 +155,7 @@ def set_structure(pdbx_file, array, data_block=None):
                            repeats=array.array_length())
         atom_site_dict["pdbx_PDB_model_num"] = models
         atom_site_dict["id"] = (np.arange(1,array.array_length()+1)
-                           .astype("U6"))
-    elif type(array) == AtomArray:
-        atom_site_dict["Cartn_x"] = array.coord[:,0].astype(str)
-        atom_site_dict["Cartn_y"] = array.coord[:,1].astype(str)
-        atom_site_dict["Cartn_z"] = array.coord[:,2].astype(str)
-        atom_site_dict["pdbx_PDB_model_num"] = np.full(len(array), "1")
+                           .astype("U7"))
     else:
         raise ValueError("Structure must be AtomArray or AtomArrayStack")
     atom_site_dict["id"] = (np.arange(1,len(atom_site_dict["group_PDB"])+1)
@@ -158,10 +163,11 @@ def set_structure(pdbx_file, array, data_block=None):
     if data_block is None:
         data_blocks = pdbx_file.get_block_names()
         if len(data_blocks) == 0:
-            raise TypeError("No data block is existent in PDB file, must be specified")
+            raise TypeError("No data block is existent in PDB file, "
+                            "must be specified")
         else:
             data_block = data_blocks[0]
-    pdbx_file.set_category("atom_site", atom_site_dict, data_block)
+    pdbx_file.set_category("atom_site", atom_site_dict, data_block, False)
 
 
 def _determine_entity_id(chain_id):

@@ -135,7 +135,7 @@ class PDBxFile(object):
         return category_dict
             
     
-    def set_category(self, category, category_dict, block=None):
+    def set_category(self, category, category_dict, block=None, quote=True):
         if block is None:
             block = self.get_block_names()[0]
             
@@ -143,6 +143,14 @@ class PDBxFile(object):
             is_looped = True
         else:
             is_looped = False
+            
+        if quote:
+            for key, value in category_dict.items():
+                if is_looped:
+                    for i in range(len(value)):
+                        value[i] = shlex.quote(value[i])
+                else:
+                    category_dict[key] = shlex.quote(value)
         
         if is_looped:
             key_lines = ["_" + category + "." + key
@@ -270,14 +278,7 @@ class PDBxFile(object):
     def _process_singlevalued(self, lines):
         category_dict = {}
         for line in lines:
-            # In case of "X'" atoms, shlex throws :
-            # ValueError("No closing quotation")
-            # because "'" is recognized as quotation start
-            # Alternative: str.split()
-            try:
-                parts = shlex.split(line)
-            except ValueError:
-                parts = line.split()
+            parts = shlex.split(line)
             key = parts[0].split(".")[1]
             value = parts[1]
             category_dict[key] = value
@@ -302,15 +303,7 @@ class PDBxFile(object):
                                               dtype=object)
                 keys_length = len(keys)
             else:
-                try:
-                    values = shlex.split(line)
-                except ValueError:
-                    # In case of "X'" atoms, shlex throws :
-                    # ValueError("No closing quotation")
-                    # because "'" is recognized as quotation start
-                    # Alternative: str.split()
-                    values = line.split()
-                for value in values:
+                for value in shlex.split(line):
                     category_dict[keys[j]][i] = value
                     j += 1
                     if j == keys_length:
@@ -322,6 +315,7 @@ class PDBxFile(object):
             # Trim to correct size
             category_dict[key] = category_dict[key][:i]
         return category_dict
+    
 
 def _is_empty(line):
     return len(line) == 0 or line[0] == "#"
