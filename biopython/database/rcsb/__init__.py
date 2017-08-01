@@ -4,3 +4,4 @@
 # as part of this package.
 
 from .fetch import *
+from .search import *
