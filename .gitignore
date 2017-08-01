@@ -1,11 +1,13 @@
+# Ignore the sample file for tests without Biopython installation
+/test.py
+
 # Ignore in data folders of unit tests
 tests/structure/data/
 
-# Ignore the build directory (and its sub-directories):
-build
-
-# Ignore the distribution directory
+# Ignore the distribution directories
 dist
+build
+*.egg-info/
 
 # Ignore backup files from some Unix editors,
 *~
