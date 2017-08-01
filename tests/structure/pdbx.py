@@ -26,7 +26,9 @@ class PDBxTest(unittest.TestCase):
         self._test_conversion(stack=True)
             
     def _test_conversion(self, stack):
+        print("")
         for path in self.files:
+            print(path[-8:-4], end='\r')
             with self.subTest(id=path[-8:-4]):
                 pdbx_file = pdbx.PDBxFile()
                 pdbx_file.read(path)
@@ -40,6 +42,7 @@ class PDBxTest(unittest.TestCase):
                 else:
                     array2 = pdbx.get_structure(pdbx_file, model=1)
                 self.assertEqual(array1, array2)
+        print(" "*4, end='\r')
             
         
     
