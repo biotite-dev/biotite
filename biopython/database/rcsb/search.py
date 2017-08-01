@@ -19,18 +19,7 @@ class Query(metaclass=abc.ABCMeta):
     
     def __str__(self):
         return tostring(self.query, encoding="unicode")
-    
-class SimpleQuery(Query, metaclass=abc.ABCMeta):
-    
-    def __init__(self, query_type):
-        super().__init__()
-        self.query = Element("orgPdbQuery")
-        self.add_tag("queryType", "org.pdb.query.simple."+query_type)
-        
-    def add_tag(self, tag, content):
-        child = SubElement(self.query, tag)
-        child.text = content
-    
+
 
 class CompositeQuery(Query):
     
@@ -46,25 +35,49 @@ class CompositeQuery(Query):
                 conj_type.text = operator
             refinement.append(q.query)
 
+    
+class SimpleQuery(Query, metaclass=abc.ABCMeta):
+    
+    def __init__(self, query_type, parameter_class=""):
+        super().__init__()
+        self.query = Element("orgPdbQuery")
+        self._param_cls = parameter_class
+        type = SubElement(self.query, "queryType")
+        type.text = "org.pdb.query.simple." + query_type
+        
+    def add_param(self, param, content):
+        if self._param_cls == "":
+            child = SubElement(self.query, param)
+        else:
+            child = SubElement(self.query, self._param_cls + "." + param)
+        child.text = content
+
 
 class MethodQuery(SimpleQuery):
     
     def __init__(self, method, has_data=None):
-        super().__init__("ExpTypeQuery")
-        self.add_tag("mvStructure.expMethod.value", method.upper())
+        super().__init__("ExpTypeQuery", "mvStructure")
+        self.add_param("expMethod.value", method.upper())
         if has_data == True:
-            self.add_tag("mvStructure.hasExperimentalData.value", "Y")
+            self.add_param("hasExperimentalData.value", "Y")
         elif has_data == False:
-            self.add_tag("mvStructure.hasExperimentalData.value", "N")
-            
+            self.add_param("hasExperimentalData.value", "N")
             
 class ResolutionQuery(SimpleQuery):
     
     def __init__(self, min, max):
-        super().__init__("ResolutionQuery")
-        self.add_tag("refine.ls_d_res_high.comparator", "between")
-        self.add_tag("refine.ls_d_res_high.min", "{:.2f}".format(min))
-        self.add_tag("refine.ls_d_res_high.max", "{:.2f}".format(max))
+        super().__init__("ResolutionQuery", "refine.ls_d_res_high")
+        self.add_param("comparator", "between")
+        self.add_param("min", "{:.2f}".format(min))
+        self.add_param("max", "{:.2f}".format(max))
+        
+class BFactorQuery(SimpleQuery):
+    
+    def __init__(self, min, max):
+        super().__init__("ResolutionQuery", "refine.B_iso_mean")
+        self.add_param("comparator", "between")
+        self.add_param("min", "{:.2f}".format(min))
+        self.add_param("max", "{:.2f}".format(max))
     
     
     
