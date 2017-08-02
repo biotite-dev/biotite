@@ -34,7 +34,6 @@ class NpzFile(object):
         array.coord = coord
         for key, value in self._data_dict.items():
             if key != "coord":
-                array.add_annotation(key)
                 array.set_annotation(key, value)
         return array
         
