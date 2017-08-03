@@ -4,6 +4,5 @@
 # as part of this package.
 
 from .alphabet import *
-from .generalseq import *
 from .mbseq import *
 from .sequence import *

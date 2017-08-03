@@ -10,26 +10,26 @@ from .alphabet import Alphabet
 class Sequence(metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=[]):
-        set_sequence(sequence)
+        self.set_sequence(sequence)
     
     def copy(self, new_seq_code=None):
         seq_copy = type(self)()
+        return seq_copy
     
     def _copy_code(self, new_object, new_seq_code):
         if new_seq_code is None:
             new_object.set_seq_code(self.get_seq_code())
         else:
             new_object.set_seq_code(new_seq_code)
-        return seq_copy
     
     def set_sequence(self, sequence):
-        self._seq_code = encode(sequence, self.get_alphabet())
+        self._seq_code = Sequence.encode(sequence, self.get_alphabet())
     
     def get_sequence(self):
-        return decode(code, self.get_alphabet())
+        return Sequence.decode(code, self.get_alphabet())
     
     def set_seq_code(self, code):
-        self._seq_code = code.astype(_dtype(len(self.get_alphabet())))
+        self._seq_code = code.astype(Sequence._dtype(len(self.get_alphabet())))
         
     def get_seq_code(self):
         return self._seq_code
@@ -50,8 +50,9 @@ class Sequence(metaclass=abc.ABCMeta):
         return match_indices
     
     def reverse(self):
-        reversed_code = np.fliplr(np.copy(self._seq_code))
+        reversed_code = np.flip(np.copy(self._seq_code), axis=0)
         reversed = self.copy(reversed_code)
+        return reversed
     
     def __getitem__(self, index):
         alph = get_alphabet(self)
@@ -73,14 +74,14 @@ class Sequence(metaclass=abc.ABCMeta):
         return len(self._seq_code)
     
     def __iter__(self):
-        alph = get_alphabet(self)
+        alph = self.get_alphabet()
         i = 0
         while i < len(self):
             yield alph.decode(self._seq_code[i])
             i += 1
     
     def __str__(self):
-        alph = get_alphabet(self)
+        alph = self.get_alphabet()
         string = ""
         for e in self._seq_code:
             string += alph.decode(e)
@@ -101,8 +102,8 @@ class Sequence(metaclass=abc.ABCMeta):
     
     @staticmethod
     def encode(sequence, alphabet):
-        self._seq_code = np.array([alphabet.encode(e) for e in sequence],
-                                  dtype=_dtype(len(alphabet)))
+        return np.array([alphabet.encode(e) for e in sequence],
+                        dtype=Sequence._dtype(len(alphabet)))
 
     @staticmethod
     def decode(seq_code, alphabet):
@@ -125,6 +126,7 @@ class GeneralSequence(Sequence):
     def copy(self, new_seq_code=None):
         seq_copy = GeneralSequence(self._alphabet)
         self._copy_code(seq_copy, new_seq_code)
+        return seq_copy
     
     def get_alphabet(self):
         return self._alphabet

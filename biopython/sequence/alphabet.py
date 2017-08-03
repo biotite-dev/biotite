@@ -7,7 +7,7 @@ import copy
 
 class Alphabet(object):
     
-    def __init__(name, symbols, parents=[]):
+    def __init__(self, name, symbols, parents=[]):
         self._symbols = copy.deepcopy(list(symbols))
         self._name = name
         self._parents = copy.copy(list(parents))

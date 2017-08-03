@@ -24,13 +24,13 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
         if ambiguous == False:
             try:
                 self._alphabet = type(self).alph_unambiguous
-                seq_code = encode(sequence, self._alphabet)
+                seq_code = Sequence.encode(sequence, self._alphabet)
             except AlphabetError:
                 self._alphabet = type(self).alph_ambiguous
-                seq_code = encode(sequence, self._alphabet)
+                seq_code = Sequence.encode(sequence, self._alphabet)
         else:
             self._alphabet = type(self).alph_ambiguous
-            seq_code = encode(sequence, self._alphabet)
+            seq_code = Sequence.encode(sequence, self._alphabet)
         super().__init__()
         self.set_seq_code(seq_code)
         
@@ -40,20 +40,21 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
         else:
             seq_copy = type(self)(ambiguous=False)
         self._copy_code(seq_copy, new_seq_code)
+        return seq_copy
     
     def get_alphabet(self):
         return self._alphabet
     
     def complement(self):
         compl_code = self._complement_func(self.get_seq_code())
-        new_seq = self.copy(compl_code)
+        return self.copy(compl_code)
 
 class DNASequence(_NucleotideSequence):
     
     alph_unambiguous = Alphabet("UnambiguousDNA", ["A","C","G","T"])
     alph_ambiguous = Alphabet("AmbiguousDNA",
                               ["A","C","G","T","R","Y","W","S",
-                               "M","K","H","B","V","D","N"],
+                               "M","K","H","B","V","D","N","X"],
                               parents=["UnambiguousDNA"])
     
     compl_symbol_dict = {"A" : "T",
@@ -86,7 +87,8 @@ class DNASequence(_NucleotideSequence):
         rna_seq = RNASequence(ambiguous=ambiguous)
         # Alphabets of RNA and DNA are completely identical,
         # only the symbol 'T' is substituted by 'U'
-        rna_seq.set_seq_code(self.seq_code)
+        rna_seq.set_seq_code(self.get_seq_code())
+        return rna_seq
         
 
 
@@ -95,7 +97,7 @@ class RNASequence(_NucleotideSequence):
     alph_unambiguous = Alphabet("UnambiguousRNA", ["A","C","G","U"])
     alph_ambiguous = Alphabet("AmbiguousRNA",
                               ["A","C","G","U","R","Y","W","S",
-                               "M","K","H","B","V","D","N"],
+                               "M","K","H","B","V","D","N","X"],
                               parents=["UnambiguousRNA"])
     
     compl_symbol_dict = {"A" : "U",
@@ -125,10 +127,11 @@ class RNASequence(_NucleotideSequence):
             ambiguous = False
         else:
             ambiguous = True
-        rna_seq = RNASequence(ambiguous=ambiguous)
+        dna_seq = DNASequence(ambiguous=ambiguous)
         # Alphabets of RNA and DNA are completely identical,
         # only the symbol 'T' is substituted by 'U'
-        rna_seq.set_seq_code(self.seq_code)
+        dna_seq.set_seq_code(self.get_seq_code())
+        return dna_seq
     
     def translate(self, **kwargs):
         # start_codons
