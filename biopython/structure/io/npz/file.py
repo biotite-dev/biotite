@@ -5,8 +5,9 @@
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
+from ....file import File
 
-class NpzFile(object):
+class NpzFile(File):
     
     def __init__(self):
         self._data_dict = None

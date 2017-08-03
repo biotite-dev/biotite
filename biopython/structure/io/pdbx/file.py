@@ -5,8 +5,9 @@
 
 import shlex
 import numpy as np
+from ....file import File
 
-class PDBxFile(object):
+class PDBxFile(File):
     
     def __init__(self):
         self._lines = []
