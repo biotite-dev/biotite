@@ -1,14 +1,15 @@
 CONTRIBUTORS
 ============
 
-This is a list of people who have made contributions to Biopython.
+This is a alphabetically sorted list of people who have made contributions to Biopython.
 
-People are listed alphabetically, as verfied with Unix sort::
 
-    $ grep "^- " CONTRIB.rst | LC_ALL=C sort -u -c -f
+Contributors to Biopython 2.x:
 
-This is certainly not comprehensive, and if you've been overlooked (sorry!),
-please open an issue on GitHub or mention it on the development mailing list.
+- Patrick Kunzmann <https://github.com/padix-key>
+
+
+Contributors to Biopython 0.x and 1.x:
 
 - Aaron Gallagher <habnabit at gmail>
 - Aaron Kitzmiller <https://github.com/aaronk>
