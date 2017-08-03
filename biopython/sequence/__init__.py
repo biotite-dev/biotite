@@ -4,8 +4,6 @@
 # as part of this package.
 
 from .alphabet import *
-from .dnaseq import *
 from .generalseq import *
-from .proteinseq import *
-from .rnaseq import *
+from .mbseq import *
 from .sequence import *
