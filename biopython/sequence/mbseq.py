@@ -10,26 +10,20 @@ import abc
 
 class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
     
-    alph_unambiguous = None
-    alph_ambiguous = None
-    compl_dict = None
-    
     def __init__(self, sequence=[], ambiguous=False):
-        # Vectorized function that returns a complement code sequence
-        self._complement_func = np.vectorize(type(self).compl_dict.__getitem__)
         if isinstance(sequence, str):
             sequence = sequence.upper()
         else:
             sequence = [symbol.upper() for symbol in sequence]
         if ambiguous == False:
             try:
-                self._alphabet = type(self).alph_unambiguous
+                self._alphabet = self.unambiguous_alphabet()
                 seq_code = Sequence.encode(sequence, self._alphabet)
             except AlphabetError:
-                self._alphabet = type(self).alph_ambiguous
+                self._alphabet = self.ambiguous_alphabet()
                 seq_code = Sequence.encode(sequence, self._alphabet)
         else:
-            self._alphabet = type(self).alph_ambiguous
+            self._alphabet = self.ambiguous_alphabet()
             seq_code = Sequence.encode(sequence, self._alphabet)
         super().__init__()
         self.set_seq_code(seq_code)
@@ -45,9 +39,21 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
     def get_alphabet(self):
         return self._alphabet
     
+    @abc.abstractmethod
     def complement(self):
         compl_code = self._complement_func(self.get_seq_code())
         return self.copy(compl_code)
+    
+    @abc.abstractstaticmethod
+    def unambiguous_alphabet():
+        pass
+    
+    @abc.abstractstaticmethod
+    def ambiguous_alphabet():
+        pass
+    
+    
+
 
 class DNASequence(_NucleotideSequence):
     
@@ -78,6 +84,8 @@ class DNASequence(_NucleotideSequence):
         key_code = alph_ambiguous.encode(key)
         val_code = alph_ambiguous.encode(value)
         compl_dict[key_code] = val_code
+    # Vectorized function that returns a complement code
+    _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def transcribe(self):
         if self.get_alphabet() == DNASequence.alph_unambiguous:
@@ -89,6 +97,18 @@ class DNASequence(_NucleotideSequence):
         # only the symbol 'T' is substituted by 'U'
         rna_seq.set_seq_code(self.get_seq_code())
         return rna_seq
+    
+    def complement(self):
+        compl_code = DNASequence._complement_func(self.get_seq_code())
+        return self.copy(compl_code)
+    
+    @staticmethod
+    def unambiguous_alphabet():
+        return DNASequence.alph_unambiguous
+    
+    @staticmethod
+    def ambiguous_alphabet():
+        return DNASequence.alph_ambiguous
         
 
 
@@ -121,6 +141,8 @@ class RNASequence(_NucleotideSequence):
         key_code = alph_ambiguous.encode(key)
         val_code = alph_ambiguous.encode(value)
         compl_dict[key_code] = val_code
+    # Vectorized function that returns a complement code sequence
+    _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def reverse_transcribe(self):
         if self.get_alphabet() == DNASequence.alph_unambiguous:
@@ -140,6 +162,18 @@ class RNASequence(_NucleotideSequence):
         if self._alphabet == RNASequence.alph_ambiguous:
             raise AlphabetError("Translation requires unambiguous alphabet")
         raise NotImplementedError()
+    
+    def complement(self):
+        compl_code = RNASequence._complement_func(self.get_seq_code())
+        return self.copy(compl_code)
+    
+    @staticmethod
+    def unambiguous_alphabet():
+        return RNASequence.alph_unambiguous
+    
+    @staticmethod
+    def ambiguous_alphabet():
+        return RNASequence.alph_ambiguous
 
 
 class ProteinSequence(Sequence):
