@@ -4,5 +4,5 @@
 # as part of this package.
 
 from .alphabet import *
-from .mbseq import *
+from .seqtypes import *
 from .sequence import *

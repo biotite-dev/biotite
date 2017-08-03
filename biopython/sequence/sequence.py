@@ -14,6 +14,7 @@ class Sequence(metaclass=abc.ABCMeta):
     
     def copy(self, new_seq_code=None):
         seq_copy = type(self)()
+        self._copy_code(seq_copy, new_seq_code)
         return seq_copy
     
     def _copy_code(self, new_object, new_seq_code):
@@ -48,6 +49,10 @@ class Sequence(metaclass=abc.ABCMeta):
             if np.array_equal(sequence, sub_seq):
                 match_indices.append(i)
         return match_indices
+    
+    def find_symbol(symbol):
+        code = self.get_alphabet().encode(symbol)
+        return numpy.where(self._seq_code == code)
     
     def reverse(self):
         reversed_code = np.flip(np.copy(self._seq_code), axis=0)
