@@ -254,29 +254,33 @@ class ProteinSequence(Sequence):
     alphabet = Alphabet("Protein", ["A","C","D","E","F","G","H","I","K","L",
                                     "M","N","P","Q","R","S","T","V","W","Y",
                                     "*"])
-    dict_3to1 = {"ALA" : "A",
-                 "CYS" : "C",
-                 "ASP" : "D",
-                 "GLU" : "E",
-                 "PHE" : "F",
-                 "GLY" : "G",
-                 "HIS" : "H",
-                 "ILE" : "I",
-                 "LYS" : "K",
-                 "LEU" : "L",
-                 "MET" : "M",
-                 "ASN" : "N",
-                 "PRO" : "P",
-                 "GLN" : "Q",
-                 "ARG" : "R",
-                 "SER" : "S",
-                 "THR" : "T",
-                 "VAL" : "V",
-                 "TRP" : "W",
-                 "TYR" : "Y"}
+    _dict_3to1 = {"ALA" : "A",
+                  "CYS" : "C",
+                  "ASP" : "D",
+                  "GLU" : "E",
+                  "PHE" : "F",
+                  "GLY" : "G",
+                  "HIS" : "H",
+                  "ILE" : "I",
+                  "LYS" : "K",
+                  "LEU" : "L",
+                  "MET" : "M",
+                  "ASN" : "N",
+                  "PRO" : "P",
+                  "GLN" : "Q",
+                  "ARG" : "R",
+                  "SER" : "S",
+                  "THR" : "T",
+                  "VAL" : "V",
+                  "TRP" : "W",
+                  "TYR" : "Y"}
+    
+    _dict_1to3 = {}
+    for key, value in _dict_3to1.items():
+        _dict_1to3[value] = key
     
     def __init__(self, sequence=[]):
-        dict_3to1 = ProteinSequence.dict_3to1
+        dict_3to1 = ProteinSequence._dict_3to1
         alph = ProteinSequence.alphabet
         sequence = [alph.encode(dict_3to1[symbol]) if len(symbol) == 3
                     else alph.encode(symbol) for symbol in sequence]
@@ -291,6 +295,14 @@ class ProteinSequence(Sequence):
         seq_code = no_stop.get_seq_code()
         no_stop.set_seq_code(seq_code[seq_code != stop_code])
         return no_stop
+    
+    @staticmethod
+    def convert_letters_3to1(symbol):
+        return ProteinSequence._dict_3to1[symbol]
+    
+    @staticmethod
+    def convert_letters_1to3(symbol):
+        return ProteinSequence._dict_3to1[symbol]
     
     @staticmethod
     def convert_codon_table(symbol_table):

@@ -26,7 +26,8 @@ class NpzFile(File):
     
     def get_structure(self):
         if self._data_dict is None:
-            raise ValueError("The structure of this file has not been loaded or set yet")
+            raise ValueError("The structure of this file "
+                             "has not been loaded or set yet")
         coord = self._data_dict["coord"]
         if len(coord.shape) == 3:
             array = AtomArrayStack(coord.shape[0], coord.shape[1])

@@ -109,7 +109,8 @@ def _superimpose(reference, subject, ca_only):
             ref_centered = reference.copy();
             
         if len(sub_centered) != len(ref_centered):
-            raise BadStructureException("The subject and reference array have different amount of atoms")
+            raise BadStructureException("The subject and reference array "
+                                        "have different amount of atoms")
         
         sub_centered.coord -= sub_centroid
         ref_centered.coord -= ref_centroid
@@ -121,7 +122,7 @@ def _superimpose(reference, subject, ca_only):
         cov = np.dot(y.T, x)
         v, s, w = np.linalg.svd(cov)
         rotation = np.dot(w, v.T)
-        # Remove pssibility of reflected atom coordinates
+        # Remove possibility of reflected atom coordinates
         if np.linalg.det(v) * np.linalg.det(w) < 0:
             s[-1,:] *= -1
             v[:,-1] *= -1
