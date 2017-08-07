@@ -6,6 +6,8 @@
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import File
+from ...error import BadStructureError
+import copy
 
 _atom_records = {"hetero"    : (0,  6),
                  "atom_id"   : (6,  11),
@@ -29,7 +31,9 @@ class PDBFile(File):
         self._lines = []
     
     def read(self, file_name):
-        raise NotImplementedError()
+        with open(file_name, "r") as f:
+            str_data = f.read()
+        self._lines = str_data.split("\n")
                 
     def write(self, file_name):
         with open(file_name, "w") as f:
@@ -41,11 +45,59 @@ class PDBFile(File):
         pdb_file._categories = copy.deepcopy(self._categories)
     
     def get_structure(self):
-        raise NotImplementedError()
+        # Line indices where a new model starts
+        model_start_i = np.array([i for i in range(len(self._lines))
+                                  if self._lines[i].startswith(("MODEL"))])
+        # Line indices with ATOM or HETATM records
+        atom_line_i = np.array([i for i in range(len(self._lines)) if
+                                self._lines[i].startswith(("ATOM", "HETATM"))])
+        model = 0
+        if len(model_start_i) <= 1:
+            array = AtomArray(len(atom_line_i))
+            annot_i = atom_line_i
+        else:
+            if len(atom_line_i) % len(model_start_i):
+                raise BadStructureError("Amount of ATOM/HETATM records is "
+                                        "not multiple of model count")
+            array = AtomArrayStack(len(model_start_i),
+                                   len(atom_line_i) // len(model_start_i))
+            annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+        # Fill in annotation
+        # i is index in array, j is line index
+        for i, j in enumerate(annot_i):
+            line = self._lines[j]
+            array.chain_id[i] = line[21].upper()
+            array.res_id[i] = int(line[22:26])
+            array.res_name[i] = line[17:20]
+            array.hetero[i] = (False if line[0:4] == "ATOM" else True)
+            array.atom_name[i] = line[12:16]
+            array.element[i] = line[76:78]
+        
+        # Fill in coordinates
+        if isinstance(array, AtomArray):
+            for i, j in enumerate(atom_line_i):
+                line = self._lines[j]
+                array.coord[i,0] = float(line[30:38])
+                array.coord[i,1] = float(line[38:46])
+                array.coord[i,2] = float(line[46:54])
+        
+        elif isinstance(array, AtomArrayStack):
+            m = 0
+            i = 0
+            for k in atom_line_i:
+                if m < len(model_start_i)-1 and k > model_start_i[m+1]:
+                    m += 1
+                    i = 0
+                line = self._lines[k]
+                array.coord[m,i,0] = float(line[30:38])
+                array.coord[m,i,1] = float(line[38:46])
+                array.coord[m,i,2] = float(line[46:54])
+                i += 1
+                
+        return array
         
     def set_structure(self, array):
-        self._lines = [" " * 79] * len(array)
-        atom_id = np.arange(1, len(array)+1)
+        atom_id = np.arange(1, array.array_length()+1)
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
         try:
             charge = [ "+"+str(np.abs(charge)) if charge > 0 else
@@ -54,23 +106,64 @@ class PDBFile(File):
                       for charge in array.get_annotation("charge")]
         except ValueError:
             # In case charge annotation is not existing
-            charge = [""] * len(array)
-        for i in range(len(array)):
-            self._lines[i] = ("{:6}".format(hetero[i]) + 
-                              "{:>5d}".format(atom_id[i]) +
-                              " " +
-                              "{:4}".format(array.atom_name[i]) +
-                              " " +
-                              "{:3}".format(array.res_name[i]) +
-                              " " +
-                              "{:1}".format(array.chain_id[i]) +
-                              "{:>4d}".format(array.res_id[i]) +
-                              (" " * 4) +
-                              "{:>8.3f}".format(array.coord[i,0]) +
-                              "{:>8.3f}".format(array.coord[i,1]) +
-                              "{:>8.3f}".format(array.coord[i,2]) +
-                              (" " * 22) +
-                              "{:2}".format(array.element[i]) +
-                              "{:2}".format(charge[i])
-                             )
+            charge = [""] * array.array_length()
+        
+        if isinstance(array, AtomArray):
+            self._lines = [None] * array.array_length()
+            for i in range(array.array_length()):
+                self._lines[i] = ("{:6}".format(hetero[i]) + 
+                                  "{:>5d}".format(atom_id[i]) +
+                                  " " +
+                                  "{:4}".format(array.atom_name[i]) +
+                                  " " +
+                                  "{:3}".format(array.res_name[i]) +
+                                  " " +
+                                  "{:1}".format(array.chain_id[i]) +
+                                  "{:>4d}".format(array.res_id[i]) +
+                                  (" " * 4) + 
+                                  "{:>8.3f}".format(array.coord[i,0]) + 
+                                  "{:>8.3f}".format(array.coord[i,1]) + 
+                                  "{:>8.3f}".format(array.coord[i,2]) + 
+                                  (" " * 22) + 
+                                  "{:2}".format(array.element[i]) +
+                                  "{:2}".format(charge[i])
+                                 )
+        
+        elif isinstance(array, AtomArrayStack):
+            self._lines = []
+            # The entire information, but the coordinates,
+            # is equal for each model
+            # Therefore template lines are created
+            # which are afterwards applied for each model
+            temp_lines = [None] * array.array_length()
+            for i in range(array.array_length()):
+                temp_lines[i] = ("{:6}".format(hetero[i]) + 
+                                 "{:>5d}".format(atom_id[i]) +
+                                 " " +
+                                 "{:4}".format(array.atom_name[i]) +
+                                 " " +
+                                 "{:3}".format(array.res_name[i]) +
+                                 " " +
+                                 "{:1}".format(array.chain_id[i]) +
+                                 "{:>4d}".format(array.res_id[i]) +
+                                 (" " * 50) + 
+                                 "{:2}".format(array.element[i]) +
+                                 "{:2}".format(charge[i])
+                                )
+            for i in range(array.stack_depth()):
+                #Fill in coordinates for each model
+                self._lines.append("{:5}{:>9d}".format("MODEL", i+1))
+                model_lines = copy.copy(temp_lines)
+                for j, line in enumerate(model_lines):
+                    # Insert coordinates
+                    line = (line[:30]
+                            + "{:>8.3f}{:>8.3f}{:>8.3f}".format(
+                                    array.coord[i,j,0],
+                                    array.coord[i,j,1],
+                                    array.coord[i,j,2])
+                            + line[54:] )
+                    model_lines[j] = line
+                self._lines.extend(model_lines)
+                self._lines.append("ENDMDL")
+                
             

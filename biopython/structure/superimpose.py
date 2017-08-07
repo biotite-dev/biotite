@@ -11,19 +11,19 @@ import numpy as np
 from .geometry import centroid
 from .atoms import Atom, AtomArray, AtomArrayStack, stack
 
-def superimpose(reference, subject, ca_only=True):
+def superimpose(fixed, mobile, ca_only=True):
     """
-    Superimpose structures on a reference structure.
+    Superimpose structures on a fixed structure.
     
     The superimposition is performed using the Kabsch algorithm [1]_ [2]_.
     
     Parameters
     ----------
-    reference : AtomArray
-        The reference structure.
-    subject: AtomArray or AtomArrayStack
-        The structure(s) which is/are superimposed on the `reference`
-        structure. Both, `reference` and `subject` should have equal
+    fixed : AtomArray
+        The fixed structure.
+    mobile: AtomArray or AtomArrayStack
+        The structure(s) which is/are superimposed on the `fixed`
+        structure. Both, `fixed` and `mobile` should have equal
         annotation arrays and must have equal sizes.
     ca_only: bool, optional
         If True, the function performs the superimpostion
@@ -33,17 +33,17 @@ def superimpose(reference, subject, ca_only=True):
     Returns
     -------
     fitted : AtomArray or AtomArrayStack
-        A copy of the `subject` structure(s),
-        superimposed on the reference structure.
+        A copy of the `mobile` structure(s),
+        superimposed on the fixed structure.
     transformation : tuple or tuple list
-        The tuple contains the transformations that were applied on `subject`.
+        The tuple contains the transformations that were applied on `mobile`.
         This can be used in `apply_superimposition()` in order to transform
         another AtomArray in the same way.
         The first element contains the translation vector for moving the
         centroid into the origin.
         The second element contains the rotation matrix.
         The third element contains the translation vector for moving the
-        structure onto the reference.
+        structure onto the fixed.
         The three transformations are performed sequentially.
     
     See Also
@@ -66,18 +66,18 @@ def superimpose(reference, subject, ca_only=True):
     .. [2] W Kabsch, "A discussion of the solution for the best rotation to
        relate two sets of vectors." Acta Cryst, 34, 827-828 (1978).
     """
-    if type(reference) != AtomArray:
+    if type(fixed) != AtomArray:
         raise ValueError("Reference must be AtomArray")
-    if type(subject) == AtomArray:
+    if type(mobile) == AtomArray:
         # Simply superimpose without loop
-        return _superimpose(reference, subject, ca_only)
-    elif type(subject) == AtomArrayStack:
-        # Superimpose for every array in AtomArrayStack
+        return _superimpose(fixed, mobile, ca_only)
+    elif type(mobile) == AtomArrayStack:
+        # Superimpose for every mobile in AtomArrayStack
         fitted_subjects = []
         transformations = []
-        for array in subject:
-            fitted_subject, transformation = _superimpose(reference,
-                                                          array, ca_only)
+        for mobile in mobile:
+            fitted_subject, transformation = _superimpose(fixed,
+                                                          mobile, ca_only)
             fitted_subjects.append(fitted_subject)
             transformations.append(transformation)
         # Convert AtomArray list back to AtomArrayStack
@@ -87,7 +87,7 @@ def superimpose(reference, subject, ca_only=True):
         raise ValueError("Reference must be AtomArray")
 
 
-def _superimpose(reference, subject, ca_only):
+def _superimpose(fixed, mobile, ca_only):
     """
     Performs the actual superimposition.
     
@@ -95,29 +95,29 @@ def _superimpose(reference, subject, ca_only):
     --------
     superimpose
     """
-    if type(subject) == AtomArray:
-        sub_centroid = centroid(subject)
-        ref_centroid = centroid(reference)
+    if type(mobile) == AtomArray:
+        mob_centroid = centroid(mobile)
+        fix_centroid = centroid(fixed)
         if ca_only:
             # For performance reasons the Kabsch algorithm
             # is only performed with "CA" per default
             # Implicitly this creates array copies
-            sub_centered = subject[(subject.atom_name == " CA ")]
-            ref_centered = reference[(reference.atom_name == " CA ")]
+            mob_centered = mobile.coord[(mobile.atom_name == " CA ")]
+            fix_centered = fixed.coord[(fixed.atom_name == " CA ")]
         else:
-            sub_centered = subject.copy();
-            ref_centered = reference.copy();
+            mob_centered = np.copy(mobile.coord)
+            fix_centered = np.copy(fixed.coord)
             
-        if len(sub_centered) != len(ref_centered):
-            raise BadStructureException("The subject and reference array "
+        if len(mob_centered) != len(fix_centered):
+            raise BadStructureException("The mobile and fixed array "
                                         "have different amount of atoms")
         
-        sub_centered.coord -= sub_centroid
-        ref_centered.coord -= ref_centroid
+        mob_centered -= mob_centroid
+        fix_centered -= fix_centroid
         
         # Calculating rotation matrix using Kabsch algorithm
-        y = sub_centered.coord
-        x = ref_centered.coord
+        y = mob_centered
+        x = fix_centered
         # Calculate covariance matrix
         cov = np.dot(y.T, x)
         v, s, w = np.linalg.svd(cov)
@@ -128,16 +128,11 @@ def _superimpose(reference, subject, ca_only):
             v[:,-1] *= -1
         rotation = np.dot(v,w)
         
-        if ca_only:
-            # Superimposed AtomArray should not be "CA" sequence
-            # therefore original subject is copied 
-            fitted_subject = subject.copy()
-            fitted_subject.coord -= sub_centroid
-        else:
-            fitted_subject = sub_centered
+        fitted_subject = mobile.copy()
+        fitted_subject.coord -= mob_centroid
         fitted_subject.coord = np.dot(fitted_subject.coord, rotation)
-        fitted_subject.coord += ref_centroid
-        return fitted_subject, (-sub_centroid,rotation,ref_centroid)
+        fitted_subject.coord += fix_centroid
+        return fitted_subject, (-mob_centroid, rotation, fix_centroid)
 
 
 def apply_superimposition(atoms, transformation):

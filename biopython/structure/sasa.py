@@ -194,6 +194,8 @@ def sasa(array, **kwargs):
     
 def total_surface(array, **kwargs):
     """
+    DEPRECATED
+    
     Calculate the surface area for each atom in a structure.
     
     In contrast to `sasa()` this function calculates the total surface area for

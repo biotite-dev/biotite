@@ -6,4 +6,5 @@
 import os.path
 
 pdb_ids = ["3o5r", "1l2y", "5ugo", "5h73"]
+
 data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")

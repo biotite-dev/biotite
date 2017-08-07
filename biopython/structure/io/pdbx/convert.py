@@ -8,6 +8,18 @@ import shlex
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from collections import OrderedDict
+from ....sequence.seqtypes import ProteinSequence
+
+
+def get_seqeunce(pdbx_file, data_block=None):
+    poly_dict = pdbx_file.get_category("entity_poly", data_block)
+    seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
+    sequences = []
+    if isinstance(seq_string, ndarray):
+        for string in seq_string:
+            sequences.append(ProteinSequence(string))
+    else:
+        return sequences.append(ProteinSequence(seq_string))
 
 
 def get_structure(pdbx_file, data_block=None, insertion_code=None,

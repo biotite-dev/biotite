@@ -7,6 +7,7 @@ import numpy as np
 import abc
 from .alphabet import Alphabet
 
+
 class Sequence(metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=[]):
@@ -38,21 +39,6 @@ class Sequence(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_alphabet(self):
         pass
-    
-    def find_subsequence(sequence):
-        if not self.get_alphabet.extends(sequence.get_alphabet()):
-            raise ValueError("The sequences alphabets are not equal")
-        match_indices = []
-        frame_size = len(sequence)
-        for i in range(len(self) - frame_size + 1):
-            sub_seq = self._seq_code[i : i + frame_size]
-            if np.array_equal(sequence, sub_seq):
-                match_indices.append(i)
-        return match_indices
-    
-    def find_symbol(symbol):
-        code = self.get_alphabet().encode(symbol)
-        return numpy.where(self._seq_code == code)
     
     def reverse(self):
         reversed_code = np.flip(np.copy(self._seq_code), axis=0)
