@@ -14,7 +14,6 @@ _dowload_url = "http://ftp.ncbi.nih.gov/blast/matrices/"
 def fetch(matrix_name, overwrite=False, quiet=True):
     r = requests.get(_dowload_url + matrix_name)
     content = r.text
-    print(content)
     
     lines = content.split("\n")
     lines = [line for line in lines if len(line) != 0 and line[0] != "#"]

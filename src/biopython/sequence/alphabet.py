@@ -38,6 +38,12 @@ class Alphabet(object):
     def __len__(self):
         return len(self._symbols)
     
+    def __iter__(self):
+        i = 0
+        while i < len(self):
+            yield self._symbols[i]
+            i += 1
+    
 
 class AlphabetError(Exception):
     pass
