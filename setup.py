@@ -8,15 +8,16 @@ import sys
 
 setup(name="Biopython",
       version = "2.0a1",
-      description = "Python Distribution Utilities",
+      description = "A set of general tools for computational biology",
       author = "The Biopython contributors",
       url = "https://github.com/padix-key/biopython2",
       packages = find_packages("src"),
-      package_dir={"":"src"},
-      include_package_data=True,
+      package_dir = {"":"src"},
+      include_package_data = True,
       install_requires = ["requests",
                           "numpy",
                           "scipy",
                           "matplotlib"],
-      test_suite="tests.main.test_suite"
+      test_suite = "tests.main.test_suite",
+      zip_safe = False
      )
