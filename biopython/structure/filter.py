@@ -22,3 +22,18 @@ def filter_backbone(array):
               (array.atom_name == "CA") |
               (array.atom_name == "C")) &
               filter_amino_acids(array) )
+    
+def filter_intersection(array, intersect):
+    filter = np.full(array.array_length(), True, dtype=bool)
+    intersect_categories = intersect.get_annotation_categories()
+    # Check atom equality only for categories,
+    # which exist in both arrays
+    categories = [category for category in array.get_annotation_categories()
+                  if category in intersect_categories]
+    for i in range(array.array_length()):
+        subfilter = np.full(intersect.array_length(), True, dtype=bool)
+        for category in categories:
+            subfilter &= (intersect.get_annotation(category)
+                          == array.get_annotation(category)[i])
+        filter[i] = subfilter.any()
+    return filter
