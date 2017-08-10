@@ -3,7 +3,7 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from .globalign import *
-from .localign import *
-from .matrix import *
-from .score import *
+from ..sequence import Sequence
+
+def simple_score(seq1, seq2):
+    pass
