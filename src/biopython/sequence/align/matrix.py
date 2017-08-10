@@ -5,7 +5,7 @@
 
 from ..sequence import Sequence
 from ..alphabet import Alphabet
-from numpy import np
+import numpy as np
 
 
 class SubstitutionMatrix(object):
