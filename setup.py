@@ -3,26 +3,17 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import sys
 
-setup(name='Biopython',
-      version = '2.0a1',
-      description = 'Python Distribution Utilities',
+setup(name="Biopython",
+      version = "2.0a1",
+      description = "Python Distribution Utilities",
       author = "The Biopython contributors",
       url = "https://github.com/padix-key/biopython2",
-      packages = ["biopython",
-                  "biopython.database",
-                  "biopython.database.rcsb",
-                  "biopython.sequence",
-                  "biopython.sequence.align",
-                  "biopython.sequence.io",
-                  "biopython.sequence.io.fasta",
-                  "biopython.structure",
-                  "biopython.structure.io",
-                  "biopython.structure.io.npz",
-                  "biopython.structure.io.pdb",
-                  "biopython.structure.io.pdbx"],
+      packages = find_packages("src"),
+      package_dir={"":"src"},
+      include_package_data=True,
       install_requires = ["requests",
                           "numpy",
                           "scipy",
