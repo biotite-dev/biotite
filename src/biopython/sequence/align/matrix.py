@@ -63,22 +63,26 @@ class SubstitutionMatrix(object):
                 string += " {:>3}".format(int(self._matrix[i,j]))
             string += "\n"
         return string
+    
+    @staticmethod
+    def std_protein_matrix():
+        return _matrix_blosum62
+    
+    @staticmethod
+    def std_nucleotide_matrix():
+        return _matrix_nuc
 
 
 # Preformatted BLOSUM62 and NUC substitution matrix from NCBI
-
-matrix_blosum62 = None
-
-matrix_nuc = None
 
 _matrix_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "matrix_data")
 
 _matrix = np.load(os.path.join(_matrix_dir, "blosum62.npy"))
 _alph = ProteinSequence.alphabet 
-matrix_blosum62 = SubstitutionMatrix(_alph, _alph, _matrix)
+_matrix_blosum62 = SubstitutionMatrix(_alph, _alph, _matrix)
 
 _matrix = np.load(os.path.join(_matrix_dir, "nuc.npy"))
 _alph = DNASequence.alphabet 
-matrix_nuc = SubstitutionMatrix(_alph, _alph, _matrix)
+_matrix_nuc = SubstitutionMatrix(_alph, _alph, _matrix)
 
