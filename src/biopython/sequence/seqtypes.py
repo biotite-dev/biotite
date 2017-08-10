@@ -250,7 +250,7 @@ class ProteinSequence(Sequence):
     
     alphabet = Alphabet(["A","C","D","E","F","G","H","I","K","L",
                          "M","N","P","Q","R","S","T","V","W","Y",
-                         "X","*"])
+                         "B","Z","X","*"])
     
     _dict_3to1 = {"ALA" : "A",
                   "CYS" : "C",
@@ -272,7 +272,10 @@ class ProteinSequence(Sequence):
                   "VAL" : "V",
                   "TRP" : "W",
                   "TYR" : "Y",
-                  "UNK" : "X"}
+                  "ASX" : "B",
+                  "GLX" : "Z",
+                  "UNK" : "X",
+                  " * "  : "*"}
     
     _dict_1to3 = {}
     for key, value in _dict_3to1.items():
