@@ -6,9 +6,11 @@
 import unittest
 
 from .structure import structure_suite
+from .sequence import sequence_suite
 
 test_suite = unittest.TestSuite()
 test_suite.addTest(structure_suite)
+test_suite.addTest(sequence_suite)
 
 def run():
     runner = unittest.TextTestRunner()

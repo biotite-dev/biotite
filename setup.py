@@ -18,5 +18,5 @@ setup(name="Biopython",
                           "numpy",
                           "scipy",
                           "matplotlib"],
-      test_suite="tests.test.test_suite"
+      test_suite="tests.main.test_suite"
      )

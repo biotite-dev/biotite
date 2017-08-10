@@ -30,7 +30,7 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
         self.set_seq_code(seq_code)
         
     def copy(self, new_seq_code=None):
-        if self._alphabet == type(self).alphabet_ambiguous:
+        if self._alphabet == self.ambiguous_alphabet:
             seq_copy = type(self)(ambiguous=True)
         else:
             seq_copy = type(self)(ambiguous=False)
@@ -78,14 +78,14 @@ class DNASequence(_NucleotideSequence):
                          "N" : "N"}
     compl_dict = {}
     for key, value in compl_symbol_dict.items():
-        key_code = alphabet_ambiguous.encode(key)
-        val_code = alphabet_ambiguous.encode(value)
+        key_code = alphabet_amb.encode(key)
+        val_code = alphabet_amb.encode(value)
         compl_dict[key_code] = val_code
     # Vectorized function that returns a complement code
     _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def transcribe(self):
-        if self.get_alphabet() == DNASequence.alphabet_unambiguous:
+        if self.get_alphabet() == DNASequence.alphabet:
             ambiguous = False
         else:
             ambiguous = True
@@ -133,14 +133,14 @@ class RNASequence(_NucleotideSequence):
                          "N" : "N"}
     compl_dict = {}
     for key, value in compl_symbol_dict.items():
-        key_code = alphabet_ambiguous.encode(key)
-        val_code = alphabet_ambiguous.encode(value)
+        key_code = alphabet_amb.encode(key)
+        val_code = alphabet_amb.encode(value)
         compl_dict[key_code] = val_code
     # Vectorized function that returns a complement code sequence
     _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def reverse_transcribe(self):
-        if self.get_alphabet() == DNASequence.alphabet_unambiguous:
+        if self.get_alphabet() == DNASequence.alphabet:
             ambiguous = False
         else:
             ambiguous = True
@@ -151,7 +151,7 @@ class RNASequence(_NucleotideSequence):
         return dna_seq
     
     def translate(self, **kwargs):
-        if self._alphabet == RNASequence.alphabet_ambiguous:
+        if self._alphabet == RNASequence.alphabet_amb:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
         if "codon_table" in kwargs:
@@ -248,9 +248,10 @@ class ProteinSequence(Sequence):
     
     _codon_table = None
     
-    alphabet = Alphabet("Protein", ["A","C","D","E","F","G","H","I","K","L",
-                                    "M","N","P","Q","R","S","T","V","W","Y",
-                                    "X","*"])
+    alphabet = Alphabet(["A","C","D","E","F","G","H","I","K","L",
+                         "M","N","P","Q","R","S","T","V","W","Y",
+                         "X","*"])
+    
     _dict_3to1 = {"ALA" : "A",
                   "CYS" : "C",
                   "ASP" : "D",
@@ -306,8 +307,7 @@ class ProteinSequence(Sequence):
     def convert_codon_table(symbol_table):
         code_table = {}
         for key, value in symbol_table.items():
-            key_code = tuple(Sequence.encode(key,
-                                             RNASequence.alphabet_unambiguous))
+            key_code = tuple(Sequence.encode(key, RNASequence.alphabet))
             val_code = ProteinSequence.alphabet.encode(value)
             code_table[key_code] = val_code
         return code_table

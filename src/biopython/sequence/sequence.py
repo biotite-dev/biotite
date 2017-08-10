@@ -46,20 +46,20 @@ class Sequence(metaclass=abc.ABCMeta):
         return reversed
     
     def __getitem__(self, index):
-        alph = get_alphabet(self)
+        alph = self.get_alphabet()
         sub_seq = self._seq_code.__getitem__(index)
-        if isinstance(item, np.ndarray):
+        if isinstance(index, np.ndarray):
             new_seq = sequence.copy(sub_seq)
         else:
             return alph.decode(sub_seq)
     
     def __setitem__(self, index, symbol):
-        alph = get_alphabet(self)
+        alph = self.get_alphabet()
         symbol = alph.encode(symbol)
         self._seq_code.__setitem__(index, symbol)
     
     def __delitem__(self, index):
-        self._seq_code.__delitem__(index) 
+        self._seq_code = np.delete(self._seq_code, index) 
     
     def __len__(self):
         return len(self._seq_code)
