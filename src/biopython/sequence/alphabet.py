@@ -7,13 +7,9 @@ import copy
 
 class Alphabet(object):
     
-    def __init__(self, name, symbols, parents=[]):
+    def __init__(self, symbols, parents=[]):
         self._symbols = copy.deepcopy(list(symbols))
-        self._name = name
         self._parents = copy.copy(list(parents))
-    
-    def get_name(self):
-        return self._name
     
     def get_symbols(self):
         return copy.deepcopy(self._symbols)
@@ -22,7 +18,7 @@ class Alphabet(object):
         return copy.copy(self._parents)
     
     def extends(self, alphabet):
-        return alphabet._name in self._parents
+        return alphabet in self._parents
     
     def encode(self, symbol):
         try:
@@ -37,17 +33,10 @@ class Alphabet(object):
             raise AlphabetError(str(code) + " is not a valid alphabet code")
     
     def __str__(self):
-        return self._name + ": " + str(self._symbols)
+        return str(self._symbols)
     
     def __len__(self):
         return len(self._symbols)
-    
-    def __eq__(self, item):
-        if isinstance(item, Alphabet):
-            return self.get_name() == item.get_name()
-    
-    def __ne__(self, item):
-        return not self.__eq__(item)
     
 
 class AlphabetError(Exception):

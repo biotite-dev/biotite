@@ -42,8 +42,7 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def complement(self):
-        compl_code = self._complement_func(self.get_seq_code())
-        return self.copy(compl_code)
+        pass
     
     @abc.abstractstaticmethod
     def unambiguous_alphabet():
@@ -56,11 +55,10 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
 
 class DNASequence(_NucleotideSequence):
     
-    alphabet_unambiguous = Alphabet("UnambiguousDNA", ["A","C","G","T"])
-    alphabet_ambiguous = Alphabet("AmbiguousDNA",
-                              ["A","C","G","T","R","Y","W","S",
-                               "M","K","H","B","V","D","N","X"],
-                              parents=["UnambiguousDNA"])
+    alphabet     = Alphabet(["A","C","G","T"])
+    alphabet_amb = Alphabet(["A","C","G","T","R","Y","W","S",
+                             "M","K","H","B","V","D","N","X"],
+                            parents=[alphabet])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -103,20 +101,19 @@ class DNASequence(_NucleotideSequence):
     
     @staticmethod
     def unambiguous_alphabet():
-        return DNASequence.alphabet_unambiguous
+        return DNASequence.alphabet
     
     @staticmethod
     def ambiguous_alphabet():
-        return DNASequence.alphabet_ambiguous
+        return DNASequence.alphabet_amb
 
 
 class RNASequence(_NucleotideSequence):
     
-    alphabet_unambiguous = Alphabet("UnambiguousRNA", ["A","C","G","U"])
-    alphabet_ambiguous = Alphabet("AmbiguousRNA",
-                              ["A","C","G","U","R","Y","W","S",
-                               "M","K","H","B","V","D","N","X"],
-                              parents=["UnambiguousRNA"])
+    alphabet     = Alphabet(["A","C","G","U"])
+    alphabet_amb = Alphabet(["A","C","G","U","R","Y","W","S",
+                             "M","K","H","B","V","D","N","X"],
+                            parents=[alphabet])
     
     compl_symbol_dict = {"A" : "U",
                          "C" : "G",
@@ -222,11 +219,11 @@ class RNASequence(_NucleotideSequence):
     
     @staticmethod
     def unambiguous_alphabet():
-        return RNASequence.alphabet_unambiguous
+        return RNASequence.alphabet
     
     @staticmethod
     def ambiguous_alphabet():
-        return RNASequence.alphabet_ambiguous
+        return RNASequence.alphabet_amb
 
 
 class ProteinSequence(Sequence):
