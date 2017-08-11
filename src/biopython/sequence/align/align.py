@@ -139,7 +139,7 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
                 from_left += gap_opening
             # Evaluate score from top direction
             from_top = score_table[i-1, j]
-            if trace_table[i-1, j] & 2:
+            if trace_table[i-1, j] & 4:
                 from_top += gap_extension
             else:
                 from_top += gap_opening
@@ -195,7 +195,7 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
                 from_left += gap_opening
             # Evaluate score from top direction
             from_top = score_table[i-1, j]
-            if trace_table[i-1, j] & 2:
+            if trace_table[i-1, j] & 4:
                 from_top += gap_extension
             else:
                 from_top += gap_opening
