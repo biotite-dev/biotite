@@ -48,8 +48,8 @@ class Sequence(metaclass=abc.ABCMeta):
     def __getitem__(self, index):
         alph = self.get_alphabet()
         sub_seq = self._seq_code.__getitem__(index)
-        if isinstance(index, np.ndarray):
-            new_seq = sequence.copy(sub_seq)
+        if isinstance(sub_seq, np.ndarray):
+            return self.copy(sub_seq)
         else:
             return alph.decode(sub_seq)
     
