@@ -17,14 +17,30 @@ class Alignment(object):
         self.trace = trace
         self.score = score
         
-    def format_compact(self):
+    def format_compact(self, line_length=72):
         str_seq1, str_seq2 = self.get_gapped_seq_strings()
         return str_seq1 + "\n" + str_seq2
     
-    def format_detail(self, matrix, cutoff=0):
+    def format_detail(self, matrix, cutoff=0, line_length=72):
         str_seq1, str_seq2 = self.get_gapped_seq_strings()
         conservation = self.get_conservation_string(matrix, cutoff)
-        return str_seq1 + "\n" + conservation + "\n" + str_seq2
+        i = 0
+        string = ""
+        # String contains 'line_length' symbols per line
+        while i+line_length <= len(self.trace):
+            string += str_seq1[i : i+line_length] + "\n"
+            string += conservation[i : i+line_length] + "\n"
+            string += str_seq2[i : i+line_length] + "\n"
+            string += "\n"
+            i += line_length
+        # Add symbol remainder if present
+        if i < len(self.trace):
+            string += str_seq1[i:] + "\n"
+            string += conservation[i:] + "\n"
+            string += str_seq2[i:] + "\n"
+            string += "\n"
+        # Return string without terminal 'newlines'
+        return string[:-2]
     
     def get_conservation_string(self, matrix, cutoff=0):
         seq_code1 = self.seq1.get_seq_code()
