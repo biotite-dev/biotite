@@ -23,7 +23,7 @@ class SubstitutionMatrix(object):
                 for j in range(len(alphabet2)):
                     sym1 = alphabet1.decode(i)
                     sym2 = alphabet2.decode(j)
-                    self._matrix[i,j] = matrix_dict[sym1, sym2]
+                    self._matrix[i,j] = int(matrix_dict[sym1, sym2])
         elif isinstance(matrix, np.ndarray):
             self._matrix = np.copy(matrix)
         else:

@@ -9,16 +9,57 @@ import numpy as np
 import copy
 
 
-class Alignment():
+class Alignment(object):
     
     def __init__(self, seq1, seq2, trace, score):
         self.seq1 = seq1
         self.seq2 = seq2
         self.trace = trace
         self.score = score
+        
+    def format_compact(self):
+        str_seq1, str_seq2 = self.get_gapped_seq_strings()
+        return str_seq1 + "\n" + str_seq2
+    
+    def format_detail(self, matrix, cutoff=0):
+        str_seq1, str_seq2 = self.get_gapped_seq_strings()
+        conservation = self.get_conservation_string(matrix, cutoff)
+        return str_seq1 + "\n" + conservation + "\n" + str_seq2
+    
+    def get_conservation_string(self, matrix, cutoff=0):
+        seq_code1 = self.seq1.get_seq_code()
+        seq_code2 = self.seq2.get_seq_code()
+        conservation = ""
+        for i in range(len(self.trace)):
+            if self.trace[i,0] == -1 or self.trace[i,1] == -1:
+                conservation += " "
+            else:
+                score = matrix.get_score_by_code(seq_code1[self.trace[i,0]],
+                                                 seq_code2[self.trace[i,1]])
+                if score >= cutoff:
+                    conservation += "|"
+                else:
+                    conservation += "."
+        return conservation
+    
+    def get_gapped_seq_strings(self):
+        str_seq1 = ""
+        str_seq2 = ""
+        for e in range(len(self.trace)):
+            i = self.trace[e,0]
+            j = self.trace[e,1]
+            if i != -1:
+                str_seq1 += self.seq1[i]
+            else:
+                str_seq1 += "-"
+            if j != -1:
+                str_seq2 += self.seq2[j]
+            else:
+                str_seq2 += "-"
+        return str_seq1, str_seq2
     
     def __str__(self):
-        pass
+        return self.format_compact()
 
 
 def simple_score(seq1, seq2, matrix):
@@ -95,10 +136,12 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     _traceback(trace_table, i, j, trace, trace_list)
     trace_list = [np.flip(np.array(tr, dtype=int), axis=0)
                   for tr in trace_list]
-    # Remove gap entries in traces
+    # Replace gap entries with -1
     for i, trace in enumerate(trace_list):
-        trace = trace[np.unique(trace[:,0], return_index=True)[1]]
-        trace = trace[np.unique(trace[:,1], return_index=True)[1]]
+        gap_filter = np.zeros(trace.shape, dtype=bool)
+        gap_filter[np.unique(trace[:,0], return_index=True)[1], 0] = True
+        gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
+        trace[~gap_filter] = -1
         trace_list[i] = trace
     
     return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]

@@ -4,7 +4,7 @@
 # as part of this package.
 
 """
-This module contains all possible errors of the `Structure` subpackage.
+This module contains all possible errors of the `structure` subpackage.
 """
 
 class BadStructureError(Exception):
