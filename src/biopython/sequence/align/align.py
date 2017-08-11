@@ -90,7 +90,7 @@ def simple_score(seq1, seq2, matrix):
     score = 0
     for i in range(len(seq1)):
         score += matrix.get_score_by_code(seq1_code[i], seq2_code[i])
-    return code
+    return score
 
 
 def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
