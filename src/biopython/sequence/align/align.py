@@ -109,6 +109,8 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="u1")
     score_table[:,0] = -np.arange(0, len(seq1)+1)
     score_table[0,:] = -np.arange(0, len(seq2)+1)
+    trace_table[1:,0] = 4
+    trace_table[0,1:] = 2
     code1 = seq1.get_seq_code()
     code2 = seq2.get_seq_code()
     
@@ -161,9 +163,69 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
         trace_list[i] = trace
     
     return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]
+
+
+def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
+    # Procedure is analogous to align_global()
+    score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="i4")
+    trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="u1")
+    code1 = seq1.get_seq_code()
+    code2 = seq2.get_seq_code()
     
+    # Fill table
+    max_i = score_table.shape[0]
+    max_j = score_table.shape[1]
+    i = 1
+    while i < max_i:
+        j = 1
+        while j < max_j:
+            # Evaluate score from diagonal direction
+            from_diag = score_table[i-1, j-1]
+            from_diag += matrix.get_score_by_code(code1[i-1], code2[j-1])
+            # Evaluate score from left direction
+            from_left = score_table[i, j-1]
+            if trace_table[i, j-1] & 2:
+                from_left += gap_extension
+            else:
+                from_left += gap_opening
+            # Evaluate score from top direction
+            from_top = score_table[i-1, j]
+            if trace_table[i-1, j] & 2:
+                from_top += gap_extension
+            else:
+                from_top += gap_opening
+            # Find maximum
+            trace, score = _eval_trace_from_score(from_diag,from_left,from_top)
+            # Local alignment specialty:
+            # If score is less than or equal to 0,
+            # then 0 is saved on the field and the trace ends here
+            if score <= 0:
+                score_table[i,j] = 0
+            else:
+                score_table[i,j] = score
+                trace_table[i,j] = trace
+            j +=1
+        i += 1
     
+    # Traceback
+    # The start point is the maximal score in the table
+    i, j = np.unravel_index(np.argmax(score_table), score_table.shape)
+    max_score = score_table[i,j]
+    trace = []
+    trace_list = []
+    _traceback(trace_table, i, j, trace, trace_list)
+    trace_list = [np.flip(np.array(tr, dtype=int), axis=0)
+                  for tr in trace_list]
+    # Replace gap entries with -1
+    for i, trace in enumerate(trace_list):
+        gap_filter = np.zeros(trace.shape, dtype=bool)
+        gap_filter[np.unique(trace[:,0], return_index=True)[1], 0] = True
+        gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
+        trace[~gap_filter] = -1
+        trace_list[i] = trace
     
+    return [Alignment(seq1, seq2, trace, max_score)
+            for trace in trace_list]    
 
 
 def _eval_trace_from_score(from_diag, from_left, from_top):
