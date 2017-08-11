@@ -10,7 +10,7 @@ from ....file import File
 class PDBxFile(File):
     
     def __init__(self):
-        self._lines = []
+        super().__init__()
         # This dictionary saves the PDBx category names,
         # together with its line position in the file
         # and the data_block it is in
@@ -18,9 +18,7 @@ class PDBxFile(File):
     
     
     def read(self, file_name):
-        with open(file_name, "r") as f:
-            str_data = f.read()
-        self._lines = str_data.split("\n")
+        super().read(file_name)
         # Remove emptyline at then end of file, if present
         if self._lines[-1] == "":
             del self._lines[-1]
@@ -249,12 +247,6 @@ class PDBxFile(File):
             if category_info["start"] > category_start:
                 category_info["start"] += len_diff
                 category_info["stop"] += len_diff
-                
-    
-    def write(self, file_name):
-        with open(file_name, "w") as f:
-            f.writelines([line+"\n" for line in self._lines])
-        
     
     
     def copy(self):

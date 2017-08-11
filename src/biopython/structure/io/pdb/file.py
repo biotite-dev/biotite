@@ -27,18 +27,6 @@ _atom_records = {"hetero"    : (0,  6),
 
 class PDBFile(File):
     
-    def __init__(self):
-        self._lines = []
-    
-    def read(self, file_name):
-        with open(file_name, "r") as f:
-            str_data = f.read()
-        self._lines = str_data.split("\n")
-                
-    def write(self, file_name):
-        with open(file_name, "w") as f:
-            f.writelines([line+"\n" for line in self._lines])
-    
     def copy(self):
         pdb_file = PDBFile()
         pdb_file._lines = copy.deepcopy(self._lines)

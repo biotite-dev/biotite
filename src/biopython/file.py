@@ -7,13 +7,17 @@ import abc
 
 class File(metaclass=abc.ABCMeta):
     
-    @abc.abstractmethod
-    def read(self, file_path):
-        pass
+    def __init__(self):
+        self._lines = []
     
-    @abc.abstractmethod
-    def write(self, file_path):
-        pass
+    def read(self, file_name):
+        with open(file_name, "r") as f:
+            str_data = f.read()
+        self._lines = str_data.split("\n")
+    
+    def write(self, file_name):
+        with open(file_name, "w") as f:
+            f.writelines([line+"\n" for line in self._lines])
     
     @abc.abstractmethod
     def copy():
