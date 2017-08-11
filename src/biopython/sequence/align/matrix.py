@@ -17,15 +17,13 @@ class SubstitutionMatrix(object):
         self._alph2 = alphabet2
         if isinstance(matrix, dict):
             matrix_dict = matrix
-            self._matrix = np.full(( len(alphabet1), len(alphabet2) ), np.nan)
+            self._matrix = np.zeros(( len(alphabet1), len(alphabet2) ),
+                                    dtype="i4")
             for i in range(len(alphabet1)):
                 for j in range(len(alphabet2)):
                     sym1 = alphabet1.decode(i)
                     sym2 = alphabet2.decode(j)
-                    try:
-                        self._matrix[i,j] = matrix_dict[sym1, sym2]
-                    except KeyError:
-                        pass
+                    self._matrix[i,j] = matrix_dict[sym1, sym2]
         elif isinstance(matrix, np.ndarray):
             self._matrix = np.copy(matrix)
         else:
@@ -41,15 +39,15 @@ class SubstitutionMatrix(object):
     def get_matrix(self):
         return np.copy(self._matrix)
     
-    def get_score_by_code(code1, code2):
+    def get_score_by_code(self, code1, code2):
         return self._matrix[code1, code2]
     
-    def get_score(symbol1, symbol2):
+    def get_score(self, symbol1, symbol2):
         code1 = self._alph1.encode(symbol1)
         code2 = self._alph1.encode(symbol2)
         return self._matrix[code1, code2]
     
-    def shape():
+    def shape(self):
         return (len(alphabet1), len(alphabet2))
     
     def __str__(self):
