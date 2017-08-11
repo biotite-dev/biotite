@@ -455,6 +455,9 @@ class Atom(object):
             if self._annot[name] != item._annot[name]:
                 return False
         return True
+    
+    def __ne__(self, item):
+        return not self == item
 
     
 class AtomArray(_AtomArrayBase):

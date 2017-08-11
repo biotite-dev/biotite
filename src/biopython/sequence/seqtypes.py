@@ -284,8 +284,8 @@ class ProteinSequence(Sequence):
     def __init__(self, sequence=[]):
         dict_3to1 = ProteinSequence._dict_3to1
         alph = ProteinSequence.alphabet
-        sequence = [alph.encode(dict_3to1[symbol]) if len(symbol) == 3
-                    else alph.encode(symbol) for symbol in sequence]
+        sequence = [dict_3to1[symbol] if len(symbol) == 3
+                    else symbol for symbol in sequence]
         super().__init__(sequence)
     
     def get_alphabet(self):

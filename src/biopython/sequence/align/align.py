@@ -79,7 +79,7 @@ class Alignment(object):
     
     def __getitem__(self, index):
         if not isinstance(index, slice):
-            raise TypeError("Alignments only support slice indexing")
+            raise IndexError("Alignments only support slice indexing")
         return Alignment(self.seq1, self.seq2, self.trace[index], self.score)
 
 

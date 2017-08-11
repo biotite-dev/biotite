@@ -6,10 +6,12 @@
 import unittest
 
 from .sequence import *
+from .fasta import *
 
 loader = unittest.defaultTestLoader
 sequence_suite = unittest.TestSuite()
 sequence_suite.addTest(loader.loadTestsFromTestCase(SequenceTest))
+sequence_suite.addTest(loader.loadTestsFromTestCase(FastaTest))
 
 def run():
     runner = unittest.TextTestRunner()

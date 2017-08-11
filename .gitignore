@@ -1,8 +1,9 @@
 # Ignore the sample file for tests without Biopython installation
 /test.py
 
-# Ignore in data folders of unit tests
+# Ignore data folders of unit tests
 tests/structure/data/
+tests/sequence/data/
 
 # Ignore the distribution directories
 dist

@@ -71,6 +71,16 @@ class Sequence(metaclass=abc.ABCMeta):
             yield alph.decode(self._seq_code[i])
             i += 1
     
+    def __eq__(self, item):
+        if not isinstance(item, type(self)):
+            return False
+        if self.get_alphabet() != item.get_alphabet():
+            return False
+        return np.array_equal(self._seq_code, item._seq_code)
+    
+    def __ne__(self, item):
+        return not self == item
+    
     def __str__(self):
         alph = self.get_alphabet()
         string = ""
