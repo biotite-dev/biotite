@@ -7,17 +7,24 @@ from setuptools import setup, find_packages
 import sys
 
 setup(name="Biopython",
-      version = "2.0a1",
-      description = "A set of general tools for computational biology",
-      author = "The Biopython contributors",
-      url = "https://github.com/padix-key/biopython2",
-      packages = find_packages("src"),
-      package_dir = {"":"src"},
-      include_package_data = True,
-      install_requires = ["requests",
-                          "numpy",
-                          "scipy",
-                          "matplotlib"],
-      test_suite = "tests.main.test_suite",
-      zip_safe = False
-     )
+    version = "2.0a1",
+    description = "A set of general tools for computational biology",
+    author = "The Biopython contributors",
+    url = "https://github.com/padix-key/biopython2",
+    packages = find_packages("src"),
+    package_dir = {"":"src"},
+    include_package_data = True,
+    install_requires = ["requests",
+                        "numpy",
+                        "scipy",
+                        "matplotlib"],
+    test_suite = "tests.main.test_suite",
+    zip_safe = False,
+    
+    command_options = {
+        'build_sphinx':
+            {"source_dir" : ("setup.py", "./doc"),
+             "config_dir" : ("setup.py", "./doc"),
+             "build_dir"  : ("setup.py", "./doc/build")}
+    }
+    )
