@@ -48,17 +48,17 @@ def superimpose(fixed, mobile, ca_only=True):
     
     See Also
     --------
-    apply_superimposition
+    superimpose_apply
     
     Notes
     -----
-    The `transformation` tuple can be used in `apply_superimposition()` in
+    The `transformation` tuple can be used in `superimpose_apply()` in
     order to transform another `AtomArray` in the same way. This can come in
     handy, in case you want to superimpose two structures with different
     amount of atoms. Often the two structures can be sliced in order to
     obtain the same size and annotation arrays. After superimposition the
     transformation can be applied on the original structure using
-    `apply_superimposition()`.
+    `superimpose_apply()`.
     
     .. [1] W Kabsch, "A solution for the best rotation to relate two sets of
        vectors." Acta Cryst, 32, 922-923 (1976).
@@ -135,7 +135,7 @@ def _superimpose(fixed, mobile, ca_only):
         return fitted_subject, (-mob_centroid, rotation, fix_centroid)
 
 
-def apply_superimposition(atoms, transformation):
+def superimpose_apply(atoms, transformation):
     """
     Superimpose structures using a given transformation tuple.
     
