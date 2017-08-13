@@ -480,7 +480,7 @@ class AtomArray(_AtomArrayBase):
     
     Inserting or appending an `AtomArray` into another `AtomArray` is
     done with the '+' operator. Only the annotation categories, which are 
-    existing in both arrays are transferred to the new array.
+    existing in both arrays, are transferred to the new array.
     
     Attributes
     ----------
