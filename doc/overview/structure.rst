@@ -157,7 +157,4 @@ Output:
 Reference
 ---------
 
-.. toctree::
-   :maxdepth: 1
-
-   reference/index
+:ref:`Reference </apidoc/biopython.structure>`

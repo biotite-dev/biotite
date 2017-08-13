@@ -4,10 +4,11 @@
 # as part of this package.
 
 from os.path import realpath, dirname, join, isdir
-from os import listdir
+from os import listdir, makedirs
 from importlib import import_module
 import types
 import sys
+import abc
 
 
 ##### API Doc creation #####
@@ -43,23 +44,82 @@ def _create_package_doc(pck, src_path, doc_path):
                      and type(getattr(module, attr)) == types.FunctionType]
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
-                     and type(getattr(module, attr)) == type]
-        _create_file(doc_path, pck, class_list, func_list, sub_pck)
-        
-        print("")
-        print("Package: " + pck)
-        print("All")
-        print([attr for attr in attr_list if attr[0] != "_"])
-        print("Functions")
-        print(func_list)
-        print("Classes")
-        print(class_list)
+                     and type(getattr(module, attr)) in [type, abc.ABCMeta]]
+        _create_files(doc_path, pck, class_list, func_list, sub_pck)
         
         return([pck] + sub_pck)
 
 
-def _create_file(doc_path, package, classes, functions, subpackages):
-    pass
+def _create_files(doc_path, package, classes, functions, subpackages):
+    sub_path = join(doc_path, package)
+    if not isdir(sub_path):
+        makedirs(sub_path)
+    
+    for cls in classes:
+        file_content = \
+        """
+{:}.{:}
+{:}
+
+.. autoclass:: {:}.{:}
+    :members:
+    :undoc-members:
+    :inherited-members:
+        """.format(package, cls, "=" * (len(package)+len(cls)+1),
+                   package, cls)
+        with open(join(sub_path, cls+".rst"), "w") as f:
+            f.write(file_content)
+            
+    for func in functions:
+        file_content = \
+        """
+{:}.{:}
+{:}
+
+.. autofunction:: {:}.{:}
+        """.format(package, func, "=" * (len(package)+len(func)+1),
+                   package, func)
+        with open(join(sub_path, func+".rst"), "w") as f:
+            f.write(file_content)
+    
+    
+    lines = []
+    
+    lines.append(package)
+    lines.append("=" * len(package))
+    lines.append("\n")
+    lines.append(".. automodule:: " + package)
+    lines.append("\n")
+    
+    lines.append("Classes")
+    lines.append("-" * len("Classes"))
+    lines.append("\n")
+    for cls in classes:
+        lines.append(_indent + "- :doc:`"
+                     + package + "." + cls
+                     + " <" + package + "/" + cls + ">`")
+    lines.append("\n")
+    
+    lines.append("Functions")
+    lines.append("-" * len("Functions"))
+    lines.append("\n")
+    for func in functions:
+        lines.append(_indent + "- :doc:`"
+                     + package + "." + func
+                     + " <" + package + "/" + func + ">`")
+    lines.append("\n")
+    
+    lines.append("Subpackages")
+    lines.append("-" * len("Subpackages"))
+    lines.append("\n")
+    for pck in subpackages:
+        lines.append(_indent + "- :doc:`"
+                     + pck
+                     + " <" + pck + ">`")
+    lines.append("\n")
+    
+    with open(join(doc_path, package+".rst"), "w") as f:
+        f.writelines([line+"\n" for line in lines])
 
 
 def _is_package(path):
@@ -84,7 +144,7 @@ templates_path = ['templates']
 source_suffix = ['.rst']
 master_doc = 'index'
 
-project = 'Biopython 2.0'
+project = 'Biopython'
 copyright = '2017, Patrick Kunzmann'
 author = 'Patrick Kunzmann'
 version = '2.0'
