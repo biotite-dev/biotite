@@ -7,6 +7,9 @@
 Contains functions for visualisation of structures and structure data.
 """
 
+__all__ = ["simple_view"]
+
+
 def simple_view(fig, atom_arrays):
     """
     Show the structure using a `matplotlib` 3-D plot.

@@ -9,6 +9,9 @@ import numpy as np
 import abc
 import copy
 
+__all__ = ["DNASequence", "RNASequence", "ProteinSequence"]
+
+
 class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=[], ambiguous=False):

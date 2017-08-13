@@ -7,6 +7,9 @@ import shlex
 import numpy as np
 from ....file import File
 
+__all__ = ["PDBxFile"]
+
+
 class PDBxFile(File):
     
     def __init__(self):

@@ -7,6 +7,8 @@ import numpy as np
 import abc
 from .alphabet import Alphabet
 
+__all__ = ["Sequence", "GeneralSequence"]
+
 
 class Sequence(metaclass=abc.ABCMeta):
     

@@ -10,6 +10,8 @@ from ...seqtypes import DNASequence, ProteinSequence
 import textwrap
 import copy
 
+__all__ = ["FastaFile"]
+
 
 class FastaFile(File):
     

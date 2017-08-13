@@ -14,6 +14,9 @@ from .util import vector_dot, norm_vector
 from .filter import filter_backbone
 from .error import BadStructureError
 
+__all__ = ["distance", "centroid", "angle", "dihedral", "dihedral_backbone"]
+
+
 def distance(atoms1, atoms2):
     """
     Measures the euclidian distance between atoms.

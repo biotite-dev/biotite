@@ -12,6 +12,9 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .util import vector_dot
 
+__all__ = ["rmsd", "rmsf", "average"]
+
+
 def rmsd(reference, subject):
     """
     Calculate the RMSD between two structures.

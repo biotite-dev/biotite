@@ -9,6 +9,9 @@ from ....file import File
 from ...error import BadStructureError
 import copy
 
+__all__ = ["PDBFile"]
+
+
 _atom_records = {"hetero"    : (0,  6),
                  "atom_id"   : (6,  11),
                  "atom_name" : (12, 16),

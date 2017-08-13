@@ -70,6 +70,9 @@ the original `ndarray`.
 
 import numpy as np
 
+__all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
+
+
 class _AtomArrayBase(object):
     """
     Private base class for `AtomArray` and `AtomArrayStack`. It

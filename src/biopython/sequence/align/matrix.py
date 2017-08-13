@@ -9,6 +9,8 @@ from ..alphabet import Alphabet
 import numpy as np
 import os.path
 
+__all__ = ["SubstitutionMatrix"]
+
 
 class SubstitutionMatrix(object):
     

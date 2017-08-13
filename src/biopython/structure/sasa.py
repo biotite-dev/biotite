@@ -13,6 +13,8 @@ from .adjacency import AdjacencyMap
 from .geometry import distance
 from .util import vector_dot
 
+__all__ = ["sasa"]
+
 
 def sasa(array, **kwargs):
     """

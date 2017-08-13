@@ -5,6 +5,8 @@
 
 import numpy as np
 
+__all__ = ["find_subsequence", "find_symbol"]
+
 
 def find_subsequence(sequence, query):
     if not sequence.get_alphabet.extends(query.get_alphabet()):

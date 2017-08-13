@@ -9,6 +9,8 @@ Utility functions for in internal use in `Bio.Structure` package
 
 import numpy as np
 
+__all__ = ["vector_dot", "norm_vector", "distance"]
+
 
 def vector_dot(v1,v2):
     """

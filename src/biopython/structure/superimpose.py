@@ -11,6 +11,9 @@ import numpy as np
 from .geometry import centroid
 from .atoms import Atom, AtomArray, AtomArrayStack, stack
 
+__all__ = ["superimpose", "superimpose_apply"]
+
+
 def superimpose(fixed, mobile, ca_only=True):
     """
     Superimpose structures on a fixed structure.

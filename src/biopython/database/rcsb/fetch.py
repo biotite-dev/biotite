@@ -8,6 +8,10 @@ import os.path
 import os
 import glob
 
+__all__ = ["fetch"]
+
+
+
 _dowload_url = "https://files.rcsb.org/download/"
 
 def fetch(pdb_ids, format, target_path, overwrite=False, quiet=True):

@@ -7,6 +7,9 @@
 This module contains all possible errors of the `structure` subpackage.
 """
 
+__all__ = ["BadStructureError"]
+
+
 class BadStructureError(Exception):
     """
     Indicates that a structure is not suitable for a certain operation.

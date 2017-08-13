@@ -10,8 +10,10 @@ from ...atoms import Atom, AtomArray, AtomArrayStack
 from collections import OrderedDict
 from ....sequence.seqtypes import ProteinSequence
 
+__all__ = ["get_sequence", "get_structure", "set_structure"]
 
-def get_seqeunce(pdbx_file, data_block=None):
+
+def get_sequence(pdbx_file, data_block=None):
     poly_dict = pdbx_file.get_category("entity_poly", data_block)
     seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
     sequences = []

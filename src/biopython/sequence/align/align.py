@@ -8,6 +8,9 @@ from ..sequence import Sequence
 import numpy as np
 import copy
 
+__all__ = ["Alignment", "simple_score", "align_global", "align_local"]
+
+
 
 class Alignment(object):
     

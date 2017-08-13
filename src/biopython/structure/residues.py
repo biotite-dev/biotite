@@ -11,6 +11,9 @@ atom level.
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
+__all__ = ["apply_residue_wise", "get_residues"]
+
+
 def apply_residue_wise(array, data, function, axis=None):
     """
     Apply a function to intervals of data, where each interval correspond to

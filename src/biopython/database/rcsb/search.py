@@ -7,6 +7,10 @@ import requests
 import abc
 from xml.etree.ElementTree import Element, SubElement, tostring
 
+__all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
+           "ResolutionQuery", "BFactorQuery", "search"]
+
+
 _search_url = "https://www.rcsb.org/pdb/rest/search"
 
 class Query(metaclass=abc.ABCMeta):

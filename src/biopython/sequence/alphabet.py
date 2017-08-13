@@ -5,6 +5,9 @@
 
 import copy
 
+__all__ = ["Alphabet", "AlphabetError"]
+
+
 class Alphabet(object):
     
     def __init__(self, symbols, parents=[]):

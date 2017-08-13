@@ -10,6 +10,9 @@ This module provides utility functions for creating filters on atom arrays and a
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 
+__all__ = ["filter_amino_acids", "filter_backbone", "filter_intersection"]
+
+
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC"]

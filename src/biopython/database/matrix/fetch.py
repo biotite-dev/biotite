@@ -9,6 +9,9 @@ import os
 import glob
 import numpy as np
 
+__all__ = ["fetch"]
+
+
 _dowload_url = "http://ftp.ncbi.nih.gov/blast/matrices/"
 
 def fetch(matrix_name, overwrite=False, quiet=True):

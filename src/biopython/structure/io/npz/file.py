@@ -7,6 +7,9 @@ import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import File
 
+__all__ = ["NpzFile"]
+
+
 class NpzFile(File):
     
     def __init__(self):

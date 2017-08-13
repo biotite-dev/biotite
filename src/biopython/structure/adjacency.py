@@ -11,6 +11,9 @@ a location.
 import numpy as np
 from .geometry import distance
 
+__all__ = ["AdjacencyMap"]
+
+
 class AdjacencyMap(object):
     """
     This class enables the efficient search of atoms in vicinity of a

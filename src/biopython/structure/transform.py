@@ -11,6 +11,9 @@ that can be applied on structures.
 import numpy as np
 from .geometry import centroid
 
+__all__ = ["translate", "rotate", "rotate_centered"]
+
+
 def translate(atoms, vector):
     """
     Translate a list of atoms by a given vector.

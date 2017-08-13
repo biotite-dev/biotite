@@ -5,6 +5,9 @@
 
 import abc
 
+__all__ = ["File"]
+
+
 class File(metaclass=abc.ABCMeta):
     
     def __init__(self):
