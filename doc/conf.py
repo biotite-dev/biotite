@@ -20,8 +20,7 @@ def create_api_doc(src_path, doc_path):
     package_list = _create_package_doc("biopython",
                                        join(src_path, "biopython"),
                                        doc_path)
-    for p in package_list:
-        print(p)
+    create_package_index(doc_path, package_list)
 
 
 def _create_package_doc(pck, src_path, doc_path):
@@ -120,7 +119,18 @@ def _create_files(doc_path, package, classes, functions, subpackages):
     
     with open(join(doc_path, package+".rst"), "w") as f:
         f.writelines([line+"\n" for line in lines])
-
+        
+        
+def create_package_index(doc_path, package_list):
+    
+    lines = []
+    for pck in package_list:
+        lines.append(_indent + "- :doc:`"
+                     + pck
+                     + " <" + "/apidoc/" + pck + ">`")
+    with open(join(doc_path, "index"+".rst"), "w") as f:
+        f.writelines([line+"\n" for line in lines])
+    
 
 def _is_package(path):
     content = listdir(path)
@@ -134,10 +144,10 @@ sys.path.insert(0, package_path)
 create_api_doc(package_path, "apidoc")
 
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
               'sphinx.ext.doctest',
               'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
-              'sphinx.ext.autosummary',
               'numpydoc']
 
 templates_path = ['templates']

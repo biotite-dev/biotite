@@ -21,6 +21,9 @@ in `numpy` arrays. This approach has multiple advantages:
 Based ony the implementation in `numpy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and visualisation.
 
+:doc:`API Reference </apidoc/biopython.structure>`
+--------------------------------------------------
+
 Examples
 --------
 Let's do some calculations on the miniprotein *TC5b* (PDB: 1L2Y). The structure
@@ -153,8 +156,3 @@ structure.
 Output:
 	
 .. image:: /assets/examples/dihedral.svg
-
-Reference
----------
-
-:ref:`Reference </apidoc/biopython.structure>`

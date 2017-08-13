@@ -73,16 +73,16 @@ def sasa(array, **kwargs):
     References
     ----------
     
-        .. [1] A Shrake and JA Rupley, "Environment and exposure to solvent of
-           protein atoms. Lysozyme and insulin." J Mol Biol, 79,
-           351-371 (1973).
+    .. [1] A Shrake and JA Rupley, "Environment and exposure to solvent of
+       protein atoms. Lysozyme and insulin." J Mol Biol, 79,
+       351-371 (1973).
+   
+    .. [2] J Tsai R Taylor, C Chotia and M Gerstein, "The packing densitiy
+       in proteins: standard radii and volumes." J Mol Biol, 290,
+       253-299 (1999).
        
-        .. [2] J Tsai R Taylor, C Chotia and M Gerstein, "The packing densitiy
-           in proteins: standard radii and volumes." J Mol Biol, 290,
-           253-299 (1999).
-           
-        .. [3] A Bondi, "Van der Waals volumes and radii." J Phys Chem, 86,
-           441-451 (1964).
+    .. [3] A Bondi, "Van der Waals volumes and radii." J Phys Chem, 86,
+       441-451 (1964).
     
     """
     if "probe_radius" in kwargs:

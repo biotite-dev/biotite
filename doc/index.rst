@@ -26,17 +26,20 @@ Subpackages
 Biopython 2.0 currently consists of 4 subpackages:
 
 :doc:`Sequence <overview/application>`
+""""""""""""""""""""""""""""""""""""""
 
 Command line and online applications can be managed with the ``application``
 subpackage.
 *This feature is not included yet.*
 
 :doc:`Sequence <overview/database>`
+"""""""""""""""""""""""""""""""""""
 
 The ``database`` subpackage provides interfaces for searching in and fetching
 data from biologial databases like *NCBI* or *RCSB*.
 
 :doc:`Sequence <overview/sequence>`
+"""""""""""""""""""""""""""""""""""
 
 The ``sequence`` subpackage contains functionality for working with sequence
 information of any kind. The package contains by default sequence types for
@@ -47,6 +50,7 @@ Beside the standard I/O operations, the the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 
 :doc:`Structure <overview/structure>`
+"""""""""""""""""""""""""""""""""""""
 
 The ``structure`` subpackage enables handling of 3D structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their properties,
@@ -54,6 +58,11 @@ based on `numpy` arrays. The subpackage includes read/write functionality for
 different formats, strucutre filters, coordinate transformations, angle and
 bond measurements, accessible surface area calculation, structure
 superimposition and more.
+
+API Reference
+-------------
+
+.. include:: apidoc/index.rst
 
 Indices and tables
 ------------------
