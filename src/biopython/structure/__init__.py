@@ -6,27 +6,68 @@
 """
 A subpackage for handling protein structures. 
 
-This subpackage enables efficient and easy handling of protein structure data
-by representation of atom attributes in `numpy` arrays. These atom attributes
-include polypetide chain id, residue id, residue name, hetero residue
-information, atom name and atom coordinates.
+In this context an atom is described by two kinds of attributes: the
+coordinates and the annotations. The annotations include information
+about polypetide chain id, residue id, residue name, hetero atom
+information, atom name and optionally more. The coordinates are a
+`numpy` float `ndarray` of length 3, containing the x, y and z
+coordinates.
 
-The package contains mainly three types: `Atom`, `AtomArray` and
-`AtomArrayStack`. An `Atom` contains data for a single atom, an `AtomArray`
-stores data for an entire model and `AtomArrayStack` stores data for multiple
-models, where each model differs in the atom coordinates. Both, `AtomArrray` and
-`AtomArrayStack`, store the attributes in `numpy` arrays. This approach has
-multiple advantages:
-    
-    - Convenient selection of atoms in a structure
-      by using `numpy` style indexing
-    - Fast calculations on structures using C-accelerated `ndarray` operations
-    - Simple implementation of custom calculations
-    
+An `Atom` contains data for a single atom, it stores the annotations as
+scalar values and the coordinates as length 3 `ndarray`.
+An `AtomArray` stores data for an entire structure model containing *n*
+atoms. Therefore the annotations are represented as `ndarray`s of
+length *n*, so called annotation arrays. The coordinates are a (n x 3)
+`ndarray`.
+`AtomArrayStack` stores data for *m* models. Each `AtomArray` in
+the `AtomArrayStack` has the same annotation arrays, since each atom
+must be represented in all models in the stack. Each model may differ in
+atom coordinates. Therefore the annotation arrays are represented as
+`ndarray`s of length *n*, while the coordinates are a (m x n x 3)
+`ndarray`.
+All types must not be subclassed.
+
+The following annotation categories are mandatory:
+
+=========  ===========  =================  =============================
+Category   Type         Examples           Description
+=========  ===========  =================  =============================
+chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
+res_id     int          1,2,3, ...         Sequence position of residue
+res_name   string (U3)  'GLY','ALA', ...   Residue name
+hetero     bool         True, False        True, for non AA residues
+atom_name  string (U6)  'CA','N', ...      Atom name
+element    string (U2)  'C','O','SE', ...  Chemical Element
+=========  ===========  =================  =============================
+
+For all `Atom`, `AtomArray` and `AtomArrayStack` objects these
+annotations must be set, otherwise some functions will not work or
+errors will occur.
+Additionally to these annotations, an arbitrary amount of annotation
+categories can be added (Use `add_annotation()` for this).
+The annotation arrays can be accessed either via the function
+`get_annotation()` or directly (e.g. ``array.res_id``).
+
+The following annotation categories are optionally used by some utility
+funtions:
+
+=========  ===========  =================   ============================
+Category   Type         Examples            Description
+=========  ===========  =================   ============================
+charge     int          -2,-1,0,1,2, ...    Electric charge of the atom
+=========  ===========  =================   ============================
+
+For each type, the attributes can be accessed directly. Both `AtomArray`
+and `AtomArrayStack` support `numpy` style indexing, the index is
+propagated to each attribute. If a single integer is used as index,
+an object with one dimension less is returned
+(`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
+Do not expect a deep copy, when sclicing an `AtomArray` or
+`AtomArrayStack`. The attributes of the sliced object may still point to
+the original `ndarray`.
+
 Based ony the implementation in `numpy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and visualisation.
-An `Entity` from `BIO.PDB` can be converted into an `AtomArrray` or
-`AtomArrayStack` and vice versa.
 """
 
 from .adjacency import *
