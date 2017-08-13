@@ -128,13 +128,6 @@ def _get_model_dict(atom_site_dict, model):
 
 
 def set_structure(pdbx_file, array, data_block=None):
-    """
-    if type(array) == AtomArrayStack:
-        models = array
-    elif type(array) == AtomArray:
-        models = [array]
-    else raise ValueError("Structure must be AtomArray or AtomArrayStack")
-    """
     atom_site_dict = OrderedDict()
     atom_site_dict["group_PDB"] = np.array(["ATOM" if e == False else "HETATM"
                                             for e in array.hetero])

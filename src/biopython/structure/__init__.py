@@ -18,13 +18,13 @@ scalar values and the coordinates as length 3 `ndarray`.
 An `AtomArray` stores data for an entire structure model containing *n*
 atoms. Therefore the annotations are represented as `ndarray`s of
 length *n*, so called annotation arrays. The coordinates are a (n x 3)
-`ndarray`.
+`ndarray` .
 `AtomArrayStack` stores data for *m* models. Each `AtomArray` in
 the `AtomArrayStack` has the same annotation arrays, since each atom
 must be represented in all models in the stack. Each model may differ in
 atom coordinates. Therefore the annotation arrays are represented as
-`ndarray`s of length *n*, while the coordinates are a (m x n x 3)
-`ndarray`.
+`ndarrays` of length *n*, while the coordinates are a (m x n x 3)
+`ndarray` .
 All types must not be subclassed.
 
 The following annotation categories are mandatory:
@@ -44,7 +44,8 @@ For all `Atom`, `AtomArray` and `AtomArrayStack` objects these
 annotations must be set, otherwise some functions will not work or
 errors will occur.
 Additionally to these annotations, an arbitrary amount of annotation
-categories can be added (Use `add_annotation()` for this).
+categories can be added (use `add_annotation()` or `add_annotation()`
+for this).
 The annotation arrays can be accessed either via the function
 `get_annotation()` or directly (e.g. ``array.res_id``).
 
@@ -63,11 +64,12 @@ propagated to each attribute. If a single integer is used as index,
 an object with one dimension less is returned
 (`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
 Do not expect a deep copy, when sclicing an `AtomArray` or
-`AtomArrayStack`. The attributes of the sliced object may still point to
-the original `ndarray`.
+`AtomArrayStack`. The attributes of the sliced object may still point
+to the original `ndarray` .
 
-Based ony the implementation in `numpy` arrays, this package furthermore
-contains functions for structure analysis, manipulation and visualisation.
+Based on the implementation in `numpy` arrays, this package furthermore
+contains functions for structure analysis, manipulation and
+visualisation.
 """
 
 from .adjacency import *

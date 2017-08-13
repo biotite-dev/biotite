@@ -63,6 +63,9 @@ def superimpose(fixed, mobile, ca_only=True):
     transformation can be applied on the original structure using
     `superimpose_apply()`.
     
+    References
+    ----------
+    
     .. [1] W Kabsch, "A solution for the best rotation to relate two sets of
        vectors." Acta Cryst, 32, 922-923 (1976).
        

@@ -69,6 +69,9 @@ def sasa(array, **kwargs):
     sasa : 1-D ndarray(dtype=bool)
         Atom-wise SASA. `NaN` for atoms where SASA has not been calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
+        
+    References
+    ----------
     
         .. [1] A Shrake and JA Rupley, "Environment and exposure to solvent of
            protein atoms. Lysozyme and insulin." J Mol Biol, 79,
@@ -80,6 +83,7 @@ def sasa(array, **kwargs):
            
         .. [3] A Bondi, "Van der Waals volumes and radii." J Phys Chem, 86,
            441-451 (1964).
+    
     """
     if "probe_radius" in kwargs:
         probe_radius = float(kwargs["probe_radius"])
