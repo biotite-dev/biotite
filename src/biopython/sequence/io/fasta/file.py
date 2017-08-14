@@ -31,11 +31,11 @@ class FastaFile(File):
         fasta_file._lines = copy.copy(self._lines)
         return fasta_file
     
-    def get_header(self, index):
+    def get_header(self, index=0):
         # Remove '>' in the header
         return self._lines[self._header_i[index]][1:]
     
-    def get_sequence(self, index):
+    def get_sequence(self, index=0):
         # Get lines belonging to the header
         # Check if index is last index in order to prevent IndexError
         if index+1 == len(self._header_i):
