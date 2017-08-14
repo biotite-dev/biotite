@@ -27,13 +27,13 @@ Subpackages
 -----------
 Biopython 2.0 currently consists of 4 subpackages:
 
-:doc:`Sequence <overview/application>`
-""""""""""""""""""""""""""""""""""""""
+:doc:`Application <overview/application>`
+"""""""""""""""""""""""""""""""""""""""""
 Command line and online applications can be managed with the ``application``
 subpackage.
 *This feature is not included yet.*
 
-:doc:`Sequence <overview/database>`
+:doc:`Database <overview/database>`
 """""""""""""""""""""""""""""""""""
 The ``database`` subpackage provides interfaces for searching in and fetching
 data from biologial databases like *NCBI* or *RCSB*.

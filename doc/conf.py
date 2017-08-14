@@ -170,6 +170,8 @@ todo_include_todos = False
 
 html_theme = 'alabaster'
 html_static_path = ['static']
+html_logo = 'assets/general/biopython_logo_xs.png'
+html_favicon = 'assets/general/biopython_icon_32p.png'
 htmlhelp_basename = 'BiopythonDoc'
 
 

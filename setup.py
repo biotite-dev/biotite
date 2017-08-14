@@ -26,7 +26,7 @@ setup(name="Biopython",
     command_options = {
         'build_sphinx':
             {"source_dir" : ("setup.py", "./doc"),
-             "config_dir" : ("setup.py", "./doc"),
-             "release"    : ("setup.py", release)}
+             "build_dir"  : ("setup.py", "./doc/_build"),
+             "release"    : ("setup.py", "2.0a2")}
     }
-    )
+)

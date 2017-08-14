@@ -14,7 +14,7 @@ __all__ = ["fetch"]
 
 _dowload_url = "http://ftp.ncbi.nih.gov/blast/matrices/"
 
-def fetch(matrix_name, overwrite=False, quiet=True):
+def fetch(matrix_name):
     r = requests.get(_dowload_url + matrix_name)
     content = r.text
     
