@@ -15,6 +15,10 @@ __all__ = ["FastaFile"]
 
 class FastaFile(File):
     
+    def __init__(self):
+        super().__init__()
+        self._header_i = []
+    
     def read(self, file_name):
         super().read(file_name)
         # Filter out empty and comment lines
