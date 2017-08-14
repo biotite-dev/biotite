@@ -256,6 +256,20 @@ class PDBxFile(File):
         pdbx_file = PDBxFile()
         pdbx_file._lines = copy.deepcopy(self._lines)
         pdbx_file._categories = copy.deepcopy(self._categories)
+        
+        
+    def __setitem__(self, index, item):
+        if isinstance(index, tuple):
+            self.set_category(index[1], item, block=index[0])
+        else:
+            self.set_category(index, item)
+    
+    
+    def __getitem__(self, index):
+        if isinstance(index, tuple):
+            return self.get_category(index[1], block=index[0])
+        else:
+            return self.get_category(index)
     
     
     def _add_category(self, block, category_name,
