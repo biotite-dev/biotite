@@ -21,7 +21,7 @@ class Alphabet(object):
         return copy.copy(self._parents)
     
     def extends(self, alphabet):
-        return alphabet in self._parents
+        return alphabet == self or alphabet in self._parents
     
     def encode(self, symbol):
         try:

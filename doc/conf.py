@@ -158,7 +158,6 @@ project = 'Biopython'
 copyright = '2017, Patrick Kunzmann'
 author = 'Patrick Kunzmann'
 version = '2.0'
-release = '2.0a1'
 
 exclude_patterns = ['build']
 
@@ -169,7 +168,7 @@ todo_include_todos = False
 
 ##### HTML #####
 
-html_theme = 'nature'
+html_theme = 'alabaster'
 html_static_path = ['static']
 htmlhelp_basename = 'BiopythonDoc'
 

@@ -1,6 +1,8 @@
 Biopython 2.0 documentation
 ===========================
-The Biopython package provides a general set of tool for computational biology
+
+
+The Biopython package provides a general set of tool for computational biology.
 
 Biopython 2.0 is an effort to rewrite Biopython in order to bring it on to
 modern scientific Python standards. The improvements of Biopython 2.0 include:
@@ -27,20 +29,17 @@ Biopython 2.0 currently consists of 4 subpackages:
 
 :doc:`Sequence <overview/application>`
 """"""""""""""""""""""""""""""""""""""
-
 Command line and online applications can be managed with the ``application``
 subpackage.
 *This feature is not included yet.*
 
 :doc:`Sequence <overview/database>`
 """""""""""""""""""""""""""""""""""
-
 The ``database`` subpackage provides interfaces for searching in and fetching
 data from biologial databases like *NCBI* or *RCSB*.
 
 :doc:`Sequence <overview/sequence>`
 """""""""""""""""""""""""""""""""""
-
 The ``sequence`` subpackage contains functionality for working with sequence
 information of any kind. The package contains by default sequence types for
 DNA, RNA and Proteins and allows conversion between them
@@ -51,7 +50,6 @@ functions for sequence manipulations and global/local alignments.
 
 :doc:`Structure <overview/structure>`
 """""""""""""""""""""""""""""""""""""
-
 The ``structure`` subpackage enables handling of 3D structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their properties,
 based on `numpy` arrays. The subpackage includes read/write functionality for

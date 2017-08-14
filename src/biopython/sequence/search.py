@@ -5,20 +5,28 @@
 
 import numpy as np
 
-__all__ = ["find_subsequence", "find_symbol"]
+__all__ = ["find_subsequence", "find_symbol", "find_symbol_first",
+           "find_symbol_last"]
 
 
 def find_subsequence(sequence, query):
-    if not sequence.get_alphabet.extends(query.get_alphabet()):
+    print("")
+    if not sequence.get_alphabet().extends(query.get_alphabet()):
         raise ValueError("The sequences alphabets are not equal")
     match_indices = []
     frame_size = len(query)
     for i in range(len(sequence) - frame_size + 1):
-        sub_seq = sequence._seq_code[i : i + frame_size]
-        if np.array_equal(query, sub_seq):
+        sub_seq_code = sequence.get_seq_code()[i : i + frame_size]
+        if np.array_equal(query.get_seq_code(), sub_seq_code):
             match_indices.append(i)
-    return match_indices
+    return np.array(match_indices)
 
 def find_symbol(sequence, symbol):
     code = sequence.get_alphabet().encode(symbol)
-    return numpy.where(self._seq_code == code)
+    return np.where(sequence.get_seq_code() == code)[0]
+
+def find_symbol_first(sequence, symbol):
+    return np.min(find_symbol(sequence, symbol))
+    
+def find_symbol_last(sequence, symbol):
+    return np.max(find_symbol(sequence, symbol))

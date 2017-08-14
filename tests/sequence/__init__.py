@@ -7,11 +7,13 @@ import unittest
 
 from .sequence import *
 from .fasta import *
+from .search import *
 
 loader = unittest.defaultTestLoader
 sequence_suite = unittest.TestSuite()
 sequence_suite.addTest(loader.loadTestsFromTestCase(SequenceTest))
 sequence_suite.addTest(loader.loadTestsFromTestCase(FastaTest))
+sequence_suite.addTest(loader.loadTestsFromTestCase(SearchTest))
 
 def run():
     runner = unittest.TextTestRunner()

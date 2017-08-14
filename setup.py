@@ -6,8 +6,10 @@
 from setuptools import setup, find_packages
 import sys
 
+release = "2.0a2"
+
 setup(name="Biopython",
-    version = "2.0a1",
+    version = release,
     description = "A set of general tools for computational biology",
     author = "The Biopython contributors",
     url = "https://github.com/padix-key/biopython2",
@@ -25,6 +27,6 @@ setup(name="Biopython",
         'build_sphinx':
             {"source_dir" : ("setup.py", "./doc"),
              "config_dir" : ("setup.py", "./doc"),
-             "build_dir"  : ("setup.py", "./doc/build")}
+             "release"    : ("setup.py", release)}
     }
     )
