@@ -21,25 +21,29 @@ class AdjacencyMap(object):
     
     This class stores the indices of an atom array in virtual "boxes",
     each corresponding to a specific coordinate interval. If the atoms
-    in vicinity of a specific location are searched, only the atoms in the
-    relevant boxes are checked. Effectively this decreases the operation time
-    from O(n) to O(1), after the `AdjacencyMap` has been created. Therefore
-    an `AdjacencyMap` saves calculation time in those cases, where vicinity is
-    checked for multiple locations.
+    in vicinity of a specific location are searched, only the atoms in
+    the relevant boxes are checked. Effectively this decreases the
+    operation time from O(n) to O(1), after the `AdjacencyMap` has been
+    created. Therefore an `AdjacencyMap` saves calculation time in those
+    cases, where vicinity is checked for multiple locations.
+    
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The `AtomArray` to create the `AdjacencyMap` for.
+    box_size: float
+        The coordinate interval each box has for x, y and z axis.
+        The amount of boxes depend on the protein size and the
+        `box_size`.
+            
+    Examples
+    --------
+    
+        >>> adj_map = AdjacencyMap(atom_array, box_size=5)
+        >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
     """
     
     def __init__(self, atom_array, box_size):
-        """
-        Create an `AdjacencyMap`.
-        
-        Parameters
-        ----------
-        atom_array : AtomArray
-            The `AtomArray` to create the `AdjacencyMap` for.
-        box_size: float
-            The coordinate interval each box has for x, y and z axis.
-            The amount of boxes depend on the protein size and the `box_size`.
-        """
         self.array = atom_array.copy()
         self.boxsize = box_size
         # calculate how many boxes are required for each dimension
@@ -64,16 +68,17 @@ class AdjacencyMap(object):
         Parameters
         ----------
         coord : ndarray(dtype=float)
-            The central coordinates, around which the atoms are searched.
+            The central coordinates, around which the atoms are
+            searched.
         radius: float
-            The radius around `coord`, in which the atoms are searched, i.e.
-            all atoms in `radius` distance to `coord` are returned.
+            The radius around `coord`, in which the atoms are searched,
+            i.e. all atoms in `radius` distance to `coord` are returned.
         
         Returns
         -------
         indices : ndarray(dtype=int)
-            The indices of the atom array, where the atoms are in the defined
-            vicinity around `coord`.
+            The indices of the atom array, where the atoms are in the
+            defined vicinity around `coord`.
             
         See Also
         --------
@@ -91,18 +96,20 @@ class AdjacencyMap(object):
         Parameters
         ----------
         coord : ndarray(dtype=float)
-            The central coordinates, around which the atoms are searched.
+            The central coordinates, around which the atoms are
+            searched.
         box_r: float
-            The radius around `coord` (in amount of boxes), in which the atoms
-            are searched. This does not correspond to the Euclidian distance
-            used in `get_atoms()`. In this case, all atoms in the box
-            corresponding to `coord` and in adjacent boxes are returned.
+            The radius around `coord` (in amount of boxes), in which the
+            atoms are searched. This does not correspond to the
+            Euclidian distance used in `get_atoms()`. In this case, all
+            atoms in the box corresponding to `coord` and in adjacent
+            boxes are returned.
         
         Returns
         -------
         indices : ndarray(dtype=int)
-            The indices of the atom array, where the atoms are in the defined
-            vicinity around `coord`.
+            The indices of the atom array, where the atoms are in the
+            defined vicinity around `coord`.
             
         See Also
         --------

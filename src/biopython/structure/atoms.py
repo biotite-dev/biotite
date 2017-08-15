@@ -320,6 +320,13 @@ class Atom(object):
     
     The coordinates an annotations can be accessed directly.
     
+    Parameters
+    ----------
+    coord: list or ndarray
+        the x, y and z coordinates
+    kwargs
+        atom annotations as key value pair
+    
     Attributes
     ----------
     {annot} : scalar
@@ -336,19 +343,10 @@ class Atom(object):
         CA
         >>> print(atom.coord)
         [1 2 3]
+        
     """
     
     def __init__(self, coord, **kwargs):
-        """
-        Create an `Atom`.
-        
-        Parameters
-        ----------
-        coord: list or ndarray
-            the x, y and z coordinates
-        kwargs
-            atom annotations as key value pair
-        """
         self._annot = {}
         if "kwargs" in kwargs:
             # kwargs are given directly as dictionary
@@ -379,9 +377,6 @@ class Atom(object):
             super().__setattr__(attr, value)
     
     def __str__(self):
-        """
-        String representation of the atom.
-        """
         string = ""
         for value in self._annot.values():
             string += str(value) + "\t"
@@ -422,8 +417,13 @@ class AtomArray(_AtomArrayBase):
     index returns a single `Atom` instance.
     
     Inserting or appending an `AtomArray` into another `AtomArray` is
-    done with the '+' operator. Only the annotation categories, which are 
-    existing in both arrays, are transferred to the new array.
+    done with the '+' operator. Only the annotation categories, which
+    are existing in both arrays, are transferred to the new array.
+    
+    Parameters
+    ----------
+    length : int
+        The fixed amount of atoms in the array.
     
     Attributes
     ----------
@@ -469,14 +469,6 @@ class AtomArray(_AtomArrayBase):
     """
     
     def __init__(self, length):
-        """
-        Create an `AtomArray`.
-        
-        Parameters
-        ----------
-        length : int
-            The initial array length.
-        """
         super().__init__(length)
         if length is None:
             self._coord = None
@@ -653,6 +645,16 @@ class AtomArrayStack(_AtomArrayBase):
     '+' operator. For addition of atom arrays onto the stack use the
     `stack()` method.
     
+    Parameters
+    ----------
+    depth : int
+        The fixed amount of arrays in the stack. When indexing, this is
+        the length of the first dimension.
+        
+    length : int
+        The fixed amount of atoms in each array in the stack. When
+        indexing, this is the length of the second dimension.
+    
     Attributes
     ----------
     {annot} : ndarray
@@ -692,16 +694,6 @@ class AtomArrayStack(_AtomArrayBase):
     """
     
     def __init__(self, depth, length):
-        """
-        Create an `AtomArrayStack`.
-        
-        Parameters
-        ----------
-        depth, length : int
-            If length and depth is given, the attribute arrays will be
-            created with zeros. `depth` corresponds to the first
-            dimension, `length` to the second.
-        """
         super().__init__(length)
         if depth == None or length == None:
             self._coord = None
@@ -896,6 +888,7 @@ class AtomArrayStack(_AtomArrayBase):
             string += str(array) + "\n" + "\n"
         return string
 
+
 def array(atoms):
     """
     Create an `AtomArray` from a list of `Atom`.
@@ -936,6 +929,7 @@ def array(atoms):
             array._annot[name][i] = atoms[i]._annot[name]
         array._coord[i] = atoms[i].coord
     return array
+
 
 def stack(arrays):
     """
