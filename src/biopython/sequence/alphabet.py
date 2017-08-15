@@ -5,7 +5,7 @@
 
 import copy
 
-__all__ = ["Alphabet", "AlphabetError"]
+__all__ = ["Alphabet", "AlphabetMapper", "AlphabetError"]
 
 
 class Alphabet(object):
@@ -13,6 +13,9 @@ class Alphabet(object):
     def __init__(self, symbols, parents=[]):
         self._symbols = copy.deepcopy(list(symbols))
         self._parents = copy.copy(list(parents))
+        self._symbol_dict = {}
+        for i, symbol in enumerate(symbols):
+            self._symbol_dict[symbol] = i
     
     def get_symbols(self):
         return copy.deepcopy(self._symbols)
@@ -25,8 +28,8 @@ class Alphabet(object):
     
     def encode(self, symbol):
         try:
-            return self._symbols.index(symbol)
-        except ValueError:
+            return self._symbol_dict[symbol]
+        except KeyError:
             raise AlphabetError(str(symbol) + " is not in the alphabet")
     
     def decode(self, code):
@@ -47,6 +50,19 @@ class Alphabet(object):
             yield self._symbols[i]
             i += 1
     
+
+class AlphabetMapper(object):
+    
+    def __init__(source_alphabet, target_alphabet):
+        self._mapper = [-1] * len(source_alphabet)
+        for i in range(len(source_alphabet)):
+            symbol = source_alphabet.decode(i)
+            new_code = target_alphabet.encode(symbol)
+            self._mapper[i] = new_code
+        
+    def __getitem__(code):
+        return self._mapper[code]
+
 
 class AlphabetError(Exception):
     pass
