@@ -87,8 +87,8 @@ def rotate_centered(atoms, angles):
     """
     Rotates a list of atoms by given angles.
     
-    The rotations are centered at the centroid of the corresponding structure
-    and are performed sequentially in the order x,y,z.
+    The rotations are centered at the centroid of the corresponding
+    structure and are performed sequentially in the order x,y,z.
     
     Parameters
     ----------

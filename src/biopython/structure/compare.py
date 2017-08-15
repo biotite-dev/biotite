@@ -90,8 +90,8 @@ def average(atom_arrays):
     """
     Calculate an average structure
     
-    Calculate the average structure by calculating the average coordinates
-    of each atom.
+    Calculate the average structure by calculating the average
+    coordinates of each atom.
     
     Parameters
     ----------
@@ -122,15 +122,16 @@ def average(atom_arrays):
 
 def _sq_euclidian(reference, subject):
     """
-    Calculate squared euclidian distance between atoms in two structures.
+    Calculate squared euclidian distance between atoms in two
+    structures.
     
     Parameters
     ----------
     reference : AtomArray
         Reference structure.
     subject : AtomArray or AtomArrayStack
-        Structure(s) whose atoms squared euclidian distance to `reference`
-        is measured.
+        Structure(s) whose atoms squared euclidian distance to
+        `reference` is measured.
     
     Returns
     -------

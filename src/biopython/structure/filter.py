@@ -4,7 +4,8 @@
 # as part of this package.
 
 """
-This module provides utility functions for creating filters on atom arrays and atom array stacks.
+This module provides utility functions for creating filters on atom
+arrays and atom array stacks.
 """
 
 import numpy as np
@@ -24,7 +25,7 @@ def filter_amino_acids(array):
     
     Parameters
     ----------
-    array : AtomArray
+    array : AtomArray or AtomArrayStack
         The array to be filtered.
     
     Returns
@@ -40,11 +41,11 @@ def filter_backbone(array):
     """
     Filter all peptide backbone atoms of one array.
     
-    This includes the "N","CA" and "C" atoms of amino acids.
+    This includes the "N", "CA" and "C" atoms of amino acids.
     
     Parameters
     ----------
-    array : AtomArray
+    array : AtomArray or AtomArrayStack
         The array to be filtered.
     
     Returns
@@ -69,7 +70,7 @@ def filter_intersection(array, intersect):
     
     Parameters
     ----------
-    array : AtomArray
+    array : AtomArray or AtomArrayStack
         The array to be filtered.
     intersect : AtomArray
         Atoms in `array` are filtered that exists also in this

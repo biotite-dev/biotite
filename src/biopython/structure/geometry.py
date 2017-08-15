@@ -4,8 +4,8 @@
 # as part of this package.
 
 """
-This module provides functions for geometric measurements between atoms in a
-structure, mainly lenghts and angles.
+This module provides functions for geometric measurements between atoms
+in a structure, mainly lenghts and angles.
 """
 
 import numpy as np
@@ -19,19 +19,21 @@ __all__ = ["distance", "centroid", "angle", "dihedral", "dihedral_backbone"]
 
 def distance(atoms1, atoms2):
     """
-    Measures the euclidian distance between atoms.
+    Measure the euclidian distance between atoms.
     
     Parameters
     ----------
     atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
-        The atoms to measure the distances between. The dimensions may vary.
-        Alternatively an ndarray containing the coordinates can be provided.
+        The atoms to measure the distances between. The dimensions may
+        vary. Alternatively an ndarray containing the coordinates can be
+        provided.
     
     Returns
     -------
     dist : float or ndarray
         The atom distances. The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the last axis.
+        the input `atoms` with the highest dimensionality minus the last
+        axis.
     """
     v1 = coord(atoms1)
     v2 = coord(atoms2)
@@ -47,38 +49,41 @@ def distance(atoms1, atoms2):
 
 def centroid(atoms):
     """
-    Measures the centroid of a structure.
+    Measure the centroid of a structure.
     
     Parameters
     ----------
     atoms: ndarray orAtomArray or AtomArrayStack
         The structures to determine the centroid from.
-        Alternatively an ndarray containing the coordinates can be provided.
+        Alternatively an ndarray containing the coordinates can be
+        provided.
     
     Returns
     -------
     centroid : float or ndarray
-        The centroid of the structure(s). The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the second last axis.
+        The centroid of the structure(s). The shape is equal to the
+        shape of the input `atoms` with the highest dimensionality minus
+        the second last axis.
     """
     return np.mean(coord(atoms), axis=-2)
 
 
 def angle(atom1, atom2, atom3):
     """
-    Measures the angle between 3 atoms.
+    Measure the angle between 3 atoms.
     
     Parameters
     ----------
     atoms1, atoms2, atoms3 : ndarray or Atom or AtomArray or AtomArrayStack
-        The atoms to measure the angle between.
-        Alternatively an ndarray containing the coordinates can be provided.
+        The atoms to measure the angle between. Alternatively an ndarray
+        containing the coordinates can be provided.
     
     Returns
     -------
     angle : float or ndarray
-        The angle(s) between the atoms. The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the last axis.
+        The angle(s) between the atoms. The shape is equal to the shape
+        of the input `atoms` with the highest dimensionality minus the
+        last axis.
     """
     v1 = coord(atom2) - coord(atom1)
     v2 = coord(atom3) - coord(atom2)
@@ -89,19 +94,21 @@ def angle(atom1, atom2, atom3):
 
 def dihedral(atom1, atom2, atom3, atom4):
     """
-    Measures the dihedral angle between 4 atoms.
+    Measure the dihedral angle between 4 atoms.
     
     Parameters
     ----------
     atoms1, atoms2, atoms3, atom4 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the dihedral angle between.
-        Alternatively an ndarray containing the coordinates can be provided.
+        Alternatively an ndarray containing the coordinates can be
+        provided.
     
     Returns
     -------
     dihed : float or ndarray
-        The dihedral angle(s) between the atoms. The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the last axis.
+        The dihedral angle(s) between the atoms. The shape is equal to
+        the shape of the input `atoms` with the highest dimensionality
+        minus the last axis.
     
     See Also
     --------
@@ -125,36 +132,52 @@ def dihedral(atom1, atom2, atom3, atom4):
 
 def dihedral_backbone(atom_array, chain_id):
     """
-    Measures the characteristic backbone dihedral angles of a structure.
+    Measure the characteristic backbone dihedral angles of a structure.
     
     Parameters
     ----------
     atom_array: AtomArray
         The protein structure.
     chain_id: string
-        The ID of the polypeptide chain. The dihedral angles are calculated
-        for ``atom_array[atom_array.chain_id == chain_id]``
+        The ID of the polypeptide chain. The dihedral angles are
+        calculated for ``atom_array[atom_array.chain_id == chain_id]``
     
     Returns
     -------
-    psi : 1-D ndarray
-        An array containing the *psi* dihedral angles. The index *n* represents
-        the section between CA(n+1) and CA(n+2). Therefore the length of this
-        array is the length of the AtomArray -1.
-    omega : 1-D ndarray
-        An array containing the *omega* dihedral angles. Indexing as above.
-    phi : 1-D ndarray
-        An array containing the *phi* dihedral angles. Indexing as above.
+    psi, omega, phi : 1-D ndarray
+        An array containing the 3 backbone dihedral angles. The array
+        index *n* represents the angles in the section between *CA(n)*
+        and *CA(n+1)*. Therefore the length of this array is the length
+        of the AtomArray -1. This differs from the angle definition in
+        biology, since *psi(n)* and *phi(n)* are defined as the angles
+        next to *CA(n)*. The indices of *phi* need to be shifted by 1 
+        for this. 
     
     Raises
     ------
     BadStructureError
-        If the amount of backbone atoms is not equal to amount of residues*3
-        (for N, CA and C).
+        If the amount of backbone atoms is not equal to amount of
+        residues times 3 (for N, CA and C).
     
     See Also
     --------
     dihedral
+    
+    Examples
+    --------
+        
+        >>> pdbx_file = PDBxFile()
+        >>> pdbx_file.read("1l2y.cif")
+        >>> array = pdbx.get_structure(pdbx_file, model=1)
+        >>> psi, omega, phi = struc.dihedral_backbone(array, "A")
+        >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi), linestyle="None", marker="o")
+        >>> plt.xlim(-180, 180)
+        >>> plt.ylim(-180, 180)
+        >>> plt.show()
+    
+    Output
+    
+    .. image:: /assets/examples/dihedral.svg
     """
     try:
         # Filter all backbone atoms
