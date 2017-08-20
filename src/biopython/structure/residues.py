@@ -53,10 +53,12 @@ def apply_residue_wise(array, data, function, axis=None):
     Calculate residue-wise SASA from atom-wise SASA of a 20 residue
     peptide.
     
-        >>> sasa = struc.sasa(atom_array)
-        >>> print(len(sasa))
+        >>> sasa_per_atom = sasa(atom_array)
+        >>> print(len(sasa_per_atom))
         154
-        >>> sasa_per_residue = struc.apply_residue_wise(atom_array, sasa, np.sum)
+        >>> sasa_per_residue = struc.apply_residue_wise(atom_array,
+                                                        sasa_per_atom,
+                                                        np.sum)
         >>> print(len(sasa_per_residue))
         20
         >>> print(sasa_per_residue)
@@ -69,7 +71,7 @@ def apply_residue_wise(array, data, function, axis=None):
     
         >>> print(len(atom_array))
         154
-        >>> centroids = struc.apply_residue_wise(atom_array, atom_array.coord,
+        >>> centroids = apply_residue_wise(atom_array, atom_array.coord,
         ...                                      np.average, axis=0)
         >>> print(len(centroids))
         20

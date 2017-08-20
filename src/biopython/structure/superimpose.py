@@ -18,7 +18,9 @@ def superimpose(fixed, mobile, ca_only=True):
     """
     Superimpose structures on a fixed structure.
     
-    The superimposition is performed using the Kabsch algorithm [1]_ [2]_.
+    The superimposition is performed using the Kabsch algorithm
+    [1]_ [2]_, so that the RMSD between the superimposed and the fixed
+    structure is minimized.
     
     Parameters
     ----------
@@ -39,9 +41,9 @@ def superimpose(fixed, mobile, ca_only=True):
         A copy of the `mobile` structure(s),
         superimposed on the fixed structure.
     transformation : tuple or tuple list
-        The tuple contains the transformations that were applied on `mobile`.
-        This can be used in `apply_superimposition()` in order to transform
-        another AtomArray in the same way.
+        The tuple contains the transformations that were applied on
+        `mobile`. This can be used in `apply_superimposition()` in order
+        to transform another AtomArray in the same way.
         The first element contains the translation vector for moving the
         centroid into the origin.
         The second element contains the rotation matrix.
@@ -56,21 +58,43 @@ def superimpose(fixed, mobile, ca_only=True):
     Notes
     -----
     The `transformation` tuple can be used in `superimpose_apply()` in
-    order to transform another `AtomArray` in the same way. This can come in
-    handy, in case you want to superimpose two structures with different
-    amount of atoms. Often the two structures can be sliced in order to
-    obtain the same size and annotation arrays. After superimposition the
-    transformation can be applied on the original structure using
-    `superimpose_apply()`.
+    order to transform another `AtomArray` in the same way. This can
+    come inhandy, in case you want to superimpose two structures with
+    different amount of atoms. Often the two structures can be sliced in
+    order to obtain the same size and annotation arrays. After
+    superimposition the transformation can be applied on the original
+    structure using `superimpose_apply()`.
     
     References
     ----------
     
-    .. [1] W Kabsch, "A solution for the best rotation to relate two sets of
-       vectors." Acta Cryst, 32, 922-923 (1976).
+    .. [1] W Kabsch, "A solution for the best rotation to relate two
+    sets of vectors." Acta Cryst, 32, 922-923 (1976).
        
-    .. [2] W Kabsch, "A discussion of the solution for the best rotation to
-       relate two sets of vectors." Acta Cryst, 34, 827-828 (1978).
+    .. [2] W Kabsch, "A discussion of the solution for the best rotation
+    to relate two sets of vectors." Acta Cryst, 34, 827-828 (1978).
+    
+    Examples
+    --------
+    
+    Superimpose two models of 20 residue peptide, randomly
+    rotate/translate one of them and superimpose it onto the other
+    model:
+    
+        >>> file = PDBxFile()
+        >>> file.read("tests/structure/data/1l2y.cif")
+        >>> array1 = get_structure(file, model=1)
+        >>> array2 = get_structure(file, model=2)
+        >>> array2 = translate(array2, [1,2,3])
+        >>> array2 = rotate(array2, [1,2,3])
+        >>> print(rmsd(array1, array2))
+        10.8492095649
+        >>> array2_fit, transformation = superimpose(array1, array2, ca_only=True)
+        >>> print(rmsd(array1, array2_fit))
+        1.95480879468
+        >>> array2_fit, transformation = superimpose(array1, array2, ca_only=False)
+        >>> print(rmsd(array1, array2_fit))
+        1.92792691375
     """
     if type(fixed) != AtomArray:
         raise ValueError("Reference must be AtomArray")
@@ -96,10 +120,6 @@ def superimpose(fixed, mobile, ca_only=True):
 def _superimpose(fixed, mobile, ca_only):
     """
     Performs the actual superimposition.
-    
-    See Also
-    --------
-    superimpose
     """
     if type(mobile) == AtomArray:
         mob_centroid = centroid(mobile)
@@ -108,8 +128,8 @@ def _superimpose(fixed, mobile, ca_only):
             # For performance reasons the Kabsch algorithm
             # is only performed with "CA" per default
             # Implicitly this creates array copies
-            mob_centered = mobile.coord[(mobile.atom_name == " CA ")]
-            fix_centered = fixed.coord[(fixed.atom_name == " CA ")]
+            mob_centered = mobile.coord[(mobile.atom_name == "CA")]
+            fix_centered = fixed.coord[(fixed.atom_name == "CA")]
         else:
             mob_centered = np.copy(mobile.coord)
             fix_centered = np.copy(fixed.coord)

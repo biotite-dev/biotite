@@ -14,8 +14,7 @@ def simple_view(fig, atom_arrays):
     """
     Show the structure using a `matplotlib` 3-D plot.
     
-    This is a very simply visualisation function, which is best suited for
-    AtomArrays containing only the backbone atoms.
+    This is a very simply visualisation function.
     
     Parameters
     ----------
@@ -38,7 +37,7 @@ def simple_view(fig, atom_arrays):
     ax.set_ylim(-10,10)
     ax.set_zlim(-10,10)
     for atom_array in atom_arrays:
-        atom_array = atom_array[(atom_array.atom_name == " CA ")]
+        atom_array = atom_array[(atom_array.atom_name == "CA")]
         ax.plot(atom_array.coord[:,0],
                  atom_array.coord[:,1],
                  atom_array.coord[:,2],)

@@ -58,7 +58,7 @@ def sasa(array, **kwargs):
         
             - **ProtOr** - A set, which does not require hydrogen atoms in
               the model. Suitable for crystal structures. [2]_
-            - **Single** - A set, which uses a defines VdW radius for every
+            - **Single** - A set, which uses a defined VdW radius for every
               single atom, therefore hydrogen atoms are required in the
               model (e.g. NMR elucidated structures). [3]_
         By default *ProtOr* is used.
