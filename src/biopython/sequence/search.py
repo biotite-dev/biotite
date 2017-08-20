@@ -10,7 +10,6 @@ __all__ = ["find_subsequence", "find_symbol", "find_symbol_first",
 
 
 def find_subsequence(sequence, query):
-    print("")
     if not sequence.get_alphabet().extends(query.get_alphabet()):
         raise ValueError("The sequences alphabets are not equal")
     match_indices = []

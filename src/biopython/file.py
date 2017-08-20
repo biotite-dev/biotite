@@ -10,6 +10,26 @@ __all__ = ["File"]
 
 class File(metaclass=abc.ABCMeta):
     
+    @abc.abstractmethod
+    def __init__(self):
+        pass
+    
+    @abc.abstractmethod
+    def read(self, file_name):
+        pass
+    
+    @abc.abstractmethod
+    def write(self, file_name):
+        pass
+    
+    @abc.abstractmethod
+    def copy():
+        pass
+
+
+
+class TextFile(File, metaclass=abc.ABCMeta):
+    
     def __init__(self):
         self._lines = []
     
@@ -21,7 +41,3 @@ class File(metaclass=abc.ABCMeta):
     def write(self, file_name):
         with open(file_name, "w") as f:
             f.writelines([line+"\n" for line in self._lines])
-    
-    @abc.abstractmethod
-    def copy():
-        pass

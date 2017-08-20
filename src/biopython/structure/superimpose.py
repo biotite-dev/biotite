@@ -16,7 +16,7 @@ __all__ = ["superimpose", "superimpose_apply"]
 
 def superimpose(fixed, mobile, ca_only=True):
     """
-    Superimpose structures on a fixed structure.
+    Superimpose structures onto a fixed structure.
     
     The superimposition is performed using the Kabsch algorithm
     [1]_ [2]_, so that the RMSD between the superimposed and the fixed
@@ -31,7 +31,7 @@ def superimpose(fixed, mobile, ca_only=True):
         structure. Both, `fixed` and `mobile` should have equal
         annotation arrays and must have equal sizes.
     ca_only: bool, optional
-        If True, the function performs the superimpostion
+        If True, the function performs the superimposition
         considering only the "CA" atoms. This increases the
         performance drastically but decreases the accuracy slightly.
     
@@ -82,7 +82,7 @@ def superimpose(fixed, mobile, ca_only=True):
     model:
     
         >>> file = PDBxFile()
-        >>> file.read("tests/structure/data/1l2y.cif")
+        >>> file.read("1l2y.cif")
         >>> array1 = get_structure(file, model=1)
         >>> array2 = get_structure(file, model=2)
         >>> array2 = translate(array2, [1,2,3])

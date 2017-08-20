@@ -5,12 +5,12 @@
 
 import shlex
 import numpy as np
-from ....file import File
+from ....file import TextFile
 
 __all__ = ["PDBxFile"]
 
 
-class PDBxFile(File):
+class PDBxFile(TextFile):
     
     def __init__(self):
         super().__init__()

@@ -5,7 +5,7 @@
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
-from ....file import File
+from ....file import TextFile
 from ...error import BadStructureError
 import copy
 
@@ -28,7 +28,34 @@ _atom_records = {"hetero"    : (0,  6),
                  "element"   : (76, 78),
                  "charge"    : (78, 80),}
 
-class PDBFile(File):
+class PDBFile(TextFile):
+    """
+    This class represents a PDB file.
+    
+    The usage of PDBxFile is encouraged in favor of this class.
+    
+    This class only provides suppert reading/writing the pure atom
+    information (*ATOM*, *HETATM, *MODEL* and *ENDMDL* records). *TER*
+    records cannot be written.
+    
+    See also
+    --------
+    PDBxFile
+    
+    Examples
+    --------
+    Load a `*.pdb` file, modify the structure and save the new
+    structure into a new file:
+    
+        >>> file = PDBFile()
+        >>> file.read("1l2y.pdb")
+        >>> array_stack = file.get_structure()
+        >>> array_stack_mod = rotate(array_stack, [1,2,3])
+        >>> file = PDBFile()
+        >>> file.set_structure(array_stack_mod)
+        >>> file.write("1l2y_mod.pdb")
+    
+    """
     
     def copy(self):
         pdb_file = PDBFile()
@@ -36,6 +63,15 @@ class PDBFile(File):
         pdb_file._categories = copy.deepcopy(self._categories)
     
     def get_structure(self):
+        """
+        Get an `AtomArray` or `AtomArrayStack` from the PDB file.
+        
+        Returns
+        -------
+        array : AtomArray or AtomArrayStack
+            A stack is returned, if this file contains multiple models,
+            otherwise an array is returned.
+        """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self._lines))
                                   if self._lines[i].startswith(("MODEL"))])
@@ -88,6 +124,16 @@ class PDBFile(File):
         return array
         
     def set_structure(self, array):
+        """
+        Set the `AtomArray` or `AtomArrayStack` for the file.
+        
+        Parameters
+        ----------
+        array : AtomArray or AtomArrayStack
+            The array or stack to be saved into this file. If a stack
+            is given, each array in the stack is saved as separate
+            model.
+        """
         atom_id = np.arange(1, array.array_length()+1)
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
         try:
