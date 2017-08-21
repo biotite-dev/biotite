@@ -180,7 +180,7 @@ def dihedral_backbone(atom_array, chain_id):
     
     Output
     
-    .. image:: /assets/examples/dihedral.svg
+    .. image:: /static/assets/examples/dihedral.svg
     """
     try:
         # Filter all backbone atoms

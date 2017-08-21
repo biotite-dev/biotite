@@ -22,7 +22,7 @@ class NpzFile(TextFile):
     
     Examples
     --------
-    Load a `\*.npz file, modify the structure and save the new
+    Load a \*.npz file, modify the structure and save the new
     structure into a new file:
     
         >>> file = NpzFile()

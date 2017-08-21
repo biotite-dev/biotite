@@ -143,43 +143,54 @@ package_path = join( dirname(dirname(realpath(__file__))), "src" )
 sys.path.insert(0, package_path)
 create_api_doc(package_path, "apidoc")
 
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.doctest',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.viewcode',
-              'numpydoc']
+extensions = ["sphinx.ext.autodoc",
+              "sphinx.ext.autosummary",
+              "sphinx.ext.doctest",
+              "sphinx.ext.mathjax",
+              "sphinx.ext.viewcode",
+              "numpydoc"]
 
-templates_path = ['templates']
-source_suffix = ['.rst']
-master_doc = 'index'
+templates_path = ["templates"]
+source_suffix = [".rst"]
+master_doc = "index"
 
-project = 'Biopython'
-copyright = '2017, Patrick Kunzmann'
-author = 'Patrick Kunzmann'
-version = '2.0'
+project = "Biopython"
+copyright = "2017, Patrick Kunzmann"
+author = "Patrick Kunzmann"
+version = "2.0"
 
-exclude_patterns = ['build']
+exclude_patterns = ["build"]
 
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 todo_include_todos = False
 
 
 ##### HTML #####
 
-html_theme = 'alabaster'
-html_static_path = ['static']
-html_logo = 'assets/general/biopython_logo_xs.png'
-html_favicon = 'assets/general/biopython_icon_32p.png'
-htmlhelp_basename = 'BiopythonDoc'
-
+html_theme = "alabaster"
+html_static_path = ["static"]
+html_logo = "static/assets/general/biopython_logo_xs.png"
+html_favicon = "static/assets/general/biopython_icon_32p.png"
+htmlhelp_basename = "BiopythonDoc"
+html_theme_options = {
+    "description"      : "A set of general tools "
+                         "for computational biology",
+    "github_user"      : "padix-key",
+    "github_repo"      : "biopython2",
+    "github_banner"    : "true",
+    "extra_nav_links"  : {"Overview" : "index",
+                          "API Reference" : "apidoc/biopython"},
+    "page_width"       : "85%",
+    "fixed_sidebar"    : "true"
+    
+}
 
 ##### LaTeX #####
 
 latex_elements = {}
 latex_documents = [
-    (master_doc, 'Biopython.tex', 'Biopython Documentation',
-     'Patrick Kunzmann', 'manual'),
+    (master_doc, "Biopython.tex", "Biopython Documentation",
+     "Patrick Kunzmann", "manual"),
 ]
 

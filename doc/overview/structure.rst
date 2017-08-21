@@ -91,7 +91,7 @@ CA atoms of all models compared to the averaged structure.
 	
 Output:
 
-.. image:: /assets/examples/rmsf.svg
+.. image:: /static/assets/examples/rmsf.svg
 
 As we can see, the CA position is most variable at the first and last position.
 Now we test the superimposition capabilities: We extract the first and the
@@ -130,7 +130,7 @@ Output:
 
 ``RMSD = 1.9548087935``
 
-.. image:: /assets/examples/superimpose.svg
+.. image:: /static/assets/examples/superimpose.svg
 
 And finally we want to create a Ramachandran plot of the first model in the
 structure.
@@ -155,4 +155,4 @@ structure.
 	
 Output:
 	
-.. image:: /assets/examples/dihedral.svg
+.. image:: /static/assets/examples/dihedral.svg
