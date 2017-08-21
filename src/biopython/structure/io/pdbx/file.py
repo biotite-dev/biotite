@@ -11,6 +11,69 @@ __all__ = ["PDBxFile"]
 
 
 class PDBxFile(TextFile):
+    """
+    This class represents a PDBx/mmCIF file.
+    
+    The categories of the file can be accessed using the
+    `get_category()`/`set_category()` methods. The content of each
+    category is represented, by a dictionary. The dictionary contains
+    the entry (e.g. *label_entity_id* in *atom_site*) as key. The
+    corresponding values are either strings in *non-looped* categories,
+    or 1-D numpy arrays of string objects in case of *looped*
+    categories.
+    
+    A category can be changed or added using `set_category()`:
+    If a string-valued dictionary is provided, a *non-looped* category
+    will be created; if an array-valued dictionary is given, a
+    *looped* category will be created. In case of arrays, it is
+    important that all arrays have the same size.
+    
+    Alternatively, The content of this file can also be read/write
+    accessed using dictionary-like indexing:
+    You can either provide a data block and a category or only a
+    category, in which case the first data block is taken.
+    
+    Notes
+    -----
+    This class is also able to detect and parse multiline entries in the
+    file. However, when writing a category no multiline values are used.
+    This could lead to long lines.
+    
+    This class uses a lazy category dictionary creation: When reading
+    the file only the line positions of all categories are checked. The
+    time consuming task of dictionary creation is done when
+    `get_category()` is called.
+    
+    Examples
+    --------
+    Read the file and get author names
+
+        >>> file = PDBxFile()
+        >>> file.read("1l2y.cif")
+        >>> author_dict = file.get_category("citation_author", block="1L2Y")
+        >>> print(author_dict["name"])
+        ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
+    
+    Dictionary style indexing, no specification of data block:
+    
+        >>> print(file["citation_author"]["name"])
+        ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
+    
+    Get the structure from the file:
+    
+        >>> arr = get_structure(file)
+        >>> print(type(arr))
+        <class 'biopython.structure.atoms.AtomArrayStack'>
+        >>> arr = get_structure(file, model=1)
+        >>> print(type(arr))
+        <class 'biopython.structure.atoms.AtomArray'>
+    
+    Modify atom array and write it back into the file:
+    
+        >>> arr_mod = rotate(arr, [1,2,3])
+        >>> set_structure(file, arr_mod)
+        >>> file.write("1l2y_mod.cif")
+    """
     
     def __init__(self):
         super().__init__()
@@ -77,6 +140,14 @@ class PDBxFile(TextFile):
     
     
     def get_block_names(self):
+        """
+        Get the names of all data blocks in the file.
+        
+        Returns
+        -------
+        blocks : list
+            List of data block names.
+        """
         blocks = []
         for category_tuple in self._categories.keys():
             block = category_tuple[0]
@@ -86,6 +157,24 @@ class PDBxFile(TextFile):
     
     
     def get_category(self, category, block=None):
+        """
+        Get the dictionary for a given category.
+        
+        Parameters
+        ----------
+        category : string
+            The name of the category. The leading underscore is omitted.
+        block : string, optional
+            The name of the data block. Default is the first
+            (and most times only) data block of the file.
+            
+        Returns
+        -------
+        category_dict : dict
+            A entry keyed dictionary. The corresponding values are
+            strings or `ndarrays` of strings for *non-looped* and
+            *looped* categories, respectively.
+        """
         if block is None:
             block = self.get_block_names()[0]
         category_info = self._categories[(block, category)]
@@ -138,6 +227,31 @@ class PDBxFile(TextFile):
             
     
     def set_category(self, category, category_dict, block=None, quote=True):
+        """
+        Set the content of a category.
+        
+        If the category is already exisiting, all lines corresponding
+        to the category are replaced. Otherwise a new category is
+        created and the lines are appended at the end of the data block.
+        
+        Parameters
+        ----------
+        category : string
+            The name of the category. The leading underscore is omitted.
+        category_dict : dict
+            The category content. The dictionary must have strings
+            (subcategories) as keys and strings or `ndarrays` as
+            values.
+        block : string, optional
+            The name of the data block. Default is the first
+            (and most times only) data block of the file. If the
+            block is not contained in the file yet, a new block is
+            appended at the end of the file.
+        quote : bool, optional
+            If true, every dictionary value is put into quotes if
+            necessary. This task might be time consuming.
+            True by default.
+        """
         if block is None:
             block = self.get_block_names()[0]
             
@@ -147,6 +261,7 @@ class PDBxFile(TextFile):
             is_looped = False
             
         if quote:
+            # Escape quotes if required
             for key, value in category_dict.items():
                 if is_looped:
                     for i in range(len(value)):
@@ -177,9 +292,9 @@ class PDBxFile(TextFile):
             new_lines = ["loop_"] + key_lines + value_lines
             
         else:
-            # For better readability not only one space is inserted after each
-            # key, but as much spaces that every value starts at the same
-            # position in the line
+            # For better readability, not only one space is inserted
+            # after each key, but as much spaces that every value starts
+            # at the same position in the line
             max_len = 0
             for key in category_dict.keys():
                 if len(key) > max_len:

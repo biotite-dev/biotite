@@ -14,6 +14,24 @@ __all__ = ["get_sequence", "get_structure", "set_structure"]
 
 
 def get_sequence(pdbx_file, data_block=None):
+    """
+    Get the protein sequences from the
+    `entity_poly.pdbx_seq_one_letter_code_can` entry. 
+    
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    data_block : string, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+        
+    Returns
+    -------
+    sequences : list of ProteinSequence
+        The protein sequences for each entity (equivalent to chain in
+        most cases).
+    """
     poly_dict = pdbx_file.get_category("entity_poly", data_block)
     seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
     sequences = []
@@ -25,8 +43,56 @@ def get_sequence(pdbx_file, data_block=None):
     return sequences
 
 
-def get_structure(pdbx_file, data_block=None, insertion_code=None,
-                  altloc=None, model=None, extra_fields=None):
+def get_structure(pdbx_file, data_block=None, insertion_code=[],
+                  altloc=[], model=None, extra_fields=[]):
+    """
+    Create an `AtomArray` or `AtomArrayStack` from a `atom_site`
+    category.
+    
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    data_block : string, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+    insertion_code : list of tuple, optional
+        In case the structure contains insertion codes, those can be
+        specified here: Each tuple consists of an integer, specifying
+        the residue ID, and a letter, specifying the insertion code.
+        By default no insertions are used.
+    altloc : list of tuple, optional
+        In case the structure contains *altloc* entries, those can be
+        specified here: Each tuple consists of an integer, specifying
+        the residue ID, and a letter, specifying the *altloc* ID.
+        By default the location with the *altloc* ID "A" is used.
+    model : int, optional
+        If this parameter is given, the function will return an
+        `AtomArray` from the atoms corresponding to the given model ID.
+        If this parameter is omitted, an `AtomArrayStack` containing all
+        models will be returned, even if the structure contins only one
+        model.
+    extra_fields : list of str, optional
+        The strings in the list are entry names, that are
+        additionally added as annotation arrays.
+        The annotation category name will be the same as the PDBx
+        subcategroy name. The array type is always `str`.
+        
+    Returns
+    -------
+    array : AtomArray or AtomArrayStack
+        The return type depends on the `model` parameter.
+        
+    Examples
+    --------
+
+        >>> file = PDBxFile()
+        >>> file.read("1l2y.cif")
+        >>> arr = get_structure(file, model=1)
+        >>> print(len(arr))
+        304
+    
+    """
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
     if model is None:
@@ -74,29 +140,27 @@ def _fill_annotations(array, model_dict, extra_fields):
     array.set_annotation("hetero", (model_dict["group_PDB"] == "HETATM"))
     array.set_annotation("atom_name", model_dict["label_atom_id"].astype("U6"))
     array.set_annotation("element", model_dict["type_symbol"].astype("U2"))
-    if extra_fields is not None:
-        for field in extra_fields:
-            field_name = field[0]
-            annot_name = field[1]
-            array.set_annotation(annot_name, model_dict[field_name])
+    for field in extra_fields:
+        field_name = field[0]
+        annot_name = field[1]
+        array.set_annotation(annot_name, model_dict[field_name].astype(str))
 
 
 def _filter_inscode_altloc(array, model_dict, inscode, altloc):
     try:
         inscode_array = model_dict["pdbx_PDB_ins_code"]
         # Default: Filter all atoms with insertion code ".", "?" or "A"
-        inscode_filter = np.in1d(inscode_array, [".","?","A"],
+        inscode_filter = np.in1d(inscode_array, [".","?"],
                                  assume_unique=True)
         # Now correct filter for every given insertion code
-        if inscode is not None:
-            for code in inscode:
-                residue = code[0]
-                insertion = code[1]
-                residue_filter = (array.res_id == residue)
-                # Reset (to False) filter for given res_id
-                inscode_filter &= ~residue_filter
-                # Choose atoms of res_id with insertion code
-                inscode_filter |= residue_filter & (inscode_array == insertion)
+        for code in inscode:
+            residue = code[0]
+            insertion = code[1]
+            residue_filter = (array.res_id == residue)
+            # Reset (to False) filter for given res_id
+            inscode_filter &= ~residue_filter
+            # Choose atoms of res_id with insertion code
+            inscode_filter |= residue_filter & (inscode_array == insertion)
     except KeyError:
         # In case no insertion code column is existent
         inscode_filter = np.full(array.array_length(), True)
@@ -105,13 +169,12 @@ def _filter_inscode_altloc(array, model_dict, inscode, altloc):
         altloc_array = model_dict["label_alt_id"]
         altloc_filter = np.in1d(altloc_array, [".","?","A"],
                                 assume_unique=True)
-        if altloc is not None:
-            for loc in altloc:
-                residue = loc[0]
-                altloc = loc[1]
-                residue_filter = (array.res_id == residue)
-                altloc_filter &= ~residue_filter
-                altloc_filter |= residue_filter & (altloc_array == altloc)
+        for loc in altloc:
+            residue = loc[0]
+            altloc = loc[1]
+            residue_filter = (array.res_id == residue)
+            altloc_filter &= ~residue_filter
+            altloc_filter |= residue_filter & (altloc_array == altloc)
     except KeyError:
         altloc_filter = np.full(array.array_length(), True)
         
@@ -129,6 +192,32 @@ def _get_model_dict(atom_site_dict, model):
 
 
 def set_structure(pdbx_file, array, data_block=None):
+    """
+    Set the `atom_site` category with an
+    `AtomArray` or `AtomArrayStack`.
+    
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    array : AtomArray or AtomArrayStack
+        The structure to be written. If a stack is given, each array in
+        the stack will be in a separate model.
+    data_block : string, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+    
+    Examples
+    --------
+
+        >>> file = PDBxFile()
+        >>> set_structure(file, atom_array)
+        >>> file.write("structure.cif")
+    
+    """
+    # Fill PDBx columns from information
+    # in structures' attribute arrays as good as possible
+    # Use OrderedDict in order to ensure the usually used column order.
     atom_site_dict = OrderedDict()
     atom_site_dict["group_PDB"] = np.array(["ATOM" if e == False else "HETATM"
                                             for e in array.hetero])

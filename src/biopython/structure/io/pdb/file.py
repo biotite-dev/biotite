@@ -38,13 +38,15 @@ class PDBFile(TextFile):
     information (*ATOM*, *HETATM, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
     
+    Usage of altlocs and insertion codes is not supported.
+    
     See also
     --------
     PDBxFile
     
     Examples
     --------
-    Load a `*.pdb` file, modify the structure and save the new
+    Load a `\*.pdb` file, modify the structure and save the new
     structure into a new file:
     
         >>> file = PDBFile()
