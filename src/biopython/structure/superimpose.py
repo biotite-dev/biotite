@@ -68,11 +68,14 @@ def superimpose(fixed, mobile, ca_only=True):
     References
     ----------
     
-    .. [1] W Kabsch, "A solution for the best rotation to relate two
-    sets of vectors." Acta Cryst, 32, 922-923 (1976).
+    .. [1] W Kabsch,
+       "A solution for the best rotation to relate two sets of vectors."
+       Acta Cryst, 32, 922-923 (1976).
        
-    .. [2] W Kabsch, "A discussion of the solution for the best rotation
-    to relate two sets of vectors." Acta Cryst, 34, 827-828 (1978).
+    .. [2] W Kabsch,
+       "A discussion of the solution for the best rotation to relate
+       two sets of vectors."
+       Acta Cryst, 34, 827-828 (1978).
     
     Examples
     --------
@@ -95,6 +98,7 @@ def superimpose(fixed, mobile, ca_only=True):
         >>> array2_fit, transformation = superimpose(array1, array2, ca_only=False)
         >>> print(rmsd(array1, array2_fit))
         1.92792691375
+        
     """
     if type(fixed) != AtomArray:
         raise ValueError("Reference must be AtomArray")

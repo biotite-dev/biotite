@@ -20,9 +20,11 @@ def sasa(array, **kwargs):
     """
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
     
-    This function uses the Shrake-Rupley ("rolling probe") algorithm [1]_:
-    Every atom is occupied by a evenly distributed point mesh. The points that
-    can be reached by the "rolling probe", are surface accessible.
+    This function uses the Shrake-Rupley ("rolling probe")
+    algorithm [1]_:
+    Every atom is occupied by a evenly distributed point mesh. The
+    points that can be reached by the "rolling probe", are surface
+    accessible.
     
     Parameters
     ----------
@@ -31,58 +33,65 @@ def sasa(array, **kwargs):
     probe_radius : float, optional
         The VdW-radius of the solvent molecules (default: 1.4).
     atom_filter : ndarray(dtype=bool), optional
-        If this parameter is given, SASA is only calculated for the filtered
-        atoms.
+        If this parameter is given, SASA is only calculated for the
+        filtered atoms.
     ignore_ions : bool, optional
         If true, all monoatomic ions are removed before SASA calculation
         (default: True).
     point_number : int, optional
         The number of points in the mesh occupying each atom for SASA
-        calculation (default: 100). The SASA calculation time is proportional
-        to the amount of sphere points.
+        calculation (default: 100). The SASA calculation time is
+        proportional to the amount of sphere points.
     point_distr : string or function, optional
-        If a function is given, the function is used to calculate the point
-        distribution for the mesh (the function must take `float` *n* as
-        parameter and return an *(n x 3)* `ndarray`). Alternatively a string
-        can be given to choose a built-in distribution:
+        If a function is given, the function is used to calculate the
+        point distribution for the mesh (the function must take `float`
+        *n* as parameter and return an *(n x 3)* `ndarray`).
+        Alternatively a string can be given to choose a built-in
+        distribution:
             
-            - **Fibonacci** - Distribute points using a golden section spiral.
+            - **Fibonacci** - Distribute points using a golden section
+              spiral.
             
         By default *Fibonacci* is used.
     vdw_radii : string or ndarray(dtype=float), optional
         Indicates the set of VdW radii to be used. If an `array`-length
-        `ndarray` is given, each atom gets the radius at the corresponding
-        index. Radii given for atoms that are not used in SASA calculation
-        (e.g. solvent atoms) can have arbitrary values (e.g. `NaN`).
-        If instead a `string` is given, one of the built-in sets is used:
+        `ndarray` is given, each atom gets the radius at the
+        correspondingbindex. Radii given for atoms that are not used in
+        SASA calculation (e.g. solvent atoms) can have arbitrary values
+        (e.g. `NaN`). If instead a `string` is given, one of the
+        built-in sets is used:
         
-            - **ProtOr** - A set, which does not require hydrogen atoms in
-              the model. Suitable for crystal structures. [2]_
-            - **Single** - A set, which uses a defined VdW radius for every
-              single atom, therefore hydrogen atoms are required in the
-              model (e.g. NMR elucidated structures). [3]_
+            - **ProtOr** - A set, which does not require hydrogen atoms
+              in the model. Suitable for crystal structures. [2]_
+            - **Single** - A set, which uses a defined VdW radius for
+              every single atom, therefore hydrogen atoms are required
+              in the model (e.g. NMR elucidated structures). [3]_
+              
         By default *ProtOr* is used.
               
     
     Returns
     -------
     sasa : 1-D ndarray(dtype=bool)
-        Atom-wise SASA. `NaN` for atoms where SASA has not been calculated
+        Atom-wise SASA. `NaN` for atoms where SASA has not been 
+        alculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
         
     References
     ----------
     
-    .. [1] A Shrake and JA Rupley, "Environment and exposure to solvent of
-       protein atoms. Lysozyme and insulin." J Mol Biol, 79,
-       351-371 (1973).
+    .. [1] A Shrake and JA Rupley,
+       "Environment and exposure to solvent of protein atoms.
+       Lysozyme and insulin."
+       J Mol Biol, 79,351-371 (1973).
    
-    .. [2] J Tsai R Taylor, C Chotia and M Gerstein, "The packing densitiy
-       in proteins: standard radii and volumes." J Mol Biol, 290,
-       253-299 (1999).
+    .. [2] J Tsai R Taylor, C Chotia and M Gerstein,
+       "The packing densitiy in proteins: standard radii and volumes."
+       J Mol Biol, 290, 253-299 (1999).
        
-    .. [3] A Bondi, "Van der Waals volumes and radii." J Phys Chem, 86,
-       441-451 (1964).
+    .. [3] A Bondi,
+       "Van der Waals volumes and radii."
+       J Phys Chem, 86, 441-451 (1964).
     
     """
     if "probe_radius" in kwargs:
