@@ -9,6 +9,7 @@ from importlib import import_module
 import types
 import sys
 import abc
+import inspect
 
 
 ##### API Doc creation #####
@@ -44,7 +45,15 @@ def _create_package_doc(pck, src_path, doc_path):
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
                      and type(getattr(module, attr)) in [type, abc.ABCMeta]]
-        _create_files(doc_path, pck, class_list, func_list, sub_pck)
+        class_dict = {}
+        for cls in class_list:
+            cls_attr_list = dir(getattr(module, cls))
+            class_dict[cls] = [attr for attr in cls_attr_list
+                               if attr[0] != "_"
+                               and inspect.isfunction(
+                                        getattr(getattr(module, cls), attr))
+                              ]
+        _create_files(doc_path, pck, class_dict, func_list, sub_pck)
         
         return([pck] + sub_pck)
 
@@ -54,24 +63,34 @@ def _create_files(doc_path, package, classes, functions, subpackages):
     if not isdir(sub_path):
         makedirs(sub_path)
     
-    for cls in classes:
+    for cls, methods in classes.items():
         file_content = \
         """
+:orphan:
+
 {:}.{:}
 {:}
 
-.. autoclass:: {:}.{:}
-    :members:
-    :undoc-members:
-    :inherited-members:
+.. autodata:: {:}.{:}
+
+|
         """.format(package, cls, "=" * (len(package)+len(cls)+1),
                    package, cls)
+        for method in methods:
+            file_content += \
+            """
+.. automethod:: {:}.{:}.{:}
+
+|
+            """.format(package, cls, method)
         with open(join(sub_path, cls+".rst"), "w") as f:
             f.write(file_content)
             
     for func in functions:
         file_content = \
         """
+:orphan:
+
 {:}.{:}
 {:}
 
