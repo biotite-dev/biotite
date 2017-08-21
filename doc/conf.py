@@ -124,10 +124,16 @@ def _create_files(doc_path, package, classes, functions, subpackages):
 def create_package_index(doc_path, package_list):
     
     lines = []
+    
+    lines.append("API Reference")
+    lines.append("-" * len("API Reference"))
+    lines.append("\n")
+    
+    lines.append(".. toctree::")
+    lines.append(_indent + ":maxdepth: 1")
+    lines.append("\n")
     for pck in package_list:
-        lines.append(_indent + "- :doc:`"
-                     + pck
-                     + " <" + "/apidoc/" + pck + ">`")
+        lines.append(_indent + pck)
     with open(join(doc_path, "index"+".rst"), "w") as f:
         f.writelines([line+"\n" for line in lines])
     
@@ -170,17 +176,26 @@ todo_include_todos = False
 
 html_theme = "alabaster"
 html_static_path = ["static"]
-html_logo = "static/assets/general/biopython_logo_xs.png"
+#html_logo = "static/assets/general/biopython_logo_xs.png"
 html_favicon = "static/assets/general/biopython_icon_32p.png"
 htmlhelp_basename = "BiopythonDoc"
+html_sidebars = {"**": ["about.html",
+                        #"localtoc.html",
+                        "navigation.html",
+                        "relations.html",
+                        "searchbox.html",
+                        "donate.html"]}
 html_theme_options = {
     "description"      : "A set of general tools "
                          "for computational biology",
+    "logo"             : "assets/general/biopython_logo_xs.png",
+    "logo_name"        : "false",
     "github_user"      : "padix-key",
     "github_repo"      : "biopython2",
     "github_banner"    : "true",
-    "extra_nav_links"  : {"Overview" : "index",
-                          "API Reference" : "apidoc/biopython"},
+    "extra_nav_links"  : {"Overview" : "index.html",
+                          "Tutorial" : "tutorial/index.html",
+                          "API Reference" : "apidoc/biopython.html"},
     "page_width"       : "85%",
     "fixed_sidebar"    : "true"
     

@@ -1,5 +1,6 @@
-Structure subpackage
-====================
+Going 3D - The Structure subpackage
+-----------------------------------
+   
 ``structure`` is a Biopython subpackage for handling protein structures.
 This subpackage enables efficient and easy handling of protein structure data
 by representation of atom attributes in `numpy` arrays. These atom attributes
@@ -21,11 +22,8 @@ in `numpy` arrays. This approach has multiple advantages:
 Based ony the implementation in `numpy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and visualisation.
 
-:doc:`API Reference </apidoc/biopython.structure>`
---------------------------------------------------
-
-Examples
---------
+Introduction
+^^^^^^^^^^^^
 Let's do some calculations on the miniprotein *TC5b* (PDB: 1L2Y). The structure
 of this 20-residue protein has been elucidated via NMR, therefore the
 corresponding PDB file consists of multiple (namely 38) models, each showing
