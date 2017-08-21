@@ -1,4 +1,4 @@
-.. image:: doc/assets/general/biopython_logo_m.png
+.. image:: doc/static/assets/general/biopython_logo_s.png
    :alt: The Biopython Project
 
 Inofficial Biopython 2 repository
