@@ -8,12 +8,14 @@ import unittest
 from .sequence import *
 from .fasta import *
 from .search import *
+from .align import *
 
 loader = unittest.defaultTestLoader
 sequence_suite = unittest.TestSuite()
 sequence_suite.addTest(loader.loadTestsFromTestCase(SequenceTest))
 sequence_suite.addTest(loader.loadTestsFromTestCase(FastaTest))
 sequence_suite.addTest(loader.loadTestsFromTestCase(SearchTest))
+sequence_suite.addTest(loader.loadTestsFromTestCase(AlignTest))
 
 def run():
     runner = unittest.TextTestRunner()
