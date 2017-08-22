@@ -236,18 +236,24 @@ def set_structure(pdbx_file, array, data_block=None):
          (type(array) == AtomArrayStack and array.stack_depth() == 1)  ):
         # 'ravel' flattens coord without copy
         # in case of stack with stack_depth = 1
-        atom_site_dict["Cartn_x"] = np.ravel(array.coord[...,0]).astype(str)
-        atom_site_dict["Cartn_y"] = np.ravel(array.coord[...,1]).astype(str)
-        atom_site_dict["Cartn_z"] = np.ravel(array.coord[...,2]).astype(str)
+        atom_site_dict["Cartn_x"] = np.array(["{:.3f}".format(c) for c 
+                                              in np.ravel(array.coord[...,0])])
+        atom_site_dict["Cartn_y"] = np.array(["{:.3f}".format(c) for c 
+                                              in np.ravel(array.coord[...,1])])
+        atom_site_dict["Cartn_z"] = np.array(["{:.3f}".format(c) for c 
+                                              in np.ravel(array.coord[...,2])])
         atom_site_dict["pdbx_PDB_model_num"]= np.full(array.array_length(),"1")
     elif type(array) == AtomArrayStack:
         for key, value in atom_site_dict.items():
             atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
         coord = np.reshape(array.coord,
                            (array.stack_depth()*array.array_length(), 3))
-        atom_site_dict["Cartn_x"] = coord[:,0].astype(str)
-        atom_site_dict["Cartn_y"] = coord[:,1].astype(str)
-        atom_site_dict["Cartn_z"] = coord[:,2].astype(str)
+        atom_site_dict["Cartn_x"] =  np.array(["{:.3f}".format(c)
+                                               for c in coord[:,0]])
+        atom_site_dict["Cartn_y"] = np.array(["{:.3f}".format(c)
+                                               for c in coord[:,1]])
+        atom_site_dict["Cartn_z"] = np.array(["{:.3f}".format(c)
+                                               for c in coord[:,2]])
         models = np.repeat(np.arange(1, len(coord)+1).astype(str),
                            repeats=array.array_length())
         atom_site_dict["pdbx_PDB_model_num"] = models

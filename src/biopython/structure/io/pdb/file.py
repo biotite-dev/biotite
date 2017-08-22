@@ -78,8 +78,14 @@ class PDBFile(TextFile):
         model_start_i = np.array([i for i in range(len(self._lines))
                                   if self._lines[i].startswith(("MODEL"))])
         # Line indices with ATOM or HETATM records
+        # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self._lines)) if
-                                self._lines[i].startswith(("ATOM", "HETATM"))])
+                                self._lines[i].startswith(("ATOM", "HETATM"))
+                                # altloc
+                                and self._lines[i][16] in [" ", "A"]
+                                # inscode
+                                and self._lines[i][26] == " "])
+        
         model = 0
         if len(model_start_i) <= 1:
             array = AtomArray(len(atom_line_i))
@@ -95,12 +101,12 @@ class PDBFile(TextFile):
         # i is index in array, j is line index
         for i, j in enumerate(annot_i):
             line = self._lines[j]
-            array.chain_id[i] = line[21].upper()
+            array.chain_id[i] = line[21].upper().strip()
             array.res_id[i] = int(line[22:26])
-            array.res_name[i] = line[17:20]
+            array.res_name[i] = line[17:20].strip()
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
-            array.atom_name[i] = line[12:16]
-            array.element[i] = line[76:78]
+            array.atom_name[i] = line[12:16].strip()
+            array.element[i] = line[76:78].strip()
         
         # Fill in coordinates
         if isinstance(array, AtomArray):
