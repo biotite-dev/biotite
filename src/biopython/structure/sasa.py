@@ -45,7 +45,7 @@ def sasa(array, **kwargs):
     point_distr : string or function, optional
         If a function is given, the function is used to calculate the
         point distribution for the mesh (the function must take `float`
-        *n* as parameter and return an *(n x 3)* `ndarray`).
+        *n* as parameter and return a *(n x 3)* `ndarray`).
         Alternatively a string can be given to choose a built-in
         distribution:
             
@@ -56,7 +56,7 @@ def sasa(array, **kwargs):
     vdw_radii : string or ndarray(dtype=float), optional
         Indicates the set of VdW radii to be used. If an `array`-length
         `ndarray` is given, each atom gets the radius at the
-        correspondingbindex. Radii given for atoms that are not used in
+        corresponding index. Radii given for atoms that are not used in
         SASA calculation (e.g. solvent atoms) can have arbitrary values
         (e.g. `NaN`). If instead a `string` is given, one of the
         built-in sets is used:
@@ -74,7 +74,7 @@ def sasa(array, **kwargs):
     -------
     sasa : 1-D ndarray(dtype=bool)
         Atom-wise SASA. `NaN` for atoms where SASA has not been 
-        alculated
+        calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
         
     References
