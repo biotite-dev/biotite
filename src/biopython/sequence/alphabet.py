@@ -44,6 +44,28 @@ class Alphabet(object):
     
     Examples
     --------
+    Create an Alphabet containing DNA letters and encode/decode a
+    letter/code:
+    
+        >>> alph = Alphabet(["A","C","G","T"])
+        >>> print(alph.encode("G"))
+        2
+        >>> print(alph.decode(2))
+        G
+        >>> try:
+        ...    alph.encode("foo")
+        >>> except Exception as e:
+        ...    print(e)
+        'foo' is not in the alphabet
+    
+    Create an Alphabet of arbitrary objects:
+    
+        >>> alph = Alphabet(["foo", 42, (1,2,3), 5, 3.141])
+        >>> print(alph.encode((1,2,3)))
+        2
+        >>> print(alph.decode(4))
+        3.141
+        
     """
     
     def __init__(self, symbols):
@@ -53,15 +75,45 @@ class Alphabet(object):
             self._symbol_dict[symbol] = i
     
     def get_symbols(self):
+        """
+        Get the symbols in the alphabet.
+        
+        Returns
+        -------
+        symbols : list
+            Copy of the internal list of symbols.
+        """
         return copy.deepcopy(self._symbols)
     
     def is_letter_alphabet(self):
+        """
+        Check, if this alphabet only contains single letter symbols.
+        
+        Returns
+        -------
+        result : bool
+            True, if this alphabet uses exclusively single letters
+            symbols, false otherwise.
+        """
         for symbol in self._symbols:
             if type(symbol) != string or len(symbol) != 1:
                 return False
         return True
     
     def extends(self, alphabet):
+        """
+        Check, if this alphabet extends another alphabet.
+        
+        Parameters
+        ----------
+        alphabet : Alphabet
+            The potential parent alphabet.
+        
+        Returns
+        -------
+        result : bool
+            True, if this object extends `alphabet`, false otherwise.
+        """
         if alphabet is self:
             return True
         # Check for every symbol in the parent alphabet
@@ -73,12 +125,48 @@ class Alphabet(object):
         return True
     
     def encode(self, symbol):
+        """
+        Use the alphabet to encode a symbol.
+        
+        Parameters
+        ----------
+        symbol : object
+            The object to encode into a symbol code.
+        
+        Returns
+        -------
+        code : int
+            The symbol code of `symbol`.
+        
+        Raises
+        ------
+        AlphabetError
+            If `symbol` is not in the alphabet.
+        """
         try:
             return self._symbol_dict[symbol]
         except KeyError:
-            raise AlphabetError(str(symbol) + " is not in the alphabet")
+            raise AlphabetError("'" + str(symbol) + "' is not in the alphabet")
     
     def decode(self, code):
+        """
+        Use the alphabet to decode a symbol code.
+        
+        Parameters
+        ----------
+        code : int
+            The symbol code to be decoded.
+        
+        Returns
+        -------
+        symbol : object
+            The symbol corresponding to `code`.
+        
+        Raises
+        ------
+        AlphabetError
+            If `code` is not a valid code in the alphabet.
+        """
         try:
             return self._symbols[code]
         except IndexError:
@@ -98,17 +186,47 @@ class Alphabet(object):
     
 
 class AlphabetMapper(object):
+    """
+    This class is used for symbol code conversion from a source
+    alphabet into a target alphabet.
     
-    def __init__(source_alphabet, target_alphabet):
+    Parameters
+    ----------
+    source_alphabet, target_alphabet : Alphabet
+        The codes are converted from the source alphabet into the
+        target alphabet.
+    
+    Examples
+    --------
+        
+        >>> source_alph = Alphabet(["A","C","G","T"])
+        >>> target_alph = Alphabet(["T","U","A","G","C"])
+        >>> mapper = AlphabetMapper(source_alph, target_alph)
+        >>> print(mapper[0])
+        2
+        >>> print(mapper[1])
+        4
+        >>> print(mapper[2])
+        3
+        >>> print(mapper[3])
+        0
+        
+    """
+    
+    def __init__(self, source_alphabet, target_alphabet):
         self._mapper = [-1] * len(source_alphabet)
         for i in range(len(source_alphabet)):
             symbol = source_alphabet.decode(i)
             new_code = target_alphabet.encode(symbol)
             self._mapper[i] = new_code
         
-    def __getitem__(code):
+    def __getitem__(self, code):
         return self._mapper[code]
 
 
 class AlphabetError(Exception):
+    """
+    This exception is raised, when a code or a symbol is not in an
+    `Alphabet`.
+    """
     pass

@@ -97,7 +97,7 @@ class Sequence(metaclass=abc.ABCMeta):
     
     def copy(self, new_seq_code=None):
         """
-        Creates a copy of the `Sequence` object.
+        Create a copy of the `Sequence` object.
         
         Parameters
         ----------
@@ -251,7 +251,7 @@ class Sequence(metaclass=abc.ABCMeta):
     @staticmethod
     def decode(code, alphabet):
         """
-        decode a list of sequence code using an `Alphabet`.
+        Decode a list of sequence code using an `Alphabet`.
         
         Parameters
         ----------
