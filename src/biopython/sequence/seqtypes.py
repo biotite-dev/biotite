@@ -57,6 +57,26 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
 
 
 class DNASequence(_NucleotideSequence):
+    """
+    Representation of a DNA sequence.
+    
+    This class may one of two different alphabets:
+    `alphabet` contains only the unambiguous DNA letters 'A', 'C', 'G'
+    and 'T'.
+    `alphabet_amb` uses an extended alphabet for ambiguous letters.
+    
+    Parameters
+    ----------
+    sequence : iterable object, optional
+        The initial DNA sequence. This may either be a list or a string.
+        May take upper or lower case letters.
+        By default the sequence is empty.
+    ambiguous : bool, optional
+        If true, the ambiguous DNA alphabet is used. By default the
+        object tries to use the unambiguous alphabet. If this fails due
+        ambiguous letters in the sequence, the ambiguous DNA alphabet
+        is used.
+    """
     
     alphabet     = Alphabet(["A","C","G","T"])
     alphabet_amb = Alphabet(["A","C","G","T","R","Y","W","S",
@@ -87,6 +107,23 @@ class DNASequence(_NucleotideSequence):
     _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def transcribe(self):
+        """
+        Transcribe the DNA sequence into a RNA sequence.
+        
+        Returns
+        -------
+        transcript : RNASequence
+            The trancribed sequence.
+        
+        Examples
+        --------
+        
+            >>> dna_seq = DNASequence("ACGCTT")
+            >>> rna_seq = dna_seq.transcribe()
+            >>> print(rna_seq)
+            ACGCUU
+
+        """
         if self.get_alphabet() == DNASequence.alphabet:
             ambiguous = False
         else:
@@ -98,6 +135,24 @@ class DNASequence(_NucleotideSequence):
         return rna_seq
     
     def complement(self):
+        """
+        Get the complement DNA sequence.
+        
+        Returns
+        -------
+        complement : DNASequence
+            The complement sequence.
+        
+        Examples
+        --------
+        
+            >>> dna_seq = DNASequence("ACGCTT")
+            >>> print(dna_seq.complement())
+            TGCGAA
+            >>> print(dna_seq.reverse().complement())
+            AAGCGT
+        
+        """
         compl_code = DNASequence._complement_func(self.code)
         return self.copy(compl_code)
     
@@ -111,6 +166,26 @@ class DNASequence(_NucleotideSequence):
 
 
 class RNASequence(_NucleotideSequence):
+    """
+    Representation of a RNA sequence.
+    
+    This class may one of two different alphabets:
+    `alphabet` contains only the unambiguous RNA letters 'A', 'C', 'G'
+    and 'U'.
+    `alphabet_amb` uses an extended alphabet for ambiguous letters.
+    
+    Parameters
+    ----------
+    sequence : iterable object, optional
+        The initial RNA sequence. This may either be a list or a string.
+        May take upper or lower case letters.
+        By default the sequence is empty.
+    ambiguous : bool, optional
+        If true, the ambiguous RNA alphabet is used. By default the
+        object tries to use the unambiguous alphabet. If this fails due
+        ambiguous letters in the sequence, the ambiguous DNA alphabet
+        is used.
+    """
     
     alphabet     = Alphabet(["A","C","G","U"])
     alphabet_amb = Alphabet(["A","C","G","U","R","Y","W","S",
@@ -141,6 +216,23 @@ class RNASequence(_NucleotideSequence):
     _complement_func = np.vectorize(compl_dict.__getitem__)
     
     def reverse_transcribe(self):
+        """
+        Reverse-transcribe the RNA sequence into a DNA sequence.
+        
+        Returns
+        -------
+        transcript : DNASequence
+            The reverse-trancribed sequence.
+        
+        Examples
+        --------
+        
+            >>> rna_seq = RNASequence("UGACCU")
+            >>> dna_seq = rna_seq.reverse_transcribe()
+            >>> print(dna_seq)
+            TGACCT
+        
+        """
         if self.get_alphabet() == DNASequence.alphabet:
             ambiguous = False
         else:
@@ -152,6 +244,62 @@ class RNASequence(_NucleotideSequence):
         return dna_seq
     
     def translate(self, **kwargs):
+        """
+        Translate the RNA sequence into a protein sequence.
+        
+        If `complete` is true, the entire sequence is translated,
+        beginning with the first codon and ending with the last codon,
+        even if stop codons occur during the translation.
+        
+        Otherwise this method returns possible ORFs in the
+        sequence, even if not stop codon occurs in an ORF.
+        
+        Parameters
+        ----------
+        complete : bool, optional
+            If true, the complete sequence is translated, otherwise all
+            ORFs are translated. (Default: False)
+        codon_table : dict, optional
+            The codon table to be used. A codon table maps triplett
+            sequence codes to amino acid single letter sequence codes.
+            The table can be generated from a dictionary, containing
+            strings as keys and values, via
+            `ProteinSequence.convert_codon_table()`. By default an
+            codon table from *E. coli* is used.
+        start_codons : list of strings. optional
+            A list of codons to be used as starting point for
+            translation. By default the list contains only "ATG".
+        
+        Returns
+        -------
+        protein : ProteinSequence or list of ProteinSequence
+            The translated protein sequence. If `complete` is true,
+            only a single `ProteinSequence` is returned. Otherwise
+            a list of `ProteinSequence` is returned, which contains
+            every ORF.
+        pos : list of tuple (int, int)
+            Is only returned if `complete` is false. The list contains
+            a tuple for each ORF.
+            The first element of the tuple is the index of the 
+            RNASequence`, where the translation starts.
+            The second element is the exclusive stop index, therefore
+            it represents the first nucleotide in the RNASequence after
+            a stop codon.
+        
+        Examples
+        --------
+        
+            >>> rna_seq = RNASequence("AAUGAUGCUAUAGAU")
+            >>> prot_seq = rna_seq.translate(complete=True)
+            >>> print(prot_seq)
+            NDAID
+            >>> prot_seqs, pos = rna_seq.translate(complete=False)
+            >>> for seq in prot_seqs:
+            ...    print(seq)
+            MML*
+            ML*
+        
+        """
         if self._alphabet == RNASequence.alphabet_amb:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
@@ -217,6 +365,24 @@ class RNASequence(_NucleotideSequence):
                 
     
     def complement(self):
+        """
+        Get the complement RNA sequence.
+        
+        Returns
+        -------
+        complement : RNASequence
+            The complement sequence.
+        
+        Examples
+        --------
+        
+            >>> rna_seq = RNASequence("UGACCU")
+            >>> print(rna_seq.complement())
+            ACUGGA
+            >>> print(rna_seq.reverse().complement())
+            AGGUCA
+        
+        """
         compl_code = RNASequence._complement_func(self.code)
         return self.copy(compl_code)
     
