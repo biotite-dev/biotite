@@ -190,6 +190,7 @@ class RNASequence(_NucleotideSequence):
                             for codon in start_codons]
             seq_code = self.code
             protein_seqs = []
+            pos = []
             for i in range(len(seq_code) - 3 + 1):
                 sub_seq = seq_code[i : i + 3]
                 # sub_seq equals all nucleotides
@@ -213,7 +214,8 @@ class RNASequence(_NucleotideSequence):
                     protein_seq = ProteinSequence()
                     protein_seq.code = aa_code
                     protein_seqs.append(protein_seq)
-            return protein_seqs
+                    pos.append((i,j))
+            return protein_seqs, pos
                 
     
     def complement(self):

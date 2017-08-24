@@ -41,5 +41,5 @@ class SequenceTest(unittest.TestCase):
         self.assertEqual("AAUGCGUUAGAU", str(rna))
         protein = rna.translate(complete=True)
         self.assertEqual("NALD", str(protein))
-        proteins = rna.translate(complete=False)
+        proteins, pos = rna.translate(complete=False)
         self.assertEqual("MR*", str(proteins[0]))
