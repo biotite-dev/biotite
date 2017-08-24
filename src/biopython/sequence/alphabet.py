@@ -62,6 +62,8 @@ class Alphabet(object):
         return True
     
     def extends(self, alphabet):
+        if alphabet is self:
+            return True
         # Check for every symbol in the parent alphabet
         # if the symbol is also is the extending (this) alphabet
         # and has the same code (list index) for each symbol
