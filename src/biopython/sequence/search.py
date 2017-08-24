@@ -15,14 +15,14 @@ def find_subsequence(sequence, query):
     match_indices = []
     frame_size = len(query)
     for i in range(len(sequence) - frame_size + 1):
-        sub_seq_code = sequence.get_seq_code()[i : i + frame_size]
-        if np.array_equal(query.get_seq_code(), sub_seq_code):
+        sub_seq_code = sequence.code[i : i + frame_size]
+        if np.array_equal(query.code, sub_seq_code):
             match_indices.append(i)
     return np.array(match_indices)
 
 def find_symbol(sequence, symbol):
     code = sequence.get_alphabet().encode(symbol)
-    return np.where(sequence.get_seq_code() == code)[0]
+    return np.where(sequence.code == code)[0]
 
 def find_symbol_first(sequence, symbol):
     return np.min(find_symbol(sequence, symbol))

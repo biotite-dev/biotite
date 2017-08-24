@@ -30,7 +30,7 @@ class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
             self._alphabet = self.ambiguous_alphabet()
             seq_code = Sequence.encode(sequence, self._alphabet)
         super().__init__()
-        self.set_seq_code(seq_code)
+        self.code = seq_code
         
     def copy(self, new_seq_code=None):
         if self._alphabet == self.ambiguous_alphabet:
@@ -95,11 +95,11 @@ class DNASequence(_NucleotideSequence):
         rna_seq = RNASequence(ambiguous=ambiguous)
         # Alphabets of RNA and DNA are completely identical,
         # only the symbol 'T' is substituted by 'U'
-        rna_seq.set_seq_code(self.get_seq_code())
+        rna_seq.code = self.code
         return rna_seq
     
     def complement(self):
-        compl_code = DNASequence._complement_func(self.get_seq_code())
+        compl_code = DNASequence._complement_func(self.code)
         return self.copy(compl_code)
     
     @staticmethod
@@ -150,7 +150,7 @@ class RNASequence(_NucleotideSequence):
         dna_seq = DNASequence(ambiguous=ambiguous)
         # Alphabets of RNA and DNA are completely identical,
         # only the symbol 'T' is substituted by 'U'
-        dna_seq.set_seq_code(self.get_seq_code())
+        dna_seq.code = self.code
         return dna_seq
     
     def translate(self, **kwargs):
@@ -170,7 +170,7 @@ class RNASequence(_NucleotideSequence):
             # Pessimistic array allocation
             aa_code = np.zeros(len(self) // 3)
             aa_i = 0
-            seq_code = self.get_seq_code()
+            seq_code = self.code
             for i in range(0, len(seq_code), 3):
                 codon = tuple(seq_code[i : i+3])
                 aa_code[aa_i] = codon_table[codon]
@@ -178,7 +178,7 @@ class RNASequence(_NucleotideSequence):
             # Trim to correct size
             aa_code = aa_code[:aa_i]
             protein_seq = ProteinSequence()
-            protein_seq.set_seq_code(aa_code)
+            protein_seq.code = aa_code
             return protein_seq
         
         else:
@@ -188,7 +188,7 @@ class RNASequence(_NucleotideSequence):
                 start_codons = ["AUG"]
             start_codons = [self.encode(codon, self.get_alphabet())
                             for codon in start_codons]
-            seq_code = self.get_seq_code()
+            seq_code = self.code
             protein_seqs = []
             for i in range(len(seq_code) - 3 + 1):
                 sub_seq = seq_code[i : i + 3]
@@ -211,13 +211,13 @@ class RNASequence(_NucleotideSequence):
                     # Trim to correct size
                     aa_code = aa_code[:aa_i]
                     protein_seq = ProteinSequence()
-                    protein_seq.set_seq_code(aa_code)
+                    protein_seq.code = aa_code
                     protein_seqs.append(protein_seq)
             return protein_seqs
                 
     
     def complement(self):
-        compl_code = RNASequence._complement_func(self.get_seq_code())
+        compl_code = RNASequence._complement_func(self.code)
         return self.copy(compl_code)
     
     @staticmethod
@@ -287,7 +287,9 @@ class ProteinSequence(Sequence):
     def __init__(self, sequence=[]):
         dict_3to1 = ProteinSequence._dict_3to1
         alph = ProteinSequence.alphabet
-        sequence = [dict_3to1[symbol] if len(symbol) == 3
+        # Convert 3-letter codes to single letter codes,
+        # if list contains 3-letter codes
+        sequence = [dict_3to1[symbol.upper()] if len(symbol) == 3
                     else symbol for symbol in sequence]
         super().__init__(sequence)
     
@@ -297,8 +299,8 @@ class ProteinSequence(Sequence):
     def remove_stops(self):
         stop_code = ProteinSequence.alphabet.encode("*")
         no_stop = self.copy()
-        seq_code = no_stop.get_seq_code()
-        no_stop.set_seq_code(seq_code[seq_code != stop_code])
+        seq_code = no_stop.code
+        no_stop.code = seq_code[seq_code != stop_code]
         return no_stop
     
     @staticmethod

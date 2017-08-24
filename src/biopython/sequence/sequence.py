@@ -54,14 +54,18 @@ class Sequence(metaclass=abc.ABCMeta):
     
     Examples
     --------
-    Creating a DNA sequence from string and print the sequence and the
-    sequence code:
+    Creating a DNA sequence from string and print the symbols and the
+    code:
     
         >>> dna_seq = DNASequence("ACGTA")
         >>> print(dna_seq)
         ACGTA
-        >>> print(dna_seq.get_seq_code())
+        >>> print(dna_seq.code)
         [0 1 2 3 0]
+        >>> print(dna_seq.symbols)
+        ['A', 'C', 'G', 'T', 'A']
+        >>> print(list(dna_seq)
+        ['A', 'C', 'G', 'T', 'A']
     
     Sequence indexing:
         
@@ -85,7 +89,7 @@ class Sequence(metaclass=abc.ABCMeta):
     """
     
     def __init__(self, sequence=[]):
-        self.set_sequence(sequence)
+        self.symbols = sequence
     
     def copy(self, new_seq_code=None):
         seq_copy = type(self)()
@@ -94,21 +98,26 @@ class Sequence(metaclass=abc.ABCMeta):
     
     def _copy_code(self, new_object, new_seq_code):
         if new_seq_code is None:
-            new_object.set_seq_code(self.get_seq_code())
+            new_object._seq_code = np.copy(self._seq_code)
         else:
-            new_object.set_seq_code(new_seq_code)
+            new_object._seq_code = new_seq_code
     
-    def set_sequence(self, sequence):
-        self._seq_code = Sequence.encode(sequence, self.get_alphabet())
+    @property
+    def symbols(self):
+        return Sequence.decode(self.code, self.get_alphabet())
     
-    def get_sequence(self):
-        return Sequence.decode(code, self.get_alphabet())
+    @symbols.setter
+    def symbols(self, value):
+        self._seq_code = Sequence.encode(value, self.get_alphabet())
     
-    def set_seq_code(self, code):
-        self._seq_code = code.astype(Sequence._dtype(len(self.get_alphabet())))
-        
-    def get_seq_code(self):
+    @property
+    def code(self):
         return self._seq_code
+    
+    @code.setter
+    def code(self, value):
+        self._seq_code = value.astype(Sequence._dtype(len(self.get_alphabet())))
+    
     
     @abc.abstractmethod
     def get_alphabet(self):

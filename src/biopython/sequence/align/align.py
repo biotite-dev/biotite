@@ -46,8 +46,8 @@ class Alignment(object):
         return string[:-2]
     
     def get_conservation_string(self, matrix, cutoff=0):
-        seq_code1 = self.seq1.get_seq_code()
-        seq_code2 = self.seq2.get_seq_code()
+        seq_code1 = self.seq1.code
+        seq_code2 = self.seq2.code
         conservation = ""
         for i in range(len(self.trace)):
             if self.trace[i,0] == -1 or self.trace[i,1] == -1:
@@ -93,8 +93,8 @@ def simple_score(seq1, seq2, matrix):
     if (matrix.get_alphabet1() != seq1.get_alphabet() and
         matrix.get_alphabet2() != seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    seq1_code = seq1.get_seq_code()
-    seq2_code = seq2.get_seq_code()
+    seq1_code = seq1.code
+    seq2_code = seq2.code
     score = 0
     for i in range(len(seq1)):
         score += matrix.get_score_by_code(seq1_code[i], seq2_code[i])
@@ -119,8 +119,8 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     score_table[0,:] = -np.arange(0, len(seq2)+1)
     trace_table[1:,0] = 4
     trace_table[0,1:] = 2
-    code1 = seq1.get_seq_code()
-    code2 = seq2.get_seq_code()
+    code1 = seq1.code
+    code2 = seq2.code
     
     # Fill table
     max_i = score_table.shape[0]
@@ -177,8 +177,8 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     # Procedure is analogous to align_global()
     score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="i4")
     trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="u1")
-    code1 = seq1.get_seq_code()
-    code2 = seq2.get_seq_code()
+    code1 = seq1.code
+    code2 = seq2.code
     
     # Fill table
     max_i = score_table.shape[0]
