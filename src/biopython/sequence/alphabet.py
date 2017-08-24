@@ -9,6 +9,42 @@ __all__ = ["Alphabet", "AlphabetMapper", "AlphabetError"]
 
 
 class Alphabet(object):
+    """
+    This class defines the allowed symbols for a `Sequence` and handles
+    the encoding/decoding between symbols and symbol codes.
+    
+    An `Alphabet` is created with the list of symbols, that can be used
+    in this context. In most cases a symbol will be simply a letter,
+    hence a string of length 1. But in principal every hashable Python
+    object can serve as symbol.
+    
+    The encoding of a symbol into a symbol code is
+    done in the following way: Find the first index in the symbol list,
+    where the list element equals the symbol. This index is the
+    symbol code. If the symbol is not found in the list, an
+    `AlphabetError` is raised.
+    
+    Internally, a dictionary is used for encoding, with symbols as keys
+    and symbol codes as values. Therefore, every symbol must be
+    hashable. For decoding the symbol list is indexed with the symbol
+    code.
+    
+    If an alphabet *1* contains the same symbols and the same
+    symbol-code-mappings like another alphabet *2*, but alphabet *1*
+    introdues also new symbols, the alphabet *1* extends alphabet *2*.
+    
+    Objects of this class are immutable.
+    
+    Parameters
+    ----------
+    symbols : iterable object, optional
+        The symbols, that are allowed in this alphabet. The
+        corresponding code for a symbol, is the index of that symbol
+        in this list.
+    
+    Examples
+    --------
+    """
     
     def __init__(self, symbols, parents=[]):
         self._symbols = copy.deepcopy(list(symbols))
