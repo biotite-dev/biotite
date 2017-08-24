@@ -31,7 +31,7 @@ class Alphabet(object):
     
     If an alphabet *1* contains the same symbols and the same
     symbol-code-mappings like another alphabet *2*, but alphabet *1*
-    introdues also new symbols, the alphabet *1* extends alphabet *2*.
+    introdues also new symbols, then alphabet *1* *extends* alphabet *2*.
     
     Objects of this class are immutable.
     
@@ -46,9 +46,8 @@ class Alphabet(object):
     --------
     """
     
-    def __init__(self, symbols, parents=[]):
+    def __init__(self, symbols):
         self._symbols = copy.deepcopy(list(symbols))
-        self._parents = copy.copy(list(parents))
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
@@ -56,11 +55,14 @@ class Alphabet(object):
     def get_symbols(self):
         return copy.deepcopy(self._symbols)
     
-    def parent_alphabets(self):
-        return copy.copy(self._parents)
-    
     def extends(self, alphabet):
-        return alphabet == self or alphabet in self._parents
+        # Check for every symbol in the parent alphabet
+        # if the symbol is also is the extending (this) alphabet
+        # and has the same code for each symbol
+        for i, symbol in enumerate(alphabet._symbols):
+            if self._symbols[i] != symbol:
+                return False
+        return True
     
     def encode(self, symbol):
         try:

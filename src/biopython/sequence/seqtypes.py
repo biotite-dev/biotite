@@ -60,8 +60,7 @@ class DNASequence(_NucleotideSequence):
     
     alphabet     = Alphabet(["A","C","G","T"])
     alphabet_amb = Alphabet(["A","C","G","T","R","Y","W","S",
-                             "M","K","H","B","V","D","N","X"],
-                            parents=[alphabet])
+                             "M","K","H","B","V","D","N","X"])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -115,8 +114,7 @@ class RNASequence(_NucleotideSequence):
     
     alphabet     = Alphabet(["A","C","G","U"])
     alphabet_amb = Alphabet(["A","C","G","U","R","Y","W","S",
-                             "M","K","H","B","V","D","N","X"],
-                            parents=[alphabet])
+                             "M","K","H","B","V","D","N","X"])
     
     compl_symbol_dict = {"A" : "U",
                          "C" : "G",
