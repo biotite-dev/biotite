@@ -302,11 +302,11 @@ class ProteinSequence(Sequence):
         return no_stop
     
     @staticmethod
-    def convert_letters_3to1(symbol):
+    def convert_letter_3to1(symbol):
         return ProteinSequence._dict_3to1[symbol]
     
     @staticmethod
-    def convert_letters_1to3(symbol):
+    def convert_letter_1to3(symbol):
         return ProteinSequence._dict_3to1[symbol]
     
     @staticmethod
