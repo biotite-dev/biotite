@@ -55,10 +55,16 @@ class Alphabet(object):
     def get_symbols(self):
         return copy.deepcopy(self._symbols)
     
+    def is_letter_alphabet(self):
+        for symbol in self._symbols:
+            if type(symbol) != string or len(symbol) != 1:
+                return False
+        return True
+    
     def extends(self, alphabet):
         # Check for every symbol in the parent alphabet
         # if the symbol is also is the extending (this) alphabet
-        # and has the same code for each symbol
+        # and has the same code (list index) for each symbol
         for i, symbol in enumerate(alphabet._symbols):
             if self._symbols[i] != symbol:
                 return False
