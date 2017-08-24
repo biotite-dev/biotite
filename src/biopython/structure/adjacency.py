@@ -41,6 +41,7 @@ class AdjacencyMap(object):
     
         >>> adj_map = AdjacencyMap(atom_array, box_size=5)
         >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
+        
     """
     
     def __init__(self, atom_array, box_size):

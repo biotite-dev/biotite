@@ -435,7 +435,6 @@ class AtomArray(_AtomArrayBase):
     
     Examples
     --------
-    
     Creating an atom array from atoms:
     
         >>> atom1 = Atom([1,2,3], chain_id="A")
@@ -665,7 +664,6 @@ class AtomArrayStack(_AtomArrayBase):
     
     Examples
     --------
-    
     Creating an atom array stack from two arrays:
     
         >>> atom1 = Atom([1,2,3], chain_id="A")
