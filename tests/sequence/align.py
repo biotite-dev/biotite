@@ -22,7 +22,7 @@ class AlignTest(unittest.TestCase):
                          [[0,0], [1,1], [2,2], [3,3], [4,4], [5,5],
                           [6,6], [7,-1], [8,7], [9,8], [10,9]])
     
-    def test_glocal_align(self):
+    def test_local_align(self):
         seq1 = seq.DNASequence("ATGGCACATGATCTTA")
         seq2 = seq.DNASequence("ACTTGCTTACGAT")
         alignments = align.align_local(seq1, seq2,

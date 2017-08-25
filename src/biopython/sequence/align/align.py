@@ -8,9 +8,9 @@ from ..sequence import Sequence
 import numpy as np
 import copy
 try:
-    from .calign import c_fill_align_table
-    _c_accel = True
-except:
+    from .calign import c_fill_align_table, c_follow_trace
+    _c_accel = False
+except ImportError:
     pass
     _c_accel = False
 
@@ -113,14 +113,14 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     # Therefore the first sequence is one the left
     # and the second sequence is at the top  
     # The table for saving the scores
-    score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="i4")
+    score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
     # The table the directions a field came from
     # A "1" in the corresponding bit means
     # the field came from this direction
     # The values: bit 1 -> 1 -> diagonal -> alignment of symbols
     #             bit 2 -> 2 -> left     -> gap in first sequence
     #             bit 3 -> 4 -> top      -> gap in second sequence
-    trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="u1")
+    trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.uint8)
     score_table[:,0] = -np.arange(0, len(seq1)+1)
     score_table[0,:] = -np.arange(0, len(seq2)+1)
     trace_table[1:,0] = 4
@@ -128,72 +128,76 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     code1 = seq1.code
     code2 = seq2.code
     
-    # Fill table
     if _c_accel and code1.dtype == np.uint8 and code2.dtype == np.uint8:
-        fill_func = c_fill_align_table
+        fill_func  = c_fill_align_table
+        trace_func = c_follow_trace
     else:
-        fill_func = _fill_align_table
+        fill_func  = _fill_align_table
+        trace_func = _follow_trace
+    
+    # Fill table
     fill_func(code1, code2, matrix.get_matrix(),
               score_table, trace_table,
               gap_opening, gap_extension,
               local = False)
     
     # Traceback
+    trace_list = []
+    # The start point is the last element in the table
     i = score_table.shape[0] -1
     j = score_table.shape[1] -1
     max_score = score_table[i,j]
-    trace = []
-    trace_list = []
-    _traceback(trace_table, i, j, trace, trace_list)
-    trace_list = [np.flip(np.array(tr, dtype=int), axis=0)
-                  for tr in trace_list]
-    # Replace gap entries with -1
-    for i, trace in enumerate(trace_list):
-        gap_filter = np.zeros(trace.shape, dtype=bool)
-        gap_filter[np.unique(trace[:,0], return_index=True)[1], 0] = True
-        gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
-        trace[~gap_filter] = -1
-        trace_list[i] = trace
+
+    _traceback(trace_table, trace_list, i, j, trace_func)
     
     return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]
 
 
 def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     # Procedure is analogous to align_global()
-    score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="i4")
-    trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype="u1")
+    score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
+    trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.uint8)
     code1 = seq1.code
     code2 = seq2.code
     
-    # Fill table
     if _c_accel and code1.dtype == np.uint8 and code2.dtype == np.uint8:
-        fill_func = c_fill_align_table
+        fill_func  = c_fill_align_table
+        trace_func = c_follow_trace
     else:
-        fill_func = _fill_align_table
+        fill_func  = _fill_align_table
+        trace_func = _follow_trace
+    
+    # Fill table
     fill_func(code1, code2, matrix.get_matrix(),
               score_table, trace_table,
               gap_opening, gap_extension,
               local = True)
     
     # Traceback
+    trace_list = []
     # The start point is the maximal score in the table
     i, j = np.unravel_index(np.argmax(score_table), score_table.shape)
     max_score = score_table[i,j]
-    trace = []
-    trace_list = []
-    _traceback(trace_table, i, j, trace, trace_list)
-    trace_list = [np.flip(np.array(tr, dtype=int), axis=0)
-                  for tr in trace_list]
+    
+    _traceback(trace_table, trace_list, i, j, trace_func)
+    
+    return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]
+    
+    
+def _traceback(trace_table, trace_list, i_start, j_start, trace_func):
+    # Pessimistic array allocation
+    trace = np.full(( i_start+1 + j_start+1, 2 ), -1, dtype=np.int64)
+    
+    trace_func(trace_table, i_start, j_start, 0, trace, trace_list)
+    
     # Replace gap entries with -1
     for i, trace in enumerate(trace_list):
+        trace = np.flip(trace, axis=0)
         gap_filter = np.zeros(trace.shape, dtype=bool)
         gap_filter[np.unique(trace[:,0], return_index=True)[1], 0] = True
         gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
         trace[~gap_filter] = -1
         trace_list[i] = trace
-    
-    return [Alignment(seq1, seq2, trace, max_score)
-            for trace in trace_list]
 
 
 def _fill_align_table(code1, code2, matrix, score_table, trace_table,
@@ -257,11 +261,13 @@ def _fill_align_table(code1, code2, matrix, score_table, trace_table,
         i += 1
 
 
-def _traceback(trace_table, i, j, trace, trace_list):
+def _follow_trace(trace_table, i, j, pos, trace, trace_list):
     while trace_table[i,j] != 0:
         # -1 is necessary due to the shift of the sequences
         # to the bottom/right in the table
-        trace.append((i-1, j-1))
+        trace[pos, 0] = i-1
+        trace[pos, 1] = j-1
+        pos += 1
         # Traces may split
         next_indices = []
         trace_value = trace_table[i,j]
@@ -271,10 +277,13 @@ def _traceback(trace_table, i, j, trace, trace_list):
             next_indices.append((i, j-1))
         if trace_value & 4:
             next_indices.append((i-1, j))
-        # Trace split -> Recursive call of _traceback() for indices[1:]
+        # Trace split -> Recursive call of _follow_trace() for indices[1:]
         for k in range(1, len(next_indices)):
             new_i, new_j = next_indices[k]
-            _traceback(trace_table, new_i, new_j, copy.copy(trace), trace_list)
+            _follow_trace(trace_table, new_i, new_j, pos,
+                          np.copy(trace), trace_list)
         # Continue in this method with indices[0]
         i, j = next_indices[0]
-    trace_list.append(trace)
+    # Trim trace to correct size (delete all -1 entries)
+    # and append to trace_list
+    trace_list.append((trace[trace[:,0] != -1]))
