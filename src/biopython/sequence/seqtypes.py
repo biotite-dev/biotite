@@ -396,6 +396,25 @@ class RNASequence(_NucleotideSequence):
 
 
 class ProteinSequence(Sequence):
+    """
+    Representation of a protein sequence.
+    
+    Furthermore this class offers a codon table for conversion of
+    nucleotide tripletts into amino acids. A *codon symbol table* holds
+    triplett strings as keys (e.g. 'AUG') and 1-letter amino acid
+    representations as values (e.g. 'M'). A *codon table* is a *codon
+    symbol table* that is converted into symbol codes. Therefore a
+    *codon table* holds tuples of 3 integers as keys and amino acid
+    symbol codes as values.
+    
+    Parameters
+    ----------
+    sequence : iterable object, optional
+        The initial protein sequence. This may either be a list or a
+        string. May take upper or lower case letters. If a list is
+        given, the list elements can be 1-letter or 3-letter amino acid
+        representations. By default the sequence is empty.
+    """
     
     _codon_symbol_table = {
      "UUU": "F", "UUC": "F", "UUA": "L", "UUG": "L",
@@ -463,6 +482,14 @@ class ProteinSequence(Sequence):
         return ProteinSequence.alphabet
     
     def remove_stops(self):
+        """
+        Remove *stop signals* from the sequence.
+        
+        Returns
+        -------
+        no_stop : ProteinSequence
+            A copy of this sequence without stop signals.
+        """
         stop_code = ProteinSequence.alphabet.encode("*")
         no_stop = self.copy()
         seq_code = no_stop.code
@@ -471,14 +498,53 @@ class ProteinSequence(Sequence):
     
     @staticmethod
     def convert_letter_3to1(symbol):
+        """
+        Convert a 3-letter to a 1-letter amino acid representation.
+        
+        Parameters
+        ----------
+        symbol : string
+            3-letter amino acid representation.
+        
+        Returns
+        -------
+        convert : string
+            1-letter amino acid representation.
+        """
         return ProteinSequence._dict_3to1[symbol]
     
     @staticmethod
     def convert_letter_1to3(symbol):
+        """
+        Convert a 1-letter to a 3-letter amino acid representation.
+        
+        Parameters
+        ----------
+        symbol : string
+            1-letter amino acid representation.
+        
+        Returns
+        -------
+        convert : string
+            3-letter amino acid representation.
+        """
         return ProteinSequence._dict_3to1[symbol]
     
     @staticmethod
     def convert_codon_table(symbol_table):
+        """
+        Convert a symbol codon table into a codon table
+        
+        Parameters
+        ----------
+        symbol_table : dict
+            The codon symbol table.
+        
+        Returns
+        -------
+        code_table : dict
+            The codon table.
+        """
         code_table = {}
         for key, value in symbol_table.items():
             key_code = tuple(Sequence.encode(key, RNASequence.alphabet))
@@ -488,6 +554,15 @@ class ProteinSequence(Sequence):
     
     @staticmethod
     def std_codon_table():
+        """
+        Get the standard codon table, which is the *E. coli* codon
+        table.
+        
+        Returns
+        -------
+        code_table : dict
+            The standard codon table.
+        """
         if ProteinSequence._codon_table is None:
             ProteinSequence._codon_table = ProteinSequence.convert_codon_table(
                                            ProteinSequence._codon_symbol_table)
@@ -495,5 +570,14 @@ class ProteinSequence(Sequence):
     
     @staticmethod
     def std_codon_symbol_table():
+        """
+        Get the standard codon symbol table, which is the *E. coli*
+        codon table.
+        
+        Returns
+        -------
+        symbol_table : dict
+            The standard codon symbol table.
+        """
         return copy.copy(ProteinSequence._codon_symbol_table)
     

@@ -34,6 +34,7 @@ def superimpose(fixed, mobile, ca_only=True):
         If True, the function performs the superimposition
         considering only the "CA" atoms. This increases the
         performance drastically but decreases the accuracy slightly.
+        True by default.
     
     Returns
     -------

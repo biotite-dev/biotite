@@ -32,6 +32,7 @@ class Alphabet(object):
     If an alphabet *1* contains the same symbols and the same
     symbol-code-mappings like another alphabet *2*, but alphabet *1*
     introdues also new symbols, then alphabet *1* *extends* alphabet *2*.
+    Per definition, every alphabet also extends itself.
     
     Objects of this class are immutable.
     
