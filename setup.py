@@ -3,8 +3,8 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from setuptools import setup, find_packages
-import sys
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 
 release = "2.0a2"
 
@@ -15,6 +15,10 @@ setup(name="Biopython",
     url = "https://github.com/padix-key/biopython2",
     packages = find_packages("src"),
     package_dir = {"" : "src"},
+    ext_modules = cythonize(
+        [Extension  ("biopython.sequence.align.calign",
+                        ["src/biopython/sequence/align/calign.pyx"])]
+    ),
     package_data = {"biopython.sequence.align" : ["matrix_data/*.npy"]},
     install_requires = ["requests",
                         "numpy",

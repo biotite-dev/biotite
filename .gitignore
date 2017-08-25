@@ -31,6 +31,10 @@ _build
 # Ignore hidden files from Dolphin window manager
 .directory
 
+# Ignore files created via Cython
+*.c
+*.so
+
 # Ignore all compiled python files (e.g. from running the unit tests):
 *.pyc
 *.pyo
