@@ -34,6 +34,8 @@ setup(name="Biopython",
                         "numpy",
                         "scipy",
                         "matplotlib"],
+    extras_require = {'trajectory':  ["mdtraj"],
+    },
     
     test_suite = "tests.main.test_suite",
     
