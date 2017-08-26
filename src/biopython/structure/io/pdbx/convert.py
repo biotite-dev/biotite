@@ -4,7 +4,6 @@
 # as part of this package.
 
 import numpy as np
-import shlex
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from collections import OrderedDict
@@ -223,8 +222,7 @@ def set_structure(pdbx_file, array, data_block=None):
                                             for e in array.hetero])
     atom_site_dict["id"] = None
     atom_site_dict["type_symbol"] = np.copy(array.element)
-    atom_site_dict["label_atom_id"] = np.array([shlex.quote(e)
-                                                for e in array.atom_name])
+    atom_site_dict["label_atom_id"] = np.copy(array.atom_name)
     atom_site_dict["label_alt_id"] = np.full(array.array_length(), ".")
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
@@ -266,11 +264,11 @@ def set_structure(pdbx_file, array, data_block=None):
     if data_block is None:
         data_blocks = pdbx_file.get_block_names()
         if len(data_blocks) == 0:
-            raise TypeError("No data block is existent in PDB file, "
+            raise TypeError("No data block is existent in PDBx file, "
                             "must be specified")
         else:
             data_block = data_blocks[0]
-    pdbx_file.set_category("atom_site", atom_site_dict, data_block, False)
+    pdbx_file.set_category("atom_site", atom_site_dict, data_block)
 
 
 def _determine_entity_id(chain_id):

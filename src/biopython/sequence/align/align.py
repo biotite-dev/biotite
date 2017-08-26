@@ -9,7 +9,7 @@ import numpy as np
 import copy
 try:
     from .calign import c_fill_align_table, c_follow_trace
-    _c_accel = False
+    _c_accel = True
 except ImportError:
     pass
     _c_accel = False

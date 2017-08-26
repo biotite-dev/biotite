@@ -13,19 +13,29 @@ setup(name="Biopython",
     description = "A set of general tools for computational biology",
     author = "The Biopython contributors",
     url = "https://github.com/padix-key/biopython2",
+    
+    zip_safe = False,
     packages = find_packages("src"),
     package_dir = {"" : "src"},
+    
     ext_modules = cythonize(
         [Extension  ("biopython.sequence.align.calign",
-                        ["src/biopython/sequence/align/calign.pyx"])]
+                     ["src/biopython/sequence/align/calign.pyx"]
+                    ),
+         Extension  ("biopython.structure.io.pdbx.cprocessloop",
+                     ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
+                    )
+        ]
     ),
+    
     package_data = {"biopython.sequence.align" : ["matrix_data/*.npy"]},
+    
     install_requires = ["requests",
                         "numpy",
                         "scipy",
                         "matplotlib"],
+    
     test_suite = "tests.main.test_suite",
-    zip_safe = False,
     
     command_options = {
         'build_sphinx':

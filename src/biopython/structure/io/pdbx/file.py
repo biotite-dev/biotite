@@ -6,6 +6,12 @@
 import shlex
 import numpy as np
 from ....file import TextFile
+try:
+    from .cprocessloop import c_process_looped
+    _c_accel = True
+except ImportError:
+    pass
+    _c_accel = False
 
 __all__ = ["PDBxFile"]
 
@@ -219,14 +225,25 @@ class PDBxFile(TextFile):
                      if not _is_empty(line) and not _is_loop_start(line)]
         
         if is_loop:
-            category_dict = self._process_looped(lines)
+            if _c_accel:
+                # Special optimisation for "atom_site:"
+                # Even if the values are quote protected,
+                # not whitespaces are expected in escaped values
+                # Therefore slow shlex.split() call is not necessary
+                if category == "atom_site":
+                    whitespace_values = False
+                else:
+                    whitespace_values = True
+                category_dict = c_process_looped(lines, whitespace_values)
+            else:
+                category_dict = _process_looped(lines)
         else:
-            category_dict = self._process_singlevalued(lines)
+            category_dict = _process_singlevalued(lines)
         
         return category_dict
             
     
-    def set_category(self, category, category_dict, block=None, quote=True):
+    def set_category(self, category, category_dict, block=None):
         """
         Set the content of a category.
         
@@ -246,11 +263,7 @@ class PDBxFile(TextFile):
             The name of the data block. Default is the first
             (and most times only) data block of the file. If the
             block is not contained in the file yet, a new block is
-            appended at the end of the file.
-        quote : bool, optional
-            If true, every dictionary value is put into quotes if
-            necessary. This task might be time consuming.
-            True by default.
+            appended at the end of the file..
         """
         if block is None:
             block = self.get_block_names()[0]
@@ -260,14 +273,13 @@ class PDBxFile(TextFile):
         else:
             is_looped = False
             
-        if quote:
-            # Escape quotes if required
-            for key, value in category_dict.items():
-                if is_looped:
-                    for i in range(len(value)):
-                        value[i] = shlex.quote(value[i])
-                else:
-                    category_dict[key] = shlex.quote(value)
+        # Enclose values with quotes if required
+        for key, value in category_dict.items():
+            if is_looped:
+                for i in range(len(value)):
+                    value[i] = _quote(value[i])
+            else:
+                category_dict[key] = _quote(value)
         
         if is_looped:
             key_lines = ["_" + category + "." + key
@@ -399,47 +411,46 @@ class PDBxFile(TextFile):
                                            "loop"      : is_loop,
                                            "multiline" : is_multilined}
     
-            
-    def _process_singlevalued(self, lines):
-        category_dict = {}
-        for line in lines:
-            parts = shlex.split(line)
-            key = parts[0].split(".")[1]
-            value = parts[1]
-            category_dict[key] = value
-        return category_dict
     
-    
-    def _process_looped(self, lines):
-        category_dict = {}
-        keys = []
-        # Array index
-        i = 0
-        # Dictionary key index
-        j = 0
-        for line in lines:
-            in_key_lines = (line[0] == "_")
-            if in_key_lines:
-                key = line.split(".")[1]
-                keys.append(key)
-                # Pessimistic array allocation
-                # numpy array filled with strings
-                category_dict[key] = np.zeros(len(lines),
-                                              dtype=object)
-                keys_length = len(keys)
-            else:
-                for value in shlex.split(line):
-                    category_dict[keys[j]][i] = value
-                    j += 1
-                    if j == keys_length:
-                        # If all keys have been filled with a value,
-                        # restart with first key with incremented index
-                        j = 0
-                        i += 1
-        for key in category_dict.keys():
-            # Trim to correct size
-            category_dict[key] = category_dict[key][:i]
-        return category_dict
+def _process_singlevalued(lines):
+    category_dict = {}
+    for line in lines:
+        parts = shlex.split(line)
+        key = parts[0].split(".")[1]
+        value = parts[1]
+        category_dict[key] = value
+    return category_dict
+
+
+def _process_looped(lines):
+    category_dict = {}
+    keys = []
+    # Array index
+    i = 0
+    # Dictionary key index
+    j = 0
+    for line in lines:
+        in_key_lines = (line[0] == "_")
+        if in_key_lines:
+            key = line.split(".")[1]
+            keys.append(key)
+            # Pessimistic array allocation
+            # numpy array filled with strings
+            category_dict[key] = np.zeros(len(lines), dtype=object)
+            keys_length = len(keys)
+        else:
+            for value in shlex.split(line):
+                category_dict[keys[j]][i] = value
+                j += 1
+                if j == keys_length:
+                    # If all keys have been filled with a value,
+                    # restart with first key with incremented index
+                    j = 0
+                    i += 1
+    for key in category_dict.keys():
+        # Trim to correct size
+        category_dict[key] = category_dict[key][:i]
+    return category_dict
     
 
 def _is_empty(line):
@@ -451,6 +462,7 @@ def _data_block_name(line):
         return line[5:]
     else:
         return None
+
 
 def _is_loop_start(line):
     return line.startswith("loop_")
@@ -468,4 +480,14 @@ def _get_category_name(line):
         return None
     else:
         return line[1:line.find(".")]
-    
+
+
+def _quote(value):
+    if "'" in value:
+        return('"' + value + '"')
+    elif '"' in value:
+        return("'" + value + "'")
+    elif " " in value:
+        return("'" + value + "'")
+    else:
+        return value
