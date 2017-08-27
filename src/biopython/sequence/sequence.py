@@ -185,9 +185,6 @@ class Sequence(metaclass=abc.ABCMeta):
         symbol = alph.encode(symbol)
         self._seq_code.__setitem__(index, symbol)
     
-    def __delitem__(self, index):
-        self._seq_code = np.delete(self._seq_code, index) 
-    
     def __len__(self):
         return len(self._seq_code)
     
