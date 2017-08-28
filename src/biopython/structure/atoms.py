@@ -448,6 +448,9 @@ class AtomArray(_AtomArrayBase):
     
         >>> print(atom_array.chain_id)
         ['A' 'A' 'B']
+        
+    Accessing the coordinates:
+    
         >>> print(atom_array.coord)
         [[1 2 3]
          [2 3 4]
