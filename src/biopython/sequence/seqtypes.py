@@ -511,7 +511,7 @@ class ProteinSequence(Sequence):
         convert : string
             1-letter amino acid representation.
         """
-        return ProteinSequence._dict_3to1[symbol]
+        return ProteinSequence._dict_3to1[symbol.upper()]
     
     @staticmethod
     def convert_letter_1to3(symbol):
@@ -528,7 +528,7 @@ class ProteinSequence(Sequence):
         convert : string
             3-letter amino acid representation.
         """
-        return ProteinSequence._dict_3to1[symbol]
+        return ProteinSequence._dict_3to1[symbol.upper()]
     
     @staticmethod
     def convert_codon_table(symbol_table):
