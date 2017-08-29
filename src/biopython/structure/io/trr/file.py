@@ -5,10 +5,12 @@
 
 import mdtraj.formats as traj
 from ..trajfile import TrajectoryFile
+from ....file import register_suffix
 
 __all__ = ["TRRFile"]
 
 
+@register_suffix(["trr"])
 class TRRFile(TrajectoryFile):
     
     def _traj_type(self):

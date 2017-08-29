@@ -5,7 +5,7 @@
 
 import shlex
 import numpy as np
-from ....file import TextFile
+from ....file import TextFile, register_suffix
 try:
     from .cprocessloop import c_process_looped
     _c_accel = True
@@ -16,6 +16,7 @@ except ImportError:
 __all__ = ["PDBxFile"]
 
 
+@register_suffix(["cif", "pdbx"])
 class PDBxFile(TextFile):
     """
     This class represents a PDBx/mmCIF file.

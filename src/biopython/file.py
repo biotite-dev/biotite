@@ -5,8 +5,10 @@
 
 import abc
 
-__all__ = ["File", "TextFile"]
+__all__ = ["File", "TextFile", "register_suffix", "read"]
 
+
+_suffix_dict = {}
 
 class File(metaclass=abc.ABCMeta):
     
@@ -26,6 +28,24 @@ class File(metaclass=abc.ABCMeta):
         pass
 
 
+def register_suffix(suffixes):
+    def decorator(file_cls):
+        for suffix in suffixes:
+            _suffix_dict[suffix.lower()] = file_cls
+        return file_cls
+    return decorator
+
+
+def read(file_name):
+    suffix = file_name.split(".")[-1].lower()
+    try:
+        file_cls = _suffix_dict[suffix]
+    except KeyError:
+        raise ValueError("'{:}' suffix is not supported".format(suffix))
+    file = file_cls()
+    file.read(file_name)
+    return file
+        
 
 class TextFile(File, metaclass=abc.ABCMeta):
     

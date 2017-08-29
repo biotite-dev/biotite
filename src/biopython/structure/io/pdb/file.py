@@ -5,7 +5,7 @@
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
-from ....file import TextFile
+from ....file import TextFile, register_suffix
 from ...error import BadStructureError
 import copy
 
@@ -28,6 +28,8 @@ _atom_records = {"hetero"    : (0,  6),
                  "element"   : (76, 78),
                  "charge"    : (78, 80),}
 
+
+@register_suffix(["pdb"])
 class PDBFile(TextFile):
     """
     This class represents a PDB file.

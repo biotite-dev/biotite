@@ -5,11 +5,12 @@
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
-from ....file import TextFile
+from ....file import TextFile, register_suffix
 
 __all__ = ["NpzFile"]
 
 
+@register_suffix(["npz"])
 class NpzFile(TextFile):
     """
     This class represents a NPZ file, the preferable format for
