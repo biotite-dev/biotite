@@ -64,5 +64,6 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     sq_distance = np.sum(diff**2, axis=1)
     sq_min_len = min_len**2
     sq_max_len = max_len**2
-    discontinuity = np.where( ((sq_distance < sq_min_len) | (sq_distance > sq_max_len)) )
+    discontinuity = np.where( ((sq_distance < sq_min_len) |
+                               (sq_distance > sq_max_len)) )
     return discontinuity[0] + 1
