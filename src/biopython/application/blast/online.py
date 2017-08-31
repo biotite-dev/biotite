@@ -3,6 +3,7 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
+from .alignment import BlastAlignment
 from ..application import Application, evaluation
 from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
@@ -10,6 +11,7 @@ from ...sequence.seqtypes import DNASequence, ProteinSequence
 from ...sequence.io.fasta import FastaFile
 import time
 import requests
+from xml.etree import ElementTree
 from abc import abstractmethod
 
 __all__ = ["BlastOnline"]
@@ -66,7 +68,7 @@ class BlastOnline(WebApp):
         self._rid = None
         self._is_finished = False
     
-    def _set_max_evalue(self, value):
+    def _set_max_expect_value(self, value):
         self._expect_value = value
     
     def set_gap_penalty(self, opening, extension):
@@ -169,6 +171,39 @@ class BlastOnline(WebApp):
         request = requests.get(self.app_url(), params=param_dict)
         self._contact()
         print(request.text)
+        print("")
+        
+        alignments = []
+        root = ElementTree.fromstring(request.text)
+        hit_xpath = "./BlastOutput_iterations/Iteration/Iteration_hits/Hit"
+        hits = root.findall(hit_xpath)
+        for hit in hits:
+            hit_definition = hit.find("Hit_def").text
+            hit_id = hit.find("Hit_accession").text
+            hsp = hit.find(".Hit_hsps/Hsp")
+            score = int(hsp.find("Hsp_score"))
+            e_value = float(hsp.find("Hsp_evalue"))
+            query_begin = int(hsp.find("Hsp_query-from"))
+            query_end = int(hsp.find("Hsp_query-to"))
+            hit_begin = int(hsp.find("Hsp_hit-from"))
+            hit_end = int(hsp.find("Hsp_hit-to"))
+            
+            seq1_str = hsp.find("Hsp_qseq")
+            seq2_str = hsp.find("Hsp_hseq")
+            if program in ["blastn", "megablast"]:
+                seq1 = DNASequence(seq1_str)
+                seq2 = DNASequence(seq2_str)
+            else:
+                seq1 = ProteinSequence(seq1_str)
+                seq2 = ProteinSequence(seq2_str)
+            
+            alignment = BlastAlignment( seq1 ,seq2, trace, score, e_value,
+                                        (query_begin, query_end),
+                                        (query_begin, query_end),
+                                        hit_id, hit_definition )
+            alignments.append(alignment)
+        return alignments
+            
     
     @staticmethod
     def _get_info(text):

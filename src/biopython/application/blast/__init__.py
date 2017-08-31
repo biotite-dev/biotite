@@ -4,3 +4,4 @@
 # as part of this package.
 
 from .online import *
+from .alignment import *
