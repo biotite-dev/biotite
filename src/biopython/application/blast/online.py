@@ -8,7 +8,8 @@ from ..application import Application, evaluation
 from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import DNASequence, ProteinSequence
-from ...sequence.io.fasta import FastaFile
+from ...sequence.io.fasta.file import FastaFile
+from ...sequence.align.align import Alignment
 import time
 import requests
 from xml.etree import ElementTree
@@ -175,27 +176,31 @@ class BlastOnline(WebApp):
         
         alignments = []
         root = ElementTree.fromstring(request.text)
+        # Extract BlastAlignment objects from <Hit> tags
         hit_xpath = "./BlastOutput_iterations/Iteration/Iteration_hits/Hit"
         hits = root.findall(hit_xpath)
         for hit in hits:
             hit_definition = hit.find("Hit_def").text
             hit_id = hit.find("Hit_accession").text
             hsp = hit.find(".Hit_hsps/Hsp")
-            score = int(hsp.find("Hsp_score"))
-            e_value = float(hsp.find("Hsp_evalue"))
-            query_begin = int(hsp.find("Hsp_query-from"))
-            query_end = int(hsp.find("Hsp_query-to"))
-            hit_begin = int(hsp.find("Hsp_hit-from"))
-            hit_end = int(hsp.find("Hsp_hit-to"))
+            score = int(hsp.find("Hsp_score").text)
+            e_value = float(hsp.find("Hsp_evalue").text)
+            query_begin = int(hsp.find("Hsp_query-from").text)
+            query_end = int(hsp.find("Hsp_query-to").text)
+            hit_begin = int(hsp.find("Hsp_hit-from").text)
+            hit_end = int(hsp.find("Hsp_hit-to").text)
             
-            seq1_str = hsp.find("Hsp_qseq")
-            seq2_str = hsp.find("Hsp_hseq")
-            if program in ["blastn", "megablast"]:
-                seq1 = DNASequence(seq1_str)
-                seq2 = DNASequence(seq2_str)
+            seq1_str = hsp.find("Hsp_qseq").text
+            seq2_str = hsp.find("Hsp_hseq").text
+            if self._program in ["blastn", "megablast"]:
+                # DNASequence/ProteinSequence do ignore gaps
+                # Gaps are represented by the trace
+                seq1 = DNASequence(seq1_str.replace("-", ""))
+                seq2 = DNASequence(seq2_str.replace("-", ""))
             else:
-                seq1 = ProteinSequence(seq1_str)
-                seq2 = ProteinSequence(seq2_str)
+                seq1 = ProteinSequence(seq1_str.replace("-", ""))
+                seq2 = ProteinSequence(seq2_str.replace("-", ""))
+            trace = Alignment.trace_from_string(seq1_str, seq2_str)
             
             alignment = BlastAlignment( seq1 ,seq2, trace, score, e_value,
                                         (query_begin, query_end),
@@ -203,7 +208,7 @@ class BlastOnline(WebApp):
                                         hit_id, hit_definition )
             alignments.append(alignment)
         return alignments
-            
+    
     
     @staticmethod
     def _get_info(text):

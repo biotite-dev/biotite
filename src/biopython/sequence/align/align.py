@@ -90,6 +90,25 @@ class Alignment(object):
         if not isinstance(index, slice):
             raise IndexError("Alignments only support slice indexing")
         return Alignment(self.seq1, self.seq2, self.trace[index], self.score)
+    
+    @staticmethod
+    def trace_from_string(seq1_str, seq2_str):
+        i = 0
+        j = 0
+        trace = np.full((len(seq1_str), 2), -1, dtype=np.int64)
+        for k in range(len(seq1_str)):
+            if seq1_str[k] == "-":
+                trace[k, 0] = -1
+            else:
+                trace[k, 0] = i
+                i += 1
+            if seq2_str[k] == "-":
+                trace[k, 1] = -1
+            else:
+                trace[k, 1] = j
+                j += 1
+            k += 1
+        return trace
 
 
 def simple_score(seq1, seq2, matrix):
