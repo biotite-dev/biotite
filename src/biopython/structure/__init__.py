@@ -81,6 +81,7 @@ from .geometry import *
 from .integrity import *
 from .residues import *
 from .sasa import *
+from .secondary import *
 from .superimpose import *
 from .transform import *
 # util is used internal
