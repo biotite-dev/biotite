@@ -81,8 +81,8 @@ from .geometry import *
 from .integrity import *
 from .residues import *
 from .sasa import *
-from .secondary import *
+from .sse import *
 from .superimpose import *
 from .transform import *
-# util is used internal
+# util is used internally
 from .vis import *

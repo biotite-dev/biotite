@@ -13,8 +13,9 @@ from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .geometry import distance, angle, dihedral
 from .filter import filter_amino_acids
 from .error import BadStructureError
+from .util import distance
 
-__all__ = ["secondary_structure"]
+__all__ = ["annotate_sse"]
 
 
 _radians_to_angle = 2*np.pi/360
@@ -26,16 +27,41 @@ _d3_helix = ((5.3-0.5), (5.3+0.5))
 _d4_helix = ((6.4-0.6), (6.4+0.6))
 
 _r_strand = ((124-14)*_radians_to_angle, (124+14)*_radians_to_angle)
-_a_strand = ((-170-45)*_radians_to_angle, (-170+45)*_radians_to_angle)
+_a_strand = ((-180)*_radians_to_angle, (-125)*_radians_to_angle,
+             (145)*_radians_to_angle, (180)*_radians_to_angle)
 _d2_strand = ((6.7-0.6), (6.7+0.6))
 _d3_strand = ((9.9-0.9), (9.9+0.9))
 _d4_strand = ((12.4-1.1), (12.4+1.1))
 
 
-def secondary_structure(atom_array, chain_id):
+def annotate_sse(atom_array, chain_id):
     """
-    Calculate the secondary structure of a peptide chain using the
-    `P-SEA` algorithm [1]_.
+    Calculate the secondary structure elements (SSE) of a
+    peptide chain based on the `P-SEA` algorithm [1]_.
+    
+    The annotation is based CA coordinates only, specifically
+    distances and dihedral angles.
+    
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The atom array to annotate for.
+    chain_id : str
+        The chain ID to annotate for.
+    
+    Returns
+    -------
+    sse : ndarray
+        An array containing the secondary structure elements,
+        where the index corresponds to the index of the CA-filtered
+        `atom_array`. 'a' means alpha helix, 'b' means beta strand/sheet,
+        'c' means coil.
+    
+    Notes
+    -----
+    Although this function uses the original `P-SEA` algorithm, there
+    are deviatons in some cases, do do not rely on getting the exact same
+    results.
     
     References
     ----------
@@ -44,6 +70,18 @@ def secondary_structure(atom_array, chain_id):
        "P-SEA: a new efficient assignment of secondary structure from
        CA trace of protein."
        Comput Appl Biosci, 13, 291-295 (1997).
+    
+    Examples
+    --------
+    
+    SSE of PDB 1L2Y:
+        
+        >>> a = get_structure(file, model=1)
+        >>> sse = annotate_sse(a, "A")
+        >>> print(sse)
+        ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c']
+    
     """
     # Filter all CA atoms in the relevant chain.
     ca_coord = atom_array[filter_amino_acids(atom_array) &
@@ -81,8 +119,8 @@ def secondary_structure(atom_array, chain_id):
     sse = np.full(len(ca_coord), "c", dtype="U1")
     
     # Annotate helices
-    # Find CA that meet criteria for helix starts
-    is_helix_start = np.zeros(len(sse), dtype=bool)
+    # Find CA that meet criteria for potential helices
+    is_pot_helix = np.zeros(len(sse), dtype=bool)
     for i in range(len(sse)):
         if (
                 d3i[i] >= _d3_helix[0] and d3i[i] <= _d3_helix[1]
@@ -91,23 +129,21 @@ def secondary_structure(atom_array, chain_id):
                 ri[i] >= _r_helix[0] and ri[i] <= _r_helix[1]
             and ai[i] >= _a_helix[0] and ai[i] <= _a_helix[1]
            ):
-                is_helix_start[i] = True
-    # Remove potential helix starts, if there are not at least
-    # 5 consecutive elements
-    is_real_helix_start = np.zeros(len(sse), dtype=bool)
+                is_pot_helix[i] = True
+    # Real helices are 5 consecutive helix elements
+    is_helix = np.zeros(len(sse), dtype=bool)
     counter = 0
     for i in range(len(sse)):
-        if is_helix_start[i]:
+        if is_pot_helix[i]:
             counter += 1
         else:
             if counter >= 5:
-                is_real_helix_start[i-counter : i] = True
+                is_helix[i-counter : i] = True
             counter = 0
     # Extend the helices by one at each end if CA meets extension criteria
-    
     i = 0
     while i < len(sse):
-        if is_real_helix_start[i]:
+        if is_helix[i]:
             sse[i] = "a"
             if (
                 d3i[i-1] >= _d3_helix[0] and d3i[i-1] <= _d3_helix[1]
@@ -124,7 +160,52 @@ def secondary_structure(atom_array, chain_id):
                     sse[i+1] = "a"
         i += 1
     
+    # Annotate sheets
+    # Find CA that meet criteria for potential strands
+    is_pot_strand = np.zeros(len(sse), dtype=bool)
+    for i in range(len(sse)):
+        if (    d2i[i] >= _d2_strand[0] and d2i[i] <= _d2_strand[1]
+            and d3i[i] >= _d3_strand[0] and d3i[i] <= _d3_strand[1]
+            and d4i[i] >= _d4_strand[0] and d4i[i] <= _d4_strand[1]
+           ) or (
+                ri[i] >= _r_strand[0] and ri[i] <= _r_strand[1]
+            and (   (ai[i] >= _a_strand[0] and ai[i] <= _a_strand[1])
+                 or (ai[i] >= _a_strand[2] and ai[i] <= _a_strand[3]))
+           ):
+                is_pot_strand[i] = True
+    # Real strands are 5 consecutive strand elements,
+    # or shorter fragments of at least 3 consecutive strand residues,
+    # if they are in hydrogen bond proximity to 5 other residues
+    pot_strand_coord = ca_coord[is_pot_strand]
+    is_strand = np.zeros(len(sse), dtype=bool)
+    counter = 0
+    contacts = 0
+    for i in range(len(sse)):
+        if is_pot_strand[i]:
+            counter += 1
+            coord = ca_coord[i]
+            for strand_coord in ca_coord:
+                dist = distance(coord, strand_coord)
+                if dist >= 4.2 and dist <= 5.2:
+                    contacts += 1
+        else:
+            if counter >= 4:
+                is_strand[i-counter : i] = True
+            elif counter == 3 and contacts >= 5:
+                is_strand[i-counter : i] = True
+            counter = 0
+            contacts = 0
+    # Extend the strands by one at each end if CA meets extension criteria
+    i = 0
+    while i < len(sse):
+        if is_strand[i]:
+            sse[i] = "b"
+            if d3i[i-1] >= _d3_strand[0] and d3i[i-1] <= _d3_strand[1]:
+                sse[i-1] = "b"
+            sse[i] = "b"
+            if d3i[i+1] >= _d3_strand[0] and d3i[i+1] <= _d3_strand[1]:
+                sse[i+1] = "b"
+        i += 1
     
-    #sse[is_real_helix_start] = "a"
     return sse
             
