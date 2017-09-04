@@ -137,21 +137,19 @@ def dihedral_backbone(atom_array, chain_id):
     Parameters
     ----------
     atom_array: AtomArray
-        The protein structure.
+        The protein structure. a complete backbone, without gaps,
+        is required here.
     chain_id: string
         The ID of the polypeptide chain. The dihedral angles are
         calculated for ``atom_array[atom_array.chain_id == chain_id]``
     
     Returns
     -------
-    psi, omega, phi : 1-D ndarray
-        An array containing the 3 backbone dihedral angles. The array
-        index *n* represents the angles in the section between *CA(n)*
-        and *CA(n+1)*. Therefore the length of this array is the length
-        of the AtomArray -1. This differs from the angle definition in
-        biology, since *psi(n)* and *phi(n)* are defined as the angles
-        next to *CA(n)*. The indices of *phi* need to be shifted by 1 
-        for this. 
+    phi, psi, omega : 1-D ndarray
+        An array containing the 3 backbone dihedral angles for every
+        CA. 'phi' is not defined at the N-terminus, 'psi' and 'omega'
+        are not defined at the C-terminus. In these places the arrays
+        have `NaN` values.
     
     Raises
     ------
@@ -185,21 +183,35 @@ def dihedral_backbone(atom_array, chain_id):
     """
     try:
         # Filter all backbone atoms
-        backbone = atom_array[filter_backbone(atom_array) &
-                              (atom_array.chain_id == chain_id)]
-        angle_atoms = np.zeros(( len(backbone)-3, 4, 3 ))
-        # Fill numpy array, where last dimension is used for dihedral calc
-        for i in range(len(angle_atoms)):
-            angle_atoms[i] = backbone.coord[0+i : 4+i]
-        dihed = dihedral(angle_atoms[:,0], angle_atoms[:,1],
-                         angle_atoms[:,2], angle_atoms[:,3])
-        # Extract the three dihedral angle types
-        psi = dihed[0::3]
-        omega = dihed[1::3]
-        phi = dihed[2::3]
-        return psi, omega, phi
+        bb_coord = atom_array[filter_backbone(atom_array) &
+                              (atom_array.chain_id == chain_id)].coord
+        print(bb_coord)
+        
+        phi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
+        psi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
+        omega_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
+        
+        for i in range(1, len(phi_coord)):
+            phi_coord[i] = (bb_coord[(i*3+1)-2], bb_coord[(i*3+1)-1],
+                            bb_coord[(i*3+1)], bb_coord[(i*3+1)+1])
+        for i in range(0, len(psi_coord)-1):
+            psi_coord[i] = (bb_coord[(i*3+1)-1], bb_coord[(i*3+1)],
+                            bb_coord[(i*3+1)+1], bb_coord[(i*3+1)+2])
+        for i in range(0, len(psi_coord)-1):
+            omega_coord[i] = (bb_coord[(i*3+1)], bb_coord[(i*3+1)+1],
+                              bb_coord[(i*3+1)+2], bb_coord[(i*3+1)+3])
+        
+        phi = dihedral(phi_coord[:,0], phi_coord[:,1],
+                       phi_coord[:,2], phi_coord[:,3])
+        psi = dihedral(psi_coord[:,0], psi_coord[:,1],
+                       psi_coord[:,2], psi_coord[:,3])
+        omega = dihedral(omega_coord[:,0], omega_coord[:,1],
+                         omega_coord[:,2], omega_coord[:,3])
+        
+        return phi, psi, omega
+    
     except Exception as err:
-        if len(backbone) != backbone.seq_length()*3:
+        if len(bb_coord) % 3 != 0:
             raise BadStructureError("AtomArray has insufficient amount"
                 "of backbone atoms") from None
         else:
