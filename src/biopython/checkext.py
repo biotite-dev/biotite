@@ -3,5 +3,12 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from .file import *
-from .checkext import *
+__all__ = ["has_c_extensions"]
+
+
+def has_c_extensions():
+    try:
+        from .ccheckext import c_check_extensions
+        return c_check_extensions()
+    except ImportError:
+        return False

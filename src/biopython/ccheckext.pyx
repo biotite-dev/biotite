@@ -3,5 +3,5 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from .file import *
-from .checkext import *
+def c_check_extensions():
+    return True
