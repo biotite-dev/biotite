@@ -4,9 +4,40 @@
 # as part of this package.
 
 from setuptools import setup, find_packages, Extension
-from Cython.Build import cythonize
+from setuptools.command.sdist import sdist
+
 
 release = "2.0a2"
+
+c_ext_modules = [Extension("biopython.sequence.align.calign",
+                           ["src/biopython/sequence/align/calign.c"]
+                          ),
+                 Extension("biopython.structure.io.pdbx.cprocessloop",
+                           ["src/biopython/structure/io/pdbx/cprocessloop.c"]
+                          ),
+                 Extension("biopython.ccheckext",
+                           ["src/biopython/ccheckext.c"]
+                          )
+                ]
+
+pyx_ext_modules = [Extension("biopython.sequence.align.calign",
+                             ["src/biopython/sequence/align/calign.pyx"]
+                            ),
+                   Extension("biopython.structure.io.pdbx.cprocessloop",
+                             ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
+                            ),
+                   Extension("biopython.ccheckext",
+                             ["src/biopython/ccheckext.pyx"]
+                          )
+                ]
+
+
+class cython_sdist(sdist):  
+    def run(self):
+        from Cython.Build import cythonize
+        cythonize(pyx_ext_modules, verbose=True)
+        super().run()
+
 
 setup(name="Biopython",
     version = release,
@@ -18,17 +49,11 @@ setup(name="Biopython",
     packages = find_packages("src"),
     package_dir = {"" : "src"},
     
-    ext_modules = cythonize(
-        [Extension  ("biopython.sequence.align.calign",
-                     ["src/biopython/sequence/align/calign.pyx"]
-                    ),
-         Extension  ("biopython.structure.io.pdbx.cprocessloop",
-                     ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
-                    )
-        ]
-    ),
+    cmdclass={'sdist': cython_sdist},
+    ext_modules = c_ext_modules,
     
-    package_data = {"" : ["*.npy", "*.pyx"]},
+    # Including substitution matrix data
+    package_data = {"" : ["*.npy"]},
     
     install_requires = ["requests",
                         "numpy",
