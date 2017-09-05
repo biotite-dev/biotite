@@ -207,6 +207,21 @@ def sasa(array, **kwargs):
     return sasa
 
 
+def _create_fibonacci_points(n):
+    """
+    Get an array of approximately equidistant points on a sphere surface
+    using a golden section spiral.
+    """
+    phi = (3 - np.sqrt(5)) * np.pi * np.arange(n)
+    z = np.linspace(1 - 1.0/n, 1.0/n - 1, n)
+    radius = np.sqrt(1 - z*z)
+    coords = np.zeros((n, 3))
+    coords[:,0] = radius * np.cos(phi)
+    coords[:,1] = radius * np.sin(phi)
+    coords[:,2] = z
+    return coords
+
+
 _protor_default = 1.80
 _protor_radii = {"GLY": {" O  ": 1.42,
                          " C  ": 1.61,
