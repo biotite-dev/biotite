@@ -33,10 +33,22 @@ pyx_ext_modules = [Extension("biopython.sequence.align.calign",
 
 
 class cython_sdist(sdist):  
+    
+    description = "Create source distribution with or without C-extensions"
+    user_options = [('no-ext', None, "Omits C-extensions")]
+    
     def run(self):
-        from Cython.Build import cythonize
-        cythonize(pyx_ext_modules, verbose=True)
+        if not self.no_ext:
+            from Cython.Build import cythonize
+            cythonize(pyx_ext_modules, verbose=True)
         super().run()
+    
+    def initialize_options(self):
+        self.no_ext = 0
+        super().initialize_options()
+    
+    def finalize_options(self):
+        super().finalize_options()
 
 
 setup(name="Biopython",
