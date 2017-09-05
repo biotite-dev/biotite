@@ -4,51 +4,41 @@
 # as part of this package.
 
 from setuptools import setup, find_packages, Extension
-from setuptools.command.sdist import sdist
+import sys
 
 
 release = "2.0a2"
 
-c_ext_modules = [Extension("biopython.sequence.align.calign",
-                           ["src/biopython/sequence/align/calign.c"]
-                          ),
-                 Extension("biopython.structure.io.pdbx.cprocessloop",
-                           ["src/biopython/structure/io/pdbx/cprocessloop.c"]
-                          ),
-                 Extension("biopython.ccheckext",
-                           ["src/biopython/ccheckext.c"]
-                          )
-                ]
 
-pyx_ext_modules = [Extension("biopython.sequence.align.calign",
-                             ["src/biopython/sequence/align/calign.pyx"]
-                            ),
-                   Extension("biopython.structure.io.pdbx.cprocessloop",
-                             ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
-                            ),
-                   Extension("biopython.ccheckext",
-                             ["src/biopython/ccheckext.pyx"]
-                          )
-                ]
-
-
-class cython_sdist(sdist):  
-    
-    description = "Create source distribution with or without C-extensions"
-    user_options = [('no-ext', None, "Omits C-extensions")]
-    
-    def run(self):
-        if not self.no_ext:
-            from Cython.Build import cythonize
-            cythonize(pyx_ext_modules, verbose=True)
-        super().run()
-    
-    def initialize_options(self):
-        self.no_ext = 0
-        super().initialize_options()
-    
-    def finalize_options(self):
-        super().finalize_options()
+if "--no-extensions" in sys.argv:
+    ext_modules = None
+    sys.argv.remove("--no-extensions")
+else:
+    try:
+        from Cython.Build import cythonize
+        ext_modules = cythonize(
+            [Extension("biopython.sequence.align.calign",
+                       ["src/biopython/sequence/align/calign.pyx"]
+                      ),
+             Extension("biopython.structure.io.pdbx.cprocessloop",
+                       ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
+                      ),
+             Extension("biopython.ccheckext",
+                       ["src/biopython/ccheckext.pyx"]
+                      )]
+        )
+    except:
+        ext_modules = \
+            [Extension("biopython.sequence.align.calign",
+                       ["src/biopython/sequence/align/calign.c"]
+                      ),
+             Extension("biopython.structure.io.pdbx.cprocessloop",
+                       ["src/biopython/structure/io/pdbx/cprocessloop.c"]
+                      ),
+             Extension("biopython.ccheckext",
+                       ["src/biopython/ccheckext.c"]
+                      )
+            ]
 
 
 setup(name="Biopython",
@@ -61,8 +51,7 @@ setup(name="Biopython",
     packages = find_packages("src"),
     package_dir = {"" : "src"},
     
-    cmdclass={'sdist': cython_sdist},
-    ext_modules = c_ext_modules,
+    ext_modules = ext_modules,
     
     # Including substitution matrix data
     package_data = {"" : ["*.npy"]},
