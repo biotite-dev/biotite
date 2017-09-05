@@ -18,6 +18,26 @@ _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC"]
 
+_solvent_list = ["HOH","SOL"]
+
+
+def filter_solvent(array):
+    """
+    Filter all atoms of one array that are part of the solvent.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    
+    Returns
+    -------
+    filter : ndarray(dtype=bool)
+        This array is `True` for all indices in `array`, where the atom
+        belongs to the solvent.
+    """
+    return ( np.in1d(array.res_name, _solvent_list) & (array.hetero == True) )
+
 
 def filter_amino_acids(array):
     """
