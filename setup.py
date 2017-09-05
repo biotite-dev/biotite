@@ -28,7 +28,7 @@ setup(name="Biopython",
         ]
     ),
     
-    package_data = {"biopython.sequence.align" : ["matrix_data/*.npy"]},
+    package_data = {"" : ["*.npy", "*.pyx"]},
     
     install_requires = ["requests",
                         "numpy",
