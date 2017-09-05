@@ -12,6 +12,7 @@ import numpy as np
 from .adjacency import AdjacencyMap
 from .geometry import distance
 from .util import vector_dot
+from .filter import filter_solvent
 
 __all__ = ["sasa"]
 
@@ -109,7 +110,7 @@ def sasa(array, **kwargs):
     occl_filter = np.ones(len(array), dtype=bool)
     
     # Remove water residues, since it is the solvent
-    filter = (array.hetero != "W")
+    filter = ~filter_solvent(array)
     sasa_filter = sasa_filter & filter
     occl_filter = occl_filter & filter
     if "ignore_ions" in kwargs:
