@@ -4,7 +4,7 @@
 # as part of this package.
 
 from .alignment import BlastAlignment
-from ..application import Application, evaluation
+from ..application import Application, requires_state, AppState
 from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import DNASequence, ProteinSequence
@@ -67,33 +67,37 @@ class BlastOnline(WebApp):
         
         self._mail=mail
         self._rid = None
-        self._is_finished = False
     
-    def _set_max_expect_value(self, value):
+    @requires_state(AppState.CREATED)
+    def set_max_expect_value(self, value):
         self._expect_value = value
     
+    @requires_state(AppState.CREATED)
     def set_gap_penalty(self, opening, extension):
         self._gap_openining = opening
         self._gap_extension = extension
-        
+    
+    @requires_state(AppState.CREATED)
     def set_word_size(self, size):
         self._word_size = size
-        
+    
+    @requires_state(AppState.CREATED)
     def set_match_reward(self, reward):
         self._reward = score
     
+    @requires_state(AppState.CREATED)
     def set_mismatch_penalty(self, penalty):
         self._penalty = penalty
-        
+    
+    @requires_state(AppState.CREATED)
     def set_substitution_matrix(self, matrix_name):
         self._matrix = matrix_name.upper()
     
+    @requires_state(AppState.CREATED)
     def set_threshold(self, threshold):
         self._threshold = threshold
     
     def run(self):
-        super().run()
-        
         param_dict = {}
         param_dict["tool"] = "BiopythonClient"
         if self._mail is not None:
@@ -128,39 +132,25 @@ class BlastOnline(WebApp):
         info_dict = BlastOnline._get_info(request.text)
         self._rid = info_dict["RID"]
     
-    def join(self):
-        if not self.is_started():
-            raise ApplicationError("The application run has not been "
-                                   "not started yet")
-        time.sleep(BlastOnline._contact_delay)
-        while not self.is_finished():
-            # NCBI requires a 3 second delay between requests
-            time.sleep(BlastOnline._contact_delay)
-        time.sleep(BlastOnline._contact_delay)
-        super().join()
-    
     def is_finished(self):
-        if not self.is_started():
-            raise ApplicationError("The application run has not been "
-                                   "not started yet")
-        if self._is_finished:
-            # If it is already known that the application finished,
-            # return true
-            return True
-        else:
-            # Otherwise check again
-            data_dict = {"FORMAT_OBJECT" : "SearchInfo",
-                         "RID"           : self._rid,
-                         "CMD"           : "Get"}
-            request = requests.get(self.app_url(), params=data_dict)
-            self._contact()
-            info_dict = BlastOnline._get_info(request.text)
-            if info_dict["Status"] == "READY":
-                self._is_finished = True
-            return self._is_finished
+        data_dict = {"FORMAT_OBJECT" : "SearchInfo",
+                     "RID"           : self._rid,
+                     "CMD"           : "Get"}
+        request = requests.get(self.app_url(), params=data_dict)
+        self._contact()
+        info_dict = BlastOnline._get_info(request.text)
+        return info_dict["Status"] == "READY"
+        
+    def wait_interval(self):
+        # NCBI requires a 3 second delay between server contacts
+        return BlastOnline._contact_delay
     
-    @evaluation
-    def get_alignments(self):
+    def tidy_up(self):
+        param_dict["CMD"] = "Delete"
+        param_dict["RID"] = self._rid
+        request = requests.get(self.app_url(), params=param_dict)
+    
+    def evaluate(self):
         param_dict = {}
         param_dict["tool"] = "BiopythonClient"
         if self._mail is not None:
@@ -174,7 +164,7 @@ class BlastOnline(WebApp):
         print(request.text)
         print("")
         
-        alignments = []
+        self._alignments = []
         root = ElementTree.fromstring(request.text)
         # Extract BlastAlignment objects from <Hit> tags
         hit_xpath = "./BlastOutput_iterations/Iteration/Iteration_hits/Hit"
@@ -206,9 +196,12 @@ class BlastOnline(WebApp):
                                         (query_begin, query_end),
                                         (query_begin, query_end),
                                         hit_id, hit_definition )
-            alignments.append(alignment)
-        return alignments
+            self._alignments.append(alignment)
+        return self._alignments
     
+    @requires_state(AppState.FINISHED)
+    def get_alignments(self):
+        return self._alignments
     
     @staticmethod
     def _get_info(text):

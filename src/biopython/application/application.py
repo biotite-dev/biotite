@@ -4,46 +4,96 @@
 # as part of this package.
 
 import abc
+import time
+from enum import IntEnum
 
-__all__ = ["Application", "ApplicationError"]
+__all__ = ["Application", "AppStateError", "AppState"]
+
+
+class AppState(IntEnum):
+    CREATED = auto()
+    RUNNING = auto()
+    FINISHED = auto()
+    CANCELLED = auto()
 
 
 class Application(metaclass=abc.ABCMeta):
     
     def __init__(self):
-        self._is_joined = False
-        self._is_started = False
+        self._state = AppState.CREATED
+    
+    @requires_state(AppState.CREATED)
+    def start(self):
+        self.run()
+        self._start_time = time.time()
+        self._state = AppState.RUNNING
+    
+    @requires_state(AppState.RUNNING)
+    def join(self, timeout=None):
+        time.sleep(wait_interval())
+        while self.get_app_state() != AppState.FINISHED:
+            if timeout is not None and time.time()-self._start_time > timeout:
+                raise TimeoutError("The application expired its timeout")
+            else:
+                time.sleep(wait_interval())
+        time.sleep(wait_interval())
+        self.evaluate()
+        self._state = AppState.FINISHED
+        self.tidy_up()
+    
+    @requires_state(AppState.RUNNING)
+    def cancel(self):
+        self._state = AppState.CANCELLED
+        self.tidy_up()
+    
+    def get_app_state(self):
+        if self._state == AppState.RUNNING:
+            if is_finished():
+                self._state = AppState.FINISHED
+        return self._state
     
     @abc.abstractmethod
     def run(self):
-        self._is_started = True
-    
-    @abc.abstractmethod
-    def join(self):
-        self._is_joined = True
+        pass
     
     @abc.abstractmethod
     def is_finished(self):
         pass
     
-    def is_started(self):
-        return self._is_started
+    @abc.abstractmethod
+    def wait_interval(self):
+        pass
+    
+    @abc.abstractmethod
+    def evaluate(self):
+        pass
+    
+    def tidy_up(self):
+        pass 
 
 
-def evaluation(func):
-    def wrapper(*args):
-        instance = args[0]
-        if not instance._is_joined:
-            raise EvaluationError("Cannot access run results yet, "
-                                  "join first")
-        return func(*args)
-    return wrapper
+def requires_state(app_state):
+    def decorator(func):
+        def wrapper(*args):
+            instance = args[0]
+            if instance.get_app_state() != app_state:
+                raise AppStateError("The application object is in {:}, "
+                                    "but the method requires {:}".format(
+                                        instance.get_app_state(), app_state)
+                                    )
+        return wrapper
+    return decorator
 
 
-class ApplicationError(Exception):
+class AppStateError(Exception):
     """
-    Indicates that the application lifecycle was violated:
-    Either it was tried to join the application, before it was started,
-    or it was tried to access the application results,
-    before the application run was finished and joined.
+    Indicate that the application lifecycle was violated.
     """
+    pass
+
+
+class TimeoutError(Exception):
+    """
+    Indicate that the application's timeout expired.
+    """
+    pass
