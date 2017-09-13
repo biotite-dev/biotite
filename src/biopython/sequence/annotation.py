@@ -5,7 +5,7 @@
 
 from .sequence import Sequence
 import copy
-from enum import Flag
+from enum import Flag, auto
 
 __all__ = ["Feature", "Annotation", "AnnotatedSequence"]
 

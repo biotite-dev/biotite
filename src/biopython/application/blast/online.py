@@ -146,6 +146,7 @@ class BlastOnline(WebApp):
         return BlastOnline._contact_delay
     
     def tidy_up(self):
+        param_dict = {}
         param_dict["CMD"] = "Delete"
         param_dict["RID"] = self._rid
         request = requests.get(self.app_url(), params=param_dict)
@@ -161,8 +162,6 @@ class BlastOnline(WebApp):
         param_dict["NCBI_GI"] = "T"
         request = requests.get(self.app_url(), params=param_dict)
         self._contact()
-        print(request.text)
-        print("")
         
         self._alignments = []
         root = ElementTree.fromstring(request.text)
@@ -197,9 +196,8 @@ class BlastOnline(WebApp):
                                         (query_begin, query_end),
                                         hit_id, hit_definition )
             self._alignments.append(alignment)
-        return self._alignments
     
-    @requires_state(AppState.FINISHED)
+    @requires_state(AppState.JOINED)
     def get_alignments(self):
         return self._alignments
     

@@ -5,18 +5,15 @@
 
 import unittest
 
-from .structure import structure_suite
-from .sequence import sequence_suite
-from .application import application_suite
+from .blast import *
 
-test_suite = unittest.TestSuite()
-test_suite.addTest(structure_suite)
-test_suite.addTest(sequence_suite)
-test_suite.addTest(application_suite)
+loader = unittest.defaultTestLoader
+application_suite = unittest.TestSuite()
+application_suite.addTest(loader.loadTestsFromTestCase(BlastTest))
 
 def run():
     runner = unittest.TextTestRunner()
-    runner.run(test_suite)
+    runner.run(structure_suite)
 
 if __name__ == "__main__":
     run()

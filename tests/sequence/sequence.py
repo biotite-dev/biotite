@@ -21,8 +21,8 @@ class SequenceTest(unittest.TestCase):
         self.assertEqual(string[2], dna[2])
         dna[-1] = "C"
         self.assertEqual("AATGCGTTC", str(dna))
-        del dna[4]
-        self.assertEqual("AATGGTTC", str(dna))
+        dna = dna[3:-2]
+        self.assertEqual("GCGT", str(dna))
         
     def test_alph_error(self):
         string = "AATGCGTUTA"
