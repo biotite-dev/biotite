@@ -6,16 +6,17 @@
 import unittest
 import biopython.sequence as seq
 import biopython.sequence.io.fasta as fasta
+import biopython.database.entrez as entrez
 import numpy as np
 import os
 import os.path
-from .testutil import data_dir
+from .testutil import data_dir, uids
 
 class FastaTest(unittest.TestCase):
     
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.files = [os.path.join(data_dir, "sequence.fasta")]
+        self.files = entrez.fetch(uids, data_dir, "fasta", "nuccore", "fasta")
         
     def test_sequence_conversion(self):
         for path in self.files:

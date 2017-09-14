@@ -5,4 +5,6 @@
 
 import os.path
 
+uids = ["1L2Y", "3O5R", "M95099"]
+
 data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")

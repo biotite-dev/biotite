@@ -10,8 +10,7 @@ import biopython.database.rcsb as rcsb
 import numpy as np
 import os
 import os.path
-from .testutil import data_dir
-from .testutil import pdb_ids
+from .testutil import data_dir, pdb_ids
 
 class PDBxTest(unittest.TestCase):
     
