@@ -15,7 +15,7 @@ _standard_url = "https://files.rcsb.org/download/"
 _mmtf_url = "https://mmtf.rcsb.org/v1.0/full/"
 
 def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
-    # If only a single PDB id is present,
+    # If only a single PDB ID is present,
     # put it into a single element list
     if isinstance(pdb_ids, str):
         pdb_ids = [pdb_ids]
