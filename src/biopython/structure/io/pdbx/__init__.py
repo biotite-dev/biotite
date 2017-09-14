@@ -4,10 +4,11 @@
 # as part of this package.
 
 """
-This subpackage is used for reading and writing an `AtomArray` or
-`AtomArrayStack` using the modern PDBx/mmCIF file format. Since the
-format has a dictionary-like structure, this subpackage provides
-a file class that allows dictionary-style indexing.
+This subpackage provides support for the the modern PDBx/mmCIF file
+format. The `PDBxFile` class provides dictionary-like access to every
+field in PDBx/mmCIF files. Additional utility functions allow
+conversion of these dictionaries to `AtomArray` and `AtomArrayStack`
+objects and vice versa.
 """
 
 from .convert import *
