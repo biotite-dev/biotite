@@ -86,15 +86,14 @@ def filter_intersection(array, intersect):
     
     An atom is defined as existent in the second array, if there is an
     atom in the second array that has the same annotation values in all
-    categories that exists in both atoms.
+    categories that exists in both arrays.
     
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
     intersect : AtomArray
-        Atoms in `array` are filtered that exists also in this
-        `AtomArray`.
+        Atoms in `array` that also exists in `intersect` are filtered.
     
     Returns
     -------
