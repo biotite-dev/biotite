@@ -12,11 +12,14 @@ __all__ = ["XTCFile"]
 
 @register_suffix(["xtc"])
 class XTCFile(TrajectoryFile):
+    """
+    This file class represents a XTC trajectory file.
+    """
     
-    def _traj_type(self):
+    def traj_type(self):
         return traj.XTCTrajectoryFile
     
-    def _output_value_index(self, value):
+    def output_value_index(self, value):
         if value == "coord":
             return 0
         if value == "time":

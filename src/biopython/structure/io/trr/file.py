@@ -12,11 +12,14 @@ __all__ = ["TRRFile"]
 
 @register_suffix(["trr"])
 class TRRFile(TrajectoryFile):
+    """
+    This file class represents a TRR trajectory file.
+    """
     
-    def _traj_type(self):
+    def traj_type(self):
         return traj.TRRTrajectoryFile
     
-    def _output_value_index(self, value):
+    def output_value_index(self, value):
         if value == "coord":
             return 0
         if value == "time":

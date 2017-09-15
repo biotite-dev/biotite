@@ -12,11 +12,14 @@ __all__ = ["TNGFile"]
 
 @register_suffix(["tng"])
 class TNGFile(TrajectoryFile):
+    """
+    This file class represents a TNG trajectory file.
+    """
     
-    def _traj_type(self):
+    def traj_type(self):
         return traj.TNGTrajectoryFile
     
-    def _output_value_index(self, value):
+    def output_value_index(self, value):
         if value == "coord":
             return 0
         if value == "time":
