@@ -31,12 +31,11 @@ Application
 """""""""""
 Command line and online applications can be managed with the ``application``
 subpackage.
-*This feature is not included yet.*
 
 Database
 """"""""
 The ``database`` subpackage provides interfaces for searching in and fetching
-data from biologial databases like *NCBI* or *RCSB*.
+data from biologial databases like *NCBI Entrez* or *RCSB*.
 
 Sequence
 """"""""
@@ -63,6 +62,8 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
    
+   install
    tutorial/index
    apidoc/index
+   develop
    
