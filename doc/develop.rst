@@ -147,6 +147,17 @@ and add the case to the test suite similar to the follwong line:
 
    structure_suite.addTest(loader.loadTestsFromTestCase(SuperimposeTest))
 
+Code deployment
+---------------
+
+The binary distribution and the source distribution are created with
+the following commands, respectively:
+
+.. code-block:: python
+
+   python setup.py bdist_wheel
+   python setup.py sdist
+
 Building the documentation
 --------------------------
 

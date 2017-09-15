@@ -1,5 +1,5 @@
-Installation instructions
-=========================
+Install instructions
+====================
 
 Biopython 2.0 comes in two flavors: A binary distribution with some extra
 C-accelerated functions (e.g. for alignments or mmCIF parsing) and a
@@ -63,7 +63,7 @@ Source distribution
 -------------------
 
 The source distribution, written in pure Python, should be seen as a fallback
-option, which is useful, if there is either no *wheel* available for you or the
+option, which is useful in case there is either no *wheel* available for you or the
 available *wheel* is not working for some reason (or you just don't like fast
 code).
 *pip* will automatically install the source distribution if it does not find
