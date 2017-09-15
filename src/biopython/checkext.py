@@ -7,6 +7,15 @@ __all__ = ["has_c_extensions"]
 
 
 def has_c_extensions():
+    """
+    Check if the Biopython distribution uses successfully built
+    Cython extensions.
+    
+    Returns
+    -------
+    bool
+        True, if Cython extensions exist, false otherwise.
+    """
     try:
         from .ccheckext import c_check_extensions
         return c_check_extensions()

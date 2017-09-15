@@ -8,6 +8,14 @@ import abc
 __all__ = ["File", "TextFile"]
 
 class File(metaclass=abc.ABCMeta):
+    """
+    Base class for all file classes. Every file class is
+    instantiated without arguments. In order to fill the instance
+    with content, either a file is read using the `read()` method,
+    or the instance is directly modified with class specific setter
+    methods. In order to write the instance content into a file the
+    `write()` method is used.
+    """
     
     def __init__(self):
         pass
@@ -21,11 +29,29 @@ class File(metaclass=abc.ABCMeta):
         pass
     
     @abc.abstractmethod
-    def copy():
+    def copy(self):
+        """
+        Copy the contents of the file.
+        
+        Returns
+        -------
+        copy : File
+            A copy of the file.
+        """
         pass
         
 
 class TextFile(File, metaclass=abc.ABCMeta):
+    """
+    Base class for all text file classes. When reading a file, the text
+    content is saved as list of strings. When writing a file, the list
+    is written into the file.
+    
+    Attributes
+    ----------
+    _lines : list
+        List of string representing the lines in the text file.
+    """
     
     def __init__(self):
         self._lines = []

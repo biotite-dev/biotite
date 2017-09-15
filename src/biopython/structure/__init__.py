@@ -35,7 +35,7 @@ Category   Type         Examples           Description
 chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
 res_name   string (U3)  'GLY','ALA', ...   Residue name
-hetero     bool         True, False        True, for non AA residues
+hetero     bool         True, False        True for non AA residues
 atom_name  string (U6)  'CA','N', ...      Atom name
 element    string (U2)  'C','O','SE', ...  Chemical Element
 =========  ===========  =================  =============================
