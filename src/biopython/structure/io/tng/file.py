@@ -5,12 +5,10 @@
 
 import mdtraj.formats as traj
 from ..trajfile import TrajectoryFile
-from ....file import register_suffix
 
 __all__ = ["TNGFile"]
 
 
-@register_suffix(["tng"])
 class TNGFile(TrajectoryFile):
     """
     This file class represents a TNG trajectory file.

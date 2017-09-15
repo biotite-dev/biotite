@@ -3,7 +3,7 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from ....file import TextFile, register_suffix
+from ....file import TextFile
 from ...sequence import Sequence
 from ...alphabet import AlphabetError
 from ...seqtypes import DNASequence, ProteinSequence
@@ -13,7 +13,6 @@ import copy
 __all__ = ["FastaFile"]
 
 
-@register_suffix(["fa", "fsa", "fasta"])
 class FastaFile(TextFile):
     
     def __init__(self):

@@ -5,12 +5,10 @@
 
 import mdtraj.formats as traj
 from ..trajfile import TrajectoryFile
-from ....file import register_suffix
 
 __all__ = ["XTCFile"]
 
 
-@register_suffix(["xtc"])
 class XTCFile(TrajectoryFile):
     """
     This file class represents a XTC trajectory file.
