@@ -23,7 +23,7 @@ class AdjacencyMap(object):
     each corresponding to a specific coordinate interval. If the atoms
     in vicinity of a specific location are searched, only the atoms in
     the relevant boxes are checked. Effectively this decreases the
-    operation time from O(n) to O(1), after the `AdjacencyMap` has been
+    operation time from *O(n)* to *O(1)*, after the `AdjacencyMap` has been
     created. Therefore an `AdjacencyMap` saves calculation time in those
     cases, where vicinity is checked for multiple locations.
     

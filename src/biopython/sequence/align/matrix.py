@@ -49,18 +49,18 @@ class SubstitutionMatrix(object):
     Examples
     --------
     
-        >>> alph_1 = Alphabet(["foo","bar"])
-        >>> alph_2 = Alphabet([1,2,3])
-        >>> matrix_dict = {("foo",1):5,  ("foo",2):10, ("foo",3):15,
-        ...                ("bar",1):42, ("bar",2):42, ("bar",3):42}
-        >>> matrix = SubstitutionMatrix(alph_1, alph_2, matrix_dict)
-        >>> print(matrix.get_matrix())
-        [[ 5 10 15]
-         [42 42 42]]
-        >>> print(matrix.get_score("foo", 2))
-        10
-        >>> print(matrix.get_score_by_code(0, 1))
-        10
+    >>> alph_1 = Alphabet(["foo","bar"])
+    >>> alph_2 = Alphabet([1,2,3])
+    >>> matrix_dict = {("foo",1):5,  ("foo",2):10, ("foo",3):15,
+    ...                ("bar",1):42, ("bar",2):42, ("bar",3):42}
+    >>> matrix = SubstitutionMatrix(alph_1, alph_2, matrix_dict)
+    >>> print(matrix.get_matrix())
+    [[ 5 10 15]
+     [42 42 42]]
+    >>> print(matrix.get_score("foo", 2))
+    10
+    >>> print(matrix.get_score_by_code(0, 1))
+    10
     
     See also
     --------
@@ -114,7 +114,7 @@ class SubstitutionMatrix(object):
     
     def get_matrix(self):
         """
-        Get a copy of the 2-D `ndarray` containing the score values.. 
+        Get a copy of the 2-D `ndarray` containing the score values. 
         
         Returns
         -------
@@ -122,6 +122,21 @@ class SubstitutionMatrix(object):
             The symbol code indexed score matrix.
         """
         return np.copy(self._matrix)
+    
+    def transpose(self):
+        """
+        Get a copy of this instance, where the alphabets are swapped
+        with other.
+        
+        Returns
+        -------
+        transposed : SubstitutionMatrix
+            The transposed substitution matrix.
+        """
+        new_alph1 = self._alph2
+        new_alph2 = self._alph1
+        new_matrix = np.transpose(self._matrix)
+        return SubstitutionMatrix(new_alph1, new_alph2, new_matrix)
     
     def get_score_by_code(self, code1, code2):
         """

@@ -19,6 +19,54 @@ __all__ = ["Alignment", "simple_score", "align_global", "align_local"]
 
 
 class Alignment(object):
+    """
+    An `Alignment` object stores information about which symbols of
+    two sequences are aligned to each other and the corresponding
+    alignment score.
+    
+    Rather than saving a list of aligned symbols, this class saves the
+    original two sequences, that were aligned, and a so called *trace*,
+    which indicate the aligned symbols of these sequences. The trace is
+    a (n x 2) `ndarray`, where the first dimension is the position in
+    the alignment and the second dimension represents the sequence
+    (either sequence 1 or 2). Each element of the trace is the index in
+    the corresponding sequence. A gap is represented by the value -1.
+    
+    Furthermore this class provides multiple utility functions for
+    conversion into strings in order to make the alignment human
+    readable.
+    
+    All attributes of this class are publicly accessible.
+    
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The two sequences, that were aligned to each other.
+    trace : ndarray, dtype=int, shype=(n,2)
+        The alignment trace.
+    score : int
+        Alignment score.
+    
+    Examples
+    --------
+    
+    >>> seq1 = DNASequence("CGTT")
+    >>> seq2 = DNASequence("TTGC")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_global(seq1, seq2, matrix)[0]
+    >>> print(ali)
+    CGTT--
+    --TTGC
+    >>> print(ali.trace)
+    [[ 0 -1]
+     [ 1 -1]
+     [ 2  0]
+     [ 3  1]
+     [-1  2]
+     [-1  3]]
+    
+    """
+    
     
     def __init__(self, seq1, seq2, trace, score):
         self.seq1 = seq1
@@ -27,12 +75,51 @@ class Alignment(object):
         self.score = score
         
     def format_compact(self, line_length=72):
-        str_seq1, str_seq2 = self.get_gapped_seq_strings()
+        """
+        Create a compact string representation of the alignment.
+        
+        Parameters
+        ----------
+        line_length : int, optional
+            The amount of characters, after which a line break is
+            introduced. Default is 72.
+        
+        Returns
+        -------
+        string : str
+            Compact string representation.
+        
+        Example
+        -------
+        
+        """
+        str_seq1, str_seq2 = self._get_gapped_seq_strings()
         return str_seq1 + "\n" + str_seq2
     
     def format_detail(self, matrix, cutoff=0, line_length=72):
-        str_seq1, str_seq2 = self.get_gapped_seq_strings()
-        conservation = self.get_conservation_string(matrix, cutoff)
+        """
+        Create a string representation of the alignment, where '.' or 
+        '|' characters, show the similarity between the aligned symbols.
+        
+        Parameters
+        ----------
+        matrix : SubstitutionMatrix
+            The matrix is needed in order to determine the
+            similarity
+        cutoff : int, optional
+            The cutoff score, where the similarity character changes.
+            Default is 0
+        line_length : int, optional
+            The amount of characters, after which a line break is
+            introduced.Default is 72.
+        
+        Returns
+        -------
+        string : str
+            Detailed string representation.
+        """
+        str_seq1, str_seq2 = self._get_gapped_seq_strings()
+        conservation = self._get_conservation_string(matrix, cutoff)
         i = 0
         string = ""
         # String contains 'line_length' symbols per line
@@ -51,7 +138,7 @@ class Alignment(object):
         # Return string without terminal 'newlines'
         return string[:-2]
     
-    def get_conservation_string(self, matrix, cutoff=0):
+    def _get_conservation_string(self, matrix, cutoff=0):
         seq_code1 = self.seq1.code
         seq_code2 = self.seq2.code
         conservation = ""
@@ -67,7 +154,7 @@ class Alignment(object):
                     conservation += "."
         return conservation
     
-    def get_gapped_seq_strings(self):
+    def _get_gapped_seq_strings(self):
         str_seq1 = ""
         str_seq2 = ""
         for e in range(len(self.trace)):
@@ -93,6 +180,20 @@ class Alignment(object):
     
     @staticmethod
     def trace_from_string(seq1_str, seq2_str):
+        """
+        Create a trace from two strings, which represent an alignment.
+        
+        Parameters
+        ----------
+        seq1_str, seq2_str : str
+            The strings, where each each one represents a sequence
+            in an alignment.
+        
+        Returns
+        -------
+        trace : ndarray, dtype=int, shype=(n,2)
+            The created trace.
+        """
         i = 0
         j = 0
         trace = np.full((len(seq1_str), 2), -1, dtype=np.int64)
@@ -112,6 +213,24 @@ class Alignment(object):
 
 
 def simple_score(seq1, seq2, matrix):
+    """
+    Score the similarity of two sequences.
+    
+    This is equal to a global alignment without introducing gaps.
+    Therefore both sequences need to have the same length.
+    
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The sequences, whose similarity should be scored.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    
+    Returns
+    -------
+    score : int
+        The resulting score.
+    """
     if len(seq1) != len(seq2):
         raise ValueError("Sequence lengths of {:d} and {:d} are not equal"
                          .format( len(seq1), len(seq2) ))
@@ -127,6 +246,57 @@ def simple_score(seq1, seq2, matrix):
 
 
 def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
+    """
+    Perform a global alignment based on the Needleman-Wunsch
+    algorithm [1]_.
+    
+    This algorithm yields an optimal alignment, i.e. the sequences
+    are aligned in the way that results in the highest similarity score.
+    This operation can be very time and space consuming, because both
+    scale linearly with each sequence length.
+    
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The sequences to be aligned.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    gap_opening : int, optional
+        Negative value which is used as penalty for gap openings.
+    gap_extension : int, optional
+        Negative value which is used as penalty for gap extensions.
+    
+    Returns
+    -------
+    alignments : list, type=Alignment
+        A list of alignments. Each alignment in the list has
+        the same maximum similarity score.
+    
+    References
+    ----------
+    
+    .. [1] SB Needleman, CD Wunsch,
+       "A general method applicable to the search for similarities
+       in the amino acid sequence of two proteins."
+       J Mol Biol, 48, 443-453 (1970).
+    
+    Examples
+    --------
+    
+    >>> seq1 = DNASequence("ATACGCTTGCT")
+    >>> seq2 = DNASequence("AGGCGCAGCT")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_global(seq1, seq2, matrix,
+    ...                    gap_opening=-6, gap_extension=-2)
+    >>> for a in ali:
+    ...     print(a, "\\n")
+    ATACGCTTGCT
+    AGGCGCA-GCT 
+    <BLANKLINE>
+    ATACGCTTGCT
+    AGGCGC-AGCT 
+    <BLANKLINE>
+    """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
@@ -178,6 +348,56 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
 
 
 def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
+    """
+    Perform a local alignment based on the Smith–Waterman algorithm
+    algorithm [1]_.
+    
+    This algorithm yields an optimal alignment, i.e. the sequences
+    are aligned in the way that results in the highest similarity score.
+    This operation can be very time and space consuming, because both
+    scale linearly with each sequence length.
+    
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The sequences to be aligned.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    gap_opening : int, optional
+        Negative value which is used as penalty for gap openings.
+    gap_extension : int, optional
+        Negative value which is used as penalty for gap extensions.
+    
+    Returns
+    -------
+    alignments : list, type=Alignment
+        A list of alignments. Each alignment in the list has
+        the same maximum similarity score.
+    
+    References
+    ----------
+    
+    .. [1] TF Smith, MS Waterman,
+       "Identification of common molecular subsequences."
+       J Mol Biol, 147, 195-197 (1981).
+    
+    Examples
+    --------
+    
+    >>> seq1 = DNASequence("CGAATACGCTTGCTCC")
+    >>> seq2 = DNASequence("TATAGGCGCAGCTGG")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_local(seq1, seq2, matrix,
+    ...                    gap_opening=-6, gap_extension=-2)
+    >>> for a in ali:
+    ...     print(a, "\\n")
+    ATA--CGCTTGCT
+    ATAGGCGCA-GCT 
+    <BLANKLINE>
+    ATA--CGCTTGCT
+    ATAGGCGC-AGCT
+    <BLANKLINE>
+    """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
