@@ -70,6 +70,8 @@ class Alphabet(object):
     """
     
     def __init__(self, symbols):
+        if len(symbols) == 0:
+            raise ValueError("Symbol list is empty")
         self._symbols = copy.deepcopy(list(symbols))
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):

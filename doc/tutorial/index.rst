@@ -1,6 +1,8 @@
 Tutorial
 ========
 
+.. include:: introduction.rst
+
 .. include:: sequence.rst
 
 .. include:: structure.rst

@@ -109,7 +109,7 @@ class _AtomArrayBase(object):
         
         Parameters
         ----------
-        category : string
+        category : str
             The annotation category to be set.
         array : ndarray or None
             The new value of the annotation category. The size of the
@@ -331,7 +331,7 @@ class Atom(object):
     ----------
     {annot} : scalar
         Annotations for this atom.
-    coord : ndarray(dtype=float)
+    coord : ndarray, dtype=float
         ndarray containing the x, y and z coordinate of the atom. 
     
     Examples
@@ -429,8 +429,8 @@ class AtomArray(_AtomArrayBase):
     ----------
     {annot} : ndarray
         Mutliple n-length annotation arrays.
-    coord : ndarray(dtype=float)
-        (n x 3) ndarray containing the x, y and z coordinate of the
+    coord : ndarray, dtype=float, shape=(n,3)
+        ndarray containing the x, y and z coordinate of the
         atoms.
     
     Examples
@@ -659,10 +659,10 @@ class AtomArrayStack(_AtomArrayBase):
     
     Attributes
     ----------
-    {annot} : ndarray
+    {annot} : ndarray, shape=(n,)
         Mutliple n-length annotation arrays.
-    coord : ndarray(dtype=float)
-        (m x n x 3) ndarray containing the x, y and z coordinate of the
+    coord : ndarray, dtype=float, shape=(m,n,3)
+        ndarray containing the x, y and z coordinate of the
         atoms.
     
     Examples
@@ -940,7 +940,7 @@ def stack(arrays):
     
     Parameters
     ----------
-    arrays : iterable(AtomArray)
+    arrays : iterable object, type=AtomArray
         The atom arrays to be combined in a stack.
     
     Returns

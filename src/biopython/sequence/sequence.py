@@ -101,7 +101,7 @@ class Sequence(metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        new_seq_code : ndarray(dtype=int), optional
+        new_seq_code : ndarray, dtype=int, optional
             If this parameter is set, the sequence code of the copied
             `Sequence` object is replaced with this parameter.
         

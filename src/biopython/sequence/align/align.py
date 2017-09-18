@@ -127,6 +127,11 @@ def simple_score(seq1, seq2, matrix):
 
 
 def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
+    # Check matrix alphabets
+    if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
+        or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
+            raise ValueError("Substitution matrix is inappropriate "
+                             "for the given sequences")
     # This implementation uses transposed tables in comparison
     # to the original algorithm
     # Therefore the first sequence is one the left
@@ -173,6 +178,11 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
 
 
 def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
+    # Check matrix alphabets
+    if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
+        or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
+            raise ValueError("Substitution matrix is inappropriate "
+                             "for the given sequences")
     # Procedure is analogous to align_global()
     score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
     trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.uint8)

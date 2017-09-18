@@ -5,6 +5,7 @@
 
 from os.path import realpath, dirname, join, isdir
 from os import listdir, makedirs
+import shutil
 from importlib import import_module
 import types
 import sys
@@ -18,6 +19,9 @@ _indent = " " * 4
 l = []
 
 def create_api_doc(src_path, doc_path):
+    if isdir(doc_path):
+        shutil.rmtree(doc_path)
+    makedirs(doc_path)
     package_list = _create_package_doc("biopython",
                                        join(src_path, "biopython"),
                                        doc_path)
