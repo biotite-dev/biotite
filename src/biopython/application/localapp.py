@@ -38,9 +38,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         chdir(self._exec_dir) 
         if self._mute:
             std_out = DEVNULL
+            std_err = DEVNULL
         else:
             std_out = None
-        self._process = Popen([self._bin_path] + self._options, stdout=std_out) 
+            std_err = None
+        self._process = Popen([self._bin_path] + self._options,
+                              stdout=std_out, stderr=std_err) 
         chdir(cwd)
     
     def is_finished(self):
@@ -51,7 +54,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             return True
     
     def wait_interval(self):
-        return 0.1
+        return 0.01
     
     def evaluate(self):
         pass
