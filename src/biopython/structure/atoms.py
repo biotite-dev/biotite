@@ -9,11 +9,12 @@ This module contains the main types of the `Structure` subpackage:
 """
 
 import numpy as np
+import abc
 
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
 
 
-class _AtomArrayBase(object):
+class _AtomArrayBase(object, metaclass=abc.ABCMeta):
     """
     Private base class for `AtomArray` and `AtomArrayStack`. It
     implements functionality for annotation arrays and also
