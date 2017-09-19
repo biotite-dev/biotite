@@ -60,5 +60,5 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         pass
     
     def clean_up(self):
-        if self.get_app_state() == AppState.RUNNING:
+        if self.get_app_state() == AppState.CANCELLED:
             self._process.kill()

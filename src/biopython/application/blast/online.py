@@ -128,7 +128,7 @@ class BlastWebApp(WebApp):
         request = requests.get(self.app_url(), params=param_dict)
         self._contact()
         self._request()
-        info_dict = BlastOnline._get_info(request.text)
+        info_dict = BlastWebApp._get_info(request.text)
         self._rid = info_dict["RID"]
     
     def is_finished(self):
@@ -137,12 +137,12 @@ class BlastWebApp(WebApp):
                      "CMD"           : "Get"}
         request = requests.get(self.app_url(), params=data_dict)
         self._contact()
-        info_dict = BlastOnline._get_info(request.text)
+        info_dict = BlastWebApp._get_info(request.text)
         return info_dict["Status"] == "READY"
         
     def wait_interval(self):
         # NCBI requires a 3 second delay between server contacts
-        return BlastOnline._contact_delay
+        return BlastWebApp._contact_delay
     
     def clean_up(self):
         param_dict = {}
@@ -219,12 +219,12 @@ class BlastWebApp(WebApp):
     
     def _contact(self):
         contact = time.time()
-        if (contact - BlastOnline._last_contact) < BlastOnline._contact_delay:
+        if (contact - BlastWebApp._last_contact) < BlastWebApp._contact_delay:
             self.violate_rule("The server was contacted too often")
-        BlastOnline._last_contact = contact
+        BlastWebApp._last_contact = contact
     
     def _request(self):
         request = time.time()
-        if (request - BlastOnline._last_request) < BlastOnline._request_delay:
+        if (request - BlastWebApp._last_request) < BlastWebApp._request_delay:
             self.violate_rule("Too frequent BLAST requests")
-        BlastOnline._last_request = request
+        BlastWebApp._last_request = request
