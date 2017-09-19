@@ -55,12 +55,12 @@ class Application(metaclass=abc.ABCMeta):
         time.sleep(self.wait_interval())
         self.evaluate()
         self._state = AppState.JOINED
-        self.tidy_up()
+        self.clean_up()
     
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def cancel(self):
         self._state = AppState.CANCELLED
-        self.tidy_up()
+        self.clean_up()
     
     def get_app_state(self):
         if self._state == AppState.RUNNING:
@@ -84,7 +84,7 @@ class Application(metaclass=abc.ABCMeta):
     def evaluate(self):
         pass
     
-    def tidy_up(self):
+    def clean_up(self):
         pass
 
 

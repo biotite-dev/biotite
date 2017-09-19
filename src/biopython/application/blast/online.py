@@ -145,7 +145,7 @@ class BlastOnline(WebApp):
         # NCBI requires a 3 second delay between server contacts
         return BlastOnline._contact_delay
     
-    def tidy_up(self):
+    def clean_up(self):
         param_dict = {}
         param_dict["CMD"] = "Delete"
         param_dict["RID"] = self._rid
