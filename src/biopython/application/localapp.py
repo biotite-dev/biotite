@@ -7,6 +7,7 @@ import abc
 import time
 from os import chdir, getcwd
 from .application import Application, AppState, requires_state
+from subprocess import Popen, DEVNULL
 
 __all__ = ["LocalApp"]
 
@@ -39,7 +40,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             std_out = DEVNULL
         else:
             std_out = None
-        self._process = Popen(self._bin_path + self._options, stdout=std_out) 
+        self._process = Popen([self._bin_path] + self._options, stdout=std_out) 
         chdir(cwd)
     
     def is_finished(self):
