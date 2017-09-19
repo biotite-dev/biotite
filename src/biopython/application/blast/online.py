@@ -13,14 +13,13 @@ from ...sequence.align.align import Alignment
 import time
 import requests
 from xml.etree import ElementTree
-from abc import abstractmethod
 
-__all__ = ["BlastOnline"]
+__all__ = ["BlastWebApp"]
 
 
 _ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 
-class BlastOnline(WebApp):
+class BlastWebApp(WebApp):
     
     _last_contact = 0
     _last_request = 0

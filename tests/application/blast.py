@@ -12,7 +12,7 @@ class BlastTest(unittest.TestCase):
     
     def test_online_blastp(self):
         prot_seq = seq.ProteinSequence("NLYIQWLKDGGPSSGRPPPS")
-        app = blast.BlastOnline("blastp", prot_seq)
+        app = blast.BlastWebApp("blastp", prot_seq)
         app.start()
         app.join()
         alignments = app.get_alignments()
