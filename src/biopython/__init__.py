@@ -4,4 +4,5 @@
 # as part of this package.
 
 from .file import *
+from .temp import *
 from .checkext import *

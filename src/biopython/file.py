@@ -57,10 +57,26 @@ class TextFile(File, metaclass=abc.ABCMeta):
         self._lines = []
     
     def read(self, file_name):
+        """
+        Read the lines of the given text file.
+        
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to be read.
+        """
         with open(file_name, "r") as f:
             str_data = f.read()
         self._lines = str_data.split("\n")
     
     def write(self, file_name):
+        """
+        Write the content to a given text file.
+        
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to be written to.
+        """
         with open(file_name, "w") as f:
             f.writelines([line+"\n" for line in self._lines])
