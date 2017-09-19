@@ -7,7 +7,7 @@ import abc
 import time
 from enum import Flag, auto
 
-__all__ = ["Application", "AppStateError", "AppState"]
+__all__ = ["Application", "AppStateError", "AppState", "requires_state"]
 
 
 class AppState(Flag):
