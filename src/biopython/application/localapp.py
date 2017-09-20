@@ -32,6 +32,10 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def get_process(self):
         return self._process
+    
+    @requires_state(AppState.FINISHED | AppState.JOINED)
+    def get_exit_code(self):
+        return self._code
 
     def run(self):
         cwd = getcwd()
@@ -51,6 +55,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         if code == None:
             return False
         else:
+            self._code = code
             return True
     
     def wait_interval(self):
