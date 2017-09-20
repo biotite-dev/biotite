@@ -16,17 +16,22 @@ if "sdist" in sys.argv:
     ext_modules = None
 else:
     from Cython.Build import cythonize
-    ext_modules = cythonize(
-        [Extension("biopython.sequence.align.calign",
-                   ["src/biopython/sequence/align/calign.pyx"]
-                  ),
-         Extension("biopython.structure.io.pdbx.cprocessloop",
-                   ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
-                  ),
-         Extension("biopython.ccheckext",
-                   ["src/biopython/ccheckext.pyx"]
-                  )]
-    )
+    try:
+        ext_modules = cythonize(
+            [Extension("biopython.sequence.align.calign",
+                ["src/biopython/sequence/align/calign.pyx"]
+             ),
+             Extension("biopython.structure.io.pdbx.cprocessloop",
+                ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
+             ),
+             Extension("biopython.ccheckext",
+                ["src/biopython/ccheckext.pyx"]
+             )]
+        )
+    except ValueError:
+        # In case of installing a source distribution,
+        # the *.pyx files cannot be found
+        ext_modules = None
 
 
 setup(name="biopython",
