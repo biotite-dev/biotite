@@ -36,7 +36,7 @@ def requires_state(app_state):
 class Application(metaclass=abc.ABCMeta):
     
     def __init__(self):
-        self._state = AppState.CREATED)
+        self._state = AppState.CREATED
     
     @requires_state(AppState.CREATED)
     def start(self):

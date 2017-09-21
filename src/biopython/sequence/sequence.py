@@ -117,9 +117,9 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         # because not the entire sequence code is copied then
         clone = self.__copy_create__()
         if new_seq_code is None:
-            clone._seq_code = np.copy(self._seq_code)
+            clone.code = np.copy(self.code)
         else:
-            clone._seq_code = new_seq_code
+            clone.code = new_seq_code
         self.__copy_fill__(clone)
         return clone
     
@@ -137,7 +137,8 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     @code.setter
     def code(self, value):
-        self._seq_code = value.astype(Sequence._dtype(len(self.get_alphabet())))
+        self._seq_code = value.astype(Sequence._dtype( \
+                                      len(self.get_alphabet())) )
     
     
     @abc.abstractmethod
