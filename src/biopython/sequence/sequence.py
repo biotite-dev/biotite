@@ -10,11 +10,12 @@ The module contains the `Sequence` superclass and `GeneralSequence`.
 import numpy as np
 import abc
 from .alphabet import Alphabet
+from ..copyable import Copyable
 
 __all__ = ["Sequence", "GeneralSequence"]
 
 
-class Sequence(metaclass=abc.ABCMeta):
+class Sequence(Copyable, metaclass=abc.ABCMeta):
     """
     The abstract base class for all sequence types.
     
@@ -94,31 +95,33 @@ class Sequence(metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=[]):
         self.symbols = sequence
+        
     
     def copy(self, new_seq_code=None):
         """
-        Create a copy of the `Sequence` object.
+        Copy the object.
         
         Parameters
         ----------
-        new_seq_code : ndarray, dtype=int, optional
-            If this parameter is set, the sequence code of the copied
-            `Sequence` object is replaced with this parameter.
+        new_seq_code : ndarray, optional
+            If this parameter is set, the sequence code is set to this
+            value, rather than the original sequence code.
         
         Returns
         -------
-        copy : Sequence
-            Copy of this object.
+        copy
+            A copy of this object.
         """
-        seq_copy = type(self)()
-        self._copy_code(seq_copy, new_seq_code)
-        return seq_copy
-    
-    def _copy_code(self, new_object, new_seq_code):
+        # Override in order to achieve better performance,
+        # in case only a subsequence is needed,
+        # because not the entire sequence code is copied then
+        clone = self.__copy_create__()
         if new_seq_code is None:
-            new_object._seq_code = np.copy(self._seq_code)
+            clone._seq_code = np.copy(self._seq_code)
         else:
-            new_object._seq_code = new_seq_code
+            clone._seq_code = new_seq_code
+        self.__copy_fill__(clone)
+        return clone
     
     @property
     def symbols(self):
@@ -290,10 +293,8 @@ class GeneralSequence(Sequence):
         self._alphabet = alphabet
         super().__init__(sequence)
     
-    def copy(self, new_seq_code=None):
-        seq_copy = GeneralSequence(self._alphabet)
-        self._copy_code(seq_copy, new_seq_code)
-        return seq_copy
+    def __copy_create__(self):
+        return GeneralSequence(self._alphabet)
     
     def get_alphabet(self):
         return self._alphabet

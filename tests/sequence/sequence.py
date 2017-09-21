@@ -11,13 +11,13 @@ class SequenceTest(unittest.TestCase):
     
     def test_encoding(self):
         string1 = "AATGCGTTA"
-        dna = seq.DNASequence(string1)
+        dna = seq.NucleotideSequence(string1)
         string2 = str(dna)
         self.assertEqual(string1, string2)
         
     def test_access(self):
         string = "AATGCGTTA"
-        dna = seq.DNASequence(string)
+        dna = seq.NucleotideSequence(string)
         self.assertEqual(string[2], dna[2])
         dna[-1] = "C"
         self.assertEqual("AATGCGTTC", str(dna))
@@ -27,19 +27,17 @@ class SequenceTest(unittest.TestCase):
     def test_alph_error(self):
         string = "AATGCGTUTA"
         with self.assertRaises(seq.AlphabetError):
-            seq.DNASequence(string)
+            seq.NucleotideSequence(string)
     
     def test_reverse_complement(self):
         string = "AATGCGTTA"
-        dna = seq.DNASequence(string)
+        dna = seq.NucleotideSequence(string)
         self.assertEqual("TAACGCATT", str(dna.reverse().complement()))
         
     def test_translation(self):
         string = "AATGCGTTAGAT"
-        dna = seq.DNASequence(string)
-        rna = dna.transcribe()
-        self.assertEqual("AAUGCGUUAGAU", str(rna))
-        protein = rna.translate(complete=True)
+        dna = seq.NucleotideSequence(string)
+        protein = dna.translate(complete=True)
         self.assertEqual("NALD", str(protein))
-        proteins, pos = rna.translate(complete=False)
+        proteins, pos = dna.translate(complete=False)
         self.assertEqual("MR*", str(proteins[0]))

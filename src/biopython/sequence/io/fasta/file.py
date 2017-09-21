@@ -6,7 +6,7 @@
 from ....file import TextFile
 from ...sequence import Sequence
 from ...alphabet import AlphabetError
-from ...seqtypes import DNASequence, ProteinSequence
+from ...seqtypes import NucleotideSequence, ProteinSequence
 import textwrap
 import copy
 
@@ -43,17 +43,17 @@ class FastaFile(TextFile):
         for line in lines:
             seq_string += line.strip()
         # Determine the sequence type:
-        # If DNASequence can be created it is a DNA sequence,
+        # If NucleotideSequence can be created it is a DNA sequence,
         # otherwise protein sequence
         try:
-            return DNASequence(seq_string)
+            return NucleotideSequence(seq_string)
         except AlphabetError:
             pass
         try:
             return ProteinSequence(seq_string)
         except AlphabetError:
             raise ValueError("FASTA data cannot be converted either to "
-                             "DNASequence nor to Protein Sequence")
+                             "NucleotideSequence nor to Protein Sequence")
             
     def set_header(self, index, string):
         processed_string = ">" + string.replace(">","").replace("\n","")

@@ -5,7 +5,7 @@
 
 from ..localapp import LocalApp
 from ...sequence.sequence import Sequence
-from ...sequence.seqtypes import DNASequence, ProteinSequence
+from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.align import Alignment
 from ...temp import temp_file

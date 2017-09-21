@@ -11,8 +11,8 @@ import numpy as np
 class AlignTest(unittest.TestCase):
     
     def test_global_align(self):
-        seq1 = seq.DNASequence("ATACGCTTGCT")
-        seq2 = seq.DNASequence("AGGCGCAGCT")
+        seq1 = seq.NucleotideSequence("ATACGCTTGCT")
+        seq2 = seq.NucleotideSequence("AGGCGCAGCT")
         alignments = align.align_global(seq1, seq2,
                            align.SubstitutionMatrix.std_nucleotide_matrix(),
                            gap_opening=-6,
@@ -23,8 +23,8 @@ class AlignTest(unittest.TestCase):
                           [6,6], [7,-1], [8,7], [9,8], [10,9]])
     
     def test_local_align(self):
-        seq1 = seq.DNASequence("ATGGCACATGATCTTA")
-        seq2 = seq.DNASequence("ACTTGCTTACGAT")
+        seq1 = seq.NucleotideSequence("ATGGCACATGATCTTA")
+        seq2 = seq.NucleotideSequence("ACTTGCTTACGAT")
         alignments = align.align_local(seq1, seq2,
                            align.SubstitutionMatrix.std_nucleotide_matrix(),
                            gap_opening=-6,

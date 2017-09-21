@@ -12,14 +12,14 @@ class SearchTest(unittest.TestCase):
     def test_find_subsequence(self):
         string = "ATACGCTTGCT"
         substring = "GCT"
-        main_seq = seq.DNASequence(string)
-        sub_seq = seq.DNASequence(substring)
+        main_seq = seq.NucleotideSequence(string)
+        sub_seq = seq.NucleotideSequence(substring)
         matches = seq.find_subsequence(main_seq, sub_seq)
         self.assertListEqual(list(matches), [4,8])
         
     def test_find_symbol(self):
         string = "ATACGCTTGCT"
         symbol = "T"
-        dna = seq.DNASequence(string)
+        dna = seq.NucleotideSequence(string)
         matches = seq.find_symbol(dna, symbol)
         self.assertListEqual(list(matches), [1,6,7,10])

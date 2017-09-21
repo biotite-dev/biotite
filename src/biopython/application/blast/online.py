@@ -7,7 +7,7 @@ from .alignment import BlastAlignment
 from ..application import Application, requires_state, AppState
 from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
-from ...sequence.seqtypes import DNASequence, ProteinSequence
+from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.align import Alignment
 import time
@@ -181,10 +181,10 @@ class BlastWebApp(WebApp):
             seq1_str = hsp.find("Hsp_qseq").text
             seq2_str = hsp.find("Hsp_hseq").text
             if self._program in ["blastn", "megablast"]:
-                # DNASequence/ProteinSequence do ignore gaps
+                # NucleotideSequence/ProteinSequence do ignore gaps
                 # Gaps are represented by the trace
-                seq1 = DNASequence(seq1_str.replace("-", ""))
-                seq2 = DNASequence(seq2_str.replace("-", ""))
+                seq1 = NucleotideSequence(seq1_str.replace("-", ""))
+                seq2 = NucleotideSequence(seq2_str.replace("-", ""))
             else:
                 seq1 = ProteinSequence(seq1_str.replace("-", ""))
                 seq2 = ProteinSequence(seq2_str.replace("-", ""))

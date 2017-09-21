@@ -4,7 +4,7 @@
 # as part of this package.
 
 from ..sequence import Sequence
-from ..seqtypes import DNASequence, ProteinSequence
+from ..seqtypes import NucleotideSequence, ProteinSequence
 from ..alphabet import Alphabet
 import numpy as np
 import os.path
@@ -234,6 +234,6 @@ _alph = ProteinSequence.alphabet
 _matrix_blosum62 = SubstitutionMatrix(_alph, _alph, _matrix)
 
 _matrix = np.load(os.path.join(_matrix_dir, "nuc.npy"))
-_alph = DNASequence.alphabet 
+_alph = NucleotideSequence.alphabet 
 _matrix_nuc = SubstitutionMatrix(_alph, _alph, _matrix)
 

@@ -6,64 +6,20 @@
 from .sequence import Sequence
 from .alphabet import Alphabet, AlphabetError
 import numpy as np
-import abc
 import copy
 
-__all__ = ["DNASequence", "RNASequence", "ProteinSequence"]
+__all__ = ["NucleotideSequence", "ProteinSequence"]
 
 
-class _NucleotideSequence(Sequence, metaclass=abc.ABCMeta):
-    
-    def __init__(self, sequence=[], ambiguous=False):
-        if isinstance(sequence, str):
-            sequence = sequence.upper()
-        else:
-            sequence = [symbol.upper() for symbol in sequence]
-        if ambiguous == False:
-            try:
-                self._alphabet = self.unambiguous_alphabet()
-                seq_code = Sequence.encode(sequence, self._alphabet)
-            except AlphabetError:
-                self._alphabet = self.ambiguous_alphabet()
-                seq_code = Sequence.encode(sequence, self._alphabet)
-        else:
-            self._alphabet = self.ambiguous_alphabet()
-            seq_code = Sequence.encode(sequence, self._alphabet)
-        super().__init__()
-        self.code = seq_code
-        
-    def copy(self, new_seq_code=None):
-        if self._alphabet == self.ambiguous_alphabet:
-            seq_copy = type(self)(ambiguous=True)
-        else:
-            seq_copy = type(self)(ambiguous=False)
-        self._copy_code(seq_copy, new_seq_code)
-        return seq_copy
-    
-    def get_alphabet(self):
-        return self._alphabet
-    
-    @abc.abstractmethod
-    def complement(self):
-        pass
-    
-    @abc.abstractstaticmethod
-    def unambiguous_alphabet():
-        pass
-    
-    @abc.abstractstaticmethod
-    def ambiguous_alphabet():
-        pass
-
-
-class DNASequence(_NucleotideSequence):
+class NucleotideSequence(Sequence):
     """
-    Representation of a DNA sequence.
+    Representation of a nucleotide sequence (DNA or RNA).
     
     This class may one of two different alphabets:
-    `alphabet` contains only the unambiguous DNA letters 'A', 'C', 'G'
-    and 'T'.
-    `alphabet_amb` uses an extended alphabet for ambiguous letters.
+    `unambiguous_alphabet()` contains only the unambiguous DNA
+    letters 'A', 'C', 'G' and 'T'.
+    `ambiguous_alphabet()` uses an extended alphabet for ambiguous 
+    letters.
     
     Parameters
     ----------
@@ -72,9 +28,9 @@ class DNASequence(_NucleotideSequence):
         May take upper or lower case letters.
         By default the sequence is empty.
     ambiguous : bool, optional
-        If true, the ambiguous DNA alphabet is used. By default the
+        If true, the ambiguous alphabet is used. By default the
         object tries to use the unambiguous alphabet. If this fails due
-        ambiguous letters in the sequence, the ambiguous DNA alphabet
+        ambiguous letters in the sequence, the ambiguous alphabet
         is used.
     """
     
@@ -106,146 +62,59 @@ class DNASequence(_NucleotideSequence):
     # Vectorized function that returns a complement code
     _complement_func = np.vectorize(compl_dict.__getitem__)
     
-    def transcribe(self):
-        """
-        Transcribe the DNA sequence into a RNA sequence.
-        
-        Returns
-        -------
-        transcript : RNASequence
-            The trancribed sequence.
-        
-        Examples
-        --------
-        
-            >>> dna_seq = DNASequence("ACGCTT")
-            >>> rna_seq = dna_seq.transcribe()
-            >>> print(rna_seq)
-            ACGCUU
-
-        """
-        if self.get_alphabet() == DNASequence.alphabet:
-            ambiguous = False
+    def __init__(self, sequence=[], ambiguous=False):
+        if isinstance(sequence, str):
+            sequence = sequence.upper()
         else:
-            ambiguous = True
-        rna_seq = RNASequence(ambiguous=ambiguous)
-        # Alphabets of RNA and DNA are completely identical,
-        # only the symbol 'T' is substituted by 'U'
-        rna_seq.code = self.code
-        return rna_seq
+            sequence = [symbol.upper() for symbol in sequence]
+        if ambiguous == False:
+            try:
+                self._alphabet = NucleotideSequence.alphabet
+                seq_code = Sequence.encode(sequence, self._alphabet)
+            except AlphabetError:
+                self._alphabet = NucleotideSequence.alphabet_amb
+                seq_code = Sequence.encode(sequence, self._alphabet)
+        else:
+            self._alphabet = NucleotideSequence.alphabet_amb
+            seq_code = Sequence.encode(sequence, self._alphabet)
+        super().__init__()
+        self.code = seq_code
+        
+    def __copy_create__(self):
+        if self._alphabet == NucleotideSequence.alphabet_amb:
+            seq_copy = NucleotideSequence(ambiguous=True)
+        else:
+            seq_copy = NucleotideSequence(ambiguous=False)
+        return seq_copy
+    
+    def get_alphabet(self):
+        return self._alphabet
     
     def complement(self):
         """
-        Get the complement DNA sequence.
+        Get the complement nucleotide sequence.
         
         Returns
         -------
-        complement : DNASequence
+        complement : NucleotideSequence
             The complement sequence.
         
         Examples
         --------
         
-            >>> dna_seq = DNASequence("ACGCTT")
+            >>> dna_seq = NucleotideSequence("ACGCTT")
             >>> print(dna_seq.complement())
             TGCGAA
             >>> print(dna_seq.reverse().complement())
             AAGCGT
         
         """
-        compl_code = DNASequence._complement_func(self.code)
+        compl_code = NucleotideSequence._complement_func(self.code)
         return self.copy(compl_code)
-    
-    @staticmethod
-    def unambiguous_alphabet():
-        return DNASequence.alphabet
-    
-    @staticmethod
-    def ambiguous_alphabet():
-        return DNASequence.alphabet_amb
-
-
-class RNASequence(_NucleotideSequence):
-    """
-    Representation of a RNA sequence.
-    
-    This class may one of two different alphabets:
-    `alphabet` contains only the unambiguous RNA letters 'A', 'C', 'G'
-    and 'U'.
-    `alphabet_amb` uses an extended alphabet for ambiguous letters.
-    
-    Parameters
-    ----------
-    sequence : iterable object, optional
-        The initial RNA sequence. This may either be a list or a string.
-        May take upper or lower case letters.
-        By default the sequence is empty.
-    ambiguous : bool, optional
-        If true, the ambiguous RNA alphabet is used. By default the
-        object tries to use the unambiguous alphabet. If this fails due
-        ambiguous letters in the sequence, the ambiguous DNA alphabet
-        is used.
-    """
-    
-    alphabet     = Alphabet(["A","C","G","U"])
-    alphabet_amb = Alphabet(["A","C","G","U","R","Y","W","S",
-                             "M","K","H","B","V","D","N","X"])
-    
-    compl_symbol_dict = {"A" : "U",
-                         "C" : "G",
-                         "G" : "C",
-                         "U" : "A",
-                         "M" : "K",
-                         "R" : "Y",
-                         "W" : "W",
-                         "S" : "S",
-                         "Y" : "R",
-                         "K" : "M",
-                         "V" : "B",
-                         "H" : "D",
-                         "D" : "H",
-                         "B" : "V",
-                         "X" : "X",
-                         "N" : "N"}
-    compl_dict = {}
-    for key, value in compl_symbol_dict.items():
-        key_code = alphabet_amb.encode(key)
-        val_code = alphabet_amb.encode(value)
-        compl_dict[key_code] = val_code
-    # Vectorized function that returns a complement code sequence
-    _complement_func = np.vectorize(compl_dict.__getitem__)
-    
-    def reverse_transcribe(self):
-        """
-        Reverse-transcribe the RNA sequence into a DNA sequence.
-        
-        Returns
-        -------
-        transcript : DNASequence
-            The reverse-trancribed sequence.
-        
-        Examples
-        --------
-        
-            >>> rna_seq = RNASequence("UGACCU")
-            >>> dna_seq = rna_seq.reverse_transcribe()
-            >>> print(dna_seq)
-            TGACCT
-        
-        """
-        if self.get_alphabet() == DNASequence.alphabet:
-            ambiguous = False
-        else:
-            ambiguous = True
-        dna_seq = DNASequence(ambiguous=ambiguous)
-        # Alphabets of RNA and DNA are completely identical,
-        # only the symbol 'T' is substituted by 'U'
-        dna_seq.code = self.code
-        return dna_seq
     
     def translate(self, **kwargs):
         """
-        Translate the RNA sequence into a protein sequence.
+        Translate the nucleotide sequence into a protein sequence.
         
         If `complete` is true, the entire sequence is translated,
         beginning with the first codon and ending with the last codon,
@@ -289,7 +158,7 @@ class RNASequence(_NucleotideSequence):
         Examples
         --------
         
-            >>> rna_seq = RNASequence("AAUGAUGCUAUAGAU")
+            >>> rna_seq = NucleotideSequence("AATGATGCTATAGAT")
             >>> prot_seq = rna_seq.translate(complete=True)
             >>> print(prot_seq)
             NDAID
@@ -300,7 +169,7 @@ class RNASequence(_NucleotideSequence):
             ML*
         
         """
-        if self._alphabet == RNASequence.alphabet_amb:
+        if self._alphabet == NucleotideSequence.alphabet_amb:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
         if "codon_table" in kwargs:
@@ -331,7 +200,7 @@ class RNASequence(_NucleotideSequence):
             if "start_codons" in kwargs:
                 start_codons = kwargs["start_codons"]
             else:
-                start_codons = ["AUG"]
+                start_codons = ["ATG"]
             start_codons = [self.encode(codon, self.get_alphabet())
                             for codon in start_codons]
             seq_code = self.code
@@ -362,37 +231,14 @@ class RNASequence(_NucleotideSequence):
                     protein_seqs.append(protein_seq)
                     pos.append((i,j))
             return protein_seqs, pos
-                
-    
-    def complement(self):
-        """
-        Get the complement RNA sequence.
-        
-        Returns
-        -------
-        complement : RNASequence
-            The complement sequence.
-        
-        Examples
-        --------
-        
-            >>> rna_seq = RNASequence("UGACCU")
-            >>> print(rna_seq.complement())
-            ACUGGA
-            >>> print(rna_seq.reverse().complement())
-            AGGUCA
-        
-        """
-        compl_code = RNASequence._complement_func(self.code)
-        return self.copy(compl_code)
     
     @staticmethod
     def unambiguous_alphabet():
-        return RNASequence.alphabet
+        return NucleotideSequence.alphabet
     
     @staticmethod
     def ambiguous_alphabet():
-        return RNASequence.alphabet_amb
+        return NucleotideSequence.alphabet_amb
 
 
 class ProteinSequence(Sequence):
@@ -417,22 +263,22 @@ class ProteinSequence(Sequence):
     """
     
     _codon_symbol_table = {
-     "UUU": "F", "UUC": "F", "UUA": "L", "UUG": "L",
-     "UCU": "S", "UCC": "S", "UCA": "S", "UCG": "S",
-     "UAU": "Y", "UAC": "Y", "UAA": "*", "UAG": "*",
-     "UGU": "C", "UGC": "C", "UGA": "*", "UGG": "W",
-     "CUU": "L", "CUC": "L", "CUA": "L", "CUG": "L",
-     "CCU": "P", "CCC": "P", "CCA": "P", "CCG": "P",
-     "CAU": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
-     "CGU": "R", "CGC": "R", "CGA": "R", "CGG": "R",
-     "AUU": "I", "AUC": "I", "AUA": "I", "AUG": "M",
-     "ACU": "T", "ACC": "T", "ACA": "T", "ACG": "T",
-     "AAU": "N", "AAC": "N", "AAA": "K", "AAG": "K",
-     "AGU": "S", "AGC": "S", "AGA": "R", "AGG": "R",
-     "GUU": "V", "GUC": "V", "GUA": "V", "GUG": "V",
-     "GCU": "A", "GCC": "A", "GCA": "A", "GCG": "A",
-     "GAU": "D", "GAC": "D", "GAA": "E", "GAG": "E",
-     "GGU": "G", "GGC": "G", "GGA": "G", "GGG": "G"}
+     "TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+     "TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+     "TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
+     "TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
+     "CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+     "CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+     "CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+     "CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+     "ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+     "ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+     "AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+     "AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+     "GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+     "GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+     "GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+     "GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"}
     
     _codon_table = None
     
@@ -547,7 +393,7 @@ class ProteinSequence(Sequence):
         """
         code_table = {}
         for key, value in symbol_table.items():
-            key_code = tuple(Sequence.encode(key, RNASequence.alphabet))
+            key_code = tuple(Sequence.encode(key, NucleotideSequence.alphabet))
             val_code = ProteinSequence.alphabet.encode(value)
             code_table[key_code] = val_code
         return code_table
