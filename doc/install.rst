@@ -37,8 +37,9 @@ type the following:
 
    python setup.py bdist_wheel
 
-Note that this step requires *Cython* and a C-compiler (typically GCC) to be
-installed. Then you navigate into the ``dist`` folder and type
+Note that this step requires a C-compiler (typically GCC) and the packages
+*cython* and *wheel* to be installed. Then you navigate into the ``dist``
+folder and type
 
 .. code-block:: python
 
