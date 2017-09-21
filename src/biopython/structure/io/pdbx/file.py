@@ -379,10 +379,9 @@ class PDBxFile(TextFile):
                 category_info["stop"] += len_diff
     
     
-    def copy(self):
-        pdbx_file = PDBxFile()
-        pdbx_file._lines = copy.deepcopy(self._lines)
-        pdbx_file._categories = copy.deepcopy(self._categories)
+    def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
+        clone._categories = copy.deepcopy(self._categories)
         
         
     def __setitem__(self, index, item):

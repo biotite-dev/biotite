@@ -5,12 +5,12 @@
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
-from ....file import TextFile
+from ....file import File
 
 __all__ = ["NpzFile"]
 
 
-class NpzFile(TextFile):
+class NpzFile(File):
     """
     This class represents a NPZ file, the preferable format for
     Biopython internal structure storage. 
@@ -38,17 +38,17 @@ class NpzFile(TextFile):
     def __init__(self):
         self._data_dict = None
     
+    def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
+        if self._data_dict is not None:
+            for key, value in self._data_dict.items():
+                clone._data_dict[key] = np.copy(value)
+    
     def read(self, file_name):
         self._data_dict = dict(np.load(file_name, allow_pickle=False))
                 
     def write(self, file_name):
         np.savez(file_name, **self._data_dict)
-    
-    def copy(self):
-        npz_file = NpzFile()
-        if self._data_dict is not None:
-            for key, value in self._data_dict.items():
-                npz_file[key] = np.copy(value)
     
     def get_structure(self):
         """

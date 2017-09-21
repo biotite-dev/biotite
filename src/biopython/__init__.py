@@ -6,3 +6,4 @@
 from .file import *
 from .temp import *
 from .checkext import *
+from .copyable import *

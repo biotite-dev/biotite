@@ -10,11 +10,12 @@ This module contains the main types of the `Structure` subpackage:
 
 import numpy as np
 import abc
+from ..copyable import Copyable
 
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
 
 
-class _AtomArrayBase(object, metaclass=abc.ABCMeta):
+class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     """
     Private base class for `AtomArray` and `AtomArrayStack`. It
     implements functionality for annotation arrays and also
@@ -213,16 +214,6 @@ class _AtomArrayBase(object, metaclass=abc.ABCMeta):
             self._array_length = self._coord.shape[-2]
         else:
             raise IndexError("Index must be integer")
-        
-    def _copy_attributes(self):
-        if isinstance(self, AtomArray):
-            new_object = type(self)(self.array_length())
-        if isinstance(self, AtomArrayStack):
-            new_object = type(self)(self.stack_depth(), self.array_length())
-        for name in self._annot:
-            new_object._annot[name] = np.copy(self._annot[name])
-        new_object._coord = np.copy(self._coord)
-        return new_object
     
     def equal_annotations(self, item):
         """
@@ -313,6 +304,12 @@ class _AtomArrayBase(object, metaclass=abc.ABCMeta):
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
         return concat
+    
+    def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
+        for name in self._annot:
+            clone._annot[name] = np.copy(self._annot[name])
+        clone._coord = np.copy(self._coord)
     
 
 class Atom(object):
@@ -477,18 +474,6 @@ class AtomArray(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=float)
-        
-    def copy(self):
-        """
-        Create a new `AtomArray` instance with all attribute arrays
-        copied.
-        
-        Returns
-        -------
-        new_array : AtomArray
-            A deep copy of this array.
-        """
-        return self._copy_attributes()
     
     def get_atom(self, index):
         """
@@ -625,6 +610,9 @@ class AtomArray(_AtomArrayBase):
         for atom in self:
             string += str(atom) + "\n"
         return string
+    
+    def __copy_create__(self):
+        return AtomArray(self.array_length())
 
 
 class AtomArrayStack(_AtomArrayBase):
@@ -701,18 +689,6 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.zeros((depth, length, 3), dtype=float)
-        
-    def copy(self):
-        """
-        Create a new `AtomArrayStack` instance
-        with all attribute arrays copied.
-        
-        Returns
-        -------
-        new_stack: AtomArrayStack
-            A deep copy of this stack.
-        """
-        return self._copy_attributes()
     
     def get_array(self, index):
         """
@@ -889,6 +865,9 @@ class AtomArrayStack(_AtomArrayBase):
             string += "Model " + str(i+1) + "\n"
             string += str(array) + "\n" + "\n"
         return string
+    
+    def __copy_create__(self):
+        return AtomArrayStack(self.stack_depth(), self.array_length())
 
 
 def array(atoms):

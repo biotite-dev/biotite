@@ -60,11 +60,6 @@ class PDBFile(TextFile):
     
     """
     
-    def copy(self):
-        pdb_file = PDBFile()
-        pdb_file._lines = copy.deepcopy(self._lines)
-        pdb_file._categories = copy.deepcopy(self._categories)
-    
     def get_structure(self):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.

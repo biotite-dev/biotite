@@ -25,11 +25,6 @@ class FastaFile(TextFile):
         self._lines = [line for line in self._lines
                        if len(line) != 0 and line[0] != ";"]
         self._find_header_lines()
-        
-    def copy(self):
-        fasta_file = FastaFile()
-        fasta_file._lines = copy.copy(self._lines)
-        return fasta_file
     
     def get_header(self, index=0):
         # Remove '>' in the header

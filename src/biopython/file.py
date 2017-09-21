@@ -4,10 +4,12 @@
 # as part of this package.
 
 import abc
+from .copyable import Copyable
+import copy
 
 __all__ = ["File", "TextFile"]
 
-class File(metaclass=abc.ABCMeta):
+class File(Copyable, metaclass=abc.ABCMeta):
     """
     Base class for all file classes. Every file class is
     instantiated without arguments. In order to fill the instance
@@ -26,18 +28,6 @@ class File(metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def write(self, file_name):
-        pass
-    
-    @abc.abstractmethod
-    def copy(self):
-        """
-        Copy the contents of the file.
-        
-        Returns
-        -------
-        copy : File
-            A copy of the file.
-        """
         pass
         
 
@@ -80,3 +70,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         with open(file_name, "w") as f:
             f.writelines([line+"\n" for line in self._lines])
+    
+    def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
+        clone._lines = copy.copy(self._lines)
