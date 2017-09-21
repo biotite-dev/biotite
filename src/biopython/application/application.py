@@ -38,6 +38,11 @@ class Application(metaclass=abc.ABCMeta):
     def __init__(self):
         self._state = AppState.CREATED
     
+    def __del__(self):
+        if self._state == AppState.RUNNING or self._state == AppState.FINISHED:
+            clean_up(self)
+        super().__del__()
+    
     @requires_state(AppState.CREATED)
     def start(self):
         self.run()
