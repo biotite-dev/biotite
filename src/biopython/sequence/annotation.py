@@ -11,66 +11,71 @@ from enum import Flag, Enum, auto
 __all__ = ["Feature", "Annotation", "AnnotatedSequence"]
 
 
-class LocDefect(Flag):
-    MISS_LEFT    = auto()
-    MISS_RIGHT   = auto()
-    MISS_INTERN  = auto()
-    BEYOND_LEFT  = auto()
-    BEYOND_RIGHT = auto()
-    UNK_LOC      = auto()
 
+class Location():
+    
+    class Defect(Flag):
+        MISS_LEFT    = auto()
+        MISS_RIGHT   = auto()
+        MISS_INTERN  = auto()
+        BEYOND_LEFT  = auto()
+        BEYOND_RIGHT = auto()
+        UNK_LOC      = auto()
+        BETWEEN      = auto()
 
-def Strand(Enum):
-    FORWARD = 1
-    REVERSE = -1
+    class Strand(Enum):
+        FORWARD = 1
+        REVERSE = -1
+    
+    def __init__(self, first, last, strand=Strand.FORWARD,
+                 defect=Defect(0)):
+        self.first = first
+        self.last = last
+        self.strand = strand
+        self.defect = defect
+    
+    def __str__(self):
+        string = "{:d}-{:d}".format(self.first, self.last)
+        if self.strand == Location.Strand.FORWARD:
+            string = string + " >"
+        else:
+            string = "< " + string
+        if self.defect != Location.Defect(0):
+            string += " " + str(self.defect)
+        return string
     
 
 class Feature(Copyable):
     
-    def __init__(self, name, loc, loc_defects=LocDefect(0)):
+    def __init__(self, name, locs):
         self._name = name
-        self._loc = copy.copy(loc)
-        self._loc_defects = loc_defects
+        self._locs = copy.deepcopy(locs)
         self._subfeatures = []
-        # True, if feature is already a subfeature or in an annotation
-        self._in_use = False
     
     def __copy_create__(self):
-        return Feature(self._name, self._loc, self._loc_defects)
+        return Feature(self._name, self._locs)
     
     def __copy_fill__(self, clone):
         for feature in self._subfeatures:
             clone._subfeatures.append(feature.copy())
     
     def add_subfeature(self, feature):
-        feature.use(True)
-        self._subfeatures.append(feature)
+        self._subfeatures.append(feature.copy())
     
     def del_subfeature(self, feature):
         self._subfeatures.remove(feature)
-        feature.use(False)
     
     def del_all_subfeatures(self):
-        for feature in self._subfeatures:
-            feature.use(False)
         self._subfeatures = []
     
     def get_subfeatures(self):
         return copy.copy(self._subfeatures)
     
-    def add_defect(self, loc_defect):
-        self._loc_defects |= loc_defect
-    
     def get_location(self):
-        return copy.copy(self._loc)
+        return copy.deepcopy(self._locs)
     
     def get_name(self):
         return self._name
-    
-    def use(self, set_in_use):
-        if self._in_use and set_in_use:
-            raise ValueError("Feature is already in use")
-        self._in_use = set_in_use
 
 
 class Annotation(object):
@@ -85,14 +90,12 @@ class Annotation(object):
         return copy.copy(self._features)
     
     def add_feature(feature):
-        feature.use(True)
-        self._features.append(feature)
+        self._features.append(feature.copy())
         self._feature_dict[feature.get_name()] = feature
     
     def del_feature(feature):
         self._features.remove(feature)
         del self._feature_dict[feature.get_name()]
-        feature.use(False)
     
     def release_from(self, feature):
         subfeature_list = feature.get_subfeatures()
@@ -124,19 +127,19 @@ class Annotation(object):
                 in_scope = False
                 #defect = LocDefect(0)
                 for loc in locs:
-                    first = loc[0]
-                    last = loc[1]
+                    first = loc.first
+                    last = loc.last
                     if first <= i_last and last >= i_first:
                         in_scope = True
                     ### Handle defects ###
                 if in_scope:
-                    sub_annot.add_feature(feature)
+                    sub_annot.add_feature(feature.copy())
             return sub_annot            
         else:
             raise TypeError("{:} instances are invalid Annotation indices"
                             .format(type(index).__name__))
 
-"""
+
 class AnnotatedSequence(object):
     
     def __init__(self, annotation, sequence, sequence_start=1):
@@ -159,16 +162,14 @@ class AnnotatedSequence(object):
             sub_seq = self._sequence.copy(new_seq_code=np.array([]))
             locs = index._get_location()
             for loc in locs:
-                # loc[1] is first base of location,
-                # loc[2] is last base of location
-                slice_start = loc[1] - self._seqstart
+                slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
-                slice_stop = loc[2] - self._seqstart +1
+                slice_stop = loc.last - self._seqstart +1
                 slice_index = slice(slice_start, slice_stop)
                 add_seq = self._sequence.__getitem__(slice_index)
-                if loc[0] == Strand.REVERSE:
+                if loc.strand == Location.Strand.REVERSE:
                     add_seq = add_seq.reverse().complement()
                 sub_seq += add_seq
                 return sub_seq
-"""
+
 

@@ -4,8 +4,8 @@
 # as part of this package.
 
 """
-This subpackage is used for reading and writing `NucleotideSequence`
-or `ProteinSequence` objects using the popular FASTA format.
+This subpackage is used for reading and writing `Annotation` objects
+using the GenBank format.
 """
 
 from .file import *
