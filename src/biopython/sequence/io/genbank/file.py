@@ -129,8 +129,8 @@ def _parse_single_loc(loc_str):
     else:
         first = int(first_str)
     if last_str[0] == ">":
-        last = int(first_str[1:])
+        last = int(last_str[1:])
         defect |= Location.Defect.BEYOND_RIGHT
     else:
-        last = int(first_str)
+        last = int(last_str)
     return Location(first, last, defect=defect)
