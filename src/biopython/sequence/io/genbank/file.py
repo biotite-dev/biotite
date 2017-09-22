@@ -92,11 +92,11 @@ class GenBankFile(TextFile):
 def _parse_locs(loc_str):
     locs = []
     if loc_str.startswith(("join", "order")):
-        str_list = loc_str[loc_str.index("(")+1:loc_str.index(")")].split(",")
+        str_list = loc_str[loc_str.index("(")+1:loc_str.rindex(")")].split(",")
         for s in str_list:
             locs.extend(_parse_locs(s))
     elif loc_str.startswith("complement"):
-        compl_str = loc_str[loc_str.index("(")+1:loc_str.index(")")]
+        compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
         compl_locs = _parse_locs(compl_str)
         for loc in compl_locs:
             loc.strand = Location.Strand.REVERSE
