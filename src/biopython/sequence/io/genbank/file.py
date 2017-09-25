@@ -3,9 +3,10 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
+from .convert import get_feature
 from ....file import TextFile
 from ...sequence import Sequence
-from ...annotation import Location
+from ...annotation import Location, Annotation
 from ...alphabet import AlphabetError
 from ...seqtypes import NucleotideSequence, ProteinSequence
 import textwrap
@@ -68,6 +69,11 @@ class GenBankFile(TextFile):
                         qual_dict[qual_pair[0]] = None
                 feature_table.append((key, locs, qual_dict))
         return feature_table
+    
+    def get_annotation(self, include_only=None):
+        feature_table = self.get_feature_table(include_only)
+        features = [get_feature(entry) for entry in feature_table]
+        return Annotation(features)
     
     def get_category(self, category_str, as_list=False):
         category_str = category_str.upper()

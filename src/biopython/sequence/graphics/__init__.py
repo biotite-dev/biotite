@@ -3,10 +3,5 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-"""
-This subpackage is used for reading and writing `Annotation` objects
-using the GenBank format.
-"""
-
-from .file import *
-from .convert import *
+from .features import *
+from .regionmap import *
