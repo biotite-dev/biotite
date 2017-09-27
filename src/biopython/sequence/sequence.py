@@ -137,8 +137,8 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     @code.setter
     def code(self, value):
-        self._seq_code = value.astype(Sequence._dtype( \
-                                      len(self.get_alphabet())) )
+        dtype = Sequence._dtype(len(self.get_alphabet()))
+        self._seq_code = value.astype(dtype, copy=False)
     
     
     @abc.abstractmethod
