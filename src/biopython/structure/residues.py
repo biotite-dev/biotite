@@ -183,7 +183,7 @@ def get_residues(array):
          'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
     """
     # Maximum length is length of atom array
-    ids = np.zeros(len(array.res_id), dtype=float)
+    ids = np.zeros(len(array.res_id), dtype=int)
     names = np.zeros(len(array.res_id), dtype="U3")
     ids[0] = array.res_id[0]
     names[0] = array.res_name[0]
