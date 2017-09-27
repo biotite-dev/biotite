@@ -47,7 +47,7 @@ setup(name="biopython",
     ext_modules = ext_modules,
     
     # Including substitution matrix data
-    package_data = {"biopython.sequence.align" : ["matrix_data/*.npy"]},
+    package_data = {"biopython.sequence.align" : ["matrix_data/*.mat"]},
     
     install_requires = ["requests",
                         "numpy",

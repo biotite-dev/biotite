@@ -10,7 +10,7 @@ import numpy as np
 
 class AlignTest(unittest.TestCase):
     
-    def test_global_align(self):
+    def test_align_global(self):
         seq1 = seq.NucleotideSequence("ATACGCTTGCT")
         seq2 = seq.NucleotideSequence("AGGCGCAGCT")
         alignments = align.align_global(seq1, seq2,
@@ -22,7 +22,7 @@ class AlignTest(unittest.TestCase):
                          [[0,0], [1,1], [2,2], [3,3], [4,4], [5,5],
                           [6,6], [7,-1], [8,7], [9,8], [10,9]])
     
-    def test_local_align(self):
+    def test_align_local(self):
         seq1 = seq.NucleotideSequence("ATGGCACATGATCTTA")
         seq2 = seq.NucleotideSequence("ACTTGCTTACGAT")
         alignments = align.align_local(seq1, seq2,
@@ -33,3 +33,12 @@ class AlignTest(unittest.TestCase):
         self.assertEqual(alignment.trace.tolist(),
                          [[5,0], [6,1], [7,2], [8,3], [9,4], [10,-1],
                           [11,-1], [12,5], [13,6], [14,7], [15,8]])
+    
+    def test_matrices(self):
+        db_entries = align.SubstitutionMatrix.list_db()
+        for entry in db_entries:
+            with self.subTest(entry):
+                if entry not in ["NUC","GONNET"]:
+                    alph1 = seq.ProteinSequence.alphabet
+                    alph2 = seq.ProteinSequence.alphabet
+                    matrix = align.SubstitutionMatrix(alph1, alph2, entry)
