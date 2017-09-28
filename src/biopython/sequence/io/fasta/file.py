@@ -44,6 +44,7 @@ class FastaFile(TextFile):
     >>> print(dict(file))
     {'seq1': 'ATACT', 'seq2': 'AAAATT'}
     >>> del file["seq1"]
+    >>> print(dict(file))
     {'seq2': 'AAAATT'}
     >>> file.write("test.fasta")
     """
