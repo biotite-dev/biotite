@@ -4,109 +4,121 @@
 # as part of this package.
 
 from ....file import TextFile
-from ...sequence import Sequence
-from ...alphabet import AlphabetError
-from ...seqtypes import NucleotideSequence, ProteinSequence
 import textwrap
-import copy
+from collections import OrderedDict
 
 __all__ = ["FastaFile"]
 
 
 class FastaFile(TextFile):
+    """
+    This class represents a file in FASTA format.
     
-    def __init__(self):
+    A FASTA file contains so called *header* lines, beginning with '>',
+    that describe following sequence. The corresponding sequence starts
+    at the line after the header line and ends at the next header line
+    or at the end of file. The header along with its sequence forms an
+    entry.
+    
+    This class is used in a dictionary like manner,
+    headers (without the leading '>') are used as keys,
+    and strings containing the sequences are the corresponding values.
+    Therefore entries can be accessed using indexing, `del` deletes the
+    entry at the given index. In fact objects of this class can be
+    casted into actual `dict` instances.
+    
+    Parameters
+    ----------
+    chars_per_line : int, optional
+        The number characters in a line containing sequence data
+        after which a line break is inserted. Default is 80.
+    
+    Examples
+    --------
+    
+    >>> file = FastaFile()
+    >>> file["seq1"] = "ATACT"
+    >>> print(file["seq1"])
+    ATACT
+    >>> file["seq2"] = "AAAATT"
+    >>> print(dict(file))
+    {'seq1': 'ATACT', 'seq2': 'AAAATT'}
+    >>> del file["seq1"]
+    {'seq2': 'AAAATT'}
+    >>> file.write("test.fasta")
+    """
+    
+    def __init__(self, chars_per_line=80):
         super().__init__()
-        self._header_i = []
+        self._chars_per_line = chars_per_line
+        self._entries = OrderedDict()
     
     def read(self, file_name):
         super().read(file_name)
         # Filter out empty and comment lines
         self._lines = [line for line in self._lines
-                       if len(line) != 0 and line[0] != ";"]
-        self._find_header_lines()
-    
-    def get_header(self, index=0):
-        # Remove '>' in the header
-        return self._lines[self._header_i[index]][1:]
-    
-    def get_sequence(self, index=0):
-        # Get lines belonging to the header
-        # Check if index is last index in order to prevent IndexError
-        if index+1 == len(self._header_i):
-            lines = self._lines[self._header_i[index] +1 :]
-        else:
-            lines = self._lines[self._header_i[index] +1 :
-                                self._header_i[index+1]]
-        # Fill the sequence string
-        seq_string = ""
-        for line in lines:
-            seq_string += line.strip()
-        # Determine the sequence type:
-        # If NucleotideSequence can be created it is a DNA sequence,
-        # otherwise protein sequence
-        try:
-            return NucleotideSequence(seq_string)
-        except AlphabetError:
-            pass
-        try:
-            return ProteinSequence(seq_string)
-        except AlphabetError:
-            raise ValueError("FASTA data cannot be converted either to "
-                             "NucleotideSequence nor to Protein Sequence")
-            
-    def set_header(self, index, string):
-        processed_string = ">" + string.replace(">","").replace("\n","")
-        self._lines[self._header_i[index]] = processed_string
-    
-    def set_sequence(self, index, sequence):
-        seq_string_list = textwrap.wrap(str(sequence))
-        del self._lines[self._header_i[index] +1 : self._header_i[index+1]]
-        # Insert entry
-        insert_index = self._header_i[index] +1
-        self._lines[insert_index : insert_index] = seq_string_list
-        # Amount of lines changed
-        # -> look for new position of header lines
-        self._find_header_lines()
-    
-    def add(self, header, sequence):
-        header_string = ">" + header.replace(">","").replace("\n","")
-        seq_string_list = textwrap.wrap(str(sequence))
-        self._lines += [header_string] + seq_string_list
-        # Amount of lines changed
-        # -> look for new position of header lines
-        self._find_header_lines()
+                       if len(line.strip()) != 0 and line[0] != ";"]
+        self._find_entries()
         
-    def __setitem__(self, index, value):
-        if not isinstance(index, int):
-            raise IndexError("FastaFile only supports integer indexing")
-        self.set_header(index, value[0])
-        self.set_sequence(index, value[1])
+    def __setitem__(self, header, seq_str):
+        if not isinstance(header, str):
+            raise IndexError("FastaFile only supports header strings as keys")
+        if not isinstance(seq_str, str):
+            raise IndexError("FastaFile only supports sequence strings"
+                             "as values")
+        # Delete lines of entry corresponding to the header,
+        # if existing
+        if header in self._entries:
+            start, stop = self._entries[header]
+            del self._lines[start:stop]
+            del self._entries[header]
+        # Append header line
+        self._lines += [">" + header.replace(">","").replace("\n","").strip()]
+        # Append new lines with sequence string (with line breaks)
+        self._lines += textwrap.wrap(seq_str, width=self._chars_per_line)
+        self._find_entries()
     
-    def __getitem__(self, index):
-        if not isinstance(index, int):
-            raise IndexError("FastaFile only supports integer indexing")
-        return self.get_header(index), self.get_sequence(index)
+    def __getitem__(self, header):
+        if not isinstance(header, str):
+            raise IndexError("FastaFile only supports header strings as keys")
+        start, stop = self._entries[header]
+        # Concatenate sequence string from following lines
+        seq_string = ""
+        i = start +1
+        while i < stop:
+            seq_string += self._lines[i].strip()
+            i += 1
+        return seq_string
     
-    def __delitem__(self, index):
-        del self._lines[self._header_i[index] : self._header_i[index+1]]
-        # Amount of lines changed
-        # -> look for new position of header lines
-        self._find_header_lines()
+    def __delitem__(self, header):
+        start, stop = self._entries[header]
+        del self._lines[start:stop]
+        del self._entries[header]
+        self._find_entries()
     
     def __len__(self):
-        return len(self._header_i)
+        return len(self._entries)
     
     def __iter__(self):
-        i = 0
-        while i < len(self):
-            yield self[i]
-            i += 1
+        for header in self._entries:
+            yield header, self[header]
     
-    def _find_header_lines(self):
-        self._header_i = []
+    def _find_entries(self):
+        header_i = []
         for i, line in enumerate(self._lines):
             if line[0] == ">":
-                self._header_i.append(i)
-    
+                header_i.append(i)
+        self._entries = OrderedDict()
+        for j in range(len(header_i)):
+            # Remove '>' from header
+            header = self._lines[header_i[j]].replace(">","").strip()
+            start = header_i[j]
+            if j < len(header_i) -1:
+                # Header in mid or start of file
+                # -> stop is start of next header
+                stop = header_i[j+1]
+            else:
+                # Last header -> entry stops at end of file
+                stop = len(self._lines)
+            self._entries[header] = (start, stop)
     

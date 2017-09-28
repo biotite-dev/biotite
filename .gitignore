@@ -3,7 +3,6 @@
 
 # Ignore data folders of unit tests
 tests/structure/data/
-tests/sequence/data/
 
 # Ignore the distribution directories
 dist

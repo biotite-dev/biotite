@@ -99,7 +99,7 @@ class Alphabet(object):
             symbols, false otherwise.
         """
         for symbol in self._symbols:
-            if type(symbol) != string or len(symbol) != 1:
+            if type(symbol) != str or len(symbol) != 1:
                 return False
         return True
     

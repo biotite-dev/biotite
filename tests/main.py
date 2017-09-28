@@ -10,9 +10,9 @@ from .sequence import sequence_suite
 from .application import application_suite
 
 test_suite = unittest.TestSuite()
-test_suite.addTest(structure_suite)
+#test_suite.addTest(structure_suite)
 test_suite.addTest(sequence_suite)
-test_suite.addTest(application_suite)
+#test_suite.addTest(application_suite)
 
 def run():
     runner = unittest.TextTestRunner()
