@@ -4,6 +4,7 @@
 # as part of this package.
 
 from ..localapp import LocalApp
+from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
@@ -40,9 +41,12 @@ class MuscleApp(LocalApp):
         out_file = FastaFile()
         out_file.read(self._out_file_name)
         seq_dict = dict(out_file)
-        print(seq_dict)
         out_seq_str = [None] * len(seq_dict)
         for i in range(len(self._sequences)):
             out_seq_str[i] = seq_dict[str(i)]
-        for e in out_seq_str:
-            print(e)
+        trace = Alignment.trace_from_strings(out_seq_str)
+        self._alignment = Alignment(self._sequences, trace, None)
+    
+    @requires_state(AppState.JOINED)
+    def get_alignment(self):
+        return self._alignment

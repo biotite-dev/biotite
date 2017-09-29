@@ -69,7 +69,7 @@ class FastaFile(TextFile):
         if not isinstance(header, str):
             raise IndexError("FastaFile only supports header strings as keys")
         if not isinstance(seq_str, str):
-            raise IndexError("FastaFile only supports sequence strings"
+            raise IndexError("FastaFile only supports sequence strings "
                              "as values")
         # Delete lines of entry corresponding to the header,
         # if existing
