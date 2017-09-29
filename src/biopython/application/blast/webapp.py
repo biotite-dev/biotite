@@ -188,9 +188,9 @@ class BlastWebApp(WebApp):
             else:
                 seq1 = ProteinSequence(seq1_str.replace("-", ""))
                 seq2 = ProteinSequence(seq2_str.replace("-", ""))
-            trace = Alignment.trace_from_string(seq1_str, seq2_str)
+            trace = Alignment.trace_from_strings([seq1_str, seq2_str])
             
-            alignment = BlastAlignment( seq1 ,seq2, trace, score, e_value,
+            alignment = BlastAlignment( [seq1 ,seq2], trace, score, e_value,
                                         (query_begin, query_end),
                                         (query_begin, query_end),
                                         hit_id, hit_definition )

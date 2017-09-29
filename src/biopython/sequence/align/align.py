@@ -22,28 +22,32 @@ __all__ = ["Alignment", "simple_score", "align_global", "align_local"]
 class Alignment(object):
     """
     An `Alignment` object stores information about which symbols of
-    two sequences are aligned to each other and the corresponding
-    alignment score.
+    *n* sequences are aligned to each other and it stores the
+    corresponding alignment score.
     
     Rather than saving a list of aligned symbols, this class saves the
-    original two sequences, that were aligned, and a so called *trace*,
-    which indicate the aligned symbols of these sequences. The trace is
-    a (n x 2) `ndarray`, where the first dimension is the position in
-    the alignment and the second dimension represents the sequence
-    (either sequence 1 or 2). Each element of the trace is the index in
-    the corresponding sequence. A gap is represented by the value -1.
+    original *n* sequences, that were aligned, and a so called *trace*,
+    which indicate the aligned symbols of these sequences.
+    The trace is a *(m x n)* `ndarray` with alignment length *m*, where
+    the first dimension is the position in the alignment and the second
+    dimension represents the sequence.
+    Each element of the trace is the index in the corresponding
+    sequence. A gap is represented by the value -1.
     
     Furthermore this class provides multiple utility functions for
     conversion into strings in order to make the alignment human
     readable.
     
+    Unless an `Alignment` object is the result of an multiple sequence
+    alignment, the object will contain only two sequences.
+    
     All attributes of this class are publicly accessible.
     
     Parameters
     ----------
-    seq1, seq2 : Sequence
-        The two sequences, that were aligned to each other.
-    trace : ndarray, dtype=int, shype=(n,2)
+    sequences : list
+        A list of aligned sequences.
+    trace : ndarray, dtype=int, shape=(n,m)
         The alignment trace.
     score : int
         Alignment score.
@@ -51,8 +55,8 @@ class Alignment(object):
     Examples
     --------
     
-    >>> seq1 = DNASequence("CGTT")
-    >>> seq2 = DNASequence("TTGC")
+    >>> seq1 = NucleotideSequence("CGTT")
+    >>> seq2 = NucleotideSequence("TTGC")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> ali = align_global(seq1, seq2, matrix)[0]
     >>> print(ali)
@@ -65,7 +69,12 @@ class Alignment(object):
      [ 3  1]
      [-1  2]
      [-1  3]]
-    
+    >>> print(ali[1:4].trace)
+    [[ 1 -1]
+     [ 2  0]
+     [ 3  1]]
+    >>> print(ali[1:4,0].trace)
+    [1 2 3]
     """
     
     
@@ -100,24 +109,28 @@ class Alignment(object):
                 for seq_j in range(len(seq_str_lines_list)):
                     ali_str += seq_str_lines_list[seq_j][row_i] + "\n"
                 ali_str += "\n"
-            # Remove final line break
-            return ali_str[:-1]
+            # Remove final line breaks
+            return ali_str[:-2]
         else:
             super().__str__()
     
     def __getitem__(self, index):
-        if not isinstance(index, slice):
-            raise IndexError("Alignments only support slice indexing")
-        return Alignment(self.seq1, self.seq2, self.trace[index], self.score)
+        if isinstance(index, tuple):
+            return Alignment(self.sequences[index[1]], self.trace[index],
+                             self.score)
+        elif isinstance(index, slice):
+            return Alignment(self.sequences[:], self.trace[index], self.score)
+        else:
+            raise IndexError("Invalid alignment index")
     
     @staticmethod
     def trace_from_strings(seq_str_list):
         """
-        Create a trace from two strings, which represent an alignment.
+        Create a trace from strings that represent aligned sequences.
         
         Parameters
         ----------
-        seq1_str, seq2_str : str
+        seq_str_list : list
             The strings, where each each one represents a sequence
             in an alignment.
         
@@ -127,7 +140,8 @@ class Alignment(object):
             The created trace.
         """
         seq_i = np.zeros(len(seq_str_list))
-        trace = np.full((len(seq1_str), len(seq_str_list)), -1, dtype=int)
+        trace = np.full(( len(seq_str_list[0]), len(seq_str_list) ),
+                        -1, dtype=int)
         # Get length of string (same length for all strings)
         # rather than length of list
         for pos_i in range(len(seq_str_list[0])):
@@ -135,8 +149,8 @@ class Alignment(object):
                 if seq_str_list[str_j][pos_i] == "-":
                     trace[pos_i, str_j] = -1
                 else:
-                    trace[pos_i, str_j] = seq_i[i]
-                    seq_i[i] += 1
+                    trace[pos_i, str_j] = seq_i[str_j]
+                    seq_i[str_j] += 1
         return trace
 
 
@@ -211,8 +225,8 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     Examples
     --------
     
-    >>> seq1 = DNASequence("ATACGCTTGCT")
-    >>> seq2 = DNASequence("AGGCGCAGCT")
+    >>> seq1 = NucleotideSequence("ATACGCTTGCT")
+    >>> seq2 = NucleotideSequence("AGGCGCAGCT")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> ali = align_global(seq1, seq2, matrix,
     ...                    gap_opening=-6, gap_extension=-2)
@@ -312,8 +326,8 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     Examples
     --------
     
-    >>> seq1 = DNASequence("CGAATACGCTTGCTCC")
-    >>> seq2 = DNASequence("TATAGGCGCAGCTGG")
+    >>> seq1 = NucleotideSequence("CGAATACGCTTGCTCC")
+    >>> seq2 = NucleotideSequence("TATAGGCGCAGCTGG")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> ali = align_local(seq1, seq2, matrix,
     ...                    gap_opening=-6, gap_extension=-2)

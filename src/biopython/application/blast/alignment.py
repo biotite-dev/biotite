@@ -9,9 +9,9 @@ __all__ = ["BlastAlignment"]
 
 class BlastAlignment(Alignment):
     
-    def __init__(self, seq1, seq2, trace, score, e_value,
+    def __init__(self, sequences, trace, score, e_value,
                  query_interval, hit_interval, hit_id, hit_definition):
-        super().__init__(seq1, seq2, trace, score)
+        super().__init__(sequences, trace, score)
         self.e_value = e_value
         self.query_interval = query_interval
         self.hit_interval = hit_interval

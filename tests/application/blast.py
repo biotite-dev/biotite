@@ -16,5 +16,6 @@ class BlastTest(unittest.TestCase):
         app.start()
         app.join()
         alignments = app.get_alignments()
-        self.assertEqual(prot_seq, alignments[0].seq1)
-        self.assertEqual(prot_seq, alignments[0].seq2)
+        # BLAST should find original sequence as best hit
+        self.assertEqual(prot_seq, alignments[0].sequences[0])
+        self.assertEqual(prot_seq, alignments[0].sequences[1])
