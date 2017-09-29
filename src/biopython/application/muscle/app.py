@@ -27,10 +27,22 @@ class MuscleApp(LocalApp):
 
     def run(self):
         in_file_name = temp_file("muscle_in_{:d}.fa".format(self._id))
-        out_file_name = temp_file("muscle_out_{:d}.fa".format(self._id))
+        self._out_file_name = temp_file("muscle_out_{:d}.fa".format(self._id))
         in_file = FastaFile()
         for i, seq in enumerate(self._sequences):
-            in_file.add(str(i), seq)
+            in_file[str(i)] = str(seq)
         in_file.write(in_file_name)
-        self.set_options(["-in", in_file_name, "-out", out_file_name])
+        self.set_options(["-in", in_file_name, "-out", self._out_file_name])
         super().run()
+    
+    def evaluate(self):
+        super().evaluate()
+        out_file = FastaFile()
+        out_file.read(self._out_file_name)
+        seq_dict = dict(out_file)
+        print(seq_dict)
+        out_seq_str = [None] * len(seq_dict)
+        for i in range(len(self._sequences)):
+            out_seq_str[i] = seq_dict[str(i)]
+        for e in out_seq_str:
+            print(e)
