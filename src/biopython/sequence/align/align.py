@@ -7,6 +7,7 @@ from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
 import numpy as np
 import copy
+import textwrap
 try:
     from .calign import c_fill_align_table, c_follow_trace
     _c_accel = True
@@ -68,110 +69,41 @@ class Alignment(object):
     """
     
     
-    def __init__(self, seq1, seq2, trace, score):
-        self.seq1 = seq1
-        self.seq2 = seq2
+    def __init__(self, sequences, trace, score):
+        self.sequences = copy.copy(sequences)
         self.trace = trace
         self.score = score
-        
-    def format_compact(self, line_length=72):
-        """
-        Create a compact string representation of the alignment.
-        
-        Parameters
-        ----------
-        line_length : int, optional
-            The amount of characters, after which a line break is
-            introduced. Default is 72.
-        
-        Returns
-        -------
-        string : str
-            Compact string representation.
-        
-        Example
-        -------
-        
-        """
-        str_seq1, str_seq2 = self._get_gapped_seq_strings()
-        return str_seq1 + "\n" + str_seq2
     
-    def format_detail(self, matrix, cutoff=0, line_length=72):
-        """
-        Create a string representation of the alignment, where '.' or 
-        '|' characters, show the similarity between the aligned symbols.
-        
-        Parameters
-        ----------
-        matrix : SubstitutionMatrix
-            The matrix is needed in order to determine the
-            similarity
-        cutoff : int, optional
-            The cutoff score, where the similarity character changes.
-            Default is 0
-        line_length : int, optional
-            The amount of characters, after which a line break is
-            introduced.Default is 72.
-        
-        Returns
-        -------
-        string : str
-            Detailed string representation.
-        """
-        str_seq1, str_seq2 = self._get_gapped_seq_strings()
-        conservation = self._get_conservation_string(matrix, cutoff)
-        i = 0
-        string = ""
-        # String contains 'line_length' symbols per line
-        while i+line_length <= len(self.trace):
-            string += str_seq1[i : i+line_length] + "\n"
-            string += conservation[i : i+line_length] + "\n"
-            string += str_seq2[i : i+line_length] + "\n"
-            string += "\n"
-            i += line_length
-        # Add symbol remainder if present
-        if i < len(self.trace):
-            string += str_seq1[i:] + "\n"
-            string += conservation[i:] + "\n"
-            string += str_seq2[i:] + "\n"
-            string += "\n"
-        # Return string without terminal 'newlines'
-        return string[:-2]
-    
-    def _get_conservation_string(self, matrix, cutoff=0):
-        seq_code1 = self.seq1.code
-        seq_code2 = self.seq2.code
-        conservation = ""
+    def _gapped_str(self, seq_index):
+        seq_str = ""
         for i in range(len(self.trace)):
-            if self.trace[i,0] == -1 or self.trace[i,1] == -1:
-                conservation += " "
-            else:
-                score = matrix.get_score_by_code(seq_code1[self.trace[i,0]],
-                                                 seq_code2[self.trace[i,1]])
-                if score >= cutoff:
-                    conservation += "|"
-                else:
-                    conservation += "."
-        return conservation
-    
-    def _get_gapped_seq_strings(self):
-        str_seq1 = ""
-        str_seq2 = ""
-        for e in range(len(self.trace)):
-            i = self.trace[e,0]
-            j = self.trace[e,1]
-            if i != -1:
-                str_seq1 += self.seq1[i]
-            else:
-                str_seq1 += "-"
+            j = self.trace[i][seq_index]
             if j != -1:
-                str_seq2 += self.seq2[j]
+                seq_str += self.sequences[seq_index][j]
             else:
-                str_seq2 += "-"
-        return str_seq1, str_seq2
+                seq_str += "-"
+        return seq_str
     
     def __str__(self):
-        return self.format_compact()
+        # Check if any of the sequences
+        # has an non-single letter alphabet
+        all_single_letter = True
+        for seq in self.sequences:
+            if not seq.get_alphabet().is_letter_alphabet():
+                all_single_letter = False
+        if all_single_letter:
+            seq_str_lines_list = []
+            for i in range(len(self.sequences)):
+                seq_str_lines_list.append(textwrap.wrap(self._gapped_str(i)))
+            ali_str = ""
+            for row_i in range(len(seq_str_lines_list[0])):
+                for seq_j in range(len(seq_str_lines_list)):
+                    ali_str += seq_str_lines_list[seq_j][row_i] + "\n"
+                ali_str += "\n"
+            # Remove final line break
+            return ali_str[:-1]
+        else:
+            super().__str__()
     
     def __getitem__(self, index):
         if not isinstance(index, slice):
@@ -179,7 +111,7 @@ class Alignment(object):
         return Alignment(self.seq1, self.seq2, self.trace[index], self.score)
     
     @staticmethod
-    def trace_from_string(seq1_str, seq2_str):
+    def trace_from_strings(seq_str_list):
         """
         Create a trace from two strings, which represent an alignment.
         
@@ -194,21 +126,17 @@ class Alignment(object):
         trace : ndarray, dtype=int, shype=(n,2)
             The created trace.
         """
-        i = 0
-        j = 0
-        trace = np.full((len(seq1_str), 2), -1, dtype=np.int64)
-        for k in range(len(seq1_str)):
-            if seq1_str[k] == "-":
-                trace[k, 0] = -1
-            else:
-                trace[k, 0] = i
-                i += 1
-            if seq2_str[k] == "-":
-                trace[k, 1] = -1
-            else:
-                trace[k, 1] = j
-                j += 1
-            k += 1
+        seq_i = np.zeros(len(seq_str_list))
+        trace = np.full((len(seq1_str), len(seq_str_list)), -1, dtype=int)
+        # Get length of string (same length for all strings)
+        # rather than length of list
+        for pos_i in range(len(seq_str_list[0])):
+            for str_j in range(len(seq_str_list)):
+                if seq_str_list[str_j][pos_i] == "-":
+                    trace[pos_i, str_j] = -1
+                else:
+                    trace[pos_i, str_j] = seq_i[i]
+                    seq_i[i] += 1
         return trace
 
 
@@ -344,7 +272,7 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
 
     _traceback(trace_table, trace_list, i, j, trace_func)
     
-    return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]
+    return [Alignment([seq1, seq2], trace, max_score) for trace in trace_list]
 
 
 def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
@@ -430,7 +358,7 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     
     _traceback(trace_table, trace_list, i, j, trace_func)
     
-    return [Alignment(seq1, seq2, trace, max_score) for trace in trace_list]
+    return [Alignment([seq1, seq2], trace, max_score) for trace in trace_list]
     
     
 def _traceback(trace_table, trace_list, i_start, j_start, trace_func):
