@@ -45,8 +45,7 @@ def rmsd(reference, subject):
     --------
     rmsf
     """
-    sq_euclidian = _sq_euclidian(reference, subject)
-    return np.sqrt(np.mean(sq_euclidian, axis=-1))
+    return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
 
 def rmsf(reference, subject):
@@ -81,8 +80,7 @@ def rmsf(reference, subject):
     """
     if type(subject) != AtomArrayStack:
         raise ValueError("Subject must be AtomArrayStack")
-    sq_euclidian = _sq_euclidian(reference, subject)
-    return np.sqrt(np.mean(sq_euclidian, axis=0))
+    return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=0))
     np.linalg.svd(a)
 
 
