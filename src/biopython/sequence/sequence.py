@@ -15,6 +15,11 @@ from ..copyable import Copyable
 __all__ = ["Sequence", "GeneralSequence"]
 
 
+_size_uint8  = np.iinfo(np.uint8 ).max +1
+_size_uint16 = np.iinfo(np.uint16).max +1
+_size_uint32 = np.iinfo(np.uint32).max +1
+
+
 class Sequence(Copyable, metaclass=abc.ABCMeta):
     """
     The abstract base class for all sequence types.
@@ -176,6 +181,25 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         reversed = self.copy(reversed_code)
         return reversed
     
+    def is_valid(self):
+        """
+        Check, if the sequence contains a valid sequence code.
+        
+        A sequence code is valid, if at each sequence position the
+        code is smaller than the size of the alphabet.
+        
+        Invalid code means that the code cannot be decoded into
+        symbols. Furthermore invalid code can lead to serious
+        errors in alignments, since the substitution matrix
+        is indexed with an invalid index.
+        
+        Returns
+        -------
+        valid : bool
+            True, if the sequence is valid, false otherwise.
+        """
+        return (self.code < len(get_alphabet())).all()
+    
     def __getitem__(self, index):
         alph = self.get_alphabet()
         sub_seq = self._seq_code.__getitem__(index)
@@ -269,10 +293,14 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
 
     @staticmethod
     def _dtype(alphabet_size):
-        byte_count = 1
-        while 256**byte_count < alphabet_size:
-            i += 1
-        return "u{:d}".format(byte_count)
+        if alphabet_size <= _size_uint8:
+            return np.uint8
+        elif alphabet_size <= _size_uint16:
+            return np.uint16
+        elif alphabet_size <= _size_uint32:
+            return np.uint32
+        else:
+            return np.uint64
 
 
 class GeneralSequence(Sequence):
