@@ -4,6 +4,5 @@
 # as part of this package.
 
 from .application import *
-from .containerapp import *
 from .localapp import *
 from .webapp import *
