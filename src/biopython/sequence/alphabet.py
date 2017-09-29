@@ -76,6 +76,11 @@ class Alphabet(object):
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
+        # Determine if alphabet is single letter alphabet
+        self._is_single_letter = True
+        for symbol in self._symbols:
+            if type(symbol) != str or len(symbol) != 1:
+                self._is_single_letter = False
     
     def get_symbols(self):
         """
@@ -98,10 +103,7 @@ class Alphabet(object):
             True, if this alphabet uses exclusively single letters
             symbols, false otherwise.
         """
-        for symbol in self._symbols:
-            if type(symbol) != str or len(symbol) != 1:
-                return False
-        return True
+        return self._is_single_letter
     
     def extends(self, alphabet):
         """
