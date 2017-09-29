@@ -43,6 +43,10 @@ class FastaFile(TextFile):
     >>> file["seq2"] = "AAAATT"
     >>> print(dict(file))
     {'seq1': 'ATACT', 'seq2': 'AAAATT'}
+    >>> for header, seq in file:
+    ...     print(header, seq)
+    seq1 ATACT
+    seq2 AAAATT
     >>> del file["seq1"]
     >>> print(dict(file))
     {'seq2': 'AAAATT'}
