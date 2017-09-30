@@ -6,6 +6,7 @@
 from ..features import *
 from .features import *
 from ..annotation import Location
+from matplotlib.patches import Rectangle
 
 __all__ = ["RegionMap"]
 
@@ -22,6 +23,8 @@ class RegionMap():
         self.set_lim(0,10000)
     
     def draw(self, annotation, style=base_syle, **kwargs):
+        self._ax.add_patch(Rectangle((0, self._size/2 - 25), 5000000, 50,
+                                     edgecolor="None", facecolor="gray"))
         for feature in annotation:
             try:
                 draw_func = style[type(feature)]
@@ -33,22 +36,13 @@ class RegionMap():
                     dir = "right"
                 else:
                     dir = "left"
-                draw_func(self._ax, feature, x=loc.first-0.5, y=self._height/2,
-                          width=loc.last-loc.first+1, height=self._height,
+                draw_func(self._ax, feature, x=loc.first-0.5, y=self._size/2,
+                          width=loc.last-loc.first+1, height=self._size,
                           defect=loc.defect, dir = dir, **kwargs)
     
     def set_lim(self, min, max):
         self._ax.set_xlim(min, max)
-        self._calc_height()
         
     def set_size(self, size):
         self._size = size
-        self._calc_height()
-    
-    def _calc_height(self):
-        fig = self._ax.get_figure()
-        dpi = self._ax.get_figure().dpi
-        diff = self._ax.transData.inverted().transform([(0,0), (0,self._size)])
-        height = (diff[1][1] - diff[0][1]) * dpi
-        self._ax.set_ylim(0, height)
-        self._height = height
+        self._ax.set_ylim(0, size)

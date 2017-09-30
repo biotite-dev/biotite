@@ -11,26 +11,24 @@ __all__ = ["draw_cds"]
 
 
 def draw_cds(axes, feature, x, y, width, height, defect, dir, **kwargs):
-    base_height = height*0.6
-    head_height = height*0.9
-    if width >= head_height/2:
-        head_width = head_height/2
-        base_width = width-head_width
+    # Thickness of arrow base
+    b_height = height*0.6
+    # Thickness pf arrow head
+    h_height = height*0.9
+    if width >= h_height/2:
+        h_width = h_height/2
     else:
-        head_width = width
-        base_width = None
-    if base_width is not None:
-        if dir == "right":
-            axes.add_patch(patches.FancyArrow(
-                x, y-base_height/2, width, 0,
-                width=base_height, head_width=head_height, head_length=head_width,
-                length_includes_head=True, facecolor="green", edgecolor="None")
-            )
-        else:
-            pass
-    """
-    axes.add_patch(patches.Rectangle(
-        (x+head_width, y-base_height/2), base_width, base_height*0.5,
-        facecolor="green")
+        h_width = width
+    if dir == "right":
+        start_x = x
+        dx = width
+    else:
+        start_x = x + width
+        dx = -width
+    axes.add_patch(patches.FancyArrow(
+        start_x, y, dx, 0,
+        width=b_height, head_width=h_height, head_length=h_width,
+        length_includes_head=True, facecolor="green", edgecolor="None")
     )
-    """
+    axes.text(x+width/2, y, feature.get_gene(), fontsize=3,
+              ha="center", va="center")
