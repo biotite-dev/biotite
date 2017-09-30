@@ -4,7 +4,9 @@
 # as part of this package.
 
 from setuptools import setup, find_packages, Extension
+from setuptools.command.test import test as TestCommand
 import sys
+import shlex
 
 
 release = "2.0a2"
@@ -34,6 +36,20 @@ else:
         ext_modules = None
 
 
+class PyTestCommand(TestCommand):
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = ''
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(shlex.split(self.pytest_args))
+        sys.exit(errno)
+
+
 setup(name="biopython",
     version = release,
     description = "A set of general tools for computational biology",
@@ -56,7 +72,8 @@ setup(name="biopython",
     extras_require = {'trajectory':  ["mdtraj"],
     },
     
-    test_suite = "tests.main.test_suite",
+    cmdclass = {'test': PyTestCommand},
+    tests_require = ['pytest'],
     
     command_options = {
         'build_sphinx':

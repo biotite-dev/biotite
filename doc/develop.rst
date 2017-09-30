@@ -135,17 +135,12 @@ run the following command in the top-level directory.
 
    python setup.py test
 
+Running unit test requires the `pytest` framework.
+
 Adding your own unit tests for your new module (if possible), is appreciated.
-Biopython 2.0 uses Python's `unittest` module for this task. The unit
-tests are found in the ``tests`` folder (big surprise!). If there
-is already a module with an appropriate `TestCase` for you, then just add
-your own test function to it. If not, create your own module and put your
-test case into it. Then import the module in the corresponding ``__init__.py``
-and add the case to the test suite similar to the follwong line:
-
-.. code-block:: python
-
-   structure_suite.addTest(loader.loadTestsFromTestCase(SuperimposeTest))
+The unit tests are found in the ``tests`` folder (big surprise!). If there
+is already an appropriate module for you, then just add your own test function
+to it. If not, create your own module and put your test function into it.
 
 Code deployment
 ---------------
