@@ -11,7 +11,8 @@ arrays and atom array stacks.
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 
-__all__ = ["filter_amino_acids", "filter_backbone", "filter_intersection"]
+__all__ = ["filter_solvent", "filter_amino_acids", "filter_backbone",
+           "filter_intersection"]
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",

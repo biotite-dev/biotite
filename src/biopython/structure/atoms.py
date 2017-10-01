@@ -307,9 +307,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
+        self._copy_annotations(clone)
+        clone._coord = np.copy(self._coord)
+    
+    def _copy_annotations(self, clone):
         for name in self._annot:
             clone._annot[name] = np.copy(self._annot[name])
-        clone._coord = np.copy(self._coord)
     
 
 class Atom(object):
@@ -773,7 +776,8 @@ class AtomArrayStack(_AtomArrayBase):
                     new_stack._coord = new_stack._coord[index[0]]
                 return new_stack
         else:
-            new_stack = self._copy_attributes()
+            new_stack = AtomArrayStack(depth=0, length=self.array_length())
+            self._copy_annotations(new_stack)
             new_stack._coord = self._coord[index]
             return new_stack
             
