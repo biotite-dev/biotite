@@ -8,12 +8,10 @@ from ..sequence import Sequence
 import numpy as np
 import copy
 import textwrap
-try:
+from ...extensions import has_c_extensions, uses_c_extensions
+if has_c_extensions():
     from .calign import c_fill_align_table, c_follow_trace
-    _c_accel = True
-except ImportError:
-    pass
-    _c_accel = False
+    
 
 __all__ = ["Alignment", "simple_score", "align_global", "align_local"]
 
@@ -264,12 +262,14 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     code1 = seq1.code
     code2 = seq2.code
     
-    if _c_accel and code1.dtype == np.uint8 and code2.dtype == np.uint8:
-        fill_func  = c_fill_align_table
-        trace_func = c_follow_trace
+    if uses_c_extensions() \
+        and code1.dtype == np.uint8 \
+        and code2.dtype == np.uint8:
+            fill_func  = c_fill_align_table
+            trace_func = c_follow_trace
     else:
-        fill_func  = _fill_align_table
-        trace_func = _follow_trace
+            fill_func  = _fill_align_table
+            trace_func = _follow_trace
     
     # Fill table
     fill_func(code1, code2, matrix.get_matrix(),
@@ -351,12 +351,14 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
     code1 = seq1.code
     code2 = seq2.code
     
-    if _c_accel and code1.dtype == np.uint8 and code2.dtype == np.uint8:
-        fill_func  = c_fill_align_table
-        trace_func = c_follow_trace
+    if uses_c_extensions() \
+        and code1.dtype == np.uint8 \
+        and code2.dtype == np.uint8:
+            fill_func  = c_fill_align_table
+            trace_func = c_follow_trace
     else:
-        fill_func  = _fill_align_table
-        trace_func = _follow_trace
+            fill_func  = _fill_align_table
+            trace_func = _follow_trace
     
     # Fill table
     fill_func(code1, code2, matrix.get_matrix(),

@@ -6,12 +6,9 @@
 import shlex
 import numpy as np
 from ....file import TextFile
-try:
+from ....extensions import has_c_extensions, uses_c_extensions
+if has_c_extensions():
     from .cprocessloop import c_process_looped
-    _c_accel = True
-except ImportError:
-    pass
-    _c_accel = False
 
 __all__ = ["PDBxFile"]
 
@@ -225,7 +222,7 @@ class PDBxFile(TextFile):
                      if not _is_empty(line) and not _is_loop_start(line)]
         
         if is_loop:
-            if _c_accel:
+            if uses_c_extensions():
                 # Special optimisation for "atom_site:"
                 # Even if the values are quote protected,
                 # not whitespaces are expected in escaped values
