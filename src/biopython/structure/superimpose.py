@@ -193,3 +193,4 @@ def superimpose_apply(atoms, transformation):
     transformed.coord += transformation[0]
     transformed.coord = np.dot(transformed.coord, transformation[1])
     transformed.coord += transformation[2]
+    return transformed

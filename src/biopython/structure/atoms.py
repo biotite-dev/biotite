@@ -969,28 +969,6 @@ def stack(arrays):
     return array_stack
 
 
-def _get_model_size(model, insertion_code=""):
-    """
-    Calculate the number of atoms in a model.
-    """
-    size = 0
-    for chain in model:
-        for residue in chain:
-            # Only recognize atoms with given insertion code
-            insertion = _get_insertion_code(residue)
-            if insertion == insertion_code:
-                for atom in residue:
-                    size += 1
-    return size
-
-
-def _get_insertion_code(residue):
-    """
-    Get the insertion code of a residue.
-    """
-    return residue.id[2].strip()
-
-
 def coord(item):
     """
     Get the atom coordinates of the given array.

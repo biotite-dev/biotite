@@ -81,7 +81,6 @@ def rmsf(reference, subject):
     if type(subject) != AtomArrayStack:
         raise ValueError("Subject must be AtomArrayStack")
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=0))
-    np.linalg.svd(a)
 
 
 def average(atom_arrays):
