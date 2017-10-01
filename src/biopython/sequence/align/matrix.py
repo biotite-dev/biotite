@@ -70,7 +70,7 @@ class SubstitutionMatrix(object):
         The first alphabet of the substitution matrix.
     alphabet2 : Alphabet, length=n
         The second alphabet of the substitution matrix.
-    matrix : ndarray, shape=(m,n) or dict or str
+    score_matrix : ndarray, shape=(m,n) or dict or str
         Either a symbol code indexed `ndarray` containing the scores,
         or a dictionary mapping the symbol pairing to scores,
         or a string referencing a matrix in the internal database.
@@ -116,20 +116,20 @@ class SubstitutionMatrix(object):
     _db_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                            "matrix_data")
     
-    def __init__(self, alphabet1, alphabet2, matrix):
+    def __init__(self, alphabet1, alphabet2, score_matrix):
         self._alph1 = alphabet1
         self._alph2 = alphabet2
-        if isinstance(matrix, dict):
-            self._fill_with_matrix_dict(matrix)
-        elif isinstance(matrix, np.ndarray):
+        if isinstance(score_matrix, dict):
+            self._fill_with_matrix_dict(score_matrix)
+        elif isinstance(score_matrix, np.ndarray):
             alph_shape = (len(alphabet1), len(alphabet2))
-            if matrix.shape != alph_shape:
+            if score_matrix.shape != alph_shape:
                 raise ValueError("Matrix has shape {:}, "
                                  "but {:} is required"
                                  .format(matrix.shape, alph_shape))
-            self._matrix = np.copy(matrix.astype(np.int32))
-        elif isinstance(matrix, str):
-            matrix_dict = SubstitutionMatrix.dict_from_db(matrix)
+            self._matrix = np.copy(score_matrix.astype(np.int32))
+        elif isinstance(score_matrix, str):
+            matrix_dict = SubstitutionMatrix.dict_from_db(score_matrix)
             self._fill_with_matrix_dict(matrix_dict)      
         else:
             raise TypeError("Matrix must be either a dictionary, "
@@ -166,7 +166,7 @@ class SubstitutionMatrix(object):
         """
         return self._alph2
     
-    def get_matrix(self):
+    def score_matrix(self):
         """
         Get a copy of the 2-D `ndarray` containing the score values. 
         

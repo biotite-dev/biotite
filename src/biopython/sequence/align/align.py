@@ -272,7 +272,7 @@ def align_global(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
             trace_func = _follow_trace
     
     # Fill table
-    fill_func(code1, code2, matrix.get_matrix(),
+    fill_func(code1, code2, matrix.score_matrix(),
               score_table, trace_table,
               gap_opening, gap_extension,
               local = False)
@@ -361,7 +361,7 @@ def align_local(seq1, seq2, matrix, gap_opening=-3, gap_extension=-1):
             trace_func = _follow_trace
     
     # Fill table
-    fill_func(code1, code2, matrix.get_matrix(),
+    fill_func(code1, code2, matrix.score_matrix(),
               score_table, trace_table,
               gap_opening, gap_extension,
               local = True)
