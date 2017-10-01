@@ -49,6 +49,16 @@ def test_access(array):
     with pytest.raises(IndexError):
         array.set_annotation("test2", np.array([0,1,2,3]))
 
+def test_modification(atom, array, stack):
+    new_atom = atom
+    new_atom.chain_id = "C"
+    del array[2]
+    assert array.chain_id.tolist() == ["A","A","B","B"]
+    array[-1] = new_atom
+    assert array.chain_id.tolist() == ["A","A","B","C"]
+    del stack[1]
+    assert stack.stack_depth() == 2
+
 def test_array_indexing(atom, array):
     filtered_array = array[array.chain_id == "B"]
     assert filtered_array.res_name.tolist() == ["PRO","PRO","MSE"] 
@@ -63,6 +73,9 @@ def test_stack_indexing(stack):
     assert type(filtered_stack) == struc.AtomArray
     filtered_stack = stack[0:2, stack.res_name == "PRO"]
     assert filtered_stack.atom_name.tolist() == ["O","CA"]
+    filtered_stack = stack[np.array([True,False,True])]
+    assert filtered_stack.stack_depth() == 2
+    assert filtered_stack.array_length() == 5
     
 
 def test_concatenation(array, stack):

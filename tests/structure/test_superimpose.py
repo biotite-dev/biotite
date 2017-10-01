@@ -22,5 +22,7 @@ def test_superimposition(path):
     mobile = fixed.copy()
     mobile = struc.rotate(mobile, (1,2,3))
     mobile = struc.translate(mobile, (1,2,3))
-    fitted, transformtion = struc.superimpose(fixed, mobile, False)
+    fitted, transformation = struc.superimpose(fixed, mobile, False)
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0)
+    fitted = struc.superimpose_apply(mobile, transformation)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0)
