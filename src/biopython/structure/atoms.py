@@ -200,7 +200,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if isinstance(index, int):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
-                self._coord[..., index, :] = atom._coord
+                self._coord[..., index, :] = atom.coord
             else:
                 raise IndexError("Index must be integer")
         except KeyError:
@@ -547,7 +547,7 @@ class AtomArray(_AtomArrayBase):
         atom : Atom
             The atom to be set.
         """
-        self._set_element(self, index, atom)
+        self._set_element(index, atom)
         
     def __delitem__(self, index):
         """
@@ -558,7 +558,7 @@ class AtomArray(_AtomArrayBase):
         index : int
             The position where the atom should be deleted.
         """
-        self._del_element(self, index)
+        self._del_element(index)
         
     def __len__(self):
         """
