@@ -6,6 +6,8 @@
 import biopython.structure as struc
 import biopython.structure.io.pdbx as pdbx
 import biopython.database.rcsb as rcsb
+import biopython
+import itertools
 import numpy as np
 import glob
 from os.path import join
@@ -13,15 +15,19 @@ from .util import data_dir
 import pytest
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.cif")))
-def test_array_conversion(path):
-    _test_conversion(path, is_stack=False)
-
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.cif")))
-def test_stack_conversion(path):
-    _test_conversion(path, is_stack=True)
-        
-def _test_conversion(path, is_stack):
+@pytest.mark.parametrize("path, is_stack, use_c_ext", itertools.product(
+                            glob.glob(join(data_dir, "*.cif")),
+                            [False, True],
+                            [False, True],
+                         ))
+def test_conversion(path, is_stack, use_c_ext):
+    if use_c_ext:
+        if biopython.has_c_extensions():
+            biopython.enable_c_extensions(True)
+        else:
+            return
+    else:
+        biopython.enable_c_extensions(False)
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
     if is_stack:
@@ -35,6 +41,7 @@ def _test_conversion(path, is_stack):
     else:
         array2 = pdbx.get_structure(pdbx_file, model=1)
     assert array1 == array2
+
             
         
     

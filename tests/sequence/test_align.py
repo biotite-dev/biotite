@@ -5,11 +5,19 @@
 
 import biopython.sequence as seq
 import biopython.sequence.align as align
+import biopython
 import numpy as np
 import pytest
 
-
-def test_align_global():
+@pytest.mark.parametrize("use_c_ext", [False, True])
+def test_align_global(use_c_ext):
+    if use_c_ext:
+        if biopython.has_c_extensions():
+            biopython.enable_c_extensions(True)
+        else:
+            return
+    else:
+        biopython.enable_c_extensions(False)
     seq1 = seq.NucleotideSequence("ATACGCTTGCT")
     seq2 = seq.NucleotideSequence("AGGCGCAGCT")
     alignments = align.align_global(seq1, seq2,
@@ -21,7 +29,17 @@ def test_align_global():
                                         [5,5], [6,6], [7,-1], [8,7], [9,8],
                                         [10,9]]
 
-def test_align_local():
+@pytest.mark.parametrize("use_c_ext", [False, True])
+def test_align_local(use_c_ext):
+    if use_c_ext:
+        if biopython.has_c_extensions():
+            biopython.enable_c_extensions(True)
+        else:
+            return
+    else:
+        biopython.enable_c_extensions(False)
+    if biopython.has_c_extensions():
+        biopython.enable_c_extensions(use_c_ext)
     seq1 = seq.NucleotideSequence("ATGGCACATGATCTTA")
     seq2 = seq.NucleotideSequence("ACTTGCTTACGAT")
     alignments = align.align_local(seq1, seq2,
