@@ -21,5 +21,6 @@ def test_find_symbol():
     string = "ATACGCTTGCT"
     symbol = "T"
     dna = seq.NucleotideSequence(string)
-    matches = seq.find_symbol(dna, symbol)
-    assert list(matches) == [1,6,7,10]
+    assert list(seq.find_symbol(dna, symbol)) == [1,6,7,10]
+    assert seq.find_symbol_first(dna, symbol) == 1
+    assert seq.find_symbol_last(dna, symbol) == 10
