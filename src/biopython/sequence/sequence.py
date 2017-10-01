@@ -198,7 +198,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         valid : bool
             True, if the sequence is valid, false otherwise.
         """
-        return (self.code < len(get_alphabet())).all()
+        return (self.code < len(self.get_alphabet())).all()
     
     def __getitem__(self, index):
         alph = self.get_alphabet()
