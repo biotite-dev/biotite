@@ -225,7 +225,7 @@ class PDBxFile(TextFile):
             if uses_c_extensions():
                 # Special optimisation for "atom_site:"
                 # Even if the values are quote protected,
-                # not whitespaces are expected in escaped values
+                # no whitespace is expected in escaped values
                 # Therefore slow shlex.split() call is not necessary
                 if category == "atom_site":
                     whitespace_values = False

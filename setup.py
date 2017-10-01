@@ -26,8 +26,8 @@ else:
              Extension("biopython.structure.io.pdbx.cprocessloop",
                 ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
              ),
-             Extension("biopython.ccheckext",
-                ["src/biopython/ccheckext.pyx"]
+             Extension("biopython.cextensions",
+                ["src/biopython/cextensions.pyx"]
              )]
         )
     except ValueError:

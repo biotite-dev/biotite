@@ -72,5 +72,4 @@ def uses_c_extensions():
     return _extensions_enabled
 
 
-print("testtest")
 _extensions_enabled = has_c_extensions()
