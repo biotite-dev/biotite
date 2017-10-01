@@ -40,7 +40,7 @@ class PyTestCommand(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
 
     def initialize_options(self):
-        TestCommand.initialize_options(self)
+        super().initialize_options()
         self.pytest_args = ''
 
     def run_tests(self):
@@ -72,8 +72,8 @@ setup(name="biopython",
     extras_require = {'trajectory':  ["mdtraj"],
     },
     
-    cmdclass = {'test': PyTestCommand},
-    tests_require = ['pytest'],
+    cmdclass = {"test": PyTestCommand},
+    tests_require = ["pytest"],
     
     command_options = {
         'build_sphinx':
