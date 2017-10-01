@@ -121,13 +121,12 @@ class Alphabet(object):
         """
         if alphabet is self:
             return True
-        # Check for every symbol in the parent alphabet
-        # if the symbol is also is the extending (this) alphabet
-        # and has the same code (list index) for each symbol
-        for i, symbol in enumerate(alphabet._symbols):
-            if self._symbols[i] != symbol:
-                return False
-        return True
+        elif len(alphabet) > len(self):
+            return False
+        else:
+            print(alphabet._symbols[:len(self)])
+            print(self._symbols[:len(self)])
+            return alphabet._symbols == self._symbols[:len(alphabet)]
     
     def encode(self, symbol):
         """
