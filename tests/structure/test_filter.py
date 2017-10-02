@@ -15,7 +15,6 @@ def sample_array():
     file = npz.NpzFile()
     file.read(join(data_dir, "3o5r.npz"))
     return file.get_structure()[0]
-    
 
 def test_solvent_filter(sample_array):
     assert len(sample_array[struc.filter_solvent(sample_array)]) == 287
