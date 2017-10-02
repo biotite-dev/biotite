@@ -44,7 +44,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     non-reasonable distance to the next atom.
     
     A large or very small distance is a very strong clue, that there is
-    no bond at between those atoms, therefore the chain is discontinued.
+    no bond between those atoms, therefore the chain is discontinued.
     
     Parameters
     ----------
@@ -59,11 +59,20 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     discontinuity : ndarray(dtype=bool)
         True at the indices after a discontinuity.
     """
-    backbone = array[filter_backbone(array)]
+    backbone_mask = filter_backbone(array)
+    backbone = array[backbone_mask]
     diff = np.diff(backbone.coord, axis=0)
     sq_distance = np.sum(diff**2, axis=1)
     sq_min_len = min_len**2
     sq_max_len = max_len**2
-    discontinuity = np.where( ((sq_distance < sq_min_len) |
-                               (sq_distance > sq_max_len)) )
-    return discontinuity[0] + 1
+    discon_mask = (sq_distance < sq_min_len) | (sq_distance > sq_max_len)
+    # discon_mask is shortened by 1 due to np.diff
+    # -> Lenthening by 1 to fit backbone
+    # and shifting by one to get position after discontinuity
+    discon_mask = np.concatenate(([False], discon_mask))
+    # discon_mask is true for discontinuity in backbone
+    # map it back to get discontinuity for original atom array
+    discon_mask_full = np.zeros(array.array_length(), dtype=bool)
+    discon_mask_full[backbone_mask] = discon_mask
+    discontinuity = np.where(discon_mask_full)
+    return discontinuity[0]
