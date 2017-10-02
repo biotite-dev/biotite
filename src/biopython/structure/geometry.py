@@ -53,7 +53,7 @@ def centroid(atoms):
     
     Parameters
     ----------
-    atoms: ndarray orAtomArray or AtomArrayStack
+    atoms: ndarray or AtomArray or AtomArrayStack
         The structures to determine the centroid from.
         Alternatively an ndarray containing the coordinates can be
         provided.
