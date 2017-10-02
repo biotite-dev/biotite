@@ -85,7 +85,7 @@ def angle(atom1, atom2, atom3):
         of the input `atoms` with the highest dimensionality minus the
         last axis.
     """
-    v1 = coord(atom2) - coord(atom1)
+    v1 = coord(atom1) - coord(atom2)
     v2 = coord(atom3) - coord(atom2)
     norm_vector(v1)
     norm_vector(v2)
@@ -185,7 +185,6 @@ def dihedral_backbone(atom_array, chain_id):
         # Filter all backbone atoms
         bb_coord = atom_array[filter_backbone(atom_array) &
                               (atom_array.chain_id == chain_id)].coord
-        print(bb_coord)
         
         phi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
         psi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
