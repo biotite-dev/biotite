@@ -6,4 +6,7 @@
 from .file import *
 from .temp import *
 from .extensions import *
-from .copyable import *
+from .copyable import * 
+
+
+__version__ = "2.0a2"
