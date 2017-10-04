@@ -265,7 +265,8 @@ class PDBxFile(TextFile):
         if block is None:
             block = self.get_block_names()[0]
             
-        if isinstance(list(category_dict.values())[0], np.ndarray):
+        sample_category_value = list(category_dict.values())[0]
+        if (isinstance(sample_category_value, (np.ndarray, list))):
             is_looped = True
         else:
             is_looped = False
