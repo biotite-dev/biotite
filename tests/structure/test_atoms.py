@@ -76,6 +76,9 @@ def test_stack_indexing(stack):
     filtered_stack = stack[np.array([True,False,True])]
     assert filtered_stack.stack_depth() == 2
     assert filtered_stack.array_length() == 5
+    filtered_stack = stack[:,0]
+    assert filtered_stack.stack_depth() == 3
+    assert filtered_stack.array_length() == 1
     
 
 def test_concatenation(array, stack):

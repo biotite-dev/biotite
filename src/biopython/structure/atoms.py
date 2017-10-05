@@ -771,7 +771,13 @@ class AtomArrayStack(_AtomArrayBase):
                 array = self.get_array(index[0])
                 return array.__getitem__(index[1])
             else:
-                new_stack = self._subarray(index[1])
+                # Prevent reduction in dimensionality in second dimension
+                if isinstance(index[1], int):
+                    # Prevent reduction in dimensionality
+                    # in second dimension
+                    new_stack = self._subarray(slice(index[1], index[1]+1))
+                else:
+                    new_stack = self._subarray(index[1])
                 if index[0] is not Ellipsis:
                     new_stack._coord = new_stack._coord[index[0]]
                 return new_stack
