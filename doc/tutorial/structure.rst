@@ -1,7 +1,7 @@
 Going 3D - The Structure subpackage
 -----------------------------------
    
-``structure`` is a Biopython subpackage for handling protein structures.
+``structure`` is a Biopython subpackage for handling molecular structures.
 This subpackage enables efficient and easy handling of protein structure data
 by representing atom attributes in `numpy` `ndarrays`. These atom attributes
 include so called *annotations* (polypetide chain id, residue id, residue name,
@@ -90,6 +90,10 @@ In our example all annotation arrays have a length of 3, since we used
 3 atoms tp create it. A structure containing *n* atoms, is represented by
 annotation arrays of length *n* and coordinates of shape *(n,3)*.
 
+If you want to add further annotation categories to an array, at first you have
+to call the `add_annotation()` or `set_annotation()` method. After that you can
+access the new annotation array like any other annotation array.
+
 In some cases, you might need to handle structures, where each atom is present
 in multiple locations (multiple models in NMR structures, MD trajectories).
 For the cases atom array stacks are used, which represent a list of atom
@@ -164,13 +168,12 @@ shows how to write an array or stack back into a PDB file:
    file.write("path/to/1l2y_modified.pdb")
 
 Other information (authors, secondary structure, etc.) cannot be extracted
-from PDB files, yet. The usage of PDBx/mmCIF files in favor of PDB files is
-recommended, anyway. This format is a modern alternative to the PDB format
-and will replace it someday. It solves limitations of the PDB format,
-that arise from the column restrictions. Furthermore much more additional
-information is stored in these files. In contrast to PDB files, Biopython
-can read the entire content of PDBx/mmCIF files, which can accessed in a 
-dictionary like manner.
+from PDB files, yet. This is a good place to mention that it is recommended to
+use the modern PDBx/mmCIF format in favor of the PDB format. It solves
+limitations of the PDB format, that arise from the column restrictions.
+Furthermore much more additional information is stored in these files.
+In contrast to PDB files, Biopython can read the entire content of PDBx/mmCIF
+files, which can accessed in a dictionary like manner.
 At first we read the file similarily to before:
 
 .. code-block:: python
@@ -216,7 +219,7 @@ convert the *atom_site* category into an atom array/stack and vice versa.
 
 `get_structure()` creates automatically an `AtomArrayStack`, even if the file
 actually contains only a single model. If you would like to have an
-`AtomArray`, you have to specifiy the `model` parameter.
+`AtomArray` instead, you have to specifiy the `model` parameter.
 
 For Biopython internal storage of structures *npz* files are recommended.
 These are simply binary files, that are used by `numpy`. in case of atom arrays
@@ -232,17 +235,118 @@ If the package `MDtraj` is installed Biopython provides an read/write
 interface for different trajectory file formats. More information can be found
 in the API reference.
 
-Array access and filtering
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Array indexing and filtering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Atom arrays and stacks can be indexed in a similar way an `ndarray` is indexed.
+In fact, the index is propagated to the coordinates and the annotation arrays.
+Therefore different kinds of indices can be used, like boolean arrays, lists
+containing indices, slices and, of course, integer values. Integer indices have
+a special role here, as they reduce the dimensionality of the data type:
+Indexing an `AtomArrayStack` with an integer results in an `AtomArray` at the
+specified frame, indexing an `AtomArray` with an integer yields the specified
+`Atom`. Iterating over arrays and stacks reduces the dimensionality in an
+analogous way.
+Let's demonstrate indexing with the help of the structure of *TC5b*.
+
+.. code-block:: python
+   
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   stack = pdbx.get_structure(file)
+   print(type(stack).__name__)
+   array = stack[2]
+   print(type(array).__name__)
+   print(array.array_length())
+
+Output:
+
+.. code-block:: none
+   
+   AtomArrayStack
+   AtomArray
+   304
+   
+
+This `get_structure()` gives us an `AtomArrayStack`. Via the integer index,
+we get the `AtomArray` representing the third model. The `array_length()`
+method gives us the number of atoms in arrays and stacks and is equivalent
+to the length of an atom array.
+The following code section shows some examples for how an atom array can be
+indexed.
+
+.. code-block:: python
+   
+   # Get the first atom
+   atom = array[0]
+   # Get a subarray containing the first and third atom
+   subarray = array[[0,2]]
+   # Get a subarray containing a range of atoms using slices
+   subarray = array[100:200]
+   # Filter all carbon atoms in residue 1
+   subarray = array[(array.element == "C") & (array.res_id == 1)]
+   # Filter all atoms where the X-coordinate is smaller than 2
+   subarray = array[array.coord[:,0] < 2]
+
+An atom array stack can be indexed in a similar way, with the difference, that
+the index specifies the frame(s).
+
+.. code-block:: python
+   
+   # Get an atom array from the first model
+   subarray = stack[0]
+   # Get a substack containing the first 10 models
+   substack = stack[:10]
+
+Stacks also have the speciality, that they can handle 2-dimensional indices,
+where the first dimension specifies the frame and the second dimension
+specifies the atom.
+
+.. code-block:: python
+   
+   # Get the first 100 atoms from the third model
+   subarray = stack[2, :100]
+   # Get the first 100 atoms from the models 3, 4 and 5
+   substack = stack[2:5, :100]
+   # Get the first atom in the second model
+   atom = stack[1,0]
+   # Get a stack containing arrays containing only the first atom
+   substack = stack[:, 0]
+
+Furthermore the package contains advanced filters, that create boolean masks
+from an array using specific criteria. Here is a small example
+
+.. code-block:: python
+   
+   backbone = array[struc.filter_backbone(array)]
+   print(backbone.atom_name)
+
+Output:
+
+.. code-block:: none
+   
+   ['N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA'
+    'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N'
+    'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C'
+    'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C']
+
+If you would like to know which atoms are in proximity to specific coordinates,
+have a look at the `AdjacencyMap` class.
 
 .. warning:: Creating a subarray or substack by indexing, does not necessarily
-   copy the coordinates and annotation arrays. If possible only *array views*
+   copy the coordinates and annotation arrays. If possible, only *array views*
    are created. Look into the `numpy` documentation for furher details. If you
    want to ensure, that you are working with a copy, use the `copy()` method
    after indexing.
 
 Structure analysis
 ^^^^^^^^^^^^^^^^^^
+
+The examples shown in this section do not represent the full spectrum of
+analysis tools in this package . Look into the API reference for more
+information.
 
 Geometry measures
 """""""""""""""""
@@ -257,6 +361,14 @@ Residue level operations
 
 Secondary structure determination
 """""""""""""""""""""""""""""""""
+
+
+
+
+
+
+
+
 
 Introduction
 ^^^^^^^^^^^^
