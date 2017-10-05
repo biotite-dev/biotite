@@ -17,7 +17,7 @@ __all__ = ["filter_solvent", "filter_amino_acids", "filter_backbone",
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
-                "MSE", "ASX", "GLX", "SEC"]
+                "MSE", "ASX", "GLX", "SEC", "UNK"]
 
 _solvent_list = ["HOH","SOL"]
 
