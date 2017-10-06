@@ -7,9 +7,9 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
 import sys
 import shlex
+from src.biopython import __version__
 
-
-release = "2.0a2"
+release = __version__
 
 
 if "sdist" in sys.argv:
