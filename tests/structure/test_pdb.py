@@ -24,8 +24,8 @@ def test_array_conversion(path):
     assert array1 == array2
 
 
-pdb_paths = glob.glob(join(data_dir, "*.pdb"))
-cif_paths = glob.glob(join(data_dir, "*.cif"))
+pdb_paths = sorted(glob.glob(join(data_dir, "*.pdb")))
+cif_paths = sorted(glob.glob(join(data_dir, "*.cif")))
 @pytest.mark.parametrize("pdb_path, cif_path",
                           [(pdb_paths[i], cif_paths[i]) for i
                            in range(len(pdb_paths))])

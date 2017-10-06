@@ -49,12 +49,15 @@ for this).
 The annotation arrays can be accessed either via the function
 `get_annotation()` or directly (e.g. ``array.res_id``).
 
-The following annotation categories are optionally used by some utility
-funtions:
+The following annotation categories are optionally used by some
+functions:
 
 =========  ===========  =================   ============================
 Category   Type         Examples            Description
 =========  ===========  =================   ============================
+atom_id    int          1,2,3, ...          Atom serial number
+b_factor   float        0.9, 12.3, ...      Temperature factor
+occupancy  float        .1, .3, .9, ...     Occupancy
 charge     int          -2,-1,0,1,2, ...    Electric charge of the atom
 =========  ===========  =================   ============================
 

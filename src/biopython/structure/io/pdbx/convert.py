@@ -69,13 +69,17 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
         If this parameter is given, the function will return an
         `AtomArray` from the atoms corresponding to the given model ID.
         If this parameter is omitted, an `AtomArrayStack` containing all
-        models will be returned, even if the structure contins only one
+        models will be returned, even if the structure contains only one
         model.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
         The annotation category name will be the same as the PDBx
         subcategroy name. The array type is always `str`.
+        There are 4 special field identifiers:
+        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        These will convert the respective subcategory into an
+        annotation array with reasonable type
         
     Returns
     -------
@@ -140,9 +144,25 @@ def _fill_annotations(array, model_dict, extra_fields):
     array.set_annotation("atom_name", model_dict["label_atom_id"].astype("U6"))
     array.set_annotation("element", model_dict["type_symbol"].astype("U2"))
     for field in extra_fields:
-        field_name = field[0]
-        annot_name = field[1]
-        array.set_annotation(annot_name, model_dict[field_name].astype(str))
+        if field == "atom_id":
+            array.set_annotation("atom_id",
+                                 model_dict["id"].astype(int))
+        elif field == "b_factor":
+            array.set_annotation("b_factor",
+                                 model_dict["B_iso_or_equiv"].astype(float))
+        elif field == "occupancy":
+            array.set_annotation("occupancy",
+                                 model_dict["occupancy"].astype(float))
+        elif field == "charge":
+            array.set_annotation("charge", np.array(
+                [0 if charge in ["?","."] else int(charge)
+                 for charge in model_dict["pdbx_formal_charge"]], dtype=int
+            ))
+        else:
+            field_name = field[0]
+            annot_name = field[1]
+            array.set_annotation(annot_name,
+                                 model_dict[field_name].astype(str))
 
 
 def _filter_inscode_altloc(array, model_dict, inscode, altloc):
@@ -195,6 +215,12 @@ def set_structure(pdbx_file, array, data_block=None):
     Set the `atom_site` category with an
     `AtomArray` or `AtomArrayStack`.
     
+    This will save the coordinates, the mandatory annotation categories
+    and the optional annotation categories
+    'atom_id', 'b_factor', 'occupancy' and 'charge'.
+    If the array contains the annotation 'atom_id', these values will be
+    used for atom numbering instead of continuous numbering.
+    
     Parameters
     ----------
     pdbx_file : PDBxFile
@@ -218,9 +244,11 @@ def set_structure(pdbx_file, array, data_block=None):
     # in structures' attribute arrays as good as possible
     # Use OrderedDict in order to ensure the usually used column order.
     atom_site_dict = OrderedDict()
+    # Save list of annotation categories for checks,
+    # if an optional category exists 
+    annot_categories = array.get_annotation_categories()
     atom_site_dict["group_PDB"] = np.array(["ATOM" if e == False else "HETATM"
                                             for e in array.hetero])
-    atom_site_dict["id"] = None
     atom_site_dict["type_symbol"] = np.copy(array.element)
     atom_site_dict["label_atom_id"] = np.copy(array.atom_name)
     atom_site_dict["label_alt_id"] = np.full(array.array_length(), ".")
@@ -230,6 +258,24 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_seq_id"] = np.array(["." if e == -1 else str(e)
                                             for e in array.res_id])
     atom_site_dict["auth_asym_id"] = np.copy(array.chain_id)
+    #Optional categories
+    if "atom_id" in annot_categories:
+        # Take values from 'atom_id' category
+        atom_site_dict["id"] = array.atom_id.astype("U6")
+    else:
+        atom_site_dict["id"] = None
+    if "b_factor" in annot_categories:
+        atom_site_dict["B_iso_or_equiv"] = np.array(["{:.2f}".format(b)
+                                                     for b in array.b_factor])
+    if "occupancy" in annot_categories:
+        atom_site_dict["occupancy"] = np.array(["{:.2f}".format(occ)
+                                                for occ in array.occupancy])
+    if "charge" in annot_categories:
+        atom_site_dict["pdbx_formal_charge"] \
+            = np.array(["{:+d}".format(c) if c != 0 else "?"
+                        for c in array.charge])
+    # In case of a single model handle each coordinate
+    # simply like a flattened array
     if (  type(array) == AtomArray or
          (type(array) == AtomArrayStack and array.stack_depth() == 1)  ):
         # 'ravel' flattens coord without copy
@@ -241,6 +287,8 @@ def set_structure(pdbx_file, array, data_block=None):
         atom_site_dict["Cartn_z"] = np.array(["{:.3f}".format(c) for c 
                                               in np.ravel(array.coord[...,2])])
         atom_site_dict["pdbx_PDB_model_num"]= np.full(array.array_length(),"1")
+    # In case of multiple models repeat annotations
+    # and use model specific coordinates
     elif type(array) == AtomArrayStack:
         for key, value in atom_site_dict.items():
             atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
@@ -255,12 +303,12 @@ def set_structure(pdbx_file, array, data_block=None):
         models = np.repeat(np.arange(1, len(coord)+1).astype(str),
                            repeats=array.array_length())
         atom_site_dict["pdbx_PDB_model_num"] = models
-        atom_site_dict["id"] = (np.arange(1,array.array_length()+1)
-                           .astype("U7"))
     else:
         raise ValueError("Structure must be AtomArray or AtomArrayStack")
-    atom_site_dict["id"] = (np.arange(1,len(atom_site_dict["group_PDB"])+1)
-                           .astype("U6"))
+    if not "atom_id" in annot_categories:
+        # Count from 1
+        atom_site_dict["id"] = (np.arange(1,len(atom_site_dict["group_PDB"])+1)
+                               .astype("U6"))
     if data_block is None:
         data_blocks = pdbx_file.get_block_names()
         if len(data_blocks) == 0:
