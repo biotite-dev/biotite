@@ -1000,7 +1000,7 @@ def coord(item):
     """
 
     if type(item) in (Atom, AtomArray, AtomArrayStack):
-        return item._coord
+        return item.coord
     elif isinstance(item, np.ndarray):
         return item.astype(float, copy=True)
     else:
