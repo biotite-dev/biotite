@@ -513,7 +513,7 @@ Output:
      0.93866682  0.83565702  0.61650375  0.97335428  1.03223981  0.55556655
      1.15175216  0.85585345]
 
-.. image:: /static/assets/examples/dihedral.svg
+.. image:: /static/assets/examples/rmsf.svg
 
 As you can see, both terminal residues are most flexible.
 
