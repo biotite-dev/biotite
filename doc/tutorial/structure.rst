@@ -455,6 +455,8 @@ and create a Ramachandran plot for the first frame of *TC5b*.
             marker="o", linestyle="None")
    plt.xlim(-180,180)
    plt.ylim(-180,180)
+   plt.xlabel("phi")
+   plt.ylabel("psi")
    plt.show()
 
 Output:
@@ -464,126 +466,124 @@ Output:
 Comparing structures
 """"""""""""""""""""
 
+Now we want to calculate a measure of flexibility for each residue in *TC5b*.
+The *root mean square fluctuation* (RMSF) is good value for that. It represents
+the deviation for each atom in all models relative to a reference model, which
+is usually the averaged structure. Since we are only interested in the
+backbone flexibility, we consider only CA atoms.
+Before we can calculate a reasonable RMSF, we have to superimpose each model on
+a reference model (we choose the first model), which minimizes the
+*root mean square deviation* (RMSD).
+
+.. code-block:: python
+   
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   stack = pdbx.get_structure(file)
+   # We consider only CA atoms
+   stack = stack[:, stack.atom_name == "CA"]
+   # Superimposing all models of the structure onto the first model
+   stack, transformation_tuple = struc.superimpose(stack[0], stack)
+   print("RMSD for each model to first model:")
+   print(struc.rmsd(stack[0], stack))
+   # Calculate the RMSF relative to average of all models
+   rmsf = struc.rmsf(struc.average(stack), stack)
+   # Plotting stuff
+   plt.plot(np.arange(1,21), rmsf)
+   plt.xlim(0,20)
+   plt.xticks(np.arange(1,21))
+   plt.xlabel("Residue")
+   plt.ylabel("RMSF")
+   plt.show()
+
+Output:
+
+.. code-block:: none
+   
+   RMSD for each model to first model:
+   [ 0.          0.78426444  1.00757683  0.55180272  0.80663454  1.06066791
+     0.87383705  0.62606424  1.00576561  0.81440804  0.87628298  1.35385898
+     0.93278001  0.87600934  0.99357313  0.40626578  0.31801941  1.18389047
+     1.23477073  0.89114465  0.55536526  0.73639392  0.78567399  1.10192568
+     0.67228881  1.1605639   0.98213955  1.22808849  0.79269641  0.86854739
+     0.93866682  0.83565702  0.61650375  0.97335428  1.03223981  0.55556655
+     1.15175216  0.85585345]
+
+.. image:: /static/assets/examples/dihedral.svg
+
+As you can see, both terminal residues are most flexible.
+
 Calculating accessible surface area
 """""""""""""""""""""""""""""""""""
 
-Residue level operations
+Another interesting value for a protein structure is the
+*solvent accessible surface area* (SASA) that indicates weather an atom or
+residue is on the protein surface or buried inside the protein. The function
+`sasa()` numerically calculates the SASA for each atom. Then we sum up the
+values for each residue, to get the residue-wise SASA.
+
+Besides other parameters, you can choose between different Van-der-Waals radii
+sets:
+*Prot0r*, the default set, is a set that for non-hydrogen atoms, but determines
+the radius of an atom based on the assumed amount of hydrogen atoms connected
+to it. Therefore *Prot0r* is suitable for structures with missing hydrogen
+atoms, like crystal structures.
+Since the structure of *TC5b* was elucidated via NMR, we can assign a radius to
+every single atom (including hydrogens), hence we use the *Single* set.
+
+.. code-block:: python
+   
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   array = pdbx.get_structure(file, model=1)
+   # The following line calculates the atom-wise sasa of the atom array
+   atom_sasa = struc.sasa(array, vdw_radii="Single")
+   # Sum up SASA for each residue in atom array
+   res_sasa = struc.apply_residue_wise(array, atom_sasa, np.sum)
+   # Again plotting stuff
+   plt.plot(np.arange(1,21), res_sasa)
+   plt.xlim(0,20)
+   plt.xticks(np.arange(1,21))
+   plt.xlabel("Residue")
+   plt.ylabel("SASA")
+   plt.show()
+
+Output:
+
+.. image:: /static/assets/examples/sasa.svg
 
 Secondary structure determination
 """""""""""""""""""""""""""""""""
 
-
-
-
-
-
-
-
-
-Introduction
-^^^^^^^^^^^^
-Let's do some calculations on the miniprotein *TC5b* (PDB: 1L2Y). The structure
-of this 20-residue protein has been elucidated via NMR, therefore the
-corresponding PDB file consists of multiple (namely 38) models, each showing
-another conformation.
-
-At first, let's create the atom arrays and save it back into a PDB file.
+Biopython also be used to assign *secondary structure elements* (SSE) to
+a structure:
 
 .. code-block:: python
-
-    import biopython.structure as struc
-    import biopython.structure.io.pdb as pdb
-    
-    # Read the PDB file, which is in this case in the same folder
-    pdb_file = pdb.PDBFile()
-    pdb_file.read("1l2y.pdb")
-    # Create the atom array stack from the models in the PDB file
-    stack = pdb_file.get_structure()
-    
-    # Do some fancy stuff
-    
-    # Write stack back into the file
-    pdb_file.set_structure(stack)
-    pdb_file.write("1l2y.pdb")
-    
-    # Read file again and check, if both stacks have the same content
-    pdb_file.read("1l2y.pdb")
-    stack2 = pdb_file.get_structure()
-    print("Are both stacks equal? " + str(stack == stack2))
-	
-Output:
-	
-``Are both stacks equal? True``
-
-So far, so boring. This is a good place to mention that it is recommended to
-use the modern PDBx/mmCIF format in favor of the PDB format. The parser
-provides improved functionality, not only to read structures but also related
-information. Therefore the PDBx parser will be used in the following examples.
-
-Now let's do something more fancy. We calculate the RMSF of the
-CA atoms of all models compared to the averaged structure.
-
-.. code-block:: python
-
-    import biopython.structure as struc
-    import biopython.structure.io.pdbx as pdbx
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read("1l2y.cif")
-    stack = pdbx.get_structure(pdbx_file)
-    # Filter the CA atoms
-    stack = stack[:, stack.atom_name == "CA"]
-    # Calculate the average structure
-    average = struc.average(stack)
-    # Calculate RMSF of all atom arrays in the stack compared to the average
-    rmsf = struc.rmsf(average, stack)
-    # Plot the results
-    plt.plot(np.arange(1,21), rmsf)
-    plt.xlim(0,20)
-    plt.xticks(np.arange(1,21))
-    plt.show()
-	
-Output:
-
-.. image:: /static/assets/examples/rmsf.svg
-
-As we can see, the CA position is most variable at the first and last position.
-Now we test the superimposition capabilities: We extract the first and the
-second model, then we move the second model and eventually superimpose the
-moved second model on the first model. The first model is shown in red, the
-second is shown in green before, and in orange after superimposition.
-Additionally the RMSD between the first and the superimposed second model
-is calculated.
-
-.. code-block:: python
-
-    import biopython.structure as struc
-    import biopython.structure.io.pdbx as pdbx
-    import numpy as np
-    import matplotlib.pyplot as plt
-    
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read("1l2y.cif")
-    # Extract defined models
-    array1 = pdbx.get_structure(pdbx_file, model=1)
-    array2 = pdbx.get_structure(pdbx_file, model=2)
-    # Translation and rotation of array2
-    array2 = struc.translate(array2, (1,2,3))
-    array2 = struc.rotate(array2, (1,2,3))
-    # Superimpose array2 on array1
-    fit_array2, transformation = struc.superimpose(array1, array2)
-    # Calculate RMSD
-    print("RMSD = " + str(struc.rmsd(array1, fit_array2)))
-    # Visualize the structures' backbones
-    fig = plt.figure()
-    viewer = struc.simple_view(fig, [array1, array2, fit_array2])
-    fig.tight_layout()
-    plt.show()
+   
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   array = pdbx.get_structure(file, model=1)
+   # Estimate secondary structure
+   sse = struc.annotate_sse(array, chain_id="A")
+   # Pretty print
+   print("".join(sse))
 
 Output:
 
-``RMSD = 1.9548087935``
+.. code-block:: none
+   
+   caaaaaaaaccccccccccc
 
-.. image:: /static/assets/examples/superimpose.svg
+An 'a' means alpha-helix, 'b' beta-sheet, and 'c' gamma-... just kidding,
+'c' means coil.
+
