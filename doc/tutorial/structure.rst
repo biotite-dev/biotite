@@ -344,12 +344,122 @@ have a look at the `AdjacencyMap` class.
 Structure analysis
 ^^^^^^^^^^^^^^^^^^
 
+This package would be almost useless, if there wasn't some means to analyze
+your structures. Therefore Biopython offers a bunch of functions for this
+purpose, reaching from simple bond angle and length measurements to more
+complex characteristics, like accessible surface area and secondary structure.
+The following section will introduce you to some of these functions, which
+should be applied to that good old structure of *TC5b*.
+
 The examples shown in this section do not represent the full spectrum of
-analysis tools in this package . Look into the API reference for more
+analysis tools in this package. Look into the API reference for more
 information.
 
 Geometry measures
 """""""""""""""""
+
+Let's start with measuring some simple geometric characteristics, for example
+atom distances of CA atoms:
+
+.. code-block:: python
+   
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   stack = pdbx.get_structure(file)
+   # Filter only CA atoms
+   stack = stack[:, stack.atom_name == "CA"]
+   # Calculate distance between first and second CA in first frame
+   array = stack[0]
+   print("Atom to atom:", struc.distance(array[0], array[1]))
+   # Calculate distance between the first atom
+   # and all other CA atoms in the array
+   print("Array to atom:")
+   array = stack[0]
+   print(struc.distance(array[0], array))
+   # Calculate pairwise distances between the CA atoms in the first frame
+   # and the CA atoms in the second frame
+   print("Array to array:")
+   print(struc.distance(stack[0], stack[1]))
+   # Calculate the distances between all CA atoms in the stack
+   # and the first CA atom in the first frame
+   # The resulting array is too large, therefore only the shape is printed
+   print("Stack to atom:")
+   print(struc.distance(stack, stack[0,0]).shape)
+   # And finally distances between two adjacent CA in the first frame
+   array = stack[0]
+   print("Adjacent CA distances")
+   print(struc.distance(array[:-1], array[1:]))
+
+Output:
+
+.. code-block:: none
+   
+   Atom to atom: 3.87639910226
+   Array to atom:
+   [  0.           3.8763991    5.57665975   5.03889055   6.31640919
+      8.76681499   9.90813499  10.61481667  12.89033149  14.80667937
+     13.50116443  16.87541054  18.72356614  17.22428861  19.11193308
+     16.19300176  15.51475678  12.37781309  10.44593404  12.0589665 ]
+   Array to array:
+   [ 3.43441989  0.37241509  0.22178593  0.10823123  0.15207235  0.1701705
+     0.22572771  0.47650498  0.2949322   0.1548354   0.28323488  0.40683903
+     0.13555073  0.36768737  0.46464395  0.57544244  0.33707418  0.25703307
+     0.34762192  0.38818681]
+   Stack to atom:
+   (38, 20)
+   Adjacent CA distances
+   [ 3.8763991   3.86050178  3.87147026  3.84557993  3.86660471  3.85851811
+     3.88180293  3.86098705  3.89091814  3.86355497  3.88626993  3.87561298
+     3.87466863  3.86554912  3.86627728  3.87766244  3.86038275  3.85824688
+     3.86421907]
+
+Like some other functions in this package, we are able to pick any combination
+of an atom, atom array or stack. Alternatively `ndarrays` containing the
+coordinates can be provided.
+
+Furthermore we can measure bond angles and dihedral angles:
+
+.. code-block:: python
+   
+   # Calculate angle between first 3 CA atoms in first frame
+   # (in radians)
+   print("Angle:", struc.angle(array[0],array[1],array[2]))
+   # Calculate dihedral angle between first 4 CA atoms in first frame
+   # (in radians)
+   print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
+
+Output:
+
+.. code-block:: none
+   
+   Angle: 1.60987082193
+   Dihedral angle: 1.49037920852
+
+In some cases one is interested in the dihedral angles of the peptide backbone,
+*phi*, *psi* and *omega*. In the following code snippet we measure these angles
+and create a Ramachandran plot for the first frame of *TC5b*.
+
+.. code-block:: python
+   
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import biopython.structure as struc
+   import biopython.structure.io.pdbx as pdbx
+   file = pdbx.PDBxFile()
+   file.read("path/to/1l2y.cif")
+   array = pdbx.get_structure(file, model=1)
+   phi, psi, omega = struc.dihedral_backbone(array, chain_id="A")
+   plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
+            marker="o", linestyle="None")
+   plt.xlim(-180,180)
+   plt.ylim(-180,180)
+   plt.show()
+
+Output:
+
+.. image:: /static/assets/examples/dihedral.svg
 
 Comparing structures
 """"""""""""""""""""
@@ -477,28 +587,3 @@ Output:
 ``RMSD = 1.9548087935``
 
 .. image:: /static/assets/examples/superimpose.svg
-
-And finally we want to create a Ramachandran plot of the first model in the
-structure.
-
-.. code-block:: python
-
-    import biopython.structure as struc
-    import biopython.structure.io.pdbx as pdbx
-    import numpy as np
-    import matplotlib.pyplot as plt
-    
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read("1l2y.cif")
-    array = pdbx.get_structure(pdbx_file, model=1)
-    # Calculate the backbone dihedral angles in chain "A" (only chain)
-    psi, omega, phi = struc.dihedral_backbone(array, "A")
-    # Plot the results
-    plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi), linestyle="None", marker="o")
-    plt.xlim(-180, 180)
-    plt.ylim(-180, 180)
-    plt.show()
-	
-Output:
-	
-.. image:: /static/assets/examples/dihedral.svg
