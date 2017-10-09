@@ -4,7 +4,7 @@
 
 import importlib
 
-def read_structure_from_file(file_name, format=None):
+def read_structure_from_file(file_name, format=None, extra_fields=[]):
     """
     This methods read a structure from a file.
     
@@ -16,6 +16,11 @@ def read_structure_from_file(file_name, format=None):
             The file format to be used. Can be any of the supported file
             formats as lowercase string. If no argument is given, the format
             will be guessed from the file extension.
+    extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the uoput array or stack.
+            There are 4 opional annotation identifiers:
+            'atom_id', 'b_factor', 'occupancy' and 'charge'.
         
     Returns
     -------
@@ -42,6 +47,6 @@ def read_structure_from_file(file_name, format=None):
     
     # read file and return struct
     reader.read(file_name)
-    stack = reader.get_structure()
+    stack = reader.get_structure(extra_fields)
     return stack
     
