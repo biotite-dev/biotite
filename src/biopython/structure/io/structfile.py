@@ -26,7 +26,7 @@ def read_structure_from_file(file_name, format=None):
     Examples
     --------
     Load a `\*.pdb` file:
-    
+        >>> from biopython.structure.io import read_structure_from_file
         >>> struct = read_structure_from_file('1l2y.pdb', format='pdb')
     """
     
@@ -34,7 +34,7 @@ def read_structure_from_file(file_name, format=None):
     if format is None:
         format = file_name.split('.')[-1]
         
-    # load correct reader
+    # load correct reader class
     class_path = "biopython.structure.io.{format}.{prefix}File".format(format=format.lower(), prefix=format.upper())
     module_name, class_name = class_path.rsplit(".", 1)
     MyClass = getattr(importlib.import_module(module_name), class_name)
