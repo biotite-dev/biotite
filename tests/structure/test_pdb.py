@@ -44,3 +44,18 @@ def test_pdbx_consistency(pdb_path, cif_path):
         assert a1.get_annotation(category).tolist() == \
                a1.get_annotation(category).tolist()
     assert a1.coord.tolist() == a2.coord.tolist()
+
+def test_extra_fields():
+    path = join(data_dir, "1l2y.cif")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    stack1 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
+                                                  "occupancy","charge"])
+    pdb_file.set_structure(stack1)
+    stack2 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
+                                                  "occupancy","charge"])
+    assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
+    assert stack1.b_factor.tolist() == stack2.b_factor.tolist()
+    assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
+    assert stack1.charge.tolist() == stack2.charge.tolist()
+    assert stack1 == stack2

@@ -60,9 +60,17 @@ class PDBFile(TextFile):
     
     """
     
-    def get_structure(self):
+    def get_structure(self, extra_fields=[]):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.
+        
+        Parameters
+        ----------
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the uoput array or stack.
+            There are 4 opional annotation identifiers:
+            'atom_id', 'b_factor', 'occupancy' and 'charge'.
         
         Returns
         -------
@@ -84,15 +92,28 @@ class PDBFile(TextFile):
         
         model = 0
         if len(model_start_i) <= 1:
+            # Only a single model -> AtomArray
             array = AtomArray(len(atom_line_i))
             annot_i = atom_line_i
         else:
+            # Multiple models -> AtomArrayStack
             if len(atom_line_i) % len(model_start_i):
                 raise BadStructureError("Amount of ATOM/HETATM records is "
                                         "not multiple of model count")
             array = AtomArrayStack(len(model_start_i),
                                    len(atom_line_i) // len(model_start_i))
+            # Determine annotations from first model
+            # therefore from ATOM records before second MODEL record
             annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+        # Add optional annotation arrays
+        if "atom_id" in extra_fields:
+            array.add_annotation("atom_id", dtype=int)
+        if "occupancy" in extra_fields:
+            array.add_annotation("occupancy", dtype=float)
+        if "b_factor" in extra_fields:
+            array.add_annotation("b_factor", dtype=float)
+        if "charge" in extra_fields:
+            array.add_annotation("charge", dtype=int)
         # Fill in annotation
         # i is index in array, j is line index
         for i, j in enumerate(annot_i):
@@ -103,6 +124,19 @@ class PDBFile(TextFile):
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
+        if extra_fields:
+            for i, j in enumerate(annot_i):
+                line = self._lines[j]
+                if "atom_id" in extra_fields:
+                    array.atom_id[i] = int(line[6:11].strip())
+                if "occupancy" in extra_fields:
+                    array.occupancy[i] = float(line[54:60].strip())
+                if "b_factor" in extra_fields:
+                    array.b_factor[i] = float(line[60:66].strip())
+                if "charge" in extra_fields:
+                    sign = -1 if line[79] == "-" else 1
+                    array.charge[i] = (0 if line[78] == " "
+                                       else int(line[78]) * sign)
         
         # Fill in coordinates
         if isinstance(array, AtomArray):
@@ -131,6 +165,9 @@ class PDBFile(TextFile):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
         
+        This makes also use of the optional annotation arrays
+        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        
         Parameters
         ----------
         array : AtomArray or AtomArrayStack
@@ -138,15 +175,28 @@ class PDBFile(TextFile):
             is given, each array in the stack is saved as separate
             model.
         """
-        atom_id = np.arange(1, array.array_length()+1)
+        # Save list of annotation categories for checks,
+        # if an optional category exists
+        annot_categories = array.get_annotation_categories()
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
-        try:
+        if "atom_id" in annot_categories:
+            atom_id = array.atom_id
+        else:
+            atom_id = np.arange(1, array.array_length()+1)
+        if "b_factor" in annot_categories:
+            b_factor = array.b_factor
+        else:
+            b_factor = np.zeros(array.array_length())
+        if "occupancy" in annot_categories:
+            occupancy = array.occupancy
+        else:
+            occupancy = np.ones(array.array_length())
+        if "charge" in annot_categories:
             charge = [ "+"+str(np.abs(charge)) if charge > 0 else
                       ("-"+str(np.abs(charge)) if charge < 0 else
                        "")
                       for charge in array.get_annotation("charge")]
-        except ValueError:
-            # In case charge annotation is not existing
+        else:
             charge = [""] * array.array_length()
         
         if isinstance(array, AtomArray):
@@ -161,11 +211,13 @@ class PDBFile(TextFile):
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
                                   "{:>4d}".format(array.res_id[i]) +
-                                  (" " * 4) + 
-                                  "{:>8.3f}".format(array.coord[i,0]) + 
-                                  "{:>8.3f}".format(array.coord[i,1]) + 
-                                  "{:>8.3f}".format(array.coord[i,2]) + 
-                                  (" " * 22) + 
+                                  (" " * 4) +
+                                  "{:>8.3f}".format(array.coord[i,0]) +
+                                  "{:>8.3f}".format(array.coord[i,1]) +
+                                  "{:>8.3f}".format(array.coord[i,2]) +
+                                  "{:>6.2f}".format(occupancy[i]) +
+                                  "{:>6.3f}".format(b_factor[i]) +
+                                  (" " * 10) + 
                                   "{:2}".format(array.element[i]) +
                                   "{:2}".format(charge[i])
                                  )
@@ -187,7 +239,10 @@ class PDBFile(TextFile):
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
                                  "{:>4d}".format(array.res_id[i]) +
-                                 (" " * 50) + 
+                                 (" " * 28) +
+                                 "{:>6.2f}".format(occupancy[i]) +
+                                 "{:>6.3f}".format(b_factor[i]) +
+                                 (" " * 10) +
                                  "{:2}".format(array.element[i]) +
                                  "{:2}".format(charge[i])
                                 )

@@ -79,7 +79,7 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
         There are 4 special field identifiers:
         'atom_id', 'b_factor', 'occupancy' and 'charge'.
         These will convert the respective subcategory into an
-        annotation array with reasonable type
+        annotation array with reasonable type.
         
     Returns
     -------

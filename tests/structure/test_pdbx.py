@@ -42,6 +42,18 @@ def test_conversion(path, is_stack, use_c_ext):
         array2 = pdbx.get_structure(pdbx_file, model=1)
     assert array1 == array2
 
+def test_extra_fields():
+    path = join(data_dir, "1l2y.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+    stack1 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
+                                "occupancy","charge"])
+    pdbx_file = pdbx.PDBxFile()
+    pdbx.set_structure(pdbx_file, stack1, data_block="test")
+    stack2 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
+                                "occupancy","charge"])
+    assert stack1 == stack2
+
             
         
     
