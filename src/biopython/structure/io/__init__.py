@@ -8,3 +8,4 @@ A subpackage for reading and writing structure related data.
 """
 
 from .trajfile import *
+from .structfile import *
