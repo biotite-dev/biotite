@@ -461,7 +461,7 @@ and create a Ramachandran plot for the first frame of *TC5b*.
 
 Output:
 
-.. image:: /static/assets/examples/dihedral.svg
+.. image:: /static/assets/figures/dihedral.svg
 
 Comparing structures
 """"""""""""""""""""
@@ -513,7 +513,7 @@ Output:
      0.93866682  0.83565702  0.61650375  0.97335428  1.03223981  0.55556655
      1.15175216  0.85585345]
 
-.. image:: /static/assets/examples/rmsf.svg
+.. image:: /static/assets/figures/rmsf.svg
 
 As you can see, both terminal residues are most flexible.
 
@@ -558,7 +558,7 @@ every single atom (including hydrogens), hence we use the *Single* set.
 
 Output:
 
-.. image:: /static/assets/examples/sasa.svg
+.. image:: /static/assets/figures/sasa.svg
 
 Secondary structure determination
 """""""""""""""""""""""""""""""""

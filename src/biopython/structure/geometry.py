@@ -174,12 +174,14 @@ def dihedral_backbone(atom_array, chain_id):
         ...          linestyle="None", marker="o")
         >>> plt.xlim(-180, 180)
         >>> plt.ylim(-180, 180)
+        >>> plt.xlabel("phi")
+        >>> plt.ylabel("psi")
         >>> plt.show()
     
     
     Output
     
-    .. image:: /static/assets/examples/dihedral.svg
+    .. image:: /static/assets/figures/dihedral.svg
     """
     try:
         # Filter all backbone atoms
