@@ -115,7 +115,7 @@ codon tables, 3 letter to single letter translation (and vice versa) and more.
 
 .. code-block:: python
 
-   seq1 = seq.ProteinSequence("PYTHN")
+   seq1 = seq.ProteinSequence("BIQPYTHQN")
    print("-".join([seq.ProteinSequence.convert_letter_1to3(symbol)
                    for symbol in seq1]))
 
@@ -123,7 +123,7 @@ Output:
 
 .. code-block:: none
 
-   PRO-TYR-THR-HIS-ASN
+   ASX-ILE-GLN-PRO-TYR-THR-HIS-GLN-ASN
 
 A `NucleotideSequence` can be translated into a `ProteinSequence` via the
 `translate()` method. By default, the method searches for open reading frames
@@ -256,8 +256,9 @@ Output:
    PYTHQN
    PYL-QN
 
-The alignment functions return an `Alignment` object. This object saves
+The alignment functions return a list of `Alignment` objects. This object saves
 the input sequences together with the indices (so called trace) in these
-sequences that are aligned to each other (*-1* for a gap). Furthermore this
-object can prettyprint the alignment into a human readable form.
+sequences that are aligned to each other (*-1* for a gap). Additionally the
+alignment score is stored in this object. Furthermore this object can
+prettyprint the alignment into a human readable form.
 
