@@ -9,7 +9,7 @@ from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
-from ...sequence.align.align import Alignment
+from ...sequence.align.alignment import Alignment
 import time
 import requests
 from xml.etree import ElementTree

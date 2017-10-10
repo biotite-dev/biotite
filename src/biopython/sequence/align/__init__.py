@@ -3,5 +3,6 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-from .align import *
+from .alignment import *
+from .pairwise import *
 from .matrix import *
