@@ -8,8 +8,33 @@ from .alphabet import Alphabet, AlphabetError
 import numpy as np
 import copy
 
-__all__ = ["NucleotideSequence", "ProteinSequence"]
+__all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
+
+class GeneralSequence(Sequence):
+    """
+    This class allows the creation of a sequence with custom
+    `Alphabet` without the need to subclass `Sequence`.
+        
+    Parameters
+    ----------
+    alphabet : Alphabet
+        The alphabet of this sequence.
+    sequence : iterable object, optional
+        The symbol sequence, the `Sequence` is initialized with. For
+        alphabets containing single letter strings, this parameter
+        may also be a `str` object. By default the sequence is empty.
+    """
+        
+    def __init__(self, alphabet, sequence=[]):
+        self._alphabet = alphabet
+        super().__init__(sequence)
+    
+    def __copy_create__(self):
+        return GeneralSequence(self._alphabet)
+    
+    def get_alphabet(self):
+        return self._alphabet
 
 class NucleotideSequence(Sequence):
     """

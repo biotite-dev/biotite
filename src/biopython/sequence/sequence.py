@@ -12,7 +12,7 @@ import abc
 from .alphabet import Alphabet
 from ..copyable import Copyable
 
-__all__ = ["Sequence", "GeneralSequence"]
+__all__ = ["Sequence"]
 
 
 _size_uint8  = np.iinfo(np.uint8 ).max +1
@@ -301,29 +301,3 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             return np.uint32
         else:
             return np.uint64
-
-
-class GeneralSequence(Sequence):
-    """
-    This class allows the creation of a sequence with custom
-    `Alphabet` without the need to subclass `Sequence`.
-        
-    Parameters
-    ----------
-    alphabet : Alphabet
-        The alphabet of this sequence.
-    sequence : iterable object, optional
-        The symbol sequence, the `Sequence` is initialized with. For
-        alphabets containing single letter strings, this parameter
-        may also be a `str` object. By default the sequence is empty.
-    """
-        
-    def __init__(self, alphabet, sequence=[]):
-        self._alphabet = alphabet
-        super().__init__(sequence)
-    
-    def __copy_create__(self):
-        return GeneralSequence(self._alphabet)
-    
-    def get_alphabet(self):
-        return self._alphabet
