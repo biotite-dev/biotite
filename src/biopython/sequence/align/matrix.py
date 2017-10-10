@@ -126,7 +126,7 @@ class SubstitutionMatrix(object):
             if score_matrix.shape != alph_shape:
                 raise ValueError("Matrix has shape {:}, "
                                  "but {:} is required"
-                                 .format(matrix.shape, alph_shape))
+                                 .format(score_matrix.shape, alph_shape))
             self._matrix = np.copy(score_matrix.astype(np.int32))
         elif isinstance(score_matrix, str):
             matrix_dict = SubstitutionMatrix.dict_from_db(score_matrix)
