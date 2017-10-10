@@ -151,8 +151,9 @@ class NucleotideSequence(Sequence):
         Parameters
         ----------
         complete : bool, optional
-            If true, the complete sequence is translated, otherwise all
-            ORFs are translated. (Default: False)
+            If true, the complete sequence is translated. In this case
+            the sequence length must be a multiple of 3.
+            Otherwise all ORFs are translated. (Default: False)
         codon_table : dict, optional
             The codon table to be used. A codon table maps triplett
             sequence codes to amino acid single letter sequence codes.
