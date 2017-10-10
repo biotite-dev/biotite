@@ -8,7 +8,7 @@ from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
-from ...sequence.align.align import Alignment
+from ...sequence.align.alignment import Alignment
 from ...temp import temp_file
 
 __all__ = ["MuscleApp"]
