@@ -191,6 +191,10 @@ class SubstitutionMatrix(object):
         new_matrix = np.transpose(self._matrix)
         return SubstitutionMatrix(new_alph1, new_alph2, new_matrix)
     
+    def is_symmetric(self):
+        return     self._alph1 == self._alph2 \
+               and np.array_equal(self._matrix, np.transpose(self._matrix))
+    
     def get_score_by_code(self, code1, code2):
         """
         Get the substitution score of two symbols,
