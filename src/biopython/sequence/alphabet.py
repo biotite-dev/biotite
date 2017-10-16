@@ -124,8 +124,6 @@ class Alphabet(object):
         elif len(alphabet) > len(self):
             return False
         else:
-            print(alphabet._symbols[:len(self)])
-            print(self._symbols[:len(self)])
             return alphabet._symbols == self._symbols[:len(alphabet)]
     
     def encode(self, symbol):
