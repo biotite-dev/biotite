@@ -156,6 +156,88 @@ Output:
 Other paramters in this powerful `translate()` method allow for a custom
 codon table or custom start codons.
 
+Loading sequences from file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Biopython enables the user to load and save sequences from/to the popular
+FASTA format. A FASTA file may contain multiple seqeunces. Each sequence entry
+starts with a line with a leading '>' and a trailing header name. The
+corresponding sequence is specified in the following lines until the next
+header or end of file. Since every sequence has its obligatory header, a FASTA
+file is predestinated to be implemented as some kind of dictionary. This is
+exactly what has been done in Biopython: The header strings (without the '>')
+are used as keys to access the sequence string. Actually you can cast the
+`FastaFile` object into a `dict`.
+Let's demonstrate this on the genome of *Escherichia coli* BL21(DE3)
+(Accession: CP001509.3). After downloading the FASTA file from the NCBI Entrez
+database, we can load the contents in the following way:
+
+.. code-block:: python
+
+   import biopython.sequence as seq
+   import biopython.sequence.io.fasta as fasta
+   file = FastaFile()
+   file.read("tests/sequence/data/ec_bl21.fasta")
+   for header, string in file:
+       print(header)
+       print(len(string))
+       print(string[:50])
+
+Output:
+
+.. code-block:: none
+
+   CP001509.3 Escherichia coli BL21(DE3), complete genome
+   4558953
+   AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAA
+
+Since there is only a single sequence in the file, the loop is run only one
+time. Since the sequence string is very long, only the first 50 bp are
+printed.
+Now this string could be used as inpt parameter for creation of a
+`NucleotideSequence`. But I want to spare you some unnecessary work, there
+is already a convenience function for that:
+
+.. code-block:: python
+
+   dna_seq = fasta.get_sequence(file)
+   print(type(dna_seq).__name__)
+   print(dna_seq[:50])
+
+Output:
+
+.. code-block:: none
+
+   NucleotideSequence
+   AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAA
+
+In this form `get_sequence()` returns the first sequence in the file, which is
+also the only sequence in most cases. If you want the sequence corresponding
+to a specific header, you have to specifix the `header` parameter.
+The function even automatically recognizes if the file contains a DNA or
+protein sequence and returns a `NucleotideSequence` or `ProteinSequence`,
+instance respectively. Actually it just tries to create a `NucleotideSequence`,
+and if this fails, a `ProteinSequence` is created instead.
+
+Sequences can be written into FASTA files n a similar way: either via
+dictionary-like access or, as show below, using the `set_sequence()`
+convenience function.
+
+.. code-block:: python
+
+   dna_seq2 = seq.NucleotideSequence("ATCGGATCTATCGATGCTAGCTACAGCTAT")
+   fasta.set_sequence(file, dna_seq2, header="gibberish")
+   print(file["gibberish"])
+
+Output:
+
+.. code-block:: none
+
+   ATCGGATCTATCGATGCTAGCTACAGCTAT
+
+As you see, our file contains our new 'gibberish' sequence now, additionally
+to the original sequence.
+
 Sequence search
 ^^^^^^^^^^^^^^^
 
