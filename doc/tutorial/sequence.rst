@@ -127,7 +127,7 @@ Output:
 
 A `NucleotideSequence` can be translated into a `ProteinSequence` via the
 `translate()` method. By default, the method searches for open reading frames
-(ORFs) in the 3 frames of the sequence. An 6 frame ORF search requires an
+(ORFs) in the 3 frames of the sequence. A 6 frame ORF search requires an
 additional call of the `translate()` method with the reverse complement
 sequence. If you want to conduct a complete translation of the sequence,
 irrespective of any start and stop codons, set the parameter `complete` to
@@ -225,6 +225,7 @@ convenience function.
 
 .. code-block:: python
 
+   # PROTIP: Let your cat walk over the keyboard
    dna_seq2 = seq.NucleotideSequence("ATCGGATCTATCGATGCTAGCTACAGCTAT")
    fasta.set_sequence(file, dna_seq2, header="gibberish")
    print(file["gibberish"])
