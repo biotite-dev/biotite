@@ -93,9 +93,12 @@ class Alignment(object):
             if not seq.get_alphabet().is_letter_alphabet():
                 all_single_letter = False
         if all_single_letter:
+            # First dimension: sequence number,
+            # second dimension: line number
             seq_str_lines_list = []
+            wrapper = textwrap.TextWrapper(break_on_hyphens=False)
             for i in range(len(self.sequences)):
-                seq_str_lines_list.append(textwrap.wrap(self._gapped_str(i)))
+                seq_str_lines_list.append(wrapper.wrap(self._gapped_str(i)))
             ali_str = ""
             for row_i in range(len(seq_str_lines_list[0])):
                 for seq_j in range(len(seq_str_lines_list)):
