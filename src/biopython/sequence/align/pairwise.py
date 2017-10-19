@@ -51,7 +51,7 @@ def simple_score(seq1, seq2, matrix):
     return score
 
 
-def align_optimal(seq1, seq2, matrix, gap_penalty=-5, local=False):
+def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
     """
     Perform an optimal alignment of two sequences based on the
     dynamic programming algorithm [1]_.
@@ -86,7 +86,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-5, local=False):
         penalty is used. The first integer in the tuple is the gap
         opening penalty, the second integer is the gap extension
         penalty.
-        The values need to be negative. (Default: *-5*)
+        The values need to be negative. (Default: *-10*)
     local : bool, optional
         If false, a global alignment is performed, otherwise a local
         alignment is performed. (Default: False)
