@@ -25,8 +25,32 @@ def test_simple_score():
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     assert align.simple_score(seq1, seq2, matrix) == 3
 
-@pytest.mark.parametrize("use_c_ext", [False, True])
-def test_align_global(use_c_ext):
+# [local, gap_penalty, input1, input2, expect]
+align_cases = [(False,-7,      "TATGGGTATCC","TATGTATAA",
+                    ("TATGGGTATCC\nTATG--TATAA",
+                     "TATGGGTATCC\nTAT-G-TATAA",
+                     "TATGGGTATCC\nTAT--GTATAA",)),
+               (True, -6,      "TATGGGTATCC","TATGTATAA",
+                    ("TATGGGTAT\nTATG--TAT",
+                     "TATGGGTAT\nTAT-G-TAT",
+                     "TATGGGTAT\nTAT--GTAT",)),
+               (False,(-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+                    ("TACTATGGGTATCC\nTCATATG--TATAA",
+                     "TACTATGGGTATCC\nTCATAT--GTATAA",)),
+               (True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+                    ("TATGGGTAT\nTATG--TAT",
+                     "TATGGGTAT\nTAT--GTAT",)),
+               (False,(-7,-1), "T","TTT",
+                    ("T--\nTTT",
+                     "--T\nTTT",))
+              ]
+align_param = [(c_ext, local, gap_penalty, input1, input2, expect)
+               for c_ext in [False, True]
+               for local, gap_penalty, input1, input2, expect in align_cases]
+@pytest.mark.parametrize("use_c_ext,local,gap_penalty,input1,input2,expect",
+                         align_param)
+def test_align_optimal(use_c_ext, local, gap_penalty,
+                       input1, input2, expect):
     if use_c_ext:
         if biopython.has_c_extensions():
             biopython.enable_c_extensions(True)
@@ -34,38 +58,13 @@ def test_align_global(use_c_ext):
             return
     else:
         biopython.enable_c_extensions(False)
-    seq1 = seq.NucleotideSequence("ATACGCTTGCT")
-    seq2 = seq.NucleotideSequence("AGGCGCAGCT")
-    alignments = align.align_global(seq1, seq2,
+    seq1 = seq.NucleotideSequence(input1)
+    seq2 = seq.NucleotideSequence(input2)
+    alignments = align.align_optimal(seq1, seq2,
                        align.SubstitutionMatrix.std_nucleotide_matrix(),
-                       gap_opening=-6,
-                       gap_extension=-2)
-    alignment = alignments[0]
-    assert alignment.trace.tolist() == [[0,0], [1,1], [2,2], [3,3], [4,4],
-                                        [5,5], [6,6], [7,-1], [8,7], [9,8],
-                                        [10,9]]
-
-@pytest.mark.parametrize("use_c_ext", [False, True])
-def test_align_local(use_c_ext):
-    if use_c_ext:
-        if biopython.has_c_extensions():
-            biopython.enable_c_extensions(True)
-        else:
-            return
-    else:
-        biopython.enable_c_extensions(False)
-    if biopython.has_c_extensions():
-        biopython.enable_c_extensions(use_c_ext)
-    seq1 = seq.NucleotideSequence("ATGGCACATGATCTTA")
-    seq2 = seq.NucleotideSequence("ACTTGCTTACGAT")
-    alignments = align.align_local(seq1, seq2,
-                       align.SubstitutionMatrix.std_nucleotide_matrix(),
-                       gap_opening=-6,
-                       gap_extension=-2)
-    alignment = alignments[0]
-    assert alignment.trace.tolist() == [[5,0], [6,1], [7,2], [8,3], [9,4],
-                                        [10,-1], [11,-1], [12,5], [13,6],
-                                        [14,7], [15,8]]
+                       gap_penalty=gap_penalty, local=local)
+    for ali in alignments:
+        assert str(ali) in expect
 
 @pytest.mark.parametrize("db_entry", [entry for entry
                                       in align.SubstitutionMatrix.list_db()
