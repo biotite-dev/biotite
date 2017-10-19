@@ -279,8 +279,8 @@ cpdef c_follow_trace(uint8[:,:] trace_table,
             # Continue in this method with indices[0] and states[0]
             i, j = next_indices[0]
             state = next_states[0]
-    # Trim trace to correct size (delete all -1 entries)
+    # Trim trace to correct size (delete all pure -1 entries)
     # and append to trace_list
-    trace_arr = np.asarray(trace)
-    trace_list.append(trace_arr[trace_arr[:,0] != -1])
+    tr_arr = np.asarray(trace)
+    trace_list.append(tr_arr[(tr_arr[:,0] != -1) | (tr_arr[:,1] != -1)])
 

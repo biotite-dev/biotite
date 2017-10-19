@@ -173,6 +173,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
             trace_func = _follow_trace
     
     # Table filling
+    ###############
     if affine_penalty:
         # Affine gap penalty
         gap_open = gap_penalty[0]
@@ -210,6 +211,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
                   gap_penalty, local)
     
     # Traceback
+    ###########
     # Stores all possible traces (= possible alignments)
     # A trace stores the indices of the aligned symbols
     # in both sequences
@@ -522,6 +524,6 @@ def _follow_trace(trace_table, i, j, pos, trace, trace_list, state):
             # Continue in this method with indices[0] and states[0]
             i, j = next_indices[0]
             state = next_states[0]
-    # Trim trace to correct size (delete all -1 entries)
+    # Trim trace to correct size (delete all pure -1 entries)
     # and append to trace_list
-    trace_list.append((trace[trace[:,0] != -1]))
+    trace_list.append((trace[(trace[:,0] != -1) | (trace[:,1] != -1)]))
