@@ -27,24 +27,13 @@ Subpackages
 -----------
 Biopython 2.0 currently consists of 4 subpackages:
 
-Application
-"""""""""""
-Command line and online applications can be managed with the ``application``
-subpackage.
-
-Database
-""""""""
-The ``database`` subpackage provides interfaces for searching in and fetching
-data from biologial databases like *NCBI Entrez* or *RCSB*.
-
 Sequence
 """"""""
 The ``sequence`` subpackage contains functionality for working with sequence
 information of any kind. The package contains by default sequence types for
-DNA, RNA and Proteins and allows conversion between them
-(transcription/translation). The alphabet-based implementation allows simple
+nucleotides and proteins, but the alphabet-based implementation allows simple
 integration of own sequence types, even if they do not rely on letters.
-Beside the standard I/O operations, the the package includes general purpose
+Beside the standard I/O operations, the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 
 Structure
@@ -55,6 +44,21 @@ based on `numpy` arrays. The subpackage includes read/write functionality for
 different formats, structure filters, coordinate transformations, angle and
 bond measurements, accessible surface area calculation, structure
 superimposition and more.
+
+Database
+""""""""
+The ``database`` subpackage is all about ddownloading data from biological
+databases, including the probably most important ones: the `RCSB PDB` and the
+`NCBI Entrez` database.
+
+Application
+"""""""""""
+The ``application`` subpackage provides interfaces for external software.
+The interfaces range from locally installed software (e.g. MSA software) to
+web apps (e.g. BLAST). The speciality is that the interfaces are seamless:
+You do not have to write input files and read output files, you only have to
+input `Python` objects and you get `Python` objects. It is basically very
+similar to using a normal `Python` functions.
 
 Table of Contents
 -----------------

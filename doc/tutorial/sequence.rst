@@ -269,16 +269,16 @@ Heuristic algorithms do not guarantee to yield the optimal alignment, but
 instead they are very fast. On the other hand, there are algorithms that
 calculate the optimal (maximum similarity score) alignment, but are quite slow.
 
-The `sequence.align` package contains two functions that implement the most
-popular optimal alignment alogorithms: `align_global()` performs an 
-global alignment using the *Needleman-Wunsch* algorithm, `align_global()`
-conducts a lokal alignment using the *Smith-Waterman* algorithm.
+The ``sequence.align`` package provides the function `align_optimal()`, which
+either performs a global alignment, using the *Needleman-Wunsch* algorithm,
+or a lokal alignment, using the *Smith-Waterman* algorithm. By defaultm it uses
+a general gap penalty, but an affine gap penalty can be used, too.
 
-Both functions can align any two `Sequence` objects with each other.
-In fact the `Sequence` objects can be instances from different `Sequence`
-subclasses and therefore may have different alphabets. The only condition
-that must be satisfied, is that the `SubstitutionMatrix` alphabets matches the
-alphabets of the sequences to be aligned.
+Most functions in ``sequence.align`` can align any two `Sequence` objects with
+each other. In fact the `Sequence` objects can be instances from different
+`Sequence` subclasses and therefore may have different alphabets. The only
+condition that must be satisfied, is that the `SubstitutionMatrix` alphabets
+matches the alphabets of the sequences to be aligned.
 
 But wait, what's a `SubstitutionMatrix`? This class maps a similarity score
 to two symbols, one from the first sequence the other from the second sequence.
@@ -320,11 +320,11 @@ For our protein alignment we will use the standard *BLOSUM62* matrix.
    seq2 = seq.ProteinSequence("PYLQN")
    matrix = align.SubstitutionMatrix.std_protein_matrix()
    print("Global alignment")
-   alignments = align.align_global(seq1, seq2, matrix)
+   alignments = align.align_optimal(seq1, seq2, matrix, local=False)
    for ali in alignments:
        print(ali)
    print("Local alignment")
-   alignments = align.align_local(seq1, seq2, matrix)
+   alignments = align.align_optimal(seq1, seq2, matrix, local=True)
    for ali in alignments:
        print(ali)
 
@@ -344,4 +344,6 @@ the input sequences together with the indices (so called trace) in these
 sequences that are aligned to each other (*-1* for a gap). Additionally the
 alignment score is stored in this object. Furthermore this object can
 prettyprint the alignment into a human readable form.
+
+
 
