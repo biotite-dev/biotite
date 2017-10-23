@@ -16,7 +16,7 @@ def _create_temp_dir():
     global _temp_dir
     if _temp_dir == "":
         cwd = os.getcwd()
-        _temp_dir = os.path.join(cwd, "temp")
+        _temp_dir = os.path.join(cwd, ".biopythontemp")
         if not os.path.isdir(_temp_dir):
             os.makedirs(_temp_dir)
         atexit.register(_delete_temp)
@@ -25,7 +25,7 @@ def _create_temp_dir():
 def _delete_temp():
     global _temp_dir
     # Condition only for savety reasons
-    if "temp" in _temp_dir: 
+    if ".biopythontemp" in _temp_dir: 
         shutil.rmtree(_temp_dir)
 
 
