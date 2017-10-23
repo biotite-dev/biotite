@@ -38,10 +38,10 @@ This approach has multiple advantages:
       alignments
 
 Besides the `Sequence` superclass, this subpackage contains the classes
-`DNASequence`, `RNASequence` and `ProteinSequence` in order to include
-the most important sequence types. The class `GeneralSequence` allows
+`NucleotideSequence` and `ProteinSequence` in order to include the most
+important biological sequence types. The class `GeneralSequence` allows
 the usage of a custom `Alphabet` without the need to subclass 
-Sequence`.
+`Sequence`.
 """
 
 from .alphabet import *
