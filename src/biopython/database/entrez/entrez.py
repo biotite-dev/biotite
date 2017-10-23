@@ -59,11 +59,90 @@ _databases = {"BioProject"        : "bioproject",
               "UniSTS"            : "unists"}
 
 def get_database_name(database):
+    """
+    Map an NCBI Entrez database name to an E-utility database name.
+    The returned value can be used for `db_name` parameter in `fetch()`.
+    
+    Parameters
+    ----------
+    database : str
+        Entrez database name.
+    
+    Returns
+    -------
+    name : str
+        E-utility database name.
+    
+    Examples
+    --------
+    
+    >>> print(get_database_name("Nucleotide"))
+    nuccore
+    """
     return _databases(database)
 
 
 def fetch(uids, target_path, suffix, db_name, ret_type,
           ret_mode="text", overwrite=False, verbose=False, mail=""):
+    """
+    Download files from the NCBI Entrez database in various formats.
+    
+    The data for each UID will be fetched into a separate file.
+    
+    A list of valid database, retrieval type and mode combinations can
+    be found under
+    `<https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`_
+    
+    This function requires an internet connection.
+    
+    Parameters
+    ----------
+    uids : str or iterable object of str
+        The a single *unique identifier* (UID) or a list of UIDs of the
+        file(s) to be downloaded .
+    target_path : str
+        The target directory of the downloaded files.
+    suffix : str
+        The file suffix of the downloaded files. This value is
+        independent of the retrieval type.
+    db_name : str:
+        E-utility database name.
+    ret_type : str
+        Retrieval type
+    ret_type : str
+        Retrieval mode
+    overwrite : bool, optional
+        If true, existing files will be overwritten. Otherwise the
+        respective file will only be downloaded if the file does not
+        exist yet in the specified target directory. (Default: False)
+    verbose: bool, optional
+        If true, the function will output the download progress.
+        (Default: False)
+    mail : str, optional
+        A mail address that is appended to to HTML request. This address
+        is contacted in case you contact the NCBI server too often.
+        This does only work if the mail address is registered.
+    
+    Returns
+    -------
+    files : str or list of str
+        The file path(s) to the downloaded files.
+        If a single string (a single UID) was given in `uids`,
+        a single string is returned. If a list (or other iterable
+        object) was given, a list of strings is returned.
+    
+    See also
+    --------
+    fetch_single_file
+    
+    Examples
+    --------
+    
+    >>> files = fetch(["1L2Y_A","3O5R_A"], biopython.temp_dir(), suffix="fa",
+    ...               db_name="protein", ret_type="fasta")
+    >>> print(files)
+    ['/home/padix/temp/1L2Y_A.fa', '/home/padix/temp/3O5R_A.fa']
+    """
     # If only a single UID is present,
     # put it into a single element list
     if isinstance(uids, str):
@@ -101,6 +180,37 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
 
 def fetch_single_file(uids, file_name,
                       db_name, ret_type, ret_mode="text", mail=None):
+    """
+    Almost the same as `fetch()`, but the data for the given UIDs will
+    be stored in a single file.
+    
+    Parameters
+    ----------
+    uids : str or iterable object of str
+        The a single *unique identifier* (UID) or a list of UIDs of the
+        file(s) to be downloaded .
+    file_name : str
+        The file path, including file name, to the target file.
+    db_name : str:
+        E-utility database name.
+    ret_type : str
+        Retrieval type
+    ret_type : str
+        Retrieval mode
+    mail : str, optional
+        A mail address that is appended to to HTML request. This address
+        is contacted in case you contact the NCBI server too often.
+        This does only work if the mail address is registered.
+    
+    Returns
+    -------
+    file : str
+        The file name of the downloaded file.
+    
+    See also
+    --------
+    fetch
+    """
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","

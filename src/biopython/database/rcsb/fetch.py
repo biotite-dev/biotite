@@ -16,14 +16,14 @@ _mmtf_url = "https://mmtf.rcsb.org/v1.0/full/"
 
 def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     """
-    Download structure files from the `RCSB` PDB in various formats.
+    Download structure files from the RCSB PDB in various formats.
     
     This function requires an internet connection.
     
     Parameters
     ----------
     pdb_ids : str or iterable object of str
-        The a single PDB ID or a list of PDB IDs of the structure(s)
+        A single PDB ID or a list of PDB IDs of the structure(s)
         to be downloaded .
     format : str
         The format of the files to be downloaded.
@@ -43,8 +43,8 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     files : str or list of str
         The file path(s) to the downloaded files.
         If a single string (a single ID) was given in `pdb_ids`,
-        a sngle string is returned. If a list (or other iterable object)
-        was given, a list of strings is returned.
+        a single string is returned. If a list (or other iterable
+        object) was given, a list of strings is returned.
     
     Examples
     --------

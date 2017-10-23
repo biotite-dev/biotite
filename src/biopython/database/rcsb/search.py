@@ -15,7 +15,7 @@ _search_url = "https://www.rcsb.org/pdb/rest/search"
 
 class Query(metaclass=abc.ABCMeta):
     """
-    A representation for an XML query for the `RCSB` SEARCH service.
+    A representation for an XML query for the RCSB SEARCH service.
     
     This class is the abstract base class for all queries.
     """
@@ -180,7 +180,7 @@ class BFactorQuery(SimpleQuery):
 def search(query):
     """
     Get all PDB IDs that meet the given query requirements,
-    via the `RCSB` SEARCH service.
+    via the RCSB SEARCH service.
     
     This function requires an internet connection.
     

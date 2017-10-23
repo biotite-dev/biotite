@@ -3,5 +3,9 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
+"""
+A subpackage for downloading files from the RCSB PDB.
+"""
+
 from .fetch import *
 from .search import *
