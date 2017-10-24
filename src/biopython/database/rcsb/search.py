@@ -8,7 +8,8 @@ import abc
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 __all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
-           "ResolutionQuery", "BFactorQuery", "search"]
+           "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
+           "search"]
 
 
 _search_url = "https://www.rcsb.org/pdb/rest/search"
@@ -175,6 +176,24 @@ class BFactorQuery(SimpleQuery):
         self.add_param("min", "{:.2f}".format(min))
         self.add_param("max", "{:.2f}".format(max))
 
+class MolecularWeightQuery(SimpleQuery):
+    """
+    Query that filters structures within a molecular weight range.
+    
+    
+    Parameters
+    ----------
+    min: float
+        The minimum molecular weight (g/mol).
+    max: float
+        The maximum molecular weight (g/mol).
+    """
+    
+    def __init__(self, min, max):
+        super().__init__("MolecularWeightQuery",
+                         "mvStructure.structureMolecularWeight")
+        self.add_param("min", "{:.1f}".format(min))
+        self.add_param("max", "{:.1f}".format(max))
 
 
 def search(query):
@@ -205,5 +224,7 @@ def search(query):
     """
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     r = requests.post(_search_url, data=str(query), headers=headers)
+    import textwrap
+    [print(e) for e in textwrap.wrap(r.text)]
     return r.text.split()
     

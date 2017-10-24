@@ -119,7 +119,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         If true, the function will output the download progress.
         (Default: False)
     mail : str, optional
-        A mail address that is appended to to HTML request. This address
+        A mail address that is appended to to HTTP request. This address
         is contacted in case you contact the NCBI server too often.
         This does only work if the mail address is registered.
     
