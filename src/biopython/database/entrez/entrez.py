@@ -138,7 +138,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     Examples
     --------
     
-    >>> files = fetch(["1L2Y_A","3O5R_A"], biopython.temp_dir(), suffix="fa",
+    >>> files = fetch(["1L2Y_A","3O5R_A"], temp_dir(), suffix="fa",
     ...               db_name="protein", ret_type="fasta")
     >>> print(files)
     ['/home/padix/temp/1L2Y_A.fa', '/home/padix/temp/3O5R_A.fa']
