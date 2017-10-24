@@ -270,9 +270,10 @@ instead they are very fast. On the other hand, there are algorithms that
 calculate the optimal (maximum similarity score) alignment, but are quite slow.
 
 The ``sequence.align`` package provides the function `align_optimal()`, which
-either performs a global alignment, using the *Needleman-Wunsch* algorithm,
-or a lokal alignment, using the *Smith-Waterman* algorithm. By defaultm it uses
-a general gap penalty, but an affine gap penalty can be used, too.
+either performs an optimal global alignment, using the *Needleman-Wunsch*
+algorithm, or an optimal lokal alignment, using the *Smith-Waterman*
+algorithm. By default it uses a general gap penalty, but an affine gap penalty
+can be used, too.
 
 Most functions in ``sequence.align`` can align any two `Sequence` objects with
 each other. In fact the `Sequence` objects can be instances from different
