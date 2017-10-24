@@ -12,6 +12,20 @@ from subprocess import Popen, DEVNULL
 __all__ = ["LocalApp"]
 
 class LocalApp(Application, metaclass=abc.ABCMeta):
+    """
+    The base class for all locally installed applications.
+    
+    Internally this creates a `Popen` instance, which handles
+    the execution.
+    
+    Parameters
+    ----------
+    bin_path : str
+        Path of the application represented by this class.
+    mute : bool, optional
+        If true, the console output of the application goes into
+        DEVNULL. (Default: True)
+    """
     
     def __init__(self, bin_path, mute=True):
         super().__init__()
@@ -23,18 +37,60 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     
     @requires_state(AppState.CREATED)
     def set_options(self, options):
+        """
+        Set command line options for the application run.
+        
+        PROTECTED: Do not call from outside.
+        
+        Parameters
+        ----------
+        options : list
+            A list of strings representing the command line options.
+        """
         self._options = options
     
     @requires_state(AppState.CREATED)
     def set_exec_dir(self, exec_dir):
+        """
+        Set the directory where the application should be executed.
+        If not set, it will be executed in the working directory at the
+        time the application was created. 
+        
+        PROTECTED: Do not call from outside.
+        
+        Parameters
+        ----------
+        exec_dir : str
+            The execution directory.
+        """
         self._exec_dir = exec_dir
     
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def get_process(self):
+        """
+        Get the `Popen` instance.
+        
+        PROTECTED: Do not call from outside.
+        
+        Returns
+        -------
+        process : Popen
+            The `Popen` instance
+        """
         return self._process
     
     @requires_state(AppState.FINISHED | AppState.JOINED)
     def get_exit_code(self):
+        """
+        Get the exit code of the process.
+        
+        PROTECTED: Do not call from outside.
+        
+        Returns
+        -------
+        code : int
+            The exit code.
+        """
         return self._code
 
     def run(self):
