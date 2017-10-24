@@ -224,7 +224,5 @@ def search(query):
     """
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     r = requests.post(_search_url, data=str(query), headers=headers)
-    import textwrap
-    [print(e) for e in textwrap.wrap(r.text)]
     return r.text.split()
     
