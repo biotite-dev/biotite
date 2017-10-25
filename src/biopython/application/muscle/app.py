@@ -17,7 +17,24 @@ __all__ = ["MuscleApp"]
 _ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 
 class MuscleApp(LocalApp):
+    """
+    Perform a multiple sequence alignment using MUSCLE.
     
+    Internally this creates a `Popen` instance, which handles
+    the execution.
+    
+    Parameters
+    ----------
+    sequences : iterable object of ProteinSequence
+        The sequences to be aligned.
+    bin_path : str
+        Path of the MUCLE binary.
+    mute : bool, optional
+        If true, the console output goes into DEVNULL. (Default: True)
+    """
+    
+    # Prevents overwriting of input and output files
+    # of different MuscleApp instancs
     _counter = 0
     
     def __init__(self, sequences, bin_path="muscle", mute=True):
@@ -49,4 +66,12 @@ class MuscleApp(LocalApp):
     
     @requires_state(AppState.JOINED)
     def get_alignment(self):
+        """
+        Get the resulting multiple sequence alignment.
+        
+        Returns
+        -------
+        alignment : Alignment
+            The global multiple sequence alignment.
+        """
         return self._alignment

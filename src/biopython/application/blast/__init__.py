@@ -3,5 +3,10 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
+"""
+A subpackage for heuristic local alignments against a large database
+using BLAST.
+"""
+
 from .webapp import *
 from .alignment import *

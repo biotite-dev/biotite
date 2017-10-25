@@ -20,6 +20,36 @@ __all__ = ["BlastWebApp"]
 _ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 
 class BlastWebApp(WebApp):
+    """
+    Perform a local alignment against a large sequence database using
+    using the web-based BLAST application (by default NCBI BLAST).
+    
+    Parameters
+    ----------
+    program : str
+        The specific BLAST program. One of 'blastn', 'megablast',
+        'blastp', 'blastx', 'tblastn' and 'tblastx'.
+    query : Sequence or str
+        The query sequence. If a string is provided, it is interpreted
+        as path to a FASTA file, if the string contains a valid FASTA
+        file extension, otherwise it is interpreted as a single letter
+        string representation of a sequence. 
+    database : str, optional
+        The NCBI sequence database to blast against. By default it
+        contains all sequences (`database`='nr').
+    app_url : str, optional
+        URL of the BLAST web app. By default NCBI BLAST is used.
+        This can be changed to a private server or another cloud
+        provider.
+    obey_rules : bool, optional
+        If true, the application raises an `RuleViolationError`, if
+        the server is contacted too often, based on the NCBI BLAST
+        usage rules. (Default: True)
+    mail : str, optional
+        If a mail address is provided, it will be appended in the
+        HTTP request. This allows the NCBI to contact you in case
+        your application sends too many requests.
+    """
     
     _last_contact = 0
     _last_request = 0
@@ -39,6 +69,8 @@ class BlastWebApp(WebApp):
         requires_protein = (program in ["blastn", "megablast",
                                         "blastx", "blastx"])
         if isinstance(query, str) and query.endswith((".fa",".fst",".fasta")):
+                # If string has a file extension, it is interpreted as
+                # FASTA file from which the sequence is taken
                 file = FastaFile()
                 file.read(self._query)
                 sequence = file.get_sequence()
@@ -69,31 +101,103 @@ class BlastWebApp(WebApp):
     
     @requires_state(AppState.CREATED)
     def set_max_expect_value(self, value):
+        """
+        Set the threshold expectation value (E-value).
+        No alignments with an E-value above this threshold will be
+        considered.
+        
+        The E-Value is the expectation value for the number of random
+        sequences of a similar sized database getting an equal or higher
+        score by change when aligned with the query sequence.
+        
+        Parameters
+        ----------
+        value : float
+            The threshold E-value.
+        """
         self._expect_value = value
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, opening, extension):
+        """
+        Set the affine gap penalty for the alignment.
+        
+        Parameters
+        ----------
+        opening : float
+            The penalty for gap opening.
+        extension : float
+            The penalty for gap extension.
+        """
         self._gap_openining = opening
         self._gap_extension = extension
     
     @requires_state(AppState.CREATED)
     def set_word_size(self, size):
+        """
+        Set the word size for alignment seeds.
+        
+        Parameters
+        ----------
+        size : int
+            Word size.
+        """
         self._word_size = size
     
     @requires_state(AppState.CREATED)
     def set_match_reward(self, reward):
+        """
+        Set the score of a symbol match in the alignment.
+        
+        Used only in 'blastn' and 'megablast'.
+        
+        Parameters
+        ----------
+        reward : int
+            Match reward. Must be positive.
+        """
         self._reward = score
     
     @requires_state(AppState.CREATED)
     def set_mismatch_penalty(self, penalty):
+        """
+        Set the penalty of a symbol mismatch in the alignment.
+        
+        Used only in 'blastn' and 'megablast'.
+        
+        Parameters
+        ----------
+        penalty : int
+            Mismatch penalty. Must be negative.
+        """
         self._penalty = penalty
     
     @requires_state(AppState.CREATED)
     def set_substitution_matrix(self, matrix_name):
+        """
+        Set the penalty of a symbol mismatch in the alignment.
+        
+        Used only in 'blastp', "blastx', 'tblastn' and 'tblastx'.
+        
+        Parameters
+        ----------
+        matrix_name : str
+            Name of the substitution matrix. Default is 'BLOSUM62'.
+        """
         self._matrix = matrix_name.upper()
     
     @requires_state(AppState.CREATED)
     def set_threshold(self, threshold):
+        """
+        Set the threshold neighboring score for initial words.
+        
+        Used only in 'blastp', "blastx', 'tblastn' and 'tblastx'.
+        
+        Parameters
+        ----------
+        threshold : int
+            Threshold value. Must be positve.
+        """
         self._threshold = threshold
     
     def run(self):
@@ -198,6 +302,14 @@ class BlastWebApp(WebApp):
     
     @requires_state(AppState.JOINED)
     def get_alignments(self):
+        """
+        Get the resulting local sequence alignment.
+        
+        Returns
+        -------
+        alignment : BlastAlignment
+            The local sequence alignment.
+        """
         return self._alignments
     
     @staticmethod
@@ -218,12 +330,20 @@ class BlastWebApp(WebApp):
         return info_dict
     
     def _contact(self):
+        """
+        Resets the time since the last server contact. Used for
+        detecting server rule violation.
+        """
         contact = time.time()
         if (contact - BlastWebApp._last_contact) < BlastWebApp._contact_delay:
             self.violate_rule("The server was contacted too often")
         BlastWebApp._last_contact = contact
     
     def _request(self):
+        """
+        Resets the time since the last new alignment request. Used for
+        detecting server rule violation.
+        """
         request = time.time()
         if (request - BlastWebApp._last_request) < BlastWebApp._request_delay:
             self.violate_rule("Too frequent BLAST requests")
