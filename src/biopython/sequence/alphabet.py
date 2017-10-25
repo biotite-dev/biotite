@@ -186,6 +186,9 @@ class Alphabet(object):
             yield self._symbols[i]
             i += 1
     
+    def __contains__(self, symbol):
+        return symbol in self._symbols
+    
 
 class AlphabetMapper(object):
     """
