@@ -311,7 +311,7 @@ class BlastWebApp(WebApp):
             
             alignment = BlastAlignment( [seq1 ,seq2], trace, score, e_value,
                                         (query_begin, query_end),
-                                        (query_begin, query_end),
+                                        (hit_begin, hit_end),
                                         hit_id, hit_definition )
             self._alignments.append(alignment)
 
