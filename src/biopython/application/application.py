@@ -33,7 +33,7 @@ def requires_state(app_state):
         The required app state.
     """
     def decorator(func):
-        def wrapper(*args):
+        def wrapper(*args, **kwargs):
             instance = args[0]
             if (instance._state & app_state).value == 0:
                 raise AppStateError("The application is in {:} state, "
@@ -41,7 +41,7 @@ def requires_state(app_state):
                                         str(instance.get_app_state()),
                                         str(app_state))
                                     )
-            return func(*args)
+            return func(*args, **kwargs)
         return wrapper
     return decorator
 

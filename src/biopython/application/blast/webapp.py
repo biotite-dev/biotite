@@ -9,6 +9,7 @@ from ..webapp import WebApp, RuleViolationError
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
+from ...sequence.io.fasta.convert import get_sequence
 from ...sequence.align.alignment import Alignment
 import time
 import requests
@@ -23,6 +24,8 @@ class BlastWebApp(WebApp):
     """
     Perform a local alignment against a large sequence database using
     using the web-based BLAST application (by default NCBI BLAST).
+    
+    Invalid input parameters may result
     
     Parameters
     ----------
@@ -60,29 +63,37 @@ class BlastWebApp(WebApp):
                  app_url=_ncbi_url, obey_rules=True, mail=None):
         super().__init__(app_url, obey_rules)
         
-        if program not in ["blastn", "megablast", "blastp",
+        # 'megablast' is somehow not working
+        # When entering the corresponding HTTPS request into a browser
+        # you are redirected onto the blast mainpage
+        if program not in ["blastn", "blastp",
                            "blastx", "tblastn", "tblastx"]:
             raise ValueError("'{:}' is not a valid BLAST program"
                              .format(program))
         self._program = program
         
-        requires_protein = (program in ["blastn", "megablast",
-                                        "blastx", "blastx"])
+        requires_protein = (program in ["blastp", "tblastn"])
         if isinstance(query, str) and query.endswith((".fa",".fst",".fasta")):
                 # If string has a file extension, it is interpreted as
                 # FASTA file from which the sequence is taken
                 file = FastaFile()
-                file.read(self._query)
-                sequence = file.get_sequence()
-                if isinstance(sequence, ProteinSequence) != requires_protein:
-                    raise ValueError("Query type is not suitable for program")
+                file.read(query)
+                # Get first entry in file and take the sequence
+                # (rather than header) 
+                self._query = str(get_sequence(file))
         elif isinstance(query, Sequence):
-            self._query = query.copy()
+            self._query = str(query)
         else:
-            if requires_protein:
-                self._query = ProteinSequence(str(query))
-            else:
-                self._query = ProteinSequence(str(query))
+            self._query = query
+        
+        # Check for unsuitable symbols in query string
+        if requires_protein:
+            ref_alphabet = ProteinSequence.alphabet
+        else:
+            ref_alphabet = NucleotideSequence.alphabet_amb
+        for symbol in self._query:
+            if not symbol.upper() in ref_alphabet:
+                raise ValueError("Query sequence contains unsuitable symbols")
         
         self._database = database
         self._gap_openining = None
@@ -242,6 +253,9 @@ class BlastWebApp(WebApp):
         request = requests.get(self.app_url(), params=data_dict)
         self._contact()
         info_dict = BlastWebApp._get_info(request.text)
+        if info_dict["Status"] == "UNKNOWN":
+            # Indicates invalid query input values
+            raise ValueError("The input values seem to be invalid")
         return info_dict["Status"] == "READY"
         
     def wait_interval(self):
@@ -267,7 +281,8 @@ class BlastWebApp(WebApp):
         self._contact()
         
         self._alignments = []
-        root = ElementTree.fromstring(request.text)
+        self._xml_response = request.text
+        root = ElementTree.fromstring(self._xml_response)
         # Extract BlastAlignment objects from <Hit> tags
         hit_xpath = "./BlastOutput_iterations/Iteration/Iteration_hits/Hit"
         hits = root.findall(hit_xpath)
@@ -299,7 +314,19 @@ class BlastWebApp(WebApp):
                                         (query_begin, query_end),
                                         hit_id, hit_definition )
             self._alignments.append(alignment)
-    
+
+    @requires_state(AppState.JOINED)
+    def get_xml_response(self):
+        """
+        Get the raw XML response.
+        
+        Returns
+        -------
+        response : str
+            The raw XML response.
+        """
+        return self._xml_response
+
     @requires_state(AppState.JOINED)
     def get_alignments(self):
         """
@@ -314,6 +341,9 @@ class BlastWebApp(WebApp):
     
     @staticmethod
     def _get_info(text):
+        """
+        Get the *QBlastInfo* block of the response HTML as dictionary
+        """
         lines = [line for line in text.split("\n")]
         info_dict = {}
         in_info_block = False
