@@ -167,6 +167,8 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
                              .format(db_name, id, ret_type, ret_mode,
                                      "BiopythonClient", mail))
             content = r.text
+            if content.startswith(" Error"):
+                raise ValueError(content[8:])
             with open(file_name, "w+") as f:
                 f.write(content)
     if verbose:
