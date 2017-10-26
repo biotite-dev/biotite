@@ -58,7 +58,7 @@ The interfaces range from locally installed software (e.g. MSA software) to
 web apps (e.g. BLAST). The speciality is that the interfaces are seamless:
 You do not have to write input files and read output files, you only have to
 input `Python` objects and you get `Python` objects. It is basically very
-similar to using a normal `Python` functions.
+similar to using normal `Python` functions.
 
 Table of Contents
 -----------------

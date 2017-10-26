@@ -25,8 +25,6 @@ class BlastWebApp(WebApp):
     Perform a local alignment against a large sequence database using
     using the web-based BLAST application (by default NCBI BLAST).
     
-    Invalid input parameters may result
-    
     Parameters
     ----------
     program : str
@@ -39,7 +37,7 @@ class BlastWebApp(WebApp):
         string representation of a sequence. 
     database : str, optional
         The NCBI sequence database to blast against. By default it
-        contains all sequences (`database`='nr').
+        contains all sequences (`database`='nr'`).
     app_url : str, optional
         URL of the BLAST web app. By default NCBI BLAST is used.
         This can be changed to a private server or another cloud

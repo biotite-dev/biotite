@@ -70,7 +70,7 @@ class Application(metaclass=abc.ABCMeta):
     `Application` type specific `clean_up()` method. `join()` can even
     be called in the *RUNNING* state: This will constantly check
     `is_finished()` and will directly go into the *JOINED* state as soon
-    as the application reaches the FINISHED state.
+    as the application reaches the *FINISHED* state.
     Calling the `cancel()` method while the application is *RUNNING*
     or *FINISHED* leaves the application in the *CANCELLED* state.
     This triggers the `clean_up()` method, too, but there are no

@@ -23,7 +23,7 @@ can be used as a symbol in a `Sequence`, as long as the object is part of the
 a list of objects that are allowed to occur in a `Sequence`. The following
 figure shows how the symbols are stored in a sequence.
 
-.. image:: /static/assets/figures/symbol_encoding.svg
+.. image:: /static/assets/figures/symbol_encoding_path.svg
 
 When setting the `Sequence` object with a sequence, the `Alphabet` of the
 `Sequence` encodes each symbol in the input sequence into a so called
