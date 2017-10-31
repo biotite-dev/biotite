@@ -184,8 +184,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biopython"
-copyright = "2017, Patrick Kunzmann"
-author = "Patrick Kunzmann"
+copyright = "2017, the Biopython 2 contributors"
 version = "2.0"
 
 exclude_patterns = ["build"]
@@ -199,7 +198,6 @@ todo_include_todos = False
 
 html_theme = "alabaster"
 html_static_path = ["static"]
-#html_logo = "static/assets/general/biopython_logo_xs.png"
 html_favicon = "static/assets/general/biopython_icon_32p.png"
 htmlhelp_basename = "BiopythonDoc"
 html_sidebars = {"**": ["about.html",
@@ -223,12 +221,4 @@ html_theme_options = {
     "fixed_sidebar"    : "true"
     
 }
-
-##### LaTeX #####
-
-latex_elements = {}
-latex_documents = [
-    (master_doc, "Biopython.tex", "Biopython Documentation",
-     "Patrick Kunzmann", "manual"),
-]
 
