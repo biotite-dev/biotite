@@ -48,3 +48,5 @@ from .alphabet import *
 from .search import *
 from .seqtypes import *
 from .sequence import *
+from .annotation import *
+from .features import *
