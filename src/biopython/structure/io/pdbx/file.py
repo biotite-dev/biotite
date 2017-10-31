@@ -170,6 +170,8 @@ class PDBxFile(TextFile):
         block : string, optional
             The name of the data block. Default is the first
             (and most times only) data block of the file.
+        
+        This function optionally uses C-extensions.
             
         Returns
         -------

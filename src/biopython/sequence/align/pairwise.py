@@ -74,6 +74,8 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
     Gotoh algorithm [3]_, however, this requires approximately 4 times
     the RAM space and execution time.
     
+    This function optionally uses C-extensions. 
+    
     Parameters
     ----------
     seq1, seq2 : Sequence
