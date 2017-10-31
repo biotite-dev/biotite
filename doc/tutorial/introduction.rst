@@ -1,15 +1,16 @@
 Introduction
 ------------
 
-`Biopython` is a `Python` package for computational biologists. It aims to
+*Biopython* is a *Python* package for computational biologists. It aims to
 provide a broad set of tools for working with different kinds of biological
-data, from sequences to structures. On one hand side working with `Biopython`
-should be computationally efficient, with the help of powerful packages like
-`numpy` and `Cython`. On the other hand it aims for simple usability and
-extensibility, so that beginners are not overwhelmed and advances users can
-easily build upon the exisiting system to implement their own algorithms.
+data, from sequences to structures. On the one hand side, working with
+*Biopython* should be computationally efficient, with the help of powerful
+packages like `numpy` and `Cython`. On the other hand it aims for simple
+usability and extensibility, so that beginners are not overwhelmed and advanced
+users can easily build upon the exisiting system to implement their own
+algorithms.
 
-`Biopython` provides 4 subpackages:
+*Biopython* provides 4 subpackages:
 The ``sequence`` subpackage contains functionality for working with sequence
 information of any kind. The package contains by default sequence types for
 nucleotides and proteins, but the alphabet-based implementation allows simple
@@ -22,15 +23,15 @@ based on `numpy` arrays. The subpackage includes read/write functionality for
 different formats, structure filters, coordinate transformations, angle and
 bond measurements, accessible surface area calculation, structure
 superimposition and more.
-The ``database`` subpackage is all about ddownloading data from biological
+The ``database`` subpackage is all about downloading data from biological
 databases, including the probably most important ones: the `RCSB PDB` and the
 `NCBI Entrez` database.
 The ``application`` subpackage provides interfaces for external software.
 The interfaces range from locally installed software (e.g. MSA software) to
-web apps (e.g. BLAST). The speciality is that the interfaces are seamless:
-You do not have to write input files and read output files, you only have to
-input `Python` objects and you get `Python` objects. It is basically very
-similar to using normal `Python` functions.
+web applications (e.g. BLAST). The speciality is that the interfaces are
+seamless: You do not have to write input files and read output files, you only
+have to input *Python* objects and you get *Python* objects. It is basically
+very similar to using normal functions.
 
 In the following sections you will get a overview over the mentioned
 subpackages, so go and grab some tea and cookies und let us begin. 

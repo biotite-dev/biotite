@@ -1,7 +1,7 @@
 Going 3D - The Structure subpackage
 -----------------------------------
    
-``structure`` is a Biopython subpackage for handling molecular structures.
+``structure`` is a *Biopython* subpackage for handling molecular structures.
 This subpackage enables efficient and easy handling of protein structure data
 by representing atom attributes in `numpy` `ndarrays`. These atom attributes
 include so called *annotations* (polypetide chain id, residue id, residue name,
@@ -19,7 +19,7 @@ in `numpy` arrays. This approach has multiple advantages:
     - Fast calculations on structures using C-accelerated `ndarray` operations
     - Simple implementation of custom calculations
     
-Based ony the implementation in `ndarrays`, this package furthermore
+Based on the implementation in `ndarrays`, this package also
 contains functions for structure analysis, manipulation and visualisation.
 
 Creating structures
@@ -43,7 +43,7 @@ The annotations shown in this example are mandatory: If you miss one of these,
 Python will not complain, but some operations might not work properly
 (especially true, when we go to atom arrays and stacks). The mandatory
 annotation categories are originated in *ATOM* records in the PDB format.
-Additionally you can specify an arbitrary amount of annotations.
+Additionally, you can specify an arbitrary amount of annotations.
 In most cases you won't work with `Atom` instances and in even fewer cases
 `Atom` instances are created as it is done in the above example.
 
@@ -53,8 +53,8 @@ An atom array can be seen as an array of atom instances (hence the name).
 But rather than storing `Atom` instances in a list or `ndarray`, an `AtomArray`
 instance contains one `ndarray` for each annotation and the coordinates.
 In order to see this in action, we first have to create an array from the atoms
-we constructed before. The we can access the annotations and coordinates of the
-atom array simply by specifying the attribute:
+we constructed before. Then we can access the annotations and coordinates of
+the atom array simply by specifying the attribute:
 
 .. code-block:: python
 
@@ -81,13 +81,13 @@ Output:
    A  1  GLY   False CA C  [ 0.  1.  1.]
    A  1  GLY   False C  C  [ 0.  0.  2.]
     
-The `struc.array()` builder function takes any iterable object containg atom
+The `struc.array()` builder function takes any iterable object containing atom
 instances, if you wanted to, you could even use another `AtomArray`.
 An alternative way of constructing an array would be creating an
 `AtomArray` by using its constructor, which fills the annotation arrays and
 coordinates with the type respective *zero* value.
 In our example all annotation arrays have a length of 3, since we used
-3 atoms tp create it. A structure containing *n* atoms, is represented by
+3 atoms to create it. A structure containing *n* atoms, is represented by
 annotation arrays of length *n* and coordinates of shape *(n,3)*.
 
 If you want to add further annotation categories to an array, at first you have
@@ -171,10 +171,10 @@ Other information (authors, secondary structure, etc.) cannot be extracted
 from PDB files, yet. This is a good place to mention that it is recommended to
 use the modern PDBx/mmCIF format in favor of the PDB format. It solves
 limitations of the PDB format, that arise from the column restrictions.
-Furthermore much more additional information is stored in these files.
-In contrast to PDB files, Biopython can read the entire content of PDBx/mmCIF
-files, which can accessed in a dictionary like manner.
-At first we read the file similarily to before:
+Furthermore, much more additional information is stored in these files.
+In contrast to PDB files, *Biopython* can read the entire content of PDBx/mmCIF
+files, which can be accessed in a dictionary like manner.
+At first, we read the file similarily to before:
 
 .. code-block:: python
    
@@ -194,7 +194,7 @@ Output:
    
    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
 
-The first index contains data block and the category name. The data black could
+The first index contains the data block and the category name. The data block could
 be omitted, since there is only one block in the file. This returns a
 dictionary. If the category is in a *loop*, the dictionary contains `ndarrays`
 of strings as values, otherwise the dictionary contains strings directly.
@@ -221,8 +221,8 @@ convert the *atom_site* category into an atom array/stack and vice versa.
 actually contains only a single model. If you would like to have an
 `AtomArray` instead, you have to specifiy the `model` parameter.
 
-For Biopython internal storage of structures *npz* files are recommended.
-These are simply binary files, that are used by `numpy`. in case of atom arrays
+For *Biopython* internal storage of structures *npz* files are recommended.
+These are simply binary files, that are used by `numpy`. In case of atom arrays
 and stacks, the annotation arrays and coordinates are written/read to/from
 *npz* files via the `NpzFile` class. Since no expensive data conversion has
 to be performed, this format is the fastest way to save and load atom arrays
@@ -231,7 +231,7 @@ and stacks.
 Reading trajectory files
 """"""""""""""""""""""""
 
-If the package `MDtraj` is installed Biopython provides an read/write
+If the package `MDtraj` is installed *Biopython* provides a read/write
 interface for different trajectory file formats. More information can be found
 in the API reference.
 
@@ -240,7 +240,7 @@ Array indexing and filtering
 
 Atom arrays and stacks can be indexed in a similar way an `ndarray` is indexed.
 In fact, the index is propagated to the coordinates and the annotation arrays.
-Therefore different kinds of indices can be used, like boolean arrays, lists
+Therefore, different kinds of indices can be used, like boolean arrays, lists
 containing indices, slices and, of course, integer values. Integer indices have
 a special role here, as they reduce the dimensionality of the data type:
 Indexing an `AtomArrayStack` with an integer results in an `AtomArray` at the
@@ -315,7 +315,7 @@ specifies the atom.
    # Get a stack containing arrays containing only the first atom
    substack = stack[:, 0]
 
-Furthermore the package contains advanced filters, that create boolean masks
+Furthermore, the package contains advanced filters, that create boolean masks
 from an array using specific criteria. Here is a small example
 
 .. code-block:: python
@@ -345,7 +345,7 @@ Structure analysis
 ^^^^^^^^^^^^^^^^^^
 
 This package would be almost useless, if there wasn't some means to analyze
-your structures. Therefore Biopython offers a bunch of functions for this
+your structures. Therefore, *Biopython* offers a bunch of functions for this
 purpose, reaching from simple bond angle and length measurements to more
 complex characteristics, like accessible surface area and secondary structure.
 The following section will introduce you to some of these functions, which
@@ -419,7 +419,7 @@ Like some other functions in this package, we are able to pick any combination
 of an atom, atom array or stack. Alternatively `ndarrays` containing the
 coordinates can be provided.
 
-Furthermore we can measure bond angles and dihedral angles:
+Furthermore, we can measure bond angles and dihedral angles:
 
 .. code-block:: python
    
@@ -467,10 +467,10 @@ Comparing structures
 """"""""""""""""""""
 
 Now we want to calculate a measure of flexibility for each residue in *TC5b*.
-The *root mean square fluctuation* (RMSF) is good value for that. It represents
-the deviation for each atom in all models relative to a reference model, which
-is usually the averaged structure. Since we are only interested in the
-backbone flexibility, we consider only CA atoms.
+The *root mean square fluctuation* (RMSF) is a good value for that. It
+represents the deviation for each atom in all models relative to a reference
+model, which is usually the averaged structure. Since we are only interested in
+the backbone flexibility, we consider only CA atoms.
 Before we can calculate a reasonable RMSF, we have to superimpose each model on
 a reference model (we choose the first model), which minimizes the
 *root mean square deviation* (RMSD).
@@ -521,17 +521,17 @@ Calculating accessible surface area
 """""""""""""""""""""""""""""""""""
 
 Another interesting value for a protein structure is the
-*solvent accessible surface area* (SASA) that indicates weather an atom or
+*solvent accessible surface area* (SASA) that indicates whether an atom or
 residue is on the protein surface or buried inside the protein. The function
 `sasa()` numerically calculates the SASA for each atom. Then we sum up the
 values for each residue, to get the residue-wise SASA.
 
 Besides other parameters, you can choose between different Van-der-Waals radii
 sets:
-*Prot0r*, the default set, is a set that for non-hydrogen atoms, but determines
-the radius of an atom based on the assumed amount of hydrogen atoms connected
-to it. Therefore *Prot0r* is suitable for structures with missing hydrogen
-atoms, like crystal structures.
+*Prot0r*, the default set, is a set that defines radii for non-hydrogen atoms,
+but determines the radius of an atom based on the assumed amount of hydrogen
+atoms connected to it. Therefore, *Prot0r* is suitable for structures with
+missing hydrogen atoms, like crystal structures.
 Since the structure of *TC5b* was elucidated via NMR, we can assign a radius to
 every single atom (including hydrogens), hence we use the *Single* set.
 
@@ -544,7 +544,7 @@ every single atom (including hydrogens), hence we use the *Single* set.
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    array = pdbx.get_structure(file, model=1)
-   # The following line calculates the atom-wise sasa of the atom array
+   # The following line calculates the atom-wise SASA of the atom array
    atom_sasa = struc.sasa(array, vdw_radii="Single")
    # Sum up SASA for each residue in atom array
    res_sasa = struc.apply_residue_wise(array, atom_sasa, np.sum)
@@ -563,7 +563,7 @@ Output:
 Secondary structure determination
 """""""""""""""""""""""""""""""""
 
-Biopython also be used to assign *secondary structure elements* (SSE) to
+Biopython can also be used to assign *secondary structure elements* (SSE) to
 a structure:
 
 .. code-block:: python

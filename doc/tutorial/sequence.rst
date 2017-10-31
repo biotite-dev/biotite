@@ -1,7 +1,7 @@
 From A to T - The Sequence subpackage
 -------------------------------------
 
-``sequence`` is a Biopython subpackage concerning maybe the most popular
+``sequence`` is a *Biopython* subpackage concerning maybe the most popular
 in computational biology: sequences. The instantiation can be quite simple as:
 
 .. code-block:: python
@@ -13,11 +13,11 @@ in computational biology: sequences. The instantiation can be quite simple as:
 
 This example shows `NucleotideSequence` which is a subclass of the abstract
 base class `Sequence`. A `NucleotideSequence` accepts a list of strings,
-where each string can be 'A', 'C', 'G' or 'T'. Each of this letters is called
+where each string can be 'A', 'C', 'G' or 'T'. Each of these letters is called
 a *symbol*.
 
-In general the sequence implementation in Biopython allows for
-*Sequences of anything*. This means any (immutable an hadhable) Python object
+In general the sequence implementation in *Biopython* allows for
+*Sequences of anything*. This means any (immutable an hashable) *Python* object
 can be used as a symbol in a `Sequence`, as long as the object is part of the
 `Alphabet` of the particular `Sequence`. An `Alphabet` object simply represents
 a list of objects that are allowed to occur in a `Sequence`. The following
@@ -80,7 +80,7 @@ with 'T'.
    # The constructor can take any iterable object (e.g. a list of symbols)
    seq1 = seq.NucleotideSequence("ACCGTATCAAG")
    print(seq1.get_alphabet())
-   # Contructing a sequence with ambiguous nucleic bases
+   # Constructing a sequence with ambiguous nucleic bases
    seq2 = seq.NucleotideSequence("TANNCGNGG")
    print(seq2.get_alphabet())
 
@@ -159,13 +159,13 @@ codon table or custom start codons.
 Loading sequences from file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Biopython enables the user to load and save sequences from/to the popular
-FASTA format. A FASTA file may contain multiple seqeunces. Each sequence entry
+*Biopython* enables the user to load and save sequences from/to the popular
+FASTA format. A FASTA file may contain multiple sequences. Each sequence entry
 starts with a line with a leading '>' and a trailing header name. The
 corresponding sequence is specified in the following lines until the next
 header or end of file. Since every sequence has its obligatory header, a FASTA
 file is predestinated to be implemented as some kind of dictionary. This is
-exactly what has been done in Biopython: The header strings (without the '>')
+exactly what has been done in *Biopython*: The header strings (without the '>')
 are used as keys to access the sequence string. Actually you can cast the
 `FastaFile` object into a `dict`.
 Let's demonstrate this on the genome of *Escherichia coli* BL21(DE3)
@@ -194,7 +194,7 @@ Output:
 Since there is only a single sequence in the file, the loop is run only one
 time. Since the sequence string is very long, only the first 50 bp are
 printed.
-Now this string could be used as inpt parameter for creation of a
+Now this string could be used as input parameter for creation of a
 `NucleotideSequence`. But I want to spare you some unnecessary work, there
 is already a convenience function for that:
 
@@ -213,13 +213,13 @@ Output:
 
 In this form `get_sequence()` returns the first sequence in the file, which is
 also the only sequence in most cases. If you want the sequence corresponding
-to a specific header, you have to specifix the `header` parameter.
+to a specific header, you have to specifiy the `header` parameter.
 The function even automatically recognizes if the file contains a DNA or
 protein sequence and returns a `NucleotideSequence` or `ProteinSequence`,
 instance respectively. Actually it just tries to create a `NucleotideSequence`,
 and if this fails, a `ProteinSequence` is created instead.
 
-Sequences can be written into FASTA files n a similar way: either via
+Sequences can be written into FASTA files in a similar way: either via
 dictionary-like access or, as show below, using the `set_sequence()`
 convenience function.
 
@@ -271,7 +271,7 @@ calculate the optimal (maximum similarity score) alignment, but are quite slow.
 
 The ``sequence.align`` package provides the function `align_optimal()`, which
 either performs an optimal global alignment, using the *Needleman-Wunsch*
-algorithm, or an optimal lokal alignment, using the *Smith-Waterman*
+algorithm, or an optimal local alignment, using the *Smith-Waterman*
 algorithm. By default it uses a general gap penalty, but an affine gap penalty
 can be used, too.
 
@@ -343,7 +343,7 @@ Output:
 The alignment functions return a list of `Alignment` objects. This object saves
 the input sequences together with the indices (so called trace) in these
 sequences that are aligned to each other (*-1* for a gap). Additionally the
-alignment score is stored in this object. Furthermore this object can
+alignment score is stored in this object. Furthermore, this object can
 prettyprint the alignment into a human readable form.
 
 

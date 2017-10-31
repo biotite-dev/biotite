@@ -2,13 +2,13 @@ Outsourcing - The Application subpackage
 ----------------------------------------
 
 Although you can achieve a lot with *Biopython*, there are still a lot of
-things which are not implemented this Python package. But wait, this is what
-the ``application`` package is for: It contains interfaces for popular
+things which are not implemented in this *Python* package. But wait, this is
+what the ``application`` package is for: It contains interfaces for popular
 external software. This ranges from locally installed software to tools
 running on servers. The usage of these interfaces is seamless: Rather than
 writing input files and reading output files, you simply put in your Python
 objects (e.g. instances of `Sequence` or `AtomArray`) and the interface
-returns Python objects (e.g. an `Alignment` object).
+returns *Python* objects (e.g. an `Alignment` object).
 
 The base class for all interfaces is the `Application` class. Each
 `Application` instance has a life cycle, starting with its creation and ending
@@ -20,7 +20,7 @@ calls the `start()` method, the app state is set to *RUNNING* and the
 app performs the calculations. When the application finishes the AppState
 changes to *FINISHED*. The user can now call the `join()` method,
 concluding the application in the *JOINED* state and making the results of the
-application accessible. Furthermore this may trigger cleanup actions in some
+application accessible. Furthermore, this may trigger cleanup actions in some
 applications. `join()` can even be called in the *RUNNING* state: This will
 constantly check if the application has finished and will directly go into
 the *JOINED* state as soon as the application reaches the *FINISHED* state.
@@ -35,8 +35,8 @@ diagram.
 
 The following sample code shows how an `Application` is generally executed.
 Pay attention to the space between the `run()` and `join()` method: Since these
-are separated functions, you can do some other stuff, while the `Application`
-runs in the background. Therefore an `Application` behaves effectively like an
+are separate functions, you can do some other stuff, while the `Application`
+runs in the background. Therefore, an `Application` behaves effectively like an
 additional thread.
 
 .. code-block:: python
@@ -92,16 +92,16 @@ Output:
    Hit name:  Chain A, Nmr Structure Of Trp-Cage Miniprotein Construct Tc5b
 
 This was too simple for BLAST: It just found the query sequence in the PDB.
-However, it gives a good impresseion about how this `Application` works.
+However, it gives a good impression about how this `Application` works.
 Besides some optional parameters, the `BlastWebApp` requires the BLAST
 program and the query sequence. After the app has finished, you get
 a list of alignments with descending score. An alignment is an instance of
-`BlastAligenment`, a subclass of `Alignment` in ``sequence.align``. It
+`BlastAlignment`, a subclass of `Alignment` in ``sequence.align``. It
 contains some additional information as shown above. The hit UID can be used
 to obtain the complete hit sequence via ``database.entrez``. 
 
 The next alignment should be a bit more challenging. We take a random part of
-the *E. coli* BL21 genome and distort it a little bit. Since we expect still a
+the *E. coli* BL21 genome and distort it a little bit. Since we still expect a
 high similarity to the original sequence, we decrease the E-value threshold.
 
 .. code-block:: python

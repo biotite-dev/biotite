@@ -22,7 +22,7 @@ so you can just load it via the ``structure.io`` package.
 
 Often you just need a file temporarily for loading it into your script. In this
 case the `Biopython` temporary directory is recommended. The temporary
-directory will be present as long as the script is running. Afterwards the
+directory will be present as long as the script is running. Afterwards, the
 directory is automatically deleted.
 
 .. code-block:: python
@@ -30,15 +30,15 @@ directory is automatically deleted.
    import biopython
    file_path = rcsb.fetch("1l2y", "cif", biopython.temp_dir())
 
-In case you want to dowload multiple files, you are able to specify a list
+In case you want to download multiple files, you are able to specify a list
 of PDB IDs, which in return gives you a list of file_paths.
 
 .. code-block:: python
 
    file_paths = rcsb.fetch(["1l2y", "3o5r], "cif", biopython.temp_dir())
 
-By default `fetch()` checks wether the file to be fetched already exists
-in the directory, and does download it if it does not exist yet. If you want to
+By default `fetch()` checks whether the file to be fetched already exists
+in the directory, and downloads it if it does not exist yet. If you want to
 download files irrespectively, set `overwrite` to true.
 
 .. code-block:: python
@@ -46,7 +46,7 @@ download files irrespectively, set `overwrite` to true.
    file_path = rcsb.fetch("1l2y", "cif", "path/to/directory", overwrite=True)
 
 Another feature is the search ability, which interfaces RCSB's SEARCH service.
-At first you have to create `Query` object for the property you want to filer.
+At first you have to create `Query` object for the property you want to filter.
 The `search()` method takes the `Query` and returns a list of PDB IDs, which
 itself can be used as inpt for `fetch()`.
 
