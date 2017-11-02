@@ -198,7 +198,7 @@ todo_include_todos = False
 
 html_theme = "alabaster"
 html_static_path = ["static"]
-html_favicon = "static/assets/general/biopython_icon_32p.png"
+#html_favicon = "static/assets/general/biopython_icon_32p.png"
 htmlhelp_basename = "BiopythonDoc"
 html_sidebars = {"**": ["about.html",
                         #"localtoc.html",
@@ -208,8 +208,9 @@ html_sidebars = {"**": ["about.html",
                         "donate.html"]}
 html_theme_options = {
     "description"      : "A set of general tools "
-                         "for computational biology",
-    "logo"             : "assets/general/biopython_logo_xs.png",
+                         "for computational biology\n"
+                         "(UNOFFICIAL)",
+    #"logo"             : "assets/general/biopython_logo_xs.png",
     "logo_name"        : "false",
     "github_user"      : "padix-key",
     "github_repo"      : "biopython2",
