@@ -1,5 +1,5 @@
-Development guidelines
-======================
+Development guide
+=================
 
 Writing code
 ------------

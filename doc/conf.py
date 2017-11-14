@@ -212,9 +212,6 @@ html_theme_options = {
     "github_user"      : "padix-key",
     "github_repo"      : "biotite",
     "github_banner"    : "true",
-    "extra_nav_links"  : {"Overview" : "index.html",
-                          "Tutorial" : "tutorial/index.html",
-                          "API Reference" : "apidoc/biotite.html"},
     "page_width"       : "85%",
     "fixed_sidebar"    : "true"
     
