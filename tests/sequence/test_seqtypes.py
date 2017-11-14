@@ -3,7 +3,7 @@
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
 import unittest
-import biopython.sequence as seq
+import biotite.sequence as seq
 import numpy as np
 import pytest
 

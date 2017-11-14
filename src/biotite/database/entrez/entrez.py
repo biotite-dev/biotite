@@ -164,7 +164,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         if not os.path.isfile(file_name) or overwrite == True:
             r = requests.get((_base_url + _fetch_url)
                              .format(db_name, id, ret_type, ret_mode,
-                                     "BiopythonClient", mail))
+                                     "BiotiteClient", mail))
             content = r.text
             if content.startswith(" Error"):
                 raise ValueError(content[8:])
@@ -219,7 +219,7 @@ def fetch_single_file(uids, file_name,
     uid_list_str = uid_list_str[:-1]
     r = requests.get((_base_url + _fetch_url)
                      .format(db_name, uid_list_str, ret_type, ret_mode,
-                             "BiopythonClient", mail))
+                             "BiotiteClient", mail))
     content = r.text
     with open(file_name, "w+") as f:
         f.write(content)

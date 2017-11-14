@@ -2,10 +2,10 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython.structure as struc
-import biopython.structure.io.pdb as pdb
-import biopython.structure.io.pdbx as pdbx
-import biopython.database.rcsb as rcsb
+import biotite.structure as struc
+import biotite.structure.io.pdb as pdb
+import biotite.structure.io.pdbx as pdbx
+import biotite.database.rcsb as rcsb
 import numpy as np
 import glob
 from os.path import join

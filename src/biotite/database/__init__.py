@@ -10,6 +10,6 @@ arguments (e.g. PDB ID) into the specified directory. The return value
 is the downloaded file name or a list of file names respectively.
 
 If the file is only needed temporarily, they can be stored in a
-temporary directory by using `biopython.temp_dir()` or
-`biopython.temp_file()` as path name.
+temporary directory by using `biotite.temp_dir()` or
+`biotite.temp_file()` as path name.
 """

@@ -2,8 +2,8 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython.sequence as seq
-import biopython.application.muscle as muscle
+import biotite.sequence as seq
+import biotite.application.muscle as muscle
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest

@@ -210,7 +210,7 @@ class BlastWebApp(WebApp):
     
     def run(self):
         param_dict = {}
-        param_dict["tool"] = "BiopythonClient"
+        param_dict["tool"] = "BiotiteClient"
         if self._mail is not None:
             param_dict["email"] = self._mail
         param_dict["CMD"] = "Put"
@@ -267,7 +267,7 @@ class BlastWebApp(WebApp):
     
     def evaluate(self):
         param_dict = {}
-        param_dict["tool"] = "BiopythonClient"
+        param_dict["tool"] = "BiotiteClient"
         if self._mail is not None:
             param_dict["email"] = self._mail
         param_dict["CMD"] = "Get"

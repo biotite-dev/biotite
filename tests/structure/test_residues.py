@@ -2,8 +2,8 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython.structure as struc
-import biopython.structure.io.npz as npz
+import biotite.structure as struc
+import biotite.structure.io.npz as npz
 import numpy as np
 from os.path import join
 from .util import data_dir

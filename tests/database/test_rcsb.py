@@ -2,9 +2,9 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython
-import biopython.database.rcsb as rcsb
-import biopython.structure.io as strucio
+import biotite
+import biotite.database.rcsb as rcsb
+import biotite.structure.io as strucio
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
@@ -12,18 +12,18 @@ import pytest
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_cif():
-    file = rcsb.fetch("1l2y", "cif", biopython.temp_dir(), overwrite=True)
+    file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
     array = strucio.get_structure_from(file)
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_pdb():
-    file = rcsb.fetch("1l2y", "cif", biopython.temp_dir(), overwrite=True)
+    file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
     array = strucio.get_structure_from(file)
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_invalid():
     with pytest.raises(ValueError):
-        file = rcsb.fetch("xxxx", "cif", biopython.temp_dir(), overwrite=True)
+        file = rcsb.fetch("xxxx", "cif", biotite.temp_dir(), overwrite=True)
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_search():

@@ -12,7 +12,7 @@ __all__ = ["NpzFile"]
 class NpzFile(File):
     """
     This class represents a NPZ file, the preferable format for
-    Biopython internal structure storage. 
+    Biotite internal structure storage. 
     
     Internally the this class writes/reads all attribute arrays of an
     `AtomArray` or `AtomArrayStack` using the `numpy` `save()`/`load()`

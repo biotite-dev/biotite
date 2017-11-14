@@ -65,10 +65,10 @@ class PDBxFile(TextFile):
     
         >>> arr = get_structure(file)
         >>> print(type(arr))
-        <class 'biopython.structure.atoms.AtomArrayStack'>
+        <class 'biotite.structure.atoms.AtomArrayStack'>
         >>> arr = get_structure(file, model=1)
         >>> print(type(arr))
-        <class 'biopython.structure.atoms.AtomArray'>
+        <class 'biotite.structure.atoms.AtomArray'>
     
     Modify atom array and write it back into the file:
     

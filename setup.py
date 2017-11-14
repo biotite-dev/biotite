@@ -6,7 +6,7 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
 import sys
 import shlex
-from src.biopython import __version__
+from src.biotite import __version__
 
 release = __version__
 
@@ -19,14 +19,14 @@ else:
     from Cython.Build import cythonize
     try:
         ext_modules = cythonize(
-            [Extension("biopython.sequence.align.calign",
-                ["src/biopython/sequence/align/calign.pyx"]
+            [Extension("biotite.sequence.align.calign",
+                ["src/biotite/sequence/align/calign.pyx"]
              ),
-             Extension("biopython.structure.io.pdbx.cprocessloop",
-                ["src/biopython/structure/io/pdbx/cprocessloop.pyx"]
+             Extension("biotite.structure.io.pdbx.cprocessloop",
+                ["src/biotite/structure/io/pdbx/cprocessloop.pyx"]
              ),
-             Extension("biopython.cextensions",
-                ["src/biopython/cextensions.pyx"]
+             Extension("biotite.cextensions",
+                ["src/biotite/cextensions.pyx"]
              )]
         )
     except ValueError:
@@ -49,11 +49,11 @@ class PyTestCommand(TestCommand):
         sys.exit(errno)
 
 
-setup(name="biopython",
+setup(name="biotite",
     version = release,
     description = "A set of general tools for computational biology",
-    author = "The Biopython contributors",
-    url = "https://github.com/padix-key/biopython2",
+    author = "The Biotite contributors",
+    url = "https://github.com/padix-key/biotite",
     
     zip_safe = False,
     packages = find_packages("src"),
@@ -62,7 +62,7 @@ setup(name="biopython",
     ext_modules = ext_modules,
     
     # Including substitution matrix data
-    package_data = {"biopython.sequence.align" : ["matrix_data/*.mat"]},
+    package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"]},
     
     install_requires = ["requests",
                         "numpy",
