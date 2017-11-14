@@ -30,9 +30,10 @@ types.
 """
 
 
-if "sdist" in sys.argv:
+if "sdist" in sys.argv or "install" in sys.argv:
     # Source distributions do not have extension modules
     # and therefore are using not C-accelerated functions
+    # Simple 'install' command uses source distribution
     ext_modules = None
 else:
     from Cython.Build import cythonize
