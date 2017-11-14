@@ -30,7 +30,7 @@ types.
 """
 
 
-if "sdist" in sys.argv or "install" in sys.argv:
+if "sdist" in sys.argv:
     # Source distributions do not have extension modules
     # and therefore are using not C-accelerated functions
     # Simple 'install' command uses source distribution
@@ -85,7 +85,6 @@ setup(
         "Natural Language :: English",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
@@ -106,7 +105,7 @@ setup(
                         "scipy",
                         "matplotlib"],
     extras_require = {'trajectory':  ["mdtraj"]},
-    python_requires = ">=3.5",
+    python_requires = ">=3.6",
     
     cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],
