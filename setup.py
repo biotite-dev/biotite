@@ -51,7 +51,7 @@ class PyTestCommand(TestCommand):
 
 setup(name="biotite",
     version = release,
-    description = "A set of general tools for computational biology",
+    description = "A general framework for computational biology",
     author = "The Biotite contributors",
     url = "https://github.com/padix-key/biotite",
     

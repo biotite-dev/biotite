@@ -206,8 +206,7 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "donate.html"]}
 html_theme_options = {
-    "description"      : "A set of general tools "
-                         "for computational biology\n",
+    "description"      : "A general framework for computational biology",
     "logo"             : "assets/general/biotite_logo_s.png",
     "logo_name"        : "false",
     "github_user"      : "padix-key",
