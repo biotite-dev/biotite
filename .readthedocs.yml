@@ -1,6 +1,0 @@
-formats:
-    - none
-python:
-    version: 3.5
-    extra_requirements:
-        - trajectory
