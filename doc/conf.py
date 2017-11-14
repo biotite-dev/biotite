@@ -209,7 +209,7 @@ html_theme_options = {
     "description"      : "A general framework for computational biology",
     "logo"             : "assets/general/biotite_logo_s.png",
     "logo_name"        : "false",
-    "github_user"      : "padix-key",
+    "github_user"      : "biotite-dev",
     "github_repo"      : "biotite",
     "github_banner"    : "true",
     "page_width"       : "85%",
