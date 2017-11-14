@@ -1,4 +1,4 @@
-# Ignore the sample file for tests without Biopython installation
+# Ignore the sample file for tests without Biotite installation
 /test.py
 
 # Ignore the distribution directories
@@ -27,7 +27,7 @@ htmlcov
 *.py-e
 
 # Ignore potential directory created during install
-biopython.egg-info
+biotite.egg-info
 
 # Ignore IntelliJ IDEA directory and project files
 .idea
