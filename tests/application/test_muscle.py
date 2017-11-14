@@ -14,11 +14,15 @@ import shutil
 @pytest.mark.skipif(shutil.which("muscle") is None,
                     reason="MUSCLE is not installed")
 def test_muscle():
-    seq1 = seq.ProteinSequence("BIQPYTHQN")
-    seq2 = seq.ProteinSequence("PYLQN")
-    seq3 = seq.ProteinSequence("BIQPSY")
-    app = muscle.MuscleApp([seq1, seq2, seq3], bin_path="muscle")
+    seq1 = seq.ProteinSequence("BIQTITE")
+    seq2 = seq.ProteinSequence("TITANITE")
+    seq3 = seq.ProteinSequence("BISMITE")
+    seq4 = seq.ProteinSequence("IQLITE")
+    app = muscle.MuscleApp([seq1, seq2, seq3, seq4], bin_path="muscle")
     app.start()
     app.join()
     alignment = app.get_alignment()
-    assert str(alignment) == "BIQPYTHQN\n---PYL-QN\nBIQPSY---"
+    assert str(alignment) == ("BIQT-ITE\n"
+                              "TITANITE\n"
+                              "BISM-ITE\n"
+                              "-IQL-ITE")
