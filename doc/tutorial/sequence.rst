@@ -1,12 +1,12 @@
 From A to T - The Sequence subpackage
 -------------------------------------
 
-``sequence`` is a *Biopython* subpackage concerning maybe the most popular
+``sequence`` is a *Biotite* subpackage concerning maybe the most popular
 in computational biology: sequences. The instantiation can be quite simple as:
 
 .. code-block:: python
 
-   >>> import biopython.sequence as seq
+   >>> import biotite.sequence as seq
    >>> dna = seq.NucleotideSequence("AACTGCTA")
    >>> print(dna)
    AACTGCTA
@@ -16,7 +16,7 @@ base class `Sequence`. A `NucleotideSequence` accepts a list of strings,
 where each string can be 'A', 'C', 'G' or 'T'. Each of these letters is called
 a *symbol*.
 
-In general the sequence implementation in *Biopython* allows for
+In general the sequence implementation in *Biotite* allows for
 *Sequences of anything*. This means any (immutable an hashable) *Python* object
 can be used as a symbol in a `Sequence`, as long as the object is part of the
 `Alphabet` of the particular `Sequence`. An `Alphabet` object simply represents
@@ -75,7 +75,7 @@ with 'T'.
 
 .. code-block:: python
 
-   import biopython.sequence as seq
+   import biotite.sequence as seq
    # Create a nucleotide sequence using a string
    # The constructor can take any iterable object (e.g. a list of symbols)
    seq1 = seq.NucleotideSequence("ACCGTATCAAG")
@@ -115,7 +115,7 @@ codon tables, 3 letter to single letter translation (and vice versa) and more.
 
 .. code-block:: python
 
-   seq1 = seq.ProteinSequence("BIQPYTHQN")
+   seq1 = seq.ProteinSequence("BIQTITE")
    print("-".join([seq.ProteinSequence.convert_letter_1to3(symbol)
                    for symbol in seq1]))
 
@@ -123,7 +123,7 @@ Output:
 
 .. code-block:: none
 
-   ASX-ILE-GLN-PRO-TYR-THR-HIS-GLN-ASN
+   ASX-ILE-GLN-THR-ILE-THR-GLU
 
 A `NucleotideSequence` can be translated into a `ProteinSequence` via the
 `translate()` method. By default, the method searches for open reading frames
@@ -159,13 +159,13 @@ codon table or custom start codons.
 Loading sequences from file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Biopython* enables the user to load and save sequences from/to the popular
+*Biotite* enables the user to load and save sequences from/to the popular
 FASTA format. A FASTA file may contain multiple sequences. Each sequence entry
 starts with a line with a leading '>' and a trailing header name. The
 corresponding sequence is specified in the following lines until the next
 header or end of file. Since every sequence has its obligatory header, a FASTA
 file is predestinated to be implemented as some kind of dictionary. This is
-exactly what has been done in *Biopython*: The header strings (without the '>')
+exactly what has been done in *Biotite*: The header strings (without the '>')
 are used as keys to access the sequence string. Actually you can cast the
 `FastaFile` object into a `dict`.
 Let's demonstrate this on the genome of *Escherichia coli* BL21(DE3)
@@ -174,8 +174,8 @@ database, we can load the contents in the following way:
 
 .. code-block:: python
 
-   import biopython.sequence as seq
-   import biopython.sequence.io.fasta as fasta
+   import biotite.sequence as seq
+   import biotite.sequence.io.fasta as fasta
    file = FastaFile()
    file.read("tests/sequence/data/ec_bl21.fasta")
    for header, string in file:
@@ -247,7 +247,7 @@ symbol:
 
 .. code-block:: python
 
-   import biopython.sequence as seq
+   import biotite.sequence as seq
    main_seq = seq.NucleotideSequence("ACCGTATCAAGTATTG")
    sub_seq = seq.NucleotideSequence("TAT")
    print(seq.find_subsequence(main_seq, sub_seq))
@@ -293,8 +293,8 @@ a `SubstitutionMatrix`, in our case for protein sequence alignments:
 
 .. code-block:: python
 
-   import biopython.sequence as seq
-   import biopython.sequence.align as align
+   import biotite.sequence as seq
+   import biotite.sequence.align as align
    import numpy as np
    alph = seq.ProteinSequence.alphabet
    # Load the standard protein substitution matrix, which is BLOSUM62
@@ -317,8 +317,8 @@ For our protein alignment we will use the standard *BLOSUM62* matrix.
 
 .. code-block:: python
 
-   seq1 = seq.ProteinSequence("BIQPYTHQN")
-   seq2 = seq.ProteinSequence("PYLQN")
+   seq1 = seq.ProteinSequence("BIQTITE")
+   seq2 = seq.ProteinSequence("IQLITE")
    matrix = align.SubstitutionMatrix.std_protein_matrix()
    print("Global alignment")
    alignments = align.align_optimal(seq1, seq2, matrix, local=False)
@@ -334,11 +334,11 @@ Output:
 .. code-block:: none
 
    Global alignment
-   BIQPYTHQN
-   ---PYL-QN
+   BIQTITE
+   -IQLITE
    Local alignment
-   PYTHQN
-   PYL-QN
+   IQTITE
+   IQLITE
 
 The alignment functions return a list of `Alignment` objects. This object saves
 the input sequences together with the indices (so called trace) in these

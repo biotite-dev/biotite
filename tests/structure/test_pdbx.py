@@ -1,12 +1,11 @@
 # Copyright 2017 Patrick Kunzmann.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+# This source code is part of the Biotite package and is distributed under the
+# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython.structure as struc
-import biopython.structure.io.pdbx as pdbx
-import biopython.database.rcsb as rcsb
-import biopython
+import biotite.structure as struc
+import biotite.structure.io.pdbx as pdbx
+import biotite.database.rcsb as rcsb
+import biotite
 import itertools
 import numpy as np
 import glob
@@ -22,12 +21,12 @@ import pytest
                          ))
 def test_conversion(path, is_stack, use_c_ext):
     if use_c_ext:
-        if biopython.has_c_extensions():
-            biopython.enable_c_extensions(True)
+        if biotite.has_c_extensions():
+            biotite.enable_c_extensions(True)
         else:
             return
     else:
-        biopython.enable_c_extensions(False)
+        biotite.enable_c_extensions(False)
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
     if is_stack:

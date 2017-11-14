@@ -1,31 +1,25 @@
-Biopython 2.0 documentation
-===========================
+Biotite documentation
+=====================
 
+The Biotite package bundles popular tools in computational biology into an
+unifying framework. It offers file I/O operations, analyses and manipulations
+for biological sequence and structure data. Furthermore, the package provides
+interfaces for popular biological databases and external software.
 
-The Biopython package provides a general set of tool for computational biology.
+The internal structure and sequence representations are based on *NumPy*
+`ndarrays`, taking the advantage of C-accelerated operations. Time consuming
+operations that could not be vectorised are mostly implemented in *Cython* in
+order to achieve C-accelerations in those places, too.
 
-Biopython 2.0 is an effort to rewrite Biopython in order to bring it on to
-modern scientific Python standards. The improvements of Biopython 2.0 include:
-
-   - **Numpy integration:**
-     Structures, seqeunces, etc. rely on `numpy ndarrays`, which offers
-     convenient data handling and C-accelerated operations.
-   - **Restructured packages:**
-     Instead of a bulk of partly incoherent packages, the package structure
-     and naming in Biopython 2.0 is clear and harmonized.
-   - **Usage of numpydoc:**
-     Biopython 2.0 uses numpydoc for all of its classes and functions.
-   - **Removal of deprecated subpackages:**
-     A lot of modules in Biopython 1.x are not up to data any more.
-     Since Biopython 2.0 is almost a full rewrite, there are no outdated
-     packages.
-   - **New functionality:**
-     Last but not least Biopython 2.0 adds functionality that is not included
-     in the original Biopython distribution.
+Additionally the package aims for simple usability and extensibility: The
+objects representing structures and sequences can be indexed and scliced like
+an `ndarray`. Even the actual internal `ndarrays` are easily accessible
+allowing advanced users to implement their own algorithms upon the existing
+types.
 
 Subpackages
 -----------
-Biopython 2.0 currently consists of 4 subpackages:
+Biotite currently consists of 4 subpackages:
 
 Sequence
 """"""""
@@ -40,7 +34,7 @@ Structure
 """""""""
 The ``structure`` subpackage enables handling of 3D structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their properties,
-based on `numpy` arrays. The subpackage includes read/write functionality for
+based on `ndarrays`. The subpackage includes read/write functionality for
 different formats, structure filters, coordinate transformations, angle and
 bond measurements, accessible surface area calculation, structure
 superimposition and more.

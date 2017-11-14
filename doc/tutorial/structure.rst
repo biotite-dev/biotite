@@ -1,7 +1,7 @@
 Going 3D - The Structure subpackage
 -----------------------------------
    
-``structure`` is a *Biopython* subpackage for handling molecular structures.
+``structure`` is a *Biotite* subpackage for handling molecular structures.
 This subpackage enables efficient and easy handling of protein structure data
 by representing atom attributes in `numpy` `ndarrays`. These atom attributes
 include so called *annotations* (polypetide chain id, residue id, residue name,
@@ -29,7 +29,7 @@ Let's begin by constructing some atoms:
 
 .. code-block:: python
 
-   import biopython.structure as struc
+   import biotite.structure as struc
    atom1 = struc.Atom([0,0,0], chain_id="A", res_id=1, res_name="GLY",
                       hetero=False, atom_name="N", element="N")
    atom2 = struc.Atom([0,1,1], chain_id="A", res_id=1, res_name="GLY",
@@ -130,7 +130,7 @@ Output:
 Loading structures from file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Usually structures are not built from scratch using `Biopython`, but they are
+Usually structures are not built from scratch using *Biotite*, but they are
 read from a file. Probably the most popular one is the *PDB* format. For our
 purpose, we will work on a protein structure as small as possible, namely
 the miniprotein *TC5b* (PDB: 1L2Y). The structure of this 20-residue protein
@@ -141,7 +141,7 @@ At first we load the structure from a PDB file:
 
 .. code-block:: python
    
-   import biopython.structure.io.pdb as pdb
+   import biotite.structure.io.pdb as pdb
    file = pdb.PDBFile()
    file.read("path/to/1l2y.pdb")
    tc5b = file.get_structure()
@@ -172,13 +172,13 @@ from PDB files, yet. This is a good place to mention that it is recommended to
 use the modern PDBx/mmCIF format in favor of the PDB format. It solves
 limitations of the PDB format, that arise from the column restrictions.
 Furthermore, much more additional information is stored in these files.
-In contrast to PDB files, *Biopython* can read the entire content of PDBx/mmCIF
+In contrast to PDB files, *Biotite* can read the entire content of PDBx/mmCIF
 files, which can be accessed in a dictionary like manner.
 At first, we read the file similarily to before:
 
 .. code-block:: python
    
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
 
@@ -221,7 +221,7 @@ convert the *atom_site* category into an atom array/stack and vice versa.
 actually contains only a single model. If you would like to have an
 `AtomArray` instead, you have to specifiy the `model` parameter.
 
-For *Biopython* internal storage of structures *npz* files are recommended.
+For *Biotite* internal storage of structures *npz* files are recommended.
 These are simply binary files, that are used by `numpy`. In case of atom arrays
 and stacks, the annotation arrays and coordinates are written/read to/from
 *npz* files via the `NpzFile` class. Since no expensive data conversion has
@@ -236,7 +236,7 @@ uses the appropriate `File` class, depending on the file format.
 
 .. code-block:: python
    
-   import biopython.structure.io as strucio
+   import biotite.structure.io as strucio
    stack_from_cif = strucio.get_structure_from("path/to/1l2y.cif")
    stack_from_pdb = strucio.get_structure_from("path/to/1l2y.pdb")
    print("Are both stacks equal?", stack_from_cif == stack_from_pdb)
@@ -250,7 +250,7 @@ Output:
 Reading trajectory files
 """"""""""""""""""""""""
 
-If the package `MDtraj` is installed *Biopython* provides a read/write
+If the package `MDtraj` is installed *Biotite* provides a read/write
 interface for different trajectory file formats. More information can be found
 in the API reference.
 
@@ -270,8 +270,8 @@ Let's demonstrate indexing with the help of the structure of *TC5b*.
 
 .. code-block:: python
    
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    stack = pdbx.get_structure(file)
@@ -364,7 +364,7 @@ Structure analysis
 ^^^^^^^^^^^^^^^^^^
 
 This package would be almost useless, if there wasn't some means to analyze
-your structures. Therefore, *Biopython* offers a bunch of functions for this
+your structures. Therefore, *Biotite* offers a bunch of functions for this
 purpose, reaching from simple bond angle and length measurements to more
 complex characteristics, like accessible surface area and secondary structure.
 The following section will introduce you to some of these functions, which
@@ -382,8 +382,8 @@ atom distances of CA atoms:
 
 .. code-block:: python
    
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    stack = pdbx.get_structure(file)
@@ -464,8 +464,8 @@ and create a Ramachandran plot for the first frame of *TC5b*.
    
    import matplotlib.pyplot as plt
    import numpy as np
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    array = pdbx.get_structure(file, model=1)
@@ -498,8 +498,8 @@ a reference model (we choose the first model), which minimizes the
    
    import matplotlib.pyplot as plt
    import numpy as np
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    stack = pdbx.get_structure(file)
@@ -558,8 +558,8 @@ every single atom (including hydrogens), hence we use the *Single* set.
    
    import matplotlib.pyplot as plt
    import numpy as np
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    array = pdbx.get_structure(file, model=1)
@@ -582,13 +582,13 @@ Output:
 Secondary structure determination
 """""""""""""""""""""""""""""""""
 
-Biopython can also be used to assign *secondary structure elements* (SSE) to
+*Biotite* can also be used to assign *secondary structure elements* (SSE) to
 a structure:
 
 .. code-block:: python
    
-   import biopython.structure as struc
-   import biopython.structure.io.pdbx as pdbx
+   import biotite.structure as struc
+   import biotite.structure.io.pdbx as pdbx
    file = pdbx.PDBxFile()
    file.read("path/to/1l2y.cif")
    array = pdbx.get_structure(file, model=1)

@@ -15,27 +15,27 @@ so you can just load it via the ``structure.io`` package.
 
 .. code-block:: python
 
-   import biopython.database.rcsb as rcsb
-   import biopython.structure.io as strucio
+   import biotite.database.rcsb as rcsb
+   import biotite.structure.io as strucio
    file_path = rcsb.fetch("1l2y", "cif", "path/to/directory")
    atom_array = strucio.get_structure_from(file_path)
 
 Often you just need a file temporarily for loading it into your script. In this
-case the `Biopython` temporary directory is recommended. The temporary
+case the *Biotite* temporary directory is recommended. The temporary
 directory will be present as long as the script is running. Afterwards, the
 directory is automatically deleted.
 
 .. code-block:: python
 
-   import biopython
-   file_path = rcsb.fetch("1l2y", "cif", biopython.temp_dir())
+   import biotite
+   file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
 
 In case you want to download multiple files, you are able to specify a list
 of PDB IDs, which in return gives you a list of file_paths.
 
 .. code-block:: python
 
-   file_paths = rcsb.fetch(["1l2y", "3o5r], "cif", biopython.temp_dir())
+   file_paths = rcsb.fetch(["1l2y", "3o5r], "cif", biotite.temp_dir())
 
 By default `fetch()` checks whether the file to be fetched already exists
 in the directory, and downloads it if it does not exist yet. If you want to
@@ -89,10 +89,10 @@ we have to provide the database specific UIDs instead of PDB IDs:
 
 .. code-block:: python
    
-   import biopython.database.entrez as entrez
-   import biopython.sequence.io.fasta as fasta
-   import biopython
-   files = entrez.fetch(["1L2Y_A","3O5R_A"], biopython.temp_dir(), suffix="fa",
+   import biotite.database.entrez as entrez
+   import biotite.sequence.io.fasta as fasta
+   import biotite
+   files = entrez.fetch(["1L2Y_A","3O5R_A"], biotite.temp_dir(), suffix="fa",
                  db_name="protein", ret_type="fasta")
    for file in files:
        fasta_file = fasta.FastaFile()
@@ -109,5 +109,5 @@ file. This is achieved with the `fetch_single_file()` function.
 .. code-block:: python
    
    file = entrez.fetch_single_file(["1L2Y_A","3O5R_A"],
-                                   biopython.temp_file("sequences.fa"),
+                                   biotite.temp_file("sequences.fa"),
                                    db_name="protein", ret_type="fasta")
