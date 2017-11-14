@@ -9,6 +9,3 @@ unifying framework, which is easy to use on the one hand side, but is also
 computationally efficient due to intensive usage *NumPy* and
 *Cython*.  This package focuses on working with sequence and structure data and
 supports various file formats and analysis and manipulation functions.
-
-More information on this project can be found on the
-`offical website <https://pythonhosted.org/biotite/>`_.
