@@ -1,7 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+# This source code is part of the Biotite package and is distributed under the
+# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
 import biopython.structure as struc
 import biopython.structure.io.npz as npz
