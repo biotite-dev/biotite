@@ -63,9 +63,9 @@ setup(
     url = "https://github.com/padix-key/biotite",
     license = "BSD 3-Clause",
     classifiers = (
-        "Development Status :: 3 - Alpha"
-        "Intended Audience :: Developers"
-        "Intended Audience :: Science/Research"
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: Microsoft :: Windows",
@@ -90,8 +90,8 @@ setup(
                         "numpy",
                         "scipy",
                         "matplotlib"],
-    extras_require = {'trajectory':  ["mdtraj"],
-    },
+    extras_require = {'trajectory':  ["mdtraj"]},
+    python_requires = ">=3.5",
     
     cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],
