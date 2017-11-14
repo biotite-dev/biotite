@@ -6,9 +6,14 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
 import sys
 import shlex
+from os.path import join, abspath, dirname
 from src.biotite import __version__
 
 release = __version__
+
+long_description = ""
+with open(join(abspath(dirname(__file__)), "doc/introduction.rst"), "r") as f:
+    long_description = f.read()
 
 
 if "sdist" in sys.argv:
@@ -49,11 +54,28 @@ class PyTestCommand(TestCommand):
         sys.exit(errno)
 
 
-setup(name="biotite",
+setup(
+    name="biotite",
     version = release,
     description = "A general framework for computational biology",
+    long_description = long_description,
     author = "The Biotite contributors",
     url = "https://github.com/padix-key/biotite",
+    license = "BSD 3-Clause",
+    classifiers = (
+        "Development Status :: 3 - Alpha"
+        "Intended Audience :: Developers"
+        "Intended Audience :: Science/Research"
+        "License :: OSI Approved :: BSD License",
+        "Natural Language :: English",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+    ),
     
     zip_safe = False,
     packages = find_packages("src"),
