@@ -1,7 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+# This source code is part of the Biotite package and is distributed under the
+# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
 from os.path import realpath, dirname, join, isdir
 from os import listdir, makedirs
@@ -22,8 +21,8 @@ def create_api_doc(src_path, doc_path):
     if isdir(doc_path):
         shutil.rmtree(doc_path)
     makedirs(doc_path)
-    package_list = _create_package_doc("biopython",
-                                       join(src_path, "biopython"),
+    package_list = _create_package_doc("biotite",
+                                       join(src_path, "biotite"),
                                        doc_path)
     create_package_index(doc_path, package_list)
 
@@ -183,9 +182,8 @@ templates_path = ["templates"]
 source_suffix = [".rst"]
 master_doc = "index"
 
-project = "Biopython"
-copyright = "2017, Patrick Kunzmann"
-author = "Patrick Kunzmann"
+project = "Biotite"
+copyright = "2017, the Biotite contributors"
 version = "2.0"
 
 exclude_patterns = ["build"]
@@ -199,9 +197,8 @@ todo_include_todos = False
 
 html_theme = "alabaster"
 html_static_path = ["static"]
-#html_logo = "static/assets/general/biopython_logo_xs.png"
-html_favicon = "static/assets/general/biopython_icon_32p.png"
-htmlhelp_basename = "BiopythonDoc"
+html_favicon = "static/assets/general/biotite_icon_32p.png"
+htmlhelp_basename = "BiotiteDoc"
 html_sidebars = {"**": ["about.html",
                         #"localtoc.html",
                         "navigation.html",
@@ -209,26 +206,14 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "donate.html"]}
 html_theme_options = {
-    "description"      : "A set of general tools "
-                         "for computational biology",
-    "logo"             : "assets/general/biopython_logo_xs.png",
+    "description"      : "A general framework for computational biology",
+    "logo"             : "assets/general/biotite_logo_s.png",
     "logo_name"        : "false",
-    "github_user"      : "padix-key",
-    "github_repo"      : "biopython2",
+    "github_user"      : "biotite-dev",
+    "github_repo"      : "biotite",
     "github_banner"    : "true",
-    "extra_nav_links"  : {"Overview" : "index.html",
-                          "Tutorial" : "tutorial/index.html",
-                          "API Reference" : "apidoc/biopython.html"},
     "page_width"       : "85%",
     "fixed_sidebar"    : "true"
     
 }
-
-##### LaTeX #####
-
-latex_elements = {}
-latex_documents = [
-    (master_doc, "Biopython.tex", "Biopython Documentation",
-     "Patrick Kunzmann", "manual"),
-]
 

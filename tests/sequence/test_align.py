@@ -1,11 +1,10 @@
 # Copyright 2017 Patrick Kunzmann.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+# This source code is part of the Biotite package and is distributed under the
+# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import biopython.sequence as seq
-import biopython.sequence.align as align
-import biopython
+import biotite.sequence as seq
+import biotite.sequence.align as align
+import biotite
 import numpy as np
 import pytest
 
@@ -52,12 +51,12 @@ align_param = [(c_ext, local, gap_penalty, input1, input2, expect)
 def test_align_optimal(use_c_ext, local, gap_penalty,
                        input1, input2, expect):
     if use_c_ext:
-        if biopython.has_c_extensions():
-            biopython.enable_c_extensions(True)
+        if biotite.has_c_extensions():
+            biotite.enable_c_extensions(True)
         else:
             return
     else:
-        biopython.enable_c_extensions(False)
+        biotite.enable_c_extensions(False)
     seq1 = seq.NucleotideSequence(input1)
     seq2 = seq.NucleotideSequence(input2)
     alignments = align.align_optimal(seq1, seq2,

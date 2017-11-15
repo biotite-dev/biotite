@@ -1,7 +1,7 @@
 Outsourcing - The Application subpackage
 ----------------------------------------
 
-Although you can achieve a lot with *Biopython*, there are still a lot of
+Although you can achieve a lot with *Biotite*, there are still a lot of
 things which are not implemented in this *Python* package. But wait, this is
 what the ``application`` package is for: It contains interfaces for popular
 external software. This ranges from locally installed software to tools
@@ -60,8 +60,8 @@ homologous sequences to the miniprotein *TC5b*:
 
 .. code-block:: python
    
-   import src.biopython.application.blast as blast
-   import src.biopython.sequence as seq
+   import src.biotite.application.blast as blast
+   import src.biotite.sequence as seq
    tc5b_seq = seq.ProteinSequence("NLYIQWLKDGGPSSGRPPPS")
    app = blast.BlastWebApp("blastp", tc5b_seq)
    app.start()
@@ -106,8 +106,8 @@ high similarity to the original sequence, we decrease the E-value threshold.
 
 .. code-block:: python
    
-   import src.biopython.application.blast as blast
-   import src.biopython.sequence as seq
+   import src.biotite.application.blast as blast
+   import src.biotite.sequence as seq
    bl21_seq = seq.NucleotideSequence(
        "CGGAAGCGCTCGGTCTCCTGGCCTTATCAGCCACTGCGCGACGATATGCTCGTCCGTTTCGAAGA"
    )
@@ -155,12 +155,13 @@ sequences you want to have aligned, run the application and get the resulting
 
 .. code-block:: python
 
-   import src.biopython.application.muscle as muscle
-   import src.biopython.sequence as seq
-   seq1 = seq.ProteinSequence("BIQPYTHQN")
-   seq2 = seq.ProteinSequence("PYLQN")
-   seq3 = seq.ProteinSequence("BIQME")
-   app = muscle.MuscleApp([seq1, seq2, seq3], bin_path="muscle")
+   import src.biotite.application.muscle as muscle
+   import src.biotite.sequence as seq
+   seq1 = seq.ProteinSequence("BIQTITE")
+   seq2 = seq.ProteinSequence("TITANITE")
+   seq3 = seq.ProteinSequence("BISMITE")
+   seq4 = seq.ProteinSequence("IQLITE")
+   app = muscle.MuscleApp([seq1, seq2, seq3, seq4], bin_path="muscle")
    app.start()
    app.join()
    alignment = app.get_alignment()
@@ -170,9 +171,10 @@ Output:
 
 .. code-block:: none
 
-   BIQPYTHQN
-   ---PYL-QN
-   BIQ----ME
+   BIQT-ITE
+   TITANITE
+   BISM-ITE
+   -IQL-ITE
 
 As of now, this does only work with protein sequences.
 
