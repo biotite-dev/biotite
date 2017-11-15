@@ -1,7 +1,12 @@
-import biopython
+# Copyright 2017 Daniel Bauer.
+# This source code is part of the Biotite package and is distributed under the
+# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+
+
+import biotite
 import pytest
 
 
 def test_version_number():
-    version = biopython.__version__
-    assert hasattr(biopython, "__version__")
+    version = biotite.__version__
+    assert hasattr(biotite, "__version__")

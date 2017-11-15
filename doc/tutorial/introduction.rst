@@ -1,16 +1,16 @@
 Introduction
 ------------
 
-*Biopython* is a *Python* package for computational biologists. It aims to
+*Biotite* is a *Python* package for computational biologists. It aims to
 provide a broad set of tools for working with different kinds of biological
 data, from sequences to structures. On the one hand side, working with
-*Biopython* should be computationally efficient, with the help of powerful
-packages like `numpy` and `Cython`. On the other hand it aims for simple
+*Biotite* should be computationally efficient, with the help of the powerful
+packages *NumPy* and *Cython*. On the other hand it aims for simple
 usability and extensibility, so that beginners are not overwhelmed and advanced
 users can easily build upon the exisiting system to implement their own
 algorithms.
 
-*Biopython* provides 4 subpackages:
+*Biotite* provides 4 subpackages:
 The ``sequence`` subpackage contains functionality for working with sequence
 information of any kind. The package contains by default sequence types for
 nucleotides and proteins, but the alphabet-based implementation allows simple
