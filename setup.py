@@ -113,6 +113,6 @@ setup(
         'build_sphinx':
             {"source_dir" : ("setup.py", "./doc"),
              "build_dir"  : ("setup.py", "./doc/_build"),
-             "release"    : ("setup.py", "2.0a2")}
+             "release"    : ("setup.py", __version__)}
     }
 )
