@@ -5,43 +5,87 @@
 from ..features import *
 from .features import *
 from ..annotation import Location
+import copy
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-__all__ = ["RegionMap"]
+__all__ = ["draw_region_map", "get_default_map_style"]
 
 
-base_syle = {CDSFeature: draw_cds}
+default_style = {
+    "strandsize"        : 0.1,
+    "fontsize"          : 0.15,
+    "cds"               : {
+        "arrowcolor"        : "limegreen",
+        "fontcolor"         : "black"
+    },
+    "drawers"           : {
+        "CDSFeature"        : draw_cds,
+    },
+}
 
-class RegionMap():
+def get_default_map_style():
+    return copy.deepcopy(default_style)
+
+def draw_region_map(annotation, region, size, margin,
+                    dpi=96, spacing=0, bases_per_line=1000,
+                    style=default_style):
+    width = size[0]
+    height = size[1]
+    fig = plt.figure(figsize=(width/float(dpi), height/float(dpi)), dpi=dpi)
+    line_width = width - 2*margin[0]
+    line_height = height - 2*margin[1] - spacing
+    line_x = margin[0]
+    line_y = margin[1] + spacing/2
     
-    def __init__(self, axes):
-        self._ax = axes
-        self._ax.set_aspect("equal")
-        self._ax.axis('off')
-        self.set_size(10)
-        self.set_lim(0,10000)
+    # Draw strand marker
+    strand_height = line_height * style["strandsize"]
+    strand_marker_x = line_x
+    strand_marker_y = line_y - strand_height/2 + line_height/2
+    fig.patches.append(Rectangle(
+        (strand_marker_x, strand_marker_y), line_width, strand_height,
+        edgecolor="None", facecolor="gray", figure=fig
+    ))
     
-    def draw(self, annotation, style=base_syle, **kwargs):
-        self._ax.add_patch(Rectangle((0, self._size/2 - 25), 5000000, 50,
-                                     edgecolor="None", facecolor="gray"))
-        for feature in annotation:
+    # Draw Annotations
+    annotation = annotation[region[0]:region[1]]
+    region_first = region[0]
+    region_last = region[1]
+    region_span = region_last - region_first +1
+    width_per_base = line_width / region_span
+    for feature in annotation:
+        for loc in feature.get_location():
+            # Determine drawing area for feature location
+            feature_span = loc.last - loc.first +1
+            feature_x = line_x + (loc.first-region_first) * width_per_base
+            feature_y = line_y
+            feature_width = width_per_base * feature_span
+            feature_height = line_height
+            if feature_x < line_x:
+                # Prevent feature from drawing out of bounds (left)
+                diff = line_x - feature_x
+                feature_x += diff
+                feature_width -= diff
+            if feature_x + feature_width > line_x + line_width:
+                # Prevent feature from drawing out of bounds (right)
+                feature_width = line_width + line_x - feature_x (right)
+            # Determine the drawing direction
+            if loc.strand == Location.Strand.FORWARD:
+                direction = "right"
+            else:
+                direction = "left"
+            # Call feature specific draw function
             try:
-                draw_func = style[type(feature)]
+                draw_func = style["drawers"][type(feature).__name__]
             except KeyError:
                 raise ValueError("Invalid feature type '{:}'"
                                  .format(type(feature).__name__))
-            for loc in feature.get_location():
-                if loc.strand == Location.Strand.FORWARD:
-                    dir = "right"
-                else:
-                    dir = "left"
-                draw_func(self._ax, feature, x=loc.first-0.5, y=self._size/2,
-                          width=loc.last-loc.first+1, height=self._size,
-                          defect=loc.defect, dir = dir, **kwargs)
+            draw_func(fig, feature,
+                      feature_x, feature_y+feature_height/2,
+                      feature_width, feature_height,
+                      style["fontsize"]*feature_height, direction, style)
     
-    def set_lim(self, min, max):
-        self._ax.set_xlim(min, max)
-        
-    def set_size(self, size):
-        self._size = size
-        self._ax.set_ylim(0, size)
+    return fig
+
+

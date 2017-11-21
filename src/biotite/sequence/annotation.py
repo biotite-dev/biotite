@@ -5,6 +5,7 @@
 from .sequence import Sequence
 from ..copyable import Copyable
 import copy
+import sys
 from enum import Flag, Enum, auto
 
 __all__ = ["Feature", "Annotation", "AnnotatedSequence"]
@@ -55,6 +56,7 @@ class Feature(Copyable):
         return Feature(self._name, self._locs)
     
     def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
         for feature in self._subfeatures:
             clone._subfeatures.append(feature.copy())
     
@@ -88,11 +90,11 @@ class Annotation(object):
     def get_features(pos=None):
         return copy.copy(self._features)
     
-    def add_feature(feature):
+    def add_feature(self, feature):
         self._features.append(feature.copy())
         self._feature_dict[feature.get_name()] = feature
     
-    def del_feature(feature):
+    def del_feature(self, feature):
         self._features.remove(feature)
         del self._feature_dict[feature.get_name()]
     
@@ -117,9 +119,14 @@ class Annotation(object):
         if isinstance(index, str):
             # Usage as a dictionary
             return self._feature_dict[index]
-        elif isinstance(index, slice_index):
+        elif isinstance(index, slice):
             i_first = index.start
+            # If no start or stop index is given, include all
+            if i_first is None:
+                i_first = -sys.maxsize
             i_last = index.stop -1
+            if i_last is None:
+                i_last = sys.maxsize
             sub_annot = Annotation()
             for feature in self:
                 locs = feature.get_location()
@@ -128,6 +135,8 @@ class Annotation(object):
                 for loc in locs:
                     first = loc.first
                     last = loc.last
+                    # Always true for maxsize values
+                    # in case no start or stop index is given
                     if first <= i_last and last >= i_first:
                         in_scope = True
                     ### Handle defects ###

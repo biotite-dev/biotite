@@ -17,6 +17,10 @@ class CDSFeature(Feature):
         else:
             self._hypothetical = False
     
+    def __copy_create__(self):
+        return CDSFeature(
+            self.get_product(), self.get_gene(), self.get_location() )
+    
     def is_hypothetical(self):
         return self._hypothetical
     
