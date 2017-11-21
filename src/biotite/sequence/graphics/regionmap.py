@@ -22,6 +22,8 @@ default_style = {
     },
     "drawers"           : {
         "CDSFeature"        : draw_cds,
+        "PromoterFeature"   : draw_promoter,
+        "TerminatorFeature" : draw_terminator,
     },
 }
 
@@ -72,9 +74,9 @@ def draw_region_map(annotation, region, size, margin,
                 feature_width = line_width + line_x - feature_x (right)
             # Determine the drawing direction
             if loc.strand == Location.Strand.FORWARD:
-                direction = "right"
+                reverse = False
             else:
-                direction = "left"
+                reverse = True
             # Call feature specific draw function
             try:
                 draw_func = style["drawers"][type(feature).__name__]
@@ -84,7 +86,7 @@ def draw_region_map(annotation, region, size, margin,
             draw_func(fig, feature,
                       feature_x, feature_y+feature_height/2,
                       feature_width, feature_height,
-                      style["fontsize"]*feature_height, direction, style)
+                      style["fontsize"]*feature_height, reverse, style)
     
     return fig
 

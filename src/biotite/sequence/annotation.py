@@ -8,7 +8,7 @@ import copy
 import sys
 from enum import Flag, Enum, auto
 
-__all__ = ["Feature", "Annotation", "AnnotatedSequence"]
+__all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 
 
@@ -47,8 +47,9 @@ class Location():
 
 class Feature(Copyable):
     
-    def __init__(self, name, locs):
+    def __init__(self, name, locs, note=""):
         self._name = name
+        self._note = note
         self._locs = copy.deepcopy(locs)
         self._subfeatures = []
     
@@ -77,6 +78,9 @@ class Feature(Copyable):
     
     def get_name(self):
         return self._name
+    
+    def get_note(self):
+        return self._note
 
 
 class Annotation(object):
