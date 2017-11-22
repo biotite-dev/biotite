@@ -38,3 +38,4 @@ deploy:
   on:
     repo: biotite-dev/biotite
     tags: true
+  skip_cleanup: true
