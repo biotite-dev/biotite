@@ -23,14 +23,14 @@ install:
   - pip install cython
   - pip install pytest
   - pip install numpy
-  - if [ $TEST_COMPLETE == true ]; then pip install mdtraj
+  - if [ $TEST_COMPLETE == true ]; then pip install mdtraj; fi
   
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
 
 before_deploy:
-  - if [ $SRC == true ]; then python setup.py sdist
-  - if [ $BIN == true ]; then python setup.py bdist_wheel
+  - if [ $SRC == true ]; then python setup.py sdist; fi
+  - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
 
 deploy:
   provider: releases
