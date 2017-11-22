@@ -14,9 +14,10 @@ matrix:
 install:
   - pip install cython
   - pip install pytest
-  - "pip install numpy --only-binary :all:"
-  - "pip install scipy --only-binary :all:"
-  - "pip install matplotlib --only-binary :all:"
+  - pip install numpy --only-binary=numpy
+  - pip install matplotlib --only-binary=matplotlib
+  - if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas
+  - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy
   - if [ $COMPLETE == true ]; then pip install mdtraj; fi
   - if [ $COMPLETE == true ]; then pip install sphinx; fi
   
