@@ -38,9 +38,11 @@ if "sdist" in sys.argv:
 else:
     from Cython.Build import cythonize
     try:
+        import numpy
         ext_modules = cythonize(
             [Extension("biotite.sequence.align.calign",
-                ["src/biotite/sequence/align/calign.pyx"]
+                ["src/biotite/sequence/align/calign.pyx"],
+                include_dirs=[numpy.get_include()]
              ),
              Extension("biotite.structure.io.pdbx.cprocessloop",
                 ["src/biotite/structure/io/pdbx/cprocessloop.pyx"]
