@@ -2,12 +2,8 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-from .convert import get_feature
 from ....file import TextFile
-from ...sequence import Sequence
-from ...annotation import Location, Annotation
-from ...alphabet import AlphabetError
-from ...seqtypes import NucleotideSequence, ProteinSequence
+from ...annotation import Location, Feature, Annotation
 import textwrap
 import copy
 
@@ -28,7 +24,7 @@ class GenBankFile(TextFile):
                 category = line[0:12].strip()
                 self._category_i.append((i, category))
     
-    def get_feature_table(self, include_only=None):
+    def get_annotation(self, include_only=None):
         feature_lines = self.get_category("FEATURES", as_list=True)[0]
         # Remove the first line,
         # because it conatins the "FEATURES" string itself.
@@ -50,8 +46,8 @@ class GenBankFile(TextFile):
         # Store last feature key and value (loop already exited)
         feature_list.append((feature_key, feature_value))
         
-        # Process only relevant features
-        feature_table = []
+        # Process only relevant features and put them into Annotation
+        annotation = Annotation()
         for key, val in feature_list:
             if include_only is None or key in include_only:
                 qualifiers = val.split(" /")
@@ -66,13 +62,8 @@ class GenBankFile(TextFile):
                     else:
                         # In case of e.g. '/pseudo'
                         qual_dict[qual_pair[0]] = None
-                feature_table.append((key, locs, qual_dict))
-        return feature_table
-    
-    def get_annotation(self, include_only=None):
-        feature_table = self.get_feature_table(include_only)
-        features = [get_feature(entry) for entry in feature_table]
-        return Annotation(features)
+                annotation.add_feature(Feature(key, locs, qual_dict))
+        return annotation
     
     def get_category(self, category_str, as_list=False):
         category_str = category_str.upper()

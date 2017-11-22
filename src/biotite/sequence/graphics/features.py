@@ -2,7 +2,6 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-from ..features import *
 from ..annotation import Location
 from matplotlib.patches import FancyArrow, Rectangle
 from matplotlib.text import Text
@@ -21,7 +20,7 @@ def draw_cds(fig, feature, x, y, width, height, fontsize, reverse, style):
         h_width = h_height/2
     else:
         h_width = width
-    if reverse == "for":
+    if reverse == True:
         start_x = x + width
         dx = -width
     else:
@@ -34,9 +33,9 @@ def draw_cds(fig, feature, x, y, width, height, fontsize, reverse, style):
         facecolor=cds_style["arrowcolor"], edgecolor="None",
         figure=fig
     ))
-    if feature.get_gene() is not None:
+    if "gene" in feature.qual:
         fig.texts.append(Text(
-            x+width/2, y, feature.get_gene(),
+            x+width/2, y, feature.qual["gene"],
             fontsize=fontsize, color=cds_style["fontcolor"],
             ha="center", va="center", figure=fig
         ))
@@ -64,24 +63,14 @@ def draw_promoter(fig, feature, x, y, width, height, fontsize, reverse, style):
 
 def draw_terminator(fig, feature, x, y, width, height, fontsize, reverse,
                     style):
-    dx = height * 0.2
+    dx = height * 0.1
     dy = height * 0.8
     if dx > width:
         dx = width
-    dy_for = dy * feature.get_efficiency()[0]
-    dy_rev = dy * feature.get_efficiency()[1]
     if reverse:
         dy_for, dy_rev = (dy_rev, dy_for)
     fig.patches.append(Rectangle(
         (x + width/2 - dx/2, y - dy/2), dx, dy,
         edgecolor="None", facecolor="gray", figure=fig
-    ))
-    fig.patches.append(Rectangle(
-        (x + width/2 - dx/2, y - dy_for/2), dx/2, dy_for,
-        edgecolor="None", facecolor="black", figure=fig
-    ))
-    fig.patches.append(Rectangle(
-        (x + width/2, y - dy_rev/2), dx/2, dy_rev,
-        edgecolor="None", facecolor="black", figure=fig
     ))
     

@@ -8,4 +8,3 @@ using the GenBank format.
 """
 
 from .file import *
-from .convert import *

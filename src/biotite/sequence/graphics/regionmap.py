@@ -2,7 +2,6 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-from ..features import *
 from .features import *
 from ..annotation import Location
 import copy
@@ -21,9 +20,9 @@ default_style = {
         "fontcolor"         : "black"
     },
     "drawers"           : {
-        "CDSFeature"        : draw_cds,
-        "PromoterFeature"   : draw_promoter,
-        "TerminatorFeature" : draw_terminator,
+        "CDS"        : draw_cds,
+        "promoter"   : draw_promoter,
+        "terminator" : draw_terminator,
     },
 }
 
@@ -57,7 +56,7 @@ def draw_region_map(annotation, region, size, margin,
     region_span = region_last - region_first +1
     width_per_base = line_width / region_span
     for feature in annotation:
-        for loc in feature.get_location():
+        for loc in feature.locs:
             # Determine drawing area for feature location
             feature_span = loc.last - loc.first +1
             feature_x = line_x + (loc.first-region_first) * width_per_base
@@ -71,18 +70,20 @@ def draw_region_map(annotation, region, size, margin,
                 feature_width -= diff
             if feature_x + feature_width > line_x + line_width:
                 # Prevent feature from drawing out of bounds (right)
-                feature_width = line_width + line_x - feature_x (right)
+                feature_width = line_width + line_x - feature_x
             # Determine the drawing direction
             if loc.strand == Location.Strand.FORWARD:
                 reverse = False
             else:
                 reverse = True
             # Call feature specific draw function
+            feature_key = feature.key
+            if feature_key == "regulatory":
+                feature_key = feature.qual["regulatory_class"]
             try:
-                draw_func = style["drawers"][type(feature).__name__]
+                draw_func = style["drawers"][feature_key]
             except KeyError:
-                raise ValueError("Invalid feature type '{:}'"
-                                 .format(type(feature).__name__))
+                continue
             draw_func(fig, feature,
                       feature_x, feature_y+feature_height/2,
                       feature_width, feature_height,

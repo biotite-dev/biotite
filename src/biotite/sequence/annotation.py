@@ -47,15 +47,16 @@ class Location():
 
 class Feature(Copyable):
     
-    def __init__(self, name, locs, note=""):
-        self._name = name
-        self._note = note
+    def __init__(self, key, locs, qual):
+        self._key = key
         self._locs = copy.deepcopy(locs)
+        self._qual = copy.deepcopy(qual)
         self._subfeatures = []
     
     def __copy_create__(self):
-        return Feature(self._name, self._locs)
+        return Feature(self._key, self._locs, self._qual)
     
+        
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
         for feature in self._subfeatures:
@@ -73,36 +74,38 @@ class Feature(Copyable):
     def get_subfeatures(self):
         return copy.copy(self._subfeatures)
     
-    def get_location(self):
-        return copy.deepcopy(self._locs)
+    @property
+    def key(self):
+        return self._key
     
-    def get_name(self):
-        return self._name
+    @property
+    def locs(self):
+        return self._locs
     
-    def get_note(self):
-        return self._note
+    @property
+    def qual(self):
+        return self._qual
 
 
 class Annotation(object):
     
     def __init__(self, features=[]):
         self._features = copy.copy(features)
-        self._feature_dict = {}
-        for feature in features:
-            self._feature_dict[feature.get_name()] = feature
         
     def get_features(pos=None):
         return copy.copy(self._features)
     
     def add_feature(self, feature):
         self._features.append(feature.copy())
-        self._feature_dict[feature.get_name()] = feature
     
     def del_feature(self, feature):
+        if not feature in self._features:
+            raise KeyError("Feature is not in annotation")
         self._features.remove(feature)
-        del self._feature_dict[feature.get_name()]
     
     def release_from(self, feature):
+        if not feature in self._features:
+            raise KeyError("Feature is not in annotation")
         subfeature_list = feature.get_subfeatures()
         feature.del_all_subfeatures()
         for f in subfeature_list:
@@ -120,10 +123,7 @@ class Annotation(object):
         return item in self._features
     
     def __getitem__(self, index):
-        if isinstance(index, str):
-            # Usage as a dictionary
-            return self._feature_dict[index]
-        elif isinstance(index, slice):
+        if isinstance(index, slice):
             i_first = index.start
             # If no start or stop index is given, include all
             if i_first is None:
@@ -133,10 +133,9 @@ class Annotation(object):
                 i_last = sys.maxsize
             sub_annot = Annotation()
             for feature in self:
-                locs = feature.get_location()
                 in_scope = False
                 #defect = LocDefect(0)
-                for loc in locs:
+                for loc in feature.locs:
                     first = loc.first
                     last = loc.last
                     # Always true for maxsize values
