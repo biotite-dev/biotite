@@ -55,7 +55,6 @@ class Feature(Copyable):
     
     def __copy_create__(self):
         return Feature(self._key, self._locs, self._qual)
-    
         
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
