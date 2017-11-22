@@ -10,14 +10,6 @@ matrix:
       - TEST_COMPLETE=true
       - BIN=true
       - SRC=true
-  - os: linux
-    dist: trusty
-    sudo: false
-    python: "3.7-dev"
-    env:
-      - TEST_COMPLETE=false
-      - BIN=true
-      - SRC=false
   
 install:
   - pip install cython
