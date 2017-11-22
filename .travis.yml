@@ -23,7 +23,7 @@ install:
   - pip install cython
   - pip install pytest
   - pip install numpy
-  - if [ $TEST_COMPLETE == true ]; pip install mdtraj
+  - if [ $TEST_COMPLETE == true ]; then pip install mdtraj
   
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
