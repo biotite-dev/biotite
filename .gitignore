@@ -2,9 +2,9 @@
 /test.py
 
 # Ignore the distribution directories
-dist
-build
-_build
+dist/
+build/
+doc/_build/
 *.egg-info/
 
 # Ignore folder created by pytest

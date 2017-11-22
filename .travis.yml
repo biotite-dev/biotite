@@ -10,30 +10,30 @@ matrix:
     - BIN=true
     - SRC=true
 install:
-- pip install cython
-- pip install pytest
-- pip install numpy --only-binary=numpy
-- pip install matplotlib --only-binary=matplotlib
-- if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
-- if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
-- if [ $COMPLETE == true ]; then pip install mdtraj; fi
-- if [ $COMPLETE == true ]; then pip install sphinx; fi
-- if [ $COMPLETE == true ]; then pip install numpydoc; fi
+  - pip install cython
+  - pip install pytest
+  - pip install numpy --only-binary=numpy
+  - pip install matplotlib --only-binary=matplotlib
+  - if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
+  - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
+  - if [ $COMPLETE == true ]; then pip install mdtraj; fi
+  - if [ $COMPLETE == true ]; then pip install sphinx; fi
+  - if [ $COMPLETE == true ]; then pip install numpydoc; fi
 script:
-- python setup.py test --pytest-args="--ignore=tests/application/"
+  - python setup.py test --pytest-args="--ignore=tests/application/"
 before_deploy:
-- if [ $SRC == true ]; then python setup.py sdist; fi
-- if [ $BIN == true ]; then python setup.py bdist_wheel; fi
-- if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
-- if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
-- if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
+  - if [ $SRC == true ]; then python setup.py sdist; fi
+  - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
+  - if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
+  - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
+  - if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
 deploy:
   provider: releases
   api-key:
     secure: ncH32tO1V1vJMgpHY/JJ+TDpFkj0uFzNVeD2tBFq+uCDSRzQo8hiC+kFveciQNr9UuKFyqBySFpjP+g93f9xWcjruzTbT42vhoM6YzddMcQI/yiINWoco1Lk8RZpv6HsWeLXPFzP6BWWwBH+1rF09AXX4hk5nHGOlawM+f1nwCoqZrvPc5mhfN/JytRgUjjVZ1yI9VL77wMakGYsuuBpgjpk1AC5bG2X0aCYSRub7kAl3CYPvrknx38pbtL8d9mMyFwLe1UVxuyhY5PZ1hzk+6Dkjwx0mWQ95TCoTOwPU2ECF81gORVd/HZeQ/xRPYb8mlufy+v7pjUgMRQVMwjRR+e3JYHxoAjbN41WUYZohyIeVGnQ9hlaa59EHoDyGL6hJFqJ2o7E5DoKCGE+ssQ/pAmczPMCf3lG4nhgA80WXo9fcchMqPqB1uX43gv+qWvLy3N8V+pzK9nQpUsjKXKROp5fABIaz56APUaq1UrzaAvPHUlNiixjWd7FCU9nDGig8vGSfGNumBUFOQHnS12eQ0ICzTK7z9SuigkEAkB236AiopD5d0fZyyz9hWvWua22wqBD4kwtIQczFos5JHibv1taWdtnxs+/XAJpcV6EWYdTpNEItejRjtPRv20Ddx+G3176aYKbXWrANk/F4sp/HgGaLR7xUiH1wabd6QS5OUE=
   file:
-  - dist/*
-  - doc/_build/doc.tar
+    - dist/*
+    - doc/_build/doc.tar
   file_glob: true
   on:
     repo: biotite-dev/biotite
