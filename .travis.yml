@@ -9,6 +9,7 @@ matrix:
     - COMPLETE=true
     - BIN=true
     - SRC=true
+
 install:
   - pip install cython
   - pip install pytest
@@ -19,14 +20,17 @@ install:
   - if [ $COMPLETE == true ]; then pip install mdtraj; fi
   - if [ $COMPLETE == true ]; then pip install sphinx; fi
   - if [ $COMPLETE == true ]; then pip install numpydoc; fi
+
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
+
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
   - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
   - if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
   - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
   - if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
+
 deploy:
   provider: releases
   api-key:
