@@ -1,44 +1,37 @@
 language: python
-
 matrix:
   include:
   - os: linux
     dist: trusty
     sudo: false
-    python: "3.6"
+    python: '3.6'
     env:
-      - COMPLETE=true
-      - BIN=true
-      - SRC=true
-  
+    - COMPLETE=true
+    - BIN=true
+    - SRC=true
 install:
-  - pip install cython
-  - pip install pytest
-  - pip install numpy --only-binary=numpy
-  - pip install matplotlib --only-binary=matplotlib
-  - if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
-  - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
-  - if [ $COMPLETE == true ]; then pip install mdtraj; fi
-  - if [ $COMPLETE == true ]; then pip install sphinx; fi
-  - if [ $COMPLETE == true ]; then pip install numpydoc; fi
-  
+- pip install cython
+- pip install pytest
+- pip install numpy --only-binary=numpy
+- pip install matplotlib --only-binary=matplotlib
+- if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
+- if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
+- if [ $COMPLETE == true ]; then pip install mdtraj; fi
+- if [ $COMPLETE == true ]; then pip install sphinx; fi
+- if [ $COMPLETE == true ]; then pip install numpydoc; fi
 script:
-  - python setup.py test --pytest-args="--ignore=tests/application/"
-
+- python setup.py test --pytest-args="--ignore=tests/application/"
 before_deploy:
-  - if [ $SRC == true ]; then python setup.py sdist; fi
-  - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
-  - if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
-  - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
-  - if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
-
+- if [ $SRC == true ]; then python setup.py sdist; fi
+- if [ $BIN == true ]; then python setup.py bdist_wheel; fi
+- if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
+- if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
+- if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
 deploy:
   provider: releases
-  api_key:
-    secure: UoLhHMR2GvYTiauFXWVmcjZtGEu7Xn0cNSCQc16FCtbH6E4zhjUoTmY2EUrFDLUS1eXiyk6R2av/yqMN81KtqYKhrZ2TdD7h3XPOIqTC/x40sdf1cCg/DvgC0qyiIkQnuRjU0AY6yhTnI30BPJujznUlECfKdc/+XkWdwB5/nncf2Fm4ExtFqSwqixwNAYnoNX+a5W3NMa9cZEYhVGCdY8Tre4PwCQo7wot2sgCJjldvlzwBElgYfNdsSwSpvuGEtyPyZPPhq4XJgjwpMq0rKhFQJ+isHutWEfkUSIpgTUfPT2siG8GuESVYvAkGxr/bimmpHFRcHP327xJB202/SAPeZJjk/px8RlEYIJ1Ejqmcggya5cud9XAsE5nPzQrEPG4NO2ASnoe0FmFZ+GZebEkuOK6GRXLMj+FOs2IIdexbPMY9TeTB2JvihDHKnghQrbB2xTrreLE9wqE/9UTVChx1Y73n8a1zKj2OqOlhOxTp18UAQYxZ3OwgDGwSMeMybk7eD0DEHWD2h0dRTX+Y9DrKsYQNNanJUKADkLCj/dP/qCyGUx2ukvnDGqOdi8Y9PYZ0ZE1Kpn5FEfuwVkUmynt8+ZomvUrL6PZYU9dwruccebi99ktTt1KJRON0mTxiEd1cqtNMsenKxbCzMiDjSI1lEV0L9BncewIf14mRw0o=
   file:
-    - dist/*
-    - doc/_build/doc.tar
+  - dist/*
+  - doc/_build/doc.tar
   file_glob: true
   on:
     repo: biotite-dev/biotite
