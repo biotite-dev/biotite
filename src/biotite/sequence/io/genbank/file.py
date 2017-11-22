@@ -64,7 +64,8 @@ class GenBankFile(TextFile):
                         qual_dict[qual_pair[0]] = None
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
-    
+
+
     def get_category(self, category_str, as_list=False):
         category_str = category_str.upper()
         category_list = []
