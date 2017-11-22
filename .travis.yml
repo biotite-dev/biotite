@@ -1,0 +1,44 @@
+language: python
+
+matrix:
+  include:
+  - os: linux
+    dist: trusty
+    sudo: false
+    python: "3.6"
+    env:
+      - BIN=true
+      - SRC=true
+  - os: linux
+    dist: trusty
+    sudo: false
+    python: "3.7-dev"
+    env:
+      - BIN=true
+      - SRC=false
+  
+install:
+  - pip install numpy
+  - pip install scipy
+  - pip install matplotlib
+  - pip install requests
+  - pip install mdtraj
+  - pip install pytest
+  - pip install cython
+  
+script:
+  - python setup.py test --pytest-args="--ignore=tests/application/"
+
+before_deploy:
+  - if [ $SRC == true ]; then python setup.py sdist
+  - if [ $BIN == true ]; then python setup.py bdist_wheel
+
+deploy:
+  provider: releases
+  api_key:
+    secure: UoLhHMR2GvYTiauFXWVmcjZtGEu7Xn0cNSCQc16FCtbH6E4zhjUoTmY2EUrFDLUS1eXiyk6R2av/yqMN81KtqYKhrZ2TdD7h3XPOIqTC/x40sdf1cCg/DvgC0qyiIkQnuRjU0AY6yhTnI30BPJujznUlECfKdc/+XkWdwB5/nncf2Fm4ExtFqSwqixwNAYnoNX+a5W3NMa9cZEYhVGCdY8Tre4PwCQo7wot2sgCJjldvlzwBElgYfNdsSwSpvuGEtyPyZPPhq4XJgjwpMq0rKhFQJ+isHutWEfkUSIpgTUfPT2siG8GuESVYvAkGxr/bimmpHFRcHP327xJB202/SAPeZJjk/px8RlEYIJ1Ejqmcggya5cud9XAsE5nPzQrEPG4NO2ASnoe0FmFZ+GZebEkuOK6GRXLMj+FOs2IIdexbPMY9TeTB2JvihDHKnghQrbB2xTrreLE9wqE/9UTVChx1Y73n8a1zKj2OqOlhOxTp18UAQYxZ3OwgDGwSMeMybk7eD0DEHWD2h0dRTX+Y9DrKsYQNNanJUKADkLCj/dP/qCyGUx2ukvnDGqOdi8Y9PYZ0ZE1Kpn5FEfuwVkUmynt8+ZomvUrL6PZYU9dwruccebi99ktTt1KJRON0mTxiEd1cqtNMsenKxbCzMiDjSI1lEV0L9BncewIf14mRw0o=
+  file: dist/*
+  file_glob: true
+  on:
+    repo: biotite-dev/biotite
+    tags: true
