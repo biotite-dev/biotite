@@ -14,8 +14,8 @@ matrix:
 install:
   - pip install cython
   - pip install pytest
-  - pip install numpy --only-binary :all:
-  - pip install matplotlib --only-binary :all:
+  - "pip install numpy --only-binary :all:"
+  - "pip install matplotlib --only-binary :all:"
   - if [ $COMPLETE == true ]; then pip install mdtraj; fi
   
 script:
