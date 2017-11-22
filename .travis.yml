@@ -7,6 +7,7 @@ matrix:
     sudo: false
     python: "3.6"
     env:
+      - TEST_COMPLETE=true
       - BIN=true
       - SRC=true
   - os: linux
@@ -14,16 +15,18 @@ matrix:
     sudo: false
     python: "3.7-dev"
     env:
+      - TEST_COMPLETE=false
       - BIN=true
       - SRC=false
   
 install:
+  - apt-get install libblas-dev liblapack-dev
   - pip install cython
+  - pip install pytest
   - pip install numpy
   - pip install matplotlib
   - pip install requests
-  - pip install mdtraj
-  - pip install pytest
+  - if [ $TEST_COMPLETE == true ]; pip install mdtraj
   
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
