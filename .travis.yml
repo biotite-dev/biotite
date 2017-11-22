@@ -18,13 +18,12 @@ matrix:
       - SRC=false
   
 install:
+  - pip install cython
   - pip install numpy
-  - pip install scipy
   - pip install matplotlib
   - pip install requests
   - pip install mdtraj
   - pip install pytest
-  - pip install cython
   
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
