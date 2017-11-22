@@ -20,12 +20,9 @@ matrix:
       - SRC=false
   
 install:
-  - apt-get install libblas-dev liblapack-dev
   - pip install cython
   - pip install pytest
   - pip install numpy
-  - pip install matplotlib
-  - pip install requests
   - if [ $TEST_COMPLETE == true ]; pip install mdtraj
   
 script:
