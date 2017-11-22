@@ -73,6 +73,7 @@ class Feature(Copyable):
     def get_subfeatures(self):
         return copy.copy(self._subfeatures)
     
+    
     @property
     def key(self):
         return self._key
