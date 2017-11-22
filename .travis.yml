@@ -20,6 +20,7 @@ install:
   - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
   - if [ $COMPLETE == true ]; then pip install mdtraj; fi
   - if [ $COMPLETE == true ]; then pip install sphinx; fi
+  - if [ $COMPLETE == true ]; then pip install numpydoc; fi
   
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
