@@ -14,7 +14,10 @@ class GenBankFile(TextFile):
     
     def __init__(self):
         super().__init__()
-        self._category_i = []
+        # Category start indices in list of lines
+        self._cat_starts = []
+        # Category names
+        self._cat_names = []
     
     def read(self, file_name):
         super().read(file_name)
@@ -22,10 +25,45 @@ class GenBankFile(TextFile):
             #Check if line contains letters in its first 5 characters
             if len(line[0:5].strip()) > 0:
                 category = line[0:12].strip()
-                self._category_i.append((i, category))
+                self._cat_starts.append(i)
+                self._cat_names.append(category)
+    
+    def __getitem__(self, index):
+        return self._lines[self._category_i[i] : self._category_i[i+1]]
+    
+    def __setitem__(self, index, item):
+        self.remove(index)
+        self.insert(index, item)
+    
+    def __delitem__(self, index):
+        self.remove(index)
+    
+    def remove(self, index):
+        del_line_span = self._cat_starts[index+1] - self._cat_starts[index]
+        del self._lines[self._cat_starts[index] : self._cat_starts[index+1]]
+        del self._cat_names[index]
+        del self._cat_starts[index]
+        for i in range(index, len(self._cat_starts)):
+            self._cat_starts[i] -= del_line_span
+    
+    def insert(self, index, item):
+        line_i = self._cat_starts[index]
+        self._lines = self._lines[:line_i] + item + self._lines[line_i:]
+        # New category takes line position of the existing one
+        # at the category index
+        self._cat_starts.insert(index, self._cat_starts[index])
+        # The following start indices are incremented
+        # by the length of inserted lines
+        for i in range(index+1, len(self._cat_starts)):
+            self._cat_starts[i] += len(item)
+        # Extract category name from first line of the inserted lines
+        self._cat_names.insert(index, item[0][0:12].strip())
+    
+    def categories(self):
+        return self._cat_names
     
     def get_annotation(self, include_only=None):
-        feature_lines = self.get_category("FEATURES", as_list=True)[0]
+        feature_lines = self.get_category("FEATURES")
         # Remove the first line,
         # because it conatins the "FEATURES" string itself.
         feature_lines.pop(0)
@@ -65,25 +103,16 @@ class GenBankFile(TextFile):
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
 
-
-    def get_category(self, category_str, as_list=False):
+    def get_category(self, category_str):
         category_str = category_str.upper()
-        category_list = []
-        for i in range(len(self._category_i)):
-            if self._category_i[i][1] == category_str:
-                start = self._category_i[i][0]
-                stop = self._category_i[i+1][0]
-                category_list.append(self._lines[start:stop])
-        if as_list:
-            return category_list
-        else:
-            category_str_list = []
-            for cat in category_list:
-                cat_str = ""
-                for line in cat:
-                    cat_str += line + "\n"
-                category_str_list.append(cat_str)
-            return(category_str_list)
+        # Find first occurence of category name in list
+        index = -1
+        for i in range(len(self._cat_names)):
+            if self._cat_names[i] == category_str:
+                index = i
+        if index == -1:
+            raise ValueError("Category '{:}' not found".format(category_str))
+        return self._lines[self._cat_starts[index] : self._cat_starts[index+1]]
 
 
 def _parse_locs(loc_str):
