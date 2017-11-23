@@ -29,7 +29,7 @@ before_deploy:
   - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
   - if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
   - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
-  - if [ $COMPLETE == true ]; then tar -cf doc.tar doc/_build/html/; fi
+  - if [ $COMPLETE == true ]; then tar -cf doc/_build/doc.tar doc/_build/html/; fi
 
 deploy:
   provider: releases
