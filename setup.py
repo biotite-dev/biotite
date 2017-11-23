@@ -77,8 +77,7 @@ setup(
     description = "A general framework for computational biology",
     long_description = long_description,
     author = "The Biotite contributors",
-    url = "www.biotite-python.org",
-    download_url = "https://github.com/biotite-dev/biotite",
+    url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = (
         "Development Status :: 3 - Alpha",
