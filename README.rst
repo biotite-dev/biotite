@@ -1,7 +1,6 @@
 .. image:: https://img.shields.io/pypi/v/biotite.svg
    :target: https://pypi.python.org/pypi/biotite
 .. image:: https://img.shields.io/pypi/pyversions/biotite.svg
-.. image:: https://img.shields.io/pypi/v/biotite.svg
 .. image:: https://img.shields.io/travis/biotite-dev/biotite.svg
    :target: https://travis-ci.org/biotite-dev/biotite
 .. image:: https://img.shields.io/codecov/c/github/biotite-dev/biotite.svg
