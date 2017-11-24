@@ -65,4 +65,5 @@ Table of Contents
    apidoc/index
    examples/index
    develop
-   
+   logo
+
