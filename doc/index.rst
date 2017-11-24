@@ -63,5 +63,6 @@ Table of Contents
    install
    tutorial/index
    apidoc/index
+   examples/index
    develop
    

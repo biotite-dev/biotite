@@ -2,7 +2,7 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-from os.path import realpath, dirname, join, isdir
+from os.path import realpath, dirname, join, isdir, isfile, basename
 from os import listdir, makedirs
 import shutil
 from importlib import import_module
@@ -10,16 +10,15 @@ import types
 import sys
 import abc
 import inspect
+import glob
 
 package_path = join( dirname(dirname(realpath(__file__))), "src" )
 sys.path.insert(0, package_path)
 import biotite
 
+_indent = " " * 3
 
 ##### API Doc creation #####
-
-_indent = " " * 4
-l = []
 
 def create_api_doc(src_path, doc_path):
     if isdir(doc_path):
@@ -148,11 +147,10 @@ def _create_files(doc_path, package, classes, functions, subpackages):
         
         
 def create_package_index(doc_path, package_list):
-    
     lines = []
     
     lines.append("API Reference")
-    lines.append("-" * len("API Reference"))
+    lines.append("=" * len("API Reference"))
     lines.append("\n")
     
     lines.append(".. toctree::")
@@ -160,7 +158,7 @@ def create_package_index(doc_path, package_list):
     lines.append("\n")
     for pck in package_list:
         lines.append(_indent + pck)
-    with open(join(doc_path, "index"+".rst"), "w") as f:
+    with open(join(doc_path, "index.rst"), "w") as f:
         f.writelines([line+"\n" for line in lines])
     
 
@@ -170,6 +168,62 @@ def _is_package(path):
 
 
 create_api_doc(package_path, "apidoc")
+
+
+##### Creation of examples.rst files #####
+
+def create_example_file(directory):
+    lines = []
+    
+    with open(join(directory, "title"), "r") as f:
+        title = f.read().strip()
+    lines.append(title)
+    lines.append("=" * len(title))
+    lines.append("")
+    
+    if isfile(join(directory, "example.png")):
+        lines.append(".. image:: example.png")
+        lines.append("")
+    if isfile(join(directory, "example.txt")):
+        lines.append(".. literalinclude:: example.txt")
+        lines.append(_indent + ":language: none")
+        lines.append("")
+    
+    lines.append(".. literalinclude:: script.py")
+    lines.append("")
+    lines.append("(:download:`Source code <script.py>`)")
+    lines.append("")
+    
+    with open(join(directory, "example.rst"), "w") as f:
+        f.writelines([line+"\n" for line in lines])
+
+dirs = glob.glob("examples/*")
+for d in dirs:
+    if isdir(d):
+        create_example_file(d)
+
+
+##### Example index creation #####
+
+def create_example_index():
+    lines = []
+    
+    lines.append("Examples")
+    lines.append("=" * len("Examples"))
+    lines.append("")
+    
+    lines.append(".. toctree::")
+    lines.append("")
+    dirs = listdir("examples")
+    for d in dirs:
+        if isdir(join("examples", d)):
+            lines.append(_indent + join(basename(d), "example"))
+    with open("examples/index.rst", "w") as f:
+        f.writelines([line+"\n" for line in lines])
+
+
+create_example_index()
+
 
 ##### General #####
 
