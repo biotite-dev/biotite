@@ -13,7 +13,8 @@ __all__ = ["draw_region_map", "get_default_map_style"]
 
 
 default_style = {
-    "strandsize"        : 0.1,
+    "strandsize"        : 0.03,
+    "strandcolor"       : "black",
     "fontsize"          : 0.15,
     "cds"               : {
         "arrowcolor"        : "limegreen",
@@ -46,7 +47,7 @@ def draw_region_map(annotation, region, size, margin,
     strand_marker_y = line_y - strand_height/2 + line_height/2
     fig.patches.append(Rectangle(
         (strand_marker_x, strand_marker_y), line_width, strand_height,
-        edgecolor="None", facecolor="gray", figure=fig
+        edgecolor="None", facecolor=style["strandcolor"], figure=fig
     ))
     
     # Draw Annotations
