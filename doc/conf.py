@@ -11,6 +11,10 @@ import sys
 import abc
 import inspect
 
+package_path = join( dirname(dirname(realpath(__file__))), "src" )
+sys.path.insert(0, package_path)
+import biotite
+
 
 ##### API Doc creation #####
 
@@ -165,11 +169,9 @@ def _is_package(path):
     return "__init__.py" in content
 
 
-##### General #####
-
-package_path = join( dirname(dirname(realpath(__file__))), "src" )
-sys.path.insert(0, package_path)
 create_api_doc(package_path, "apidoc")
+
+##### General #####
 
 extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
@@ -184,7 +186,7 @@ master_doc = "index"
 
 project = "Biotite"
 copyright = "2017, the Biotite contributors"
-version = "2.0"
+version = biotite.__version__
 
 exclude_patterns = ["build"]
 
