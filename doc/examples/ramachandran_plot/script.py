@@ -25,8 +25,6 @@ hist, psi_edges, phi_edges = np.histogram2d(
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-#im = ax.contourf(phi_edges[:-1], psi_edges[:-1], hist, cmap="jet")
-#                   norm=colors.LogNorm(vmin=hist.min(), vmax=hist.max()))
 im = ax.contourf(phi_edges[:-1], psi_edges[:-1], hist, cmap="afmhot",
                  levels=np.arange(0,0.0007,0.000025))
 cbar = fig.colorbar(im, ax=ax)
