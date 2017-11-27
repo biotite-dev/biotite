@@ -22,9 +22,6 @@ _indent = " " * 4
 l = []
 
 def create_api_doc(src_path, doc_path):
-    if isdir(doc_path):
-        shutil.rmtree(doc_path)
-    makedirs(doc_path)
     package_list = _create_package_doc("biotite",
                                        join(src_path, "biotite"),
                                        doc_path)
@@ -52,15 +49,7 @@ def _create_package_doc(pck, src_path, doc_path):
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
                      and type(getattr(module, attr)) in [type, abc.ABCMeta]]
-        class_dict = {}
-        for cls in class_list:
-            cls_attr_list = dir(getattr(module, cls))
-            class_dict[cls] = [attr for attr in cls_attr_list
-                               if attr[0] != "_"
-                               and inspect.isfunction(
-                                        getattr(getattr(module, cls), attr))
-                              ]
-        _create_files(doc_path, pck, class_dict, func_list, sub_pck)
+        _create_files(doc_path, pck, class_list, func_list, sub_pck)
         
         return([pck] + sub_pck)
 
@@ -70,26 +59,20 @@ def _create_files(doc_path, package, classes, functions, subpackages):
     if not isdir(sub_path):
         makedirs(sub_path)
     
-    for cls, methods in classes.items():
+    for cls in classes:
         file_content = \
         """
 :orphan:
 
 {:}.{:}
 {:}
-
-.. autodata:: {:}.{:}
-
-|
+.. autoclass:: {:}.{:}
+    :show-inheritance:
+    :members:
+    :undoc-members:
+    :inherited-members:
         """.format(package, cls, "=" * (len(package)+len(cls)+1),
                    package, cls)
-        for method in methods:
-            file_content += \
-            """
-.. automethod:: {:}.{:}.{:}
-
-|
-            """.format(package, cls, method)
         with open(join(sub_path, cls+".rst"), "w") as f:
             f.write(file_content)
             
@@ -100,7 +83,6 @@ def _create_files(doc_path, package, classes, functions, subpackages):
 
 {:}.{:}
 {:}
-
 .. autofunction:: {:}.{:}
         """.format(package, func, "=" * (len(package)+len(func)+1),
                    package, func)
@@ -145,8 +127,8 @@ def _create_files(doc_path, package, classes, functions, subpackages):
     
     with open(join(doc_path, package+".rst"), "w") as f:
         f.writelines([line+"\n" for line in lines])
-        
-        
+
+
 def create_package_index(doc_path, package_list):
     
     lines = []
@@ -162,7 +144,19 @@ def create_package_index(doc_path, package_list):
         lines.append(_indent + pck)
     with open(join(doc_path, "index"+".rst"), "w") as f:
         f.writelines([line+"\n" for line in lines])
+
+
+"""   
+def create_package_index(doc_path, package_list):
     
+    lines = []
+    for pck in package_list:
+        lines.append(_indent + "- :doc:`"
+                     + pck
+                     + " <" + "/apidoc/" + pck + ">`")
+    with open(join(doc_path, "index"+".rst"), "w") as f:
+        f.writelines([line+"\n" for line in lines])
+"""
 
 def _is_package(path):
     content = listdir(path)
@@ -193,6 +187,10 @@ exclude_patterns = ["build"]
 pygments_style = "sphinx"
 
 todo_include_todos = False
+
+# Prevents numpydoc from creating an autosummary which does not work
+# due to Biotite's import system
+numpydoc_show_class_members = False
 
 
 ##### HTML #####
