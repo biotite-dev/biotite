@@ -100,7 +100,7 @@ class Alignment(object):
             The list of gapped sequence strings. The order is the same
             as in `Alignment.sequences`.
         """
-        return [self._gapped_str(i) for i in range(len(sequences))]
+        return [self._gapped_str(i) for i in range(len(self.sequences))]
     
     def __str__(self):
         # Check if any of the sequences
