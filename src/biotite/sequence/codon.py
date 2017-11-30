@@ -70,7 +70,7 @@ class CodonTable(object):
     
     @staticmethod
     def load(table_name):
-        # Loads a codon table from codon_tables.txt
+        # Loads codon tables from codon_tables.txt
         with open(CodonTable._table_file, "r") as f:
             lines = f.read().split("\n")
         
@@ -123,6 +123,16 @@ class CodonTable(object):
         else:
             raise ValueError("Codon table '{:}' was not found"
                              .format(str(table_name)))
+    
+    @staticmethod
+    def table_names():
+        with open(CodonTable._table_file, "r") as f:
+            lines = f.read().split("\n")
+        names = []
+        for line in lines:
+            if line.startswith("name"):
+                names.extend([name.strip() for name in line[4:].split(";")])
+        return names
     
     @staticmethod
     def default_table():
