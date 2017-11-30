@@ -6,9 +6,17 @@ matrix:
     sudo: false
     python: '3.6'
     env:
-    - COMPLETE=true
-    - BIN=true
-    - SRC=true
+      - COMPLETE=true
+      - BIN=true
+      - SRC=true
+  - os: linux
+    dist: trusty
+    sudo: false
+    python: '3.5'
+    env:
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
 
 install:
   - pip install cython
