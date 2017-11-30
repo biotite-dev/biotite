@@ -153,8 +153,98 @@ Output:
    Protein sequence M from base 25 to base 27
    Complete translation: HMMYAIG*M
 
-Other paramters in this powerful `translate()` method allow for a custom
-codon table or custom start codons.
+The upper example uses the default `CodonTable` instance. This can be
+changed with the `codon_table` parameter.
+A `CodonTable` maps codons to amino acid and defines start codons (both
+in symbol and code form). A `CodonTable` is mainly used in the
+`translate()` method, but can also to find the corresponding amino acid
+for a codon and vice versa.
+
+.. code-block:: python
+
+   table = seq.CodonTable.default_table()
+   # Find the amino acid encoded by a given codon
+   print(table["TAC"])
+   # Find the codons encoding a given amino acid
+   print(table["Y"])
+   # Works also for codes instead of symbols
+   print(table[(1,2,3)])
+   print(table[14])
+
+Output:
+
+.. code-block:: none
+
+   Y
+   ('TAT', 'TAC')
+   14
+   ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
+
+The default `CodonTable` is equal to the NCBI "Standard" table, with the
+small difference that only "ATG" qualifies as start codon. You can also
+use any other official NCBI table via `CodonTable.load()`.
+
+.. code-block:: python
+
+   # Use the official NCBI table name
+   table = seq.CodonTable.load("Yeast Mitochondrial")
+   print("Yeast Mitochondrial:")
+   print(table)
+   print()
+   # Use the official NCBI table ID
+   table = seq.CodonTable.load(11)
+   print("Bacterial:")
+   print(table)
+
+Output:
+
+.. code-block:: none
+
+   Yeast Mitochondrial:
+   AAA K      AAC N      AAG K      AAT N
+   ACA T      ACC T      ACG T      ACT T
+   AGA R      AGC S      AGG R      AGT S
+   ATA M i    ATC I      ATG M i    ATT I
+   
+   CAA Q      CAC H      CAG Q      CAT H
+   CCA P      CCC P      CCG P      CCT P
+   CGA R      CGC R      CGG R      CGT R
+   CTA T      CTC T      CTG T      CTT T
+   
+   GAA E      GAC D      GAG E      GAT D
+   GCA A      GCC A      GCG A      GCT A
+   GGA G      GGC G      GGG G      GGT G
+   GTA V      GTC V      GTG V      GTT V
+   
+   TAA *      TAC Y      TAG *      TAT Y
+   TCA S      TCC S      TCG S      TCT S
+   TGA W      TGC C      TGG W      TGT C
+   TTA L      TTC F      TTG L      TTT F
+   
+   
+   Bacterial:
+   AAA K      AAC N      AAG K      AAT N
+   ACA T      ACC T      ACG T      ACT T
+   AGA R      AGC S      AGG R      AGT S
+   ATA I i    ATC I i    ATG M i    ATT I
+   
+   CAA Q      CAC H      CAG Q      CAT H
+   CCA P      CCC P      CCG P      CCT P
+   CGA R      CGC R      CGG R      CGT R
+   CTA L      CTC L      CTG L i    CTT L
+   
+   GAA E      GAC D      GAG E      GAT D
+   GCA A      GCC A      GCG A      GCT A
+   GGA G      GGC G      GGG G      GGT G
+   GTA V      GTC V      GTG V i    GTT V
+   
+   TAA *      TAC Y      TAG *      TAT Y
+   TCA S      TCC S      TCG S      TCT S
+   TGA *      TGC C      TGG W      TGT C
+   TTA L      TTC F      TTG L i    TTT F
+
+Feel free to define your own custom codon table via the `CodonTable`
+constructor.
 
 Loading sequences from file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -98,7 +98,8 @@ setup(
     ext_modules = ext_modules,
     
     # Including substitution matrix data
-    package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"]},
+    package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"],
+                    "biotite.sequence" : ["codon_tables.txt"],},
     
     install_requires = ["requests",
                         "numpy",
