@@ -27,6 +27,34 @@ class CodonTable(object):
             [tuple(Sequence.encode(start, NucleotideSequence.alphabet))
              for start in self._start_symbols]
         )
+    
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            if len(item) == 1:
+                # Amino acid -> return possible codons
+                codons = []
+                for key, val in self._symbol_dict.items():
+                    if val == item:
+                        codons.append(key)
+                return tuple(codons)
+            elif len(item) == 3:
+                # Codon -> return corresponding amino acid
+                return self._symbol_dict[item]
+            else:
+                raise TypeError("'{:}' is an invalid index".format(str(item)))
+        elif isinstance(item, int):
+            # Code for amino acid -> return possible codon codes
+            codons = []
+            for key, val in self._code_dict.items():
+                if val == item:
+                    codons.append(key)
+            return tuple(codons)
+        elif isinstance(item, tuple):
+            # Code for codon -> return corresponding amino acid code
+            return self._code_dict[item]
+        else:
+            raise TypeError("'{:}' is an invalid index".format(str(item)))
+            
         
     def codon_dict(self, code=False):
         if code:
@@ -100,7 +128,6 @@ class CodonTable(object):
     def default_table():
         return _default_table
 
-_std_table = CodonTable.load("Standard")
-_default_table = CodonTable(_std_table.codon_dict(), ["ATG"])
+_default_table = CodonTable(CodonTable.load("Standard").codon_dict(), ["ATG"])
     
     
