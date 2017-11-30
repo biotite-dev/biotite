@@ -17,5 +17,5 @@ def test_table_indexing():
     for codon in table["Y"]:
         assert codon in ("TAT", "TAC")
     assert table[(0, 0, 0)] == 8
-    for codon in table[(0, 0, 0)]:
+    for codon in table[8]:
         assert codon in ((0, 0, 0), (0, 0, 2))
