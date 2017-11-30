@@ -54,6 +54,31 @@ class CodonTable(object):
             return self._code_dict[item]
         else:
             raise TypeError("'{:}' is an invalid index".format(str(item)))
+    
+    def __str__(self):
+        string = ""
+        bases = ["A","C","G","T"]
+        for b1 in bases:
+            for b2 in bases:
+                for b3 in bases:
+                    codon = b1 + b2 + b3
+                    string += codon + " " + self._symbol_dict[codon]
+                    # Indicator for start codon
+                    if codon in self._start_symbols:
+                        string += " i "
+                    else:
+                        string += "   "
+                    # Add space for next codon
+                    string += " "*3
+                # Remove terminal space
+                string = string [:-6]
+                # Jump to next line
+                string += "\n"
+            # Add empty line
+            string += "\n"
+        # Remove the two terminal new lines
+        string = string[:-2]
+        return string
             
         
     def codon_dict(self, code=False):
