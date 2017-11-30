@@ -11,8 +11,50 @@ __all__ = ["CodonTable"]
 
 
 class CodonTable(object):
+    """
+    A `CodonTable` maps a codon (sequence of 3 nucleotides) to an amino
+    acid. It also defines start codons. A `CodonTable`
+    takes/outputs either the symbols or code of the codon/amino acid.
     
-    # file for codon datbles
+    Furthermore, this class is able to give a list of codons that
+    corresponds to a given amino acid.
+    
+    The `load()` method allows loading of NCBI codon tables.
+    
+    Objects of this class are immutable.
+    
+    Parameters
+    ----------
+    codon_dict : dict
+        A dictionary that maps codons to amino acids. The keys must be
+        strings of length 3 and the values strings of length 1
+        (all upper case). The dictionary must provide entries for all
+        64 possible codons.
+    starts : iterable object of str
+        The start codons. Each entry must be a string of length 3
+        (all upper case).
+    
+    Examples
+    --------
+    
+    Get the amino acid coded by a given codon (symbol and code):
+        
+        >>> table = CodonTable.default_table()
+        >>> print(table["ATG"])
+        M
+        >>> print(table[(1,2,3)])
+        14
+        
+    Get the codons coding for a given amino acid (symbol and code):
+        
+        >>> table = CodonTable.default_table()
+        >>> print(table["M"])
+        ('ATG',)
+        >>> print(table[14])
+        ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
+    """
+    
+    # file for codon tables
     _table_file = join(dirname(realpath(__file__)), "codon_tables.txt")
     
     def __init__(self, codon_dict, starts):
@@ -82,12 +124,42 @@ class CodonTable(object):
             
         
     def codon_dict(self, code=False):
+        """
+        Get the codon to amino acid mappings dictionary.
+        
+        Parameters
+        ----------
+        code : bool
+            If true, the dictionary contains keys and values as code.
+            Otherwise, the dictionary contains strings for codons and
+            amino acid. (Default: False)
+        
+        Returns
+        -------
+        codon_dict : dict
+            The dictionary mapping codons to amino acids.
+        """
         if code:
             return copy.copy(self._code_dict)
         else:
             return copy.copy(self._symbol_dict)
     
     def start_codons(self, code=False):
+        """
+        Get the start codons of the codon table.
+        
+        Parameters
+        ----------
+        code : bool
+            If true, the code will be returned instead of strings.
+            (Default: False)
+        
+        Returns
+        -------
+        start_codons : tuple
+            The start codons. Contains strings or tuples, depending on
+            the `code` parameter.
+        """
         if code:
             return self._start_codes
         else:
@@ -95,6 +167,21 @@ class CodonTable(object):
     
     @staticmethod
     def load(table_name):
+        """
+        Load a NCBI codon table.
+        
+        Parameters
+        ----------
+        table_name : str or int
+            If a string is given, it is interpreted as official NCBI
+            codon table name (e.g. "Vertebrate Mitochondrial").
+            An integer is interpreted as NCBI codon table ID.
+        
+        Returns
+        -------
+        table : CodonTable
+            The NCBI codon table.
+        """
         # Loads codon tables from codon_tables.txt
         with open(CodonTable._table_file, "r") as f:
             lines = f.read().split("\n")
@@ -151,6 +238,14 @@ class CodonTable(object):
     
     @staticmethod
     def table_names():
+        """
+        The possible codon table names for `load()`.
+        
+        Returns
+        -------
+        names : list of str
+            List of valid codon table names.
+        """
         with open(CodonTable._table_file, "r") as f:
             lines = f.read().split("\n")
         names = []
@@ -161,6 +256,16 @@ class CodonTable(object):
     
     @staticmethod
     def default_table():
+        """
+        The default codon table.
+        The table is equal to the NCBI "Standard" codon table,
+        with the difference that only "ATG" is a start codon.
+        
+        Returns
+        -------
+        table : CodonTable
+            The default codon table.
+        """
         return _default_table
 
 _default_table = CodonTable(CodonTable.load("Standard").codon_dict(), ["ATG"])
