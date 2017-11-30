@@ -14,6 +14,8 @@ def test_table_load(table_id):
 def test_table_indexing():
     table = seq.CodonTable.load("Standard")
     assert table["ATG"] == "M"
-    assert table["Y"] == ("TAT", "TAC")
+    for codon in table["Y"]:
+        assert codon in ("TAT", "TAC")
     assert table[(0, 0, 0)] == 8
-    assert table[8] == ((0, 0, 0), (0, 0, 2))
+    for codon in table[(0, 0, 0)]:
+        assert codon in ((0, 0, 0), (0, 0, 2))
