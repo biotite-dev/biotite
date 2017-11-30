@@ -287,24 +287,6 @@ class ProteinSequence(Sequence):
         representations. By default the sequence is empty.
     """
     
-    _codon_symbol_table = {
-     "TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
-     "TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
-     "TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
-     "TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
-     "CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
-     "CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
-     "CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
-     "CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
-     "ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
-     "ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
-     "AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
-     "AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
-     "GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
-     "GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
-     "GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
-     "GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G"}
-    
     _codon_table = None
     
     alphabet = Alphabet(["A","C","D","E","F","G","H","I","K","L",
@@ -337,8 +319,8 @@ class ProteinSequence(Sequence):
                   " * "  : "*"}
     
     _dict_1to3 = {}
-    for key, value in _dict_3to1.items():
-        _dict_1to3[value] = key
+    for _key, _value in _dict_3to1.items():
+        _dict_1to3[_value] = _key
     
     def __init__(self, sequence=[]):
         dict_3to1 = ProteinSequence._dict_3to1
@@ -400,55 +382,4 @@ class ProteinSequence(Sequence):
             3-letter amino acid representation.
         """
         return ProteinSequence._dict_1to3[symbol.upper()]
-    
-    @staticmethod
-    def convert_codon_table(symbol_table):
-        """
-        Convert a symbol codon table into a codon table
-        
-        Parameters
-        ----------
-        symbol_table : dict
-            The codon symbol table.
-        
-        Returns
-        -------
-        code_table : dict
-            The codon table.
-        """
-        code_table = {}
-        for key, value in symbol_table.items():
-            key_code = tuple(Sequence.encode(key, NucleotideSequence.alphabet))
-            val_code = ProteinSequence.alphabet.encode(value)
-            code_table[key_code] = val_code
-        return code_table
-    
-    @staticmethod
-    def std_codon_table():
-        """
-        Get the standard codon table, which is the *E. coli* codon
-        table.
-        
-        Returns
-        -------
-        code_table : dict
-            The standard codon table.
-        """
-        if ProteinSequence._codon_table is None:
-            ProteinSequence._codon_table = ProteinSequence.convert_codon_table(
-                                           ProteinSequence._codon_symbol_table)
-        return ProteinSequence._codon_table
-    
-    @staticmethod
-    def std_codon_symbol_table():
-        """
-        Get the standard codon symbol table, which is the *E. coli*
-        codon table.
-        
-        Returns
-        -------
-        symbol_table : dict
-            The standard codon symbol table.
-        """
-        return copy.copy(ProteinSequence._codon_symbol_table)
     
