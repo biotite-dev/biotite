@@ -153,16 +153,16 @@ class NucleotideSequence(Sequence):
             If true, the complete sequence is translated. In this case
             the sequence length must be a multiple of 3.
             Otherwise all ORFs are translated. (Default: False)
-        codon_table : dict, optional
-            The codon table to be used. A codon table maps triplett
-            sequence codes to amino acid single letter sequence codes.
-            The table can be generated from a dictionary, containing
-            strings as keys and values, via
-            `ProteinSequence.convert_codon_table()`. By default an
-            codon table from *E. coli* is used.
-        start_codons : list of strings. optional
-            A list of codons to be used as starting point for
-            translation. By default the list contains only "ATG".
+        codon_table : CodonTable, optional
+            The codon table to be used. By default the default table
+            will be used
+            (NCBI "Standard" table with "ATG" as single start codon).
+        met_start : bool. optional
+            If true, the translation starts always with a 'methionine',
+            even if the start codon codes for another amino acid.
+            Otherwise the translation starts with the amino acid
+            the codon codes for. Only applies, if `complete` is false.
+            (Default: False)
         
         Returns
         -------
@@ -183,11 +183,11 @@ class NucleotideSequence(Sequence):
         Examples
         --------
         
-            >>> rna_seq = NucleotideSequence("AATGATGCTATAGAT")
-            >>> prot_seq = rna_seq.translate(complete=True)
+            >>> dna_seq = NucleotideSequence("AATGATGCTATAGAT")
+            >>> prot_seq = dna_seq.translate(complete=True)
             >>> print(prot_seq)
             NDAID
-            >>> prot_seqs, pos = rna_seq.translate(complete=False)
+            >>> prot_seqs, pos = dna_seq.translate(complete=False)
             >>> for seq in prot_seqs:
             ...    print(seq)
             MML*
@@ -200,8 +200,11 @@ class NucleotideSequence(Sequence):
         if "codon_table" in kwargs:
             codon_table = kwargs["codon_table"]
         else:
-            codon_table = ProteinSequence.std_codon_table()
+            # Import at this position to avoid circular import
+            from .codon import CodonTable
+            codon_table = CodonTable.default_table()
         stop_code = ProteinSequence.alphabet.encode("*")
+        met_code =  ProteinSequence.alphabet.encode("M")
         
         if "complete" in kwargs and kwargs["complete"] == True:
             if len(self) % 3 != 0:
@@ -222,12 +225,11 @@ class NucleotideSequence(Sequence):
             return protein_seq
         
         else:
-            if "start_codons" in kwargs:
-                start_codons = kwargs["start_codons"]
+            if "met_start" in kwargs:
+                met_start = kwargs["met_start"]
             else:
-                start_codons = ["ATG"]
-            start_codons = [self.encode(codon, self.get_alphabet())
-                            for codon in start_codons]
+                met_start = False
+            start_codons = np.array(codon_table.start_codons(True))
             seq_code = self.code
             protein_seqs = []
             pos = []
@@ -236,11 +238,17 @@ class NucleotideSequence(Sequence):
                 # sub_seq equals all nucleotides
                 # in any of the start codons
                 if (sub_seq == start_codons).all(axis=1).any(axis=0):
+                    #Translation start
                     j = i
                     # Pessimistic array allocation
                     aa_code = np.zeros(len(self) // 3)
+                    # Index for protein sequence
                     aa_i = 0
                     stop_found = False
+                    if met_start:
+                        aa_code[aa_i] = met_code
+                        aa_i += 1
+                        j += 3
                     while j < len(seq_code) - 3 + 1 and not stop_found:
                         codon = tuple(seq_code[j : j+3])
                         code = codon_table[codon]
