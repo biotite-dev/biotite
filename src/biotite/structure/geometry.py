@@ -61,8 +61,8 @@ def centroid(atoms):
     -------
     centroid : float or ndarray
         The centroid of the structure(s). The shape is equal to the
-        shape of the input `atoms` with the highest dimensionality minus
-        the second last axis.
+        shape of the input `atoms` with the highest dimensionality
+        minus the second last axis.
     """
     return np.mean(coord(atoms), axis=-2)
 
@@ -74,8 +74,8 @@ def angle(atom1, atom2, atom3):
     Parameters
     ----------
     atoms1, atoms2, atoms3 : ndarray or Atom or AtomArray or AtomArrayStack
-        The atoms to measure the angle between. Alternatively an ndarray
-        containing the coordinates can be provided.
+        The atoms to measure the angle between. Alternatively an
+        ndarray containing the coordinates can be provided.
     
     Returns
     -------
@@ -136,7 +136,7 @@ def dihedral_backbone(atom_array, chain_id):
     Parameters
     ----------
     atom_array: AtomArray
-        The protein structure. a complete backbone, without gaps,
+        The protein structure. A complete backbone, without gaps,
         is required here.
     chain_id: string
         The ID of the polypeptide chain. The dihedral angles are
