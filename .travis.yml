@@ -36,7 +36,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -q -n biotite-env python=$TRAVIS_PYTHON_VERSION
-  - source activate test-environment
+  - source activate biotite-env
   
   - conda install -n biotite-env -c anaconda cython
   - conda install -n biotite-env -c anaconda pytest
