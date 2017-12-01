@@ -29,6 +29,24 @@ matrix:
       - COMPLETE=true
       - BIN=true
       - SRC=true
+  - os: osx
+    python: '3.4'
+    env:
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    python: '3.5'
+    env:
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    python: '3.6'
+    env:
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
