@@ -2,48 +2,48 @@ notifications:
   on_success: never
   on_failure: never
 
-language: python
+language: generic
 matrix:
   include:
   - os: linux
     dist: trusty
     sudo: false
-    python: '3.4'
     env:
+      - PY_VERSION='3.4'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: linux
     dist: trusty
     sudo: false
-    python: '3.5'
     env:
+      - PY_VERSION='3.5'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: linux
     dist: trusty
     sudo: false
-    python: '3.6'
     env:
+      - PY_VERSION='3.6'
       - COMPLETE=true
       - BIN=true
       - SRC=true
   - os: osx
-    python: '3.4'
     env:
+      - PY_VERSION='3.4'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
-    python: '3.5'
     env:
+      - PY_VERSION='3.5'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
-    python: '3.6'
     env:
+      - PY_VERSION='3.6'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -57,7 +57,7 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n biotite-env python=$TRAVIS_PYTHON_VERSION
+  - conda create -q -n biotite-env python=$PY_VERSION
   - source activate biotite-env
   
   - conda install -n biotite-env -c anaconda cython
