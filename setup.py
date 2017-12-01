@@ -105,7 +105,6 @@ setup(
     install_requires = ["requests",
                         "numpy",
                         "matplotlib"],
-    extras_require = {'trajectory':  ["mdtraj"]},
     python_requires = ">=3.5",
     
     cmdclass = {"test": PyTestCommand},

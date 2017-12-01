@@ -2,7 +2,6 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-import mdtraj.formats as traj
 from ..trajfile import TrajectoryFile
 
 __all__ = ["XTCFile"]
@@ -14,6 +13,7 @@ class XTCFile(TrajectoryFile):
     """
     
     def traj_type(self):
+        import mdtraj.formats as traj
         return traj.XTCTrajectoryFile
     
     def output_value_index(self, value):

@@ -6,7 +6,7 @@ Writing code
 
 Python version and interpreter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Biotite is made for usage with Python 3.6 and upwards. Therefore no
+Biotite is made for usage with Python 3.5 and upwards. Therefore no
 compatibility hacks for Python 2.x are necessary. Furthermore this package is
 currently made for use with CPython. Support for PyPy might be added someday.
 
@@ -20,17 +20,17 @@ up to 79 characters.
 
 Dependencies
 ^^^^^^^^^^^^
-Biotite currently depends on `numpy`, `scipy`, `matplotlib` and `requests`.
+Biotite currently depends on `numpy`, `matplotlib` and `requests`.
 The usage of these packages is not only allowed but even encouraged. Further
 packages might be added to the depedencies in the future, so if you need a
 specific package, you might open an issue on GitHub. But keep in mind, that a
 simple installation process is a central aim of Biotite, so the new dependency
 should neither be hard to install on any system nor be poorly supported.
 
-Another approach is adding your special dependency to the `extras_require`
-parameter in the ``setup.py``. In this case, put the import statement for the
-dependency directly into the class or function, unless the dependency is
-required for the entire subpackage.
+Another approach is adding your special dependency to the list of extra
+requirements in ``install.rst``. In this case, put the import statement for the
+dependency directly into the function, to ensure that the package is not
+required for any other functionality or for building the documentation.
 
 Code efficiency
 ^^^^^^^^^^^^^^^
