@@ -1,3 +1,7 @@
+notifications:
+  on_success: never
+  on_failure: never
+
 language: python
 matrix:
   include:
