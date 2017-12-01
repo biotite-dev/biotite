@@ -27,11 +27,26 @@ matrix:
       - SRC=true
 
 install:
-  - pip install cython
-  - pip install pytest
-  - pip install numpy --only-binary=numpy
-  - pip install matplotlib --only-binary=matplotlib
-  - if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
+  - wget https://repo.continuum.io/miniconda/$MINICONDA
+  
+  - bash $MINICONDA -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q -n biotite-env python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+  
+  - conda install -n biotite-env -c anaconda cython
+  - conda install -n biotite-env -c anaconda pytest
+  - conda install -n biotite-env -c anaconda numpy
+  - conda install -n biotite-env -c conda-forge matplotlib
+  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda pandas; fi
+  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda scipy; fi
+  - if [ $COMPLETE == true ]; conda install -n biotite-env -c conda-forge mdtraj; fi
+  - if [ $COMPLETE == true ]; conda install -n biotite-env -c conda-forge sphinx; fi
+  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda numpydoc; fi
   - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
   - if [ $COMPLETE == true ]; then pip install mdtraj; fi
   - if [ $COMPLETE == true ]; then pip install sphinx; fi
