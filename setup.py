@@ -86,6 +86,7 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -105,7 +106,7 @@ setup(
                         "numpy",
                         "matplotlib"],
     extras_require = {'trajectory':  ["mdtraj"]},
-    python_requires = ">=3.6",
+    python_requires = ">=3.5",
     
     cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],
