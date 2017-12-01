@@ -46,15 +46,11 @@ install:
   - conda install -n biotite-env -c anaconda pytest
   - conda install -n biotite-env -c anaconda numpy
   - conda install -n biotite-env -c conda-forge matplotlib
-  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda pandas; fi
-  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda scipy; fi
-  - if [ $COMPLETE == true ]; conda install -n biotite-env -c conda-forge mdtraj; fi
-  - if [ $COMPLETE == true ]; conda install -n biotite-env -c conda-forge sphinx; fi
-  - if [ $COMPLETE == true ]; conda install -n biotite-env -c anaconda numpydoc; fi
-  - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
-  - if [ $COMPLETE == true ]; then pip install mdtraj; fi
-  - if [ $COMPLETE == true ]; then pip install sphinx; fi
-  - if [ $COMPLETE == true ]; then pip install numpydoc; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda pandas; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda numpydoc; fi
 
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
