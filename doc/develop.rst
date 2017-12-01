@@ -6,7 +6,7 @@ Writing code
 
 Python version and interpreter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Biotite is made for usage with Python 3.5 and upwards. Therefore no
+Biotite is made for usage with Python 3.4 and upwards. Therefore no
 compatibility hacks for Python 2.x are necessary. Furthermore this package is
 currently made for use with CPython. Support for PyPy might be added someday.
 

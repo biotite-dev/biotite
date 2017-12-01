@@ -10,7 +10,7 @@ slower.
 Requirements
 ------------
 
-*Biotite* requires at least *Python* version 3.5. If you are still using
+*Biotite* requires at least *Python* version 3.4. If you are still using
 *Python* 2.7, you should `hurry up <https://pythonclock.org/>`_ with upgrading
 to *Python* 3.x.
 
