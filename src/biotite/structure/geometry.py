@@ -60,9 +60,8 @@ def centroid(atoms):
     Returns
     -------
     centroid : float or ndarray
-        The centroid of the structure(s). The shape is equal to the
-        shape of the input `atoms` with the highest dimensionality
-        minus the second last axis.
+        The centroid of the structure(s). `ndarray` is returned when
+        an `AtomArrayStack` is given (centroid for each model).
     """
     return np.mean(coord(atoms), axis=-2)
 
@@ -135,7 +134,7 @@ def dihedral_backbone(atom_array, chain_id):
     
     Parameters
     ----------
-    atom_array: AtomArray
+    atom_array: AtomArray or AtomArrayStack
         The protein structure. A complete backbone, without gaps,
         is required here.
     chain_id: string
@@ -144,11 +143,13 @@ def dihedral_backbone(atom_array, chain_id):
     
     Returns
     -------
-    phi, psi, omega : 1-D ndarray
+    phi, psi, omega : ndarray
         An array containing the 3 backbone dihedral angles for every
         CA. 'phi' is not defined at the N-terminus, 'psi' and 'omega'
         are not defined at the C-terminus. In these places the arrays
-        have `NaN` values.
+        have `NaN` values. If an `AtomArrayStack` is given, the output
+        angles are 2-dimensional, the first dimension corresponds to
+        the model number.
     
     Raises
     ------
@@ -184,34 +185,49 @@ def dihedral_backbone(atom_array, chain_id):
     """
     try:
         # Filter all backbone atoms
-        bb_coord = atom_array[filter_backbone(atom_array) &
+        bb_coord = atom_array[...,
+                              filter_backbone(atom_array) &
                               (atom_array.chain_id == chain_id)].coord
         
-        phi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
-        psi_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
-        omega_coord = np.full(( len(bb_coord)//3, 4, 3 ), np.nan)
+        # Coordinates for dihedral angle calculation
+        # Dim 0: Model index (only for atom array stacks)
+        # Dim 1: Angle index
+        # Dim 2: X, Y, Z coordinates
+        # Dim 3: Atoms involved in dihedral angle
+        if isinstance(atom_array, AtomArray):
+            angle_coord_shape = (len(bb_coord)//3, 3, 4)
+        elif isinstance(atom_array, AtomArrayStack):
+            angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1]//3, 3, 4)
+        phi_coord   = np.full(angle_coord_shape, np.nan)
+        psi_coord   = np.full(angle_coord_shape, np.nan)
+        omega_coord = np.full(angle_coord_shape, np.nan)
         
-        for i in range(1, len(phi_coord)):
-            phi_coord[i] = (bb_coord[(i*3+1)-2], bb_coord[(i*3+1)-1],
-                            bb_coord[(i*3+1)], bb_coord[(i*3+1)+1])
-        for i in range(0, len(psi_coord)-1):
-            psi_coord[i] = (bb_coord[(i*3+1)-1], bb_coord[(i*3+1)],
-                            bb_coord[(i*3+1)+1], bb_coord[(i*3+1)+2])
-        for i in range(0, len(psi_coord)-1):
-            omega_coord[i] = (bb_coord[(i*3+1)], bb_coord[(i*3+1)+1],
-                              bb_coord[(i*3+1)+2], bb_coord[(i*3+1)+3])
+        # Indices for coordinates of CA atoms 
+        ca_i = np.arange(bb_coord.shape[-2]//3) * 3 + 1
+        phi_coord  [..., 1: , :, 0]  = bb_coord[..., ca_i[1: ]-2 ,:]
+        phi_coord  [..., 1: , :, 1]  = bb_coord[..., ca_i[1: ]-1 ,:]
+        phi_coord  [..., 1: , :, 2]  = bb_coord[..., ca_i[1: ]   ,:]
+        phi_coord  [..., 1: , :, 3]  = bb_coord[..., ca_i[1: ]+1 ,:]
+        psi_coord  [..., :-1, :, 0]  = bb_coord[..., ca_i[:-1]-1 ,:]
+        psi_coord  [..., :-1, :, 1]  = bb_coord[..., ca_i[:-1]   ,:]
+        psi_coord  [..., :-1, :, 2]  = bb_coord[..., ca_i[:-1]+1 ,:]
+        psi_coord  [..., :-1, :, 3]  = bb_coord[..., ca_i[:-1]+2 ,:]
+        omega_coord[..., :-1, :, 0]  = bb_coord[..., ca_i[:-1]   ,:]
+        omega_coord[..., :-1, :, 1]  = bb_coord[..., ca_i[:-1]+1 ,:]
+        omega_coord[..., :-1, :, 2]  = bb_coord[..., ca_i[:-1]+2 ,:]
+        omega_coord[..., :-1, :, 3]  = bb_coord[..., ca_i[:-1]+3 ,:]
         
-        phi = dihedral(phi_coord[:,0], phi_coord[:,1],
-                       phi_coord[:,2], phi_coord[:,3])
-        psi = dihedral(psi_coord[:,0], psi_coord[:,1],
-                       psi_coord[:,2], psi_coord[:,3])
-        omega = dihedral(omega_coord[:,0], omega_coord[:,1],
-                         omega_coord[:,2], omega_coord[:,3])
+        phi = dihedral(phi_coord[...,0], phi_coord[...,1],
+                       phi_coord[...,2], phi_coord[...,3])
+        psi = dihedral(psi_coord[...,0], psi_coord[...,1],
+                       psi_coord[...,2], psi_coord[...,3])
+        omega = dihedral(omega_coord[...,0], omega_coord[...,1],
+                         omega_coord[...,2], omega_coord[...,3])
         
         return phi, psi, omega
     
     except Exception as err:
-        if len(bb_coord) % 3 != 0:
+        if bb_coord.shape[-1] % 3 != 0:
             raise BadStructureError("AtomArray has insufficient amount"
                 "of backbone atoms") from None
         else:
