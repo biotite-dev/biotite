@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 """
 This module allows checking of atom arrays and atom array stacks for
@@ -11,13 +11,14 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
 
-__all__ = ["check_id_continuity", "check_bond_continuity"]
+__all__ = ["check_id_continuity", "check_bond_continuity",
+           "check_duplicate_atoms"]
 
 
 def check_id_continuity(array):
     """
     Check if the residue IDs are incremented by more than 1 or
-    decremented.
+    decremented, from one atom to the next one.
     
     An increment by more than 1 is as strong clue for missung residues,
     a decrement means probably a start of a new chain.
@@ -30,12 +31,13 @@ def check_id_continuity(array):
     Returns
     -------
     discontinuity : ndarray(dtype=bool)
-        True at the indices after a discontinuity.
+        Contains the indices of atoms after a discontinuity
     """
     ids = array.res_id
     diff = np.diff(ids)
     discontinuity = np.where( ((diff != 0) & (diff != 1)) )
     return discontinuity[0] + 1
+
 
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
@@ -47,7 +49,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     
     Parameters
     ----------
-    array : AtomArray or AtomArrayStack
+    array : AtomArray
         The array to be checked.
     min_len, max_len : float, optional
         The interval in which the atom-atom distance is evaluated as
@@ -56,7 +58,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     Returns
     -------
     discontinuity : ndarray(dtype=bool)
-        True at the indices after a discontinuity.
+         Contains the indices of atoms after a discontinuity.
     """
     backbone_mask = filter_backbone(array)
     backbone = array[backbone_mask]
@@ -75,3 +77,44 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     discon_mask_full[backbone_mask] = discon_mask
     discontinuity = np.where(discon_mask_full)
     return discontinuity[0]
+
+
+def check_duplicate_atoms(array):
+    """
+    Check if a structure contains duplicate atoms, i.e. two atoms in a
+    structure have the same annotations (coordinates may be different).
+    
+    Duplicate atoms may appear, when a structure has occupancy for an
+    atom at two or more positions or when the *insertion code* or
+    *altloc* are improperly read.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    duplicate : ndarray(dtype=bool)
+        Contains the indices of duplicate atoms. The first occurence of
+        an atom is not counted as duplicate.
+    """
+    duplicates = []
+    annots = [array.get_annotation(category) for category
+              in array.get_annotation_categories()]
+    for i in range(1, array.array_length()):
+        # Start with assumption that all atoms in the array
+        # until index i are duplicates of the atom at index i
+        is_dublicate = np.full(i, True, dtype=bool)
+        for annot in annots:
+            # For each annotation array filter out the atoms until
+            # index i that have an unequal annotation
+            # to the atom at index i 
+            is_dublicate &= (annot[:i] == annot[i])
+        # After checking all annotation arrays,
+        # if there still is any duplicate to the atom at index i,
+        # add i the the list of duplicate atom indices
+        if is_dublicate.any():
+            duplicates.append(i)
+    return np.array(duplicates)
+

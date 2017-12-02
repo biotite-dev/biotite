@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 import biotite.structure as struc
 import biotite.structure.io.npz as npz
@@ -36,9 +36,18 @@ def test_dihedral():
 def test_dihedral_backbone():
     file = npz.NpzFile()
     file.read(join(data_dir, "1l2y.npz"))
+    # Test array
     array = file.get_structure()[0]
     phi, psi, omega = struc.dihedral_backbone(array, "A")
+    assert omega.shape == (20,)
     # Remove nan values
     omega = np.abs(omega)[:-1]
-    assert omega.tolist() == pytest.approx([np.pi] * len(omega),
-                                                        rel=0.05)
+    assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
+    # Test stack
+    stack = file.get_structure()
+    phi, psi, omega = struc.dihedral_backbone(stack, "A")
+    assert omega.shape == (38,20)
+    # Remove nan values
+    omega = np.abs(omega)[:, :-1]
+    omega = np.average(omega, axis=0)
+    assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
