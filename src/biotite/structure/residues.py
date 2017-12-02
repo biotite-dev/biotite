@@ -10,7 +10,7 @@ atom level.
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
-__all__ = ["apply_residue_wise", "get_residues"]
+__all__ = ["apply_residue_wise", "spread_residue_wise", "get_residues"]
 
 
 def apply_residue_wise(array, data, function, axis=None):
@@ -54,48 +54,47 @@ def apply_residue_wise(array, data, function, axis=None):
     
         >>> sasa_per_atom = sasa(atom_array)
         >>> print(len(sasa_per_atom))
-        154
-        >>> sasa_per_residue = struc.apply_residue_wise(atom_array,
-                                                        sasa_per_atom,
-                                                        np.sum)
+        304
+        >>> sasa_per_residue = apply_residue_wise(atom_array, sasa_per_atom, np.nansum)
         >>> print(len(sasa_per_residue))
         20
         >>> print(sasa_per_residue)
-        [ 157.86574713  118.14982076   94.14992528  114.91493537  113.02598368
-           22.97896584   88.05321235  145.11664892   59.42074947   37.8765113
-            0.          114.62239027  106.00488852   28.77275384   91.53945028
-          115.09834155  113.25537021   69.12604652   48.9054493   179.75047111]
+        [ 173.71750737  114.52487523   99.08331902  111.95128253  115.81167158
+           20.58874161   96.50972632  138.9740059    74.63418835   37.31709418
+            0.          113.23807888  118.38526428   28.30951972   84.92855916
+          110.66448618  110.66448618   72.06059565   45.03787228  189.15906358]
 
     Calculate the controids of each residue for the same peptide.
-    
+        
+        >>> file = fetch("1l2y","cif",temp_dir())
+        >>> atom_array = get_structure_from(file)[0]
         >>> print(len(atom_array))
-        154
+        304
         >>> centroids = apply_residue_wise(atom_array, atom_array.coord,
-        ...                                      np.average, axis=0)
+        ...                                np.average, axis=0)
         >>> print(len(centroids))
         20
         >>> print(centroids)
-        [[ -9.33587497e+00   3.08837497e+00  -2.04937501e+00]
-         [ -4.62474999e+00   4.99312496e+00  -1.83012499e+00]
-         [ -2.44825002e+00   2.78391666e+00   3.04791670e+00]
-         [ -6.55874997e+00  -5.59624996e-01   6.70249989e-01]
-         [ -4.45077781e+00  -1.42922222e+00  -4.00411113e+00]
-         [  1.18471429e+00   2.28571253e-03   1.03314285e+00]
-         [ -1.97637503e+00  -2.73912497e+00   2.88100000e+00]
-         [ -3.24277778e+00  -5.74677769e+00  -2.27588885e+00]
-         [  8.07999995e-01  -5.58362508e+00  -2.71987501e+00]
-         [  2.34224999e+00  -5.97549999e+00   1.90449998e+00]
-         [  3.41624999e+00  -3.19624996e+00   2.24575004e+00]
-         [  6.13757140e+00  -2.77557147e+00   4.25599994e+00]
-         [  6.77583329e+00  -6.59999990e+00   2.68549995e+00]
-         [  6.13083331e+00  -4.97816674e+00  -1.50333334e+00]
-         [  9.09824991e+00  -2.48450002e+00  -2.16374999e+00]
-         [  5.71227275e+00  -1.31709090e+00  -3.11790907e+00]
-         [  6.69085721e+00   3.38457145e+00  -5.37428569e-01]
-         [  3.91357149e+00   4.58928575e+00   2.10914286e+00]
-         [  5.29857130e-01   5.99642863e+00   1.11714291e-01]
-         [  7.25857139e-01   1.04195715e+01   9.49285729e-01]]
-    
+        [[ -9.5819375    3.3778125   -2.0728125 ]
+         [ -4.66952632   5.81573684  -1.85989474]
+         [ -2.46080952   3.05966667   3.07604762]
+         [ -7.21084211  -0.39636842   1.01315789]
+         [ -4.69782353  -1.08047059  -4.28411765]
+         [  1.172125     0.20641667   1.038375  ]
+         [ -2.16005263  -2.24494737   3.54052632]
+         [ -3.68231818  -5.53977273  -2.89527273]
+         [  0.71108333  -5.40941667  -2.5495    ]
+         [  2.00242857  -6.32171429   1.69528571]
+         [  2.79857143  -3.14         2.32742857]
+         [  5.90071429  -2.48892857   4.84457143]
+         [  6.75372727  -6.71236364   3.09418182]
+         [  5.69927273  -5.10063636  -1.20918182]
+         [  9.29542857  -2.96957143  -1.83528571]
+         [  5.51795833  -1.52125     -3.47266667]
+         [  7.21892857   3.67321429  -0.68435714]
+         [  4.00664286   4.364        2.67385714]
+         [  0.34114286   5.57528571  -0.25428571]
+         [  1.194       10.41625      1.13016667]]    
     """
     ids = array.res_id
     # The result array
@@ -123,6 +122,7 @@ def apply_residue_wise(array, data, function, axis=None):
             if isinstance(value, np.ndarray):
                 # Maximum length of the processed data
                 # is length of interval of size 1 -> length of all IDs
+                # (equal to atom array length)
                 processed_data = np.zeros((len(ids),) + value.shape,
                                           dtype=value.dtype)
             else:
@@ -137,6 +137,74 @@ def apply_residue_wise(array, data, function, axis=None):
         i += 1
     # Trim result array to correct size
     return processed_data[:i]
+
+
+def spread_residue_wise(array, input_data):
+    """
+    Creates an `ndarray` with residue-wise spreaded values from an input
+    `ndarray`.
+    
+    ``output_data[i] = input_data[j]``,
+    *i* is incremented from atom to atom,
+    *j* is incremented every residue ID change.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The data is spreaded over `array`'s 'res_id` annotation array.
+    input_data : ndarray
+        The data to be spreaded. The length of axis=0 must be equal to
+        the amount of different residue IDs in `array`.
+        
+    Returns
+    -------
+    output_data : ndarray
+        Residue-wise spreaded `input_data`. Length is the same as
+        `array_length()` of `array`.
+        
+    Examples
+    --------
+    Spread secondary structure annotation to every atom of a 20 residue
+    peptide (with 304 atoms).
+    
+        >>> sse = annotate_sse(atom_array, "A")
+        >>> print(len(sse))
+        20
+        >>> print(sse)
+        ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c']
+        >>> atom_wise_sse = spread_residue_wise(atom_array, sse)
+        >>> print(len(atom_wise_sse))
+        304
+        >>> print(atom_wise_sse)
+        ['c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a'
+         'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+         'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c']
+    """
+    i = 0
+    j = 0
+    array_length = array.array_length()
+    output_data = np.zeros(array_length, dtype=input_data.dtype)
+    while i < array_length:
+        output_data[i] = input_data[j]
+        if i < array_length-1 and array.res_id[i+1] != array.res_id[i]:
+            j += 1
+        i += 1
+    return output_data
 
 
 def get_residues(array):
@@ -176,7 +244,7 @@ def get_residues(array):
          'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
          'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
          'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER']
-        >>> ids, names = struc.get_residues(atom_array)
+        >>> ids, names = get_residues(atom_array)
         >>> print(names)
         ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
          'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']

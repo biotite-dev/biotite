@@ -87,4 +87,3 @@ from .sse import *
 from .superimpose import *
 from .transform import *
 # util is used internally
-from .vis import *
