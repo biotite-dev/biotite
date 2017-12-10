@@ -6,7 +6,7 @@ from .sequence import Sequence
 from ..copyable import Copyable
 import copy
 import sys
-from enum import Flag, Enum, auto
+from enum import IntEnum
 
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
@@ -14,21 +14,21 @@ __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 class Location():
     
-    class Defect(Flag):
-        MISS_LEFT    = auto()
-        MISS_RIGHT   = auto()
-        MISS_INTERN  = auto()
-        BEYOND_LEFT  = auto()
-        BEYOND_RIGHT = auto()
-        UNK_LOC      = auto()
-        BETWEEN      = auto()
+    class Defect(IntEnum):
+        NONE         = 0
+        MISS_LEFT    = 1
+        MISS_RIGHT   = 2
+        BEYOND_LEFT  = 4
+        BEYOND_RIGHT = 8
+        UNK_LOC      = 16
+        BETWEEN      = 32
 
-    class Strand(Enum):
+    class Strand(IntEnum):
         FORWARD = 1
         REVERSE = -1
     
     def __init__(self, first, last, strand=Strand.FORWARD,
-                 defect=Defect(0)):
+                 defect=Defect.NONE):
         self.first = first
         self.last = last
         self.strand = strand
@@ -47,7 +47,7 @@ class Location():
 
 class Feature(Copyable):
     
-    def __init__(self, key, locs, qual):
+    def __init__(self, key, locs, qual={}):
         self._key = key
         self._locs = copy.deepcopy(locs)
         self._qual = copy.deepcopy(qual)
@@ -91,7 +91,7 @@ class Annotation(object):
     def __init__(self, features=[]):
         self._features = copy.copy(features)
         
-    def get_features(pos=None):
+    def get_features(self):
         return copy.copy(self._features)
     
     def add_feature(self, feature):
@@ -133,17 +133,25 @@ class Annotation(object):
             sub_annot = Annotation()
             for feature in self:
                 in_scope = False
-                #defect = LocDefect(0)
                 for loc in feature.locs:
-                    first = loc.first
-                    last = loc.last
                     # Always true for maxsize values
                     # in case no start or stop index is given
-                    if first <= i_last and last >= i_first:
+                    if loc.first <= i_last and loc.last >= i_first:
                         in_scope = True
-                    ### Handle defects ###
                 if in_scope:
-                    sub_annot.add_feature(feature.copy())
+                    # Create copy for new annotation
+                    new_feature = feature.copy()
+                    for loc in new_feature.locs:
+                        # Handle defects
+                        if loc.first < i_first:
+                            print("test1")
+                            loc.defect |= Location.Defect.MISS_LEFT
+                            loc.first = i_first
+                        if loc.last > i_last:
+                            print("test2")
+                            loc.defect |= Location.Defect.MISS_RIGHT
+                            loc.last = i_last
+                    sub_annot.add_feature(new_feature)
             return sub_annot            
         else:
             raise TypeError("{:} instances are invalid Annotation indices"
