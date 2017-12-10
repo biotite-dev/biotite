@@ -207,10 +207,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         else:
             return alph.decode(sub_seq)
     
-    def __setitem__(self, index, symbol):
+    def __setitem__(self, index, symbols):
         alph = self.get_alphabet()
-        symbol = alph.encode(symbol)
-        self._seq_code.__setitem__(index, symbol)
+        code = alph.encode(symbols)
+        self._seq_code.__setitem__(index, code)
     
     def __len__(self):
         return len(self._seq_code)
