@@ -278,13 +278,8 @@ class ProteinSequence(Sequence):
     """
     Representation of a protein sequence.
     
-    Furthermore this class offers a codon table for conversion of
-    nucleotide tripletts into amino acids. A *codon symbol table* holds
-    triplett strings as keys (e.g. 'AUG') and 1-letter amino acid
-    representations as values (e.g. 'M'). A *codon table* is a *codon
-    symbol table* that is converted into symbol codes. Therefore a
-    *codon table* holds tuples of 3 integers as keys and amino acid
-    symbol codes as values.
+    Furthermore this class offers a conversion of amino acids from
+    3-letter code into 1-letter code and vice versa.
     
     Parameters
     ----------
