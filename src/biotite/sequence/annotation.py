@@ -6,6 +6,7 @@ from .sequence import Sequence
 from ..copyable import Copyable
 import copy
 import sys
+import numpy as np
 from enum import IntEnum
 
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
@@ -110,6 +111,9 @@ class Annotation(object):
         for f in subfeature_list:
             self.add_feature(f)
     
+    def __copy_create__(self):
+        return Annotation(self._features)
+    
     def __iter__(self):
         i = 0
         while i < len(self._features):
@@ -144,17 +148,15 @@ class Annotation(object):
                     for loc in new_feature.locs:
                         # Handle defects
                         if loc.first < i_first:
-                            print("test1")
                             loc.defect |= Location.Defect.MISS_LEFT
                             loc.first = i_first
                         if loc.last > i_last:
-                            print("test2")
                             loc.defect |= Location.Defect.MISS_RIGHT
                             loc.last = i_last
                     sub_annot.add_feature(new_feature)
             return sub_annot            
         else:
-            raise TypeError("{:} instances are invalid Annotation indices"
+            raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
 
 
@@ -173,21 +175,63 @@ class AnnotatedSequence(object):
     def annotation(self):
         return self._annotation
     
+    def __copy_create__(self):
+        return AnnotatedSequence(
+            self._annotation.copy(), self._sequence.copy, self._seqstart)
+    
     def __getitem__(self, index):
-        if isinstance(index, Annotation):
+        if isinstance(index, Feature):
             # Concatenate subsequences for each location of the feature
             # Start by creating an empty sequence
             sub_seq = self._sequence.copy(new_seq_code=np.array([]))
-            locs = index._get_location()
-            for loc in locs:
+            for loc in index.locs:
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart +1
-                slice_index = slice(slice_start, slice_stop)
-                add_seq = self._sequence.__getitem__(slice_index)
+                add_seq = self._sequence[slice_start:slice_stop]
                 if loc.strand == Location.Strand.REVERSE:
                     add_seq = add_seq.reverse().complement()
                 sub_seq += add_seq
-                return sub_seq
+            return sub_seq
+        elif isinstance(index, slice):
+            seq_start = index.start - self._seqstart
+            seq_stop = index.stop - self._seqstart
+            return AnnotatedSequence(self._annotation[index],
+                                     self._sequence[seq_start:seq_stop],
+                                     self._seqstart)
+        elif isinstance(index, int):
+            return self._sequence[index - self._seqstart]
+        else:
+            raise TypeError("{:} instances are invalid indices"
+                            .format(type(index).__name__))
+    
+    def __setitem__(self, index, item):
+        if isinstance(index, Feature):
+            # Item must be sequence
+            # with length equal to sum of location lengths
+            sub_seq = item
+            sub_seq_i = 0
+            for loc in index.locs:
+                slice_start = loc.first - self._seqstart
+                # +1 due to exclusive stop
+                slice_stop = loc.last - self._seqstart +1
+                interval_size = slice_stop - slice_start
+                self._sequence[slice_start:slice_stop] \
+                    = sub_seq[sub_seq_i : sub_seq_i + interval_size]
+                sub_seq_i += interval_size
+        elif isinstance(index, slice):
+            seq_start = index.start - self._seqstart
+            seq_stop = index.stop - self._seqstart
+            # Item is a Sequence
+            self._sequence[seq_start:seq_stop] = item
+        elif isinstance(index, int):
+            # Item is a symbol
+            self._sequence[index - self._seqstart] = item
+        else:
+            raise TypeError("{:} instances are invalid indices"
+                            .format(type(index).__name__))
+
+
+
 
 
