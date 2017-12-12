@@ -3,6 +3,7 @@
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
 import copy
+import numpy as np
 
 __all__ = ["Alphabet", "AlphabetMapper", "AlphabetError"]
 
@@ -172,6 +173,40 @@ class Alphabet(object):
             return self._symbols[code]
         except IndexError:
             raise AlphabetError(str(code) + " is not a valid alphabet code")
+    
+    def encode_multiple(self, symbols, dtype=np.int64):
+        """
+        Encode a list of symbols.
+        
+        Parameters
+        ----------
+        symbols : list
+            The symbols to encode.
+        dtype : dtype, optional
+            The dtype of the output ndarray. (Default: `int64`)
+            
+        Returns
+        -------
+        code : ndarray
+            The sequence code.
+        """
+        return np.array([alphabet.encode(e) for e in symbols], dtype=dtype)
+    
+    def decode_multiple(self, code):
+        """
+        Decode a sequence code into a list of symbols.
+        
+        Parameters
+        ----------
+        code : ndarray
+            The sequence code to decode.
+        
+        Returns
+        -------
+        symbols : list
+            The decoded list of symbols.
+        """
+        return [alphabet.decode(c) for c in code]
     
     def __str__(self):
         return str(self._symbols)

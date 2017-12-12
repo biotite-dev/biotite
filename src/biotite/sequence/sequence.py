@@ -129,11 +129,12 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     @property
     def symbols(self):
-        return Sequence.decode(self.code, self.get_alphabet())
+        return self.get_alphabet().decode_multiple(self.code)
     
     @symbols.setter
     def symbols(self, value):
-        self._seq_code = Sequence.encode(value, self.get_alphabet())
+        alph = self.get_alphabet()
+        self._seq_code = alph.encode(value, Sequence._dtype(len(alph)))
     
     @property
     def code(self):
@@ -221,7 +222,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
                 code = item
             else:
                 # Default: item is iterable object of symbols
-                code = Sequence.encode(item, alph)
+                code = alph.encode_multiple(item)
             self._seq_code.__setitem__(index, code)
     
     def __len__(self):
