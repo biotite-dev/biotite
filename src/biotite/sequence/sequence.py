@@ -207,10 +207,22 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         else:
             return alph.decode(sub_seq)
     
-    def __setitem__(self, index, symbols):
+    def __setitem__(self, index, item):
         alph = self.get_alphabet()
-        code = alph.encode(symbols)
-        self._seq_code.__setitem__(index, code)
+        if isinstance(index, int):
+            # Expect a single symbol
+            code = alph.encode(item)
+            self._seq_code.__setitem__(index, code)
+        else:
+            # Expect multiple symbols
+            if isinstance(item, Sequence):
+                code = item.code
+            elif isinstance(item, np.ndarray):
+                code = item
+            else:
+                # Default: item is iterable object of symbols
+                code = Sequence.encode(item, alph)
+            self._seq_code.__setitem__(index, code)
     
     def __len__(self):
         return len(self._seq_code)
