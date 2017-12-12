@@ -134,7 +134,8 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     @symbols.setter
     def symbols(self, value):
         alph = self.get_alphabet()
-        self._seq_code = alph.encode(value, Sequence._dtype(len(alph)))
+        dtype = Sequence._dtype(len(alph))
+        self._seq_code = alph.encode_multiple(value, dtype)
     
     @property
     def code(self):

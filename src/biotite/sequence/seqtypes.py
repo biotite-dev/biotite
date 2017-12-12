@@ -94,13 +94,13 @@ class NucleotideSequence(Sequence):
         if ambiguous == False:
             try:
                 self._alphabet = NucleotideSequence.alphabet
-                seq_code = self._alphabet.encode(sequence)
+                seq_code = self._alphabet.encode_multiple(sequence)
             except AlphabetError:
                 self._alphabet = NucleotideSequence.alphabet_amb
-                seq_code = self._alphabet.encode(sequence)
+                seq_code = self._alphabet.encode_multiple(sequence)
         else:
             self._alphabet = NucleotideSequence.alphabet_amb
-            seq_code = self._alphabet.encode(sequence)
+            seq_code = self._alphabet.encode_multiple(sequence)
         super().__init__()
         self.code = seq_code
         

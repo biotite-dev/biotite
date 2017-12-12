@@ -190,7 +190,7 @@ class Alphabet(object):
         code : ndarray
             The sequence code.
         """
-        return np.array([alphabet.encode(e) for e in symbols], dtype=dtype)
+        return np.array([self.encode(e) for e in symbols], dtype=dtype)
     
     def decode_multiple(self, code):
         """
@@ -206,7 +206,7 @@ class Alphabet(object):
         symbols : list
             The decoded list of symbols.
         """
-        return [alphabet.decode(c) for c in code]
+        return [self.decode(c) for c in code]
     
     def __str__(self):
         return str(self._symbols)
