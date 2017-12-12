@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 cimport cython
 import numpy as np
@@ -94,6 +94,7 @@ def c_fill_align_table_affine(uint8[:] code1 not None,
     cdef int32 mg2_score, g2g2_score
     cdef uint8 trace
     cdef int32 m_score, g1_score, g2_score
+    cdef int32 similarity
     
     for i in range(1, trace_table.shape[0]):
         for j in range(1, trace_table.shape[1]):

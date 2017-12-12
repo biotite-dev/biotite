@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
@@ -38,9 +38,11 @@ if "sdist" in sys.argv:
 else:
     from Cython.Build import cythonize
     try:
+        import numpy
         ext_modules = cythonize(
             [Extension("biotite.sequence.align.calign",
-                ["src/biotite/sequence/align/calign.pyx"]
+                ["src/biotite/sequence/align/calign.pyx"],
+                include_dirs=[numpy.get_include()]
              ),
              Extension("biotite.structure.io.pdbx.cprocessloop",
                 ["src/biotite/structure/io/pdbx/cprocessloop.pyx"]
@@ -75,7 +77,7 @@ setup(
     description = "A general framework for computational biology",
     long_description = long_description,
     author = "The Biotite contributors",
-    url = "https://github.com/padix-key/biotite",
+    url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = (
         "Development Status :: 3 - Alpha",
@@ -83,10 +85,8 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
-        "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ),
@@ -98,11 +98,11 @@ setup(
     ext_modules = ext_modules,
     
     # Including substitution matrix data
-    package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"]},
+    package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"],
+                    "biotite.sequence" : ["codon_tables.txt"],},
     
     install_requires = ["requests",
                         "numpy",
-                        "scipy",
                         "matplotlib"],
     extras_require = {'trajectory':  ["mdtraj"]},
     python_requires = ">=3.6",
@@ -114,6 +114,6 @@ setup(
         'build_sphinx':
             {"source_dir" : ("setup.py", "./doc"),
              "build_dir"  : ("setup.py", "./doc/_build"),
-             "release"    : ("setup.py", "2.0a2")}
+             "release"    : ("setup.py", __version__)}
     }
 )

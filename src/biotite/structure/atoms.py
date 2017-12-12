@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 """
 This module contains the main types of the `Structure` subpackage:
@@ -910,7 +910,7 @@ def array(atoms):
     names = sorted(atoms[0]._annot.keys())
     for atom in atoms:
         if sorted(atom._annot.keys()) != names:
-            raise ValueError("The atoms do not share the"
+            raise ValueError("The atoms do not share the "
                              "same annotation categories")
     # Add all atoms to AtomArray
     array = AtomArray(len(atoms))
@@ -968,8 +968,8 @@ def stack(arrays):
         array_count += 1
         # Check if all arrays share equal annotations
         if not array.equal_annotations(arrays[0]):
-            raise ValueError("The arrays atom annotations"
-                             "do not fit to each other") 
+            raise ValueError("The arrays annotations "
+                             "do not fit match each other") 
     array_stack = AtomArrayStack(array_count, arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation

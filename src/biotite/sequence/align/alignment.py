@@ -1,6 +1,6 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 import numpy as np
 import copy
@@ -83,6 +83,24 @@ class Alignment(object):
             else:
                 seq_str += "-"
         return seq_str
+    
+    def get_gapped_sequences(self):
+        """
+        Get a the string representation of the gapped sequences.
+        
+        Parameters
+        ----------
+        seq_str_list : list
+            The strings, where each each one represents a sequence
+            in an alignment.
+        
+        Returns
+        -------
+        sequences : list of str
+            The list of gapped sequence strings. The order is the same
+            as in `Alignment.sequences`.
+        """
+        return [self._gapped_str(i) for i in range(len(self.sequences))]
     
     def __str__(self):
         # Check if any of the sequences

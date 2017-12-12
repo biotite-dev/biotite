@@ -1,23 +1,23 @@
 # Copyright 2017 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
+# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 import abc
 import time
-from enum import Flag, auto
+from enum import IntEnum
 
 __all__ = ["Application", "AppStateError", "AppState", "requires_state"]
 
 
-class AppState(Flag):
+class AppState(IntEnum):
     """
     This enum type represents the app states of an application. 
     """
-    CREATED = auto()
-    RUNNING = auto()
-    FINISHED = auto()
-    JOINED = auto()
-    CANCELLED = auto()
+    CREATED = 1
+    RUNNING = 2
+    FINISHED = 4
+    JOINED = 8
+    CANCELLED = 16
 
 
 def requires_state(app_state):
@@ -34,12 +34,14 @@ def requires_state(app_state):
     def decorator(func):
         def wrapper(*args, **kwargs):
             instance = args[0]
-            if (instance._state & app_state).value == 0:
-                raise AppStateError("The application is in {:} state, "
-                                    "but {:} state is required".format(
-                                        str(instance.get_app_state()),
-                                        str(app_state))
-                                    )
+            if (instance._state & app_state) == 0:
+                raise AppStateError(
+                    "The application is in {:} state, "
+                    "but {:} state is required".format(
+                        str(instance.get_app_state()),
+                        str(app_state)
+                    )
+                )
             return func(*args, **kwargs)
         return wrapper
     return decorator
