@@ -111,7 +111,7 @@ Output:
 The other `Sequence` type is `ProteinSequence`. It supports the letters for
 the 20 standard amino acids plus some letters for ambiguous amino acids and a
 letter for a stop signal. Furthermore this class provides some utilities like
-codon tables, 3 letter to single letter translation (and vice versa) and more.
+3-letter to 1-letter translation (and vice versa).
 
 .. code-block:: python
 
