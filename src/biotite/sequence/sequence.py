@@ -45,6 +45,12 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     A `Sequence` can be indexed by any 1-D index a `ndarray` accepts.
     If the index is a single integer, the decoded symbol at that
     position is returned, otherwise a subsequence is returned.
+    
+    Individual symbols of the sequence can also be exchanged in indexed
+    form: If the an integer is used as index, the item is treated as a
+    symbol. Any other index (slice, index list, boolean mask) expects
+    multiple symbols, either as list of symbols, as `ndarray`
+    containing a sequence code or another `Sequence` instance.
     Concatenation of two sequences is achieved with the '+' operator.
     
     Each subclass of `Sequence` needs to overwrite the abstract method
@@ -72,14 +78,14 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     Creating a DNA sequence from string and print the symbols and the
     code:
     
-        >>> dna_seq = DNASequence("ACGTA")
+        >>> dna_seq = NucleotideSequence("ACGTA")
         >>> print(dna_seq)
         ACGTA
         >>> print(dna_seq.code)
         [0 1 2 3 0]
         >>> print(dna_seq.symbols)
         ['A', 'C', 'G', 'T', 'A']
-        >>> print(list(dna_seq)
+        >>> print(list(dna_seq))
         ['A', 'C', 'G', 'T', 'A']
     
     Sequence indexing:
@@ -88,6 +94,27 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         CG
         >>> print(dna_seq[[0,2,4]])
         AGA
+        >>> print(dna_seq[np.array([False,False,True,True,True])])
+        GTA
+    
+    Sequence manipulation:
+        
+        >>> dna_copy = dna_seq.copy()
+        >>> dna_copy[2] = "C"
+        >>> print(dna_copy)
+        ACCTA
+        >>> dna_copy = dna_seq.copy()
+        >>> dna_copy[0:2] = dna_copy[3:5]
+        >>> print(dna_copy)
+        TAGTA
+        >>> dna_copy = dna_seq.copy()
+        >>> dna_copy[np.array([True,False,False,False,True])] = "T"
+        >>> print(dna_copy)
+        TCGTT
+        >>> dna_copy = dna_seq.copy()
+        >>> dna_copy[1:4] = np.array([0,1,2])
+        >>> print(dna_copy)
+        AACGA
     
     Concatenate the two sequences:
         
