@@ -109,9 +109,8 @@ def superimpose(fixed, mobile, ca_only=True):
         # Superimpose for every mobile in AtomArrayStack
         fitted_subjects = []
         transformations = []
-        for mobile in mobile:
-            fitted_subject, transformation = _superimpose(fixed,
-                                                          mobile, ca_only)
+        for mob in mobile:
+            fitted_subject, transformation = _superimpose(fixed, mob, ca_only)
             fitted_subjects.append(fitted_subject)
             transformations.append(transformation)
         # Convert AtomArray list back to AtomArrayStack
@@ -151,10 +150,8 @@ def _superimpose(fixed, mobile, ca_only):
         # Calculate covariance matrix
         cov = np.dot(y.T, x)
         v, s, w = np.linalg.svd(cov)
-        rotation = np.dot(w, v.T)
         # Remove possibility of reflected atom coordinates
         if np.linalg.det(v) * np.linalg.det(w) < 0:
-            s[-1,:] *= -1
             v[:,-1] *= -1
         rotation = np.dot(v,w)
         
