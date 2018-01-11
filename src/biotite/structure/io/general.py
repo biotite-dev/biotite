@@ -61,7 +61,10 @@ def get_structure_from(file_path, template=None):
         else:
             return array
     elif suffix == ".mmtf":
-        raise NotImplementedError()
+        from .mmtf import MMTFFile
+        file = MMTFFile()
+        file.read(file_path)
+        return file.get_structure()
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile()
