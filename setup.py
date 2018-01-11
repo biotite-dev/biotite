@@ -103,7 +103,8 @@ setup(
     
     install_requires = ["requests",
                         "numpy",
-                        "matplotlib"],
+                        "matplotlib",
+                        "mmtf-python"],
     extras_require = {'trajectory':  ["mdtraj"]},
     python_requires = ">=3.6",
     
