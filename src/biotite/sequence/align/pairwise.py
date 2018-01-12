@@ -42,7 +42,11 @@ def simple_score(seq1, seq2, matrix):
     if (matrix.get_alphabet1() != seq1.get_alphabet() and
         matrix.get_alphabet2() != seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    score = np.sum(matrix.score_matrix()[seq1.code, seq2.code])
+    seq1_code = seq1.code
+    seq2_code = seq2.code
+    score = 0
+    for i in range(len(seq1)):
+        score += matrix.get_score_by_code(seq1_code[i], seq2_code[i])
     return score
 
 
