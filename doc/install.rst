@@ -19,6 +19,7 @@ to *Python* 3.x.
    - **numpy**
    - **matplotlib**
    - **requests**
+   - **mmtf-python**
 
 If you are a Linux user, you should be able to install these packages simply
 via *pip* (Tip: Use ``--only-binary :all:`` to ensure precompiled versions are
