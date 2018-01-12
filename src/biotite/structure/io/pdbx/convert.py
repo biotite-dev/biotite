@@ -5,8 +5,9 @@
 import numpy as np
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
-from collections import OrderedDict
+from ...filter import filter_inscode_and_altloc
 from ....sequence.seqtypes import ProteinSequence
+from collections import OrderedDict
 
 __all__ = ["get_sequence", "get_structure", "set_structure"]
 
@@ -117,7 +118,7 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
         stack.coord[:,:,2] = atom_site_dict["Cartn_z"].reshape((model_count,
                                                                 model_length))
         stack = _filter_inscode_altloc(stack, model_dict,
-                                       insertion_code, altloc)
+                                          insertion_code, altloc)
         return stack
     else:
         model_dict = _get_model_dict(atom_site_dict, model)
@@ -167,38 +168,17 @@ def _fill_annotations(array, model_dict, extra_fields):
 def _filter_inscode_altloc(array, model_dict, inscode, altloc):
     try:
         inscode_array = model_dict["pdbx_PDB_ins_code"]
-        # Default: Filter all atoms with insertion code ".", "?" or "A"
-        inscode_filter = np.in1d(inscode_array, [".","?"],
-                                 assume_unique=True)
-        # Now correct filter for every given insertion code
-        for code in inscode:
-            residue = code[0]
-            insertion = code[1]
-            residue_filter = (array.res_id == residue)
-            # Reset (to False) filter for given res_id
-            inscode_filter &= ~residue_filter
-            # Choose atoms of res_id with insertion code
-            inscode_filter |= residue_filter & (inscode_array == insertion)
     except KeyError:
         # In case no insertion code column is existent
-        inscode_filter = np.full(array.array_length(), True)
-    # Same with altlocs
+        inscode_array = None
     try:
         altloc_array = model_dict["label_alt_id"]
-        altloc_filter = np.in1d(altloc_array, [".","?","A"],
-                                assume_unique=True)
-        for loc in altloc:
-            residue = loc[0]
-            altloc = loc[1]
-            residue_filter = (array.res_id == residue)
-            altloc_filter &= ~residue_filter
-            altloc_filter |= residue_filter & (altloc_array == altloc)
     except KeyError:
-        altloc_filter = np.full(array.array_length(), True)
-        
-    # Apply combined filters
-    return array[..., inscode_filter & altloc_filter]
-    
+        # In case no insertion code column is existent
+        altloc_array = None
+    return array[..., filter_inscode_and_altloc(
+        array, inscode, altloc, inscode_array, altloc_array
+    )]
 
 
 def _get_model_dict(atom_site_dict, model):
