@@ -48,7 +48,7 @@ class MMTFFile(File):
                  axis=1
             ).reshape(depth, length, 3)
         # Create inscode and altloc arrays for the final filtering
-        altloc_array = np.array(dec.alt_loc_list, dtype="U1")
+        altloc_array = np.array(dec.alt_loc_list[:length], dtype="U1")
         inscode_array = np.zeros(array.array_length(), dtype="U1")
         
         extra_charge = False
@@ -65,13 +65,15 @@ class MMTFFile(File):
         chain_i = 0
         res_i = 0
         atom_i = 0
+        non_hetero_list = ["L-PEPTIDE LINKING", "PEPTIDE LINKING",
+                           "DNA LINKING", "RNA LINKING"]
         for i in range(dec.chains_per_model[0]):
             chain_id = dec.chain_name_list[chain_i]
             for j in range(dec.groups_per_chain[chain_i]): 
                 residue = dec.group_list[dec.group_type_list[res_i]]
                 res_id = dec.sequence_index_list[res_i] + 1
                 res_name = residue["groupName"]
-                hetero = (residue["chemCompType"] == "NON-POLYMER")
+                hetero = (residue["chemCompType"] not in non_hetero_list)
                 inscode = dec.ins_code_list[res_i]
                 for k in range(len(residue["atomNameList"])):
                     array.chain_id[atom_i]  = chain_id
