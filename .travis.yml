@@ -1,25 +1,74 @@
-language: python
+notifications:
+  on_success: never
+  on_failure: never
+
+language: generic
 matrix:
   include:
   - os: linux
     dist: trusty
     sudo: false
-    python: '3.6'
     env:
-    - COMPLETE=true
-    - BIN=true
-    - SRC=true
+      - PY_VERSION='3.4'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: linux
+    dist: trusty
+    sudo: false
+    env:
+      - PY_VERSION='3.5'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: linux
+    dist: trusty
+    sudo: false
+    env:
+      - PY_VERSION='3.6'
+      - COMPLETE=true
+      - BIN=true
+      - SRC=true
+  - os: osx
+    env:
+      - PY_VERSION='3.4'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.5'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.6'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
 
 install:
-  - pip install cython
-  - pip install pytest
-  - pip install numpy --only-binary=numpy
-  - pip install matplotlib --only-binary=matplotlib
-  - if [ $COMPLETE == true ]; then pip install pandas --only-binary=pandas; fi
-  - if [ $COMPLETE == true ]; then pip install scipy --only-binary=scipy; fi
-  - if [ $COMPLETE == true ]; then pip install mdtraj; fi
-  - if [ $COMPLETE == true ]; then pip install sphinx; fi
-  - if [ $COMPLETE == true ]; then pip install numpydoc; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
+  - wget https://repo.continuum.io/miniconda/$MINICONDA
+  
+  - bash $MINICONDA -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q -n biotite-env python=$PY_VERSION
+  - source activate biotite-env
+  
+  - conda install -n biotite-env -c anaconda cython
+  - conda install -n biotite-env -c anaconda pytest
+  - conda install -n biotite-env -c anaconda numpy
+  - conda install -n biotite-env -c conda-forge matplotlib
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda pandas; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda numpydoc; fi
 
 script:
   - python setup.py test --pytest-args="--ignore=tests/application/"
@@ -27,7 +76,7 @@ script:
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
   - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
-  - if [ $BIN == true ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
+  - if [ $BIN == true ] && [ $TRAVIS_OS_NAME == "linux" ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
   - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
   - if [ $COMPLETE == true ]; then tar -cf doc/_build/doc.tar doc/_build/html/; fi
 
