@@ -128,3 +128,67 @@ def filter_intersection(array, intersect):
                           == array.get_annotation(category)[i])
         filter[i] = subfilter.any()
     return filter
+
+
+def filter_inscode_and_altloc(array, inscode=[], altloc=[],
+                              altloc_array=None, inscode_array=None):
+    """
+    Filter all atoms having the desired altloc or inscode.
+    
+    Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
+    in case a residue is found in multiple alternative locations
+    (altloc) or different residues are inserted at a specific location
+    (inscode). This function is used to filter the desired altlocs and
+    inscodes, atoms at this position with other altlocs or inscodes are
+    removed.    
+    
+    The function will be merely used by the end user, since this kind
+    of filtering is automatically performed, when the structure is
+    loaded from a file. In the final atom array (stack) duplicate atoms
+    are not allowed.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    intersect : AtomArray
+        Atoms in `array` that also exists in `intersect` are filtered.
+    
+    Returns
+    -------
+    filter : ndarray(dtype=bool)
+        This array is `True` for all indices in `array`, where the atom
+        exists also in `intersect`.
+    """
+    if inscode_array is None:
+        # In case no insertion code column is existent
+        inscode_filter = np.full(array.array_length(), True)
+    else:
+        # Default: Filter all atoms
+        # with insertion code ".", "?" or " "
+        inscode_filter = np.in1d(inscode_array, [".","?"])
+        # Now correct filter for every given insertion code
+        for code in inscode:
+            residue = code[0]
+            insertion = code[1]
+            residue_filter = (array.res_id == residue)
+            # Reset (to False) filter for given res_id
+            inscode_filter &= ~residue_filter
+            # Choose atoms of res_id with insertion code
+            inscode_filter |= residue_filter & (inscode_array == insertion)
+    # Same with altlocs
+    if altloc_array is None:
+        altloc_filter = np.full(array.array_length(), True)
+    else:
+        altloc_array = model_dict["label_alt_id"]
+        altloc_filter = np.in1d(altloc_array, [".","?","A"," "])
+        for loc in altloc:
+            residue = loc[0]
+            altloc = loc[1]
+            residue_filter = (array.res_id == residue)
+            altloc_filter &= ~residue_filter
+            altloc_filter |= residue_filter & (altloc_array == altloc)
+    # return combined filters
+    return inscode_filter & altloc_filter
+
+
