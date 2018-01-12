@@ -20,7 +20,7 @@ def get_structure_from(file_path, template=None):
     
     Internally this function uses a `File` object, based on the file
     extension. Trajectory files furthermore require specification of
-    the `template` parameter
+    the `template` parameter.
     
     Parameters
     ----------
