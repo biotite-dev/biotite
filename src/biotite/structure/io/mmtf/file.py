@@ -13,18 +13,70 @@ __all__ = ["MMTFFile"]
 
 
 class MMTFFile(File):
+    """
+    This class represents a MMTF file.
+    
+    This class only a parser for MMTF files. Writing MMTF files is not
+    possible at this point.
+    
+    Examples
+    --------
+    
+        >>> file = MMTFFile()
+        >>> file.read("1l2y.mmtf")
+        >>> array_stack = file.get_structure()
+    
+    """
     
     def __init__(self):
         self.decoder = None
         self.encoder = None
     
     def read(self, file_name):
+        """
+        Parse a MMTF file.
+        
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to be read.
+        """
         self.decoder = mmtf.parse(file_name)
     
     def write(self, file_name):
+        """
+        Not implemented yet.        
+        """
         raise NotImplementedError()
     
     def get_structure(self, extra_fields=[], insertion_code=[], altloc=[]):
+        """
+        Get an `AtomArray` or `AtomArrayStack` from the MMTF file.
+        
+        Parameters
+        ----------
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the uoput array or stack.
+            There are 4 optional annotation identifiers:
+            'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        insertion_code : list of tuple, optional
+            In case the structure contains insertion codes, those can be
+            specified here: Each tuple consists of an integer, specifying
+            the residue ID, and a letter, specifying the insertion code.
+            By default no insertions are used.
+        altloc : list of tuple, optional
+            In case the structure contains *altloc* entries, those can be
+            specified here: Each tuple consists of an integer, specifying
+            the residue ID, and a letter, specifying the *altloc* ID.
+            By default the location with the *altloc* ID "A" is used.
+        
+        Returns
+        -------
+        array : AtomArray or AtomArrayStack
+            A stack is returned, if this file contains multiple models,
+            otherwise an array is returned.
+        """
         dec = self.decoder
         if dec is None:
             raise ValueError("No structure is currently loaded")
@@ -96,8 +148,25 @@ class MMTFFile(File):
         return array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
+    
+    def get_decoder(self):
+        """
+        Get the internally used `MMTFDecoder` from the package
+        `mmtf-python`.
+        
+        Returns
+        -------
+        decoder : MMTFDecoder
+            The decoder used for file parsing.
+        """
+        if self.decoder is None:
+            raise ValueError("No structure is currently loaded")
+        return self.decoder
         
     def set_structure(self, array):
+        """
+        Not implemented yet.        
+        """
         raise NotImplementedError()
                 
             

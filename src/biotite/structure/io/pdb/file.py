@@ -35,7 +35,7 @@ class PDBFile(TextFile):
     
     The usage of PDBxFile is encouraged in favor of this class.
     
-    This class only provides suppert reading/writing the pure atom
+    This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
     
@@ -67,7 +67,7 @@ class PDBFile(TextFile):
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the uoput array or stack.
-            There are 4 opional annotation identifiers:
+            There are 4 optional annotation identifiers:
             'atom_id', 'b_factor', 'occupancy' and 'charge'.
         insertion_code : list of tuple, optional
             In case the structure contains insertion codes, those can be
