@@ -14,17 +14,28 @@ import textwrap
 
 
 ctypedef np.int32_t int32
+ctypedef np.int64_t int64
 ctypedef np.uint8_t uint8
 ctypedef np.uint16_t uint16
 ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
-ctypedef np.int64_t int64
 
+ctypedef fused CodeType1:
+    uint8
+    uint16
+    uint32
+    uint64
+ctypedef fused CodeType2:
+    uint8
+    uint16
+    uint32
+    uint64
 
 cdef inline int32 int_max(int32 a, int32 b): return a if a >= b else b
 
 
 __all__ = ["simple_score", "align_optimal"]
+
 
 
 def simple_score(seq1, seq2, matrix):
@@ -52,11 +63,18 @@ def simple_score(seq1, seq2, matrix):
     if (matrix.get_alphabet1() != seq1.get_alphabet() and
         matrix.get_alphabet2() != seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    seq1_code = seq1.code
-    seq2_code = seq2.code
-    score = 0
-    for i in range(len(seq1)):
-        score += matrix.get_score_by_code(seq1_code[i], seq2_code[i])
+    return _add_scores(seq1.code, seq2.code, matrix.score_matrix())
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def _add_scores(CodeType1[:] code1 not None,
+                CodeType2[:] code2 not None,
+                int32[:,:] matrix not None):
+    cdef int32 score = 0
+    cdef int i
+    for i in range(len(code1)):
+        score += matrix[code1[i], code2[i]]
     return score
 
 
@@ -303,13 +321,13 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _fill_align_table(uint8[:] code1 not None,
-                       uint8[:] code2 not None,
-                       int32[:,:] matrix not None,
-                       uint8[:,:] trace_table not None,
-                       int32[:,:] score_table not None,
-                       int gap_penalty,
-                       bint local):
+def _fill_align_table(CodeType1[:] code1 not None,
+                      CodeType2[:] code2 not None,
+                      int32[:,:] matrix not None,
+                      uint8[:,:] trace_table not None,
+                      int32[:,:] score_table not None,
+                      int gap_penalty,
+                      bint local):
     cdef int i, j
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
@@ -363,16 +381,16 @@ def _fill_align_table(uint8[:] code1 not None,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _fill_align_table_affine(uint8[:] code1 not None,
-                              uint8[:] code2 not None,
-                              int32[:,:] matrix not None,
-                              uint8[:,:] trace_table not None,
-                              int32[:,:] m_table not None,
-                              int32[:,:] g1_table not None,
-                              int32[:,:] g2_table not None,
-                              int gap_open,
-                              int gap_ext,
-                              bint local):
+def _fill_align_table_affine(CodeType1[:] code1 not None,
+                             CodeType2[:] code2 not None,
+                             int32[:,:] matrix not None,
+                             uint8[:,:] trace_table not None,
+                             int32[:,:] m_table not None,
+                             int32[:,:] g1_table not None,
+                             int32[:,:] g2_table not None,
+                             int gap_open,
+                             int gap_ext,
+                             bint local):
     cdef int i, j
     cdef int32 mm_score, g1m_score, g2m_score
     cdef int32 mg1_score, g1g1_score
@@ -470,10 +488,10 @@ def _fill_align_table_affine(uint8[:] code1 not None,
 
 
 cpdef _follow_trace(uint8[:,:] trace_table,
-                     int i, int j, int pos,
-                     int64[:,:] trace,
-                     list trace_list,
-                     int state):
+                    int i, int j, int pos,
+                    int64[:,:] trace,
+                    list trace_list,
+                    int state):
     cdef list next_indices
     cdef list next_states
     cdef int trace_value
