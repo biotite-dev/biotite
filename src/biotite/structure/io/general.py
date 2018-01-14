@@ -20,7 +20,7 @@ def get_structure_from(file_path, template=None):
     
     Internally this function uses a `File` object, based on the file
     extension. Trajectory files furthermore require specification of
-    the `template` parameter
+    the `template` parameter.
     
     Parameters
     ----------
@@ -61,7 +61,10 @@ def get_structure_from(file_path, template=None):
         else:
             return array
     elif suffix == ".mmtf":
-        raise NotImplementedError()
+        from .mmtf import MMTFFile
+        file = MMTFFile()
+        file.read(file_path)
+        return file.get_structure()
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile()
