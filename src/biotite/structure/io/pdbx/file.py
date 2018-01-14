@@ -5,9 +5,6 @@
 import shlex
 import numpy as np
 from ....file import TextFile
-from ....extensions import has_c_extensions, uses_c_extensions
-if has_c_extensions():
-    from .cprocessloop import c_process_looped
 
 __all__ = ["PDBxFile"]
 
@@ -223,18 +220,15 @@ class PDBxFile(TextFile):
                      if not _is_empty(line) and not _is_loop_start(line)]
         
         if is_loop:
-            if uses_c_extensions():
-                # Special optimisation for "atom_site:"
-                # Even if the values are quote protected,
-                # no whitespace is expected in escaped values
-                # Therefore slow shlex.split() call is not necessary
-                if category == "atom_site":
-                    whitespace_values = False
-                else:
-                    whitespace_values = True
-                category_dict = c_process_looped(lines, whitespace_values)
+            # Special optimization for "atom_site":
+            # Even if the values are quote protected,
+            # no whitespace is expected in escaped values
+            # Therefore slow shlex.split() call is not necessary
+            if category == "atom_site":
+                whitespace_values = False
             else:
-                category_dict = _process_looped(lines)
+                whitespace_values = True
+            category_dict = c_process_looped(lines, whitespace_values)
         else:
             category_dict = _process_singlevalued(lines)
         
@@ -420,7 +414,7 @@ def _process_singlevalued(lines):
     return category_dict
 
 
-def _process_looped(lines):
+def _process_looped(lines, whitepace_values):
     category_dict = {}
     keys = []
     # Array index
@@ -428,8 +422,8 @@ def _process_looped(lines):
     # Dictionary key index
     j = 0
     for line in lines:
-        in_key_lines = (line[0] == "_")
-        if in_key_lines:
+        if line[0] == "_":
+            # Key line
             key = line.split(".")[1]
             keys.append(key)
             # Pessimistic array allocation
@@ -437,7 +431,21 @@ def _process_looped(lines):
             category_dict[key] = np.zeros(len(lines), dtype=object)
             keys_length = len(keys)
         else:
-            for value in shlex.split(line):
+            # If whitespace is expected in quote protected values,
+            # use standard shlex split
+            # Otherwise use much more faster whitespace split
+            # and quote removal if applicable,
+            # bypassing the slow shlex module 
+            if whitepace_values:
+                values = shlex.split(line)
+            else:
+                values = line.split()
+                for i in range(len(values)):
+                    # Remove quotes
+                    if ((values[i][0] == '"' and values[i][-1] == '"') or
+                        (values[i][0] == "'" and values[i][-1] == "'")):
+                            values[i] = values[i][1:-1]
+            for value in values:
                 category_dict[keys[j]][i] = value
                 j += 1
                 if j == keys_length:

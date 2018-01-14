@@ -43,13 +43,7 @@ else:
             [Extension("biotite.sequence.align.pairwise",
                 ["src/biotite/sequence/align/pairwise.pyx"],
                 include_dirs=[numpy.get_include()]
-             ),
-             Extension("biotite.structure.io.pdbx.cprocessloop",
-                ["src/biotite/structure/io/pdbx/cprocessloop.pyx"]
-             ),
-             Extension("biotite.cextensions",
-                ["src/biotite/cextensions.pyx"]
-             )]
+             ),]
         )
     except ValueError:
         # In case of installing a source distribution,

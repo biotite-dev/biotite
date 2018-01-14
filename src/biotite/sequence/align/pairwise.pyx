@@ -5,13 +5,13 @@
 cimport cython
 cimport numpy as np
 
-from ...extensions import has_c_extensions, uses_c_extensions
 from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
 from .alignment import Alignment
 import numpy as np
 import copy
 import textwrap
+
 
 ctypedef np.int32_t int32
 ctypedef np.uint8_t uint8
