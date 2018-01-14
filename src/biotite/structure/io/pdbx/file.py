@@ -228,7 +228,7 @@ class PDBxFile(TextFile):
                 whitespace_values = False
             else:
                 whitespace_values = True
-            category_dict = c_process_looped(lines, whitespace_values)
+            category_dict = _process_looped(lines, whitespace_values)
         else:
             category_dict = _process_singlevalued(lines)
         
@@ -440,11 +440,11 @@ def _process_looped(lines, whitepace_values):
                 values = shlex.split(line)
             else:
                 values = line.split()
-                for i in range(len(values)):
+                for k in range(len(values)):
                     # Remove quotes
-                    if ((values[i][0] == '"' and values[i][-1] == '"') or
-                        (values[i][0] == "'" and values[i][-1] == "'")):
-                            values[i] = values[i][1:-1]
+                    if ((values[k][0] == '"' and values[k][-1] == '"') or
+                        (values[k][0] == "'" and values[k][-1] == "'")):
+                            values[k] = values[k][1:-1]
             for value in values:
                 category_dict[keys[j]][i] = value
                 j += 1
