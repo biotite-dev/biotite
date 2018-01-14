@@ -46,9 +46,6 @@ def _create_package_doc(pck, src_path, doc_path):
         
         module = import_module(pck)
         attr_list = dir(module)
-        if(module.__name__ == "biotite.sequence.align"):
-            for attr in attr_list:
-                print(attr, "\t", type(getattr(module, attr)))
         func_list = [attr for attr in attr_list
                      if attr[0] != "_"
                      and type(getattr(module, attr))

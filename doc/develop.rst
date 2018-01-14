@@ -39,12 +39,9 @@ plays also an important role. Therefore time consuming tasks should be
 C-accelerated, if possible.
 The most convenient way to achieve this, is using *NumPy*.
 In cases the problem is not vectorizable, writing modules in *Cython* are the
-preferred way to go. You have to keep in mind that Biotite is also
-required to work without extension modules, so a pure Python alternative must
-always be shipped, too. The way this is solved can be seen for example in
-``biotite/sequence/align/pairwise``.
-Writing pure C-extension is disencouraged due to the bad readability.
-And anyway, Cython is *so* much better...
+preferred way to go. Writing pure C-extensions is discouraged due to the bad
+readability.
+And anyway, *Cython* is *so* much better...
 
 Code documentation
 ^^^^^^^^^^^^^^^^^^

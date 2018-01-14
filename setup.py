@@ -6,10 +6,10 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
 import sys
 import shlex
+import glob
 from os.path import join, abspath, dirname
+import os
 from src.biotite import __version__
-
-release = __version__
 
 long_description = """
 The Biotite package bundles popular tools in computational biology into an
@@ -29,26 +29,26 @@ allowing advanced users to implement their own algorithms upon the existing
 types.
 """
 
-
-if "sdist" in sys.argv:
-    # Source distributions do not have extension modules
-    # and therefore are using not C-accelerated functions
-    # Simple 'install' command uses source distribution
-    ext_modules = None
-else:
+import numpy
+try:
     from Cython.Build import cythonize
-    try:
-        import numpy
-        ext_modules = cythonize(
-            [Extension("biotite.sequence.align.pairwise",
-                ["src/biotite/sequence/align/pairwise.pyx"],
-                include_dirs=[numpy.get_include()]
-             ),]
-        )
-    except ValueError:
-        # In case of installing a source distribution,
-        # the *.pyx files cannot be found
-        ext_modules = None
+    cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
+except ValueError:
+    pass
+
+def get_extensions():
+    original_wd = os.getcwd()
+    # Change directory to setup directory to ensure correct globbing
+    os.chdir(dirname(abspath(__file__)))
+    ext_sources = glob.glob("src/biotite/**/*.c", recursive=True)
+    ext_names = [source.replace("src/", "").replace(".c", "").replace("/", ".")
+                 for source in ext_sources]
+    ext_modules = [Extension(ext_names[i], [ext_sources[i]],
+                             include_dirs=[numpy.get_include()])
+                   for i in range(len(ext_sources))]
+    # Return to original directory
+    os.chdir(original_wd)
+    return ext_modules
 
 
 class PyTestCommand(TestCommand):
@@ -67,7 +67,7 @@ class PyTestCommand(TestCommand):
 
 setup(
     name="biotite",
-    version = release,
+    version = __version__,
     description = "A general framework for computational biology",
     long_description = long_description,
     author = "The Biotite contributors",
@@ -92,7 +92,7 @@ setup(
     packages = find_packages("src"),
     package_dir = {"" : "src"},
     
-    ext_modules = ext_modules,
+    ext_modules = get_extensions(),
     
     # Including substitution matrix data
     package_data = {"biotite.sequence.align" : ["matrix_data/*.mat"],
