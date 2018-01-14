@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
@@ -6,6 +6,7 @@ import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import TextFile
 from ...error import BadStructureError
+from ...filter import filter_inscode_and_altloc
 import copy
 
 __all__ = ["PDBFile"]
@@ -34,11 +35,9 @@ class PDBFile(TextFile):
     
     The usage of PDBxFile is encouraged in favor of this class.
     
-    This class only provides suppert reading/writing the pure atom
+    This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
-    
-    Usage of altlocs and insertion codes is not supported.
     
     See also
     --------
@@ -59,7 +58,7 @@ class PDBFile(TextFile):
     
     """
     
-    def get_structure(self, extra_fields=[]):
+    def get_structure(self, extra_fields=[], insertion_code=[], altloc=[]):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.
         
@@ -68,8 +67,18 @@ class PDBFile(TextFile):
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the uoput array or stack.
-            There are 4 opional annotation identifiers:
+            There are 4 optional annotation identifiers:
             'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        insertion_code : list of tuple, optional
+            In case the structure contains insertion codes, those can be
+            specified here: Each tuple consists of an integer, specifying
+            the residue ID, and a letter, specifying the insertion code.
+            By default no insertions are used.
+        altloc : list of tuple, optional
+            In case the structure contains *altloc* entries, those can be
+            specified here: Each tuple consists of an integer, specifying
+            the residue ID, and a letter, specifying the *altloc* ID.
+            By default the location with the *altloc* ID "A" is used.
         
         Returns
         -------
@@ -83,13 +92,8 @@ class PDBFile(TextFile):
         # Line indices with ATOM or HETATM records
         # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self._lines)) if
-                                self._lines[i].startswith(("ATOM", "HETATM"))
-                                # altloc
-                                and self._lines[i][16] in [" ", "A"]
-                                # inscode
-                                and self._lines[i][26] == " "])
+                                self._lines[i].startswith(("ATOM", "HETATM"))])
         
-        model = 0
         if len(model_start_i) <= 1:
             # Only a single model -> AtomArray
             array = AtomArray(len(atom_line_i))
@@ -104,6 +108,10 @@ class PDBFile(TextFile):
             # Determine annotations from first model
             # therefore from ATOM records before second MODEL record
             annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+        
+        # Create inscode and altloc arrays for the final filtering
+        altloc_array = np.zeros(array.array_length(), dtype="U1")
+        inscode_array = np.zeros(array.array_length(), dtype="U1")
         # Add optional annotation arrays
         if "atom_id" in extra_fields:
             array.add_annotation("atom_id", dtype=int)
@@ -113,10 +121,13 @@ class PDBFile(TextFile):
             array.add_annotation("b_factor", dtype=float)
         if "charge" in extra_fields:
             array.add_annotation("charge", dtype=int)
+        
         # Fill in annotation
         # i is index in array, j is line index
         for i, j in enumerate(annot_i):
             line = self._lines[j]
+            altloc_array[i] = line[16]
+            inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
             array.res_id[i] = int(line[22:26])
             array.res_name[i] = line[17:20].strip()
@@ -158,7 +169,10 @@ class PDBFile(TextFile):
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
                 
-        return array
+        # Final filter and return
+        return array[..., filter_inscode_and_altloc(
+            array, insertion_code, altloc, inscode_array, altloc_array
+        )]
         
     def set_structure(self, array):
         """

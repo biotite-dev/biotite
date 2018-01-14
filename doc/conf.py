@@ -2,6 +2,10 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
+import pyximport
+import numpy as np
+pyximport.install(setup_args={'include_dirs': np.get_include()})
+
 from os.path import realpath, dirname, join, isdir, isfile, basename
 from os import listdir, makedirs
 import shutil
@@ -42,9 +46,14 @@ def _create_package_doc(pck, src_path, doc_path):
         
         module = import_module(pck)
         attr_list = dir(module)
+        if(module.__name__ == "biotite.sequence.align"):
+            for attr in attr_list:
+                print(attr, "\t", type(getattr(module, attr)))
         func_list = [attr for attr in attr_list
                      if attr[0] != "_"
-                     and type(getattr(module, attr)) == types.FunctionType]
+                     and type(getattr(module, attr))
+                     in [types.FunctionType, types.BuiltinFunctionType]
+                    ]
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
                      and type(getattr(module, attr)) in [type, abc.ABCMeta]]

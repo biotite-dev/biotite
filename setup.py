@@ -40,16 +40,10 @@ else:
     try:
         import numpy
         ext_modules = cythonize(
-            [Extension("biotite.sequence.align.calign",
-                ["src/biotite/sequence/align/calign.pyx"],
+            [Extension("biotite.sequence.align.pairwise",
+                ["src/biotite/sequence/align/pairwise.pyx"],
                 include_dirs=[numpy.get_include()]
-             ),
-             Extension("biotite.structure.io.pdbx.cprocessloop",
-                ["src/biotite/structure/io/pdbx/cprocessloop.pyx"]
-             ),
-             Extension("biotite.cextensions",
-                ["src/biotite/cextensions.pyx"]
-             )]
+             ),]
         )
     except ValueError:
         # In case of installing a source distribution,
@@ -86,6 +80,9 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -103,9 +100,9 @@ setup(
     
     install_requires = ["requests",
                         "numpy",
-                        "matplotlib"],
-    extras_require = {'trajectory':  ["mdtraj"]},
-    python_requires = ">=3.6",
+                        "matplotlib",
+                        "mmtf-python"],
+    python_requires = ">=3.4",
     
     cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],

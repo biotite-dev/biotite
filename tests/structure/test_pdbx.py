@@ -14,19 +14,11 @@ from .util import data_dir
 import pytest
 
 
-@pytest.mark.parametrize("path, is_stack, use_c_ext", itertools.product(
+@pytest.mark.parametrize("path, is_stack", itertools.product(
                             glob.glob(join(data_dir, "*.cif")),
                             [False, True],
-                            [False, True],
                          ))
-def test_conversion(path, is_stack, use_c_ext):
-    if use_c_ext:
-        if biotite.has_c_extensions():
-            biotite.enable_c_extensions(True)
-        else:
-            return
-    else:
-        biotite.enable_c_extensions(False)
+def test_conversion(path, is_stack):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
     if is_stack:
