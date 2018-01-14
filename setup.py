@@ -40,8 +40,8 @@ else:
     try:
         import numpy
         ext_modules = cythonize(
-            [Extension("biotite.sequence.align.calign",
-                ["src/biotite/sequence/align/calign.pyx"],
+            [Extension("biotite.sequence.align.pairwise",
+                ["src/biotite/sequence/align/pairwise.pyx"],
                 include_dirs=[numpy.get_include()]
              ),
              Extension("biotite.structure.io.pdbx.cprocessloop",
