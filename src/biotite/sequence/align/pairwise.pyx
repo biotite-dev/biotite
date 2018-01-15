@@ -73,7 +73,7 @@ def _add_scores(CodeType1[:] code1 not None,
                 int32[:,:] matrix not None):
     cdef int32 score = 0
     cdef int i
-    for i in range(len(code1)):
+    for i in range(code1.shape[0]):
         score += matrix[code1[i], code2[i]]
     return score
 
