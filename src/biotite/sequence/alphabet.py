@@ -272,7 +272,6 @@ class LetterAlphabet(Alphabet):
             code[symbols == symbol] = i
         if (code == illegal_code).any():
             raise AlphabetError("Symbol list contains illegal symbols")
-        print(symbols, code)
         return code
             
     
