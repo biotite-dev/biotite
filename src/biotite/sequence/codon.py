@@ -61,12 +61,12 @@ class CodonTable(object):
         self._symbol_dict = copy.copy(codon_dict)
         self._code_dict = {}
         for key, value in self._symbol_dict.items():
-            key_code = tuple(Sequence.encode(key, NucleotideSequence.alphabet))
+            key_code = tuple(NucleotideSequence.alphabet.encode_multiple(key))
             val_code = ProteinSequence.alphabet.encode(value)
             self._code_dict[key_code] = val_code
         self._start_symbols = tuple((starts))
         self._start_codes = tuple(
-            [tuple(Sequence.encode(start, NucleotideSequence.alphabet))
+            [tuple(NucleotideSequence.alphabet.encode_multiple(start))
              for start in self._start_symbols]
         )
     

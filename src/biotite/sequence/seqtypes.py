@@ -3,7 +3,7 @@
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 from .sequence import Sequence
-from .alphabet import Alphabet, AlphabetError
+from .alphabet import LetterAlphabet, AlphabetError
 import numpy as np
 import copy
 
@@ -58,9 +58,9 @@ class NucleotideSequence(Sequence):
         is used.
     """
     
-    alphabet     = Alphabet(["A","C","G","T"])
-    alphabet_amb = Alphabet(["A","C","G","T","R","Y","W","S",
-                             "M","K","H","B","V","D","N","X"])
+    alphabet     = LetterAlphabet(["A","C","G","T"])
+    alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
+                                   "M","K","H","B","V","D","N","X"])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -78,13 +78,13 @@ class NucleotideSequence(Sequence):
                          "B" : "V",
                          "X" : "X",
                          "N" : "N"}
-    compl_dict = {}
-    for key, value in compl_symbol_dict.items():
-        key_code = alphabet_amb.encode(key)
-        val_code = alphabet_amb.encode(value)
-        compl_dict[key_code] = val_code
+    _compl_dict = {}
+    for _key, _value in compl_symbol_dict.items():
+        _key_code = alphabet_amb.encode(_key)
+        _val_code = alphabet_amb.encode(_value)
+        _compl_dict[_key_code] = _val_code
     # Vectorized function that returns a complement code
-    _complement_func = np.vectorize(compl_dict.__getitem__)
+    _complement_func = np.vectorize(_compl_dict.__getitem__)
     
     def __init__(self, sequence=[], ambiguous=False):
         if isinstance(sequence, str):
@@ -292,9 +292,9 @@ class ProteinSequence(Sequence):
     
     _codon_table = None
     
-    alphabet = Alphabet(["A","C","D","E","F","G","H","I","K","L",
-                         "M","N","P","Q","R","S","T","V","W","Y",
-                         "B","Z","X","*"])
+    alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
+                               "M","N","P","Q","R","S","T","V","W","Y",
+                               "B","Z","X","*"])
     
     _dict_3to1 = {"ALA" : "A",
                   "CYS" : "C",

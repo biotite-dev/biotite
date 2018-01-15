@@ -291,45 +291,6 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             return new_seq
         else:
             raise ValueError("The sequences alphabets are not compatible")
-    
-    @staticmethod
-    def encode(symbols, alphabet):
-        """
-        Encode a list of symbols using an `Alphabet`.
-        
-        Parameters
-        ----------
-        symbols : list
-            The symbols to encode.
-        alphabet : Alphabet
-            The alphabet used to encode the `symbols`.
-        
-        Returns
-        -------
-        code : ndarray
-            The sequence code
-        """
-        return np.array([alphabet.encode(e) for e in symbols],
-                        dtype=Sequence._dtype(len(alphabet)))
-
-    @staticmethod
-    def decode(code, alphabet):
-        """
-        Decode a list of sequence code using an `Alphabet`.
-        
-        Parameters
-        ----------
-        code : ndarray
-            The code to decode.
-        alphabet : Alphabet
-            The alphabet used to decode the sequence code.
-        
-        Returns
-        -------
-        symbols : list
-            The decoded list of symbols.
-        """
-        return [alphabet.decode(c) for c in code]
 
     @staticmethod
     def _dtype(alphabet_size):
