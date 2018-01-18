@@ -196,7 +196,15 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
         # Affine gap penalty
         gap_open = gap_penalty[0]
         gap_ext = gap_penalty[1]
-        neg_inf = np.iinfo(np.int32).min - 2*gap_open  - 2*gap_ext
+        # Value for negative infinity
+        # Used to prevent unallowed state transitions
+        # in the first row and column
+        # Subtraction of gap_open, gap_ext and lowest score value
+        # to prevent integer overflow
+        neg_inf = np.iinfo(np.int32).min - 2*gap_open - 2*gap_ext
+        min_score = np.min(matrix.score_matrix())
+        if min_score < 0:
+            neg_inf -= min_score
         # m_table, g1_table and g2_table are the 3 score tables
         m_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         g1_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
