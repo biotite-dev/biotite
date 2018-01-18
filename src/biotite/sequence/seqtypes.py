@@ -296,34 +296,36 @@ class ProteinSequence(Sequence):
                                "M","N","P","Q","R","S","T","V","W","Y",
                                "B","Z","X","*"])
     
-    _dict_3to1 = {"ALA" : "A",
-                  "CYS" : "C",
-                  "ASP" : "D",
-                  "GLU" : "E",
-                  "PHE" : "F",
-                  "GLY" : "G",
-                  "HIS" : "H",
-                  "ILE" : "I",
-                  "LYS" : "K",
-                  "LEU" : "L",
-                  "MET" : "M",
-                  "ASN" : "N",
-                  "PRO" : "P",
-                  "GLN" : "Q",
-                  "ARG" : "R",
-                  "SER" : "S",
-                  "THR" : "T",
-                  "VAL" : "V",
-                  "TRP" : "W",
-                  "TYR" : "Y",
-                  "ASX" : "B",
-                  "GLX" : "Z",
-                  "UNK" : "X",
-                  " * "  : "*"}
+    _dict_1to3 = {"A" : "ALA",
+                  "C" : "CYS",
+                  "D" : "ASP",
+                  "E" : "GLU",
+                  "F" : "PHE",
+                  "G" : "GLY",
+                  "H" : "HIS",
+                  "I" : "ILE",
+                  "K" : "LYS",
+                  "L" : "LEU",
+                  "M" : "MET",
+                  "N" : "ASN",
+                  "P" : "PRO",
+                  "Q" : "GLN",
+                  "R" : "ARG",
+                  "S" : "SER",
+                  "T" : "THR",
+                  "V" : "VAL",
+                  "W" : "TRP",
+                  "Y" : "TYR",
+                  "B" : "ASX",
+                  "Z" : "GLX",
+                  "X" : "UNK",
+                  "*" : " * "}
     
-    _dict_1to3 = {}
-    for _key, _value in _dict_3to1.items():
-        _dict_1to3[_value] = _key
+    _dict_3to1 = {}
+    for _key, _value in _dict_1to3.items():
+        _dict_3to1[_value] = _key
+    _dict_3to1["SEC"] = "C"
+    _dict_3to1["MSE"] = "M"
     
     def __init__(self, sequence=[]):
         dict_3to1 = ProteinSequence._dict_3to1
