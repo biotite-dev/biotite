@@ -50,7 +50,7 @@ class MMTFFile(File):
             codec     = struct.unpack(">i", data[0:4 ])[0]
             length    = struct.unpack(">i", data[4:8 ])[0]
             param     = struct.unpack(">i", data[8:12])[0]
-            raw_array = data[12:]
-            return decode_array(codec, raw_array)
+            raw_bytes = data[12:]
+            return decode_array(codec, raw_bytes)
         else:
             return data
