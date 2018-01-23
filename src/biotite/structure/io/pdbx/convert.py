@@ -107,9 +107,11 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
         _fill_annotations(stack, model_dict, extra_fields)
         # Check if each model has the same amount of atoms
         # If not, raise exception
-        if model_length * model_count != len(models):
+        atom_count = len(models)
+        if model_length * model_count != atom_count:
             raise BadStructureError("The models in the file have unequal "
-                            "amount of atoms, give an explicit model instead")
+                                    "amount of atoms, give an explicit model "
+                                    "instead")
         stack.coord = np.zeros((model_count, model_length, 3), dtype=float)
         stack.coord[:,:,0] = atom_site_dict["Cartn_x"].reshape((model_count,
                                                                 model_length))
