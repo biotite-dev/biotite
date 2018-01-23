@@ -8,6 +8,7 @@ import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import numpy as np
 import glob
+import itertools
 from os.path import join
 from .util import data_dir
 import pytest
@@ -26,19 +27,18 @@ def test_array_conversion(path):
 
 mmtf_paths = sorted(glob.glob(join(data_dir, "*.mmtf")))
 cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
-@pytest.mark.parametrize("mmtf_path, cif_path",
-                          [(mmtf_paths[i], cif_paths[i]) for i
-                           in range(len(mmtf_paths))])
-def test_pdbx_consistency(mmtf_path, cif_path):
+@pytest.mark.parametrize("file_index, is_stack", itertools.product(
+                          [i for i in range(len(mmtf_paths))],
+                          [False, True])
+                        )
+def test_pdbx_consistency(file_index, is_stack):
+    model = None if is_stack else 1
     mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(mmtf_path)
-    a1 = mmtf_file.get_structure()
+    mmtf_file.read(mmtf_paths[file_index])
+    a1 = mmtf_file.get_structure(model=model)
     pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
-    a2 = pdbx.get_structure(pdbx_file)
-    # Get first array if it is stack
-    if len(a2) == 1:
-        a2 = a2.get_array(0)
+    pdbx_file.read(cif_paths[file_index])
+    a2 = pdbx.get_structure(pdbx_file, model=model)
     # Expected fail in res_id
     for category in ["chain_id", "res_name", "hetero",
                      "atom_name", "element"]:
