@@ -58,17 +58,13 @@ class PDBFile(TextFile):
     
     """
     
-    def get_structure(self, extra_fields=[], insertion_code=[], altloc=[]):
+    def get_structure(self, insertion_code=[], altloc=[],
+                      model=None, extra_fields=[]):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.
         
         Parameters
         ----------
-        extra_fields : list of str, optional
-            The strings in the list are optional annotation categories
-            that should be stored in the uoput array or stack.
-            There are 4 optional annotation identifiers:
-            'atom_id', 'b_factor', 'occupancy' and 'charge'.
         insertion_code : list of tuple, optional
             In case the structure contains insertion codes, those can be
             specified here: Each tuple consists of an integer, specifying
@@ -79,35 +75,73 @@ class PDBFile(TextFile):
             specified here: Each tuple consists of an integer, specifying
             the residue ID, and a letter, specifying the *altloc* ID.
             By default the location with the *altloc* ID "A" is used.
+        model : int, optional
+            If this parameter is given, the function will return an
+            `AtomArray` from the atoms corresponding to the given model ID.
+            If this parameter is omitted, an `AtomArrayStack` containing all
+            models will be returned, even if the structure contains only one
+            model.
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the uoput array or stack.
+            There are 4 optional annotation identifiers:
+            'atom_id', 'b_factor', 'occupancy' and 'charge'.
         
         Returns
         -------
         array : AtomArray or AtomArrayStack
-            A stack is returned, if this file contains multiple models,
-            otherwise an array is returned.
+            The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self._lines))
-                                  if self._lines[i].startswith(("MODEL"))])
+                                  if self._lines[i].startswith(("MODEL"))],
+                                 dtype=int)
         # Line indices with ATOM or HETATM records
         # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self._lines)) if
-                                self._lines[i].startswith(("ATOM", "HETATM"))])
+                                self._lines[i].startswith(("ATOM", "HETATM"))],
+                               dtype=int)
+        # Structures containing only one model may omit MODEL record
+        # In these cases model starting index is set to 0
+        if len(model_start_i) == 0:
+            model_start_i = np.array([0])
         
-        if len(model_start_i) <= 1:
-            # Only a single model -> AtomArray
-            array = AtomArray(len(atom_line_i))
-            annot_i = atom_line_i
-        else:
-            # Multiple models -> AtomArrayStack
+        if model is None:
+            # Very lazy check for length equlity check:
+            # If all models have the same amount of atoms
+            # the amount of atom lines is a 
             if len(atom_line_i) % len(model_start_i):
-                raise BadStructureError("Amount of ATOM/HETATM records is "
-                                        "not multiple of model count")
-            array = AtomArrayStack(len(model_start_i),
-                                   len(atom_line_i) // len(model_start_i))
-            # Determine annotations from first model
+                raise BadStructureError("The models in the file have unequal "
+                                        "amount of atoms, give an explicit "
+                                        "model instead")
+            depth = len(model_start_i)
+            length = len(atom_line_i) // len(model_start_i)
+            array = AtomArrayStack(depth, length)
+            # Line indices for annotation determination
+            # Annotation is determined from model 1,
             # therefore from ATOM records before second MODEL record
-            annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+            if len(model_start_i) == 1:
+                annot_i = atom_line_i
+            else:
+                annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+            # Line indices for coordinate determination
+            coord_i = atom_line_i
+        
+        else:
+            length = len(atom_line_i) // len(model_start_i)
+            array = AtomArray(length)
+            last_model = len(model_start_i)
+            if model < last_model:
+                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
+                                ( atom_line_i <  model_start_i[model  ] ) )
+            elif model == last_model:
+                line_filter = (atom_line_i >= model_start_i[model-1])
+            else:
+                raise ValueError("Requested model {:d} is larger than the "
+                                 "amount of models ({:d})"
+                                 .format(model, last_model))
+            annot_i = atom_line_i[line_filter]
+            coord_i = atom_line_i[line_filter]
         
         # Create inscode and altloc arrays for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
@@ -124,8 +158,8 @@ class PDBFile(TextFile):
         
         # Fill in annotation
         # i is index in array, j is line index
-        for i, j in enumerate(annot_i):
-            line = self._lines[j]
+        for i, line_i in enumerate(annot_i):
+            line = self._lines[line_i]
             altloc_array[i] = line[16]
             inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
@@ -135,8 +169,8 @@ class PDBFile(TextFile):
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
         if extra_fields:
-            for i, j in enumerate(annot_i):
-                line = self._lines[j]
+            for i, line_i in enumerate(annot_i):
+                line = self._lines[line_i]
                 if "atom_id" in extra_fields:
                     array.atom_id[i] = int(line[6:11].strip())
                 if "occupancy" in extra_fields:
@@ -150,20 +184,20 @@ class PDBFile(TextFile):
         
         # Fill in coordinates
         if isinstance(array, AtomArray):
-            for i, j in enumerate(atom_line_i):
-                line = self._lines[j]
+            for i, line_i in enumerate(coord_i):
+                line = self._lines[line_i]
                 array.coord[i,0] = float(line[30:38])
                 array.coord[i,1] = float(line[38:46])
                 array.coord[i,2] = float(line[46:54])
-        
+                
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
-            for k in atom_line_i:
-                if m < len(model_start_i)-1 and k > model_start_i[m+1]:
+            for line_i in atom_line_i:
+                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
                     m += 1
                     i = 0
-                line = self._lines[k]
+                line = self._lines[line_i]
                 array.coord[m,i,0] = float(line[30:38])
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])

@@ -49,7 +49,12 @@ def get_structure_from(file_path, template=None):
         from .pdb import PDBFile
         file = PDBFile()
         file.read(file_path)
-        return file.get_structure()
+        array = file.get_structure()
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, get_structure
         file = PDBxFile()

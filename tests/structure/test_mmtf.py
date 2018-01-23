@@ -9,7 +9,7 @@ import biotite.database.rcsb as rcsb
 import numpy as np
 import glob
 import itertools
-from os.path import join
+from os.path import join, basename
 from .util import data_dir
 import pytest
 
@@ -32,6 +32,7 @@ cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
                           [False, True])
                         )
 def test_pdbx_consistency(file_index, is_stack):
+    print("ID:", basename(cif_paths[file_index])[:-4])
     model = None if is_stack else 1
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(mmtf_paths[file_index])

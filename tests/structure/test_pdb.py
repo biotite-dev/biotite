@@ -6,38 +6,43 @@ import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
+import itertools
 import numpy as np
 import glob
-from os.path import join
+from os.path import join, basename
 from .util import data_dir
 import pytest
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.pdb")))
-def test_array_conversion(path):
+@pytest.mark.parametrize("path, is_stack", itertools.product(
+                            glob.glob(join(data_dir, "*.pdb")),
+                            [False, True])
+                        )
+def test_array_conversion(path, is_stack):
+    model = None if is_stack else 1
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
-    array1 = pdb_file.get_structure()
+    array1 = pdb_file.get_structure(model=model)
     pdb_file.set_structure(array1)
-    array2 = pdb_file.get_structure()
+    array2 = pdb_file.get_structure(model=model)
     assert array1 == array2
 
 
 pdb_paths = sorted(glob.glob(join(data_dir, "*.pdb")))
-cif_paths = sorted(glob.glob(join(data_dir, "*.cif")))
-@pytest.mark.parametrize("pdb_path, cif_path",
-                          [(pdb_paths[i], cif_paths[i]) for i
-                           in range(len(pdb_paths))])
-def test_pdbx_consistency(pdb_path, cif_path):
+cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
+@pytest.mark.parametrize("file_index, is_stack", itertools.product(
+                          [i for i in range(len(pdb_paths))],
+                          [False, True])
+                        )
+def test_pdbx_consistency(file_index, is_stack):
+    print("ID:", basename(cif_paths[file_index])[:-4])
+    model = None if is_stack else 1
     pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_path)
-    a1 = pdb_file.get_structure()
+    pdb_file.read(pdb_paths[file_index])
+    a1 = pdb_file.get_structure(model=model)
     pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
-    a2 = pdbx.get_structure(pdbx_file)
-    # Get first array if it is stack
-    if len(a2) == 1:
-        a2 = a2.get_array(0)
+    pdbx_file.read(cif_paths[file_index])
+    a2 = pdbx.get_structure(pdbx_file, model=model)
     # Expected fail in res_id
     for category in ["chain_id", "res_name", "hetero",
                      "atom_name", "element"]:
