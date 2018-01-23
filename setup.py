@@ -101,7 +101,7 @@ setup(
     install_requires = ["requests",
                         "numpy",
                         "matplotlib",
-                        "mmtf-python"],
+                        "msgpack"],
     python_requires = ">=3.4",
     
     cmdclass = {"test": PyTestCommand},
