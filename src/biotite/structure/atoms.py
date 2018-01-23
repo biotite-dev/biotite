@@ -377,10 +377,14 @@ class Atom(object):
             super().__setattr__(attr, value)
     
     def __str__(self):
-        string = ""
+        hetero = "HET" if self.hetero else ""
+        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
+               .format(hetero, self.chain_id, self.res_id, self.res_name,
+                       self.atom_name, self.element,
+                       self.coord[0], self.coord[1], self.coord[2])
         for value in self._annot.values():
             string += str(value) + "\t"
-        return string + str(self.coord)
+        return string + "{:7.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
