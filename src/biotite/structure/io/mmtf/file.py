@@ -5,10 +5,9 @@
 import numpy as np
 import msgpack
 import struct
-from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import File
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
+from .decode import decode_array
 
 __all__ = ["MMTFFile"]
 
@@ -37,9 +36,6 @@ class MMTFFile(File):
             self._content = msgpack.unpackb(f.read())
         for key in list(self._content.keys()):
             self._content[key.decode("UTF-8")] = self._content.pop(key)
-        for key in list(self._content.keys()):
-            print(key)
-            self[key]
     
     def write(self, file_name):
         """
@@ -54,7 +50,7 @@ class MMTFFile(File):
             codec     = struct.unpack(">i", data[0:4 ])[0]
             length    = struct.unpack(">i", data[4:8 ])[0]
             param     = struct.unpack(">i", data[8:12])[0]
-            raw_data  = data[12:]
-            print(codec)
+            raw_array = data[12:]
+            return decode_array(codec, raw_array)
         else:
             return data
