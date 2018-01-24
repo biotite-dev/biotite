@@ -43,6 +43,14 @@ class MMTFFile(File):
         """
         raise NotImplementedError()
     
+    def get_codec(self, key):
+        data = self._content[key]
+        if isinstance(data, bytes) and data[0] == 0:
+            codec = struct.unpack(">i", data[0:4 ])[0]
+            return codec
+        else:
+            return None
+    
     def __getitem__(self, key):
         data = self._content[key]
         if isinstance(data, bytes) and data[0] == 0:
@@ -51,6 +59,12 @@ class MMTFFile(File):
             length    = struct.unpack(">i", data[4:8 ])[0]
             param     = struct.unpack(">i", data[8:12])[0]
             raw_bytes = data[12:]
-            return decode_array(codec, raw_bytes)
+            return decode_array(codec, raw_bytes, param)
         else:
             return data
+    
+    def __iter__(self):
+        return self._content.__iter__()
+    
+    def __len__(self):
+        return len(self._content)
