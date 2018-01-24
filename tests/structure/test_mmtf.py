@@ -12,6 +12,7 @@ import itertools
 from os.path import join, basename
 from .util import data_dir
 import pytest
+from pytest import approx
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -19,9 +20,9 @@ import pytest
 def test_array_conversion(path):
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
-    array1 = mmtf_file.get_structure()
-    mmtf_file.set_structure(array1)
-    array2 = mmtf_file.get_structure()
+    array1 = mmtf.get_structure(mmtf_file)
+    mmtf.set_structure(mmtf_file, array1)
+    array2 = mmtf.get_structure(mmtf_file)
     assert array1 == array2
 
 
@@ -36,7 +37,7 @@ def test_pdbx_consistency(file_index, is_stack):
     model = None if is_stack else 1
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(mmtf_paths[file_index])
-    a1 = mmtf_file.get_structure(model=model)
+    a1 = mmtf.get_structure(mmtf_file, model=model)
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_paths[file_index])
     a2 = pdbx.get_structure(pdbx_file, model=model)
@@ -45,20 +46,20 @@ def test_pdbx_consistency(file_index, is_stack):
                      "atom_name", "element"]:
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
-    assert a1.coord.tolist() == a2.coord.tolist()
+    assert a1.coord.flatten().tolist() == approx(a2.coord.flatten().tolist())
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_extra_fields():
     path = join(data_dir, "1l2y.mmtf")
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
-    stack1 = mmtf_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
-    mmtf_file.set_structure(stack1)
-    stack2 = mmtf_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    stack1 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
+                                                         "occupancy","charge"])
+    mmtf.set_structure(mmtf_file, stack1)
+    stack2 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
+                                                         "occupancy","charge"])
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
-    assert stack1.b_factor.tolist() == stack2.b_factor.tolist()
-    assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
+    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2

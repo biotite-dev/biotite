@@ -93,7 +93,7 @@ def decode_array(int codec, bytes raw_bytes, int param):
 
 
 def _decode_delta(np.ndarray array):
-    return array.cumsum()
+    return np.cumsum(array, dtype=np.int32)
 
 
 def _decode_run_length(int32[:] array):
