@@ -66,10 +66,15 @@ def get_structure_from(file_path, template=None):
         else:
             return array
     elif suffix == ".mmtf":
-        from .mmtf import MMTFFile
+        from .mmtf import MMTFFile, get_structure
         file = MMTFFile()
         file.read(file_path)
-        return file.get_structure()
+        array = get_structure(file)
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile()
