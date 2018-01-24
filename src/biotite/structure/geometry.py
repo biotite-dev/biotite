@@ -122,9 +122,9 @@ def dihedral(atom1, atom2, atom3, atom4):
     n1 = np.cross(v1, v2)
     n2 = np.cross(v2, v3)
     
+    # Calculation using atan2, to ensure the correct sign of the angle 
     x = vector_dot(n1,n2)
     y = vector_dot(np.cross(n1,n2), v2)
-    
     return np.arctan2(y,x)
 
 
