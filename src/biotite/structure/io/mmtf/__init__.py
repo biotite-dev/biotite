@@ -10,3 +10,4 @@ than the text based files.
 """
 
 from .file import *
+from .convert import *
