@@ -15,7 +15,7 @@ class PDBxFile(TextFile):
     
     The categories of the file can be accessed using the
     `get_category()`/`set_category()` methods. The content of each
-    category is represented, by a dictionary. The dictionary contains
+    category is represented by a dictionary. The dictionary contains
     the entry (e.g. *label_entity_id* in *atom_site*) as key. The
     corresponding values are either strings in *non-looped* categories,
     or 1-D numpy arrays of string objects in case of *looped*

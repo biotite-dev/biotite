@@ -14,6 +14,24 @@ from .util import data_dir
 import pytest
 
 
+@pytest.mark.parametrize("category, key, exp_value", [
+    ("audit_author", "name",
+        ["Neidigh, J.W.", "Fesinmeyer, R.M.", "Andersen, N.H."]),
+    ("struct_ref_seq", "pdbx_PDB_id_code", "1L2Y"),
+    ("pdbx_nmr_ensemble", "conformer_selection_criteria",
+        ("structures with acceptable covalent geometry, "
+         "structures with the least restraint violations"))
+])
+def test_parsing(category, key, exp_value):
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(join(data_dir, "1l2y.cif"))
+    cat_dict = pdbx_file[category]
+    value = cat_dict[key]
+    if isinstance(value, np.ndarray):
+        assert value.tolist() == exp_value
+    else:
+        assert value == exp_value
+
 @pytest.mark.parametrize("path, is_stack", itertools.product(
                             glob.glob(join(data_dir, "*.cif")),
                             [False, True],
