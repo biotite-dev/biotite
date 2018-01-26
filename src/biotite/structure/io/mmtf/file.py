@@ -5,6 +5,7 @@
 import numpy as np
 import msgpack
 import struct
+import copy
 from ....file import File
 from ...error import BadStructureError
 from .decode import decode_array
@@ -17,7 +18,26 @@ class MMTFFile(File):
     This class represents a MMTF file.
     
     This class provides only a parser for MMTF files.
-    Writing MMTF files is not possible at this point.
+    Writing MMTF files is not supported at this point.
+    
+    When reading a file, the *MessagePack* unpacker is used to create
+    a dictionary of the file content.
+    This dictionary is accessed by indexing the `MMTFFile` instance
+    directly with the dictionary keys. If the value is an encoded
+    array, the value automatically decoded. Decoded arrays are always
+    returned as `ndarray` instances.
+    
+    Examples
+    --------
+    
+    >>> mmtf_file = MMTFFile()
+    >>> mmtf_file.read("path/to/1l2y.mmtf")
+    >>> print(mmtf_file["title"])
+    b'NMR Structure of Trp-Cage Miniprotein Construct TC5b'
+    >>> print(mmtf_file["chainNameList"])
+    ['A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A'
+     'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A'
+     'A' 'A']
     """
     
     def __init__(self):
@@ -43,7 +63,24 @@ class MMTFFile(File):
         """
         raise NotImplementedError()
     
+    def __copy_fill__(self, clone):
+        super().__copy_fill__(clone)
+        clone._content = copy.deepcopy(self._content)
+    
     def get_codec(self, key):
+        """
+        Obtain the codec ID of an MMTF encoded value.
+        
+        Parameters
+        ----------
+        key : str
+            The key for the potentially encoded value
+        
+        Returns
+        -------
+        codec : int or None
+            The codec ID. `None` if the value is not encoded.
+        """
         data = self._content[key]
         if isinstance(data, bytes) and data[0] == 0:
             codec = struct.unpack(">i", data[0:4 ])[0]

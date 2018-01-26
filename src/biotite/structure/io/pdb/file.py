@@ -83,7 +83,7 @@ class PDBFile(TextFile):
             model.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
-            that should be stored in the uoput array or stack.
+            that should be stored in the output array or stack.
             There are 4 optional annotation identifiers:
             'atom_id', 'b_factor', 'occupancy' and 'charge'.
         

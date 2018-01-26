@@ -89,11 +89,11 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
     Examples
     --------
 
-        >>> file = PDBxFile()
-        >>> file.read("1l2y.cif")
-        >>> arr = get_structure(file, model=1)
-        >>> print(len(arr))
-        304
+    >>> file = PDBxFile()
+    >>> file.read("1l2y.cif")
+    >>> arr = get_structure(file, model=1)
+    >>> print(len(arr))
+    304
     
     """
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)

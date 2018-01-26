@@ -48,7 +48,7 @@ def get_structure(file, insertion_code=[], altloc=[],
         model.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
-        that should be stored in the uoput array or stack.
+        that should be stored in the output array or stack.
         There are 4 optional annotation identifiers:
         'atom_id', 'b_factor', 'occupancy' and 'charge'.
     
@@ -56,6 +56,18 @@ def get_structure(file, insertion_code=[], altloc=[],
     -------
     array : AtomArray or AtomArrayStack
         The return type depends on the `model` parameter.
+    
+    Examples
+    --------
+
+    >>> file = MMTFFile()
+    >>> file.read(path)
+    >>> array = get_structure(file, model=1)
+    >>> print(array.array_length())
+    >>> stack = get_structure(file)
+    304
+    >>> print(stack.stack_depth(), stack.array_length())
+    38 304
     """
     cdef int i, j, m
     
