@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
@@ -29,7 +29,15 @@ class GenBankFile(TextFile):
                 self._cat_names.append(category)
     
     def __getitem__(self, index):
-        return self._lines[self._category_i[i] : self._category_i[i+1]]
+        if isinstance(index, str):
+            key = index
+            index = self._cat_names.index(key)
+        start = self._cat_starts[index]
+        if index < len(self._cat_starts) -1:
+            stop = self._cat_starts[index + 1]
+        else:
+            stop = len(self._lines)
+        return self._lines[start : stop]
     
     def __setitem__(self, index, item):
         self.remove(index)
@@ -37,6 +45,9 @@ class GenBankFile(TextFile):
     
     def __delitem__(self, index):
         self.remove(index)
+    
+    def __len__(self):
+        return self._cat_starts
     
     def remove(self, index):
         del_line_span = self._cat_starts[index+1] - self._cat_starts[index]
