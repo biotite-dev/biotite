@@ -28,51 +28,6 @@ class GenBankFile(TextFile):
                 self._cat_starts.append(i)
                 self._cat_names.append(category)
     
-    def __getitem__(self, index):
-        if isinstance(index, str):
-            key = index
-            index = self._cat_names.index(key)
-        start = self._cat_starts[index]
-        if index < len(self._cat_starts) -1:
-            stop = self._cat_starts[index + 1]
-        else:
-            stop = len(self._lines)
-        return self._lines[start : stop]
-    
-    def __setitem__(self, index, item):
-        self.remove(index)
-        self.insert(index, item)
-    
-    def __delitem__(self, index):
-        self.remove(index)
-    
-    def __len__(self):
-        return self._cat_starts
-    
-    def remove(self, index):
-        del_line_span = self._cat_starts[index+1] - self._cat_starts[index]
-        del self._lines[self._cat_starts[index] : self._cat_starts[index+1]]
-        del self._cat_names[index]
-        del self._cat_starts[index]
-        for i in range(index, len(self._cat_starts)):
-            self._cat_starts[i] -= del_line_span
-    
-    def insert(self, index, item):
-        line_i = self._cat_starts[index]
-        self._lines = self._lines[:line_i] + item + self._lines[line_i:]
-        # New category takes line position of the existing one
-        # at the category index
-        self._cat_starts.insert(index, self._cat_starts[index])
-        # The following start indices are incremented
-        # by the length of inserted lines
-        for i in range(index+1, len(self._cat_starts)):
-            self._cat_starts[i] += len(item)
-        # Extract category name from first line of the inserted lines
-        self._cat_names.insert(index, item[0][0:12].strip())
-    
-    def categories(self):
-        return self._cat_names
-    
     def get_annotation(self, include_only=None):
         feature_lines = self.get_category("FEATURES")
         # Remove the first line,

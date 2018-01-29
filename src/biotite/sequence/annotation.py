@@ -12,7 +12,6 @@ from enum import IntEnum
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 
-
 class Location():
     
     class Defect(IntEnum):
@@ -155,6 +154,8 @@ class Annotation(object):
                             loc.last = i_last
                     sub_annot.add_feature(new_feature)
             return sub_annot            
+        elif isinstance(index, int):
+            return self._features[index]
         else:
             raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
