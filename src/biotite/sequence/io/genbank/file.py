@@ -4,8 +4,10 @@
 
 from ....file import TextFile, InvalidFileError
 from ...annotation import Location, Feature, Annotation
+from ...seqtypes import NucleotideSequence, ProteinSequence 
 import textwrap
 import copy
+import re
 
 __all__ = ["GenBankFile", "GenPeptFile"]
 
@@ -74,7 +76,7 @@ class GenBankFile(TextFile):
         if len(version_info) < 2 or "GI" not in version_info[1]:
             raise InvalidFileError("File does not contain GI")
         # Truncate GI
-        return version_info[2][3:]
+        return version_info[1][3:]
     
     def get_db_link(self):
         starts, stops = self._get_field_indices("DBLINK")
@@ -162,6 +164,19 @@ class GenBankFile(TextFile):
                         qual_dict[qual_pair[0]] = None
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
+    
+    def get_sequence(self):
+        return NucleotideSequence(self._get_seq_string())
+    
+    def _get_seq_string(self):
+        starts, stops = self._get_field_indices("ORIGIN")
+        seq_str = ""
+        rx = re.compile("[0-9]| ")
+        for i in range(starts[0]+1, stops[0]):
+            print(self._lines[i])
+            seq_str += rx.sub("", self._lines[i])
+        return seq_str
+            
 
     def _get_field_indices(self, name):
         starts = []
@@ -245,4 +260,16 @@ def _parse_single_loc(loc_str):
 
 
 class GenPeptFile(GenBankFile):
-    pass
+    
+    def get_locus(self):
+        locus_dict = {}
+        starts, stops = self._get_field_indices("LOCUS")
+        locus_info = self._lines[starts[0]].split()
+        locus_dict["name"] = locus_info[1]
+        locus_dict["length"] = locus_info[2]
+        locus_dict["division"] = locus_info[-2]
+        locus_dict["date"] = locus_info[-1]
+        return locus_dict
+    
+    def get_sequence(self):
+        return ProteinSequence(self._get_seq_string())
