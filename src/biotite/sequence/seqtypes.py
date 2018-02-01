@@ -333,7 +333,7 @@ class ProteinSequence(Sequence):
         # Convert 3-letter codes to single letter codes,
         # if list contains 3-letter codes
         sequence = [dict_3to1[symbol.upper()] if len(symbol) == 3
-                    else symbol for symbol in sequence]
+                    else symbol.upper() for symbol in sequence]
         super().__init__(sequence)
     
     def get_alphabet(self):
