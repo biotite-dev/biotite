@@ -2,42 +2,136 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
-from ....file import TextFile
+from ....file import TextFile, InvalidFileError
 from ...annotation import Location, Feature, Annotation
 import textwrap
 import copy
 
-__all__ = ["GenBankFile"]
+__all__ = ["GenBankFile", "GenPeptFile"]
 
 
 class GenBankFile(TextFile):
     
     def __init__(self):
         super().__init__()
-        # Category start indices in list of lines
-        self._cat_starts = []
-        # Category names
-        self._cat_names = []
+        # Field start and stop indices in list of lines
+        # and names of categories
+        self._fields = []
     
     def read(self, file_name):
         super().read(file_name)
+        start = -1
+        stop = -1
+        name = ""
         for i, line in enumerate(self._lines):
-            #Check if line contains letters in its first 5 characters
-            if len(line[0:5].strip()) > 0:
-                category = line[0:12].strip()
-                self._cat_starts.append(i)
-                self._cat_names.append(category)
+            # Check if line contains a new major field
+            # (Header beginning from first column)
+            if len(line) != 0 and line[0] != " ":
+                stop = i
+                if start != -1:
+                    # Store previous field
+                    self._fields.append((start, stop, name))
+                start = i
+                name = line[0:12].strip()
+        # Store last field
+        stop = i
+        self._fields.append((start, stop, name))
+    
+    def write(self, file_name):
+        """
+        Not implemented yet.
+        """
+        raise NotImplementedError()
+    
+    def get_locus(self):
+        locus_dict = {}
+        starts, stops = self._get_field_indices("LOCUS")
+        locus_info = self._lines[starts[0]].split()
+        locus_dict["name"] = locus_info[1]
+        locus_dict["length"] = locus_info[2]
+        locus_dict["type"] = locus_info[4]
+        if locus_info[5] in ["circular", "linear"]:
+            locus_dict["type"] += " " + locus_info[4]
+        locus_dict["division"] = locus_info[-2]
+        locus_dict["date"] = locus_info[-1]
+        return locus_dict
+    
+    def get_definition(self):
+        starts, stops = self._get_field_indices("DEFINITION")
+        return self._lines[starts[0]][12:].strip()
+    
+    def get_accession(self):
+        starts, stops = self._get_field_indices("ACCESSION")
+        return self._lines[starts[0]][12:].strip()
+    
+    def get_version(self):
+        starts, stops = self._get_field_indices("VERSION")
+        return self._lines[starts[0]][12:].split()[0]
+    
+    def get_gi(self):
+        starts, stops = self._get_field_indices("VERSION")
+        version_info = self._lines[starts[0]][12:].split()
+        if len(version_info) < 2 or "GI" not in version_info[1]:
+            raise InvalidFileError("File does not contain GI")
+        # Truncate GI
+        return version_info[2][3:]
+    
+    def get_db_link(self):
+        starts, stops = self._get_field_indices("DBLINK")
+        link_dict = {}
+        for i in range(starts[0], stops[0]):
+            line = self._lines[i]
+            content = line[12:].split(":")
+            link_dict[content[0].strip()] = content[1].strip()
+        return link_dict
+    
+    def get_source(self):
+        starts, stops = self._get_field_indices("SOURCE")
+        return self._lines[starts[0]][12:].strip()
+    
+    def get_references(self):
+        references = []
+        starts, stops = self._get_field_indices("REFERENCE")
+        for i in range(len(starts)):
+            start = starts[i]
+            stop = stops[i]
+            ref_dict_raw = self._get_minor_fields(start, stop)
+            ref_dict = {}
+            for key, val in ref_dict_raw.items():
+                if key == "REFERENCE":
+                    loc_info = val[val.index("(")+1 : val.index(")")].split()
+                    first_base = int(loc_info[loc_info.index("bases") +1])
+                    last_base = int(loc_info[loc_info.index("to") +1])
+                    ref_dict["location"] = (first_base, last_base)
+                elif key == "AUTHORS":
+                    ref_dict["authors"] = val
+                elif key == "TITLE":
+                    ref_dict["title"] = val
+                elif key == "JOURNAL":
+                    ref_dict["journal"] = val
+                elif key == "PUBMED":
+                    ref_dict["pubmed"] = val
+                elif key == "REMARK":
+                    ref_dict["remark"] = val
+            references.append(ref_dict)
+        return references
+    
+    def get_comment(self):
+        starts, stops = self._get_field_indices("COMMENT")
+        return self._lines[starts[0]][12:].strip()
     
     def get_annotation(self, include_only=None):
-        feature_lines = self.get_category("FEATURES")
+        starts, stops = self._get_field_indices("FEATURES")
         # Remove the first line,
-        # because it conatins the "FEATURES" string itself.
-        feature_lines.pop(0)
+        # because it contains the "FEATURES" string itself.
+        start = starts[0] +1
+        stop = stops[0]
         
         feature_list = []
         feature_key = None
         feature_value = ""
-        for line in feature_lines:
+        for i in range(start, stop):
+            line = self._lines[i]
             # Check if line contains feature key
             if line[5] != " ":
                 if feature_key is not None:
@@ -69,16 +163,37 @@ class GenBankFile(TextFile):
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
 
-    def get_category(self, category_str):
-        category_str = category_str.upper()
-        # Find first occurence of category name in list
-        index = -1
-        for i in range(len(self._cat_names)):
-            if self._cat_names[i] == category_str:
-                index = i
-        if index == -1:
-            raise ValueError("Category '{:}' not found".format(category_str))
-        return self._lines[self._cat_starts[index] : self._cat_starts[index+1]]
+    def _get_field_indices(self, name):
+        starts = []
+        stops = []
+        for field in self._fields:
+            if field[2] == name:
+                starts.append(field[0])
+                stops.append(field[1])
+        if len(starts) == 0:
+            raise InvalidFileError("File does not contain '{:}' category"
+                                   .format(name))
+        return starts, stops
+    
+    def _get_minor_fields(self, field_start, field_stop):
+        header = ""
+        content = ""
+        minor_field_dict = {}
+        for i in range(field_start, field_stop):
+            line = self._lines[i]
+            # Check if line contains a new minor field
+            # (Header beginning from first column)
+            if len(line) != 0 and line[:12].strip() != "":
+                # Store previous minor field
+                if content != "":
+                    minor_field_dict[header] = content
+                header = line[:12].strip()
+                content = line[12:].strip()
+            else:
+                content += " " + line[12:].strip()
+        # Store last minor field
+        minor_field_dict[header] = content
+        return minor_field_dict
 
 
 def _parse_locs(loc_str):
@@ -126,3 +241,8 @@ def _parse_single_loc(loc_str):
     else:
         last = int(last_str)
     return Location(first, last, defect=defect)
+
+
+
+class GenPeptFile(GenBankFile):
+    pass

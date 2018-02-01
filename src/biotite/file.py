@@ -73,3 +73,10 @@ class TextFile(File, metaclass=abc.ABCMeta):
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
         clone._lines = copy.copy(self._lines)
+
+
+class InvalidFileError(Exception):
+    """
+    Indicates that the file is not suitable for the requested action.
+    """
+    pass
