@@ -3,7 +3,7 @@
 # 3-Clause BSD License.  Please see 'LICENSE.rst' for further information.
 
 from ....file import TextFile, InvalidFileError
-from ...annotation import Location, Feature, Annotation
+from ...annotation import Location, Feature, Annotation, AnnotatedSequence
 from ...seqtypes import NucleotideSequence, ProteinSequence 
 import textwrap
 import copy
@@ -148,33 +148,56 @@ class GenBankFile(TextFile):
         
         # Process only relevant features and put them into Annotation
         annotation = Annotation()
+        regex = re.compile(r"""(".*?"|/.*?=)""")
         for key, val in feature_list:
             if include_only is None or key in include_only:
-                qualifiers = val.split(" /")
-                # First string in qualifier is location identifier
-                # since it comes before the first qualifier
-                locs = _parse_locs(qualifiers.pop(0).strip())
                 qual_dict = {}
+                qualifiers = [s.strip() for s in regex.split(val)]
+                # Remove empty quals
+                qualifiers = [s for s in qualifiers if s]
+                # First string is location identifier
+                locs = _parse_locs(qualifiers.pop(0).strip())
+                qual_key = None
+                qual_val = None
                 for qual in qualifiers:
-                    qual_pair = qual.replace('"','').strip().split("=")
-                    if len(qual_pair) == 2:
-                        qual_dict[qual_pair[0]] = qual_pair[1]
+                    if qual[0] == "/":
+                        # Store previous qualifier pair
+                        if qual_key is not None:
+                            # In case of e.g. '/pseudo'
+                            # 'qual_val' is 'None'
+                            qual_dict[qual_key] = qual_val
+                            qual_key = None
+                            qual_val = None
+                        # Qualifier key
+                        # -> remove "/" and "="
+                        qual_key = qual[1:-1]
                     else:
-                        # In case of e.g. '/pseudo'
-                        qual_dict[qual_pair[0]] = None
+                        # Qualifier value
+                        # -> remove potential quotes
+                        if qual[0] == '"':
+                            qual_val = qual[1:-1]
+                        else:
+                            qual_val = qual
+                # Store final qualifier pair
+                if qual_key is not None:
+                    qual_dict[qual_key] = qual_val
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
     
     def get_sequence(self):
         return NucleotideSequence(self._get_seq_string())
     
+    def get_annotated_sequence(self, include_only=None):
+        sequence = self.get_sequence()
+        annotation = self.get_annotation(include_only)
+        return AnnotatedSequence(annotation, sequence)
+    
     def _get_seq_string(self):
         starts, stops = self._get_field_indices("ORIGIN")
         seq_str = ""
-        rx = re.compile("[0-9]| ")
+        regex = re.compile("[0-9]| ")
         for i in range(starts[0]+1, stops[0]):
-            print(self._lines[i])
-            seq_str += rx.sub("", self._lines[i])
+            seq_str += regex.sub("", self._lines[i])
         return seq_str
             
 
@@ -270,6 +293,10 @@ class GenPeptFile(GenBankFile):
         locus_dict["division"] = locus_info[-2]
         locus_dict["date"] = locus_info[-1]
         return locus_dict
+    
+    def get_db_source(self):
+        starts, stops = self._get_field_indices("DBSOURCE")
+        return self._lines[starts[0]][12:].split()[0]
     
     def get_sequence(self):
         return ProteinSequence(self._get_seq_string())
