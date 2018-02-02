@@ -13,6 +13,37 @@ __all__ = ["GenBankFile", "GenPeptFile"]
 
 
 class GenBankFile(TextFile):
+    """
+    This class represents a file in GenBank format.
+    
+    A GenBank file provides 3 kinds of information:
+    At first it contains some general information about the file, like
+    IDs, database relations and source organism.
+    Secondly it contains sequence annotations, i.e. the positions of
+    a reference sequence, that fulfill certain roles, like promoters or
+    coding sequences.
+    At last the file contains optionally the reference sequence.
+    
+    As of now, GenBank files can only be parsed, writing GenBank files
+    is not supported at this point.
+    
+    Examples
+    --------
+    
+    >>> file = gb.GenBankFile()
+    >>> file.read("path/to/ec_bl21.gb")
+    >>> print(file.get_definition())
+    Escherichia coli BL21(DE3), complete genome.
+    >>> for f in file.get_annotation(include_only=["CDS"]):
+    ...     if "gene" in f.qual and "lac" in f.qual["gene"]:
+    ...         for loc in f.locs:
+    ...             print(f.qual["gene"], loc.strand, loc.first, loc.last)
+    lacA Strand.REVERSE 330784 331395
+    lacY Strand.REVERSE 331461 332714
+    lacZ Strand.REVERSE 332766 335840
+    lacI Strand.REVERSE 335963 337045
+    lacI Strand.FORWARD 748736 749818
+    """
     
     def __init__(self):
         super().__init__()
@@ -46,6 +77,28 @@ class GenBankFile(TextFile):
         raise NotImplementedError()
     
     def get_locus(self):
+        """
+        Parse the *LOCUS* field of the file.
+        
+        Returns
+        ----------
+        locus_dict : dict
+            A dictionary storing the locus *name*, *length*, *type*,
+            *division* and *date*.
+        
+        Examples
+        --------
+        
+        >>> file = gb.GenBankFile()
+        >>> file.read("path/to/ec_bl21.gb")
+        >>> for key, val in file.get_locus().items():
+        ...     print(key, ":", val)
+        name : CP001509
+        length : 4558953
+        type : DNA circular
+        division : BCT
+        date : 16-FEB-2017
+        """
         locus_dict = {}
         starts, stops = self._get_field_indices("LOCUS")
         locus_info = self._lines[starts[0]].split()
@@ -53,24 +106,56 @@ class GenBankFile(TextFile):
         locus_dict["length"] = locus_info[2]
         locus_dict["type"] = locus_info[4]
         if locus_info[5] in ["circular", "linear"]:
-            locus_dict["type"] += " " + locus_info[4]
+            locus_dict["type"] += " " + locus_info[5]
         locus_dict["division"] = locus_info[-2]
         locus_dict["date"] = locus_info[-1]
         return locus_dict
     
     def get_definition(self):
+        """
+        Parse the *DEFINITION* field of the file.
+        
+        Returns
+        ----------
+        definition : str
+            Content of the *DEFINITION* field.
+        """
         starts, stops = self._get_field_indices("DEFINITION")
         return self._lines[starts[0]][12:].strip()
     
     def get_accession(self):
+        """
+        Parse the *ACCESSION* field of the file.
+        
+        Returns
+        ----------
+        accession : str
+            Content of the *ACCESSION* field.
+        """
         starts, stops = self._get_field_indices("ACCESSION")
         return self._lines[starts[0]][12:].strip()
     
     def get_version(self):
+        """
+        Parse the *VERSION* field of the file.
+        
+        Returns
+        ----------
+        version : str
+            Content of the *VERSION* field. Does not include GI.
+        """
         starts, stops = self._get_field_indices("VERSION")
         return self._lines[starts[0]][12:].split()[0]
     
     def get_gi(self):
+        """
+        Get the GI of the file.
+        
+        Returns
+        ----------
+        gi : str
+            The GI of the file.
+        """
         starts, stops = self._get_field_indices("VERSION")
         version_info = self._lines[starts[0]][12:].split()
         if len(version_info) < 2 or "GI" not in version_info[1]:
@@ -79,6 +164,25 @@ class GenBankFile(TextFile):
         return version_info[1][3:]
     
     def get_db_link(self):
+        """
+        Parse the *DBLINK* field of the file.
+        
+        Returns
+        ----------
+        link_dict : dict
+            A dictionary storing the database links, with the database
+            name as key, and the corresponding ID as value.
+        
+        Examples
+        --------
+        
+        >>> file = gb.GenBankFile()
+        >>> file.read("path/to/ec_bl21.gb")
+        >>> for key, val in file.get_db_link().items():
+        ...     print(key, ":", val)
+        BioProject : PRJNA20713
+        BioSample : SAMN02603478
+        """
         starts, stops = self._get_field_indices("DBLINK")
         link_dict = {}
         for i in range(starts[0], stops[0]):
@@ -88,10 +192,27 @@ class GenBankFile(TextFile):
         return link_dict
     
     def get_source(self):
+        """
+        Parse the *SOURCE* field of the file.
+        
+        Returns
+        ----------
+        source : str
+            Organism name corresponding to this file.
+        """
         starts, stops = self._get_field_indices("SOURCE")
         return self._lines[starts[0]][12:].strip()
     
     def get_references(self):
+        """
+        Parse the *REFERENCE* fields of the file.
+        
+        Returns
+        ----------
+        ref_list : list
+            A list, where each element is a dictionary storing
+            the reference information for one reference.
+        """
         references = []
         starts, stops = self._get_field_indices("REFERENCE")
         for i in range(len(starts)):
@@ -119,10 +240,32 @@ class GenBankFile(TextFile):
         return references
     
     def get_comment(self):
+        """
+        Parse the *COMMENT* field of the file.
+        
+        Returns
+        ----------
+        comment : str
+            Content of the *COMMENT* field.
+        """
         starts, stops = self._get_field_indices("COMMENT")
         return self._lines[starts[0]][12:].strip()
     
     def get_annotation(self, include_only=None):
+        """
+        Get the sequence annotation from the *ANNOTATION* field.
+        
+        Parameters
+        ----------
+        include_only : iterable object, optional
+            List of names of feature keys (`str`), which should included
+            in the annotation. By default all features are included.
+        
+        Returns
+        ----------
+        annotation : Annotation
+            Sequence annotation from the file.
+        """
         starts, stops = self._get_field_indices("FEATURES")
         # Remove the first line,
         # because it contains the "FEATURES" string itself.
@@ -185,9 +328,36 @@ class GenBankFile(TextFile):
         return annotation
     
     def get_sequence(self):
-        return NucleotideSequence(self._get_seq_string())
+        """
+        Get the sequence from the *ORIGIN* field.
+        
+        Returns
+        ----------
+        sequence : NucleotideSequence
+            The reference sequence in the file.
+        """
+        seq_str = self._get_seq_string()
+        if len(seq_str) == 0:
+            raise InvalidFileError("The file does not contain "
+                                   "sequence information")
+        return NucleotideSequence(seq_str)
     
     def get_annotated_sequence(self, include_only=None):
+        """
+        Get an annotated sequence by combining the *ANNOTATION* and
+        *ORIGIN* fields.
+        
+        Parameters
+        ----------
+        include_only : iterable object, optional
+            List of names of feature keys (`str`), which should included
+            in the annotation. By default all features are included.
+        
+        Returns
+        ----------
+        annot_seq : AnnotatedSequence
+            The annotated sequence.
+        """
         sequence = self.get_sequence()
         annotation = self.get_annotation(include_only)
         return AnnotatedSequence(annotation, sequence)
@@ -283,8 +453,36 @@ def _parse_single_loc(loc_str):
 
 
 class GenPeptFile(GenBankFile):
+    """
+    This class represents a file in GenBank related GenPept format.
+    
+    See also
+    --------
+    GenBankFile
+    """
     
     def get_locus(self):
+        """
+        Parse the *LOCUS* field of the file.
+        
+        Returns
+        ----------
+        locus_dict : dict
+            A dictionary storing the locus *name*, *length*,
+            *division* and *date*.
+        
+        Examples
+        --------
+        
+        >>> file = gb.GenPeptFile()
+        >>> file.read("path/to/bt_lysozyme.gp")
+        >>> for key, val in file.get_locus().items():
+        ...     print(key, ":", val)
+        name : AAC37312
+        length : 147
+        division : MAM
+        date : 27-APR-1993
+        """
         locus_dict = {}
         starts, stops = self._get_field_indices("LOCUS")
         locus_info = self._lines[starts[0]].split()
@@ -295,8 +493,28 @@ class GenPeptFile(GenBankFile):
         return locus_dict
     
     def get_db_source(self):
+        """
+        Parse the *DBSOURCE* field of the file.
+        
+        Returns
+        ----------
+        accession : str
+            Content of the *DBSOURCE* field.
+        """
         starts, stops = self._get_field_indices("DBSOURCE")
         return self._lines[starts[0]][12:].split()[0]
     
     def get_sequence(self):
-        return ProteinSequence(self._get_seq_string())
+        """
+        Get the sequence from the *ORIGIN* field.
+        
+        Returns
+        ----------
+        sequence : ProteinSequence
+            The reference sequence in the file.
+        """
+        seq_str = self._get_seq_string()
+        if len(seq_str) == 0:
+            raise InvalidFileError("The file does not contain "
+                                   "sequence information")
+        return ProteinSequence(seq_str)
