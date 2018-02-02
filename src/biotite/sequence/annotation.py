@@ -51,27 +51,9 @@ class Feature(Copyable):
         self._key = key
         self._locs = copy.deepcopy(locs)
         self._qual = copy.deepcopy(qual)
-        self._subfeatures = []
     
     def __copy_create__(self):
         return Feature(self._key, self._locs, self._qual)
-        
-    def __copy_fill__(self, clone):
-        super().__copy_fill__(clone)
-        for feature in self._subfeatures:
-            clone._subfeatures.append(feature.copy())
-    
-    def add_subfeature(self, feature):
-        self._subfeatures.append(feature.copy())
-    
-    def del_subfeature(self, feature):
-        self._subfeatures.remove(feature)
-    
-    def del_all_subfeatures(self):
-        self._subfeatures = []
-    
-    def get_subfeatures(self):
-        return copy.copy(self._subfeatures)
     
     @property
     def key(self):
@@ -101,14 +83,6 @@ class Annotation(object):
         if not feature in self._features:
             raise KeyError("Feature is not in annotation")
         self._features.remove(feature)
-    
-    def release_from(self, feature):
-        if not feature in self._features:
-            raise KeyError("Feature is not in annotation")
-        subfeature_list = feature.get_subfeatures()
-        feature.del_all_subfeatures()
-        for f in subfeature_list:
-            self.add_feature(f)
     
     def __copy_create__(self):
         return Annotation(self._features)
