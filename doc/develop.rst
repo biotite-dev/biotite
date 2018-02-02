@@ -62,7 +62,21 @@ docstrings. Methods do not need to be summarized in the class docstring.
 
 Any content, that is not part of the API reference is placed in the ``doc``
 folder in *ReST* format. The line length of ``*.rst`` files is also limited to
-79 characters, with te exceptions already mentioned above.
+79 characters, with the exceptions already mentioned above. When adding new
+content, it is appreciated to update the tutorial pages (``doc/tutorial``) as
+well.
+
+If you are not directly a developer, but you have a nice Python script based on
+*Biotite*, feel free to put your script and your output image or text
+into the examples section (``doc/examples``). Simply create a new directory
+here and put the following files here:
+   
+   - ``title``:
+     The title of your example
+   - ``script.py``:
+     The python script of your example
+   - ``example.png`` or ``example.rst``:
+     The output image or printed output of your script
 
 Module imports
 ^^^^^^^^^^^^^^
