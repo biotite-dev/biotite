@@ -84,8 +84,16 @@ class Annotation(object):
             raise KeyError("Feature is not in annotation")
         self._features.remove(feature)
     
-    def __copy_create__(self):
-        return Annotation(self._features)
+    def __add__(self, item):
+        if not isinstance(item, Feature):
+            raise TypeError("Only can add 'Feature' instances to annotation")
+        self.add_feature(item)
+    
+    def __delitem__(self, item):
+        if not isinstance(item, Feature):
+            raise TypeError("Only can delete 'Feature' instances "
+                            "from annotation")
+        self.del_feature(item)
     
     def __iter__(self):
         i = 0
