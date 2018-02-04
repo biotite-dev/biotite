@@ -12,7 +12,7 @@ from enum import IntEnum
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 
-class Location():
+class Location(Copyable):
     """
     A `Location` defines at which base(s)/residue(s) a feature is
     located.
@@ -80,6 +80,9 @@ class Location():
         self.strand = strand
         self.defect = defect
     
+    def __copy_create__(self):
+        return Location(self.first, self.last, self.strand, self.defect)
+    
     def __str__(self):
         string = "{:d}-{:d}".format(self.first, self.last)
         if self.strand == Location.Strand.FORWARD:
@@ -89,6 +92,12 @@ class Location():
         if self.defect != Location.Defect(0):
             string += " " + str(self.defect)
         return string
+    
+    def __eq__(self, item):
+        return (    self.first  == item.first
+                and self.last   == item.last
+                and self.strand == item.strand
+                and self.defect == item.defect)
     
 
 class Feature(Copyable):
@@ -112,14 +121,16 @@ class Feature(Copyable):
     
     def __init__(self, key, locs, qual={}):
         self._key = key
-        self._locs = copy.deepcopy(locs)
+        self._locs = locs.copy()
         self._qual = copy.deepcopy(qual)
     
     def __copy_create__(self):
         return Feature(self._key, self._locs, self._qual)
     
     def __eq__(self):
-        pass
+        return (    self._key  == item._key
+                and self._locs == item._locs
+                and self._qual == item._qual)
     
     @property
     def key(self):
@@ -134,7 +145,7 @@ class Feature(Copyable):
         return self._qual
 
 
-class Annotation(object):
+class Annotation(Copyable):
     """
     An `Annotation` is a list of features belonging to one sequence.
     
@@ -146,6 +157,9 @@ class Annotation(object):
     def __init__(self, features=[]):
         self._features = copy.copy(features)
         
+    def __copy_create__(self):
+        return Annotation(self._features)
+    
     def get_features(self):
         return copy.copy(self._features)
     
@@ -214,7 +228,7 @@ class Annotation(object):
                             .format(type(index).__name__))
 
 
-class AnnotatedSequence(object):
+class AnnotatedSequence(Copyable):
     
     def __init__(self, annotation, sequence, sequence_start=1):
         self._annotation = annotation
@@ -284,8 +298,8 @@ class AnnotatedSequence(object):
         else:
             raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
-
-
-
-
-
+    
+    def __eq__(self):
+        return (    self.annotation     == item.annotation
+                and self.sequence       == item.sequence
+                and self.sequence_start == item.sequence_start)
