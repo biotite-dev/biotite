@@ -172,7 +172,9 @@ class Annotation(Copyable):
     
     Integers or other index types are not supported. If you want to
     obtain the `Feature` instances from the `Annotation` you need to 
-    iterate over it.
+    iterate over it. The iteration has no defined order.
+    Alternatively, you can obtain a copy of the internal `Feature` list
+    via `get_features()`.
     
     Parameters
     ----------
@@ -184,9 +186,45 @@ class Annotation(Copyable):
     --------
     Creating an annotation from a feature list
     
+    >>> feature1 = Feature("CDS", [Location(-10, 30 )], qual={"gene" : "test1"})
+    >>> feature2 = Feature("CDS", [Location(20,  50 )], qual={"gene" : "test2"})
+    >>> annotation1 = Annotation([feature1, feature2])
+    >>> for f in annotation1:
+    ...     loc = f.locs[0]
+    ...     print("{:}   {:3d} - {:3d}   {:}"
+    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
+    test1   -10 -  30   Defect.NONE
+    test2    20 -  50   Defect.NONE
+    
     Merging two annotations and a feature
     
-    Location based indexing (note the defects)
+    >>> feature3 = Feature("CDS", [Location(100, 130 )], qual={"gene" : "test3"})
+    >>> feature4 = Feature("CDS", [Location(150, 250 )], qual={"gene" : "test4"})
+    >>> annotation2 = Annotation([feature3, feature4])
+    >>> feature5 = Feature("CDS", [Location(-50, 200 )], qual={"gene" : "test5"})
+    >>> annotation3 = annotation1 + annotation2 + feature5
+    >>> for f in annotation3:
+    ...     loc = f.locs[0]
+    ...     print("{:}   {:3d} - {:3d}   {:}"
+    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
+    test1   -10 -  30   Defect.NONE
+    test2    20 -  50   Defect.NONE
+    test3   100 - 130   Defect.NONE
+    test4   150 - 250   Defect.NONE
+    test5   -50 - 200   Defect.NONE
+    
+    Location based indexing, note the defects:
+    1 = Defect.MISS_LEFT,
+    3 = Defect.MISS_LEFT and Defect.MISS_RIGHT
+    
+    >>> annotation4 = annotation3[40:150]
+    >>> for f in annotation4:
+    ...     loc = f.locs[0]
+    ...     print("{:}   {:3d} - {:3d}   {:}"
+    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
+    test2    40 -  50   1
+    test3   100 - 130   Defect.NONE
+    test5    40 - 149   3
     """
     
     def __init__(self, features=[]):
@@ -196,20 +234,58 @@ class Annotation(Copyable):
         return Annotation(self._features)
     
     def get_features(self):
+        """
+        Get a copy of the internal feature list.
+        
+        Returns
+        ----------
+        feature_list : list of Feature
+            A copy of the internal feature list.
+        """
         return copy.copy(self._features)
     
     def add_feature(self, feature):
+        """
+        Add a feature to the annotation.
+        
+        Parameters
+        ----------
+        feature : Feature
+            Feature to be added.
+        """
+        if not isinstance(feature, Feature):
+            raise TypeError("Only 'Feature' objects are supported")
         self._features.append(feature.copy())
     
     def del_feature(self, feature):
+        """
+        Delete a feature from the annotation.
+        
+        Parameters
+        ----------
+        feature : Feature
+            Feature to be removed.
+        
+        Raises
+        ------
+        KeyError
+            If the feature is not in the annotation
+        """
         if not feature in self._features:
             raise KeyError("Feature is not in annotation")
         self._features.remove(feature)
     
     def __add__(self, item):
-        if not isinstance(item, Feature):
-            raise TypeError("Only can add 'Feature' instances to annotation")
-        self.copy().add_feature(item)
+        if isinstance(item, Annotation):
+            feature_list = self._features
+            feature_list.extend(item._features)
+            return Annotation(feature_list)
+        elif isinstance(item, Feature):
+            feature_list = self._features
+            feature_list.append(item)
+            return Annotation(feature_list)
+        else:
+            raise TypeError("Can only add 'Feature' instances to annotation")
     
     def __delitem__(self, item):
         if not isinstance(item, Feature):
