@@ -13,8 +13,50 @@ __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 
 class Location():
+    """
+    A `Location` defines at which base(s)/residue(s) a feature is
+    located.
+    
+    A feature can have multiple `Location` instances if multiple
+    locations are joined.
+    
+    Attributes
+    ----------
+    first : int
+        Starting base or residue position of the feature.
+    last : int
+        Inclusive ending base or residue position of the feature.
+    strand : Strand
+        The strand direction. Always `Strand.FORWARD` for peptide
+        features.
+    defect : Defect
+        A possible defect of the location.
+    """
     
     class Defect(IntEnum):
+        """
+        This enum type describes location defects.
+        
+        A location has a defect, when the feature itself is not directly
+        located in the range of the first to the last base.
+        
+           - **NONE** - No location defect
+           - **MISS_LEFT** - A part of the feature has been truncated
+             before the first base/residue of the `Location`
+             (probably by indexing an `Annotation` object)
+           - **MISS_RIGHT** - A part of the feature has been truncated
+             after the last base/residue of the `Location`
+             (probably by indexing an `Annotation` object)
+           - **BEYOND_LEFT** - The feature starts at an unknown position
+             before the first base/residue of the `Location`
+           - **BEYOND_RIGHT** - The feature ends at an unknown position
+             after the last base/residue of the `Location`
+           - **UNK_LOC** - The exact position is unknown, but it is at a
+             single base/residue between the first and last residue of
+             the `Location`, inclusive
+           - **BETWEEN** - The position is between to consecutive
+             bases/residues.
+        """
         NONE         = 0
         MISS_LEFT    = 1
         MISS_RIGHT   = 2
@@ -24,6 +66,10 @@ class Location():
         BETWEEN      = 32
 
     class Strand(IntEnum):
+        """
+        This enum type describes the strand of the feature location.
+        This is not relevant for residue peptide features.
+        """
         FORWARD = 1
         REVERSE = -1
     
@@ -46,6 +92,23 @@ class Location():
     
 
 class Feature(Copyable):
+    """
+    This class represents a single sequence feature, e.g. from a
+    GenBank feature table.
+    
+    Attributes
+    ----------
+    key : str
+        The name of the feature class, e.g. *gene*, *CDS* or
+        *regulatory*. 
+    locs : list of Location
+        A list of feature locations. In most cases this list will only
+        contain one location, but multiple ones are also possible for
+        example in eukaryotic CDS (due to splicing).
+    qual : dict
+        Maps GenBank feature qualifiers to their corresponding values.
+        The keys and values are always strings.
+    """
     
     def __init__(self, key, locs, qual={}):
         self._key = key
@@ -54,6 +117,9 @@ class Feature(Copyable):
     
     def __copy_create__(self):
         return Feature(self._key, self._locs, self._qual)
+    
+    def __eq__(self):
+        pass
     
     @property
     def key(self):
@@ -69,6 +135,13 @@ class Feature(Copyable):
 
 
 class Annotation(object):
+    """
+    An `Annotation` is a list of features belonging to one sequence.
+    
+    Its advantage over a simple list is the base/residue position based
+    indexing:
+    Rather than
+    """
     
     def __init__(self, features=[]):
         self._features = copy.copy(features)
@@ -87,7 +160,7 @@ class Annotation(object):
     def __add__(self, item):
         if not isinstance(item, Feature):
             raise TypeError("Only can add 'Feature' instances to annotation")
-        self.add_feature(item)
+        self.copy().add_feature(item)
     
     def __delitem__(self, item):
         if not isinstance(item, Feature):
@@ -135,9 +208,7 @@ class Annotation(object):
                             loc.defect |= Location.Defect.MISS_RIGHT
                             loc.last = i_last
                     sub_annot.add_feature(new_feature)
-            return sub_annot            
-        elif isinstance(index, int):
-            return self._features[index]
+            return sub_annot
         else:
             raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
