@@ -78,49 +78,49 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     Creating a DNA sequence from string and print the symbols and the
     code:
     
-        >>> dna_seq = NucleotideSequence("ACGTA")
-        >>> print(dna_seq)
-        ACGTA
-        >>> print(dna_seq.code)
-        [0 1 2 3 0]
-        >>> print(dna_seq.symbols)
-        ['A', 'C', 'G', 'T', 'A']
-        >>> print(list(dna_seq))
-        ['A', 'C', 'G', 'T', 'A']
+    >>> dna_seq = NucleotideSequence("ACGTA")
+    >>> print(dna_seq)
+    ACGTA
+    >>> print(dna_seq.code)
+    [0 1 2 3 0]
+    >>> print(dna_seq.symbols)
+    ['A', 'C', 'G', 'T', 'A']
+    >>> print(list(dna_seq))
+    ['A', 'C', 'G', 'T', 'A']
     
     Sequence indexing:
         
-        >>> print(dna_seq[1:3])
-        CG
-        >>> print(dna_seq[[0,2,4]])
-        AGA
-        >>> print(dna_seq[np.array([False,False,True,True,True])])
-        GTA
+    >>> print(dna_seq[1:3])
+    CG
+    >>> print(dna_seq[[0,2,4]])
+    AGA
+    >>> print(dna_seq[np.array([False,False,True,True,True])])
+    GTA
     
     Sequence manipulation:
         
-        >>> dna_copy = dna_seq.copy()
-        >>> dna_copy[2] = "C"
-        >>> print(dna_copy)
-        ACCTA
-        >>> dna_copy = dna_seq.copy()
-        >>> dna_copy[0:2] = dna_copy[3:5]
-        >>> print(dna_copy)
-        TAGTA
-        >>> dna_copy = dna_seq.copy()
-        >>> dna_copy[np.array([True,False,False,False,True])] = "T"
-        >>> print(dna_copy)
-        TCGTT
-        >>> dna_copy = dna_seq.copy()
-        >>> dna_copy[1:4] = np.array([0,1,2])
-        >>> print(dna_copy)
-        AACGA
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[2] = "C"
+    >>> print(dna_copy)
+    ACCTA
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[0:2] = dna_copy[3:5]
+    >>> print(dna_copy)
+    TAGTA
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[np.array([True,False,False,False,True])] = "T"
+    >>> print(dna_copy)
+    TCGTT
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[1:4] = np.array([0,1,2])
+    >>> print(dna_copy)
+    AACGA
     
     Concatenate the two sequences:
         
-        >>> dna_seq_concat = dna_seq + dna_seq_rev
-        >>> print(dna_seq_concat)
-        ACGTAATGCA
+    >>> dna_seq_concat = dna_seq + dna_seq_rev
+    >>> print(dna_seq_concat)
+    ACGTAATGCA
         
     """
     
@@ -200,10 +200,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         Examples
         --------
             
-            >>> dna_seq = DNASequence("ACGTA")
-            >>> dna_seq_rev = dna_seq.reverse()
-            >>> print(dna_seq_rev)
-            ATGCA
+        >>> dna_seq = DNASequence("ACGTA")
+        >>> dna_seq_rev = dna_seq.reverse()
+        >>> print(dna_seq_rev)
+        ATGCA
         """
         reversed_code = np.flip(np.copy(self._seq_code), axis=0)
         reversed = self.copy(reversed_code)

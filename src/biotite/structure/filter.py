@@ -106,13 +106,13 @@ def filter_intersection(array, intersect):
     
     Creating an atom array from atoms:
     
-        >>> array1 = AtomArray(length=5)
-        >>> array1.chain_id = np.array("A","B","C","D","E")
-        >>> array2 = AtomArray(length=5)
-        >>> array2.chain_id = np.array("D","B","C")
-        >>> array1 = array1[filter_intersection(array1, array2)]
-        >>> print(array1.chain_id)
-        ['B' 'C' 'D']
+    >>> array1 = AtomArray(length=5)
+    >>> array1.chain_id = np.array("A","B","C","D","E")
+    >>> array2 = AtomArray(length=5)
+    >>> array2.chain_id = np.array("D","B","C")
+    >>> array1 = array1[filter_intersection(array1, array2)]
+    >>> print(array1.chain_id)
+    ['B' 'C' 'D']
     
     """
     filter = np.full(array.array_length(), True, dtype=bool)

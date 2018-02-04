@@ -216,9 +216,9 @@ def set_structure(pdbx_file, array, data_block=None):
     Examples
     --------
 
-        >>> file = PDBxFile()
-        >>> set_structure(file, atom_array)
-        >>> file.write("structure.cif")
+    >>> file = PDBxFile()
+    >>> set_structure(file, atom_array)
+    >>> file.write("structure.cif")
     
     """
     # Fill PDBx columns from information

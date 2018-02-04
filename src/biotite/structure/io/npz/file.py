@@ -24,13 +24,13 @@ class NpzFile(File):
     Load a \*.npz file, modify the structure and save the new
     structure into a new file:
     
-        >>> file = NpzFile()
-        >>> file.read("1l2y.npz")
-        >>> array_stack = file.get_structure()
-        >>> array_stack_mod = rotate(array_stack, [1,2,3])
-        >>> file = NpzFile()
-        >>> file.set_structure(array_stack_mod)
-        >>> file.write("1l2y_mod.npz")
+    >>> file = NpzFile()
+    >>> file.read("1l2y.npz")
+    >>> array_stack = file.get_structure()
+    >>> array_stack_mod = rotate(array_stack, [1,2,3])
+    >>> file = NpzFile()
+    >>> file.set_structure(array_stack_mod)
+    >>> file.write("1l2y_mod.npz")
     
     """
     

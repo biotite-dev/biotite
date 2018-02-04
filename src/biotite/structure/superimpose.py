@@ -84,20 +84,20 @@ def superimpose(fixed, mobile, ca_only=True):
     rotate/translate one of them and superimpose it onto the other
     model:
     
-        >>> file = PDBxFile()
-        >>> file.read("1l2y.cif")
-        >>> array1 = get_structure(file, model=1)
-        >>> array2 = get_structure(file, model=2)
-        >>> array2 = translate(array2, [1,2,3])
-        >>> array2 = rotate(array2, [1,2,3])
-        >>> print(rmsd(array1, array2))
-        10.8492095649
-        >>> array2_fit, transformation = superimpose(array1, array2, ca_only=True)
-        >>> print(rmsd(array1, array2_fit))
-        1.95480879468
-        >>> array2_fit, transformation = superimpose(array1, array2, ca_only=False)
-        >>> print(rmsd(array1, array2_fit))
-        1.92792691375
+    >>> file = PDBxFile()
+    >>> file.read("1l2y.cif")
+    >>> array1 = get_structure(file, model=1)
+    >>> array2 = get_structure(file, model=2)
+    >>> array2 = translate(array2, [1,2,3])
+    >>> array2 = rotate(array2, [1,2,3])
+    >>> print(rmsd(array1, array2))
+    10.8492095649
+    >>> array2_fit, transformation = superimpose(array1, array2, ca_only=True)
+    >>> print(rmsd(array1, array2_fit))
+    1.95480879468
+    >>> array2_fit, transformation = superimpose(array1, array2, ca_only=False)
+    >>> print(rmsd(array1, array2_fit))
+    1.92792691375
         
     """
     if type(fixed) != AtomArray:

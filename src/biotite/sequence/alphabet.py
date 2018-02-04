@@ -48,24 +48,24 @@ class Alphabet(object):
     Create an Alphabet containing DNA letters and encode/decode a
     letter/code:
     
-        >>> alph = Alphabet(["A","C","G","T"])
-        >>> print(alph.encode("G"))
-        2
-        >>> print(alph.decode(2))
-        G
-        >>> try:
-        ...    alph.encode("foo")
-        >>> except Exception as e:
-        ...    print(e)
-        'foo' is not in the alphabet
+    >>> alph = Alphabet(["A","C","G","T"])
+    >>> print(alph.encode("G"))
+    2
+    >>> print(alph.decode(2))
+    G
+    >>> try:
+    ...    alph.encode("foo")
+    >>> except Exception as e:
+    ...    print(e)
+    'foo' is not in the alphabet
     
     Create an Alphabet of arbitrary objects:
     
-        >>> alph = Alphabet(["foo", 42, (1,2,3), 5, 3.141])
-        >>> print(alph.encode((1,2,3)))
-        2
-        >>> print(alph.decode(4))
-        3.141
+    >>> alph = Alphabet(["foo", 42, (1,2,3), 5, 3.141])
+    >>> print(alph.encode((1,2,3)))
+    2
+    >>> print(alph.decode(4))
+    3.141
         
     """
     
@@ -318,17 +318,17 @@ class AlphabetMapper(object):
     Examples
     --------
         
-        >>> source_alph = Alphabet(["A","C","G","T"])
-        >>> target_alph = Alphabet(["T","U","A","G","C"])
-        >>> mapper = AlphabetMapper(source_alph, target_alph)
-        >>> print(mapper[0])
-        2
-        >>> print(mapper[1])
-        4
-        >>> print(mapper[2])
-        3
-        >>> print(mapper[3])
-        0
+    >>> source_alph = Alphabet(["A","C","G","T"])
+    >>> target_alph = Alphabet(["T","U","A","G","C"])
+    >>> mapper = AlphabetMapper(source_alph, target_alph)
+    >>> print(mapper[0])
+    2
+    >>> print(mapper[1])
+    4
+    >>> print(mapper[2])
+    3
+    >>> print(mapper[3])
+    0
         
     """
     

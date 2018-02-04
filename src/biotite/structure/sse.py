@@ -75,11 +75,11 @@ def annotate_sse(atom_array, chain_id):
     
     SSE of PDB 1L2Y:
         
-        >>> a = get_structure(file, model=1)
-        >>> sse = annotate_sse(a, "A")
-        >>> print(sse)
-        ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
-         'c' 'c']
+    >>> a = get_structure(file, model=1)
+    >>> sse = annotate_sse(a, "A")
+    >>> print(sse)
+    ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+     'c' 'c']
     
     """
     # Filter all CA atoms in the relevant chain.

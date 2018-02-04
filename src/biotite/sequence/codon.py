@@ -39,19 +39,19 @@ class CodonTable(object):
     
     Get the amino acid coded by a given codon (symbol and code):
         
-        >>> table = CodonTable.default_table()
-        >>> print(table["ATG"])
-        M
-        >>> print(table[(1,2,3)])
-        14
+    >>> table = CodonTable.default_table()
+    >>> print(table["ATG"])
+    M
+    >>> print(table[(1,2,3)])
+    14
         
     Get the codons coding for a given amino acid (symbol and code):
         
-        >>> table = CodonTable.default_table()
-        >>> print(table["M"])
-        ('ATG',)
-        >>> print(table[14])
-        ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
+    >>> table = CodonTable.default_table()
+    >>> print(table["M"])
+    ('ATG',)
+    >>> print(table[14])
+    ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
     """
     
     # file for codon tables

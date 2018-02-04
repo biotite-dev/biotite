@@ -38,8 +38,8 @@ class AdjacencyMap(object):
     Examples
     --------
     
-        >>> adj_map = AdjacencyMap(atom_array, box_size=5)
-        >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
+    >>> adj_map = AdjacencyMap(atom_array, box_size=5)
+    >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
         
     """
     

@@ -47,31 +47,31 @@ class PDBxFile(TextFile):
     --------
     Read the file and get author names
 
-        >>> file = PDBxFile()
-        >>> file.read("1l2y.cif")
-        >>> author_dict = file.get_category("citation_author", block="1L2Y")
-        >>> print(author_dict["name"])
-        ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
+    >>> file = PDBxFile()
+    >>> file.read("1l2y.cif")
+    >>> author_dict = file.get_category("citation_author", block="1L2Y")
+    >>> print(author_dict["name"])
+    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
     
     Dictionary style indexing, no specification of data block:
     
-        >>> print(file["citation_author"]["name"])
-        ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
+    >>> print(file["citation_author"]["name"])
+    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
     
     Get the structure from the file:
     
-        >>> arr = get_structure(file)
-        >>> print(type(arr))
-        <class 'biotite.structure.atoms.AtomArrayStack'>
-        >>> arr = get_structure(file, model=1)
-        >>> print(type(arr))
-        <class 'biotite.structure.atoms.AtomArray'>
+    >>> arr = get_structure(file)
+    >>> print(type(arr))
+    <class 'biotite.structure.atoms.AtomArrayStack'>
+    >>> arr = get_structure(file, model=1)
+    >>> print(type(arr))
+    <class 'biotite.structure.atoms.AtomArray'>
     
     Modify atom array and write it back into the file:
     
-        >>> arr_mod = rotate(arr, [1,2,3])
-        >>> set_structure(file, arr_mod)
-        >>> file.write("1l2y_mod.cif")
+    >>> arr_mod = rotate(arr, [1,2,3])
+    >>> set_structure(file, arr_mod)
+    >>> file.write("1l2y_mod.cif")
     """
     
     def __init__(self):

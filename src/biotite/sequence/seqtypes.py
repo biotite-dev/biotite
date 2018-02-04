@@ -126,11 +126,11 @@ class NucleotideSequence(Sequence):
         Examples
         --------
         
-            >>> dna_seq = NucleotideSequence("ACGCTT")
-            >>> print(dna_seq.complement())
-            TGCGAA
-            >>> print(dna_seq.reverse().complement())
-            AAGCGT
+        >>> dna_seq = NucleotideSequence("ACGCTT")
+        >>> print(dna_seq.complement())
+        TGCGAA
+        >>> print(dna_seq.reverse().complement())
+        AAGCGT
         
         """
         compl_code = NucleotideSequence._complement_func(self.code)
@@ -183,15 +183,15 @@ class NucleotideSequence(Sequence):
         Examples
         --------
         
-            >>> dna_seq = NucleotideSequence("AATGATGCTATAGAT")
-            >>> prot_seq = dna_seq.translate(complete=True)
-            >>> print(prot_seq)
-            NDAID
-            >>> prot_seqs, pos = dna_seq.translate(complete=False)
-            >>> for seq in prot_seqs:
-            ...    print(seq)
-            MML*
-            ML*
+        >>> dna_seq = NucleotideSequence("AATGATGCTATAGAT")
+        >>> prot_seq = dna_seq.translate(complete=True)
+        >>> print(prot_seq)
+        NDAID
+        >>> prot_seqs, pos = dna_seq.translate(complete=False)
+        >>> for seq in prot_seqs:
+        ...    print(seq)
+        MML*
+        ML*
         
         """
         if self._alphabet == NucleotideSequence.alphabet_amb:
