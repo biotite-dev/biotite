@@ -151,7 +151,42 @@ class Annotation(Copyable):
     
     Its advantage over a simple list is the base/residue position based
     indexing:
-    Rather than
+    When using slice indices in Annotation objects, a subannotation is
+    created, containing copies of all `Feature` objects whose first and
+    last base/residue are in range of the slice.
+    If the slice starts after the first base/residue or/and the slice
+    ends before the last residue, the position out of range is set to
+    the boundaries of the slice (the `Feature` is truncated). In this
+    case the `Feature` obtains the `MISS_LEFT` and/or `MISS_RIGHT`
+    defect.
+    The third case occurs when a `Feature` starts after the slice ends
+    or a `Feature` ends before the slice starts. In this case the
+    `Feature` will not appear in the subannotation.
+    
+    The start or stop position in the slice indices can be omitted, then
+    the subannotation will include all features from the start or up to
+    the stop, respectively. Step values are ignored.
+    The stop values are still exclusive, i.e. the subannotation will
+    contain a not truncated `Feature` only if its last base/residue is
+    smaller than the stop value of the slice.
+    
+    Integers or other index types are not supported. If you want to
+    obtain the `Feature` instances from the `Annotation` you need to 
+    iterate over it.
+    
+    Parameters
+    ----------
+    features : list of Feature, optional
+        The list of features to create the `Annotation` from. if not
+        provided, an empty `Annotation` is created.
+    
+    Examples
+    --------
+    Creating an annotation from a feature list
+    
+    Merging two annotations and a feature
+    
+    Location based indexing (note the defects)
     """
     
     def __init__(self, features=[]):
