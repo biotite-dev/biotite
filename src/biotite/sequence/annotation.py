@@ -310,6 +310,9 @@ class Annotation(Copyable):
             raise TypeError("Annotation instances only contain features")
         return item in self._features
     
+    def __eq__(self, item):
+        return sorted(self._features) == sorted(item._features)
+    
     def __getitem__(self, index):
         if isinstance(index, slice):
             i_first = index.start
@@ -531,7 +534,7 @@ class AnnotatedSequence(Copyable):
             raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
     
-    def __eq__(self):
+    def __eq__(self, item):
         return (    self.annotation == item.annotation
                 and self.sequence   == item.sequence
                 and self._seqstart  == item._seqstart)
