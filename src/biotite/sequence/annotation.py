@@ -176,6 +176,12 @@ class Annotation(Copyable):
     Alternatively, you can obtain a copy of the internal `Feature` list
     via `get_features()`.
     
+    Multiple `Annotation` objects can be concatenated to one
+    `Annotation` object using the '+' operator. Single `Feature`
+    instances can be added this way, too. If a feature is present
+    in both `Annotation` objects, the resulting `Annotation` will
+    contain this feature twice.
+    
     Parameters
     ----------
     features : list of Feature, optional
@@ -340,11 +346,112 @@ class Annotation(Copyable):
 
 
 class AnnotatedSequence(Copyable):
+    """
+    An `AnnotatedSequence` is a combination of a `Sequence` and an
+    `Annotation`.
+    
+    Indexing an `AnnotatedSequence` with a slice returns another
+    `AnnotatedSequence` with the corresponding subannotation and a
+    sequence start corrected subsequence, i.e. indexing starts at 1 with
+    the default sequence start 1.
+    Furthermore, integer indices are allowed in which case the
+    corresponding symbol of the sequence is returned (also sequence
+    start corrected).
+    In both cases the index must be in range of the sequence, e.g. if
+    sequence start is 1, index 0 is not allowed.
+    Negative indices do not mean indexing from the end of the sequence,
+    in contrast to the behavior in `Sequence` objects.
+    Both index types can also be used to modify the sequence.
+    
+    Another option is indexing with a `Feature` (preferably from the
+    `Annotation` in the same `AnnotatedSequence`). In this case a
+    sequence, described by the location(s) of the `Feature`, is
+    returned.
+    When using a `Feature` for setting an `AnnotatedSequence` with a
+    sequence, the new sequence is replacing the locations of the
+    `Feature`. It is important to note that the sum of the location's 
+    interval lengths must fit the length of the replacing sequence.
+        
+    Parameters
+    ----------
+    sequence : Sequence
+        The sequence. Usually a `NucelotideSequence` or
+        `ProteinSequence`.
+    annotation : Annotation
+        The annotation corresponding to `sequence`.
+    sequence_start : int, optional
+        By default, the first symbol of the sequence is corresponding
+        to location 1 of the features in the annotation. The location
+        of the first symbol can be changed by setting this parameter.
+        Negative values are not supported yet.
+    
+    Attributes
+    ----------
+    sequence : Sequence
+        The represented sequence.
+    annotation : Annotation
+        The annotation corresponding to `sequence`.
+    sequence_start : int
+        The location of the first symbol in the sequence.
+    
+    See also
+    --------
+    Annotation, Sequence
+    
+    Examples
+    --------
+    Creating an annotated sequence
+    
+    >>> sequence = NucleotideSequence("ATGGCGTACGATTAGAAAAAAA")
+    >>> feature1 = Feature("misc_feature", [Location(1,2), Location(11,12)],
+    ...                    {"note" : "walker"})
+    >>> feature2 = Feature("misc_feature", [Location(16,22)], {"note" : "poly-A"})
+    >>> annotation = Annotation([feature1, feature2])
+    >>> annot_seq = AnnotatedSequence(annotation, sequence)
+    >>> print(annot_seq.sequence)
+    ATGGCGTACGATTAGAAAAAAA
+    >>> for f in annot_seq.annotation:
+    ...     print(f.qual["note"])
+    walker
+    poly-A
+    
+    Indexing with integers, note the sequence start correction
+    
+    >>> print(annot_seq[2])
+    >>> print(annot_seq.sequence[2])
+    T
+    G
+    
+    indexing with slices
+    
+    >>> annot_seq2 = annot_seq[:16]
+    >>> print(annot_seq2.sequence)
+    ATGGCGTACGATTAG
+    >>> for f in annot_seq2.annotation:
+    ...     print(f.qual["note"])
+    walker
+    
+    Indexing with features
+    
+    >>> print(annot_seq[feature1])
+    ATAT
+    >>> print(annot_seq[feature2])
+    AAAAAAA
+    >>> print(annot_seq.sequence)
+    ATGGCGTACGATTAGAAAAAAA
+    >>> annot_seq[feature1] = NucleotideSequence("CCCC")
+    >>> print(annot_seq.sequence)
+    CCGGCGTACGCCTAGAAAAAAA
+    """
     
     def __init__(self, annotation, sequence, sequence_start=1):
         self._annotation = annotation
         self._sequence = sequence
         self._seqstart = sequence_start
+    
+    @property
+    def sequence_start(self):
+        return self._seqstart 
     
     @property
     def sequence(self):
@@ -373,8 +480,15 @@ class AnnotatedSequence(Copyable):
                 sub_seq += add_seq
             return sub_seq
         elif isinstance(index, slice):
-            seq_start = index.start - self._seqstart
-            seq_stop = index.stop - self._seqstart
+            # Sequence start correction
+            if index.start is None:
+                seq_start = 0
+            else:
+                seq_start = index.start - self._seqstart
+            if index.stop is None:
+                index.start = len(self._sequence)
+            else:
+                seq_stop = index.stop - self._seqstart
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
                                      self._seqstart)
@@ -399,8 +513,15 @@ class AnnotatedSequence(Copyable):
                     = sub_seq[sub_seq_i : sub_seq_i + interval_size]
                 sub_seq_i += interval_size
         elif isinstance(index, slice):
-            seq_start = index.start - self._seqstart
-            seq_stop = index.stop - self._seqstart
+            # Sequence start correction
+            if index.start is None:
+                seq_start = 0
+            else:
+                seq_start = index.start - self._seqstart
+            if index.stop is None:
+                index.start = len(self._sequence)
+            else:
+                seq_stop = index.stop - self._seqstart
             # Item is a Sequence
             self._sequence[seq_start:seq_stop] = item
         elif isinstance(index, int):
@@ -411,6 +532,6 @@ class AnnotatedSequence(Copyable):
                             .format(type(index).__name__))
     
     def __eq__(self):
-        return (    self.annotation     == item.annotation
-                and self.sequence       == item.sequence
-                and self.sequence_start == item.sequence_start)
+        return (    self.annotation == item.annotation
+                and self.sequence   == item.sequence
+                and self._seqstart  == item._seqstart)
