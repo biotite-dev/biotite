@@ -71,7 +71,7 @@ class Alignment(object):
     
     
     def __init__(self, sequences, trace, score):
-        self.sequences = copy.copy(sequences)
+        self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
     
