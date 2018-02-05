@@ -41,6 +41,12 @@ Besides the `Sequence` superclass, this subpackage contains the classes
 important biological sequence types. The class `GeneralSequence` allows
 the usage of a custom `Alphabet` without the need to subclass 
 `Sequence`.
+
+Additionally, this subpackage provides support for sequence feature,
+as for example used in GenBank files. A `Feature` stores its class
+name, its qualifiers and locations. An `Annotation` is a froup of multiple
+`Feataure` objects and offers convenient location based indexing.
+An `AnnotatedSequence` combines an `Annotation` and a `Sequence`
 """
 
 from .alphabet import *
