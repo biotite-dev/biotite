@@ -223,8 +223,8 @@ class GenBankFile(TextFile):
             for key, val in ref_dict_raw.items():
                 if key == "REFERENCE":
                     loc_info = val[val.index("(")+1 : val.index(")")].split()
-                    first_base = int(loc_info[loc_info.index("bases") +1])
-                    last_base = int(loc_info[loc_info.index("to") +1])
+                    first_base = int(loc_info[loc_info.index("to") -1])
+                    last_base  = int(loc_info[loc_info.index("to") +1])
                     ref_dict["location"] = (first_base, last_base)
                 elif key == "AUTHORS":
                     ref_dict["authors"] = val
@@ -249,7 +249,10 @@ class GenBankFile(TextFile):
             Content of the *COMMENT* field.
         """
         starts, stops = self._get_field_indices("COMMENT")
-        return self._lines[starts[0]][12:].strip()
+        comment = ""
+        for line in self._lines[starts[0] : stops[0]]:
+            comment += line[12:].strip() + " "
+        return comment.strip()
     
     def get_annotation(self, include_only=None):
         """
@@ -502,7 +505,7 @@ class GenPeptFile(GenBankFile):
             Content of the *DBSOURCE* field.
         """
         starts, stops = self._get_field_indices("DBSOURCE")
-        return self._lines[starts[0]][12:].split()[0]
+        return self._lines[starts[0]][12:].strip()
     
     def get_sequence(self):
         """
