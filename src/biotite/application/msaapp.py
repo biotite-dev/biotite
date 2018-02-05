@@ -40,7 +40,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     
     def __init__(self, sequences, bin_path=None, mute=True):
         if bin_path is None:
-            bin_path = get_default_bin_path()
+            bin_path = self.get_default_bin_path()
         super().__init__(bin_path, mute)
         self._sequences = sequences
         MSAApp._counter += 1
@@ -113,7 +113,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         """
         Get input file path (FASTA format).
         
-        PROTECTED: Do not override.
+        PROTECTED: Do not call from outside.
         
         Returns
         -------
@@ -126,7 +126,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         """
         Get output file path (FASTA format).
         
-        PROTECTED: Do not override.
+        PROTECTED: Do not call from outside.
         
         Returns
         -------
@@ -138,6 +138,6 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     @classmethod
     def align(cls, sequences, bin_path=None):
         app = cls(sequences, bin_path)
-        app.run()
+        app.start()
         app.join()
         return app.get_alignment()
