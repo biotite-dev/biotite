@@ -58,9 +58,9 @@ def annotate_sse(atom_array, chain_id):
     
     Notes
     -----
-    Although this function uses the original `P-SEA` algorithm, there
-    are deviatons in some cases, do do not rely on getting the exact same
-    results.
+    Although this function is based on the original `P-SEA` algorithm,
+    there are deviatons compared to the official `P-SEA` software in
+    some cases. Do not rely on getting the exact same results.
     
     References
     ----------
