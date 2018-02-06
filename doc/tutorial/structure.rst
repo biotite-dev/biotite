@@ -221,8 +221,27 @@ convert the *atom_site* category into an atom array/stack and vice versa.
 actually contains only a single model. If you would like to have an
 `AtomArray` instead, you have to specifiy the `model` parameter.
 
+If you want to parse a large batch of structure files or you have to load very
+large structure files, the usage of PDB or mmCIF files might be too slow for
+your requirements. In this case you probably might want to use MMTF files.
+MMTF files describe structures just like PDB and mmCIF files, but they are
+binary! This circumstance increases the downloading and parsing speed by
+several multiples. The usage is similar to `PDBxFile`: The `MMTFFile` class
+decodes the file and makes it raw information accessible. The function
+`get_structure()` is then required to construct an atom array stack,
+or alternatively an atom array if a model number is specified.
+Unfortunately, writing MMTF files is not supported at this point.
+
+.. code-block:: python
+   
+   import biotite.structure.io.mmtf as mmtf
+   file = mmtf.MMTFFile()
+   file.read("tests/structure/data/1l2y.mmtf")
+   stack = mmtf.get_structure(file)
+   array = mmtf.get_structure(file, model=1)
+
 For *Biotite* internal storage of structures *npz* files are recommended.
-These are simply binary files, that are used by `numpy`. In case of atom arrays
+These are simply binary files, that are used by `NumPy`. In case of atom arrays
 and stacks, the annotation arrays and coordinates are written/read to/from
 *npz* files via the `NpzFile` class. Since no expensive data conversion has
 to be performed, this format is the fastest way to save and load atom arrays

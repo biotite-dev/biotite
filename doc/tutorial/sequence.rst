@@ -329,6 +329,9 @@ Output:
 As you see, our file contains our new 'gibberish' sequence now, additionally
 to the original sequence.
 
+Alternatively, a sequence can also be loaded from GenBank or GenPept files,
+using the `GenBankFile` and `GenPeptFile` class (more on this later).
+
 Sequence search
 ^^^^^^^^^^^^^^^
 
@@ -436,5 +439,7 @@ sequences that are aligned to each other (*-1* for a gap). Additionally the
 alignment score is stored in this object. Furthermore, this object can
 prettyprint the alignment into a human readable form.
 
+Sequence features
+^^^^^^^^^^^^^^^^^
 
-
+Sequence features describe functional parts of a sequence

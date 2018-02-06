@@ -60,8 +60,8 @@ homologous sequences to the miniprotein *TC5b*:
 
 .. code-block:: python
    
-   import src.biotite.application.blast as blast
-   import src.biotite.sequence as seq
+   import biotite.application.blast as blast
+   import biotite.sequence as seq
    tc5b_seq = seq.ProteinSequence("NLYIQWLKDGGPSSGRPPPS")
    app = blast.BlastWebApp("blastp", tc5b_seq)
    app.start()
@@ -106,8 +106,8 @@ high similarity to the original sequence, we decrease the E-value threshold.
 
 .. code-block:: python
    
-   import src.biotite.application.blast as blast
-   import src.biotite.sequence as seq
+   import biotite.application.blast as blast
+   import biotite.sequence as seq
    bl21_seq = seq.NucleotideSequence(
        "CGGAAGCGCTCGGTCTCCTGGCCTTATCAGCCACTGCGCGACGATATGCTCGTCCGTTTCGAAGA"
    )
@@ -148,20 +148,22 @@ instance with ``obey_rules=False``.
 
 Multiple sequence alignments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For *multiple sequence alignments* (MSAs) the ``application.muscle`` subpackage
-offers the `MuscleApp` for the MSA software MUSCLE. You simply input the
-sequences you want to have aligned, run the application and get the resulting
-`Alignment` object (you already know from ``sequence.align``):
+For *multiple sequence alignments* (MSAs) ``biotite.application`` offers
+several interfaces to MSA software. For our example we choose the software
+MUSCLE: The subpackage ``biotite.application.muscle`` contains the class
+`MuscleApp` that does the job. You simply input the sequences you want to have
+aligned, run the application and get the resulting `Alignment` object
+(you already know from ``sequence.align``):
 
 .. code-block:: python
 
-   import src.biotite.application.muscle as muscle
-   import src.biotite.sequence as seq
+   import biotite.application.muscle as muscle
+   import biotite.sequence as seq
    seq1 = seq.ProteinSequence("BIQTITE")
    seq2 = seq.ProteinSequence("TITANITE")
    seq3 = seq.ProteinSequence("BISMITE")
    seq4 = seq.ProteinSequence("IQLITE")
-   app = muscle.MuscleApp([seq1, seq2, seq3, seq4], bin_path="muscle")
+   app = muscle.MuscleApp([seq1, seq2, seq3, seq4])
    app.start()
    app.join()
    alignment = app.get_alignment()
@@ -176,6 +178,62 @@ Output:
    BISM-ITE
    -IQL-ITE
 
-As of now, this does only work with protein sequences.
+For the lazy people there is also a convenience method, that handles the
+`Application` execution internally:
 
+.. code-block:: python
 
+   alignment = muscle.MuscleApp.align([seq1, seq2, seq3, seq4])
+
+The alternatives to MUSCLE are Clustal-Omega and MAFFT. To use them, simply
+replace `MuscleApp` with `ClustalOmegaApp` or `MafftApp` and you are done.
+
+.. code-block:: python
+
+   import biotite.application.clustalo as clustalo
+   alignment = clustalo.ClustalOmegaApp.align([seq1, seq2, seq3, seq4])
+   print(alignment)
+
+Output:
+
+.. code-block:: none
+
+   -BIQTITE
+   TITANITE
+   -BISMITE
+   --IQLITE
+
+As shown in the output, the alignment with Clustal-Omega slightly differs from
+the one performed with MUSCLE. In contrast to MUSCLE, Clustal-Omega and MAFFT
+also support alignments of `NucleotideSequence` instances.
+
+Secondary structure annotation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Althogh ``biotite.structure`` offers the function `annotate_sse()` to
+assign secondary structure elements based on the P-SEA algorithm, DSSP can
+also be used via the ``biotite.application.dssp`` subpackage (provided that
+DSSP is installed). Let us demonstrate this on the example of the good old
+miniprotein *TC5b*:
+
+.. code-block:: python
+
+   import biotite.application.dssp as dssp
+   import biotite.structure.io as strucio
+   stack = strucio.get_structure_from("path/to/1l2y.pdb")
+   array = stack[0]
+   app = dssp.DsspApp(array)
+   app.start()
+   app.join()
+   sse = app.get_sse()
+   print(sse)
+
+Output:
+
+.. code-block:: none
+
+   ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'C' 'C'
+    'C' 'C']
+
+Similar to the MSA examples, `DsspApp` has the convenience function
+`annotate_sse()`, which handles the `DsspApp` execution internally.
