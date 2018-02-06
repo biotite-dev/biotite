@@ -14,8 +14,6 @@ import abc
 __all__ = ["MSAApp"]
 
 
-_ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
-
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     """
     Perform a multiple sequence alignment.
@@ -137,6 +135,25 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     
     @classmethod
     def align(cls, sequences, bin_path=None):
+        """
+        Perform a multiple sequence alignment.
+        
+        This is a convenience function, that wraps the `MSAApp`
+        execution.
+        
+        Parameters
+        ----------
+        sequences : iterable object of Sequence
+            The sequences to be aligned
+        bin_path : str, optional
+            Path of the MSA software binary. By default, the default path
+            will be used.
+        
+        Returns
+        -------
+        alignment : Alignment
+            The global multiple sequence alignment.
+        """
         app = cls(sequences, bin_path)
         app.start()
         app.join()
