@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
@@ -7,10 +7,7 @@ from biotite.application.muscle import MuscleApp
 from biotite.application.mafft import MafftApp
 from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
-from requests.exceptions import ConnectionError
 import pytest
-import os.path
-import shutil
 
 @pytest.mark.skipif(shutil.which("muscle")   is None or
                     shutil.which("mafft")    is None or
