@@ -8,6 +8,7 @@ from biotite.application.mafft import MafftApp
 from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
 import pytest
+import shutil
 
 @pytest.mark.skipif(shutil.which("muscle")   is None or
                     shutil.which("mafft")    is None or
