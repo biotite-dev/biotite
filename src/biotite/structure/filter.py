@@ -32,7 +32,7 @@ def filter_solvent(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
@@ -50,7 +50,7 @@ def filter_amino_acids(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
     """
@@ -70,7 +70,7 @@ def filter_backbone(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         as an backbone atom.
     """
@@ -97,7 +97,7 @@ def filter_intersection(array, intersect):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         exists also in `intersect`.
     
@@ -172,7 +172,7 @@ def filter_inscode_and_altloc(array,  inscode=[], altloc=[],
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         The combined inscode and altloc filters.
     """
     if inscode_array is None:

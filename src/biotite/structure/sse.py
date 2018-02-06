@@ -34,7 +34,7 @@ _d4_strand = ((12.4-1.1), (12.4+1.1))
 
 
 def annotate_sse(atom_array, chain_id):
-    """
+    r"""
     Calculate the secondary structure elements (SSE) of a
     peptide chain based on the `P-SEA` algorithm [1]_.
     
@@ -53,8 +53,8 @@ def annotate_sse(atom_array, chain_id):
     sse : ndarray
         An array containing the secondary structure elements,
         where the index corresponds to the index of the CA-filtered
-        `atom_array`. 'a' means alpha helix, 'b' means beta strand/sheet,
-        'c' means coil.
+        `atom_array`. 'a' means :math:`{\alpha}`-helix, 'b' means
+        :math:`{\beta}`-strand/sheet, 'c' means coil.
     
     Notes
     -----

@@ -221,9 +221,9 @@ def get_residues(array):
         
     Returns
     -------
-    ids : ndarray(dtype=int)
+    ids : ndarray, dtype=int
         List of residue IDs.
-    names : ndarray(dtype="U3")
+    names : ndarray, dtype="U3"
         List of residue names.
         
     Examples

@@ -32,7 +32,7 @@ def sasa(array, **kwargs):
         The protein model to calculate the SASA for.
     probe_radius : float, optional
         The VdW-radius of the solvent molecules (default: 1.4).
-    atom_filter : ndarray(dtype=bool), optional
+    atom_filter : ndarray, dtype=bool, optional
         If this parameter is given, SASA is only calculated for the
         filtered atoms.
     ignore_ions : bool, optional
@@ -53,7 +53,7 @@ def sasa(array, **kwargs):
               spiral.
             
         By default *Fibonacci* is used.
-    vdw_radii : string or ndarray(dtype=float), optional
+    vdw_radii : string or ndarray, dtype=float, optional
         Indicates the set of VdW radii to be used. If an `array`-length
         `ndarray` is given, each atom gets the radius at the
         corresponding index. Radii given for atoms that are not used in
@@ -72,7 +72,7 @@ def sasa(array, **kwargs):
     
     Returns
     -------
-    sasa : 1-D ndarray(dtype=bool)
+    sasa : 1-D ndarray, dtype=bool
         Atom-wise SASA. `NaN` for atoms where SASA has not been 
         calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
