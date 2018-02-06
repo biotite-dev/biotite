@@ -3,7 +3,7 @@ Going 3D - The Structure subpackage
    
 ``structure`` is a *Biotite* subpackage for handling molecular structures.
 This subpackage enables efficient and easy handling of protein structure data
-by representing atom attributes in `numpy` `ndarrays`. These atom attributes
+by representing atom attributes in `NumPy` `ndarrays`. These atom attributes
 include so called *annotations* (polypetide chain id, residue id, residue name,
 hetero residue information, atom name, element, etc.) and the atom coordinates.
 
@@ -12,10 +12,10 @@ The package contains mainly three types: `Atom`, `AtomArray` and
 stores data for an entire model and `AtomArrayStack` stores data for multiple
 models, where each model contains the same atoms but differs in the atom
 coordinates. Both, `AtomArrray` and `AtomArrayStack`, store the attributes
-in `numpy` arrays. This approach has multiple advantages:
+in `NumPy` arrays. This approach has multiple advantages:
     
     - Convenient selection of atoms in a structure
-      by using `numpy` style indexing
+      by using `NumPy` style indexing
     - Fast calculations on structures using C-accelerated `ndarray` operations
     - Simple implementation of custom calculations
     
@@ -375,7 +375,7 @@ have a look at the `AdjacencyMap` class.
 
 .. warning:: Creating a subarray or substack by indexing, does not necessarily
    copy the coordinates and annotation arrays. If possible, only *array views*
-   are created. Look into the `numpy` documentation for furher details. If you
+   are created. Look into the `NumPy` documentation for furher details. If you
    want to ensure, that you are working with a copy, use the `copy()` method
    after indexing.
 

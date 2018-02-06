@@ -25,7 +25,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     A `Sequence` can be seen as a succession of symbols, that are
     elements in the allowed set of symbols, the `Alphabet`. Internally,
-    a `Sequence` object uses a `numpy` `ndarray` of integers, where each
+    a `Sequence` object uses a `NumPy` `ndarray` of integers, where each
     integer represents a symbol. The `Alphabet` of a `Sequence` object
     is used to encode each symbol, that is used to create the
     `Sequence`, into an integer. These integer values are called

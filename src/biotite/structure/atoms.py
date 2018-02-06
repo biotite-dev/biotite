@@ -61,7 +61,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : string
             The annotation category to be added.
         dtype : type or string
-            A type instance or a valid `numpy` `dtype` string.
+            A type instance or a valid `NumPy` `dtype` string.
             Defines the type of the annotation
         
         See Also
@@ -407,7 +407,7 @@ class AtomArray(_AtomArrayBase):
     An array representation of a model consisting of multiple atoms.
     
     An `AtomArray` can be seen as a list of `Atom` instances.
-    Instead of using directly a list, this class uses an `numpy`
+    Instead of using directly a list, this class uses an `NumPy`
     `ndarray` for each annotation category and the coordinates. These
     coordinates can be accessed directly via the `coord` attribute. The
     annotations are accessed either via the category as attribute name
@@ -415,7 +415,7 @@ class AtomArray(_AtomArrayBase):
     custom annotations is achieved via `add_annotation()` or
     `set_annotation()`.
     
-    In order to get an an subarray of an `AtomArray`, `numpy` style
+    In order to get an an subarray of an `AtomArray`, `NumPy` style
     indexing is used. This includes slices, boolean arrays,
     index arrays and even *Ellipsis* notation. Using a single integer as
     index returns a single `Atom` instance.
@@ -460,7 +460,7 @@ class AtomArray(_AtomArrayBase):
      [2 3 4]
      [3 4 5]]
     
-    `numpy` style filtering:
+    `NumPy` style filtering:
     
     >>> atom_array = atom_array[atom_array.chain_id == "A"]
     >>> print(atom_array.array_length())
@@ -522,7 +522,7 @@ class AtomArray(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `numpy` accepts are valid.
+            All index types `NumPy` accepts are valid.
         
         Returns
         -------
@@ -754,7 +754,7 @@ class AtomArrayStack(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `numpy` accepts are valid.
+            All index types `NumPy` accepts are valid.
         
         Returns
         -------

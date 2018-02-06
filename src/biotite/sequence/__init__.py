@@ -13,7 +13,7 @@ the 4 letters (strings) 'A', 'C', 'G' and 'T'. But furthermore, an
 is created with at least a symbol, that is not in the given `Alphabet`,
 an `AlphabetError` is raised.
 
-Internally, a `Sequence` is saved as a `numpy` `ndarray` of integer
+Internally, a `Sequence` is saved as a `NumPy` `ndarray` of integer
 values, where each integer represents a symbol in the `Alphabet`.
 For example, 'A', 'C', 'G' and 'T' would be encoded into 1, 2, 3 and 4.
 These integer values are called *symbol code*, the encoding of an entire

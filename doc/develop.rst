@@ -20,7 +20,7 @@ up to 79 characters.
 
 Dependencies
 ^^^^^^^^^^^^
-Biotite currently depends on `numpy`, `matplotlib` and `requests`.
+Biotite currently depends on `NumPy`, `matplotlib` and `requests`.
 The usage of these packages is not only allowed but even encouraged. Further
 packages might be added to the depedencies in the future, so if you need a
 specific package, you might open an issue on GitHub. But keep in mind, that a

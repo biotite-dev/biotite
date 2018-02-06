@@ -15,7 +15,7 @@ class NpzFile(File):
     Biotite internal structure storage. 
     
     Internally the this class writes/reads all attribute arrays of an
-    `AtomArray` or `AtomArrayStack` using the `numpy` `save()`/`load()`
+    `AtomArray` or `AtomArrayStack` using the `NumPy` `save()`/`load()`
     method. This format offers the fastest I/O operations and completely
     preserves the content all atom annotation arrays.
     
