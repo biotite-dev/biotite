@@ -8,13 +8,13 @@ environment:
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\bin;%PATH%
-  - conda.exe config --set always_yes yes --set changeps1 no
-  - conda.exe update -q conda
-  - conda.exe install -c anaconda cython
-  - conda.exe install -c anaconda pytest
-  - conda.exe install -c anaconda numpy
-  - conda.exe install -c conda-forge matplotlib
-  - conda.exe install -c anaconda msgpack-python
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda install -c anaconda cython
+  - conda install -c anaconda pytest
+  - conda install -c anaconda numpy
+  - conda install -c conda-forge matplotlib
+  - conda install -c anaconda msgpack-python
 
 build: false
 
