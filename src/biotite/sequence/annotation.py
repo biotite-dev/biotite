@@ -491,9 +491,14 @@ class AnnotatedSequence(Copyable):
                 index.start = len(self._sequence)
             else:
                 seq_stop = index.stop - self._seqstart
+            # New value for the sequence start, value is base position
+            if index.start is None:
+                rel_seq_start = self._seqstart
+            else:
+                rel_seq_start = index.start
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
-                                     seq_start)
+                                     rel_seq_start)
         elif isinstance(index, int):
             return self._sequence[index - self._seqstart]
         else:
