@@ -119,13 +119,15 @@ class Feature(Copyable):
     
     def __init__(self, key, locs, qual={}):
         self._key = key
-        self._locs = locs.copy()
+        self._locs = [loc.copy() for loc in locs]
         self._qual = copy.deepcopy(qual)
     
     def __copy_create__(self):
         return Feature(self._key, self._locs, self._qual)
     
-    def __eq__(self):
+    def __eq__(self, item):
+        if not isinstance(item, Feature):
+            return False
         return (    self._key  == item._key
                 and self._locs == item._locs
                 and self._qual == item._qual)
@@ -309,7 +311,15 @@ class Annotation(Copyable):
         return item in self._features
     
     def __eq__(self, item):
-        return sorted(self._features) == sorted(item._features)
+        if not isinstance(item, Annotation):
+            return False
+        for feature in self._features:
+            if feature not in item._features:
+                return False
+        for feature in item._features:
+            if feature not in self._features:
+                return False
+        return True
     
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -539,6 +549,8 @@ class AnnotatedSequence(Copyable):
                             .format(type(index).__name__))
     
     def __eq__(self, item):
+        if not isinstance(item, AnnotatedSequence):
+            return False
         return (    self.annotation == item.annotation
                 and self.sequence   == item.sequence
                 and self._seqstart  == item._seqstart)
