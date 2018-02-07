@@ -74,7 +74,7 @@ setup(
     url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = (
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
