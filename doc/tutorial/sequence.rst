@@ -454,7 +454,7 @@ the `GenBankFile` class from ``biotite.sequence.io.genbank``:
 
    import biotite.sequence.io.genbank as gb
    file = gb.GenBankFile()
-   file.read("tests/sequence/data/gg_avidin.gb")
+   file.read("path/to/gg_avidin.gb")
    print("Accession:", file.get_accession())
    print("Definition:", file.get_definition())
 
@@ -472,7 +472,7 @@ An annotation is the collection of features corresponding to one sequence
 In case of *Biotite* we can get an `Annotation` object from the `GenBankFile`.
 This `Annotation` can be iterated in order to obtain single `Feature` objects.
 Each `Feature` contains 3 pieces of information: Its feature key
-(e.g. *regulatory* or *CDS*), a dictoinary of qualifiers and one or multiple
+(e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one or multiple
 locations on the corresponding sequence.
 A `Location` in turn, contains its starting and its ending base/residue
 position, the strand it is on (only for DNA) and possible *location defects*
@@ -533,7 +533,7 @@ Output:
 the stop base/residue of the annotation from which the subannotation is
 created. All features, that are not in this range, are not included in the
 subannotation.
-In order to demonstrate that indexing method, we create a subannotation that
+In order to demonstrate this indexing method, we create a subannotation that
 includes only features in range of the gene itself (without the regulatory
 stuff):
 
@@ -572,7 +572,7 @@ Output:
 
 The regulatory sequences have disappeared in the subannotation. Another
 interesting thing happened: the location of the *source* feature narrowed and
-is in range of the slice, now. This happened, because the feature was
+is in range of the slice now. This happened, because the feature was
 *truncated*: The bases that were not in range of the slice were removed.
 
 Let's have a closer look into location defects now: A `Location` instance
@@ -644,7 +644,7 @@ Output:
 
 When indexing an `AnnotatedSequence` with a slice, the index is applied to the
 `Annotation` and the `Sequence`. While the `Annotation` handles the index as
-shown before, the `Sequence` is indexed is based on the sequence start value.
+shown before, the `Sequence` is indexed, based on the sequence start value.
 
 .. code-block:: python
 
