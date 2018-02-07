@@ -236,7 +236,7 @@ Unfortunately, writing MMTF files is not supported at this point.
    
    import biotite.structure.io.mmtf as mmtf
    file = mmtf.MMTFFile()
-   file.read("tests/structure/data/1l2y.mmtf")
+   file.read("path/to/1l2y.mmtf")
    stack = mmtf.get_structure(file)
    array = mmtf.get_structure(file, model=1)
 

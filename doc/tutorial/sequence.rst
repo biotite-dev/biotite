@@ -442,4 +442,141 @@ prettyprint the alignment into a human readable form.
 Sequence features
 ^^^^^^^^^^^^^^^^^
 
-Sequence features describe functional parts of a sequence
+Sequence features describe functional parts of a sequence, like coding or
+regulatory parts. One popular source to obtain information about sequence
+features are GenBank (for DNA and RNA) and GenPept (for peptides) files.
+As example for sequence features we will work with the GenBank file for the
+DNA sequence of the avidin gene (Accession: AJ311647), that we can download
+from the NCBI Entrez database. After downloading we can load the file using
+the `GenBankFile` class from ``biotite.sequence.io.genbank``:
+
+.. code-block:: python
+
+   import biotite.sequence.io.genbank as gb
+   file = gb.GenBankFile()
+   file.read("tests/sequence/data/gg_avidin.gb")
+   print("Accession:", file.get_accession())
+   print("Definition:", file.get_definition())
+
+Output:
+
+.. code-block:: none
+
+   Accession: AJ311647
+   Definition: Gallus gallus AVD gene for avidin, exons 1-4.
+
+Now that we have loaded the file, we want to have a look at the features.
+Therefore, we grab the annotation from the file.
+An annotation is the collection of features corresponding to one sequence
+(the sequence itself is not included, though).
+In case of *Biotite* we can get an `Annotation` object from the `GenBankFile`.
+This `Annotation` can be iterated in order to obtain single `Feature` objects.
+Each `Feature` contains 3 pieces of information: Its feature key
+(e.g. *regulatory* or *CDS*), a dictoinary of qualifiers and one or multiple
+locations on the corresponding sequence.
+A `Location` in turn, contains its starting and its ending base/residue
+position, the strand it is on (only for DNA) and possible 'location defects'
+(defects will be discussed later).
+In the next example we will print the keys of the features and their locations:
+
+.. code-block:: python
+
+   annotation = file.get_annotation()
+   for feature in annotation:
+       # Convert the feature locations in better readable format
+       locs = [str(loc) for loc in feature.locs]
+       print("{:12}   {:}".format(feature.key, locs))
+
+Output:
+
+.. code-block:: none
+
+   source         ['1-1224 >']
+   regulatory     ['26-33 >']
+   gene           ['98-1152 >']
+   mRNA           ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   CDS            ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   sig_peptide    ['98-169 >']
+   exon           ['98-178 >']
+   intron         ['179-262 >']
+   exon           ['263-473 >']
+   intron         ['474-898 >']
+   exon           ['899-1019 >']
+   intron         ['1020-1106 >']
+   exon           ['1107-1152 >']
+   regulatory     ['1215-1220 >']
+
+The '>' characters in the string representations of a location indicate
+that the location is on the forward strand. Most of the features have only
+one location, except the *mRNA* and *CDS* feature, which have 4 locations
+joined. When we look at the rest of the features, this makes sense: The gene
+has 4 exons. Therefore, the mRNA (and consequently the CDS) is composed of
+these exons.
+
+The two *regulatory* features are the TATA box and the poly-A signal as the
+feature qualifiers make clear:
+
+.. code-block:: python
+
+   for feature in annotation:
+       if feature.key == "regulatory":
+           print(feature.qual["regulatory_class"])
+
+Output:
+
+.. code-block:: none
+
+   TATA_box
+   polyA_signal_sequence
+
+`Annotation` objects can be indexed with slices, that represent the start and
+the stop base/residue of the annotation from which the subannotation is
+created. All features, that are not in this range, are not included in the
+subannotation.
+In order to demonstrate that indexing method, we create a subannotation that
+includes only features in range of the gene itself (without the regulatory
+stuff):
+
+.. code-block:: python
+
+   # At first we have the find the feature with the 'gene' key
+   for feature in annotation:
+       if feature.key == "gene":
+           gene_feature = feature
+   # Then we create a subannotation from the feature's location
+   # Since the stop value of the slice is still exclusive,
+   # the stop value is the position of the last base +1
+   loc = gene_feature.locs[0]
+   sub_annot = annotation[loc.first : loc.last +1]
+   # Print the remaining features and their locations
+   for feature in sub_annot:
+       # Convert the feature locations in better readable format
+       locs = [str(loc) for loc in feature.locs]
+       print("{:12}   {:}".format(feature.key, locs))
+
+Output:
+
+.. code-block:: none
+
+   source         ['98-1152 >']
+   gene           ['98-1152 >']
+   mRNA           ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   CDS            ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   sig_peptide    ['98-169 >']
+   exon           ['98-178 >']
+   intron         ['179-262 >']
+   exon           ['263-473 >']
+   intron         ['474-898 >']
+   exon           ['899-1019 >']
+   intron         ['1020-1106 >']
+   exon           ['1107-1152 >']
+
+The regulatory sequences have disappeared in the subannotation. Another
+interesting thing happened: the location of the *source* feature narrowed and
+is now in range of the slice. This happened, because the feature was
+'truncated': The bases that were not in range of the slice were removed
+
+Let's have a deeper look into location defects now:
+
+An `AnnotatedSequence` is like an annotation, but the sequence is included this
+time

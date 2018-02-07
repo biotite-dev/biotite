@@ -1,0 +1,122 @@
+LOCUS       AJ311647                1224 bp    DNA     linear   VRT 14-NOV-2006
+DEFINITION  Gallus gallus AVD gene for avidin, exons 1-4.
+ACCESSION   AJ311647
+VERSION     AJ311647.1  GI:13397825
+KEYWORDS    AVD gene; avidin.
+SOURCE      Gallus gallus (chicken)
+  ORGANISM  Gallus gallus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Archelosauria; Archosauria; Dinosauria; Saurischia; Theropoda;
+            Coelurosauria; Aves; Neognathae; Galloanserae; Galliformes;
+            Phasianidae; Phasianinae; Gallus.
+REFERENCE   1
+  AUTHORS   Wallen,M.J., Laukkanen,M.O. and Kulomaa,M.S.
+  TITLE     Cloning and sequencing of the chicken egg-white avidin-encoding
+            gene and its relationship with the avidin-related genes Avr1-Avr5
+  JOURNAL   Gene 161 (2), 205-209 (1995)
+   PUBMED   7665080
+REFERENCE   2
+  AUTHORS   Ahlroth,M.K., Kola,E.H., Ewald,D., Masabanda,J., Sazanov,A.,
+            Fries,R. and Kulomaa,M.S.
+  TITLE     Characterization and chromosomal localization of the chicken avidin
+            gene family
+  JOURNAL   Anim. Genet. 31 (6), 367-375 (2000)
+   PUBMED   11167523
+REFERENCE   3  (bases 1 to 1224)
+  AUTHORS   Ahlroth,M.K.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (09-MAR-2001) Ahlroth M.K., Department of Biological and
+            Environmental Science, University of Jyvaskyla, PO Box 35,
+            FIN-40351 Jyvaskyla, FINLAND
+FEATURES             Location/Qualifiers
+     source          1..1224
+                     /organism="Gallus gallus"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:9031"
+                     /chromosome="Z"
+     regulatory      26..33
+                     /regulatory_class="TATA_box"
+     gene            <98..>1152
+                     /gene="AVD"
+     mRNA            join(<98..178,263..473,899..1019,1107..>1152)
+                     /gene="AVD"
+                     /product="avidin"
+     CDS             join(98..178,263..473,899..1019,1107..1152)
+                     /gene="AVD"
+                     /codon_start=1
+                     /product="avidin"
+                     /protein_id="CAC34569.1"
+                     /db_xref="GI:13397826"
+                     /db_xref="GOA:P02701"
+                     /db_xref="InterPro:IPR005468"
+                     /db_xref="InterPro:IPR005469"
+                     /db_xref="InterPro:IPR017889"
+                     /db_xref="PDB:1AVD"
+                     /db_xref="PDB:1AVE"
+                     /db_xref="PDB:1IJ8"
+                     /db_xref="PDB:1LDO"
+                     /db_xref="PDB:1LDQ"
+                     /db_xref="PDB:1LEL"
+                     /db_xref="PDB:1NQN"
+                     /db_xref="PDB:1RAV"
+                     /db_xref="PDB:1VYO"
+                     /db_xref="PDB:2A5B"
+                     /db_xref="PDB:2A5C"
+                     /db_xref="PDB:2A8G"
+                     /db_xref="PDB:2AVI"
+                     /db_xref="PDB:2C4I"
+                     /db_xref="PDB:2CAM"
+                     /db_xref="PDB:2JGS"
+                     /db_xref="PDB:3FDC"
+                     /db_xref="UniProtKB/Swiss-Prot:P02701"
+                     /translation="MVHATSPLLLLLLLSLALVAPGLSARKCSLTGKWDNDLGSNMTI
+                     GAVNSKGEFTGTYTTAVTATSNEIKESPLHGTQNTINKRTQPTFGFTVNWKFSESTTV
+                     FTGQCFIDRNGKEVLKTMWLLRSSVNDIGDDWKATRVGINIFTRLRTQKE"
+     sig_peptide     98..169
+     exon            98..178
+                     /gene="AVD"
+                     /number=1
+     intron          179..262
+                     /gene="AVD"
+                     /number=1
+     exon            263..473
+                     /gene="AVD"
+                     /number=2
+     intron          474..898
+                     /gene="AVD"
+                     /number=2
+     exon            899..1019
+                     /gene="AVD"
+                     /number=3
+     intron          1020..1106
+                     /gene="AVD"
+                     /number=3
+     exon            1107..1152
+                     /gene="AVD"
+                     /number=4
+     regulatory      1215..1220
+                     /regulatory_class="polyA_signal_sequence"
+ORIGIN      
+        1 actgggcaga gtcagtgctg gaagcaatma aaaggcgagg gagcaggcag gggtgagtcc
+       61 tgcaaggagc acacccagct gtccacctgc tgcagagatg gtgcacgcaa cctccccgct
+      121 gctgctgctg ctgctgctca gcctggctct ggtggctccc ggcctctctg ccagaaaggt
+      181 aacgggatgg ggctgggagt gggtgcacct ggtgcccacc actgcctcct gcccgccact
+      241 gactccttct tcttcgtcac agtgctcgct gactgggaaa tgggacaacg acctgggctc
+      301 caacatgacc atcggggctg tgaacagcaa aggtgaattc acaggcacct acaccacagc
+      361 cgtaacagcc acatcaaatg agatcaaaga gtcaccactg catgggacac aaaacaccat
+      421 caacaagagg acccagccca cctttggctt cactgtcaat tggaagtttt caggtgcttc
+      481 tctcccagcc tccctgcaat gtccctgctc ctctgctgtg cttctctgtg acaaacccct
+      541 ttgctttcct gcccttcccc acgctgtctc cagtgctctc ctgcccttcc ctacagtctc
+      601 cctgacggtc tctcctcctc gctgtggtgt ccctgatgat ttccagctca tccctgcagt
+      661 cccctcaaca atgccctgcc tcccatgccc ccggtgctgc cccatccctt cccgtagagc
+      721 tgctgggctg ctgtcacctc ctggtccccg ggtgcagggg aggtgctggg gctgtcccca
+      781 gagggcacag agagctcaga tgagttgtcc cctgggcaga gggaccatgg cactggcact
+      841 gccctgccct gcgtggggct cacgacccca ctcccctcat ctgccccttt tcccacagag
+      901 tccaccactg tcttcacggg ccagtgcttc atagacagga acgggaagga ggtcctgaag
+      961 accatgtggc tgctgcggtc aagtgttaat gacattggtg atgactggaa agctaccagg
+     1021 tgagcccagg gcagaggcac acggtcccgg gctgtgactc aatggctgtg cacttcccac
+     1081 cttacatctc ctctctctcc ccgcagggtc ggcatcaaca tcttcactcg cctgcgcaca
+     1141 cagaaggagt gaggatggcc ccgcaaagcc agcaacaatg ccggagtgct gacactgctt
+     1201 gtgatattcc tcccaataaa gctt
+//
+
