@@ -89,8 +89,6 @@ class Location(Copyable):
             string = string + " >"
         else:
             string = "< " + string
-        if self.defect != Location.Defect(0):
-            string += " " + str(self.defect)
         return string
     
     def __eq__(self, item):
