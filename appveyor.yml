@@ -1,7 +1,8 @@
-- provider: Environment
-  name: production
-  on:
-    appveyor_repo_tag: true
+deploy:
+  - provider: Environment
+    name: production
+    on:
+      appveyor_repo_tag: true
 
 
 environment:
