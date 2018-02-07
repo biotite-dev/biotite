@@ -9,7 +9,7 @@ In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
 about polypetide chain id, residue id, residue name, hetero atom
 information, atom name and optionally more. The coordinates are a
-`numpy` float `ndarray` of length 3, containing the x, y and z
+`NumPy` float `ndarray` of length 3, containing the x, y and z
 coordinates.
 
 An `Atom` contains data for a single atom, it stores the annotations as
@@ -34,7 +34,7 @@ Category   Type         Examples           Description
 chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
 res_name   string (U3)  'GLY','ALA', ...   Residue name
-hetero     bool         True, False        True for non AA residues
+hetero     bool         True, False        True for non AA/NUC residues
 atom_name  string (U6)  'CA','N', ...      Atom name
 element    string (U2)  'C','O','SE', ...  Chemical Element
 =========  ===========  =================  =============================
@@ -61,7 +61,7 @@ charge     int          -2,-1,0,1,2, ...    Electric charge of the atom
 =========  ===========  =================   ============================
 
 For each type, the attributes can be accessed directly. Both `AtomArray`
-and `AtomArrayStack` support `numpy` style indexing, the index is
+and `AtomArrayStack` support `NumPy` style indexing, the index is
 propagated to each attribute. If a single integer is used as index,
 an object with one dimension less is returned
 (`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
@@ -69,7 +69,7 @@ Do not expect a deep copy, when sclicing an `AtomArray` or
 `AtomArrayStack`. The attributes of the sliced object may still point
 to the original `ndarray` .
 
-Based on the implementation in `numpy` arrays, this package furthermore
+Based on the implementation in `NumPy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and
 visualisation.
 """

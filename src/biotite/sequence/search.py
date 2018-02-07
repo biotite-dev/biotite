@@ -34,10 +34,10 @@ def find_subsequence(sequence, query):
     Examples
     --------
     
-        >>> main_seq = DNASequence("ACTGAATGA")
-        >>> sub_seq = DNASequence("TGA")
-        >>> print(find_subsequence(main_seq, sub_seq))
-        [2 6]
+    >>> main_seq = DNASequence("ACTGAATGA")
+    >>> sub_seq = DNASequence("TGA")
+    >>> print(find_subsequence(main_seq, sub_seq))
+    [2 6]
     
     """
     if not sequence.get_alphabet().extends(query.get_alphabet()):

@@ -30,7 +30,7 @@ def check_id_continuity(array):
     
     Returns
     -------
-    discontinuity : ndarray(dtype=bool)
+    discontinuity : ndarray, dtype=bool
         Contains the indices of atoms after a discontinuity
     """
     ids = array.res_id
@@ -57,7 +57,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     
     Returns
     -------
-    discontinuity : ndarray(dtype=bool)
+    discontinuity : ndarray, dtype=bool
          Contains the indices of atoms after a discontinuity.
     """
     backbone_mask = filter_backbone(array)
@@ -95,7 +95,7 @@ def check_duplicate_atoms(array):
     
     Returns
     -------
-    duplicate : ndarray(dtype=bool)
+    duplicate : ndarray, dtype=bool
         Contains the indices of duplicate atoms. The first occurence of
         an atom is not counted as duplicate.
     """

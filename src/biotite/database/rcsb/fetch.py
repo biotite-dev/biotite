@@ -75,19 +75,19 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
             if format == "pdb":
                 r = requests.get(_standard_url + id + ".pdb")
                 content = r.text
-                assert_valid_file(content, id)
+                _assert_valid_file(content, id)
                 with open(file_name, "w+") as f:
                     f.write(content)
             elif format == "cif" or format == "pdbx":
                 r = requests.get(_standard_url + id + ".cif")
                 content = r.text
-                assert_valid_file(content, id)
+                _assert_valid_file(content, id)
                 with open(file_name, "w+") as f:
                     f.write(content)
             elif format == "mmtf":
                 r = requests.get(_mmtf_url + id)
                 content = r.content
-                assert_valid_file(content, id)
+                _assert_valid_file(r.text, id)
                 with open(file_name, "wb+") as f:
                     f.write(content)
             else:
@@ -102,7 +102,7 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
         return file_names
 
 
-def assert_valid_file(response_text, pdb_id):
+def _assert_valid_file(response_text, pdb_id):
     """
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.

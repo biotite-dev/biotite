@@ -5,6 +5,7 @@
 import numpy as np
 import copy
 import textwrap
+from ..alphabet import LetterAlphabet
     
 
 __all__ = ["Alignment"]
@@ -70,7 +71,7 @@ class Alignment(object):
     
     
     def __init__(self, sequences, trace, score):
-        self.sequences = copy.copy(sequences)
+        self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
     
@@ -107,7 +108,7 @@ class Alignment(object):
         # has an non-single letter alphabet
         all_single_letter = True
         for seq in self.sequences:
-            if not seq.get_alphabet().is_letter_alphabet():
+            if not isinstance(seq.get_alphabet(), LetterAlphabet):
                 all_single_letter = False
         if all_single_letter:
             # First dimension: sequence number,

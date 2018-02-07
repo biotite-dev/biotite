@@ -61,7 +61,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : string
             The annotation category to be added.
         dtype : type or string
-            A type instance or a valid `numpy` `dtype` string.
+            A type instance or a valid `NumPy` `dtype` string.
             Defines the type of the annotation
         
         See Also
@@ -337,12 +337,12 @@ class Atom(object):
     Examples
     --------
     
-        >>> atom = Atom([1,2,3], chain_id="A")
-        >>> atom.atom_name = "CA"
-        >>> print(atom.atom_name)
-        CA
-        >>> print(atom.coord)
-        [1 2 3]
+    >>> atom = Atom([1,2,3], chain_id="A")
+    >>> atom.atom_name = "CA"
+    >>> print(atom.atom_name)
+    CA
+    >>> print(atom.coord)
+    [1 2 3]
         
     """
     
@@ -377,10 +377,14 @@ class Atom(object):
             super().__setattr__(attr, value)
     
     def __str__(self):
-        string = ""
+        hetero = "HET" if self.hetero else ""
+        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
+               .format(hetero, self.chain_id, self.res_id, self.res_name,
+                       self.atom_name, self.element,
+                       self.coord[0], self.coord[1], self.coord[2])
         for value in self._annot.values():
             string += str(value) + "\t"
-        return string + str(self.coord)
+        return string + "{:7.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
@@ -403,7 +407,7 @@ class AtomArray(_AtomArrayBase):
     An array representation of a model consisting of multiple atoms.
     
     An `AtomArray` can be seen as a list of `Atom` instances.
-    Instead of using directly a list, this class uses an `numpy`
+    Instead of using directly a list, this class uses an `NumPy`
     `ndarray` for each annotation category and the coordinates. These
     coordinates can be accessed directly via the `coord` attribute. The
     annotations are accessed either via the category as attribute name
@@ -411,7 +415,7 @@ class AtomArray(_AtomArrayBase):
     custom annotations is achieved via `add_annotation()` or
     `set_annotation()`.
     
-    In order to get an an subarray of an `AtomArray`, `numpy` style
+    In order to get an an subarray of an `AtomArray`, `NumPy` style
     indexing is used. This includes slices, boolean arrays,
     index arrays and even *Ellipsis* notation. Using a single integer as
     index returns a single `Atom` instance.
@@ -437,37 +441,37 @@ class AtomArray(_AtomArrayBase):
     --------
     Creating an atom array from atoms:
     
-        >>> atom1 = Atom([1,2,3], chain_id="A")
-        >>> atom2 = Atom([2,3,4], chain_id="A")
-        >>> atom3 = Atom([3,4,5], chain_id="B")
-        >>> atom_array = array([atom1, atom2, atom3])
-        >>> print(atom_array.array_length())
-        3
+    >>> atom1 = Atom([1,2,3], chain_id="A")
+    >>> atom2 = Atom([2,3,4], chain_id="A")
+    >>> atom3 = Atom([3,4,5], chain_id="B")
+    >>> atom_array = array([atom1, atom2, atom3])
+    >>> print(atom_array.array_length())
+    3
     
     Accessing an annotation array:
     
-        >>> print(atom_array.chain_id)
-        ['A' 'A' 'B']
+    >>> print(atom_array.chain_id)
+    ['A' 'A' 'B']
         
     Accessing the coordinates:
     
-        >>> print(atom_array.coord)
-        [[1 2 3]
-         [2 3 4]
-         [3 4 5]]
+    >>> print(atom_array.coord)
+    [[1 2 3]
+     [2 3 4]
+     [3 4 5]]
     
-    `numpy` style filtering:
+    `NumPy` style filtering:
     
-        >>> atom_array = atom_array[atom_array.chain_id == "A"]
-        >>> print(atom_array.array_length())
-        2
+    >>> atom_array = atom_array[atom_array.chain_id == "A"]
+    >>> print(atom_array.array_length())
+    2
         
     Inserting an atom array:
         
-        >>> insert = array(Atom([7,8,9], chain_id="C"))
-        atom_array = atom_array[0:1] + insert + atom_array[1:2]
-        >>> print(atom_array.chain_id)
-        ['A' 'C' 'A']
+    >>> insert = array(Atom([7,8,9], chain_id="C"))
+    atom_array = atom_array[0:1] + insert + atom_array[1:2]
+    >>> print(atom_array.chain_id)
+    ['A' 'C' 'A']
     """
     
     def __init__(self, length):
@@ -518,7 +522,7 @@ class AtomArray(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `numpy` accepts are valid.
+            All index types `NumPy` accepts are valid.
         
         Returns
         -------
@@ -660,29 +664,29 @@ class AtomArrayStack(_AtomArrayBase):
     --------
     Creating an atom array stack from two arrays:
     
-        >>> atom1 = Atom([1,2,3], chain_id="A")
-        >>> atom1 = Atom([2,3,4], chain_id="A")
-        >>> atom1 = Atom([3,4,5], chain_id="B")
-        >>> atom_array1 = array(atom_array)
-        >>> print(atom_array1.coord)
-        [[1 2 3]
-         [2 3 4]
-         [3 4 5]]
-        >>> atom_array2 = atom_array1.copy()
-        >>> atom_array2.coord += 3
-        >>> print(atom_array2.coord)
-        [[4 5 6]
-         [5 6 7]
-         [6 7 8]]
-        >>> array_stack = stack([atom_array1, atom_array2])
-        >>> print(array_stack.coord)
-        [[[1 2 3]
-          [2 3 4]
-          [3 4 5]]
-        
-         [[4 5 6]
-          [5 6 7]
-          [6 7 8]]]
+    >>> atom1 = Atom([1,2,3], chain_id="A")
+    >>> atom1 = Atom([2,3,4], chain_id="A")
+    >>> atom1 = Atom([3,4,5], chain_id="B")
+    >>> atom_array1 = array(atom_array)
+    >>> print(atom_array1.coord)
+    [[1 2 3]
+     [2 3 4]
+     [3 4 5]]
+    >>> atom_array2 = atom_array1.copy()
+    >>> atom_array2.coord += 3
+    >>> print(atom_array2.coord)
+    [[4 5 6]
+     [5 6 7]
+     [6 7 8]]
+    >>> array_stack = stack([atom_array1, atom_array2])
+    >>> print(array_stack.coord)
+    [[[1 2 3]
+      [2 3 4]
+      [3 4 5]]
+    <BLANKLINE>
+     [[4 5 6]
+      [5 6 7]
+      [6 7 8]]]
     """
     
     def __init__(self, depth, length):
@@ -750,7 +754,7 @@ class AtomArrayStack(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `numpy` accepts are valid.
+            All index types `NumPy` accepts are valid.
         
         Returns
         -------
@@ -898,12 +902,12 @@ def array(atoms):
     
     Creating an atom array from atoms:
     
-        >>> atom1 = Atom([1,2,3], chain_id="A")
-        >>> atom2 = Atom([2,3,4], chain_id="A")
-        >>> atom3 = Atom([3,4,5], chain_id="B")
-        >>> atom_array = array([atom1, atom2, atom3])
-        >>> print(atom_array.array_length())
-        3
+    >>> atom1 = Atom([1,2,3], chain_id="A")
+    >>> atom2 = Atom([2,3,4], chain_id="A")
+    >>> atom3 = Atom([3,4,5], chain_id="B")
+    >>> atom_array = array([atom1, atom2, atom3])
+    >>> print(atom_array.array_length())
+    3
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting
@@ -939,29 +943,29 @@ def stack(arrays):
         
     Creating an atom array stack from two arrays:
     
-        >>> atom1 = Atom([1,2,3], chain_id="A")
-        >>> atom1 = Atom([2,3,4], chain_id="A")
-        >>> atom1 = Atom([3,4,5], chain_id="B")
-        >>> atom_array1 = array(atom_array)
-        >>> print(atom_array1.coord)
-        [[1 2 3]
-         [2 3 4]
-         [3 4 5]]
-        >>> atom_array2 = atom_array1.copy()
-        >>> atom_array2.coord += 3
-        >>> print(atom_array2.coord)
-        [[4 5 6]
-         [5 6 7]
-         [6 7 8]]
-        >>> array_stack = stack([atom_array1, atom_array2])
-        >>> print(array_stack.coord)
-        [[[1 2 3]
-          [2 3 4]
-          [3 4 5]]
-        
-         [[4 5 6]
-          [5 6 7]
-          [6 7 8]]]
+    >>> atom1 = Atom([1,2,3], chain_id="A")
+    >>> atom1 = Atom([2,3,4], chain_id="A")
+    >>> atom1 = Atom([3,4,5], chain_id="B")
+    >>> atom_array1 = array(atom_array)
+    >>> print(atom_array1.coord)
+    [[1 2 3]
+     [2 3 4]
+     [3 4 5]]
+    >>> atom_array2 = atom_array1.copy()
+    >>> atom_array2.coord += 3
+    >>> print(atom_array2.coord)
+    [[4 5 6]
+     [5 6 7]
+     [6 7 8]]
+    >>> array_stack = stack([atom_array1, atom_array2])
+    >>> print(array_stack.coord)
+    [[[1 2 3]
+      [2 3 4]
+      [3 4 5]]
+    <BLANKLINE>
+     [[4 5 6]
+      [5 6 7]
+      [6 7 8]]]
     """
     array_count = 0
     for array in arrays:

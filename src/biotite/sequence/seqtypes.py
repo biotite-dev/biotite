@@ -3,7 +3,7 @@
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 from .sequence import Sequence
-from .alphabet import Alphabet, AlphabetError
+from .alphabet import LetterAlphabet, AlphabetError
 import numpy as np
 import copy
 
@@ -58,9 +58,9 @@ class NucleotideSequence(Sequence):
         is used.
     """
     
-    alphabet     = Alphabet(["A","C","G","T"])
-    alphabet_amb = Alphabet(["A","C","G","T","R","Y","W","S",
-                             "M","K","H","B","V","D","N","X"])
+    alphabet     = LetterAlphabet(["A","C","G","T"])
+    alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
+                                   "M","K","H","B","V","D","N","X"])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -78,13 +78,13 @@ class NucleotideSequence(Sequence):
                          "B" : "V",
                          "X" : "X",
                          "N" : "N"}
-    compl_dict = {}
-    for key, value in compl_symbol_dict.items():
-        key_code = alphabet_amb.encode(key)
-        val_code = alphabet_amb.encode(value)
-        compl_dict[key_code] = val_code
+    _compl_dict = {}
+    for _key, _value in compl_symbol_dict.items():
+        _key_code = alphabet_amb.encode(_key)
+        _val_code = alphabet_amb.encode(_value)
+        _compl_dict[_key_code] = _val_code
     # Vectorized function that returns a complement code
-    _complement_func = np.vectorize(compl_dict.__getitem__)
+    _complement_func = np.vectorize(_compl_dict.__getitem__)
     
     def __init__(self, sequence=[], ambiguous=False):
         if isinstance(sequence, str):
@@ -94,13 +94,13 @@ class NucleotideSequence(Sequence):
         if ambiguous == False:
             try:
                 self._alphabet = NucleotideSequence.alphabet
-                seq_code = Sequence.encode(sequence, self._alphabet)
+                seq_code = self._alphabet.encode_multiple(sequence)
             except AlphabetError:
                 self._alphabet = NucleotideSequence.alphabet_amb
-                seq_code = Sequence.encode(sequence, self._alphabet)
+                seq_code = self._alphabet.encode_multiple(sequence)
         else:
             self._alphabet = NucleotideSequence.alphabet_amb
-            seq_code = Sequence.encode(sequence, self._alphabet)
+            seq_code = self._alphabet.encode_multiple(sequence)
         super().__init__()
         self.code = seq_code
         
@@ -126,11 +126,11 @@ class NucleotideSequence(Sequence):
         Examples
         --------
         
-            >>> dna_seq = NucleotideSequence("ACGCTT")
-            >>> print(dna_seq.complement())
-            TGCGAA
-            >>> print(dna_seq.reverse().complement())
-            AAGCGT
+        >>> dna_seq = NucleotideSequence("ACGCTT")
+        >>> print(dna_seq.complement())
+        TGCGAA
+        >>> print(dna_seq.reverse().complement())
+        AAGCGT
         
         """
         compl_code = NucleotideSequence._complement_func(self.code)
@@ -183,15 +183,15 @@ class NucleotideSequence(Sequence):
         Examples
         --------
         
-            >>> dna_seq = NucleotideSequence("AATGATGCTATAGAT")
-            >>> prot_seq = dna_seq.translate(complete=True)
-            >>> print(prot_seq)
-            NDAID
-            >>> prot_seqs, pos = dna_seq.translate(complete=False)
-            >>> for seq in prot_seqs:
-            ...    print(seq)
-            MML*
-            ML*
+        >>> dna_seq = NucleotideSequence("AATGATGCTATAGAT")
+        >>> prot_seq = dna_seq.translate(complete=True)
+        >>> print(prot_seq)
+        NDAID
+        >>> prot_seqs, pos = dna_seq.translate(complete=False)
+        >>> for seq in prot_seqs:
+        ...    print(seq)
+        MML*
+        ML*
         
         """
         if self._alphabet == NucleotideSequence.alphabet_amb:
@@ -278,13 +278,8 @@ class ProteinSequence(Sequence):
     """
     Representation of a protein sequence.
     
-    Furthermore this class offers a codon table for conversion of
-    nucleotide tripletts into amino acids. A *codon symbol table* holds
-    triplett strings as keys (e.g. 'AUG') and 1-letter amino acid
-    representations as values (e.g. 'M'). A *codon table* is a *codon
-    symbol table* that is converted into symbol codes. Therefore a
-    *codon table* holds tuples of 3 integers as keys and amino acid
-    symbol codes as values.
+    Furthermore this class offers a conversion of amino acids from
+    3-letter code into 1-letter code and vice versa.
     
     Parameters
     ----------
@@ -297,38 +292,40 @@ class ProteinSequence(Sequence):
     
     _codon_table = None
     
-    alphabet = Alphabet(["A","C","D","E","F","G","H","I","K","L",
-                         "M","N","P","Q","R","S","T","V","W","Y",
-                         "B","Z","X","*"])
+    alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
+                               "M","N","P","Q","R","S","T","V","W","Y",
+                               "B","Z","X","*"])
     
-    _dict_3to1 = {"ALA" : "A",
-                  "CYS" : "C",
-                  "ASP" : "D",
-                  "GLU" : "E",
-                  "PHE" : "F",
-                  "GLY" : "G",
-                  "HIS" : "H",
-                  "ILE" : "I",
-                  "LYS" : "K",
-                  "LEU" : "L",
-                  "MET" : "M",
-                  "ASN" : "N",
-                  "PRO" : "P",
-                  "GLN" : "Q",
-                  "ARG" : "R",
-                  "SER" : "S",
-                  "THR" : "T",
-                  "VAL" : "V",
-                  "TRP" : "W",
-                  "TYR" : "Y",
-                  "ASX" : "B",
-                  "GLX" : "Z",
-                  "UNK" : "X",
-                  " * "  : "*"}
+    _dict_1to3 = {"A" : "ALA",
+                  "C" : "CYS",
+                  "D" : "ASP",
+                  "E" : "GLU",
+                  "F" : "PHE",
+                  "G" : "GLY",
+                  "H" : "HIS",
+                  "I" : "ILE",
+                  "K" : "LYS",
+                  "L" : "LEU",
+                  "M" : "MET",
+                  "N" : "ASN",
+                  "P" : "PRO",
+                  "Q" : "GLN",
+                  "R" : "ARG",
+                  "S" : "SER",
+                  "T" : "THR",
+                  "V" : "VAL",
+                  "W" : "TRP",
+                  "Y" : "TYR",
+                  "B" : "ASX",
+                  "Z" : "GLX",
+                  "X" : "UNK",
+                  "*" : " * "}
     
-    _dict_1to3 = {}
-    for _key, _value in _dict_3to1.items():
-        _dict_1to3[_value] = _key
+    _dict_3to1 = {}
+    for _key, _value in _dict_1to3.items():
+        _dict_3to1[_value] = _key
+    _dict_3to1["SEC"] = "C"
+    _dict_3to1["MSE"] = "M"
     
     def __init__(self, sequence=[]):
         dict_3to1 = ProteinSequence._dict_3to1
@@ -336,7 +333,7 @@ class ProteinSequence(Sequence):
         # Convert 3-letter codes to single letter codes,
         # if list contains 3-letter codes
         sequence = [dict_3to1[symbol.upper()] if len(symbol) == 3
-                    else symbol for symbol in sequence]
+                    else symbol.upper() for symbol in sequence]
         super().__init__(sequence)
     
     def get_alphabet(self):

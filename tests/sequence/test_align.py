@@ -43,20 +43,10 @@ align_cases = [(False,-7,      "TATGGGTATCC","TATGTATAA",
                     ("T--\nTTT",
                      "--T\nTTT",))
               ]
-align_param = [(c_ext, local, gap_penalty, input1, input2, expect)
-               for c_ext in [False, True]
-               for local, gap_penalty, input1, input2, expect in align_cases]
-@pytest.mark.parametrize("use_c_ext,local,gap_penalty,input1,input2,expect",
-                         align_param)
-def test_align_optimal(use_c_ext, local, gap_penalty,
+@pytest.mark.parametrize("local, gap_penalty, input1, input2, expect",
+                         align_cases)
+def test_align_optimal(local, gap_penalty,
                        input1, input2, expect):
-    if use_c_ext:
-        if biotite.has_c_extensions():
-            biotite.enable_c_extensions(True)
-        else:
-            return
-    else:
-        biotite.enable_c_extensions(False)
     seq1 = seq.NucleotideSequence(input1)
     seq2 = seq.NucleotideSequence(input2)
     alignments = align.align_optimal(seq1, seq2,

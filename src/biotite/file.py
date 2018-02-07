@@ -23,10 +23,26 @@ class File(Copyable, metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def read(self, file_name):
+        """
+        Parse a file and store the content in this object.
+        
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be read.
+        """
         pass
     
     @abc.abstractmethod
     def write(self, file_name):
+        """
+        Write the contents of this object into a file.
+        
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be written.
+        """
         pass
         
 
@@ -73,3 +89,10 @@ class TextFile(File, metaclass=abc.ABCMeta):
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
         clone._lines = copy.copy(self._lines)
+
+
+class InvalidFileError(Exception):
+    """
+    Indicates that the file is not suitable for the requested action.
+    """
+    pass

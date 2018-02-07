@@ -3,7 +3,7 @@ Going 3D - The Structure subpackage
    
 ``structure`` is a *Biotite* subpackage for handling molecular structures.
 This subpackage enables efficient and easy handling of protein structure data
-by representing atom attributes in `numpy` `ndarrays`. These atom attributes
+by representing atom attributes in `NumPy` `ndarrays`. These atom attributes
 include so called *annotations* (polypetide chain id, residue id, residue name,
 hetero residue information, atom name, element, etc.) and the atom coordinates.
 
@@ -12,10 +12,10 @@ The package contains mainly three types: `Atom`, `AtomArray` and
 stores data for an entire model and `AtomArrayStack` stores data for multiple
 models, where each model contains the same atoms but differs in the atom
 coordinates. Both, `AtomArrray` and `AtomArrayStack`, store the attributes
-in `numpy` arrays. This approach has multiple advantages:
+in `NumPy` arrays. This approach has multiple advantages:
     
     - Convenient selection of atoms in a structure
-      by using `numpy` style indexing
+      by using `NumPy` style indexing
     - Fast calculations on structures using C-accelerated `ndarray` operations
     - Simple implementation of custom calculations
     
@@ -221,8 +221,27 @@ convert the *atom_site* category into an atom array/stack and vice versa.
 actually contains only a single model. If you would like to have an
 `AtomArray` instead, you have to specifiy the `model` parameter.
 
+If you want to parse a large batch of structure files or you have to load very
+large structure files, the usage of PDB or mmCIF files might be too slow for
+your requirements. In this case you probably might want to use MMTF files.
+MMTF files describe structures just like PDB and mmCIF files, but they are
+binary! This circumstance increases the downloading and parsing speed by
+several multiples. The usage is similar to `PDBxFile`: The `MMTFFile` class
+decodes the file and makes it raw information accessible. The function
+`get_structure()` is then required to construct an atom array stack,
+or alternatively an atom array if a model number is specified.
+Unfortunately, writing MMTF files is not supported at this point.
+
+.. code-block:: python
+   
+   import biotite.structure.io.mmtf as mmtf
+   file = mmtf.MMTFFile()
+   file.read("path/to/1l2y.mmtf")
+   stack = mmtf.get_structure(file)
+   array = mmtf.get_structure(file, model=1)
+
 For *Biotite* internal storage of structures *npz* files are recommended.
-These are simply binary files, that are used by `numpy`. In case of atom arrays
+These are simply binary files, that are used by `NumPy`. In case of atom arrays
 and stacks, the annotation arrays and coordinates are written/read to/from
 *npz* files via the `NpzFile` class. Since no expensive data conversion has
 to be performed, this format is the fastest way to save and load atom arrays
@@ -356,7 +375,7 @@ have a look at the `AdjacencyMap` class.
 
 .. warning:: Creating a subarray or substack by indexing, does not necessarily
    copy the coordinates and annotation arrays. If possible, only *array views*
-   are created. Look into the `numpy` documentation for furher details. If you
+   are created. Look into the `NumPy` documentation for furher details. If you
    want to ensure, that you are working with a copy, use the `copy()` method
    after indexing.
 

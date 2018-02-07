@@ -39,19 +39,19 @@ class CodonTable(object):
     
     Get the amino acid coded by a given codon (symbol and code):
         
-        >>> table = CodonTable.default_table()
-        >>> print(table["ATG"])
-        M
-        >>> print(table[(1,2,3)])
-        14
+    >>> table = CodonTable.default_table()
+    >>> print(table["ATG"])
+    M
+    >>> print(table[(1,2,3)])
+    14
         
     Get the codons coding for a given amino acid (symbol and code):
         
-        >>> table = CodonTable.default_table()
-        >>> print(table["M"])
-        ('ATG',)
-        >>> print(table[14])
-        ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
+    >>> table = CodonTable.default_table()
+    >>> print(table["M"])
+    ('ATG',)
+    >>> print(table[14])
+    ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
     """
     
     # file for codon tables
@@ -61,12 +61,12 @@ class CodonTable(object):
         self._symbol_dict = copy.copy(codon_dict)
         self._code_dict = {}
         for key, value in self._symbol_dict.items():
-            key_code = tuple(Sequence.encode(key, NucleotideSequence.alphabet))
+            key_code = tuple(NucleotideSequence.alphabet.encode_multiple(key))
             val_code = ProteinSequence.alphabet.encode(value)
             self._code_dict[key_code] = val_code
         self._start_symbols = tuple((starts))
         self._start_codes = tuple(
-            [tuple(Sequence.encode(start, NucleotideSequence.alphabet))
+            [tuple(NucleotideSequence.alphabet.encode_multiple(start))
              for start in self._start_symbols]
         )
     

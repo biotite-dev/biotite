@@ -3,7 +3,7 @@
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 from ...sequence import Sequence
-from ...alphabet import AlphabetError
+from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence
 
 __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences"]
@@ -134,7 +134,7 @@ def _convert_to_sequence(seq_str):
 
 
 def _convert_to_string(sequence):
-    if not sequence.alphabet.is_letter_alphabet():
-        raise ValueError("Only sequences using single letter alphabets"
+    if not isinstance(sequence.get_alphabet(), LetterAlphabet):
+        raise ValueError("Only sequences using single letter alphabets "
                          "can be stored in a FASTA file")
     return(str(sequence))

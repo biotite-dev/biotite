@@ -84,23 +84,23 @@ class SubstitutionMatrix(object):
     
     Creating a matrix via a matrix dictionary:
     
-        >>> alph1 = Alphabet(["foo","bar"])
-        >>> alph2 = Alphabet([1,2,3])
-        >>> matrix_dict = {("foo",1):5,  ("foo",2):10, ("foo",3):15,
-        ...                ("bar",1):42, ("bar",2):42, ("bar",3):42}
-        >>> matrix = SubstitutionMatrix(alph1, alph2, matrix_dict)
-        >>> print(matrix.get_matrix())
-        [[ 5 10 15]
-         [42 42 42]]
-        >>> print(matrix.get_score("foo", 2))
-        10
-        >>> print(matrix.get_score_by_code(0, 1))
-        10
+    >>> alph1 = Alphabet(["foo","bar"])
+    >>> alph2 = Alphabet([1,2,3])
+    >>> matrix_dict = {("foo",1):5,  ("foo",2):10, ("foo",3):15,
+    ...                ("bar",1):42, ("bar",2):42, ("bar",3):42}
+    >>> matrix = SubstitutionMatrix(alph1, alph2, matrix_dict)
+    >>> print(matrix.get_matrix())
+    [[ 5 10 15]
+     [42 42 42]]
+    >>> print(matrix.get_score("foo", 2))
+    10
+    >>> print(matrix.get_score_by_code(0, 1))
+    10
     
     Creating a matrix via database name:
         
-        >>> alph = ProteinSequence.alphabet
-        >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
+    >>> alph = ProteinSequence.alphabet
+    >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
     
     References
     ----------
@@ -167,14 +167,18 @@ class SubstitutionMatrix(object):
     
     def score_matrix(self):
         """
-        Get a copy of the 2-D `ndarray` containing the score values. 
+        Get the 2-D `ndarray` containing the score values.
+        
+        In the strict sense, this breaks the immutability of the
+        `SubstitutionMatrix` object. Therefore, using the returned
+        `ndarray` read-only is strongly recommended.
         
         Returns
         -------
         matrix : ndarray
             The symbol code indexed score matrix.
         """
-        return np.copy(self._matrix)
+        return self._matrix
     
     def transpose(self):
         """

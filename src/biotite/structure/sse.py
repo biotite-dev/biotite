@@ -34,7 +34,7 @@ _d4_strand = ((12.4-1.1), (12.4+1.1))
 
 
 def annotate_sse(atom_array, chain_id):
-    """
+    r"""
     Calculate the secondary structure elements (SSE) of a
     peptide chain based on the `P-SEA` algorithm [1]_.
     
@@ -53,14 +53,14 @@ def annotate_sse(atom_array, chain_id):
     sse : ndarray
         An array containing the secondary structure elements,
         where the index corresponds to the index of the CA-filtered
-        `atom_array`. 'a' means alpha helix, 'b' means beta strand/sheet,
-        'c' means coil.
+        `atom_array`. 'a' means :math:`{\alpha}`-helix, 'b' means
+        :math:`{\beta}`-strand/sheet, 'c' means coil.
     
     Notes
     -----
-    Although this function uses the original `P-SEA` algorithm, there
-    are deviatons in some cases, do do not rely on getting the exact same
-    results.
+    Although this function is based on the original `P-SEA` algorithm,
+    there are deviatons compared to the official `P-SEA` software in
+    some cases. Do not rely on getting the exact same results.
     
     References
     ----------
@@ -75,11 +75,11 @@ def annotate_sse(atom_array, chain_id):
     
     SSE of PDB 1L2Y:
         
-        >>> a = get_structure(file, model=1)
-        >>> sse = annotate_sse(a, "A")
-        >>> print(sse)
-        ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
-         'c' 'c']
+    >>> a = get_structure(file, model=1)
+    >>> sse = annotate_sse(a, "A")
+    >>> print(sse)
+    ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
+     'c' 'c']
     
     """
     # Filter all CA atoms in the relevant chain.

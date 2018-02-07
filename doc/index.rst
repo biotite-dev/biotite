@@ -41,7 +41,7 @@ superimposition and more.
 
 Database
 """"""""
-The ``database`` subpackage is all about ddownloading data from biological
+The ``database`` subpackage is all about downloading data from biological
 databases, including the probably most important ones: the `RCSB PDB` and the
 `NCBI Entrez` database.
 

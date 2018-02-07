@@ -20,7 +20,7 @@ def get_structure_from(file_path, template=None):
     
     Internally this function uses a `File` object, based on the file
     extension. Trajectory files furthermore require specification of
-    the `template` parameter
+    the `template` parameter.
     
     Parameters
     ----------
@@ -49,7 +49,12 @@ def get_structure_from(file_path, template=None):
         from .pdb import PDBFile
         file = PDBFile()
         file.read(file_path)
-        return file.get_structure()
+        array = file.get_structure()
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, get_structure
         file = PDBxFile()
@@ -61,7 +66,15 @@ def get_structure_from(file_path, template=None):
         else:
             return array
     elif suffix == ".mmtf":
-        raise NotImplementedError()
+        from .mmtf import MMTFFile, get_structure
+        file = MMTFFile()
+        file.read(file_path)
+        array = get_structure(file)
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile()

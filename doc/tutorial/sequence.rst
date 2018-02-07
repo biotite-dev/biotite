@@ -111,7 +111,7 @@ Output:
 The other `Sequence` type is `ProteinSequence`. It supports the letters for
 the 20 standard amino acids plus some letters for ambiguous amino acids and a
 letter for a stop signal. Furthermore this class provides some utilities like
-codon tables, 3 letter to single letter translation (and vice versa) and more.
+3-letter to 1-letter translation (and vice versa).
 
 .. code-block:: python
 
@@ -329,6 +329,9 @@ Output:
 As you see, our file contains our new 'gibberish' sequence now, additionally
 to the original sequence.
 
+Alternatively, a sequence can also be loaded from GenBank or GenPept files,
+using the `GenBankFile` and `GenPeptFile` class (more on this later).
+
 Sequence search
 ^^^^^^^^^^^^^^^
 
@@ -436,5 +439,279 @@ sequences that are aligned to each other (*-1* for a gap). Additionally the
 alignment score is stored in this object. Furthermore, this object can
 prettyprint the alignment into a human readable form.
 
+Sequence features
+^^^^^^^^^^^^^^^^^
 
+Sequence features describe functional parts of a sequence, like coding or
+regulatory parts. One popular source to obtain information about sequence
+features are GenBank (for DNA and RNA) and GenPept (for peptides) files.
+As example for sequence features we will work with the GenBank file for the
+DNA sequence of the avidin gene (Accession: AJ311647), that we can download
+from the NCBI Entrez database. After downloading we can load the file using
+the `GenBankFile` class from ``biotite.sequence.io.genbank``:
 
+.. code-block:: python
+
+   import biotite.sequence.io.genbank as gb
+   file = gb.GenBankFile()
+   file.read("path/to/gg_avidin.gb")
+   print("Accession:", file.get_accession())
+   print("Definition:", file.get_definition())
+
+Output:
+
+.. code-block:: none
+
+   Accession: AJ311647
+   Definition: Gallus gallus AVD gene for avidin, exons 1-4.
+
+Now that we have loaded the file, we want to have a look at the features.
+Therefore, we grab the annotation from the file.
+An annotation is the collection of features corresponding to one sequence
+(the sequence itself is not included, though).
+In case of *Biotite* we can get an `Annotation` object from the `GenBankFile`.
+This `Annotation` can be iterated in order to obtain single `Feature` objects.
+Each `Feature` contains 3 pieces of information: Its feature key
+(e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one or multiple
+locations on the corresponding sequence.
+A `Location` in turn, contains its starting and its ending base/residue
+position, the strand it is on (only for DNA) and possible *location defects*
+(defects will be discussed later).
+In the next example we will print the keys of the features and their locations:
+
+.. code-block:: python
+
+   annotation = file.get_annotation()
+   for feature in annotation:
+       # Convert the feature locations in better readable format
+       locs = [str(loc) for loc in feature.locs]
+       print("{:12}   {:}".format(feature.key, locs))
+
+Output:
+
+.. code-block:: none
+
+   source         ['1-1224 >']
+   regulatory     ['26-33 >']
+   gene           ['98-1152 >']
+   mRNA           ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   CDS            ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   sig_peptide    ['98-169 >']
+   exon           ['98-178 >']
+   intron         ['179-262 >']
+   exon           ['263-473 >']
+   intron         ['474-898 >']
+   exon           ['899-1019 >']
+   intron         ['1020-1106 >']
+   exon           ['1107-1152 >']
+   regulatory     ['1215-1220 >']
+
+The '>' characters in the string representations of a location indicate
+that the location is on the forward strand. Most of the features have only
+one location, except the *mRNA* and *CDS* feature, which have 4 locations
+joined. When we look at the rest of the features, this makes sense: The gene
+has 4 exons. Therefore, the mRNA (and consequently the CDS) is composed of
+these exons.
+
+The two *regulatory* features are the TATA box and the poly-A signal as the
+feature qualifiers make clear:
+
+.. code-block:: python
+
+   for feature in annotation:
+       if feature.key == "regulatory":
+           print(feature.qual["regulatory_class"])
+
+Output:
+
+.. code-block:: none
+
+   TATA_box
+   polyA_signal_sequence
+
+`Annotation` objects can be indexed with slices, that represent the start and
+the stop base/residue of the annotation from which the subannotation is
+created. All features, that are not in this range, are not included in the
+subannotation.
+In order to demonstrate this indexing method, we create a subannotation that
+includes only features in range of the gene itself (without the regulatory
+stuff):
+
+.. code-block:: python
+
+   # At first we have the find the feature with the 'gene' key
+   for feature in annotation:
+       if feature.key == "gene":
+           gene_feature = feature
+   # Then we create a subannotation from the feature's location
+   # Since the stop value of the slice is still exclusive,
+   # the stop value is the position of the last base +1
+   loc = gene_feature.locs[0]
+   sub_annot = annotation[loc.first : loc.last +1]
+   # Print the remaining features and their locations
+   for feature in sub_annot:
+       locs = [str(loc) for loc in feature.locs]
+       print("{:12}   {:}".format(feature.key, locs))
+
+Output:
+
+.. code-block:: none
+
+   source         ['98-1152 >']
+   gene           ['98-1152 >']
+   mRNA           ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   CDS            ['98-178 >', '263-473 >', '899-1019 >', '1107-1152 >']
+   sig_peptide    ['98-169 >']
+   exon           ['98-178 >']
+   intron         ['179-262 >']
+   exon           ['263-473 >']
+   intron         ['474-898 >']
+   exon           ['899-1019 >']
+   intron         ['1020-1106 >']
+   exon           ['1107-1152 >']
+
+The regulatory sequences have disappeared in the subannotation. Another
+interesting thing happened: the location of the *source* feature narrowed and
+is in range of the slice now. This happened, because the feature was
+*truncated*: The bases that were not in range of the slice were removed.
+
+Let's have a closer look into location defects now: A `Location` instance
+has a defect, when the feature itself is not directly located in the range of
+the first to the last base, for example when the exact postion is not known or,
+as in our case, a part of the feature was truncated. Let's have a look at the
+location defects of our subannotation:
+
+.. code-block:: python
+
+   for feature in sub_annot:
+       defects = [int(location.defect) for location in feature.locs]
+       print("{:12}   {:}".format(feature.key, defects))
+
+Output:
+
+.. code-block:: none
+
+   source         [3]
+   gene           [12]
+   mRNA           [4, 0, 0, 8]
+   CDS            [0, 0, 0, 0]
+   sig_peptide    [0]
+   exon           [0]
+   intron         [0]
+   exon           [0]
+   intron         [0]
+   exon           [0]
+   intron         [0]
+   exon           [0]
+
+The class `Location.Defect` is an `IntEnum` that behaves like a flag
+(unfortunately the `Flag` class is only available since Python 3.6). This means
+that multiple defects can be combined to one value.
+`0` means that the location has no defect, which is true for most of the
+features.
+The *source* feature has a defect with a value of `3`, which is a combination
+of `1` (*MISS_LEFT*) and `2` (*MISS_RIGHT*). *MISS_LEFT* is applied, if a
+feature was truncated before the first base and *MISS_RIGHT* is applied if
+feature was truncated after the last base. Since *source* was truncated from
+both sides, the combinated is applied.
+*gene* has the defect value `12`, combining `4` (*BEYOND_LEFT*) and
+`8` (*BEYOND_RIGHT*). These defects already appear in the GenBank file, since
+the gene is defined as the unit that is transcribed into one (pre-)mRNA. As
+the transcription starts somewhere before the start of the coding region, but
+the exact location is not known, *BEYOND_LEFT* is applied. In an analogous way,
+the transription does stop somewhere after the coding region (at the terminator
+signal), hence *BEYOND_RIGHT* is applied. These two defects are also reflected
+in the *mRNA* feature.
+
+Now, that you have understood what annotations are, we proceed to the next
+topic: annotated sequences. An `AnnotatedSequence` is like an annotation, but
+the sequence is included this time. Since our GenBank file contains the
+sequence corresponding to the feature table, we can directly obtain the
+`AnnotatedSequence`:
+
+.. code-block:: python
+
+   annot_seq = file.get_annotated_sequence()
+   print("Same annotation as before?", (annotation == annot_seq.annotation))
+   print(annot_seq.sequence[:60], "...")
+
+Output:
+
+.. code-block:: none
+
+   Same annotation as before? True
+   ACTGGGCAGAGTCAGTGCTGGAAGCAATMAAAAGGCGAGGGAGCAGGCAGGGGTGAGTCC ...
+
+When indexing an `AnnotatedSequence` with a slice, the index is applied to the
+`Annotation` and the `Sequence`. While the `Annotation` handles the index as
+shown before, the `Sequence` is indexed, based on the sequence start value.
+
+.. code-block:: python
+
+   print("Sequence start before indexing:", annot_seq.sequence_start)
+   for feature in annot_seq.annotation:
+       if feature.key == "regulatory" \
+           and feature.qual["regulatory_class"] == "polyA_signal_sequence":
+               polya_feature = feature
+   loc = feature.locs[0]
+   # Get annotated sequence containing only the poly-A signal region
+   poly_a = annot_seq[loc.first : loc.last +1]
+   print("Sequence start after indexing:", poly_a.sequence_start)
+   print(poly_a.sequence)
+
+Output:
+
+.. code-block:: none
+
+   Sequence start before indexing: 1
+   Sequence start after indexing: 1215
+   AATAAA
+
+Here we get the poly-A signal Sequence ``AATAAA``. As you might have noticed,
+the sequence start has shifted to the start of the slice index (the first base
+of the *regulatory* feature).
+
+.. warning:: Since `AnnoatedSequence` objects use base position indices and
+   `Sequence` objects use array position indices, you will get different
+   results for ``annot_seq[n:m].sequence`` and ``annot_seq.sequence[n:m]``.
+
+There is also a convenient way to obtain the sequence of a feature, even if
+the feature contains multiple locations or a location is on the reverse strand:
+Simply use a `Feature` object as index:
+
+.. code-block:: python
+
+   for feature in annot_seq.annotation:
+       if feature.key == "CDS":
+           cds_feature = feature
+   dna_seq = annot_seq[cds_feature]
+   print(dna_seq[:60], "...")
+
+Output:
+
+.. code-block:: none
+
+   ATGGTGCACGCAACCTCCCCGCTGCTGCTGCTGCTGCTGCTCAGCCTGGCTCTGGTGGCT ...
+
+Awesome. Now we can translate the sequence and compare it with the translation
+given by the CDS feature. But before we can do that, we have to prepare the
+data: The DNA sequence uses currently an ambiguous alphabet due to the nasty
+`M` at position 28 of the original sequence, we have to remove the stop symbol
+after translation and we need to remove the space characters in the translation
+given by the CDS feature.
+
+.. code-block:: python
+
+   import biotite.sequence as seq
+   # This step make the alphabet unambiguous
+   dna_seq = seq.NucleotideSequence(dna_seq)
+   prot_seq = dna_seq.translate(complete=True)
+   print("Are the translated sequences equal?",
+         (str(prot_seq.remove_stops()) == \
+          cds_feature.qual["translation"].replace(" ", "")))
+
+Output:
+
+.. code-block:: none
+
+   Are the translated sequences equal? True

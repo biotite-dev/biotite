@@ -2,5 +2,8 @@
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
-def c_check_extensions():
-    return True
+"""
+A subpackage for multiple sequence alignments using Clustal-Omega.
+"""
+
+from .app import *

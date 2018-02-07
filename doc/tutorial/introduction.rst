@@ -19,7 +19,7 @@ Beside the standard I/O operations, the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 The ``structure`` subpackage enables handling of 3D structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their properties,
-based on `numpy` arrays. The subpackage includes read/write functionality for
+based on `NumPy` arrays. The subpackage includes read/write functionality for
 different formats, structure filters, coordinate transformations, angle and
 bond measurements, accessible surface area calculation, structure
 superimposition and more.
@@ -33,5 +33,5 @@ seamless: You do not have to write input files and read output files, you only
 have to input *Python* objects and you get *Python* objects. It is basically
 very similar to using normal functions.
 
-In the following sections you will get a overview over the mentioned
+In the following sections you will get an overview over the mentioned
 subpackages, so go and grab some tea and cookies und let us begin. 

@@ -20,7 +20,7 @@ up to 79 characters.
 
 Dependencies
 ^^^^^^^^^^^^
-Biotite currently depends on `numpy`, `matplotlib` and `requests`.
+Biotite currently depends on `NumPy`, `matplotlib` and `requests`.
 The usage of these packages is not only allowed but even encouraged. Further
 packages might be added to the depedencies in the future, so if you need a
 specific package, you might open an issue on GitHub. But keep in mind, that a
@@ -39,12 +39,9 @@ plays also an important role. Therefore time consuming tasks should be
 C-accelerated, if possible.
 The most convenient way to achieve this, is using *NumPy*.
 In cases the problem is not vectorizable, writing modules in *Cython* are the
-preferred way to go. You have to keep in mind that Biotite is also
-required to work without extension modules, so a pure Python alternative must
-always be shipped, too. The way this is solved can be seen for example in
-``biotite/sequence/align/pairwise``.
-Writing pure C-extension is disencouraged due to the bad readability.
-And anyway, Cython is *so* much better...
+preferred way to go. Writing pure C-extensions is discouraged due to the bad
+readability.
+And anyway, *Cython* is *so* much better...
 
 Code documentation
 ^^^^^^^^^^^^^^^^^^
@@ -65,7 +62,21 @@ docstrings. Methods do not need to be summarized in the class docstring.
 
 Any content, that is not part of the API reference is placed in the ``doc``
 folder in *ReST* format. The line length of ``*.rst`` files is also limited to
-79 characters, with te exceptions already mentioned above.
+79 characters, with the exceptions already mentioned above. When adding new
+content, it is appreciated to update the tutorial pages (``doc/tutorial``) as
+well.
+
+If you are not directly a developer, but you have a nice Python script based on
+*Biotite*, feel free to put your script and your output image or text
+into the examples section (``doc/examples``). Simply create a new directory
+here and put the following files here:
+   
+   - ``title``:
+     The title of your example
+   - ``script.py``:
+     The python script of your example
+   - ``example.png`` or ``example.rst``:
+     The output image or printed output of your script
 
 Module imports
 ^^^^^^^^^^^^^^

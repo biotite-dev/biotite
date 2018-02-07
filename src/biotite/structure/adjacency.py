@@ -38,8 +38,8 @@ class AdjacencyMap(object):
     Examples
     --------
     
-        >>> adj_map = AdjacencyMap(atom_array, box_size=5)
-        >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
+    >>> adj_map = AdjacencyMap(atom_array, box_size=5)
+    >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
         
     """
     
@@ -67,7 +67,7 @@ class AdjacencyMap(object):
         
         Parameters
         ----------
-        coord : ndarray(dtype=float)
+        coord : ndarray, dtype=float
             The central coordinates, around which the atoms are
             searched.
         radius: float
@@ -76,7 +76,7 @@ class AdjacencyMap(object):
         
         Returns
         -------
-        indices : ndarray(dtype=int)
+        indices : ndarray, dtype=int
             The indices of the atom array, where the atoms are in the
             defined vicinity around `coord`.
             
@@ -95,7 +95,7 @@ class AdjacencyMap(object):
         
         Parameters
         ----------
-        coord : ndarray(dtype=float)
+        coord : ndarray, dtype=float
             The central coordinates, around which the atoms are
             searched.
         box_r: float
@@ -107,7 +107,7 @@ class AdjacencyMap(object):
         
         Returns
         -------
-        indices : ndarray(dtype=int)
+        indices : ndarray, dtype=int
             The indices of the atom array, where the atoms are in the
             defined vicinity around `coord`.
             

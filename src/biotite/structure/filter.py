@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
@@ -11,7 +11,7 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 
 __all__ = ["filter_solvent", "filter_amino_acids", "filter_backbone",
-           "filter_intersection"]
+           "filter_intersection", "filter_inscode_and_altloc"]
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
@@ -32,7 +32,7 @@ def filter_solvent(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
@@ -50,7 +50,7 @@ def filter_amino_acids(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
     """
@@ -70,7 +70,7 @@ def filter_backbone(array):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         as an backbone atom.
     """
@@ -97,7 +97,7 @@ def filter_intersection(array, intersect):
     
     Returns
     -------
-    filter : ndarray(dtype=bool)
+    filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         exists also in `intersect`.
     
@@ -106,13 +106,13 @@ def filter_intersection(array, intersect):
     
     Creating an atom array from atoms:
     
-        >>> array1 = AtomArray(length=5)
-        >>> array1.chain_id = np.array("A","B","C","D","E")
-        >>> array2 = AtomArray(length=5)
-        >>> array2.chain_id = np.array("D","B","C")
-        >>> array1 = array1[filter_intersection(array1, array2)]
-        >>> print(array1.chain_id)
-        ['B' 'C' 'D']
+    >>> array1 = AtomArray(length=5)
+    >>> array1.chain_id = np.array("A","B","C","D","E")
+    >>> array2 = AtomArray(length=5)
+    >>> array2.chain_id = np.array("D","B","C")
+    >>> array1 = array1[filter_intersection(array1, array2)]
+    >>> print(array1.chain_id)
+    ['B' 'C' 'D']
     
     """
     filter = np.full(array.array_length(), True, dtype=bool)
@@ -128,3 +128,81 @@ def filter_intersection(array, intersect):
                           == array.get_annotation(category)[i])
         filter[i] = subfilter.any()
     return filter
+
+
+def filter_inscode_and_altloc(array,  inscode=[], altloc=[],
+                              inscode_array=None, altloc_array=None):
+    """
+    Filter all atoms having the desired altloc or inscode.
+    
+    Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
+    in case a residue is found in multiple alternative locations
+    (altloc) or different residues are inserted at a specific location
+    (inscode). This function is used to filter the desired altlocs and
+    inscodes, atoms at this position with other altlocs or inscodes are
+    removed.    
+    
+    The function will be merely used by the end user, since this kind
+    of filtering is automatically performed, when the structure is
+    loaded from a file. In the final atom array (stack) duplicate atoms
+    are not allowed.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    inscode : list of tuple, optional
+        Each tuple consists of an integer, specifying
+        the residue ID, and a letter, specifying the insertion code.
+        By default no insertions are used.
+    altloc : list of tuple, optional
+        Each tuple consists of an integer, specifying
+        the residue ID, and a letter, specifying the *altloc* ID.
+        By default the location with the *altloc* ID "A" is used.
+    inscode_array : array-like, optional
+        An array containing the insertion codes for each atom
+        (same length as `array`).
+        Can contain '.', '?', ' ' or a letter at each position.
+        If not specified, this filter will apply to all atoms.
+    altloc_array : array-like, optional
+        An array containing the alternative location codes for each
+        atom (same length as `array`).
+        Can contain '.', '?', ' ' or a letter at each position.
+        If not specified, this filter will apply to all atoms.
+    
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        The combined inscode and altloc filters.
+    """
+    if inscode_array is None:
+        # In case no insertion code column is existent
+        inscode_filter = np.full(array.array_length(), True)
+    else:
+        # Default: Filter all atoms
+        # with insertion code ".", "?" or " "
+        inscode_filter = np.in1d(inscode_array, [".","?"," "])
+        # Now correct filter for every given insertion code
+        for code in inscode:
+            residue = code[0]
+            insertion = code[1]
+            residue_filter = (array.res_id == residue)
+            # Reset (to False) filter for given res_id
+            inscode_filter &= ~residue_filter
+            # Choose atoms of res_id with insertion code
+            inscode_filter |= residue_filter & (inscode_array == insertion)
+    # Same with altlocs
+    if altloc_array is None:
+        altloc_filter = np.full(array.array_length(), True)
+    else:
+        altloc_filter = np.in1d(altloc_array, [".","?","A"," "])
+        for loc in altloc:
+            residue = loc[0]
+            altloc = loc[1]
+            residue_filter = (array.res_id == residue)
+            altloc_filter &= ~residue_filter
+            altloc_filter |= residue_filter & (altloc_array == altloc)
+    # return combined filters
+    return inscode_filter & altloc_filter
+
+

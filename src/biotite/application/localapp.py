@@ -33,6 +33,8 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._options = []
         self._exec_dir = getcwd()
         self._process = None
+        self._stdout_file_path = None
+        self._stdout_file = None
     
     @requires_state(AppState.CREATED)
     def set_options(self, options):
@@ -63,6 +65,16 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             The execution directory.
         """
         self._exec_dir = exec_dir
+    
+    @requires_state(AppState.CREATED)
+    def set_std_out_file(self, file_path):
+        """
+        Set the STDOUT stream of the application.
+        Overrides the `mute` parameter.
+        
+        PROTECTED: Do not call from outside.
+        """
+        self._stdout_file_path = file_path
     
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def get_process(self):
@@ -101,6 +113,9 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         else:
             std_out = None
             std_err = None
+        if self._stdout_file_path is not None:
+            self._stdout_file = open(self._stdout_file_path, "w")
+            std_out = self._stdout_file
         self._process = Popen([self._bin_path] + self._options,
                               stdout=std_out, stderr=std_err) 
         chdir(cwd)
@@ -117,7 +132,9 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         return 0.01
     
     def evaluate(self):
-        pass
+        super().evaluate()
+        if self._stdout_file is not None:
+            self._stdout_file.close()
     
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:

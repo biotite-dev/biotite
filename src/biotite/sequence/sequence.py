@@ -25,7 +25,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     A `Sequence` can be seen as a succession of symbols, that are
     elements in the allowed set of symbols, the `Alphabet`. Internally,
-    a `Sequence` object uses a `numpy` `ndarray` of integers, where each
+    a `Sequence` object uses a `NumPy` `ndarray` of integers, where each
     integer represents a symbol. The `Alphabet` of a `Sequence` object
     is used to encode each symbol, that is used to create the
     `Sequence`, into an integer. These integer values are called
@@ -45,6 +45,12 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     A `Sequence` can be indexed by any 1-D index a `ndarray` accepts.
     If the index is a single integer, the decoded symbol at that
     position is returned, otherwise a subsequence is returned.
+    
+    Individual symbols of the sequence can also be exchanged in indexed
+    form: If the an integer is used as index, the item is treated as a
+    symbol. Any other index (slice, index list, boolean mask) expects
+    multiple symbols, either as list of symbols, as `ndarray`
+    containing a sequence code or another `Sequence` instance.
     Concatenation of two sequences is achieved with the '+' operator.
     
     Each subclass of `Sequence` needs to overwrite the abstract method
@@ -72,28 +78,49 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     Creating a DNA sequence from string and print the symbols and the
     code:
     
-        >>> dna_seq = DNASequence("ACGTA")
-        >>> print(dna_seq)
-        ACGTA
-        >>> print(dna_seq.code)
-        [0 1 2 3 0]
-        >>> print(dna_seq.symbols)
-        ['A', 'C', 'G', 'T', 'A']
-        >>> print(list(dna_seq)
-        ['A', 'C', 'G', 'T', 'A']
+    >>> dna_seq = NucleotideSequence("ACGTA")
+    >>> print(dna_seq)
+    ACGTA
+    >>> print(dna_seq.code)
+    [0 1 2 3 0]
+    >>> print(dna_seq.symbols)
+    ['A', 'C', 'G', 'T', 'A']
+    >>> print(list(dna_seq))
+    ['A', 'C', 'G', 'T', 'A']
     
     Sequence indexing:
         
-        >>> print(dna_seq[1:3])
-        CG
-        >>> print(dna_seq[[0,2,4]])
-        AGA
+    >>> print(dna_seq[1:3])
+    CG
+    >>> print(dna_seq[[0,2,4]])
+    AGA
+    >>> print(dna_seq[np.array([False,False,True,True,True])])
+    GTA
+    
+    Sequence manipulation:
+        
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[2] = "C"
+    >>> print(dna_copy)
+    ACCTA
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[0:2] = dna_copy[3:5]
+    >>> print(dna_copy)
+    TAGTA
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[np.array([True,False,False,False,True])] = "T"
+    >>> print(dna_copy)
+    TCGTT
+    >>> dna_copy = dna_seq.copy()
+    >>> dna_copy[1:4] = np.array([0,1,2])
+    >>> print(dna_copy)
+    AACGA
     
     Concatenate the two sequences:
         
-        >>> dna_seq_concat = dna_seq + dna_seq_rev
-        >>> print(dna_seq_concat)
-        ACGTAATGCA
+    >>> dna_seq_concat = dna_seq + dna_seq_rev
+    >>> print(dna_seq_concat)
+    ACGTAATGCA
         
     """
     
@@ -129,11 +156,13 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     @property
     def symbols(self):
-        return Sequence.decode(self.code, self.get_alphabet())
+        return self.get_alphabet().decode_multiple(self.code)
     
     @symbols.setter
     def symbols(self, value):
-        self._seq_code = Sequence.encode(value, self.get_alphabet())
+        alph = self.get_alphabet()
+        dtype = Sequence._dtype(len(alph))
+        self._seq_code = alph.encode_multiple(value, dtype)
     
     @property
     def code(self):
@@ -171,10 +200,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         Examples
         --------
             
-            >>> dna_seq = DNASequence("ACGTA")
-            >>> dna_seq_rev = dna_seq.reverse()
-            >>> print(dna_seq_rev)
-            ATGCA
+        >>> dna_seq = DNASequence("ACGTA")
+        >>> dna_seq_rev = dna_seq.reverse()
+        >>> print(dna_seq_rev)
+        ATGCA
         """
         reversed_code = np.flip(np.copy(self._seq_code), axis=0)
         reversed = self.copy(reversed_code)
@@ -207,10 +236,22 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         else:
             return alph.decode(sub_seq)
     
-    def __setitem__(self, index, symbol):
+    def __setitem__(self, index, item):
         alph = self.get_alphabet()
-        symbol = alph.encode(symbol)
-        self._seq_code.__setitem__(index, symbol)
+        if isinstance(index, int):
+            # Expect a single symbol
+            code = alph.encode(item)
+            self._seq_code.__setitem__(index, code)
+        else:
+            # Expect multiple symbols
+            if isinstance(item, Sequence):
+                code = item.code
+            elif isinstance(item, np.ndarray):
+                code = item
+            else:
+                # Default: item is iterable object of symbols
+                code = alph.encode_multiple(item)
+            self._seq_code.__setitem__(index, code)
     
     def __len__(self):
         return len(self._seq_code)
@@ -250,45 +291,6 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             return new_seq
         else:
             raise ValueError("The sequences alphabets are not compatible")
-    
-    @staticmethod
-    def encode(symbols, alphabet):
-        """
-        Encode a list of symbols using an `Alphabet`.
-        
-        Parameters
-        ----------
-        symbols : list
-            The symbols to encode.
-        alphabet : Alphabet
-            The alphabet used to encode the `symbols`.
-        
-        Returns
-        -------
-        code : ndarray
-            The sequence code
-        """
-        return np.array([alphabet.encode(e) for e in symbols],
-                        dtype=Sequence._dtype(len(alphabet)))
-
-    @staticmethod
-    def decode(code, alphabet):
-        """
-        Decode a list of sequence code using an `Alphabet`.
-        
-        Parameters
-        ----------
-        code : ndarray
-            The code to decode.
-        alphabet : Alphabet
-            The alphabet used to decode the sequence code.
-        
-        Returns
-        -------
-        symbols : list
-            The decoded list of symbols.
-        """
-        return [alphabet.decode(c) for c in code]
 
     @staticmethod
     def _dtype(alphabet_size):

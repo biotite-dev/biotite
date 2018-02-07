@@ -122,9 +122,9 @@ def dihedral(atom1, atom2, atom3, atom4):
     n1 = np.cross(v1, v2)
     n2 = np.cross(v2, v3)
     
+    # Calculation using atan2, to ensure the correct sign of the angle 
     x = vector_dot(n1,n2)
     y = vector_dot(np.cross(n1,n2), v2)
-    
     return np.arctan2(y,x)
 
 
@@ -166,18 +166,17 @@ def dihedral_backbone(atom_array, chain_id):
     
     Input
     
-        >>> pdbx_file = PDBxFile()
-        >>> pdbx_file.read("1l2y.cif")
-        >>> atom_array = get_structure(pdbx_file, model=1)
-        >>> psi, omega, phi = struc.dihedral_backbone(atom_array, "A")
-        >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
-        ...          linestyle="None", marker="o")
-        >>> plt.xlim(-180, 180)
-        >>> plt.ylim(-180, 180)
-        >>> plt.xlabel("phi")
-        >>> plt.ylabel("psi")
-        >>> plt.show()
-    
+    >>> pdbx_file = PDBxFile()
+    >>> pdbx_file.read("1l2y.cif")
+    >>> atom_array = get_structure(pdbx_file, model=1)
+    >>> psi, omega, phi = struc.dihedral_backbone(atom_array, "A")
+    >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
+    ...          linestyle="None", marker="o")
+    >>> plt.xlim(-180, 180)
+    >>> plt.ylim(-180, 180)
+    >>> plt.xlabel("phi")
+    >>> plt.ylabel("psi")
+    >>> plt.show()
     
     Output
     

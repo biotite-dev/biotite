@@ -4,7 +4,6 @@
 
 from .file import *
 from .temp import *
-from .extensions import *
 from .copyable import * 
 
 
