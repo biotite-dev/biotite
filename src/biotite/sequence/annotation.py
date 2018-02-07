@@ -354,7 +354,8 @@ class AnnotatedSequence(Copyable):
     Indexing an `AnnotatedSequence` with a slice returns another
     `AnnotatedSequence` with the corresponding subannotation and a
     sequence start corrected subsequence, i.e. indexing starts at 1 with
-    the default sequence start 1.
+    the default sequence start 1. The sequence start in the newly
+    created `AnnotatedSequence` is the start of the slice.
     Furthermore, integer indices are allowed in which case the
     corresponding symbol of the sequence is returned (also sequence
     start corrected).
@@ -492,7 +493,7 @@ class AnnotatedSequence(Copyable):
                 seq_stop = index.stop - self._seqstart
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
-                                     self._seqstart)
+                                     seq_start)
         elif isinstance(index, int):
             return self._sequence[index - self._seqstart]
         else:
