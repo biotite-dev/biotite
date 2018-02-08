@@ -9,6 +9,7 @@ This module provides functions for structure superimposition.
 import numpy as np
 from .geometry import centroid
 from .atoms import Atom, AtomArray, AtomArrayStack, stack
+from .error import BadStructureError
 
 __all__ = ["superimpose", "superimpose_apply"]
 
@@ -138,7 +139,7 @@ def _superimpose(fixed, mobile, ca_only):
             fix_centered = np.copy(fixed.coord)
             
         if len(mob_centered) != len(fix_centered):
-            raise BadStructureException("The mobile and fixed array "
+            raise BadStructureError("The mobile and fixed array "
                                         "have different amount of atoms")
         
         mob_centered -= mob_centroid
