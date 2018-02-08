@@ -1,0 +1,26 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Miniconda35"
+    - PYTHON: "C:\\Miniconda35-x64"
+    - PYTHON: "C:\\Miniconda36"
+    - PYTHON: "C:\\Miniconda36-x64"
+
+install:
+  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda install -c anaconda cython
+  - conda install -c anaconda pytest
+  - conda install -c anaconda numpy
+  - conda install -c conda-forge matplotlib
+
+build: false
+
+test_script:
+  - python setup.py test --pytest-args="--ignore=tests/application"
+
+after_test:
+  - python setup.py bdist_wheel
+
+artifacts:
+  - path: dist\*

@@ -7,7 +7,8 @@ from setuptools.command.test import test as TestCommand
 import sys
 import shlex
 import glob
-from os.path import join, abspath, dirname
+from os.path import join, abspath, dirname, normpath
+import fnmatch
 import os
 from src.biotite import __version__
 
@@ -40,8 +41,14 @@ def get_extensions():
     original_wd = os.getcwd()
     # Change directory to setup directory to ensure correct globbing
     os.chdir(dirname(abspath(__file__)))
-    ext_sources = glob.glob("src/biotite/**/*.c", recursive=True)
-    ext_names = [source.replace("src/", "").replace(".c", "").replace("/", ".")
+    ext_sources = []
+    for dirpath, dirnames, filenames in os.walk(normpath("src/biotite")):
+        for filename in fnmatch.filter(filenames, '*.c'):
+            ext_sources.append(os.path.join(dirpath, filename))
+    ext_names = [source
+                 .replace("src"+normpath("/"), "")
+                 .replace(".c", "")
+                 .replace(normpath("/"), ".")
                  for source in ext_sources]
     ext_modules = [Extension(ext_names[i], [ext_sources[i]],
                              include_dirs=[numpy.get_include()])
@@ -74,13 +81,14 @@ setup(
     url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = (
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
