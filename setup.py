@@ -7,7 +7,7 @@ from setuptools.command.test import test as TestCommand
 import sys
 import shlex
 import glob
-from os.path import join, abspath, dirname
+from os.path import join, abspath, dirname, normpath
 import os
 from src.biotite import __version__
 
@@ -40,8 +40,11 @@ def get_extensions():
     original_wd = os.getcwd()
     # Change directory to setup directory to ensure correct globbing
     os.chdir(dirname(abspath(__file__)))
-    ext_sources = glob.glob("src/biotite/**/*.c", recursive=True)
-    ext_names = [source.replace("src/", "").replace(".c", "").replace("/", ".")
+    ext_sources = glob.glob(normpath("src/biotite/**/*.c"), recursive=True)
+    ext_names = [source
+                 .replace("src"+normpath("/"), "")
+                 .replace(".c", "")
+                 .replace(normpath("/"), ".")
                  for source in ext_sources]
     ext_modules = [Extension(ext_names[i], [ext_sources[i]],
                              include_dirs=[numpy.get_include()])
