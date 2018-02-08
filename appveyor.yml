@@ -14,7 +14,6 @@ install:
   - conda install -c anaconda pytest
   - conda install -c anaconda numpy
   - conda install -c conda-forge matplotlib
-  - conda install -c anaconda msgpack-python
 
 build: false
 
