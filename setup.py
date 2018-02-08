@@ -8,6 +8,7 @@ import sys
 import shlex
 import glob
 from os.path import join, abspath, dirname, normpath
+import fnmatch
 import os
 from src.biotite import __version__
 
@@ -40,7 +41,10 @@ def get_extensions():
     original_wd = os.getcwd()
     # Change directory to setup directory to ensure correct globbing
     os.chdir(dirname(abspath(__file__)))
-    ext_sources = glob.glob(normpath("src/biotite/**/*.c"), recursive=True)
+    ext_sources = []
+    for dirpath, dirnames, filenames in os.walk(normpath("src/biotite")):
+        for filename in fnmatch.filter(filenames, '*.c'):
+            ext_sources.append(os.path.join(dirpath, filename))
     ext_names = [source
                  .replace("src"+normpath("/"), "")
                  .replace(".c", "")
