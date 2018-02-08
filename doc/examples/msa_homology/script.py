@@ -34,10 +34,7 @@ for hit in hits:
     hit_seqs.append(fasta.get_sequence(file))
 
 # Perform a multiple sequence alignment using MUSCLE
-muscle_app = muscle.MuscleApp(hit_seqs)
-muscle_app.start()
-muscle_app.join()
-ali = muscle_app.get_alignment()
+ali = muscle.MuscleApp.align(hit_seqs)
 # Print the MSA with hit IDs
 print("MSA results:")
 gapped_seqs = ali.get_gapped_sequences()
