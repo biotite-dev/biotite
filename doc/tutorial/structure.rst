@@ -59,9 +59,9 @@ the atom array simply by specifying the attribute:
 .. code-block:: python
 
    array = struc.array([atom1, atom2, atom3])
-   print(array.chain_id)
-   print(array.res_id)
-   print(array.atom_name)
+   print("Chain ID:", array.chain_id)
+   print("Residue ID:", array.res_id)
+   print("Atom name:", array.atom_name)
    print(array.coord)
    print()
    print(array)
