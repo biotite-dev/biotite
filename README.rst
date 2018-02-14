@@ -13,6 +13,6 @@ Biotite project
 
 The *Biotite* package bundles popular tasks in computational biology into an
 unifying framework, which is easy to use on the one hand side, but is also
-computationally efficient due to intensive usage *NumPy* and
+computationally efficient due to intensive usage of *NumPy* and
 *Cython*.  This package focuses on working with sequence and structure data and
 supports various file formats and analysis and manipulation functions.
