@@ -88,9 +88,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         
         Since trajectory files usually only contain atom coordinate
         information and no topology information, this method requires
-        a template array or stack. This template can be acquired for
-        example from a PDB file, which is associated with the trajectory
-        file. 
+        a template atom array or stack. This template can be acquired
+        for example from a PDB file, which is associated with the
+        trajectory file. 
         
         Parameters
         ----------
