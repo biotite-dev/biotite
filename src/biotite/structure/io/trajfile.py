@@ -57,7 +57,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             The atom indices to be read from the file.
         """
         super().read(file_name)
-        traj_type = self._traj_type()
+        traj_type = self.traj_type()
         with traj_type(file_name, 'r') as f:
             if start is not None and start != 0:
                 # Discard atoms before start
@@ -67,9 +67,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 result = f.read(stride=step, atom_indices=atom_i)
             else:
                 result = f.read(stop-start, step, atom_i)
-            self._coord = result[self._output_value_index("coord")]
-            self._time  = result[self._output_value_index("time")]
-            self._box   = result[self._output_value_index("box")]
+            self._coord = result[self.output_value_index("coord")]
+            self._time  = result[self.output_value_index("time")]
+            self._box   = result[self.output_value_index("box")]
     
     def get_coord(self):
         """
@@ -167,7 +167,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Returns
         -------
         class
-            An `MDtraj` subclass of `TrajectoryFile`
+            An `MDtraj` subclass of `TrajectoryFile`.
         """
         pass
     
