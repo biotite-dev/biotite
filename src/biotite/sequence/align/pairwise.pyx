@@ -78,7 +78,8 @@ def _add_scores(CodeType1[:] code1 not None,
     return score
 
 
-def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
+def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
+                  terminal_penalty=True, local=False):
     """
     Perform an optimal alignment of two sequences based on the
     dynamic programming algorithm [1]_.
@@ -114,6 +115,10 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
         opening penalty, the second integer is the gap extension
         penalty.
         The values need to be negative. (Default: *-10*)
+    terminal_penalty : bool, optional
+        If true, gap penalties are applied to terminal gaps.
+        If `local` is true, this parameter has no effect. 
+        (Default: True)
     local : bool, optional
         If false, a global alignment is performed, otherwise a local
         alignment is performed. (Default: False)
@@ -215,26 +220,32 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10, local=False):
         g2_table[0, : ] = neg_inf
         # Initialize first row and column for global alignments
         if not local:
-            g1_table[0, 1:] = (np.arange(len(seq2)) * gap_ext) + gap_open
-            g2_table[1:,0 ] = (np.arange(len(seq1)) * gap_ext) + gap_open
+            if terminal_penalty:
+                # Terminal gaps are penalized
+                # -> Penalties in first row/column
+                g1_table[0, 1:] = (np.arange(len(seq2)) * gap_ext) + gap_open
+                g2_table[1:,0 ] = (np.arange(len(seq1)) * gap_ext) + gap_open
             trace_table[1:,0] = 64
             trace_table[0,1:] = 16
         _fill_align_table_affine(code1, code2,
                                  matrix.score_matrix(), trace_table,
                                  m_table, g1_table, g2_table,
-                                 gap_open, gap_ext, local)
+                                 gap_open, gap_ext, terminal_penalty, local)
     else:
         # General gap penalty
         # The table for saving the scores
         score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         # Initialize first row and column for global alignments
         if not local:
-            score_table[:,0] = np.arange(len(seq1)+1) * gap_penalty
-            score_table[0,:] = np.arange(len(seq2)+1) * gap_penalty
+            if terminal_penalty:
+                # Terminal gaps are penalized
+                # -> Penalties in first row/column
+                score_table[:,0] = np.arange(len(seq1)+1) * gap_penalty
+                score_table[0,:] = np.arange(len(seq2)+1) * gap_penalty
             trace_table[1:,0] = 4
             trace_table[0,1:] = 2
         _fill_align_table(code1, code2, matrix.score_matrix(), trace_table,
-                          score_table, gap_penalty, local)
+                          score_table, gap_penalty, terminal_penalty, local)
     
     # Traceback
     ###########
@@ -335,12 +346,17 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       uint8[:,:] trace_table not None,
                       int32[:,:] score_table not None,
                       int gap_penalty,
+                      bint term_penalty,
                       bint local):
     cdef int i, j
+    cdef int max_i, max_j
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
     cdef int32 score
     
+    # Used in case terminal gaps are not penalized
+    i_max = score_table.shape[0] -1
+    j_max = score_table.shape[1] -1
     # Starts at 1 since the first row and column are already filled
     for i in range(1, score_table.shape[0]):
         for j in range(1, score_table.shape[1]):
@@ -350,9 +366,15 @@ def _fill_align_table(CodeType1[:] code1 not None,
             # to the bottom/right in the table
             from_diag = score_table[i-1, j-1] + matrix[code1[i-1], code2[j-1]]
             # Evaluate score from left direction
-            from_left = score_table[i, j-1] + gap_penalty
+            if not term_penalty and i == i_max:
+                from_left = score_table[i, j-1]
+            else:
+                from_left = score_table[i, j-1] + gap_penalty
             # Evaluate score from top direction
-            from_top = score_table[i-1, j] + gap_penalty
+            if not term_penalty and j == j_max:
+                from_top = score_table[i-1, j]
+            else:
+                from_top = score_table[i-1, j] + gap_penalty
             
             # Find maximum
             if from_diag > from_left:
@@ -398,8 +420,10 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                              int32[:,:] g2_table not None,
                              int gap_open,
                              int gap_ext,
+                             bint term_penalty,
                              bint local):
     cdef int i, j
+    cdef int max_i, max_j
     cdef int32 mm_score, g1m_score, g2m_score
     cdef int32 mg1_score, g1g1_score
     cdef int32 mg2_score, g2g2_score
@@ -407,21 +431,33 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity
     
+    # Used in case terminal gaps are not penalized
+    i_max = trace_table.shape[0] -1
+    j_max = trace_table.shape[1] -1
+    # Starts at 1 since the first row and column are already filled
     for i in range(1, trace_table.shape[0]):
         for j in range(1, trace_table.shape[1]):
             # Calculate the scores for possible transitions
             # into the current cell
             similarity = matrix[code1[i-1], code2[j-1]]
-            mm_score = m_table[i-1,j-1] + similarity
+            mm_score  =  m_table[i-1,j-1] + similarity
             g1m_score = g1_table[i-1,j-1] + similarity
             g2m_score = g2_table[i-1,j-1] + similarity
             # No transition from g1_table to g2_table and vice versa
             # Since this would mean adjacent gaps in both sequences
             # A substitution makes more sense in this case
-            mg1_score = m_table[i,j-1]  + gap_open
-            g1g1_score = g1_table[i,j-1] + gap_ext
-            mg2_score = m_table[i-1,j]  + gap_open
-            g2g2_score = g2_table[i-1,j] + gap_ext
+            if not term_penalty and i == i_max:
+                mg1_score  =  m_table[i,j-1]
+                g1g1_score = g1_table[i,j-1]
+            else:
+                mg1_score  =  m_table[i,j-1] + gap_open
+                g1g1_score = g1_table[i,j-1] + gap_ext
+            if not term_penalty and j == j_max:
+                mg2_score  = m_table[i-1,j]
+                g2g2_score = g2_table[i-1,j]
+            else:
+                mg2_score  =  m_table[i-1,j] + gap_open
+                g2g2_score = g2_table[i-1,j] + gap_ext
             
             # Find maximum score and trace
             # (similar to general gap method)

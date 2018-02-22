@@ -25,33 +25,38 @@ def test_simple_score():
     assert align.simple_score(seq1, seq2, matrix) == 3
 
 # [local, gap_penalty, input1, input2, expect]
-align_cases = [(False,-7,      "TATGGGTATCC","TATGTATAA",
+align_cases = [(False,True, -7,      "TATGGGTATCC","TATGTATAA",
                     ("TATGGGTATCC\nTATG--TATAA",
                      "TATGGGTATCC\nTAT-G-TATAA",
                      "TATGGGTATCC\nTAT--GTATAA",)),
-               (True, -6,      "TATGGGTATCC","TATGTATAA",
+               (True, True, -6,      "TATGGGTATCC","TATGTATAA",
                     ("TATGGGTAT\nTATG--TAT",
                      "TATGGGTAT\nTAT-G-TAT",
                      "TATGGGTAT\nTAT--GTAT",)),
-               (False,(-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+               (False,True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
                     ("TACTATGGGTATCC\nTCATATG--TATAA",
                      "TACTATGGGTATCC\nTCATAT--GTATAA",)),
-               (True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+               (True, True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
                     ("TATGGGTAT\nTATG--TAT",
                      "TATGGGTAT\nTAT--GTAT",)),
-               (False,(-7,-1), "T","TTT",
+               (False,True, (-7,-1), "T","TTT",
                     ("T--\nTTT",
-                     "--T\nTTT",))
+                     "--T\nTTT",)),
+               (False,True, -7, "TAAAGCGAAAT","TGCGT",
+                    ("TAAAGCGAAAT\nT---GCG---T")),
+               (False,False,-7, "TAAAGCGAAAT","TGCGT",
+                    ("TAAAGCGAAAT\n---TGCGT---"))
               ]
-@pytest.mark.parametrize("local, gap_penalty, input1, input2, expect",
+@pytest.mark.parametrize("local, term, gap_penalty, input1, input2, expect",
                          align_cases)
-def test_align_optimal(local, gap_penalty,
+def test_align_optimal(local, term, gap_penalty,
                        input1, input2, expect):
     seq1 = seq.NucleotideSequence(input1)
     seq2 = seq.NucleotideSequence(input2)
     alignments = align.align_optimal(seq1, seq2,
                        align.SubstitutionMatrix.std_nucleotide_matrix(),
-                       gap_penalty=gap_penalty, local=local)
+                       gap_penalty=gap_penalty, terminal_penalty=term,
+                       local=local)
     for ali in alignments:
         assert str(ali) in expect
 
