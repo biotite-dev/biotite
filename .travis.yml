@@ -72,7 +72,7 @@ install:
   - if [ $COMPLETE == true ]; then pip install msgpack; fi
 
 script:
-  - python setup.py test --pytest-args="--ignore=tests/application/"
+  - if [ $COMPLETE == true ]; then python setup.py test --pytest-args="--ignore=tests/application/"; else python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
 
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
