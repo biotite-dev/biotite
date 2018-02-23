@@ -21,7 +21,8 @@ for name, sequence in file:
 # Get BLOSUM62 matrix
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 # Perform pairwise sequence alignment with affine gap penalty
+# Terminal gaps are not penalized
 alignments = align.align_optimal(avidin_seq, streptavidin_seq, matrix,
-                                 gap_penalty=(-10, -1))
+                                 gap_penalty=(-10, -1), terminal_penalty=False)
 # Output first and only alignment
 print(alignments[0])
