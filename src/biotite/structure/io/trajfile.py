@@ -57,7 +57,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             The atom indices to be read from the file.
         """
         super().read(file_name)
-        traj_type = self._traj_type()
+        traj_type = self.traj_type()
         with traj_type(file_name, 'r') as f:
             if start is not None and start != 0:
                 # Discard atoms before start
@@ -67,9 +67,10 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 result = f.read(stride=step, atom_indices=atom_i)
             else:
                 result = f.read(stop-start, step, atom_i)
-            self._coord = result[self._output_value_index("coord")]
-            self._time  = result[self._output_value_index("time")]
-            self._box   = result[self._output_value_index("box")]
+            # nm to Angstrom
+            self._coord = result[self.output_value_index("coord")] * 10
+            self._time  = result[self.output_value_index("time")]
+            self._box   = result[self.output_value_index("box")]
     
     def get_coord(self):
         """
@@ -88,9 +89,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         
         Since trajectory files usually only contain atom coordinate
         information and no topology information, this method requires
-        a template array or stack. This template can be acquired for
-        example from a PDB file, which is associated with the trajectory
-        file. 
+        a template atom array or stack. This template can be acquired
+        for example from a PDB file, which is associated with the
+        trajectory file. 
         
         Parameters
         ----------
@@ -105,7 +106,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             but the coordinates from the trajectory file.
         """
         if template.array_length() != self._coord.shape[-2]:
-            raise ValueError("Template")
+            raise ValueError("Template and trajectory have "
+                             "unequal amount of atoms")
         if isinstance(template, AtomArray):
             array_stack = stack([template])
         else:
@@ -167,7 +169,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Returns
         -------
         class
-            An `MDtraj` subclass of `TrajectoryFile`
+            An `MDtraj` subclass of `TrajectoryFile`.
         """
         pass
     

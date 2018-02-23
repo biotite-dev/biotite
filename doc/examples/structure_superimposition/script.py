@@ -24,10 +24,13 @@ ku = ku[~struc.filter_solvent(ku)]
 # The structures have a differing amount of atoms missing
 # at the the start and end of the structure
 # -> Find common structure
-ku_dna = ku_dna[struc.filter_intersection(ku_dna, ku)]
-ku = ku[struc.filter_intersection(ku, ku_dna)]
+ku_dna_common = ku_dna[struc.filter_intersection(ku_dna, ku)]
+ku_common = ku[struc.filter_intersection(ku, ku_dna)]
 # Superimpose
-ku_superimposed, transformation = struc.superimpose(ku_dna, ku)
+ku_superimposed, transformation = struc.superimpose(ku_dna_common, ku_common)
+# We do not want the cropped structures
+# -> apply superimposition on structures before intersection filtering
+ku_superimposed = struc.superimpose_apply(ku, transformation)
 # Write PDBx files as input for PyMOL
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_dna, data_block="ku_dna")

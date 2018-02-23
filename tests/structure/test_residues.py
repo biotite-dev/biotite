@@ -32,3 +32,4 @@ def test_get_residues(array):
     assert names.tolist() == ["ASN","LEU","TYR","ILE","GLN","TRP","LEU","LYS",
                               "ASP","GLY","GLY","PRO","SER","SER","GLY","ARG",
                               "PRO","PRO","PRO","SER"]
+    assert len(ids) == struc.get_residue_count(array)

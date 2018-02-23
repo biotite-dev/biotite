@@ -10,7 +10,8 @@ atom level.
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
-__all__ = ["apply_residue_wise", "spread_residue_wise", "get_residues"]
+__all__ = ["apply_residue_wise", "spread_residue_wise", "get_residues",
+           "get_residue_count"]
 
 
 def apply_residue_wise(array, data, function, axis=None):
@@ -262,4 +263,31 @@ def get_residues(array):
             i += 1
     # Trim to correct size
     return ids[:i], names[:i]
-            
+
+def get_residue_count(array):
+    """
+    Get the amount of residues in an atom array (stack).
+    
+    The count is determined from the `res_id` annotation.
+    Each time the residue ID changes, the count is incremented.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack), where the residues are counted.
+        
+    Returns
+    -------
+    count : int
+        Amount of residues.
+    """
+    if array.array_length() == 0:
+        return 0
+    else:
+        count = 1
+        curr_id = array.res_id[0]
+        for id in array.res_id:
+            if id != curr_id:
+                count += 1
+                curr_id = id
+        return count

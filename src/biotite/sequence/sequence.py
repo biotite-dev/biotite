@@ -228,6 +228,25 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         """
         return (self.code < len(self.get_alphabet())).all()
     
+    def get_symbol_frequency(self):
+        """
+        Get the number of occurences of each symbol in the sequence.
+        
+        If a symbol does not occur in the sequence, but it is in the
+        alphabet, its number of occurences is 0.
+        
+        Returns
+        -------
+        frequency : dict
+            A dictionary containing the symbols as keys and the
+            corresponding number of occurences in the sequence as
+            values.
+        """
+        frequencies = {}
+        for code, symbol in enumerate(self.get_alphabet()):
+            frequencies[symbol] = len(np.nonzero((self._seq_code == code))[0])
+        return frequencies
+    
     def __getitem__(self, index):
         alph = self.get_alphabet()
         sub_seq = self._seq_code.__getitem__(index)
