@@ -67,7 +67,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 result = f.read(stride=step, atom_indices=atom_i)
             else:
                 result = f.read(stop-start, step, atom_i)
-            self._coord = result[self.output_value_index("coord")]
+            # nm to Angstrom
+            self._coord = result[self.output_value_index("coord")] * 10
             self._time  = result[self.output_value_index("time")]
             self._box   = result[self.output_value_index("box")]
     
@@ -105,7 +106,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             but the coordinates from the trajectory file.
         """
         if template.array_length() != self._coord.shape[-2]:
-            raise ValueError("Template")
+            raise ValueError("Template and trajectory have "
+                             "unequal amount of atoms")
         if isinstance(template, AtomArray):
             array_stack = stack([template])
         else:
