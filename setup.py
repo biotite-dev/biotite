@@ -108,7 +108,6 @@ setup(
     
     install_requires = ["requests",
                         "numpy",
-                        "matplotlib",
                         "msgpack"],
     python_requires = ">=3.4",
     
