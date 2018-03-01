@@ -81,6 +81,7 @@ from .error import *
 from .filter import *
 from .geometry import *
 from .integrity import *
+from .mechanics import *
 from .residues import *
 from .sasa import *
 from .sse import *
