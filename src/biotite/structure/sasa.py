@@ -11,7 +11,7 @@ import numpy as np
 from .adjacency import AdjacencyMap
 from .geometry import distance
 from .util import vector_dot
-from .filter import filter_solvent
+from .filter import filter_solvent, filter_monoatomic_ions
 
 __all__ = ["sasa"]
 
@@ -113,11 +113,13 @@ def sasa(array, **kwargs):
     sasa_filter = sasa_filter & filter
     occl_filter = occl_filter & filter
     if "ignore_ions" in kwargs:
-        ignore_ions = np.array(kwargs["ignore_ions"])
+        ignore_ions = kwargs["ignore_ions"]
     else:
         ignore_ions = True
     if ignore_ions:
-        pass
+        filter = ~filter_monoatomic_ions(array)
+        sasa_filter = sasa_filter & filter
+        occl_filter = occl_filter & filter
     
     if "point_number" in kwargs:
         point_number = int(kwargs["point_number"])
