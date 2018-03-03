@@ -264,7 +264,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
             # First level: The atoms to calculate SASA for
             if not sasa_filter_view[i]:
                 # SASA is not calculated for this atom
-                break
+                continue
             n_accesible = point_number
             atom_x = main_coord[i,0]
             atom_y = main_coord[i,1]
@@ -301,8 +301,8 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                 # Second level: The sphere points for that atom
                 # Transform sphere point to sphere of current atom
                 point_x = sphere_coord[j,0] * radius + atom_x
-                point_y = sphere_coord[j,0] * radius + atom_y
-                point_z = sphere_coord[j,0] * radius + atom_z
+                point_y = sphere_coord[j,1] * radius + atom_y
+                point_z = sphere_coord[j,2] * radius + atom_z
                 for k in range(rel_atom_i):
                     # Third level: Compare point to occluding atoms
                     dist_sq = distance_sq(point_x, point_y, point_z,
@@ -318,13 +318,14 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                         n_accesible -= 1
                         break
             sasa[i] = area_per_point * n_accesible * radius_sq
-        return sasa
     
     finally:
         # Free allocated memory
         for i in range(array_length):
             free(occl_list_ptr[i])
         free(occl_list_ptr)
+    
+    return np.asarray(sasa)
 
 
 cdef inline float32 distance_sq(float32 x1, float32 y1, float32 z1,
