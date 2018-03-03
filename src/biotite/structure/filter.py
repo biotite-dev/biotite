@@ -40,7 +40,7 @@ def filter_monoatomic_ions(array):
     """
     # Exclusively in monoatomic ions,
     # the element name is equal to the residue name
-    return (array.atom_name == array.element)
+    return (array.res_name == array.element)
 
 
 def filter_solvent(array):
