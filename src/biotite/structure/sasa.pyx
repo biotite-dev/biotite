@@ -178,6 +178,11 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                                                            copy=False)
     # Memoryviews for sphere points
     cdef float32[:,:] sphere_coord = sphere_points
+    # Check if any of these arrays are empty to prevent segfault
+    if     main_coord.shape[0]   == 0 \
+        or occl_coord.shape[0]   == 0 \
+        or sphere_coord.shape[0] == 0:
+            raise ValueError("Coordinates are empty")
     # Memoryviews for radii of SASA and occluding atoms
     # their squares and their sum of sqaures
     cdef float32[:] atom_radii = radii
@@ -214,7 +219,8 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # Therefore intersecting atoms are always in the same or adjacent box.
     adj_map = AdjacencyMap(occl_array, np.max(radii[occl_filter])*2)
     # Put indices for occluding atoms in a C-array of C-arrays
-    cdef int64[:] box_indices
+    cdef int[:] box_indices
+    cdef int length
     cdef int max_adj_list_length = 0
     cdef int array_length = array.array_length()
     cdef int* adj_atom_ptr = NULL
@@ -227,22 +233,29 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # Put the rest into a try-finally-block
     # to ensure memory deallocation
     try:
+        # Dry call of 'get_atoms_in_box()'
+        # to get right index array shape
+        box_indices, length = adj_map.get_atoms_in_box(array.coord[0],
+                                                       efficient_mode=True)
         for i in range(array_length):
             if sasa_filter_view[i]:
-                box_indices = adj_map.get_atoms_in_box(array.coord[i])
+                box_indices, length = adj_map.get_atoms_in_box(
+                    array.coord[i], efficient_mode=True,
+                    array_indices=np.asarray(box_indices)
+                )
                 # Array with terminating -1
                 adj_atom_ptr = \
-                    <int*> malloc((box_indices.shape[0] +1) * sizeof(int))
+                    <int*> malloc((length +1) * sizeof(int))
                 if not adj_atom_ptr:
                     raise MemoryError()
                 # Copy box indices
-                for j in range(box_indices.shape[0]):
+                for j in range(length):
                     adj_atom_ptr[j] = <int>box_indices[j]
                 # Needed to determine size of
                 # relevant occluding atom coord array
                 if j > max_adj_list_length:
                     max_adj_list_length = j
-                adj_atom_ptr[box_indices.shape[0]] = -1
+                adj_atom_ptr[length] = -1
             else:
                 adj_atom_ptr = NULL
             occl_list_ptr[i] = adj_atom_ptr

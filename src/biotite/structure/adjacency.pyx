@@ -11,7 +11,6 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
-from .atoms import AtomArray
 import numpy as np
 from .geometry import distance
 
@@ -52,36 +51,33 @@ cdef class AdjacencyMap:
     
     cdef float32[:,:] _coord
     cdef ptr[:,:,:] _boxes
-    cdef ptr[:,:,:] _box_length
+    cdef int[:,:,:] _box_length
     cdef int _boxsize
     cdef float32[:] _min_coord
     cdef float32[:] _max_coord
-    cdef int[:] _box_count
     cdef int _max_box_length
     
-    def __init__(self, AtomArray atom_array not None, int box_size):
+    def __init__(self, atom_array not None, int box_size):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
-        cdef int* box_ptr = 0
+        cdef int* box_ptr = NULL
         cdef int length
-        self._coord = atom_array.coord.astype(np.float32)
+        
+        coord = atom_array.coord.astype(np.float32)
+        self._coord = coord
         self._boxsize = box_size
         # calculate how many boxes are required for each dimension
-        min_coord = np.min(self.array.coord, axis=0).astype(np.float32)
-        max_coord = np.max(self.array.coord, axis=0).astype(np.float32)
+        min_coord = np.min(coord, axis=0).astype(np.float32)
+        max_coord = np.max(coord, axis=0).astype(np.float32)
         self._min_coord = min_coord
         self._max_coord = max_coord
-        self._box_count = ((max_coord - min_coord) // box_size) +1
+        box_count = (((max_coord - min_coord) / box_size) +1).astype(int)
         # ndarray of pointers to C-arrays
         # containing indices to atom array
-        # First deallocate, just to make sure
-        # (Constructor might be called multiple times)
-        if self._boxes is None:
-            deallocate_ptrs(self._boxes)
-        self._boxes = np.zeros(self.box_count, dtype=np.uint64)
+        self._boxes = np.zeros(box_count, dtype=np.uint64)
         # Stores the length of the C-arrays
-        self._box_length = np.zeros(self.box_count, dtype=np.int32)
+        self._box_length = np.zeros(box_count, dtype=np.int32)
         # Fill boxes
         for atom_array_i in range(self._coord.shape[0]):
             x = self._coord[atom_array_i, 0]
@@ -104,7 +100,7 @@ cdef class AdjacencyMap:
             self._box_length[i,j,k] = length
             self._boxes[i,j,k] = <ptr> box_ptr
             
-    def __dealloc__():
+    def __dealloc__(self):
         deallocate_ptrs(self._boxes)
     
     def get_atoms(self, np.ndarray coord, float32 radius):
@@ -131,8 +127,8 @@ cdef class AdjacencyMap:
         get_atoms_in_box
         """
         cdef np.ndarray indices = \
-            self.get_atoms_in_box(coord, int(radius/self.boxsize)+1)
-        cdef np.ndarray sel_coord = np.asarray(self._coord[indices])
+            self.get_atoms_in_box(coord, int(radius/self._boxsize)+1)
+        cdef np.ndarray sel_coord = np.asarray(self._coord)[indices]
         dist = distance(sel_coord, coord)
         return indices[dist <= radius]
     
@@ -200,8 +196,7 @@ cdef class AdjacencyMap:
         cdef int index_array_length = (2*box_r + 1)**3 * self._max_box_length
         cdef int[:] indices
         if not efficient_mode or array_indices is None:
-            indices = np.zeros(index_array_length,
-                                                 dtype=np.int32):
+            indices = np.zeros(index_array_length, dtype=np.int32)
         else:
             # Check if index array has sufficient size and dtype
             if array_indices.dtype != np.int32 \
@@ -210,7 +205,7 @@ cdef class AdjacencyMap:
                                      "is insufficient")
             indices = array_indices
         # Fill index array
-        length = self._get_atoms_in_box(coord.astype(float32, copy=False),
+        length = self._get_atoms_in_box(coord.astype(np.float32, copy=False),
                                         indices, box_r)
         if not efficient_mode:
             return np.asarray(indices[:length])
@@ -220,7 +215,7 @@ cdef class AdjacencyMap:
     
     def _get_atoms_in_box(self,
                           float32[:] coord not None,
-                          int[:] indices not None
+                          int[:] indices not None,
                           int box_r=1):
         cdef int length
         cdef int* ptr
@@ -231,22 +226,20 @@ cdef class AdjacencyMap:
         x = coord[0]
         y = coord[1]
         z = coord[2]
-        if not self._check_coord(x, y, z):
-            raise ValueError("Coordinates are not in range of box")
         self._get_box_index(x, y, z, &i, &j, &k)
         array_i = 0
         # Look into boxes of the indices and adjacent boxes
         # in all 3 dimensions
         for adj_i in range(i-box_r, i+box_r+1):
-            if (adj_i >= 0 and adj_i < shape[0]):
+            if (adj_i >= 0 and adj_i < self._boxes.shape[0]):
                 for adj_j in range(j-box_r, j+box_r+1):
-                    if (adj_j >= 0 and adj_j < shape[1]):
+                    if (adj_j >= 0 and adj_j < self._boxes.shape[1]):
                         for adj_k in range(k-box_r, k+box_r+1):
-                            if (adj_k >= 0 and adj_k < shape[2]):
+                            if (adj_k >= 0 and adj_k < self._boxes.shape[2]):
                                 # Fill with index array
                                 # with indices in box
-                                ptr = <int*>self._boxes[i,j,k]
-                                length = self._box_length[i,j,k]
+                                ptr = <int*>self._boxes[adj_i, adj_j, adj_k]
+                                length = self._box_length[adj_i, adj_j, adj_k]
                                 for box_i in range(length):
                                     indices[array_i] = ptr[box_i]
                                     array_i += 1
@@ -256,9 +249,9 @@ cdef class AdjacencyMap:
     
     cdef inline void _get_box_index(self, float32 x, float32 y, float32 z,
                              int* i, int* j, int* k):
-        i[0] = (x - self._min_coord[0]) // self._boxsize
-        j[0] = (y - self._min_coord[1]) // self._boxsize
-        k[0] = (z - self._min_coord[2]) // self._boxsize
+        i[0] = int((x - self._min_coord[0]) / self._boxsize)
+        j[0] = int((y - self._min_coord[1]) / self._boxsize)
+        k[0] = int((z - self._min_coord[2]) / self._boxsize)
     
     
     cdef inline bint _check_coord(self, float32 x, float32 y, float32 z):
@@ -275,8 +268,8 @@ cdef inline deallocate_ptrs(ptr[:,:,:] ptrs):
     cdef int i, j, k
     cdef int* box_ptr
     # Free box pointers
-    for i in ptrs.shape[0]:
-        for j in ptrs.shape[1]:
-            for k in ptrs.shape[2]:
+    for i in range(ptrs.shape[0]):
+        for j in range(ptrs.shape[1]):
+            for k in range(ptrs.shape[2]):
                 box_ptr = <int*>ptrs[i,j,k]
                 free(box_ptr)
