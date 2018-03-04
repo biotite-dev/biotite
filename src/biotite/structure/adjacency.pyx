@@ -7,13 +7,21 @@ This module allows efficient search of atoms in a defined radius around
 a location.
 """
 
+cimport cython
+cimport numpy as np
+from libc.stdlib cimport realloc, malloc, free
+
+from .atoms import AtomArray
 import numpy as np
 from .geometry import distance
+
+ctypedef np.uint64_t ptr
+ctypedef np.float32_t float32
 
 __all__ = ["AdjacencyMap"]
 
 
-class AdjacencyMap(object):
+cdef class AdjacencyMap:
     """
     This class enables the efficient search of atoms in vicinity of a
     defined location.
@@ -40,28 +48,69 @@ class AdjacencyMap(object):
     
     >>> adj_map = AdjacencyMap(atom_array, box_size=5)
     >>> near_atoms = atom_array[adj_map.get_atoms([1,2,3], radius=7)]
-        
     """
     
-    def __init__(self, atom_array, box_size):
-        self.array = atom_array.copy()
-        self.boxsize = box_size
-        # calculate how many boxes are required for each dimension
-        self.min_coord = np.min(self.array.coord, axis=-2)
-        self.max_coord = np.max(self.array.coord, axis=-2)
-        self.box_count = ((((self.max_coord-self.min_coord) / box_size)+1)
-                          .astype(int))
-        self.boxes = np.zeros(self.box_count, dtype=object)
-        # Fill boxes with empty lists, cannot use ndarray.fill(),
-        # since it fills the entire array with the same list instance
-        for x in range(self.boxes.shape[0]):
-            for y in range(self.boxes.shape[1]):
-                for z in range(self.boxes.shape[2]):
-                    self.boxes[x,y,z] = []
-        for i, pos in enumerate(self.array.coord):
-            self.boxes[self._get_box_index(pos)].append(i)
+    cdef float32[:,:] _coord
+    cdef ptr[:,:,:] _boxes
+    cdef ptr[:,:,:] _box_length
+    cdef int _boxsize
+    cdef float32[:] _min_coord
+    cdef float32[:] _max_coord
+    cdef int[:] _box_count
+    cdef int _max_box_length
     
-    def get_atoms(self, coord, radius):
+    def __init__(self, AtomArray atom_array not None, int box_size):
+        cdef float32 x, y, z
+        cdef int i, j, k
+        cdef int atom_array_i
+        cdef int* box_ptr = 0
+        cdef int length
+        self._coord = atom_array.coord.astype(np.float32)
+        self._boxsize = box_size
+        # calculate how many boxes are required for each dimension
+        min_coord = np.min(self.array.coord, axis=0).astype(np.float32)
+        max_coord = np.max(self.array.coord, axis=0).astype(np.float32)
+        self._min_coord = min_coord
+        self._max_coord = max_coord
+        self._box_count = ((max_coord - min_coord) // box_size) +1
+        # ndarray of pointers to C-arrays
+        # containing indices to atom array
+        self._boxes = np.zeros(self.box_count, dtype=np.uint64)
+        # Stores the length of the C-arrays
+        self._box_length = np.zeros(self.box_count, dtype=np.int32)
+        # Fill boxes
+        for atom_array_i in range(self._coord.shape[0]):
+            x = self._coord[atom_array_i, 0]
+            y = self._coord[atom_array_i, 1]
+            z = self._coord[atom_array_i, 2]
+            # Get box indices for coordinates
+            self._get_box_index(x, y, z, &i, &j, &k)
+            # Increment box length and reallocate
+            length = self._box_length[i,j,k] + 1
+            box_ptr = <int*>self._boxes[i,j,k]
+            box_ptr = <int*>realloc(box_ptr, length * sizeof(int))
+            if not box_ptr:
+                raise MemoryError()
+            # Potentially increase max box length
+            if length > self._max_box_length:
+                self._max_box_length = length
+            # Store atom array index in respective box
+            box_ptr[length-1] = atom_array_i
+            # Store new box pointer and length
+            self._box_length[i,j,k] = length
+            self._boxes[i,j,k] = <ptr> box_ptr
+            
+    def __dealloc__():
+        cdef int i, j, k
+        cdef int* box_ptr
+        # Free box pointers
+        for i in self._boxes.shape[0]:
+            for j in self._boxes.shape[1]:
+                for k in self._boxes.shape[2]:
+                    box_ptr = <int*>self._boxes[i,j,k]
+                    free(box_ptr)
+    
+    def get_atoms(self, np.ndarray coord, float32 radius):
         """
         Search for atoms in vicinity of the given position.
         
@@ -84,12 +133,17 @@ class AdjacencyMap(object):
         --------
         get_atoms_in_box
         """
+        
+        
         indices = self.get_atoms_in_box(coord, int(radius/self.boxsize)+1)
         sel_coord = self.array.coord[indices]
         dist = distance(sel_coord, coord)
         return indices[dist <= radius]
     
-    def get_atoms_in_box(self, coord, box_r=1):
+    def _get_atoms(self, float32[:] coord, float32 radius):
+        pass
+    
+    def get_atoms_in_box(self, np.ndarray coord, int box_r=1):
         """
         Search for atoms in vicinity of the given position.
         
@@ -98,12 +152,14 @@ class AdjacencyMap(object):
         coord : ndarray, dtype=float
             The central coordinates, around which the atoms are
             searched.
-        box_r: float
+        box_r: float, optional
             The radius around `coord` (in amount of boxes), in which the
             atoms are searched. This does not correspond to the
             Euclidian distance used in `get_atoms()`. In this case, all
             atoms in the box corresponding to `coord` and in adjacent
             boxes are returned.
+            By default atoms are searched in the box of `coord` and adjacent
+            boxes.
         
         Returns
         -------
@@ -127,23 +183,44 @@ class AdjacencyMap(object):
                                 atom_indices.extend(self.boxes[x,y,z])
         return np.array(atom_indices)
     
-    def get_atom_array(self):
-        """
-        Get the atom array corresponding to the adjacency map.
+    
+    def _get_atoms_in_box(self, float32[:] coord, int box_r=1):
+        cdef float32 x, y,z
+        cdef int i, j, k
+        cdef int adj_i, adj_j, adj_k
+        cdef int array_i
+        # Pessimistic assumption on index array length requirement
+        cdef int index_array_length = (2*box_r + 1)**3 * self._max_box_length
+        cdef int[:] array_indices = np.zeros(index_array_length,
+                                             dtype=np.int32):
+        x = coord[0]
+        y = coord[1]
+        z = coord[2]
+        if not self._check_coord(x, y, z):
+            raise ValueError("Coordinates are not in range of box")
+        self._get_box_index(x, y, z, &i, &j, &k)
+        for adj_i in range(i-box_r, i+box_r+1):
+            if (adj_i >= 0 and adj_i < shape[0]):
+                for adj_j in range(j-box_r, j+box_r+1):
+                    if (adj_j >= 0 and adj_j < shape[1]):
+                        for adj_k in range(k-box_r, k+box_r+1):
+                            if (adj_k >= 0 and adj_k < shape[2]):
+                                
         
-        Returns
-        -------
-        array : AtomArray
-            The atom array corresponding to the map.
-            
-        See Also
-        --------
-        get_atoms
-        """
-        return self.array
     
-    def _get_box_index(self, coord):
-        return tuple(((coord-self.min_coord) / self.boxsize).astype(int))
     
-    def __str__(self):
-        return(self.boxes)
+    cdef inline void _get_box_index(self, float32 x, float32 y, float32 z,
+                             int* i, int* j, int* k):
+        i[0] = (x - self._min_coord[0]) // self._boxsize
+        j[0] = (y - self._min_coord[1]) // self._boxsize
+        k[0] = (z - self._min_coord[2]) // self._boxsize
+    
+    
+    cdef inline bint _check_coord(self, float32 x, float32 y, float32 z):
+        if x < self._min_coord[0] or x > self._max_coord[0]:
+            return False
+        if y < self._min_coord[1] or y > self._max_coord[1]:
+            return False
+        if z < self._min_coord[2] or z > self._max_coord[2]:
+            return False
+        return True
