@@ -11,24 +11,84 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .error import BadStructureError
+from .geometry import distance
 
 __all__ = ["atom_masses", "mass_of_element", "mass_center", "gyration_radius"]
 
 
 def gyration_radius(array, masses=None):
+    """
+    Compute the radius/radii of gyration of an atom array or stack.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array or stack to calculate the radius/radii of gyration
+        for.
+    
+    Returns
+    -------
+    masses : float, or ndarray, dtype=float
+        If `array` is an `AtomArray`, a single float is returned.
+        If `array` is an `AtomArrayStack`, an `ndarray` containing the
+        radii of gyration for every model is returned.
+    """
     if masses is None:
         masses = atom_masses(array)
-    inertia_moment = np.sum(masses[:,np.newaxis] * array.coord*array.coord,
-                            axis=-2)
+    center = mass_center(array, masses)
+    radii = distance(array, center[:, np.newaxis, :])
+    inertia_moment = np.sum(masses * radii*radii, axis=-1)
     return np.sqrt(inertia_moment / np.sum(masses))
 
 def mass_center(array, masses=None):
+    """
+    Calculate the center(s) of mass of an atom array or stack.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array or stack to calculate the center(s) of mass for.    
+    
+    Returns
+    -------
+    masses : ndarray, ndarray, dtype=float
+        Array containing the the coordinates of the center of mass.
+        If `array` is an `AtomArray`, this will be an length 3
+        `ndarray`; if it is an `AtomArrayStack` with *n* models,
+        a (*n x 3*) `ndarray` is returned.
+    """
     if masses is None:
         masses = atom_masses(array)
     return np.sum(masses[:,np.newaxis] * array.coord, axis=-2) / np.sum(masses)
 
 
 def atom_masses(array):
+    """
+    Obtain the atomic masses for an atom array [1]_.
+    
+    The weights are determined from the *element* annotation array.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array or stack to calculate the atom masses for.    
+    
+    Returns
+    -------
+    masses : np.ndarray, dtype=float
+        Array containing the atom masses.
+        The length is equal to the array length of the array or stack.
+        
+    References
+    ----------
+    
+    .. [1] J Meija, TB Coplen, M Berglund, WA Brand, P De Bièvre,
+       M Gröning, NE Holden, J Irrgeher, RD Loss, T Walczyk
+       and T Prohaska
+       "Atomic weights of the elements 2013 (IUPAC Technical Report)."
+       Pure Appl Chem, 88, 265-291 (2016).
+    
+    """
     masses = np.zeros(array.array_length())
     for i, element in enumerate(array.element):
         try:
