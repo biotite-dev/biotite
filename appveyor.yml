@@ -12,7 +12,6 @@ install:
   - conda install -c anaconda cython
   - conda install -c anaconda pytest
   - conda install -c anaconda numpy
-  - conda install -c conda-forge matplotlib
 
 build: false
 

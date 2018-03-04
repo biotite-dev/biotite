@@ -63,7 +63,7 @@ install:
   - conda install -n biotite-env -c anaconda cython
   - conda install -n biotite-env -c anaconda pytest
   - conda install -n biotite-env -c anaconda numpy
-  - conda install -n biotite-env -c conda-forge matplotlib
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge matplotlib; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda pandas; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
