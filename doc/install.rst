@@ -11,7 +11,6 @@ to *Python* 3.x.
 *Biotite* also requires the following packages:
 
    - **numpy**
-   - **matplotlib**
    - **requests**
    - **msgpack**
 
@@ -26,6 +25,7 @@ forementioned packages.
 Some functions require some extra packages:
 
    - **mdtraj** - Required for trajetory file I/O operations.
+   - **matplotlib** - Required for plotting purposes.
 
 Install from PyPI
 -----------------

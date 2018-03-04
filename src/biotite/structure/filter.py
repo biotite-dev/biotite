@@ -10,8 +10,9 @@ arrays and atom array stacks.
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 
-__all__ = ["filter_solvent", "filter_amino_acids", "filter_backbone",
-           "filter_intersection", "filter_inscode_and_altloc"]
+__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
+           "filter_backbone", "filter_intersection",
+           "filter_inscode_and_altloc"]
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
@@ -19,6 +20,27 @@ _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "MSE", "ASX", "GLX", "SEC", "UNK"]
 
 _solvent_list = ["HOH","SOL"]
+
+
+def filter_monoatomic_ions(array):
+    """
+    Filter all atoms of an atom array, that are monoatomic ions
+    (e.g. sodium or chloride ions).
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        is a monoatomic ion.
+    """
+    # Exclusively in monoatomic ions,
+    # the element name is equal to the residue name
+    return (array.res_name == array.element)
 
 
 def filter_solvent(array):
