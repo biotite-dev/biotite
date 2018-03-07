@@ -194,23 +194,21 @@ cdef class AdjacencyMap:
         # Pessimistic assumption on index array length requirement
         cdef int length
         cdef int index_array_length = (2*box_r + 1)**3 * self._max_box_length
-        cdef int[:] indices
         if not efficient_mode or array_indices is None:
-            indices = np.zeros(index_array_length, dtype=np.int32)
+            array_indices = np.zeros(index_array_length, dtype=np.int32)
         else:
             # Check if index array has sufficient size and dtype
             if array_indices.dtype != np.int32 \
                 or len(array_indices) < index_array_length:
                     raise ValueError("Optionally provided index array"
                                      "is insufficient")
-            indices = array_indices
         # Fill index array
         length = self._get_atoms_in_box(coord.astype(np.float32, copy=False),
-                                        indices, box_r)
+                                        array_indices, box_r)
         if not efficient_mode:
-            return np.asarray(indices[:length])
+            return array_indices[:length]
         else:
-            return np.asarray(indices), length
+            return array_indices, length
     
     
     def _get_atoms_in_box(self,
