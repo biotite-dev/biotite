@@ -63,7 +63,7 @@ install:
   - conda install -n biotite-env -c anaconda cython
   - conda install -n biotite-env -c anaconda pytest
   - conda install -n biotite-env -c anaconda numpy
-  - conda install -n biotite-env -c conda-forge matplotlib
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge matplotlib; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda pandas; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
@@ -90,7 +90,7 @@ deploy:
     secure: ncH32tO1V1vJMgpHY/JJ+TDpFkj0uFzNVeD2tBFq+uCDSRzQo8hiC+kFveciQNr9UuKFyqBySFpjP+g93f9xWcjruzTbT42vhoM6YzddMcQI/yiINWoco1Lk8RZpv6HsWeLXPFzP6BWWwBH+1rF09AXX4hk5nHGOlawM+f1nwCoqZrvPc5mhfN/JytRgUjjVZ1yI9VL77wMakGYsuuBpgjpk1AC5bG2X0aCYSRub7kAl3CYPvrknx38pbtL8d9mMyFwLe1UVxuyhY5PZ1hzk+6Dkjwx0mWQ95TCoTOwPU2ECF81gORVd/HZeQ/xRPYb8mlufy+v7pjUgMRQVMwjRR+e3JYHxoAjbN41WUYZohyIeVGnQ9hlaa59EHoDyGL6hJFqJ2o7E5DoKCGE+ssQ/pAmczPMCf3lG4nhgA80WXo9fcchMqPqB1uX43gv+qWvLy3N8V+pzK9nQpUsjKXKROp5fABIaz56APUaq1UrzaAvPHUlNiixjWd7FCU9nDGig8vGSfGNumBUFOQHnS12eQ0ICzTK7z9SuigkEAkB236AiopD5d0fZyyz9hWvWua22wqBD4kwtIQczFos5JHibv1taWdtnxs+/XAJpcV6EWYdTpNEItejRjtPRv20Ddx+G3176aYKbXWrANk/F4sp/HgGaLR7xUiH1wabd6QS5OUE=
   file:
     - dist/*
-    - doc/_build/doc.tar
+    - doc/_build/doc.zip
   file_glob: true
   on:
     repo: biotite-dev/biotite

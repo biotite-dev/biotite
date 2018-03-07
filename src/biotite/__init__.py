@@ -7,4 +7,4 @@ from .temp import *
 from .copyable import * 
 
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
