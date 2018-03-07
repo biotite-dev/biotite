@@ -220,7 +220,7 @@ cdef class AdjacencyMap:
         cdef int length
         cdef int* ptr
         cdef float32 x, y,z
-        cdef int i, j, k
+        cdef int i=0, j=0, k=0
         cdef int adj_i, adj_j, adj_k
         cdef int array_i, box_i
         x = coord[0]
@@ -246,12 +246,13 @@ cdef class AdjacencyMap:
         # return the actual length of the index array
         return array_i
     
-    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef inline void _get_box_index(self, float32 x, float32 y, float32 z,
                              int* i, int* j, int* k):
-        i[0] = int((x - self._min_coord[0]) / self._boxsize)
-        j[0] = int((y - self._min_coord[1]) / self._boxsize)
-        k[0] = int((z - self._min_coord[2]) / self._boxsize)
+        i[0] = <int>((x - self._min_coord[0]) / self._boxsize)
+        j[0] = <int>((y - self._min_coord[1]) / self._boxsize)
+        k[0] = <int>((z - self._min_coord[2]) / self._boxsize)
     
     
     cdef inline bint _check_coord(self, float32 x, float32 y, float32 z):
