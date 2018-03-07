@@ -103,7 +103,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
        J Phys Chem, 86, 441-451 (1964).
     
     """
-    cdef int i, j, k, adj_atom_i, rel_atom_i
+    cdef int i=0, j=0, k=0, adj_atom_i=0, rel_atom_i=0
     
     cdef np.ndarray sasa_filter
     cdef np.ndarray occl_filter
@@ -218,123 +218,88 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # where two atom can intersect.
     # Therefore intersecting atoms are always in the same or adjacent box.
     adj_map = AdjacencyMap(occl_array, np.max(radii[occl_filter])*2)
-    # Put indices for occluding atoms in a C-array of C-arrays
-    cdef int[:] box_indices
+    cdef np.ndarray box_indices
+    cdef int[:] box_indices_view
     cdef int length
     cdef int max_adj_list_length = 0
     cdef int array_length = array.array_length()
-    cdef int* adj_atom_ptr = NULL
-    cdef int** occl_list_ptr = <int**> malloc(array_length * sizeof(int*))
-    if not occl_list_ptr:
-        raise MemoryError()
-    # Initialize containing pointers with 0 for security reasons
-    for i in range(array_length):
-        occl_list_ptr[i] = NULL
-    # Put the rest into a try-finally-block
-    # to ensure memory deallocation
-    try:
-        # Dry call of 'get_atoms_in_box()'
-        # to get right index array shape
-        box_indices, length = adj_map.get_atoms_in_box(array.coord[0],
-                                                       efficient_mode=True)
-        for i in range(array_length):
-            if sasa_filter_view[i]:
-                box_indices, length = adj_map.get_atoms_in_box(
-                    array.coord[i], efficient_mode=True,
-                    array_indices=np.asarray(box_indices)
-                )
-                # Array with terminating -1
-                adj_atom_ptr = \
-                    <int*> malloc((length +1) * sizeof(int))
-                if not adj_atom_ptr:
-                    raise MemoryError()
-                # Copy box indices
-                for j in range(length):
-                    adj_atom_ptr[j] = <int>box_indices[j]
-                # Needed to determine size of
-                # relevant occluding atom coord array
-                if j > max_adj_list_length:
-                    max_adj_list_length = j
-                adj_atom_ptr[length] = -1
-            else:
-                adj_atom_ptr = NULL
-            occl_list_ptr[i] = adj_atom_ptr
-            
-        # Later on, this array stores coordinates for actual
-        # occluding atoms for a certain atom to calculate the
-        # SASA for
-        # The first three indices of the second axis
-        # are x, y and z, the last one is the squared radius
-        # This list is longer than the maximal length of a list of
-        # adjacent atoms
-        relevant_occl_coord = np.zeros((max_adj_list_length, 4),
-                                       dtype=np.float32)
+    # Dry call of 'get_atoms_in_box()'
+    # to get right index array shape
+    box_indices, length = adj_map.get_atoms_in_box(array.coord[0],
+                                                   efficient_mode=True)
+    max_adj_list_length = len(box_indices)
         
-        # Actual SASA calculation
-        for i in range(array_length):
-            # First level: The atoms to calculate SASA for
-            if not sasa_filter_view[i]:
-                # SASA is not calculated for this atom
-                continue
-            n_accesible = point_number
-            atom_x = main_coord[i,0]
-            atom_y = main_coord[i,1]
-            atom_z = main_coord[i,2]
-            radius = atom_radii[i]
-            radius_sq = atom_radii_sq[i]
-            # Find occluding atoms from list of adjacent atoms
-            adj_atom_ptr = occl_list_ptr[i]
-            j = 0
-            rel_atom_i = 0
-            while adj_atom_ptr[j] != -1:
-                # Remove all atoms, where the distance to the relevant atom
-                # is larger than the sum of the radii,
-                # since those atoms do not touch
-                # If distance is 0, it is the same atom,
-                # and the atom is removed from the list as well
-                adj_atom_i = adj_atom_ptr[j]
-                occl_x = occl_coord[adj_atom_i,0]
-                occl_y = occl_coord[adj_atom_i,1]
-                occl_z = occl_coord[adj_atom_i,2]
-                adj_radius = occl_radii[adj_atom_i]
-                adj_radius_sq = occl_radii_sq[adj_atom_i]
-                dist_sq = distance_sq(atom_x, atom_y, atom_z,
-                                          occl_x, occl_y, occl_z)
-                if dist_sq != 0 \
-                    and dist_sq < (adj_radius+radius) * (adj_radius+radius):
-                        relevant_occl_coord[rel_atom_i,0] = occl_x
-                        relevant_occl_coord[rel_atom_i,1] = occl_y
-                        relevant_occl_coord[rel_atom_i,2] = occl_z
-                        relevant_occl_coord[rel_atom_i,3] = adj_radius_sq
-                        rel_atom_i += 1
-                j += 1
-            for j in range(sphere_coord.shape[0]):
-                # Second level: The sphere points for that atom
-                # Transform sphere point to sphere of current atom
-                point_x = sphere_coord[j,0] * radius + atom_x
-                point_y = sphere_coord[j,1] * radius + atom_y
-                point_z = sphere_coord[j,2] * radius + atom_z
-                for k in range(rel_atom_i):
-                    # Third level: Compare point to occluding atoms
-                    dist_sq = distance_sq(point_x, point_y, point_z,
-                                          relevant_occl_coord[k, 0],
-                                          relevant_occl_coord[k, 1],
-                                          relevant_occl_coord[k, 2])
-                    # Compare squared distance
-                    # to squared radius of occluding atom
-                    # (Radius is relevant_occl_coord[3])
-                    if dist_sq < relevant_occl_coord[k, 3]:
-                        # Point is occluded
-                        # -> Continue with next point
-                        n_accesible -= 1
-                        break
-            sasa[i] = area_per_point * n_accesible * radius_sq
+    # Later on, this array stores coordinates for actual
+    # occluding atoms for a certain atom to calculate the
+    # SASA for
+    # The first three indices of the second axis
+    # are x, y and z, the last one is the squared radius
+    # This list is as long as the maximal length of a list of
+    # adjacent atoms
+    relevant_occl_coord = np.zeros((max_adj_list_length, 4),
+                                   dtype=np.float32)
     
-    finally:
-        # Free allocated memory
-        for i in range(array_length):
-            free(occl_list_ptr[i])
-        free(occl_list_ptr)
+    # Actual SASA calculation
+    for i in range(array_length):
+        # First level: The atoms to calculate SASA for
+        if not sasa_filter_view[i]:
+            # SASA is not calculated for this atom
+            continue
+        n_accesible = point_number
+        atom_x = main_coord[i,0]
+        atom_y = main_coord[i,1]
+        atom_z = main_coord[i,2]
+        radius = atom_radii[i]
+        radius_sq = atom_radii_sq[i]
+        # Find occluding atoms from list of adjacent atoms
+        rel_atom_i = 0
+        box_indices, length = adj_map.get_atoms_in_box(
+            array.coord[0], efficient_mode=True,
+            array_indices=np.asarray(box_indices))
+        box_indices_view = box_indices
+        for j in range(box_indices_view.shape[0]):
+            # Remove all atoms, where the distance to the relevant atom
+            # is larger than the sum of the radii,
+            # since those atoms do not touch
+            # If distance is 0, it is the same atom,
+            # and the atom is removed from the list as well
+            adj_atom_i = box_indices_view[j]
+            occl_x = occl_coord[adj_atom_i,0]
+            occl_y = occl_coord[adj_atom_i,1]
+            occl_z = occl_coord[adj_atom_i,2]
+            adj_radius = occl_radii[adj_atom_i]
+            adj_radius_sq = occl_radii_sq[adj_atom_i]
+            dist_sq = distance_sq(atom_x, atom_y, atom_z,
+                                      occl_x, occl_y, occl_z)
+            if dist_sq != 0 \
+                and dist_sq < (adj_radius+radius) * (adj_radius+radius):
+                    relevant_occl_coord[rel_atom_i,0] = occl_x
+                    relevant_occl_coord[rel_atom_i,1] = occl_y
+                    relevant_occl_coord[rel_atom_i,2] = occl_z
+                    relevant_occl_coord[rel_atom_i,3] = adj_radius_sq
+                    rel_atom_i += 1
+            j += 1
+        for j in range(sphere_coord.shape[0]):
+            # Second level: The sphere points for that atom
+            # Transform sphere point to sphere of current atom
+            point_x = sphere_coord[j,0] * radius + atom_x
+            point_y = sphere_coord[j,1] * radius + atom_y
+            point_z = sphere_coord[j,2] * radius + atom_z
+            for k in range(rel_atom_i):
+                # Third level: Compare point to occluding atoms
+                dist_sq = distance_sq(point_x, point_y, point_z,
+                                      relevant_occl_coord[k, 0],
+                                      relevant_occl_coord[k, 1],
+                                      relevant_occl_coord[k, 2])
+                # Compare squared distance
+                # to squared radius of occluding atom
+                # (Radius is relevant_occl_coord[3])
+                if dist_sq < relevant_occl_coord[k, 3]:
+                    # Point is occluded
+                    # -> Continue with next point
+                    n_accesible -= 1
+                    break
+        sasa[i] = area_per_point * n_accesible * radius_sq
     
     return np.asarray(sasa)
 
