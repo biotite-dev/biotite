@@ -254,8 +254,8 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         # Find occluding atoms from list of adjacent atoms
         rel_atom_i = 0
         box_indices, length = adj_map.get_atoms_in_box(
-            array.coord[0], efficient_mode=True,
-            array_indices=np.asarray(box_indices))
+            np.asarray(main_coord[i]), efficient_mode=True,
+            array_indices=box_indices)
         box_indices_view = box_indices
         for j in range(box_indices_view.shape[0]):
             # Remove all atoms, where the distance to the relevant atom
