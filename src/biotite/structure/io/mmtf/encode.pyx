@@ -16,11 +16,13 @@ ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
-__all__ = ["decode_array"]
+__all__ = ["encode_array"]
 
 
-def decode_array(int codec, bytes raw_bytes, int param):
-    cdef np.ndarray array
+def encode_array(int codec, int param, np.ndarray array):
+    cdef bytes raw_bytes
+    cdef int param = 0
+    cdef int length = 0
     # Pass-through: 32-bit floating-point number array
     if   codec == 1:
         array = np.frombuffer(raw_bytes, dtype=">f4").astype(np.float32)
@@ -92,59 +94,32 @@ def decode_array(int codec, bytes raw_bytes, int param):
         raise ValueError("Unknown codec with ID " + str(codec))
 
 
-def _decode_delta(np.ndarray array):
-    return np.cumsum(array, dtype=np.int32)
-
-
-def _decode_run_length(int32[:] array):
-    cdef int length = 0
-    cdef int i, j
-    cdef int value, repeat
-    # Determine length of output array by summing the run lengths
-    for i in range(1, array.shape[0], 2):
-        length += array[i]
-    cdef int32[:] output = np.zeros(length, dtype=np.int32)
-    # Fill output array
-    j = 0
-    for i in range(0, array.shape[0], 2):
-        value = array[i]
-        repeat = array[i+1]
-        output[j : j+repeat] = value
-        j += repeat
+def _encode_delta(int32[:] array):
+    cdef int32[:] output = np.zeros(array.shape[0])
+    output[0] = array[0]
+    cdef int i = 0
+    for i in range(1, array.shape[0]):
+        output[i] = array[i] - array[i-1]
     return np.asarray(output)
 
 
-ctypedef fused PackedType:
-    int8
-    int16
-def _decode_packed(PackedType[:] array):
-    cdef int min_val, max_val
-    if PackedType is int8:
-        min_val = np.iinfo(np.int8).min
-        max_val = np.iinfo(np.int8).max
-    else:
-        min_val = np.iinfo(np.int16).min
-        max_val = np.iinfo(np.int16).max
-    cdef int i, j
-    cdef int packed_val, unpacked_val
-    # Pessimistic size assumption:
-    # The maximum output array length is the input array length
-    # in case all values are within the type limits
-    cdef int32[:] output = np.zeros(array.shape[0], dtype=np.int32)
-    j = 0
-    unpacked_val = 0
+def _encode_run_length(int32[:] array):
+    # Pessimistic allocation of output array
+    # -> Run length is 1 for every element
+    cdef int32[:] output = np.zeros(array.shape[0] * 2, dtype=np.int32)
+    cdef int i=0, j=0
+    cdef int val = array[0]
+    cdef int run_length = 0
+    cdef int curr_val
     for i in range(array.shape[0]):
-        packed_val = array[i]
-        if packed_val == max_val or packed_val == min_val:
-            unpacked_val += packed_val
+        curr_val = array[i]
+        if curr_val == val:
+            run_length += 1
         else:
-            unpacked_val += packed_val
-            output[j] = unpacked_val
-            unpacked_val = 0
-            j += 1
-    # Trim to correct size and return
-    return np.asarray(output[:j])
-
-
-def _decode_integer(int divisor, np.ndarray array):
-    return np.divide(array, divisor, dtype=np.float32)
+            output[j] = val
+            output[j+1] = run_length
+            j += 2
+            val = curr_val
+            run_length = 0
+    # Trim to correct size
+    return np.asarray(output)[:j]

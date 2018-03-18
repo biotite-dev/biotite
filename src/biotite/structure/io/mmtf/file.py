@@ -9,6 +9,7 @@ import copy
 from ....file import File
 from ...error import BadStructureError
 from .decode import decode_array
+from .encode import encode_array
 
 __all__ = ["MMTFFile"]
 
@@ -96,9 +97,26 @@ class MMTFFile(File):
             length    = struct.unpack(">i", data[4:8 ])[0]
             param     = struct.unpack(">i", data[8:12])[0]
             raw_bytes = data[12:]
+            #print(key, length, len(raw_bytes))
+            print(key, '\t', param, codec)
             return decode_array(codec, raw_bytes, param)
         else:
             return data
+    
+    def __setitem__(self, key, item):
+        if not isinstance(item, tuple) \
+            or not isinstance(item[0], int) \
+            or not isinstance(item[1], np.ndarray):
+                raise TypeError("Item needs to be a tuple containing the codec"
+                                "and the ndarray")
+        codec = item[0]
+        array = item[1]
+        raw_bytes, param, length = encode_array(array)
+        data = struct.pack(">i", codec) \
+             + struct.pack(">i", codec) \
+             + struct.pack(">i", codec) \
+             + raw_bytes
+        self._content[key] = data
     
     def __iter__(self):
         return self._content.__iter__()
