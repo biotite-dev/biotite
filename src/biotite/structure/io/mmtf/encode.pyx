@@ -1,6 +1,7 @@
 # Copyright 2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+from dask.array.ufunc import remainder
 
 cimport cython
 cimport numpy as np
@@ -19,77 +20,90 @@ ctypedef np.float32_t float32
 __all__ = ["encode_array"]
 
 
-def encode_array(int codec, int param, np.ndarray array):
-    cdef bytes raw_bytes
-    cdef int param = 0
-    cdef int length = 0
+def encode_array(np.ndarray array, int codec, int param):
     # Pass-through: 32-bit floating-point number array
     if   codec == 1:
-        array = np.frombuffer(raw_bytes, dtype=">f4").astype(np.float32)
-        return array
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return array.astype(">f4").tobytes()
     # Pass-through: 8-bit signed integer array
     elif codec == 2:
-        array = np.frombuffer(raw_bytes, dtype=">i1").astype(np.int8)
-        return array
+        if array.dtype != np.int8:
+            raise TypeError("Array with dtype 'int8' is required")
+        return array.astype(">i1").tobytes()
     # Pass-through: 16-bit signed integer array
     elif codec == 3:
-        array = np.frombuffer(raw_bytes, dtype=">i2").astype(np.int16)
-        return array
+        if array.dtype != np.int16:
+            raise TypeError("Array with dtype 'int16' is required")
+        return array.astype(">i2").tobytes()
     # Pass-through: 32-bit signed integer array
     elif codec == 4:
-        array = np.frombuffer(raw_bytes, dtype=">i4").astype(np.int32)
-        return array
+        if array.dtype != np.int32:
+            raise TypeError("Array with dtype 'int32' is required")
+        return array.astype(">i4").tobytes()
     # UTF8/ASCII fixed-length string array
     elif codec == 5:
-        array = np.fromstring(raw_bytes, np.dtype("S" + str(param)))
-        return array.astype(np.dtype("U" + str(param)))
+        dtype = np.dtype("U" + str(param))
+        if array.dtype != dtype:
+            raise TypeError("Array with dtype '" + dtype + "' is required")
+        return array.astype(np.dtype("S" + str(param)).tobytes())
     # Run-length encoded character array
     elif codec == 6:
-        array = np.frombuffer(raw_bytes, dtype=">i4").astype(np.int32)
-        return np.frombuffer(_decode_run_length(array), dtype="U1")
+        if array.dtype != np.dtype("U1"):
+            raise TypeError("Array with dtype 'U1' is required")
+        array = _encode_run_length(np.frombuffer(array, dtype=np.int32))
+        return array.astype(">i4").tobytes()
     # Run-length encoded 32-bit signed integer array
     elif codec == 7:
-        array = np.frombuffer(raw_bytes, dtype=">i4").astype(np.int32)
-        return _decode_run_length(array)
+        if array.dtype != np.int32:
+            raise TypeError("Array with dtype 'int32' is required")
+        return _encode_run_length(array).astype(">i4").tobytes()
     # Delta & run-length encoded 32-bit signed integer array
     elif codec == 8:
-        array = np.frombuffer(raw_bytes, dtype=">i4").astype(np.int32)
-        return _decode_delta(
-               _decode_run_length(array))
+        if array.dtype != np.int32:
+            raise TypeError("Array with dtype 'int32' is required")
+        return _encode_run_length(_encode_delta(array)).astype(">i4").tobytes()
     # Integer & run-length encoded 32-bit floating-point number array
     elif codec == 9:
-        array = np.frombuffer(raw_bytes, dtype=">i4").astype(np.int32)
-        return _decode_integer(param, 
-               _decode_run_length(array))
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return _encode_run_length(_encode_integer(param, np.int32, array)) \
+                .astype(">i4").tobytes()
     # Integer & delta encoded
     # & two-byte-packed 32-bit floating-point number array
     elif codec == 10:
-        array = np.frombuffer(raw_bytes, dtype=">i2").astype(np.int16)
-        return _decode_integer(param, 
-               _decode_delta(
-               _decode_packed(array)))
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return _encode_packed(
+                    True,_encode_delta(_encode_integer(param, np.int32, array))
+                ).astype(">i2").tobytes()
     # Integer encoded 32-bit floating-point number array
     elif codec == 11:
-        array = np.frombuffer(raw_bytes, dtype=">i2").astype(np.int16)
-        return _decode_integer(param, array)
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return _encode_integer(param, np.int16, array).astype(">i2").tobytes()
     # Integer & two-byte-packed 32-bit floating-point number array
     elif codec == 12:
-        array = np.frombuffer(raw_bytes, dtype=">i2").astype(np.int16)
-        return _decode_integer(param, 
-               _decode_packed(array))
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return _encode_packed(True, _encode_integer(param, np.int32, array)) \
+                .astype(">i2").tobytes()
     # Integer & one-byte-packed 32-bit floating-point number array
     elif codec == 13:
-        array = np.frombuffer(raw_bytes, dtype=">i1").astype(np.int8)
-        return _decode_integer(param, 
-               _decode_packed(array))
+        if array.dtype != np.float32:
+            raise TypeError("Array with dtype 'float32' is required")
+        return _encode_packed(False, _encode_integer(param, np.int32, array)) \
+                .astype(">i1").tobytes()
     # Two-byte-packed 32-bit signed integer array
     elif codec == 14:
-        array = np.frombuffer(raw_bytes, dtype=">i2").astype(np.int16)
-        return _decode_packed(array)
+        if array.dtype != np.int32:
+            raise TypeError("Array with dtype 'int32' is required")
+        return _encode_packed(True, array).astype(">i2").tobytes()
     # One-byte-packed 32-bit signed integer array
     elif codec == 15:
-        array = np.frombuffer(raw_bytes, dtype=">i1").astype(np.int8)
-        return _decode_packed(array)
+        if array.dtype != np.int32:
+            raise TypeError("Array with dtype 'int32' is required")
+        return _encode_packed(False, array).astype(">i1").tobytes()
     else:
         raise ValueError("Unknown codec with ID " + str(codec))
 
@@ -123,3 +137,50 @@ def _encode_run_length(int32[:] array):
             run_length = 0
     # Trim to correct size
     return np.asarray(output)[:j]
+
+
+def _encode_packed(bint two_byte, int32[:] array):
+    cdef int min_val, max_val
+    cdef int i=0, j=0
+    if two_byte:
+        min_val = np.iinfo(np.int16).min
+        max_val = np.iinfo(np.int16).max
+    else:
+        min_val = np.iinfo(np.int8).min
+        max_val = np.iinfo(np.int8).max
+    # Get length of output array
+    # by summing up required length of each element
+    cdef int number
+    cdef int length = 0
+    for i in range(array.shape[0]):
+        number = array[i]
+        if number < 0:
+            length += number // min_val +1
+        elif number > 0:
+            length += number // max_val +1
+        else:
+            # e = 0
+            length += 1
+    # Fill output
+    cdef int16[:] output = np.zeros(length, dtype=np.int32)
+    cdef int remainder
+    j = 0
+    for i in range(array.shape[0]):
+        remainder = array[i]
+        if remainder < 0:
+            while remainder <= min_val:
+                remainder -= min_val
+                output[j] = min_val
+                j += 1
+        elif remainder > 0:
+            while remainder >= max_val:
+                remainder -= max_val
+                output[j] = max_val
+                j += 1
+        output[j] = remainder
+        j += 1
+    return np.asarray(output)
+
+
+def _encode_integer(int divisor, dtype, np.ndarray array):
+    return np.multiply(array, divisor, dtype=dtype)

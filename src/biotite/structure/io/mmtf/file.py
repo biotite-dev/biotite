@@ -97,26 +97,25 @@ class MMTFFile(File):
             length    = struct.unpack(">i", data[4:8 ])[0]
             param     = struct.unpack(">i", data[8:12])[0]
             raw_bytes = data[12:]
-            #print(key, length, len(raw_bytes))
-            print(key, '\t', param, codec)
             return decode_array(codec, raw_bytes, param)
         else:
             return data
     
     def __setitem__(self, key, item):
-        if not isinstance(item, tuple) \
-            or not isinstance(item[0], int) \
-            or not isinstance(item[1], np.ndarray):
-                raise TypeError("Item needs to be a tuple containing the codec"
-                                "and the ndarray")
-        codec = item[0]
-        array = item[1]
-        raw_bytes, param, length = encode_array(array)
+        if isinstance(item, np.ndarray):
+            raise TypeError("Arrays that need to be encoded must be addeed"
+                            "via 'set_array()'")
+        self._content[key] = item
+    
+    def set_array(self, array, codec, param=0):
+        length = len(array)
+        raw_bytes = encode_array(array, codec, param)
         data = struct.pack(">i", codec) \
-             + struct.pack(">i", codec) \
-             + struct.pack(">i", codec) \
+             + struct.pack(">i", length) \
+             + struct.pack(">i", param) \
              + raw_bytes
-        self._content[key] = data
+        self._content[key] = item
+        
     
     def __iter__(self):
         return self._content.__iter__()
