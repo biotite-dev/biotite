@@ -84,8 +84,24 @@ class MMTFFile(File):
         """
         data = self._content[key]
         if isinstance(data, bytes) and data[0] == 0:
-            codec = struct.unpack(">i", data[0:4 ])[0]
+            codec = struct.unpack(">i", data[0:4])[0]
             return codec
+        else:
+            return None
+    
+    def get_length(self, key):
+        data = self._content[key]
+        if isinstance(data, bytes) and data[0] == 0:
+            param = struct.unpack(">i", data[4:8])[0]
+            return param
+        else:
+            return None
+    
+    def get_param(self, key):
+        data = self._content[key]
+        if isinstance(data, bytes) and data[0] == 0:
+            param = struct.unpack(">i", data[8:12])[0]
+            return param
         else:
             return None
     
@@ -107,14 +123,14 @@ class MMTFFile(File):
                             "via 'set_array()'")
         self._content[key] = item
     
-    def set_array(self, array, codec, param=0):
+    def set_array(self, key, array, codec, param=0):
         length = len(array)
         raw_bytes = encode_array(array, codec, param)
         data = struct.pack(">i", codec) \
              + struct.pack(">i", length) \
              + struct.pack(">i", param) \
              + raw_bytes
-        self._content[key] = item
+        self._content[key] = data
         
     
     def __iter__(self):

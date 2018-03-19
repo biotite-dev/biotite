@@ -46,7 +46,7 @@ def encode_array(np.ndarray array, int codec, int param):
         dtype = np.dtype("U" + str(param))
         if array.dtype != dtype:
             raise TypeError("Array with dtype '" + dtype + "' is required")
-        return array.astype(np.dtype("S" + str(param)).tobytes())
+        return array.astype(np.dtype("S" + str(param))).tobytes()
     # Run-length encoded character array
     elif codec == 6:
         if array.dtype != np.dtype("U1"):
@@ -67,33 +67,38 @@ def encode_array(np.ndarray array, int codec, int param):
     elif codec == 9:
         if array.dtype != np.float32:
             raise TypeError("Array with dtype 'float32' is required")
-        return _encode_run_length(_encode_integer(param, np.int32, array)) \
-                .astype(">i4").tobytes()
+        return _encode_run_length(
+                    _encode_integer(param, array).astype(np.int32)
+                ).astype(">i4").tobytes()
     # Integer & delta encoded
     # & two-byte-packed 32-bit floating-point number array
     elif codec == 10:
         if array.dtype != np.float32:
             raise TypeError("Array with dtype 'float32' is required")
         return _encode_packed(
-                    True,_encode_delta(_encode_integer(param, np.int32, array))
+                    True, _encode_delta(
+                        _encode_integer(param, array).astype(np.int32)
+                    )
                 ).astype(">i2").tobytes()
     # Integer encoded 32-bit floating-point number array
     elif codec == 11:
         if array.dtype != np.float32:
             raise TypeError("Array with dtype 'float32' is required")
-        return _encode_integer(param, np.int16, array).astype(">i2").tobytes()
+        return _encode_integer(param, array).astype(">i2").tobytes()
     # Integer & two-byte-packed 32-bit floating-point number array
     elif codec == 12:
         if array.dtype != np.float32:
             raise TypeError("Array with dtype 'float32' is required")
-        return _encode_packed(True, _encode_integer(param, np.int32, array)) \
-                .astype(">i2").tobytes()
+        return _encode_packed(
+                    True, _encode_integer(param, array).astype(np.int32) 
+                ).astype(">i2").tobytes()
     # Integer & one-byte-packed 32-bit floating-point number array
     elif codec == 13:
         if array.dtype != np.float32:
             raise TypeError("Array with dtype 'float32' is required")
-        return _encode_packed(False, _encode_integer(param, np.int32, array)) \
-                .astype(">i1").tobytes()
+        return _encode_packed(
+                    False, _encode_integer(param, array).astype(np.int32)
+                ).astype(">i1").tobytes()
     # Two-byte-packed 32-bit signed integer array
     elif codec == 14:
         if array.dtype != np.int32:
@@ -109,7 +114,7 @@ def encode_array(np.ndarray array, int codec, int param):
 
 
 def _encode_delta(int32[:] array):
-    cdef int32[:] output = np.zeros(array.shape[0])
+    cdef int32[:] output = np.zeros(array.shape[0], np.int32)
     output[0] = array[0]
     cdef int i = 0
     for i in range(1, array.shape[0]):
@@ -130,15 +135,21 @@ def _encode_run_length(int32[:] array):
         if curr_val == val:
             run_length += 1
         else:
+            # New element -> Write element with run-length
             output[j] = val
             output[j+1] = run_length
             j += 2
             val = curr_val
-            run_length = 0
+            run_length = 1
+    # Write last element
+    output[j] = val
+    output[j+1] = run_length
+    j += 2
     # Trim to correct size
     return np.asarray(output)[:j]
 
 
+@cython.cdivision(True)
 def _encode_packed(bint two_byte, int32[:] array):
     cdef int min_val, max_val
     cdef int i=0, j=0
@@ -162,7 +173,7 @@ def _encode_packed(bint two_byte, int32[:] array):
             # e = 0
             length += 1
     # Fill output
-    cdef int16[:] output = np.zeros(length, dtype=np.int32)
+    cdef int16[:] output = np.zeros(length, dtype=np.int16)
     cdef int remainder
     j = 0
     for i in range(array.shape[0]):
@@ -182,5 +193,5 @@ def _encode_packed(bint two_byte, int32[:] array):
     return np.asarray(output)
 
 
-def _encode_integer(int divisor, dtype, np.ndarray array):
-    return np.multiply(array, divisor, dtype=dtype)
+def _encode_integer(int divisor, np.ndarray array):
+    return np.multiply(array, divisor)
