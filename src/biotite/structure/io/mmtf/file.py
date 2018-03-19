@@ -18,9 +18,6 @@ class MMTFFile(File):
     """
     This class represents a MMTF file.
     
-    This class provides only a parser for MMTF files.
-    Writing MMTF files is not supported at this point.
-    
     When reading a file, the *MessagePack* unpacker is used to create
     a dictionary of the file content.
     This dictionary is accessed by indexing the `MMTFFile` instance
@@ -34,7 +31,7 @@ class MMTFFile(File):
     >>> mmtf_file = MMTFFile()
     >>> mmtf_file.read("path/to/1l2y.mmtf")
     >>> print(mmtf_file["title"])
-    b'NMR Structure of Trp-Cage Miniprotein Construct TC5b'
+    NMR Structure of Trp-Cage Miniprotein Construct TC5b
     >>> print(mmtf_file["chainNameList"])
     ['A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A'
      'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A' 'A'
@@ -54,15 +51,12 @@ class MMTFFile(File):
             The name of the file to be read.
         """
         with open(file_name, "rb") as f:
-            self._content = msgpack.unpackb(f.read())
-        for key in list(self._content.keys()):
-            self._content[key.decode("UTF-8")] = self._content.pop(key)
+            self._content = msgpack.unpackb(f.read(), use_list=True, raw=False)
     
     def write(self, file_name):
-        """
-        Not implemented yet.        
-        """
-        raise NotImplementedError()
+        with open(file_name, "wb") as f:
+            packed_bytes = msgpack.packb(self._content, use_bin_type=False)
+            f.write(packed_bytes)
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
@@ -75,7 +69,7 @@ class MMTFFile(File):
         Parameters
         ----------
         key : str
-            The key for the potentially encoded value
+            The key for the potentially encoded value.
         
         Returns
         -------
