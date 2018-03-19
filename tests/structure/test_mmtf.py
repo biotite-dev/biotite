@@ -15,6 +15,28 @@ import pytest
 from pytest import approx
 
 
+@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+def test_codecs(path):
+    mmtf_file = mmtf.MMTFFile()
+    mmtf_file.read(path)
+    for key in mmtf_file:
+        if mmtf_file.get_codec(key) is not None:
+            codec = mmtf_file.get_codec(key)
+            param = mmtf_file.get_param(key)
+            print(key, codec)
+            array1 = mmtf_file[key]
+            mmtf_file.set_array(key, array1, codec, param)
+            array2 = mmtf_file[key]
+            if array1.dtype == np.float32:
+                if param != 0:
+                    tol = 1/param
+                else:
+                    tol = 0
+                assert np.isclose(array1, array2, atol=tol).all()
+            else:
+                assert (array1 == array2).all()
+
+
 @pytest.mark.xfail(raises=NotImplementedError)
 @pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
 def test_array_conversion(path):
@@ -47,6 +69,7 @@ def test_pdbx_consistency(file_index, is_stack):
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == approx(a2.coord.flatten().tolist())
+
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_extra_fields():
