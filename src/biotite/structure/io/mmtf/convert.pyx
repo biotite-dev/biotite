@@ -90,13 +90,13 @@ def get_structure(file, insertion_code=[], altloc=[],
     
     # Create arrays from 'groupList' list of dictionaries
     cdef list group_list = file["groupList"]
-    cdef list non_hetero_list = [b"L-PEPTIDE LINKING", b"PEPTIDE LINKING",
-                                 b"DNA LINKING", b"RNA LINKING"]
+    cdef list non_hetero_list = ["L-PEPTIDE LINKING", "PEPTIDE LINKING",
+                                 "DNA LINKING", "RNA LINKING"]
     # Determine per-residue-count and maximum count
     # of atoms in each residue
     cdef np.ndarray atoms_per_res = np.zeros(len(group_list), dtype=np.int32)
     for i in range(len(group_list)):
-        atoms_per_res[i] = len(group_list[i][b"atomNameList"])
+        atoms_per_res[i] = len(group_list[i]["atomNameList"])
     cdef int32 max_atoms_per_res = np.max(atoms_per_res)
     #Create the arrays
     cdef np.ndarray res_names = np.zeros(len(group_list), dtype="U3")
@@ -110,11 +110,11 @@ def get_structure(file, insertion_code=[], altloc=[],
     # Fill the arrays
     for i in range(len(group_list)):
         residue = group_list[i]
-        res_names[i] = residue[b"groupName"]
-        hetero_res[i] = (residue[b"chemCompType"] not in non_hetero_list)
-        atom_names[i, :atoms_per_res[i]] = residue[b"atomNameList"]
-        elements[i, :atoms_per_res[i]] = residue[b"elementList"]
-        charges[i, :atoms_per_res[i]] = residue[b"formalChargeList"]
+        res_names[i] = residue["groupName"]
+        hetero_res[i] = (residue["chemCompType"] not in non_hetero_list)
+        atom_names[i, :atoms_per_res[i]] = residue["atomNameList"]
+        elements[i, :atoms_per_res[i]] = residue["elementList"]
+        charges[i, :atoms_per_res[i]] = residue["formalChargeList"]
     
     # Create the atom array (stack)
     cdef int depth, length
