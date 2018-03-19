@@ -39,7 +39,7 @@ class MMTFFile(File):
     """
     
     def __init__(self):
-        self._content = None
+        self._content = {}
     
     def read(self, file_name):
         """
