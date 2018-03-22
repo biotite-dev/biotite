@@ -43,3 +43,4 @@ biotite.egg-info
 
 # Visual studio code project files
 *.code-workspace
+.vscode/*
