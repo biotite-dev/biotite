@@ -40,3 +40,6 @@ biotite.egg-info
 # Ignore Eclipse project files
 .project
 .pydevproject
+
+# Visual studio code project files
+*.code-workspace
