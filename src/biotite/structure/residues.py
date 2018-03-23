@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
@@ -10,8 +10,44 @@ atom level.
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
-__all__ = ["apply_residue_wise", "spread_residue_wise", "get_residues",
-           "get_residue_count"]
+__all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
+           "get_residues", "get_residue_count"]
+
+
+def get_residue_starts(array):
+    res_ids = array.res_id
+    chain_ids = array.chain_ids
+    res_names = array.res_names
+
+    # Maximum length is length of atom array
+    starts = np.zeros(res_ids, dtype=int)
+    starts[0] = 0
+    i = 1
+    # Variables for current values
+    curr_chain_id = chain_ids[0]
+    curr_res_id = res_ids[0]
+    curr_res_name = res_names[0]
+
+    for j in range(array.array_length()):
+        if res_ids[i] != -1:
+            if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
+                starts[i] = j
+                i += 1
+                curr_chain_id = chain_ids[j]
+                curr_res_id   = res_ids[j]
+                curr_res_name = res_names[j]
+        else:
+            # Residue ID = -1 -> Hetero residue
+            # -> Cannot rely on residue ID for residue distinction
+            # -> Fall back on residue names
+            if curr_res_name != res_names[j] or curr_chain_id != chain_ids[j]:
+                starts[i] = j
+                i += 1
+                curr_chain_id = chain_ids[j]
+                curr_res_id   = res_ids[j]
+                curr_res_name = res_names[j]
+    # Trim to correct size
+    return starts[:i]
 
 
 def apply_residue_wise(array, data, function, axis=None):
