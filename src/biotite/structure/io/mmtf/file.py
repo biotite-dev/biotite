@@ -40,6 +40,8 @@ class MMTFFile(File):
     
     def __init__(self):
         self._content = {}
+        self._content["mmtfVersion"] = "1.0.0"
+        self._content["mmtfProducer"] = "UNKNOWN"
     
     def read(self, file_name):
         """

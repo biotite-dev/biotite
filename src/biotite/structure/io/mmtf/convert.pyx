@@ -10,7 +10,7 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
-from ...residues import get_residue_starts()
+from ...residues import get_residue_starts
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -83,11 +83,25 @@ def get_structure(file, insertion_code=[], altloc=[],
     cdef np.ndarray x_coord = file["xCoordList"]
     cdef np.ndarray y_coord = file["yCoordList"]
     cdef np.ndarray z_coord = file["zCoordList"]
-    cdef np.ndarray b_factor = file["bFactorList"]
-    cdef np.ndarray occupancy = file["occupancyList"]
-    cdef np.ndarray altloc_all = file["altLocList"]
-    cdef np.ndarray inscode = file["insCodeList"]
-    cdef np.ndarray atom_ids = file["atomIdList"]
+    cdef np.ndarray b_factor
+    if "b_factor" in extra_fields:
+        b_factor = file["bFactorList"]
+    cdef np.ndarray occupancy
+    if "occupancy" in extra_fields:
+        occupancy = file["occupancyList"]
+    cdef np.ndarray atom_ids
+    if "atom_id" in extra_fields:
+        atom_ids = file["atomIdList"]
+    cdef np.ndarray altloc_all
+    cdef np.ndarray inscode
+    try:
+        altloc_all = file["altLocList"]
+    except KeyError:
+        altloc_all = None
+    try:
+        inscode = file["insCodeList"]
+    except KeyError:
+        inscode = None
     
     # Create arrays from 'groupList' list of dictionaries
     cdef list group_list = file["groupList"]
@@ -141,8 +155,14 @@ def get_structure(file, insertion_code=[], altloc=[],
              axis=1
         ).reshape(depth, length, 3)
         # Create inscode and altloc arrays for the final filtering
-        altloc_array = altloc_all[:length]
-        inscode_array = np.zeros(length, dtype="U1")
+        if altloc_all is not None:
+            altloc_array = altloc_all[:length]
+        else:
+            altloc_array = None
+        if inscode is not None:
+            inscode_array = np.zeros(length, dtype="U1")
+        else:
+            inscode_array = None
         
         extra_charge = False
         if "charge" in extra_fields:
@@ -175,9 +195,14 @@ def get_structure(file, insertion_code=[], altloc=[],
         array.coord[:,1] = y_coord[start_i : stop_i]
         array.coord[:,2] = z_coord[start_i : stop_i]
         # Create inscode and altloc arrays for the final filtering
-        altloc_array = np.array(altloc_all[start_i : stop_i],
-                                dtype="U1")
-        inscode_array = np.zeros(array.array_length(), dtype="U1")
+        if altloc_all is not None:
+            altloc_array = np.array(altloc_all[start_i : stop_i], dtype="U1")
+        else:
+            altloc_array = None
+        if inscode is not None:
+            inscode_array = np.zeros(array.array_length(), dtype="U1")
+        else:
+            inscode_array = None
         
         extra_charge = False
         if "charge" in extra_fields:
@@ -197,8 +222,10 @@ def get_structure(file, insertion_code=[], altloc=[],
     
     # Filter inscode and altloc and return
     # Format arrays for filter function
-    altloc_array[altloc_array == ""] = " "
-    inscode_array[inscode_array == ""] = " "
+    if altloc_array is not None:
+        altloc_array[altloc_array == ""] = " "
+    if inscode_array is not None:
+        inscode_array[inscode_array == ""] = " "
     return array[..., filter_inscode_and_altloc(
         array, insertion_code, altloc, inscode_array, altloc_array
     )]
@@ -254,7 +281,8 @@ def _fill_annotations(int model, array,
         chain_id_for_chain = chain_names[chain_i]
         for j in range(res_per_chain[chain_i]): 
             res_id_for_res = res_ids[res_i]
-            inscode_for_res = res_inscodes[res_i]
+            if res_inscodes is not None:
+                inscode_for_res = res_inscodes[res_i]
             type_i = res_type_i[res_i]
             res_name_for_res = res_names[type_i]
             hetero_for_res = hetero_res[type_i]
@@ -267,7 +295,8 @@ def _fill_annotations(int model, array,
                 element[atom_i]   = elements[type_i][k].upper()
                 if extra_charge:
                     charge[atom_i] = charges[type_i][k]
-                atom_inscodes[atom_i] = inscode_for_res
+                if res_inscodes is not None:
+                    atom_inscodes[atom_i] = inscode_for_res
                 atom_i += 1
             res_i += 1
         chain_i += 1
@@ -284,19 +313,13 @@ def set_structure(file, array, assume_unique=True):
     cdef np.ndarray arr_hetero    = array.hetero
     cdef np.ndarray arr_atom_name = array.atom_name
     cdef np.ndarray arr_element   = array.element
-    
-    ### Convert simple values (like coordinates) ###
-    cdef np.ndarray coord
-    if isinstance(array, AtomArrayStack):
-        coord = array.coord.reshape(
-            (array.stack_depth() * array.array_length(), 3)
-        )
-    else:
-        coord = array.coord
-    file.set_array("xCoordList", coord[:,0], codec=10, param=1000)
-    file.set_array("yCoordList", coord[:,1], codec=10, param=1000)
-    file.set_array("zCoordList", coord[:,2], codec=10, param=1000)
-    file["numAtoms"] = len(coord)
+
+    # Residue start indices
+    # Since the stop of i is the start of i+1,
+    # The exclusive end of the atom array is appended
+    # to enable convenient usage in the following loops
+    cdef np.ndarray starts = np.append(get_residue_starts(array),
+                                       [array_length])
 
     ### Preparing the group list ###
     # List of residues used for setting the file's 'groupList'
@@ -311,18 +334,18 @@ def set_structure(file, array, assume_unique=True):
     cdef int residue_i
     # List of indices to list of residues
     cdef np.ndarray res_types
-    # Residue start indices
-    cdef np.ndarray starts
     # Start and exclusive stop of on residue interval
     cdef int start
     cdef int stop
     # Amount of atoms in a residue
     cdef int res_length
     # Name of a residue
-    cdef str res_name
+    cdef res_name
     if assume_unique:
-        starts = np.append(get_residue_starts(array), [array.array_length()])
-        residue_i_array = np.zeros(starts-1, dtype=np.int32)
+        # 'len(starts)-1' since 'starts' has the end
+        # of the atom array appended
+        residue_i_array = np.zeros(len(starts)-1, dtype=np.int32)
+        res_types = np.zeros(len(starts)-1, dtype=np.int32)
         residues = []
         res_tuple_dict = {}
         for i in range(len(starts)-1):
@@ -331,7 +354,7 @@ def set_structure(file, array, assume_unique=True):
             res_length = stop - start
             res_name = arr_res_name[start]
             res_tuple = (res_name, res_length)
-            residue_i = res_tuple_dict.get(res_tuple, default=-1)
+            residue_i = res_tuple_dict.get(res_tuple, -1)
             if residue_i == -1:
                 # New entry in dictionary
                 curr_residue = {}
@@ -355,16 +378,68 @@ def set_structure(file, array, assume_unique=True):
                 res_types[i] = residue_i
     else:
         raise NotImplementedError()
-
+    
     ### Convert annotation arrays into MMTF arrays ###
     # Pessimistic assumption on length of arrays
     # -> At maximum as large as atom array
-    cdef np.ndarray chain_names = np.zeros(array_length, dtype="U3")
-    cdef int chain_names_i = 0
-    cdef np.ndarray res_ids = np.zeros(array_length, dtype=int)
-    cdef int res_ids_i = 0
-    # Variables for storing current chain and residue ID
-    cdef str curr_chain_id = ""
-    cdef int curr_res_id = -1
-    for i in range(array_length):
-        pass
+    cdef np.ndarray chain_names = np.zeros(array_length, dtype="U4")
+    cdef np.ndarray res_per_chain = np.zeros(array_length, dtype=np.int32)
+    # Variables for storing last and current chain  ID
+    cdef last_chain_id = arr_chain_id[0]
+    cdef curr_chain_id
+    # Counter for chain length
+    cdef int res_counter = 0
+    i = 0
+    j = 0
+    for i in range(len(starts)-1):
+        start = starts[i]
+        curr_chain_id = arr_chain_id[start]
+        if curr_chain_id != last_chain_id:
+            # New chain
+            chain_names[j] = last_chain_id
+            res_per_chain[j] = res_counter
+            res_counter = 1
+            j += 1
+        else:
+            res_counter += 1
+    # Trim to correct size
+    chain_names = chain_names[:j]
+    res_per_chain = res_per_chain[:j]
+    # Residue IDs from residue starts
+    cdef np.ndarray res_ids = arr_res_id[starts[:-1]].astype(np.int32)
+
+    ### Adapt arrays for multiple models
+    cdef int model_count = 1
+    cdef int chains_per_model = len(chain_names)
+    if isinstance(array, AtomArrayStack):
+        # Multi-model
+        model_count = array.stack_depth()
+        chain_names = np.tile(chain_names, model_count)
+        res_per_chain = np.tile(res_per_chain, model_count)
+        res_ids = np.tile(res_ids, model_count)
+        res_types = np.tile(res_types, model_count)
+    
+    ### Put arrays into file ###
+    cdef np.ndarray coord
+    if isinstance(array, AtomArrayStack):
+        coord = array.coord.reshape(
+            (array.stack_depth() * array.array_length(), 3)
+        )
+    else:
+        coord = array.coord
+    file.set_array("xCoordList", coord[:,0], codec=10, param=1000)
+    file.set_array("yCoordList", coord[:,1], codec=10, param=1000)
+    file.set_array("zCoordList", coord[:,2], codec=10, param=1000)
+
+    file["numModels"] = model_count
+    file["chainsPerModel"] = [chains_per_model] * model_count
+    file["numChains"] = len(chain_names)
+    file.set_array("chainNameList", chain_names, codec=5, param=4)
+    file.set_array("chainIdList", chain_names, codec=5, param=4)
+    file["groupsPerChain"] = res_per_chain.tolist()
+    file["numGroups"] = len(res_ids)
+    file.set_array("groupIdList", res_ids, codec=8)
+    file.set_array("sequenceIndexList", res_ids-1, codec=8)
+    file.set_array("groupTypeList", res_types, codec=4)
+    file["groupList"] = residues
+    file["numAtoms"] = model_count * array_length
