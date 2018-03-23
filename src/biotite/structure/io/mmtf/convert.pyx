@@ -313,6 +313,9 @@ def set_structure(file, array, assume_unique=True):
     cdef np.ndarray arr_hetero    = array.hetero
     cdef np.ndarray arr_atom_name = array.atom_name
     cdef np.ndarray arr_element   = array.element
+    cdef np.ndarray arr_charge    = None
+    if "charge" in array.get_annotation_categories():
+        arr_charge = array.charge
 
     # Residue start indices
     # Since the stop of i is the start of i+1,
@@ -325,7 +328,7 @@ def set_structure(file, array, assume_unique=True):
     # List of residues used for setting the file's 'groupList'
     cdef list residues
     # An entry in 'residues'
-    cdef dict curr_residue
+    cdef dict curr_res
     # Stores a tuple of residue name and length for fast lookup in dict
     cdef tuple res_tuple
     # Dictionary with indices to list of residues as values
@@ -357,20 +360,25 @@ def set_structure(file, array, assume_unique=True):
             residue_i = res_tuple_dict.get(res_tuple, -1)
             if residue_i == -1:
                 # New entry in dictionary
-                curr_residue = {}
-                atom_name_list = arr_atom_name[start:stop].tolist()
-                element_list = arr_element[start:stop].tolist()
-                curr_residue["atomNameList"] = atom_name_list
-                curr_residue["elementList"] = element_list
-                curr_residue["groupName"] = res_name
-                if arr_hetero[start]:
-                    curr_residue["chemCompType"] = "NON-POLYMER"
+                curr_res = {}
+                curr_res["atomNameList"] = arr_atom_name[start:stop].tolist()
+                curr_res["elementList"] = arr_element[start:stop].tolist()
+                if arr_charge is not None:
+                    curr_res["formalChargeList"] \
+                        = arr_charge[start:stop].tolist()
                 else:
-                    curr_residue["chemCompType"] = "PEPTIDE LINKING"
+                    curr_res["formalChargeList"] = [0] * (stop-start)
+                curr_res["groupName"] = res_name
+                if arr_hetero[start]:
+                    curr_res["chemCompType"] = "NON-POLYMER"
+                else:
+                    curr_res["chemCompType"] = "PEPTIDE LINKING"
                     # TODO: Differentiate cases of different polymers
+                curr_res["bondAtomList"] = []
+                curr_res["bondOrderList"] = []
                 # Add new residue to list
                 residue_i = len(residues)
-                residues.append(curr_residue)
+                residues.append(curr_res)
                 res_tuple_dict[res_tuple] = residue_i
                 res_types[i] = residue_i
             else:
