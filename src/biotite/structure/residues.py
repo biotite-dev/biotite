@@ -15,6 +15,28 @@ __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
 
 
 def get_residue_starts(array):
+    """
+    Get the indices in an atom array, whcih indicates the beginning of
+    a residue.
+    
+    A new residue starts, either when the residue ID or chain ID
+    changes from one to the next atom.
+    If the residue ID is *-1*, a residue name change, instead of a
+    residue ID change, is interpreted as new residue.
+
+    This method is internally used by all other residue-related
+    functions.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to get the residue starts from.
+        
+    Returns
+    -------
+    starts : ndarray
+        The start indices of resdiues in `array`.
+    """
     chain_ids = array.chain_id
     res_ids = array.res_id
     res_names = array.res_name
@@ -53,7 +75,7 @@ def get_residue_starts(array):
 def apply_residue_wise(array, data, function, axis=None):
     """
     Apply a function to intervals of data, where each interval
-    correspond to one residue.
+    corresponds to one residue.
     
     The function takes an atom array (stack) and an data array
     (`ndarray`) of the same length. The function iterates through the
