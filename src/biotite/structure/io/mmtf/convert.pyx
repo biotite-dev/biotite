@@ -10,6 +10,7 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
+from ...residues import get_residue_starts()
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -272,5 +273,98 @@ def _fill_annotations(int model, array,
         chain_i += 1
                 
 
-def set_structure(file, array):
-    raise NotImplementedError()
+def set_structure(file, array, assume_unique=True):
+    cdef int i=0, j=0
+    cdef array_length = array.array_length()
+    
+    # Get annotation arrays from atom array (stack)
+    cdef np.ndarray arr_chain_id  = array.chain_id
+    cdef np.ndarray arr_res_id    = array.res_id
+    cdef np.ndarray arr_res_name  = array.res_name
+    cdef np.ndarray arr_hetero    = array.hetero
+    cdef np.ndarray arr_atom_name = array.atom_name
+    cdef np.ndarray arr_element   = array.element
+    
+    ### Convert simple values (like coordinates) ###
+    cdef np.ndarray coord
+    if isinstance(array, AtomArrayStack):
+        coord = array.coord.reshape(
+            (array.stack_depth() * array.array_length(), 3)
+        )
+    else:
+        coord = array.coord
+    file.set_array("xCoordList", coord[:,0], codec=10, param=1000)
+    file.set_array("yCoordList", coord[:,1], codec=10, param=1000)
+    file.set_array("zCoordList", coord[:,2], codec=10, param=1000)
+    file["numAtoms"] = len(coord)
+
+    ### Preparing the group list ###
+    # List of residues used for setting the file's 'groupList'
+    cdef list residues
+    # An entry in 'residues'
+    cdef dict curr_residue
+    # Stores a tuple of residue name and length for fast lookup in dict
+    cdef tuple res_tuple
+    # Dictionary with indices to list of residues as values
+    cdef dict res_tuple_dict
+    # Index to list of residues
+    cdef int residue_i
+    # List of indices to list of residues
+    cdef np.ndarray res_types
+    # Residue start indices
+    cdef np.ndarray starts
+    # Start and exclusive stop of on residue interval
+    cdef int start
+    cdef int stop
+    # Amount of atoms in a residue
+    cdef int res_length
+    # Name of a residue
+    cdef str res_name
+    if assume_unique:
+        starts = np.append(get_residue_starts(array), [array.array_length()])
+        residue_i_array = np.zeros(starts-1, dtype=np.int32)
+        residues = []
+        res_tuple_dict = {}
+        for i in range(len(starts)-1):
+            start = starts[i]
+            stop = starts[i+1]
+            res_length = stop - start
+            res_name = arr_res_name[start]
+            res_tuple = (res_name, res_length)
+            residue_i = res_tuple_dict.get(res_tuple, default=-1)
+            if residue_i == -1:
+                # New entry in dictionary
+                curr_residue = {}
+                atom_name_list = arr_atom_name[start:stop].tolist()
+                element_list = arr_element[start:stop].tolist()
+                curr_residue["atomNameList"] = atom_name_list
+                curr_residue["elementList"] = element_list
+                curr_residue["groupName"] = res_name
+                if arr_hetero[start]:
+                    curr_residue["chemCompType"] = "NON-POLYMER"
+                else:
+                    curr_residue["chemCompType"] = "PEPTIDE LINKING"
+                    # TODO: Differentiate cases of different polymers
+                # Add new residue to list
+                residue_i = len(residues)
+                residues.append(curr_residue)
+                res_tuple_dict[res_tuple] = residue_i
+                res_types[i] = residue_i
+            else:
+                # Put already known residue to residue types
+                res_types[i] = residue_i
+    else:
+        raise NotImplementedError()
+
+    ### Convert annotation arrays into MMTF arrays ###
+    # Pessimistic assumption on length of arrays
+    # -> At maximum as large as atom array
+    cdef np.ndarray chain_names = np.zeros(array_length, dtype="U3")
+    cdef int chain_names_i = 0
+    cdef np.ndarray res_ids = np.zeros(array_length, dtype=int)
+    cdef int res_ids_i = 0
+    # Variables for storing current chain and residue ID
+    cdef str curr_chain_id = ""
+    cdef int curr_res_id = -1
+    for i in range(array_length):
+        pass

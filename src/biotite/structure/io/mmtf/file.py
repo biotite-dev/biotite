@@ -125,7 +125,6 @@ class MMTFFile(File):
              + struct.pack(">i", param) \
              + raw_bytes
         self._content[key] = data
-        
     
     def __iter__(self):
         return self._content.__iter__()
