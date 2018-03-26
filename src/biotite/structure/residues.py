@@ -51,7 +51,7 @@ def get_residue_starts(array):
     curr_res_name = res_names[0]
 
     for j in range(array.array_length()):
-        if res_ids[i] != -1:
+        if res_ids[j] != -1:
             if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
                 starts[i] = j
                 i += 1
