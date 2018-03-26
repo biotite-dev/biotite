@@ -79,7 +79,11 @@ def get_structure(file, insertion_code=[], altloc=[],
     cdef int32[:] chains_per_model = np.array(file["chainsPerModel"], np.int32)
     cdef int32[:] res_per_chain = np.array(file["groupsPerChain"], np.int32)
     cdef int32[:] res_type_i = file["groupTypeList"]
-    cdef int32[:] res_ids = np.add(file["sequenceIndexList"],1, dtype=np.int32)
+    cdef np.ndarray index_list = file["sequenceIndexList"]
+    # Sequence index starts at 0, res IDs at 1
+    # -> increment (the hetero residues (-1) exclusive)
+    index_list[index_list != -1] += 1
+    cdef int32[:] res_ids = index_list
     cdef np.ndarray x_coord = file["xCoordList"]
     cdef np.ndarray y_coord = file["yCoordList"]
     cdef np.ndarray z_coord = file["zCoordList"]
@@ -451,7 +455,10 @@ def set_structure(file, array, assume_unique=True):
     file["groupsPerChain"] = res_per_chain.tolist()
     file["numGroups"] = len(res_ids)
     file.set_array("groupIdList", res_ids, codec=8)
-    file.set_array("sequenceIndexList", res_ids-1, codec=8)
+     # Sequence index starts at 0, res IDs at 1
+     # -> decrement (the hetero residues (-1) exclusive)
+    res_ids[res_ids != -1] -= 1
+    file.set_array("sequenceIndexList", res_ids, codec=8)
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
