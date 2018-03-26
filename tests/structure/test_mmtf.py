@@ -39,7 +39,7 @@ def test_codecs(path):
 
 @pytest.mark.parametrize("path, single_model",
                          itertools.product(glob.glob(join(data_dir, "*.mmtf")),
-                                           ["False, True"])
+                                           [False, True])
                         )
 def test_array_conversion(path, single_model):
     if single_model:
