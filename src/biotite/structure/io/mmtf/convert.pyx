@@ -410,6 +410,8 @@ def set_structure(file, array, assume_unique=True):
             # New chain
             chain_names[j] = last_chain_id
             res_per_chain[j] = res_counter
+            last_chain_id = curr_chain_id
+            # Reset residue-per-chain counter
             res_counter = 1
             j += 1
         else:
