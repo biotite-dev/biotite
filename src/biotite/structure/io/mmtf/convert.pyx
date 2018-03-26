@@ -410,6 +410,10 @@ def set_structure(file, array, assume_unique=True):
             j += 1
         else:
             res_counter += 1
+    # Add last element
+    chain_names[j] = last_chain_id
+    res_per_chain[j] = res_counter
+    j += 1
     # Trim to correct size
     chain_names = chain_names[:j]
     res_per_chain = res_per_chain[:j]
@@ -432,9 +436,9 @@ def set_structure(file, array, assume_unique=True):
     if isinstance(array, AtomArrayStack):
         coord = array.coord.reshape(
             (array.stack_depth() * array.array_length(), 3)
-        )
+        ).astype(np.float32, copy=False)
     else:
-        coord = array.coord
+        coord = array.coord.astype(np.float32, copy=False)
     file.set_array("xCoordList", coord[:,0], codec=10, param=1000)
     file.set_array("yCoordList", coord[:,1], codec=10, param=1000)
     file.set_array("zCoordList", coord[:,2], codec=10, param=1000)
