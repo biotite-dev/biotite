@@ -273,8 +273,8 @@ class SubstitutionMatrix(object):
         
         Returns
         -------
-        db_list : list
-            List of matrix names in the internal database.
+        matrix_dict : dict
+            A dictionary representing the substitution matrix.
         """
         lines = string.split("\n")
         lines = [line for line in lines if len(line) != 0 and line[0] != "#"]
@@ -300,8 +300,8 @@ class SubstitutionMatrix(object):
         
         Returns
         -------
-        db_list : list
-            List of matrix names in the internal database.
+        matrix_dict : dict
+            A dictionary representing the substitution matrix.
         """
         filename = "{:}/{:}.mat".format(SubstitutionMatrix._db_dir,
                                         matrix_name)
