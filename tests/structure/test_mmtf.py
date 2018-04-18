@@ -83,7 +83,6 @@ def test_pdbx_consistency(file_index, is_stack):
            approx(a2.coord.flatten().tolist(), abs=1e-3)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_extra_fields():
     path = join(data_dir, "1l2y.mmtf")
     mmtf_file = mmtf.MMTFFile()
