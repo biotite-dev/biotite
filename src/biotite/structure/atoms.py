@@ -382,9 +382,6 @@ class Atom(object):
                .format(hetero, self.chain_id, self.res_id, self.res_name,
                        self.atom_name, self.element,
                        self.coord[0], self.coord[1], self.coord[2])
-        for value in self._annot.values():
-            string += str(value) + "\t"
-        return string + "{:7.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
