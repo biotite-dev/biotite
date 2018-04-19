@@ -39,8 +39,8 @@ cdef class AdjacencyMap:
         The `AtomArray` to create the `AdjacencyMap` for.
     box_size: float
         The coordinate interval each box has for x, y and z axis.
-        The amount of boxes depend on the protein size and the
-        `box_size`.
+        The amount of boxes depends on the range of coordinatesin the
+        `atom_array` and the `box_size`.
             
     Examples
     --------
@@ -52,12 +52,12 @@ cdef class AdjacencyMap:
     cdef float32[:,:] _coord
     cdef ptr[:,:,:] _boxes
     cdef int[:,:,:] _box_length
-    cdef int _boxsize
+    cdef float _boxsize
     cdef float32[:] _min_coord
     cdef float32[:] _max_coord
     cdef int _max_box_length
     
-    def __init__(self, atom_array not None, int box_size):
+    def __init__(self, atom_array not None, float box_size):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
