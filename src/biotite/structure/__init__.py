@@ -76,6 +76,7 @@ visualisation.
 
 from .adjacency import *
 from .atoms import *
+from .bonds import *
 from .compare import *
 from .error import *
 from .filter import *
