@@ -163,6 +163,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 raise IndexError("Expected array length "
                                  + str(self._array_length)
                                  + ", but got " + str(len(value)) )
+            if value.shape[-1] != 3:
+                raise IndexError("Expected 3 coordinates for each atom")
             self._coord = value
         # This condition is required, since otherwise 
         # call of the next one would result

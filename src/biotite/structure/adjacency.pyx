@@ -64,6 +64,13 @@ cdef class AdjacencyMap:
         cdef int* box_ptr = NULL
         cdef int length
         
+        self._boxes = None
+        if box_size <= 0:
+            raise ValueError("Box size must be greater than 0")
+        if atom_array.coord is None:
+            raise ValueError("Atom array must not be empty")
+        if np.isnan(atom_array.coord).any():
+            raise ValueError("Atom array contains NaN values")
         coord = atom_array.coord.astype(np.float32)
         self._coord = coord
         self._boxsize = box_size
@@ -101,7 +108,8 @@ cdef class AdjacencyMap:
             self._boxes[i,j,k] = <ptr> box_ptr
             
     def __dealloc__(self):
-        deallocate_ptrs(self._boxes)
+        if self._boxes is not None:
+            deallocate_ptrs(self._boxes)
     
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
