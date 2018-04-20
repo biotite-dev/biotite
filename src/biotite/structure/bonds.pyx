@@ -40,13 +40,13 @@ class BondList(Copyable):
     sanitized.
     """
 
-    def __init__(self, int atom_count, np.ndarray bonds=None):
+    def __init__(self, uint32 atom_count, np.ndarray bonds=None):
+        self._atom_count = atom_count
         if bonds is not None:
             if (bonds[:,:2] >= atom_count).any():
                 raise ValueError("Index {:d} in bonds is too large "
                                  "for atom count ({:d})"
                                  .format(np.max(bonds[:,:2]), atom_count))
-            self._atom_count = atom_count
             if bonds.shape[1] == 3:
                 # input contains bonds (index 0 and 1)
                 # including the bond type value (index 3)
@@ -70,14 +70,16 @@ class BondList(Copyable):
         else:
             # Create empty bond list
             self._bonds = np.zeros((0, 3), dtype=np.uint32)
+            self._max_bonds_per_atom = 0
 
     def __copy_create__(self):
         # Create empty bond list to prevent
         # unnecessary removal of redundant atoms
         # and calculation of maximum bonds per atom
-        return BondList()
+        return BondList(self._atom_count)
     
     def __copy_fill__(self, clone):
+        # The bonds are added here
         clone._bonds = self._bonds.copy()
         clone._max_bonds_per_atom = self._max_bonds_per_atom
     
@@ -166,7 +168,18 @@ class BondList(Copyable):
         # option than the repetitive call of _get_max_bonds_per_atom()
 
     def __add__(self, bond_list):
-        pass
+        cdef np.ndarray other_bonds = bond_list.as_array()
+        other_bonds = bond_list.as_array()
+        # Offset the indices (consistent with addition of AtomArray)
+        other_bonds[:,:2] += self._atom_count
+        cdef np.ndarray merged_bonds \
+            = np.concatenate([self.as_array(), other_bonds])
+        cdef uint32 merged_count = self._atom_count + bond_list._atom_count
+        cdef merged_bond_list =  BondList(merged_count)
+        merged_bond_list._bonds = merged_bonds
+        merged_bond_list._max_bonds_per_atom \
+            = merged_bond_list._get_max_bonds_per_atom()
+        return merged_bond_list
 
     def __getitem__(self, index):
         pass
