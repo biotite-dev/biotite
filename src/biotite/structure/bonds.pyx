@@ -18,6 +18,7 @@ from ..copyable import Copyable
 ctypedef np.uint64_t ptr
 ctypedef np.uint32_t uint32
 ctypedef np.uint8_t uint8
+ctypedef np.int64_t int64
 
 __all__ = ["BondList"]
 
@@ -175,14 +176,56 @@ class BondList(Copyable):
         cdef np.ndarray merged_bonds \
             = np.concatenate([self.as_array(), other_bonds])
         cdef uint32 merged_count = self._atom_count + bond_list._atom_count
-        cdef merged_bond_list =  BondList(merged_count)
+        cdef merged_bond_list = BondList(merged_count)
         merged_bond_list._bonds = merged_bonds
         merged_bond_list._max_bonds_per_atom \
             = merged_bond_list._get_max_bonds_per_atom()
         return merged_bond_list
 
     def __getitem__(self, index):
-        pass
+        cdef copy = self.copy()
+        cdef uint32[:,:] all_bonds_v = copy._bonds
+        # Boolean mask representation of the index
+        cdef np.ndarray mask
+        cdef uint8[:] mask_v
+        # Boolean mask for removal of bonds
+        cdef np.ndarray removal_filter
+        cdef uint8[:] removal_filter_v
+        cdef np.ndarray offsets
+        cdef uint32[:] offsets_v
+        cdef int i
+        cdef uint32* index1_ptr
+        cdef uint32* index2_ptr
+        if isinstance(index, int):
+            return copy.get_bonds(index)
+        else:
+            mask = _to_bool_mask(index, length=copy._atom_count)
+            offsets = np.cumsum(~mask.astype(bool, copy=False),
+                                dtype=np.uint32)
+            removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
+            mask_v = mask
+            offests_v = offsets
+            removal_filter_v = removal_filter
+            # If an atom in a bond is not masked,
+            # the bond is removed from the list
+            # If an atom is masked,
+            # its index value is decreased by the respective offset
+            # The offset is neccessary, removing atoms in an AtomArray
+            # decreases the index of the following atoms
+            for i in range(all_bonds_v.shape[0]):
+                index1_ptr = &all_bonds_v[i,0]
+                index2_ptr = &all_bonds_v[i,1]
+                if mask_v[index1_ptr[0]] and mask_v[index2_ptr[0]]:
+                    index1_ptr[0] -= offests_v[index1_ptr[0]]
+                    index2_ptr[0] -= offests_v[index2_ptr[0]]
+                else:
+                    removal_filter_v[i] = False
+            # Remove bonds, where at least one atom was removed
+            # by the input index
+            copy._bonds = copy._bonds[removal_filter.astype(bool, copy=False)]
+            copy._atom_count = len(np.nonzero(mask)[0])
+            copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
+            return copy
 
     def _get_max_bonds_per_atom(self):
         cdef int i
@@ -265,3 +308,34 @@ cdef inline void _sort(uint32* index1_ptr, uint32* index2_ptr):
         swap = index1_ptr[0]
         index1_ptr[0] = index2_ptr[0]
         index2_ptr[0] = swap
+
+def _to_bool_mask(object index, int length):
+    """
+    Convert an index of arbitrary type into a boolean mask
+    with given length
+    """
+    cdef int i=0, j=0
+    cdef int64[:] index_array
+    cdef uint8[:] bool_mask
+    if isinstance(index, np.ndarray):
+        if index.dtype == np.bool:
+            # Index is already boolean mask -> simply return
+            return index
+        elif index.dtype == np.int:
+            # Index is an index array
+            # -> construct a boolean mask from it
+            index_array = index
+            bool_mask = np.zeros(length, dtype=np.uint8)
+            # Flip mask to true for every index in index array
+            for i in range(index_array.shape[0]):
+                j = index_array[i]
+                bool_mask[j] = True
+            return np.asarray(bool_mask)
+    else:
+        # Any other index type -> construct an intermediate index array
+        array = np.arange(length)
+        array = array[index]
+        if not isinstance(array, np.ndarray):
+            raise TypeError("A single integer is not a valid index "
+                            "for this method")
+        return _to_bool_mask(array, length)
