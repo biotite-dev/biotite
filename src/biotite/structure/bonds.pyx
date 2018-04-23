@@ -303,7 +303,7 @@ cdef inline bint _in_array(uint32* array, uint32 atom_index, int array_length):
 
 cdef inline void _sort(uint32* index1_ptr, uint32* index2_ptr):
     cdef uint32 swap
-    if index1_ptr > index2_ptr:
+    if index1_ptr[0] > index2_ptr[0]:
         # Swap indices
         swap = index1_ptr[0]
         index1_ptr[0] = index2_ptr[0]
@@ -319,8 +319,8 @@ def _to_bool_mask(object index, int length):
     cdef uint8[:] bool_mask
     if isinstance(index, np.ndarray):
         if index.dtype == np.bool:
-            # Index is already boolean mask -> simply return
-            return index
+            # Index is already boolean mask -> simply return as uint8
+            return index.astype(np.uint8, copy=False)
         elif index.dtype == np.int:
             # Index is an index array
             # -> construct a boolean mask from it
