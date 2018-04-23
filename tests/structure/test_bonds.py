@@ -3,7 +3,10 @@
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
 import biotite.structure as struc
+import biotite.structure.io as strucio
 import numpy as np
+from os.path import join
+from .util import data_dir
 import pytest
 
 @pytest.fixture
@@ -95,5 +98,19 @@ def test_indexing(bond_list):
                                             [0, 2, 0],
                                             [2, 3, 0]]
 
-def test_on_structure(bond_list):
-    pass
+def test_atom_array_consistency():
+    array = strucio.get_structure_from(join(data_dir, "1l2y.mmtf"))[0]
+    ca = array[array.atom_name == "CA"]
+    # Just for testing, does not refelct real bonds
+    bond_list = struc.BondList(ca.array_length(), 
+        np.array([(0,1),(2,8),(5,15),(1,5),(0,9),(3,18),(2,9)])
+    )
+    # The bonds, should always point to the same atoms (same res_id),
+    # irrespective of indexing
+    ids1 = ca.res_id[bond_list.as_array()[:,:2].flatten()]
+    # Some random boolean mask as index
+    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=np.bool)
+    ca = ca[mask]
+    bond_list = bond_list[mask]
+    ids2 = ca.res_id[bond_list.as_array()[:,:2].flatten()]
+    assert ids1.tolist() == ids2.tolist()
