@@ -35,6 +35,8 @@ class BondType(IntEnum):
     AROMATIC = 5
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 class BondList(Copyable):
     """
     A bond list stores indices of atoms
