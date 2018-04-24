@@ -449,6 +449,18 @@ class AtomArray(_AtomArrayBase):
     Inserting or appending an `AtomArray` into another `AtomArray` is
     done with the '+' operator. Only the annotation categories, which
     are existing in both arrays, are transferred to the new array.
+
+    Optionally, an `AtomArray` can store chemical bond information via
+    a `BondList` object. It can be accessed using the `bonds` attribute.
+    If no bond information is available, `bonds` is *None*.
+    Consequently the bond information can be removed from the
+    `AtomArray`, by setting `bonds` to *None*.
+    When indexing the `AtomArray` the atom indics in the associated
+    `BondList` are updated as well, hence the indices in the `BondList`
+    will always point to the same atoms.
+    If two `AtomArray` instances are concatenated, the resulting
+    `AtomArray` will contain the merged `BondList` if at least one of
+    the operands contains bond information.
     
     Parameters
     ----------

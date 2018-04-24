@@ -37,8 +37,75 @@ class BondType(IntEnum):
 
 class BondList(Copyable):
     """
-    Input array may contain redundant bonds, which are automatically
-    sanitized.
+    A bond list stores indices of atoms
+    (usually of an `AtomArray` or `AtomArrayStack`)
+    that form chemical bonds together with the type (or order) of the
+    bond.
+
+    Internally the bonds are stored as *n x 3* `ndarray`. For each row,
+    the first column specifies the index of the first atom, the second
+    column the index of the second atom involved in the bond.
+    The third column stores an integer that is interpreted as member
+    of the the `BondType` enum, that specifies the order of the bond.
+
+    When indexing a `BondList`, the index is not forwarded to the
+    internal `ndarray`. Instead the indexing behavior is consistent with
+    indexing an `AtomArray` or `AtomArrayStack`:
+    Bonds with at least one atom index that is not covered by the index
+    are removed, atom indices that occur after an uncovered atom index
+    move up.
+    Effectively, this means that after indexing an `AtomArray` and a
+    `BondList` with the same index, the atom indices in the `BondList`
+    will still point to the same atoms in the `AtomArray` before and
+    after indexing.
+
+    The same consistency applies to merging `BondList` instances via the
+    '+' operator: The atom indices of the second `BondList` are
+    increased by the atom count of the first `BondList`.
+    
+    Parameters
+    ----------
+    atom_count : int
+        A positive integer, that specifies the amount of atoms the
+        `BondList` refers to
+        (usually the length of an atom array (stack)).
+        Effectively, this value is the exclusive maximum for the indices
+        stored in the `BondList`.
+    bonds : ndarray, shape=(n,2) or shape=(n,3), dtype=int, optional
+        This array contains the indices of atoms which are bonded:
+        For each row, the first column specifies the first atom,
+        the second row the second atom involved in a chemical bond.
+        If an *n x 3* array is provided, the additional column
+        specifies a `BondType` instead of `BondType.ANY`.
+        By default, the created `BondList` is empty.
+    
+    Notes
+    -----
+    When initially providing the bonds as `ndarray`, the input is
+    sanitized: Redundant bonds are removed, and each bond entry is
+    sorted so that the lower one of the two atom indices is in the first
+    column.
+    
+    Examples
+    --------
+
+    Construct a `BondList`, where a central atom (index 1) is connected
+    to three other atoms (index 0, 3 and 4):
+
+    >>> bond_list = BondList(5, np.array([(1,0),(1,3),(1,4)]))
+    >>> print(bond_list)
+    ... [[0 1 0]
+    ...  [1 3 0]
+    ...  [1 4 0]]
+
+    Remove the first atom (index 0) via indexing:
+    The bond containing index 0 is removed and all other indices move up
+    (indices are decreased by one):
+
+    >>> bond_list = bond_list[1:]
+    >>> print(bond_list)
+    ... [[0 2 0]
+    ...  [0 3 0]]
     """
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
@@ -96,6 +163,9 @@ class BondList(Copyable):
     
     def as_array(self):
         return self._bonds.copy()
+    
+    def get_atom_count(self):
+        return self._atom_count
     
     def get_bonds(self, uint32 atom_index):
         cdef int i=0, j=0
