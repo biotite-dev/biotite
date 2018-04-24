@@ -200,14 +200,16 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             attr.append(name)
             
     def _subarray(self, index):
+        # Index is one dimensional (boolean mask, index array)
         new_coord = self._coord[..., index, :]
         new_length = new_coord.shape[-2]
         if isinstance(self, AtomArray):
             new_object = AtomArray(new_length)
-        if isinstance(self, AtomArrayStack):
+        elif isinstance(self, AtomArrayStack):
             new_depth = new_coord.shape[-3]
             new_object = AtomArrayStack(new_depth, new_length)
         new_object._coord = new_coord
+        new_object._bonds = self._bonds[index]
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
                                              .__getitem__(index))
@@ -230,6 +232,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 self._annot[name] = np.delete(self._annot[name], index, axis=0)
             self._coord = np.delete(self._coord, index, axis=-2)
             self._array_length = self._coord.shape[-2]
+            if self._bonds is not None:
+                mask = np.ones(self._bonds.get_atom_count(), dtype=bool)
+                mask[index] = False
+                self._bonds = self._bonds[mask]
         else:
             raise IndexError("Index must be integer")
     
@@ -341,6 +347,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def _copy_annotations(self, clone):
         for name in self._annot:
             clone._annot[name] = np.copy(self._annot[name])
+        if self._bonds is not None:
+            clone._bonds = self._bonds.copy()
     
 
 class Atom(object):
@@ -563,7 +571,7 @@ class AtomArray(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `NumPy` accepts are valid.
+            All index types *NumPy* accepts, are valid.
         
         Returns
         -------
@@ -1021,12 +1029,14 @@ def stack(arrays):
         # Check if all arrays share equal annotations
         if not array.equal_annotations(arrays[0]):
             raise ValueError("The arrays annotations "
-                             "do not fit match each other") 
+                             "do not fit match each other")
     array_stack = AtomArrayStack(array_count, arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays] 
     array_stack._coord = np.stack(coord_list, axis=0)
+    # Take bond list from first array
+    array_stack._bonds = arrays[0]._bonds
     return array_stack
 
 
