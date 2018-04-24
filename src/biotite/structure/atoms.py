@@ -9,6 +9,7 @@ This module contains the main types of the `Structure` subpackage:
 
 import numpy as np
 import abc
+from .bonds import BondList
 from ..copyable import Copyable
 
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
@@ -28,6 +29,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._annot = {}
         self._array_length = length
         self._coord = None
+        self._bonds = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
         self.add_annotation("res_name", dtype="U3")
@@ -143,6 +145,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         if attr == "coord":
             return self._coord
+        if attr == "bonds":
+            return self._bonds
         elif attr in self._annot:
             return self._annot[attr]
         else:
@@ -160,12 +164,24 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if not isinstance(value, np.ndarray):
                 raise TypeError("Value must be ndarray")
             if value.shape[-2] != self._array_length:
-                raise IndexError("Expected array length "
-                                 + str(self._array_length)
-                                 + ", but got " + str(len(value)) )
+                raise IndexError("Expected array length {:d}, but got {:d}"
+                                 .format(self._array_length, len(value)) )
             if value.shape[-1] != 3:
                 raise IndexError("Expected 3 coordinates for each atom")
             self._coord = value
+        if attr == "bonds":
+            if isinstance(value, BondList):
+                if value.get_atom_count() != self._array_length:
+                    raise IndexError("Array length is {:d}, "
+                                    "but bond list has {:d} atoms"
+                                    .format(self._array_length, 
+                                            value.get_atom_count()) )
+                self._bonds = value
+            elif value is None:
+                # Remove bond list
+                self._bonds = None
+            else:
+                raise TypeError("Value must be BondList")
         # This condition is required, since otherwise 
         # call of the next one would result
         # in indefinite calls of __setattr__
@@ -179,6 +195,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def __dir__(self):
         attr = super().__dir__()
         attr.append("coord")
+        attr.append("bonds")
         for name in self._annot.keys():
             attr.append(name)
             
@@ -304,6 +321,16 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        # Concatenate bonds lists,
+        # if at least one of them contains bond information
+        if self._bonds is not None or array._bonds is not None:
+            bonds1 = self._bonds
+            bonds2 = array._bonds
+            if bonds1 is None:
+               bonds1 = BondList(self._array_length)
+            if bonds2 is None:
+                bonds2 = BondList(array._array_length)
+            concat._bonds = bonds1 + bonds2
         return concat
     
     def __copy_fill__(self, clone):
@@ -435,6 +462,9 @@ class AtomArray(_AtomArrayBase):
     coord : ndarray, dtype=float, shape=(n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
+    bonds: BondList or None
+        A `BondList`, specifying the indices of atoms
+        that form a chemical bond.
     
     Examples
     --------
@@ -632,7 +662,7 @@ class AtomArrayStack(_AtomArrayBase):
     coordinate array is 3-D (m x n x 3).
     
     Indexing works similar to `AtomArray`, with the difference, that two
-    index dimension are possible: The first index dimension specifies
+    index dimensions are possible: The first index dimension specifies
     the array(s), the second index dimension specifies the atoms in each
     array (same as the index in `AtomArray`). Using a single integer as
     first dimension index returns a single `AtomArray` instance.
@@ -658,6 +688,13 @@ class AtomArrayStack(_AtomArrayBase):
     coord : ndarray, dtype=float, shape=(m,n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
+    bonds: BondList or None
+        A `BondList`, specifying the indices of atoms
+        that form a chemical bond.
+    
+    See also
+    --------
+    AtomArray
     
     Examples
     --------
