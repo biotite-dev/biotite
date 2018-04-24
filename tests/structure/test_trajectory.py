@@ -29,5 +29,4 @@ def test_PDBx_consistency(format):
     for cat in array1. get_annotation_categories():
         assert array1.get_annotation(cat).tolist() == \
                array2.get_annotation(cat).tolist()
-        print(array1.coord[0,0], array2.coord[0,0])
         assert array1.coord == pytest.approx(array2.coord)
