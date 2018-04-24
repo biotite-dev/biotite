@@ -96,4 +96,3 @@ def test_extra_fields():
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
-    assert stack1 == stack2
