@@ -209,7 +209,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             new_depth = new_coord.shape[-3]
             new_object = AtomArrayStack(new_depth, new_length)
         new_object._coord = new_coord
-        new_object._bonds = self._bonds[index]
+        if self._bonds is not None:
+            new_object._bonds = self._bonds[index]
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
                                              .__getitem__(index))
