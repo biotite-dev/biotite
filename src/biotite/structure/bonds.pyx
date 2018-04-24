@@ -274,7 +274,7 @@ class BondList(Copyable):
                                 dtype=np.uint32)
             removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
             mask_v = mask
-            offests_v = offsets
+            offsets_v = offsets
             removal_filter_v = removal_filter
             # If an atom in a bond is not masked,
             # the bond is removed from the list
@@ -286,8 +286,8 @@ class BondList(Copyable):
                 index1_ptr = &all_bonds_v[i,0]
                 index2_ptr = &all_bonds_v[i,1]
                 if mask_v[index1_ptr[0]] and mask_v[index2_ptr[0]]:
-                    index1_ptr[0] -= offests_v[index1_ptr[0]]
-                    index2_ptr[0] -= offests_v[index2_ptr[0]]
+                    index1_ptr[0] -= offsets_v[index1_ptr[0]]
+                    index2_ptr[0] -= offsets_v[index2_ptr[0]]
                 else:
                     removal_filter_v[i] = False
             # Remove bonds, where at least one atom was removed
