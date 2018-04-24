@@ -366,6 +366,15 @@ class BondList(Copyable):
             copy._atom_count = len(np.nonzero(mask)[0])
             copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
             return copy
+    
+    def __eq__(self, item):
+        if not isinstance(item, BondList):
+            return False
+        if self._atom_count != item._atom_count:
+            return False
+        if np.array_equal(self._bonds, item._bonds):
+            return False
+        return True
 
     def _get_max_bonds_per_atom(self):
         cdef int i
