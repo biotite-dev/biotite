@@ -60,6 +60,8 @@ class BondList(Copyable):
     `BondList` with the same index, the atom indices in the `BondList`
     will still point to the same atoms in the `AtomArray` before and
     after indexing.
+    If a `BondList` is indexed with single integer as index,
+    `get_bonds()` will be called with the index as parameter.
 
     The same consistency applies to merging `BondList` instances via the
     '+' operator: The atom indices of the second `BondList` are
