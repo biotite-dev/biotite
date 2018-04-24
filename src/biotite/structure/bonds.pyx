@@ -155,7 +155,15 @@ class BondList(Copyable):
     
     def offset_indices(self, int offset):
         """
-        Implicitly this increases the internal atom count.
+        Increase all atom indices in the `BondList` by the given offset.
+        
+        Implicitly this increases the atom count.
+
+        Parameters
+        ----------
+        offset : int
+            The atom indices are increased by this value.
+            Must be positive.
         """
         if offset < 0:
             raise ValueError("Offest must be positive")
@@ -164,12 +172,50 @@ class BondList(Copyable):
         self._atom_count += offset
     
     def as_array(self):
+        """
+        Obtain a copy of the internal `ndarray`.
+
+        Returns
+        -------
+        array : ndarray, shape=(n,3), dtype=np.uint32
+            Copy of the internal `ndarray`.
+            For each row, the first column specifies the index of the
+            first atom, the second column the index of the second atom
+            involved in the bond.
+            The third column stores the `BondType`.
+        """
         return self._bonds.copy()
     
     def get_atom_count(self):
+        """
+        Get the atom count.
+
+        Returns
+        -------
+        atom_count : int
+            The atom count.
+        """
         return self._atom_count
     
     def get_bonds(self, uint32 atom_index):
+        """
+        Obtain the indices of the atoms bonded to the atom with the
+        given index as well as the corresponding bond types.
+
+        Parameters
+        ----------
+        atom_index : int
+            The index of the atom to get the bonds for.
+        
+        Returns
+        -------
+        bonds : np.ndarray, dtype=np.uint32
+            The indices of connected atoms.
+        bond_types : np.ndarray, dtype=np.uint8
+            Array of integers, interpreted as `BondType` instances.
+            This array specifies the type (or order) of the bonds to
+            the connected atoms.
+        """
         cdef int i=0, j=0
         cdef uint32[:,:] all_bonds_v = self._bonds
         # Pessimistic array allocation:
@@ -198,6 +244,18 @@ class BondList(Copyable):
         return bonds, bond_types
     
     def add_bond(self, uint32 index1, uint32 index2, bond_type=BondType.ANY):
+        """
+        Add a bond to the `BondList`.
+
+        If the bond is already existent, only the bond type is updated.
+
+        Parameters
+        ----------
+        index1, index2 : int
+            The indices of the atoms to create a bond for.
+        bond_type : BondType or int, optional
+            The type of the bond. Default is `BondType.ANY`.
+        """
         if index1 >= self._atom_count or index2 >= self._atom_count:
             raise ValueError("Index {:d} in new bond is too large "
                                 "for atom count ({:d})"
@@ -225,6 +283,16 @@ class BondList(Copyable):
             self._max_bonds_per_atom = self._get_max_bonds_per_atom()
 
     def remove_bond(self, uint32 index1, uint32 index2):
+        """
+        Remove a bond from the `BondList`.
+
+        If the bond is not existent in the `BondList`, nothing happens.
+
+        Parameters
+        ----------
+        index1, index2 : int
+            The indices of the atoms whose bond should be removed.
+        """
         _sort(&index1, &index2)
         # Find the bond in bond list
         cdef int i
