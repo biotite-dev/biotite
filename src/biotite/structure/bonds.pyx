@@ -315,13 +315,15 @@ class BondList(Copyable):
             = np.concatenate([self._bonds, bond_list._bonds])
         # Offset the indices of appended bonds list
         # (consistent with addition of AtomArray)
-        other_bonds[self._atom_count:, :2] += self._atom_count
+        merged_bonds[self._atom_count:, :2] += self._atom_count
         cdef uint32 merged_count = self._atom_count + bond_list._atom_count
-        cdef merged_bonds = BondList(merged_count)
-        merged_bonds._bonds = merged_bonds
-        merged_bonds._max_bonds_per_atom \
-            = max(self._max_bonds_per_atom, merged_bonds._max_bonds_per_atom
-        return merged_bonds
+        cdef merged_bond_list = BondList(merged_count)
+        # Array is not used in constructor to prevent unnecessary
+        # maximum and redundant bond calculation
+        merged_bond_list._bonds = merged_bonds
+        merged_bond_list._max_bonds_per_atom \
+            = max(self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom)
+        return merged_bond_list
 
     def __getitem__(self, index):
         cdef copy = self.copy()
