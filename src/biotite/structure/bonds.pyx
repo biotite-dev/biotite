@@ -312,7 +312,6 @@ class BondList(Copyable):
 
     def __add__(self, bond_list):
         cdef np.ndarray other_bonds = bond_list.as_array()
-        other_bonds = bond_list.as_array()
         # Offset the indices (consistent with addition of AtomArray)
         other_bonds[:,:2] += self._atom_count
         cdef np.ndarray merged_bonds \
