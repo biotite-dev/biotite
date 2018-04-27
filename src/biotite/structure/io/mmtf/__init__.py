@@ -10,4 +10,5 @@ than the text based file formats.
 """
 
 from .file import *
-from .convert import *
+from .convertfile import *
+from .convertarray import *
