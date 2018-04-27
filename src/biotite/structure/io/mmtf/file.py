@@ -57,7 +57,7 @@ class MMTFFile(File):
     
     def write(self, file_name):
         with open(file_name, "wb") as f:
-            packed_bytes = msgpack.packb(self._content, use_bin_type=False)
+            packed_bytes = msgpack.packb(self._content, use_bin_type=True)
             f.write(packed_bytes)
     
     def __copy_fill__(self, clone):
@@ -118,6 +118,9 @@ class MMTFFile(File):
             raise TypeError("Arrays that need to be encoded must be addeed"
                             "via 'set_array()'")
         self._content[key] = item
+    
+    def __delitem__(self, key):
+        del self._content[key]
     
     def set_array(self, key, array, codec, param=0):
         length = len(array)
