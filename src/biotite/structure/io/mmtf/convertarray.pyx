@@ -192,20 +192,6 @@ def set_structure(file, array):
     _delete_record(file, "secStructList")
     _delete_record(file, "insCodeList")
 
-    _delete_record(file, "unitCell")
-    _delete_record(file, "spaceGroup")
-    _delete_record(file, "structureId")
-    _delete_record(file, "title")
-    _delete_record(file, "depositionDate")
-    _delete_record(file, "releaseDate")
-    _delete_record(file, "ncsOperatorList")
-    _delete_record(file, "bioAssemblyList")
-    _delete_record(file, "entityList")
-    _delete_record(file, "experimentalMethods")
-    _delete_record(file, "resolution")
-    _delete_record(file, "rFree")
-    _delete_record(file, "rWork")
-
     ### Put arrays into file ###
     cdef np.ndarray coord
     if isinstance(array, AtomArrayStack):
