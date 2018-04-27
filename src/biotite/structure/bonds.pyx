@@ -369,6 +369,9 @@ class BondList(Copyable):
             copy._atom_count = len(np.nonzero(mask)[0])
             copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
             return copy
+    
+    def __str__(self):
+        return str(self.as_array())
 
     def _get_max_bonds_per_atom(self):
         cdef int i
