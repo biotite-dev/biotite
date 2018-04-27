@@ -22,8 +22,12 @@ ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
+__all__ = ["set_structure"]
 
-def set_structure(file, array, assume_unique=True):
+
+def set_structure(file, array):
+    cdef bint include_bonds = (array.bonds is not None)
+    
     cdef int i=0, j=0
     cdef array_length = array.array_length()
     
@@ -65,48 +69,70 @@ def set_structure(file, array, assume_unique=True):
     cdef int res_length
     # Name of a residue
     cdef res_name
-    if assume_unique:
-        # 'len(starts)-1' since 'starts' has the end
-        # of the atom array appended
-        residue_i_array = np.zeros(len(starts)-1, dtype=np.int32)
-        res_types = np.zeros(len(starts)-1, dtype=np.int32)
-        residues = []
-        res_tuple_dict = {}
-        for i in range(len(starts)-1):
-            start = starts[i]
-            stop = starts[i+1]
-            res_length = stop - start
-            res_name = arr_res_name[start]
-            res_tuple = (res_name, res_length)
-            residue_i = res_tuple_dict.get(res_tuple, -1)
-            if residue_i == -1:
-                # New entry in dictionary
-                curr_res = {}
-                curr_res["atomNameList"] = arr_atom_name[start:stop].tolist()
-                curr_res["elementList"] = arr_element[start:stop].tolist()
-                if arr_charge is not None:
-                    curr_res["formalChargeList"] \
-                        = arr_charge[start:stop].tolist()
-                else:
-                    curr_res["formalChargeList"] = [0] * (stop-start)
-                curr_res["groupName"] = res_name
-                if arr_hetero[start]:
-                    curr_res["chemCompType"] = "NON-POLYMER"
-                else:
-                    curr_res["chemCompType"] = "PEPTIDE LINKING"
-                    # TODO: Differentiate cases of different polymers
+    # BondList for inter-residue bonds
+    # intra-residue bonds are successively removed
+    if include_bonds:
+        inter_bonds = array.bonds.copy()
+    # 'len(starts)-1' since 'starts' has the end
+    # of the atom array appended
+    residue_i_array = np.zeros(len(starts)-1, dtype=np.int32)
+    res_types = np.zeros(len(starts)-1, dtype=np.int32)
+    residues = []
+    # Dictionary maps (name, length) tuples to indices in residue list
+    # (later groupList)
+    res_tuple_dict = {}
+    for i in range(len(starts)-1):
+        start = starts[i]
+        stop = starts[i+1]
+        res_length = stop - start
+        res_name = arr_res_name[start]
+        # Get intra-residue bonds of this residue
+        if include_bonds:
+            intra_bonds = array.bonds[start:stop]
+        # Check if the residue does already exist
+        # (same name and length)
+        res_tuple = (res_name, res_length)
+        residue_i = res_tuple_dict.get(res_tuple, -1)
+        if residue_i == -1:
+            # If it does not exist, create a new entry in dictionary
+            curr_res = {}
+            curr_res["atomNameList"] = arr_atom_name[start:stop].tolist()
+            curr_res["elementList"] = [e.capitalize() for e
+                                       in arr_element[start:stop]]
+            if arr_charge is not None:
+                curr_res["formalChargeList"] \
+                    = arr_charge[start:stop].tolist()
+            else:
+                curr_res["formalChargeList"] = [0] * (stop-start)
+            curr_res["groupName"] = res_name
+            if arr_hetero[start]:
+                curr_res["chemCompType"] = "NON-POLYMER"
+            else:
+                curr_res["chemCompType"] = "PEPTIDE LINKING"
+                # TODO: Differentiate cases of different polymers
+            # Add intra-residue bonds
+            if include_bonds:
+                intra_bonds = array.bonds[start:stop]
+                bond_array = intra_bonds.as_array()
+                curr_res["bondAtomList"] = bond_array[:,:2].flatten().tolist()
+                curr_res["bondOrderList"] = bond_array[:,2].tolist()
+            else:
                 curr_res["bondAtomList"] = []
                 curr_res["bondOrderList"] = []
-                # Add new residue to list
-                residue_i = len(residues)
-                residues.append(curr_res)
-                res_tuple_dict[res_tuple] = residue_i
-                res_types[i] = residue_i
-            else:
-                # Put already known residue to residue types
-                res_types[i] = residue_i
-    else:
-        raise NotImplementedError()
+            # Add new residue to list
+            residue_i = len(residues)
+            residues.append(curr_res)
+            res_tuple_dict[res_tuple] = residue_i
+        # Remove intra-residue bonds from all bonds
+        # to obtain inter-residue bonds
+        # If the residue is already known is irrelevant for this case
+        if include_bonds:
+            # Offset is required to obtain original indices
+            # for bond removal
+            intra_bonds.offset_indices(start)
+            inter_bonds.remove_bonds(intra_bonds)
+        # Put new or already known residue to sequence of residue types
+        res_types[i] = residue_i
     
     ### Convert annotation arrays into MMTF arrays ###
     # Pessimistic assumption on length of arrays
@@ -153,7 +179,33 @@ def set_structure(file, array, assume_unique=True):
         res_per_chain = np.tile(res_per_chain, model_count)
         res_ids = np.tile(res_ids, model_count)
         res_types = np.tile(res_types, model_count)
-    
+
+    ### Remove arrays from file ###
+    # Arrays are removed when they are optional
+    # and when setting the structure information invalidates its content
+    _delete_record(file, "bondAtomList")
+    _delete_record(file, "bondOrderList")
+    _delete_record(file, "bFactorList")
+    _delete_record(file, "atomIdList")
+    _delete_record(file, "altLocList")
+    _delete_record(file, "occupancyList")
+    _delete_record(file, "secStructList")
+    _delete_record(file, "insCodeList")
+
+    _delete_record(file, "unitCell")
+    _delete_record(file, "spaceGroup")
+    _delete_record(file, "structureId")
+    _delete_record(file, "title")
+    _delete_record(file, "depositionDate")
+    _delete_record(file, "releaseDate")
+    _delete_record(file, "ncsOperatorList")
+    _delete_record(file, "bioAssemblyList")
+    _delete_record(file, "entityList")
+    _delete_record(file, "experimentalMethods")
+    _delete_record(file, "resolution")
+    _delete_record(file, "rFree")
+    _delete_record(file, "rWork")
+
     ### Put arrays into file ###
     cdef np.ndarray coord
     if isinstance(array, AtomArrayStack):
@@ -181,3 +233,38 @@ def set_structure(file, array, assume_unique=True):
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
+
+    ### Add inter-residue bonds ###
+    if include_bonds:
+        all_inter_bonds = inter_bonds
+        # Repeat the inter-residue bonds for each additional model
+        for i in range(model_count-1):
+            all_inter_bonds += inter_bonds
+        bond_array = all_inter_bonds.as_array()
+        file.set_array("bondAtomList",
+                       bond_array[:,:2].flatten().astype(np.int32),
+                       codec=4)
+        file.set_array("bondOrderList",
+                       bond_array[:,2].astype(np.int8),
+                       codec=2)
+        file["numBonds"] = array.bonds.get_bond_count() * model_count
+    else:
+        file["numBonds"] = 0
+    
+    ### Add additional information ###
+    # Only set additional information, if not already set
+    try:
+        val = file["mmtfVersion"]
+    except KeyError:
+        file["mmtfVersion"] = "1.0.0"
+    try:
+        val = file["mmtfProducer"]
+    except KeyError:
+        file["mmtfProducer"] = "UNKNOWN"
+
+
+def _delete_record(file, record):
+    try:
+        del file[record]
+    except:
+        pass
