@@ -22,7 +22,7 @@ ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
-__all__ = ["get_structure", "set_structure"]
+__all__ = ["get_structure"]
 
     
 def get_structure(file, insertion_code=[], altloc=[],
@@ -372,9 +372,5 @@ def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
     inter_bonds[:,2] = bond_types
     inter_bond_list = BondList(atom_count, inter_bonds)
     inter_bond_list = inter_bond_list[model_start : model_stop]
-    global_bond_list = BondList(
-        model_stop - model_start,
-        np.concatenate([inter_bond_list.as_array(),
-                        intra_bond_list.as_array()], axis=0)
-    )
+    global_bond_list = inter_bond_list.merge(intra_bond_list)
     return global_bond_list
