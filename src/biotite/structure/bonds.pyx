@@ -313,18 +313,9 @@ class BondList(Copyable):
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
             = np.concatenate([self._bonds, bond_list._bonds])
-        print(self)
-        print("")
-        print(bond_list)
-        print("")
-        print(merged_bonds)
-        print("")
         # Offset the indices of appended bonds list
         # (consistent with addition of AtomArray)
         merged_bonds[len(self._bonds):, :2] += self._atom_count
-        print(self._atom_count)
-        print(merged_bonds)
-        print("\n")
         cdef uint32 merged_count = self._atom_count + bond_list._atom_count
         cdef merged_bond_list = BondList(merged_count)
         # Array is not used in constructor to prevent unnecessary
