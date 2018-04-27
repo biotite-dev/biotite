@@ -8,6 +8,7 @@ cimport numpy as np
 import numpy as np
 from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
+from ...bonds import BondList
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
@@ -25,7 +26,7 @@ __all__ = ["get_structure", "set_structure"]
 
     
 def get_structure(file, insertion_code=[], altloc=[],
-                  model=None, extra_fields=[]):
+                  model=None, extra_fields=[], include_bonds=False):
     """
     Get an `AtomArray` or `AtomArrayStack` from the MMTF file.
     
@@ -183,6 +184,13 @@ def get_structure(file, insertion_code=[], altloc=[],
                           chain_names, chains_per_model, res_per_chain,
                           res_type_i, res_ids, atoms_per_res, res_names,
                           hetero_res, atom_names, elements, charges)
+        
+        if include_bonds:
+            array.bonds = _create_bond_list(
+                1, file["bondAtomList"], file["bondOrderList"],
+                0, length, file["numAtoms"], group_list, res_type_i,
+                atoms_per_res, res_per_chain, chains_per_model
+            )
     
     else:
         length = _get_model_length(model, res_type_i, chains_per_model,
@@ -223,6 +231,12 @@ def get_structure(file, insertion_code=[], altloc=[],
                           chain_names, chains_per_model, res_per_chain,
                           res_type_i, res_ids, atoms_per_res, res_names,
                           hetero_res, atom_names, elements, charges)
+        if include_bonds:
+            array.bonds = _create_bond_list(
+                model, file["bondAtomList"], file["bondOrderList"],
+                start_i, stop_i, file["numAtoms"], group_list, res_type_i,
+                atoms_per_res, res_per_chain, chains_per_model
+            )
     
     # Filter inscode and altloc and return
     # Format arrays for filter function
@@ -304,6 +318,66 @@ def _fill_annotations(int model, array,
                 atom_i += 1
             res_i += 1
         chain_i += 1
+
+
+def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
+                      int model_start, int model_stop, int atom_count,
+                      list group_list, int32[:] res_type_i,
+                      int32[:] atoms_per_res,
+                      int32[:] res_per_chain, int32[:] chains_per_model):
+    cdef int i=0, j=0
+    
+    # Determine per-residue-count and maximum count
+    # of bonds in each residue
+    cdef int32[:] bonds_per_res = np.zeros(len(group_list), dtype=np.int32)
+    for i in range(len(group_list)):
+        bonds_per_res[i] = len(group_list[i]["bondOrderList"])
+    cdef int32 max_bonds_per_res = np.max(bonds_per_res)
+
+    # Create arrays for intra-residue bonds and bond types
+    cdef np.ndarray intra_bonds = np.zeros(
+        (len(group_list), max_bonds_per_res, 3), dtype=np.uint32
+    )
+    # Array for intermediate storing
+    cdef np.ndarray bonds_in_residue
+    # Dictionary for groupList entry
+    cdef dict residue
+    # Fill the array
+    for i in range(len(group_list)):
+        residue = group_list[i]
+        bonds_in_residue = np.array(residue["bondAtomList"], dtype=np.uint32)
+        intra_bonds[i, :bonds_per_res[i], :2] \
+            = bonds_in_residue.reshape((len(bonds_in_residue)//2, 2))
+        intra_bonds[i, :bonds_per_res[i], 2] = residue["bondOrderList"]
+
+    # Unify intra-residue bonds to one BondList
+    cdef int chain_i=0, res_i=0
+    cdef int type_i
+    intra_bond_list = BondList(0)
+    for i in range(chains_per_model[model-1]):
+        for j in range(res_per_chain[chain_i]): 
+            type_i = res_type_i[res_i]
+            bond_list_per_res = BondList(
+                atoms_per_res[type_i],
+                intra_bonds[type_i, :bonds_per_res[type_i]]
+            )
+            intra_bond_list += bond_list_per_res
+            res_i += 1
+        chain_i += 1
+    
+    # Add inter-residue bonds to BondList
+    cdef np.ndarray inter_bonds = np.zeros((len(bond_types), 3),
+                                           dtype=np.uint32)
+    inter_bonds[:,:2] = bonds.reshape((len(bond_types), 2))
+    inter_bonds[:,2] = bond_types
+    inter_bond_list = BondList(atom_count, inter_bonds)
+    inter_bond_list = inter_bond_list[model_start : model_stop]
+    global_bond_list = BondList(
+        model_stop - model_start,
+        np.concatenate([inter_bond_list.as_array(),
+                        intra_bond_list.as_array()], axis=0)
+    )
+    return global_bond_list
                 
 
 def set_structure(file, array, assume_unique=True):
