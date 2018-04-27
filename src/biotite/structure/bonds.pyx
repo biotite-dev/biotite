@@ -198,6 +198,9 @@ class BondList(Copyable):
             The atom count.
         """
         return self._atom_count
+
+    def get_bond_count(self):
+        return len(self._bonds)
     
     def get_bonds(self, uint32 atom_index):
         """
@@ -352,7 +355,6 @@ class BondList(Copyable):
         merged_bond_list._max_bonds_per_atom \
             = max(self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom)
         return merged_bond_list
-
 
     def __getitem__(self, index):
         cdef copy = self.copy()
