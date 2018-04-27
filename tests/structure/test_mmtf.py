@@ -23,7 +23,6 @@ def test_codecs(path):
         if mmtf_file.get_codec(key) is not None:
             codec = mmtf_file.get_codec(key)
             param = mmtf_file.get_param(key)
-            print(key, codec)
             array1 = mmtf_file[key]
             mmtf_file.set_array(key, array1, codec, param)
             array2 = mmtf_file[key]
@@ -66,7 +65,6 @@ cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
                           [False, True])
                         )
 def test_pdbx_consistency(file_index, is_stack):
-    print("ID:", basename(cif_paths[file_index])[:-4])
     model = None if is_stack else 1
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(mmtf_paths[file_index])
