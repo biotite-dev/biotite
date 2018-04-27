@@ -310,6 +310,34 @@ class BondList(Copyable):
         # in 'get_bonds()', the slightly larger memory usage is a better
         # option than the repetitive call of _get_max_bonds_per_atom()
 
+    def remove_bonds(self, bond_list):
+        cdef int i=0, j=0
+        # All bonds in the own BondList
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        # The bonds that should be removed
+        cdef uint32[:,:] rem_bonds_v = bond_list._bonds
+        cdef np.ndarray mask = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
+        cdef uint8[:] mask_v = mask
+        for i in range(all_bonds_v.shape[0]):
+            for j in range(rem_bonds_v.shape[0]):
+                if      all_bonds_v[i,0] == rem_bonds_v[j,0] \
+                    and all_bonds_v[i,1] == rem_bonds_v[j,1]:
+                        mask_v[i] = False
+        # Remove the bonds
+        self._bonds = self._bonds[mask.astype(np.bool, copy=False)]
+        # The maximum bonds per atom is not recalculated
+        # (see 'remove_bond())
+        #for bond in bond_list._bonds:
+        #    self.remove_bond(bond[0], bond[1])
+
+    def merge(self, bond_list):
+        return BondList(
+            max(self._atom_count, bond_list._atom_count),
+            np.concatenate([self.as_array(),
+                            bond_list.as_array()],
+                            axis=0)
+        )
+
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
             = np.concatenate([self._bonds, bond_list._bonds])
@@ -324,6 +352,7 @@ class BondList(Copyable):
         merged_bond_list._max_bonds_per_atom \
             = max(self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom)
         return merged_bond_list
+
 
     def __getitem__(self, index):
         cdef copy = self.copy()
