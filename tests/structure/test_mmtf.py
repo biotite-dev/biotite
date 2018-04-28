@@ -47,10 +47,10 @@ def test_array_conversion(path, single_model):
         model = None
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model)
+    a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
-    a2 = mmtf.get_structure(mmtf_file, model=model)
+    a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
