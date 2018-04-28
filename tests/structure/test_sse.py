@@ -16,7 +16,6 @@ def test_sse():
     array = file.get_structure()[0]
     sse = struc.annotate_sse(array, "A")
     sse_str = "".join(sse.tolist())
-    print("".join(sse.tolist()))
     assert sse_str == ("caaaaaacccccccccccccbbbbbccccccbbbbccccccccccccccc"
                        "ccccccccccccbbbbbbcccccccaaaaaaaaaccccccbbbbbccccc"
                        "ccccccccccccbbbbbbbccccccccc")

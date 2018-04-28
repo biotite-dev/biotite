@@ -51,8 +51,8 @@ class GenBankFile(TextFile):
         # and names of categories
         self._fields = []
     
-    def read(self, file_name):
-        super().read(file_name)
+    def process_input(self):
+        super().process_input()
         start = -1
         stop = -1
         name = ""

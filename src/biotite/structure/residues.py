@@ -1,4 +1,4 @@
-# Copyright 2017 Patrick Kunzmann.
+# Copyright 2017-2018 Patrick Kunzmann.
 # This source code is part of the Biotite package and is distributed under the
 # 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
 
@@ -10,14 +10,72 @@ atom level.
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
-__all__ = ["apply_residue_wise", "spread_residue_wise", "get_residues",
-           "get_residue_count"]
+__all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
+           "get_residues", "get_residue_count"]
+
+
+def get_residue_starts(array):
+    """
+    Get the indices in an atom array, whcih indicates the beginning of
+    a residue.
+    
+    A new residue starts, either when the residue ID or chain ID
+    changes from one to the next atom.
+    If the residue ID is *-1*, a residue name change, instead of a
+    residue ID change, is interpreted as new residue.
+
+    This method is internally used by all other residue-related
+    functions.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to get the residue starts from.
+        
+    Returns
+    -------
+    starts : ndarray
+        The start indices of resdiues in `array`.
+    """
+    chain_ids = array.chain_id
+    res_ids = array.res_id
+    res_names = array.res_name
+
+    # Maximum length is length of atom array
+    starts = np.zeros(array.array_length(), dtype=int)
+    starts[0] = 0
+    i = 1
+    # Variables for current values
+    curr_chain_id = chain_ids[0]
+    curr_res_id = res_ids[0]
+    curr_res_name = res_names[0]
+
+    for j in range(array.array_length()):
+        if res_ids[j] != -1:
+            if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
+                starts[i] = j
+                i += 1
+                curr_chain_id = chain_ids[j]
+                curr_res_id   = res_ids[j]
+                curr_res_name = res_names[j]
+        else:
+            # Residue ID = -1 -> Hetero residue
+            # -> Cannot rely on residue ID for residue distinction
+            # -> Fall back on residue names
+            if curr_res_name != res_names[j] or curr_chain_id != chain_ids[j]:
+                starts[i] = j
+                i += 1
+                curr_chain_id = chain_ids[j]
+                curr_res_id   = res_ids[j]
+                curr_res_name = res_names[j]
+    # Trim to correct size
+    return starts[:i]
 
 
 def apply_residue_wise(array, data, function, axis=None):
     """
     Apply a function to intervals of data, where each interval
-    correspond to one residue.
+    corresponds to one residue.
     
     The function takes an atom array (stack) and an data array
     (`ndarray`) of the same length. The function iterates through the
@@ -35,7 +93,7 @@ def apply_residue_wise(array, data, function, axis=None):
         determine the intervals.
     data : ndarray
         The data, whose intervals are the parameter for `function`. Must
-        have same length as `array.res_id`.
+        have same length as `array`.
     function : function
         The `function` must have either the form *f(data)* or
         *f(data, axis)* in case `axis` is given. Every `function` call
@@ -97,26 +155,16 @@ def apply_residue_wise(array, data, function, axis=None):
      [  0.34114286   5.57528571  -0.25428571]
      [  1.194       10.41625      1.13016667]]    
     """
-    ids = array.res_id
+    starts = np.append(get_residue_starts(array), [array.array_length()])
     # The result array
     processed_data = None
-    # Start of each interval
-    start = 0
-    # Index of last value in result array
-    i = 0
-    while start in range(len(ids)):
-        # End of each interval
-        stop = start
-        # Determine length of interval
-        # When first condition fails the second one is not checked,
-        # otherwise the second condition could throw IndexError
-        while stop < len(ids) and ids[stop] == ids[start]:
-            stop += 1
-        interval = data[start:stop]
+    for i in range(len(starts)-1):
+        interval = data[starts[i]:starts[i+1]]
         if axis == None:
             value = function(interval)
         else:
             value = function(interval, axis=axis)
+        value = function(interval, axis=axis)
         # Identify the shape of the resulting array by evaluation
         # of the function return value for the first interval
         if processed_data is None:
@@ -124,20 +172,15 @@ def apply_residue_wise(array, data, function, axis=None):
                 # Maximum length of the processed data
                 # is length of interval of size 1 -> length of all IDs
                 # (equal to atom array length)
-                processed_data = np.zeros((len(ids),) + value.shape,
+                processed_data = np.zeros((len(starts)-1,) + value.shape,
                                           dtype=value.dtype)
             else:
                 # Scalar value -> one dimensional result array
-                # Maximum length of the processed data
-                # is length of interval of size 1 -> length of all IDs
-                processed_data = np.zeros(len(ids),
+                processed_data = np.zeros(len(starts)-1,
                                           dtype=type(value))
         # Write values into result arrays
         processed_data[i] = value
-        start = stop
-        i += 1
-    # Trim result array to correct size
-    return processed_data[:i]
+    return processed_data
 
 
 def spread_residue_wise(array, input_data):
@@ -147,7 +190,7 @@ def spread_residue_wise(array, input_data):
     
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,
-    *j* is incremented every residue ID change.
+    *j* is incremented every residue change.
     
     Parameters
     ----------
@@ -196,15 +239,11 @@ def spread_residue_wise(array, input_data):
          'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
          'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c']
     """
-    i = 0
-    j = 0
-    array_length = array.array_length()
-    output_data = np.zeros(array_length, dtype=input_data.dtype)
-    while i < array_length:
-        output_data[i] = input_data[j]
-        if i < array_length-1 and array.res_id[i+1] != array.res_id[i]:
-            j += 1
-        i += 1
+    starts = get_residue_starts(array)
+    output_data = np.zeros(array.array_length(), dtype=input_data.dtype)
+    for i in range(len(starts)-1):
+        output_data[starts[i]:starts[i+1]] = input_data[i]
+    output_data[starts[-1]:] = input_data[-1]
     return output_data
 
 
@@ -250,26 +289,16 @@ def get_residues(array):
         ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
          'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
     """
-    # Maximum length is length of atom array
-    ids = np.zeros(len(array.res_id), dtype=int)
-    names = np.zeros(len(array.res_id), dtype="U3")
-    ids[0] = array.res_id[0]
-    names[0] = array.res_name[0]
-    i = 1
-    for j in range(len(array.res_id)):
-        if array.res_id[j] != ids[i-1]:
-            ids[i] = array.res_id[j]
-            names[i] = array.res_name[j]
-            i += 1
-    # Trim to correct size
-    return ids[:i], names[:i]
+    starts = get_residue_starts(array)
+    return array.res_id[starts], array.res_name[starts]
 
 def get_residue_count(array):
     """
     Get the amount of residues in an atom array (stack).
     
-    The count is determined from the `res_id` annotation.
-    Each time the residue ID changes, the count is incremented.
+    The count is determined from the `res_id` and `chain_id` annotation.
+    Each time the residue ID or chain ID changes,
+    the count is incremented. Special rules apply to hetero residues
     
     Parameters
     ----------
@@ -281,13 +310,4 @@ def get_residue_count(array):
     count : int
         Amount of residues.
     """
-    if array.array_length() == 0:
-        return 0
-    else:
-        count = 1
-        curr_id = array.res_id[0]
-        for id in array.res_id:
-            if id != curr_id:
-                count += 1
-                curr_id = id
-        return count
+    return len(get_residue_starts(array))

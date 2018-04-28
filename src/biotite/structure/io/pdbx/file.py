@@ -82,8 +82,8 @@ class PDBxFile(TextFile):
         self._categories = {}
     
     
-    def read(self, file_name):
-        super().read(file_name)
+    def process_input(self):
+        super().process_input()
         # Remove emptyline at then end of file, if present
         if self._lines[-1] == "":
             del self._lines[-1]

@@ -67,7 +67,11 @@ an object with one dimension less is returned
 (`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
 Do not expect a deep copy, when sclicing an `AtomArray` or
 `AtomArrayStack`. The attributes of the sliced object may still point
-to the original `ndarray` .
+to the original `ndarray`.
+
+An optional attribute for `AtomArray` and `AtomArrayStack` instances
+are associated `BondList` objects, that specifiy the indices of atoms
+that form a chemical bonds.
 
 Based on the implementation in `NumPy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and
@@ -76,6 +80,7 @@ visualisation.
 
 from .adjacency import *
 from .atoms import *
+from .bonds import *
 from .compare import *
 from .error import *
 from .filter import *

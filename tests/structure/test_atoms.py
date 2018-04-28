@@ -96,3 +96,29 @@ def test_comparison(array):
     mod_array = array.copy()
     mod_array.res_name[0] = "UNK"
     mod_array != array
+
+def test_bonds(array):
+    assert array.bonds is None
+    with pytest.raises(TypeError):
+        # Expect a BondList
+        array.bonds = 42
+    with pytest.raises(IndexError):
+        # Expect a BondList with array length as atom count
+        array.bonds = struc.BondList(13)
+    array.bonds = struc.BondList(5, np.array([(0,1),(0,2),(2,3),(2,4)]))
+    assert array.bonds.as_array().tolist() == [[0, 1, 0],
+                                               [0, 2, 0],
+                                               [2, 3, 0],
+                                               [2, 4, 0],]
+    filtered_array = array[array.chain_id == "B"]
+    assert filtered_array.bonds.as_array().tolist() == [[0, 1, 0],
+                                                        [0, 2, 0]]
+    concat_array = array + array
+    assert concat_array.bonds.as_array().tolist() == [[0, 1, 0],
+                                                      [0, 2, 0],
+                                                      [2, 3, 0],
+                                                      [2, 4, 0],
+                                                      [5, 6, 0],
+                                                      [5, 7, 0],
+                                                      [7, 8, 0],
+                                                      [7, 9, 0]]
