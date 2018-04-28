@@ -53,6 +53,10 @@ def get_structure(file, insertion_code=[], altloc=[],
         that should be stored in the output array or stack.
         There are 4 optional annotation identifiers:
         'atom_id', 'b_factor', 'occupancy' and 'charge'.
+    include_bonds : bool
+        If set to true, an `BondList` will be created for the resulting
+        `AtomArray` containing the bond information from the file.
+        (Default: False)
     
     Returns
     -------
@@ -326,7 +330,7 @@ def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
                       int32[:] atoms_per_res,
                       int32[:] res_per_chain, int32[:] chains_per_model):
     cdef int i=0, j=0
-    
+
     # Determine per-residue-count and maximum count
     # of bonds in each residue
     cdef int32[:] bonds_per_res = np.zeros(len(group_list), dtype=np.int32)
