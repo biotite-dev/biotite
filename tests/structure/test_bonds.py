@@ -37,9 +37,9 @@ def test_modification(bond_list):
     bond_list.remove_bond(4, 0)
     # Not in list -> Do nothing
     bond_list.remove_bond(0, 3)
-    assert bond_list.as_array().tolist() == [[0, 1, 0],
-                                             [1, 2, 0],
-                                             [1, 3, 1],
+    # Remove mutliple bonds, one of them is not in list
+    bond_list.remove_bonds(struc.BondList(10, np.array([(1,0),(1,2),(8,9)])))
+    assert bond_list.as_array().tolist() == [[1, 3, 1],
                                              [3, 4, 0],
                                              [4, 6, 0],
                                              [1, 4, 0]]
@@ -62,6 +62,16 @@ def test_access(bond_list):
     bonds, bond_types = bond_list.get_bonds(4)
     assert bonds.tolist() == [3, 0, 6]
     assert bond_types.tolist() == [0, 0, 0]
+
+def test_merge(bond_list):
+    merged_list = bond_list.merge(struc.BondList(8, np.array([(4,6),(6,7)])))
+    assert merged_list.as_array().tolist() == [[0, 1, 0],
+                                               [1, 2, 0],
+                                               [1, 3, 0],
+                                               [3, 4, 0],
+                                               [0, 4, 0],
+                                               [4, 6, 0],
+                                               [6, 7, 0]]
 
 def test_concatenation(bond_list):
     bond_list += struc.BondList(3, np.array([(0,1,2),(1,2,2)]))
