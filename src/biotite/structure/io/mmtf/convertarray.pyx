@@ -26,6 +26,31 @@ __all__ = ["set_structure"]
 
 
 def set_structure(file, array):
+    """
+    Set the relevant fiels of an MMTF file with the content of an
+    `AtomArray` or `AtomArrayStack`.
+    
+    All required and some optional fields of the MMTF file will be set
+    or overriden if the field does already exist. Files are removed when
+    they are optional and when setting the structure information
+    could invalidate its content (e.g. altLocList). 
+    
+    Parameters
+    ----------
+    file : MMTFFile
+        The file object.
+    array : AtomArray or AtomArrayStack
+        The structure to be written. If a stack is given, each array in
+        the stack will be in a separate model.
+    
+    Examples
+    --------
+
+    >>> file = MMTFFile()
+    >>> set_structure(file, atom_array)
+    >>> file.write("structure.mmtf")
+    
+    """
     cdef bint include_bonds = (array.bonds is not None)
     
     cdef int i=0, j=0

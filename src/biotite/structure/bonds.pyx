@@ -63,7 +63,7 @@ class BondList(Copyable):
     If a `BondList` is indexed with single integer as index,
     `get_bonds()` will be called with the index as parameter.
 
-    The same consistency applies to merging `BondList` instances via the
+    The same consistency applies to adding `BondList` instances via the
     '+' operator: The atom indices of the second `BondList` are
     increased by the atom count of the first `BondList`.
     
@@ -98,18 +98,19 @@ class BondList(Copyable):
 
     >>> bond_list = BondList(5, np.array([(1,0),(1,3),(1,4)]))
     >>> print(bond_list)
-    ... [[0 1 0]
-    ...  [1 3 0]
-    ...  [1 4 0]]
+    [[0 1 0]
+     [1 3 0]
+     [1 4 0]]
 
     Remove the first atom (index 0) via indexing:
-    The bond containing index 0 is removed and all other indices move up
-    (indices are decreased by one):
+    The bond containing index 0 is removed, since the corresponding atom
+    does not exist anymore. Since all other atoms move up in their
+    position, the indices in the bond list are decreased by one:
 
     >>> bond_list = bond_list[1:]
     >>> print(bond_list)
-    ... [[0 2 0]
-    ...  [0 3 0]]
+    [[0 2 0]
+     [0 3 0]]
     """
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
@@ -166,6 +167,20 @@ class BondList(Copyable):
         offset : int
             The atom indices are increased by this value.
             Must be positive.
+        
+        Examples
+        --------
+
+        >>> bond_list = BondList(5, np.array([(1,0),(1,3),(1,4)]))
+        >>> print(bond_list)
+        [[0 1 0]
+         [1 3 0]
+         [1 4 0]]
+        >>> bond_list.offset_indices(2)
+        >>> print(bond_list)
+        [[2 3 0]
+         [3 5 0]
+         [3 6 0]]
         """
         if offset < 0:
             raise ValueError("Offest must be positive")
@@ -200,6 +215,15 @@ class BondList(Copyable):
         return self._atom_count
 
     def get_bond_count(self):
+        """
+        Get the amount of bonds.
+
+        Returns
+        -------
+        bond_count : int
+            The amount of bonds. This is equal to the length of the
+            internal `ndarray` containing the bonds.
+        """
         return len(self._bonds)
     
     def get_bonds(self, uint32 atom_index):
@@ -220,6 +244,14 @@ class BondList(Copyable):
             Array of integers, interpreted as `BondType` instances.
             This array specifies the type (or order) of the bonds to
             the connected atoms.
+        
+        Examples
+        --------
+
+        >>> bond_list = BondList(5, np.array([(1,0),(1,3),(1,4)]))
+        >>> bonds, types = bond_list.get_bonds(1)
+        >>> print(bonds)
+        [0 3 4]
         """
         cdef int i=0, j=0
         cdef uint32[:,:] all_bonds_v = self._bonds
@@ -314,6 +346,19 @@ class BondList(Copyable):
         # option than the repetitive call of _get_max_bonds_per_atom()
 
     def remove_bonds(self, bond_list):
+        """
+        Remove multiple bonds from the `BondList`.
+
+        All bonds present in `bond_list` are removed from this instance
+        If a bond is not existent in this instance, nothing happens.
+        Only the bond indices, not the bond types, are relevant for
+        this.
+
+        Parameters
+        ----------
+        bond_list : BondList
+            The bonds in `bond_list` are removed from this instance.
+        """
         cdef int i=0, j=0
         # All bonds in the own BondList
         cdef uint32[:,:] all_bonds_v = self._bonds
@@ -334,12 +379,42 @@ class BondList(Copyable):
         #    self.remove_bond(bond[0], bond[1])
 
     def merge(self, bond_list):
-        return BondList(
-            max(self._atom_count, bond_list._atom_count),
-            np.concatenate([self.as_array(),
-                            bond_list.as_array()],
-                            axis=0)
-        )
+        """
+        Merge the this instance with another `BondList` in a new object.
+
+        The internal `ndarray` instances containg the bonds are simply
+        concatenated and the new atom count is the maximum atom count
+        of the merged bond lists.
+
+        Parameters
+        ----------
+        bond_list : BondList
+            The bonds in `bond_list` are removed from this instance.
+        
+        Returns
+        -------
+        bond_list : BondList
+            The merged `BondList`.
+        
+        Notes
+        -----
+
+        This is not equal to using '+' operator.
+        
+        Examples
+        --------
+
+        >>> bond_list1 = BondList(3, np.array([(0,1),(1,2)]))
+        >>> bond_list2 = BondList(5, np.array([(2,3),(3,4)]))
+        >>> merged_list = bond_list1.merge(bond_list2)
+        >>> print(merged_list.get_atom_count())
+        5
+        >>> print(merged_list)
+        [[0 1 0]
+         [1 2 0]
+         [2 3 0]
+         [3 4 0]]
+        """
 
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
