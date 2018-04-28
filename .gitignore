@@ -41,6 +41,9 @@ biotite.egg-info
 .project
 .pydevproject
 
-# Visual studio code project files
+# Ignore Visual studio code project files
 *.code-workspace
 .vscode/*
+
+# Ignore fuse_hidden files on Linux systems
+*.fuse_hidden*
