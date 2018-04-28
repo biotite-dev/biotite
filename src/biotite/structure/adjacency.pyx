@@ -39,8 +39,8 @@ cdef class AdjacencyMap:
         The `AtomArray` to create the `AdjacencyMap` for.
     box_size: float
         The coordinate interval each box has for x, y and z axis.
-        The amount of boxes depend on the protein size and the
-        `box_size`.
+        The amount of boxes depends on the range of coordinatesin the
+        `atom_array` and the `box_size`.
             
     Examples
     --------
@@ -52,18 +52,25 @@ cdef class AdjacencyMap:
     cdef float32[:,:] _coord
     cdef ptr[:,:,:] _boxes
     cdef int[:,:,:] _box_length
-    cdef int _boxsize
+    cdef float _boxsize
     cdef float32[:] _min_coord
     cdef float32[:] _max_coord
     cdef int _max_box_length
     
-    def __init__(self, atom_array not None, int box_size):
+    def __init__(self, atom_array not None, float box_size):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
         cdef int* box_ptr = NULL
         cdef int length
         
+        self._boxes = None
+        if box_size <= 0:
+            raise ValueError("Box size must be greater than 0")
+        if atom_array.coord is None:
+            raise ValueError("Atom array must not be empty")
+        if np.isnan(atom_array.coord).any():
+            raise ValueError("Atom array contains NaN values")
         coord = atom_array.coord.astype(np.float32)
         self._coord = coord
         self._boxsize = box_size
@@ -101,7 +108,8 @@ cdef class AdjacencyMap:
             self._boxes[i,j,k] = <ptr> box_ptr
             
     def __dealloc__(self):
-        deallocate_ptrs(self._boxes)
+        if self._boxes is not None:
+            deallocate_ptrs(self._boxes)
     
     def get_atoms(self, np.ndarray coord, float32 radius):
         """

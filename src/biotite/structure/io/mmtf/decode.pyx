@@ -100,7 +100,7 @@ def _decode_run_length(int32[:] array):
     cdef int length = 0
     cdef int i, j
     cdef int value, repeat
-    # Determine length of output array
+    # Determine length of output array by summing the run lengths
     for i in range(1, array.shape[0], 2):
         length += array[i]
     cdef int32[:] output = np.zeros(length, dtype=np.int32)

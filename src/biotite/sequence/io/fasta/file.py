@@ -57,8 +57,8 @@ class FastaFile(TextFile):
         self._chars_per_line = chars_per_line
         self._entries = OrderedDict()
     
-    def read(self, file_name):
-        super().read(file_name)
+    def process_input(self):
+        super().process_input()
         # Filter out empty and comment lines
         self._lines = [line for line in self._lines
                        if len(line.strip()) != 0 and line[0] != ";"]

@@ -101,66 +101,72 @@ def superimpose(fixed, mobile, ca_only=True):
     1.92792691375
         
     """
-    if type(fixed) != AtomArray:
-        raise ValueError("Reference must be AtomArray")
-    if type(mobile) == AtomArray:
-        # Simply superimpose without loop
-        return _superimpose(fixed, mobile, ca_only)
-    elif type(mobile) == AtomArrayStack:
-        # Superimpose for every mobile in AtomArrayStack
-        fitted_subjects = []
-        transformations = []
-        for mob in mobile:
-            fitted_subject, transformation = _superimpose(fixed, mob, ca_only)
-            fitted_subjects.append(fitted_subject)
-            transformations.append(transformation)
-        # Convert AtomArray list back to AtomArrayStack
-        fitted_subjects = stack(fitted_subjects)
-        return (fitted_subjects, transformations)
+    mob_centroid = centroid(mobile)
+    fix_centroid = centroid(fixed)
+    if ca_only:
+        # For performance reasons the Kabsch algorithm
+        # is only performed with "CA" per default
+        # Implicitly this creates array copies
+        mob_centered = mobile.coord[..., (mobile.atom_name == "CA"), :]
+        fix_centered = fixed.coord[..., (fixed.atom_name == "CA"), :]
     else:
+        mob_centered = np.copy(mobile.coord)
+        fix_centered = np.copy(fixed.coord)
+
+    if mob_centered.shape[-2] != fix_centered.shape[-2]:
+        raise BadStructureError(
+            "The mobile array has {:d} atoms and the fixed array has "
+            "{:d} atoms, but they must be equal"
+            .format(mob_centered.shape[-2], fix_centered.shape[-2])
+        )
+    
+    mob_centered -= mob_centroid[..., np.newaxis, :]
+    fix_centered -= fix_centroid
+    
+    if not isinstance(fixed, AtomArray):
         raise ValueError("Reference must be AtomArray")
+   
+    if isinstance(mobile, AtomArray):
+        # Simply superimpose without loop
+        rotation = _superimpose(fix_centered, mob_centered)
+        superimposed = mobile.copy()
+        superimposed.coord -= mob_centroid[..., np.newaxis, :]
+        superimposed.coord = np.dot(superimposed.coord, rotation)
+        superimposed.coord += fix_centroid
+        return superimposed, (-mob_centroid, rotation, fix_centroid)
+    
+    elif isinstance(mobile, AtomArrayStack):
+        superimposed = mobile.copy()
+        superimposed.coord -= mob_centroid[..., np.newaxis, :]
+        # Perform Kabsch algorithm for every model
+        transformations = [None] * superimposed.coord.shape[-2]
+        for i in range(len(superimposed.coord)):
+            rotation = _superimpose(fix_centered, mob_centered[i])
+            superimposed.coord[i] = np.dot(superimposed.coord[i], rotation)
+            transformations[i] = (-mob_centroid[i], rotation, fix_centroid)
+        superimposed.coord += fix_centroid
+        return superimposed, transformations
+   
+    else:
+        raise ValueError("Mobile structure must be AtomArray "
+                         "or AtomArrayStack")
 
 
-def _superimpose(fixed, mobile, ca_only):
+def _superimpose(fix_centered, mob_centered):
     """
-    Performs the actual superimposition.
+    Perform the Kabsch algorithm using only the coordinates.
     """
-    if type(mobile) == AtomArray:
-        mob_centroid = centroid(mobile)
-        fix_centroid = centroid(fixed)
-        if ca_only:
-            # For performance reasons the Kabsch algorithm
-            # is only performed with "CA" per default
-            # Implicitly this creates array copies
-            mob_centered = mobile.coord[(mobile.atom_name == "CA")]
-            fix_centered = fixed.coord[(fixed.atom_name == "CA")]
-        else:
-            mob_centered = np.copy(mobile.coord)
-            fix_centered = np.copy(fixed.coord)
-            
-        if len(mob_centered) != len(fix_centered):
-            raise BadStructureError("The mobile and fixed array "
-                                        "have different amount of atoms")
-        
-        mob_centered -= mob_centroid
-        fix_centered -= fix_centroid
-        
-        # Calculating rotation matrix using Kabsch algorithm
-        y = mob_centered
-        x = fix_centered
-        # Calculate covariance matrix
-        cov = np.dot(y.T, x)
-        v, s, w = np.linalg.svd(cov)
-        # Remove possibility of reflected atom coordinates
-        if np.linalg.det(v) * np.linalg.det(w) < 0:
-            v[:,-1] *= -1
-        rotation = np.dot(v,w)
-        
-        fitted_subject = mobile.copy()
-        fitted_subject.coord -= mob_centroid
-        fitted_subject.coord = np.dot(fitted_subject.coord, rotation)
-        fitted_subject.coord += fix_centroid
-        return fitted_subject, (-mob_centroid, rotation, fix_centroid)
+    # Calculating rotation matrix
+    y = mob_centered
+    x = fix_centered
+    # Calculate covariance matrix
+    cov = np.dot(y.T, x)
+    v, s, w = np.linalg.svd(cov)
+    # Remove possibility of reflected atom coordinates
+    if np.linalg.det(v) * np.linalg.det(w) < 0:
+        v[:,-1] *= -1
+    rotation = np.dot(v,w)
+    return rotation
 
 
 def superimpose_apply(atoms, transformation):

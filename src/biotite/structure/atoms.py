@@ -9,6 +9,7 @@ This module contains the main types of the `Structure` subpackage:
 
 import numpy as np
 import abc
+from .bonds import BondList
 from ..copyable import Copyable
 
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
@@ -28,6 +29,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._annot = {}
         self._array_length = length
         self._coord = None
+        self._bonds = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
         self.add_annotation("res_name", dtype="U3")
@@ -143,6 +145,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         if attr == "coord":
             return self._coord
+        if attr == "bonds":
+            return self._bonds
         elif attr in self._annot:
             return self._annot[attr]
         else:
@@ -160,10 +164,24 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if not isinstance(value, np.ndarray):
                 raise TypeError("Value must be ndarray")
             if value.shape[-2] != self._array_length:
-                raise IndexError("Expected array length "
-                                 + str(self._array_length)
-                                 + ", but got " + str(len(value)) )
+                raise IndexError("Expected array length {:d}, but got {:d}"
+                                 .format(self._array_length, len(value)) )
+            if value.shape[-1] != 3:
+                raise IndexError("Expected 3 coordinates for each atom")
             self._coord = value
+        if attr == "bonds":
+            if isinstance(value, BondList):
+                if value.get_atom_count() != self._array_length:
+                    raise IndexError("Array length is {:d}, "
+                                    "but bond list has {:d} atoms"
+                                    .format(self._array_length, 
+                                            value.get_atom_count()) )
+                self._bonds = value
+            elif value is None:
+                # Remove bond list
+                self._bonds = None
+            else:
+                raise TypeError("Value must be BondList")
         # This condition is required, since otherwise 
         # call of the next one would result
         # in indefinite calls of __setattr__
@@ -177,18 +195,22 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def __dir__(self):
         attr = super().__dir__()
         attr.append("coord")
+        attr.append("bonds")
         for name in self._annot.keys():
             attr.append(name)
             
     def _subarray(self, index):
+        # Index is one dimensional (boolean mask, index array)
         new_coord = self._coord[..., index, :]
         new_length = new_coord.shape[-2]
         if isinstance(self, AtomArray):
             new_object = AtomArray(new_length)
-        if isinstance(self, AtomArrayStack):
+        elif isinstance(self, AtomArrayStack):
             new_depth = new_coord.shape[-3]
             new_object = AtomArrayStack(new_depth, new_length)
         new_object._coord = new_coord
+        if self._bonds is not None:
+            new_object._bonds = self._bonds[index]
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
                                              .__getitem__(index))
@@ -211,6 +233,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 self._annot[name] = np.delete(self._annot[name], index, axis=0)
             self._coord = np.delete(self._coord, index, axis=-2)
             self._array_length = self._coord.shape[-2]
+            if self._bonds is not None:
+                mask = np.ones(self._bonds.get_atom_count(), dtype=bool)
+                mask[index] = False
+                self._bonds = self._bonds[mask]
         else:
             raise IndexError("Index must be integer")
     
@@ -302,6 +328,16 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        # Concatenate bonds lists,
+        # if at least one of them contains bond information
+        if self._bonds is not None or array._bonds is not None:
+            bonds1 = self._bonds
+            bonds2 = array._bonds
+            if bonds1 is None:
+               bonds1 = BondList(self._array_length)
+            if bonds2 is None:
+                bonds2 = BondList(array._array_length)
+            concat._bonds = bonds1 + bonds2
         return concat
     
     def __copy_fill__(self, clone):
@@ -312,6 +348,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def _copy_annotations(self, clone):
         for name in self._annot:
             clone._annot[name] = np.copy(self._annot[name])
+        if self._bonds is not None:
+            clone._bonds = self._bonds.copy()
     
 
 class Atom(object):
@@ -382,9 +420,6 @@ class Atom(object):
                .format(hetero, self.chain_id, self.res_id, self.res_name,
                        self.atom_name, self.element,
                        self.coord[0], self.coord[1], self.coord[2])
-        for value in self._annot.values():
-            string += str(value) + "\t"
-        return string + "{:7.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
@@ -423,6 +458,18 @@ class AtomArray(_AtomArrayBase):
     Inserting or appending an `AtomArray` into another `AtomArray` is
     done with the '+' operator. Only the annotation categories, which
     are existing in both arrays, are transferred to the new array.
+
+    Optionally, an `AtomArray` can store chemical bond information via
+    a `BondList` object. It can be accessed using the `bonds` attribute.
+    If no bond information is available, `bonds` is *None*.
+    Consequently the bond information can be removed from the
+    `AtomArray`, by setting `bonds` to *None*.
+    When indexing the `AtomArray` the atom indics in the associated
+    `BondList` are updated as well, hence the indices in the `BondList`
+    will always point to the same atoms.
+    If two `AtomArray` instances are concatenated, the resulting
+    `AtomArray` will contain the merged `BondList` if at least one of
+    the operands contains bond information.
     
     Parameters
     ----------
@@ -436,6 +483,9 @@ class AtomArray(_AtomArrayBase):
     coord : ndarray, dtype=float, shape=(n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
+    bonds: BondList or None
+        A `BondList`, specifying the indices of atoms
+        that form a chemical bond.
     
     Examples
     --------
@@ -522,7 +572,7 @@ class AtomArray(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `NumPy` accepts are valid.
+            All index types *NumPy* accepts, are valid.
         
         Returns
         -------
@@ -633,7 +683,7 @@ class AtomArrayStack(_AtomArrayBase):
     coordinate array is 3-D (m x n x 3).
     
     Indexing works similar to `AtomArray`, with the difference, that two
-    index dimension are possible: The first index dimension specifies
+    index dimensions are possible: The first index dimension specifies
     the array(s), the second index dimension specifies the atoms in each
     array (same as the index in `AtomArray`). Using a single integer as
     first dimension index returns a single `AtomArray` instance.
@@ -659,6 +709,13 @@ class AtomArrayStack(_AtomArrayBase):
     coord : ndarray, dtype=float, shape=(m,n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
+    bonds: BondList or None
+        A `BondList`, specifying the indices of atoms
+        that form a chemical bond.
+    
+    See also
+    --------
+    AtomArray
     
     Examples
     --------
@@ -973,12 +1030,14 @@ def stack(arrays):
         # Check if all arrays share equal annotations
         if not array.equal_annotations(arrays[0]):
             raise ValueError("The arrays annotations "
-                             "do not fit match each other") 
+                             "do not fit match each other")
     array_stack = AtomArrayStack(array_count, arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays] 
     array_stack._coord = np.stack(coord_list, axis=0)
+    # Take bond list from first array
+    array_stack._bonds = arrays[0]._bonds
     return array_stack
 
 

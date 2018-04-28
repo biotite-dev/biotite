@@ -97,7 +97,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     Parameters
     ----------
     uids : str or iterable object of str
-        The a single *unique identifier* (UID) or a list of UIDs of the
+        A single *unique identifier* (UID) or a list of UIDs of the
         file(s) to be downloaded .
     target_path : str
         The target directory of the downloaded files.
@@ -108,7 +108,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         E-utility database name.
     ret_type : str
         Retrieval type
-    ret_type : str
+    ret_mode : str
         Retrieval mode
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
@@ -187,8 +187,8 @@ def fetch_single_file(uids, file_name,
     
     Parameters
     ----------
-    uids : str or iterable object of str
-        The a single *unique identifier* (UID) or a list of UIDs of the
+    uids : iterable object of str
+        A list of UIDs of the
         file(s) to be downloaded .
     file_name : str
         The file path, including file name, to the target file.
@@ -196,7 +196,7 @@ def fetch_single_file(uids, file_name,
         E-utility database name.
     ret_type : str
         Retrieval type
-    ret_type : str
+    ret_mode : str
         Retrieval mode
     mail : str, optional
         A mail address that is appended to to HTML request. This address

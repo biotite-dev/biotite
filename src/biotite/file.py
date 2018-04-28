@@ -73,6 +73,27 @@ class TextFile(File, metaclass=abc.ABCMeta):
         with open(file_name, "r") as f:
             str_data = f.read()
         self._lines = str_data.split("\n")
+        self.process_input()
+    
+    def read_from_string(self, string):
+        """
+        Read the lines from the given string.
+        
+        Parameters
+        ----------
+        file_name : str
+            The string to be read.
+        """
+        self._lines = string.split("\n")
+        self.process_input()
+    
+    def process_input(self):
+        """
+        Process the input read from file or string.
+
+        PROTECTED: Optionally override when inheriting
+        """
+        pass
     
     def write(self, file_name):
         """
