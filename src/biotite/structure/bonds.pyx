@@ -420,7 +420,6 @@ class BondList(Copyable):
     def _remove_redundant_bonds(self):
         cdef int j
         cdef uint32[:,:] all_bonds_v = self._bonds
-        cdef int max_index = np.max(self._bonds[:,:2])
         # Boolean mask for final removal of redundant atoms
         # Unfortunately views of boolean ndarrays are not supported
         # -> use uint8 array
