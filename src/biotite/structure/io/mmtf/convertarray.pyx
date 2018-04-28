@@ -219,6 +219,20 @@ def set_structure(file, array):
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
+    # Optional annotation arrays
+    categories = array.get_annotation_categories()
+    if "atom_id" in categories:
+        file.set_array("atomIdList",
+                       np.tile(array.atom_id.astype(np.int32), model_count),
+                       codec=8)
+    if "b_factor" in categories:
+        file.set_array("bFactorList",
+                       np.tile(array.b_factor.astype(np.float32), model_count),
+                       codec=10, param=100)
+    if "occupancy" in categories:
+        file.set_array("occupancyList",
+                       np.tile(array.occupancy.astype(np.float32), model_count),
+                       codec=9, param=100)
 
     ### Add inter-residue bonds ###
     if include_bonds:
