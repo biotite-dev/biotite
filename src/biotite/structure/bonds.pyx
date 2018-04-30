@@ -7,6 +7,9 @@ This module allows efficient search of atoms in a defined radius around
 a location.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["BondList"]
+
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
@@ -19,8 +22,6 @@ ctypedef np.uint64_t ptr
 ctypedef np.uint32_t uint32
 ctypedef np.uint8_t uint8
 ctypedef np.int64_t int64
-
-__all__ = ["BondList"]
 
 
 class BondType(IntEnum):

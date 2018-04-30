@@ -6,4 +6,6 @@
 A subpackage for protein secondary structure annotation using DSSP.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .app import *

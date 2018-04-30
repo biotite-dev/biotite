@@ -7,13 +7,14 @@ This module provides functions for calculation of mechanical or
 mass-related properties of a molecular structure.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["atom_masses", "mass_of_element", "mass_center", "gyration_radius"]
+
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .error import BadStructureError
 from .geometry import distance
-
-__all__ = ["atom_masses", "mass_of_element", "mass_center", "gyration_radius"]
 
 
 def gyration_radius(array, masses=None):

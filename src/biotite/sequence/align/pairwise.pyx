@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+
 cimport cython
 cimport numpy as np
 

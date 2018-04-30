@@ -2,11 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["NpzFile"]
+
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import File
-
-__all__ = ["NpzFile"]
 
 
 class NpzFile(File):

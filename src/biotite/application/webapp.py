@@ -2,10 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["WebApp", "RuleViolationError"]
+
 import abc
 from .application import Application
-
-__all__ = ["WebApp", "RuleViolationError"]
 
 
 class WebApp(Application, metaclass=abc.ABCMeta):

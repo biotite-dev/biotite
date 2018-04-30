@@ -6,12 +6,13 @@
 This module provides functions for structure superimposition.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["superimpose", "superimpose_apply"]
+
 import numpy as np
 from .geometry import centroid
 from .atoms import Atom, AtomArray, AtomArrayStack, stack
 from .error import BadStructureError
-
-__all__ = ["superimpose", "superimpose_apply"]
 
 
 def superimpose(fixed, mobile, ca_only=True):

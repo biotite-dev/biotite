@@ -2,9 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from ..trajfile import TrajectoryFile
-
+__author__ = "Patrick Kunzmann"
 __all__ = ["TRRFile"]
+
+from ..trajfile import TrajectoryFile
 
 
 class TRRFile(TrajectoryFile):

@@ -2,11 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["File", "TextFile"]
+
 import abc
 from .copyable import Copyable
 import copy
 
-__all__ = ["File", "TextFile"]
 
 class File(Copyable, metaclass=abc.ABCMeta):
     """

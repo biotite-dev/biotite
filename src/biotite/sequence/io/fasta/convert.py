@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+
 from ...sequence import Sequence
 from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence

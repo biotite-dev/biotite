@@ -7,12 +7,13 @@ This module allows checking of atom arrays and atom array stacks for
 errors in the structure.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["check_id_continuity", "check_bond_continuity",
+           "check_duplicate_atoms"]
+
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
-
-__all__ = ["check_id_continuity", "check_bond_continuity",
-           "check_duplicate_atoms"]
 
 
 def check_id_continuity(array):

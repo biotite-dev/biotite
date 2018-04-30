@@ -78,6 +78,8 @@ contains functions for structure analysis, manipulation and
 visualisation.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .adjacency import *
 from .atoms import *
 from .bonds import *

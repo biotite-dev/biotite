@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["fetch"]
+
 import requests
 import os.path
 import os
 import glob
-
-__all__ = ["fetch"]
 
 
 _standard_url = "https://files.rcsb.org/download/"

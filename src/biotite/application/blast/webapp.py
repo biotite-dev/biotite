@@ -2,6 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["BlastWebApp"]
+
 from .alignment import BlastAlignment
 from ..application import Application, requires_state, AppState
 from ..webapp import WebApp, RuleViolationError
@@ -13,8 +16,6 @@ from ...sequence.align.alignment import Alignment
 import time
 import requests
 from xml.etree import ElementTree
-
-__all__ = ["BlastWebApp"]
 
 
 _ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"

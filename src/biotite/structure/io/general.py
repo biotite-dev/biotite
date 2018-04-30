@@ -7,10 +7,11 @@ This module contains a convenience function for loading structures from
 general structure files.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["get_structure_from"]
+
 import os.path
 from ..atoms import AtomArray, AtomArrayStack
-
-__all__ = ["get_structure_from"]
 
 
 def get_structure_from(file_path, template=None):

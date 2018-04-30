@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["CodonTable"]
+
 import copy
 from os.path import join, dirname, realpath
 from .sequence import Sequence
 from .seqtypes import NucleotideSequence, ProteinSequence
-
-__all__ = ["CodonTable"]
 
 
 class CodonTable(object):

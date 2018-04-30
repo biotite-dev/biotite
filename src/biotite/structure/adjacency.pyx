@@ -7,6 +7,9 @@ This module allows efficient search of atoms in a defined radius around
 a location.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["AdjacencyMap"]
+
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
@@ -16,8 +19,6 @@ from .geometry import distance
 
 ctypedef np.uint64_t ptr
 ctypedef np.float32_t float32
-
-__all__ = ["AdjacencyMap"]
 
 
 cdef class AdjacencyMap:

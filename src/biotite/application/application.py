@@ -2,11 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["Application", "AppStateError", "AppState", "requires_state"]
+
 import abc
 import time
 from enum import IntEnum
-
-__all__ = ["Application", "AppStateError", "AppState", "requires_state"]
 
 
 class AppState(IntEnum):

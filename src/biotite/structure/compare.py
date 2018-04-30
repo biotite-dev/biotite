@@ -7,11 +7,12 @@ This module provides functions for calculation of characteristic values when
 comparing multiple structures with each other.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["rmsd", "rmsf", "average"]
+
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .util import vector_dot
-
-__all__ = ["rmsd", "rmsf", "average"]
 
 
 def rmsd(reference, subject):

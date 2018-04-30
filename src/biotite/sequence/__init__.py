@@ -49,6 +49,8 @@ name, its qualifiers and locations. An `Annotation` is a froup of multiple
 An `AnnotatedSequence` combines an `Annotation` and a `Sequence`
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .alphabet import *
 from .search import *
 from .seqtypes import *

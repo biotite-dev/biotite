@@ -14,5 +14,7 @@ Furthermore the package contains convenience functions for
 getting/setting directly `Sequence` objects, rather than strings.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .file import *
 from .convert import *

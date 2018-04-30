@@ -2,6 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["MafftApp"]
+
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
@@ -9,8 +12,6 @@ from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
 from ...temp import temp_file
-
-__all__ = ["MafftApp"]
 
 
 class MafftApp(MSAApp):

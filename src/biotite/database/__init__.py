@@ -17,3 +17,5 @@ If the file is only needed temporarily, they can be stored in a
 temporary directory by using `biotite.temp_dir()` or
 `biotite.temp_file()` as path name.
 """
+
+__author__ = "Patrick Kunzmann"

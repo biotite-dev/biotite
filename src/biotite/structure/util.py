@@ -6,9 +6,10 @@
 Utility functions for in internal use in `Bio.Structure` package
 """
 
-import numpy as np
-
+__author__ = "Patrick Kunzmann"
 __all__ = ["vector_dot", "norm_vector", "distance"]
+
+import numpy as np
 
 
 def vector_dot(v1,v2):

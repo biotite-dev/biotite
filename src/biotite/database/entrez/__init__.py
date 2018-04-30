@@ -6,4 +6,6 @@
 A subpackage for downloading files from the NCBI Entrez database.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .entrez import *

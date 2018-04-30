@@ -10,5 +10,7 @@ conversion of these dictionaries to `AtomArray` and `AtomArrayStack`
 objects and vice versa.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .convert import *
 from .file import *

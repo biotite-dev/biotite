@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
+
 from .sequence import Sequence
 from .alphabet import LetterAlphabet, AlphabetError
 import numpy as np
 import copy
-
-__all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
 
 class GeneralSequence(Sequence):

@@ -2,9 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["Copyable"]
+
 import abc
 
-__all__ = ["Copyable"]
 
 class Copyable(metaclass=abc.ABCMeta):
     """

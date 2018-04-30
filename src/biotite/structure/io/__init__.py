@@ -6,5 +6,7 @@
 A subpackage for reading and writing structure related data.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .trajfile import *
 from .general import *

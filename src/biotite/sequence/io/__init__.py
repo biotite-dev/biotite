@@ -5,3 +5,5 @@
 """
 A subpackage for reading and writing sequence related data.
 """
+
+__author__ = "Patrick Kunzmann"

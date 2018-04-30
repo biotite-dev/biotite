@@ -2,10 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
+
 import copy
 import numpy as np
-
-__all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
 
 
 class Alphabet(object):

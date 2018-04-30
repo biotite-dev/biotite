@@ -6,4 +6,6 @@
 A subpackage for multiple sequence alignments using MUSCLE.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .app import *

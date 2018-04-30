@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["get_database_name", "fetch", "fetch_single_file"]
+
 import requests
 import os.path
 import os
 import glob
-
-__all__ = ["get_database_name", "fetch", "fetch_single_file"]
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"

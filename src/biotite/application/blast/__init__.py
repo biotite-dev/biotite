@@ -7,5 +7,7 @@ A subpackage for heuristic local alignments against a large database
 using BLAST.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .webapp import *
 from .alignment import *

@@ -7,11 +7,12 @@ This module provides utility for handling data on residue level, rather than
 atom level.
 """
 
-import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-
+__author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
            "get_residues", "get_residue_count"]
+
+import numpy as np
+from .atoms import AtomArray, AtomArrayStack
 
 
 def get_residue_starts(array):

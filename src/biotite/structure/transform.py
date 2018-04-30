@@ -7,10 +7,11 @@ This module provides different transformations#
 that can be applied on structures.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["translate", "rotate", "rotate_centered"]
+
 import numpy as np
 from .geometry import centroid
-
-__all__ = ["translate", "rotate", "rotate_centered"]
 
 
 def translate(atoms, vector):

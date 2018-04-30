@@ -6,6 +6,7 @@
 This module contains all possible errors of the `structure` subpackage.
 """
 
+__author__ = "Patrick Kunzmann"
 __all__ = ["BadStructureError"]
 
 

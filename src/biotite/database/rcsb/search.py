@@ -2,13 +2,14 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import requests
-import abc
-from xml.etree.ElementTree import Element, SubElement, tostring
-
+__author__ = "Patrick Kunzmann"
 __all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
            "search"]
+
+import requests
+import abc
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 
 _search_url = "https://www.rcsb.org/pdb/rest/search"

@@ -2,14 +2,15 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["PDBFile"]
+
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 import copy
-
-__all__ = ["PDBFile"]
 
 
 _atom_records = {"hetero"    : (0,  6),

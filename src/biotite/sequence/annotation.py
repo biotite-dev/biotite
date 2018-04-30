@@ -2,14 +2,15 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
+
 from .sequence import Sequence
 from ..copyable import Copyable
 import copy
 import sys
 import numpy as np
 from enum import IntEnum
-
-__all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
 
 class Location(Copyable):

@@ -6,12 +6,13 @@
 The module contains the `Sequence` superclass and `GeneralSequence`.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["Sequence"]
+
 import numpy as np
 import abc
 from .alphabet import Alphabet
 from ..copyable import Copyable
-
-__all__ = ["Sequence"]
 
 
 _size_uint8  = np.iinfo(np.uint8 ).max +1

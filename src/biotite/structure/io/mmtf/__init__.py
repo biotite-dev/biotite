@@ -9,6 +9,8 @@ smaller file size and a highly increased I/O operation performance,
 than the text based file formats.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .file import *
 from .convertfile import *
 from .convertarray import *

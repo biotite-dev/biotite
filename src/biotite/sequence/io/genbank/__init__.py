@@ -7,4 +7,6 @@ This subpackage is used for reading information (especially sequence
 features) from files in the GenBank and GenPept format.
 """
 
+__author__ = "Patrick Kunzmann"
+
 from .file import *

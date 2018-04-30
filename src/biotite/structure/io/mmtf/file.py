@@ -2,6 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["MMTFFile"]
+
 import numpy as np
 import msgpack
 import struct
@@ -10,8 +13,6 @@ from ....file import File
 from ...error import BadStructureError
 from .decode import decode_array
 from .encode import encode_array
-
-__all__ = ["MMTFFile"]
 
 
 class MMTFFile(File):
