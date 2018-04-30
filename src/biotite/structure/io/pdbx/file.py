@@ -1,12 +1,13 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["PDBxFile"]
 
 import shlex
 import numpy as np
 from ....file import TextFile
-
-__all__ = ["PDBxFile"]
 
 
 class PDBxFile(TextFile):

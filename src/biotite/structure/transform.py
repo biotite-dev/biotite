@@ -1,16 +1,17 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module provides different transformations#
 that can be applied on structures.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["translate", "rotate", "rotate_centered"]
+
 import numpy as np
 from .geometry import centroid
-
-__all__ = ["translate", "rotate", "rotate_centered"]
 
 
 def translate(atoms, vector):

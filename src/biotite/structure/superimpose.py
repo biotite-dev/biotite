@@ -1,17 +1,18 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module provides functions for structure superimposition.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["superimpose", "superimpose_apply"]
+
 import numpy as np
 from .geometry import centroid
 from .atoms import Atom, AtomArray, AtomArrayStack, stack
 from .error import BadStructureError
-
-__all__ = ["superimpose", "superimpose_apply"]
 
 
 def superimpose(fixed, mobile, ca_only=True):

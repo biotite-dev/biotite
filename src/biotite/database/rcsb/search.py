@@ -1,14 +1,15 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
+           "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
+           "search"]
 
 import requests
 import abc
 from xml.etree.ElementTree import Element, SubElement, tostring
-
-__all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
-           "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
-           "search"]
 
 
 _search_url = "https://www.rcsb.org/pdb/rest/search"

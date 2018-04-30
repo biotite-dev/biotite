@@ -1,6 +1,9 @@
-# Copyright 2017-2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["get_sequence", "get_structure", "set_structure"]
 
 import numpy as np
 from ...error import BadStructureError
@@ -8,8 +11,6 @@ from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...filter import filter_inscode_and_altloc
 from ....sequence.seqtypes import ProteinSequence
 from collections import OrderedDict
-
-__all__ = ["get_sequence", "get_structure", "set_structure"]
 
 
 def get_sequence(pdbx_file, data_block=None):

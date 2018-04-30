@@ -1,14 +1,15 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["LocalApp"]
 
 import abc
 import time
 from os import chdir, getcwd
 from .application import Application, AppState, requires_state
 from subprocess import Popen, DEVNULL
-
-__all__ = ["LocalApp"]
 
 class LocalApp(Application, metaclass=abc.ABCMeta):
     """

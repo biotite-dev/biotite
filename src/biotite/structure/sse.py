@@ -1,11 +1,14 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module allows estimation of secondary structure elements in protein
 structures.
 """
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["annotate_sse"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
@@ -13,8 +16,6 @@ from .geometry import distance, angle, dihedral
 from .filter import filter_amino_acids
 from .error import BadStructureError
 from .util import distance
-
-__all__ = ["annotate_sse"]
 
 
 _radians_to_angle = 2*np.pi/360

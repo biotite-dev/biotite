@@ -1,6 +1,9 @@
-# Copyright 2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["MSAApp"]
 
 from .localapp import LocalApp
 from .application import AppState, requires_state
@@ -10,8 +13,6 @@ from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
 from ..temp import temp_file
 import abc
-
-__all__ = ["MSAApp"]
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):

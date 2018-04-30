@@ -1,10 +1,14 @@
-# Copyright 2017-2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
 """
 Use this module to calculate the Solvent Accessible Surface Area (SASA) of
 a protein or single atoms.
 """
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["sasa"]
 
 cimport cython
 cimport numpy as np
@@ -17,8 +21,6 @@ from .filter import filter_solvent, filter_monoatomic_ions
 ctypedef np.uint8_t np_bool
 ctypedef np.int64_t int64
 ctypedef np.float32_t float32
-
-__all__ = ["sasa"]
 
 
 @cython.boundscheck(False)

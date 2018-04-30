@@ -1,6 +1,6 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 A subpackage for handling sequences.
@@ -48,6 +48,8 @@ name, its qualifiers and locations. An `Annotation` is a froup of multiple
 `Feataure` objects and offers convenient location based indexing.
 An `AnnotatedSequence` combines an `Annotation` and a `Sequence`
 """
+
+__author__ = "Patrick Kunzmann"
 
 from .alphabet import *
 from .search import *

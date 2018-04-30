@@ -1,11 +1,12 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
-import numpy as np
-
+__author__ = "Patrick Kunzmann"
 __all__ = ["find_subsequence", "find_symbol", "find_symbol_first",
            "find_symbol_last"]
+
+import numpy as np
 
 
 def find_subsequence(sequence, query):

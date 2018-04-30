@@ -1,11 +1,14 @@
-# Copyright 2017-2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module allows efficient search of atoms in a defined radius around
 a location.
 """
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["AdjacencyMap"]
 
 cimport cython
 cimport numpy as np
@@ -16,8 +19,6 @@ from .geometry import distance
 
 ctypedef np.uint64_t ptr
 ctypedef np.float32_t float32
-
-__all__ = ["AdjacencyMap"]
 
 
 cdef class AdjacencyMap:

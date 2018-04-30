@@ -1,11 +1,14 @@
-# Copyright 2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module allows efficient search of atoms in a defined radius around
 a location.
 """
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["BondList"]
 
 cimport cython
 cimport numpy as np
@@ -19,8 +22,6 @@ ctypedef np.uint64_t ptr
 ctypedef np.uint32_t uint32
 ctypedef np.uint8_t uint8
 ctypedef np.int64_t int64
-
-__all__ = ["BondList"]
 
 
 class BondType(IntEnum):
@@ -415,6 +416,12 @@ class BondList(Copyable):
          [2 3 0]
          [3 4 0]]
         """
+        return BondList( 
+            max(self._atom_count, bond_list._atom_count), 
+            np.concatenate([self.as_array(), 
+                            bond_list.as_array()], 
+                            axis=0) 
+        ) 
 
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
@@ -572,7 +579,7 @@ def _to_bool_mask(object index, int length):
         if index.dtype == np.bool:
             # Index is already boolean mask -> simply return as uint8
             return index.astype(np.uint8, copy=False)
-        elif index.dtype == np.int:
+        elif index.dtype == np.int64:
             # Index is an index array
             # -> construct a boolean mask from it
             index_array = index
@@ -584,7 +591,7 @@ def _to_bool_mask(object index, int length):
             return np.asarray(bool_mask)
     else:
         # Any other index type -> construct an intermediate index array
-        array = np.arange(length)
+        array = np.arange(length, dtype=np.int64)
         array = array[index]
         if not isinstance(array, np.ndarray):
             raise TypeError("A single integer is not a valid index "

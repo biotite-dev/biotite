@@ -1,13 +1,14 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["TrajectoryFile"]
 
 import abc
 import numpy as np
 from ..atoms import AtomArray, AtomArrayStack, stack
 from ...file import File
-
-__all__ = ["TrajectoryFile"]
 
 
 class TrajectoryFile(File, metaclass=abc.ABCMeta):

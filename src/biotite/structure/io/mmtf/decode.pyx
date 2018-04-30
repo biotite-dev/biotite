@@ -1,6 +1,9 @@
-# Copyright 2018 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["decode_array"]
 
 cimport cython
 cimport numpy as np
@@ -15,8 +18,6 @@ ctypedef np.uint16_t uint16
 ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
-
-__all__ = ["decode_array"]
 
 
 def decode_array(int codec, bytes raw_bytes, int param):

@@ -1,19 +1,20 @@
-# Copyright 2017 Patrick Kunzmann.
-# This source code is part of the Biotite package and is distributed under the
-# 3-Clause BSD License. Please see 'LICENSE.rst' for further information.
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
 """
 This module provides functions for geometric measurements between atoms
 in a structure, mainly lenghts and angles.
 """
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["distance", "centroid", "angle", "dihedral", "dihedral_backbone"]
+
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .filter import filter_backbone
 from .error import BadStructureError
-
-__all__ = ["distance", "centroid", "angle", "dihedral", "dihedral_backbone"]
 
 
 def distance(atoms1, atoms2):
