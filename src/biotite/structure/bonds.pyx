@@ -579,7 +579,7 @@ def _to_bool_mask(object index, int length):
         if index.dtype == np.bool:
             # Index is already boolean mask -> simply return as uint8
             return index.astype(np.uint8, copy=False)
-        elif index.dtype == np.int:
+        elif index.dtype == np.int64:
             # Index is an index array
             # -> construct a boolean mask from it
             index_array = index
@@ -591,7 +591,7 @@ def _to_bool_mask(object index, int length):
             return np.asarray(bool_mask)
     else:
         # Any other index type -> construct an intermediate index array
-        array = np.arange(length)
+        array = np.arange(length, dtype=np.int64)
         array = array[index]
         if not isinstance(array, np.ndarray):
             raise TypeError("A single integer is not a valid index "
