@@ -22,7 +22,7 @@ so you can just load it via the ``structure.io`` package.
    import biotite.database.rcsb as rcsb
    import biotite.structure.io as strucio
    file_path = rcsb.fetch("1l2y", "cif", "path/to/directory")
-   atom_array = strucio.get_structure_from(file_path)
+   atom_array = strucio.load_structure(file_path)
 
 Often you just need a file temporarily for loading it into your script. In this
 case the *Biotite* temporary directory is recommended. The temporary
@@ -61,7 +61,7 @@ itself can be used as inpt for `fetch()`.
    print(pdb_ids)
    files = rcsb.fetch(pdb_ids, "cif", temp_dir())
    for file in files:
-       array = strucio.get_structure_from(file)
+       array = strucio.load_structure(file)
        # Do some fancy stuff
 
 Output:

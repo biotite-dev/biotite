@@ -5,7 +5,6 @@
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
 import itertools
 import numpy as np
 import glob

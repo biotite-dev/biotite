@@ -224,7 +224,7 @@ miniprotein *TC5b*:
 
    import biotite.application.dssp as dssp
    import biotite.structure.io as strucio
-   stack = strucio.get_structure_from("path/to/1l2y.pdb")
+   stack = strucio.load_structure("path/to/1l2y.pdb")
    array = stack[0]
    app = dssp.DsspApp(array)
    app.start()

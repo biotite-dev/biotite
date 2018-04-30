@@ -8,13 +8,13 @@ general structure files.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_structure_from"]
+__all__ = ["load_structure", "save_structure"]
 
 import os.path
 from ..atoms import AtomArray, AtomArrayStack
 
 
-def get_structure_from(file_path, template=None):
+def load_structure(file_path, template=None):
     """
     Load an atom array or stack from a structure file without the need
     to manually instantiate a `File` object.
@@ -86,7 +86,7 @@ def get_structure_from(file_path, template=None):
             return array[0]
         else:
             return array
-    elif suffix == "trr":
+    elif suffix == ".trr":
         if template is None:
             raise TypeError("Template must be specified for trajectory files")
         from .trr import TRRFile
@@ -110,3 +110,32 @@ def get_structure_from(file_path, template=None):
     else:
         raise ValueError("Unknown file format")
 
+
+def save_structure(file_path, array):
+    # We only need the suffix here
+    filename, suffix = os.path.splitext(file_path)
+    if suffix == ".pdb":
+        from .pdb import PDBFile
+        file = PDBFile()
+        file.set_structure(array)
+        file.write(file_path)
+    elif suffix == ".cif" or suffix == ".pdbx":
+        from .pdbx import PDBxFile, set_structure
+        file = PDBxFile()
+        set_structure(file, array, data_block="STRUCTURE")
+        file.write(file_path)
+    elif suffix == ".mmtf":
+        from .mmtf import MMTFFile, set_structure
+        file = MMTFFile()
+        set_structure(file, array)
+        file.write(file_path)
+    elif suffix == ".npz":
+        from .npz import NpzFile
+        file = NpzFile()
+        file.set_structure(array)
+        file.write(file_path)
+    elif suffix == ".trr" or suffix == ".xtc" or suffix == ".tng":
+        raise NotImplementedError("Writing trajectory files is not "
+                                  "implemented yet")
+    else:
+        raise ValueError("Unknown file format")
