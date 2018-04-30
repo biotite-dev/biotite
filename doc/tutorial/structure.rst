@@ -253,15 +253,15 @@ and stacks.
 
 Since programmers are usually lazy and do not want to write more code than
 necessary, there is a convenient function that unifies the forementioned
-file formats. `get_structure_from()` takes a file path and outputs an array
+file formats. `load_structure()` takes a file path and outputs an array
 (or stack, if the files contains multiple models). Internally, this function
 uses the appropriate `File` class, depending on the file format.
 
 .. code-block:: python
    
    import biotite.structure.io as strucio
-   stack_from_cif = strucio.get_structure_from("path/to/1l2y.cif")
-   stack_from_pdb = strucio.get_structure_from("path/to/1l2y.pdb")
+   stack_from_cif = strucio.load_structure("path/to/1l2y.cif")
+   stack_from_pdb = strucio.load_structure("path/to/1l2y.pdb")
    print("Are both stacks equal?", stack_from_cif == stack_from_pdb)
 
 Output:

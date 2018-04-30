@@ -8,13 +8,13 @@ general structure files.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_structure_from"]
+__all__ = ["load_structure"]
 
 import os.path
 from ..atoms import AtomArray, AtomArrayStack
 
 
-def get_structure_from(file_path, template=None):
+def load_structure(file_path, template=None):
     """
     Load an atom array or stack from a structure file without the need
     to manually instantiate a `File` object.
@@ -110,3 +110,5 @@ def get_structure_from(file_path, template=None):
     else:
         raise ValueError("Unknown file format")
 
+
+def save_structure(file_path, array):
