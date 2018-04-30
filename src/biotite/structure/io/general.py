@@ -122,7 +122,7 @@ def save_structure(file_path, array):
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, set_structure
         file = PDBxFile()
-        set_structure(file, array)
+        set_structure(file, array, data_block="STRUCTURE")
         file.write(file_path)
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, set_structure
