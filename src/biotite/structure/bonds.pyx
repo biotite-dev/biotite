@@ -416,6 +416,12 @@ class BondList(Copyable):
          [2 3 0]
          [3 4 0]]
         """
+        return BondList( 
+            max(self._atom_count, bond_list._atom_count), 
+            np.concatenate([self.as_array(), 
+                            bond_list.as_array()], 
+                            axis=0) 
+        ) 
 
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
