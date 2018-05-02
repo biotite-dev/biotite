@@ -12,9 +12,8 @@ class Visualizer(metaclass=abc.ABCMeta):
     def __init__(self):
         pass
     
-    def create_figure(self, size):
+    def create_figure(self, size, dpi=100):
         import matplotlib.pyplot as plt
-        dpi = 100
         return plt.figure(figsize=(size[0]/dpi, size[1]/dpi))
 
     @abc.abstractmethod

@@ -11,14 +11,14 @@ from ...visualize import Visualizer
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
     def __init__(self, alignment,
-                 chars_per_line=50, padding=20, border_size=10,
+                 symbols_per_line=50, padding=30, border_size=10,
                  box_size=(20,30),
-                 labels=None, label_size=100,
-                 show_numbers=True, number_size=30,
+                 labels=None, label_size=150,
+                 show_numbers=True, number_size=50,
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False):
         self._alignment        = alignment
-        self._chars_per_line  = chars_per_line
+        self._symbols_per_line  = symbols_per_line
         self._padding          = padding
         self._border_size      = border_size
         self._box_size         = box_size
@@ -55,7 +55,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         from matplotlib.patches import Rectangle
         from matplotlib.text import Text
 
-        fig_size_x = self._box_size[0] * self._chars_per_line
+        fig_size_x = self._box_size[0] * self._symbols_per_line
         if self._labels is not None:
             fig_size_x += self._label_size
         if self._show_numbers is not None:
@@ -64,12 +64,42 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         
         seq_num = self._alignment.trace.shape[1]
         seq_len = self._alignment.trace.shape[0]
-        line_count = (seq_len // self._chars_per_line) + 1
+        line_count = (seq_len // self._symbols_per_line) + 1
         fig_size_y = line_count * self._box_size[1] * seq_num
         fig_size_y += (line_count-1) * self._padding
         fig_size_y += 2 * self._border_size
 
         fig = self.create_figure(size=(fig_size_x, fig_size_y))
+
+        ### Draw labels ###
+        if self._labels is not None:
+            y = fig_size_y - self._border_size
+            y -= self._box_size[1] / 2
+            for i in range(line_count):
+                for j in range(seq_num):
+                    label = self._labels[j]
+                    text = Text(self._border_size, y, label,
+                                color="black", ha="left", va="center",
+                                size=self._label_font_size, figure=fig)
+                    fig.texts.append(text)
+                    y -= self._box_size[1]
+                y -= self._padding
+        
+        ### Draw numbers  ###
+        if self._show_numbers:
+            y = fig_size_y - self._border_size
+            y -= self._box_size[1] / 2
+            for i in range(line_count-1):
+                for j in range(seq_num):
+                    number = self._get_seq_pos(
+                        self._alignment, (i+1) * self._symbols_per_line -1, j
+                    )
+                    text = Text(fig_size_x - self._border_size, y, str(number),
+                                color="black", ha="right", va="center",
+                                size=self._label_font_size, figure=fig)
+                    fig.texts.append(text)
+                    y -= self._box_size[1]
+                y -= self._padding
 
         ### Draw symbols in boxes ###
         x_start = self._label_size if self._labels is not None else 0
@@ -87,7 +117,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                 else:
                     symbol = "-"
                 color = self.get_color(self._alignment, (i, j))
-                box = Rectangle((x,y), self._box_size[0]-1, self._box_size[1]-1)
+                box = Rectangle((x,y), self._box_size[0]-1,self._box_size[1]-1)
                 text = Text(x + self._box_size[0]/2, y + self._box_size[1]/2,
                             symbol, color="black", ha="center", va="center",
                             size=self._symbol_font_size, figure=fig)
@@ -100,7 +130,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                 fig.texts.append(text)
                 y -= self._box_size[1]
             line_pos += 1
-            if line_pos >= self._chars_per_line:
+            if line_pos >= self._symbols_per_line:
                 line_pos = 0
                 x = x_start
                 y_start -= seq_num * self._box_size[1] + self._padding
@@ -109,3 +139,16 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
 
         #fig.patches.append(Rectangle((10, 20), 30, 40))
         return fig
+    
+    def _get_seq_pos(self, alignment, i, j):
+        pos_found = False
+        while not pos_found:
+            if i == 0:
+                pos = 0
+                pos_found = True
+            else:
+                pos = alignment.trace[i,j]
+                if pos != -1:
+                    pos_found = True
+            i -= 1
+        return pos + 1
