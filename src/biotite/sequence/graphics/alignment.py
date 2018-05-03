@@ -149,15 +149,25 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
                  show_numbers=True, number_size=50,
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False,
-                 cmap="Greens", matrix=None):
+                 cmap=None, matrix=None):
         from matplotlib import cm
+        from matplotlib.colors import ListedColormap
         super().__init__(alignment, symbols_per_line, padding, border_size,
                         box_size, labels, label_size, show_numbers,
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
-        if isinstance(cmap, str):
+        if cmap is None:
+            # Default colormap
+            green = [89/255, 184/255, 76/255, 1]
+            cmap_val = np.stack(
+                [np.interp(np.linspace(0, 1, 100), [0, 1], [1, green[i]])
+                for i in range(len(green))]
+            ).transpose()
+            self._cmap = ListedColormap(cmap_val)
+        elif isinstance(cmap, str):
             self._cmap = cm.get_cmap(cmap)
         else:
+            # cmap is a colormap
             self._cmap = cmap
         if matrix is not None:
             self._matrix = matrix.score_matrix()
