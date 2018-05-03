@@ -3,9 +3,10 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["AlignmentVisualizer"]
+__all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer"]
 
 import abc
+import numpy as np
 from ...visualize import Visualizer
 
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
@@ -18,7 +19,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False):
         self._alignment        = alignment
-        self._symbols_per_line  = symbols_per_line
+        self._symbols_per_line = symbols_per_line
         self._padding          = padding
         self._border_size      = border_size
         self._box_size         = box_size
@@ -32,24 +33,9 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         self._symbol_font_size = symbol_font_size
         self._color_symbols    = color_symbols
 
-    #@abc.abstractmethod
-    def get_color(self, alignment, pos):
-        i = pos[0]
-        j = pos[1]
-        if alignment.trace[i,j] != -1:
-            symbol = alignment.sequences[j][alignment.trace[i,j]]
-            if   symbol == "A":
-                return "green"
-            elif symbol == "T":
-                return "red"
-            elif symbol == "G":
-                return "yellow"
-            elif symbol == "C":
-                return "blue"
-            else:
-                return "white"
-        else:
-            return "white"
+    @abc.abstractmethod
+    def get_color(self, alignment, pos_i, seq_i):
+        pass
 
     def generate(self):
         from matplotlib.patches import Rectangle
@@ -116,7 +102,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                             [self._alignment.trace[i,j]]
                 else:
                     symbol = "-"
-                color = self.get_color(self._alignment, (i, j))
+                color = self.get_color(self._alignment, i, j)
                 box = Rectangle((x,y), self._box_size[0]-1,self._box_size[1]-1)
                 text = Text(x + self._box_size[0]/2, y + self._box_size[1]/2,
                             symbol, color="black", ha="center", va="center",
@@ -152,3 +138,58 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                     pos_found = True
             i -= 1
         return pos + 1
+
+
+class AlignmentSimilarityVisualizer(AlignmentVisualizer):
+
+    def __init__(self, alignment,
+                 symbols_per_line=50, padding=30, border_size=10,
+                 box_size=(20,30),
+                 labels=None, label_size=150,
+                 show_numbers=True, number_size=50,
+                 label_font=None, label_font_size=16,
+                 symbol_font=None, symbol_font_size=16, color_symbols=False,
+                 cmap="Greens", matrix=None):
+        from matplotlib import cm
+        super().__init__(alignment, symbols_per_line, padding, border_size,
+                        box_size, labels, label_size, show_numbers,
+                        number_size, label_font, label_font_size, symbol_font,
+                        symbol_font_size, color_symbols)
+        if isinstance(cmap, str):
+            self._cmap = cm.get_cmap(cmap)
+        else:
+            self._cmap = cmap
+        if matrix is not None:
+            self._matrix = matrix.score_matrix()
+        else:
+            self._matrix = None 
+    
+    def get_color(self, alignment, pos_i, seq_i):
+        index1 = alignment.trace[pos_i, seq_i]
+        if index1 == -1:
+            similarity = 0
+        else:
+            code1 = alignment.sequences[seq_i].code[index1]
+            similarities = np.zeros(alignment.trace.shape[1])
+            for i in range(alignment.trace.shape[1]):
+                index2 = alignment.trace[pos_i, i]
+                if index2 == -1:
+                    similarities[i] = 0
+                else:
+                    code2 = alignment.sequences[i].code[index2]
+                    similarities[i] = self._get_similarity(self._matrix,
+                                                           code1, code2)
+            similarities = np.delete(similarities, seq_i)
+            similarity = np.average(similarities)
+        return self._cmap(similarity)
+    
+    def _get_similarity(self, matrix, code1, code2):
+        if matrix is None:
+            return 1 if code1 == code2 else 0
+        else:
+            sim = matrix[code1, code2]
+            # Normalize (range 0.0 - 1.0)
+            min_sim = np.min(matrix[code1])
+            max_sim = np.max(matrix[code1])
+            sim = (sim - min_sim) / (max_sim - min_sim)
+            return sim
