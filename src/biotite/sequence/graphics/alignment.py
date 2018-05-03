@@ -9,6 +9,7 @@ __all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer",
 import abc
 import numpy as np
 from ...visualize import Visualizer
+from .colorschemes import color_schemes
 
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
@@ -228,33 +229,6 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
 class AlignmentSymbolVisualizer(AlignmentVisualizer):
 
-    _default_protein_colors = np.array([
-        (203, 245, 55 ),
-        (245, 55,  165),
-        (55,  122, 245),
-        (55,  57,  245),
-        (55,  245, 122),
-        (234, 245, 55 ),
-        (245, 55,  55 ),
-        (140, 245, 55 ),
-        (245, 55,  85 ),
-        (109, 245, 55 ),
-        (77,  245, 55 ),
-        (189, 55,  245),
-        (245, 191, 55 ),
-        (144, 55,  245),
-        (245, 100, 55 ),
-        (245, 55,  211),
-        (234, 55,  245),
-        (171, 245, 55 ),
-        (55,  245, 185),
-        (55,  245, 255),
-        (55,  122, 245),
-        (55,  57,  245),
-        (255, 255, 255),
-        (255, 255, 255)
-    ]) / 255
-
     def __init__(self, alignment,
                  symbols_per_line=50, padding=30, border_size=10,
                  box_size=(20,30),
@@ -268,7 +242,8 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
         if colors is None:
-            self._colors = AlignmentSymbolVisualizer._default_protein_colors
+            alphabet = alignment.sequences[0].get_alphabet()
+            self._colors = color_schemes[alphabet]["rainbow"]
         else:
             self._colors = colors
     

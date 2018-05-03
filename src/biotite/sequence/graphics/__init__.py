@@ -5,3 +5,4 @@
 __author__ = "Patrick Kunzmann"
 
 from .alignment import *
+from .colorschemes import *
