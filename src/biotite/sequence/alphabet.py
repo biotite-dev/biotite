@@ -209,6 +209,9 @@ class Alphabet(object):
     
     def __contains__(self, symbol):
         return symbol in self._symbols
+    
+    def __hash__(self):
+        return hash(tuple(self._symbols))
 
 
 class LetterAlphabet(Alphabet):
