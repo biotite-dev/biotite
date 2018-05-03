@@ -149,26 +149,24 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
                  show_numbers=True, number_size=50,
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False,
-                 cmap=None, matrix=None):
+                 color=None, cmap=None, matrix=None):
         from matplotlib import cm
-        from matplotlib.colors import ListedColormap
         super().__init__(alignment, symbols_per_line, padding, border_size,
                         box_size, labels, label_size, show_numbers,
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
-        if cmap is None:
+        if color is not None:
+            self._cmap = _generate_colormap(color)
+        elif cmap is not None:
+            if isinstance(cmap, str):
+                self._cmap = cm.get_cmap(cmap)
+            else:
+                # cmap is a colormap
+                self._cmap = cmap
+        else:
             # Default colormap
             green = [89/255, 184/255, 76/255, 1]
-            cmap_val = np.stack(
-                [np.interp(np.linspace(0, 1, 100), [0, 1], [1, green[i]])
-                for i in range(len(green))]
-            ).transpose()
-            self._cmap = ListedColormap(cmap_val)
-        elif isinstance(cmap, str):
-            self._cmap = cm.get_cmap(cmap)
-        else:
-            # cmap is a colormap
-            self._cmap = cmap
+            self._cmap = _generate_colormap(green)
         if matrix is not None:
             self._matrix = matrix.score_matrix()
         else:
@@ -203,3 +201,13 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
             max_sim = np.max(matrix[code1])
             sim = (sim - min_sim) / (max_sim - min_sim)
             return sim
+    
+
+def _generate_colormap(color):
+    from matplotlib.colors import ListedColormap, to_rgba
+    color = to_rgba(color)
+    cmap_val = np.stack(
+        [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
+        for i in range(len(color))]
+    ).transpose()
+    return ListedColormap(cmap_val)
