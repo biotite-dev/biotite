@@ -156,7 +156,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
         if color is not None:
-            self._cmap = _generate_colormap(color)
+            self._cmap = self._generate_colormap(color)
         elif cmap is not None:
             if isinstance(cmap, str):
                 self._cmap = cm.get_cmap(cmap)
@@ -166,7 +166,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
         else:
             # Default colormap
             green = [89/255, 184/255, 76/255, 1]
-            self._cmap = _generate_colormap(green)
+            self._cmap = self._generate_colormap(green)
         if matrix is not None:
             self._matrix = matrix.score_matrix()
         else:
@@ -202,12 +202,12 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
             sim = (sim - min_sim) / (max_sim - min_sim)
             return sim
     
-
-def _generate_colormap(color):
-    from matplotlib.colors import ListedColormap, to_rgba
-    color = to_rgba(color)
-    cmap_val = np.stack(
-        [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
-        for i in range(len(color))]
-    ).transpose()
-    return ListedColormap(cmap_val)
+    @staticmethod
+    def _generate_colormap(color):
+        from matplotlib.colors import ListedColormap, to_rgba
+        color = to_rgba(color)
+        cmap_val = np.stack(
+            [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
+            for i in range(len(color))]
+        ).transpose()
+        return ListedColormap(cmap_val)
