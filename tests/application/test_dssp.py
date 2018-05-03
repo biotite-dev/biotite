@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 def test_dssp():
-    stack = strucio.get_structure_from(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
     array = stack[0]
     print(DsspApp.annotate_sse(array).tolist())
     assert DsspApp.annotate_sse(array).tolist() == \
