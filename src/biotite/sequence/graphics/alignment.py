@@ -3,7 +3,8 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer"]
+__all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer",
+           "AlignmentSymbolVisualizer"]
 
 import abc
 import numpy as np
@@ -211,3 +212,57 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
             for i in range(len(color))]
         ).transpose()
         return ListedColormap(cmap_val)
+
+
+class AlignmentSymbolVisualizer(AlignmentVisualizer):
+
+    _default_protein_colors = np.array([
+        (203, 245, 55 ),
+        (245, 55,  165),
+        (55,  122, 245),
+        (55,  57,  245),
+        (55,  245, 122),
+        (234, 245, 55 ),
+        (245, 55,  55 ),
+        (140, 245, 55 ),
+        (245, 55,  85 ),
+        (109, 245, 55 ),
+        (77,  245, 55 ),
+        (189, 55,  245),
+        (245, 191, 55 ),
+        (144, 55,  245),
+        (245, 100, 55 ),
+        (245, 55,  211),
+        (234, 55,  245),
+        (171, 245, 55 ),
+        (55,  245, 185),
+        (55,  245, 255),
+        (55,  122, 245),
+        (55,  57,  245),
+        (255, 255, 255),
+        (255, 255, 255)
+    ]) / 255
+
+    def __init__(self, alignment,
+                 symbols_per_line=50, padding=30, border_size=10,
+                 box_size=(20,30),
+                 labels=None, label_size=150,
+                 show_numbers=True, number_size=50,
+                 label_font=None, label_font_size=16,
+                 symbol_font=None, symbol_font_size=16, color_symbols=False,
+                 colors=None):
+        super().__init__(alignment, symbols_per_line, padding, border_size,
+                        box_size, labels, label_size, show_numbers,
+                        number_size, label_font, label_font_size, symbol_font,
+                        symbol_font_size, color_symbols)
+        if colors is None:
+            self._colors = AlignmentSymbolVisualizer._default_protein_colors
+        else:
+            self._colors = colors
+    
+    def get_color(self, alignment, pos_i, seq_i):
+        index = alignment.trace[pos_i, seq_i]
+        if index == -1:
+            return (1, 1, 1)
+        code = alignment.sequences[seq_i].code[index]
+        return self._colors[code]
