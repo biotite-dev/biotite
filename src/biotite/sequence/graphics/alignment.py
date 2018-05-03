@@ -51,7 +51,11 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         
         seq_num = self._alignment.trace.shape[1]
         seq_len = self._alignment.trace.shape[0]
-        line_count = (seq_len // self._symbols_per_line) + 1
+        line_count = (seq_len // self._symbols_per_line)
+        # Only extend line count by 1 if there is a remainder
+        # (remaining symbols)
+        if seq_len % self._symbols_per_line != 0:
+            line_count += 1
         fig_size_y = line_count * self._box_size[1] * seq_num
         fig_size_y += (line_count-1) * self._padding
         fig_size_y += 2 * self._border_size
