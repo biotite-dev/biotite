@@ -38,6 +38,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     _counter = 0
     
     def __init__(self, sequences, bin_path=None, mute=True):
+        # Check if all sequences share the same alphabet
+        alphabet = sequences[0].get_alphabet()
+        for seq in sequences:
+            if seq.get_alphabet() != alphabet:
+                raise ValueError("Alphabets of the sequences are not equal")
         if bin_path is None:
             bin_path = self.get_default_bin_path()
         super().__init__(bin_path, mute)
