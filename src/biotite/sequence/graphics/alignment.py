@@ -72,7 +72,8 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                     label = self._labels[j]
                     text = Text(self._border_size, y, label,
                                 color="black", ha="left", va="center",
-                                size=self._label_font_size, figure=fig)
+                                size=self._label_font_size, figure=fig,
+                                fontproperties=self._label_font)
                     fig.texts.append(text)
                     y -= self._box_size[1]
                 y -= self._padding
@@ -88,7 +89,8 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                     )
                     text = Text(fig_size_x - self._border_size, y, str(number),
                                 color="black", ha="right", va="center",
-                                size=self._label_font_size, figure=fig)
+                                size=self._label_font_size, figure=fig,
+                                fontproperties=self._label_font)
                     fig.texts.append(text)
                     y -= self._box_size[1]
                 y -= self._padding
@@ -112,7 +114,8 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                 box = Rectangle((x,y), self._box_size[0]-1,self._box_size[1]-1)
                 text = Text(x + self._box_size[0]/2, y + self._box_size[1]/2,
                             symbol, color="black", ha="center", va="center",
-                            size=self._symbol_font_size, figure=fig)
+                            size=self._symbol_font_size, figure=fig,
+                            fontproperties=self._symbol_font)
                 if self._color_symbols:
                     box.set_color("None")
                     text.set_color(color)
