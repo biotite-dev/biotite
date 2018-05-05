@@ -236,14 +236,14 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
                  show_numbers=True, number_size=50,
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False,
-                 colors=None):
+                 colors="rainbow"):
         super().__init__(alignment, symbols_per_line, padding, border_size,
                         box_size, labels, label_size, show_numbers,
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
-        if colors is None:
+        if isinstance(colors, str):
             alphabet = alignment.sequences[0].get_alphabet()
-            self._colors = color_schemes[alphabet]["rainbow"]
+            self._colors = color_schemes[alphabet][colors]
         else:
             self._colors = colors
     
