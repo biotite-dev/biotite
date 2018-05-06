@@ -3,13 +3,13 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["FeatureVisualizer"]
+__all__ = ["FeatureMap"]
 
 import numpy as np
 from ...visualize import Visualizer
 from ..annotation import Annotation, Feature, Location
 
-class FeatureVisualizer(Visualizer):
+class FeatureMap(Visualizer):
     
     def __init__(self, annotation, loc_range=None,
                  width=800, feature_size=50, line_size=2,
