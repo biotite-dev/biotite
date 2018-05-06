@@ -15,7 +15,7 @@ class SequenceLogo(Visualizer):
         # Check if all sequences share the same alphabet
         sequences = alignment.sequences
         self._alphabet = sequences[0].get_alphabet()
-        for seq in alignment.sequences:
+        for seq in sequences:
             if seq.get_alphabet() != self._alphabet:
                 raise ValueError("Alphabets of the sequences in the alignment "
                                  "are not equal")
@@ -82,6 +82,10 @@ class SequenceLogo(Visualizer):
                                 ha="left", va="bottom", color=self._colors[j],
                                 fontproperties=self._font, figure=fig)
                     fig.texts.append(text)
+                    # Rescale symbols,
+                    # so that they fit the given width and height
+                    # Scale factor is desired size
+                    # divided by current size
                     bounds = text.get_window_extent(renderer=renderer).bounds
                     text.set_path_effects([
                         ScaleEffect(symbol_width / bounds[2],

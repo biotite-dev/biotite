@@ -52,7 +52,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         
         seq_num = self._alignment.trace.shape[1]
         seq_len = self._alignment.trace.shape[0]
-        line_count = (seq_len // self._symbols_per_line)
+        line_count = seq_len // self._symbols_per_line
         # Only extend line count by 1 if there is a remainder
         # (remaining symbols)
         if seq_len % self._symbols_per_line != 0:
