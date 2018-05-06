@@ -64,7 +64,7 @@ class FeatureVisualizer(Visualizer):
             else:
                 part_line_width = \
                     line_width * remaining_length / self._line_length
-            line = Rectangle((self._border_size, y-self._line_size),
+            line = Rectangle((self._border_size, y - self._line_size/2),
                              part_line_width, self._line_size,
                              color="gray", linewidth=0)
             fig.patches.append(line)
