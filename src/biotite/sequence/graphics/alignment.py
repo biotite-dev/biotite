@@ -35,6 +35,13 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         self._symbol_font_size = symbol_font_size
         self._color_symbols    = color_symbols
 
+        # Check if all sequences share the same alphabet
+        alphabet = alignment.sequences[0].get_alphabet()
+        for seq in alignment.sequences:
+            if seq.get_alphabet() != self._alphabet:
+                raise ValueError("Alphabets of the sequences in the alignment "
+                                 "are not equal")
+
     @abc.abstractmethod
     def get_color(self, alignment, pos_i, seq_i):
         pass
