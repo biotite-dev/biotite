@@ -14,7 +14,7 @@ from .colorschemes import color_schemes
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
     def __init__(self, alignment,
-                 symbols_per_line=50, padding=30, border_size=10,
+                 symbols_per_line=50, spacing=30, border_size=10,
                  box_size=(20,30),
                  labels=None, label_size=150,
                  show_numbers=True, number_size=50,
@@ -22,7 +22,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                  symbol_font=None, symbol_font_size=16, color_symbols=False):
         self._alignment        = alignment
         self._symbols_per_line = symbols_per_line
-        self._padding          = padding
+        self._spacing          = spacing
         self._border_size      = border_size
         self._box_size         = box_size
         self._labels           = labels
@@ -65,7 +65,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         if seq_len % self._symbols_per_line != 0:
             line_count += 1
         fig_size_y = line_count * self._box_size[1] * seq_num
-        fig_size_y += (line_count-1) * self._padding
+        fig_size_y += (line_count-1) * self._spacing
         fig_size_y += 2 * self._border_size
 
         fig = self.create_figure(size=(fig_size_x, fig_size_y))
@@ -83,7 +83,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                                 fontproperties=self._label_font)
                     fig.texts.append(text)
                     y -= self._box_size[1]
-                y -= self._padding
+                y -= self._spacing
         
         ### Draw numbers  ###
         if self._show_numbers:
@@ -100,7 +100,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                                 fontproperties=self._label_font)
                     fig.texts.append(text)
                     y -= self._box_size[1]
-                y -= self._padding
+                y -= self._spacing
 
         ### Draw symbols in boxes ###
         x_start = self._label_size if self._labels is not None else 0
@@ -135,7 +135,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
             if line_pos >= self._symbols_per_line:
                 line_pos = 0
                 x = x_start
-                y_start -= seq_num * self._box_size[1] + self._padding
+                y_start -= seq_num * self._box_size[1] + self._spacing
             else:
                 x += self._box_size[0]
 
@@ -159,7 +159,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
 class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
     def __init__(self, alignment,
-                 symbols_per_line=50, padding=30, border_size=10,
+                 symbols_per_line=50, spacing=30, border_size=10,
                  box_size=(20,30),
                  labels=None, label_size=150,
                  show_numbers=True, number_size=50,
@@ -167,7 +167,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
                  symbol_font=None, symbol_font_size=16, color_symbols=False,
                  color=None, cmap=None, matrix=None):
         from matplotlib import cm
-        super().__init__(alignment, symbols_per_line, padding, border_size,
+        super().__init__(alignment, symbols_per_line, spacing, border_size,
                         box_size, labels, label_size, show_numbers,
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
@@ -240,14 +240,14 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 class AlignmentSymbolVisualizer(AlignmentVisualizer):
 
     def __init__(self, alignment,
-                 symbols_per_line=50, padding=30, border_size=10,
+                 symbols_per_line=50, spacing=30, border_size=10,
                  box_size=(20,30),
                  labels=None, label_size=150,
                  show_numbers=True, number_size=50,
                  label_font=None, label_font_size=16,
                  symbol_font=None, symbol_font_size=16, color_symbols=False,
                  colors="rainbow"):
-        super().__init__(alignment, symbols_per_line, padding, border_size,
+        super().__init__(alignment, symbols_per_line, spacing, border_size,
                         box_size, labels, label_size, show_numbers,
                         number_size, label_font, label_font_size, symbol_font,
                         symbol_font_size, color_symbols)
