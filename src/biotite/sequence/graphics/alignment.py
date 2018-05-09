@@ -38,7 +38,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         # Check if all sequences share the same alphabet
         alphabet = alignment.sequences[0].get_alphabet()
         for seq in alignment.sequences:
-            if seq.get_alphabet() != self._alphabet:
+            if seq.get_alphabet() != alphabet:
                 raise ValueError("Alphabets of the sequences in the alignment "
                                  "are not equal")
 
