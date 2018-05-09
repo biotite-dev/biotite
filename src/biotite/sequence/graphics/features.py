@@ -14,17 +14,23 @@ class FeatureMap(Visualizer):
     def __init__(self, annotation, loc_range=None,
                  width=800, feature_size=50, line_size=2,
                  multi_line=True, line_length=1000,
-                 padding=30, border_size=10,
+                 spacing=30, border_size=10,
+                 show_numbers=True, number_size=150,
                  font=None, font_size=16):
-        self._annotation = annotation
-        self._loc_range = loc_range
-        self._width = width
+        self._annotation   = annotation
+        self._loc_range    = loc_range
+        self._width        = width
         self._feature_size = feature_size
-        self._line_size = line_size
-        self._padding = padding
-        self._border_size = border_size
-        self._font = font
-        self._font_size = font_size
+        self._line_size    = line_size
+        self._spacing      = spacing
+        self._border_size  = border_size
+        self._show_numbers = show_numbers
+        self._font         = font
+        self._font_size    = font_size
+        if show_numbers:
+            self._number_size  = number_size
+        else:
+            self._number_size = 0
         if loc_range is None:
             self._loc_range = annotation.get_location_range()
         else:
@@ -42,15 +48,16 @@ class FeatureMap(Visualizer):
 
     def generate(self):
         from matplotlib.patches import Rectangle
+        from matplotlib.text import Text
 
         annotation_length = self._loc_range[1] - self._loc_range[0]
-        line_width = self._width - 2*self._border_size
+        line_width = self._width - 2*self._border_size - self._number_size
         line_count = annotation_length // self._line_length
         # Only extend line count by 1 if there is a remainder
         if annotation_length % self._line_length != 0:
             line_count += 1
         fig_size_y = line_count * self._feature_size
-        fig_size_y += (line_count-1) * self._padding
+        fig_size_y += (line_count-1) * self._spacing
         fig_size_y += 2 * self._border_size
 
         fig = self.create_figure(size=(self._width, fig_size_y))
@@ -68,7 +75,7 @@ class FeatureMap(Visualizer):
                              part_line_width, self._line_size,
                              color="gray", linewidth=0)
             fig.patches.append(line)
-            y -= self._padding
+            y -= self._spacing
             y -= self._feature_size
             remaining_length -= self._line_length
         
@@ -96,9 +103,53 @@ class FeatureMap(Visualizer):
                         self.drawfunc[key](
                             feature, x, y, width, height, fig, loc_index=i
                         )
-            y -= self._padding
+            y -= self._spacing
             y -= self._feature_size
             line_start_loc += self._line_length
+        
+        ### Draw position numbers ###
+        if self. _show_numbers:
+            x = self._width - self._border_size
+            y = fig_size_y - self._border_size - self._feature_size/2
+            for i in range(line_count):
+                if i == line_count-1:
+                    # Last line -> get number of last column in trace
+                    loc = self._loc_range[1] -1
+                else:
+                    loc = self._loc_range[0] + ((i+1) * self._line_length) -1
+                text = Text(x, y, str(loc),
+                            color="black", ha="right", va="center",
+                            size=self._font_size, figure=fig,
+                            fontproperties=self._font)
+                fig.texts.append(text)
+                y -= self._feature_size
+                y -= self._spacing
+
+
+            while line_start_loc < self._loc_range[1]:
+                annotation_for_line = self._annotation[
+                    line_start_loc : line_start_loc + self._line_length
+                ]
+                for feature in annotation_for_line:
+                    key = feature.key
+                    if key == "regulatory":
+                        key = feature.qual["regulatory_class"]
+                    if key in self.drawfunc:
+                        for i in range(len(feature.locs)):
+                            loc = feature.locs[i]
+                            loc_len = loc.last - loc.first + 1
+                            loc_in_line = loc.first - line_start_loc
+                            x = self._border_size
+                            x += line_width * (loc_in_line / self._line_length)
+                            # Line width multiplied by percentage of line
+                            width = line_width * (loc_len / self._line_length)
+                            height = self._feature_size
+                            self.drawfunc[key](
+                                feature, x, y, width, height, fig, loc_index=i
+                            )
+                y -= self._spacing
+                y -= self._feature_size
+                line_start_loc += self._line_length
         
         return fig
 
