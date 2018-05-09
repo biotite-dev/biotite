@@ -89,11 +89,14 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         if self._show_numbers:
             y = fig_size_y - self._border_size
             y -= self._box_size[1] / 2
-            for i in range(line_count-1):
+            for i in range(line_count):
                 for j in range(seq_num):
-                    number = self._get_seq_pos(
-                        self._alignment, (i+1) * self._symbols_per_line -1, j
-                    )
+                    if i == line_count-1:
+                        # Last line -> get number of last column in trace
+                        trace_pos = len(self._alignment.trace) -1
+                    else:
+                        trace_pos = (i+1) * self._symbols_per_line -1
+                    number = self._get_seq_pos(self._alignment, trace_pos, j)
                     text = Text(fig_size_x - self._border_size, y, str(number),
                                 color="black", ha="right", va="center",
                                 size=self._label_font_size, figure=fig,
@@ -139,7 +142,6 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
             else:
                 x += self._box_size[0]
 
-        #fig.patches.append(Rectangle((10, 20), 30, 40))
         return fig
     
     def _get_seq_pos(self, alignment, i, j):
