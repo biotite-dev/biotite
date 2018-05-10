@@ -2,228 +2,30 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import pyximport
-import numpy as np
-pyximport.install(setup_args={'include_dirs': np.get_include()})
+__author__ = "Patrick Kunzmann"
 
 from os.path import realpath, dirname, join, isdir, isfile, basename
-from os import listdir, makedirs
-import shutil
-from importlib import import_module
-import types
 import sys
-import abc
-import inspect
 import glob
+from doc.apidoc import *
+from doc.examples import *
 
-package_path = join( dirname(dirname(realpath(__file__))), "src" )
+absolute_path = dirname(realpath(__file__))
+package_path = join(dirname(absolute_path), "src")
 sys.path.insert(0, package_path)
 import biotite
 
-_indent = " " * 3
+### Creation of API documentation ###
 
-##### API Doc creation #####
+create_api_doc(package_path, join(absolute_path, "apidoc"))
 
-def create_api_doc(src_path, doc_path):
-    package_list = _create_package_doc("biotite",
-                                       join(src_path, "biotite"),
-                                       doc_path)
-    create_package_index(doc_path, package_list)
+##### Creation of code examples #####
 
-
-def _create_package_doc(pck, src_path, doc_path):
-    if not _is_package(src_path):
-        return []
-    else:
-        content = listdir(src_path)
-        dirs = [f for f in content if isdir(join(src_path, f))]
-        sub_pck = []
-        for directory in dirs:
-            sub = _create_package_doc(pck + "." + directory,
-                                      join(src_path, directory),
-                                      doc_path)
-            sub_pck += sub
-        
-        module = import_module(pck)
-        attr_list = dir(module)
-        func_list = [attr for attr in attr_list
-                     if attr[0] != "_"
-                     and type(getattr(module, attr))
-                     in [types.FunctionType, types.BuiltinFunctionType]
-                    ]
-        class_list = [attr for attr in attr_list
-                     if attr[0] != "_"
-                     and type(getattr(module, attr)) in [type, abc.ABCMeta]]
-        _create_files(doc_path, pck, class_list, func_list, sub_pck)
-        
-        return([pck] + sub_pck)
-
-
-def _create_files(doc_path, package, classes, functions, subpackages):
-    sub_path = join(doc_path, package)
-    if not isdir(sub_path):
-        makedirs(sub_path)
-    
-    for cls in classes:
-        file_content = \
-        """
-:orphan:
-
-{:}.{:}
-{:}
-.. autoclass:: {:}.{:}
-    :show-inheritance:
-    :members:
-    :undoc-members:
-    :inherited-members:
-        """.format(package, cls, "=" * (len(package)+len(cls)+1),
-                   package, cls)
-        with open(join(sub_path, cls+".rst"), "w") as f:
-            f.write(file_content)
-            
-    for func in functions:
-        file_content = \
-        """
-:orphan:
-
-{:}.{:}
-{:}
-.. autofunction:: {:}.{:}
-        """.format(package, func, "=" * (len(package)+len(func)+1),
-                   package, func)
-        with open(join(sub_path, func+".rst"), "w") as f:
-            f.write(file_content)
-    
-    
-    lines = []
-    
-    lines.append(package)
-    lines.append("=" * len(package))
-    lines.append("\n")
-    lines.append(".. automodule:: " + package)
-    lines.append("\n")
-    
-    lines.append("Classes")
-    lines.append("-" * len("Classes"))
-    lines.append("\n")
-    for cls in classes:
-        lines.append(_indent + "- :doc:`"
-                     + package + "." + cls
-                     + " <" + package + "/" + cls + ">`")
-    lines.append("\n")
-    
-    lines.append("Functions")
-    lines.append("-" * len("Functions"))
-    lines.append("\n")
-    for func in functions:
-        lines.append(_indent + "- :doc:`"
-                     + package + "." + func
-                     + " <" + package + "/" + func + ">`")
-    lines.append("\n")
-    
-    lines.append("Subpackages")
-    lines.append("-" * len("Subpackages"))
-    lines.append("\n")
-    for pck in subpackages:
-        lines.append(_indent + "- :doc:`"
-                     + pck
-                     + " <" + pck + ">`")
-    lines.append("\n")
-    
-    with open(join(doc_path, package+".rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-
-def create_package_index(doc_path, package_list):
-    lines = []
-    
-    lines.append("API Reference")
-    lines.append("=" * len("API Reference"))
-    lines.append("\n")
-    
-    lines.append(".. toctree::")
-    lines.append(_indent + ":maxdepth: 1")
-    lines.append("\n")
-    for pck in package_list:
-        lines.append(_indent + pck)
-    with open(join(doc_path, "index.rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-
-"""   
-def create_package_index(doc_path, package_list):
-    
-    lines = []
-    for pck in package_list:
-        lines.append(_indent + "- :doc:`"
-                     + pck
-                     + " <" + "/apidoc/" + pck + ">`")
-    with open(join(doc_path, "index"+".rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-"""
-
-def _is_package(path):
-    content = listdir(path)
-    return "__init__.py" in content
-
-
-create_api_doc(package_path, "apidoc")
-
-
-##### Creation of examples.rst files #####
-
-def create_example_file(directory):
-    lines = []
-    
-    with open(join(directory, "title"), "r") as f:
-        title = f.read().strip()
-    lines.append(title)
-    lines.append("=" * len(title))
-    lines.append("")
-    
-    if isfile(join(directory, "example.png")):
-        lines.append(".. image:: example.png")
-        lines.append("")
-    if isfile(join(directory, "example.txt")):
-        lines.append(".. literalinclude:: example.txt")
-        lines.append(_indent + ":language: none")
-        lines.append("")
-    
-    lines.append(".. literalinclude:: script.py")
-    lines.append("")
-    lines.append("(:download:`Source code <script.py>`)")
-    lines.append("")
-    
-    with open(join(directory, "example.rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-dirs = glob.glob("examples/*")
+dirs = glob.glob(join(absolute_path, "examples", "*"))
 for d in dirs:
     if isdir(d):
         create_example_file(d)
-
-
-##### Example index creation #####
-
-def create_example_index():
-    lines = []
-    
-    lines.append("Examples")
-    lines.append("=" * len("Examples"))
-    lines.append("")
-    
-    lines.append(".. toctree::")
-    lines.append("")
-    dirs = listdir("examples")
-    for d in dirs:
-        if isdir(join("examples", d)):
-            lines.append(_indent + join(basename(d), "example"))
-    with open("examples/index.rst", "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-
 create_example_index()
-
 
 ##### General #####
 
