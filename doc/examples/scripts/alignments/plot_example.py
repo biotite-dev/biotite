@@ -1,5 +1,10 @@
-# This script performs a pairwise sequence alignment of
-# avidin (Gallus gallus) with streptavidin (Streptomyces lavendulae).
+"""
+Pairwise sequence alignment of Avidin with Streptavidin
+=======================================================
+
+This script performs a pairwise sequence alignment of
+avidin (Gallus gallus) with streptavidin (Streptomyces lavendulae).
+"""
 
 import biotite
 import biotite.sequence as seq

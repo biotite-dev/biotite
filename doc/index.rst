@@ -67,7 +67,7 @@ Table of Contents
    install
    tutorial/index
    apidoc/index
-   examples/index
+   examples/gallery/index
    develop
    logo
 
