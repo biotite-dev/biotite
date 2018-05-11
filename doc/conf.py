@@ -98,6 +98,6 @@ sphinx_gallery_conf = {
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
-        absolute_path, "static/assets/general/biotite_icon_64p.png"
+        absolute_path, "static/assets/general/biotite_icon_thumb.png"
     )
 }
