@@ -16,7 +16,7 @@ class SequenceLogo(Visualizer):
         sequences = alignment.sequences
         self._alphabet = sequences[0].get_alphabet()
         for seq in sequences:
-            if seq.get_alphabet() != alphabet:
+            if seq.get_alphabet() != self._alphabet:
                 raise ValueError("Alphabets of the sequences in the alignment "
                                  "are not equal")
         
