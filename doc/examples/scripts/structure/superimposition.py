@@ -21,6 +21,9 @@ import biotite.database.rcsb as rcsb
 import numpy as np
 from  os import remove
 
+ku_dna_file = biotite.temp_file("ku_dna.cif")
+ku_file = biotite.temp_file("ku.cif")
+
 # Download and parse structure files
 file = rcsb.fetch("1JEY", "mmtf", biotite.temp_dir())
 ku_dna = strucio.load_structure(file)
@@ -43,13 +46,8 @@ ku_superimposed = struc.superimpose_apply(ku, transformation)
 # Write PDBx files as input for PyMOL
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_dna, data_block="ku_dna")
-cif_file.write("ku_dna.cif")
+cif_file.write(ku_dna_file)
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_superimposed, data_block="ku")
-cif_file.write("ku.cif")
-#
-#   Visualization with PyMOL...
-#
-# Remove files
-remove("ku_dna.cif")
-remove("ku.cif")
+cif_file.write(ku_file)
+# Visualization with PyMOL...

@@ -4,7 +4,7 @@ Pairwise sequence alignment of Avidin with Streptavidin
 
 This script performs a pairwise sequence alignment of
 avidin (*Gallus gallus*)
-with *streptavidin* (*Streptomyces lavendulae*).
+with streptavidin (*Streptomyces lavendulae*).
 """
 
 # Code source: Patrick Kunzmann
@@ -37,6 +37,8 @@ alignments = align.align_optimal(avidin_seq, streptavidin_seq, matrix,
                                  gap_penalty=(-10, -1), terminal_penalty=False)
 # Draw first and only alignment
 # The color intensity indicates the similiarity
-vis = graphics.AlignmentSimilarityVisualizer(alignments[0], matrix=matrix)
+vis = graphics.AlignmentSimilarityVisualizer(
+    alignments[0], matrix=matrix, labels=["Avidin", "Streptavidin"]
+)
 fig = vis.generate()
 plt.show()
