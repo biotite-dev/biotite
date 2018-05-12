@@ -17,6 +17,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as sts
 
 # Download and import file
 file = rcsb.fetch("3vkh", "cif", biotite.temp_dir())
@@ -30,16 +31,24 @@ psi *= 180/np.pi
 # Remove invalid values (NaN) at first and last position
 phi= phi[1:-1]
 psi= psi[1:-1]
-# Creation of 2D-histogram
-hist, psi_edges, phi_edges = np.histogram2d(
-    psi, phi, bins=72, normed=True, range=[[-180,180],[-180,180]])
 
+# Using gaussin KDE to visualize density
+data_set = np.vstack([phi, psi])
+density = sts.gaussian_kde(data_set)(data_set)
+# Ensure that high density colors are rendered in front
+i_sorted = density.argsort()
+phi = phi[i_sorted]
+psi = psi[i_sorted]
+density = density[i_sorted]
+# Normalize, so that the lonliest point gets a value of 1
+density = density / np.min(density)
+
+# Plot density
 fig = plt.figure()
 ax = fig.add_subplot(111)
-im = ax.contourf(phi_edges[:-1], psi_edges[:-1], hist, cmap="afmhot",
-                 levels=np.arange(0,0.0007,0.000025))
-cbar = fig.colorbar(im, ax=ax)
-cbar.set_label("Residue density")
+cax = ax.scatter(phi, psi, c=density, s=0.5, cmap="RdYlGn_r")
+cbar = fig.colorbar(cax, orientation="vertical")
+cbar.set_label("Relative density")
 ax.set_xlim(-180, 175)
 ax.set_ylim(-180, 175)
 ax.set_xlabel(r"$\phi$")
