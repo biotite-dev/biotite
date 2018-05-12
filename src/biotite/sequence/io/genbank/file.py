@@ -61,7 +61,7 @@ class GenBankFile(TextFile):
         for i, line in enumerate(self._lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " ":
+            if len(line) != 0 and line[0] != " " and line[:2] != "//":
                 stop = i
                 if start != -1:
                     # Store previous field
@@ -370,7 +370,8 @@ class GenBankFile(TextFile):
     def _get_seq_string(self):
         starts, stops = self._get_field_indices("ORIGIN")
         seq_str = ""
-        regex = re.compile("[0-9]| ")
+        # Remove numbers, emtpy spaces and the '//' at end of file
+        regex = re.compile("[0-9]| |/")
         for i in range(starts[0]+1, stops[0]):
             seq_str += regex.sub("", self._lines[i])
         return seq_str
