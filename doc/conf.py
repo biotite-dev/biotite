@@ -46,7 +46,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017, the Biotite contributors"
+copyright = "2017-2018, the Biotite contributors"
 version = biotite.__version__
 
 exclude_patterns = ["build"]
