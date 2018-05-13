@@ -54,9 +54,11 @@ for file in files[:10]:
 # on. Therefore, we write a function that creates a proper abbreviation
 # for a species name.
 
-def abbreviate(source):
-    splitted_source = source.split()
-    return "{:}. {:}".format(splitted_source[0][0], splitted_source[1])
+def abbreviate(species):
+    # Remove possible brackets
+    species = species.replace("[","").replace("]","")
+    splitted_species= species.split()
+    return "{:}. {:}".format(splitted_species[0][0], splitted_species[1])
 
 print("Sources:")
 sources = [abbreviate(file.get_source()) for file in files]
