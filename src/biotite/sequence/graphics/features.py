@@ -41,9 +41,12 @@ class FeatureMap(Visualizer):
             self._line_length = self._loc_range[1] - self._loc_range[0]
         
         self.drawfunc = {
-            "CDS" : draw_cds,
-            "gene" : draw_gene,
-            "misc_structure" : draw_misc,
+            "CDS"                   : draw_cds,
+            "gene"                  : draw_gene,
+            "misc_structure"        : draw_misc,
+            "promoter"              : draw_promoter,
+            "terminator"            : draw_terminator,
+            "ribosome_binding_site" : draw_rbs
         }
 
     def generate(self):
@@ -154,6 +157,8 @@ class FeatureMap(Visualizer):
         return fig
 
 
+
+
 def draw_cds(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
     def label_func(feature):
         if "product" not in feature.qual:
@@ -219,7 +224,8 @@ def _draw_coding(feature, label_func, x, y, width, height, figure,
         figure.texts.append(text)
 
 
-def draw_misc(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
+def draw_misc(feature, x, y, width, height, figure, loc_index=0,
+              style_dict={}):
     from matplotlib.patches import Rectangle
     from matplotlib.text import Text
 
@@ -228,3 +234,62 @@ def draw_misc(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
     rect = Rectangle((x, y + height/2 * (1-fraction)), width, height*fraction,
                      color="black", linewidth=0)
     figure.patches.append(rect)
+
+
+def draw_promoter(feature, x, y, width, height, figure, loc_index=0,
+                  style_dict={}):
+    from matplotlib.patches import Rectangle
+    from matplotlib.patches import Wedge
+    from matplotlib.patches import FancyArrow
+    from matplotlib.text import Text
+
+    base_width = 4
+    head_width = 8
+    curve_radius = 10
+
+    y_center = y + height/2
+    y_curve_max = y + height - head_width/2 + base_width/2
+    y_curve_min = y_curve_max - curve_radius
+    y_tip = y + height - head_width/2
+
+    vertical = Rectangle((x, y_center), base_width, y_curve_min-y_center,
+                         color="black", linewidth=0)
+    figure.patches.append(vertical)
+    curve = Wedge(center=(x+curve_radius, y_curve_min), r=curve_radius,
+                  theta1=90, theta2=180, width=base_width,
+                  color="black", linewidth=0)
+    figure.patches.append(curve)
+    horizontal = FancyArrow(
+        x+curve_radius, y_tip, dx=width-curve_radius, dy=0,
+        width=base_width, head_width=head_width, head_length=head_width,
+        length_includes_head=True, color="black", linewidth=0
+    )
+    figure.patches.append(horizontal)
+    if "note" in feature.qual:
+        text = Text(x + width/2, y + height/4, feature.qual["note"],
+                    color="black", ha="center", va="center",
+                    size=9, figure=figure)
+        figure.texts.append(text)
+
+
+def draw_terminator(feature, x, y, width, height, figure, loc_index=0,
+                    style_dict={}):
+    from matplotlib.patches import Rectangle
+    from matplotlib.text import Text
+
+    bar_width = 5
+    x_start = x + width/2 - bar_width/2
+
+    rect = Rectangle((x_start, y), bar_width, height,
+                     color="black", linewidth=0)
+    figure.patches.append(rect)
+
+def draw_rbs(feature, x, y, width, height, figure, loc_index=0,
+                    style_dict={}):
+    from matplotlib.patches import Ellipse
+
+    fraction = 0.4
+
+    ellipse = Ellipse((x + width/2, y + height/2), width, fraction*height,
+                     color="orange", linewidth=0)
+    figure.patches.append(ellipse)
