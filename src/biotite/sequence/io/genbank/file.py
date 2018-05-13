@@ -11,7 +11,7 @@ import textwrap
 import copy
 import re
 
-__all__ = ["GenBankFile", "GenPeptFile"]
+__all__ = ["GenBankFile", "GenPeptFile", "MultiFile"]
 
 
 class GenBankFile(TextFile):
@@ -524,3 +524,28 @@ class GenPeptFile(GenBankFile):
             raise InvalidFileError("The file does not contain "
                                    "sequence information")
         return ProteinSequence(seq_str)
+
+
+class MultiFile(TextFile):
+
+    def __init__(self, file_type):
+        super().__init__()
+        if file_type == "gb":
+            self._file_class = GenBankFile
+        elif file_type == "gp":
+            self._file_class = GenPeptFile
+        else:
+            raise ValueError("'{:}' is an invalid file type".format(file_type))
+
+    def __iter__(self):
+        start_i = 0
+        for i in range(len(self._lines)):
+            line = self._lines[i]
+            if line.strip() == "//":
+                # Create file with lines corresponding to that file
+                file = self._file_class()
+                file._lines = self._lines[start_i : i]
+                file.process_input()
+                # Reset file start index
+                start_i = i
+                yield file
