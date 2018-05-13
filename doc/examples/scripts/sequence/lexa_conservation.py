@@ -109,7 +109,6 @@ vis = graphics.AlignmentSimilarityVisualizer(
     symbols_per_line=25, label_size=250
 )
 figure = vis.generate()
-plt.show()
 
 ########################################################################
 # Finally we can generate our sequence logo.
