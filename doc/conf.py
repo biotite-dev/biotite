@@ -88,9 +88,6 @@ sphinx_gallery_conf = {
     "examples_dirs"             : "examples/scripts",
     "gallery_dirs"              : "examples/gallery",
     "filename_pattern"          : "/",
-    ###
-    "ignore_pattern"            : "/homolog_msa",
-    ###
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time

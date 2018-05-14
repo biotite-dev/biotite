@@ -5,10 +5,13 @@ MMTF as trajectory format
 This example demonstrates how the MMTF format can be used as an
 alterntive to classical trajecotry formats (TRR, XTC, etc.).
 
-For this purpose a trajectory file obtained from a simulation of the
-miniprotein TC5b (1001 frames, 304 atoms) was loaded,
-and the coordinates are saved as the default ``xCoordList``,
-``yCoordList`` and ``zCoordList`` in an MMTF file.
+For this purpose a trajectory file obtained from a MD simulation
+(Gromacs) of the miniprotein TC5b (PDB: 1L2Y) was loaded
+(1001 frames, 304 atoms), and the coordinates are saved as the default
+``xCoordList``, ``yCoordList`` and ``zCoordList`` in an MMTF file.
+
+The trajectory file can be downloaded
+:download:`here </static/assets/download/1l2y_md.xtc>`.
 
 Using the MTTF format for macromolecular trajectories takes advantage
 of the precise and open specification of the format and the wide support
@@ -17,6 +20,9 @@ This comes at cost of a slightly higher file compared to the XTC format,
 the limited size of each field (max. 2\ :sup:`32`\ -1 bytes) and the
 violation of the format itself (most mandatory fields are omitted).
 """
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
 
 import biotite
 import biotite.structure as struc
