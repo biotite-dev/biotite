@@ -13,27 +13,30 @@ from .colorschemes import color_schemes
 
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
-    def __init__(self, alignment,
-                 symbols_per_line=50, spacing=30, border_size=10,
-                 box_size=(20,30),
-                 labels=None, label_size=150,
-                 show_numbers=True, number_size=50,
-                 label_font=None, label_font_size=16,
-                 symbol_font=None, symbol_font_size=16, color_symbols=False):
+    def __init__(self, alignment):
         self._alignment        = alignment
-        self._symbols_per_line = symbols_per_line
-        self._spacing          = spacing
-        self._border_size      = border_size
-        self._box_size         = box_size
-        self._labels           = labels
-        self._label_size       = label_size
-        self._show_numbers     = show_numbers
-        self._number_size      = number_size
-        self._label_font       = label_font
-        self._label_font_size  = label_font_size
-        self._symbol_font      = symbol_font
-        self._symbol_font_size = symbol_font_size
-        self._color_symbols    = color_symbols
+
+        self._show_numbers     = False
+        self._number_size      = 50
+        self._number_font      = None
+        self._number_font_size = 16
+        self._number_func      = [lambda x: x + 1] * len(alignment.sequences)
+
+        self._show_labels      = False
+        self._labels           = None
+        self._label_size       = 150
+        self._label_font       = None
+        self._label_font_size  = 16
+
+        self._box_size         = (20,30)
+        self._symbols_per_line = 50
+        self._symbol_font      = None
+        self._symbol_font_size = 16
+        self._color_symbols    = False
+
+        self._spacing          = 30
+        self._border_size      = 10
+        
 
         # Check if all sequences share the same alphabet
         alphabet = alignment.sequences[0].get_alphabet()
@@ -41,6 +44,38 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
             if seq.get_alphabet() != alphabet:
                 raise ValueError("Alphabets of the sequences in the alignment "
                                  "are not equal")
+    
+    def add_location_numbers(self, size=50, font_size=16, font=None,
+                             number_functions=None):
+        self._show_numbers     = True
+        self._number_size      = size
+        self._number_font      = font
+        self._number_font_size = font_size
+        if number_functions is not None:
+            for i, func in enumerate(number_functions):
+                if func is not None:
+                    self._number_func[i] = func
+    
+    def add_labels(self, labels, size=150, font_size=16, font=None):
+        self._show_labels      = True
+        self._labels           = labels
+        self._label_size       = size
+        self._label_font       = font
+        self._label_font_size  = font_size
+    
+    def set_alignment_properties(self, box_size=(20,30), symbols_per_line=50,
+                                 font_size=16, font=None, color_symbols=False):
+        self._box_size         = box_size
+        self._symbols_per_line = symbols_per_line
+        self._symbol_font      = font
+        self._symbol_font_size = font_size
+        self._color_symbols    = color_symbols
+    
+    def set_spacing(self, spacing):
+        self._spacing = spacing
+    
+    def set_border_size(self, border_size):
+        self._border_size = border_size
 
     @abc.abstractmethod
     def get_color(self, alignment, pos_i, seq_i):
@@ -96,11 +131,13 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                         trace_pos = len(self._alignment.trace) -1
                     else:
                         trace_pos = (i+1) * self._symbols_per_line -1
-                    number = self._get_seq_pos(self._alignment, trace_pos, j)
+                    seq_index = self._get_last_real_index(self._alignment,
+                                                          trace_pos, j)
+                    number = self._number_func[j](seq_index)
                     text = Text(fig_size_x - self._border_size, y, str(number),
                                 color="black", ha="right", va="center",
-                                size=self._label_font_size, figure=fig,
-                                fontproperties=self._label_font)
+                                size=self._number_font_size, figure=fig,
+                                fontproperties=self._number_font)
                     fig.texts.append(text)
                     y -= self._box_size[1]
                 y -= self._spacing
@@ -144,52 +181,46 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
 
         return fig
     
-    def _get_seq_pos(self, alignment, i, j):
-        pos_found = False
-        while not pos_found:
+    def _get_last_real_index(self, alignment, i, j):
+        index_found = False
+        while not index_found:
             if i == 0:
-                pos = 0
-                pos_found = True
+                index = 0
+                index_found = True
             else:
-                pos = alignment.trace[i,j]
-                if pos != -1:
-                    pos_found = True
+                index = alignment.trace[i,j]
+                if index != -1:
+                    index_found = True
             i -= 1
-        return pos + 1
+        return index
 
 
 class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
-    def __init__(self, alignment,
-                 symbols_per_line=50, spacing=30, border_size=10,
-                 box_size=(20,30),
-                 labels=None, label_size=150,
-                 show_numbers=True, number_size=50,
-                 label_font=None, label_font_size=16,
-                 symbol_font=None, symbol_font_size=16, color_symbols=False,
-                 color=None, cmap=None, matrix=None):
+    def __init__(self, alignment, matrix=None):
         from matplotlib import cm
-        super().__init__(alignment, symbols_per_line, spacing, border_size,
-                        box_size, labels, label_size, show_numbers,
-                        number_size, label_font, label_font_size, symbol_font,
-                        symbol_font_size, color_symbols)
-        if color is not None:
-            self._cmap = self._generate_colormap(color, color_symbols)
-        elif cmap is not None:
+        super().__init__(alignment)
+        if matrix is not None:
+            self._matrix = matrix.score_matrix()
+        else:
+            self._matrix = None 
+        # Default colormap
+        green = [89/255, 184/255, 76/255, 1]
+        self._cmap = self._generate_colormap(green, self._color_symbols)
+    
+    def set_color(self, color=None, cmap=None):
+        if color is None and cmap is None:
+            raise ValueError("Either color or colormap must be set")
+        elif color is not None:
+            self._cmap = self._generate_colormap(color, self._color_symbols)
+        else:
+            # cmap is not None
             if isinstance(cmap, str):
                 self._cmap = cm.get_cmap(cmap)
             else:
                 # cmap is a colormap
                 self._cmap = cmap
-        else:
-            # Default colormap
-            green = [89/255, 184/255, 76/255, 1]
-            self._cmap = self._generate_colormap(green, color_symbols)
-        if matrix is not None:
-            self._matrix = matrix.score_matrix()
-        else:
-            self._matrix = None 
-    
+
     def get_color(self, alignment, pos_i, seq_i):
         index1 = alignment.trace[pos_i, seq_i]
         if index1 == -1:
@@ -241,18 +272,12 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
 class AlignmentSymbolVisualizer(AlignmentVisualizer):
 
-    def __init__(self, alignment,
-                 symbols_per_line=50, spacing=30, border_size=10,
-                 box_size=(20,30),
-                 labels=None, label_size=150,
-                 show_numbers=True, number_size=50,
-                 label_font=None, label_font_size=16,
-                 symbol_font=None, symbol_font_size=16, color_symbols=False,
-                 colors="rainbow"):
-        super().__init__(alignment, symbols_per_line, spacing, border_size,
-                        box_size, labels, label_size, show_numbers,
-                        number_size, label_font, label_font_size, symbol_font,
-                        symbol_font_size, color_symbols)
+    def __init__(self, alignment):
+        super().__init__(alignment)
+        alphabet = alignment.sequences[0].get_alphabet()
+        self._colors = color_schemes[alphabet]["rainbow"]
+    
+    def set_color_scheme(self, colors):
         if isinstance(colors, str):
             alphabet = alignment.sequences[0].get_alphabet()
             self._colors = color_schemes[alphabet][colors]
@@ -262,6 +287,7 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
     def get_color(self, alignment, pos_i, seq_i):
         index = alignment.trace[pos_i, seq_i]
         if index == -1:
+            # Gaps are white
             return (1, 1, 1)
         code = alignment.sequences[seq_i].code[index]
         return self._colors[code]

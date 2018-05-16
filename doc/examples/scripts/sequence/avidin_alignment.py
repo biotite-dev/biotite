@@ -38,7 +38,8 @@ alignments = align.align_optimal(avidin_seq, streptavidin_seq, matrix,
 # Draw first and only alignment
 # The color intensity indicates the similiarity
 vis = graphics.AlignmentSimilarityVisualizer(
-    alignments[0], matrix=matrix, labels=["Avidin", "Streptavidin"]
-)
+    alignments[0], matrix=matrix)
+vis.add_labels(labels=["Avidin", "Streptavidin"])
+vis.add_location_numbers()
 fig = vis.generate()
 plt.show()

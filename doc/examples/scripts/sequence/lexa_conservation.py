@@ -106,10 +106,9 @@ for site in binding_sites[:10]:
 # alignment.
 
 alignment = clustalo.ClustalOmegaApp.align(binding_sites)
-vis = graphics.AlignmentSimilarityVisualizer(
-    alignment[:,:10], show_numbers=False, labels=sources[:10],
-    symbols_per_line=25, label_size=250
-)
+vis = graphics.AlignmentSimilarityVisualizer(alignment[:,:10])
+vis.set_alignment_properties(symbols_per_line=25)
+vis.add_labels(labels=sources[:10], size=250)
 figure = vis.generate()
 
 ########################################################################
