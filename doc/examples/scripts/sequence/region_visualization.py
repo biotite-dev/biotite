@@ -41,7 +41,6 @@ for feature in annotation:
 # Extend the location range by 1000 (arbitrary) in each dirction
 min_loc -= 10000
 max_loc += 10000
-print(min_loc, max_loc)
 # Visualize the region as feature map
 feature_map = graphics.FeatureMap(annotation, loc_range=(min_loc, max_loc),
                                   line_length=2000)

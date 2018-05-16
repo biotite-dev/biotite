@@ -13,7 +13,7 @@ For this purpose a trajectory file obtained from a MD simulation
 The trajectory file can be downloaded
 :download:`here </static/assets/download/1l2y_md.xtc>`.
 
-Using the MTTF format for macromolecular trajectories takes advantage
+Using the MMTF format for macromolecular trajectories takes advantage
 of the precise and open specification of the format and the wide support
 by a multitude of software.
 This comes at cost of a slightly higher file compared to the XTC format,
