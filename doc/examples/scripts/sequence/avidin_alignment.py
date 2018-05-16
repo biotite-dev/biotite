@@ -41,5 +41,6 @@ vis = graphics.AlignmentSimilarityVisualizer(
     alignments[0], matrix=matrix)
 vis.add_labels(labels=["Avidin", "Streptavidin"])
 vis.add_location_numbers()
+vis.set_alignment_properties(symbols_per_line=40)
 fig = vis.generate()
 plt.show()
