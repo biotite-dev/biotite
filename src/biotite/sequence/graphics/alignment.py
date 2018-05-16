@@ -209,6 +209,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
         self._cmap = self._generate_colormap(green, self._color_symbols)
     
     def set_color(self, color=None, cmap=None):
+        from matplotlib import cm
         if color is None and cmap is None:
             raise ValueError("Either color or colormap must be set")
         elif color is not None:
