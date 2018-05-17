@@ -12,7 +12,9 @@ from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
 from ..temp import temp_file
+import numpy as np
 import abc
+from collections import OrderedDict
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
@@ -59,12 +61,17 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         super().evaluate()
         out_file = FastaFile()
         out_file.read(self._out_file_name)
-        seq_dict = dict(out_file)
+        seq_dict = OrderedDict(out_file)
+        # Get alignment
         out_seq_str = [None] * len(seq_dict)
         for i in range(len(self._sequences)):
             out_seq_str[i] = seq_dict[str(i)]
         trace = Alignment.trace_from_strings(out_seq_str)
         self._alignment = Alignment(self._sequences, trace, None)
+        # Also obtain original order
+        self._order = np.zeros(len(seq_dict), dtype=int)
+        for i, seq_index in enumerate(seq_dict):
+             self._order[i] = int(seq_index)
     
     @requires_state(AppState.JOINED)
     def get_alignment(self):
@@ -77,6 +84,37 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             The global multiple sequence alignment.
         """
         return self._alignment
+    
+    @requires_state(AppState.JOINED)
+    def get_alignment_order(self):
+        """
+        Get the order of the resulting multiple sequence alignment.
+
+        Usually the order of sequences in the output file is
+        different from the input file, e.g. the sequences are sorted by
+        distances.
+        When using `align()` this order is rearranged so that its is the
+        same as the input order. This method returns the original order 
+        of the sequences that can be used to restore the MSA software
+        intended order
+        
+        Returns
+        -------
+        order : ndarray, dtype=int
+            The sequence order intended by the MSA software.
+        
+        Examples
+        --------
+        Align sequences and restore the original order:
+
+        app = ClustalOmegaApp(sequences)
+        app.start()
+        app.join()
+        alignment = app.get_alignment()
+        order = app.get_alignment_order()
+        alignment = alignment[:, order]
+        """
+        return self._order
     
     @staticmethod
     @abc.abstractmethod

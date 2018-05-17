@@ -37,4 +37,6 @@ class MafftApp(MSAApp):
         return "mafft"
     
     def get_cli_arguments(self):
-        return ["--auto", self.get_input_file_path()]
+        return ["--auto",
+                "--reorder",
+                self.get_input_file_path()]
