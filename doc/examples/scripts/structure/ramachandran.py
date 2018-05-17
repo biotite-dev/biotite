@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as sts
 
-# Download and import file
+# Download and parse file
 file = rcsb.fetch("3vkh", "cif", biotite.temp_dir())
 atom_array = strucio.load_structure(file)
 # Calculate backbone dihedral angles

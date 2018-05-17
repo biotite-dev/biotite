@@ -13,9 +13,11 @@ sequence alignment of the hit sequences afterwards, using MUSCLE.
 import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
+import biotite.sequence.graphics as graphics
 import biotite.application.muscle as muscle
 import biotite.application.blast as blast
 import biotite.database.entrez as entrez
+import matplotlib.pyplot as plt
 
 # Download sequence of Streptococcus pyogenes Cas9
 file_name = entrez.fetch("Q99ZW2", biotite.temp_dir(), "fa", "protein", "fasta")
@@ -42,9 +44,23 @@ for hit in hits:
     hit_seqs.append(fasta.get_sequence(file))
 
 # Perform a multiple sequence alignment using MUSCLE
-ali = muscle.MuscleApp.align(hit_seqs)
+app = muscle.MuscleApp(hit_seqs)
+app.start()
+app.join()
+alignment = app.get_alignment()
 # Print the MSA with hit IDs
 print("MSA results:")
-gapped_seqs = ali.get_gapped_sequences()
+gapped_seqs = alignment.get_gapped_sequences()
 for i in range(len(gapped_seqs)):
     print(hits[i], " "*3, gapped_seqs[i])
+
+# Visualize the first 200 columns
+# of the sequence using AlignmentSymbolVisualizer
+# Reorder alignments to reflect sequence distance
+order = app.get_alignment_order()
+vis = graphics.AlignmentSymbolVisualizer(alignment[:200, order.tolist()])
+vis.add_labels(labels=[hits[i] for i in order])
+vis.add_location_numbers()
+vis.set_alignment_properties(symbols_per_line=40)
+figure = vis.generate()
+plt.show()
