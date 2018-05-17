@@ -130,8 +130,12 @@ class Alignment(object):
     
     def __getitem__(self, index):
         if isinstance(index, tuple):
-            return Alignment(self.sequences[index[1]], self.trace[index],
-                             self.score)
+            new_trace = self.trace[index]
+            if isinstance(index[1], (list, tuple, np.ndarray)):
+                new_sequences = [self.sequences[i] for i in index[1]]
+            else:
+                new_sequences = self.sequences[index[1]]
+            return Alignment(new_sequences, new_trace, self.score)
         elif isinstance(index, slice):
             return Alignment(self.sequences[:], self.trace[index], self.score)
         else:
