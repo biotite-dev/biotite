@@ -19,7 +19,6 @@ import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import numpy as np
-from  os import remove
 
 ku_dna_file = biotite.temp_file("ku_dna.cif")
 ku_file = biotite.temp_file("ku.cif")
