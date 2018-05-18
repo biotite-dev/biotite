@@ -12,25 +12,23 @@ from ..annotation import Annotation, Feature, Location
 class FeatureMap(Visualizer):
     
     def __init__(self, annotation, loc_range=None,
-                 width=800, feature_size=50, line_size=2,
-                 multi_line=True, line_length=1000,
-                 spacing=30, border_size=10,
-                 show_numbers=True, number_size=150,
-                 font=None, font_size=16):
+                 width=800, multi_line=True, line_length=1000):
+        super().__init__()
         self._annotation   = annotation
         self._loc_range    = loc_range
         self._width        = width
-        self._feature_size = feature_size
-        self._line_size    = line_size
-        self._spacing      = spacing
-        self._border_size  = border_size
-        self._show_numbers = show_numbers
-        self._font         = font
-        self._font_size    = font_size
-        if show_numbers:
-            self._number_size  = number_size
-        else:
-            self._number_size = 0
+
+        self._feature_size = 50
+        self._line_size    = 2
+        
+        self._spacing      = 30
+        
+        self._border_size  = 10
+        
+        self._show_numbers        = False
+        self._number_font         = None
+        self._number_font_size    = 16
+        
         if loc_range is None:
             self._loc_range = annotation.get_location_range()
         else:
@@ -48,6 +46,24 @@ class FeatureMap(Visualizer):
             "terminator"            : draw_terminator,
             "ribosome_binding_site" : draw_rbs
         }
+
+        self.style = {}
+    
+    def add_location_numbers(self, size=50, font_size=16, font=None):
+        self._show_numbers     = True
+        self._number_size      = size
+        self._number_font      = font
+        self._number_font_size = font_size
+    
+    def set_size(self, feature_size=50, line_size=2):
+        self._feature_size = feature_size
+        self._line_size    = line_size
+
+    def set_spacing(self, spacing):
+        self._spacing = spacing
+    
+    def set_border_size(self, border_size):
+        self._border_size = border_size
 
     def generate(self):
         from matplotlib.patches import Rectangle
@@ -159,7 +175,7 @@ class FeatureMap(Visualizer):
 
 
 
-def draw_cds(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
+def draw_cds(feature, x, y, width, height, figure, loc_index, style_dict):
     def label_func(feature):
         if "product" not in feature.qual:
             return None
@@ -171,7 +187,7 @@ def draw_cds(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
                  loc_index, style_dict)
 
 
-def draw_gene(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
+def draw_gene(feature, x, y, width, height, figure, loc_index, style_dict):
     def label_func(feature):
         if  "gene" not in feature.qual:
             return None
@@ -182,7 +198,7 @@ def draw_gene(feature, x, y, width, height, figure, loc_index=0, style_dict={}):
 
 
 def _draw_coding(feature, label_func, x, y, width, height, figure,
-                loc_index=0, style_dict={}):
+                loc_index, style_dict):
     from matplotlib.patches import FancyArrow
     from matplotlib.text import Text
 
@@ -224,8 +240,7 @@ def _draw_coding(feature, label_func, x, y, width, height, figure,
         figure.texts.append(text)
 
 
-def draw_misc(feature, x, y, width, height, figure, loc_index=0,
-              style_dict={}):
+def draw_misc(feature, x, y, width, height, figure, loc_index, style_dict):
     from matplotlib.patches import Rectangle
     from matplotlib.text import Text
 
@@ -236,8 +251,7 @@ def draw_misc(feature, x, y, width, height, figure, loc_index=0,
     figure.patches.append(rect)
 
 
-def draw_promoter(feature, x, y, width, height, figure, loc_index=0,
-                  style_dict={}):
+def draw_promoter(feature, x, y, width, height, figure, loc_index, style_dict):
     from matplotlib.patches import Rectangle
     from matplotlib.patches import Wedge
     from matplotlib.patches import FancyArrow
@@ -272,8 +286,8 @@ def draw_promoter(feature, x, y, width, height, figure, loc_index=0,
         figure.texts.append(text)
 
 
-def draw_terminator(feature, x, y, width, height, figure, loc_index=0,
-                    style_dict={}):
+def draw_terminator(feature, x, y, width, height, figure,
+                    loc_index, style_dict):
     from matplotlib.patches import Rectangle
     from matplotlib.text import Text
 
@@ -284,8 +298,7 @@ def draw_terminator(feature, x, y, width, height, figure, loc_index=0,
                      color="black", linewidth=0)
     figure.patches.append(rect)
 
-def draw_rbs(feature, x, y, width, height, figure, loc_index=0,
-                    style_dict={}):
+def draw_rbs(feature, x, y, width, height, figure, loc_index, style_dict):
     from matplotlib.patches import Ellipse
 
     fraction = 0.4

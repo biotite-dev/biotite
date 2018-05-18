@@ -11,7 +11,8 @@ from .colorschemes import color_schemes
 
 class SequenceLogo(Visualizer):
     
-    def __init__(self, alignment, width, height, font=None, colors="rainbow"):
+    def __init__(self, alignment, width, height):
+        super().__init__()
         # Check if all sequences share the same alphabet
         sequences = alignment.sequences
         self._alphabet = sequences[0].get_alphabet()
@@ -41,7 +42,13 @@ class SequenceLogo(Visualizer):
 
         self._width = width
         self._height = height
+        self._font = None
+        self._colors = color_schemes[self._alphabet]["rainbow"]
+    
+    def set_font(self, font):
         self._font = font
+    
+    def set_colors(self, colors):
         if isinstance(colors, str):
             self._colors = color_schemes[self._alphabet][colors]
         else:

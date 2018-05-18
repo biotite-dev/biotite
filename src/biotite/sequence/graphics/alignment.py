@@ -14,6 +14,7 @@ from .colorschemes import color_schemes
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
     def __init__(self, alignment):
+        super().__init__()
         self._alignment        = alignment
 
         self._show_numbers     = False
