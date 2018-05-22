@@ -9,7 +9,7 @@ __all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer",
 import abc
 import numpy as np
 from ...visualize import Visualizer
-from .colorschemes import color_schemes
+from .colorschemes import get_color_scheme
 
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     
@@ -277,12 +277,12 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
     def __init__(self, alignment):
         super().__init__(alignment)
         alphabet = alignment.sequences[0].get_alphabet()
-        self._colors = color_schemes[alphabet]["rainbow"]
+        self._colors = get_color_scheme("rainbow", alphabet)
     
-    def set_color_scheme(self, colors):
+    def set_color_scheme(self, scheme):
         if isinstance(colors, str):
             alphabet = alignment.sequences[0].get_alphabet()
-            self._colors = color_schemes[alphabet][colors]
+            self._colors = get_color_scheme("rainbow", scheme)
         else:
             self._colors = colors
     

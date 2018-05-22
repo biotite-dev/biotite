@@ -7,7 +7,7 @@ __all__ = ["SequenceLogo"]
 
 import numpy as np
 from ...visualize import Visualizer
-from .colorschemes import color_schemes
+from .colorschemes import get_color_scheme
 
 class SequenceLogo(Visualizer):
     
@@ -43,14 +43,14 @@ class SequenceLogo(Visualizer):
         self._width = width
         self._height = height
         self._font = None
-        self._colors = color_schemes[self._alphabet]["rainbow"]
+        self._colors = get_color_scheme("rainbow", self._alphabet)
     
     def set_font(self, font):
         self._font = font
     
-    def set_colors(self, colors):
+    def set_colors(self, scheme):
         if isinstance(colors, str):
-            self._colors = color_schemes[self._alphabet][colors]
+            self._colors = get_color_scheme(scheme, self._alphabet)
         else:
             self._colors = colors
 

@@ -3,53 +3,42 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["color_schemes"]
+__all__ = ["get_color_scheme"]
 
 import numpy as np
-from ..seqtypes import NucleotideSequence, ProteinSequence
-
-_rainbow_protein_colors = np.array([
-    (203, 245, 55 ),
-    (245, 55,  165),
-    (55,  122, 245),
-    (55,  57,  245),
-    (55,  245, 122),
-    (234, 245, 55 ),
-    (245, 55,  55 ),
-    (140, 245, 55 ),
-    (245, 55,  85 ),
-    (109, 245, 55 ),
-    (77,  245, 55 ),
-    (189, 55,  245),
-    (245, 191, 55 ),
-    (144, 55,  245),
-    (245, 100, 55 ),
-    (245, 55,  211),
-    (234, 55,  245),
-    (171, 245, 55 ),
-    (55,  245, 185),
-    (55,  245, 255),
-    (55,  122, 245),
-    (55,  57,  245),
-    (255, 255, 255),
-    (255, 255, 255)
-]) / 255
+import json
+from os.path import join, dirname, realpath
+import glob
+import os
+from ..alphabet import Alphabet
 
 
-_rainbow_dna_colors = np.array([
-    (55,  55,  245),
-    (55,  245, 55 ),
-    (245, 245, 55 ),
-    (245, 55,  55 )
-]) / 255
+_scheme_dir = join(dirname(realpath(__file__)), "color_schemes")
 
+_color_schemes = []
 
+for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
+    with open(file_name, "r") as file:
+        scheme = json.load(file)
+        alphabet = Alphabet(scheme["alphabet"])
+        # Store alphabet as 'Alphabet' object
+        scheme["alphabet"] = alphabet
+        colors = [None] * len(scheme["colors"])
+        for key, value in scheme["colors"].items():
+            index = alphabet.encode(key)
+            colors[index] = value
+        _color_schemes.append(scheme)
+        # Store colors as symbol code ordered list of colors,
+        # rather than dictionary
+        scheme["colors"] = colors
+        _color_schemes.append(scheme)
 
-color_schemes = {
-    NucleotideSequence.alphabet : {
-        "rainbow" : _rainbow_dna_colors
-    },
-    ProteinSequence.alphabet : {
-        "rainbow" : _rainbow_protein_colors
-    }
-}
+def get_color_scheme(name, alphabet, default="#FFFFFF"):
+    for scheme in _color_schemes:
+        if scheme["name"] == name and scheme["alphabet"].extends(alphabet):
+            colors = scheme["colors"]
+            # Replace None values with default color
+            colors = [color if color is not None else default
+                      for color in colors]
+            return colors
+    raise ValueError("Unkown scheme '{:}' for given alphabet".format(name))
