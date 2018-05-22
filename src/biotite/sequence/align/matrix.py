@@ -305,8 +305,7 @@ class SubstitutionMatrix(object):
         matrix_dict : dict
             A dictionary representing the substitution matrix.
         """
-        filename = "{:}/{:}.mat".format(SubstitutionMatrix._db_dir,
-                                        matrix_name)
+        filename = SubstitutionMatrix._db_dir + os.sep + matrix_name + ".mat"
         with open(filename, "r") as f:
             return SubstitutionMatrix.dict_from_str(f.read())
     
