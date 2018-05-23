@@ -6,7 +6,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["FeatureMap"]
 
 import numpy as np
-from ...visualize import Visualizer
+from ...visualize import Visualizer, colors
 from ..annotation import Annotation, Feature, Location
 
 class FeatureMap(Visualizer):
@@ -229,7 +229,7 @@ def _draw_coding(feature, label_func, x, y, width, height, figure,
     arrow = FancyArrow(tail_x, arrow_y, dx, dy,
                        width=tail_height, head_width=head_height,
                        head_length=head_width, length_includes_head=True,
-                       color="forestgreen", linewidth=0)
+                       color=colors["dimgreen"], linewidth=0)
     figure.patches.append(arrow)
 
     label = label_func(feature)
@@ -306,5 +306,5 @@ def draw_rbs(feature, x, y, width, height, figure, loc_index, style_dict):
     fraction = 0.4
 
     ellipse = Ellipse((x + width/2, y + height/2), width, fraction*height,
-                     color="orange", linewidth=0)
+                     color=colors["dimorange"], linewidth=0)
     figure.patches.append(ellipse)

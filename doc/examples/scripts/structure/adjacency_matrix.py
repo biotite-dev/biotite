@@ -17,6 +17,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 file_name = rcsb.fetch("1aki", "mmtf", biotite.temp_dir())
 array = strucio.load_structure(file_name)
@@ -35,5 +36,6 @@ for i in range(ca.array_length()):
 
 figure = plt.figure()
 ax = figure.add_subplot(111)
-ax.matshow(adjacency_matrix, cmap="Greens")
+cmap = ListedColormap(["white", biotite.colors["dimgreen"]])
+ax.matshow(adjacency_matrix, cmap=cmap)
 plt.show()

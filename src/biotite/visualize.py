@@ -3,9 +3,10 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Visualizer"]
+__all__ = ["Visualizer", "colors"]
 
 import abc
+from collections import OrderedDict
 
 class Visualizer(metaclass=abc.ABCMeta):
     
@@ -19,3 +20,17 @@ class Visualizer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate(self):
         pass
+
+
+colors = OrderedDict([
+    ("brightorange" , "#ffb569ff"),
+    ("lightorange"  , "#ff982dff"),
+    ("orange"       , "#ff8405ff"),
+    ("dimorange"    , "#dc7000ff"),
+    ("darkorange"   , "#b45c00ff"),
+    ("brightgreen"  , "#98e97fff"),
+    ("lightgreen"   , "#6fe04cff"),
+    ("green"        , "#52da2aff"),
+    ("dimgreen"     , "#45bc20ff"),
+    ("darkgreen"    , "#389a1aff"),
+])

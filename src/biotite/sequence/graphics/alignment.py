@@ -8,7 +8,7 @@ __all__ = ["AlignmentVisualizer", "AlignmentSimilarityVisualizer",
 
 import abc
 import numpy as np
-from ...visualize import Visualizer
+from ...visualize import Visualizer, colors
 from .colorschemes import get_color_scheme
 
 class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
@@ -206,8 +206,8 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
         else:
             self._matrix = None 
         # Default colormap
-        green = [89/255, 184/255, 76/255, 1]
-        self._cmap = self._generate_colormap(green, self._color_symbols)
+        self._cmap = self._generate_colormap(colors["dimgreen"],
+                                             self._color_symbols)
     
     def set_color(self, color=None, cmap=None):
         from matplotlib import cm

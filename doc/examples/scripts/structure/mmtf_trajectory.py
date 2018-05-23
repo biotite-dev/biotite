@@ -54,7 +54,7 @@ mmtf_size = os.path.getsize(mmtf_file_path)
 figure = plt.figure()
 ax = figure.add_subplot(111)
 ax.bar([1,2], [xtc_size/1000, mmtf_size/1000], width=0.3,
-       color=["forestgreen", "orange"], linewidth=0)
+       color=[biotite.colors["green"], biotite.colors["orange"]], linewidth=0)
 ax.set_xticks([1,2])
 ax.set_xticklabels(["XTC", "MMTF"])
 ax.set_xlim(0.5,2.5)

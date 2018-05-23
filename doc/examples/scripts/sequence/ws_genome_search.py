@@ -85,9 +85,9 @@ alignment = rev_alignments[0]
 number_funcs = [None,   lambda x: len(alignment.sequences[1]) - x]
 # Visualize alignment, use custom color
 vis = graphics.AlignmentSimilarityVisualizer(alignment, matrix)
-vis.set_color(color="orange")
-vis.add_labels(labels=["E. coli (leuL)", "S. enterica"])
+vis.set_color(color=biotite.colors["lightorange"])
 vis.set_alignment_properties(symbols_per_line=30)
+vis.add_labels(labels=["E. coli (leuL)", "S. enterica"])
 # Apply new numbering scheme
 vis.add_location_numbers(size=100, number_functions=number_funcs)
 figure = vis.generate()
@@ -116,9 +116,10 @@ alignments = align.align_optimal(
 alignment = alignments[0]
 
 # Lets try a matplotlib colormap this time
+# Color the symbols rather than the background
 vis = graphics.AlignmentSimilarityVisualizer(alignment, matrix)
 vis.set_color(cmap="summer_r")
 vis.add_labels(labels=["E. coli", "S. enterica"])
-vis.set_alignment_properties(symbols_per_line=30)
+vis.set_alignment_properties(symbols_per_line=30, color_symbols=True)
 figure = vis.generate()
 plt.show()
