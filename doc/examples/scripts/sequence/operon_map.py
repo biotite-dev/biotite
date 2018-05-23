@@ -31,6 +31,8 @@ gene2 = Feature("gene", [Location(421, 1020, strand)],
 term = Feature("regulatory", [Location(1050, 1080, strand)],
                 {"regulatory_class" : "terminator"})
 annotation = Annotation([prom, rbs1, gene1, rbs2, gene2, term])
-feature_map = graphics.FeatureMap(annotation, multi_line=False)
+feature_map = graphics.FeatureMap(
+    annotation, multi_line=False, loc_range=(1, 1101)
+)
 figure = feature_map.generate()
 plt.show()
