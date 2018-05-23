@@ -26,6 +26,7 @@ class FeatureMap(Visualizer):
         self._border_size  = 10
         
         self._show_numbers        = False
+        self._number_size         = 150
         self._number_font         = None
         self._number_font_size    = 16
         
@@ -49,7 +50,7 @@ class FeatureMap(Visualizer):
 
         self.style = {}
     
-    def add_location_numbers(self, size=50, font_size=16, font=None):
+    def add_location_numbers(self, size=150, font_size=16, font=None):
         self._show_numbers     = True
         self._number_size      = size
         self._number_font      = font
@@ -120,7 +121,8 @@ class FeatureMap(Visualizer):
                         width = line_width * (loc_len / self._line_length)
                         height = self._feature_size
                         self.drawfunc[key](
-                            feature, x, y, width, height, fig, loc_index=i
+                            feature, x, y, width, height, fig, loc_index=i,
+                            style_dict=self.style
                         )
             y -= self._spacing
             y -= self._feature_size
@@ -138,8 +140,8 @@ class FeatureMap(Visualizer):
                     loc = self._loc_range[0] + ((i+1) * self._line_length) -1
                 text = Text(x, y, str(loc),
                             color="black", ha="right", va="center",
-                            size=self._font_size, figure=fig,
-                            fontproperties=self._font)
+                            size=self._number_font_size, figure=fig,
+                            fontproperties=self._number_font)
                 fig.texts.append(text)
                 y -= self._feature_size
                 y -= self._spacing

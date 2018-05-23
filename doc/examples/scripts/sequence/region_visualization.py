@@ -42,7 +42,9 @@ for feature in annotation:
 min_loc -= 10000
 max_loc += 10000
 # Visualize the region as feature map
-feature_map = graphics.FeatureMap(annotation, loc_range=(min_loc, max_loc),
-                                  line_length=2000)
+feature_map = graphics.FeatureMap(
+    annotation, loc_range=(min_loc, max_loc), line_length=2000
+)
+feature_map.add_location_numbers()
 figure = feature_map.generate()
 plt.show()
