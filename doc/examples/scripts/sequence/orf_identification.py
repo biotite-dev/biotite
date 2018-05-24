@@ -9,7 +9,7 @@ At first we will download and read the Porcine circovirus genome.
 For translation we will use the default codon table (eukaryotes),
 since domestic pigs are the host of the virus.
 
-Since we want to perfrom a six-frame translation we have to look at
+Since we want to perform a six-frame translation we have to look at
 the complementary strand of the genome as well.
 """
 
