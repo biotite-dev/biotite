@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_color_scheme"]
+__all__ = ["get_color_scheme", "list_color_scheme_names"]
 
 import numpy as np
 import json
@@ -27,7 +27,6 @@ for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
         for key, value in scheme["colors"].items():
             index = alphabet.encode(key)
             colors[index] = value
-        _color_schemes.append(scheme)
         # Store colors as symbol code ordered list of colors,
         # rather than dictionary
         scheme["colors"] = colors
@@ -42,3 +41,10 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
                       for color in colors]
             return colors
     raise ValueError("Unkown scheme '{:}' for given alphabet".format(name))
+
+def list_color_scheme_names(alphabet):
+    scheme_list = []
+    for scheme in _color_schemes:
+        if scheme["alphabet"].extends(alphabet):
+            scheme_list.append(scheme["name"])
+    return scheme_list
