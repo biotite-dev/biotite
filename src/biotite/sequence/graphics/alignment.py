@@ -280,9 +280,9 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
         self._colors = get_color_scheme("rainbow", alphabet)
     
     def set_color_scheme(self, scheme):
-        if isinstance(colors, str):
-            alphabet = alignment.sequences[0].get_alphabet()
-            self._colors = get_color_scheme("rainbow", scheme)
+        if isinstance(scheme, str):
+            alphabet = self._alignment.sequences[0].get_alphabet()
+            self._colors = get_color_scheme(scheme, alphabet)
         else:
             self._colors = colors
     
