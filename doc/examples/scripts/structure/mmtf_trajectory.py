@@ -16,9 +16,10 @@ The trajectory file can be downloaded
 Using the MMTF format for macromolecular trajectories takes advantage
 of the precise and open specification of the format and the wide support
 by a multitude of software.
-This comes at cost of a slightly higher file compared to the XTC format,
-the limited size of each field (max. 2\ :sup:`32`\ -1 bytes) and the
-violation of the format itself (most mandatory fields are omitted).
+This comes at cost of a slightly higher file size compared to the XTC
+format, the limited size of each field (max. 2\ :sup:`32`\ -1 bytes)
+and the violation of the format itself
+(most mandatory fields are omitted).
 """
 
 # Code source: Patrick Kunzmann
