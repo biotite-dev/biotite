@@ -10,7 +10,7 @@ For translation we will use the default codon table (eukaryotes),
 since domestic pigs are the host of the virus.
 
 Since we want to perfrom a six-frame translation we have to look at
-the complementary strand of the genome as well
+the complementary strand of the genome as well.
 """
 
 # Code source: Patrick Kunzmann
