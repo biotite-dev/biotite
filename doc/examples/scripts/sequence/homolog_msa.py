@@ -62,5 +62,7 @@ vis = graphics.AlignmentSymbolVisualizer(alignment[:200, order.tolist()])
 vis.add_labels(labels=[hits[i] for i in order])
 vis.add_location_numbers()
 vis.set_alignment_properties(symbols_per_line=40)
+# Use Clustal X color scheme
+vis.set_color_scheme("clustalx")
 figure = vis.generate()
 plt.show()
