@@ -68,6 +68,7 @@ Table of Contents
    tutorial/index
    apidoc/index
    examples/gallery/index
+   extensions
    develop
    logo
 
