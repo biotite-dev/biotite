@@ -4,6 +4,10 @@
 
 __author__ = "Patrick Kunzmann"
 
+import pyximport
+import numpy as np
+pyximport.install(setup_args={'include_dirs': np.get_include()})
+
 from os.path import realpath, dirname, join, isdir, isfile, basename
 from os import listdir, makedirs
 import sys
@@ -52,7 +56,7 @@ def _create_package_doc(pck, src_path, doc_path):
                     ]
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
-                     and type(getattr(module, attr)) in [type, abc.ABCMeta]]
+                     and isinstance(getattr(module, attr), type)]
         _create_files(doc_path, pck, class_list, func_list, sub_pck)
         
         return([pck] + sub_pck)
