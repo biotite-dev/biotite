@@ -233,9 +233,10 @@ Biotite extension packages are Python packages that provide further
 functionality for Biotite objects (`AtomArray`, `Sequence`, etc.)
 or offer objects that build up on these ones.
 
-There are multiple reasons why one could choose to publish code as extension
+There can be good reasons why one could choose to publish code as extension
 package instead of contributing it directly to the Biotite project:
    
+   - Independent development
    - An incompatible license
    - The code's use cases are too specialized
    - Unsuitable dependencies
