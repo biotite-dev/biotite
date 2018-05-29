@@ -10,6 +10,20 @@ from ...visualize import Visualizer
 from .colorschemes import get_color_scheme
 
 class SequenceLogo(Visualizer):
+    """
+    This class is used for creation of sequence logos.
+
+    EXPERIMENTAL: Future API changes are probable.
+
+    Parameters
+    ----------
+    alignment : Alignment
+        The logo is created based on this alignment.
+    width : float
+        The width of the figure (pixels).
+    height : float
+        The height of the figure (pixels).
+    """
     
     def __init__(self, alignment, width, height):
         super().__init__()
@@ -46,13 +60,33 @@ class SequenceLogo(Visualizer):
         self._colors = get_color_scheme("rainbow", self._alphabet)
     
     def set_font(self, font):
+        """
+        Set the font used for the symbols in the logo.
+
+        Parameters
+        ----------
+        font : FontProperties
+            The font that should be used for symbol rendering.
+        """
         self._font = font
     
-    def set_colors(self, scheme):
-        if isinstance(colors, str):
+    def set_color_scheme(self, scheme):
+        """
+        Set the color scheme used for the logo.
+
+        Parameters
+        ----------
+        scheme : str or list of (tuple or str)
+            Either a valid color scheme name
+            (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
+            or a list of `matplotlib` compatible colors.
+            The list length must be at least as long as the
+            length of the alphabet used by the sequences.
+        """
+        if isinstance(scheme, str):
             self._colors = get_color_scheme(scheme, self._alphabet)
         else:
-            self._colors = colors
+            self._colors = scheme
 
     def generate(self):
         from matplotlib.patches import Rectangle
@@ -99,16 +133,4 @@ class SequenceLogo(Visualizer):
                                     height / bounds[3])
                     ])
                     start_height += height
-        """
-        for p in pos:
-            text = Text(p[0], p[1], "T",
-                        color="black", ha="left", va="bottom",
-                        family="monospace", weight="bold",
-                        size=size, figure=fig)
-            fig.texts.append(text)
-            bounds = text.get_window_extent(renderer=renderer).bounds
-            text.set_path_effects([ScaleEffect(p[2]/bounds[2], p[3]/bounds[3])])
-            rect = Rectangle((p[0], p[1]), p[2], p[3], color="gray")
-            fig.patches.append(rect)
-        """
         return fig

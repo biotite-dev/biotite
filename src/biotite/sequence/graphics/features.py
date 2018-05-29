@@ -10,7 +10,39 @@ from ...visualize import Visualizer, colors
 from ..annotation import Annotation, Feature, Location
 
 class FeatureMap(Visualizer):
+    """
+    A `FeatureMap` is a location based visualization of sequence
+    features.
+
+    EXPERIMENTAL: Future API changes are probable.
+
+    Parameters
+    ----------
+    annotation : Annotation
+        This annotation contains the features to be visualized.
+    loc_range : tuple of int, length=2, optional
+        The displayed location range. By default the entire range,
+        i.e. the first base/residue of the first feature and the last
+        base/residue of the last feature is taken as range.
+    width : float, optional
+        The width of the figure (pixels). (Default: 800)
+    multi_line : bool, optional
+        If true, display the features in multiple lines. Otherwise
+        display the features on a single line.
+    line_legth : int
+        The amount of bases/residues per line. (Default: 1000)
     
+    Attributes
+    ----------
+    drawfunc : dict
+        A dictionary that maps sequence feature keys to functions,
+        that draw a representation for that feature class on
+        the figure.
+        Features with keys that are not in this dictionary are not
+        drawn. Add or modify the items to extend or alter the
+        visualization.
+    """
+
     def __init__(self, annotation, loc_range=None,
                  width=800, multi_line=True, line_length=1000):
         super().__init__()
@@ -23,7 +55,7 @@ class FeatureMap(Visualizer):
         
         self._spacing      = 30
         
-        self._border_size  = 10
+        self._margin  = 10
         
         self._show_numbers        = False
         self._number_size         = 150
@@ -51,47 +83,91 @@ class FeatureMap(Visualizer):
         self.style = {}
     
     def add_location_numbers(self, size=150, font_size=16, font=None):
+        """
+        Add numbers to the right side of the figure, that display the
+        respective sequence location at the right end of the line.
+
+        Parameters
+        ----------
+        size : float, optional
+            The size of the number column in x-direction (pixels).
+            (Default: 50)
+        font_size : float, optional
+            Font size of the numbers.
+            (Default: 16)
+        font : FontProperties, optional
+            `matplotlib` `FontProperties` for customization of the
+            font used by the numbers.
+        """
         self._show_numbers     = True
         self._number_size      = size
         self._number_font      = font
         self._number_font_size = font_size
     
     def set_size(self, feature_size=50, line_size=2):
+        """
+        Set the size of the features and the guiding line.
+
+        Parameters
+        ----------
+        feature_size : float, optional
+            The height of a feature's drwaing area (pixels).
+            (Default: 50)
+        line_size : float, optional
+            The height of the guidling line (pixels).
+            (Default: 2)
+        """
         self._feature_size = feature_size
         self._line_size    = line_size
 
     def set_spacing(self, spacing):
+        """
+        Set the spacing between the lines.
+
+        Parameters
+        ----------
+        spacing : float
+            The spacing between the lines.
+        """
         self._spacing = spacing
     
-    def set_border_size(self, border_size):
-        self._border_size = border_size
+    def set_margin(self, margin):
+        """
+        Set the margin of the figure.
+
+        Parameters
+        ----------
+        margin : float
+            The margin of the figure.
+        """
+        self._margin = margin
 
     def generate(self):
         from matplotlib.patches import Rectangle
         from matplotlib.text import Text
 
         annotation_length = self._loc_range[1] - self._loc_range[0]
-        line_width = self._width - 2*self._border_size - self._number_size
+        line_width = self._width - 2*self._margin - self._number_size
         line_count = annotation_length // self._line_length
         # Only extend line count by 1 if there is a remainder
         if annotation_length % self._line_length != 0:
             line_count += 1
         fig_size_y = line_count * self._feature_size
         fig_size_y += (line_count-1) * self._spacing
-        fig_size_y += 2 * self._border_size
+        fig_size_y += 2 * self._margin
 
         fig = self.create_figure(size=(self._width, fig_size_y))
 
         ### Draw lines ###
         remaining_length = annotation_length
-        y = fig_size_y - self._border_size - self._feature_size/2
+        y = fig_size_y - self._margin - self._feature_size/2
         while remaining_length > 0:
             if remaining_length > self._line_length:
                 part_line_width = line_width
             else:
                 part_line_width = \
                     line_width * remaining_length / self._line_length
-            line = Rectangle((self._border_size, y - self._line_size/2),
+            line = Rectangle((self._margin, y - self._line_size/2),
                              part_line_width, self._line_size,
                              color="gray", linewidth=0)
             fig.patches.append(line)
@@ -101,7 +177,7 @@ class FeatureMap(Visualizer):
         
         ### Draw features ###
         line_start_loc = self._loc_range[0]
-        y = fig_size_y - self._border_size - self._feature_size
+        y = fig_size_y - self._margin - self._feature_size
         while line_start_loc < self._loc_range[1]:
             annotation_for_line = self._annotation[
                 line_start_loc : line_start_loc + self._line_length
@@ -115,7 +191,7 @@ class FeatureMap(Visualizer):
                         loc = feature.locs[i]
                         loc_len = loc.last - loc.first + 1
                         loc_in_line = loc.first - line_start_loc
-                        x = self._border_size
+                        x = self._margin
                         x += line_width * (loc_in_line / self._line_length)
                         # Line width multiplied by percentage of line
                         width = line_width * (loc_len / self._line_length)
@@ -130,8 +206,8 @@ class FeatureMap(Visualizer):
         
         ### Draw position numbers ###
         if self. _show_numbers:
-            x = self._width - self._border_size
-            y = fig_size_y - self._border_size - self._feature_size/2
+            x = self._width - self._margin
+            y = fig_size_y - self._margin - self._feature_size/2
             for i in range(line_count):
                 if i == line_count-1:
                     # Last line -> get number of last column in trace
@@ -160,7 +236,7 @@ class FeatureMap(Visualizer):
                             loc = feature.locs[i]
                             loc_len = loc.last - loc.first + 1
                             loc_in_line = loc.first - line_start_loc
-                            x = self._border_size
+                            x = self._margin
                             x += line_width * (loc_in_line / self._line_length)
                             # Line width multiplied by percentage of line
                             width = line_width * (loc_len / self._line_length)
