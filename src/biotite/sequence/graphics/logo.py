@@ -11,7 +11,7 @@ from .colorschemes import get_color_scheme
 
 class SequenceLogo(Visualizer):
     """
-    This class is used for creation of sequence logos.
+    This class is used for creation of sequence logos [1]_.
 
     EXPERIMENTAL: Future API changes are probable.
 
@@ -23,6 +23,13 @@ class SequenceLogo(Visualizer):
         The width of the figure (pixels).
     height : float
         The height of the figure (pixels).
+    
+    References
+    ----------
+    
+    .. [1] TD Schneider and RM Stephens,
+       "Sequence logos: a new way to display consensus sequences"
+        Nucleic Acids Res, 18, 6097-6100 (1990).
     """
     
     def __init__(self, alignment, width, height):
