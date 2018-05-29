@@ -440,7 +440,7 @@ correponds to `BondType.ANY`, which means that the type of the bond is
 undefined.
 This makes sense, since we did not define the bond types when we created the
 bond list.
-Another thing that has changed is the bond-wise order:
+The other thing that has changed is the bond-wise order:
 Each bond is sorted so that the index with the lower index is the first
 element.
 
