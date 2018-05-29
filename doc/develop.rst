@@ -212,6 +212,7 @@ The following packages are required for the complete build process:
    - *matplotlib*
    - *requests*
    - *msgpack*
+   - *mdtraj*
    - *Cython*
    - *Sphinx*
    - *numpydoc*
