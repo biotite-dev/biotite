@@ -393,7 +393,7 @@ Up to now we only looked into atom arrays whose atoms are merely described by
 its coordinates and annotations. But there is more: Chemcial bonds can be
 described, too, using a `BondList`!
 
-Consider the following case: Your atom array contains three atoms:
+Consider the following case: Your atom array contains four atoms:
 *N*, *CA*, *C* and *CB*. *CA* is a central atom that is connected to
 *N*, *C* and *CB*.
 A `BondList` is created by passing a `ndarray` containing pairs of integers,
@@ -436,7 +436,7 @@ Output:
 When you look at the internal `ndarray` (as given by `as_array()`), you see
 a third column containging zeros.
 This column describes each bond with values from the `BondType` enum: *0*
-correponds to `BondType.ANY`, which meansthat the type of the bond is
+correponds to `BondType.ANY`, which means that the type of the bond is
 undefined.
 This makes sense, since we did not define the bond types when we created the
 bond list.
@@ -478,11 +478,11 @@ Output:
     ['CA' 'CB']]
 
 As you see, the the bonds involing the *N* (only a single one) is
-removed and the remaining bonds are shifted.
+removed and the remaining indices are shifted.
 
 We do not have to index the the atom array and the bond list separately,
 for convenienve reasons you can associate a bond list to an atom array.
-Every time the atom array is indexed, the index is alos applied to the
+Every time the atom array is indexed, the index is also applied to the
 associated bond list. The same behavior applies to concatenations, by the way.
 
 .. code-block:: python
