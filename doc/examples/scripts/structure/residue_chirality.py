@@ -1,12 +1,20 @@
-# This script determines whether a protein structure
-# contains L- or D-amino acids.
-# D-amino acids would suggest, that there is something
-# wrong with the protein structure.
-# As example the miniprotein TC5b (PDB: 1L2Y) was chosen.
-# L = 1
-# D = -1
-# N/A = 0 (e.g. Glycine)
+"""
+Determination of amino acid enantiomers
+=======================================
 
+This script determines whether a protein structure contains
+L- or D-amino acids.
+D-amino acids would suggest, that there is something wrong with the
+protein structure.
+As example the miniprotein TC5b (PDB: 1L2Y) was chosen.
+
+* L = 1
+* D = -1
+* N/A = 0 (e.g. Glycine)
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
 
 import numpy as np
 import biotite
@@ -17,8 +25,8 @@ import biotite.database.rcsb as rcsb
 
 def get_enantiomer(n, ca, c, cb):
     # Enantiomer is determined by constructing a plane with N, CA and C
-    # When CB is inserted, the sign of the resulting sign describes the
-    # enantiomer:
+    # When CB is inserted, the sign of the resulting scalar describes
+    # the enantiomer:
     # L = 1
     # D = -1
     n = np.cross(ca-n, ca-c)
@@ -44,7 +52,7 @@ def analyze_chirality(array):
 
 # Fetch and parse structure file
 file = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-stack = strucio.get_structure_from(file)
+stack = strucio.load_structure(file)
 # Get first model
 array = stack[0]
 # Get enantiomers

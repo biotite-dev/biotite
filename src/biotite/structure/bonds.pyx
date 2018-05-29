@@ -8,7 +8,7 @@ a location.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["BondList"]
+__all__ = ["BondList", "BondType"]
 
 cimport cython
 cimport numpy as np

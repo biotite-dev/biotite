@@ -2,10 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__version__ = "0.5.3"
+"""
+A subpackage for visualization of sequence and sequence related objects.
+"""
+
 __author__ = "Patrick Kunzmann"
 
-from .file import *
-from .temp import *
-from .copyable import * 
-from .visualize import * 
+from .alignment import *
+from .features import *
+from .colorschemes import *
+from .logo import *

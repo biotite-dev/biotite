@@ -140,7 +140,7 @@ def superimpose(fixed, mobile, ca_only=True):
         superimposed = mobile.copy()
         superimposed.coord -= mob_centroid[..., np.newaxis, :]
         # Perform Kabsch algorithm for every model
-        transformations = [None] * superimposed.coord.shape[-2]
+        transformations = [None] * len(superimposed.coord)
         for i in range(len(superimposed.coord)):
             rotation = _superimpose(fix_centered, mob_centered[i])
             superimposed.coord[i] = np.dot(superimposed.coord[i], rotation)

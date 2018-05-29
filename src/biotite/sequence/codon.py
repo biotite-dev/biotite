@@ -59,7 +59,12 @@ class CodonTable(object):
     _table_file = join(dirname(realpath(__file__)), "codon_tables.txt")
     
     def __init__(self, codon_dict, starts):
-        self._symbol_dict = copy.copy(codon_dict)
+        # Check if 'starts' is iterable objectof length 3 strings
+        for start in starts:
+            if not isinstance(start, str) or len(start) != 3:
+                raise ValueError("Invalid codon '{:}' as start codon"
+                                 .format(start))
+        self._symbol_dict = dict(codon_dict.items())
         self._code_dict = {}
         for key, value in self._symbol_dict.items():
             key_code = tuple(NucleotideSequence.alphabet.encode_multiple(key))

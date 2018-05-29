@@ -234,7 +234,6 @@ several multiples. The usage is similar to `PDBxFile`: The `MMTFFile` class
 decodes the file and makes it raw information accessible. The function
 `get_structure()` is then required to construct an atom array stack,
 or alternatively an atom array if a model number is specified.
-Unfortunately, writing MMTF files is not supported at this point.
 
 .. code-block:: python
    
@@ -269,6 +268,10 @@ Output:
 .. code-block:: none
    
    Are both stacks equal? True
+
+The analogous `save_structure()` function provides a shortcut for writing to
+structure files. The desired file format is inferred from the provided
+file name.
 
 Reading trajectory files
 """"""""""""""""""""""""
@@ -382,6 +385,187 @@ have a look at the `AdjacencyMap` class.
    are created. Look into the `NumPy` documentation for furher details. If you
    want to ensure, that you are working with a copy, use the `copy()` method
    after indexing.
+
+Representing bonds
+^^^^^^^^^^^^^^^^^^
+
+Up to now we only looked into atom arrays whose atoms are merely described by
+its coordinates and annotations. But there is more: Chemcial bonds can be
+described, too, using a `BondList`!
+
+Consider the following case: Your atom array contains four atoms:
+*N*, *CA*, *C* and *CB*. *CA* is a central atom that is connected to
+*N*, *C* and *CB*.
+A `BondList` is created by passing a `ndarray` containing pairs of integers,
+where each integer represents an index in a corresponding atom array and the
+pairs indicate which atoms share a bond. Furthermore, it is required to
+specifiy the number of atoms in the atom array. 
+
+.. code-block:: python
+   
+   array = struc.array([
+   struc.Atom([0,0,0], atom_name="N"),
+   struc.Atom([0,0,0], atom_name="CA"),
+   struc.Atom([0,0,0], atom_name="C"),
+   struc.Atom([0,0,0], atom_name="CB")
+   ])
+   print("Atoms:", array.atom_name)
+   bond_list = struc.BondList(len(array), np.array([[1,0], [1,2], [1,3]]))
+   print("Bonds (indices):")
+   print(bond_list.as_array())
+   print("Bonds (atoms names):")
+   print(array.atom_name[bond_list.as_array()[:, :2]])
+   ca_bonds, ca_bond_types = bond_list.get_bonds(1)
+   print("Bonds of CA:", array.atom_name[ca_bonds])
+
+Output:
+
+.. code-block:: none
+   
+   Atoms: ['N' 'CA' 'C' 'CB']
+   Bonds (indices):
+   [[0 1 0]
+    [1 2 0]
+    [1 3 0]]
+   Bonds (atoms names):
+   [['N' 'CA']
+    ['CA' 'C']
+    ['CA' 'CB']]
+   Bonds of CA: ['N' 'C' 'CB']
+
+When you look at the internal `ndarray` (as given by `as_array()`), you see
+a third column containging zeros.
+This column describes each bond with values from the `BondType` enum: *0*
+correponds to `BondType.ANY`, which means that the type of the bond is
+undefined.
+This makes sense, since we did not define the bond types when we created the
+bond list.
+The other thing that has changed is the index order:
+Each bond is sorted so that the index with the lower index is the first
+element.
+
+Although a `BondList` uses an `ndarray` under the hood, indexing works a little
+bit different:
+The indexing operation is not applied on the internal `ndarray`, instead it
+behaves like the same indexing operation was applied to a corresponding
+atom array.
+The bond list adjusts its indices so that they still point on the same atoms
+as before. Bonds that involve at least one atom, that has been removed, are
+deleted as well.
+We will try that by deleting the *C* atom.
+
+.. code-block:: python
+   
+   mask = (array.atom_name != "C")
+   sub_array = array[mask]
+   sub_bond_list = bond_list[mask]
+   print("Atoms:", sub_array.atom_name)
+   print("Bonds (indices):")
+   print(sub_bond_list.as_array())
+   print("Bonds (atoms names):")
+   print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
+
+Output:
+
+.. code-block:: none
+   
+   Atoms: ['N' 'CA' 'CB']
+   Bonds (indices):
+   [[0 1 0]
+    [1 2 0]]
+   Bonds (atoms names):
+   [['N' 'CA']
+    ['CA' 'CB']]
+
+As you see, the the bonds involing the *N* (only a single one) is
+removed and the remaining indices are shifted.
+
+We do not have to index the the atom array and the bond list separately,
+for convenienve reasons you can associate a bond list to an atom array.
+Every time the atom array is indexed, the index is also applied to the
+associated bond list. The same behavior applies to concatenations, by the way.
+
+.. code-block:: python
+   
+   array.bonds = bond_list
+   sub_array = array[array.atom_name != "C"]
+   print("Bonds (atoms names):")
+   print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
+
+Output:
+
+.. code-block:: none
+   
+   Bonds (atoms names):
+   [['N' 'CA']
+    ['CA' 'CB']]
+
+Let's scale things up a bit: Bond information can be loaded from and saved to
+MMTF files. We'll try that on the structure of *TC5b* and look at the bond
+information of the third residue, a tyrosine:
+
+.. code-block:: python
+   
+   mmtf_file = mmtf.MMTFFile()
+   mmtf_file.read("tests/structure/data/1l2y.mmtf")
+   stack = mmtf.get_structure(mmtf_file, include_bonds=True)
+   tyrosine = stack[:, (stack.res_id == 3)]
+   print("Bonds (indices):")
+   print(tyrosine.bonds)
+   print("Bonds (atoms names):")
+
+Output:
+
+.. code-block:: none
+   
+   Bonds (indices):
+   [[ 0  1  1]
+    [ 1  2  1]
+    [ 2  3  2]
+    [ 1  4  1]
+    [ 4  5  1]
+    [ 5  6  2]
+    [ 5  7  1]
+    [ 6  8  1]
+    [ 7  9  2]
+    [ 8 10  2]
+    [ 9 10  1]
+    [10 11  1]
+    [ 0 12  1]
+    [ 1 13  1]
+    [ 4 14  1]
+    [ 4 15  1]
+    [ 6 16  1]
+    [ 7 17  1]
+    [ 8 18  1]
+    [ 9 19  1]
+    [11 20  1]]
+   Bonds (atoms names):
+   [['N' 'CA']
+    ['CA' 'C']
+    ['C' 'O']
+    ['CA' 'CB']
+    ['CB' 'CG']
+    ['CG' 'CD1']
+    ['CG' 'CD2']
+    ['CD1' 'CE1']
+    ['CD2' 'CE2']
+    ['CE1' 'CZ']
+    ['CE2' 'CZ']
+    ['CZ' 'OH']
+    ['N' 'H']
+    ['CA' 'HA']
+    ['CB' 'HB2']
+    ['CB' 'HB3']
+    ['CD1' 'HD1']
+    ['CD2' 'HD2']
+    ['CE1' 'HE1']
+    ['CE2' 'HE2']
+    ['OH' 'HH']]
+
+Since we loaded the bond information from a MMTF file, the bond types are
+also defined: Here we have both, `BondType.SINGLE` and `BondType.DOUBLE`
+bonds (*1* and *2*, repectively).
 
 Structure analysis
 ^^^^^^^^^^^^^^^^^^

@@ -11,7 +11,7 @@ Writing code
 Python version and interpreter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Biotite is made for usage with Python 3.4 and upwards. Therefore no
-compatibility hacks for Python 2.x are necessary. Furthermore this package is
+compatibility hacks for Python 2.x are necessary. Furthermore, this package is
 currently made for use with CPython. Support for PyPy might be added someday.
 
 Code style
@@ -33,8 +33,12 @@ should neither be hard to install on any system nor be poorly supported.
 
 Another approach is adding your special dependency to the list of extra
 requirements in ``install.rst``. In this case, put the import statement for the
-dependency directly into the function, to ensure that the package is not
-required for any other functionality or for building the documentation.
+dependency directly into the function or class, rather than module level,
+to ensure that the package is not required for any other functionality or for
+building the API documentation.
+
+If your added code has a dependency that is too special, consider publishing it
+as extension package.
 
 Code efficiency
 ^^^^^^^^^^^^^^^
@@ -47,14 +51,15 @@ preferred way to go. Writing pure C-extensions is discouraged due to the bad
 readability.
 And anyway, *Cython* is *so* much better...
 
-Code documentation
-^^^^^^^^^^^^^^^^^^
+Docstrings
+^^^^^^^^^^
 Biotite uses
-`numpydoc <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
-for its documentation. The docstrings can be interpreted by *Sphinx* via the
-*numpydoc* extension. All publicly accessible attributes must be fully
-documented, this includes functions, classes, methods, instance and class
-variables and the ``__init__`` modules.
+`numpydoc <https://numpydoc.readthedocs.io/en/latest/>`_
+formatted docstrings for its documentation.
+The docstrings can be interpreted by *Sphinx* via the *numpydoc* extension.
+All publicly accessible attributes must be fully documented, this includes
+functions, classes, methods, instance and class variables and the
+``__init__`` modules.
 The ``__init__`` module documentation summarizes the content of the entire
 subpackage, since the single modules are not visible to the user.
 Consequently, all other modules do not need to be fully documented, one or
@@ -64,28 +69,10 @@ documented. The publicly accessible instance variables are documented under the
 `Attributes` headline, while class variables are documented in their separate
 docstrings. Methods do not need to be summarized in the class docstring.
 
-Any content, that is not part of the API reference is placed in the ``doc``
-folder in *ReST* format. The line length of ``*.rst`` files is also limited to
-79 characters, with the exceptions already mentioned above. When adding new
-content, it is appreciated to update the tutorial pages (``doc/tutorial``) as
-well.
-
-If you are not directly a developer, but you have a nice Python script based on
-*Biotite*, feel free to put your script and your output image or text
-into the examples section (``doc/examples``). Simply create a new directory
-here and put the following files here:
-   
-   - ``title``:
-     The title of your example
-   - ``script.py``:
-     The python script of your example
-   - ``example.png`` or ``example.rst``:
-     The output image or printed output of your script
-
 Module imports
 ^^^^^^^^^^^^^^
 
-In Biotite, the user imports packages rather than single modules
+In Biotite, the user imports packages in conrast to single modules
 (similar to *NumPy*). In order for that to work, the ``__init__.py`` file
 of each Biotite subpackage needs to import all of its modules,
 whose content is publicly accessible, in a relative manner.
@@ -109,7 +96,37 @@ In order to prevent namespace pollution, all modules must define the `__all__`
 variable with all publicly accessible attributes of the module.
 
 When using Biotite internal imports, always use relative imports. Otherwise
-In-development testing (see below) is not possible.
+in-development testing (see below) is not possible.
+
+
+
+Writing the documentation
+-------------------------
+
+Any documentation apart from the API reference is placed in the ``doc``
+folder.
+Biotite uses *Sphinx* for building its documentation and therefore is based
+on *reStructuredText* files.
+The line length of these ``*.rst`` files is also limited to
+79 characters, with the exceptions already mentioned above. 
+
+Updating the tutorial
+^^^^^^^^^^^^^^^^^^^^^
+
+When adding new content for broad audience, it is appreciated to update the
+tutorial pages (``doc/tutorial``) as well.
+The corresponding figures are put into ``doc/static/assets/figures``.
+
+Contributing examples
+^^^^^^^^^^^^^^^^^^^^^
+
+Do you have an application of Biotite and you want to share it with the world?
+Then the example gallery is the way to go.
+For gallery generation the package `sphinx-gallery` is used. Please refer to
+its documentation for further information script formatting.
+The example scripts are placed in ``doc/examples/scripts``.
+
+
 
 Code testing
 ------------
@@ -156,6 +173,8 @@ The unit tests are found in the ``tests`` folder (big surprise!). If there
 is already an appropriate module for you, then just add your own test function
 to it. If not, create your own module and put your test function into it.
 
+
+
 Code deployment
 ---------------
 
@@ -171,7 +190,7 @@ The source distribution is pure *Python*, hence *Cython* modules cannot be used
 with it.
 
 Building the documentation
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Sphinx documentation is created using
 
@@ -181,3 +200,56 @@ The Sphinx documentation is created using
 
 in the top-level directory. The HTML output can be found under
 ``doc/_build/html``.
+
+
+
+Required packages
+-----------------
+
+The following packages are required for the complete build process:
+   
+   - *numpy*
+   - *matplotlib*
+   - *requests*
+   - *msgpack*
+   - *mdtraj*
+   - *Cython*
+   - *Sphinx*
+   - *numpydoc*
+   - *sphinx-gallery*
+
+Furthermore the following software must be installed:
+
+   - *MUSCLE*
+   - *MAFFT*
+   - *Clustal Omega*
+
+
+
+Extension packages
+------------------
+
+Biotite extension packages are Python packages that provide further
+functionality for Biotite objects (`AtomArray`, `Sequence`, etc.)
+or offer objects that build up on these ones.
+
+There can be good reasons why one could choose to publish code as extension
+package instead of contributing it directly to the Biotite project:
+   
+   - Independent development
+   - An incompatible license
+   - The code's use cases are too specialized
+   - Unsuitable dependencies
+   - Acceleration by C/C++ code (in contrast to Cython code)
+
+If your code fulfills the following conditions
+
+   - extends Biotite functionality
+   - is documented
+   - is unit tested
+
+you can contact the maintainer or open an issue to ask for official
+acceptance as extension package.
+
+The extension packages are displayed on the *Extensions* page in the
+documentation.

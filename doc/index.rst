@@ -5,7 +5,7 @@
 Biotite documentation
 =====================
 
-The Biotite package bundles popular tools in computational biology into an
+The *Biotite* package bundles popular tools in computational biology into an
 unifying framework. It offers file I/O operations, analyses and manipulations
 for biological sequence and structure data. Furthermore, the package provides
 interfaces for popular biological databases and external software.
@@ -62,12 +62,13 @@ Table of Contents
 -----------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    install
    tutorial/index
    apidoc/index
-   examples/index
+   examples/gallery/index
+   extensions
    develop
    logo
 

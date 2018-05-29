@@ -1,11 +1,22 @@
-# This script performs a pairwise sequence alignment of
-# avidin (Gallus gallus) with streptavidin (Streptomyces lavendulae).
+"""
+Pairwise sequence alignment of Avidin with Streptavidin
+=======================================================
 
+This script performs a pairwise sequence alignment of
+avidin (*Gallus gallus*)
+with streptavidin (*Streptomyces lavendulae*).
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
+import matplotlib.pyplot as plt
 import biotite
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
+import biotite.sequence.graphics as graphics
 
 # Download and parse protein sequences of avidin and streptavidin
 file_name = entrez.fetch_single_file(["CAC34569", "ACL82594"],
@@ -24,5 +35,12 @@ matrix = align.SubstitutionMatrix.std_protein_matrix()
 # Terminal gaps are not penalized
 alignments = align.align_optimal(avidin_seq, streptavidin_seq, matrix,
                                  gap_penalty=(-10, -1), terminal_penalty=False)
-# Output first and only alignment
-print(alignments[0])
+# Draw first and only alignment
+# The color intensity indicates the similiarity
+vis = graphics.AlignmentSimilarityVisualizer(
+    alignments[0], matrix=matrix)
+vis.add_labels(labels=["Avidin", "Streptavidin"])
+vis.add_location_numbers()
+vis.set_alignment_properties(symbols_per_line=40)
+fig = vis.generate()
+plt.show()

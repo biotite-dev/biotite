@@ -22,9 +22,8 @@ class Alignment(object):
     Rather than saving a list of aligned symbols, this class saves the
     original *n* sequences, that were aligned, and a so called *trace*,
     which indicate the aligned symbols of these sequences.
-    The trace is a *(m x n)* `ndarray` with alignment length *m*, where
-    the first dimension is the position in the alignment and the second
-    dimension represents the sequence.
+    The trace is a *(m x n)* `ndarray` with alignment length *m* and
+    sequence count *n*.
     Each element of the trace is the index in the corresponding
     sequence. A gap is represented by the value -1.
     
@@ -131,8 +130,12 @@ class Alignment(object):
     
     def __getitem__(self, index):
         if isinstance(index, tuple):
-            return Alignment(self.sequences[index[1]], self.trace[index],
-                             self.score)
+            new_trace = self.trace[index]
+            if isinstance(index[1], (list, tuple, np.ndarray)):
+                new_sequences = [self.sequences[i] for i in index[1]]
+            else:
+                new_sequences = self.sequences[index[1]]
+            return Alignment(new_sequences, new_trace, self.score)
         elif isinstance(index, slice):
             return Alignment(self.sequences[:], self.trace[index], self.score)
         else:
