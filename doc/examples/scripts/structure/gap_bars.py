@@ -1,10 +1,19 @@
-# This script creates two bars, each indicating gaps in the structure
-# of DNA-PKcs. The top bar indicates the missing residues in a recent
-# crystal structure (PDB: 5LUQ), the bottom bar indicates missing
-# residues in a recent cryo-EM structure (PDB: 5W1R).
-# Green:  Space-resolved residues
-# Yellow: Residues with merely polyalanine annotation
-# Red:    Unresolved residues
+"""
+Missing residues in protein structures of DNA-PKcs
+==================================================
+
+This script creates two bars, each indicating gaps in the structure
+of DNA-PKcs. The top bar indicates the missing residues in a recent
+crystal structure (PDB: 5LUQ), the bottom bar indicates missing
+residues in a recent cryo-EM structure (PDB: 5W1R).
+
+* *Green*:  Space-resolved residues
+* *Yellow*: Residues with merely polyalanine annotation
+* *Red*:    Unresolved residues
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
 
 import biotite
 import biotite.structure as struc
@@ -17,7 +26,7 @@ import numpy as np
 def plot_gaps(pdb_id, chain_id, ax):
     # Download and parse structure file
     path = rcsb.fetch(pdb_id, "mmtf", biotite.temp_dir())
-    atom_array = strucio.get_structure_from(path)
+    atom_array = strucio.load_structure(path)
     # Consider only one chain
     atom_array = atom_array[atom_array.chain_id == chain_id]
     # Array for saving the 'green', 'yellow' and 'red' state
@@ -66,6 +75,8 @@ def plot_gaps(pdb_id, chain_id, ax):
     # Some other visual stuff
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
     ax.yaxis.set_visible(False)
     ax.set_xlim(0.5, len(states) + 0.5)
     ax.set_ylim(0, 2)

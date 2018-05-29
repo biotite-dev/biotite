@@ -13,12 +13,12 @@ import pytest
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_cif():
     file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
-    array = strucio.get_structure_from(file)
+    array = strucio.load_structure(file)
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_pdb():
     file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
-    array = strucio.get_structure_from(file)
+    array = strucio.load_structure(file)
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_invalid():

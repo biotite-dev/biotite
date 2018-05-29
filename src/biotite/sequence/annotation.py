@@ -245,7 +245,7 @@ class Annotation(Copyable):
         Get a copy of the internal feature list.
         
         Returns
-        ----------
+        -------
         feature_list : list of Feature
             A copy of the internal feature list.
         """
@@ -263,6 +263,29 @@ class Annotation(Copyable):
         if not isinstance(feature, Feature):
             raise TypeError("Only 'Feature' objects are supported")
         self._features.append(feature.copy())
+    
+    def get_location_range(self):
+        """
+        Get the range of feature locations,
+        i.e. the first and exclusive last base/residue.
+        
+        Returns
+        -------
+        int : start
+            Start location.
+        int : stop
+            Exclusive stop location.
+        """
+        first = sys.maxsize
+        last = -sys.maxsize
+        for feature in self._features:
+            for loc in feature.locs:
+                if loc.first < first:
+                    first = loc.first
+                if loc.last > last:
+                    last = loc.last
+        # Exclusive stop -> +1
+        return first, last+1
     
     def del_feature(self, feature):
         """

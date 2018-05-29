@@ -42,4 +42,5 @@ class ClustalOmegaApp(MSAApp):
     def get_cli_arguments(self):
         return ["--in", self.get_input_file_path(),
                 "--out", self.get_output_file_path(),
-                "--seqtype", self._seqtype]
+                "--seqtype", self._seqtype,
+                "--output-order=tree-order"]

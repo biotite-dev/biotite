@@ -109,7 +109,7 @@ def test_indexing(bond_list):
                                             [2, 3, 0]]
 
 def test_atom_array_consistency():
-    array = strucio.get_structure_from(join(data_dir, "1l2y.mmtf"))[0]
+    array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))[0]
     ca = array[array.atom_name == "CA"]
     # Just for testing, does not refelct real bonds
     bond_list = struc.BondList(ca.array_length(), 

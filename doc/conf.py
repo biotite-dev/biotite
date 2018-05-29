@@ -2,27 +2,30 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__author__ = "Patrick Kunzmann"
+
 import pyximport
 import numpy as np
 pyximport.install(setup_args={'include_dirs': np.get_include()})
 
 from os.path import realpath, dirname, join, isdir, isfile, basename
 from os import listdir, makedirs
+import sys
+import glob
 import shutil
+import matplotlib
 from importlib import import_module
 import types
-import sys
 import abc
-import inspect
-import glob
 
-package_path = join( dirname(dirname(realpath(__file__))), "src" )
+absolute_path = dirname(realpath(__file__))
+package_path = join(dirname(absolute_path), "src")
 sys.path.insert(0, package_path)
 import biotite
 
-_indent = " " * 3
+### Create API docmentation ###
 
-##### API Doc creation #####
+_indent = " " * 3
 
 def create_api_doc(src_path, doc_path):
     package_list = _create_package_doc("biotite",
@@ -53,7 +56,7 @@ def _create_package_doc(pck, src_path, doc_path):
                     ]
         class_list = [attr for attr in attr_list
                      if attr[0] != "_"
-                     and type(getattr(module, attr)) in [type, abc.ABCMeta]]
+                     and isinstance(getattr(module, attr), type)]
         _create_files(doc_path, pck, class_list, func_list, sub_pck)
         
         return([pck] + sub_pck)
@@ -150,88 +153,26 @@ def create_package_index(doc_path, package_list):
         f.writelines([line+"\n" for line in lines])
 
 
-"""   
-def create_package_index(doc_path, package_list):
-    
-    lines = []
-    for pck in package_list:
-        lines.append(_indent + "- :doc:`"
-                     + pck
-                     + " <" + "/apidoc/" + pck + ">`")
-    with open(join(doc_path, "index"+".rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-"""
-
 def _is_package(path):
     content = listdir(path)
     return "__init__.py" in content
 
+### Reset matplotlib params ###
 
-create_api_doc(package_path, "apidoc")
+matplotlib.rcdefaults()
 
+### Creation of API documentation ###
 
-##### Creation of examples.rst files #####
+create_api_doc(package_path, join(absolute_path, "apidoc"))
 
-def create_example_file(directory):
-    lines = []
-    
-    with open(join(directory, "title"), "r") as f:
-        title = f.read().strip()
-    lines.append(title)
-    lines.append("=" * len(title))
-    lines.append("")
-    
-    if isfile(join(directory, "example.png")):
-        lines.append(".. image:: example.png")
-        lines.append("")
-    if isfile(join(directory, "example.txt")):
-        lines.append(".. literalinclude:: example.txt")
-        lines.append(_indent + ":language: none")
-        lines.append("")
-    
-    lines.append(".. literalinclude:: script.py")
-    lines.append("")
-    lines.append("(:download:`Source code <script.py>`)")
-    lines.append("")
-    
-    with open(join(directory, "example.rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-dirs = glob.glob("examples/*")
-for d in dirs:
-    if isdir(d):
-        create_example_file(d)
-
-
-##### Example index creation #####
-
-def create_example_index():
-    lines = []
-    
-    lines.append("Examples")
-    lines.append("=" * len("Examples"))
-    lines.append("")
-    
-    lines.append(".. toctree::")
-    lines.append("")
-    dirs = listdir("examples")
-    for d in dirs:
-        if isdir(join("examples", d)):
-            lines.append(_indent + join(basename(d), "example"))
-    with open("examples/index.rst", "w") as f:
-        f.writelines([line+"\n" for line in lines])
-
-
-create_example_index()
-
-
-##### General #####
+#### General ####
 
 extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
               "sphinx.ext.doctest",
               "sphinx.ext.mathjax",
               "sphinx.ext.viewcode",
+              "sphinx_gallery.gen_gallery",
               "numpydoc"]
 
 templates_path = ["templates"]
@@ -239,7 +180,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017, the Biotite contributors"
+copyright = "2017-2018, the Biotite contributors"
 version = biotite.__version__
 
 exclude_patterns = ["build"]
@@ -253,7 +194,7 @@ todo_include_todos = False
 numpydoc_show_class_members = False
 
 
-##### HTML #####
+#### HTML ####
 
 html_theme = "alabaster"
 html_static_path = ["static"]
@@ -266,14 +207,26 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "donate.html"]}
 html_theme_options = {
-    "description"      : "A general framework for computational biology",
-    "logo"             : "assets/general/biotite_logo_s.png",
-    "logo_name"        : "false",
-    "github_user"      : "biotite-dev",
-    "github_repo"      : "biotite",
-    "github_banner"    : "true",
-    "page_width"       : "85%",
-    "fixed_sidebar"    : "true"
+    "description"   : "A general framework for computational biology",
+    "logo"          : "assets/general/biotite_logo_s.png",
+    "logo_name"     : "false",
+    "github_user"   : "biotite-dev",
+    "github_repo"   : "biotite",
+    "github_banner" : "true",
+    "page_width"    : "85%",
+    "fixed_sidebar" : "true"
     
 }
 
+sphinx_gallery_conf = {
+    "examples_dirs"             : "examples/scripts",
+    "gallery_dirs"              : "examples/gallery",
+    "filename_pattern"          : "/",
+    "backreferences_dir"        : False,
+    "download_section_examples" : False,
+    # Never report run time
+    "min_reported_time"         : sys.maxsize,
+    "default_thumb_file"        : join(
+        absolute_path, "static/assets/general/biotite_icon_thumb.png"
+    )
+}

@@ -13,6 +13,7 @@ from .util import data_dir
 import pytest
 
 
+@pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize("format", ["trr","xtc"])
 def test_PDBx_consistency(format):
     pdbx_file = pdbx.PDBxFile()

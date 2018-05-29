@@ -94,7 +94,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     .. [1] A Shrake and JA Rupley,
        "Environment and exposure to solvent of protein atoms.
        Lysozyme and insulin."
-       J Mol Biol, 79,351-371 (1973).
+       J Mol Biol, 79, 351-371 (1973).
    
     .. [2] J Tsai R Taylor, C Chotia and M Gerstein,
        "The packing densitiy in proteins: standard radii and volumes."

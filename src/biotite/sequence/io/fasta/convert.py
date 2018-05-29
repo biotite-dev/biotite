@@ -39,8 +39,11 @@ def get_sequence(fasta_file, header=None):
         seq_str = fasta_file[header]
     else:
         # Return first (and probably only) sequence of file
+        seq_str = None
         for header, seq_str in fasta_file:
             break
+        if seq_str is None:
+            raise ValueError("File does not contain any sequences")
     # Determine the sequence type:
     # If NucleotideSequence can be created it is a DNA sequence,
     # otherwise protein sequence

@@ -11,7 +11,7 @@ import textwrap
 import copy
 import re
 
-__all__ = ["GenBankFile", "GenPeptFile"]
+__all__ = ["GenBankFile", "GenPeptFile", "MultiFile"]
 
 
 class GenBankFile(TextFile):
@@ -61,7 +61,7 @@ class GenBankFile(TextFile):
         for i, line in enumerate(self._lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " ":
+            if len(line) != 0 and line[0] != " " and line[:2] != "//":
                 stop = i
                 if start != -1:
                     # Store previous field
@@ -370,7 +370,8 @@ class GenBankFile(TextFile):
     def _get_seq_string(self):
         starts, stops = self._get_field_indices("ORIGIN")
         seq_str = ""
-        regex = re.compile("[0-9]| ")
+        # Remove numbers, emtpy spaces and the '//' at end of file
+        regex = re.compile("[0-9]| |/")
         for i in range(starts[0]+1, stops[0]):
             seq_str += regex.sub("", self._lines[i])
         return seq_str
@@ -523,3 +524,28 @@ class GenPeptFile(GenBankFile):
             raise InvalidFileError("The file does not contain "
                                    "sequence information")
         return ProteinSequence(seq_str)
+
+
+class MultiFile(TextFile):
+
+    def __init__(self, file_type):
+        super().__init__()
+        if file_type == "gb":
+            self._file_class = GenBankFile
+        elif file_type == "gp":
+            self._file_class = GenPeptFile
+        else:
+            raise ValueError("'{:}' is an invalid file type".format(file_type))
+
+    def __iter__(self):
+        start_i = 0
+        for i in range(len(self._lines)):
+            line = self._lines[i]
+            if line.strip() == "//":
+                # Create file with lines corresponding to that file
+                file = self._file_class()
+                file._lines = self._lines[start_i : i]
+                file.process_input()
+                # Reset file start index
+                start_i = i
+                yield file
