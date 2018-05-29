@@ -13,6 +13,7 @@ from .util import data_dir
 import pytest
 
 
+@pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize("path", glob.glob(join(data_dir, "1l2y.*")))
 def test_loading(path):
     if splitext(path)[1] in [".trr", ".xtc", ".tng"]:
