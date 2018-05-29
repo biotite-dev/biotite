@@ -214,6 +214,7 @@ The following packages are required for the complete build process:
    - *msgpack*
    - *mdtraj*
    - *Cython*
+   - *pytest*
    - *Sphinx*
    - *numpydoc*
    - *sphinx-gallery*
