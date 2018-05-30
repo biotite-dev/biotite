@@ -68,6 +68,7 @@ install:
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx; fi
+  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx-gallery; fi
   - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda numpydoc; fi
   - if [ $COMPLETE == true ]; then pip install msgpack; fi
 
