@@ -109,8 +109,12 @@ cdef class AdjacencyMap:
             self._boxes[i,j,k] = <ptr> box_ptr
             
     def __dealloc__(self):
-        if self._boxes is not None:
-            deallocate_ptrs(self._boxes)
+        try:
+            if self._boxes is not None:
+                deallocate_ptrs(self._boxes)
+        except AttributeError:
+            # Happens if self._boxes is not initialized
+            pass
     
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
