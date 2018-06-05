@@ -65,6 +65,8 @@ cdef class AdjacencyMap:
         cdef int* box_ptr = NULL
         cdef int length
         
+        if self._has_initialized_boxes():
+            raise Exception("Duplicate call of constructor")
         self._boxes = None
         if box_size <= 0:
             raise ValueError("Box size must be greater than 0")
@@ -109,12 +111,8 @@ cdef class AdjacencyMap:
             self._boxes[i,j,k] = <ptr> box_ptr
             
     def __dealloc__(self):
-        try:
-            if self._boxes is not None:
-                deallocate_ptrs(self._boxes)
-        except AttributeError:
-            # Happens if self._boxes is not initialized
-            pass
+        if self._has_initialized_boxes():
+            deallocate_ptrs(self._boxes)
     
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
@@ -274,6 +272,18 @@ cdef class AdjacencyMap:
         if z < self._min_coord[2] or z > self._max_coord[2]:
             return False
         return True
+    
+    cdef inline bint _has_initialized_boxes(self):
+        # Memoryviews are not initialized on class creation
+        # This method checks if a the _boxes memoryview was initialized
+        # and is not None
+        try:
+            if self._boxes is not None:
+                return True
+            else:
+                return False
+        except AttributeError:
+            return False
 
 
 cdef inline deallocate_ptrs(ptr[:,:,:] ptrs):
