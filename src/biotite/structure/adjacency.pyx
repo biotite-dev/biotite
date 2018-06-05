@@ -58,7 +58,7 @@ cdef class AdjacencyMap:
     cdef float32[:] _max_coord
     cdef int _max_box_length
     
-    def __init__(self, atom_array not None, float box_size):
+    def __cinit__(self, atom_array not None, float box_size):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
