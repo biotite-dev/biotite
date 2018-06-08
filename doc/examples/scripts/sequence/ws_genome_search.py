@@ -74,7 +74,7 @@ print("Score:", rev_alignments[0].score)
 ########################################################################
 # Clearly the the alignment with the reverse genome seems to be the
 # right one.
-# For visualization puposes we have to apply a renumbering function
+# For visualization purposes we have to apply a renumbering function
 # for the genomic sequence,
 # since the original indices refer to the reverse complement sequence,
 # but we want the numbers to refer to the original one.
