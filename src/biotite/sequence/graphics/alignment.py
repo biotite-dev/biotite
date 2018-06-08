@@ -350,7 +350,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
     For determination of the color, this `AlignmentVisualizer` uses a
     measure called *average normalized similarity*.
 
-    The *normalized similarity* of one symbol *i* to antother symbol *j*
+    The *normalized similarity* of one symbol *i* to another symbol *j*
     is defined as
 
     .. math:: S_{norm}(i,j) = \\frac{S(i,j) - \\min\\limits_j(S(i,j))} {\\max\\limits_j(S(i,j)) - \\min\\limits_j(S(i,j))}
