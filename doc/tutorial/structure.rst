@@ -507,7 +507,7 @@ information of the third residue, a tyrosine:
 .. code-block:: python
    
    mmtf_file = mmtf.MMTFFile()
-   mmtf_file.read("tests/structure/data/1l2y.mmtf")
+   mmtf_file.read("path/to/1l2y.mmtf")
    stack = mmtf.get_structure(mmtf_file, include_bonds=True)
    tyrosine = stack[:, (stack.res_id == 3)]
    print("Bonds (indices):")

@@ -271,7 +271,7 @@ database, we can load the contents in the following way:
    import biotite.sequence as seq
    import biotite.sequence.io.fasta as fasta
    file = FastaFile()
-   file.read("tests/sequence/data/ec_bl21.fasta")
+   file.read("path/to/ec_bl21.fasta")
    for header, string in file:
        print(header)
        print(len(string))
