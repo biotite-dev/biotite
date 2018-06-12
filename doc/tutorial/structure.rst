@@ -513,6 +513,7 @@ information of the third residue, a tyrosine:
    print("Bonds (indices):")
    print(tyrosine.bonds)
    print("Bonds (atoms names):")
+   print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 
 Output:
 
