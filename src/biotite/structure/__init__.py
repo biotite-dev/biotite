@@ -3,7 +3,7 @@
 # information.
 
 """
-A subpackage for handling protein structures. 
+A subpackage for handling molecular structures. 
 
 In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
