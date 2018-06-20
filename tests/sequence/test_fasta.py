@@ -28,7 +28,7 @@ def test_access():
                           "third dna sequence" : "ACGT",
                           "yet another sequence" : "ACGT"}
 
-def test_conversion():
+def test_sequence_conversion():
     path = os.path.join(data_dir, "nuc.fasta")
     file = fasta.FastaFile()
     file.read(path)
@@ -54,3 +54,17 @@ def test_conversion():
     file5.read(path)
     with pytest.raises(ValueError):
         seq.NucleotideSequence(fasta.get_sequence(file5))
+
+def test_alignment_conversion():
+    path = os.path.join(data_dir, "alignment.fasta")
+    file = fasta.FastaFile()
+    file.read(path)
+    alignment = fasta.get_alignment(file)
+    assert str(alignment) == ("ADTRCGTARDCGTR-DRTCGRAGD\n"
+                              "ADTRCGT---CGTRADRTCGRAGD\n"
+                              "ADTRCGTARDCGTRADR--GRAGD")
+    
+    file2 = fasta.FastaFile()
+    fasta.set_alignment(file2, alignment, seq_names=["seq1","seq2","seq3"])
+    alignment2 = fasta.get_alignment(file2)
+    assert str(alignment) == str(alignment2)
