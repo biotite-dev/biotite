@@ -25,17 +25,18 @@ def get_sequence(fasta_file, header=None):
         The header to get the sequence from. By default, the first
         sequence of the file is returned.
     
+    Returns
+    -------
+    sequence : `NucleotideSequence` or `ProteinSequence`
+        The first sequence in the `FastaFile`.
+        `NucleotideSequence` if the sequence string fits the
+        corresponding alphabet, `ProteinSequence` otherwise.
+    
     Raises
     ------
     ValueError
         If the sequence data can be neither converted into a
         `NucleotideSequence` nor a `ProteinSequence`.
-    
-    Returns
-    -------
-    sequence : `NucleotideSequence` or `ProteinSequence`
-        `NucleotideSequence` if the sequence string fits the
-        corresponding alphabet, `ProteinSequence` otherwise.
     """
     if header is not None:
         seq_str = fasta_file[header]
@@ -62,17 +63,17 @@ def get_sequences(fasta_file):
     fasta_file : FastaFile
         The `FastaFile` to be accessed.
     
-    Raises
-    ------
-    ValueError
-        If at least on of the sequence strings can be neither converted
-        into a `NucleotideSequence` nor a `ProteinSequence`.
-    
     Returns
     -------
     seq_dict : dict
         A dictionary containg `NucleotideSequence` and/or
         `ProteinSequence` instances.
+    
+    Raises
+    ------
+    ValueError
+        If at least on of the sequence strings can be neither converted
+        into a `NucleotideSequence` nor a `ProteinSequence`.
     """
     seq_dict = {}
     for header, seq_str in fasta_file:
@@ -127,6 +128,21 @@ def set_sequences(fasta_file, sequence_dict):
 
 
 def get_alignment(fasta_file, additional_gap_chars=("_",)):
+    """
+    Get an alignment from a `FastaFile` instance.
+    
+    Parameters
+    ----------
+    fasta_file : FastaFile
+        The `FastaFile` to be accessed.
+    additional_gap_chars : str, optional
+        The characters to be treated as gaps.
+    
+    Returns
+    -------
+    alignment : Alignment
+        The alignment from the `FastaFile`.
+    """
     seq_strings = [seq_str for header, seq_str in fasta_file]
     # Replace additional gap symbols with default gap symbol ('-')
     for char in additional_gap_chars:
@@ -140,6 +156,19 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
 
 
 def set_alignment(fasta_file, alignment, seq_names):
+    """
+    Fill a `FastaFile` with gapped sequence strings from an alignment.
+    
+    Parameters
+    ----------
+    fasta_file : FastaFile
+        The `FastaFile` to be accessed.
+    alignment : Alignment
+        The alignment to be set. 
+    seq_names : iterable object of str
+        The names for the sequences in the alignment.
+        Must have the same length as the sequence count in `alignment`.
+    """
     gapped_seq_strings = alignment.get_gapped_sequences()
     if len(gapped_seq_strings) != len(seq_names):
         raise ValueError("Alignment has {:d} sequences,"
