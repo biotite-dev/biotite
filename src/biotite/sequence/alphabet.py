@@ -275,7 +275,9 @@ class LetterAlphabet(Alphabet):
         for i, symbol in enumerate(self._symbols):
             code[symbols == symbol] = i
         if (code == illegal_code).any():
-            raise AlphabetError("Symbol list contains illegal symbols")
+            illegal_symbol = symbols[code == illegal_code][0]
+            raise AlphabetError("'{:}' is not in the alphabet"
+                                .format(illegal_symbol))
         return code
             
     
