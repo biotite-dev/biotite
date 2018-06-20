@@ -90,12 +90,6 @@ class Alignment(object):
         """
         Get a the string representation of the gapped sequences.
         
-        Parameters
-        ----------
-        seq_str_list : list
-            The strings, where each each one represents a sequence
-            in an alignment.
-        
         Returns
         -------
         sequences : list of str
