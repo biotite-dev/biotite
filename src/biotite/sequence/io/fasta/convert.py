@@ -10,7 +10,7 @@ from ...seqtypes import NucleotideSequence, ProteinSequence
 from ...align.alignment import Alignment
 
 __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
-           "get_alignment"]
+           "get_alignment", "set_alignment"]
 
 
 def get_sequence(fasta_file, header=None):
@@ -139,6 +139,15 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
     trace = Alignment.trace_from_strings(seq_strings)
     return Alignment(sequences, trace, score=None)
 
+
+def set_alignment(fasta_file, alignment, seq_names):
+    gapped_seq_strings = alignment.get_gapped_sequences()
+    if len(gapped_seq_strings) != len(seq_names):
+        raise ValueError("Alignment has {:d} sequences,"
+                         "but {:d} names were given"
+                         .format(len(gapped_seq_strings), len(seq_names)))
+    for i in range(len(gapped_seq_strings)):
+        fasta_file[seq_names[i]] = gapped_seq_strings[i]
 
 def _convert_to_sequence(seq_str):
     try:
