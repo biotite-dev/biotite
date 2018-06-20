@@ -295,10 +295,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     def __str__(self):
         alph = self.get_alphabet()
-        string = ""
-        for e in self._seq_code:
-            string += alph.decode(e)
-        return string
+        return "".join([alph.decode(e) for e in self._seq_code])
     
     def __add__(self, sequence):
         if self.get_alphabet().extends(sequence.get_alphabet()):
