@@ -7,8 +7,10 @@ __author__ = "Patrick Kunzmann"
 from ...sequence import Sequence
 from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence
+from ...align.alignment import Alignment
 
-__all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences"]
+__all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
+           "get_alignment"]
 
 
 def get_sequence(fasta_file, header=None):
@@ -123,6 +125,19 @@ def set_sequences(fasta_file, sequence_dict):
     seq_str_dict = {}
     for header, sequence in sequence_dict.items():
         fasta_file[header] = _convert_to_string(sequence)
+
+
+def get_alignment(fasta_file, additional_gap_chars=("_",)):
+    seq_strings = [seq_str for header, seq_str in fasta_file]
+    # Replace additional gap symbols with default gap symbol ('-')
+    for char in additional_gap_chars:
+        for i, seq_str in enumerate(seq_strings):
+            seq_strings[i] = seq_str.replace(char, "-")
+    # Remove gaps for creation of sequences
+    sequences = [_convert_to_sequence(seq_str.replace("-",""))
+                 for seq_str in seq_strings]
+    trace = Alignment.trace_from_strings(seq_strings)
+    return Alignment(sequences, trace, score=None)
 
 
 def _convert_to_sequence(seq_str):
