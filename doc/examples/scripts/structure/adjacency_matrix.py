@@ -25,13 +25,13 @@ array = strucio.load_structure(file_name)
 ca = array[array.atom_name == "CA"]
 # 7 Angstrom adjacency threshold
 threshold = 7
-# Create adjacency map of the CA atom array
+# Create cell list of the CA atom array
 # for efficient measurement of adjacency
-adjacency_map = struc.AdjacencyMap(ca, box_size=threshold)
+cell_list = struc.CellList(ca, cell_size=threshold)
 adjacency_matrix = np.zeros(( ca.array_length(), ca.array_length()),
                             dtype=np.uint8)
 for i in range(ca.array_length()):
-    indices = adjacency_map.get_atoms(ca.coord[i], radius=threshold)
+    indices = cell_list.get_atoms(ca.coord[i], radius=threshold)
     adjacency_matrix[i, indices] = 1
 
 figure = plt.figure()

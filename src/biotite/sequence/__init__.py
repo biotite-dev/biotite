@@ -15,7 +15,7 @@ an `AlphabetError` is raised.
 
 Internally, a `Sequence` is saved as a `NumPy` `ndarray` of integer
 values, where each integer represents a symbol in the `Alphabet`.
-For example, 'A', 'C', 'G' and 'T' would be encoded into 1, 2, 3 and 4.
+For example, 'A', 'C', 'G' and 'T' would be encoded into 0, 1, 2 and 3.
 These integer values are called *symbol code*, the encoding of an entire
 sequence of symbols is called *sequence code*.
 

@@ -378,7 +378,7 @@ Output:
     'N' 'CA' 'C' 'N' 'CA' 'C' 'N' 'CA' 'C']
 
 If you would like to know which atoms are in proximity to specific coordinates,
-have a look at the `AdjacencyMap` class.
+have a look at the `CellList` class.
 
 .. warning:: Creating a subarray or substack by indexing, does not necessarily
    copy the coordinates and annotation arrays. If possible, only *array views*
@@ -507,12 +507,13 @@ information of the third residue, a tyrosine:
 .. code-block:: python
    
    mmtf_file = mmtf.MMTFFile()
-   mmtf_file.read("tests/structure/data/1l2y.mmtf")
+   mmtf_file.read("path/to/1l2y.mmtf")
    stack = mmtf.get_structure(mmtf_file, include_bonds=True)
    tyrosine = stack[:, (stack.res_id == 3)]
    print("Bonds (indices):")
    print(tyrosine.bonds)
    print("Bonds (atoms names):")
+   print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 
 Output:
 

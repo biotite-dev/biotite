@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 __author__ = "Patrick Kunzmann"
 
 from .file import *
