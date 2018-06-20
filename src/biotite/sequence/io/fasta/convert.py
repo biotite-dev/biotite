@@ -72,9 +72,8 @@ def get_sequences(fasta_file):
         A dictionary containg `NucleotideSequence` and/or
         `ProteinSequence` instances.
     """
-    seq_str_dict = dict(fasta_file)
     seq_dict = {}
-    for header, seq_str in seq_str_dict.items():
+    for header, seq_str in fasta_file:
         seq_dict[header] = _convert_to_sequence(seq_str)
     return seq_dict
 
