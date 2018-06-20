@@ -122,7 +122,6 @@ def set_sequences(fasta_file, sequence_dict):
         If the sequences alphabets uses symbols other than single
         letters.
     """
-    seq_str_dict = {}
     for header, sequence in sequence_dict.items():
         fasta_file[header] = _convert_to_string(sequence)
 
@@ -148,6 +147,7 @@ def set_alignment(fasta_file, alignment, seq_names):
                          .format(len(gapped_seq_strings), len(seq_names)))
     for i in range(len(gapped_seq_strings)):
         fasta_file[seq_names[i]] = gapped_seq_strings[i]
+
 
 def _convert_to_sequence(seq_str):
     try:
