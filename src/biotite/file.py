@@ -112,6 +112,9 @@ class TextFile(File, metaclass=abc.ABCMeta):
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
         clone._lines = copy.copy(self._lines)
+    
+    def __str__(self):
+        return("\n".join(self._lines))
 
 
 class InvalidFileError(Exception):
