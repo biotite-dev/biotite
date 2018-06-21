@@ -10,7 +10,7 @@ import textwrap
 from ..alphabet import LetterAlphabet
     
 
-__all__ = ["Alignment", "get_codes", "get_symbols", "get_identity"]
+__all__ = ["Alignment", "get_codes", "get_symbols", "get_identity", "score"]
 
 
 class Alignment(object):
@@ -231,7 +231,7 @@ def get_identity(alignment, mode="not_terminal"):
                 stop_index = i+1
                 break
         if start_index == -1 or stop_index == -1:
-            raise ValueError("Alignment entirely constists of terminal gaps")
+            raise ValueError("Alignment entirely consists of terminal gaps")
     else:
         # 'all' -> count all columns, entire trace
         start_index = 0
@@ -251,3 +251,71 @@ def get_identity(alignment, mode="not_terminal"):
         return matches / shortest_length
     else:
         return matches / (stop_index - start_index)
+
+
+def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
+    codes = get_codes(alignment)
+    matrix = matrix.score_matrix()
+
+    # Sum similarity scores (without gaps)
+    score = 0
+    # Iterate over all positions
+    for pos in range(codes.shape[1]):
+        column = codes[:, pos]
+        # Iterate over all possible pairs
+        # Do not count self-similarity
+        # and do not count similarity twice (not S(i,j) and S(j,i))
+        for i in range(codes.shape[0]):
+            for j in range(i+1, codes.shape[0]):
+                code_i = column[i]
+                code_j = column[j]
+                # Ignore gaps
+                if code_i != -1 and code_j != -1:
+                    score += matrix[code_i, code_j]
+    # Sum gap penalties
+    if type(gap_penalty) == int:
+        gap_open = gap_penalty
+        gap_ext = gap_penalty
+    elif type(gap_penalty) == tuple:
+        gap_open = gap_penalty[0]
+        gap_ext = gap_penalty[1]
+    else:
+        raise TypeError("Gap penalty must be either integer or tuple")
+    # Iterate over all sequences
+    for seq_code in codes:
+        in_gap = False
+        if terminal_penalty:
+            start_index = 0
+            stop_index = len(seq_code)
+        else:
+            # Find a start and stop index excluding terminal gaps
+            start_index, stop_index = _identify_terminal_gaps(seq_code)
+        for i in range(start_index, stop_index):
+            if seq_code[i] == -1:
+                if in_gap:
+                    score += gap_ext
+                else:
+                    score += gap_open
+                in_gap = True
+            else:
+                in_gap = False
+    return score
+
+
+def _identify_terminal_gaps(seq_code):
+    # Find a start and stop index excluding terminal gaps
+    start_index = -1
+    for i in range(len(seq_code)):
+        # Check if the sequence has a gap at the given position
+        if seq_code[i] != -1:
+            start_index = i
+            break
+    # Reverse iteration
+    stop_index = -1
+    for i in range(len(seq_code)-1, -1, -1):
+        if (seq_code[i] != -1).all():
+            stop_index = i+1
+            break
+    if start_index == -1 or stop_index == -1:
+        raise ValueError("Sequence is empty")
+    return start_index, stop_index
