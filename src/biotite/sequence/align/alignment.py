@@ -49,22 +49,25 @@ class Alignment(object):
     Examples
     --------
     
-    >>> seq1 = NucleotideSequence("CGTT")
-    >>> seq2 = NucleotideSequence("TTGC")
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
-    >>> ali = align_global(seq1, seq2, matrix)[0]
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
     >>> print(ali)
-    CGTT--
-    --TTGC
+    CGTCAT--
+    --TCATGC
     >>> print(ali.trace)
     [[ 0 -1]
      [ 1 -1]
      [ 2  0]
      [ 3  1]
-     [-1  2]
-     [-1  3]]
+     [ 4  2]
+     [ 5  3]
+     [-1  4]
+     [-1  5]]
     >>> print(ali[1:4].trace)
-    [[ 1 -1]
+     [ 1 -1]
      [ 2  0]
      [ 3  1]]
     >>> print(ali[1:4,0].trace)
@@ -155,7 +158,7 @@ class Alignment(object):
         
         Returns
         -------
-        trace : ndarray, dtype=int, shype=(n,2)
+        trace : ndarray, dtype=int, shape=(n,2)
             The created trace.
         """
         seq_i = np.zeros(len(seq_str_list))
@@ -174,6 +177,40 @@ class Alignment(object):
 
 
 def get_codes(alignment):
+    """
+    Get the sequence codes for the alignment.
+
+    The codes are built from the trace:
+    Instead of the indices of the aligned symbols, the return value
+    contains the corresponding symbol codes for each index.
+    Gaps are still represented by *-1*.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to get the sequence codes for.
+    
+    Returns
+    -------
+    codes : ndarray, dtype=int, shape=(n,m)
+        The sequence codes for the alignment.
+        The shape is *(n,m)* for *n* sequences and *m* alignment cloumn.
+        The array uses *-1* values for gaps.
+    
+    Examples
+    --------
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
+    >>> print(ali)
+    CGTCAT--
+    --TCATGC
+    >>> print(align.get_codes(ali))
+    [[ 1  2  3  1  0  3 -1 -1]
+     [-1 -1  3  1  0  3  2  1]]
+    """
     trace = alignment.trace
     # -1 is code value for gaps
     codes = np.full(trace.shape, -1, dtype=int)
@@ -189,6 +226,25 @@ def get_codes(alignment):
 
 
 def get_symbols(alignment):
+    """
+    Similar to `get_codes()`, but contains the decoded symbols instead
+    of codes.
+    Gaps are still represented by *None* values.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to get the symbols for.
+    
+    Returns
+    -------
+    symbols : list of list
+        The nested list of symbols.
+    
+    See Also
+    --------
+    get_codes
+    """
     codes = get_codes(alignment)
     symbols = [None] * codes.shape[0]
     for i in range(codes.shape[0]):
@@ -207,7 +263,29 @@ def get_symbols(alignment):
 
 def get_sequence_identity(alignment, mode="not_terminal"):
     """
-    mode : {'all', 'not_terminal', 'shortest'}
+    Calculate the sequence identity for an alignment.
+
+    The identity is equal to the matches divided by a measure for the
+    length of the alignment that depends on the `mode` parameter.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to calculate the identity for.
+    mode : {'all', 'not_terminal', 'shortest'}, optional
+        The calculation mode for alignment length.
+
+            - **all** - Count all alignment columns.
+            - **not_terminal** - Count all alignment columns of
+              non-terminal gaps.
+            - **shortest** - Use the shortest sequence.
+
+        Default is *not_terminal*.
+    
+    Returns
+    -------
+    identity : float
+        The sequence identity, ranging between 0 and 1.
     """
     if mode not in ["all", "not_terminal", "shortest"]:
         raise ValueError("'{:}' is an invalid calculation mode".format(mode))
@@ -255,6 +333,34 @@ def get_sequence_identity(alignment, mode="not_terminal"):
 
 
 def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
+    """
+    Calculate the similarity score of an alignment.
+
+    If the alignment contains more than two sequences,
+    all pairwise scores are counted.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to calculate the identity for.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    gap_penalty : int or (tuple, dtype=int), optional
+        If an integer is provided, the value will be interpreted as
+        general gap penalty. If a tuple is provided, an affine gap
+        penalty is used. The first integer in the tuple is the gap
+        opening penalty, the second integer is the gap extension
+        penalty.
+        The values need to be negative. (Default: *-10*)
+    terminal_penalty : bool, optional
+        If true, gap penalties are applied to terminal gaps.
+        (Default: True)
+    
+    Returns
+    -------
+    score : int
+        The similarity score.
+    """
     codes = get_codes(alignment)
     matrix = matrix.score_matrix()
 
