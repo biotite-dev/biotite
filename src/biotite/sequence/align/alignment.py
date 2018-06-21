@@ -10,7 +10,8 @@ import textwrap
 from ..alphabet import LetterAlphabet
     
 
-__all__ = ["Alignment"]
+__all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
+           "score"]
 
 
 class Alignment(object):
@@ -48,22 +49,25 @@ class Alignment(object):
     Examples
     --------
     
-    >>> seq1 = NucleotideSequence("CGTT")
-    >>> seq2 = NucleotideSequence("TTGC")
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
-    >>> ali = align_global(seq1, seq2, matrix)[0]
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
     >>> print(ali)
-    CGTT--
-    --TTGC
+    CGTCAT--
+    --TCATGC
     >>> print(ali.trace)
     [[ 0 -1]
      [ 1 -1]
      [ 2  0]
      [ 3  1]
-     [-1  2]
-     [-1  3]]
+     [ 4  2]
+     [ 5  3]
+     [-1  4]
+     [-1  5]]
     >>> print(ali[1:4].trace)
-    [[ 1 -1]
+     [ 1 -1]
      [ 2  0]
      [ 3  1]]
     >>> print(ali[1:4,0].trace)
@@ -154,7 +158,7 @@ class Alignment(object):
         
         Returns
         -------
-        trace : ndarray, dtype=int, shype=(n,2)
+        trace : ndarray, dtype=int, shape=(n,2)
             The created trace.
         """
         seq_i = np.zeros(len(seq_str_list))
@@ -170,3 +174,255 @@ class Alignment(object):
                     trace[pos_i, str_j] = seq_i[str_j]
                     seq_i[str_j] += 1
         return trace
+
+
+def get_codes(alignment):
+    """
+    Get the sequence codes for the alignment.
+
+    The codes are built from the trace:
+    Instead of the indices of the aligned symbols, the return value
+    contains the corresponding symbol codes for each index.
+    Gaps are still represented by *-1*.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to get the sequence codes for.
+    
+    Returns
+    -------
+    codes : ndarray, dtype=int, shape=(n,m)
+        The sequence codes for the alignment.
+        The shape is *(n,m)* for *n* sequences and *m* alignment cloumn.
+        The array uses *-1* values for gaps.
+    
+    Examples
+    --------
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
+    >>> print(ali)
+    CGTCAT--
+    --TCATGC
+    >>> print(align.get_codes(ali))
+    [[ 1  2  3  1  0  3 -1 -1]
+     [-1 -1  3  1  0  3  2  1]]
+    """
+    trace = alignment.trace
+    # -1 is code value for gaps
+    codes = np.full(trace.shape, -1, dtype=int)
+    for i in range(trace.shape[0]):
+        for j in range(trace.shape[1]):
+            # Get symbol code for each index in trace
+            index = trace[i,j]
+            # Code is set to -1 for gaps
+            if index != -1:
+                codes[i,j] = alignment.sequences[j].code[index]
+    # Transpose to have the number of sequences as first dimension
+    return codes.transpose()
+
+
+def get_symbols(alignment):
+    """
+    Similar to `get_codes()`, but contains the decoded symbols instead
+    of codes.
+    Gaps are still represented by *None* values.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to get the symbols for.
+    
+    Returns
+    -------
+    symbols : list of list
+        The nested list of symbols.
+    
+    See Also
+    --------
+    get_codes
+    """
+    codes = get_codes(alignment)
+    symbols = [None] * codes.shape[0]
+    for i in range(codes.shape[0]):
+        symbols_for_seq = [None] * codes.shape[1]
+        alphabet = alignment.sequences[i].get_alphabet()
+        for j in range(codes.shape[1]):
+            code = codes[i,j]
+            # Store symbol in the list
+            # For gaps (-1) this condition fails
+            # and the list keeps a 'None'
+            if code != -1:
+                symbols_for_seq[j] = alphabet.decode(code)
+        symbols[i] = symbols_for_seq
+    return symbols
+
+
+def get_sequence_identity(alignment, mode="not_terminal"):
+    """
+    Calculate the sequence identity for an alignment.
+
+    The identity is equal to the matches divided by a measure for the
+    length of the alignment that depends on the `mode` parameter.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to calculate the identity for.
+    mode : {'all', 'not_terminal', 'shortest'}, optional
+        The calculation mode for alignment length.
+
+            - **all** - Count all alignment columns.
+            - **not_terminal** - Count all alignment columns of
+              non-terminal gaps.
+            - **shortest** - Use the shortest sequence.
+
+        Default is *not_terminal*.
+    
+    Returns
+    -------
+    identity : float
+        The sequence identity, ranging between 0 and 1.
+    """
+    if mode not in ["all", "not_terminal", "shortest"]:
+        raise ValueError("'{:}' is an invalid calculation mode".format(mode))
+    trace = alignment.trace
+    codes = get_codes(alignment)
+    
+    if mode in ["not_terminal", "shortest"]:
+        # Ignore terminal gaps
+        # -> get start and exclusive stop column of the trace
+        # excluding terminal gaps
+        start_index = -1
+        for i in range(len(trace)):
+            # Check if all sequences have no gap at the given position
+            if (trace[i] != -1).all():
+                start_index = i
+                break
+        # Reverse iteration
+        stop_index = -1
+        for i in range(len(trace)-1, -1, -1):
+            # Check if all sequences have no gap at the given position
+            if (trace[i] != -1).all():
+                stop_index = i+1
+                break
+        if start_index == -1 or stop_index == -1:
+            raise ValueError("Alignment entirely consists of terminal gaps")
+    else:
+        # 'all' -> count all columns, entire trace
+        start_index = 0
+        stop_index = len(trace)
+    
+    # Count matches
+    matches = 0
+    for i in range(start_index, stop_index):
+        column = codes[:,i]
+        # One unique value -> all symbols match
+        if len(np.unique(column)) == 1:
+            matches += 1
+    
+    #Calculate iddentity
+    if mode == "shortest":
+        shortest_length = min([len(seq) for seq in alignment.sequences])
+        return matches / shortest_length
+    else:
+        return matches / (stop_index - start_index)
+
+
+def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
+    """
+    Calculate the similarity score of an alignment.
+
+    If the alignment contains more than two sequences,
+    all pairwise scores are counted.
+    
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to calculate the identity for.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    gap_penalty : int or (tuple, dtype=int), optional
+        If an integer is provided, the value will be interpreted as
+        general gap penalty. If a tuple is provided, an affine gap
+        penalty is used. The first integer in the tuple is the gap
+        opening penalty, the second integer is the gap extension
+        penalty.
+        The values need to be negative. (Default: *-10*)
+    terminal_penalty : bool, optional
+        If true, gap penalties are applied to terminal gaps.
+        (Default: True)
+    
+    Returns
+    -------
+    score : int
+        The similarity score.
+    """
+    codes = get_codes(alignment)
+    matrix = matrix.score_matrix()
+
+    # Sum similarity scores (without gaps)
+    score = 0
+    # Iterate over all positions
+    for pos in range(codes.shape[1]):
+        column = codes[:, pos]
+        # Iterate over all possible pairs
+        # Do not count self-similarity
+        # and do not count similarity twice (not S(i,j) and S(j,i))
+        for i in range(codes.shape[0]):
+            for j in range(i+1, codes.shape[0]):
+                code_i = column[i]
+                code_j = column[j]
+                # Ignore gaps
+                if code_i != -1 and code_j != -1:
+                    score += matrix[code_i, code_j]
+    # Sum gap penalties
+    if type(gap_penalty) == int:
+        gap_open = gap_penalty
+        gap_ext = gap_penalty
+    elif type(gap_penalty) == tuple:
+        gap_open = gap_penalty[0]
+        gap_ext = gap_penalty[1]
+    else:
+        raise TypeError("Gap penalty must be either integer or tuple")
+    # Iterate over all sequences
+    for seq_code in codes:
+        in_gap = False
+        if terminal_penalty:
+            start_index = 0
+            stop_index = len(seq_code)
+        else:
+            # Find a start and stop index excluding terminal gaps
+            start_index, stop_index = _identify_terminal_gaps(seq_code)
+        for i in range(start_index, stop_index):
+            if seq_code[i] == -1:
+                if in_gap:
+                    score += gap_ext
+                else:
+                    score += gap_open
+                in_gap = True
+            else:
+                in_gap = False
+    return score
+
+
+def _identify_terminal_gaps(seq_code):
+    # Find a start and stop index excluding terminal gaps
+    start_index = -1
+    for i in range(len(seq_code)):
+        # Check if the sequence has a gap at the given position
+        if seq_code[i] != -1:
+            start_index = i
+            break
+    # Reverse iteration
+    stop_index = -1
+    for i in range(len(seq_code)-1, -1, -1):
+        if (seq_code[i] != -1).all():
+            stop_index = i+1
+            break
+    if start_index == -1 or stop_index == -1:
+        raise ValueError("Sequence is empty")
+    return start_index, stop_index
