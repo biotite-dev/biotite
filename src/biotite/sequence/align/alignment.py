@@ -10,7 +10,7 @@ import textwrap
 from ..alphabet import LetterAlphabet
     
 
-__all__ = ["Alignment"]
+__all__ = ["Alignment", "get_codes", "get_symbols"]
 
 
 class Alignment(object):
@@ -170,3 +170,37 @@ class Alignment(object):
                     trace[pos_i, str_j] = seq_i[str_j]
                     seq_i[str_j] += 1
         return trace
+
+
+def get_codes(alignment):
+    trace = alignment.trace
+    # -1 is code value for gaps
+    codes = np.full(trace.shape, -1, dtype=int)
+    for i in range(trace.shape[0]):
+        for j in range(trace.shape[1]):
+            # Get symbol code for each index in trace
+            index = trace[i,j]
+            # Code is set to -1 for gaps
+            if index != -1:
+                codes[i,j] = alignment.sequences[j].code[index]
+    # Transpose to have the number of sequences as first dimension
+    return codes.transpose()
+
+
+def get_symbols(alignment):
+    codes = get_codes(alignment)
+    symbols = [None] * codes.shape[0]
+    for i in range(codes.shape[0]):
+        symbols_for_seq = [None] * codes.shape[1]
+        alphabet = alignment.sequences[i].get_alphabet()
+        for j in range(codes.shape[1]):
+            code = codes[i,j]
+            # Store symbol in the list
+            # For gaps (-1) this condition fails
+            # and the list keeps a 'None'
+            if code != -1:
+                symbols_for_seq[j] = alphabet.decode(code)
+        symbols[i] = symbols_for_seq
+    return symbols
+
+
