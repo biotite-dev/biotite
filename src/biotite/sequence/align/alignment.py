@@ -10,7 +10,7 @@ import textwrap
 from ..alphabet import LetterAlphabet
     
 
-__all__ = ["Alignment", "get_codes", "get_symbols"]
+__all__ = ["Alignment", "get_codes", "get_symbols", "get_identity"]
 
 
 class Alignment(object):
@@ -204,3 +204,50 @@ def get_symbols(alignment):
     return symbols
 
 
+def get_identity(alignment, mode="not_terminal"):
+    """
+    mode : {'all', 'not_terminal', 'shortest'}
+    """
+    if mode not in ["all", "not_terminal", "shortest"]:
+        raise ValueError("'{:}' is an invalid calculation mode".format(mode))
+    trace = alignment.trace
+    codes = get_codes(alignment)
+    
+    if mode in ["not_terminal", "shortest"]:
+        # Ignore terminal gaps
+        # -> get start and exclusive stop column of the trace
+        # excluding terminal gaps
+        start_index = -1
+        for i in range(len(trace)):
+            # Check if all sequences have no gap at the given position
+            if (trace[i] != -1).all():
+                start_index = i
+                break
+        # Reverse iteration
+        stop_index = -1
+        for i in range(len(trace)-1, -1, -1):
+            # Check if all sequences have no gap at the given position
+            if (trace[i] != -1).all():
+                stop_index = i+1
+                break
+        if start_index == -1 or stop_index == -1:
+            raise ValueError("Alignment entirely constists of terminal gaps")
+    else:
+        # 'all' -> count all columns, entire trace
+        start_index = 0
+        stop_index = len(trace)
+    
+    # Count matches
+    matches = 0
+    for i in range(start_index, stop_index):
+        column = codes[:,i]
+        # One unique value -> all symbols match
+        if len(np.unique(column)) == 1:
+            matches += 1
+    
+    #Calculate iddentity
+    if mode == "shortest":
+        shortest_length = min([len(seq) for seq in alignment.sequences])
+        return matches / shortest_length
+    else:
+        return matches / (stop_index - start_index)
