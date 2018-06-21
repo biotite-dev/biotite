@@ -18,6 +18,35 @@ def test_alignment_str():
     alignment = align.Alignment([seq1, seq2], trace, None)
     assert str(alignment).split("\n") == ali_str
 
+def test_conversion_to_symbols():
+    seq_str1 = "HAKLPRDD--WKL--"
+    seq_str2 = "HA--PRDDADWKLHH"
+    seq_str3 = "HA----DDADWKLHH"
+    seq_strings = [seq_str1, seq_str2, seq_str3]
+    sequences = [seq.ProteinSequence(seq_str.replace("-",""))
+                 for seq_str in seq_strings]
+    trace = align.Alignment.trace_from_strings(seq_strings)
+    alignment = align.Alignment(sequences, trace, score=None)
+    # Test the conversion bach to strings of symbols
+    symbols = align.get_symbols(alignment)
+    symbols = ["".join([sym if sym is not None else "-" for sym in sym_list])
+               for sym_list in symbols]
+    assert symbols == seq_strings
+
+def test_identity():
+    seq_str1 = "--HAKLPRDD--WL--"
+    seq_str2 = "FRHA--QRTDADWLHH"
+    seq_strings = [seq_str1, seq_str2]
+    sequences = [seq.ProteinSequence(seq_str.replace("-",""))
+                 for seq_str in seq_strings]
+    trace = align.Alignment.trace_from_strings(seq_strings)
+    alignment = align.Alignment(sequences, trace, score=None)
+    # Assert correct sequence identity calculation
+    modes = ["all", "not_terminal", "shortest"]
+    values = [6/16, 6/12, 6/10]
+    for mode, value in zip(modes, values):
+        assert align.get_sequence_identity(alignment, mode=mode) == value
+
 def test_simple_score():
     seq1 = seq.NucleotideSequence("ACCTGA")
     seq2 = seq.NucleotideSequence("ACTGGT")
@@ -53,12 +82,19 @@ def test_align_optimal(local, term, gap_penalty,
                        input1, input2, expect):
     seq1 = seq.NucleotideSequence(input1)
     seq2 = seq.NucleotideSequence(input2)
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+    # Test alignment function
     alignments = align.align_optimal(seq1, seq2,
-                       align.SubstitutionMatrix.std_nucleotide_matrix(),
+                       matrix,
                        gap_penalty=gap_penalty, terminal_penalty=term,
                        local=local)
     for ali in alignments:
         assert str(ali) in expect
+    # Test if separate score function calculates the same score
+    for ali in alignments:
+        score = align.score(ali, matrix,
+                            gap_penalty=gap_penalty, terminal_penalty=term)
+        assert score == ali.score
 
 @pytest.mark.parametrize("db_entry", [entry for entry
                                       in align.SubstitutionMatrix.list_db()
