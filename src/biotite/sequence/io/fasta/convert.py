@@ -180,11 +180,24 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 def _convert_to_sequence(seq_str):
     try:
-        return NucleotideSequence(seq_str)
+        code = NucleotideSequence.alphabet.encode_multiple(seq_str)
+        seq = NucleotideSequence()
+        seq.code = code
+        return seq
     except AlphabetError:
         pass
     try:
-        return ProteinSequence(seq_str)
+        code = ProteinSequence.alphabet.encode_multiple(seq_str)
+        seq = ProteinSequence()
+        seq.code = code
+        return seq
+    except AlphabetError:
+        pass
+    try:
+        code = NucleotideSequence.alphabet_amb.encode_multiple(seq_str)
+        seq = NucleotideSequence()
+        seq.code = code
+        return seq
     except AlphabetError:
         raise ValueError("FASTA data cannot be converted either to "
                          "NucleotideSequence nor to Protein Sequence")
