@@ -47,11 +47,13 @@ def test_identity():
     for mode, value in zip(modes, values):
         assert align.get_sequence_identity(alignment, mode=mode) == value
 
-def test_simple_score():
+def test_align_ungapped():
     seq1 = seq.NucleotideSequence("ACCTGA")
     seq2 = seq.NucleotideSequence("ACTGGT")
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
-    assert align.simple_score(seq1, seq2, matrix) == 3
+    ali = align.align_ungapped(seq1, seq2, matrix)
+    assert ali.score == 3
+    assert str(ali) == "ACCTGA\nACTGGT"
 
 # [local, gap_penalty, input1, input2, expect]
 align_cases = [(False,True, -7,      "TATGGGTATCC","TATGTATAA",

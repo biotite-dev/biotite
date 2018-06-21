@@ -36,16 +36,15 @@ ctypedef fused CodeType2:
 cdef inline int32 int_max(int32 a, int32 b): return a if a >= b else b
 
 
-__all__ = ["simple_score", "align_optimal"]
+__all__ = ["align_ungapped", "align_optimal"]
 
 
 
-def simple_score(seq1, seq2, matrix):
+def align_ungapped(seq1, seq2, matrix, score_only=False):
     """
-    Score the similarity of two sequences.
+    Align two sequences without introduction of gaps.
     
-    This is equal to a global alignment without introducing gaps.
-    Therefore both sequences need to have the same length.
+    Both sequences need to have the same length.
     
     Parameters
     ----------
@@ -53,11 +52,14 @@ def simple_score(seq1, seq2, matrix):
         The sequences, whose similarity should be scored.
     matrix : SubstitutionMatrix
         The substitution matrix used for scoring.
+    score_only : bool, optional
+        If true return only the score instead of an alignment.
     
     Returns
     -------
-    score : int
-        The resulting score.
+    score : Alignment or int
+        The resulting trivial alignment. If `score_only` is set to true,
+        only the score is returned.
     """
     if len(seq1) != len(seq2):
         raise ValueError("Sequence lengths of {:d} and {:d} are not equal"
@@ -65,7 +67,24 @@ def simple_score(seq1, seq2, matrix):
     if (matrix.get_alphabet1() != seq1.get_alphabet() and
         matrix.get_alphabet2() != seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    return _add_scores(seq1.code, seq2.code, matrix.score_matrix())
+    score = _add_scores(seq1.code, seq2.code, matrix.score_matrix())
+    if score_only:
+        return score
+    else:
+        # Sequences do not need to be actually aligned
+        # -> Create alignment with trivial trace
+        # [[0 0]
+        #  [1 1]
+        #  [2 2]
+        #   ... ]
+        seq_length = len(seq1)
+        return Alignment(
+            sequences = [seq1, seq2],
+            trace     = np.tile(np.arange(seq_length), 2)
+                        .reshape(2, seq_length)
+                        .transpose(),
+            score     = score
+        )
 
 
 @cython.boundscheck(False)
