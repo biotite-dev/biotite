@@ -10,7 +10,8 @@ import textwrap
 from ..alphabet import LetterAlphabet
     
 
-__all__ = ["Alignment", "get_codes", "get_symbols", "get_identity", "score"]
+__all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
+           "score"]
 
 
 class Alignment(object):
@@ -204,7 +205,7 @@ def get_symbols(alignment):
     return symbols
 
 
-def get_identity(alignment, mode="not_terminal"):
+def get_sequence_identity(alignment, mode="not_terminal"):
     """
     mode : {'all', 'not_terminal', 'shortest'}
     """
