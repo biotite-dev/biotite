@@ -40,7 +40,6 @@ template = template[(template.res_name != "CL") & (template.res_name != "SOL")]
 # from the first character in the atom name
 # Since hydrogens may have leading numbers we simply ignore numbers
 for i in range(template.array_length()):
-    pass
     template.element[i] = re.sub(r"\d", "", template.atom_name[i])[0]
 trajectory = strucio.load_structure(traj_file_path, template=template)
 
