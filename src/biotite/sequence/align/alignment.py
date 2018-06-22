@@ -145,6 +145,9 @@ class Alignment(object):
         else:
             raise IndexError("Invalid alignment index")
     
+    def __iter__(self):
+        raise TypeError("'Alignment' object is not iterable")
+    
     @staticmethod
     def trace_from_strings(seq_str_list):
         """
