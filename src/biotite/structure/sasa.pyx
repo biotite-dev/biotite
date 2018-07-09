@@ -26,7 +26,7 @@ ctypedef np.float32_t float32
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
-         bint ignore_ions=True, int point_number=100,
+         bint ignore_ions=True, int point_number=1000,
          point_distr="Fibonacci", vdw_radii="ProtOr"):
     """
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
