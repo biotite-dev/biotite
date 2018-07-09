@@ -17,6 +17,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colors
 import scipy.stats as sts
 
 # Download and parse file
@@ -32,23 +33,13 @@ psi *= 180/np.pi
 phi= phi[1:-1]
 psi= psi[1:-1]
 
-# Using gaussin KDE to visualize density
-data_set = np.vstack([phi, psi])
-density = sts.gaussian_kde(data_set)(data_set)
-# Ensure that high density colors are rendered in front
-i_sorted = density.argsort()
-phi = phi[i_sorted]
-psi = psi[i_sorted]
-density = density[i_sorted]
-# Normalize, so that the lonliest point gets a value of 1
-density = density / np.min(density)
-
 # Plot density
 fig = plt.figure()
 ax = fig.add_subplot(111)
-cax = ax.scatter(phi, psi, c=density, s=0.5, cmap="RdYlGn_r")
-cbar = fig.colorbar(cax, orientation="vertical")
-cbar.set_label("Relative density")
+h, xed, yed, image = ax.hist2d(phi, psi, bins=(200, 200),
+                cmap="RdYlGn_r", cmin=1)
+cbar = fig.colorbar(image, orientation="vertical")
+cbar.set_label("Count")
 ax.set_xlim(-180, 175)
 ax.set_ylim(-180, 175)
 ax.set_xlabel(r"$\phi$")
