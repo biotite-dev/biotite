@@ -38,7 +38,9 @@ ku = ku[~struc.filter_solvent(ku)]
 ku_dna_common = ku_dna[struc.filter_intersection(ku_dna, ku)]
 ku_common = ku[struc.filter_intersection(ku, ku_dna)]
 # Superimpose
-ku_superimposed, transformation = struc.superimpose(ku_dna_common, ku_common)
+ku_superimposed, transformation = struc.superimpose(
+    ku_dna_common, ku_common, (ku_common.atom_name == "CA")
+)
 # We do not want the cropped structures
 # -> apply superimposition on structures before intersection filtering
 ku_superimposed = struc.superimpose_apply(ku, transformation)

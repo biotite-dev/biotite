@@ -21,7 +21,9 @@ def test_superimposition_array(path):
     mobile = fixed.copy()
     mobile = struc.rotate(mobile, (1,2,3))
     mobile = struc.translate(mobile, (1,2,3))
-    fitted, transformation = struc.superimpose(fixed, mobile, False)
+    fitted, transformation = struc.superimpose(
+        fixed, mobile, (mobile.atom_name == "CA")
+    )
     assert struc.rmsd(fixed, fitted) == pytest.approx(0)
     fitted = struc.superimpose_apply(mobile, transformation)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0)
@@ -34,7 +36,11 @@ def test_superimposition_stack(ca_only):
     stack = pdbx.get_structure(pdbx_file)
     fixed = stack[0]
     mobile = stack[1:]
-    fitted, transformation = struc.superimpose(fixed, mobile, ca_only)
+    if ca_only:
+        mask = (mobile.atom_name == "CA")
+    else:
+        mask = None
+    fitted, transformation = struc.superimpose(fixed, mobile, mask)
     if ca_only:
         # The superimpositions are better for most cases than the
         # superimpositions in the structure file

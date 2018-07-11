@@ -15,7 +15,7 @@ from .atoms import Atom, AtomArray, AtomArrayStack, stack
 from .error import BadStructureError
 
 
-def superimpose(fixed, mobile, ca_only=True):
+def superimpose(fixed, mobile, atom_mask=None):
     """
     Superimpose structures onto a fixed structure.
     
@@ -31,11 +31,13 @@ def superimpose(fixed, mobile, ca_only=True):
         The structure(s) which is/are superimposed on the `fixed`
         structure. Both, `fixed` and `mobile` should have equal
         annotation arrays and must have equal sizes.
-    ca_only: bool, optional
-        If True, the function performs the superimposition
-        considering only the "CA" atoms. This increases the
-        performance drastically but decreases the accuracy slightly.
-        True by default.
+    atom_mask: ndarray, dtype=bool, optional
+        If given, only the atoms covered by this boolean mask will be
+        considered for superimposition.
+        This means that the algorithm will minimize the RMSD based
+        on the covered atoms instead of all atoms.
+        The returned superimposed structure will contain all atoms
+        of the input structure, regardless of this parameter.
     
     Returns
     -------
@@ -94,22 +96,22 @@ def superimpose(fixed, mobile, ca_only=True):
     >>> array2 = rotate(array2, [1,2,3])
     >>> print(rmsd(array1, array2))
     10.8492095649
-    >>> array2_fit, transformation = superimpose(array1, array2, ca_only=True)
+    >>> array2_fit, transformation = superimpose(
+            array1, array2, mask=(array2.atom_name == "CA")
+        )
     >>> print(rmsd(array1, array2_fit))
     1.95480879468
-    >>> array2_fit, transformation = superimpose(array1, array2, ca_only=False)
+    >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print(rmsd(array1, array2_fit))
     1.92792691375
         
     """
     mob_centroid = centroid(mobile)
     fix_centroid = centroid(fixed)
-    if ca_only:
-        # For performance reasons the Kabsch algorithm
-        # is only performed with "CA" per default
+    if atom_mask is not None:
         # Implicitly this creates array copies
-        mob_centered = mobile.coord[..., (mobile.atom_name == "CA"), :]
-        fix_centered = fixed.coord[..., (fixed.atom_name == "CA"), :]
+        mob_centered = mobile.coord[..., atom_mask, :]
+        fix_centered = fixed.coord[..., atom_mask, :]
     else:
         mob_centered = np.copy(mobile.coord)
         fix_centered = np.copy(fixed.coord)
