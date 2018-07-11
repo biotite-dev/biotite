@@ -26,7 +26,7 @@ ctypedef np.float32_t float32
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
-         bint ignore_ions=True, int point_number=100,
+         bint ignore_ions=True, int point_number=1000,
          point_distr="Fibonacci", vdw_radii="ProtOr"):
     """
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
@@ -259,7 +259,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
             np.asarray(main_coord[i]), efficient_mode=True,
             array_indices=cell_indices)
         cell_indices_view = cell_indices
-        for j in range(cell_indices_view.shape[0]):
+        for j in range(length):
             # Remove all atoms, where the distance to the relevant atom
             # is larger than the sum of the radii,
             # since those atoms do not touch
@@ -280,7 +280,6 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                     relevant_occl_coord[rel_atom_i,2] = occl_z
                     relevant_occl_coord[rel_atom_i,3] = adj_radius_sq
                     rel_atom_i += 1
-            j += 1
         for j in range(sphere_coord.shape[0]):
             # Second level: The sphere points for that atom
             # Transform sphere point to sphere of current atom
