@@ -40,7 +40,6 @@ template = template[(template.res_name != "CL") & (template.res_name != "SOL")]
 # from the first character in the atom name
 # Since hydrogens may have leading numbers we simply ignore numbers
 for i in range(template.array_length()):
-    pass
     template.element[i] = re.sub(r"\d", "", template.atom_name[i])[0]
 trajectory = strucio.load_structure(traj_file_path, template=template)
 
@@ -56,12 +55,14 @@ rmsd = struc.rmsd(template, trajectory)
 # Simulation was 1000 ps long
 time = np.linspace(0, 1000, len(trajectory))
 
-figure = plt.figure()
+figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, rmsd, color=biotite.colors["dimorange"])
 ax.set_xlim(0,1000)
-ax.set_xlabel("time (ps)")
+ax.set_xlabel("Time (ps)")
 ax.set_ylabel("RMSD (Angstrom)")
+figure.tight_layout()
+
 
 ########################################################################
 # As we can see the simulation seems to converge already in the
@@ -76,12 +77,13 @@ ax.set_ylabel("RMSD (Angstrom)")
 
 radius = struc.gyration_radius(trajectory)
 
-figure = plt.figure()
+figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, radius, color=biotite.colors["dimorange"])
 ax.set_xlim(0,1000)
-ax.set_xlabel("time (ps)")
+ax.set_xlabel("Time (ps)")
 ax.set_ylabel("Radius of gyration (Angstrom)")
+figure.tight_layout()
 
 ########################################################################
 # From this perspective, the protein seems really stable.
@@ -104,7 +106,7 @@ ax.set_ylabel("Radius of gyration (Angstrom)")
 ca_trajectory = trajectory[:, trajectory.atom_name == "CA"]
 rmsf = struc.rmsf(struc.average(ca_trajectory), ca_trajectory)
 
-figure = plt.figure()
+figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(np.arange(1, 21), rmsf, color=biotite.colors["dimorange"])
 ax.set_xlim(1, 20)
@@ -112,5 +114,7 @@ ax.set_xlabel("Residue")
 ax.set_ylabel("RMSF (Angstrom)")
 ax.set_xticks(np.arange(1, 21))
 ax.set_xticklabels(np.arange(1, 21))
+figure.tight_layout()
+
 
 plt.show()
