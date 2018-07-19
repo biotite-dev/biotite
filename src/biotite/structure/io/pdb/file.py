@@ -11,7 +11,7 @@ from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 import copy
-
+from warnings import warn
 
 _atom_records = {"hetero"    : (0,  6),
                  "atom_id"   : (6,  11),
@@ -59,6 +59,24 @@ class PDBFile(TextFile):
     
     """
     
+    def guess_element(self, atom_name):
+        """
+        Guess an Element from an Atom name. This is not 100% failproof but
+        should catch most cases not involving hetero atoms
+        
+        Parameters
+        ----------
+        atom_name : string
+            Atom name of an element
+        
+        Returns
+        ----------
+        string : The guessed element abbrevation 
+        """
+        
+        # First character is usually the element name
+        return atom_name[0].upper()
+
     def get_structure(self, insertion_code=[], altloc=[],
                       model=None, extra_fields=[]):
         """
@@ -169,6 +187,17 @@ class PDBFile(TextFile):
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
+        
+        # Replace empty strings for elements with guessed types
+        if '' in array.element:
+            rep_num = 0
+            for idx in range(len(array.element)):
+                if not array.element[idx]:
+                    atom_name = array.atom_name[idx]
+                    array.element[idx] = self.guess_element(atom_name)
+                    rep_num += 1
+            warn("{} elements were guessed from atom_name.".format(rep_num))
+                            
         if extra_fields:
             for i, line_i in enumerate(annot_i):
                 line = self._lines[line_i]
@@ -208,7 +237,8 @@ class PDBFile(TextFile):
         return array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
-        
+
+            
     def set_structure(self, array):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
