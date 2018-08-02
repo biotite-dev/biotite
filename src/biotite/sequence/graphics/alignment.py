@@ -84,9 +84,15 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         font : FontProperties, optional
             `matplotlib` `FontProperties` for customization of the
             font used by the numbers.
-        number_functions : function, optional
-            A function that converts a sequence index to a location
+        number_functions : iterable object of function, optional
+            A list of functions, where each function alters the location
+            number for each sequence.
+            Must have the same length as the number of sequences in the
+            alignment.
+            Each function converts a sequence index to a location
             number.
+            When the list element is `None`, the default location
+            numbers are used for the respective sequence.
             By default the location number is the sequence index + 1
             (Sequence index starts at 0, location starts at 1).
         """

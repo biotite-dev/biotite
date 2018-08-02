@@ -158,7 +158,7 @@ class NucleotideSequence(Sequence):
             The codon table to be used. By default the default table
             will be used
             (NCBI "Standard" table with "ATG" as single start codon).
-        met_start : bool. optional
+        met_start : bool, optional
             If true, the translation starts always with a 'methionine',
             even if the start codon codes for another amino acid.
             Otherwise the translation starts with the amino acid

@@ -663,10 +663,7 @@ class AtomArray(_AtomArrayBase):
         
         Each line contains the attributes of one atom.
         """
-        string = ""
-        for atom in self:
-            string += str(atom) + "\n"
-        return string
+        return "\n".join([str(atom) for atom in self])
     
     def __copy_create__(self):
         return AtomArray(self.array_length())

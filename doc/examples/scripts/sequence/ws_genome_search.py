@@ -2,15 +2,16 @@ r"""
 Finding homologs of short sequences in a genome
 ===============================================
 
-In this example we use an local alignment (dynamic programming) for
+In this example we use a local alignment (dynamic programming) for
 identification of homologs of a short sequence in an entire bacterial
 genome.
 Specifically we take the *leuL* gene (*leu* operon leader peptide)
 from *E. coli* BL21 and search for it in the genome of a
 *Salmonella enterica* strain.
 
-This method only works for short sequences, since the dynmic programming
-method requires too much RAM (dozens of gigabyte) for longer sequences.
+This method only works for short sequences, since the dynamic
+programming method requires too much RAM (dozens of gigabyte) for longer
+sequences.
 """
 
 # Code source: Patrick Kunzmann
@@ -59,9 +60,9 @@ rev_alignments = align.align_optimal(
 ########################################################################
 # Now that we have both alignments (forward and reverse strand),
 # we can can check which of them has a higher score.
-# We simply take the score of the first element in each list, since due
-# to the nature of the dynamic programming algorithm, every element in
-# a list has the same score.
+# We simply take the score of the first alignment in each list.
+# Due to the nature of the dynamic programming algorithm, every
+# alignment in each list has the same score.
 
 print("Forward:")
 print("Alignment count:", len(alignments))
@@ -72,12 +73,12 @@ print("Alignment count:", len(rev_alignments))
 print("Score:", rev_alignments[0].score)
 
 ########################################################################
-# Clearly the the alignment with the reverse genome seems to be the
+# Clearly the alignment with the reverse genome seems to be the
 # right one.
 # For visualization purposes we have to apply a renumbering function
 # for the genomic sequence,
 # since the original indices refer to the reverse complement sequence,
-# but we want the numbers to refer to the original one.
+# but we want the numbers to refer to the original sequence.
 
 # Use first and only alignment 
 alignment = rev_alignments[0]
