@@ -8,6 +8,7 @@ doc/_build/
 *.egg-info/
 
 # Ignore folder created by pytest
+.pytest_cache
 htmlcov
 .coverage
 .eggs
