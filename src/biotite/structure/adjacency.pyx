@@ -18,6 +18,7 @@ import numpy as np
 
 ctypedef np.uint64_t ptr
 ctypedef np.float32_t float32
+ctypedef np.uint8_t uint8
 
 
 cdef class CellList:
@@ -113,6 +114,26 @@ cdef class CellList:
         if self._has_initialized_cells():
             deallocate_ptrs(self._cells)
     
+    def create_adjacency_matrix(self, float32 threshold_distance):
+        cdef int i=0, j=0
+        cdef int index
+        cdef int[:,:] adjacent_indices = self.get_atoms(
+            np.asarray(self._coord), threshold_distance
+        )
+        cdef int array_length = self._coord.shape[0]
+        cdef uint8[:,:] matrix = np.zeros(
+            (array_length, array_length), dtype=np.uint8
+        )
+        # Fill matrix
+        for i in range(adjacent_indices.shape[0]):
+            for j in range(adjacent_indices.shape[1]):
+                index = adjacent_indices[i,j]
+                if index == -1:
+                    # end of list -> jump to next position
+                    break
+                matrix[i, index] = True
+        return np.asarray(matrix, dtype=bool)
+    
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
         Search for atoms in vicinity of the given position.
@@ -134,7 +155,7 @@ cdef class CellList:
             
         See Also
         --------
-        get_atoms_in_cell
+        get_atoms_in_cells
         """
         cdef int i=0, j=0
         cdef int subset_j = 0
