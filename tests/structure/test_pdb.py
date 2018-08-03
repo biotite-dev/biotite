@@ -9,6 +9,7 @@ import itertools
 import numpy as np
 import glob
 from os.path import join, basename
+from os import remove
 from .util import data_dir
 import pytest
 
@@ -63,3 +64,37 @@ def test_extra_fields():
     assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
+
+@pytest.mark.filterwarnings("ignore")
+def test_guess_elements():
+    import tempfile
+    from copy import deepcopy
+
+    # read valid pdb file
+    path = join(data_dir, "1l2y.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    stack = pdb_file.get_structure()
+
+    # remove all elements
+    stack.element[:] = ''
+
+    # save stack without elements to tmp file
+    tmp_file = tempfile.NamedTemporaryFile(suffix='.pdb').name
+    tmp_pdb_file = pdb.PDBFile()
+    tmp_pdb_file.set_structure(stack)
+    tmp_pdb_file.write(tmp_file)
+
+    # read new stack from file with guessed elements
+    guessed_pdb_file = pdb.PDBFile()
+    guessed_pdb_file.read(tmp_file)
+    guessed_stack = guessed_pdb_file.get_structure()
+
+    # remove tmp file before an assert can fail
+    remove(tmp_file)
+
+    assert '' not in guessed_stack.element.tolist()
+    assert guessed_stack[0, (guessed_stack.atom_name == 'CA') & (guessed_stack.res_id == 1)].element == 'C'
+    assert guessed_stack[0, (guessed_stack.atom_name == 'HD21') & (guessed_stack.res_id == 1)].element == 'H'
+    assert guessed_stack[0, (guessed_stack.atom_name == 'O') & (guessed_stack.res_id == 1)].element == 'O'
+

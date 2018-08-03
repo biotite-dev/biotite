@@ -11,7 +11,7 @@ from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 import copy
-
+from warnings import warn
 
 _atom_records = {"hetero"    : (0,  6),
                  "atom_id"   : (6,  11),
@@ -58,7 +58,7 @@ class PDBFile(TextFile):
     >>> file.write("1l2y_mod.pdb")
     
     """
-    
+
     def get_structure(self, insertion_code=[], altloc=[],
                       model=None, extra_fields=[]):
         """
@@ -169,6 +169,22 @@ class PDBFile(TextFile):
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
+        
+        # Replace empty strings for elements with guessed types
+        def guess_element(atom_name):
+            if atom_name.startswith(('H', '1H', '2H', '3H')):
+                return 'H'
+            return atom_name[0]
+
+        if '' in array.element:
+            rep_num = 0
+            for idx in range(len(array.element)):
+                if not array.element[idx]:
+                    atom_name = array.atom_name[idx]
+                    array.element[idx] = guess_element(atom_name)
+                    rep_num += 1
+            warn("{} elements were guessed from atom_name.".format(rep_num))
+                            
         if extra_fields:
             for i, line_i in enumerate(annot_i):
                 line = self._lines[line_i]
@@ -208,7 +224,8 @@ class PDBFile(TextFile):
         return array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
-        
+
+            
     def set_structure(self, array):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
