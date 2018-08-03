@@ -23,7 +23,7 @@ def test_loading(path):
         array = strucio.load_structure(path)
 
 
-@pytest.mark.parametrize("suffix", ["pdb","cif","pdbx","mmtf"])
+@pytest.mark.parametrize("suffix", ["pdb","cif","gro","pdbx","mmtf"])
 def test_saving(suffix):
     array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
     strucio.save_structure(biotite.temp_file("1l2y." + suffix),

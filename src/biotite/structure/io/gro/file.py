@@ -195,7 +195,6 @@ class GROFile(TextFile):
             return np.abs(array.coord.max(axis=0) - array.coord.min(axis=0))/10
 
         if isinstance(array, AtomArray):
-            print((array.array_length() + 3))
             self._lines = [None] * (array.array_length() + 3)
 
             # write header lines
