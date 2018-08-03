@@ -58,6 +58,9 @@ cdef class CellList:
     cdef float32[:] _max_coord
     cdef int _max_cell_length
     
+    @cython.initializedcheck(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def __cinit__(self, atom_array not None, float cell_size):
         cdef float32 x, y, z
         cdef int i, j, k
@@ -114,6 +117,9 @@ cdef class CellList:
         if self._has_initialized_cells():
             deallocate_ptrs(self._cells)
     
+    @cython.initializedcheck(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def create_adjacency_matrix(self, float32 threshold_distance):
         if threshold_distance < 0:
             raise ValueError("Threshold must be a positive value")
@@ -136,6 +142,9 @@ cdef class CellList:
                 matrix[i, index] = True
         return np.asarray(matrix, dtype=bool)
     
+    @cython.initializedcheck(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
         Search for atoms in vicinity of the given position.
@@ -225,6 +234,8 @@ cdef class CellList:
         else:
             raise ValueError("Invalid shape for input coordinates")
     
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def get_atoms_in_cells(self, np.ndarray coord, int cell_radius=1):
         """
         Search for atoms in vicinity of the given position.
@@ -345,15 +356,19 @@ cdef class CellList:
                                             list_ptr[cell_i]
                                         array_i += 1
     
+    @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef inline void _get_cell_index(self, float32 x, float32 y, float32 z,
                              int* i, int* j, int* k):
         i[0] = <int>((x - self._min_coord[0]) / self._cellsize)
         j[0] = <int>((y - self._min_coord[1]) / self._cellsize)
         k[0] = <int>((z - self._min_coord[2]) / self._cellsize)
     
-    
+    @cython.initializedcheck(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef inline bint _check_coord(self, float32 x, float32 y, float32 z):
         if x < self._min_coord[0] or x > self._max_coord[0]:
             return False
