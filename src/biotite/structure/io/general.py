@@ -70,7 +70,7 @@ def load_structure(file_path, template=None):
         from .gro import GROFile
         file = GROFile()
         file.read(file_path)
-        array = file.get_structure(file)
+        array = file.get_structure()
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]

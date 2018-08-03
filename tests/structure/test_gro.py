@@ -11,6 +11,7 @@ import glob
 from os.path import join, basename
 from .util import data_dir
 import pytest
+import tempfile
 
 
 @pytest.mark.parametrize("path, is_stack", itertools.product(
@@ -38,7 +39,7 @@ def test_pdb_consistency(file_index, is_stack):
     model = None if is_stack else 1
     gro_file = gro.GROFile()
     gro_file.read(gro_paths[file_index])
-    a2 = gro_file.get_structure(gro_file, model=model)
+    a2 = gro_file.get_structure(model=model)
     model = None if is_stack else 1
     pdb_file = pdb.PDBFile()
     pdb_file.read(pdb_paths[file_index])
@@ -69,7 +70,7 @@ def test_pdb_to_gro(file_index, is_stack):
     a1 = pdb_file.get_structure(model=model)
 
     # save stack as gro
-    tmp = biotite.temp_file(pdb_paths[file_index][:-4] + ".gro")
+    tmp = tempfile.NamedTemporaryFile(suffix=".gro").name
     gro_file = gro.GROFile()
     gro_file.set_structure(a1)
     gro_file.write(tmp)
