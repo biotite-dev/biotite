@@ -158,7 +158,7 @@ cdef class CellList:
         >>> atom_array = atom_array[atom_array.atom_name == "CA"]
         >>> cell_list = struc.CellList(atom_array, 5)
         >>> matrix = cell_list.create_adjacency_matrix(5)
-        """"
+        """
         if threshold_distance < 0:
             raise ValueError("Threshold must be a positive value")
         cdef int i=0, j=0
