@@ -2,10 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
+import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
-from biotite.structure.atoms import AtomArray as AtomArray
 import itertools
 import numpy as np
 import glob
@@ -47,14 +46,12 @@ def test_pdb_consistency(file_index, is_stack):
 
     assert a1.array_length() == a2.array_length()
 
-    for category in ["res_id", "res_name", "atom_name",
-                     "element"]:
+    for category in ["res_id", "res_name", "atom_name"]:
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
 
 
     # mind rounding errors when converting pdb to gros (A -> nm).
     assert False not in np.isclose(a1.coord, a2.coord, atol=0.01)
-
 
 
