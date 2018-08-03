@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
@@ -9,7 +10,6 @@ import itertools
 import numpy as np
 import glob
 from os.path import join, basename
-from os import remove
 from .util import data_dir
 import pytest
 
@@ -80,7 +80,7 @@ def test_guess_elements():
     stack.element[:] = ''
 
     # save stack without elements to tmp file
-    tmp_file = tempfile.NamedTemporaryFile(suffix='.pdb').name
+    tmp_file = biotite.temp_file("guess_elements.pdb")
     tmp_pdb_file = pdb.PDBFile()
     tmp_pdb_file.set_structure(stack)
     tmp_pdb_file.write(tmp_file)
@@ -89,9 +89,6 @@ def test_guess_elements():
     guessed_pdb_file = pdb.PDBFile()
     guessed_pdb_file.read(tmp_file)
     guessed_stack = guessed_pdb_file.get_structure()
-
-    # remove tmp file before an assert can fail
-    remove(tmp_file)
 
     assert '' not in guessed_stack.element.tolist()
     assert guessed_stack[0, (guessed_stack.atom_name == 'CA') & (guessed_stack.res_id == 1)].element == 'C'
