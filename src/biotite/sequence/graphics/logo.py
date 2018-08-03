@@ -26,7 +26,6 @@ class SequenceLogo(Visualizer):
     
     References
     ----------
-    
     .. [1] TD Schneider and RM Stephens,
        "Sequence logos: a new way to display consensus sequences"
         Nucleic Acids Res, 18, 6097-6100 (1990).
