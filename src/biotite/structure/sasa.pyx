@@ -83,7 +83,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     
     Returns
     -------
-    sasa : 1-D ndarray, dtype=bool
+    sasa : ndarray, dtype=bool, shape=(n,)
         Atom-wise SASA. `NaN` for atoms where SASA has not been 
         calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
