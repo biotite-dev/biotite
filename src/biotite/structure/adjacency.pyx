@@ -115,6 +115,8 @@ cdef class CellList:
             deallocate_ptrs(self._cells)
     
     def create_adjacency_matrix(self, float32 threshold_distance):
+        if threshold_distance < 0:
+            raise ValueError("Threshold must be a positive value")
         cdef int i=0, j=0
         cdef int index
         cdef int[:,:] adjacent_indices = self.get_atoms(
@@ -170,6 +172,9 @@ cdef class CellList:
         cdef int[:,:] indices_multi
         cdef int[:,:] all_indices_multi
         cdef float32[:,:] coord_multi
+
+        if radius < 0:
+            raise ValueError("Radius must be a positive value")
 
         all_indices = \
             self.get_atoms_in_cells(coord, <int>(radius/self._cellsize)+1)
@@ -259,6 +264,8 @@ cdef class CellList:
         --------
         get_atoms
         """
+        if cell_radius < 0:
+            raise ValueError("Radius must be a positive value")
         cdef int length
         # Pessimistic assumption on index array length requirement:
         # At maximum, tte amount of atoms can only be the maximum
