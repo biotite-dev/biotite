@@ -13,6 +13,7 @@ from ...filter import filter_inscode_and_altloc
 import copy
 from warnings import warn
 
+
 _atom_records = {"hetero"    : (0,  6),
                  "atom_id"   : (6,  11),
                  "atom_name" : (12, 16),
@@ -56,7 +57,6 @@ class PDBFile(TextFile):
     >>> file = PDBFile()
     >>> file.set_structure(array_stack_mod)
     >>> file.write("1l2y_mod.pdb")
-    
     """
 
     def get_structure(self, insertion_code=[], altloc=[],
@@ -171,12 +171,13 @@ class PDBFile(TextFile):
             array.element[i] = line[76:78].strip()
         
         # Replace empty strings for elements with guessed types
+        # This is used e.g. for PDB files created by Gromacs
         def guess_element(atom_name):
-            if atom_name.startswith(('H', '1H', '2H', '3H')):
+            if atom_name.startswith(("H", "1H", "2H", "3H")):
                 return 'H'
             return atom_name[0]
 
-        if '' in array.element:
+        if "" in array.element:
             rep_num = 0
             for idx in range(len(array.element)):
                 if not array.element[idx]:
@@ -225,7 +226,6 @@ class PDBFile(TextFile):
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
 
-            
     def set_structure(self, array):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
