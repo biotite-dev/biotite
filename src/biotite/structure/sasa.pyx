@@ -221,15 +221,14 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # Therefore intersecting atoms are always in the same or adjacent cell.
     cell_list = CellList(occl_array, np.max(radii[occl_filter])*2)
     cdef np.ndarray cell_indices
-    cdef int[:] cell_indices_view
+    cdef int[:,:] cell_indices_view
     cdef int length
     cdef int max_adj_list_length = 0
     cdef int array_length = array.array_length()
-    # Dry call of 'get_atoms_in_cell()'
-    # to get right index array shape
-    cell_indices, length = cell_list.get_atoms_in_cell(array.coord[0],
-                                                   efficient_mode=True)
-    max_adj_list_length = len(cell_indices)
+
+    cell_indices = cell_list.get_atoms_in_cells(array.coord)
+    cell_indices_view = cell_indices
+    max_adj_list_length = cell_indices.shape[0]
         
     # Later on, this array stores coordinates for actual
     # occluding atoms for a certain atom to calculate the
@@ -255,17 +254,16 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         radius_sq = atom_radii_sq[i]
         # Find occluding atoms from list of adjacent atoms
         rel_atom_i = 0
-        cell_indices, length = cell_list.get_atoms_in_cell(
-            np.asarray(main_coord[i]), efficient_mode=True,
-            array_indices=cell_indices)
-        cell_indices_view = cell_indices
-        for j in range(length):
+        for j in range(max_adj_list_length):
             # Remove all atoms, where the distance to the relevant atom
             # is larger than the sum of the radii,
             # since those atoms do not touch
             # If distance is 0, it is the same atom,
             # and the atom is removed from the list as well
-            adj_atom_i = cell_indices_view[j]
+            adj_atom_i = cell_indices_view[i,j]
+            if adj_atom_i == -1:
+                # -1 means end of list
+                break
             occl_x = occl_coord[adj_atom_i,0]
             occl_y = occl_coord[adj_atom_i,1]
             occl_z = occl_coord[adj_atom_i,2]
@@ -301,7 +299,6 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                     n_accesible -= 1
                     break
         sasa[i] = area_per_point * n_accesible * radius_sq
-    
     return np.asarray(sasa)
 
 

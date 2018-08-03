@@ -28,11 +28,7 @@ threshold = 7
 # Create cell list of the CA atom array
 # for efficient measurement of adjacency
 cell_list = struc.CellList(ca, cell_size=threshold)
-adjacency_matrix = np.zeros(( ca.array_length(), ca.array_length()),
-                            dtype=np.uint8)
-for i in range(ca.array_length()):
-    indices = cell_list.get_atoms(ca.coord[i], radius=threshold)
-    adjacency_matrix[i, indices] = 1
+adjacency_matrix = cell_list.create_adjacency_matrix(threshold)
 
 figure = plt.figure()
 ax = figure.add_subplot(111)
