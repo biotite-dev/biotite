@@ -14,6 +14,7 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
+from .atoms import coord as to_coord
 import numpy as np
 
 ctypedef np.uint64_t ptr
@@ -30,14 +31,16 @@ cdef class CellList:
     each corresponding to a specific coordinate interval. If the atoms
     in vicinity of a specific location are searched, only the atoms in
     the relevant cells are checked. Effectively this decreases the
-    operation time from *O(n)* to *O(1)*, after the `CellList` has been
+    operation time for finding atoms with a maximum distance to given
+    coordinates from *O(n)* to *O(1)*, after the `CellList` has been
     created. Therefore an `CellList` saves calculation time in those
     cases, where vicinity is checked for multiple locations.
     
     Parameters
     ----------
-    atom_array : AtomArray
+    atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The `AtomArray` to create the `CellList` for.
+        Alternatively the atom coordiantes are accepted directly.
     cell_size: float
         The coordinate interval each cell has for x, y and z axis.
         The amount of cells depends on the range of coordinates in the
@@ -73,11 +76,11 @@ cdef class CellList:
         self._cells = None
         if cell_size <= 0:
             raise ValueError("Cell size must be greater than 0")
-        if atom_array.coord is None:
+        if to_coord(atom_array) is None:
             raise ValueError("Atom array must not be empty")
-        if np.isnan(atom_array.coord).any():
+        if np.isnan(to_coord(atom_array)).any():
             raise ValueError("Atom array contains NaN values")
-        coord = atom_array.coord.astype(np.float32)
+        coord = to_coord(atom_array).astype(np.float32)
         self._coord = coord
         self._cellsize = cell_size
         # calculate how many cells are required for each dimension
@@ -121,6 +124,41 @@ cdef class CellList:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def create_adjacency_matrix(self, float32 threshold_distance):
+        """
+        Create an adjacency matrix for the atoms in this cell list.
+
+        An adjacency matrix depicts which atoms *i* and *j* have
+        a distance lower than a given threshold distance.
+        The values in the adjacency matrix ``m`` are
+        ``m[i,j] = 1 if distance(i,j) <= threshold else 0``
+        
+        Parameters
+        ----------
+        threshold_distance : float
+            The threshold distance. All atom pairs that have a distance
+            lower than this value are indicated by `True` values in
+            the resulting matrix.
+        
+        Returns
+        -------
+        matrix : ndarray, dtype=bool
+            An *n x n* adjacency matrix.
+        
+        Notes
+        -----
+        The highest performance is achieved when the the cell size is
+        equal to the threshold distance. However, this is purely
+        optinal: The resulting adjacency matrix is the same for every
+        cell size.
+
+        Examples
+        --------
+        Create adjacency matrix for CA atoms in a structure:
+
+        >>> atom_array = atom_array[atom_array.atom_name == "CA"]
+        >>> cell_list = struc.CellList(atom_array, 5)
+        >>> matrix = cell_list.create_adjacency_matrix(5)
+        """"
         if threshold_distance < 0:
             raise ValueError("Threshold must be a positive value")
         cdef int i=0, j=0
@@ -147,26 +185,83 @@ cdef class CellList:
     @cython.wraparound(False)
     def get_atoms(self, np.ndarray coord, float32 radius):
         """
-        Search for atoms in vicinity of the given position.
+        Find atoms with a maximum distance from given coordinates.
         
         Parameters
         ----------
-        coord : ndarray, dtype=float
+        coord : ndarray, dtype=float, shape=(3,) or shape=(n,3)
             The central coordinates, around which the atoms are
             searched.
+            If a single position is given, the indices of atoms in its
+            radius are returned.
+            Multiple positions (2-D `ndarray`) have a vectorized
+            behavior:
+            Each row in the resulting `ndarray` contains the indices for
+            the corresponding position.
+            Since the positions may have different amounts of adjacent
+            atoms, trailing `-1` values are used to indicate nonexisting
+            indices.
         radius: float
             The radius around `coord`, in which the atoms are searched,
             i.e. all atoms in `radius` distance to `coord` are returned.
         
         Returns
         -------
-        indices : ndarray, dtype=int32
+        indices : ndarray, dtype=int32, shape=(n,) or shape=(m,n)
             The indices of the atom array, where the atoms are in the
-            defined vicinity around `coord`.
+            defined `radius` around `coord`.
+            If `coord` contains multiple positions, this return value is
+            two-dimensional with trailing `-1` values for empty values.
             
         See Also
         --------
         get_atoms_in_cells
+
+        Examples
+        --------
+        Get adjacent atoms for single positions:
+
+        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> pos = np.array([1.0, 2.0, 3.0])
+        >>> indices = cell_list.get_atoms(pos, radius=2.0)
+        >>> print(indices)
+        [102 104 112]
+        >>> print(atom_array[indices])
+            A       6 TRP CE3    C         0.779    0.524    2.812
+            A       6 TRP CZ3    C         1.439    0.433    4.053
+            A       6 TRP HE3    H        -0.299    0.571    2.773
+        >>> indices = cell_list.get_atoms(pos, radius=3.0)
+        >>> print(atom_array[indices])
+            A       6 TRP CD2    C         1.508    0.564    1.606
+            A       6 TRP CE3    C         0.779    0.524    2.812
+            A       6 TRP CZ3    C         1.439    0.433    4.053
+            A       6 TRP HE3    H        -0.299    0.571    2.773
+            A       6 TRP HZ3    H         0.862    0.400    4.966
+            A       3 TYR CZ     C        -0.639    3.053    5.043
+            A       3 TYR HH     H         1.187    3.395    5.567
+            A      19 PRO HD2    H         0.470    3.937    1.260
+            A       6 TRP CE2    C         2.928    0.515    1.710
+            A       6 TRP CH2    C         2.842    0.407    4.120
+            A      18 PRO HA     H         2.719    3.181    1.316
+            A      18 PRO HB3    H         2.781    3.223    3.618
+            A      18 PRO CB     C         3.035    4.190    3.187
+        
+        Get adjacent atoms for mutliple positions:
+
+        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
+        >>> indices = cell_list.get_atoms(pos, radius=3.0)
+        >>> print(indices)
+        [[ 99 102 104 ...  -1  -1  -1]
+         [104 114  45 ...  -1  -1  -1]
+         [ 46  55 273 ...  -1  -1  -1]]
+        >>> # Convert to list of arrays and remove trailing -1
+        >>> indices = [row[row != -1] for row in indices]
+        >>> for row in indices:
+        ...     print(row)
+        [ 99 102 104 112 114  45  55 290 101 105 271 273 268]
+        [104 114  45  46  55  44  54 105 271 273 265 268 269 272 275]
+        [ 46  55 273 268 269 272 274 275]
         """
         cdef int i=0, j=0
         cdef int subset_j = 0
@@ -238,7 +333,8 @@ cdef class CellList:
     @cython.wraparound(False)
     def get_atoms_in_cells(self, np.ndarray coord, int cell_radius=1):
         """
-        Search for atoms in vicinity of the given position.
+        Find atoms with a maximum cell distance from given
+        coordinates.
         
         Instead of using the radius as maximum euclidian distance to the
         given coordinates,
@@ -251,9 +347,18 @@ cdef class CellList:
         
         Parameters
         ----------
-        coord : ndarray, dtype=float
+        coord : ndarray, dtype=float, shape=(3,) or shape=(n,3)
             The central coordinates, around which the atoms are
             searched.
+            If a single position is given, the indices of atoms in its
+            cell radius are returned.
+            Multiple positions (2-D `ndarray`) have a vectorized
+            behavior:
+            Each row in the resulting `ndarray` contains the indices for
+            the corresponding position.
+            Since the positions may have different amounts of adjacent
+            atoms, trailing `-1` values are used to indicate nonexisting
+            indices.
         cell_r: float, optional
             The radius around `coord` (in amount of cells), in which
             the atoms are searched. This does not correspond to the
@@ -261,15 +366,15 @@ cdef class CellList:
             atoms in the cell corresponding to `coord` and in adjacent
             cells are returned.
             By default atoms are searched in the cell of `coord`
-            and adjacent cells.
+            and directly adjacent cells (cell_radius=1).
         
         Returns
         -------
-        indices : ndarray, dtype=int32, shape=(3,) or shape=(n,3)
+        indices : ndarray, dtype=int32, shape=(n,) or shape=(m,n)
             The indices of the atom array, where the atoms are in the
-            defined vicinity around `coord`. If `efficient_mode`
-            is enabled. the `length` return value gives the range of
-            `indices`, that is filled with meaningful values.
+            defined `radius` around `coord`.
+            If `coord` contains multiple positions, this return value is
+            two-dimensional with trailing `-1` values for empty values.
             
         See Also
         --------
