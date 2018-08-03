@@ -134,7 +134,7 @@ def save_structure(file_path, array):
         file = PDBxFile()
         set_structure(file, array, data_block="STRUCTURE")
         file.write(file_path)
-    if suffix == ".gro":
+    elif suffix == ".gro":
         from .gro import GROFile
         file = GROFile()
         file.set_structure(array)
