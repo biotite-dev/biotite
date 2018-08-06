@@ -504,7 +504,7 @@ class AlignmentSymbolVisualizer(AlignmentVisualizer):
             alphabet = self._alignment.sequences[0].get_alphabet()
             self._colors = get_color_scheme(scheme, alphabet)
         else:
-            self._colors = colors
+            self._colors = scheme
     
     def get_color(self, alignment, pos_i, seq_i):
         index = alignment.trace[pos_i, seq_i]
