@@ -52,7 +52,7 @@ def test_pdb_consistency(file_index, is_stack):
                a2.get_annotation(category).tolist()
 
     # Mind rounding errors when converting pdb to gro (A -> nm)
-    assert a1.coord == approx(a2.coord, abs=1e-2)
+    assert a1.coord.tolist() == approx(a2.coord.tolist(), abs=1e-2)
 
 @pytest.mark.parametrize("file_index, is_stack", itertools.product(
                           [i for i in range(len(pdb_paths))],
@@ -86,7 +86,7 @@ def test_pdb_to_gro(file_index, is_stack):
                a2.get_annotation(category).tolist()
 
     # Mind rounding errors when converting pdb to gro (A -> nm)
-    assert a1.coord == approx(a2.coord, abs=1e-2)
+    assert a1.coord.tolist() == approx(a2.coord.tolist(), abs=1e-2)
 
 
 
