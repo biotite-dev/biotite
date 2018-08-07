@@ -66,6 +66,16 @@ def load_structure(file_path, template=None):
             return array[0]
         else:
             return array
+    elif suffix == ".gro":
+        from .gro import GROFile
+        file = GROFile()
+        file.read(file_path)
+        array = file.get_structure()
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, get_structure
         file = MMTFFile()
@@ -124,6 +134,11 @@ def save_structure(file_path, array):
         file = PDBxFile()
         set_structure(file, array, data_block="STRUCTURE")
         file.write(file_path)
+    elif suffix == ".gro":
+        from .gro import GROFile
+        file = GROFile()
+        file.set_structure(array)
+        file.write(file_path)
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, set_structure
         file = MMTFFile()
@@ -138,4 +153,4 @@ def save_structure(file_path, array):
         raise NotImplementedError("Writing trajectory files is not "
                                   "implemented yet")
     else:
-        raise ValueError("Unknown file format")
+        raise ValueError("Unknown file format: " + suffix)

@@ -68,20 +68,23 @@ class PDBFile(TextFile):
         ----------
         insertion_code : list of tuple, optional
             In case the structure contains insertion codes, those can be
-            specified here: Each tuple consists of an integer, specifying
-            the residue ID, and a letter, specifying the insertion code.
+            specified here: Each tuple consists of an integer,
+            specifying the residue ID, and a letter, specifying the 
+            insertion code.
             By default no insertions are used.
         altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can be
-            specified here: Each tuple consists of an integer, specifying
-            the residue ID, and a letter, specifying the *altloc* ID.
-            By default the location with the *altloc* ID "A" is used.
+            In case the structure contains *altloc* entries, those can
+            be specified here: Each tuple consists of an integer,
+            specifying the residue ID, and a letter, specifying the
+            *altloc* ID. By default the location with the *altloc* ID
+            "A" is used.
         model : int, optional
             If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model ID.
-            If this parameter is omitted, an `AtomArrayStack` containing all
-            models will be returned, even if the structure contains only one
-            model.
+            `AtomArray` from the atoms corresponding to the given model
+            ID.
+            If this parameter is omitted, an `AtomArrayStack` containing
+            all models will be returned, even if the structure contains
+            only one model.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -158,7 +161,7 @@ class PDBFile(TextFile):
             array.add_annotation("charge", dtype=int)
         
         # Fill in annotation
-        # i is index in array, j is line index
+        # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self._lines[line_i]
             altloc_array[i] = line[16]
