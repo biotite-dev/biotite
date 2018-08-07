@@ -115,7 +115,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     for d_i in range(donor.array_length()):
         for a_i in range(acceptors.array_length()):
             for dh_i in range(donor_h[d_i].array_length()):
-                if donor[:, d_i] != acceptors[:, a_i] and donor[:, d_i].res_id != acceptors[:, a_i].res_id:
+                if donor[:, d_i] != acceptors[:, a_i]:
                     triplets += donor[:, d_i] + donor_h[d_i][:, dh_i] + acceptors[:, a_i]
 
     # Calculate angle and distance on all triplets
@@ -125,7 +125,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
 
     # Apply hbond criterion
     cutoff_angle_radian = np.deg2rad(cutoff_angle)
-    hbond_mask = (distances < cutoff_dist) & (angles > cutoff_angle_radian)
+    hbond_mask = (distances <= cutoff_dist) & (angles >= cutoff_angle_radian)
 
     # Reduce output to contain only triplets counted at least once
     is_counted = hbond_mask.sum(axis=0) >= 1
@@ -137,7 +137,8 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
 
 
 def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
-    """ True if the angle and distance between donor, donor_h and acceptor
+    """
+    True if the angle and distance between donor, donor_h and acceptor
     meets the criteria of a hydrogen bond
     
     The default criteria is: :math:`\\theta > 120deg` and :math
@@ -149,3 +150,29 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     dist = distance(donor_h, acceptor)
 
     return theta > cutoff_angle_rad and dist < cutoff_dist
+
+def get_hbond_frequency(mask):
+    """
+    Parameters
+    ----------
+    mask: Array
+        Input mask obtained from `hbond.hbond`
+    
+    Returns
+    -------
+    The frequency for each hydrogen bond
+
+    
+    Examples
+    --------
+        
+    >>> struct = load_structure("tests/structure/data/1l2y.pdb")
+
+    >>> triplets, mask = hbond.hbond(struct)
+    >>> freq = hbond.get_hbond_frequency(mask)
+
+    See Also
+    --------
+    hbond
+    """
+    return mask.sum(axis=0)/len(mask)
