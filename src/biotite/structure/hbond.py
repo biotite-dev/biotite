@@ -111,6 +111,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     donor_h = _get_bonded_hydrogen(donor, atoms1)
 
     # Build a stack containing the D-H..A triplets in correct order for every possible possible hbond
+    # TODO function spends 99.9% of its time in creating the triplets array. how can we make this faster?
     triplets = AtomArrayStack(depth=len(donor), length=0)
     for d_i in range(donor.array_length()):
         for a_i in range(acceptors.array_length()):
