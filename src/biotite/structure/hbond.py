@@ -11,11 +11,12 @@ __all__ = ["is_hbond", "hbond"]
 
 from .geometry import distance, angle
 import numpy as np
-from .atoms import AtomArrayStack
+from .atoms import AtomArrayStack, stack
 
 
+# NOTE Use tuple instead of list as default parameters. See https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
 def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
-           donor_elements=['O', 'N', 'S'], acceptor_elements=['O', 'N', 'S']):
+           donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
     Finds hydrogen bonds between atoms1 and atoms2.
     
@@ -41,8 +42,8 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     Returns
     -------
     array : int
-        Nx3 matrix containing the indeces of every Donor-H..Acceptor interaction that was counted at least once. N is the number
-        of found interactions. The format is [[D_index, H_intex, A_index]
+        Nx3 matrix containing the indices of every Donor-H..Acceptor interaction that was counted at least once. N is the number
+        of found interactions. The format is [[D_index, H_intex, A_index]]
     array : bool
         MxN matrix that shows if an interaction N (see above) is present in the model M.
         
@@ -72,9 +73,10 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
 
     # Create AtomArrayStacks from AtomArrays
     if not isinstance(atoms1, AtomArrayStack):
-        atoms1 = AtomArrayStack([atoms1])
+        # NOTE: The AtomArrayStack constructor creates an empty stack (similar to np.zeros()). What you want is the function stack()
+        atoms1 = stack([atoms1])
     if atoms2 and not isinstance(atoms2, AtomArrayStack):
-        atoms2 = AtomArrayStack([atoms2])
+        atoms2 = stack([atoms2])
 
     # If no second stack is given, the first one is used
     if not atoms2:
@@ -85,7 +87,8 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
         raise ValueError("atoms1 and atoms2 must be of same length")
 
     # Find donors, acceptors and donor hydrogens
-    donor = atoms1[:, np.isin(atoms1.element, donor_elements)]
+    # NOTE: For consistency
+    donors = atoms1[:, np.isin(atoms1.element, donor_elements)]
     acceptors = atoms2[:, np.isin(atoms2.element, acceptor_elements)]
 
     def _get_bonded_hydrogen(atoms1, atoms2, cutoff=1.5):
@@ -99,7 +102,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
 
         donor_hs = []
         for i in range(atoms1.array_length()):
-            donor = atoms1[0][i]
+            donor = atoms1[0, i]
             candidates = hydrogens[:, hydrogens.res_id == donor.res_id]
             distances = distance(donor, candidates[0])
             donor_h = candidates[:, distances < cutoff]
@@ -108,16 +111,16 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
         return donor_hs
 
     # TODO use BondList if available
-    donor_h = _get_bonded_hydrogen(donor, atoms1)
+    donor_hs = _get_bonded_hydrogen(donors, atoms1)
 
     # Build a stack containing the D-H..A triplets in correct order for every possible possible hbond
     # TODO function spends 99.9% of its time in creating the triplets array. how can we make this faster?
-    triplets = AtomArrayStack(depth=len(donor), length=0)
-    for d_i in range(donor.array_length()):
+    triplets = AtomArrayStack(depth=donors.stack_depth(), length=0)
+    for d_i in range(donors.array_length()):
         for a_i in range(acceptors.array_length()):
-            for dh_i in range(donor_h[d_i].array_length()):
-                if donor[:, d_i] != acceptors[:, a_i]:
-                    triplets += donor[:, d_i] + donor_h[d_i][:, dh_i] + acceptors[:, a_i]
+            for dh_i in range(donor_hs[d_i].array_length()):
+                if donors[:, d_i] != acceptors[:, a_i]:
+                    triplets += donors[:, d_i] + donor_hs[d_i][:, dh_i] + acceptors[:, a_i]
 
     # Calculate angle and distance on all triplets
     coords = triplets.coord
@@ -129,7 +132,8 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     hbond_mask = (distances <= cutoff_dist) & (angles >= cutoff_angle_radian)
 
     # Reduce output to contain only triplets counted at least once
-    is_counted = hbond_mask.sum(axis=0) >= 1
+    # NOTE: More clear syntax
+    is_counted = hbond_mask.any(axis=0)
     triplets = triplets[:, np.repeat(is_counted, 3)]
     hbond_mask = hbond_mask[:, is_counted]
 
