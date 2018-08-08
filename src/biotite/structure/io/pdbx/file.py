@@ -83,11 +83,11 @@ class PDBxFile(TextFile):
         self._categories = {}
     
     
-    def process_input(self):
-        super().process_input()
+    def read(self, file):
+        super().read(file)
         # Remove emptyline at then end of file, if present
-        if self._lines[-1] == "":
-            del self._lines[-1]
+        if self.lines[-1] == "":
+            del self.lines[-1]
         
         current_data_block = ""
         current_category = None
@@ -95,7 +95,7 @@ class PDBxFile(TextFile):
         stop = -1
         is_loop = False
         has_multiline_values = False
-        for i, line in enumerate(self._lines):
+        for i, line in enumerate(self.lines):
             # Ignore empty and comment lines
             if not _is_empty(line):
                 data_block_name = _data_block_name(line)
@@ -121,7 +121,7 @@ class PDBxFile(TextFile):
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is in the
                         # next line
-                        category_in_line = _get_category_name(self._lines[i+1])
+                        category_in_line = _get_category_name(self.lines[i+1])
                     is_loop = is_loop_in_line
                     current_category = category_in_line
                     start = i
@@ -134,7 +134,7 @@ class PDBxFile(TextFile):
         # Since at the end of the file the end of the category
         # is not determined by the start of a new one,
         # this needs to be handled separately
-        stop = len(self._lines)
+        stop = len(self.lines)
         self._add_category(data_block, current_category, start,
                            stop, is_loop, has_multiline_values)
     
@@ -187,37 +187,37 @@ class PDBxFile(TextFile):
         
         if is_multilined:
             # Convert multiline values into singleline values
-            pre_lines = [line.strip() for line in self._lines[start:stop]
+            prelines = [line.strip() for line in self.lines[start:stop]
                          if not _is_empty(line) and not _is_loop_start(line)]
-            lines = (len(pre_lines)) * [None]
+            lines = (len(prelines)) * [None]
             # lines index
             k = 0
-            # pre_lines index
+            # prelines index
             i = 0
-            while i < len(pre_lines):
-                if pre_lines[i][0] == ";":
+            while i < len(prelines):
+                if prelines[i][0] == ";":
                     # multiline values
-                    lines[k-1] += " '" + pre_lines[i][1:]
+                    lines[k-1] += " '" + prelines[i][1:]
                     j = i+1
-                    while pre_lines[j] != ";":
-                        lines[k-1] += pre_lines[j]
+                    while prelines[j] != ";":
+                        lines[k-1] += prelines[j]
                         j += 1
                     lines[k-1] += "'"
                     i = j+1
-                elif not is_loop and pre_lines[i][0] in ["'",'"']:
+                elif not is_loop and prelines[i][0] in ["'",'"']:
                     # Singleline values where value is in the line
                     # after the corresponding key
-                    lines[k-1] += " " + pre_lines[i]
+                    lines[k-1] += " " + prelines[i]
                     i += 1
                 else:    
                     # Normal singleline value in the same row as the key
-                    lines[k] = pre_lines[i]
+                    lines[k] = prelines[i]
                     i += 1
                     k += 1
             lines = [line for line in lines if line is not None]
             
         else:
-            lines = [line.strip() for line in self._lines[start:stop]
+            lines = [line.strip() for line in self.lines[start:stop]
                      if not _is_empty(line) and not _is_loop_start(line)]
         
         if is_loop:
@@ -276,7 +276,7 @@ class PDBxFile(TextFile):
                 category_dict[key] = _quote(value)
         
         if is_looped:
-            key_lines = ["_" + category + "." + key
+            keylines = ["_" + category + "." + key
                          for key in category_dict.keys()]
             value_arr = list(category_dict.values())
             # Array containing the number of characters + whitespace
@@ -291,11 +291,11 @@ class PDBxFile(TextFile):
                 # +1 whitespace character as separator 
                 col_lens[i] = col_len+1
             arr_len = len(value_arr[0])
-            value_lines = [""] * arr_len
+            valuelines = [""] * arr_len
             for i in range(arr_len):
                 for j, arr in enumerate(value_arr):
-                    value_lines[i] += arr[i] + " "*(col_lens[j] - len(arr[i]))
-            new_lines = ["loop_"] + key_lines + value_lines
+                    valuelines[i] += arr[i] + " "*(col_lens[j] - len(arr[i]))
+            newlines = ["loop_"] + keylines + valuelines
             
         else:
             # For better readability, not only one space is inserted
@@ -307,12 +307,12 @@ class PDBxFile(TextFile):
                     max_len = len(key)
             # "+3" Because of three whitespace chars after longest key
             req_len = max_len + 3
-            new_lines = ["_" + category + "." + key
+            newlines = ["_" + category + "." + key
                          + " " * (req_len-len(key)) + value
                          for key, value in category_dict.items()]
             
         # A command line is set after every category
-        new_lines += ["#"]
+        newlines += ["#"]
         
         if (block,category) in self._categories:
             # Category already exists in data block
@@ -322,14 +322,14 @@ class PDBxFile(TextFile):
             old_category_stop = category_info["stop"]
             category_start = old_category_start 
             # Difference between number of lines of the old and new category
-            len_diff = len(new_lines) - (old_category_stop-old_category_start)
+            len_diff = len(newlines) - (old_category_stop-old_category_start)
             # Remove old category content
-            del self._lines[old_category_start : old_category_stop]
+            del self.lines[old_category_start : old_category_stop]
             # Insert new lines at category start
-            self._lines[category_start:category_start] = new_lines
+            self.lines[category_start:category_start] = newlines
             # Update category info
             category_info["start"] = category_start
-            category_info["stop"] = category_start + len(new_lines)
+            category_info["stop"] = category_start + len(newlines)
             # When writing a category no multiline values are used
             category_info["multiline"] = False
             category_info["loop"] = is_looped
@@ -343,15 +343,15 @@ class PDBxFile(TextFile):
                     if last_stop < category_info["stop"]:
                         last_stop = category_info["stop"]
             category_start = last_stop
-            category_stop = category_start + len(new_lines)
-            len_diff = len(new_lines)
-            self._lines[category_start:category_start] = new_lines
+            category_stop = category_start + len(newlines)
+            len_diff = len(newlines)
+            self.lines[category_start:category_start] = newlines
             self._add_category(block, category, category_start, category_stop,
                                is_looped, is_multilined=False)
         else:
             # The data block does not exist
-            # Put the begin of data block in front of new_lines
-            new_lines = ["data_"+block, "#"] + new_lines
+            # Put the begin of data block in front of newlines
+            newlines = ["data_"+block, "#"] + newlines
             # Find last category in the file
             # and set start of new data_block with new category
             # to stop of last category
@@ -360,9 +360,9 @@ class PDBxFile(TextFile):
                 if last_stop < category_info["stop"]:
                     last_stop = category_info["stop"]
             category_start = last_stop + 2
-            category_stop = last_stop + len(new_lines)
-            len_diff = len(new_lines)-2
-            self._lines[last_stop:last_stop] = new_lines
+            category_stop = last_stop + len(newlines)
+            len_diff = len(newlines)-2
+            self.lines[last_stop:last_stop] = newlines
             self._add_category(block, category, category_start, category_stop,
                                is_looped, is_multilined=False)
         # Update start and stop of all categories appearing after the
