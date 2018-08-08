@@ -44,11 +44,45 @@ class NpzFile(File):
             for key, value in self._data_dict.items():
                 clone._data_dict[key] = np.copy(value)
     
-    def read(self, file_name):
-        self._data_dict = dict(np.load(file_name, allow_pickle=False))
+    def read(self, file):
+        """
+        Parse a NPZ file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively, a file path can be supplied.
+        """
+        def _read(file):
+            nonlocal self
+            self._data_dict = dict(np.load(file, allow_pickle=False))
+        
+        if isinstance(file, str):
+            with open(file, "rb") as f:
+                _read(f)
+        else:
+            _read(file)
                 
-    def write(self, file_name):
-        np.savez(file_name, **self._data_dict)
+    def write(self, file):
+        """
+        Write a NPZ file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively, a file path can be supplied.
+        """
+        def _write(file):
+            nonlocal self
+            np.savez(file, **self._data_dict)
+
+        if isinstance(file, str):
+            with open(file, "wb") as f:
+                _write(f)
+        else:
+            _write(file)
     
     def get_structure(self):
         """

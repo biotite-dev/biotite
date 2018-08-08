@@ -44,22 +44,48 @@ class MMTFFile(File):
         self._content["mmtfVersion"] = "1.0.0"
         self._content["mmtfProducer"] = "UNKNOWN"
     
-    def read(self, file_name):
+    def read(self, file):
         """
         Parse a MMTF file.
         
         Parameters
         ----------
-        file_name : str
-            The name of the file to be read.
+        file : file-like object or str
+            The file to be read.
+            Alternatively, a file path can be supplied.
         """
-        with open(file_name, "rb") as f:
-            self._content = msgpack.unpackb(f.read(), use_list=True, raw=False)
+        def _read(file):
+            nonlocal self
+            self._content = msgpack.unpackb(
+                file.read(), use_list=True, raw=False
+            )
+        
+        if isinstance(file, str):
+            with open(file, "rb") as f:
+                _read(f)
+        else:
+            _read(file)
     
-    def write(self, file_name):
-        with open(file_name, "wb") as f:
+    def write(self, file):
+        """
+        Write contents into a MMTF file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be written to.
+            Alternatively, a file path can be supplied.
+        """
+        def _write(file):
+            nonlocal self
             packed_bytes = msgpack.packb(self._content, use_bin_type=True)
-            f.write(packed_bytes)
+            file.write(packed_bytes)
+
+        if isinstance(file, str):
+            with open(file, "wb") as f:
+                _write(f)
+        else:
+            _write(file)
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)

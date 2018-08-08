@@ -24,26 +24,29 @@ class File(Copyable, metaclass=abc.ABCMeta):
         pass
     
     @abc.abstractmethod
-    def read(self, file_name):
+    def read(self, file):
         """
-        Parse a file and store the content in this object.
+        Parse a file (or file-like object)
+        and store the content in this object.
         
         Parameters
         ----------
-        file_name : str
-            The path of the file to be read.
+        file_name : file-like object or str
+            The file to be read.
+            Alternatively a file path cen be supplied.
         """
         pass
     
     @abc.abstractmethod
-    def write(self, file_name):
+    def write(self, file):
         """
-        Write the contents of this object into a file.
+        Write the contents of this object into a file (or file-like object).
         
         Parameters
         ----------
-        file_name : str
-            The path of the file to be written.
+        file_name : file-like object or str
+            The file to be written to.
+            Alternatively a file path cen be supplied.
         """
         pass
         
@@ -56,65 +59,61 @@ class TextFile(File, metaclass=abc.ABCMeta):
     
     Attributes
     ----------
-    _lines : list
+    lines : list
         List of string representing the lines in the text file.
+        PROTECTED: Do not modify from outside.
     """
     
     def __init__(self):
-        self._lines = []
-    
-    def read(self, file_name):
-        """
-        Read the lines of the given text file.
-        
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to be read.
-        """
-        with open(file_name, "r") as f:
-            str_data = f.read()
-        self._lines = str_data.split("\n")
-        self.process_input()
-    
-    def read_from_string(self, string):
-        """
-        Read the lines from the given string.
-        
-        Parameters
-        ----------
-        file_name : str
-            The string to be read.
-        """
-        self._lines = string.split("\n")
-        self.process_input()
-    
-    def process_input(self):
-        """
-        Process the input read from file or string.
+        self.lines = []
 
-        PROTECTED: Optionally override when inheriting
+    def read(self, file):
         """
-        pass
-    
-    def write(self, file_name):
-        """
-        Write the content to a given text file.
+        Parse a file (or file-like object)
+        and store the content in this object.
         
         Parameters
         ----------
-        file_name : str
-            The name of the file to be written to.
+        file_name : file-like object or str
+            The file to be read.
+            Alternatively a file path cen be supplied.
         """
-        with open(file_name, "w") as f:
-            f.writelines([line+"\n" for line in self._lines])
+        def _read(file):
+            nonlocal self
+            self.lines = file.read().split("\n")
+        
+        if isinstance(file, str):
+            with open(file, "r") as f:
+                _read(f)
+        else:
+            _read(file)
+
+    def write(self, file):
+        """
+        Write the contents of this object into a file (or file-like object).
+        
+        Parameters
+        ----------
+        file_name : file-like object or str
+            The file to be written to.
+            Alternatively a file path cen be supplied.
+        """
+        def _write(file):
+            nonlocal self
+            file.write("\n".join(self.lines))
+
+        if isinstance(file, str):
+            with open(file, "w") as f:
+                _write(f)
+        else:
+            _write(file)
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
-        clone._lines = copy.copy(self._lines)
+        clone.lines = copy.copy(self.lines)
     
     def __str__(self):
-        return("\n".join(self._lines))
+        return("\n".join(self.lines))
 
 
 class InvalidFileError(Exception):
