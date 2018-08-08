@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_color_scheme", "list_color_scheme_names"]
+__all__ = ["get_color_scheme", "list_color_scheme_names", "load_color_scheme"]
 
 import numpy as np
 import json
@@ -13,11 +13,30 @@ import os
 from ..alphabet import Alphabet
 
 
-_scheme_dir = join(dirname(realpath(__file__)), "color_schemes")
+def load_color_scheme(file_name):
+    """
+    Load a color scheme from a JSON file.
 
-_color_schemes = []
+    A color scheme is a list of colors that correspond to symbols of an
+    alphabet. The color for a symbol is list of colors indexed by the
+    corresponding symbol code.
 
-for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
+    Parameters
+    ----------
+    file_name : str
+        The file name of the JSON file containing the scheme.
+    
+    Returns
+    -------
+    scheme : dict
+        A dictionary representing the color scheme, It contains the following
+        keys, if the input file is proper:
+        
+           - **name** - Name of the scheme.
+           - **alphabet** - `Alphabet` instance describing the type of
+             sequence the scheme can be used for.
+           - **colors** - List of *Matplotlib* compatible colors
+    """
     with open(file_name, "r") as file:
         scheme = json.load(file)
         alphabet = Alphabet(scheme["alphabet"])
@@ -30,7 +49,7 @@ for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
         # Store colors as symbol code ordered list of colors,
         # rather than dictionary
         scheme["colors"] = colors
-        _color_schemes.append(scheme)
+        return scheme
 
 
 def get_color_scheme(name, alphabet, default="#FFFFFF"):
@@ -106,3 +125,12 @@ def list_color_scheme_names(alphabet):
         if scheme["alphabet"].extends(alphabet):
             scheme_list.append(scheme["name"])
     return scheme_list
+
+
+_scheme_dir = join(dirname(realpath(__file__)), "color_schemes")
+
+_color_schemes = []
+
+for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
+    scheme = load_color_scheme(file_name)
+    _color_schemes.append(scheme)
