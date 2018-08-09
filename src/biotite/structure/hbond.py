@@ -7,7 +7,7 @@ This module provides functions for hydrogen bonding calculation.
 """
 
 __author__ = "Daniel Bauer"
-__all__ = ["is_hbond", "hbond"]
+__all__ = ["is_hbond", "hbond", "get_hbond_frequency"]
 
 from .geometry import distance, angle
 import numpy as np

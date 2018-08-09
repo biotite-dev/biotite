@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure.hbond as hbond
+import biotite.structure as struc
 import numpy as np
 from biotite.structure.io import load_structure
 
@@ -11,7 +11,7 @@ def test_hbond_same_resid():
     path = "tests/structure/data/1l2y.pdb"
     s = load_structure(path)
 
-    triplets, mask = hbond.hbond(s[:, s.res_id == 1], s[:, s.res_id == 1])
+    triplets, mask = struc.hbond(s[:, s.res_id == 1], s[:, s.res_id == 1])
 
     assert triplets[:, (triplets.res_id == 1) & (triplets.atom_name == 'N')].array_length() > 1
 
@@ -23,8 +23,8 @@ def test_hbond_total_count():
     path = "tests/structure/data/1l2y.pdb"
     s = load_structure(path)
 
-    triplets, mask = hbond.hbond(s)
-    freq = hbond.get_hbond_frequency(mask)
+    triplets, mask = struc.hbond(s)
+    freq = struc.get_hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
 
@@ -34,8 +34,8 @@ def test_get_hbond_frequency():
         [False, False, False, False, False], # 0.0
         [False, False, False, True, True] # 0.4
     ]).T
-    print(hbond.get_hbond_frequency(mask))
-    assert not np.isin(False, np.isclose(hbond.get_hbond_frequency(mask), np.array([1.0, 0.0, 0.4])))
+    print(struc.get_hbond_frequency(mask))
+    assert not np.isin(False, np.isclose(struc.get_hbond_frequency(mask), np.array([1.0, 0.0, 0.4])))
 
 
 def test_is_hbond():
@@ -58,7 +58,7 @@ def test_is_hbond():
         [4.0, 3.0, 0.0]  # acceptor
     ])
 
-    assert hbond.is_hbond(*hbond_coords_valid)
-    assert not hbond.is_hbond(*hbond_coords_wrong_angle)
-    assert not hbond.is_hbond(*hbond_coords_wrong_distance)
+    assert struc.is_hbond(*hbond_coords_valid)
+    assert not struc.is_hbond(*hbond_coords_wrong_angle)
+    assert not struc.is_hbond(*hbond_coords_wrong_distance)
 
