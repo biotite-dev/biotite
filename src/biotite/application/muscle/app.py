@@ -11,7 +11,6 @@ from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
-from ...temp import temp_file
 
 
 class MuscleApp(MSAApp):

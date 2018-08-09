@@ -81,14 +81,14 @@ def test_guess_elements():
     removed_stack.element[:] = ''
 
     # save stack without elements to tmp file
-    tmp_file = biotite.temp_file("guess_elements.pdb")
+    tmp_file_name = biotite.temp_file(".pdb")
     tmp_pdb_file = pdb.PDBFile()
     tmp_pdb_file.set_structure(removed_stack)
-    tmp_pdb_file.write(tmp_file)
+    tmp_pdb_file.write(tmp_file_name)
 
     # read new stack from file with guessed elements
     guessed_pdb_file = pdb.PDBFile()
-    guessed_pdb_file.read(tmp_file)
+    guessed_pdb_file.read(tmp_file_name)
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()

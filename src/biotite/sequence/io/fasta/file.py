@@ -59,10 +59,10 @@ class FastaFile(TextFile):
         self._chars_per_line = chars_per_line
         self._entries = OrderedDict()
     
-    def process_input(self):
-        super().process_input()
+    def read(self, file):
+        super().read(file)
         # Filter out empty and comment lines
-        self._lines = [line for line in self._lines
+        self.lines = [line for line in self.lines
                        if len(line.strip()) != 0 and line[0] != ";"]
         self._find_entries()
         
@@ -76,12 +76,12 @@ class FastaFile(TextFile):
         # if existing
         if header in self._entries:
             start, stop = self._entries[header]
-            del self._lines[start:stop]
+            del self.lines[start:stop]
             del self._entries[header]
         # Append header line
-        self._lines += [">" + header.replace(">","").replace("\n","").strip()]
+        self.lines += [">" + header.replace(">","").replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
-        self._lines += textwrap.wrap(seq_str, width=self._chars_per_line)
+        self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
         self._find_entries()
     
     def __getitem__(self, header):
@@ -92,13 +92,13 @@ class FastaFile(TextFile):
         seq_string = ""
         i = start +1
         while i < stop:
-            seq_string += self._lines[i].strip()
+            seq_string += self.lines[i].strip()
             i += 1
         return seq_string
     
     def __delitem__(self, header):
         start, stop = self._entries[header]
-        del self._lines[start:stop]
+        del self.lines[start:stop]
         del self._entries[header]
         self._find_entries()
     
@@ -111,13 +111,13 @@ class FastaFile(TextFile):
     
     def _find_entries(self):
         header_i = []
-        for i, line in enumerate(self._lines):
+        for i, line in enumerate(self.lines):
             if line[0] == ">":
                 header_i.append(i)
         self._entries = OrderedDict()
         for j in range(len(header_i)):
             # Remove '>' from header
-            header = self._lines[header_i[j]].replace(">","").strip()
+            header = self.lines[header_i[j]].replace(">","").strip()
             start = header_i[j]
             if j < len(header_i) -1:
                 # Header in mid or start of file
@@ -125,6 +125,6 @@ class FastaFile(TextFile):
                 stop = header_i[j+1]
             else:
                 # Last header -> entry stops at end of file
-                stop = len(self._lines)
+                stop = len(self.lines)
             self._entries[header] = (start, stop)
     

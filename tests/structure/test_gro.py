@@ -12,7 +12,6 @@ from os.path import join, basename
 from .util import data_dir
 import pytest
 from pytest import approx
-import tempfile
 
 
 @pytest.mark.parametrize("path, is_stack", itertools.product(
@@ -70,14 +69,14 @@ def test_pdb_to_gro(file_index, is_stack):
     a1 = pdb_file.get_structure(model=model)
 
     # Save stack as gro
-    tmp = tempfile.NamedTemporaryFile(suffix=".gro").name
+    tmp_file_name = biotite.temp_file("gro")
     gro_file = gro.GROFile()
     gro_file.set_structure(a1)
-    gro_file.write(tmp)
+    gro_file.write(tmp_file_name)
 
     # Reload stack from gro
     gro_file = gro.GROFile()
-    gro_file.read(tmp)
+    gro_file.read(tmp_file_name)
     a2 = gro_file.get_structure(model=model)
 
     assert a1.array_length() == a2.array_length()

@@ -97,13 +97,13 @@ class PDBFile(TextFile):
             The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self._lines))
-                                  if self._lines[i].startswith(("MODEL"))],
+        model_start_i = np.array([i for i in range(len(self.lines))
+                                  if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
         # Filter out lines of altlocs and insertion codes
-        atom_line_i = np.array([i for i in range(len(self._lines)) if
-                                self._lines[i].startswith(("ATOM", "HETATM"))],
+        atom_line_i = np.array([i for i in range(len(self.lines)) if
+                                self.lines[i].startswith(("ATOM", "HETATM"))],
                                dtype=int)
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
@@ -163,7 +163,7 @@ class PDBFile(TextFile):
         # Fill in annotation
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
-            line = self._lines[line_i]
+            line = self.lines[line_i]
             altloc_array[i] = line[16]
             inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
@@ -191,7 +191,7 @@ class PDBFile(TextFile):
                             
         if extra_fields:
             for i, line_i in enumerate(annot_i):
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 if "atom_id" in extra_fields:
                     array.atom_id[i] = int(line[6:11].strip())
                 if "occupancy" in extra_fields:
@@ -206,7 +206,7 @@ class PDBFile(TextFile):
         # Fill in coordinates
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 array.coord[i,0] = float(line[30:38])
                 array.coord[i,1] = float(line[38:46])
                 array.coord[i,2] = float(line[46:54])
@@ -218,7 +218,7 @@ class PDBFile(TextFile):
                 if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
                     m += 1
                     i = 0
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 array.coord[m,i,0] = float(line[30:38])
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])
@@ -268,9 +268,9 @@ class PDBFile(TextFile):
             charge = [""] * array.array_length()
         
         if isinstance(array, AtomArray):
-            self._lines = [None] * array.array_length()
+            self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
-                self._lines[i] = ("{:6}".format(hetero[i]) + 
+                self.lines[i] = ("{:6}".format(hetero[i]) + 
                                   "{:>5d}".format(atom_id[i]) +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
@@ -291,14 +291,14 @@ class PDBFile(TextFile):
                                  )
         
         elif isinstance(array, AtomArrayStack):
-            self._lines = []
+            self.lines = []
             # The entire information, but the coordinates,
             # is equal for each model
             # Therefore template lines are created
             # which are afterwards applied for each model
-            temp_lines = [None] * array.array_length()
+            templines = [None] * array.array_length()
             for i in range(array.array_length()):
-                temp_lines[i] = ("{:6}".format(hetero[i]) + 
+                templines[i] = ("{:6}".format(hetero[i]) + 
                                  "{:>5d}".format(atom_id[i]) +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
@@ -316,9 +316,9 @@ class PDBFile(TextFile):
                                 )
             for i in range(array.stack_depth()):
                 #Fill in coordinates for each model
-                self._lines.append("{:5}{:>9d}".format("MODEL", i+1))
-                model_lines = copy.copy(temp_lines)
-                for j, line in enumerate(model_lines):
+                self.lines.append("{:5}{:>9d}".format("MODEL", i+1))
+                modellines = copy.copy(templines)
+                for j, line in enumerate(modellines):
                     # Insert coordinates
                     line = (line[:30]
                             + "{:>8.3f}{:>8.3f}{:>8.3f}".format(
@@ -326,8 +326,8 @@ class PDBFile(TextFile):
                                     array.coord[i,j,1],
                                     array.coord[i,j,2])
                             + line[54:] )
-                    model_lines[j] = line
-                self._lines.extend(model_lines)
-                self._lines.append("ENDMDL")
+                    modellines[j] = line
+                self.lines.extend(modellines)
+                self.lines.append("ENDMDL")
                 
             
