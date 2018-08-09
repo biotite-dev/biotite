@@ -14,9 +14,8 @@ import numpy as np
 from .atoms import AtomArrayStack, stack
 
 
-# NOTE Use tuple instead of list as default parameters. See https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
-def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
-           donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+def hbond(atoms, donor_selection=None, acceptor_selection=None,
+          cutoff_dist=2.5, cutoff_angle=120, donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
     Finds hydrogen bonds between atoms1 and atoms2.
     
@@ -27,16 +26,18 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     ----------
     
     atoms1 : AtomArray or AtomArrayStack
-        TODO
-    atoms2 : AtomArray or AtomArrayStack or None
-        TODO
+        model(s) used for hydrogen bond search
+    donor_selection : AtomArray or AtomArrayStack or None
+        slice of atoms to use as donors (optional)
+    acceptor_selection : AtomArray or AtomArrayStack or None
+        slice of atoms to use as acceptors (optional)
     cutoff_dist: float or int
         The maximal distance between Donor-H..Acceptor to be considered a hydrogen bond
     cutoff_angle: float or int
         The minimal angle between Donor-H..Acceptor to be considered a hydrogen bond  
-    donor_elements: array of strings
+    donor_elements: tuple of strings
         Elements to be considered as possible donors
-    acceptor_elements: array of strings
+    acceptor_elements: tuple of strings
         Elements to be considered as possible acceptors
         
     Returns
@@ -45,7 +46,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
         Nx3 matrix containing the indices of every Donor-H..Acceptor interaction that was counted at least once. N is the number
         of found interactions. The format is [[D_index, H_intex, A_index]]
     array : bool
-        MxN matrix that shows if an interaction N (see above) is present in the model M.
+        MxN matrix that shows if an interaction with index N (see above) is present in the model M.
         
     Examples
     --------
@@ -72,24 +73,27 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
     """
 
     # Create AtomArrayStacks from AtomArrays
-    if not isinstance(atoms1, AtomArrayStack):
-        # NOTE: The AtomArrayStack constructor creates an empty stack (similar to np.zeros()). What you want is the function stack()
-        atoms1 = stack([atoms1])
-    if atoms2 and not isinstance(atoms2, AtomArrayStack):
-        atoms2 = stack([atoms2])
+    if not isinstance(atoms, AtomArrayStack):
+        atoms = stack([atoms])
+    if donor_selection and not isinstance(donor_selection, AtomArrayStack):
+        donor_selection = stack([donor_selection])
+    if acceptor_selection and not isinstance(acceptor_selection, AtomArrayStack):
+        acceptor_selection = stack([acceptor_selection])
 
-    # If no second stack is given, the first one is used
-    if not atoms2:
-        atoms2 = atoms1
+    # if no donor/acceptor selections are made, use the full stack
+    if not donor_selection:
+        donor_selection = atoms
+    if not acceptor_selection:
+        acceptor_selection = atoms
 
-    # atoms1 and atoms 2 need to be of same length
-    if atoms1.array_length() != atoms2.array_length():
+    # atoms, donor_selection and acceptor_selection must contain the same number of models
+    if len(atoms) != len(donor_selection) or len(atoms) != len(acceptor_selection):
         raise ValueError("atoms1 and atoms2 must be of same length")
 
     # Find donors, acceptors and donor hydrogens
     # NOTE: For consistency
-    donors = atoms1[:, np.isin(atoms1.element, donor_elements)]
-    acceptors = atoms2[:, np.isin(atoms2.element, acceptor_elements)]
+    donors = donor_selection[:, np.isin(donor_selection.element, donor_elements)]
+    acceptors = acceptor_selection[:, np.isin(acceptor_selection.element, acceptor_elements)]
 
     def _get_bonded_hydrogen(atoms1, atoms2, cutoff=1.5):
         """
@@ -111,7 +115,7 @@ def hbond(atoms1, atoms2=None, cutoff_dist=2.5, cutoff_angle=120,
         return donor_hs
 
     # TODO use BondList if available
-    donor_hs = _get_bonded_hydrogen(donors, atoms1)
+    donor_hs = _get_bonded_hydrogen(donors, donor_selection)
 
     # Build a stack containing the D-H..A triplets in correct order for every possible possible hbond
     # TODO function spends 99.9% of its time in creating the triplets array. how can we make this faster?
