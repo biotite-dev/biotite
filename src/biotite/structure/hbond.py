@@ -75,59 +75,67 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     # Create AtomArrayStacks from AtomArrays
     if not isinstance(atoms, AtomArrayStack):
         atoms = stack([atoms])
-    if donor_selection and not isinstance(donor_selection, AtomArrayStack):
-        donor_selection = stack([donor_selection])
-    if acceptor_selection and not isinstance(acceptor_selection, AtomArrayStack):
-        acceptor_selection = stack([acceptor_selection])
 
     # if no donor/acceptor selections are made, use the full stack
-    if not donor_selection:
-        donor_selection = atoms
-    if not acceptor_selection:
-        acceptor_selection = atoms
+    # and reduce selections with multiple models
+    if donor_selection is None:
+        donor_selection = np.full(atoms.array_length(), True)
+    elif len(donor_selection.shape) > 1:
+        donor_selection = donor_selection[0]
+    if acceptor_selection is None:
+        acceptor_selection = np.full(atoms.array_length(), True)
+    elif len(acceptor_selection.shape) > 1:
+        acceptor_selection = acceptor_selection[0]
 
-    # atoms, donor_selection and acceptor_selection must contain the same number of models
-    if len(atoms) != len(donor_selection) or len(atoms) != len(acceptor_selection):
-        raise ValueError("atoms1 and atoms2 must be of same length")
+    # Filter donor/acceptor elements
+    donor_selection = donor_selection & np.isin(atoms.element, donor_elements)
+    acceptor_selection = acceptor_selection & np.isin(atoms.element, acceptor_elements)
 
-    # Find donors, acceptors and donor hydrogens
-    # NOTE: For consistency
-    donors = donor_selection[:, np.isin(donor_selection.element, donor_elements)]
-    acceptors = acceptor_selection[:, np.isin(acceptor_selection.element, acceptor_elements)]
-
-    def _get_bonded_hydrogen(atoms1, atoms2, cutoff=1.5):
+    def _get_bonded_hydrogen(atoms, donor_mask, cutoff=1.5):
         """
-        Helper function to find associated hydrogens for all donors.
-        The criterium is that the hydrogen must be in the same residue
-        and the distance must be smaller then 1.5 Angstroem
+        Helper function to find indeces of associated hydrogens in atoms for
+        all donors in atoms[donor_mask]. The criterium is that the hydrogen
+        must be in the same residue and the distance must be smaller then 1.5
+        Angstroem.
 
         """
-        hydrogens = atoms2[:, atoms2.element == 'H']
-
+        hydrogens_mask = atoms.element == 'H'
+        donors = atoms[donor_mask]
         donor_hs = []
-        for i in range(atoms1.array_length()):
-            donor = atoms1[0, i]
-            candidates = hydrogens[:, hydrogens.res_id == donor.res_id]
-            distances = distance(donor, candidates[0])
-            donor_h = candidates[:, distances < cutoff]
-            donor_hs.append(donor_h)
+        for i in range(donors.array_length()):
+            donor = donors[i]
+            candidate_mask = hydrogens_mask & (atoms.res_id == donor.res_id)
+            # print(candidate_mask)
+            candidate_distance = distance(donor, atoms[candidate_mask & hydrogens_mask])
 
-        return donor_hs
+            distances = np.full(atoms.array_length(), -1)
+            distances[candidate_mask & hydrogens_mask] = candidate_distance
+            donor_h_mask = candidate_mask & (distances <= cutoff) & (distances >= 0)
+            donor_hs.append(np.where(donor_h_mask)[0])
+
+        return np.array(donor_hs)
 
     # TODO use BondList if available
-    donor_hs = _get_bonded_hydrogen(donors, donor_selection)
+    donor_i = np.where(donor_selection)[0]
+    acceptor_i = np.where(acceptor_selection)[0]
+    donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
+    # print(donor_hs_i)
 
-    # Build a stack containing the D-H..A triplets in correct order for every possible possible hbond
-    # TODO function spends 99.9% of its time in creating the triplets array. how can we make this faster?
-    triplets = AtomArrayStack(depth=donors.stack_depth(), length=0)
-    for d_i in range(donors.array_length()):
-        for a_i in range(acceptors.array_length()):
-            for dh_i in range(donor_hs[d_i].array_length()):
-                if donors[:, d_i] != acceptors[:, a_i]:
-                    triplets += donors[:, d_i] + donor_hs[d_i][:, dh_i] + acceptors[:, a_i]
+    # Build an index list containing the D-H..A triplets in correct order for every possible possible hbond
+    max_triplets_size = len(donor_i) * len(acceptor_i) * max(map(lambda x: len(x), donor_hs_i))
+    triplets = np.zeros(max_triplets_size, dtype=np.int64)
+    triplet_idx = 0
+    for donor_hs_idx, d_i in enumerate(donor_i):
+        for a_i in acceptor_i:
+            if d_i != a_i:
+                for dh_i in donor_hs_i[donor_hs_idx]:
+                    triplets[triplet_idx:triplet_idx+3] = (d_i, dh_i, a_i)
+                    triplet_idx += 3
+    triplets = triplets[:triplet_idx]
+
 
     # Calculate angle and distance on all triplets
-    coords = triplets.coord
+    coords = atoms[:, triplets].coord
     distances = distance(coords[:, 1::3], coords[:, 2::3])
     angles = angle(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3])
 
@@ -135,10 +143,10 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     cutoff_angle_radian = np.deg2rad(cutoff_angle)
     hbond_mask = (distances <= cutoff_dist) & (angles >= cutoff_angle_radian)
 
-    # Reduce output to contain only triplets counted at least once
-    # NOTE: More clear syntax
+    # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
-    triplets = triplets[:, np.repeat(is_counted, 3)]
+    triplets = triplets[np.repeat(is_counted, 3)]
+    triplets = np.reshape(triplets, (int(len(triplets)/3), 3))
     hbond_mask = hbond_mask[:, is_counted]
 
     return triplets, hbond_mask

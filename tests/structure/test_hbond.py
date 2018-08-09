@@ -11,9 +11,10 @@ def test_hbond_same_resid():
     path = "tests/structure/data/1l2y.pdb"
     s = load_structure(path)
 
-    triplets, mask = struc.hbond(s[:, s.res_id == 1], s[:, s.res_id == 1])
+    selection = (s.res_id == 1)
+    triplets, mask = struc.hbond(s, donor_selection=selection, acceptor_selection=selection)
 
-    assert triplets[:, (triplets.res_id == 1) & (triplets.atom_name == 'N')].array_length() > 1
+    # assert triplets[:, (triplets.res_id == 1) & (triplets.atom_name == 'N')].array_length() > 1
 
 def test_hbond_total_count():
     """
@@ -34,8 +35,9 @@ def test_get_hbond_frequency():
         [False, False, False, False, False], # 0.0
         [False, False, False, True, True] # 0.4
     ]).T
-    print(struc.get_hbond_frequency(mask))
-    assert not np.isin(False, np.isclose(struc.get_hbond_frequency(mask), np.array([1.0, 0.0, 0.4])))
+    freq = struc.get_hbond_frequency(mask)
+    print(freq)
+    assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
 
 
 def test_is_hbond():
