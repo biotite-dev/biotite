@@ -8,6 +8,7 @@ __all__ = ["temp_file", "temp_dir"]
 import shutil
 import atexit
 import os
+import tempfile
 
 
 _temp_dir = ""
@@ -29,25 +30,28 @@ def _delete_temp():
         shutil.rmtree(_temp_dir)
 
 
-def temp_file(file_name):
+def temp_file(suffix=""):
     """
-    Get a file path to a temporary file with the given file name.
+    Get a file path to a temporary file.
     
     All temporary files will be deleted after script execution.
     
     Parameters
     ----------
-    file_name : str
-        The base name of the file.
+    suffix : str
+        Suffix of the file.
+        By default no suffix will be appended.
     
     Returns
     -------
     temp_file_name : str
-        `file_name` appended to the path of the temporary directory.
+        a file name in the temporary directory.
     """
     global _temp_dir
     _create_temp_dir()
-    return os.path.join(_temp_dir, file_name)
+    if suffix != "" and not suffix.startswith("."):
+        suffix = "." + suffix
+    return tempfile.mktemp(suffix=suffix, dir=_temp_dir)
      
 
 def temp_dir():
