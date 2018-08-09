@@ -58,6 +58,7 @@ class GenBankFile(TextFile):
         start = -1
         stop = -1
         name = ""
+        self._fields = []
         for i, line in enumerate(self._lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
@@ -527,6 +528,34 @@ class GenPeptFile(GenBankFile):
 
 
 class MultiFile(TextFile):
+    """
+    This class represents a file in GenBank or GenPept format,
+    that contains multiple entries, for more than one UID
+    
+    The information for each UID are appended to each other in such a
+    file.
+    Objects of this class can be iterated to obtain a `GenBankFile`
+    or `GenPeptFile` for each entry in the file.
+
+    Parameters
+    ----------
+    file_type : {'gb', 'gp'}
+        Determines whether the objects should be used for GenBank or
+        GenPept files.
+    
+    Examples
+    --------
+    
+    >>> fetch_single_file(
+    ...     ["1L2Y_A", "3O5R_A", "5UGO_A"], "multifile.gp", "protein", "gp")
+    >>> multi_file = MultiFile(file_type="gp")
+    >>> multi_file.read("multifile.gp")
+    >>> for gp_file in multi_file:
+    ...     print(gp_file.get_accession())
+    1L2Y_A
+    3O5R_A
+    5UGO_A
+    """
 
     def __init__(self, file_type):
         super().__init__()
