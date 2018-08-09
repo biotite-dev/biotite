@@ -8,6 +8,7 @@ __all__ = ["temp_file", "temp_dir"]
 import shutil
 import atexit
 import os
+import tempfile
 
 
 _temp_dir = ""
@@ -29,7 +30,7 @@ def _delete_temp():
         shutil.rmtree(_temp_dir)
 
 
-def temp_file(file_name):
+def temp_file(suffix=""):
     """
     Get a file path to a temporary file with the given file name.
     
@@ -47,7 +48,7 @@ def temp_file(file_name):
     """
     global _temp_dir
     _create_temp_dir()
-    return os.path.join(_temp_dir, file_name)
+    return tempfile.mktemp(suffix=suffix, dir=_temp_dir)
      
 
 def temp_dir():
