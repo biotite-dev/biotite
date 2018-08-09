@@ -35,10 +35,6 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    # Prevents overwriting of input and output files
-    # of different MSAApp instancs
-    _counter = 0
-    
     def __init__(self, sequences, bin_path=None, mute=True):
         # Check if all sequences share the same alphabet
         alphabet = sequences[0].get_alphabet()
@@ -49,10 +45,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             bin_path = self.get_default_bin_path()
         super().__init__(bin_path, mute)
         self._sequences = sequences
-        MSAApp._counter += 1
-        self._id = MSAApp._counter
-        self._in_file_name  = temp_file("msa_in_{:d}.fa".format(self._id))
-        self._out_file_name = temp_file("msa_out_{:d}.fa".format(self._id))
+        self._in_file_name  = temp_file("fa")
+        self._out_file_name = temp_file("fa")
 
     def run(self):
         in_file = FastaFile()
