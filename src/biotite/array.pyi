@@ -2,9 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-
 from typing import Iterbale, TypeVar
 import numpy as np
+
 
 _T = TypeVar("_T")
 

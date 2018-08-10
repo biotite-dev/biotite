@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from .file import *
-from .temp import *
-from .copyable import * 
-from .visualize import * 
+from .alignment import *
+from .pairwise import *
+from .matrix import *

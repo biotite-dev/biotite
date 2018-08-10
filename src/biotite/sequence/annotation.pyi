@@ -1,0 +1,56 @@
+from biotite.sequence.seqtypes import NucleotideSequence
+from numpy import str_
+from typing import (
+    Dict,
+    Iterator,
+    List,
+    Union,
+)
+
+
+class AnnotatedSequence:
+    def __getitem__(
+        self,
+        index: Union[slice, Feature, int]
+    ) -> Union[str_, AnnotatedSequence, NucleotideSequence]: ...
+    def __init__(
+        self,
+        annotation: Annotation,
+        sequence: NucleotideSequence,
+        sequence_start: int = 1
+    ) -> None: ...
+    def __setitem__(
+        self,
+        index: Feature,
+        item: NucleotideSequence
+    ) -> None: ...
+    @property
+    def sequence(self) -> NucleotideSequence: ...
+
+
+class Annotation:
+    def __add__(
+        self,
+        item: Union[Annotation, Feature]
+    ) -> Annotation: ...
+    def __getitem__(self, index: slice) -> Annotation: ...
+    def __init__(self, features: List[Feature] = []) -> None: ...
+    def __iter__(self) -> Iterator[Feature]: ...
+    def add_feature(self, feature: Feature) -> None: ...
+    def get_features(self) -> List[Feature]: ...
+
+
+class Feature:
+    def __copy_create__(self) -> Feature: ...
+    def __init__(self, key: str, locs: List[Location], qual: Dict[str, str] = {}) -> None: ...
+    @property
+    def key(self) -> str: ...
+    @property
+    def locs(self) -> List[Location]: ...
+    @property
+    def qual(self) -> Dict[str, str]: ...
+
+
+class Location:
+    def __copy_create__(self) -> Location: ...
+    def __str__(self) -> str: ...

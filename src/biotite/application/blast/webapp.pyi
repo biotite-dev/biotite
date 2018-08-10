@@ -1,0 +1,29 @@
+from biotite.sequence.seqtypes import (
+    NucleotideSequence,
+    ProteinSequence,
+)
+from typing import (
+    Dict,
+    Union,
+)
+
+
+class BlastWebApp:
+    def __init__(
+        self,
+        program: str,
+        query: Union[ProteinSequence, str, NucleotideSequence],
+        database: str = 'nr',
+        app_url: str = 'https://blast.ncbi.nlm.nih.gov/Blast.cgi',
+        obey_rules: bool = True,
+        mail: None = None
+    ) -> None: ...
+    def _contact(self) -> None: ...
+    @staticmethod
+    def _get_info(text: str) -> Dict[str, str]: ...
+    def _request(self) -> None: ...
+    def clean_up(self) -> None: ...
+    def evaluate(self) -> None: ...
+    def is_finished(self) -> bool: ...
+    def run(self) -> None: ...
+    def wait_interval(self) -> int: ...

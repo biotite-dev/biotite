@@ -2,7 +2,5 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from .convert import *
 from .file import *
-from .temp import *
-from .copyable import * 
-from .visualize import * 
