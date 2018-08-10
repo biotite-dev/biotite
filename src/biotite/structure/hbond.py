@@ -181,14 +181,15 @@ def get_hbond_frequency(mask):
     """
     Parameters
     ----------
-    mask: Array
-        Input mask obtained from `hbond.hbond`
+    mask: ndarray, dtype=bool_, shape=(MxN) or (N)
+        Input mask obtained from `hbond` function.
     
     Returns
     -------
-    The frequency for each hydrogen bond
+    ndarray, dtype=Float
+        For each individual triplet n of the mask, returns the
+        percentage of models M, in which this hydrogen bond is present.
 
-    
     Examples
     --------
         
