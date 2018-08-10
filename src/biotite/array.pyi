@@ -2,12 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Iterable, TypeVar
+from typing import Generic, TypeVar
 import numpy as np
 
 
 _T = TypeVar("_T")
 
 # Generic placeholder for numpy arrays
-class Array(np.ndarray, Iterable[_T]):
+class Array(np.ndarray, Generic[_T]):
     ...
