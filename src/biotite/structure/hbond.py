@@ -17,41 +17,41 @@ from .atoms import AtomArrayStack, stack
 def hbond(atoms, donor_selection=None, acceptor_selection=None,
           cutoff_dist=2.5, cutoff_angle=120, donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
-    Finds hydrogen bonds between atoms1 and atoms2.
+    Finds hydrogen bonds in a structure.
     
     The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) < 2.5 A` (Baker and Hubbard, 1984)
+    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
     
     Parameters
     ----------
-    
-    atoms1 : AtomArray or AtomArrayStack
-        model(s) used for hydrogen bond search
-    donor_selection : AtomArray or AtomArrayStack or None
-        slice of atoms to use as donors (optional)
-    acceptor_selection : AtomArray or AtomArrayStack or None
-        slice of atoms to use as acceptors (optional)
-    cutoff_dist: float or int
-        The maximal distance between Donor-H..Acceptor to be considered a hydrogen bond
-    cutoff_angle: float or int
-        The minimal angle between Donor-H..Acceptor to be considered a hydrogen bond  
-    donor_elements: tuple of strings
-        Elements to be considered as possible donors
-    acceptor_elements: tuple of strings
-        Elements to be considered as possible acceptors
+    atoms : AtomArray or AtomArrayStack
+        The atoms to find hydrogen bonds in.
+    donor_selection, acceptor_selection : ndarray or None
+        Boolean mask for atoms to limit the hydrogen bond search to
+        specitic sections of the model. The shape must match the
+        shape of the atoms argument (default: None).
+    cutoff_dist: float
+        The maximal distance in Angstroem between the hydrogen and acceptor to be
+        considered a hydrogen bond. (default: 2.5)
+    cutoff_angle: float
+        The angle cutoff in degree between Donor-H..Acceptor to be considered a hydrogen
+        bond (default: 120).
+    donor_elements, acceptor_elements: tuple(strings)
+        Elements to be considered as possible donors or acceptors (default: O, N, S).
         
     Returns
     -------
-    array : int
-        Nx3 matrix containing the indices of every Donor-H..Acceptor interaction that was counted at least once. N is the number
-        of found interactions. The format is [[D_index, H_intex, A_index]]
-    array : bool
-        MxN matrix that shows if an interaction with index N (see above) is present in the model M.
+    triplets : ndarray, dtype=int64, shape=(N,3)
+        Nx3 matrix containing the indices of every Donor-H..Acceptor interaction that was
+        counted at least once. N is the number of found interactions. The format is
+        [[D_index, H_index, A_index]].
+    mask : ndarry, type=bool_, shape=(MxN)
+        MxN matrix that shows if an interaction with index N in the triplet array (see above)
+        is present in the model M.
         
     Examples
     --------
-    
-    Input
+    Calculate the total number of hydrogen bonds found in each model:
     
     >>> struct = load_structure("tests/structure/data/1l2y.pdb")
 
@@ -63,13 +63,10 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     >>> plt.ylabel("# H-Bonds")
     >>> plt.show()
 
-    
-    Output
-    
-    TODO
-        
-    
-
+    See Also
+    --------
+    get_hbond_frequency
+    is_hbond
     """
 
     # Create AtomArrayStacks from AtomArrays
@@ -119,7 +116,6 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     donor_i = np.where(donor_selection)[0]
     acceptor_i = np.where(acceptor_selection)[0]
     donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
-    # print(donor_hs_i)
 
     # Build an index list containing the D-H..A triplets in correct order for every possible possible hbond
     max_triplets_size = len(donor_i) * len(acceptor_i) * max(map(lambda x: len(x), donor_hs_i))
@@ -141,7 +137,7 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
 
     # Apply hbond criterion
     cutoff_angle_radian = np.deg2rad(cutoff_angle)
-    hbond_mask = (distances <= cutoff_dist) & (angles >= cutoff_angle_radian)
+    hbond_mask = (distances <= cutoff_dist) & (angles > cutoff_angle_radian)
 
     # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
@@ -159,7 +155,11 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     meets the criteria of a hydrogen bond
     
     The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) < 2.5 A` (Baker and Hubbard, 1984)
+    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
+    
+    Parameters
+    ----------
+    donor, donor_h, acceptor : Atom or AtomArray
     """
 
     cutoff_angle_rad = np.deg2rad(cutoff_angle)
