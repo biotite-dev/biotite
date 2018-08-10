@@ -132,12 +132,7 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
 
     # Calculate angle and distance on all triplets
     coords = atoms[:, triplets].coord
-    distances = distance(coords[:, 1::3], coords[:, 2::3])
-    angles = angle(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3])
-
-    # Apply hbond criterion
-    cutoff_angle_radian = np.deg2rad(cutoff_angle)
-    hbond_mask = (distances <= cutoff_dist) & (angles > cutoff_angle_radian)
+    hbond_mask = is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3])
 
     # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
@@ -159,14 +154,28 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     
     Parameters
     ----------
-    donor, donor_h, acceptor : Atom or AtomArray
+    donor, donor_h, acceptor : ndarray, dtype=float, shape=(MxN) or (N)
+        The Coordinates to measure the hydrogen bonding criterium between.
+        The three parameters must be of identical shape and either contain
+        a list of coordinates (N) or a set of list of coordinates (MxN).
+        
+    Returns
+    -------
+    mask : ndarray, type=bool_, shape=(MxN) or (N)
+        For each set of coordinates and dimension, returns a boolean to
+        indicate if the coordinates match the hydrogen bonding criterium
+        
+    
+    See Also
+    --------
+    hbond
     """
 
     cutoff_angle_rad = np.deg2rad(cutoff_angle)
     theta = angle(donor, donor_h, acceptor)
     dist = distance(donor_h, acceptor)
 
-    return theta > cutoff_angle_rad and dist < cutoff_dist
+    return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
 
 def get_hbond_frequency(mask):
     """

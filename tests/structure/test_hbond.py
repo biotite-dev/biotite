@@ -64,3 +64,50 @@ def test_is_hbond():
     assert not struc.is_hbond(*hbond_coords_wrong_angle)
     assert not struc.is_hbond(*hbond_coords_wrong_distance)
 
+def test_is_hbond_multiple():
+    hbonds_valid = np.array([
+    # first model
+    [
+        # first bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 3.0, 0.0],   # acceptor
+        # second bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 3.0, 0.0],  # acceptor
+    ],
+    # second model
+    [
+        # first bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 3.0, 0.0],   # acceptor
+        # second bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 3.0, 0.0],  # acceptor
+    ]])
+
+    hbonds_invalid = np.array([
+    # first model
+    [
+        # first bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 3.0, 0.0],   # acceptor
+        # second bond
+        [1.0, 1.0, 0.0],  # donor
+        [1.0, 2.0, 0.0],  # donor_h
+        [1.0, 1.0, 0.0],  # acceptor
+    ]])
+
+    assert struc.is_hbond(hbonds_valid[:, 0::3],
+                          hbonds_valid[:, 1::3],
+                          hbonds_valid[:, 2::3]).sum() == 4
+
+    assert struc.is_hbond(hbonds_invalid[:, 0::3],
+                          hbonds_invalid[:, 1::3],
+                          hbonds_invalid[:, 2::3]).sum() == 1
+
+
