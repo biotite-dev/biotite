@@ -1,0 +1,1 @@
+mypy --ignore-missing-imports src/biotite
