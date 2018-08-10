@@ -129,10 +129,10 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
                     triplet_idx += 3
     triplets = triplets[:triplet_idx]
 
-
     # Calculate angle and distance on all triplets
     coords = atoms[:, triplets].coord
-    hbond_mask = is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3])
+    hbond_mask = is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
+                          cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
 
     # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
@@ -141,7 +141,6 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     hbond_mask = hbond_mask[:, is_counted]
 
     return triplets, hbond_mask
-
 
 
 def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
@@ -158,6 +157,12 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
         The Coordinates to measure the hydrogen bonding criterium between.
         The three parameters must be of identical shape and either contain
         a list of coordinates (N) or a set of list of coordinates (MxN).
+    cutoff_dist: float
+        The maximal distance in Angstroem between the hydrogen and acceptor to be
+        considered a hydrogen bond. (default: 2.5)
+    cutoff_angle: float
+        The angle cutoff in degree between Donor-H..Acceptor to be considered a hydrogen
+        bond (default: 120).
         
     Returns
     -------
@@ -176,6 +181,7 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     dist = distance(donor_h, acceptor)
 
     return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
+
 
 def get_hbond_frequency(mask):
     """
