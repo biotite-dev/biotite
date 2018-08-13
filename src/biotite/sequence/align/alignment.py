@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import textwrap
 from ..alphabet import LetterAlphabet
-    
+
 
 __all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
            "score"]
