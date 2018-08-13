@@ -62,9 +62,8 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
      14 12 15 12 12 13 13 13 12 12 11 15 10 11]
 
-    Get hydrogen bond donors of first model:
+    Get hydrogen bond donors of third model:
 
-    >>> triplets, mask = struc.hbond(stack)
     >>> # Third model -> index 2
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
@@ -87,7 +86,7 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
 
     See Also
     --------
-    get_hbond_frequency
+    hbond_frequency
     is_hbond
 
     References
