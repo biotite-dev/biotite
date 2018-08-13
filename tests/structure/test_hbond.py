@@ -25,17 +25,17 @@ def test_hbond_total_count():
     s = load_structure(path)
 
     triplets, mask = struc.hbond(s)
-    freq = struc.get_hbond_frequency(mask)
+    freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
 
-def test_get_hbond_frequency():
+def test_hbond_frequency():
     mask = np.array([
         [True, True, True, True, True], # 1.0
         [False, False, False, False, False], # 0.0
         [False, False, False, True, True] # 0.4
     ]).T
-    freq = struc.get_hbond_frequency(mask)
+    freq = struc.hbond_frequency(mask)
     print(freq)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
 
