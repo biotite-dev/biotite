@@ -7,7 +7,7 @@ This module provides functions for hydrogen bonding calculation.
 """
 
 __author__ = "Daniel Bauer"
-__all__ = ["is_hbond", "hbond", "get_hbond_frequency"]
+__all__ = ["is_hbond", "hbond", "hbond_frequency"]
 
 from .geometry import distance, angle
 import numpy as np
@@ -230,7 +230,7 @@ def hbond_frequency(mask):
     >>> struct = load_structure("tests/structure/data/1l2y.pdb")
     >>> triplets, mask = hbond.hbond(struct)
     >>> freq = hbond.hbond_frequency(mask)
-    
+
 
     See Also
     --------
