@@ -211,7 +211,7 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
 
 
-def get_hbond_frequency(mask):
+def hbond_frequency(mask):
     """
     Parameters
     ----------
@@ -228,9 +228,9 @@ def get_hbond_frequency(mask):
     --------
         
     >>> struct = load_structure("tests/structure/data/1l2y.pdb")
-
     >>> triplets, mask = hbond.hbond(struct)
-    >>> freq = hbond.get_hbond_frequency(mask)
+    >>> freq = hbond.hbond_frequency(mask)
+    
 
     See Also
     --------
