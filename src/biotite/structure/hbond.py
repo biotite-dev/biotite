@@ -15,12 +15,13 @@ from .atoms import AtomArrayStack, stack
 
 
 def hbond(atoms, donor_selection=None, acceptor_selection=None,
-          cutoff_dist=2.5, cutoff_angle=120, donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+          cutoff_dist=2.5, cutoff_angle=120,
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
-    Finds hydrogen bonds in a structure.
+    Find hydrogen bonds in a structure.
     
     The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
+    :math:`\\text(H..Acceptor) <= 2.5 A` [1]_
     
     Parameters
     ----------
@@ -28,45 +29,73 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
         The atoms to find hydrogen bonds in.
     donor_selection, acceptor_selection : ndarray or None
         Boolean mask for atoms to limit the hydrogen bond search to
-        specitic sections of the model. The shape must match the
-        shape of the atoms argument (default: None).
+        specific sections of the model. The shape must match the
+        shape of the `atoms` argument (default: None).
     cutoff_dist: float
-        The maximal distance in Angstroem between the hydrogen and acceptor to be
+        The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (default: 2.5)
     cutoff_angle: float
-        The angle cutoff in degree between Donor-H..Acceptor to be considered a hydrogen
-        bond (default: 120).
-    donor_elements, acceptor_elements: tuple(strings)
-        Elements to be considered as possible donors or acceptors (default: O, N, S).
+        The angle cutoff in degree between Donor-H..Acceptor to be
+        considered a hydrogen bond (default: 120).
+    donor_elements, acceptor_elements: tuple of str
+        Elements to be considered as possible donors or acceptors
+        (default: O, N, S).
         
     Returns
     -------
-    triplets : ndarray, dtype=int64, shape=(N,3)
-        Nx3 matrix containing the indices of every Donor-H..Acceptor interaction that was
-        counted at least once. N is the number of found interactions. The format is
-        [[D_index, H_index, A_index]].
-    mask : ndarry, type=bool_, shape=(MxN)
-        MxN matrix that shows if an interaction with index N in the triplet array (see above)
-        is present in the model M.
+    triplets : ndarray, dtype=int, shape=(n,3)
+        *n x 3* matrix containing the indices of every Donor-H..Acceptor
+        interaction that was counted at least once. *n* is the number of
+        found interactions. The format is [[D_index, H_index, A_index]].
+    mask : ndarry, dtype=bool, shape=(m,n)
+        *m x n* matrix that shows if an interaction with index *n* in
+        `triplets` is present in the model *m*.
         
     Examples
     --------
     Calculate the total number of hydrogen bonds found in each model:
     
-    >>> struct = load_structure("tests/structure/data/1l2y.pdb")
+    >>> stack = load_structure("path/to/1l2y.pdb")
+    >>> triplets, mask = hbond(stack)
+    >>> hbonds_per_model = np.count_nonzero(mask, axis=1)
+    >>> print(hbonds_per_model)
+    [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
+     14 12 15 12 12 13 13 13 12 12 11 15 10 11]
 
-    >>> triplets, mask = hbond.hbond(struct)
-    >>> hbonds_per_model = mask.sum(axis=1)
+    Get hydrogen bond donors of first model:
 
-    >>> plt.plot(range(len(struct)), hbonds_per_model )
-    >>> plt.xlabel("Model")
-    >>> plt.ylabel("# H-Bonds")
-    >>> plt.show()
+    >>> triplets, mask = struc.hbond(stack)
+    >>> # Third model -> index 2
+    >>> triplets = triplets[mask[2,:]]
+    >>> # First column contains donors
+    >>> print(stack[2, triplets[:,0]])
+        A       1 ASN N      N        -6.589    7.754   -0.571
+        A       5 GLN N      N        -5.009   -0.575   -1.365
+        A       6 TRP N      N        -2.154   -0.497   -1.588
+        A       6 TRP NE1    N         3.420    0.332   -0.121
+        A       7 LEU N      N        -1.520   -1.904    0.893
+        A       8 LYS N      N        -2.716   -4.413    0.176
+        A       8 LYS NZ     N        -6.352   -4.311   -4.482
+        A       9 ASP N      N        -0.694   -5.301   -1.644
+        A      10 GLY N      N         1.135   -6.232    0.250
+        A      11 GLY N      N         2.142   -4.244    1.916
+        A      13 SER N      N         6.424   -5.220    3.257
+        A      14 SER N      N         6.424   -5.506    0.464
+        A      14 SER OG     O         4.689   -5.759   -2.390
+        A      15 GLY N      N         8.320   -3.632   -0.318
+        A      16 ARG N      N         8.043   -1.206   -1.866
 
     See Also
     --------
     get_hbond_frequency
     is_hbond
+
+    References
+    ----------
+    
+    .. [1] A Shrake and JA Rupley,
+       "Hydrogen bonding in globular proteins"
+       Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
 
     # Create AtomArrayStacks from AtomArrays
