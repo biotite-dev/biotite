@@ -28,7 +28,8 @@ def gyration_radius(array, masses=None):
         for.
     masses : ndarray, optional
         The masses to use for each atom in the input `array`.
-        Must have the same length as `array`.
+        Must have the same length as `array`. By default, the standard
+        atomic mass for each element is taken.
     
     Returns
     -------
@@ -41,7 +42,7 @@ def gyration_radius(array, masses=None):
     if masses is None:
         masses = atom_masses(array)
     center = mass_center(array, masses)
-    radii = distance(array, center[:, np.newaxis, :])
+    radii = distance(array, center[..., np.newaxis, :])
     inertia_moment = np.sum(masses * radii*radii, axis=-1)
     return np.sqrt(inertia_moment / np.sum(masses))
 
@@ -55,8 +56,9 @@ def mass_center(array, masses=None):
         The array or stack to calculate the center(s) of mass for.
     masses : ndarray, optional
         The masses to use for each atom in the input `array`.
-        Must have the same length as `array`.
-
+        Must have the same length as `array`. By default, the standard
+        atomic mass for each element is taken.
+    
     Returns
     -------
     radius : ndarray, ndarray, dtype=float
