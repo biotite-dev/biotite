@@ -7,7 +7,7 @@ This module provides functions for hydrogen bonding calculation.
 """
 
 __author__ = "Daniel Bauer"
-__all__ = ["is_hbond", "hbond", "hbond_frequency"]
+__all__ = ["hbond", "hbond_frequency"]
 
 from .geometry import distance, angle
 import numpy as np
@@ -173,7 +173,7 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
 
     # Calculate angle and distance on all triplets
     coords = atoms[:, triplets].coord
-    hbond_mask = is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
+    hbond_mask = _is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
                           cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
 
     # Reduce+Reshape output to contain only triplets counted at least once
@@ -189,43 +189,6 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
         return triplets
     else:
         return triplets, hbond_mask
-
-
-def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
-    """
-    True if the angle and distance between donor, donor_h and acceptor
-    meets the criteria of a hydrogen bond
-    
-    The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
-    
-    Parameters
-    ----------
-    donor, donor_h, acceptor : ndarray, dtype=float, shape=(MxN) or (N)
-        The coordinates to measure the hydrogen bonding criterium
-        between.
-        The three parameters must be of identical shape and either
-        contain a list of coordinates (N) or a set of list of
-        coordinates (MxN).
-    cutoff_dist: float
-        The maximal distance between the hydrogen and acceptor to be
-        considered a hydrogen bond. (default: 2.5)
-    cutoff_angle: float
-        The angle cutoff in degree between Donor-H..Acceptor to be
-        considered a hydrogen bond (default: 120).
-        
-    Returns
-    -------
-    mask : ndarray, type=bool_, shape=(MxN) or (N)
-        For each set of coordinates and dimension, returns a boolean to
-        indicate if the coordinates match the hydrogen bonding
-        criterium.
-        
-    
-    See Also
-    --------
-    hbond
-    """
 
     cutoff_angle_rad = np.deg2rad(cutoff_angle)
     theta = angle(donor, donor_h, acceptor)
@@ -260,3 +223,40 @@ def hbond_frequency(mask):
     >>> freq = hbond.hbond_frequency(mask)
     """
     return mask.sum(axis=0)/len(mask)
+
+
+def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
+    """
+    True if the angle and distance between donor, donor_h and acceptor
+    meets the criteria of a hydrogen bond
+    
+    The default criteria is: :math:`\\theta > 120deg` and :math
+    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
+    
+    Parameters
+    ----------
+    donor, donor_h, acceptor : ndarray, dtype=float, shape=(MxN) or (N)
+        The coordinates to measure the hydrogen bonding criterium
+        between.
+        The three parameters must be of identical shape and either
+        contain a list of coordinates (N) or a set of list of
+        coordinates (MxN).
+    cutoff_dist: float
+        The maximal distance between the hydrogen and acceptor to be
+        considered a hydrogen bond. (default: 2.5)
+    cutoff_angle: float
+        The angle cutoff in degree between Donor-H..Acceptor to be
+        considered a hydrogen bond (default: 120).
+        
+    Returns
+    -------
+    mask : ndarray, type=bool_, shape=(MxN) or (N)
+        For each set of coordinates and dimension, returns a boolean to
+        indicate if the coordinates match the hydrogen bonding
+        criterium.
+        
+    
+    See Also
+    --------
+    hbond
+    """
