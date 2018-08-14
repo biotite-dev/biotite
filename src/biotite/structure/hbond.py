@@ -92,7 +92,7 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     References
     ----------
     
-    .. [1] A Shrake and JA Rupley,
+    .. [1] EN Baker and RE Hubbard,
        "Hydrogen bonding in globular proteins"
        Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
