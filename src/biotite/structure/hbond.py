@@ -120,8 +120,10 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
         acceptor_selection = acceptor_selection[0]
 
     # Filter donor/acceptor elements
-    donor_selection = donor_selection & np.isin(atoms.element, donor_elements)
-    acceptor_selection = acceptor_selection & np.isin(atoms.element, acceptor_elements)
+    donor_selection \
+        = donor_selection & np.isin(atoms.element, donor_elements)
+    acceptor_selection \
+        = acceptor_selection & np.isin(atoms.element, acceptor_elements)
 
     def _get_bonded_hydrogen(atoms, donor_mask, cutoff=1.5):
         """
@@ -137,12 +139,14 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
         for i in range(donors.array_length()):
             donor = donors[i]
             candidate_mask = hydrogens_mask & (atoms.res_id == donor.res_id)
-            # print(candidate_mask)
-            candidate_distance = distance(donor, atoms[candidate_mask & hydrogens_mask])
+            candidate_distance = distance(
+                donor, atoms[candidate_mask & hydrogens_mask]
+            )
 
             distances = np.full(atoms.array_length(), -1)
             distances[candidate_mask & hydrogens_mask] = candidate_distance
-            donor_h_mask = candidate_mask & (distances <= cutoff) & (distances >= 0)
+            donor_h_mask \
+                = candidate_mask & (distances <= cutoff) & (distances >= 0)
             donor_hs.append(np.where(donor_h_mask)[0])
 
         return np.array(donor_hs)
@@ -152,8 +156,11 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     acceptor_i = np.where(acceptor_selection)[0]
     donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
 
-    # Build an index list containing the D-H..A triplets in correct order for every possible possible hbond
-    max_triplets_size = len(donor_i) * len(acceptor_i) * max(map(lambda x: len(x), donor_hs_i))
+    # Build an index list containing the D-H..A triplets
+    # in correct order for every possible possible hbond
+    max_triplets_size \
+        = len(donor_i) * len(acceptor_i) \
+          * max(map(lambda x: len(x), donor_hs_i))
     triplets = np.zeros(max_triplets_size, dtype=np.int64)
     triplet_idx = 0
     for donor_hs_idx, d_i in enumerate(donor_i):
@@ -195,15 +202,17 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     Parameters
     ----------
     donor, donor_h, acceptor : ndarray, dtype=float, shape=(MxN) or (N)
-        The Coordinates to measure the hydrogen bonding criterium between.
-        The three parameters must be of identical shape and either contain
-        a list of coordinates (N) or a set of list of coordinates (MxN).
+        The coordinates to measure the hydrogen bonding criterium
+        between.
+        The three parameters must be of identical shape and either
+        contain a list of coordinates (N) or a set of list of
+        coordinates (MxN).
     cutoff_dist: float
-        The maximal distance in Angstroem between the hydrogen and acceptor to be
+        The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (default: 2.5)
     cutoff_angle: float
-        The angle cutoff in degree between Donor-H..Acceptor to be considered a hydrogen
-        bond (default: 120).
+        The angle cutoff in degree between Donor-H..Acceptor to be
+        considered a hydrogen bond (default: 120).
         
     Returns
     -------

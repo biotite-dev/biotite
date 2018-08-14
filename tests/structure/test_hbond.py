@@ -7,18 +7,25 @@ import numpy as np
 from biotite.structure.io import load_structure
 
 def test_hbond_same_resid():
-    """ 1ASN in 1l2y should form a hydrogen bond between its sidechain and the N-term """
+    """
+    1ASN in 1l2y should form a hydrogen bond between its
+    sidechain and the N-term
+    """
     path = "tests/structure/data/1l2y.pdb"
     s = load_structure(path)
 
     selection = (s.res_id == 1)
-    triplets, mask = struc.hbond(s, donor_selection=selection, acceptor_selection=selection)
+    triplets, mask = struc.hbond(
+        s, donor_selection=selection, acceptor_selection=selection
+    )
 
-    # assert triplets[:, (triplets.res_id == 1) & (triplets.atom_name == 'N')].array_length() > 1
+    # assert triplets[:, (triplets.res_id == 1) \
+    # & (triplets.atom_name == 'N')].array_length() > 1
 
 def test_hbond_total_count():
     """
-    With the standart Baker & Hubbard criterion, 1l2y should have 28 hydrogen bonds with a frequency > 0.1
+    With the standart Baker & Hubbard criterion,
+    1l2y should have 28 hydrogen bonds with a frequency > 0.1
     (comparision with external calculation)
     """
     path = "tests/structure/data/1l2y.pdb"
