@@ -2,36 +2,37 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
+from os.path import join
 import numpy as np
+import biotite.structure as struc
 from biotite.structure.io import load_structure
+from .util import data_dir
 
-def test_hbond_same_resid():
+
+def test_hbond_same_res():
     """
-    1ASN in 1l2y should form a hydrogen bond between its
-    sidechain and the N-term
+    Check if hydrogen bonds in the same residue are detected.
+    At least one of such bonds is present in 1L2Y (1ASN with N-terminus)
+    (model 2).
     """
-    path = "tests/structure/data/1l2y.pdb"
-    s = load_structure(path)
-
-    selection = (s.res_id == 1)
-    triplets, mask = struc.hbond(
-        s, donor_selection=selection, acceptor_selection=selection
-    )
-
-    # assert triplets[:, (triplets.res_id == 1) \
-    # & (triplets.atom_name == 'N')].array_length() > 1
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    # Focus on second model
+    array = stack[1]
+    triplets = struc.hbond(array)
+    same_res_count = 0
+    for triplet in triplets:
+        if array.res_id[triplet[0]] == array.res_id[triplet[2]]:
+            same_res_count += 1
+    assert same_res_count >= 1
 
 def test_hbond_total_count():
     """
     With the standart Baker & Hubbard criterion,
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
-    (comparision with external calculation)
+    (comparision with MDTraj results)
     """
-    path = "tests/structure/data/1l2y.pdb"
-    s = load_structure(path)
-
-    triplets, mask = struc.hbond(s)
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    triplets, mask = struc.hbond(stack)
     freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
@@ -43,11 +44,11 @@ def test_hbond_frequency():
         [False, False, False, True, True] # 0.4
     ]).T
     freq = struc.hbond_frequency(mask)
-    print(freq)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
 
 
 def test_is_hbond():
+    from biotite.structure.hbond import _is_hbond as is_hbond
     hbond_coords_valid = np.array([
         [1.0, 1.0, 0.0],  # donor
         [1.0, 2.0, 0.0],  # donor_h
@@ -67,11 +68,12 @@ def test_is_hbond():
         [4.0, 3.0, 0.0]  # acceptor
     ])
 
-    assert struc.is_hbond(*hbond_coords_valid)
-    assert not struc.is_hbond(*hbond_coords_wrong_angle)
-    assert not struc.is_hbond(*hbond_coords_wrong_distance)
+    assert is_hbond(*hbond_coords_valid)
+    assert not is_hbond(*hbond_coords_wrong_angle)
+    assert not is_hbond(*hbond_coords_wrong_distance)
 
 def test_is_hbond_multiple():
+    from biotite.structure.hbond import _is_hbond as is_hbond
     hbonds_valid = np.array([
     # first model
     [
@@ -109,11 +111,11 @@ def test_is_hbond_multiple():
         [1.0, 1.0, 0.0],  # acceptor
     ]])
 
-    assert struc.is_hbond(hbonds_valid[:, 0::3],
+    assert is_hbond(hbonds_valid[:, 0::3],
                           hbonds_valid[:, 1::3],
                           hbonds_valid[:, 2::3]).sum() == 4
 
-    assert struc.is_hbond(hbonds_invalid[:, 0::3],
+    assert is_hbond(hbonds_invalid[:, 0::3],
                           hbonds_invalid[:, 1::3],
                           hbonds_invalid[:, 2::3]).sum() == 1
 
