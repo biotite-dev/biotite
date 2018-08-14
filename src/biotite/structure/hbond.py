@@ -190,12 +190,6 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     else:
         return triplets, hbond_mask
 
-    cutoff_angle_rad = np.deg2rad(cutoff_angle)
-    theta = angle(donor, donor_h, acceptor)
-    dist = distance(donor_h, acceptor)
-
-    return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
-
 
 def hbond_frequency(mask):
     """
@@ -255,8 +249,12 @@ def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
         indicate if the coordinates match the hydrogen bonding
         criterium.
         
-    
     See Also
     --------
     hbond
     """
+    cutoff_angle_rad = np.deg2rad(cutoff_angle)
+    theta = angle(donor, donor_h, acceptor)
+    dist = distance(donor_h, acceptor)
+
+    return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
