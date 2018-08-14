@@ -45,11 +45,15 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     -------
     triplets : ndarray, dtype=int, shape=(n,3)
         *n x 3* matrix containing the indices of every Donor-H..Acceptor
-        interaction that was counted at least once. *n* is the number of
-        found interactions. The format is [[D_index, H_index, A_index]].
+        interaction that is available in any of the models.
+        *n* is the number of found interactions.
+        The three matrix columns are *D_index*, *H_index*, *A_index*.
+        If only one model (`AtomArray`) is given, `triplets` contains
+        all of its hydrogen bonds.
     mask : ndarry, dtype=bool, shape=(m,n)
         *m x n* matrix that shows if an interaction with index *n* in
-        `triplets` is present in the model *m*.
+        `triplets` is present in the model *m* of the input `atoms`.
+        Only returned if `atoms` is an `AtomArrayStack`.
         
     Examples
     --------
@@ -97,9 +101,12 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
        Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
 
-    # Create AtomArrayStacks from AtomArrays
+    # Create AtomArrayStack from AtomArray
     if not isinstance(atoms, AtomArrayStack):
         atoms = stack([atoms])
+        single_model = True
+    else:
+        single_model = False
 
     # if no donor/acceptor selections are made, use the full stack
     # and reduce selections with multiple models
@@ -168,7 +175,13 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     triplets = np.reshape(triplets, (int(len(triplets)/3), 3))
     hbond_mask = hbond_mask[:, is_counted]
 
-    return triplets, hbond_mask
+    if single_model:
+        # For a single model, hbond_mask contains only 'True' values,
+        # since all interaction are in the one model
+        # -> Simply return triplets without hbond_mask
+        return triplets
+    else:
+        return triplets, hbond_mask
 
 
 def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
