@@ -1,14 +1,14 @@
-from numpy import (
-    float64,
-    ndarray,
-)
-from typing import Union
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+from typing import Union, Tuple
+import numpy as np
+from .atoms import AtomArray, AtomArrayStack
 
 
-def distance(v1: ndarray, v2: ndarray) -> Union[float64, ndarray]: ...
+def vector_dot(v1: np.ndarray, v2: np.ndarray) -> Union[float, np.ndarray]: ...
 
+def norm_vector(v: np.ndarray) -> None: ...
 
-def norm_vector(v: ndarray) -> None: ...
-
-
-def vector_dot(v1: ndarray, v2: ndarray) -> Union[float64, ndarray]: ...
+def distance(v1: np.ndarray, v2: np.ndarray) -> Union[float, np.ndarray]: ...

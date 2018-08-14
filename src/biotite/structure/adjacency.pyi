@@ -7,14 +7,14 @@ import numpy as np
 from .atoms import AtomArray
 
 
-def class CellList:
+class CellList:
     def __init__(
         self, atom_array : Union[AtomArray, np.ndarray], cell_size : float
     ) -> None: ...
     def create_adjacency_matrix(
         self, threshold_distance : float
     ) -> np.ndarray: ...
-    def get_atoms(self, coord : np.ndarray, radius : float) -> np.ndarray:
+    def get_atoms(self, coord : np.ndarray, radius : float) -> np.ndarray: ...
     def get_atoms_in_cells(
         self,coord : np.ndarray, cell_radius : int = 1
-    ) -> np.ndarray:
+    ) -> np.ndarray: ...

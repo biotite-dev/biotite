@@ -1,27 +1,17 @@
-from biotite.structure.atoms import (
-    AtomArray,
-    AtomArrayStack,
-)
-from numpy import (
-    float64,
-    ndarray,
-)
-from typing import Union
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+from typing import Union, overload
+import numpy as np
+from .atoms import AtomArray, AtomArrayStack
 
 
-def _sq_euclidian(
-    reference: AtomArray,
-    subject: Union[AtomArrayStack, AtomArray]
-) -> ndarray: ...
+@overload
+def rmsd(reference: AtomArray, subject: AtomArray) -> float: ...
+@overload
+def rmsd(reference: AtomArray, subject: AtomArrayStack) -> np.ndarray: ...
 
+def rmsf(reference: AtomArray, subject: AtomArrayStack) -> np.ndarray: ...
 
 def average(atom_arrays: AtomArrayStack) -> AtomArray: ...
-
-
-def rmsd(
-    reference: AtomArray,
-    subject: Union[AtomArrayStack, AtomArray]
-) -> Union[float64, ndarray]: ...
-
-
-def rmsf(reference: AtomArray, subject: AtomArrayStack) -> ndarray: ...

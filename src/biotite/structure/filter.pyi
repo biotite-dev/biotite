@@ -1,42 +1,35 @@
-from biotite.structure.atoms import (
-    AtomArray,
-    AtomArrayStack,
-)
-from numpy import ndarray
-from typing import (
-    Any,
-    List,
-    Optional,
-    Union,
-)
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
+from typing import Union, Optional, Tuple, Iterable, Sequence
+import numpy as np
+from .atoms import AtomArray, AtomArrayStack
+
+
+def filter_monoatomic_ions(
+    array: Union[AtomArrayStack, AtomArray]
+) -> np.ndarray: ...
+
+def filter_solvent(array: Union[AtomArrayStack, AtomArray]) -> np.ndarray: ...
 
 def filter_amino_acids(
     array: Union[AtomArrayStack, AtomArray]
-) -> ndarray: ...
-
+) -> np.ndarray: ...
 
 def filter_backbone(
     array: Union[AtomArrayStack, AtomArray]
-) -> ndarray: ...
+) -> np.ndarray: ...
 
+def filter_intersection(
+    array: Union[AtomArrayStack, AtomArray],
+    intersect: Union[AtomArrayStack, AtomArray]
+) -> np.ndarray: ...
 
 def filter_inscode_and_altloc(
     array: Union[AtomArrayStack, AtomArray],
-    inscode: List[Any] = [],
-    altloc: List[Any] = [],
-    inscode_array: Optional[ndarray] = None,
-    altloc_array: Optional[ndarray] = None
-) -> ndarray: ...
-
-
-def filter_intersection(
-    array: AtomArray,
-    intersect: AtomArray
-) -> ndarray: ...
-
-
-def filter_monoatomic_ions(array: AtomArray) -> ndarray: ...
-
-
-def filter_solvent(array: AtomArray) -> ndarray: ...
+    inscode: Iterable[Tuple[int, str]] = [],
+    altloc:  Iterable[Tuple[int, str]] = [],
+    inscode_array: Optional[Sequence[str]] = None,
+    altloc_array:  Optional[Sequence[str]] = None
+) -> np.ndarray: ...

@@ -1,27 +1,28 @@
-from biotite.structure.atoms import (
-    AtomArray,
-    AtomArrayStack,
-)
-from numpy import ndarray
-from typing import (
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+from typing import Tuple, List, Optional, overload
+import numpy as np
+from .atoms import AtomArray, AtomArrayStack
 
 
-def _superimpose(fix_centered: ndarray, mob_centered: ndarray) -> ndarray: ...
-
-
+@overload
 def superimpose(
     fixed: AtomArray,
-    mobile: Union[AtomArray, AtomArrayStack],
-    atom_mask: Optional[ndarray] = None
-) -> Union[Tuple[AtomArrayStack, List[Tuple[ndarray, ndarray, ndarray]]], Tuple[AtomArray, Tuple[ndarray, ndarray, ndarray]]]: ...
-
+    mobile: AtomArray,
+    atom_mask: Optional[np.ndarray] = None
+) -> Tuple[AtomArray,
+           Tuple[np.ndarray, np.ndarray, np.ndarray]]: ...
+@overload
+def superimpose(
+    fixed: AtomArray,
+    mobile: AtomArrayStack,
+    atom_mask: Optional[np.ndarray] = None
+) -> Tuple[AtomArrayStack,
+           List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]: ...
 
 def superimpose_apply(
     atoms: AtomArray,
-    transformation: Tuple[ndarray, ndarray, ndarray]
+    transformation: Tuple[np.ndarray, np.ndarray, np.ndarray]
 ) -> AtomArray: ...
