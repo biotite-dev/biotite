@@ -5,12 +5,13 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
-from .sequence import Sequence
-from ..copyable import Copyable
+import numbers
 import copy
 import sys
-import numpy as np
 from enum import IntEnum
+import numpy as np
+from .sequence import Sequence
+from ..copyable import Copyable
 
 
 class Location(Copyable):
@@ -533,7 +534,7 @@ class AnnotatedSequence(Copyable):
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
                                      rel_seq_start)
-        elif isinstance(index, int):
+        elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
         else:
             raise TypeError("{:} instances are invalid indices"
@@ -565,7 +566,7 @@ class AnnotatedSequence(Copyable):
                 seq_stop = index.stop - self._seqstart
             # Item is a Sequence
             self._sequence[seq_start:seq_stop] = item
-        elif isinstance(index, int):
+        elif isinstance(index, numbers.Integral):
             # Item is a symbol
             self._sequence[index - self._seqstart] = item
         else:

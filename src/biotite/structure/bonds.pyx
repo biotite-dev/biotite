@@ -14,8 +14,9 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
-import numpy as np
+import numbers
 from enum import IntEnum
+import numpy as np
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -452,7 +453,7 @@ class BondList(Copyable):
         cdef int i
         cdef uint32* index1_ptr
         cdef uint32* index2_ptr
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             return copy.get_bonds(index)
         else:
             mask = _to_bool_mask(index, length=copy._atom_count)

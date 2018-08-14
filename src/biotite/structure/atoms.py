@@ -10,8 +10,9 @@ This module contains the main types of the `Structure` subpackage:
 __author__ = "Patrick Kunzmann"
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
 
-import numpy as np
+import numbers
 import abc
+import numpy as np
 from .bonds import BondList
 from ..copyable import Copyable
 
@@ -219,7 +220,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def _set_element(self, index, atom):
         try:
-            if isinstance(index, int):
+            if isinstance(index, numbers.Integral):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
@@ -229,7 +230,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             raise KeyError("Atom has insufficient annotations")
         
     def _del_element(self, index):
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             for name in self._annot:
                 self._annot[name] = np.delete(self._annot[name], index, axis=0)
             self._coord = np.delete(self._coord, index, axis=-2)
@@ -581,7 +582,7 @@ class AtomArray(_AtomArrayBase):
             If `index` is an integer an `Atom` instance,
             otherwise an `AtomArray` with reduced length is returned.
         """
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             return self.get_atom(index)
         elif isinstance(index, tuple):
             if len(index) == 2 and index[0] is Ellipsis:
@@ -819,18 +820,18 @@ class AtomArrayStack(_AtomArrayBase):
             is returned. In case the index is a tuple(int, int) an
             `Atom` instance is returned.  
         """
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             return self.get_array(index)
         elif isinstance(index, tuple):
             if len(index) != 2:
                 raise IndexError("AtomArrayStack cannot take an index "
                                  "with more than two dimensions")
-            if type(index[0]) == int:
+            if isinstance(index[0], numbers.Integral):
                 array = self.get_array(index[0])
                 return array.__getitem__(index[1])
             else:
                 # Prevent reduction in dimensionality in second dimension
-                if isinstance(index[1], int):
+                if isinstance(index[1], numbers.Integral):
                     # Prevent reduction in dimensionality
                     # in second dimension
                     new_stack = self._subarray(slice(index[1], index[1]+1))
@@ -861,7 +862,7 @@ class AtomArrayStack(_AtomArrayBase):
         """
         if not super(AtomArray, array).__eq__(array):
             raise ValueError("The array's atom annotations do not fit")
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             self._coord[index] = array._coord
         else:
             raise IndexError("Index must be integer")
@@ -875,7 +876,7 @@ class AtomArrayStack(_AtomArrayBase):
         index : int
             The position where the atom array should be deleted.
         """
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             self._coord = np.delete(self._coord, index, axis=0)
         else:
             raise IndexError("Index must be integer")
