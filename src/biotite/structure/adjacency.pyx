@@ -219,7 +219,7 @@ cdef class CellList:
 
         Examples
         --------
-        Get adjacent atoms for single positions:
+        Get adjacent atoms for a single position:
 
         >>> cell_list = struc.CellList(atom_array, 3)
         >>> pos = np.array([1.0, 2.0, 3.0])
@@ -359,7 +359,7 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        cell_r: float, optional
+        cell_radius: float, optional
             The radius around `coord` (in amount of cells), in which
             the atoms are searched. This does not correspond to the
             Euclidian distance used in `get_atoms()`. In this case, all
