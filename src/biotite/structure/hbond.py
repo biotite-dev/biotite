@@ -218,7 +218,8 @@ def is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     -------
     mask : ndarray, type=bool_, shape=(MxN) or (N)
         For each set of coordinates and dimension, returns a boolean to
-        indicate if the coordinates match the hydrogen bonding criterium
+        indicate if the coordinates match the hydrogen bonding
+        criterium.
         
     
     See Also
@@ -237,25 +238,25 @@ def hbond_frequency(mask):
     """
     Parameters
     ----------
-    mask: ndarray, dtype=bool_, shape=(MxN) or (N)
+    mask: ndarray, dtype=bool, shape=(m,n)
         Input mask obtained from `hbond` function.
     
     Returns
     -------
     ndarray, dtype=Float
-        For each individual triplet n of the mask, returns the
-        percentage of models M, in which this hydrogen bond is present.
-
-    Examples
-    --------
-        
-    >>> struct = load_structure("tests/structure/data/1l2y.pdb")
-    >>> triplets, mask = hbond.hbond(struct)
-    >>> freq = hbond.hbond_frequency(mask)
-
+        For each individual interaction *n* of the mask, returns the
+        percentage of models *m*, in which this hydrogen bond is
+        present.
 
     See Also
     --------
     hbond
+
+    Examples
+    --------
+
+    >>> stack = load_structure("path/to/1l2y.pdb")
+    >>> triplets, mask = hbond(stack)
+    >>> freq = hbond.hbond_frequency(mask)
     """
     return mask.sum(axis=0)/len(mask)
