@@ -11,17 +11,17 @@ class PDBFile(TextFile):
     @overload
     def get_structure(
         self,
+        model: None = None,
         insertion_code: List[Tuple[int, str]] = [],
         altloc: List[Tuple[int, str]] = [],
-        model: None = None,
         extra_fields: List[str] = []
     ) -> AtomArrayStack: ...
     @overload
     def get_structure(
         self,
+        model: int,
         insertion_code: List[Tuple[int, str]] = [],
         altloc: List[Tuple[int, str]] = [],
-        model: int = ...,
         extra_fields: List[str] = []
     ) -> AtomArray: ...
     def set_structure(

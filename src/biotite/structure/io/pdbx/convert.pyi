@@ -14,19 +14,19 @@ def get_sequence(
 @overload
 def get_structure(
     pdbx_file: PDBxFile,
+    model: None = None,
     data_block: Optional[str] = None,
     insertion_code: List[Tuple[int, str]] = [],
     altloc: List[Tuple[int, str]] = [],
-    model: None = None,
     extra_fields: List[str] = []
 ) -> AtomArrayStack: ...
 @overload
 def get_structure(
     pdbx_file: PDBxFile,
+    model: int,
     data_block: Optional[str] = None,
     insertion_code: List[Tuple[int, str]] = [],
     altloc: List[Tuple[int, str]] = [],
-    model: int = ...,
     extra_fields: List[str] = []
 ) -> AtomArray: ...
 
