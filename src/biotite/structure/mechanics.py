@@ -26,18 +26,23 @@ def gyration_radius(array, masses=None):
     array : AtomArray or AtomArrayStack
         The array or stack to calculate the radius/radii of gyration
         for.
+    masses : ndarray, optional
+        The masses to use for each atom in the input `array`.
+        Must have the same length as `array`. By default, the standard
+        atomic mass for each element is taken.
     
     Returns
     -------
-    masses : float, or ndarray, dtype=float
-        If `array` is an `AtomArray`, a single float is returned.
+    masses : float or ndarray, dtype=float
+        If `array` is an `AtomArray`, the radius of gyration is
+        returned as single float.
         If `array` is an `AtomArrayStack`, an `ndarray` containing the
         radii of gyration for every model is returned.
     """
     if masses is None:
         masses = atom_masses(array)
     center = mass_center(array, masses)
-    radii = distance(array, center[:, np.newaxis, :])
+    radii = distance(array, center[..., np.newaxis, :])
     inertia_moment = np.sum(masses * radii*radii, axis=-1)
     return np.sqrt(inertia_moment / np.sum(masses))
 
@@ -48,11 +53,15 @@ def mass_center(array, masses=None):
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
-        The array or stack to calculate the center(s) of mass for.    
+        The array or stack to calculate the center(s) of mass for.
+    masses : ndarray, optional
+        The masses to use for each atom in the input `array`.
+        Must have the same length as `array`. By default, the standard
+        atomic mass for each element is taken.
     
     Returns
     -------
-    masses : ndarray, ndarray, dtype=float
+    radius : ndarray, ndarray, dtype=float
         Array containing the the coordinates of the center of mass.
         If `array` is an `AtomArray`, this will be an length 3
         `ndarray`; if it is an `AtomArrayStack` with *n* models,
@@ -123,7 +132,7 @@ def mass_of_element(element):
        Pure Appl Chem, 88, 265-291 (2016).
     
     """
-    return _masses(element.upper())
+    return _masses[element.upper()]
 
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 _masses = {

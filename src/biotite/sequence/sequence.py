@@ -9,8 +9,9 @@ The module contains the `Sequence` superclass and `GeneralSequence`.
 __author__ = "Patrick Kunzmann"
 __all__ = ["Sequence"]
 
-import numpy as np
+import numbers
 import abc
+import numpy as np
 from .alphabet import Alphabet
 from ..copyable import Copyable
 
@@ -258,7 +259,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     def __setitem__(self, index, item):
         alph = self.get_alphabet()
-        if isinstance(index, int):
+        if isinstance(index, numbers.Integral):
             # Expect a single symbol
             code = alph.encode(item)
             self._seq_code.__setitem__(index, code)
