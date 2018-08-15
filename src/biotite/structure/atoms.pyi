@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import numpy as np
-from .bonds import BondList
 from typing import (
     List,
     Union,
@@ -11,12 +9,15 @@ from typing import (
     Sequence,
     MutableSequence,
     Tuple,
+    Iterator,
     overload
 )
+import numpy as np
+from .bonds import BondList
 
 
 class _AtomArrayBase:
-    def __init__(self, length : int) -> None: ...
+    def __init__(self, length: int) -> None: ...
     def __add__(
         self,
         array: Union[AtomArrayStack, AtomArray]
@@ -44,7 +45,7 @@ class _AtomArrayBase:
     def __len__(self) -> int: ...
 
 
-class Atom(_AtomArrayBase):
+class Atom:
     def __init__(self, coord: Union[List[int], np.ndarray], **kwargs) -> None: ...
     def __getattr__(self, attr: str) -> object: ...
     def __setattr__(self, attr: str, value: object) -> None: ...
@@ -55,7 +56,7 @@ class Atom(_AtomArrayBase):
 class AtomArray(_AtomArrayBase):
     def __init__(self, length: int) -> None: ...
     def get_atom(self, index: int) -> Atom: ...
-    def __iter__(self) -> Atom: ...
+    def __iter__(self) -> Iterator[Atom]: ...
     @overload
     def __getitem__(
         self, index: Union[MutableSequence[int], MutableSequence[bool], slice]
@@ -69,11 +70,11 @@ class AtomArray(_AtomArrayBase):
     def __str__(self) -> str: ...
 
 
-class AtomArrayStack:
+class AtomArrayStack(_AtomArrayBase):
     def __init__(self, depth: int, length: int) -> None: ...
     def get_array(self, index: int) -> AtomArray: ...
     def stack_depth(self) -> int: ...
-    def __iter__(self) -> AtomArray: ...
+    def __iter__(self) -> Iterator[AtomArray]: ...
     @overload
     def __getitem__(self, index: Tuple[int, int]) -> Atom: ...
     @overload

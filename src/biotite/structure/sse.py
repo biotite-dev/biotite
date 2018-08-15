@@ -15,7 +15,6 @@ from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .geometry import distance, angle, dihedral
 from .filter import filter_amino_acids
 from .error import BadStructureError
-from .util import distance
 
 
 _radians_to_angle = 2*np.pi/360

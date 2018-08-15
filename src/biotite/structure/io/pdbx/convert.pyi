@@ -1,48 +1,34 @@
-from biotite.structure.atoms import (
-    AtomArray,
-    AtomArrayStack,
-)
-from biotite.structure.io.pdbx.file import PDBxFile
-from numpy import ndarray
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
 
+from typing import Optional, Union, Tuple, List, overload
+from ...atoms import AtomArray, AtomArrayStack
+from .file import PDBxFile
+from ....sequence.seqtypes import ProteinSequence
 
-def _determine_entity_id(chain_id: ndarray) -> ndarray: ...
+def get_sequence(
+    pdbx_file: PDBxFile, data_block: Optional[str] = None
+) -> ProteinSequence: ...
 
-
-def _fill_annotations(
-    array: Union[AtomArray, AtomArrayStack],
-    model_dict: Dict[str, ndarray],
-    extra_fields: List[str]
-) -> None: ...
-
-
-def _filter_inscode_altloc(
-    array: Union[AtomArray, AtomArrayStack],
-    model_dict: Dict[str, ndarray],
-    inscode: List[Any],
-    altloc: List[Any]
-) -> Union[AtomArray, AtomArrayStack]: ...
-
-
-def _get_model_dict(atom_site_dict: Dict[str, ndarray], model: int) -> Dict[str, ndarray]: ...
-
-
+@overload
 def get_structure(
     pdbx_file: PDBxFile,
-    data_block: None = None,
-    insertion_code: List[Any] = [],
-    altloc: List[Any] = [],
-    model: Optional[int] = None,
+    data_block: Optional[str] = None,
+    insertion_code: List[Tuple[int, str]] = [],
+    altloc: List[Tuple[int, str]] = [],
+    model: None = None,
     extra_fields: List[str] = []
-) -> Union[AtomArray, AtomArrayStack]: ...
-
+) -> AtomArrayStack: ...
+@overload
+def get_structure(
+    pdbx_file: PDBxFile,
+    data_block: Optional[str] = None,
+    insertion_code: List[Tuple[int, str]] = [],
+    altloc: List[Tuple[int, str]] = [],
+    model: int = ...,
+    extra_fields: List[str] = []
+) -> AtomArray: ...
 
 def set_structure(
     pdbx_file: PDBxFile,

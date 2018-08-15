@@ -1,17 +1,14 @@
-from biotite.structure.atoms import (
-    AtomArray,
-    AtomArrayStack,
-)
-from typing import (
-    Optional,
-    Union,
-)
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+from typing import Optional, Union
+from .atoms import AtomArrayStack, AtomArray
 
 
 def load_structure(
     file_path: str,
-    template: Optional[AtomArrayStack] = None
+    template: Optional[Union[AtomArrayStack, AtomArray]] = None
 ) -> Union[AtomArray, AtomArrayStack]: ...
-
 
 def save_structure(file_path: str, array: AtomArrayStack) -> None: ...

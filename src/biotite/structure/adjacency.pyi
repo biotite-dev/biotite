@@ -9,12 +9,12 @@ from .atoms import AtomArray
 
 class CellList:
     def __init__(
-        self, atom_array : Union[AtomArray, np.ndarray], cell_size : float
+        self, atom_array: Union[AtomArray, np.ndarray], cell_size: float
     ) -> None: ...
     def create_adjacency_matrix(
-        self, threshold_distance : float
+        self, threshold_distance: float
     ) -> np.ndarray: ...
-    def get_atoms(self, coord : np.ndarray, radius : float) -> np.ndarray: ...
+    def get_atoms(self, coord: np.ndarray, radius: float) -> np.ndarray: ...
     def get_atoms_in_cells(
-        self,coord : np.ndarray, cell_radius : int = 1
+        self,coord: np.ndarray, cell_radius: int = 1
     ) -> np.ndarray: ...
