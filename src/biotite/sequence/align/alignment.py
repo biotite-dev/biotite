@@ -149,7 +149,7 @@ class Alignment(object):
         
         Parameters
         ----------
-        seq_str_list : list
+        seq_str_list : list of str
             The strings, where each each one represents a sequence
             in an alignment.
         
