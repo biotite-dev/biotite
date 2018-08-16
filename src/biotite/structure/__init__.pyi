@@ -9,6 +9,7 @@ from .compare import *
 from .error import *
 from .filter import *
 from .geometry import *
+from .hbond import *
 from .integrity import *
 from .mechanics import *
 from .residues import *
