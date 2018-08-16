@@ -2,13 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Optional, Union
+from typing import Optional, Union, BinaryIO
 import numpy as np
 from ..atoms import AtomArray, AtomArrayStack
 from ...file import File
 
 
-class TrajectoryFile(File):
+class TrajectoryFile(File[BinaryIO]):
     def __init__(self) -> None: ...
     def read(
         self,
