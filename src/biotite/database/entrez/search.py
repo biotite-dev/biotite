@@ -167,7 +167,7 @@ def search(query, db_name, number=20):
     
     Examples
     --------
-    >>> query = SimpleQuery("Escherichia coli", "Organism") & \
+    >>> query = SimpleQuery("Escherichia coli", "Organism") & \\
     ...         SimpleQuery("90:100", "Sequence Length")
     >>> ids = search(query, "nuccore", number=5)
     >>> print(ids)
