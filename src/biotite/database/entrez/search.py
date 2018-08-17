@@ -52,8 +52,8 @@ class CompositeQuery(Query):
     A composite query is a combination of two other queries,
     combined either with an 'AND', 'OR' or 'NOT' operator.
 
-    Usually the user does not create insatnces of this class directly,
-    but he combines `Query` instances with
+    Usually the user does not create instances of this class directly,
+    but `Query` instances are combined with
     ``|`` (OR), ``&`` (AND) or ``^`` (NOT).
     
     Parameters
@@ -66,10 +66,10 @@ class CompositeQuery(Query):
     Examples
     --------
 
-    >>> query = SimpleQuery("Escherichia coli", "Organism") & \
-    >>> SimpleQuery("90:100", "Sequence Length")
-    >>> print(type(query))
-    <class 'biotite.database.entrez.search.CompositeQuery'>
+    >>> query = SimpleQuery("Escherichia coli", "Organism") & \\
+    ... SimpleQuery("90:100", "Sequence Length")
+    >>> print(type(query).__name__)
+    CompositeQuery
     >>> print(query)
     ("Escherichia coli"[Organism]) AND (90:100[Sequence Length])
     """
