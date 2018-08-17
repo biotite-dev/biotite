@@ -206,7 +206,7 @@ def search(query):
     Parameters
     ----------
     query : Query
-        Index of the atom array.
+        The search query.
     
     Returns
     -------

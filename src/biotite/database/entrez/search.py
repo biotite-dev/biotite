@@ -53,7 +53,8 @@ class CompositeQuery(Query):
     combined either with an 'AND', 'OR' or 'NOT' operator.
 
     Usually the user does not create insatnces of this class directly,
-    but he combines `Query` instances with ``|``, ``&`` or ``^``.
+    but he combines `Query` instances with
+    ``|`` (OR), ``&`` (AND) or ``^`` (NOT).
     
     Parameters
     ----------
@@ -61,6 +62,16 @@ class CompositeQuery(Query):
         The combination operator.
     queries : iterable object of SimpleQuery
         The queries to be combined.
+    
+    Examples
+    --------
+
+    >>> query = SimpleQuery("Escherichia coli", "Organism") & \
+    >>> SimpleQuery("90:100", "Sequence Length")
+    >>> print(type(query))
+    <class 'biotite.database.entrez.search.CompositeQuery'>
+    >>> print(query)
+    ("Escherichia coli"[Organism]) AND (90:100[Sequence Length])
     """
     
     def __init__(self, operator, query1, query2):
@@ -75,7 +86,34 @@ class CompositeQuery(Query):
 
 
 class SimpleQuery(Query):
+    """
+    A simple query for the NCBI Entrez search service without
+    combination via 'AND', 'OR' or 'NOT'. A query consists of a search
+    term and an optional field.
     
+    Parameters
+    ----------
+    term: str
+        The search term.
+    field : str, optional
+        The field to search the term in.
+        The list of possible fields and the required search term
+        formatting can be found
+        `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
+        By default the field is omitted and all fields are searched in
+        for the term, implicitly.
+    
+    Examples
+    --------
+    
+    >>> query = SimpleQuery("Escherichia coli")
+    >>> print(query)
+    "Escherichia coli"
+    >>> query = SimpleQuery("Escherichia coli", "Organism")
+    >>> print(query)
+    "Escherichia coli"[Organism]
+    """
+
     # Field identifiers are taken from
     # https://www.ncbi.nlm.nih.gov/books/NBK49540/
     _fields = [
@@ -112,28 +150,28 @@ class SimpleQuery(Query):
 def search(query, db_name, number=20):
     """
     Get all PDB IDs that meet the given query requirements,
-    via the RCSB SEARCH service.
+    via the NCBI ESearch service.
     
     This function requires an internet connection.
     
     Parameters
     ----------
     query : Query
-        Index of the atom array.
+        The search query.
     
     Returns
     -------
     ids : list of str
-        A list of strings containing all PDB IDs that meet the query
-        requirements.
+        A list of strings containing all NCBI UIDs (accession number)
+        that meet the query requirements.
     
     Examples
     --------
-    
-    >>> query = ResolutionQuery(0.0, 0.6)
-    >>> ids = search(query)
+    >>> query = SimpleQuery("Escherichia coli", "Organism") & \
+    ...         SimpleQuery("90:100", "Sequence Length")
+    >>> ids = search(query, "nuccore", number=5)
     >>> print(ids)
-    ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
+    ['1447562463', '1447562199', '1447561837', '1447561836', '1447561835']
     """ 
     r = requests.get(
         (_base_url + _search_url).format(db_name, str(query), str(number))
