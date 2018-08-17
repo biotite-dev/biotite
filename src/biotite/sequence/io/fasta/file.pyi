@@ -2,11 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Union, Tuple, MutableMapping, Iterable, Iterator, TextIO
+from typing import Union, Tuple, Iterable, Iterator, TextIO
 from ....file import TextFile
 
 
-class FastaFile(TextFile, MutableMapping[str, str]):
+class FastaFile(TextFile):
     def __init__(self, chars_per_line: int = 80) -> None: ...
     def read(self, file: Union[str, TextIO]) -> None: ...
     def __setitem__(self, header: str, seq_str: str) -> None: ...

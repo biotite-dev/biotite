@@ -1,20 +1,18 @@
-from biotite.sequence.seqtypes import (
-    NucleotideSequence,
-    ProteinSequence,
-)
-from numpy import ndarray
-from typing import (
-    List,
-    Tuple,
-    Union,
-)
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+from typing import List, Tuple, Union
+import numpy as np
+from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
+from ...sequence.align.Alignment import Alignment
 
 
-class BlastAlignment:
+class BlastAlignment(Alignment):
     def __init__(
         self,
         sequences: Union[List[ProteinSequence], List[NucleotideSequence]],
-        trace: ndarray,
+        trace: np.ndarray,
         score: int,
         e_value: float,
         query_interval: Tuple[int, int],

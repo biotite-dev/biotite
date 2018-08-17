@@ -118,7 +118,7 @@ class MethodQuery(SimpleQuery):
     
     Parameters
     ----------
-    method: string
+    method: str
         Structures of the given method are filtered. Possible values
         are:
         'X-RAY', 'SOLUTION_NMR', 'SOLID-STATE NMR',
