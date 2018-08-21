@@ -15,23 +15,23 @@ from typing import (
     Hashable
 )
 from typing import Sequence as _Sequence
-from enum import IntEnum
+from enum import Enum, Flag
 from .sequence import Sequence
 
 
 class Location:
-    class Defect(IntEnum):
-        NONE         = 0
-        MISS_LEFT    = 1
-        MISS_RIGHT   = 2
-        BEYOND_LEFT  = 4
-        BEYOND_RIGHT = 8
-        UNK_LOC      = 16
-        BETWEEN      = 32
+    class Defect(Flag):
+        NONE         = ...
+        MISS_LEFT    = ...
+        MISS_RIGHT   = ...
+        BEYOND_LEFT  = ...
+        BEYOND_RIGHT = ...
+        UNK_LOC      = ...
+        BETWEEN      = ...
 
-    class Strand(IntEnum):
-        FORWARD = 1
-        REVERSE = -1
+    class Strand(Enum):
+        FORWARD = ...
+        REVERSE = ...
         
     first: int
     last: int

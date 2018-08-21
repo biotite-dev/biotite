@@ -7,18 +7,18 @@ __all__ = ["Application", "AppStateError", "AppState", "requires_state"]
 
 import abc
 import time
-from enum import IntEnum
+from enum import Flag, auto
 
 
-class AppState(IntEnum):
+class AppState(Flag):
     """
     This enum type represents the app states of an application. 
     """
-    CREATED = 1
-    RUNNING = 2
-    FINISHED = 4
-    JOINED = 8
-    CANCELLED = 16
+    CREATED = auto()
+    RUNNING = auto()
+    FINISHED = auto()
+    JOINED = auto()
+    CANCELLED = auto()
 
 
 def requires_state(app_state):
