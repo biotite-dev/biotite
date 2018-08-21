@@ -13,7 +13,7 @@ install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n biotite-env python=$PY_VERSION cython, pytest, numpy
+  - conda create -q -n biotite-env python=%PY_VERSION% cython, pytest, numpy
   - activate biotite-env
 
 build: false
