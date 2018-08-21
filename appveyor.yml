@@ -1,13 +1,13 @@
 environment:
   matrix:
     - PYTHON: "C:\\Miniconda36"
-      PY_VERSION="3.6"
+      PY_VERSION: "3.6"
     - PYTHON: "C:\\Miniconda36-x64"
-      PY_VERSION="3.6"
+      PY_VERSION: "3.6"
     - PYTHON: "C:\\Miniconda36"
-      PY_VERSION="3.7"
+      PY_VERSION: "3.7"
     - PYTHON: "C:\\Miniconda36-x64"
-      PY_VERSION="3.7"
+      PY_VERSION: "3.7"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
