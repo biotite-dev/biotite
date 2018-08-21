@@ -1,15 +1,20 @@
 environment:
   matrix:
     - PYTHON: "C:\\Miniconda36"
+      PY_VERSION="3.6"
     - PYTHON: "C:\\Miniconda36-x64"
+      PY_VERSION="3.6"
+    - PYTHON: "C:\\Miniconda36"
+      PY_VERSION="3.7"
+    - PYTHON: "C:\\Miniconda36-x64"
+      PY_VERSION="3.7"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda install -c anaconda cython
-  - conda install -c anaconda pytest
-  - conda install -c anaconda numpy
+  - conda create -q -n biotite-env python=$PY_VERSION cython, pytest, numpy
+  - activate biotite-env
 
 build: false
 
