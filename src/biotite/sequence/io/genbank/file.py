@@ -74,7 +74,7 @@ class GenBankFile(TextFile):
         stop = i
         self._fields.append((start, stop, name))
     
-    def write(self, file_name):
+    def write(self, file):
         """
         Not implemented yet.
         """

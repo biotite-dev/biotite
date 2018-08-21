@@ -154,7 +154,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         with traj_type(file_name, 'w') as f:
             f.write(xyz=self._coord, time=self._time, box=self._box)
     
-    def copy():
+    def copy(self):
         """
         This operation is not implemented for trajectory files.
         

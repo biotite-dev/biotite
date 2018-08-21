@@ -7,7 +7,6 @@ __all__ = ["CodonTable"]
 
 import copy
 from os.path import join, dirname, realpath
-from .sequence import Sequence
 from .seqtypes import NucleotideSequence, ProteinSequence
 
 

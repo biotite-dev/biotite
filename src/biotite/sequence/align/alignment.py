@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import textwrap
 from ..alphabet import LetterAlphabet
-    
+
 
 __all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
            "score"]
@@ -149,7 +149,7 @@ class Alignment(object):
         
         Parameters
         ----------
-        seq_str_list : list
+        seq_str_list : list of str
             The strings, where each each one represents a sequence
             in an alignment.
         

@@ -165,7 +165,7 @@ class BlastWebApp(WebApp):
         reward : int
             Match reward. Must be positive.
         """
-        self._reward = score
+        self._reward = reward
     
     @requires_state(AppState.CREATED)
     def set_mismatch_penalty(self, penalty):
@@ -328,12 +328,12 @@ class BlastWebApp(WebApp):
     @requires_state(AppState.JOINED)
     def get_alignments(self):
         """
-        Get the resulting local sequence alignment.
+        Get the resulting local sequence alignments.
         
         Returns
         -------
-        alignment : BlastAlignment
-            The local sequence alignment.
+        alignment : list of BlastAlignment
+            The local sequence alignments.
         """
         return self._alignments
     
@@ -345,7 +345,7 @@ class BlastWebApp(WebApp):
         lines = [line for line in text.split("\n")]
         info_dict = {}
         in_info_block = False
-        for i, line in enumerate(lines):
+        for line in lines:
             if "QBlastInfoBegin" in line:
                 in_info_block = True
                 continue

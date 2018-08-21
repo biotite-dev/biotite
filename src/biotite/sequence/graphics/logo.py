@@ -29,7 +29,7 @@ class SequenceLogo(Visualizer):
     
     .. [1] TD Schneider and RM Stephens,
        "Sequence logos: a new way to display consensus sequences"
-        Nucleic Acids Res, 18, 6097-6100 (1990).
+       Nucleic Acids Res, 18, 6097-6100 (1990).
     """
     
     def __init__(self, alignment, width, height):
