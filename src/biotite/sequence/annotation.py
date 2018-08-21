@@ -8,7 +8,7 @@ __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 import numbers
 import copy
 import sys
-from enum import IntEnum
+from enum import Flag, Enum, auto
 import numpy as np
 from .sequence import Sequence
 from ..copyable import Copyable
@@ -35,7 +35,7 @@ class Location(Copyable):
         A possible defect of the location.
     """
     
-    class Defect(IntEnum):
+    class Defect(Flag):
         """
         This enum type describes location defects.
         
@@ -60,20 +60,20 @@ class Location(Copyable):
              bases/residues.
         """
         NONE         = 0
-        MISS_LEFT    = 1
-        MISS_RIGHT   = 2
-        BEYOND_LEFT  = 4
-        BEYOND_RIGHT = 8
-        UNK_LOC      = 16
-        BETWEEN      = 32
+        MISS_LEFT    = auto()
+        MISS_RIGHT   = auto()
+        BEYOND_LEFT  = auto()
+        BEYOND_RIGHT = auto()
+        UNK_LOC      = auto()
+        BETWEEN      = auto()
 
-    class Strand(IntEnum):
+    class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
         This is not relevant for residue peptide features.
         """
-        FORWARD = 1
-        REVERSE = -1
+        FORWARD = auto()
+        REVERSE = auto()
     
     def __init__(self, first, last, strand=Strand.FORWARD,
                  defect=Defect.NONE):
