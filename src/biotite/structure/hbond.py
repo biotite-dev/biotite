@@ -14,7 +14,7 @@ import numpy as np
 from .atoms import AtomArrayStack, stack
 
 
-def hbond(atoms, donor_selection=None, acceptor_selection=None,
+def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
           donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
@@ -27,10 +27,15 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms to find hydrogen bonds in.
-    donor_selection, acceptor_selection : ndarray or None
+    selection1, selection2: ndarray or None
         Boolean mask for atoms to limit the hydrogen bond search to
         specific sections of the model. The shape must match the
-        shape of the `atoms` argument (default: None).
+        shape of the `atoms` argument. If None is given, the whole atoms
+        stack is used instead. (default: None).
+    selection1_type: str (default: 'both')
+        Can be 'acceptor', 'donor' or 'both' and determines the type of
+        selection1. selection2_type is chosen accordingly (both or the
+        opposite)
     cutoff_dist: float
         The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (default: 2.5)
@@ -100,6 +105,71 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
        "Hydrogen bonding in globular proteins"
        Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
+        
+    # build default selections
+    if selection1 is None:
+        selection1 = np.full(atoms.array_length(), True)
+    if selection2 is None:
+        selection2 = np.full(atoms.array_length(), True)
+
+    # determine selection2 type
+    if selection1_type == 'both':
+        selection2_type = selection1_type
+    elif selection1_type == 'acceptor':
+        selection2_type = 'donor'
+    else:
+        selection2_type = 'acceptor'
+
+    # create selection1 donors and acceptors
+    if selection1_type in ['both', 'donor']:
+        donor1_selection = selection1
+    else:
+        donor1_selection = np.full(atoms.array_length(), False)
+    if selection1_type in ['both', 'acceptor']:
+        acceptor1_selection = selection1
+    else:
+        acceptor1_selection = np.full(atoms.array_length(), False)
+    
+    # create selection2 donors and acceptors
+    if selection2_type in ['both', 'donor']:
+        donor2_selection = selection2
+    else:
+        donor2_selection = np.full(atoms.array_length(), False)
+    if selection2_type in ['both', 'acceptor']:
+        acceptor2_selection = selection2
+    else:
+        acceptor2_selection = np.full(atoms.array_length(), False)
+
+    # if the selections are identical, we only need to run once
+    if np.array_equal(donor1_selection, donor2_selection) and np.array_equal(acceptor1_selection, acceptor2_selection):
+        return _hbond(atoms, donor1_selection, acceptor2_selection,
+            cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
+
+    # run hbond analysis for between donors and acceptors of both selections
+    result1 = _hbond(atoms, donor1_selection, acceptor2_selection,
+        cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
+    result2 = _hbond(atoms, donor2_selection, acceptor1_selection,
+        cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
+
+    if not isinstance(atoms, AtomArrayStack):
+        return np.concatenate((result1, result2))
+    else:
+        triplets = np.concatenate((result1[0], result2[0]))
+        mask = np.concatenate((result1[1], result2[1]), axis=1)
+        return triplets, mask
+        
+
+def _hbond(atoms, donor_selection=None, acceptor_selection=None,
+          cutoff_dist=2.5, cutoff_angle=120,
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+    """
+    Find hydrogen bonds between the donors and acceptors in a structure.
+    
+    See Also
+    --------
+    hbond
+
+    """
 
     # Create AtomArrayStack from AtomArray
     if not isinstance(atoms, AtomArrayStack):
@@ -162,6 +232,13 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
     max_triplets_size \
         = 3 * len(donor_i) * len(acceptor_i) \
           * max(map(lambda x: len(x), donor_hs_i))
+
+    if len(donor_i) == 0:
+        max_triplets_size = 0
+    else:
+        max_triplets_size \
+            = 3 * len(donor_i) * len(acceptor_i) \
+            * max(map(lambda x: len(x), donor_hs_i))
     triplets = np.zeros(max_triplets_size, dtype=np.int64)
     triplet_idx = 0
     for donor_hs_idx, d_i in enumerate(donor_i):

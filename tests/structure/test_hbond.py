@@ -16,14 +16,12 @@ def test_hbond_same_res():
     (model 2).
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection = stack.res_id == 1
     # Focus on second model
     array = stack[1]
-    triplets = struc.hbond(array)
-    same_res_count = 0
-    for triplet in triplets:
-        if array.res_id[triplet[0]] == array.res_id[triplet[2]]:
-            same_res_count += 1
-    assert same_res_count >= 1
+    triplets = struc.hbond(array, selection, selection)
+    assert len(triplets) == 1
+
 
 def test_hbond_total_count():
     """
@@ -36,6 +34,48 @@ def test_hbond_total_count():
     freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
+
+
+def test_hbond_with_selections():
+    """
+    When selection1 and selection2 is defined, no hydrogen bonds outside
+    of this boundary should be found. Also, hbond should respect the selection
+    type
+    """
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR backbone oxygen
+    selection2 = stack.res_id == 7
+
+    # backbone hbond should be found if selection1/2 type is both
+    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='both')
+    assert len(triplets) == 1
+    assert triplets[0][0] == 116
+    assert triplets[0][2] == 38
+
+    # backbone hbond should be found if selection1 is acceptor and selection2 is donor
+    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='acceptor')
+    assert len(triplets) == 1
+    assert triplets[0][0] == 116
+    assert triplets[0][2] == 38
+
+    # no hbond should be found because the backbone oxygen cannot be a donor
+    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='donor')
+    assert len(triplets) == 0
+
+
+def test_hbond_single_selection():
+    """
+    If only selection1 or selection2 is defined, hbond should run
+    against all other atoms as the other selection
+    """
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection = (stack.res_id == 2) & (stack.atom_name == 'O')  # 2LEU backbone oxygen
+    triplets, mask = struc.hbond(stack, selection1=selection)
+    assert len(triplets) == 2
+
+    triplets, mask = struc.hbond(stack, selection2=selection)
+    assert len(triplets) == 2
+
 
 def test_hbond_frequency():
     mask = np.array([
