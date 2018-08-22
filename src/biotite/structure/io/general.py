@@ -11,6 +11,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
 import os.path
+import io
 from ..atoms import AtomArray, AtomArrayStack
 
 
@@ -27,7 +28,7 @@ def load_structure(file_path, template=None):
     ----------
     file_path : str
         The path to structure file.
-    template : AtomArray or AtomArrayStack, optional
+    template : AtomArray or AtomArrayStack or file-like object or str, optional
         Only required when reading a trajectory file.
     
     Returns
@@ -44,6 +45,10 @@ def load_structure(file_path, template=None):
         If a trajectory file is loaded without specifying the
         `template` parameter.
     """
+    # Optionally load template from file
+    if isinstance(template, (io.IOBase, str)):
+        template = load_structure(template)
+
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
