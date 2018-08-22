@@ -11,6 +11,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
 import os.path
+import io
 from ..atoms import AtomArray, AtomArrayStack
 
 
@@ -44,8 +45,8 @@ def load_structure(file_path, template=None):
         If a trajectory file is loaded without specifying the
         `template` parameter.
     """
-    # eventually load template from file
-    if template != None and not (isinstance(template, AtomArray) or isinstance(template, AtomArrayStack)):
+    # Optionally load template from file
+    if isinstance(template, io.IOBase):
         template = load_structure(template)
 
     # We only need the suffix here
