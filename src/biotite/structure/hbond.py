@@ -158,8 +158,9 @@ def hbond(atoms, donor_selection=None, acceptor_selection=None,
 
     # Build an index list containing the D-H..A triplets
     # in correct order for every possible possible hbond
+    # The size of the list is 3 times the worst case amount of triplets
     max_triplets_size \
-        = len(donor_i) * len(acceptor_i) \
+        = 3 * len(donor_i) * len(acceptor_i) \
           * max(map(lambda x: len(x), donor_hs_i))
     triplets = np.zeros(max_triplets_size, dtype=np.int64)
     triplet_idx = 0
