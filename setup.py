@@ -30,6 +30,11 @@ allowing advanced users to implement their own algorithms upon the existing
 types.
 """
 
+original_wd = os.getcwd()
+# Change directory to setup directory to ensure correct file identification
+os.chdir(dirname(abspath(__file__)))
+
+
 # Compile Cython into C if any Cython files exist
 if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
     try:
@@ -40,9 +45,6 @@ if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
         pass
 
 def get_extensions():
-    original_wd = os.getcwd()
-    # Change directory to setup directory to ensure correct globbing
-    os.chdir(dirname(abspath(__file__)))
     ext_sources = []
     for dirpath, dirnames, filenames in os.walk(normpath("src/biotite")):
         for filename in fnmatch.filter(filenames, '*.c'):
@@ -55,8 +57,6 @@ def get_extensions():
     ext_modules = [Extension(ext_names[i], [ext_sources[i]],
                              include_dirs=[numpy.get_include()])
                    for i in range(len(ext_sources))]
-    # Return to original directory
-    os.chdir(original_wd)
     return ext_modules
 
 
@@ -77,12 +77,13 @@ class PyTestCommand(TestCommand):
 setup(
     name="biotite",
     version = __version__,
-    description = "A general framework for computational biology",
+    description = ("A comprehensive framework for "
+                   "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
     url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
-    classifiers = (
+    classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
@@ -96,7 +97,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
-    ),
+    ],
     
     zip_safe = False,
     packages = find_packages("src"),
@@ -124,3 +125,7 @@ setup(
              "release"    : ("setup.py", __version__)}
     }
 )
+
+
+# Return to original directory
+os.chdir(original_wd)
