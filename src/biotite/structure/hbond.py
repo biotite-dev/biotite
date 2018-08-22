@@ -226,8 +226,6 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     acceptor_i = np.where(acceptor_selection)[0]
     donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
 
-    # TODO use CellList here to reduce the number of triplets based on triplets
-    # and thus avoid MemoryError
     # Build an index list containing the D-H..A triplets
     # in correct order for every possible possible hbond
     # The size of the list is 3 times the worst case amount of triplets
