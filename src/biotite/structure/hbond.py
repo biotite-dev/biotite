@@ -240,7 +240,8 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     else:
         max_triplets_size \
             = 3 * len(donor_i) * len(acceptor_i) \
-            * max(map(lambda x: len(x), donor_hs_i))
+               * max(map(lambda x: len(x), donor_hs_i))\
+
     triplets = np.zeros(max_triplets_size, dtype=np.int64)
     triplet_idx = 0
     for donor_hs_idx, d_i in enumerate(donor_i):
@@ -251,10 +252,15 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
                     triplet_idx += 3
     triplets = triplets[:triplet_idx]
 
-    # Calculate angle and distance on all triplets
-    coords = atoms[:, triplets].coord
-    hbond_mask = _is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
-                          cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
+    # calculate mask along the trajectory. Vectorization along axis=0 requires too much memory
+    hbond_mask = np.full((len(atoms), int(len(triplets)/3)), False)
+    for frame in range(len(atoms)):
+        print('.', end='', flush=True)
+        # Calculate angle and distance on all triplets
+        coords = atoms[frame, triplets].coord
+        frame_mask = _is_hbond(coords[0::3], coords[1::3], coords[2::3],
+                               cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
+        hbond_mask[frame] = frame_mask
 
     # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
