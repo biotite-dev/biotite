@@ -30,12 +30,14 @@ allowing advanced users to implement their own algorithms upon the existing
 types.
 """
 
-import numpy
-try:
-    from Cython.Build import cythonize
-    cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
-except ValueError:
-    pass
+# Compile Cython into C if any Cython files exist
+if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
+    try:
+        from Cython.Build import cythonize
+        import numpy
+        cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
+    except ValueError:
+        pass
 
 def get_extensions():
     original_wd = os.getcwd()
