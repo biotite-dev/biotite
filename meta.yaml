@@ -1,0 +1,33 @@
+package:
+  name: biotite
+  version: "0.8.0"
+
+source:
+  git_rev: "v0.7.0"
+  git_url: "https://github.com/biotite-dev/biotite"
+  folder: conda-dist
+
+build:
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - wheel
+    - cython >=0.28
+    - numpy
+  host:
+    - python
+    - setuptools
+  run:
+    - python >=3.6
+    - requests
+    - numpy
+    - msgpack-python
+
+about:
+  home: https://www.biotite-python.org/
+  license: BSD 3-Clause
+  license_file: LICENSE.rst
+  summary: "A comprehensive framework for computational molecular biology"
