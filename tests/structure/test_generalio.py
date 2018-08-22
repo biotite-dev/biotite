@@ -27,9 +27,9 @@ def test_loading(path):
 def test_loading_template_with_trj():
     template = join(data_dir, "1l2y.pdb")
     trajectory = join(data_dir, "1l2y.xtc")
-    a = strucio.load_structure(trajectory, template)
-    assert isinstance(a, struc.AtomArrayStack)
-    assert len(a) > 1
+    stack = strucio.load_structure(trajectory, template)
+    assert isinstance(stack, struc.AtomArrayStack)
+    assert len(stack) > 1
 
 
 @pytest.mark.parametrize("suffix", ["pdb","cif","gro","pdbx","mmtf"])
