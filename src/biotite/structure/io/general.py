@@ -27,7 +27,7 @@ def load_structure(file_path, template=None):
     ----------
     file_path : str
         The path to structure file.
-    template : AtomArray or AtomArrayStack, optional
+    template : AtomArray or AtomArrayStack or file-like object or str, optional
         Only required when reading a trajectory file.
     
     Returns
@@ -44,6 +44,10 @@ def load_structure(file_path, template=None):
         If a trajectory file is loaded without specifying the
         `template` parameter.
     """
+    # eventually load template from file
+    if template != None and not (isinstance(template, AtomArray) or isinstance(template, AtomArrayStack)):
+        template = load_structure(template)
+
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
