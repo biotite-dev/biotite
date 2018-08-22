@@ -46,7 +46,7 @@ def load_structure(file_path, template=None):
         `template` parameter.
     """
     # Optionally load template from file
-    if isinstance(template, io.IOBase):
+    if isinstance(template, (io.IOBase, str)):
         template = load_structure(template)
 
     # We only need the suffix here
