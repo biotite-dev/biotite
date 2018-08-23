@@ -1,25 +1,24 @@
+{% set version = "0.7.0" %}
+
 package:
   name: biotite
-  version: "0.8.0"
+  version: {{ version }}
 
 source:
-  git_rev: "v0.7.0"
+  git_rev: v{{ version }}
   git_url: "https://github.com/biotite-dev/biotite"
   folder: conda-dist
 
 build:
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: $PYTHON $RECIPE_DIR/setup.py install --single-version-externally-managed --record=record.txt
 
 requirements:
-  build:
-    - python
+  host:
+    - python >=3.6
     - setuptools
     - wheel
     - cython >=0.28
     - numpy
-  host:
-    - python
-    - setuptools
   run:
     - python >=3.6
     - requests
