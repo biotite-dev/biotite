@@ -251,7 +251,6 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     # calculate mask along the trajectory. Vectorization along axis=0 requires too much memory
     hbond_mask = np.full((len(atoms), int(len(triplets)/3)), False)
     for frame in range(len(atoms)):
-        print('.', end='', flush=True)
         # Calculate angle and distance on all triplets
         coords = atoms[frame, triplets].coord
         frame_mask = _is_hbond(coords[0::3], coords[1::3], coords[2::3],
