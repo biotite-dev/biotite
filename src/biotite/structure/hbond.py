@@ -105,12 +105,13 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
        "Hydrogen bonding in globular proteins"
        Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
-        
-    # build default selections
-    if selection1 is None:
-        selection1 = np.full(atoms.array_length(), True)
-    if selection2 is None:
-        selection2 = np.full(atoms.array_length(), True)
+
+    # Create AtomArrayStack from AtomArray
+    if not isinstance(atoms, AtomArrayStack):
+        atoms = stack([atoms])
+        single_model = True
+    else:
+        single_model = False
 
     # determine selection2 type
     if selection1_type == 'both':
@@ -120,44 +121,52 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     else:
         selection2_type = 'acceptor'
 
-    # create selection1 donors and acceptors
-    if selection1_type in ['both', 'donor']:
-        donor1_selection = selection1
-    else:
-        donor1_selection = np.full(atoms.array_length(), False)
-    if selection1_type in ['both', 'acceptor']:
-        acceptor1_selection = selection1
-    else:
-        acceptor1_selection = np.full(atoms.array_length(), False)
-    
-    # create selection2 donors and acceptors
-    if selection2_type in ['both', 'donor']:
-        donor2_selection = selection2
-    else:
-        donor2_selection = np.full(atoms.array_length(), False)
-    if selection2_type in ['both', 'acceptor']:
-        acceptor2_selection = selection2
-    else:
-        acceptor2_selection = np.full(atoms.array_length(), False)
+    # create donors and acceptors selections
+    def build_donor_acceptor_selections(selection, selection_type):
+        if selection is None:
+            selection = np.full(atoms.array_length(), True)
+
+        if selection_type in ['both', 'donor']:
+            donor_selection = selection
+        else:
+            donor_selection = np.full(atoms.array_length(), False)
+
+        if selection_type in ['both', 'acceptor']:
+            acceptor_selection = selection
+        else:
+            acceptor_selection = np.full(atoms.array_length(), False)
+        return donor_selection, acceptor_selection
+
+
+    donor1_selection, acceptor1_selection = \
+        build_donor_acceptor_selections(selection1, selection1_type)
+    donor2_selection, acceptor2_selection = \
+        build_donor_acceptor_selections(selection2, selection2_type)
+
 
     # if the selections are identical, we only need to run once
     if np.array_equal(donor1_selection, donor2_selection) and np.array_equal(acceptor1_selection, acceptor2_selection):
-        return _hbond(atoms, donor1_selection, acceptor2_selection,
-            cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-
-    # run hbond analysis for between donors and acceptors of both selections
-    result1 = _hbond(atoms, donor1_selection, acceptor2_selection,
-        cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-    result2 = _hbond(atoms, donor2_selection, acceptor1_selection,
-        cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-
-    if not isinstance(atoms, AtomArrayStack):
-        return np.concatenate((result1, result2))
+        triplets, mask = _hbond(atoms, donor1_selection, acceptor2_selection,
+                                cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
     else:
+        # run hbond analysis for between donors and acceptors of both selections
+        result1 = _hbond(atoms, donor1_selection, acceptor2_selection,
+                         cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
+        result2 = _hbond(atoms, donor2_selection, acceptor1_selection,
+                         cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
+
         triplets = np.concatenate((result1[0], result2[0]))
         mask = np.concatenate((result1[1], result2[1]), axis=1)
+
+
+    if single_model:
+        # For a single model, hbond_mask contains only 'True' values,
+        # since all interaction are in the one model
+        # -> Simply return triplets without hbond_mask
+        return triplets
+    else:
         return triplets, mask
-        
+
 
 def _hbond(atoms, donor_selection=None, acceptor_selection=None,
           cutoff_dist=2.5, cutoff_angle=120,
@@ -170,13 +179,6 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     hbond
 
     """
-
-    # Create AtomArrayStack from AtomArray
-    if not isinstance(atoms, AtomArrayStack):
-        atoms = stack([atoms])
-        single_model = True
-    else:
-        single_model = False
 
     # if no donor/acceptor selections are made, use the full stack
     # and reduce selections with multiple models
@@ -262,13 +264,7 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     triplets = np.reshape(triplets, (int(len(triplets)/3), 3))
     hbond_mask = hbond_mask[:, is_counted]
 
-    if single_model:
-        # For a single model, hbond_mask contains only 'True' values,
-        # since all interaction are in the one model
-        # -> Simply return triplets without hbond_mask
-        return triplets
-    else:
-        return triplets, hbond_mask
+    return triplets, hbond_mask
 
 
 def hbond_frequency(mask):
