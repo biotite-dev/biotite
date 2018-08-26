@@ -172,8 +172,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         return triplets, mask
 
 
-
-
 def _hbond(atoms, donor_selection, acceptor_selection,
            cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
            vectorized):
@@ -222,25 +220,24 @@ def _hbond(atoms, donor_selection, acceptor_selection,
     acceptor_i = np.where(acceptor_selection)[0]
     donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
 
-    # Build an index list containing the D-H..A triplets
-    # in correct order for every possible possible hbond
-    # The size of the list is 3 times the worst case amount of triplets
-    if len(donor_i) == 0:
-        max_triplets_size = 0
-    else:
-        max_triplets_size \
-            = 3 * len(donor_i) * len(acceptor_i) \
-               * max(map(lambda x: len(x), donor_hs_i))\
+    def _get_triplets(donor_i, donor_hs_i, acceptor_i):
+        """ build D-H..A triplets for every possible combination """
+        donor_i = np.repeat(donor_i, [len(h) for h in donor_hs_i])
+        donor_hs_i = np.array([item for sublist in donor_hs_i for item in sublist])
+        duplets = np.stack((donor_i, donor_hs_i)).T
+        if len(duplets) == 0: # otherwise, dtype of empty array does not match
+            return np.zeros(0, dtype=np.int)
 
-    triplets = np.zeros(max_triplets_size, dtype=np.int64)
-    triplet_idx = 0
-    for donor_hs_idx, d_i in enumerate(donor_i):
-        for a_i in acceptor_i:
-            if d_i != a_i:
-                for dh_i in donor_hs_i[donor_hs_idx]:
-                    triplets[triplet_idx:triplet_idx+3] = (d_i, dh_i, a_i)
-                    triplet_idx += 3
-    triplets = triplets[:triplet_idx]
+        duplets = np.repeat(duplets, acceptor_i.shape[0], axis=0)
+        acceptor_i = acceptor_i[:, np.newaxis]
+        acceptor_i = np.tile(acceptor_i, (int(duplets.shape[0] / acceptor_i.shape[0]), 1))
+
+        triplets = np.hstack((duplets, acceptor_i))
+        triplets = triplets[triplets[:, 0] != triplets[:, 2]]
+
+        triplets = triplets.reshape(triplets.shape[0] * triplets.shape[1])
+        return triplets
+    triplets = _get_triplets(donor_i, donor_hs_i, acceptor_i)
 
     if vectorized:
         coords = atoms[:, triplets].coord
