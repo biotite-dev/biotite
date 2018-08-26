@@ -16,7 +16,8 @@ from .atoms import AtomArrayStack, stack
 
 def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
-          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S'),
+          vectorized=True):
     """
     Find hydrogen bonds in a structure.
     
@@ -45,6 +46,9 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     donor_elements, acceptor_elements: tuple of str
         Elements to be considered as possible donors or acceptors
         (default: O, N, S).
+    vectorized: bool
+        Enable/Disable vectorization across models. Vectorization is
+        faster, but requires more memory (default: True).
         
     Returns
     -------
@@ -143,21 +147,21 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     donor2_selection, acceptor2_selection = \
         build_donor_acceptor_selections(selection2, selection2_type)
 
+    # find hydrogen bonds between selections.
+    triplets, mask = _hbond(atoms, donor1_selection, acceptor2_selection,
+                            cutoff_dist, cutoff_angle, donor_elements,
+                            acceptor_elements,
+                            vectorized)
 
-    # if the selections are identical, we only need to run once
-    if np.array_equal(donor1_selection, donor2_selection) and np.array_equal(acceptor1_selection, acceptor2_selection):
-        triplets, mask = _hbond(atoms, donor1_selection, acceptor2_selection,
-                                cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-    else:
-        # run hbond analysis for between donors and acceptors of both selections
-        result1 = _hbond(atoms, donor1_selection, acceptor2_selection,
-                         cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-        result2 = _hbond(atoms, donor2_selection, acceptor1_selection,
-                         cutoff_dist, cutoff_angle, donor_elements, acceptor_elements)
-
-        triplets = np.concatenate((result1[0], result2[0]))
-        mask = np.concatenate((result1[1], result2[1]), axis=1)
-
+    # If the selections are identical, we can skip the second run
+    if not (np.array_equal(donor1_selection, donor2_selection) and
+            np.array_equal(acceptor1_selection, acceptor2_selection)):
+        triplets2, mask2 = _hbond(atoms, donor2_selection, acceptor1_selection,
+                                cutoff_dist, cutoff_angle, donor_elements,
+                                acceptor_elements,
+                                vectorized)
+        triplets = np.concatenate((triplets, triplets2))
+        mask = np.concatenate((mask, mask2), axis=1)
 
     if single_model:
         # For a single model, hbond_mask contains only 'True' values,
@@ -168,9 +172,11 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         return triplets, mask
 
 
-def _hbond(atoms, donor_selection=None, acceptor_selection=None,
-          cutoff_dist=2.5, cutoff_angle=120,
-          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+
+
+def _hbond(atoms, donor_selection, acceptor_selection,
+           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
+           vectorized):
     """
     Find hydrogen bonds between the donors and acceptors in a structure.
     
@@ -179,18 +185,6 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
     hbond
 
     """
-
-    # if no donor/acceptor selections are made, use the full stack
-    # and reduce selections with multiple models
-    if donor_selection is None:
-        donor_selection = np.full(atoms.array_length(), True)
-    elif len(donor_selection.shape) > 1:
-        donor_selection = donor_selection[0]
-    if acceptor_selection is None:
-        acceptor_selection = np.full(atoms.array_length(), True)
-    elif len(acceptor_selection.shape) > 1:
-        acceptor_selection = acceptor_selection[0]
-
     # Filter donor/acceptor elements
     donor_selection \
         = donor_selection & np.isin(atoms.element, donor_elements)
@@ -248,14 +242,19 @@ def _hbond(atoms, donor_selection=None, acceptor_selection=None,
                     triplet_idx += 3
     triplets = triplets[:triplet_idx]
 
-    # calculate mask along the trajectory. Vectorization along axis=0 requires too much memory
-    hbond_mask = np.full((len(atoms), int(len(triplets)/3)), False)
-    for frame in range(len(atoms)):
-        # Calculate angle and distance on all triplets
-        coords = atoms[frame, triplets].coord
-        frame_mask = _is_hbond(coords[0::3], coords[1::3], coords[2::3],
+    if vectorized:
+        coords = atoms[:, triplets].coord
+        hbond_mask = _is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
+                  cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
+    else:
+        # calculate mask along the trajectory. Vectorization along axis=0 requires too much memory
+        hbond_mask = np.full((len(atoms), int(len(triplets)/3)), False)
+        for frame in range(len(atoms)):
+            # Calculate angle and distance on all triplets
+            coords = atoms[frame, triplets].coord
+            frame_mask = _is_hbond(coords[0::3], coords[1::3], coords[2::3],
                                cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
-        hbond_mask[frame] = frame_mask
+            hbond_mask[frame] = frame_mask
 
     # Reduce+Reshape output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
