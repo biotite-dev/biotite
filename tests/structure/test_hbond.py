@@ -43,23 +43,27 @@ def test_hbond_with_selections():
     type
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
-    selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR backbone oxygen
+    selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
     selection2 = stack.res_id == 7
 
     # backbone hbond should be found if selection1/2 type is both
-    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='both')
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type='both')
     assert len(triplets) == 1
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
-    # backbone hbond should be found if selection1 is acceptor and selection2 is donor
-    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='acceptor')
+    # backbone hbond should be found if selection1 is acceptor and selection2
+    # is donor
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type='acceptor')
     assert len(triplets) == 1
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
     # no hbond should be found because the backbone oxygen cannot be a donor
-    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type='donor')
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type='donor')
     assert len(triplets) == 0
 
 
@@ -69,7 +73,7 @@ def test_hbond_single_selection():
     against all other atoms as the other selection
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
-    selection = (stack.res_id == 2) & (stack.atom_name == 'O')  # 2LEU backbone oxygen
+    selection = (stack.res_id == 2) & (stack.atom_name == 'O')  # 2LEU BB Ox
     triplets, mask = struc.hbond(stack, selection1=selection)
     assert len(triplets) == 2
 
