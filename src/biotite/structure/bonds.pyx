@@ -119,9 +119,10 @@ class BondList(Copyable):
         self._atom_count = atom_count
         if bonds is not None:
             if (bonds[:,:2] >= atom_count).any():
-                raise ValueError("Index {:d} in bonds is too large "
-                                 "for atom count ({:d})"
-                                 .format(np.max(bonds[:,:2]), atom_count))
+                raise ValueError(
+                    f"Index {np.max(bonds[:,:2])} in bonds is too large "
+                    f"for atom count of {atom_count}"
+                )
             if bonds.shape[1] == 3:
                 # input contains bonds (index 0 and 1)
                 # including the bond type value (index 3)
@@ -137,9 +138,10 @@ class BondList(Copyable):
                 # Set and sort atom indices per bond
                 self._bonds[:,:2] = np.sort(bonds[:,:2], axis=1)
             else:
-                raise ValueError("Input array containing bonds must have a "
-                                 "length of either 2 or 3 in the second "
-                                 "dimension")
+                raise ValueError(
+                    "Input array containing bonds must be either of shape "
+                    "(n,2) or (n,3)"
+                )
             self._remove_redundant_bonds()
             self._max_bonds_per_atom = self._get_max_bonds_per_atom()
         else:
@@ -296,10 +298,10 @@ class BondList(Copyable):
             The type of the bond. Default is `BondType.ANY`.
         """
         if index1 >= self._atom_count or index2 >= self._atom_count:
-            raise ValueError("Index {:d} in new bond is too large "
-                                "for atom count ({:d})"
-                                .format(np.max(index1, index2),
-                                        self._atom_count))
+            raise ValueError(
+                f"Index {max(index1, index2)} in new bond is too large "
+                f"for atom count of {self._atom_count}"
+            )
         _sort(&index1, &index2)
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds

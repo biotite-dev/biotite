@@ -132,16 +132,17 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     elif point_distr == "Fibonacci":
         sphere_points = _create_fibonacci_points(point_number)
     else:
-        raise ValueError("'" + str(point_distr) +
-                         "' is not a valid point distribution")
+        raise ValueError(f"'{point_distr}' is not a valid point distribution")
     sphere_points = sphere_points.astype(np.float32)
     
     cdef np.ndarray radii
     if isinstance(vdw_radii, np.ndarray):
         radii = vdw_radii.astype(np.float32)
         if len(radii) != array.array_length():
-            raise ValueError("VdW radii array contains insufficient"
-                             "amount of elements")
+            raise ValueError(
+                f"Amount VdW radii ({len(radii)}) and "
+                f"amount of atoms ({array.array_length()}) are not equal"
+            )
     elif vdw_radii == "ProtOr":
         filter = (array.element != "H")
         sasa_filter = sasa_filter & filter
@@ -157,8 +158,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         for i in np.arange(len(radii))[occl_filter]:
             radii[i] = _single_radii[array.element[i]]
     else:
-        raise KeyError("'" + str(vdw_radii) + 
-                       "' is not a valid radii set")
+        raise KeyError(f"'{vdw_radii}' is not a valid radii set")
     # Increase atom radii by probe size ("rolling probe")
     radii += probe_radius
     

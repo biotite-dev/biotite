@@ -61,8 +61,7 @@ class CodonTable(object):
         # Check if 'starts' is iterable objectof length 3 strings
         for start in starts:
             if not isinstance(start, str) or len(start) != 3:
-                raise ValueError("Invalid codon '{:}' as start codon"
-                                 .format(start))
+                raise ValueError(f"Invalid codon '{start}' as start codon")
         self._symbol_dict = dict(codon_dict.items())
         self._code_dict = {}
         for key, value in self._symbol_dict.items():
@@ -88,7 +87,7 @@ class CodonTable(object):
                 # Codon -> return corresponding amino acid
                 return self._symbol_dict[item]
             else:
-                raise TypeError("'{:}' is an invalid index".format(str(item)))
+                raise ValueError(f"'{item}' is an invalid index")
         elif isinstance(item, int):
             # Code for amino acid -> return possible codon codes
             codons = []
@@ -100,7 +99,9 @@ class CodonTable(object):
             # Code for codon -> return corresponding amino acid code
             return self._code_dict[item]
         else:
-            raise TypeError("'{:}' is an invalid index".format(str(item)))
+            raise TypeError(
+                f"'{type(item).__name__}' objects are invalid indices"
+            )
     
     def __str__(self):
         string = ""
@@ -238,8 +239,7 @@ class CodonTable(object):
                     symbol_dict[codon] = aa[i]
                 return CodonTable(symbol_dict, starts)
         else:
-            raise ValueError("Codon table '{:}' was not found"
-                             .format(str(table_name)))
+            raise ValueError(f"Codon table '{table_name}' was not found")
     
     @staticmethod
     def table_names():

@@ -34,14 +34,12 @@ def requires_state(app_state):
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
+            # First parameter of method is always 'self'
             instance = args[0]
             if (instance._state & app_state) == 0:
                 raise AppStateError(
-                    "The application is in {:} state, "
-                    "but {:} state is required".format(
-                        str(instance.get_app_state()),
-                        str(app_state)
-                    )
+                    f"The application is in {instance.get_app_state()} state, "
+                    f"but {app_state} state is required"
                 )
             return func(*args, **kwargs)
         return wrapper
@@ -125,7 +123,10 @@ class Application(metaclass=abc.ABCMeta):
         while self.get_app_state() != AppState.FINISHED:
             if timeout is not None and time.time()-self._start_time > timeout:
                 self.cancel()
-                raise TimeoutError("The application expired its timeout")
+                raise TimeoutError(
+                    f"The application expired its timeout "
+                    f"({timeout:.1f} s)"
+                )
             else:
                 time.sleep(self.wait_interval())
         time.sleep(self.wait_interval())
