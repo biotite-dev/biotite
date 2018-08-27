@@ -387,8 +387,7 @@ class GenBankFile(TextFile):
                 starts.append(field[0])
                 stops.append(field[1])
         if len(starts) == 0:
-            raise InvalidFileError("File does not contain '{:}' category"
-                                   .format(name))
+            raise InvalidFileError(f"File does not contain '{name}' category")
         return starts, stops
     
     def _get_minor_fields(self, field_start, field_stop):
@@ -565,7 +564,7 @@ class MultiFile(TextFile):
         elif file_type == "gp":
             self._file_class = GenPeptFile
         else:
-            raise ValueError("'{:}' is an invalid file type".format(file_type))
+            raise ValueError(f"'{file_type}' is an invalid file type")
 
     def __iter__(self):
         start_i = 0

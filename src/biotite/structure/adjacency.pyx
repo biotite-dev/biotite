@@ -79,7 +79,7 @@ cdef class CellList:
         if to_coord(atom_array) is None:
             raise ValueError("Atom array must not be empty")
         if np.isnan(to_coord(atom_array)).any():
-            raise ValueError("Atom array contains NaN values")
+            raise ValueError("Atom array coordinates contain NaN values")
         coord = to_coord(atom_array).astype(np.float32)
         self._coord = coord
         self._cellsize = cell_size

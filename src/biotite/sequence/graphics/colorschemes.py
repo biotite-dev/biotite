@@ -101,7 +101,7 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
             colors = [color if color is not None else default
                       for color in colors]
             return colors
-    raise ValueError("Unkown scheme '{:}' for given alphabet".format(name))
+    raise ValueError(f"Unkown scheme '{name}' for given alphabet")
 
 
 def list_color_scheme_names(alphabet):

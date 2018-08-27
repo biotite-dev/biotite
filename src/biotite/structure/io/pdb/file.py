@@ -141,9 +141,10 @@ class PDBFile(TextFile):
             elif model == last_model:
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
-                raise ValueError("Requested model {:d} is larger than the "
-                                 "amount of models ({:d})"
-                                 .format(model, last_model))
+                raise ValueError(
+                    f"Requested model number {model} is larger than the "
+                    f"amount of models ({last_model})"
+                )
             annot_i = atom_line_i[line_filter]
             coord_i = atom_line_i[line_filter]
         

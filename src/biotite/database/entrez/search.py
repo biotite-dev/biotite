@@ -129,21 +129,23 @@ class SimpleQuery(Query):
         super().__init__()
         if field is not None:
             if field not in SimpleQuery._fields:
-                raise ValueError("'{:}' is an unknown field identifier"
-                                 .format(field))
-        if any([(invalid_string in term) for invalid_string
-                in ['"', "AND", "OR", "NOT", "[", "]", "(", ")"]]):
-            raise ValueError("Search term contains invalid content")
+                raise ValueError(f"Unknown field identifier '{field}'")
+        for invalid_string in \
+            ['"', "AND", "OR", "NOT", "[", "]", "(", ")", "\t", "\n"]:
+                if invalid_string in term:
+                    raise ValueError(
+                        f"Query contains illegal term {invalid_string}"
+                    )
         if " " in term:
             # Encapsulate in quotes if spaces are in search term
-            term = '"' + term + '"'
+            term = f'"{term}"'
         self._term = term
         self._field = field
     
     def __str__(self):
         string = self._term
         if self._field is not None:
-            string += "[" + self._field + "]"
+            string += f"[{self._field}]"
         return string
 
 

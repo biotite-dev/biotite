@@ -123,7 +123,7 @@ def load_structure(file_path, template=None):
         file.read(file_path)
         return file.get_structure(template)
     else:
-        raise ValueError("Unknown file format")
+        raise ValueError(f"Unknown file format '{suffix}'")
 
 
 def save_structure(file_path, array):
@@ -158,4 +158,4 @@ def save_structure(file_path, array):
         raise NotImplementedError("Writing trajectory files is not "
                                   "implemented yet")
     else:
-        raise ValueError("Unknown file format: " + suffix)
+        raise ValueError(f"Unknown file format '{suffix}'")

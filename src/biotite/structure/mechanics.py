@@ -104,7 +104,7 @@ def atom_masses(array):
         try:
             masses[i] = _masses[element]
         except KeyError:
-            raise ValueError("'{:}' is not a valid element".format(element))
+            raise ValueError(f"'{element}' is not a valid element")
     return masses
 
 

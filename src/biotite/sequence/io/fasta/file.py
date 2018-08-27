@@ -68,9 +68,11 @@ class FastaFile(TextFile):
         
     def __setitem__(self, header, seq_str):
         if not isinstance(header, str):
-            raise IndexError("FastaFile only supports header strings as keys")
+            raise IndexError(
+                "'FastaFile' only supports header strings as keys"
+            )
         if not isinstance(seq_str, str):
-            raise IndexError("FastaFile only supports sequence strings "
+            raise IndexError("'FastaFile' only supports sequence strings "
                              "as values")
         # Delete lines of entry corresponding to the header,
         # if existing
@@ -86,7 +88,9 @@ class FastaFile(TextFile):
     
     def __getitem__(self, header):
         if not isinstance(header, str):
-            raise IndexError("FastaFile only supports header strings as keys")
+            raise IndexError(
+                "'FastaFile' only supports header strings as keys"
+            )
         start, stop = self._entries[header]
         # Concatenate sequence string from following lines
         seq_string = ""
