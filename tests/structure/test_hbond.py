@@ -29,8 +29,15 @@ def test_hbond_total_count():
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
     (comparision with MDTraj results)
     """
+    # with vectorization
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
-    triplets, mask = struc.hbond(stack)
+    triplets, mask = struc.hbond(stack, vectorized=True)
+    freq = struc.hbond_frequency(mask)
+
+    assert len(freq[freq >= 0.1]) == 28
+
+    # without vectorization
+    triplets, mask = struc.hbond(stack, vectorized=False)
     freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28

@@ -225,8 +225,8 @@ def _hbond(atoms, donor_selection, acceptor_selection,
         donor_i = np.repeat(donor_i, [len(h) for h in donor_hs_i])
         donor_hs_i = np.array([item for sublist in donor_hs_i for item in sublist])
         duplets = np.stack((donor_i, donor_hs_i)).T
-        if len(duplets) == 0: # otherwise, dtype of empty array does not match
-            return np.zeros(0, dtype=np.int)
+        if len(duplets) == 0:  # otherwise, dtype of empty array does not match
+            return np.empty((0, 3), dtype=np.int)
 
         duplets = np.repeat(duplets, acceptor_i.shape[0], axis=0)
         acceptor_i = acceptor_i[:, np.newaxis]
@@ -235,28 +235,33 @@ def _hbond(atoms, donor_selection, acceptor_selection,
         triplets = np.hstack((duplets, acceptor_i))
         triplets = triplets[triplets[:, 0] != triplets[:, 2]]
 
-        triplets = triplets.reshape(triplets.shape[0] * triplets.shape[1])
+        # triplets = triplets.reshape(triplets.shape[0] * triplets.shape[1])
         return triplets
     triplets = _get_triplets(donor_i, donor_hs_i, acceptor_i)
 
+    if len(triplets) == 0:
+        return triplets, np.empty((len(atoms), 3), dtype=np.bool)
+
+
     if vectorized:
-        coords = atoms[:, triplets].coord
-        hbond_mask = _is_hbond(coords[:, 0::3], coords[:, 1::3], coords[:, 2::3],
+        donor_atoms = atoms[:, triplets[:, 0]]
+        donor_h_atoms = atoms[:, triplets[:, 1]]
+        acceptor_atoms = atoms[:, triplets[:, 2]]
+        hbond_mask = _is_hbond(donor_atoms, donor_h_atoms, acceptor_atoms,
                   cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
     else:
-        # calculate mask along the trajectory. Vectorization along axis=0 requires too much memory
-        hbond_mask = np.full((len(atoms), int(len(triplets)/3)), False)
+        hbond_mask = np.full((len(atoms), len(triplets)), False)
         for frame in range(len(atoms)):
-            # Calculate angle and distance on all triplets
-            coords = atoms[frame, triplets].coord
-            frame_mask = _is_hbond(coords[0::3], coords[1::3], coords[2::3],
+            donor_atoms = atoms[frame, triplets[:, 0]]
+            donor_h_atoms = atoms[frame, triplets[:, 1]]
+            acceptor_atoms = atoms[frame, triplets[:, 2]]
+            frame_mask = _is_hbond(donor_atoms, donor_h_atoms, acceptor_atoms,
                                cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
             hbond_mask[frame] = frame_mask
 
-    # Reduce+Reshape output to contain only triplets counted at least once
+    # Reduce output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
-    triplets = triplets[np.repeat(is_counted, 3)]
-    triplets = np.reshape(triplets, (int(len(triplets)/3), 3))
+    triplets = triplets[is_counted]
     hbond_mask = hbond_mask[:, is_counted]
 
     return triplets, hbond_mask
@@ -309,12 +314,11 @@ def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
     
     Parameters
     ----------
-    donor, donor_h, acceptor : ndarray, dtype=float, shape=(MxN) or (N)
-        The coordinates to measure the hydrogen bonding criterium
-        between.
+    donor, donor_h, acceptor : AtomArray, AtomArrayStack or ndarray
+        The atoms to measure the hydrogen bonding criterium between.
         The three parameters must be of identical shape and either
-        contain a list of coordinates (N) or a set of list of
-        coordinates (MxN).
+        contain a list of coordinates/atoms (N) or a set of list of
+        coordinates/atoms (MxN).
     cutoff_dist: float
         The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (default: 2.5)
