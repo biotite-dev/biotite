@@ -113,20 +113,57 @@ class MMTFFile(File):
             return None
     
     def get_length(self, key):
+        """
+        Obtain the length of an MMTF encoded value.
+        
+        Parameters
+        ----------
+        key : str
+            The key for the potentially encoded value.
+        
+        Returns
+        -------
+        codec : int or None
+            The length of the `bytes` array.
+            `None` if the value is not encoded.
+        """
         data = self._content[key]
         if isinstance(data, bytes) and data[0] == 0:
-            param = struct.unpack(">i", data[4:8])[0]
-            return param
+            length = struct.unpack(">i", data[4:8])[0]
+            return length
         else:
             return None
     
     def get_param(self, key):
+        """
+        Obtain the parameter of an MMTF encoded value.
+        
+        Parameters
+        ----------
+        key : str
+            The key for the potentially encoded value.
+        
+        Returns
+        -------
+        codec : int or None
+            The parameter of the encoded value.
+            `None` if the value is not encoded.
+        """
         data = self._content[key]
         if isinstance(data, bytes) and data[0] == 0:
             param = struct.unpack(">i", data[8:12])[0]
             return param
         else:
             return None
+    
+    def set_array(self, key, array, codec, param=0):
+        length = len(array)
+        raw_bytes = encode_array(array, codec, param)
+        data = struct.pack(">i", codec) \
+             + struct.pack(">i", length) \
+             + struct.pack(">i", param) \
+             + raw_bytes
+        self._content[key] = data
     
     def __getitem__(self, key):
         data = self._content[key]
@@ -142,21 +179,12 @@ class MMTFFile(File):
     
     def __setitem__(self, key, item):
         if isinstance(item, np.ndarray):
-            raise TypeError("Arrays that need to be encoded must be addeed"
+            raise TypeError("Arrays that need to be encoded must be addeed "
                             "via 'set_array()'")
         self._content[key] = item
     
     def __delitem__(self, key):
         del self._content[key]
-    
-    def set_array(self, key, array, codec, param=0):
-        length = len(array)
-        raw_bytes = encode_array(array, codec, param)
-        data = struct.pack(">i", codec) \
-             + struct.pack(">i", length) \
-             + struct.pack(">i", param) \
-             + raw_bytes
-        self._content[key] = data
     
     def __iter__(self):
         return self._content.__iter__()

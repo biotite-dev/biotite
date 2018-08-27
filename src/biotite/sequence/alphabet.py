@@ -133,8 +133,7 @@ class Alphabet(object):
         try:
             return self._symbol_dict[symbol]
         except KeyError:
-            raise AlphabetError("'{:}' is not in the alphabet"
-                                .format(str(symbol)))
+            raise AlphabetError(f"'{symbol}' is not in the alphabet")
     
     def decode(self, code):
         """
@@ -158,8 +157,7 @@ class Alphabet(object):
         try:
             return self._symbols[code]
         except IndexError:
-            raise AlphabetError("'{:}' is not a valid code"
-                                .format(str(code)))
+            raise AlphabetError(f"'{code:d}' is not a valid code")
     
     def encode_multiple(self, symbols, dtype=np.int64):
         """
@@ -223,8 +221,7 @@ class LetterAlphabet(Alphabet):
             raise ValueError("Symbol list is too large")
         for symbol in symbols:
             if not isinstance(symbol, str) or len(symbol) > 1:
-                raise ValueError("Symbol '{:}' is not a single letter"
-                                 .format(str(symbol)))
+                raise ValueError(f"Symbol '{symbol}' is not a single letter")
         self._symbols = np.array(list(symbols), dtype="U1")
     
     def get_symbols(self):
@@ -241,8 +238,7 @@ class LetterAlphabet(Alphabet):
     def encode(self, symbol):
         indices = np.where(self._symbols == symbol)[0]
         if len(indices) == 0:
-            raise AlphabetError("'{:}' is not in the alphabet"
-                                .format(str(symbol)))
+            raise AlphabetError(f"'{symbol}' is not in the alphabet")
         return indices[0]
     
     def encode_multiple(self, symbols, dtype=None):
@@ -275,9 +271,9 @@ class LetterAlphabet(Alphabet):
         for i, symbol in enumerate(self._symbols):
             code[symbols == symbol] = i
         if (code == illegal_code).any():
+            # Check, which symbol is illegal and raise
             illegal_symbol = symbols[code == illegal_code][0]
-            raise AlphabetError("'{:}' is not in the alphabet"
-                                .format(illegal_symbol))
+            raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
         return code
             
     
@@ -302,8 +298,7 @@ class LetterAlphabet(Alphabet):
             for i, symbol in enumerate(self._symbols):
                 symbols[code == i] = symbol
         except IndexError:
-            raise AlphabetError("'{:}' is not a valid code"
-                                .format(str(i)))
+            raise AlphabetError(f"'{i:d}' is not a valid code")
         return symbols
     
     def __str__(self):

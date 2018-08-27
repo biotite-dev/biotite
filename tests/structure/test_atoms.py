@@ -102,7 +102,7 @@ def test_bonds(array):
     with pytest.raises(TypeError):
         # Expect a BondList
         array.bonds = 42
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         # Expect a BondList with array length as atom count
         array.bonds = struc.BondList(13)
     array.bonds = struc.BondList(5, np.array([(0,1),(0,2),(2,3),(2,4)]))

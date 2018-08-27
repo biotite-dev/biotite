@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import textwrap
 from ..alphabet import LetterAlphabet
-    
+
 
 __all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
            "score"]
@@ -137,7 +137,8 @@ class Alignment(object):
         elif isinstance(index, slice):
             return Alignment(self.sequences[:], self.trace[index], self.score)
         else:
-            raise IndexError("Invalid alignment index")
+            raise IndexError(f"Invalid alignment index type "
+                             f"'{type(index).__name__}'")
     
     def __iter__(self):
         raise TypeError("'Alignment' object is not iterable")
@@ -149,7 +150,7 @@ class Alignment(object):
         
         Parameters
         ----------
-        seq_str_list : list
+        seq_str_list : list of str
             The strings, where each each one represents a sequence
             in an alignment.
         
@@ -285,7 +286,7 @@ def get_sequence_identity(alignment, mode="not_terminal"):
         The sequence identity, ranging between 0 and 1.
     """
     if mode not in ["all", "not_terminal", "shortest"]:
-        raise ValueError("'{:}' is an invalid calculation mode".format(mode))
+        raise ValueError(f"'{mode}' is an invalid calculation mode")
     trace = alignment.trace
     codes = get_codes(alignment)
     

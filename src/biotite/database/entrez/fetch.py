@@ -157,8 +157,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     for i, id in enumerate(uids):
         # Verbose output
         if verbose:
-            print("Fetching file {:d} / {:d} ({:})..."
-                  .format(i+1, len(uids), id), end="\r")
+            print(f"Fetching file {i+1:d} / {len(uids):d} ({id})...", end="\r")
         # Fetch file from database
         file_name = os.path.join(target_path, id + "." + suffix)
         file_names.append(file_name)

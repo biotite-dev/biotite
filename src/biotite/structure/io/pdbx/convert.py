@@ -43,8 +43,8 @@ def get_sequence(pdbx_file, data_block=None):
     return sequences
 
 
-def get_structure(pdbx_file, data_block=None, insertion_code=[],
-                  altloc=[], model=None, extra_fields=[]):
+def get_structure(pdbx_file, model=None, data_block=None,
+                  insertion_code=[], altloc=[], extra_fields=[]):
     """
     Create an `AtomArray` or `AtomArrayStack` from a `atom_site`
     category.
@@ -53,6 +53,12 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
     ----------
     pdbx_file : PDBxFile
         The file object.
+    model : int, optional
+        If this parameter is given, the function will return an
+        `AtomArray` from the atoms corresponding to the given model ID.
+        If this parameter is omitted, an `AtomArrayStack` containing all
+        models will be returned, even if the structure contains only one
+        model.
     data_block : string, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
@@ -66,12 +72,6 @@ def get_structure(pdbx_file, data_block=None, insertion_code=[],
         specified here: Each tuple consists of an integer, specifying
         the residue ID, and a letter, specifying the *altloc* ID.
         By default the location with the *altloc* ID "A" is used.
-    model : int, optional
-        If this parameter is given, the function will return an
-        `AtomArray` from the atoms corresponding to the given model ID.
-        If this parameter is omitted, an `AtomArrayStack` containing all
-        models will be returned, even if the structure contains only one
-        model.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.

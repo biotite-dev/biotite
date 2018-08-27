@@ -59,13 +59,20 @@ class PDBFile(TextFile):
     >>> file.write("1l2y_mod.pdb")
     """
 
-    def get_structure(self, insertion_code=[], altloc=[],
-                      model=None, extra_fields=[]):
+    def get_structure(self, model=None, insertion_code=[], altloc=[],
+                      extra_fields=[]):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.
         
         Parameters
         ----------
+        model : int, optional
+            If this parameter is given, the function will return an
+            `AtomArray` from the atoms corresponding to the given model
+            ID.
+            If this parameter is omitted, an `AtomArrayStack` containing
+            all models will be returned, even if the structure contains
+            only one model.
         insertion_code : list of tuple, optional
             In case the structure contains insertion codes, those can be
             specified here: Each tuple consists of an integer,
@@ -78,13 +85,6 @@ class PDBFile(TextFile):
             specifying the residue ID, and a letter, specifying the
             *altloc* ID. By default the location with the *altloc* ID
             "A" is used.
-        model : int, optional
-            If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model
-            ID.
-            If this parameter is omitted, an `AtomArrayStack` containing
-            all models will be returned, even if the structure contains
-            only one model.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -141,9 +141,10 @@ class PDBFile(TextFile):
             elif model == last_model:
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
-                raise ValueError("Requested model {:d} is larger than the "
-                                 "amount of models ({:d})"
-                                 .format(model, last_model))
+                raise ValueError(
+                    f"Requested model number {model} is larger than the "
+                    f"amount of models ({last_model})"
+                )
             annot_i = atom_line_i[line_filter]
             coord_i = atom_line_i[line_filter]
         

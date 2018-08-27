@@ -64,7 +64,7 @@ class DsspApp(LocalApp):
             if line.startswith("  #  RESIDUE AA STRUCTURE"):
                 sse_start = i+1
         if sse_start is None:
-            raise VaueError("DSSP file does not contain SSE records")
+            raise ValueError("DSSP file does not contain SSE records")
         lines = [line for line in lines[sse_start:] if len(line) != 0]
         self._sse = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters

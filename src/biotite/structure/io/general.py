@@ -11,6 +11,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
 import os.path
+import io
 from ..atoms import AtomArray, AtomArrayStack
 
 
@@ -27,7 +28,7 @@ def load_structure(file_path, template=None):
     ----------
     file_path : str
         The path to structure file.
-    template : AtomArray or AtomArrayStack, optional
+    template : AtomArray or AtomArrayStack or file-like object or str, optional
         Only required when reading a trajectory file.
     
     Returns
@@ -44,6 +45,10 @@ def load_structure(file_path, template=None):
         If a trajectory file is loaded without specifying the
         `template` parameter.
     """
+    # Optionally load template from file
+    if isinstance(template, (io.IOBase, str)):
+        template = load_structure(template)
+
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
@@ -118,7 +123,7 @@ def load_structure(file_path, template=None):
         file.read(file_path)
         return file.get_structure(template)
     else:
-        raise ValueError("Unknown file format")
+        raise ValueError(f"Unknown file format '{suffix}'")
 
 
 def save_structure(file_path, array):
@@ -153,4 +158,4 @@ def save_structure(file_path, array):
         raise NotImplementedError("Writing trajectory files is not "
                                   "implemented yet")
     else:
-        raise ValueError("Unknown file format: " + suffix)
+        raise ValueError(f"Unknown file format '{suffix}'")

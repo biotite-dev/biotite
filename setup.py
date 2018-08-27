@@ -92,9 +92,8 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
@@ -106,14 +105,15 @@ setup(
     ext_modules = get_extensions(),
     
     # Including substitution matrix data
-    package_data = {"biotite.sequence.align"    : ["matrix_data/*.mat"],
+    package_data = {"biotite"                   : ["py.typed", "**/*.pyi"],
+                    "biotite.sequence.align"    : ["matrix_data/*.mat"],
                     "biotite.sequence.graphics" : ["color_schemes/*.json"],
                     "biotite.sequence"          : ["codon_tables.txt"],},
     
     install_requires = ["requests >= 2.12",
                         "numpy >= 1.13",
                         "msgpack >= 0.5.6"],
-    python_requires = ">=3.4",
+    python_requires = ">=3.6",
     
     cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],

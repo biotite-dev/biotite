@@ -22,7 +22,7 @@ class Query(metaclass=abc.ABCMeta):
     """
     
     def __init__(self):
-        pass
+        self.query = None
     
     def get_query(self):
         """
@@ -118,7 +118,7 @@ class MethodQuery(SimpleQuery):
     
     Parameters
     ----------
-    method: string
+    method: str
         Structures of the given method are filtered. Possible values
         are:
         'X-RAY', 'SOLUTION_NMR', 'SOLID-STATE NMR',
@@ -154,8 +154,8 @@ class ResolutionQuery(SimpleQuery):
     def __init__(self, min, max):
         super().__init__("ResolutionQuery", "refine.ls_d_res_high")
         self.add_param("comparator", "between")
-        self.add_param("min", "{:.2f}".format(min))
-        self.add_param("max", "{:.2f}".format(max))
+        self.add_param("min", f"{min:.2f}")
+        self.add_param("max", f"{max:.2f}")
     
 class BFactorQuery(SimpleQuery):
     """
@@ -173,8 +173,8 @@ class BFactorQuery(SimpleQuery):
     def __init__(self, min, max):
         super().__init__("ResolutionQuery", "refine.B_iso_mean")
         self.add_param("comparator", "between")
-        self.add_param("min", "{:.2f}".format(min))
-        self.add_param("max", "{:.2f}".format(max))
+        self.add_param("min", f"{min:.2f}")
+        self.add_param("max", f"{max:.2f}")
 
 class MolecularWeightQuery(SimpleQuery):
     """
@@ -192,8 +192,8 @@ class MolecularWeightQuery(SimpleQuery):
     def __init__(self, min, max):
         super().__init__("MolecularWeightQuery",
                          "mvStructure.structureMolecularWeight")
-        self.add_param("min", "{:.1f}".format(min))
-        self.add_param("max", "{:.1f}".format(max))
+        self.add_param("min", f"{min:.1f}")
+        self.add_param("max", f"{max:.1f}")
 
 
 def search(query):
@@ -206,7 +206,7 @@ def search(query):
     Parameters
     ----------
     query : Query
-        Index of the atom array.
+        The search query.
     
     Returns
     -------

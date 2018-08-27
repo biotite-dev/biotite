@@ -108,9 +108,10 @@ class GROFile(TextFile):
             annot_i = get_atom_line_i(model_start_i[0], length)
         else:
             if model > len(model_start_i):
-                raise ValueError("Requested model {:d} is larger than the "
-                           "amount of models ({:d})"
-                           .format(model, len(model_start_i)))
+                raise ValueError(
+                    f"Requested model {model} is larger than the "
+                    f"amount of models ({len(model_start_i)})"
+                )
 
             length = model_atom_counts[model-1]
             array = AtomArray(length)
