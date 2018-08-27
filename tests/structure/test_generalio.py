@@ -23,6 +23,15 @@ def test_loading(path):
         array = strucio.load_structure(path)
 
 
+@pytest.mark.xfail(raises=ImportError)
+def test_loading_template_with_trj():
+    template = join(data_dir, "1l2y.pdb")
+    trajectory = join(data_dir, "1l2y.xtc")
+    stack = strucio.load_structure(trajectory, template)
+    assert isinstance(stack, struc.AtomArrayStack)
+    assert len(stack) > 1
+
+
 @pytest.mark.parametrize("suffix", ["pdb","cif","gro","pdbx","mmtf"])
 def test_saving(suffix):
     array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))

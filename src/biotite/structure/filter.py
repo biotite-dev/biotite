@@ -174,11 +174,11 @@ def filter_inscode_and_altloc(array,  inscode=[], altloc=[],
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    inscode : list of tuple, optional
+    inscode : iterable object of tuple, optional
         Each tuple consists of an integer, specifying
         the residue ID, and a letter, specifying the insertion code.
         By default no insertions are used.
-    altloc : list of tuple, optional
+    altloc : iterable object of tuple, optional
         Each tuple consists of an integer, specifying
         the residue ID, and a letter, specifying the *altloc* ID.
         By default the location with the *altloc* ID "A" is used.

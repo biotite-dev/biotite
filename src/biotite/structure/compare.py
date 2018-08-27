@@ -35,7 +35,7 @@ def rmsd(reference, subject):
     
     Returns
     -------
-    rmsd : float or 1-D ndarray
+    rmsd : float or ndarray, dtype=float, shape=(n,)
         RMSD between subject and reference.
         If subject is an `AtomArray` a float is returned.
         If subject is an `AtomArrayStack` an `ndarray`
@@ -70,7 +70,7 @@ def rmsf(reference, subject):
     
     Returns
     -------
-    rmsf : 1-D ndarray
+    rmsf : ndarray, dtype=float, shape=(n,)
         RMSF between subject and reference structure.
         The index corresponds to the atoms in the annotation arrays.
     
@@ -85,10 +85,10 @@ def rmsf(reference, subject):
 
 def average(atom_arrays):
     """
-    Calculate an average structure
+    Calculate an average structure.
     
-    Calculate the average structure by calculating the average
-    coordinates of each atom.
+    The average structure has the average coordinates
+    of the input models.
     
     Parameters
     ----------
@@ -132,7 +132,7 @@ def _sq_euclidian(reference, subject):
     
     Returns
     -------
-    1-D ndarray or 2-D ndarray
+    ndarray, dtype=float, shape=(n,) or shape=(m,n)
         Squared euclidian distance between subject and reference.
         If subject is an `AtomArray` a 1-D array is returned.
         If subject is an `AtomArrayStack` a 2-D array is returned.

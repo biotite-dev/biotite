@@ -8,7 +8,7 @@ __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 import numbers
 import copy
 import sys
-from enum import IntEnum
+from enum import Flag, Enum, auto
 import numpy as np
 from .sequence import Sequence
 from ..copyable import Copyable
@@ -35,7 +35,7 @@ class Location(Copyable):
         A possible defect of the location.
     """
     
-    class Defect(IntEnum):
+    class Defect(Flag):
         """
         This enum type describes location defects.
         
@@ -60,20 +60,20 @@ class Location(Copyable):
              bases/residues.
         """
         NONE         = 0
-        MISS_LEFT    = 1
-        MISS_RIGHT   = 2
-        BEYOND_LEFT  = 4
-        BEYOND_RIGHT = 8
-        UNK_LOC      = 16
-        BETWEEN      = 32
+        MISS_LEFT    = auto()
+        MISS_RIGHT   = auto()
+        BEYOND_LEFT  = auto()
+        BEYOND_RIGHT = auto()
+        UNK_LOC      = auto()
+        BETWEEN      = auto()
 
-    class Strand(IntEnum):
+    class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
         This is not relevant for residue peptide features.
         """
-        FORWARD = 1
-        REVERSE = -1
+        FORWARD = auto()
+        REVERSE = auto()
     
     def __init__(self, first, last, strand=Strand.FORWARD,
                  defect=Defect.NONE):
@@ -110,7 +110,7 @@ class Feature(Copyable):
     key : str
         The name of the feature class, e.g. *gene*, *CDS* or
         *regulatory*. 
-    locs : list of Location
+    locs : iterable object of Location
         A list of feature locations. In most cases this list will only
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
@@ -186,7 +186,7 @@ class Annotation(Copyable):
     
     Parameters
     ----------
-    features : list of Feature, optional
+    features : iterable object of Feature, optional
         The list of features to create the `Annotation` from. if not
         provided, an empty `Annotation` is created.
     
@@ -235,8 +235,11 @@ class Annotation(Copyable):
     test5    40 - 149   3
     """
     
-    def __init__(self, features=[]):
-        self._features = copy.copy(features)
+    def __init__(self, features=None):
+        if features is None:
+            self._features = []
+        else:
+            self._features = list(features)
         
     def __copy_create__(self):
         return Annotation(self._features)
@@ -318,34 +321,6 @@ class Annotation(Copyable):
         else:
             raise TypeError("Can only add 'Feature' instances to annotation")
     
-    def __delitem__(self, item):
-        if not isinstance(item, Feature):
-            raise TypeError("Only can delete 'Feature' instances "
-                            "from annotation")
-        self.del_feature(item)
-    
-    def __iter__(self):
-        i = 0
-        while i < len(self._features):
-            yield self._features[i]
-            i += 1
-    
-    def __contains__(self, item):
-        if not isinstance(item, Feature):
-            raise TypeError("Annotation instances only contain features")
-        return item in self._features
-    
-    def __eq__(self, item):
-        if not isinstance(item, Annotation):
-            return False
-        for feature in self._features:
-            if feature not in item._features:
-                return False
-        for feature in item._features:
-            if feature not in self._features:
-                return False
-        return True
-    
     def __getitem__(self, index):
         if isinstance(index, slice):
             i_first = index.start
@@ -379,6 +354,34 @@ class Annotation(Copyable):
         else:
             raise TypeError("{:} instances are invalid indices"
                             .format(type(index).__name__))
+    
+    def __delitem__(self, item):
+        if not isinstance(item, Feature):
+            raise TypeError("Only can delete 'Feature' instances "
+                            "from annotation")
+        self.del_feature(item)
+    
+    def __iter__(self):
+        i = 0
+        while i < len(self._features):
+            yield self._features[i]
+            i += 1
+    
+    def __contains__(self, item):
+        if not isinstance(item, Feature):
+            raise TypeError("Annotation instances only contain features")
+        return item in self._features
+    
+    def __eq__(self, item):
+        if not isinstance(item, Annotation):
+            return False
+        for feature in self._features:
+            if feature not in item._features:
+                return False
+        for feature in item._features:
+            if feature not in self._features:
+                return False
+        return True
 
 
 class AnnotatedSequence(Copyable):

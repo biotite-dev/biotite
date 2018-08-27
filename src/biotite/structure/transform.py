@@ -22,7 +22,7 @@ def translate(atoms, vector):
     ----------
     atoms : Atom or AtomArray or AtomArrayStack
         The atoms whose coordinates are altered.
-    vector: Iterable object, length=3
+    vector: array-like, length=3
         The translation vector :math:`(x, y, z)`.
     
     Returns
@@ -47,7 +47,7 @@ def rotate(atoms, angles):
     ----------
     atoms : Atom or AtomArray or AtomArrayStack
         The atoms whose coordinates are altered.
-    angles: Iterable object, length=3
+    angles: array-like, length=3
         The rotation angles in radians around x, y and z.
     
     Returns
@@ -94,7 +94,7 @@ def rotate_centered(atoms, angles):
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms whose coordinates are altered.
-    angles: Iterable object, length=3
+    angles: array-like, length=3
         the rotation angles in radians around axes x, y and z.
     
     Returns

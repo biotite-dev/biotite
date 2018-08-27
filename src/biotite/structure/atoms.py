@@ -62,9 +62,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        category : string
+        category : str
             The annotation category to be added.
-        dtype : type or string
+        dtype : type or str
             A type instance or a valid `NumPy` `dtype` string.
             Defines the type of the annotation
         
@@ -82,7 +82,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        category : string
+        category : str
             The annotation category to be removed.
         """
         if category not in self._annot:
@@ -94,7 +94,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        category : string
+        category : str
             The annotation category to be returned.
             
         Returns
@@ -138,68 +138,6 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The list containing the names of each annotation array.
         """
         return list(self._annot.keys())
-    
-    def __getattr__(self, attr):
-        """
-        If the attribute is an annotation, the annotation is returned
-        from the dictionary.
-        Exposes coordinates.
-        """
-        if attr == "coord":
-            return self._coord
-        if attr == "bonds":
-            return self._bonds
-        elif attr in self._annot:
-            return self._annot[attr]
-        else:
-            raise AttributeError("'" + type(self).__name__ +
-                                 "' object has no attribute '" + attr + "'")
-        
-    def __setattr__(self, attr, value):
-        """
-        If the attribute is an annotation, the `value` is saved to the
-        annotation in the dictionary.
-        Exposes coordinates.
-        `value` must have same length as `array_length()`.
-        """
-        if attr == "coord":
-            if not isinstance(value, np.ndarray):
-                raise TypeError("Value must be ndarray")
-            if value.shape[-2] != self._array_length:
-                raise IndexError("Expected array length {:d}, but got {:d}"
-                                 .format(self._array_length, len(value)) )
-            if value.shape[-1] != 3:
-                raise IndexError("Expected 3 coordinates for each atom")
-            self._coord = value
-        if attr == "bonds":
-            if isinstance(value, BondList):
-                if value.get_atom_count() != self._array_length:
-                    raise IndexError("Array length is {:d}, "
-                                    "but bond list has {:d} atoms"
-                                    .format(self._array_length, 
-                                            value.get_atom_count()) )
-                self._bonds = value
-            elif value is None:
-                # Remove bond list
-                self._bonds = None
-            else:
-                raise TypeError("Value must be BondList")
-        # This condition is required, since otherwise 
-        # call of the next one would result
-        # in indefinite calls of __setattr__
-        elif attr == "_annot":
-            super().__setattr__(attr, value)
-        elif attr in self._annot:
-            self.set_annotation(attr, value)
-        else:
-            super().__setattr__(attr, value)
-            
-    def __dir__(self):
-        attr = super().__dir__()
-        attr.append("coord")
-        attr.append("bonds")
-        for name in self._annot.keys():
-            attr.append(name)
             
     def _subarray(self, index):
         # Index is one dimensional (boolean mask, index array)
@@ -283,6 +221,68 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         return self._annot.keys() == item._annot.keys()
     
+    def __getattr__(self, attr):
+        """
+        If the attribute is an annotation, the annotation is returned
+        from the dictionary.
+        Exposes coordinates.
+        """
+        if attr == "coord":
+            return self._coord
+        if attr == "bonds":
+            return self._bonds
+        elif attr in self._annot:
+            return self._annot[attr]
+        else:
+            raise AttributeError("'" + type(self).__name__ +
+                                 "' object has no attribute '" + attr + "'")
+        
+    def __setattr__(self, attr, value):
+        """
+        If the attribute is an annotation, the `value` is saved to the
+        annotation in the dictionary.
+        Exposes coordinates.
+        `value` must have same length as `array_length()`.
+        """
+        if attr == "coord":
+            if not isinstance(value, np.ndarray):
+                raise TypeError("Value must be ndarray")
+            if value.shape[-2] != self._array_length:
+                raise IndexError("Expected array length {:d}, but got {:d}"
+                                 .format(self._array_length, len(value)) )
+            if value.shape[-1] != 3:
+                raise IndexError("Expected 3 coordinates for each atom")
+            self._coord = value
+        if attr == "bonds":
+            if isinstance(value, BondList):
+                if value.get_atom_count() != self._array_length:
+                    raise IndexError("Array length is {:d}, "
+                                    "but bond list has {:d} atoms"
+                                    .format(self._array_length, 
+                                            value.get_atom_count()) )
+                self._bonds = value
+            elif value is None:
+                # Remove bond list
+                self._bonds = None
+            else:
+                raise TypeError("Value must be BondList")
+        # This condition is required, since otherwise 
+        # call of the next one would result
+        # in indefinite calls of __setattr__
+        elif attr == "_annot":
+            super().__setattr__(attr, value)
+        elif attr in self._annot:
+            self.set_annotation(attr, value)
+        else:
+            super().__setattr__(attr, value)
+            
+    def __dir__(self):
+        attr = super().__dir__()
+        attr.append("coord")
+        attr.append("bonds")
+        for name in self._annot.keys():
+            attr.append(name)
+    
     def __eq__(self, item):
         """
         See Also
@@ -292,14 +292,6 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if not self.equal_annotations(item):
             return False
         return np.array_equal(self._coord, item._coord)
-    
-    def __ne__(self, item):
-        """
-        See Also
-        --------
-        equal_annotations
-        """
-        return not self.__eq__(item)
     
     def __len__(self):
         """
@@ -650,14 +642,6 @@ class AtomArray(_AtomArrayBase):
             return False
         return True
     
-    def __ne__(self, item):
-        """
-        See also
-        --------
-        __eq__
-        """
-        return not self.__eq__(item)
-    
     def __str__(self):
         """
         Get a string representation of the array.
@@ -913,14 +897,6 @@ class AtomArrayStack(_AtomArrayBase):
         if not isinstance(item, AtomArrayStack):
             return False
         return True
-    
-    def __ne__(self, item):
-        """
-        See also
-        --------
-        __eq__
-        """
-        return not self.__eq__(item)
     
     def __str__(self):
         """

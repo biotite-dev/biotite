@@ -126,7 +126,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         
     """
     
-    def __init__(self, sequence=[]):
+    def __init__(self, sequence=()):
         self.symbols = sequence
         
     
@@ -262,7 +262,6 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         if isinstance(index, numbers.Integral):
             # Expect a single symbol
             code = alph.encode(item)
-            self._seq_code.__setitem__(index, code)
         else:
             # Expect multiple symbols
             if isinstance(item, Sequence):
@@ -272,7 +271,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             else:
                 # Default: item is iterable object of symbols
                 code = alph.encode_multiple(item)
-            self._seq_code.__setitem__(index, code)
+        self._seq_code.__setitem__(index, code)
     
     def __len__(self):
         return len(self._seq_code)
@@ -290,9 +289,6 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         if self.get_alphabet() != item.get_alphabet():
             return False
         return np.array_equal(self._seq_code, item._seq_code)
-    
-    def __ne__(self, item):
-        return not self == item
     
     def __str__(self):
         alph = self.get_alphabet()

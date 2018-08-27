@@ -197,6 +197,17 @@ class SubstitutionMatrix(object):
         return SubstitutionMatrix(new_alph1, new_alph2, new_matrix)
     
     def is_symmetric(self):
+        """
+        Check whether the substitution matrix is symmetric,
+        i.e. both alphabets are identical
+        and the score matrix is symmetric.
+
+        Returns
+        -------
+        is_symmetric : bool
+            True, if both alphabets are identical and the score matrix
+            is symmetric, false otherwise.
+        """
         return     self._alph1 == self._alph2 \
                and np.array_equal(self._matrix, np.transpose(self._matrix))
     
