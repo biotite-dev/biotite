@@ -49,8 +49,9 @@ class WebApp(Application, metaclass=abc.ABCMeta):
         """
         if self._obey_rules:
             if msg is None:
-                raise RuleViolationError("The user guidelines "
-                                         "would be violated")
+                raise RuleViolationError(
+                    "The user guidelines would be violated"
+                )
             else:
                 raise RuleViolationError(msg)
     

@@ -207,7 +207,7 @@ class NucleotideSequence(Sequence):
         
         if complete:
             if len(self) % 3 != 0:
-                raise ValueError("Sequence needs to be a multiple of 3 "
+                raise ValueError("Sequence length needs to be a multiple of 3 "
                                  "for complete translation")
             # Pessimistic array allocation
             aa_code = np.zeros(len(self) // 3)

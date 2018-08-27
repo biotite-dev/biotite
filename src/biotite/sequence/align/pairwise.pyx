@@ -62,8 +62,9 @@ def align_ungapped(seq1, seq2, matrix, score_only=False):
         only the score is returned.
     """
     if len(seq1) != len(seq2):
-        raise ValueError("Sequence lengths of {:d} and {:d} are not equal"
-                         .format( len(seq1), len(seq2) ))
+        raise ValueError(
+            f"Different sequence lengths ({len(seq1):d} and {len(seq2):d})"
+        )
     if (matrix.get_alphabet1() != seq1.get_alphabet() and
         matrix.get_alphabet2() != seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
@@ -183,8 +184,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
-            raise ValueError("Substitution matrix is inappropriate "
-                             "for the given sequences")
+            raise ValueError("The sequences' alphabets do not fit the matrix")
     # Check if gap penalty is gernal or affine
     if type(gap_penalty) == int:
         affine_penalty = False

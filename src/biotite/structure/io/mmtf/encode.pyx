@@ -110,7 +110,7 @@ def encode_array(np.ndarray array, int codec, int param):
             raise TypeError("Array with dtype 'int32' is required")
         return _encode_packed(False, array).astype(">i1").tobytes()
     else:
-        raise ValueError("Unknown codec with ID " + str(codec))
+        raise ValueError(f"Unknown codec with ID {codec}")
 
 
 def _encode_delta(int32[:] array):

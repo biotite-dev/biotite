@@ -179,7 +179,7 @@ class MMTFFile(File):
     
     def __setitem__(self, key, item):
         if isinstance(item, np.ndarray):
-            raise TypeError("Arrays that need to be encoded must be addeed"
+            raise TypeError("Arrays that need to be encoded must be addeed "
                             "via 'set_array()'")
         self._content[key] = item
     

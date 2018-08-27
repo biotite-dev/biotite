@@ -8,7 +8,7 @@ __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 import numbers
 import copy
 import sys
-from enum import IntEnum
+from enum import Flag, Enum, auto
 import numpy as np
 from .sequence import Sequence
 from ..copyable import Copyable
@@ -35,7 +35,7 @@ class Location(Copyable):
         A possible defect of the location.
     """
     
-    class Defect(IntEnum):
+    class Defect(Flag):
         """
         This enum type describes location defects.
         
@@ -60,20 +60,20 @@ class Location(Copyable):
              bases/residues.
         """
         NONE         = 0
-        MISS_LEFT    = 1
-        MISS_RIGHT   = 2
-        BEYOND_LEFT  = 4
-        BEYOND_RIGHT = 8
-        UNK_LOC      = 16
-        BETWEEN      = 32
+        MISS_LEFT    = auto()
+        MISS_RIGHT   = auto()
+        BEYOND_LEFT  = auto()
+        BEYOND_RIGHT = auto()
+        UNK_LOC      = auto()
+        BETWEEN      = auto()
 
-    class Strand(IntEnum):
+    class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
         This is not relevant for residue peptide features.
         """
-        FORWARD = 1
-        REVERSE = -1
+        FORWARD = auto()
+        REVERSE = auto()
     
     def __init__(self, first, last, strand=Strand.FORWARD,
                  defect=Defect.NONE):
@@ -265,7 +265,10 @@ class Annotation(Copyable):
             Feature to be added.
         """
         if not isinstance(feature, Feature):
-            raise TypeError("Only 'Feature' objects are supported")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(feature).__name__}"
+            )
         self._features.append(feature.copy())
     
     def get_location_range(self):
@@ -319,7 +322,10 @@ class Annotation(Copyable):
             feature_list.append(item)
             return Annotation(feature_list)
         else:
-            raise TypeError("Can only add 'Feature' instances to annotation")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(item).__name__}"
+            )
     
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -352,13 +358,16 @@ class Annotation(Copyable):
                     sub_annot.add_feature(new_feature)
             return sub_annot
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __delitem__(self, item):
         if not isinstance(item, Feature):
-            raise TypeError("Only can delete 'Feature' instances "
-                            "from annotation")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(item).__name__}"
+            )
         self.del_feature(item)
     
     def __iter__(self):
@@ -368,8 +377,6 @@ class Annotation(Copyable):
             i += 1
     
     def __contains__(self, item):
-        if not isinstance(item, Feature):
-            raise TypeError("Annotation instances only contain features")
         return item in self._features
     
     def __eq__(self, item):
@@ -540,8 +547,9 @@ class AnnotatedSequence(Copyable):
         elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __setitem__(self, index, item):
         if isinstance(index, Feature):
@@ -573,8 +581,9 @@ class AnnotatedSequence(Copyable):
             # Item is a symbol
             self._sequence[index - self._seqstart] = item
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __eq__(self, item):
         if not isinstance(item, AnnotatedSequence):

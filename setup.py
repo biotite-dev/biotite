@@ -30,17 +30,21 @@ allowing advanced users to implement their own algorithms upon the existing
 types.
 """
 
-import numpy
-try:
-    from Cython.Build import cythonize
-    cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
-except ValueError:
-    pass
+original_wd = os.getcwd()
+# Change directory to setup directory to ensure correct file identification
+os.chdir(dirname(abspath(__file__)))
+
+
+# Compile Cython into C if any Cython files exist
+if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
+    try:
+        from Cython.Build import cythonize
+        import numpy
+        cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
+    except ValueError:
+        pass
 
 def get_extensions():
-    original_wd = os.getcwd()
-    # Change directory to setup directory to ensure correct globbing
-    os.chdir(dirname(abspath(__file__)))
     ext_sources = []
     for dirpath, dirnames, filenames in os.walk(normpath("src/biotite")):
         for filename in fnmatch.filter(filenames, '*.c'):
@@ -53,8 +57,6 @@ def get_extensions():
     ext_modules = [Extension(ext_names[i], [ext_sources[i]],
                              include_dirs=[numpy.get_include()])
                    for i in range(len(ext_sources))]
-    # Return to original directory
-    os.chdir(original_wd)
     return ext_modules
 
 
@@ -75,12 +77,13 @@ class PyTestCommand(TestCommand):
 setup(
     name="biotite",
     version = __version__,
-    description = "A general framework for computational biology",
+    description = ("A comprehensive framework for "
+                   "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
     url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
-    classifiers = (
+    classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
@@ -93,7 +96,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
-    ),
+    ],
     
     zip_safe = False,
     packages = find_packages("src"),
@@ -107,9 +110,9 @@ setup(
                     "biotite.sequence.graphics" : ["color_schemes/*.json"],
                     "biotite.sequence"          : ["codon_tables.txt"],},
     
-    install_requires = ["requests",
-                        "numpy",
-                        "msgpack"],
+    install_requires = ["requests >= 2.12",
+                        "numpy >= 1.13",
+                        "msgpack >= 0.5.6"],
     python_requires = ">=3.6",
     
     cmdclass = {"test": PyTestCommand},
@@ -122,3 +125,7 @@ setup(
              "release"    : ("setup.py", __version__)}
     }
 )
+
+
+# Return to original directory
+os.chdir(original_wd)

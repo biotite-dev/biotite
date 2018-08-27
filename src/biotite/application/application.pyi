@@ -3,19 +3,16 @@
 # information.
 
 from typing import Callable
-from enum import IntEnum
+from enum import Flag
 from abc import abstractmethod
 
 
-def requires_state(app_state: int) -> Callable[[Callable], Callable]: ...
-
-
-class AppState(IntEnum):
-    CREATED = 1
-    RUNNING = 2
-    FINISHED = 4
-    JOINED = 8
-    CANCELLED = 16
+class AppState(Flag):
+    CREATED = ...
+    RUNNING = ...
+    FINISHED = ...
+    JOINED = ...
+    CANCELLED = ...
 
 
 class Application:
@@ -33,3 +30,6 @@ class Application:
     @abstractmethod
     def evaluate(self) -> None: ...
     def clean_up(self) -> None: ...
+
+
+def requires_state(app_state: AppState) -> Callable[[Callable], Callable]: ...
