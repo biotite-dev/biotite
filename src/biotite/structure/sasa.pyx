@@ -15,7 +15,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 
 import numpy as np
-from .adjacency import CellList
+from .celllist import CellList
 from .filter import filter_solvent, filter_monoatomic_ions
 
 ctypedef np.uint8_t np_bool
