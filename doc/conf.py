@@ -207,7 +207,8 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "donate.html"]}
 html_theme_options = {
-    "description"   : "A general framework for computational biology",
+    "description"   : "A comprehensive framework for " \
+                      "computational molecular biology",
     "logo"          : "assets/general/biotite_logo_s.png",
     "logo_name"     : "false",
     "github_user"   : "biotite-dev",
