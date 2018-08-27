@@ -311,13 +311,14 @@ cdef class CellList:
             array_i = 0
             for j in range(all_indices.shape[1]):
                 coord_index = all_indices[i,j]
-                x2 = self._coord[coord_index, 0]
-                y2 = self._coord[coord_index, 1]
-                z2 = self._coord[coord_index, 2]
-                sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
-                if sq_dist <= sq_radius:
-                    indices[i, array_i] = coord_index
-                    array_i += 1
+                if coord_index != -1:
+                    x2 = self._coord[coord_index, 0]
+                    y2 = self._coord[coord_index, 1]
+                    z2 = self._coord[coord_index, 2]
+                    sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
+                    if sq_dist <= sq_radius:
+                        indices[i, array_i] = coord_index
+                        array_i += 1
         
         if is_multi_coord:
             return np.asarray(indices)
