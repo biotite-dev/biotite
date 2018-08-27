@@ -110,9 +110,9 @@ setup(
                     "biotite.sequence.graphics" : ["color_schemes/*.json"],
                     "biotite.sequence"          : ["codon_tables.txt"],},
     
-    install_requires = ["requests",
-                        "numpy",
-                        "msgpack"],
+    install_requires = ["requests >= 2.12",
+                        "numpy >= 1.13",
+                        "msgpack >= 0.5.6"],
     python_requires = ">=3.4",
     
     cmdclass = {"test": PyTestCommand},
