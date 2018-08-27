@@ -300,7 +300,7 @@ cdef class CellList:
                 y2 = self._coord[coord_index, 1]
                 z2 = self._coord[coord_index, 2]
                 sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
-                if sq_dist < sq_radius:
+                if sq_dist <= sq_radius:
                     indices_single[subset_j] = coord_index
                     subset_j += 1
             return np.asarray(indices_single)[:subset_j]
@@ -321,7 +321,7 @@ cdef class CellList:
                     y2 = self._coord[coord_index, 1]
                     z2 = self._coord[coord_index, 2]
                     sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
-                    if sq_dist < sq_radius:
+                    if sq_dist <= sq_radius:
                         indices_multi[i, subset_j] = coord_index
                         subset_j += 1
             return np.asarray(indices_multi)
@@ -414,7 +414,7 @@ cdef class CellList:
         )
         # Fill index array
         self._get_atoms_in_cells(coord.astype(np.float32, copy=False),
-                                  array_indices, cell_radius)
+                                 array_indices, cell_radius)
         if multi_coord:
             return array_indices
         else:
