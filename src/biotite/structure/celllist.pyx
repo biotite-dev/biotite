@@ -255,9 +255,9 @@ cdef class CellList:
         >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(indices)
-        [[ 99 102 104 ...  -1  -1  -1]
-         [104 114  45 ...  -1  -1  -1]
-         [ 46  55 273 ...  -1  -1  -1]]
+        [[ 99 102 104 112 114  45  55 290 101 105 271 273 268  -1  -1]
+         [104 114  45  46  55  44  54 105 271 273 265 268 269 272 275]
+         [ 46  55 273 268 269 272 274 275  -1  -1  -1  -1  -1  -1  -1]]
         >>> # Convert to list of arrays and remove trailing -1
         >>> indices = [row[row != -1] for row in indices]
         >>> for row in indices:
@@ -268,6 +268,7 @@ cdef class CellList:
         """
         cdef int i=0, j=0
         cdef int array_i = 0
+        cdef int max_array_length = 0
         cdef int coord_index
         cdef float32 x1, y1, z1, x2, y2, z2
         cdef float32 sq_dist
@@ -319,11 +320,13 @@ cdef class CellList:
                     if sq_dist <= sq_radius:
                         indices[i, array_i] = coord_index
                         array_i += 1
+            if array_i > max_array_length:
+                max_array_length = array_i
         
         if is_multi_coord:
-            return np.asarray(indices)
+            return np.asarray(indices)[:, :max_array_length]
         else:
-            return np.asarray(indices)[0, :array_i]
+            return np.asarray(indices)[0, :max_array_length]
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -396,26 +399,34 @@ cdef class CellList:
         cdef int length = (2*max_cell_radius + 1)**3 * self._max_cell_length
         array_indices = np.full((len(coord), length), -1, dtype=np.int32)
         # Fill index array
-        self._get_atoms_in_cells(coord, array_indices, cell_radius)
+        cdef int max_array_length \
+            = self._get_atoms_in_cells(coord, array_indices, cell_radius)
         if is_multi_coord:
-            return array_indices
+            return array_indices[:, :max_array_length]
         else:
-            array_indices = array_indices[0]
-            return array_indices[array_indices != -1]
+            return array_indices[0, :max_array_length]
             
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void _get_atoms_in_cells(self,
+    cdef int _get_atoms_in_cells(self,
                                  float32[:,:] coord,
                                  int[:,:] indices,
                                  int[:] cell_radius):
+        # This method fills the given empty index array
+        # with actual indices of adjacent atoms
+        #
+        # Since the length of 'indices' (second dimension) is
+        # the wort case assumption, this method returns the actual
+        # required length, i.e. the highest length of all arrays
+        # in this 'array of arrays'
         cdef int length
         cdef int* list_ptr
         cdef float32 x, y,z
         cdef int i=0, j=0, k=0
         cdef int adj_i, adj_j, adj_k
         cdef int pos_i, array_i, cell_i
+        cdef int max_array_length = 0
         cdef int cell_r
         
         cdef ptr[:,:,:] cells = self._cells
@@ -444,6 +455,10 @@ cdef class CellList:
                                         indices[pos_i, array_i] = \
                                             list_ptr[cell_i]
                                         array_i += 1
+            if array_i > max_array_length:
+                max_array_length = array_i
+        return max_array_length
+    
     
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
