@@ -106,7 +106,7 @@ we have to provide the database specific UIDs instead of PDB IDs:
 
 A list of valid database, retrieval type and mode combinations can
 be found
-`here <https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`.
+`here <https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`_.
 The Entrez database allows for packing data for multiple UIDs into a single
 file. This is achieved with the `fetch_single_file()` function.
 

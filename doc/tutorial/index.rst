@@ -5,6 +5,9 @@
 Tutorial
 ========
 
+.. contents::
+   :depth: 3
+
 .. include:: introduction.rst
 
 .. include:: sequence.rst

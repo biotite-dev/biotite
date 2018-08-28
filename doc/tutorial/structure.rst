@@ -380,7 +380,7 @@ Output:
 If you would like to know which atoms are in proximity to specific coordinates,
 have a look at the `CellList` class.
 
-.. warning:: Creating a subarray or substack by indexing, does not necessarily
+.. warning:: Creating a subarray or substack by indexing does not necessarily
    copy the coordinates and annotation arrays. If possible, only *array views*
    are created. Look into the `NumPy` documentation for furher details. If you
    want to ensure, that you are working with a copy, use the `copy()` method
@@ -477,11 +477,11 @@ Output:
    [['N' 'CA']
     ['CA' 'CB']]
 
-As you see, the the bonds involing the *N* (only a single one) is
+As you see, the the bonds involing the *C* (only a single one) is
 removed and the remaining indices are shifted.
 
 We do not have to index the the atom array and the bond list separately,
-for convenienve reasons you can associate a bond list to an atom array.
+for convenience reasons you can associate a bond list to an atom array.
 Every time the atom array is indexed, the index is also applied to the
 associated bond list. The same behavior applies to concatenations, by the way.
 
