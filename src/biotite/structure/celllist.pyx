@@ -281,12 +281,12 @@ cdef class CellList:
         cdef float32[:,:] coord_v
         
         coord, radius, is_multi_coord, is_multi_radius \
-            = _prepare_vectorization(coord, radius, np.int32)
+            = _prepare_vectorization(coord, radius, np.float32)
         if is_multi_radius:
             sq_radii = radius * radius
             cell_radii = np.floor_divide(
-                radius, self._cellsize, dtype=np.int32
-            ) + 1
+                radius, self._cellsize
+            ).astype(np.int32) + 1
         else:
             # All radii are equal
             sq_radii = np.full(
@@ -548,6 +548,7 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
             )
         if (radius < 0).any():
             raise ValueError("Radii must be a positive values")
+        radius = radius.astype(radius_dtype, copy=False)
         is_multi_radius = True
     else:
         # Single radius
