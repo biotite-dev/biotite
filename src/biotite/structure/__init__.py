@@ -80,13 +80,14 @@ visualisation.
 
 __author__ = "Patrick Kunzmann"
 
-from .adjacency import *
 from .atoms import *
 from .bonds import *
+from .celllist import *
 from .compare import *
 from .error import *
 from .filter import *
 from .geometry import *
+from .hbond import *
 from .integrity import *
 from .mechanics import *
 from .residues import *

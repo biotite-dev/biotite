@@ -41,17 +41,11 @@ class DsspApp(LocalApp):
         If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    # Prevents overwriting of input and output files
-    # of different DsspApp instancs
-    _counter = 0
-    
     def __init__(self, atom_array, bin_path="dssp", mute=True):
         super().__init__(bin_path, mute)
         self._array = atom_array
-        DsspApp._counter += 1
-        self._id = DsspApp._counter
-        self._in_file_name  = temp_file("dssp_in_{:d}.pdb".format(self._id))
-        self._out_file_name = temp_file("dssp_out_{:d}.dssp".format(self._id))
+        self._in_file_name  = temp_file("pdb")
+        self._out_file_name = temp_file("pdb")
 
     def run(self):
         in_file = PDBFile()
@@ -70,7 +64,7 @@ class DsspApp(LocalApp):
             if line.startswith("  #  RESIDUE AA STRUCTURE"):
                 sse_start = i+1
         if sse_start is None:
-            raise VaueError("DSSP file does not contain SSE records")
+            raise ValueError("DSSP file does not contain SSE records")
         lines = [line for line in lines[sse_start:] if len(line) != 0]
         self._sse = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters

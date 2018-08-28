@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBFile"]
 
 import numpy as np
@@ -11,6 +11,7 @@ from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 import copy
+from warnings import warn
 
 
 _atom_records = {"hetero"    : (0,  6),
@@ -56,32 +57,34 @@ class PDBFile(TextFile):
     >>> file = PDBFile()
     >>> file.set_structure(array_stack_mod)
     >>> file.write("1l2y_mod.pdb")
-    
     """
-    
-    def get_structure(self, insertion_code=[], altloc=[],
-                      model=None, extra_fields=[]):
+
+    def get_structure(self, model=None, insertion_code=[], altloc=[],
+                      extra_fields=[]):
         """
         Get an `AtomArray` or `AtomArrayStack` from the PDB file.
         
         Parameters
         ----------
-        insertion_code : list of tuple, optional
-            In case the structure contains insertion codes, those can be
-            specified here: Each tuple consists of an integer, specifying
-            the residue ID, and a letter, specifying the insertion code.
-            By default no insertions are used.
-        altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can be
-            specified here: Each tuple consists of an integer, specifying
-            the residue ID, and a letter, specifying the *altloc* ID.
-            By default the location with the *altloc* ID "A" is used.
         model : int, optional
             If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model ID.
-            If this parameter is omitted, an `AtomArrayStack` containing all
-            models will be returned, even if the structure contains only one
-            model.
+            `AtomArray` from the atoms corresponding to the given model
+            ID.
+            If this parameter is omitted, an `AtomArrayStack` containing
+            all models will be returned, even if the structure contains
+            only one model.
+        insertion_code : list of tuple, optional
+            In case the structure contains insertion codes, those can be
+            specified here: Each tuple consists of an integer,
+            specifying the residue ID, and a letter, specifying the 
+            insertion code.
+            By default no insertions are used.
+        altloc : list of tuple, optional
+            In case the structure contains *altloc* entries, those can
+            be specified here: Each tuple consists of an integer,
+            specifying the residue ID, and a letter, specifying the
+            *altloc* ID. By default the location with the *altloc* ID
+            "A" is used.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -94,13 +97,13 @@ class PDBFile(TextFile):
             The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self._lines))
-                                  if self._lines[i].startswith(("MODEL"))],
+        model_start_i = np.array([i for i in range(len(self.lines))
+                                  if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
         # Filter out lines of altlocs and insertion codes
-        atom_line_i = np.array([i for i in range(len(self._lines)) if
-                                self._lines[i].startswith(("ATOM", "HETATM"))],
+        atom_line_i = np.array([i for i in range(len(self.lines)) if
+                                self.lines[i].startswith(("ATOM", "HETATM"))],
                                dtype=int)
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
@@ -138,9 +141,10 @@ class PDBFile(TextFile):
             elif model == last_model:
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
-                raise ValueError("Requested model {:d} is larger than the "
-                                 "amount of models ({:d})"
-                                 .format(model, last_model))
+                raise ValueError(
+                    f"Requested model number {model} is larger than the "
+                    f"amount of models ({last_model})"
+                )
             annot_i = atom_line_i[line_filter]
             coord_i = atom_line_i[line_filter]
         
@@ -158,9 +162,9 @@ class PDBFile(TextFile):
             array.add_annotation("charge", dtype=int)
         
         # Fill in annotation
-        # i is index in array, j is line index
+        # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
-            line = self._lines[line_i]
+            line = self.lines[line_i]
             altloc_array[i] = line[16]
             inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
@@ -169,9 +173,26 @@ class PDBFile(TextFile):
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
+        
+        # Replace empty strings for elements with guessed types
+        # This is used e.g. for PDB files created by Gromacs
+        def guess_element(atom_name):
+            if atom_name.startswith(("H", "1H", "2H", "3H")):
+                return 'H'
+            return atom_name[0]
+
+        if "" in array.element:
+            rep_num = 0
+            for idx in range(len(array.element)):
+                if not array.element[idx]:
+                    atom_name = array.atom_name[idx]
+                    array.element[idx] = guess_element(atom_name)
+                    rep_num += 1
+            warn("{} elements were guessed from atom_name.".format(rep_num))
+                            
         if extra_fields:
             for i, line_i in enumerate(annot_i):
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 if "atom_id" in extra_fields:
                     array.atom_id[i] = int(line[6:11].strip())
                 if "occupancy" in extra_fields:
@@ -186,7 +207,7 @@ class PDBFile(TextFile):
         # Fill in coordinates
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 array.coord[i,0] = float(line[30:38])
                 array.coord[i,1] = float(line[38:46])
                 array.coord[i,2] = float(line[46:54])
@@ -198,7 +219,7 @@ class PDBFile(TextFile):
                 if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
                     m += 1
                     i = 0
-                line = self._lines[line_i]
+                line = self.lines[line_i]
                 array.coord[m,i,0] = float(line[30:38])
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])
@@ -208,7 +229,7 @@ class PDBFile(TextFile):
         return array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
-        
+
     def set_structure(self, array):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
@@ -248,9 +269,9 @@ class PDBFile(TextFile):
             charge = [""] * array.array_length()
         
         if isinstance(array, AtomArray):
-            self._lines = [None] * array.array_length()
+            self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
-                self._lines[i] = ("{:6}".format(hetero[i]) + 
+                self.lines[i] = ("{:6}".format(hetero[i]) + 
                                   "{:>5d}".format(atom_id[i]) +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
@@ -271,14 +292,14 @@ class PDBFile(TextFile):
                                  )
         
         elif isinstance(array, AtomArrayStack):
-            self._lines = []
+            self.lines = []
             # The entire information, but the coordinates,
             # is equal for each model
             # Therefore template lines are created
             # which are afterwards applied for each model
-            temp_lines = [None] * array.array_length()
+            templines = [None] * array.array_length()
             for i in range(array.array_length()):
-                temp_lines[i] = ("{:6}".format(hetero[i]) + 
+                templines[i] = ("{:6}".format(hetero[i]) + 
                                  "{:>5d}".format(atom_id[i]) +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
@@ -296,9 +317,9 @@ class PDBFile(TextFile):
                                 )
             for i in range(array.stack_depth()):
                 #Fill in coordinates for each model
-                self._lines.append("{:5}{:>9d}".format("MODEL", i+1))
-                model_lines = copy.copy(temp_lines)
-                for j, line in enumerate(model_lines):
+                self.lines.append("{:5}{:>9d}".format("MODEL", i+1))
+                modellines = copy.copy(templines)
+                for j, line in enumerate(modellines):
                     # Insert coordinates
                     line = (line[:30]
                             + "{:>8.3f}{:>8.3f}{:>8.3f}".format(
@@ -306,8 +327,8 @@ class PDBFile(TextFile):
                                     array.coord[i,j,1],
                                     array.coord[i,j,2])
                             + line[54:] )
-                    model_lines[j] = line
-                self._lines.extend(model_lines)
-                self._lines.append("ENDMDL")
+                    modellines[j] = line
+                self.lines.extend(modellines)
+                self.lines.append("ENDMDL")
                 
             

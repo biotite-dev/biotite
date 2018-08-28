@@ -42,7 +42,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Parameters
         ----------
         file_name : str
-            The name of the file to be read. Includes the file path.
+            The path of the file to be read.
+            A file-like-object cannot be used.
         start : int, optional
             The frame index, where file parsing is started. If no value
             is given, parsing starts at the first frame. The index
@@ -57,7 +58,6 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         atom_i : ndarray, dtype=int
             The atom indices to be read from the file.
         """
-        super().read(file_name)
         traj_type = self.traj_type()
         with traj_type(file_name, 'r') as f:
             if start is not None and start != 0:
@@ -143,13 +143,18 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     def write(self, file_name):
         """
         Write the content into a trajectory file.
+
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be written to.
+            A file-like-object cannot be used.
         """
-        super().write(file_name)
-        traj_type = self._traj_type()
+        traj_type = self.traj_type()
         with traj_type(file_name, 'w') as f:
             f.write(xyz=self._coord, time=self._time, box=self._box)
     
-    def copy():
+    def copy(self):
         """
         This operation is not implemented for trajectory files.
         

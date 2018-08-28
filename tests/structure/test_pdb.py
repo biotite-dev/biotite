@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
@@ -63,3 +64,32 @@ def test_extra_fields():
     assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
+
+@pytest.mark.filterwarnings("ignore")
+def test_guess_elements():
+    import tempfile
+    from copy import deepcopy
+
+    # read valid pdb file
+    path = join(data_dir, "1l2y.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    stack = pdb_file.get_structure()
+
+    # remove all elements
+    removed_stack = stack.copy()
+    removed_stack.element[:] = ''
+
+    # save stack without elements to tmp file
+    tmp_file_name = biotite.temp_file(".pdb")
+    tmp_pdb_file = pdb.PDBFile()
+    tmp_pdb_file.set_structure(removed_stack)
+    tmp_pdb_file.write(tmp_file_name)
+
+    # read new stack from file with guessed elements
+    guessed_pdb_file = pdb.PDBFile()
+    guessed_pdb_file.read(tmp_file_name)
+    guessed_stack = guessed_pdb_file.get_structure()
+
+    assert guessed_stack.element.tolist() == stack.element.tolist()
+

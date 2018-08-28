@@ -10,6 +10,7 @@ from ...seqtypes import NucleotideSequence, ProteinSequence
 import textwrap
 import copy
 import re
+import io
 
 __all__ = ["GenBankFile", "GenPeptFile", "MultiFile"]
 
@@ -53,12 +54,13 @@ class GenBankFile(TextFile):
         # and names of categories
         self._fields = []
     
-    def process_input(self):
-        super().process_input()
+    def read(self, file):
+        super().read(file)
         start = -1
         stop = -1
         name = ""
-        for i, line in enumerate(self._lines):
+        self._fields = []
+        for i, line in enumerate(self.lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
             if len(line) != 0 and line[0] != " " and line[:2] != "//":
@@ -72,7 +74,7 @@ class GenBankFile(TextFile):
         stop = i
         self._fields.append((start, stop, name))
     
-    def write(self, file_name):
+    def write(self, file):
         """
         Not implemented yet.
         """
@@ -103,7 +105,7 @@ class GenBankFile(TextFile):
         """
         locus_dict = {}
         starts, stops = self._get_field_indices("LOCUS")
-        locus_info = self._lines[starts[0]].split()
+        locus_info = self.lines[starts[0]].split()
         locus_dict["name"] = locus_info[1]
         locus_dict["length"] = locus_info[2]
         locus_dict["type"] = locus_info[4]
@@ -123,7 +125,7 @@ class GenBankFile(TextFile):
             Content of the *DEFINITION* field.
         """
         starts, stops = self._get_field_indices("DEFINITION")
-        return self._lines[starts[0]][12:].strip()
+        return self.lines[starts[0]][12:].strip()
     
     def get_accession(self):
         """
@@ -135,7 +137,7 @@ class GenBankFile(TextFile):
             Content of the *ACCESSION* field.
         """
         starts, stops = self._get_field_indices("ACCESSION")
-        return self._lines[starts[0]][12:].strip()
+        return self.lines[starts[0]][12:].strip()
     
     def get_version(self):
         """
@@ -147,7 +149,7 @@ class GenBankFile(TextFile):
             Content of the *VERSION* field. Does not include GI.
         """
         starts, stops = self._get_field_indices("VERSION")
-        return self._lines[starts[0]][12:].split()[0]
+        return self.lines[starts[0]][12:].split()[0]
     
     def get_gi(self):
         """
@@ -159,7 +161,7 @@ class GenBankFile(TextFile):
             The GI of the file.
         """
         starts, stops = self._get_field_indices("VERSION")
-        version_info = self._lines[starts[0]][12:].split()
+        version_info = self.lines[starts[0]][12:].split()
         if len(version_info) < 2 or "GI" not in version_info[1]:
             raise InvalidFileError("File does not contain GI")
         # Truncate GI
@@ -188,7 +190,7 @@ class GenBankFile(TextFile):
         starts, stops = self._get_field_indices("DBLINK")
         link_dict = {}
         for i in range(starts[0], stops[0]):
-            line = self._lines[i]
+            line = self.lines[i]
             content = line[12:].split(":")
             link_dict[content[0].strip()] = content[1].strip()
         return link_dict
@@ -203,7 +205,7 @@ class GenBankFile(TextFile):
             Organism name corresponding to this file.
         """
         starts, stops = self._get_field_indices("SOURCE")
-        return self._lines[starts[0]][12:].strip()
+        return self.lines[starts[0]][12:].strip()
     
     def get_references(self):
         """
@@ -252,7 +254,7 @@ class GenBankFile(TextFile):
         """
         starts, stops = self._get_field_indices("COMMENT")
         comment = ""
-        for line in self._lines[starts[0] : stops[0]]:
+        for line in self.lines[starts[0] : stops[0]]:
             comment += line[12:].strip() + " "
         return comment.strip()
     
@@ -281,7 +283,7 @@ class GenBankFile(TextFile):
         feature_key = None
         feature_value = ""
         for i in range(start, stop):
-            line = self._lines[i]
+            line = self.lines[i]
             # Check if line contains feature key
             if line[5] != " ":
                 if feature_key is not None:
@@ -373,7 +375,7 @@ class GenBankFile(TextFile):
         # Remove numbers, emtpy spaces and the '//' at end of file
         regex = re.compile("[0-9]| |/")
         for i in range(starts[0]+1, stops[0]):
-            seq_str += regex.sub("", self._lines[i])
+            seq_str += regex.sub("", self.lines[i])
         return seq_str
             
 
@@ -385,8 +387,7 @@ class GenBankFile(TextFile):
                 starts.append(field[0])
                 stops.append(field[1])
         if len(starts) == 0:
-            raise InvalidFileError("File does not contain '{:}' category"
-                                   .format(name))
+            raise InvalidFileError(f"File does not contain '{name}' category")
         return starts, stops
     
     def _get_minor_fields(self, field_start, field_stop):
@@ -394,7 +395,7 @@ class GenBankFile(TextFile):
         content = ""
         minor_field_dict = {}
         for i in range(field_start, field_stop):
-            line = self._lines[i]
+            line = self.lines[i]
             # Check if line contains a new minor field
             # (Header beginning from first column)
             if len(line) != 0 and line[:12].strip() != "":
@@ -491,7 +492,7 @@ class GenPeptFile(GenBankFile):
         """
         locus_dict = {}
         starts, stops = self._get_field_indices("LOCUS")
-        locus_info = self._lines[starts[0]].split()
+        locus_info = self.lines[starts[0]].split()
         locus_dict["name"] = locus_info[1]
         locus_dict["length"] = locus_info[2]
         locus_dict["division"] = locus_info[-2]
@@ -508,7 +509,7 @@ class GenPeptFile(GenBankFile):
             Content of the *DBSOURCE* field.
         """
         starts, stops = self._get_field_indices("DBSOURCE")
-        return self._lines[starts[0]][12:].strip()
+        return self.lines[starts[0]][12:].strip()
     
     def get_sequence(self):
         """
@@ -527,6 +528,34 @@ class GenPeptFile(GenBankFile):
 
 
 class MultiFile(TextFile):
+    """
+    This class represents a file in GenBank or GenPept format,
+    that contains multiple entries, for more than one UID
+    
+    The information for each UID are appended to each other in such a
+    file.
+    Objects of this class can be iterated to obtain a `GenBankFile`
+    or `GenPeptFile` for each entry in the file.
+
+    Parameters
+    ----------
+    file_type : {'gb', 'gp'}
+        Determines whether the objects should be used for GenBank or
+        GenPept files.
+    
+    Examples
+    --------
+    
+    >>> fetch_single_file(
+    ...     ["1L2Y_A", "3O5R_A", "5UGO_A"], "multifile.gp", "protein", "gp")
+    >>> multi_file = MultiFile(file_type="gp")
+    >>> multi_file.read("multifile.gp")
+    >>> for gp_file in multi_file:
+    ...     print(gp_file.get_accession())
+    1L2Y_A
+    3O5R_A
+    5UGO_A
+    """
 
     def __init__(self, file_type):
         super().__init__()
@@ -535,17 +564,17 @@ class MultiFile(TextFile):
         elif file_type == "gp":
             self._file_class = GenPeptFile
         else:
-            raise ValueError("'{:}' is an invalid file type".format(file_type))
+            raise ValueError(f"'{file_type}' is an invalid file type")
 
     def __iter__(self):
         start_i = 0
-        for i in range(len(self._lines)):
-            line = self._lines[i]
+        for i in range(len(self.lines)):
+            line = self.lines[i]
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
+                file_content = "\n".join(self.lines[start_i : i])
                 file = self._file_class()
-                file._lines = self._lines[start_i : i]
-                file.process_input()
+                file.read(io.StringIO(file_content))
                 # Reset file start index
                 start_i = i
                 yield file

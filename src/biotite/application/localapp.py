@@ -74,6 +74,11 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         Overrides the `mute` parameter.
         
         PROTECTED: Do not call from outside.
+
+        Parameters
+        ----------
+        file_path : str
+            The path to the file *stdout* is written into.
         """
         self._stdout_file_path = file_path
     

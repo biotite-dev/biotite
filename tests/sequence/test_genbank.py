@@ -59,3 +59,9 @@ def test_genpept_conversion():
     lasts = [loc.last for loc in feature.locs]
     assert firsts == [52,55,62,76,78,81,117,120,125]
     assert lasts  == [53,55,62,76,78,81,117,120,126]
+
+def test_multi_file():
+    multi_file = gb.MultiFile(file_type="gp")
+    multi_file.read(join(data_dir, "multifile.gp"))
+    accessions = [f.get_accession() for f in multi_file]
+    assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]

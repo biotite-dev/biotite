@@ -9,41 +9,27 @@ matrix:
     dist: trusty
     sudo: false
     env:
-      - PY_VERSION='3.4'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: linux
-    dist: trusty
-    sudo: false
-    env:
-      - PY_VERSION='3.5'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: linux
-    dist: trusty
-    sudo: false
-    env:
       - PY_VERSION='3.6'
       - COMPLETE=true
       - BIN=true
       - SRC=true
-  - os: osx
+  - os: linux
+    dist: trusty
+    sudo: false
     env:
-      - PY_VERSION='3.4'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: osx
-    env:
-      - PY_VERSION='3.5'
+      - PY_VERSION='3.7'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.6'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.7'
       - COMPLETE=false
       - BIN=true
       - SRC=false

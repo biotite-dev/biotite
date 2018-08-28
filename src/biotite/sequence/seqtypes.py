@@ -26,7 +26,7 @@ class GeneralSequence(Sequence):
         may also be a `str` object. By default the sequence is empty.
     """
         
-    def __init__(self, alphabet, sequence=[]):
+    def __init__(self, alphabet, sequence=()):
         self._alphabet = alphabet
         super().__init__(sequence)
     
@@ -137,7 +137,7 @@ class NucleotideSequence(Sequence):
         compl_code = NucleotideSequence._complement_func(self.code)
         return self.copy(compl_code)
     
-    def translate(self, **kwargs):
+    def translate(self, complete=False, codon_table=None, met_start=False):
         """
         Translate the nucleotide sequence into a protein sequence.
         
@@ -198,18 +198,16 @@ class NucleotideSequence(Sequence):
         if self._alphabet == NucleotideSequence.alphabet_amb:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
-        if "codon_table" in kwargs:
-            codon_table = kwargs["codon_table"]
-        else:
+        if codon_table is None:
             # Import at this position to avoid circular import
             from .codon import CodonTable
             codon_table = CodonTable.default_table()
         stop_code = ProteinSequence.alphabet.encode("*")
         met_code =  ProteinSequence.alphabet.encode("M")
         
-        if "complete" in kwargs and kwargs["complete"] == True:
+        if complete:
             if len(self) % 3 != 0:
-                raise ValueError("Sequence needs to be a multiple of 3 "
+                raise ValueError("Sequence length needs to be a multiple of 3 "
                                  "for complete translation")
             # Pessimistic array allocation
             aa_code = np.zeros(len(self) // 3)
@@ -226,10 +224,6 @@ class NucleotideSequence(Sequence):
             return protein_seq
         
         else:
-            if "met_start" in kwargs:
-                met_start = kwargs["met_start"]
-            else:
-                met_start = False
             start_codons = np.array(codon_table.start_codons(True))
             seq_code = self.code
             protein_seqs = []
@@ -328,7 +322,7 @@ class ProteinSequence(Sequence):
     _dict_3to1["SEC"] = "C"
     _dict_3to1["MSE"] = "M"
     
-    def __init__(self, sequence=[]):
+    def __init__(self, sequence=()):
         dict_3to1 = ProteinSequence._dict_3to1
         alph = ProteinSequence.alphabet
         # Convert 3-letter codes to single letter codes,
