@@ -8,7 +8,9 @@ from .atoms import AtomArrayStack, AtomArray
 
 def load_structure(
     file_path: str,
-    template: Optional[Union[AtomArrayStack, AtomArray]] = None
-) -> Union[AtomArray, AtomArrayStack, TextIO, BinaryIO, str]: ...
+    template: Union[
+        AtomArrayStack, AtomArray, TextIO, BinaryIO, str, None
+    ] = None
+) -> Union[AtomArray, AtomArrayStack,]: ...
 
 def save_structure(file_path: str, array: AtomArrayStack) -> None: ...

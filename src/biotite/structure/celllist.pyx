@@ -183,7 +183,7 @@ cdef class CellList:
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def get_atoms(self, np.ndarray coord, float32 radius):
+    def get_atoms(self, np.ndarray coord, radius):
         """
         Find atoms with a maximum distance from given coordinates.
         
@@ -201,9 +201,12 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        radius: float
+        radius: float or ndarray, shape=(n,), dtype=float, optional
             The radius around `coord`, in which the atoms are searched,
             i.e. all atoms in `radius` distance to `coord` are returned.
+            Either a single radius can be given as scalar, or individual
+            radii for each position in `coord` can be provided as
+            `ndarray`.
         
         Returns
         -------
@@ -252,9 +255,9 @@ cdef class CellList:
         >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(indices)
-        [[ 99 102 104 ...  -1  -1  -1]
-         [104 114  45 ...  -1  -1  -1]
-         [ 46  55 273 ...  -1  -1  -1]]
+        [[ 99 102 104 112 114  45  55 290 101 105 271 273 268  -1  -1]
+         [104 114  45  46  55  44  54 105 271 273 265 268 269 272 275]
+         [ 46  55 273 268 269 272 274 275  -1  -1  -1  -1  -1  -1  -1]]
         >>> # Convert to list of arrays and remove trailing -1
         >>> indices = [row[row != -1] for row in indices]
         >>> for row in indices:
@@ -264,74 +267,70 @@ cdef class CellList:
         [ 46  55 273 268 269 272 274 275]
         """
         cdef int i=0, j=0
-        cdef int subset_j = 0
+        cdef int array_i = 0
+        cdef int max_array_length = 0
         cdef int coord_index
         cdef float32 x1, y1, z1, x2, y2, z2
         cdef float32 sq_dist
-        cdef float32 sq_radius = radius*radius
+        cdef float32 sq_radius
+        cdef float32[:] sq_radii
+        cdef np.ndarray cell_radii
         
-        cdef int[:] indices_single
-        cdef int[:] all_indices_single
-        cdef float32[:] coord_single
-        cdef int[:,:] indices_multi
-        cdef int[:,:] all_indices_multi
-        cdef float32[:,:] coord_multi
-
-        if radius < 0:
-            raise ValueError("Radius must be a positive value")
-
-        all_indices = \
-            self.get_atoms_in_cells(coord, <int>(radius/self._cellsize)+1)
+        cdef int[:,:] all_indices
+        cdef int[:,:] indices
+        cdef float32[:,:] coord_v
         
-        # Filter all indices from all_indices
+        coord, radius, is_multi_coord, is_multi_radius \
+            = _prepare_vectorization(coord, radius, np.float32)
+        if is_multi_radius:
+            sq_radii = radius * radius
+            cell_radii = np.floor_divide(
+                radius, self._cellsize
+            ).astype(np.int32) + 1
+        else:
+            # All radii are equal
+            sq_radii = np.full(
+                len(coord), radius[0]*radius[0], dtype=np.float32
+            )
+            cell_radii = np.full(
+                len(coord), int(radius[0]/self._cellsize)+1, dtype=np.int32
+            )
+
+        all_indices = self.get_atoms_in_cells(coord, cell_radii)
+        
+        # Filter all indices from all_indices,
         # where squared distance is smaller than squared radius
-        if coord.ndim == 1 and coord.shape[0] == 3:
-            # Single position
-            all_indices_single = all_indices
-            indices_single = np.full(all_indices.shape, -1, dtype=np.int32)
-            coord_single = coord.astype(np.float32, copy=False)
-            x1 = coord_single[0]
-            y1 = coord_single[1]
-            z1 = coord_single[2]
-            subset_j = 0
-            for j in range(all_indices_single.shape[0]):
-                coord_index = all_indices_single[j]
-                x2 = self._coord[coord_index, 0]
-                y2 = self._coord[coord_index, 1]
-                z2 = self._coord[coord_index, 2]
-                sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
-                if sq_dist < sq_radius:
-                    indices_single[subset_j] = coord_index
-                    subset_j += 1
-            return np.asarray(indices_single)[:subset_j]
-                
-        elif coord.ndim == 2 and coord.shape[1] == 3:
-            # Multiple positions
-            all_indices_multi = all_indices
-            indices_multi = np.full(all_indices.shape, -1, dtype=np.int32)
-            coord_multi = coord.astype(np.float32, copy=False)
-            for i in range(all_indices_multi.shape[0]):
-                x1 = coord_multi[i,0]
-                y1 = coord_multi[i,1]
-                z1 = coord_multi[i,2]
-                subset_j = 0
-                for j in range(all_indices_multi.shape[1]):
-                    coord_index = all_indices_multi[i,j]
+        indices = np.full(
+            (all_indices.shape[0], all_indices.shape[1]), -1, dtype=np.int32
+        )
+        coord_v = coord
+        for i in range(all_indices.shape[0]):
+            sq_radius = sq_radii[i]
+            x1 = coord_v[i,0]
+            y1 = coord_v[i,1]
+            z1 = coord_v[i,2]
+            array_i = 0
+            for j in range(all_indices.shape[1]):
+                coord_index = all_indices[i,j]
+                if coord_index != -1:
                     x2 = self._coord[coord_index, 0]
                     y2 = self._coord[coord_index, 1]
                     z2 = self._coord[coord_index, 2]
                     sq_dist = squared_distance(x1, y1, z1, x2, y2, z2)
-                    if sq_dist < sq_radius:
-                        indices_multi[i, subset_j] = coord_index
-                        subset_j += 1
-            return np.asarray(indices_multi)
+                    if sq_dist <= sq_radius:
+                        indices[i, array_i] = coord_index
+                        array_i += 1
+            if array_i > max_array_length:
+                max_array_length = array_i
         
+        if is_multi_coord:
+            return np.asarray(indices)[:, :max_array_length]
         else:
-            raise ValueError("Invalid shape for input coordinates")
+            return np.asarray(indices)[0, :max_array_length]
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def get_atoms_in_cells(self, np.ndarray coord, int cell_radius=1):
+    def get_atoms_in_cells(self, np.ndarray coord, cell_radius=1):
         """
         Find atoms with a maximum cell distance from given
         coordinates.
@@ -359,14 +358,17 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        cell_radius: float, optional
+        cell_radius: int or ndarray, shape=(n,), dtype=int, optional
             The radius around `coord` (in amount of cells), in which
             the atoms are searched. This does not correspond to the
             Euclidian distance used in `get_atoms()`. In this case, all
             atoms in the cell corresponding to `coord` and in adjacent
             cells are returned.
+            Either a single radius can be given as scalar, or individual
+            radii for each position in `coord` can be provided as
+            `ndarray`.
             By default atoms are searched in the cell of `coord`
-            and directly adjacent cells (cell_radius=1).
+            and directly adjacent cells (cell_radius = 1).
         
         Returns
         -------
@@ -380,66 +382,59 @@ cdef class CellList:
         --------
         get_atoms
         """
-        if cell_radius < 0:
-            raise ValueError("Radius must be a positive value")
-        cdef int length
-        # Pessimistic assumption on index array length requirement:
-        # At maximum, tte amount of atoms can only be the maximum
-        # amount of atoms per cell times the amount of cell
+        coord, cell_radius, is_multi_coord, is_multi_radius \
+            = _prepare_vectorization(coord, cell_radius, np.int32)
+        
+        cdef int max_cell_radius
+        if is_multi_radius:
+            max_cell_radius = np.max(cell_radius)
+        else:
+            # All radii are equal
+            max_cell_radius = cell_radius[0]
+        # Wort case assumption on index array length requirement:
+        # At maximum, the amount of adjacent atoms can only be the
+        # maximum amount of atoms per cell times the amount of cells
         # Since the cells extend in 3 dimensions the amount of cells is
         # (2*r + 1)**3
-        cdef int index_array_length = \
-            (2*cell_radius + 1)**3 * self._max_cell_length
-        # The amount of positions,
-        # for each one the adjacent atoms are obtained
-        cdef int coord_count
-        # Save if adjacent atoms are searched for a single position
-        # or multiple positions
-        cdef bint multi_coord
-        # If only a single position is given,
-        # the input is treated as multiple positions with an amount of 1  
-        if coord.ndim == 1 and coord.shape[0] == 3:
-            # Single position
-            coord = coord[np.newaxis, :]
-            pos_count = 1
-            multi_coord = False
-        elif coord.ndim == 2 and coord.shape[1] == 3:
-            # Multiple positions
-            pos_count = coord.shape[0]
-            multi_coord = True
-        else:
-            raise ValueError("Invalid shape for input coordinates")
-        array_indices = np.full(
-            (pos_count, index_array_length), -1, dtype=np.int32
-        )
+        cdef int length = (2*max_cell_radius + 1)**3 * self._max_cell_length
+        array_indices = np.full((len(coord), length), -1, dtype=np.int32)
         # Fill index array
-        self._get_atoms_in_cells(coord.astype(np.float32, copy=False),
-                                  array_indices, cell_radius)
-        if multi_coord:
-            return array_indices
+        cdef int max_array_length \
+            = self._get_atoms_in_cells(coord, array_indices, cell_radius)
+        if is_multi_coord:
+            return array_indices[:, :max_array_length]
         else:
-            array_indices = array_indices[0]
-            return array_indices[array_indices != -1]
+            return array_indices[0, :max_array_length]
             
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void _get_atoms_in_cells(self,
+    cdef int _get_atoms_in_cells(self,
                                  float32[:,:] coord,
                                  int[:,:] indices,
-                                 int cell_r=1):
+                                 int[:] cell_radius):
+        # This method fills the given empty index array
+        # with actual indices of adjacent atoms
+        #
+        # Since the length of 'indices' (second dimension) is
+        # the wort case assumption, this method returns the actual
+        # required length, i.e. the highest length of all arrays
+        # in this 'array of arrays'
         cdef int length
         cdef int* list_ptr
         cdef float32 x, y,z
         cdef int i=0, j=0, k=0
         cdef int adj_i, adj_j, adj_k
         cdef int pos_i, array_i, cell_i
+        cdef int max_array_length = 0
+        cdef int cell_r
         
         cdef ptr[:,:,:] cells = self._cells
         cdef int[:,:,:] cell_length = self._cell_length
 
         for pos_i in range(coord.shape[0]):
             array_i = 0
+            cell_r = cell_radius[pos_i]
             x = coord[pos_i, 0]
             y = coord[pos_i, 1]
             z = coord[pos_i, 2]
@@ -460,6 +455,10 @@ cdef class CellList:
                                         indices[pos_i, array_i] = \
                                             list_ptr[cell_i]
                                         array_i += 1
+            if array_i > max_array_length:
+                max_array_length = array_i
+        return max_array_length
+    
     
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
@@ -496,6 +495,74 @@ cdef class CellList:
             return False
 
 
+def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
+    """
+    Since `get_atoms()` and `get_atoms_in_cells()`, may take different
+    amount of dimensions for the coordinates and the radius to enable
+    vectorized compuation, each of these functions would need to handle
+    the different cases.
+
+    This function converts the input radius and coordinates into a
+    uniform format and also return, whether single/multiple
+    radii/coordinates were given.
+
+    The shapes before and after conversion are:
+       
+       - coord: ( ,3), radius: (scalar) -> coord: (1,3), radius: (1,)
+       - coord: (n,3), radius: (scalar) -> coord: (n,3), radius: (n,)
+       - coord: (n,3), radius: (n,)     -> coord: (n,3), radius: (n,3)
+    
+    Thes resulting values have the same dimensionality for all cases and
+    can be handeled uniformly by `get_atoms()` and
+    `get_atoms_in_cells()`.
+    """
+    cdef bint is_multi_coord
+    cdef bint is_multi_radius
+
+    if coord.ndim == 1 and coord.shape[0] == 3:
+        # Single position
+        coord = coord[np.newaxis, :].astype(np.float32, copy=False)
+        is_multi_coord = False
+    elif coord.ndim == 2 and coord.shape[1] == 3:
+        # Multiple positions
+        coord = coord.astype(np.float32, copy=False)
+        is_multi_coord = True
+    else:
+        raise ValueError(
+            f"Invalid shape for input coordinates"
+        )
+    
+    if isinstance(radius, np.ndarray):
+        # Multiple radii
+        # Check whether amount of coordinates match amount of radii
+        if not is_multi_coord:
+            raise ValueError(
+                "Cannot accept array of radii, if a single position is given"
+            )
+        if radius.ndim != 1:
+            raise ValueError("Array of radii must be one-dimensional")
+        if radius.shape[0] != coord.shape[0]:
+            raise ValueError(
+                f"Amount of radii ({radius.shape[0]}) "
+                f"and coordinates ({coord.shape[0]}) are not equal"
+            )
+        if (radius < 0).any():
+            raise ValueError("Radii must be a positive values")
+        radius = radius.astype(radius_dtype, copy=False)
+        is_multi_radius = True
+    else:
+        # Single radius
+        if radius < 0:
+            raise ValueError("Radius must be a positive value")
+        # If only a single integer is given,
+        # create numpy array filled with identical values
+        # with the same length as the coordiantes
+        radius = np.full(coord.shape[0], radius, dtype=radius_dtype)
+        is_multi_radius = False
+
+    return coord, radius, is_multi_coord, is_multi_radius
+
+
 cdef inline void deallocate_ptrs(ptr[:,:,:] ptrs):
     cdef int i, j, k
     cdef int* cell_ptr
@@ -505,6 +572,7 @@ cdef inline void deallocate_ptrs(ptr[:,:,:] ptrs):
             for k in range(ptrs.shape[2]):
                 cell_ptr = <int*>ptrs[i,j,k]
                 free(cell_ptr)
+
 
 cdef inline float32 squared_distance(float32 x1, float32 y1, float32 z1,
                     float32 x2, float32 y2, float32 z2):
