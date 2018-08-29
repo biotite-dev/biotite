@@ -19,7 +19,7 @@ for sequence and macromolecular sructure data:
 
 The internal structure and sequence representations are based on *NumPy*
 `ndarray` objects.
-Vectorization and *Cython* based C-extensions redner most operations
+Vectorization and *Cython* based C-extensions render most operations
 highly efficient.
 
 Additionally, the package aims for simple usability and extensibility:
@@ -40,8 +40,8 @@ Beside the standard I/O operations, the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 On top of the actual sequence data, the subpackage can also handle sequence
 features, to annotate your sequences with the respective functionality.
-Eventually the data can be visualized in different *Matplotlib* based
-representations, ranging from sequence alignments to feature maps
+Eventually, the data can be visualized in different *Matplotlib* based
+representations, ranging from sequence alignments to feature maps.
 
 .. image:: /examples/gallery/sequence/images/sphx_glr_sw_genome_search_001.png
    :width: 48 %
