@@ -201,11 +201,9 @@ html_static_path = ["static"]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"
 html_sidebars = {"**": ["about.html",
-                        #"localtoc.html",
                         "navigation.html",
-                        "relations.html",
                         "searchbox.html",
-                        "donate.html"]}
+                        "buttons.html"]}
 html_theme_options = {
     "description"   : "A comprehensive framework for " \
                       "computational molecular biology",
@@ -215,8 +213,9 @@ html_theme_options = {
     "github_repo"   : "biotite",
     "github_banner" : "true",
     "page_width"    : "85%",
-    "fixed_sidebar" : "true"
+    "fixed_sidebar" : "true",
     
+    "sidebar_link_underscore" : "#FFFFFF"
 }
 
 sphinx_gallery_conf = {
