@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Optional, Union, Dict, TextIO, List
+from typing import Optional, Union, Tuple, Dict, TextIO, List
 import numpy as np
 from ....file import TextFile
 
@@ -21,6 +21,10 @@ class PDBxFile(TextFile):
         block: Optional[str] = None
     ) -> None: ...
     def __setitem__(
-        self, index: str, item: Dict[str, Union[str, np.ndarray]]
+        self,
+        index: Union[str, Tuple[str, str]],
+        item: Dict[str, Union[str, np.ndarray]]
     ) -> None: ...
-    def __getitem__(self, index: str) -> Dict[str, Union[str, np.ndarray]]: ...
+    def __getitem__(
+        self, index: Union[str, Tuple[str, str]]
+    ) -> Dict[str, Union[str, np.ndarray]]: ...

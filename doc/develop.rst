@@ -224,6 +224,7 @@ Furthermore the following software must be installed:
    - *MUSCLE*
    - *MAFFT*
    - *Clustal Omega*
+   - *DSSP*
 
 
 

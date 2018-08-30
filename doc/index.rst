@@ -88,6 +88,10 @@ It is basically very similar to using normal `Python` functions.
    :width: 48 %
    :target: examples/gallery/sequence/lexa_conservation.html
 
+.. image:: /examples/gallery/structure/images/sphx_glr_transketolase_sse_004.png
+   :width: 48 %
+   :target: examples/gallery/structure/transketolase_sse.html
+
 
 **Database** subpackage
 -----------------------

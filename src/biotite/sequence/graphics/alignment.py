@@ -221,9 +221,9 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
         from matplotlib.text import Text
 
         fig_size_x = self._box_size[0] * self._symbols_per_line
-        if self._labels is not None:
+        if self._show_labels:
             fig_size_x += self._label_size
-        if self._show_numbers is not None:
+        if self._show_numbers:
             fig_size_x += self._number_size
         fig_size_x += 2 * self._margin
         
