@@ -227,7 +227,7 @@ visualize_secondary_structure(sse, tk_mono.res_id[0])
 
 sse = dssp.DsspApp.annotate_sse(tk_mono)
 sse = np.array([dssp_to_abc[e] for e in sse], dtype="U1")
-visualize_secondary_structure(sse, 2)
+visualize_secondary_structure(sse, tk_mono.res_id[0])
 # sphinx_gallery_thumbnail_number = 4
 
 ########################################################################
@@ -239,6 +239,7 @@ visualize_secondary_structure(sse, 2)
 # *Biotite*'s built-in method, based on the P-SEA algorithm.
 
 sse = struc.annotate_sse(array, chain_id="A")
-visualize_secondary_structure(sse, 2)
+visualize_secondary_structure(sse, tk_mono.res_id[0])
 
 plt.show()
+print(tk_mono.res_id[0])
