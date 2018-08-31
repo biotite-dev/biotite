@@ -41,7 +41,7 @@ class DsspApp(LocalApp):
         If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, atom_array, bin_path="dssp", mute=True):
+    def __init__(self, atom_array, bin_path="mkdssp", mute=True):
         super().__init__(bin_path, mute)
         self._array = atom_array
         self._in_file_name  = temp_file("pdb")
@@ -88,7 +88,7 @@ class DsspApp(LocalApp):
         return self._sse
     
     @staticmethod
-    def annotate_sse(atom_array, bin_path="dssp"):
+    def annotate_sse(atom_array, bin_path="mkdssp"):
         """
         Perform a secondary structure assignment to an atom array.
         
