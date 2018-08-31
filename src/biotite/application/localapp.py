@@ -7,9 +7,10 @@ __all__ = ["LocalApp"]
 
 import abc
 import time
+import io
 from os import chdir, getcwd
 from .application import Application, AppState, requires_state
-from subprocess import Popen, DEVNULL
+from subprocess import Popen, PIPE, SubprocessError
 
 class LocalApp(Application, metaclass=abc.ABCMeta):
     """
@@ -22,15 +23,11 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     ----------
     bin_path : str
         Path of the application represented by this class.
-    mute : bool, optional
-        If true, the console output of the application goes into
-        DEVNULL. (Default: True)
     """
     
-    def __init__(self, bin_path, mute=True):
+    def __init__(self, bin_path):
         super().__init__()
         self._bin_path = bin_path
-        self._mute = mute
         self._options = []
         self._exec_dir = getcwd()
         self._process = None
@@ -67,21 +64,6 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         """
         self._exec_dir = exec_dir
     
-    @requires_state(AppState.CREATED)
-    def set_std_out_file(self, file_path):
-        """
-        Set the STDOUT stream of the application.
-        Overrides the `mute` parameter.
-        
-        PROTECTED: Do not call from outside.
-
-        Parameters
-        ----------
-        file_path : str
-            The path to the file *stdout* is written into.
-        """
-        self._stdout_file_path = file_path
-    
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def get_process(self):
         """
@@ -109,21 +91,20 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             The exit code.
         """
         return self._code
+    
+    @requires_state(AppState.JOINED)
+    def get_stdout(self):
+        return self._stdout
+    
+    @requires_state(AppState.JOINED)
+    def get_stderr(self):
+        return self._stderr
 
     def run(self):
         cwd = getcwd()
         chdir(self._exec_dir) 
-        if self._mute:
-            std_out = DEVNULL
-            std_err = DEVNULL
-        else:
-            std_out = None
-            std_err = None
-        if self._stdout_file_path is not None:
-            self._stdout_file = open(self._stdout_file_path, "w")
-            std_out = self._stdout_file
         self._process = Popen([self._bin_path] + self._options,
-                              stdout=std_out, stderr=std_err) 
+                              stdout=PIPE, stderr=PIPE, text=True) 
         chdir(cwd)
     
     def is_finished(self):
@@ -132,6 +113,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             return False
         else:
             self._code = code
+            self._stdout, self._stderr = self._process.communicate()
             return True
     
     def wait_interval(self):
@@ -139,8 +121,14 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     
     def evaluate(self):
         super().evaluate()
-        if self._stdout_file is not None:
-            self._stdout_file.close()
+        # Check if applicaion terminated correctly
+        exit_code = self.get_exit_code()
+        if exit_code != 0:
+            err_msg = self.get_stderr().replace("\n", " ")
+            raise SubprocessError(
+                f"'{self._bin_path}' returned with exit code {exit_code}: "
+                f"{err_msg}"
+            )
     
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:

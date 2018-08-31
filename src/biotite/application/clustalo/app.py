@@ -23,16 +23,14 @@ class ClustalOmegaApp(MSAApp):
         The sequences to be aligned.
     bin_path : str, optional
         Path of the Custal-Omega binary.
-    mute : bool, optional
-        If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, sequences, bin_path=None, mute=True):
+    def __init__(self, sequences, bin_path=None):
         if isinstance(sequences[0], NucleotideSequence):
             self._seqtype = "DNA"
         else:
             self._seqtype = "Protein"
-        super().__init__(sequences, bin_path, mute)
+        super().__init__(sequences, bin_path)
     
     @staticmethod
     def get_default_bin_path():

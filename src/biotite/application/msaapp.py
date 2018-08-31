@@ -31,11 +31,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     bin_path : str, optional
         Path of the MSA software binary. By default, the default path
         will be used.
-    mute : bool, optional
-        If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, sequences, bin_path=None, mute=True):
+    def __init__(self, sequences, bin_path=None):
         # Check if all sequences share the same alphabet
         alphabet = sequences[0].get_alphabet()
         for seq in sequences:
@@ -43,7 +41,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
                 raise ValueError("Alphabets of the sequences are not equal")
         if bin_path is None:
             bin_path = self.get_default_bin_path()
-        super().__init__(bin_path, mute)
+        super().__init__(bin_path)
         self._sequences = sequences
         self._in_file_name  = temp_file("fa")
         self._out_file_name = temp_file("fa")
