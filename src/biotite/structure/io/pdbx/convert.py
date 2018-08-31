@@ -239,7 +239,10 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
     atom_site_dict["label_seq_id"] = np.array(["." if e == -1 else str(e)
                                             for e in array.res_id])
-    atom_site_dict["auth_asym_id"] = np.copy(array.chain_id)
+    atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
+    atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
+    atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]
+    atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
     #Optional categories
     if "atom_id" in annot_categories:
         # Take values from 'atom_id' category
