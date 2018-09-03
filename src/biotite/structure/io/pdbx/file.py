@@ -260,13 +260,20 @@ class PDBxFile(TextFile):
         """
         if block is None:
             block = self.get_block_names()[0]
-            
+        
         sample_category_value = list(category_dict.values())[0]
         if (isinstance(sample_category_value, (np.ndarray, list))):
             is_looped = True
         else:
             is_looped = False
-            
+        
+        # Value arrays (looped categories) can be modified (e.g. quoted)
+        # Hence make a copy to avoid unwaned side effects
+        # due to modification of input values
+        if is_looped:
+            category_dict = {key : val.copy() for key, val
+                             in category_dict.items()}
+
         # Enclose values with quotes if required
         for key, value in category_dict.items():
             if is_looped:
@@ -311,7 +318,7 @@ class PDBxFile(TextFile):
                          + " " * (req_len-len(key)) + value
                          for key, value in category_dict.items()]
             
-        # A command line is set after every category
+        # A comment line is set after every category
         newlines += ["#"]
         
         if (block,category) in self._categories:
