@@ -23,13 +23,17 @@ class MafftApp(MSAApp):
         The sequences to be aligned.
     bin_path : str, optional
         Path of the MUSCLE binary.
-    mute : bool, optional
-        If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, sequences, bin_path=None, mute=True):
-        super().__init__(sequences, bin_path, mute)
-        self.set_std_out_file(self.get_output_file_path())
+    def __init__(self, sequences, bin_path=None):
+        super().__init__(sequences, bin_path)
+    
+    def evaluate(self):
+        with open(self.get_output_file_path(), "w") as f:
+            # MAFFT outputs alignment to console
+            # -> write console output to output file name
+            f.write(self.get_stdout())
+        super().evaluate()
     
     @staticmethod
     def get_default_bin_path():
