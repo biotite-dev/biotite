@@ -242,4 +242,3 @@ sse = struc.annotate_sse(array, chain_id="A")
 visualize_secondary_structure(sse, tk_mono.res_id[0])
 
 plt.show()
-print(tk_mono.res_id[0])
