@@ -21,7 +21,7 @@ to *Python* 3.x.
 If you are a Linux user, you should be able to install these packages simply
 via *pip* (Tip: Use ``--only-binary :all:`` to ensure precompiled versions are
 installed).
-In case you are using Windows I recommend installing *numpy* and
+In case you are using Windows, I recommend installing *numpy* and
 *matplotlib* via `Conda <https://conda.io/docs/>`_, or alternatively
 `Anaconda <https://www.anaconda.com/download/>`_ which already contains the
 forementioned packages.
@@ -64,7 +64,7 @@ Install from source
 -------------------
 
 If you want to install your own *Biotite* build, navigate to the top-level
-directory of your local *Biotite* clone (the one, ``setup.py`` is in) and type
+directory of your local *Biotite* clone (the one ``setup.py`` is in) and type
 the following:
 
 .. code-block:: none
