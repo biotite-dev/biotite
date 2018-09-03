@@ -23,12 +23,10 @@ class MuscleApp(MSAApp):
         The sequences to be aligned.
     bin_path : str, optional
         Path of the MUSCLE binary.
-    mute : bool, optional
-        If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, sequences, bin_path=None, mute=True):
-        super().__init__(sequences, bin_path, mute)
+    def __init__(self, sequences, bin_path=None):
+        super().__init__(sequences, bin_path)
     
     @staticmethod
     def get_default_bin_path():
