@@ -44,11 +44,15 @@ def test_conversion(path, is_stack):
         array1 = pdbx.get_structure(pdbx_file, model=1)
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
+    print(str(pdbx_file)[:10000])
     if is_stack:
         array2 = pdbx.get_structure(pdbx_file)
     else:
         array2 = pdbx.get_structure(pdbx_file, model=1)
-    assert array1 == array2
+    for category in array1.get_annotation_categories():
+        assert array1.get_annotation(category).tolist() == \
+               array2.get_annotation(category).tolist()
+    assert array1.coord.tolist() == array2.coord.tolist()
 
 def test_extra_fields():
     path = join(data_dir, "1l2y.cif")

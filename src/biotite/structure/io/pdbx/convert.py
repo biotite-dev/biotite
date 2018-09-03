@@ -141,7 +141,7 @@ def get_structure(pdbx_file, model=None, data_block=None,
 def _fill_annotations(array, model_dict, extra_fields):
     array.set_annotation("chain_id", model_dict["auth_asym_id"].astype("U3"))
     array.set_annotation("res_id", np.array([-1 if e in [".","?"] else int(e)
-                                      for e in model_dict["label_seq_id"]]))
+                                      for e in model_dict["auth_seq_id"]]))
     array.set_annotation("res_name", model_dict["label_comp_id"].astype("U3"))
     array.set_annotation("hetero", (model_dict["group_PDB"] == "HETATM"))
     array.set_annotation("atom_name", model_dict["label_atom_id"].astype("U6"))
@@ -238,7 +238,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
     atom_site_dict["label_seq_id"] = np.array(["." if e == -1 else str(e)
-                                            for e in array.res_id])
+                                               for e in array.res_id])
     atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
     atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]

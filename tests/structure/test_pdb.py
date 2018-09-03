@@ -43,9 +43,7 @@ def test_pdbx_consistency(file_index, is_stack):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_paths[file_index])
     a2 = pdbx.get_structure(pdbx_file, model=model)
-    # Expected fail in res_id
-    for category in ["chain_id", "res_name", "hetero",
-                     "atom_name", "element"]:
+    for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.tolist() == a2.coord.tolist()
