@@ -331,7 +331,7 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
 
 
 class AlignmentSimilarityVisualizer(AlignmentVisualizer):
-    """
+    r"""
     This `AlignmentVisualizer` colors the symbols based on the
     similarity with the other symbols in the same column.
 
@@ -356,20 +356,26 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
     For determination of the color, this `AlignmentVisualizer` uses a
     measure called *average normalized similarity*.
 
-    The *normalized similarity* of one symbol *i* to another symbol *j*
-    is defined as
+    The *normalized similarity* of one symbol *a* to another symbol *b*
+    (both in aphabet *X*) is defined as
 
-    .. math:: S_{norm}(i,j) = \\frac{S(i,j) - \\min\\limits_j(S(i,j))} {\\max\\limits_j(S(i,j)) - \\min\\limits_j(S(i,j))}
+    .. math:: S_{norm}(a,b) = \frac{S(a,b) - \min\limits_x(S(a,x))} {\max\limits_x(S(a,x)) - \min\limits_x(S(a,x))}
 
-    where *S(i,j)* is the similarity described in the
-    substitution matrix.
+    .. math:: a,b,x \in X
 
-    The *average normalized similarity* of a symbol *i* is
-    calculated by averaging the *normalized similarity* to each other
-    symbol *j* in the same alignment column.
+    where *S(x,y)* is the similarity score of the two symbols
+    *x* and *y* described in the substitution matrix.
+    As the normalization is conducted only with respect to *a*,
+    the *normalized similarity* is not commutative.
 
-    .. math:: S_{norm,av}(i) = \\frac{1}{n-1} \\left(\\left(\\sum\\limits_{j=1}^n S_{norm}(i,j)\\right) - S_{norm}(i,i)\\right)
+    The *average normalized similarity* of a symbol *a* is
+    determined by averaging the normalized similarity over each
+    symbol *b*\ :sub:`i` in the same alignment column.
 
+    .. math:: S_{norm,av}(a) = \frac{1}{n-1} \left[\left(\sum\limits_{i=1}^n S_{norm}(a,b_i)\right) - S_{norm}(a,a)\right]
+
+    The normalized similarity of *a* to itself is subtracted,
+    because *a* does also occur in *b*\ :sub:`i`.
     """
 
     def __init__(self, alignment, matrix=None):
