@@ -69,6 +69,6 @@ def test_outside_location():
     array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
     array = array[struc.filter_amino_acids(array)]
     cell_list = struc.CellList(array, cell_size=5)
-    outside_coord = np.min(array, axis=0) - 100
+    outside_coord = np.min(array.coord, axis=0) - 100
     # Expect empty array
-    assert len(cell_list.get_atoms(outside_coord)) == 0
+    assert len(cell_list.get_atoms(outside_coord, 5)) == 0
