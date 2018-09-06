@@ -62,3 +62,13 @@ def test_adjacency_matrix(cell_size, threshold):
     # Both ways to create an adjacency matrix
     # should give the same result
     assert matrix.tolist() == expected_matrix.tolist()
+
+
+def test_outside_location():
+    # Test result for location outside any cell
+    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = array[struc.filter_amino_acids(array)]
+    cell_list = struc.CellList(array, cell_size=5)
+    outside_coord = np.min(array, axis=0) - 100
+    # Expect empty array
+    assert len(cell_list.get_atoms(outside_coord)) == 0
