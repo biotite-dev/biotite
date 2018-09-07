@@ -74,9 +74,7 @@ def test_pdbx_consistency(path, single_model):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
-    # Expected fail in res_id
-    for category in ["chain_id", "res_name", "hetero",
-                     "atom_name", "element"]:
+    for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \

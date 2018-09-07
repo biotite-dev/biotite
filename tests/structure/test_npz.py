@@ -30,4 +30,7 @@ def test_pdbx_consistency(path):
     cif_path = splitext(path)[0] + ".cif"
     array1 = strucio.load_structure(path)
     array2 = strucio.load_structure(cif_path)
-    assert array1 == array2
+    for category in array1.get_annotation_categories():
+        assert array1.get_annotation(category).tolist() == \
+               array2.get_annotation(category).tolist()
+    assert array1.coord.tolist() == array2.coord.tolist()
