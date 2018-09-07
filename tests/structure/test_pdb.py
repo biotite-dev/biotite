@@ -2,46 +2,51 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
+import numpy as np
+import glob
+from os.path import join, splitext
+import pytest
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-import itertools
-import numpy as np
-import glob
-from os.path import join, basename
 from .util import data_dir
-import pytest
 
 
-@pytest.mark.parametrize("path, is_stack", itertools.product(
-                            glob.glob(join(data_dir, "*.pdb")),
-                            [False, True])
-                        )
-def test_array_conversion(path, is_stack):
-    model = None if is_stack else 1
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_array_conversion(path, single_model):
+    model = 1 if single_model else None
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     array1 = pdb_file.get_structure(model=model)
+    pdb_file = pdb.PDBFile()
     pdb_file.set_structure(array1)
     array2 = pdb_file.get_structure(model=model)
     assert array1 == array2
 
 
-pdb_paths = sorted(glob.glob(join(data_dir, "*.pdb")))
-cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
-@pytest.mark.parametrize("file_index, is_stack", itertools.product(
-                          [i for i in range(len(pdb_paths))],
-                          [False, True])
-                        )
-def test_pdbx_consistency(file_index, is_stack):
-    print("ID:", basename(cif_paths[file_index])[:-4])
-    model = None if is_stack else 1
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_pdbx_consistency(path, single_model):
+    model = 1 if single_model else None
+    cif_path = splitext(path)[0] + ".cif"
     pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_paths[file_index])
+    pdb_file.read(path)
     a1 = pdb_file.get_structure(model=model)
     pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_paths[file_index])
+    pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
@@ -63,11 +68,9 @@ def test_extra_fields():
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
 
+
 @pytest.mark.filterwarnings("ignore")
 def test_guess_elements():
-    import tempfile
-    from copy import deepcopy
-
     # read valid pdb file
     path = join(data_dir, "1l2y.pdb")
     pdb_file = pdb.PDBFile()

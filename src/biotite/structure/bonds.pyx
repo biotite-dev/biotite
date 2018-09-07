@@ -488,6 +488,12 @@ class BondList(Copyable):
     
     def __str__(self):
         return str(self.as_array())
+    
+    def __eq__(self, item):
+        if not isinstance(item, BondList):
+            return False
+        return (self._atom_count == item._atom_count and
+                np.array_equal(self._bonds, item._bonds))
 
     def _get_max_bonds_per_atom(self):
         cdef int i

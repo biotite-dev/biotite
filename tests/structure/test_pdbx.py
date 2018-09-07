@@ -13,14 +13,23 @@ from .util import data_dir
 import pytest
 
 
-@pytest.mark.parametrize("category, key, exp_value", [
-    ("audit_author", "name",
-        ["Neidigh, J.W.", "Fesinmeyer, R.M.", "Andersen, N.H."]),
-    ("struct_ref_seq", "pdbx_PDB_id_code", "1L2Y"),
-    ("pdbx_nmr_ensemble", "conformer_selection_criteria",
-        ("structures with acceptable covalent geometry, "
-         "structures with the least restraint violations"))
-])
+@pytest.mark.parametrize(
+    "category, key, exp_value", 
+    [
+        (
+            "audit_author", "name",
+            ["Neidigh, J.W.", "Fesinmeyer, R.M.", "Andersen, N.H."]
+        ),
+        (
+            "struct_ref_seq", "pdbx_PDB_id_code", "1L2Y"
+        ),
+        (
+            "pdbx_nmr_ensemble", "conformer_selection_criteria",
+            "structures with acceptable covalent geometry, "
+            "structures with the least restraint violations"
+        )
+    ]
+)
 def test_parsing(category, key, exp_value):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(join(data_dir, "1l2y.cif"))
@@ -31,24 +40,21 @@ def test_parsing(category, key, exp_value):
     else:
         assert value == exp_value
 
-@pytest.mark.parametrize("path, is_stack", itertools.product(
-                            glob.glob(join(data_dir, "*.cif")),
-                            [False, True],
-                         ))
-def test_conversion(path, is_stack):
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.cif")),
+        [False, True]
+    )
+)
+def test_conversion(path, single_model):
+    model = 1 if single_model else None
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
-    if is_stack:
-        array1 = pdbx.get_structure(pdbx_file)
-    else:
-        array1 = pdbx.get_structure(pdbx_file, model=1)
+    array1 = pdbx.get_structure(pdbx_file, model=model)
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
-    print(str(pdbx_file)[:10000])
-    if is_stack:
-        array2 = pdbx.get_structure(pdbx_file)
-    else:
-        array2 = pdbx.get_structure(pdbx_file, model=1)
+    array2 = pdbx.get_structure(pdbx_file, model=model)
     for category in array1.get_annotation_categories():
         assert array1.get_annotation(category).tolist() == \
                array2.get_annotation(category).tolist()
@@ -66,6 +72,22 @@ def test_extra_fields():
                                 "occupancy","charge"])
     assert stack1 == stack2
 
+def test_unequal_lengths():
+    valid_category_dict = {
+        "foo1" : ["1", "2", "3"],
+        "foo2" : ["1", "2", "3"]
+    }
+    # Arrays have unequal lengths -> invalid
+    invalid_category_dict = {
+        "foo1" : ["1", "2", "3"],
+        "foo2" : ["1", "2", "3", "4"]
+    }
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.set_category("test", valid_category_dict,  block="test_block")
+    with pytest.raises(ValueError):
+        pdbx_file.set_category(
+            "test", invalid_category_dict, block="test_block"
+        )
             
         
     

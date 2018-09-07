@@ -250,28 +250,35 @@ def set_structure(pdbx_file, array, data_block=None):
     else:
         atom_site_dict["id"] = None
     if "b_factor" in annot_categories:
-        atom_site_dict["B_iso_or_equiv"] = np.array(["{:.2f}".format(b)
-                                                     for b in array.b_factor])
+        atom_site_dict["B_iso_or_equiv"] = np.array(
+            [f"{b:.2f}" for b in array.b_factor]
+        )
     if "occupancy" in annot_categories:
-        atom_site_dict["occupancy"] = np.array(["{:.2f}".format(occ)
-                                                for occ in array.occupancy])
+        atom_site_dict["occupancy"] = np.array(
+            [f"{occ:.2f}" for occ in array.occupancy]
+        )
     if "charge" in annot_categories:
-        atom_site_dict["pdbx_formal_charge"] \
-            = np.array(["{:+d}".format(c) if c != 0 else "?"
-                        for c in array.charge])
+        atom_site_dict["pdbx_formal_charge"] = np.array(
+            [f"{c:+d}" if c != 0 else "?" for c in array.charge]
+        )
     # In case of a single model handle each coordinate
     # simply like a flattened array
     if (  type(array) == AtomArray or
          (type(array) == AtomArrayStack and array.stack_depth() == 1)  ):
         # 'ravel' flattens coord without copy
         # in case of stack with stack_depth = 1
-        atom_site_dict["Cartn_x"] = np.array(["{:.3f}".format(c) for c 
-                                              in np.ravel(array.coord[...,0])])
-        atom_site_dict["Cartn_y"] = np.array(["{:.3f}".format(c) for c 
-                                              in np.ravel(array.coord[...,1])])
-        atom_site_dict["Cartn_z"] = np.array(["{:.3f}".format(c) for c 
-                                              in np.ravel(array.coord[...,2])])
-        atom_site_dict["pdbx_PDB_model_num"]= np.full(array.array_length(),"1")
+        atom_site_dict["Cartn_x"] = np.array(
+            [f"{c:.3f}" for c in np.ravel(array.coord[...,0])]
+        )
+        atom_site_dict["Cartn_y"] = np.array(
+            [f"{c:.3f}" for c in np.ravel(array.coord[...,1])]
+        )
+        atom_site_dict["Cartn_z"] = np.array(
+            [f"{c:.3f}" for c in np.ravel(array.coord[...,2])]
+        )
+        atom_site_dict["pdbx_PDB_model_num"] = np.full(
+            array.array_length(), "1"
+        )
     # In case of multiple models repeat annotations
     # and use model specific coordinates
     elif type(array) == AtomArrayStack:
@@ -279,14 +286,19 @@ def set_structure(pdbx_file, array, data_block=None):
             atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
         coord = np.reshape(array.coord,
                            (array.stack_depth()*array.array_length(), 3))
-        atom_site_dict["Cartn_x"] =  np.array(["{:.3f}".format(c)
-                                               for c in coord[:,0]])
-        atom_site_dict["Cartn_y"] = np.array(["{:.3f}".format(c)
-                                               for c in coord[:,1]])
-        atom_site_dict["Cartn_z"] = np.array(["{:.3f}".format(c)
-                                               for c in coord[:,2]])
-        models = np.repeat(np.arange(1, len(coord)+1).astype(str),
-                           repeats=array.array_length())
+        atom_site_dict["Cartn_x"] = np.array(
+            [f"{c:.3f}" for c in coord[:,0]]
+        )
+        atom_site_dict["Cartn_y"] = np.array(
+            [f"{c:.3f}" for c in coord[:,1]]
+        )
+        atom_site_dict["Cartn_z"] = np.array(
+            [f"{c:.3f}" for c in coord[:,2]]
+        )
+        models = np.repeat(
+            np.arange(1, array.stack_depth()+1).astype(str),
+            repeats=array.array_length()
+        )
         atom_site_dict["pdbx_PDB_model_num"] = models
     else:
         raise ValueError("Structure must be AtomArray or AtomArrayStack")

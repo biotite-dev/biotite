@@ -51,8 +51,8 @@ def test_dssp(path):
     sse_from_app = DsspApp.annotate_sse(chain)
     np.set_printoptions(threshold=10000)
     # PDB uses different DSSP version -> slight differences possible
-    # -> only 95% must be identical
-    assert np.count_nonzero(sse_from_app == sse) / len(sse) > 0.95
+    # -> only 90% must be identical
+    assert np.count_nonzero(sse_from_app == sse) / len(sse) > 0.9
 
 
 @pytest.mark.skipif(shutil.which("mkdssp") is None,
