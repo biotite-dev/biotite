@@ -3,7 +3,6 @@
 # information.
 
 from os.path import join
-import warnings
 import pytest
 import numpy as np
 import biotite.structure as struc
@@ -12,6 +11,8 @@ import biotite.structure.io.mmtf as mmtf
 from .util import data_dir
 
 
+# Ignore warning about dummy unit cell vector
+@pytest.mark.filterwarnings("ignore")
 @pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize("pdb_id", ["1l2y", "1gya"])
 def test_single(pdb_id):
@@ -28,10 +29,7 @@ def test_single(pdb_id):
     # Use the same atom radii
     radii = {element.capitalize() : radius / 10
              for element, radius in radii.items()}
-    with warnings.catch_warnings():
-        # Ignore warning about dummy unit cell vector
-        warnings.simplefilter("ignore")
-        traj = mdtraj.load(file_name)
+    traj = mdtraj.load(file_name)
     # Conversion from nm^2 to A^2
     sasa_exp = mdtraj.shrake_rupley(
         traj, change_radii=radii, n_sphere_points=5000
