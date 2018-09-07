@@ -87,10 +87,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     cdef int32[:] chains_per_model = np.array(file["chainsPerModel"], np.int32)
     cdef int32[:] res_per_chain = np.array(file["groupsPerChain"], np.int32)
     cdef int32[:] res_type_i = file["groupTypeList"]
-    cdef np.ndarray index_list = file["sequenceIndexList"]
-    # Sequence index starts at 0, res IDs at 1
-    # -> increment (the hetero residues (-1) exclusive)
-    index_list[index_list != -1] += 1
+    cdef np.ndarray index_list = file["groupIdList"]
     cdef int32[:] res_ids = index_list
     cdef np.ndarray x_coord = file["xCoordList"]
     cdef np.ndarray y_coord = file["yCoordList"]
