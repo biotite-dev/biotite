@@ -264,8 +264,17 @@ class PDBxFile(TextFile):
         sample_category_value = list(category_dict.values())[0]
         if (isinstance(sample_category_value, (np.ndarray, list))):
             is_looped = True
+            arr_len = len(list(category_dict.values())[0])
+            # Check whether all arrays have the same length
+            for subcat, array in category_dict.items():
+                if len(array) != arr_len:
+                    raise ValueError(
+                        f"Length of Subcategory '{subcat}' is {len(array)}, "
+                        f" but {arr_len} was expected"
+                    )
         else:
             is_looped = False
+        
         
         # Value arrays (looped categories) can be modified (e.g. quoted)
         # Hence make a copy to avoid unwaned side effects
@@ -297,7 +306,6 @@ class PDBxFile(TextFile):
                 # Length of column is max value length 
                 # +1 whitespace character as separator 
                 col_lens[i] = col_len+1
-            arr_len = len(value_arr[0])
             valuelines = [""] * arr_len
             for i in range(arr_len):
                 for j, arr in enumerate(value_arr):

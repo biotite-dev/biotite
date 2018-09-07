@@ -72,6 +72,22 @@ def test_extra_fields():
                                 "occupancy","charge"])
     assert stack1 == stack2
 
+def test_unequal_lengths():
+    valid_category_dict = {
+        "foo1" : ["1", "2", "3"],
+        "foo2" : ["1", "2", "3"]
+    }
+    # Arrays have unequal lengths -> invalid
+    invalid_category_dict = {
+        "foo1" : ["1", "2", "3"],
+        "foo2" : ["1", "2", "3", "4"]
+    }
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.set_category("test", valid_category_dict,  block="test_block")
+    with pytest.raises(ValueError):
+        pdbx_file.set_category(
+            "test", invalid_category_dict, block="test_block"
+        )
             
         
     
