@@ -15,16 +15,16 @@ import glob
 import shutil
 import matplotlib
 
-absolute_path = dirname(realpath(__file__))
+doc_path = dirname(realpath(__file__))
 
 # Include biotite/doc in PYTHONPATH
 # in order to import modules for API doc generation etc.
-sys.path.insert(0, absolute_path)
+sys.path.insert(0, doc_path)
 import apidoc
 
 # Include biotite/src in PYTHONPATH
 # in order to import the 'biotite' package
-package_path = join(dirname(absolute_path), "src")
+package_path = join(dirname(doc_path), "src")
 sys.path.insert(0, package_path)
 import biotite
 
@@ -34,7 +34,7 @@ import biotite
 matplotlib.rcdefaults()
 
 # Creation of API documentation
-apidoc.create_api_doc(package_path, join(absolute_path, "apidoc"))
+apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
 
 #### General ####
 
@@ -98,6 +98,6 @@ sphinx_gallery_conf = {
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
-        absolute_path, "static/assets/general/biotite_icon_thumb.png"
+        doc_path, "static/assets/general/biotite_icon_thumb.png"
     )
 }
