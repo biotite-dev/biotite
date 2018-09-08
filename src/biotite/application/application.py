@@ -7,6 +7,7 @@ __all__ = ["Application", "AppStateError", "AppState", "requires_state"]
 
 import abc
 import time
+from functools import wraps
 from enum import Flag, auto
 
 
@@ -31,8 +32,18 @@ def requires_state(app_state):
     ----------
     app_state : AppState
         The required app state.
+    
+    Examples
+    --------
+    Raises `AppStateError` when `function` is called,
+    if `Application` is not in one of the specified states:
+    
+    >>> @requires_state(AppState.RUNNING | AppState.FINISHED)
+    >>> def function(self):
+    ...     pass
     """
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             # First parameter of method is always 'self'
             instance = args[0]
@@ -206,7 +217,7 @@ class Application(metaclass=abc.ABCMeta):
     
     def clean_up(self):
         """
-        Do clean up work after the application terminates..
+        Do clean up work after the application terminates.
         
         PROTECTED: Optionally override when inheriting.
         """
