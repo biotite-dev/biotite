@@ -3,7 +3,7 @@
 # information.
 
 import biotite.structure as struc
-import biotite.structure.io.npz as npz
+import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
 from .util import data_dir
@@ -11,9 +11,7 @@ import pytest
 
 @pytest.fixture
 def sample_array():
-    file = npz.NpzFile()
-    file.read(join(data_dir, "3o5r.npz"))
-    return file.get_structure()[0]
+    return strucio.load_structure(join(data_dir, "3o5r.mmtf"))
 
 def test_solvent_filter(sample_array):
     assert len(sample_array[struc.filter_solvent(sample_array)]) == 287

@@ -40,13 +40,17 @@ SOURCE  19 EXPRESSION_SYSTEM_TAXID: 83333
 KEYWDS    TRANSFERASE, LYASE, DNA DOMAIN, TRANSFERASE-DNA COMPLEX               
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    B.D.FREUDENTHAL,S.H.WILSON,W.A.BEARD                                  
+REVDAT   4   04-OCT-17 5UGO    1       JRNL                                     
+REVDAT   3   16-AUG-17 5UGO    1       JRNL                                     
 REVDAT   2   02-AUG-17 5UGO    1       REVDAT                                   
 REVDAT   1   26-JUL-17 5UGO    0                                                
 JRNL        AUTH   D.D.SHOCK,B.D.FREUDENTHAL,W.A.BEARD,S.H.WILSON               
-JRNL        TITL   MODULATING THE DNA POLYMERASE REACTION EQUILIBRIUM THROUGH   
-JRNL        TITL 2 CHEMICAL BIOLOGY                                             
-JRNL        REF    TO BE PUBLISHED                                              
-JRNL        REFN                                                                
+JRNL        TITL   MODULATING THE DNA POLYMERASE BETA REACTION EQUILIBRIUM TO   
+JRNL        TITL 2 DISSECT THE REVERSE REACTION.                                
+JRNL        REF    NAT. CHEM. BIOL.              V.  13  1074 2017              
+JRNL        REFN                   ESSN 1552-4469                               
+JRNL        PMID   28759020                                                     
+JRNL        DOI    10.1038/NCHEMBIO.2450                                        
 REMARK   2                                                                      
 REMARK   2 RESOLUTION.    1.90 ANGSTROMS.                                       
 REMARK   3                                                                      

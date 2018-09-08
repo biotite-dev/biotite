@@ -260,13 +260,29 @@ class PDBxFile(TextFile):
         """
         if block is None:
             block = self.get_block_names()[0]
-            
+        
         sample_category_value = list(category_dict.values())[0]
         if (isinstance(sample_category_value, (np.ndarray, list))):
             is_looped = True
+            arr_len = len(list(category_dict.values())[0])
+            # Check whether all arrays have the same length
+            for subcat, array in category_dict.items():
+                if len(array) != arr_len:
+                    raise ValueError(
+                        f"Length of Subcategory '{subcat}' is {len(array)}, "
+                        f" but {arr_len} was expected"
+                    )
         else:
             is_looped = False
-            
+        
+        
+        # Value arrays (looped categories) can be modified (e.g. quoted)
+        # Hence make a copy to avoid unwaned side effects
+        # due to modification of input values
+        if is_looped:
+            category_dict = {key : val.copy() for key, val
+                             in category_dict.items()}
+
         # Enclose values with quotes if required
         for key, value in category_dict.items():
             if is_looped:
@@ -290,7 +306,6 @@ class PDBxFile(TextFile):
                 # Length of column is max value length 
                 # +1 whitespace character as separator 
                 col_lens[i] = col_len+1
-            arr_len = len(value_arr[0])
             valuelines = [""] * arr_len
             for i in range(arr_len):
                 for j, arr in enumerate(value_arr):
@@ -311,7 +326,7 @@ class PDBxFile(TextFile):
                          + " " * (req_len-len(key)) + value
                          for key, value in category_dict.items()]
             
-        # A command line is set after every category
+        # A comment line is set after every category
         newlines += ["#"]
         
         if (block,category) in self._categories:

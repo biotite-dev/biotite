@@ -238,10 +238,6 @@ def set_structure(file, array):
     file["groupsPerChain"] = res_per_chain.tolist()
     file["numGroups"] = len(res_ids)
     file.set_array("groupIdList", res_ids, codec=8)
-     # Sequence index starts at 0, res IDs at 1
-     # -> decrement (the hetero residues (-1) exclusive)
-    res_ids[res_ids != -1] -= 1
-    file.set_array("sequenceIndexList", res_ids, codec=8)
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
