@@ -20,7 +20,7 @@ class Alignment(object):
     *n* sequences are aligned to each other and it stores the
     corresponding alignment score.
     
-    Rather than saving a list of aligned symbols, this class saves the
+    Instead of saving a list of aligned symbols, this class saves the
     original *n* sequences, that were aligned, and a so called *trace*,
     which indicate the aligned symbols of these sequences.
     The trace is a *(m x n)* `ndarray` with alignment length *m* and
@@ -43,12 +43,20 @@ class Alignment(object):
         A list of aligned sequences.
     trace : ndarray, dtype=int, shape=(n,m)
         The alignment trace.
+    score : int, optional
+        Alignment score.
+    
+    Attributes
+    ----------
+    sequences : list
+        A list of aligned sequences.
+    trace : ndarray, dtype=int, shape=(n,m)
+        The alignment trace.
     score : int
         Alignment score.
     
     Examples
     --------
-    
     
     >>> seq1 = NucleotideSequence("CGTCAT")
     >>> seq2 = NucleotideSequence("TCATGC")
@@ -75,7 +83,7 @@ class Alignment(object):
     """
     
     
-    def __init__(self, sequences, trace, score):
+    def __init__(self, sequences, trace, score=None):
         self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
