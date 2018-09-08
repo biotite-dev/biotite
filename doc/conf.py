@@ -13,6 +13,7 @@ from os import listdir, makedirs
 import sys
 import glob
 import shutil
+import types
 import matplotlib
 
 doc_path = dirname(realpath(__file__))
@@ -35,6 +36,7 @@ matplotlib.rcdefaults()
 
 # Creation of API documentation
 apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
+
 
 #### General ####
 
@@ -101,3 +103,14 @@ sphinx_gallery_conf = {
         doc_path, "static/assets/general/biotite_icon_thumb.png"
     )
 }
+
+
+#### App setup ####
+
+def maybe_skip_member(app, what, name, obj, skip, options):
+    if what == "class":
+        if type(obj) not in [types.FunctionType, types.BuiltinFunctionType]:
+            return True
+
+def setup(app):
+    app.connect('autodoc-skip-member', maybe_skip_member)
