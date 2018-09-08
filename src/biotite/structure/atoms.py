@@ -1047,7 +1047,7 @@ def coord(item):
     ----------
     item : `Atom`, `AtomArray` or `AtomArrayStack` or ndarray
         Takes the coord attribute, if `item` is `Atom`, `AtomArray` or
-        `AtomArrayStack`, or takes directly a ndarray.
+        `AtomArrayStack`, or directly returns a given `ndarray`.
     
     Returns
     -------
