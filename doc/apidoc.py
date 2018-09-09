@@ -9,10 +9,15 @@ from os.path import dirname, join, isdir
 from os import listdir, makedirs
 from importlib import import_module
 import types
-import abc
+import json
 
 
 _indent = " " * 3
+
+
+#with open("apidoc.json", "r") as file:
+#    content_structure = json.load(f)
+
 
 
 def create_api_doc(src_path, doc_path):
@@ -75,46 +80,50 @@ def _create_package_doc(pck, src_path, doc_path):
 
 def _create_package_page(doc_path, package_name,
                          classes, functions, subpackages):
-    lines = []
-    
-    # Title and package description
-    lines.append(package_name)
-    lines.append("=" * len(package_name))
-    lines.append("\n")
-    lines.append(".. automodule:: " + package_name)
-    lines.append("\n")
-    
-    # Enumerate classes
-    lines.append("Classes")
-    lines.append("-" * len("Classes"))
-    lines.append("\n")
-    for cls in classes:
-        lines.append(
-            _indent + f"- :doc:`{package_name}.{cls} <{cls}>`"
-        )
-    lines.append("\n")
-    
-    # Enumerate functions
-    lines.append("Functions")
-    lines.append("-" * len("Functions"))
-    lines.append("\n")
-    for func in functions:
-        lines.append(
-            _indent + f"- :doc:`{package_name}.{func} <{func}>`"
-        )
-    lines.append("\n")
-    
-    lines.append("Subpackages")
-    lines.append("-" * len("Subpackages"))
-    lines.append("\n")
-    for pck in subpackages:
-        lines.append(
-            _indent + f"- :doc:`{pck} <../{pck}/package>`"
-        )
-    lines.append("\n")
-    
+    # String for class enumeration
+    classes_string = "\n".join(
+        [_indent + f"- :doc:`{package_name}.{cls} <{cls}>`"
+         for cls in classes]
+    )
+
+    # String for function enumeration
+    functions_string = "\n".join(
+        [_indent + f"- :doc:`{package_name}.{func} <{func}>`"
+         for func in functions]
+    )
+
+    # String for subpackage enumeration
+    subpackages_string = "\n".join(
+        [_indent + f"- :doc:`{pck} <../{pck}/package>`"
+         for pck in subpackages]
+    )
+
+    # Assemble page
+    file_content = \
+f"""
+{package_name}
+{"=" * len(package_name)}
+.. currentmodule:: matplotlib.axes
+
+.. automodule:: {package_name}
+
+Classes
+-------
+
+{classes_string}
+
+Functions
+---------
+
+{functions_string}
+
+Subpackages
+-----------
+
+{subpackages_string}
+"""
     with open(join(doc_path, "package.rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
+        f.write(file_content)
 
 
 def _create_class_page(doc_path, package_name, class_name):
