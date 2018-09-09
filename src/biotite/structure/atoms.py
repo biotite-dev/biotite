@@ -992,7 +992,9 @@ def stack(arrays):
     -------
     stack : AtomArrayStack
         The stacked atom arrays.
-        
+    
+    Examples
+    --------
     Creating an atom array stack from two arrays:
     
     >>> atom1 = Atom([1,2,3], chain_id="A")
@@ -1015,9 +1017,9 @@ def stack(arrays):
       [2 3 4]
       [3 4 5]]
     <BLANKLINE>
-     [[4 5 6]
-      [5 6 7]
-      [6 7 8]]]
+    [[4 5 6]
+     [5 6 7]
+     [6 7 8]]]
     """
     array_count = 0
     for array in arrays:
