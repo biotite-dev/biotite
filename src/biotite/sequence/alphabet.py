@@ -97,7 +97,7 @@ class Alphabet(object):
         ----------
         alphabet : Alphabet
             The potential parent alphabet.
-        
+
         Returns
         -------
         result : bool
@@ -213,6 +213,23 @@ class Alphabet(object):
 
 
 class LetterAlphabet(Alphabet):
+    """
+    `LetterAlphabet` is a an `Alphabet` subclass specialized for letter
+    based alphabets, like DNA or protein sequence alphabets.
+    The alphabet size is limited to a maximum of 128 symbols, the size
+    of the ASCII charcater set.
+    The encoding and decoding process is a lot faster than for a
+    nromal `Alphabet`.
+
+    The performance gain comes through the use of *NumPy* for encoding
+    and decoding:
+    Instead of iterating over each symbol/code of the sequence to be
+    encoded or decoded, this class iterates over the symbols/codes in
+    the alphabet:
+    All symbols/codes in the sequence, that are equal to the current
+    symbol/code, are converted using a boolean mask with *Numpy*.
+    This approach is most viable for small alphabets.
+    """
     
     def __init__(self, symbols):
         if len(symbols) == 0:
