@@ -107,12 +107,5 @@ sphinx_gallery_conf = {
 
 #### App setup ####
 
-# Skip all class members, that are not methods,
-# since other attributes are already documented in the class docstring
-def maybe_skip_member(app, what, name, obj, skip, options):
-    if what == "class":
-        if type(obj) not in [types.FunctionType, types.BuiltinFunctionType]:
-            return True
-
 def setup(app):
-    app.connect('autodoc-skip-member', maybe_skip_member)
+    app.connect('autodoc-skip-member', apidoc.skip_non_methods)

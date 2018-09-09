@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["create_api_doc"]
+__all__ = ["create_api_doc", "skip_non_methods"]
 
 from os.path import dirname, join, isdir
 from os import listdir, makedirs
@@ -166,3 +166,17 @@ def _create_package_index(doc_path, package_list):
 def _is_package(path):
     content = listdir(path)
     return "__init__.py" in content
+
+
+
+# Skip all class members, that are not methods,
+# since other attributes are already documented in the class docstring
+def skip_non_methods(app, what, name, obj, skip, options):
+    """
+    Skip all class members, that are not methods,
+    since other attributes are already documented
+    in the class docstring.
+    """
+    if what == "class":
+        if type(obj) not in [types.FunctionType, types.BuiltinFunctionType]:
+            return True
