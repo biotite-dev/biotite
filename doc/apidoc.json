@@ -1,0 +1,28 @@
+{
+    "biotite.sequence" : {
+        "Sequence types" : [
+            "Sequence",
+            "NucleotideSequence",
+            "ProteinSequence",
+            "GeneralSequence"
+        ],
+        "Alphabets" : [
+            "Alphabet",
+            "LetterAlphabet",
+            "AlphabetMapper",
+            "AlphabetError"
+        ],
+        "Sequence features" : [
+            "Feature",
+            "Location",
+            "Annotation",
+            "AnnotatedSequence"
+        ],
+        "Sequence search" : [
+            "find_subsequence",
+            "find_symbol",
+            "find_symbol_first",
+            "find_symbol_last"
+        ]
+    }
+}

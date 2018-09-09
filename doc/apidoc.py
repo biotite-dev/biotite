@@ -10,13 +10,16 @@ from os import listdir, makedirs
 from importlib import import_module
 import types
 import json
+from collections import OrderedDict
 
 
 _indent = " " * 3
 
 
-#with open("apidoc.json", "r") as file:
-#    content_structure = json.load(f)
+# The categories for functions and classes on the module pages
+# from biotite/doc/apidoc.json
+with open("apidoc.json", "r") as file:
+    _pck_categories = json.load(file, object_pairs_hook=OrderedDict)
 
 
 
@@ -80,17 +83,43 @@ def _create_package_doc(pck, src_path, doc_path):
 
 def _create_package_page(doc_path, package_name,
                          classes, functions, subpackages):
-    # String for class enumeration
-    classes_string = "\n".join(
-        [_indent + f"- :doc:`{package_name}.{cls} <{cls}>`"
-         for cls in classes]
-    )
+    attributes = classes + functions
+    
+    # Get categories for this package
+    try:
+        categories = _pck_categories[package_name]
+    except KeyError:
+        categories = {}
+    # Put all attributes that are not in any category
+    # into 'Miscellaneous' category
+    misc_attributes = []
+    for attr in attributes:
+        in_category = False
+        for categorized_attributes in categories.values():
+            if attr in categorized_attributes:
+                in_category = True
+        if not in_category:
+            misc_attributes.append(attr)
+    categories["Miscellaneous"] = misc_attributes
+    
 
-    # String for function enumeration
-    functions_string = "\n".join(
-        [_indent + f"- :doc:`{package_name}.{func} <{func}>`"
-         for func in functions]
-    )
+    # String for categorized class and function enumeration
+    category_strings = []
+    for category, attrs in categories.items():
+        # Create string for each category
+        string = \
+f"""
+{category}
+{"-"*len(category)}
+
+.. autosummary::
+   :nosignatures:
+
+"""
+        string += "\n".join([_indent + attr for attr in attrs])
+        category_strings.append(string)
+    # Concatenate strings
+    attributes_string = "\n".join(category_strings)
 
     # String for subpackage enumeration
     subpackages_string = "\n".join(
@@ -98,25 +127,22 @@ def _create_package_page(doc_path, package_name,
          for pck in subpackages]
     )
 
+
     # Assemble page
     file_content = \
 f"""
 {package_name}
 {"=" * len(package_name)}
-.. currentmodule:: matplotlib.axes
+.. currentmodule:: {package_name}
 
 .. automodule:: {package_name}
 
-Classes
--------
+{attributes_string}
 
-{classes_string}
-
-Functions
----------
-
-{functions_string}
-
+"""
+    if len(subpackages) > 0:
+        file_content += \
+f"""
 Subpackages
 -----------
 
