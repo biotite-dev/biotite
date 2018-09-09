@@ -100,7 +100,10 @@ def _create_package_page(doc_path, package_name,
                 in_category = True
         if not in_category:
             misc_attributes.append(attr)
-    categories["Miscellaneous"] = misc_attributes
+    if len(misc_attributes) > 0:
+        # If no other categories exist, call the category 'Content'
+        misc_category_name = "Miscellaneous" if categories else "Content"
+        categories[misc_category_name] = misc_attributes
     
 
     # String for categorized class and function enumeration

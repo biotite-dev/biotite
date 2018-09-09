@@ -104,7 +104,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
                   terminal_penalty=True, local=False):
     """
     Perform an optimal alignment of two sequences based on the
-    dynamic programming algorithm [1]_.
+    dynamic programming algorithm. [1]_
     
     This algorithm yields an optimal alignment, i.e. the sequences
     are aligned in the way that results in the highest similarity

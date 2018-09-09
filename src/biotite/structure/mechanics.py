@@ -74,7 +74,7 @@ def mass_center(array, masses=None):
 
 def atom_masses(array):
     """
-    Obtain the atomic masses for an atom array [1]_.
+    Obtain the atomic masses for an atom array. [1]_
     
     The weights are determined from the *element* annotation array.
     
@@ -110,7 +110,7 @@ def atom_masses(array):
 
 def mass_of_element(element):
     """
-    Obtain the atomic mass of a given element [1]_.
+    Obtain the atomic mass of a given element. [1]_
     
     Parameters
     ----------

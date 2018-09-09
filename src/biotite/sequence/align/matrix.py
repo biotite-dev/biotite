@@ -15,7 +15,7 @@ __all__ = ["SubstitutionMatrix"]
 
 class SubstitutionMatrix(object):
     """
-    A `SubstitutionMatrix` is the base for scoring in sequence
+    A `SubstitutionMatrix` is the foundation for scoring in sequence
     alignments. A `SubstitutionMatrix` maps each possible pairing
     of a symbol of a first alphabet with a symbol of a second alphabet
     to a score (integer).
