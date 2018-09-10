@@ -10,6 +10,7 @@ from os import listdir, makedirs
 from importlib import import_module
 import types
 import json
+import enum
 from collections import OrderedDict
 
 
@@ -213,10 +214,17 @@ def _is_package(path):
 # since other attributes are already documented in the class docstring
 def skip_non_methods(app, what, name, obj, skip, options):
     """
-    Skip all class members, that are not methods,
+    Skip all class members, that are not methods or enum values,
     since other attributes are already documented
     in the class docstring.
     """
+    if skip:
+        return True
     if what == "class":
-        if type(obj) not in [types.FunctionType, types.BuiltinFunctionType]:
-            return True
+        if type(obj) in [
+            types.FunctionType, types.BuiltinFunctionType, types.MethodType
+        ] or type(obj).__name__ in [
+            "cython_function_or_method", "method_descriptor"
+        ] or isinstance(obj, enum.Enum):
+            return False
+        return True
