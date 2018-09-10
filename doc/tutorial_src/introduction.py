@@ -1,9 +1,6 @@
-.. This source code is part of the Biotite package and is distributed
-   under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-   information.
-
+r"""
 Introduction
-------------
+============
 
 *Biotite* is a *Python* package for computational biologists. It aims to
 provide a broad set of tools for working with different kinds of biological
@@ -38,4 +35,8 @@ have to input *Python* objects and you get *Python* objects. It is basically
 very similar to using normal functions.
 
 In the following sections you will get an overview over the mentioned
-subpackages, so go and grab some tea and cookies und let us begin. 
+subpackages, so go and grab some tea and cookies und let us begin.
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause

@@ -22,6 +22,7 @@ doc_path = dirname(realpath(__file__))
 # in order to import modules for API doc generation etc.
 sys.path.insert(0, doc_path)
 import apidoc
+import tutorial
 
 # Include biotite/src in PYTHONPATH
 # in order to import the 'biotite' package
@@ -36,6 +37,9 @@ matplotlib.rcdefaults()
 
 # Creation of API documentation
 apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
+
+# Creation of tutorial *.rst files from Python script
+tutorial.create_tutorial("tutorial_src", "tutorial")
 
 
 #### General ####
