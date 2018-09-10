@@ -126,14 +126,15 @@ f"""
 
     # String for subpackage enumeration
     subpackages_string = "\n".join(
-        [_indent + f"- :doc:`{pck} <../{pck}/package>`"
-         for pck in subpackages]
+        [_indent + pck for pck in subpackages]
     )
 
 
     # Assemble page
     file_content = \
 f"""
+:orphan:
+
 {package_name}
 {"=" * len(package_name)}
 .. currentmodule:: {package_name}
@@ -148,6 +149,8 @@ f"""
 f"""
 Subpackages
 -----------
+
+.. autosummary::
 
 {subpackages_string}
 """
@@ -186,19 +189,22 @@ f"""
 
 
 def _create_package_index(doc_path, package_list):
-    lines = []
+    # String for package enumeration
+    packages_string = "\n".join(
+        [_indent + pck for pck in package_list]
+    )
     
-    lines.append("API Reference")
-    lines.append("=" * len("API Reference"))
-    lines.append("\n")
-    
-    lines.append(".. toctree::")
-    lines.append(_indent + ":maxdepth: 1")
-    lines.append("\n")
-    for pck in package_list:
-        lines.append(_indent + f"{pck}/package")
+    file_content = \
+f"""
+API Reference
+=============
+
+.. autosummary::
+
+{packages_string}
+"""
     with open(join(doc_path, "index.rst"), "w") as f:
-        f.writelines([line+"\n" for line in lines])
+        f.write(file_content)
 
 
 def _is_package(path):
