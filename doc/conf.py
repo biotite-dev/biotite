@@ -66,6 +66,8 @@ todo_include_todos = False
 # due to Biotite's import system
 numpydoc_show_class_members = False
 
+autodoc_member_order = "bysource"
+
 
 #### HTML ####
 
