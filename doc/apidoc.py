@@ -30,10 +30,14 @@ def create_api_doc(src_path, doc_path):
     Parameters
     ----------
     src_path : str
-        The path to the working copy of the *Biotite* package
-    src_path : str
-        The path to the documentation root directory (``biotite/doc``)
+        The path to the working copy of the *Biotite* package.
+    doc_path : str
+        The path to the API documentation root directory
+        (``biotite/doc/apidoc``).
     """
+    # Create directory to store apidoc
+    if not isdir(doc_path):
+        makedirs(doc_path)
     package_list = _create_package_doc("biotite",
                                        join(src_path, "biotite"),
                                        doc_path)
@@ -67,16 +71,12 @@ def _create_package_doc(pck, src_path, doc_path):
     class_list = [attr for attr in attr_list
                     if attr[0] != "_"
                     and isinstance(getattr(module, attr), type)]
-    # Create directory to store *.rst files for this package/subpackage
-    pck_path = join(doc_path, pck)
-    if not isdir(pck_path):
-        makedirs(pck_path)
     # Create *.rst files
-    _create_package_page(pck_path, pck, class_list, func_list, sub_pck)
+    _create_package_page(doc_path, pck, class_list, func_list, sub_pck)
     for class_name in class_list:
-        _create_class_page(pck_path, pck, class_name)
+        _create_class_page(doc_path, pck, class_name)
     for function_name in func_list:
-        _create_function_page(pck_path, pck, function_name)
+        _create_function_page(doc_path, pck, function_name)
     
     return([pck] + sub_pck)
 
@@ -117,6 +117,7 @@ f"""
 
 .. autosummary::
    :nosignatures:
+   :toctree:
 
 """
         string += "\n".join([_indent + attr for attr in attrs])
@@ -133,8 +134,6 @@ f"""
     # Assemble page
     file_content = \
 f"""
-:orphan:
-
 {package_name}
 {"=" * len(package_name)}
 .. currentmodule:: {package_name}
@@ -154,15 +153,13 @@ Subpackages
 
 {subpackages_string}
 """
-    with open(join(doc_path, "package.rst"), "w") as f:
+    with open(join(doc_path, f"{package_name}.rst"), "w") as f:
         f.write(file_content)
 
 
 def _create_class_page(doc_path, package_name, class_name):
     file_content = \
 f"""
-:orphan:
-
 {package_name}.{class_name}
 {"=" * (len(package_name)+len(class_name)+1)}
 .. autoclass:: {package_name}.{class_name}
@@ -171,20 +168,18 @@ f"""
     :undoc-members:
     :inherited-members:
 """
-    with open(join(doc_path, f"{class_name}.rst"), "w") as f:
+    with open(join(doc_path, f"{package_name}.{class_name}.rst"), "w") as f:
         f.write(file_content)
 
 
 def _create_function_page(doc_path, package_name, function_name):
     file_content = \
 f"""
-:orphan:
-
 {package_name}.{function_name}
 {"=" * (len(package_name)+len(function_name)+1)}
 .. autofunction:: {package_name}.{function_name}
 """
-    with open(join(doc_path, f"{function_name}.rst"), "w") as f:
+    with open(join(doc_path, f"{package_name}.{function_name}.rst"), "w") as f:
         f.write(file_content)
 
 
@@ -200,6 +195,7 @@ API Reference
 =============
 
 .. autosummary::
+   :toctree:
 
 {packages_string}
 """
