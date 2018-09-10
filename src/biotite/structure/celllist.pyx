@@ -24,6 +24,8 @@ ctypedef np.uint8_t uint8
 
 cdef class CellList:
     """
+    __init__(atom_array, cell_size)
+    
     This class enables the efficient search of atoms in vicinity of a
     defined location.
     
@@ -125,6 +127,8 @@ cdef class CellList:
     @cython.wraparound(False)
     def create_adjacency_matrix(self, float32 threshold_distance):
         """
+        create_adjacency_matrix(threshold_distance)
+        
         Create an adjacency matrix for the atoms in this cell list.
 
         An adjacency matrix depicts which atoms *i* and *j* have
@@ -185,6 +189,8 @@ cdef class CellList:
     @cython.wraparound(False)
     def get_atoms(self, np.ndarray coord, radius):
         """
+        get_atoms(coord, radius)
+        
         Find atoms with a maximum distance from given coordinates.
         
         Parameters
@@ -332,6 +338,8 @@ cdef class CellList:
     @cython.wraparound(False)
     def get_atoms_in_cells(self, np.ndarray coord, cell_radius=1):
         """
+        get_atoms_in_cells(coord, cell_radius=1)
+        
         Find atoms with a maximum cell distance from given
         coordinates.
         
@@ -508,9 +516,9 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
 
     The shapes before and after conversion are:
        
-       - coord: ( ,3), radius: (scalar) -> coord: (1,3), radius: (1,)
-       - coord: (n,3), radius: (scalar) -> coord: (n,3), radius: (n,)
-       - coord: (n,3), radius: (n,)     -> coord: (n,3), radius: (n,3)
+       - coord: (3, ), radius: (scalar) -> coord: (1,3), radius: (1, )
+       - coord: (n,3), radius: (scalar) -> coord: (n,3), radius: (n, )
+       - coord: (n,3), radius: (n,    ) -> coord: (n,3), radius: (n,3)
     
     Thes resulting values have the same dimensionality for all cases and
     can be handeled uniformly by `get_atoms()` and

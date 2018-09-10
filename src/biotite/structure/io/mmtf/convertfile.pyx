@@ -29,6 +29,9 @@ ctypedef np.float32_t float32
 def get_structure(file, model=None, insertion_code=[], altloc=[],
                   extra_fields=[], include_bonds=False):
     """
+    get_structure(file, model=None, insertion_code=[], altloc=[],
+                  extra_fields=[], include_bonds=False)
+    
     Get an `AtomArray` or `AtomArrayStack` from the MMTF file.
     
     Parameters
