@@ -46,8 +46,8 @@ def test_hbond_total_count():
 def test_hbond_with_selections():
     """
     When selection1 and selection2 is defined, no hydrogen bonds outside
-    of this boundary should be found. Also, hbond should respect the selection
-    type
+    of this boundary should be found. Also, hbond should respect the
+    selection type.
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
     selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
@@ -60,15 +60,16 @@ def test_hbond_with_selections():
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
-    # backbone hbond should be found if selection1 is acceptor and selection2
-    # is donor
+    # backbone hbond should be found if selection1 is acceptor and
+    # selection2 is donor
     triplets, mask = struc.hbond(stack, selection1, selection2,
                                  selection1_type='acceptor')
     assert len(triplets) == 1
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
-    # no hbond should be found because the backbone oxygen cannot be a donor
+    # no hbond should be found,
+    # because the backbone oxygen cannot be a donor
     triplets, mask = struc.hbond(stack, selection1, selection2,
                                  selection1_type='donor')
     assert len(triplets) == 0
