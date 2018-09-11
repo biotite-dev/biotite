@@ -164,8 +164,16 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             cutoff_dist, cutoff_angle,
             donor_elements, acceptor_elements, vectorized
         )
-        triplets = np.concatenate((triplets, triplets2))
+        triplets = np.concatenate((triplets, triplets2), axis=0)
         mask = np.concatenate((mask, mask2), axis=1)
+        if len(triplets) > 0:
+            # Each triplet array returned by both runs may have triplets
+            # that are already the other array
+            # -> filter unique triplets and apply also to mask
+            triplets, unique_indices = np.unique(
+                triplets, axis=0, return_index=True
+            )
+            mask = mask[:, unique_indices]
 
     if single_model:
         # For a single model, hbond_mask contains only 'True' values,
