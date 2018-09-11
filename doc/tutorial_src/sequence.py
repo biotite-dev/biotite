@@ -387,10 +387,10 @@ print(align.get_codes(alignment))
 #
 # .. currentmodule:: biotite.sequence.io.fasta
 #
-# But why should you recalculate the score, when the score has already
-# been directly calculated via :func:`align_optimal()`?
-# Because, you might load an alignment from an external alignment
-# program as FASTA file using :func:`get_alignment()`.
+# You may ask, why should you recalculate the score, when the score has
+# already been directly calculated via :func:`align_optimal()`.
+# The answer is, that you might load an alignment from an external
+# alignment program as FASTA file using :func:`get_alignment()`.
 #
 # Sequence features
 # -----------------
@@ -564,7 +564,7 @@ print(poly_a.sequence)
 # As you might have noticed, the sequence start has shifted to the start
 # of the slice index (the first base of the *regulatory* feature).
 # 
-# .. warning:: Since :class:`AnnoatedSequence` objects use base position
+# .. warning:: Since :class:`AnnotatedSequence` objects use base position
 #    indices and :class:`Sequence` objects use array position indices,
 #    you will get different results for ``annot_seq[n:m].sequence`` and
 #    ``annot_seq.sequence[n:m]``.
