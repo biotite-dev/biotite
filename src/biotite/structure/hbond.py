@@ -32,14 +32,15 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         Boolean mask for atoms to limit the hydrogen bond search to
         specific sections of the model. The shape must match the
         shape of the `atoms` argument. If None is given, the whole atoms
-        stack is used instead. (default: None).
-    selection1_type: str (default: 'both')
-        Can be 'acceptor', 'donor' or 'both' and determines the type of
-        selection1. selection2_type is chosen accordingly (both or the
-        opposite)
+        stack is used instead. (Default: None)
+    selection1_type: {'acceptor', 'donor', 'both'}, optional (default: 'both')
+        Determines the type of `selection1`.
+        The type of `selection2` is chosen accordingly
+        ('both' or the opposite).
+        (Default: 'both')
     cutoff_dist: float
         The maximal distance between the hydrogen and acceptor to be
-        considered a hydrogen bond. (default: 2.5)
+        considered a hydrogen bond. (Default: 2.5)
     cutoff_angle: float
         The angle cutoff in degree between Donor-H..Acceptor to be
         considered a hydrogen bond (default: 120).
@@ -100,7 +101,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     See Also
     --------
     hbond_frequency
-    is_hbond
 
     References
     ----------

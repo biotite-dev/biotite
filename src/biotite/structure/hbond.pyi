@@ -9,12 +9,14 @@ from .atoms import AtomArray, AtomArrayStack
 @overload
 def hbond(
     atoms: AtomArray,
-    donor_selection: Optional[np.dnarray] = None,
-    acceptor_selection: Optional[np.dnarray] = None,
+    selection1: Optional[np.dnarray] = None,
+    selection2: Optional[np.dnarray] = None,
+    selection1_type: str = "both",
     cutoff_dist: float = 2.5,
     cutoff_angle: float = 120,
     donor_elements: Sequence = ('O', 'N', 'S'),
-    acceptor_elements: Sequence = ('O', 'N', 'S')
+    acceptor_elements: Sequence = ('O', 'N', 'S'),
+    vectorized = True
 ) -> np.ndarray: ...
 @overload
 def hbond(
