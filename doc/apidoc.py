@@ -214,17 +214,20 @@ def _is_package(path):
 # since other attributes are already documented in the class docstring
 def skip_non_methods(app, what, name, obj, skip, options):
     """
-    Skip all class members, that are not methods or enum values,
-    since other attributes are already documented
-    in the class docstring.
+    Skip all class members, that are not methods, enum values or inner
+    classes, since other attributes are already documented in the class
+    docstring.
     """
     if skip:
         return True
     if what == "class":
+        # Functions
         if type(obj) in [
             types.FunctionType, types.BuiltinFunctionType, types.MethodType
+        # Functions from C-extensions
         ] or type(obj).__name__ in [
             "cython_function_or_method", "method_descriptor"
-        ] or isinstance(obj, enum.Enum):
+        # Enum Instance or inner class
+        ] or isinstance(obj, enum.Enum) or isinstance(obj, type):
             return False
         return True
