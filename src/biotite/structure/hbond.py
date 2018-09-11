@@ -122,8 +122,10 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         selection2_type = selection1_type
     elif selection1_type == 'acceptor':
         selection2_type = 'donor'
-    else:
+    elif selection1_type == 'donor':
         selection2_type = 'acceptor'
+    else:
+        raise ValueError(f"Unkown selection type '{selection1_type}'")
 
     # create donors and acceptors selections
     def build_donor_acceptor_selections(selection, selection_type):
