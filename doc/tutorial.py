@@ -1,18 +1,26 @@
 import os.path
 import os
 import codeop
+import logging
+from sphinx.util.logging import getLogger
+from sphinx.util import status_iterator
 import sphinx_gallery.gen_rst as genrst
 import sphinx_gallery.py_source_parser as parser
 import biotite
 
 
 def create_tutorial(src_dir, target_dir):
-    scripts = [script for script in os.listdir(src_dir)
-               if os.path.isfile(os.path.join(src_dir, script))]
-    for script in scripts:
+    logger = getLogger('sphinx-gallery')
+    logger.info("generating tutorial...", color="white")
+    with open(os.path.join(src_dir, "scripts"), "r") as file:
+        scripts = [line.strip() for line in file.read().split("\n")
+                          if line[0] != "#" and line.strip() != ""]
+    iterator = status_iterator(
+        scripts, "generating tutorial...", length=len(scripts)
+    )
+    for script in iterator:
         _create_tutorial_section(script, src_dir, target_dir)
     
-
     # Create index
     # String for enumeration of tutorial pages
     include_string = "\n\n".join(
@@ -58,6 +66,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
     content_rst = ""
     for block_label, block_content, line_no in script_blocks:
         if block_label == 'code':
+            # Run code and save output images
             code_output, rtime = genrst.execute_code_block(
                 compiler=compiler, src_file=src_file, code_block=block_content,
                 lineno=line_no, example_globals=tutorial_globals,
