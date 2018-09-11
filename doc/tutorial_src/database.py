@@ -84,8 +84,8 @@ composite = rcsb.CompositeQuery("and", [query1, query2])
 # It provides a myriad of information, ranging from sequences and
 # sequence features to scientific papers. Fetching files from
 # NCBI Entrez works analogous to the RCSB interface. This time
-# we have to provide the database specific UIDs or GIs
-# instead of PDB IDs to the :func:`fetch` function.
+# we have to provide the UIDs (Accession or GI) instead of PDB IDs
+# to the :func:`fetch` function.
 # Furthermore, we need to specifiy the database to retrieve the data
 # from and the retrieval type.
 
