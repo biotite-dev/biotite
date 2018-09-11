@@ -117,7 +117,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     else:
         single_model = False
 
-    # determine selection2 type
+    # Determine selection2 type
     if selection1_type == 'both':
         selection2_type = selection1_type
     elif selection1_type == 'acceptor':
@@ -127,7 +127,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     else:
         raise ValueError(f"Unkown selection type '{selection1_type}'")
 
-    # create donors and acceptors selections
+    # Create donors and acceptors selections
     def build_donor_acceptor_selections(selection, selection_type):
         if selection is None:
             selection = np.full(atoms.array_length(), True)
@@ -149,19 +149,21 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     donor2_selection, acceptor2_selection = \
         build_donor_acceptor_selections(selection2, selection2_type)
 
-    # find hydrogen bonds between selections.
-    triplets, mask = _hbond(atoms, donor1_selection, acceptor2_selection,
-                            cutoff_dist, cutoff_angle, donor_elements,
-                            acceptor_elements,
-                            vectorized)
+    # Find hydrogen bonds between selections
+    triplets, mask = _hbond(
+        atoms, donor1_selection, acceptor2_selection,
+        cutoff_dist, cutoff_angle,
+        donor_elements, acceptor_elements, vectorized
+    )
 
     # If the selections are identical, we can skip the second run
     if not (np.array_equal(donor1_selection, donor2_selection) and
             np.array_equal(acceptor1_selection, acceptor2_selection)):
-        triplets2, mask2 = _hbond(atoms, donor2_selection, acceptor1_selection,
-                                cutoff_dist, cutoff_angle, donor_elements,
-                                acceptor_elements,
-                                vectorized)
+        triplets2, mask2 = _hbond(
+            atoms, donor2_selection, acceptor1_selection,
+            cutoff_dist, cutoff_angle,
+            donor_elements, acceptor_elements, vectorized
+        )
         triplets = np.concatenate((triplets, triplets2))
         mask = np.concatenate((mask, mask2), axis=1)
 
