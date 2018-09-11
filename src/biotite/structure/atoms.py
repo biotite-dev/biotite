@@ -1039,6 +1039,6 @@ def coord(item):
     if type(item) in (Atom, AtomArray, AtomArrayStack):
         return item.coord
     elif isinstance(item, np.ndarray):
-        return item.astype(float, copy=True)
+        return item.astype(float, copy=False)
     else:
         return np.array(item, dtype=float)
