@@ -9,6 +9,9 @@ from .matrix import SubstitutionMatrix
 
 
 class Alignment:
+    sequences : List[Sequence]
+    trace : np.ndarray
+    score: Optional[int]
     def __init__(
         self, sequences: List[Sequence],
         trace: np.ndarray,
