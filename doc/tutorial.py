@@ -48,6 +48,11 @@ def _create_tutorial_section(fname, src_dir, target_dir):
         os.makedirs(target_dir)
 
     src_file = os.path.normpath(os.path.join(src_dir, fname))
+    # Check if the same tutorial script has been already run
+    md5_file = os.path.join(target_dir, f"{fname}.md5")
+    if _md5sum_is_current(src_file, md5_file):
+        return
+
     file_conf, script_blocks = parser.split_code_and_text_blocks(src_file)
 
     # Remove *.py suffix
@@ -81,5 +86,18 @@ def _create_tutorial_section(fname, src_dir, target_dir):
         else:
             content_rst += block_content + "\n\n"
 
-    with open(os.path.join(target_dir, f"{base_image_name}.rst"), "w") as f:
-        f.write(content_rst)
+    with open(os.path.join(target_dir, f"{base_image_name}.rst"), "w") as file:
+        file.write(content_rst)
+    
+    # Write checksum of file to avoid unnecessary rerun
+    with open(md5_file, "w") as file:
+        file.write(genrst.get_md5sum(src_file))
+    
+
+def _md5sum_is_current(src_file, md5_file):
+    if not os.path.exists(md5_file):
+        return False
+    src_md5 = genrst.get_md5sum(src_file)
+    with open(md5_file, "r") as file:
+        ref_md5 = file.read()
+    return src_md5 == ref_md5
