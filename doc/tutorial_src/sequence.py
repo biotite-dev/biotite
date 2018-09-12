@@ -2,7 +2,7 @@
 From A to T - The Sequence subpackage
 =====================================
 
-.. currentmodule:: biotite
+.. currentmodule:: biotite.sequence
 
 :mod:`biotite.sequence` is a *Biotite* subpackage concerning maybe the
 most popular data type in computational molecular biology: sequences.
@@ -14,8 +14,6 @@ dna = seq.NucleotideSequence("AACTGCTA")
 print(dna)
 
 ########################################################################
-# .. currentmodule:: biotite.sequence
-#
 # This example shows :class:`NucleotideSequence` which is a subclass of
 # the abstract base class :class:`Sequence`.
 # A :class:`NucleotideSequence` accepts a list of strings,
@@ -90,6 +88,7 @@ print("Code: ", sequence.code)
 # RNA sequences you can use this class, too, you just need to replace
 # the ``'U'`` with ``'T'``.
 
+import biotite.sequence as seq
 # Create a nucleotide sequence using a string
 # The constructor can take any iterable object (e.g. a list of symbols)
 seq1 = seq.NucleotideSequence("ACCGTATCAAG")
@@ -205,6 +204,7 @@ print(table)
 # we can load the contents in the following way:
 
 import biotite
+import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
 file_path = entrez.fetch(
@@ -258,6 +258,7 @@ fasta.set_sequence(file, dna_seq1, header="gibberish")
 # .. or dictionary style
 file["more gibberish"] = str(dna_seq2)
 print(file)
+file.write(biotite.temp_file("fa"))
 
 ########################################################################
 # As you see, our file contains our new ``'gibberish'`` and
@@ -274,6 +275,7 @@ print(file)
 # A sequence can be searched for the position of a subsequence or a
 # specific symbol:
 
+import biotite.sequence as seq
 main_seq = seq.NucleotideSequence("ACCGTATCAAGTATTG")
 sub_seq = seq.NucleotideSequence("TAT")
 print("Occurences of 'TAT': ", seq.find_subsequence(main_seq, sub_seq))
@@ -322,6 +324,7 @@ print("Occurences of 'C': ", seq.find_symbol(main_seq, "C"))
 # :class:`SubstitutionMatrix`, in our case for protein sequence
 # alignments:
 
+import biotite.sequence as seq
 import biotite.sequence.align as align
 import numpy as np
 alph = seq.ProteinSequence.alphabet

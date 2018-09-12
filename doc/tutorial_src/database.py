@@ -15,7 +15,7 @@ Fetching structure files from the RCSB PDB
 
 Downloading structure files from the *RCSB PDB* is quite easy:
 Simply specify the PDB ID, the file format and the target directory
-for the :func:`fetch` function and you are done.
+for the :func:`fetch()` function and you are done.
 The function even returns the path to the downloaded file, so you
 can just load it via the other *Biotite* subpackages
 (more on this later).
@@ -38,8 +38,9 @@ file_paths = rcsb.fetch(["1l2y", "1aki"], "cif", biotite.temp_dir())
 print([relpath(file_path) for file_path in file_paths])
 
 ########################################################################
-# By default :func:`fetch` checks whether the file to be fetched already
-# exists in the directory, and downloads it, if it does not exist yet.
+# By default :func:`fetch()` checks whether the file to be fetched
+# already exists in the directory, and downloads it, if it does not
+# exist yet.
 # If you want to download files irrespectively, set :obj:`overwrite` to
 # true.
 
@@ -53,7 +54,7 @@ file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
 # 
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
-# The :func:`search` method takes the :class:`Query` and returns a
+# The :func:`search()` method takes the :class:`Query` and returns a
 # list of PDB IDs, which itself can be used as inpt for :func:`fetch()`.
 
 query = rcsb.ResolutionQuery(0.0, 0.6)
@@ -85,7 +86,7 @@ composite = rcsb.CompositeQuery("and", [query1, query2])
 # sequence features to scientific papers. Fetching files from
 # NCBI Entrez works analogous to the RCSB interface. This time
 # we have to provide the UIDs (Accession or GI) instead of PDB IDs
-# to the :func:`fetch` function.
+# to the :func:`fetch()` function.
 # Furthermore, we need to specifiy the database to retrieve the data
 # from and the retrieval type.
 
@@ -109,13 +110,13 @@ print([relpath(file_path) for file_path in file_paths])
 # A list of valid database, retrieval type and mode combinations can
 # be found
 # `here <https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`_.
-# Furthermore :func:`get_database_name` can be helpful to get the
+# Furthermore :func:`get_database_name()` can be helpful to get the
 # required database name by the more commonly known names.
 
 print(entrez.get_database_name("Nucleotide"))
 
 # The *Entrez* database allows for packing data for multiple UIDs into a
-# single file. This is achieved with the :func:`fetch_single_file`
+# single file. This is achieved with the :func:`fetch_single_file()`
 # function.
 
 file_path = entrez.fetch_single_file(
@@ -153,8 +154,8 @@ print(composite_query)
 
 
 ########################################################################
-# Finally, the query is given to the :func:`search` function to obtain
-# the GIs, that can be used as input to :func:`fetch`.
+# Finally, the query is given to the :func:`search()` function to obtain
+# the GIs, that can be used as input to :func:`fetch()`.
 
 # Return a maximum number of 10 entries
 gis = entrez.search(composite_query, "protein", number=10)
