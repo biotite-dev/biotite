@@ -36,7 +36,7 @@ This will constantly check if the application has finished and will
 directly go into the ``JOINED`` state as soon as the application reaches
 the ``FINISHED`` state.
 Calling the :func:`Application.cancel()` method while the application is
-``RUNNING`` or ``FINISHED`` leaves the application in the *CANCELLED*
+``RUNNING`` or ``FINISHED`` leaves the application in the ``CANCELLED``
 state.
 This triggers cleanup, too, but there are no accessible results.
 If a method is called in an unsuitable app state, an
