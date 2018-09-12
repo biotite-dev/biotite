@@ -3,6 +3,7 @@
 # information.
 
 from typing import (
+    TypeVar,
     Tuple,
     Union,
     Optional,
@@ -12,14 +13,13 @@ from typing import (
     List,
     overload
 )
-from typing import Sequence as _Sequence
 from abc import abstractmethod
 from .sequence import Sequence
 from .alphabet import Alphabet, LetterAlphabet
 from .codon import CodonTable
 
 
-_T = TypeVar("_V", bound="Hashable")
+_T = TypeVar("_T", bound="Hashable")
 
 class GeneralSequence(Sequence[_T]):
     def __init__(
@@ -33,7 +33,7 @@ class NucleotideSequence(Sequence[str]):
     def __init__(
         self, sequence: Iterable[str] = (), ambiguous: bool = False
     ) -> None: ...
-    def get_alphabet(self) -> LetterAlphabet[str]: ...
+    def get_alphabet(self) -> LetterAlphabet: ...
     def complement(self) -> NucleotideSequence: ...
     @overload
     def translate(
@@ -50,15 +50,15 @@ class NucleotideSequence(Sequence[str]):
     ) -> Union[ProteinSequence,
                Tuple[List[ProteinSequence], List[Tuple[int, int]]]]: ...
     @staticmethod
-    def unambiguous_alphabet() -> LetterAlphabet[str]: ...
+    def unambiguous_alphabet() -> LetterAlphabet: ...
     @staticmethod
-    def ambiguous_alphabet() -> LetterAlphabet[str]: ...
+    def ambiguous_alphabet() -> LetterAlphabet: ...
 
 
 class ProteinSequence(Sequence[str]):
     alphabet : LetterAlphabet
     def __init__(self, sequence: Iterable[str] = ()) -> None: ...
-    def get_alphabet(self) -> LetterAlphabet[str]: ...
+    def get_alphabet(self) -> LetterAlphabet: ...
     def remove_stops(self) -> ProteinSequence: ...
     @staticmethod
     def convert_letter_1to3(symbol: str) -> str: ...

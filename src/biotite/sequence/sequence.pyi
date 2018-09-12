@@ -10,6 +10,7 @@ from typing import (
     Dict,
     List,
     MutableSequence,
+    Generic,
     Iterable,
     Iterator,
     overload
@@ -24,7 +25,7 @@ from .alphabet import Alphabet
 _T = TypeVar("_T", bound="Sequence")
 _V = TypeVar("_V", bound="Hashable")
 
-class Sequence(Copyable, Generic[_V], _Sequence[_V]):
+class Sequence(Generic[_V], _Sequence[_V], Copyable):
     symbols : List[_V]
     code : np.ndarray
     def __init__(self, sequence: Iterable[_V] = ()) -> None: ...
