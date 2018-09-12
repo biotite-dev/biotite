@@ -240,7 +240,7 @@ def _hbond(atoms, donor_selection, acceptor_selection,
     triplets = _get_triplets(donor_i, donor_hs_i, acceptor_i)
 
     if len(triplets) == 0:
-        return triplets, np.empty((len(atoms), 3), dtype=np.bool)
+        return triplets, np.empty((len(atoms), 0), dtype=np.bool)
 
 
     if vectorized:
