@@ -60,7 +60,7 @@ from biotite.application import Application
 class MyApplication(Application):
     def __init__(self, param): super().__init__()
     def run(self): pass
-    def is_finished(self): pass 
+    def is_finished(self): return True 
     def wait_interval(self): return 0.1
     def evaluate(self): pass
     def clean_up(self): pass
@@ -155,7 +155,7 @@ print("Hit name: ", best_ali.hit_definition)
 # This is because normally the :class:`BlastWebApp` respects NCBI's code of
 # conduct and prevents you from submitting two queries within one
 # minute. If you want to be rude to the NCBI server, create the
-# instance with :obj:`obey_rules set to false.
+# instance with :obj:`obey_rules` set to false.
 # 
 # Multiple sequence alignments
 # ----------------------------
@@ -163,7 +163,7 @@ print("Hit name: ", best_ali.hit_definition)
 # .. currentmodule:: biotite.application.muscle
 #
 # For *multiple sequence alignments* (MSAs) :mod:`biotite.application`
-# offers several interfaces to MSA software
+# offers several interfaces to MSA software.
 # For our example we choose the software MUSCLE:
 # The subpackage :mod:`biotite.application.muscle` contains the class
 # :class:`MuscleApp` that does the job.
