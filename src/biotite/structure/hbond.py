@@ -203,10 +203,10 @@ def _hbond(atoms, donor_selection, acceptor_selection,
 
     def _get_bonded_hydrogen(atoms, donor_mask, cutoff=1.5):
         """
-        Helper function to find indeces of associated hydrogens in atoms for
-        all donors in atoms[donor_mask]. The criterium is that the hydrogen
-        must be in the same residue and the distance must be smaller then 1.5
-        Angstroem.
+        Helper function to find indices of associated hydrogens in atoms
+        for all donors in atoms[donor_mask].
+        The criterium is that the hydrogen must be in the same residue
+        and the distance must be smaller then 1.5 Angstroem.
 
         """
         hydrogens_mask = atoms.element == 'H'
@@ -235,26 +235,32 @@ def _hbond(atoms, donor_selection, acceptor_selection,
     def _get_triplets(donor_i, donor_hs_i, acceptor_i):
         """ build D-H..A triplets for every possible combination """
         donor_i = np.repeat(donor_i, [len(h) for h in donor_hs_i])
-        donor_hs_i = np.array([item for sublist in donor_hs_i for item in sublist])
-        duplets = np.stack((donor_i, donor_hs_i)).T
-        if len(duplets) == 0:  # otherwise, dtype of empty array does not match
+        donor_hs_i = np.array(
+            [item for sublist in donor_hs_i for item in sublist]
+        )
+        doublets = np.stack((donor_i, donor_hs_i)).T
+        # Otherwise, dtype of empty array does not match
+        if len(doublets) == 0:
             return np.empty((0, 3), dtype=np.int)
 
-        duplets = np.repeat(duplets, acceptor_i.shape[0], axis=0)
+        doublets = np.repeat(doublets, acceptor_i.shape[0], axis=0)
         acceptor_i = acceptor_i[:, np.newaxis]
-        acceptor_i = np.tile(acceptor_i, (int(duplets.shape[0] / acceptor_i.shape[0]), 1))
+        acceptor_i = np.tile(
+            acceptor_i,
+            (int(doublets.shape[0] / acceptor_i.shape[0]), 1)
+        )
 
-        triplets = np.hstack((duplets, acceptor_i))
+        triplets = np.hstack((doublets, acceptor_i))
         triplets = triplets[triplets[:, 0] != triplets[:, 2]]
-
-        # triplets = triplets.reshape(triplets.shape[0] * triplets.shape[1])
         return triplets
+    
     triplets = _get_triplets(donor_i, donor_hs_i, acceptor_i)
 
     if len(triplets) == 0:
+        # TODO len(atoms)? -> (0, 3)
         return triplets, np.empty((len(atoms), 3), dtype=np.bool)
 
-
+    # Filter triplets that do not meet distance or angle condition
     if vectorized:
         donor_atoms = atoms[:, triplets[:, 0]]
         donor_h_atoms = atoms[:, triplets[:, 1]]
