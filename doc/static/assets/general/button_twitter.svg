@@ -26,8 +26,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="7.9195959"
-     inkscape:cx="6.8790906"
-     inkscape:cy="18.954668"
+     inkscape:cx="-12.503211"
+     inkscape:cy="18.449592"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -46,6 +46,11 @@
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:title></dc:title>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>TWITTER, TWEET, RETWEET and the Twitter logo are trademarks of Twitter, Inc. or its affiliates.</dc:title>
+          </cc:Agent>
+        </dc:rights>
       </cc:Work>
     </rdf:RDF>
   </metadata>
