@@ -36,7 +36,7 @@ _d4_strand = ((12.4-1.1), (12.4+1.1))
 def annotate_sse(atom_array, chain_id):
     r"""
     Calculate the secondary structure elements (SSE) of a
-    peptide chain based on the `P-SEA` algorithm [1]_.
+    peptide chain based on the `P-SEA` algorithm. [1]_
     
     The annotation is based CA coordinates only, specifically
     distances and dihedral angles.

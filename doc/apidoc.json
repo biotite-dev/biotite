@@ -1,0 +1,163 @@
+{
+    "biotite.application" : {
+        "Application classes" : [
+            "Application",
+            "WebApp",
+            "LocalApp",
+            "MSAApp"
+        ]
+    },
+
+    "biotite.database.entrez" : {
+        "Queries" : [
+            "Query",
+            "CompositeQuery",
+            "SimpleQuery"
+        ],
+        "Search and fetch" : [
+            "get_database_name",
+            "search",
+            "fetch",
+            "fetch_single_file"
+        ]
+    },
+    
+    "biotite.database.rcsb" : {
+        "Queries" : [
+            "Query",
+            "CompositeQuery",
+            "SimpleQuery",
+            "BFactorQuery",
+            "CompositeQuery",
+            "MethodQuery",
+            "MolecularWeightQuery",
+            "ResolutionQuery"
+        ],
+        "Search and fetch" : [
+            "search",
+            "fetch"
+        ]
+    },
+
+    "biotite.sequence" : {
+        "Sequence types" : [
+            "Sequence",
+            "NucleotideSequence",
+            "ProteinSequence",
+            "GeneralSequence"
+        ],
+        "Alphabets" : [
+            "Alphabet",
+            "LetterAlphabet",
+            "AlphabetMapper",
+            "AlphabetError"
+        ],
+        "Sequence features" : [
+            "Feature",
+            "Location",
+            "Annotation",
+            "AnnotatedSequence"
+        ],
+        "Sequence search" : [
+            "find_subsequence",
+            "find_symbol",
+            "find_symbol_first",
+            "find_symbol_last"
+        ]
+    },
+
+    "biotite.sequence.align" : {
+        "Substitution matrices" : [
+            "SubstitutionMatrix"
+        ],
+        "Aligners" : [
+            "align_optimal",
+            "align_ungapped"
+        ],
+        "Alignments" : [
+            "Alignment",
+            "get_codes",
+            "get_symbols",
+            "get_sequence_identity",
+            "score"
+        ]
+    },
+
+    "biotite.sequence.graphics" : {
+        "Visualizers" : [
+            "AlignmentVisualizer",
+            "AlignmentSimilarityVisualizer",
+            "AlignmentSymbolVisualizer",
+            "SequenceLogo",
+            "FeatureMap"
+        ],
+        "Color schemes" : [
+            "load_color_scheme",
+            "get_color_scheme",
+            "list_color_scheme_names"
+        ]
+    },
+
+    "biotite.structure" : {
+        "Structure types" : [
+            "Atom",
+            "AtomArray",
+            "AtomArrayStack",
+            "array",
+            "stack"
+        ],
+        "Bonds" : [
+            "BondList",
+            "BondType"
+        ],
+        "Geometry" : [
+            "distance",
+            "angle",
+            "dihedral",
+            "dihedral_backbone",
+            "centroid",
+            "mass_of_element",
+            "atom_masses",
+            "mass_center",
+            "gyration_radius"
+        ],
+        "Manipulation" : [
+            "translate",
+            "rotate",
+            "rotate_centered",
+            "superimpose",
+            "superimpose_apply"
+        ],
+        "Filters" : [
+            "filter_amino_acids",
+            "filter_backbone",
+            "filter_solvent",
+            "filter_monoatomic_ions",
+            "filter_intersection",
+            "filter_inscode_and_altloc"
+        ],
+        "Checks" : [
+            "check_bond_continuity",
+            "check_id_continuity",
+            "check_duplicate_atoms"
+        ],
+        "Residue level utility" : [
+            "get_residue_starts",
+            "get_residues",
+            "apply_residue_wise",
+            "spread_residue_wise",
+            "get_residue_count"
+        ],
+        "Structure comparison" : [
+            "average",
+            "rmsd",
+            "rmsf"
+        ],
+        "Advanced analysis" : [
+            "sasa",
+            "annotate_sse",
+            "hbond",
+            "hbond_frequency"
+        ]
+    }
+}

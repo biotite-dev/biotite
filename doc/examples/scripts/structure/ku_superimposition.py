@@ -20,6 +20,8 @@ import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import numpy as np
 
+# The output file names
+# Modify these values for actual file output
 ku_dna_file = biotite.temp_file("ku_dna.cif")
 ku_file = biotite.temp_file("ku.cif")
 

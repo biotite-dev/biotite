@@ -14,7 +14,8 @@ import numpy as np
 
 class DsspApp(LocalApp):
     r"""
-    Perform a multiple sequence alignment.
+    Annotate the secondary structure of a protein structure using the
+    DSSP software.
     
     Internally this creates a `Popen` instance, which handles
     the execution.

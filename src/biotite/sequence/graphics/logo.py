@@ -11,7 +11,7 @@ from .colorschemes import get_color_scheme
 
 class SequenceLogo(Visualizer):
     """
-    This class is used for creation of sequence logos [1]_.
+    This class is used for creation of sequence logos. [1]_
 
     EXPERIMENTAL: Future API changes are probable.
 

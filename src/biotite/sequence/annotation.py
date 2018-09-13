@@ -102,9 +102,26 @@ class Location(Copyable):
 
 class Feature(Copyable):
     """
-    This class represents a single sequence feature, e.g. from a
-    GenBank feature table.
-    
+    This class represents a single sequence feature, for example from a
+    GenBank feature table. 
+    A feature describes a functional part of a sequence.
+    It consists of a feature key, describung the general class of the
+    feature, at least one location, describing its position on the
+    reference, and qualifiers, describing the feature in detail.
+
+    Parameters
+    ----------
+    key : str
+        The name of the feature class, e.g. *gene*, *CDS* or
+        *regulatory*. 
+    locs : iterable object of Location
+        A list of feature locations. In most cases this list will only
+        contain one location, but multiple ones are also possible for
+        example in eukaryotic CDS (due to splicing).
+    qual : dict, optional
+        Maps GenBank feature qualifiers to their corresponding values.
+        The keys and values are always strings.
+
     Attributes
     ----------
     key : str

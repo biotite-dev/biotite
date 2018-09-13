@@ -3,6 +3,7 @@
 # information.
 
 from typing import (
+    TypeVar,
     Tuple,
     Union,
     Optional,
@@ -12,19 +13,22 @@ from typing import (
     List,
     overload
 )
-from typing import Sequence as _Sequence
 from abc import abstractmethod
 from .sequence import Sequence
 from .alphabet import Alphabet, LetterAlphabet
 from .codon import CodonTable
 
 
-class GeneralSequence(Sequence):
-    def __init__(self, sequence: Iterable[Hashable] = ()) -> None: ...
-    def get_alphabet(self) -> Alphabet: ...
+_T = TypeVar("_T", bound="Hashable")
+
+class GeneralSequence(Sequence[_T]):
+    def __init__(
+        self, alphabet : Alphabet[_T], sequence: Iterable[_T] = ()
+    ) -> None: ...
+    def get_alphabet(self) -> Alphabet[_T]: ...
 
 
-class NucleotideSequence(Sequence):
+class NucleotideSequence(Sequence[str]):
     alphabet : LetterAlphabet
     def __init__(
         self, sequence: Iterable[str] = (), ambiguous: bool = False
@@ -51,7 +55,7 @@ class NucleotideSequence(Sequence):
     def ambiguous_alphabet() -> LetterAlphabet: ...
 
 
-class ProteinSequence(Sequence):
+class ProteinSequence(Sequence[str]):
     alphabet : LetterAlphabet
     def __init__(self, sequence: Iterable[str] = ()) -> None: ...
     def get_alphabet(self) -> LetterAlphabet: ...

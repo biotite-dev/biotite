@@ -14,11 +14,15 @@ combination of two alphabets (usually both alphabets are equal).
 The alphabets in the `SubstitutionMatrix` must match or extend the
 alphabets of the sequences to be aligned.
 
-After alignment one or more `Alignment` instances are returned.
-These objects contain the original sequences, a trace
-(indices of aligned) and the similarity score.
+An alignment cannot be directly represented as list of `Sequence`
+objects, since a gap indicates the absence of any symbol.
+Instead, the aligning functions return one or more `Alignment`
+instances.
+These objects contain the original sequences and a trace, that describe
+which positions (indices) in the sequences are aligned.
+Optionally they also contain the similarity score.
 
-The alignment functions are usually C-accelerated, reducing the
+The aligning functions are usually C-accelerated, reducing the
 computation time substantially.
 """
 

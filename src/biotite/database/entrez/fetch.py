@@ -79,7 +79,7 @@ def get_database_name(database):
     >>> print(get_database_name("Nucleotide"))
     nuccore
     """
-    return _databases(database)
+    return _databases[database]
 
 
 def fetch(uids, target_path, suffix, db_name, ret_type,

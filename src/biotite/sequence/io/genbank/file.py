@@ -530,7 +530,7 @@ class GenPeptFile(GenBankFile):
 class MultiFile(TextFile):
     """
     This class represents a file in GenBank or GenPept format,
-    that contains multiple entries, for more than one UID
+    that contains multiple entries, for more than one UID.
     
     The information for each UID are appended to each other in such a
     file.

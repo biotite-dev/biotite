@@ -28,6 +28,8 @@ ctypedef np.float32_t float32
 
 def set_structure(file, array):
     """
+    set_structure(file, array)
+
     Set the relevant fiels of an MMTF file with the content of an
     `AtomArray` or `AtomArrayStack`.
     

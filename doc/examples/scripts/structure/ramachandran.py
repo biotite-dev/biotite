@@ -34,15 +34,17 @@ phi= phi[1:-1]
 psi= psi[1:-1]
 
 # Plot density
-fig = plt.figure()
-ax = fig.add_subplot(111)
+figure = plt.figure()
+ax = figure.add_subplot(111)
 h, xed, yed, image = ax.hist2d(phi, psi, bins=(200, 200),
                 cmap="RdYlGn_r", cmin=1)
-cbar = fig.colorbar(image, orientation="vertical")
+cbar = figure.colorbar(image, orientation="vertical")
 cbar.set_label("Count")
+ax.set_aspect("equal")
 ax.set_xlim(-180, 175)
 ax.set_ylim(-180, 175)
 ax.set_xlabel(r"$\phi$")
 ax.set_ylabel(r"$\psi$")
 ax.set_title("Ramachandran plot of dynein motor domain")
+figure.tight_layout()
 plt.show()

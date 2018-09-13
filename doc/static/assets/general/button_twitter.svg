@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="64"
+   height="64"
+   viewBox="0 0 16.933333 16.933334"
+   version="1.1"
+   id="svg833"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="button_twitter.svg">
+  <defs
+     id="defs827" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="7.9195959"
+     inkscape:cx="-12.503211"
+     inkscape:cy="18.449592"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="990"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata830">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>TWITTER, TWEET, RETWEET and the Twitter logo are trademarks of Twitter, Inc. or its affiliates.</dc:title>
+          </cc:Agent>
+        </dc:rights>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-280.06666)">
+    <path
+       inkscape:connector-curvature="0"
+       class="st0"
+       d="m 16.933333,288.53332 c 0,4.67784 -3.788832,8.46667 -8.466666,8.46667 C 3.788834,296.99999 0,293.21116 0,288.53332 c 0,-4.67783 3.788834,-8.46666 8.466667,-8.46666 4.677834,0 8.466666,3.78883 8.466666,8.46666 z m -10.016066,4.46617 c 3.754967,0 5.808134,-3.1115 5.808134,-5.80813 0,-0.0889 0,-0.1778 -0.0042,-0.26247 0.397934,-0.28787 0.745067,-0.6477 1.020234,-1.05833 -0.364067,0.16086 -0.757767,0.27093 -1.172634,0.32173 0.423334,-0.254 0.745067,-0.65193 0.897467,-1.1303 -0.3937,0.23283 -0.829733,0.40217 -1.2954,0.4953 -0.372533,-0.39793 -0.9017,-0.64347 -1.490134,-0.64347 -1.126066,0 -2.040466,0.9144 -2.040466,2.04047 0,0.16087 0.01693,0.3175 0.05503,0.46567 -1.697567,-0.0847 -3.2004,-0.89747 -4.207934,-2.1336 -0.173566,0.30056 -0.275166,0.65193 -0.275166,1.02446 0,0.70697 0.359833,1.3335 0.910166,1.69757 -0.334433,-0.008 -0.6477,-0.1016 -0.922866,-0.254 0,0.008 0,0.0169 0,0.0254 0,0.9906 0.702733,1.81187 1.6383,2.00237 -0.169333,0.0466 -0.351367,0.072 -0.537634,0.072 -0.131233,0 -0.258233,-0.0127 -0.385233,-0.0381 0.258233,0.8128 1.011767,1.40124 1.905,1.41817 -0.6985,0.5461 -1.579033,0.87207 -2.535767,0.87207 -0.1651,0 -0.325966,-0.008 -0.486833,-0.0296 0.893233,0.5842 1.9685,0.92287 3.119967,0.92287"
+       id="path4"
+       style="fill:#1b1817;fill-opacity:1;stroke-width:0.04233333" />
+  </g>
+</svg>
