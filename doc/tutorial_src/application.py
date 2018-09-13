@@ -218,7 +218,7 @@ print(alignment)
 #
 # Similar to the MSA examples, :class:`DsspApp` has the convenience
 # function :func:`DsspApp.annotate_sse()`, which handles the
-# :class`DsspApp` execution internally.
+# :class:`DsspApp` execution internally.
 
 import biotite
 import biotite.database.rcsb as rcsb

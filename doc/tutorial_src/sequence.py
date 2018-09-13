@@ -16,7 +16,7 @@ print(dna)
 ########################################################################
 # This example shows :class:`NucleotideSequence` which is a subclass of
 # the abstract base class :class:`Sequence`.
-# A :class:`NucleotideSequence` accepts a list of strings,
+# A :class:`NucleotideSequence` accepts an iterable object of strings,
 # where each string can be ``'A'``, ``'C'``, ``'G'`` or ``'T'``.
 # Each of these letters is called a *symbol*.
 # 
@@ -37,7 +37,7 @@ print(dna)
 # the input sequence into a so called *symbol code*.
 # The encoding process is quite simple:
 # A symbol *s* is at index *i* in the list of allowed symbols in the
-# alphabet, so the symbol code for *s* is *i*
+# alphabet, so the symbol code for *s* is *i*.
 # If *s* is not in the alphabet, an :class:`AlphabetError` is raised.
 # The array of symbol codes, that arises from encoding the input
 # sequence, is called *sequence code*.
@@ -68,9 +68,9 @@ class NonsenseSequence(seq.Sequence):
         return NonsenseSequence.alphabet
 
 sequence = NonsenseSequence(["foo", b"bar", 42, "foo", "foo", 42])
-print("Alphabet: ", sequence.get_alphabet())
-print("Symbols: ", sequence.symbols)
-print("Code: ", sequence.code)
+print("Alphabet:", sequence.get_alphabet())
+print("Symbols:", sequence.symbols)
+print("Code:", sequence.code)
 
 ########################################################################
 # From DNA to Protein
@@ -104,9 +104,9 @@ print(seq2.get_alphabet())
 
 # Lower case characters are automatically capitalized
 seq1 = seq.NucleotideSequence("tacagtt")
-print("Original: ", seq1)
+print("Original:", seq1)
 seq2 = seq1.reverse().complement()
-print("Reverse complement: ", seq2)
+print("Reverse complement:", seq2)
 
 ########################################################################
 # The other :class:`Sequence` type is :class:`ProteinSequence`.
@@ -196,10 +196,11 @@ print(table)
 # predestinated to be implemented as some kind of dictionary.
 # This is exactly what has been done in *Biotite*:
 # The header strings (without the ``'>'``) are used as keys to access
-# the sequence string.
-# Actually you can cast the  `FastaFile` object into a `dict`.
+# the respective sequence strings.
+# Actually you can cast the  :class:`FastaFile` object into a
+# :class:`dict`.
 # Let's demonstrate this on the genome of the *lambda* phage
-# (Accession: NC_001416).
+# (Accession: ``NC_001416```).
 # After downloading the FASTA file from the NCBI Entrez database,
 # we can load the contents in the following way:
 
@@ -214,10 +215,10 @@ file_path = entrez.fetch(
 file = fasta.FastaFile()
 file.read(file_path)
 for header, string in file:
-    print("Header: ", header)
+    print("Header:", header)
     print(len(string))
-    print("Sequence: ", string[:50], "...")
-    print("Sequence length: ", len(string))
+    print("Sequence:", string[:50], "...")
+    print("Sequence length:", len(string))
 
 ########################################################################
 # Since there is only a single sequence in the file, the loop is run
@@ -225,8 +226,8 @@ for header, string in file:
 # As the sequence string is very long, only the first 50 bp are printed.
 # Now this string could be used as input parameter for creation of a
 # :class:`NucleotideSequence`.
-# But I want to spare you some unnecessary work, there is already a
-# convenience function for that:
+# But we want to spare ourselves some unnecessary work, there is already
+# a convenience function for that:
 
 dna_seq = fasta.get_sequence(file)
 print(type(dna_seq).__name__)
@@ -278,8 +279,8 @@ file.write(biotite.temp_file("fa"))
 import biotite.sequence as seq
 main_seq = seq.NucleotideSequence("ACCGTATCAAGTATTG")
 sub_seq = seq.NucleotideSequence("TAT")
-print("Occurences of 'TAT': ", seq.find_subsequence(main_seq, sub_seq))
-print("Occurences of 'C': ", seq.find_symbol(main_seq, "C"))
+print("Occurences of 'TAT':", seq.find_subsequence(main_seq, sub_seq))
+print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 
 ########################################################################
 # Sequence alignments
@@ -379,8 +380,8 @@ for ali in alignments:
 
 alignment = alignments[0]
 print("Score: ", alignment.score)
-print("Recalculated score: ", align.score(alignment, matrix=matrix))
-print("Sequence identity: ", align.get_sequence_identity(alignment))
+print("Recalculated score:", align.score(alignment, matrix=matrix))
+print("Sequence identity:", align.get_sequence_identity(alignment))
 print("Symbols:")
 print(align.get_symbols(alignment))
 print("symbols codes:")
@@ -405,7 +406,7 @@ print(align.get_codes(alignment))
 # One popular source to obtain information about sequence features are
 # GenBank (for DNA and RNA) and GenPept (for peptides) files.
 # As example for sequence features we will work with the GenBank file
-# for the DNA sequence of the avidin gene (Accession: AJ311647),
+# for the DNA sequence of the avidin gene (Accession: ``AJ311647```),
 # that we can download from the NCBI Entrez database.
 # After downloading we can load the file using the :class:`GenBankFile`
 # class from :mod:`biotite.sequence.io.genbank`.
@@ -432,10 +433,10 @@ print("Definition:", file.get_definition())
 # In case of *Biotite* we can get an :class:`Annotation` object from the
 # :class:`GenBankFile`.
 # This :class:`Annotation` can be iterated in order to obtain single
-# `Feature` objects.
-# Each `Feature` contains 3 pieces of information: Its feature key
-# (e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one or
-# multiple locations on the corresponding sequence.
+# :class:`Feature` objects.
+# Each :class:`Feature` contains 3 pieces of information: Its feature
+# key (e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one
+# or multiple locations on the corresponding sequence.
 # A :class:`Location` in turn, contains its starting and its ending
 # base/residue position, the strand it is on (only for DNA) and possible
 # *location defects* (defects will be discussed later).
@@ -509,7 +510,7 @@ for feature in sub_annot:
     print(f"{feature.key:12}   {defects}")
 
 ########################################################################
-# The class `Location.Defect` is a :class:`Flag`.
+# The class :class:`Location.Defect` is a :class:`Flag`.
 # This means that multiple defects can be combined to one value.
 # ``NONE`` means that the location has no defect, which is true for most
 # of the features.
@@ -547,7 +548,7 @@ print(annot_seq.sequence[:60], "...")
 # When indexing an :class:`AnnotatedSequence` with a slice,
 # the index is applied to the :class:`Annotation` and the
 # :class:`Sequence`.
-# While the `Annotation` handles the index as shown before,
+# While the :class:`Annotation` handles the index as shown before,
 # the :class:`Sequence` is indexed based on the sequence start
 # value (usually *1*).
 

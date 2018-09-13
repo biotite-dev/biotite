@@ -127,7 +127,7 @@ print(stack)
 # but they are read from a file.
 # Probably the most popular strcuture file format is the *PDB* format.
 # For our purpose, we will work on a protein structure as small as
-# possible, namely the miniprotein *TC5b* (PDB: 1L2Y).
+# possible, namely the miniprotein *TC5b* (PDB: ``1L2Y```).
 # The structure of this 20-residue protein (304 atoms) has been
 # elucidated via NMR.
 # Thus, the corresponding PDB file consists of multiple (namely 38)
@@ -255,10 +255,10 @@ mmtf.set_structure(file, array)
 # :class:`ndarray` is returned, otherwise the dictionary value is
 # directly returned.
 # A list of all MMTF fields (keys) can be found in the
-# `specification <https://github.com/rcsb/mmtf/blob/master/spec.md>`_.
-# The implementation of :class:`MMTFFile` decodes the encoded fields only
-# when you need them, so no computation time is wasted on fields you are
-# not interested in.
+# `specification <https://github.com/rcsb/mmtf/blob/master/spec.md#fields>`_.
+# The implementation of :class:`MMTFFile` decodes the encoded fields
+# only when you need them, so no computation time is wasted on fields
+# you are not interested in.
 
 # Field is not encoded
 print(file["title"])

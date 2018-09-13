@@ -115,6 +115,7 @@ print([relpath(file_path) for file_path in file_paths])
 
 print(entrez.get_database_name("Nucleotide"))
 
+########################################################################
 # The *Entrez* database allows for packing data for multiple UIDs into a
 # single file. This is achieved with the :func:`fetch_single_file()`
 # function.
@@ -126,7 +127,7 @@ file_path = entrez.fetch_single_file(
 print(relpath(file_path))
 
 ########################################################################
-# Similar to the *RCSB PDB*, you can also serach in the *NCBI Entrez*
+# Similar to the *RCSB PDB*, you can also search in the *NCBI Entrez*
 # database, but in an even more powerful manner:
 # Due to the simple design of the search queries accepted by
 # *NCBI Entrez*, you can search in every
@@ -139,9 +140,9 @@ print(entrez.SimpleQuery("BL21 genome"))
 print(entrez.SimpleQuery("Escherichia coli", field="Organism"))
 
 ########################################################################
-# You can even combine multiple :class:`Query` in any way you like using
-# the binary operators ``|``, ``&`` and ``^``, that represent ``OR``,
-# ``AND`` and ``NOT`` linkage, respectively.
+# You can even combine multiple :class:`Query` objects in any way you
+# like using the binary operators ``|``, ``&`` and ``^``,
+# that represent ``OR``,  ``AND`` and ``NOT`` linkage, respectively.
 
 composite_query = (
     entrez.SimpleQuery("50:100", field="Sequence Length") &

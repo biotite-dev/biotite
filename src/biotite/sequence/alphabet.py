@@ -39,7 +39,7 @@ class Alphabet(object):
     
     Parameters
     ----------
-    symbols : iterable object, optional
+    symbols : iterable object
         The symbols, that are allowed in this alphabet. The
         corresponding code for a symbol, is the index of that symbol
         in this list.
