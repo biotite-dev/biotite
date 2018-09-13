@@ -10,13 +10,27 @@ from typing import (
     MutableSequence,
     Tuple,
     Iterator,
-    overload
+    overload,
+    Callable
 )
 import numpy as np
 from .bonds import BondList
+from .copyable import Copyable 
 
 
-class _AtomArrayBase:
+class _AtomArrayBase(Copyable):
+    coord: np.ndarray
+    chain_id: np.ndarray
+    res_id: np.ndarray
+    res_name: np.ndarray
+    hetero: np.ndarray
+    atom_name: np.ndarray
+    element: np.ndarray
+    atom_id: np.ndarray
+    b_factor: np.ndarray
+    occupancy: np.ndarray
+    charge: np.ndarray
+    bonds: Union[BondList, None]
     def __init__(self, length: int) -> None: ...
     def __add__(
         self,
@@ -36,19 +50,26 @@ class _AtomArrayBase:
         self,
         item: Union[AtomArrayStack, AtomArray]
     ) -> bool: ...
-    def __getattr__(self, attr: str) -> Union[BondList, np.ndarray, None]: ...
-    def __setattr__(
-        self, attr: str, value: Union[BondList, np.ndarray, None]
-    ) -> None: ...
     def __dir__(self) -> List[str]: ...
     def __eq__(self, item: object) -> bool: ...
     def __len__(self) -> int: ...
 
 
 class Atom:
-    def __init__(self, coord: Union[List[int], np.ndarray], **kwargs) -> None: ...
-    def __getattr__(self, attr: str) -> object: ...
-    def __setattr__(self, attr: str, value: object) -> None: ...
+    coord: np.ndarray
+    chain_id: str
+    res_id: imt
+    res_name: str
+    hetero: bool
+    atom_name: str
+    element: str
+    atom_id: int
+    b_factor: float
+    occupancy: float
+    charge: int
+    def __init__(
+        self, coord: Union[List[int], np.ndarray], **kwargs
+    ) -> None: ...
     def __str__(self) -> str: ...
     def __eq__(self, item: object) -> bool: ...
 
@@ -117,5 +138,5 @@ def array(atoms: Sequence[Atom]) -> AtomArray: ...
 def stack(arrays: Sequence[AtomArray]) -> AtomArrayStack: ...
 
 def coord(
-    item: Union[AtomArrayStack, AtomArray, np.ndarray]
+    item: Union[AtomArrayStack, AtomArray, Atom, np.ndarray]
 ) -> np.ndarray: ...

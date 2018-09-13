@@ -103,8 +103,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The annotation array.
         """
         if category not in self._annot:
-            raise ValueError("Annotation category '" + category +
-                             "' is not existing")
+            raise ValueError(
+                f"Annotation category '{category}' is not existing"
+            )
         return self._annot[category]
     
     def set_annotation(self, category, array):
@@ -121,11 +122,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             array must be the same as the array length.
         """
         if not isinstance(array, np.ndarray):
-            raise TypeError("Value must be ndarray")
+            raise TypeError("Annotation must be an 'ndarray'")
         if len(array) != self._array_length:
-            raise IndexError("Expected array length "
-                             + str(self._array_length)
-                             + ", but got " + str(len(array)) )
+            raise IndexError(
+                f"Expected array length {self._array_length}, "
+                f"but got {len(array)}"
+            )
         self._annot[category] = array
         
     def get_annotation_categories(self):
@@ -163,9 +165,11 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
             else:
-                raise IndexError("Index must be integer")
+                raise TypeError(
+                    f"Index must be integer, not '{type(index).__name__}'"
+                )
         except KeyError:
-            raise KeyError("Atom has insufficient annotations")
+            raise KeyError("The annotations of the 'Atom' are incompatible")
         
     def _del_element(self, index):
         if isinstance(index, numbers.Integral):
@@ -178,7 +182,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 mask[index] = False
                 self._bonds = self._bonds[mask]
         else:
-            raise IndexError("Index must be integer")
+            raise TypeError(
+                    f"Index must be integer, not '{type(index).__name__}'"
+                )
     
     def equal_annotations(self, item):
         """
@@ -234,8 +240,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         elif attr in self._annot:
             return self._annot[attr]
         else:
-            raise AttributeError("'" + type(self).__name__ +
-                                 "' object has no attribute '" + attr + "'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{attr}'"
+            )
         
     def __setattr__(self, attr, value):
         """
@@ -246,26 +253,28 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         if attr == "coord":
             if not isinstance(value, np.ndarray):
-                raise TypeError("Value must be ndarray")
+                raise TypeError("Value must be ndarray of floats")
             if value.shape[-2] != self._array_length:
-                raise IndexError("Expected array length {:d}, but got {:d}"
-                                 .format(self._array_length, len(value)) )
+                raise ValueError(
+                    f"Expected array length {self._array_length}, "
+                    f"but got {len(value)}"
+                )
             if value.shape[-1] != 3:
-                raise IndexError("Expected 3 coordinates for each atom")
+                raise TypeError("Expected 3 coordinates for each atom")
             self._coord = value
         if attr == "bonds":
             if isinstance(value, BondList):
                 if value.get_atom_count() != self._array_length:
-                    raise IndexError("Array length is {:d}, "
-                                    "but bond list has {:d} atoms"
-                                    .format(self._array_length, 
-                                            value.get_atom_count()) )
+                    raise ValueError(
+                        f"Array length is {self._array_length}, "
+                        f"but bond list has {value.get_atom_count()} atoms"
+                    )
                 self._bonds = value
             elif value is None:
                 # Remove bond list
                 self._bonds = None
             else:
-                raise TypeError("Value must be BondList")
+                raise TypeError("Value must be 'BondList'")
         # This condition is required, since otherwise 
         # call of the next one would result
         # in indefinite calls of __setattr__
@@ -395,8 +404,9 @@ class Atom(object):
         if attr in self._annot:
             return self._annot[attr]
         else:
-            raise AttributeError("'" + type(self).__name__ +
-                                 "' object has no attribute '" + attr + "'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{attr}'"
+            )
         
     def __setattr__(self, attr, value):
         # First condition is required, since call of the second would
@@ -581,8 +591,9 @@ class AtomArray(_AtomArrayBase):
                 # If first index is "...", just ignore the first index
                 return self.__getitem__(index[1])
             else:
-                raise IndexError("AtomArray cannot take multidimensional "
-                                 "indices")
+                raise IndexError(
+                    "'AtomArray' does not accept multidimensional indices"
+                )
         else:
             return self._subarray(index)
         
@@ -808,8 +819,10 @@ class AtomArrayStack(_AtomArrayBase):
             return self.get_array(index)
         elif isinstance(index, tuple):
             if len(index) != 2:
-                raise IndexError("AtomArrayStack cannot take an index "
-                                 "with more than two dimensions")
+                raise IndexError(
+                    "'AtomArrayStack' does not accept an index "
+                    "with more than two dimensions"
+                )
             if isinstance(index[0], numbers.Integral):
                 array = self.get_array(index[0])
                 return array.__getitem__(index[1])
@@ -845,11 +858,15 @@ class AtomArrayStack(_AtomArrayBase):
             The atom array to be set.
         """
         if not super(AtomArray, array).__eq__(array):
-            raise ValueError("The array's atom annotations do not fit")
+            raise ValueError(
+                "The stack and the array have unequal annotations"
+            )
         if isinstance(index, numbers.Integral):
             self._coord[index] = array._coord
         else:
-            raise IndexError("Index must be integer")
+            raise TypeError(
+                f"Index must be integer, not '{type(index).__name__}'"
+            )
         
     def __delitem__(self, index):
         """
@@ -863,7 +880,9 @@ class AtomArrayStack(_AtomArrayBase):
         if isinstance(index, numbers.Integral):
             self._coord = np.delete(self._coord, index, axis=0)
         else:
-            raise IndexError("Index must be integer")
+            raise TypeError(
+                f"Index must be integer, not '{type(index).__name__}'"
+            )
     
     def __len__(self):
         """
@@ -946,8 +965,9 @@ def array(atoms):
     names = sorted(atoms[0]._annot.keys())
     for atom in atoms:
         if sorted(atom._annot.keys()) != names:
-            raise ValueError("The atoms do not share the "
-                             "same annotation categories")
+            raise ValueError(
+                "The atoms do not share the same annotation categories"
+            )
     # Add all atoms to AtomArray
     array = AtomArray(len(atoms))
     for i in range(len(atoms)):
@@ -972,7 +992,9 @@ def stack(arrays):
     -------
     stack : AtomArrayStack
         The stacked atom arrays.
-        
+    
+    Examples
+    --------
     Creating an atom array stack from two arrays:
     
     >>> atom1 = Atom([1,2,3], chain_id="A")
@@ -995,17 +1017,16 @@ def stack(arrays):
       [2 3 4]
       [3 4 5]]
     <BLANKLINE>
-     [[4 5 6]
-      [5 6 7]
-      [6 7 8]]]
+    [[4 5 6]
+     [5 6 7]
+     [6 7 8]]]
     """
     array_count = 0
     for array in arrays:
         array_count += 1
         # Check if all arrays share equal annotations
         if not array.equal_annotations(arrays[0]):
-            raise ValueError("The arrays annotations "
-                             "do not fit match each other")
+            raise ValueError("The atom arrays have unequal annotations")
     array_stack = AtomArrayStack(array_count, arrays[0].array_length())
     for name, annotation in arrays[0]._annot.items():
         array_stack._annot[name] = annotation
@@ -1028,7 +1049,7 @@ def coord(item):
     ----------
     item : `Atom`, `AtomArray` or `AtomArrayStack` or ndarray
         Takes the coord attribute, if `item` is `Atom`, `AtomArray` or
-        `AtomArrayStack`, or takes directly a ndarray.
+        `AtomArrayStack`, or directly returns a given `ndarray`.
     
     Returns
     -------

@@ -29,7 +29,7 @@ class FeatureMap(Visualizer):
     multi_line : bool, optional
         If true, display the features in multiple lines. Otherwise
         display the features on a single line.
-    line_legth : int
+    line_length : int
         The amount of bases/residues per line. (Default: 1000)
     
     Attributes
@@ -147,7 +147,9 @@ class FeatureMap(Visualizer):
         from matplotlib.text import Text
 
         annotation_length = self._loc_range[1] - self._loc_range[0]
-        line_width = self._width - 2*self._margin - self._number_size
+        line_width = self._width - 2*self._margin
+        if self._show_numbers:
+            line_width -= self._number_size
         line_count = annotation_length // self._line_length
         # Only extend line count by 1 if there is a remainder
         if annotation_length % self._line_length != 0:

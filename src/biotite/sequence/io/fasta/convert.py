@@ -171,9 +171,10 @@ def set_alignment(fasta_file, alignment, seq_names):
     """
     gapped_seq_strings = alignment.get_gapped_sequences()
     if len(gapped_seq_strings) != len(seq_names):
-        raise ValueError("Alignment has {:d} sequences,"
-                         "but {:d} names were given"
-                         .format(len(gapped_seq_strings), len(seq_names)))
+        raise ValueError(
+            f"Alignment has {len(gapped_seq_strings)} sequences, "
+            f"but {len(seq_names)} names were given"
+        )
     for i in range(len(gapped_seq_strings)):
         fasta_file[seq_names[i]] = gapped_seq_strings[i]
 
@@ -200,7 +201,7 @@ def _convert_to_sequence(seq_str):
         return seq
     except AlphabetError:
         raise ValueError("FASTA data cannot be converted either to "
-                         "NucleotideSequence nor to Protein Sequence")
+                         "'NucleotideSequence' nor to 'ProteinSequence'")
 
 
 def _convert_to_string(sequence):

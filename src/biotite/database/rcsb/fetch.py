@@ -67,8 +67,8 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     for i, id in enumerate(pdb_ids):
         # Verbose output
         if verbose:
-            print("Fetching file {:d} / {:d} ({:})..."
-                  .format(i+1, len(pdb_ids), id), end="\r")
+            print(f"Fetching file {i+1:d} / {len(pdb_ids):d} ({id})...",
+                  end="\r")
         # Fetch file from database
         file_name = os.path.join(target_path, id + "." + format)
         file_names.append(file_name)
@@ -92,8 +92,7 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
                 with open(file_name, "wb+") as f:
                     f.write(content)
             else:
-                raise ValueError("Format '{:}' is not supported"
-                                 .format(format))
+                raise ValueError(f"Format '{format}' is not supported")
     if verbose:
         print("\nDone")
     # If input was a single ID, return only a single path

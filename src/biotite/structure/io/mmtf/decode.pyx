@@ -90,7 +90,7 @@ def decode_array(int codec, bytes raw_bytes, int param):
         array = np.frombuffer(raw_bytes, dtype=">i1").astype(np.int8)
         return _decode_packed(array)
     else:
-        raise ValueError("Unknown codec with ID " + str(codec))
+        raise ValueError("Unknown codec with ID {codec}")
 
 
 def _decode_delta(np.ndarray array):

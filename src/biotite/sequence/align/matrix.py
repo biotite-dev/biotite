@@ -15,7 +15,7 @@ __all__ = ["SubstitutionMatrix"]
 
 class SubstitutionMatrix(object):
     """
-    A `SubstitutionMatrix` is the base for scoring in sequence
+    A `SubstitutionMatrix` is the foundation for scoring in sequence
     alignments. A `SubstitutionMatrix` maps each possible pairing
     of a symbol of a first alphabet with a symbol of a second alphabet
     to a score (integer).
@@ -125,9 +125,10 @@ class SubstitutionMatrix(object):
         elif isinstance(score_matrix, np.ndarray):
             alph_shape = (len(alphabet1), len(alphabet2))
             if score_matrix.shape != alph_shape:
-                raise ValueError("Matrix has shape {:}, "
-                                 "but {:} is required"
-                                 .format(score_matrix.shape, alph_shape))
+                raise ValueError(
+                    f"Matrix has shape {score_matrix.shape}, "
+                    f"but {alph_shape} is required"
+                )
             self._matrix = np.copy(score_matrix.astype(np.int32))
         elif isinstance(score_matrix, str):
             matrix_dict = SubstitutionMatrix.dict_from_db(score_matrix)

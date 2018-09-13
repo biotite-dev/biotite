@@ -3,7 +3,7 @@
 # information.
 
 import biotite.structure as struc
-import biotite.structure.io.npz as npz
+import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
 from .util import data_dir
@@ -11,9 +11,7 @@ import pytest
 
 
 def test_sse():
-    file = npz.NpzFile()
-    file.read(join(data_dir, "3o5r.npz"))
-    array = file.get_structure()[0]
+    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
     sse = struc.annotate_sse(array, "A")
     sse_str = "".join(sse.tolist())
     assert sse_str == ("caaaaaacccccccccccccbbbbbccccccbbbbccccccccccccccc"

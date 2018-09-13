@@ -286,6 +286,12 @@ def _hbond(atoms, donor_selection, acceptor_selection,
 
 def hbond_frequency(mask):
     """
+    Get the relative frequency of each hydrogen bond in a multi-model
+    structure.
+
+    The frequency is the amount of models, where the respective bond
+    exists divided by the total amount of models.
+    
     Parameters
     ----------
     mask: ndarray, dtype=bool, shape=(m,n)

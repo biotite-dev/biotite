@@ -102,9 +102,26 @@ class Location(Copyable):
 
 class Feature(Copyable):
     """
-    This class represents a single sequence feature, e.g. from a
-    GenBank feature table.
-    
+    This class represents a single sequence feature, for example from a
+    GenBank feature table. 
+    A feature describes a functional part of a sequence.
+    It consists of a feature key, describung the general class of the
+    feature, at least one location, describing its position on the
+    reference, and qualifiers, describing the feature in detail.
+
+    Parameters
+    ----------
+    key : str
+        The name of the feature class, e.g. *gene*, *CDS* or
+        *regulatory*. 
+    locs : iterable object of Location
+        A list of feature locations. In most cases this list will only
+        contain one location, but multiple ones are also possible for
+        example in eukaryotic CDS (due to splicing).
+    qual : dict, optional
+        Maps GenBank feature qualifiers to their corresponding values.
+        The keys and values are always strings.
+
     Attributes
     ----------
     key : str
@@ -265,7 +282,10 @@ class Annotation(Copyable):
             Feature to be added.
         """
         if not isinstance(feature, Feature):
-            raise TypeError("Only 'Feature' objects are supported")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(feature).__name__}"
+            )
         self._features.append(feature.copy())
     
     def get_location_range(self):
@@ -319,7 +339,10 @@ class Annotation(Copyable):
             feature_list.append(item)
             return Annotation(feature_list)
         else:
-            raise TypeError("Can only add 'Feature' instances to annotation")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(item).__name__}"
+            )
     
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -352,13 +375,16 @@ class Annotation(Copyable):
                     sub_annot.add_feature(new_feature)
             return sub_annot
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __delitem__(self, item):
         if not isinstance(item, Feature):
-            raise TypeError("Only can delete 'Feature' instances "
-                            "from annotation")
+            raise TypeError(
+                f"Only 'Feature' objects are supported, "
+                f"not {type(item).__name__}"
+            )
         self.del_feature(item)
     
     def __iter__(self):
@@ -368,8 +394,6 @@ class Annotation(Copyable):
             i += 1
     
     def __contains__(self, item):
-        if not isinstance(item, Feature):
-            raise TypeError("Annotation instances only contain features")
         return item in self._features
     
     def __eq__(self, item):
@@ -540,8 +564,9 @@ class AnnotatedSequence(Copyable):
         elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __setitem__(self, index, item):
         if isinstance(index, Feature):
@@ -573,8 +598,9 @@ class AnnotatedSequence(Copyable):
             # Item is a symbol
             self._sequence[index - self._seqstart] = item
         else:
-            raise TypeError("{:} instances are invalid indices"
-                            .format(type(index).__name__))
+            raise TypeError(
+                f"'{type(index).__name__}' instances are invalid indices"
+            )
     
     def __eq__(self, item):
         if not isinstance(item, AnnotatedSequence):

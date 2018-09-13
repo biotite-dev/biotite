@@ -3,7 +3,7 @@ data_5UGO
 _entry.id   5UGO 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.283 
+_audit_conform.dict_version    5.286 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
@@ -47,25 +47,25 @@ _citation.book_publisher            ?
 _citation.book_publisher_city       ? 
 _citation.book_title                ? 
 _citation.coordinate_linkage        ? 
-_citation.country                   ? 
+_citation.country                   US 
 _citation.database_id_Medline       ? 
 _citation.details                   ? 
 _citation.id                        primary 
-_citation.journal_abbrev            'To Be Published' 
+_citation.journal_abbrev            'Nat. Chem. Biol.' 
 _citation.journal_id_ASTM           ? 
-_citation.journal_id_CSD            0353 
-_citation.journal_id_ISSN           ? 
+_citation.journal_id_CSD            ? 
+_citation.journal_id_ISSN           1552-4469 
 _citation.journal_full              ? 
 _citation.journal_issue             ? 
-_citation.journal_volume            ? 
+_citation.journal_volume            13 
 _citation.language                  ? 
-_citation.page_first                ? 
-_citation.page_last                 ? 
-_citation.title                     'Modulating the DNA polymerase reaction equilibrium through chemical biology' 
-_citation.year                      ? 
+_citation.page_first                1074 
+_citation.page_last                 1080 
+_citation.title                     'Modulating the DNA polymerase beta reaction equilibrium to dissect the reverse reaction.' 
+_citation.year                      2017 
 _citation.database_id_CSD           ? 
-_citation.pdbx_database_id_DOI      ? 
-_citation.pdbx_database_id_PubMed   ? 
+_citation.pdbx_database_id_DOI      10.1038/nchembio.2450 
+_citation.pdbx_database_id_PubMed   28759020 
 _citation.unpublished_flag          ? 
 # 
 loop_
@@ -6055,11 +6055,16 @@ _pdbx_struct_conn_angle.value_esd
 41 O5    ? E 2PN .   ? A 2PN 401 ? 1_555 CA ? F CA . ? A CA 402 ? 1_555 O   ? K HOH .   ? A HOH 643 ? 1_555 122.1 ? 
 42 O6    ? E 2PN .   ? A 2PN 401 ? 1_555 CA ? F CA . ? A CA 402 ? 1_555 O   ? K HOH .   ? A HOH 643 ? 1_555 70.0  ? 
 # 
-_pdbx_audit_revision_history.ordinal             1 
-_pdbx_audit_revision_history.data_content_type   'Structure model' 
-_pdbx_audit_revision_history.major_revision      1 
-_pdbx_audit_revision_history.minor_revision      0 
-_pdbx_audit_revision_history.revision_date       2017-07-26 
+loop_
+_pdbx_audit_revision_history.ordinal 
+_pdbx_audit_revision_history.data_content_type 
+_pdbx_audit_revision_history.major_revision 
+_pdbx_audit_revision_history.minor_revision 
+_pdbx_audit_revision_history.revision_date 
+1 'Structure model' 1 0 2017-07-26 
+2 'Structure model' 1 1 2017-08-02 
+3 'Structure model' 1 2 2017-08-16 
+4 'Structure model' 1 3 2017-10-04 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -6067,6 +6072,43 @@ _pdbx_audit_revision_details.data_content_type   'Structure model'
 _pdbx_audit_revision_details.provider            repository 
 _pdbx_audit_revision_details.type                'Initial release' 
 _pdbx_audit_revision_details.description         ? 
+# 
+loop_
+_pdbx_audit_revision_group.ordinal 
+_pdbx_audit_revision_group.revision_ordinal 
+_pdbx_audit_revision_group.data_content_type 
+_pdbx_audit_revision_group.group 
+1 2 'Structure model' 'Author supporting evidence' 
+2 3 'Structure model' 'Database references'        
+3 4 'Structure model' 'Database references'        
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1 2 'Structure model' pdbx_audit_support 
+2 3 'Structure model' citation           
+3 4 'Structure model' citation           
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1  2 'Structure model' '_pdbx_audit_support.funding_organization' 
+2  2 'Structure model' '_pdbx_audit_support.grant_number'         
+3  3 'Structure model' '_citation.country'                        
+4  3 'Structure model' '_citation.journal_abbrev'                 
+5  3 'Structure model' '_citation.journal_id_CSD'                 
+6  3 'Structure model' '_citation.journal_id_ISSN'                
+7  3 'Structure model' '_citation.pdbx_database_id_DOI'           
+8  3 'Structure model' '_citation.pdbx_database_id_PubMed'        
+9  3 'Structure model' '_citation.title'                          
+10 3 'Structure model' '_citation.year'                           
+11 4 'Structure model' '_citation.journal_volume'                 
+12 4 'Structure model' '_citation.page_first'                     
+13 4 'Structure model' '_citation.page_last'                      
 # 
 loop_
 _software.citation_id 
@@ -6341,9 +6383,9 @@ _ndb_struct_na_base_pair_step.j_PDB_ins_code_2
 1 A DG 15 1_555 B DC 2  1_555 A DC 16 1_555 B DG 1  1_555 0.482  -0.787 3.134 -0.098 6.963  35.058 -2.225 -0.799 2.928 11.420 
 0.160   35.721 14 TT_DG15DC16:DG1DC2_PP T 15 ? P 2  ? T 16 ? P 1  ? 
 # 
-_pdbx_audit_support.funding_organization   'National Institutes of Health' 
+_pdbx_audit_support.funding_organization   'National Institutes of Health/National Institute of Environmental Health Sciences' 
 _pdbx_audit_support.country                'United States' 
-_pdbx_audit_support.grant_number           ? 
+_pdbx_audit_support.grant_number           ES024431 
 _pdbx_audit_support.ordinal                1 
 # 
 loop_

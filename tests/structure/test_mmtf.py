@@ -2,16 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import glob
+import itertools
+from os.path import join, splitext
+import numpy as np
+import pytest
+from pytest import approx
 import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
-import numpy as np
-import glob
-import itertools
-from os.path import join, basename
 from .util import data_dir
-import pytest
-from pytest import approx
 
 
 @pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
@@ -35,15 +35,15 @@ def test_codecs(path):
                 assert (array1 == array2).all()
 
 
-@pytest.mark.parametrize("path, single_model",
-                         itertools.product(glob.glob(join(data_dir, "*.mmtf")),
-                                           [False, True])
-                        )
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.mmtf")),
+        [False, True]
+    )
+)
 def test_array_conversion(path, single_model):
-    if single_model:
-        model = 1
-    else:
-        model = None
+    model = 1 if single_model else None
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
@@ -55,25 +55,26 @@ def test_array_conversion(path, single_model):
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \
            approx(a2.coord.flatten().tolist(), abs=1e-3)
+    assert a1.bonds == a2.bonds
 
 
-mmtf_paths = sorted(glob.glob(join(data_dir, "*.mmtf")))
-cif_paths  = sorted(glob.glob(join(data_dir, "*.cif" )))
-@pytest.mark.parametrize("file_index, is_stack", itertools.product(
-                          [i for i in range(len(mmtf_paths))],
-                          [False, True])
-                        )
-def test_pdbx_consistency(file_index, is_stack):
-    model = None if is_stack else 1
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.mmtf")),
+        [False, True]
+    )
+)
+def test_pdbx_consistency(path, single_model):
+    model = None if single_model else 1
+    cif_path = splitext(path)[0] + ".cif"
     mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(mmtf_paths[file_index])
+    mmtf_file.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model)
     pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_paths[file_index])
+    pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
-    # Expected fail in res_id
-    for category in ["chain_id", "res_name", "hetero",
-                     "atom_name", "element"]:
+    for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \

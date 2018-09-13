@@ -5,6 +5,8 @@
 from typing import List, Union, overload
 
 
+def get_database_name(database: str) -> str: ...
+
 @overload
 def fetch(
     uids: str,

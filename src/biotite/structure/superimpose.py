@@ -118,9 +118,9 @@ def superimpose(fixed, mobile, atom_mask=None):
 
     if mob_centered.shape[-2] != fix_centered.shape[-2]:
         raise BadStructureError(
-            "The mobile array has {:d} atoms and the fixed array has "
-            "{:d} atoms, but they must be equal"
-            .format(mob_centered.shape[-2], fix_centered.shape[-2])
+            f"The mobile array ({mob_centered.shape[-2]} atoms) "
+            f"and the fixed array ({fix_centered.shape[-2]} atoms), "
+            f"have an unequal amount of atoms"
         )
     
     mob_centered -= mob_centroid[..., np.newaxis, :]

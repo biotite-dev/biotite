@@ -74,7 +74,7 @@ def mass_center(array, masses=None):
 
 def atom_masses(array):
     """
-    Obtain the atomic masses for an atom array [1]_.
+    Obtain the atomic masses for an atom array. [1]_
     
     The weights are determined from the *element* annotation array.
     
@@ -104,13 +104,13 @@ def atom_masses(array):
         try:
             masses[i] = _masses[element]
         except KeyError:
-            raise ValueError("'{:}' is not a valid element".format(element))
+            raise ValueError(f"'{element}' is not a valid element")
     return masses
 
 
 def mass_of_element(element):
     """
-    Obtain the atomic mass of a given element [1]_.
+    Obtain the atomic mass of a given element. [1]_
     
     Parameters
     ----------

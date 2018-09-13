@@ -15,7 +15,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 
 import numpy as np
-from .adjacency import CellList
+from .celllist import CellList
 from .filter import filter_solvent, filter_monoatomic_ions
 
 ctypedef np.uint8_t np_bool
@@ -29,6 +29,9 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
          bint ignore_ions=True, int point_number=1000,
          point_distr="Fibonacci", vdw_radii="ProtOr"):
     """
+    sasa(array, probe_radius=1.4, atom_filter=None, ignore_ions=True,
+         point_number=1000, point_distr="Fibonacci", vdw_radii="ProtOr")
+
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
     
     This function uses the Shrake-Rupley ("rolling probe")
@@ -53,7 +56,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         The number of points in the mesh occupying each atom for SASA
         calculation (default: 100). The SASA calculation time is
         proportional to the amount of sphere points.
-    point_distr : string or function, optional
+    point_distr : str or function, optional
         If a function is given, the function is used to calculate the
         point distribution for the mesh (the function must take `float`
         *n* as parameter and return a *(n x 3)* `ndarray`).
@@ -64,12 +67,12 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
               spiral.
             
         By default *Fibonacci* is used.
-    vdw_radii : string or ndarray, dtype=float, optional
+    vdw_radii : str or ndarray, dtype=float, optional
         Indicates the set of VdW radii to be used. If an `array`-length
         `ndarray` is given, each atom gets the radius at the
         corresponding index. Radii given for atoms that are not used in
         SASA calculation (e.g. solvent atoms) can have arbitrary values
-        (e.g. `NaN`). If instead a `string` is given, one of the
+        (e.g. `NaN`). If instead a string is given, one of the
         built-in sets is used:
         
             - **ProtOr** - A set, which does not require hydrogen atoms
@@ -83,7 +86,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     
     Returns
     -------
-    sasa : 1-D ndarray, dtype=bool
+    sasa : ndarray, dtype=bool, shape=(n,)
         Atom-wise SASA. `NaN` for atoms where SASA has not been 
         calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
@@ -132,16 +135,17 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     elif point_distr == "Fibonacci":
         sphere_points = _create_fibonacci_points(point_number)
     else:
-        raise ValueError("'" + str(point_distr) +
-                         "' is not a valid point distribution")
+        raise ValueError(f"'{point_distr}' is not a valid point distribution")
     sphere_points = sphere_points.astype(np.float32)
     
     cdef np.ndarray radii
     if isinstance(vdw_radii, np.ndarray):
         radii = vdw_radii.astype(np.float32)
         if len(radii) != array.array_length():
-            raise ValueError("VdW radii array contains insufficient"
-                             "amount of elements")
+            raise ValueError(
+                f"Amount VdW radii ({len(radii)}) and "
+                f"amount of atoms ({array.array_length()}) are not equal"
+            )
     elif vdw_radii == "ProtOr":
         filter = (array.element != "H")
         sasa_filter = sasa_filter & filter
@@ -157,8 +161,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         for i in np.arange(len(radii))[occl_filter]:
             radii[i] = _single_radii[array.element[i]]
     else:
-        raise KeyError("'" + str(vdw_radii) + 
-                       "' is not a valid radii set")
+        raise KeyError(f"'{vdw_radii}' is not a valid radii set")
     # Increase atom radii by probe size ("rolling probe")
     radii += probe_radius
     
@@ -509,9 +512,9 @@ _single_radii = {"H":  1.20,
                  "N":  1.55,
                  "O":  1.52,
                  "F":  1.47,
-                 "Si": 2.10,
+                 "SI": 2.10,
                  "P":  1.80,
                  "S":  1.80,
-                 "Cl": 1.75,
+                 "CL": 1.75,
                  "Br": 1.85,
                  "I":  1.98}

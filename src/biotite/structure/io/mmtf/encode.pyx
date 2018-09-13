@@ -23,58 +23,48 @@ ctypedef np.float32_t float32
 def encode_array(np.ndarray array, int codec, int param):
     # Pass-through: 32-bit floating-point number array
     if   codec == 1:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return array.astype(">f4").tobytes()
     # Pass-through: 8-bit signed integer array
     elif codec == 2:
-        if array.dtype != np.int8:
-            raise TypeError("Array with dtype 'int8' is required")
+        array = array.astype(np.int8, copy=False)
         return array.astype(">i1").tobytes()
     # Pass-through: 16-bit signed integer array
     elif codec == 3:
-        if array.dtype != np.int16:
-            raise TypeError("Array with dtype 'int16' is required")
+        array = array.astype(np.int16, copy=False)
         return array.astype(">i2").tobytes()
     # Pass-through: 32-bit signed integer array
     elif codec == 4:
-        if array.dtype != np.int32:
-            raise TypeError("Array with dtype 'int32' is required")
+        array = array.astype(np.int32, copy=False)
         return array.astype(">i4").tobytes()
     # UTF8/ASCII fixed-length string array
     elif codec == 5:
         dtype = np.dtype("U" + str(param))
-        if array.dtype != dtype:
-            raise TypeError("Array with dtype '" + dtype + "' is required")
+        array = array.astype(dtype, copy=False)
         return array.astype(np.dtype("S" + str(param))).tobytes()
     # Run-length encoded character array
     elif codec == 6:
-        if array.dtype != np.dtype("U1"):
-            raise TypeError("Array with dtype 'U1' is required")
+        array = array.astype("U1", copy=False)
         array = _encode_run_length(np.frombuffer(array, dtype=np.int32))
         return array.astype(">i4").tobytes()
     # Run-length encoded 32-bit signed integer array
     elif codec == 7:
-        if array.dtype != np.int32:
-            raise TypeError("Array with dtype 'int32' is required")
+        array = array.astype(np.int32, copy=False)
         return _encode_run_length(array).astype(">i4").tobytes()
     # Delta & run-length encoded 32-bit signed integer array
     elif codec == 8:
-        if array.dtype != np.int32:
-            raise TypeError("Array with dtype 'int32' is required")
+        array = array.astype(np.int32, copy=False)
         return _encode_run_length(_encode_delta(array)).astype(">i4").tobytes()
     # Integer & run-length encoded 32-bit floating-point number array
     elif codec == 9:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return _encode_run_length(
                     _encode_integer(param, array).astype(np.int32)
                 ).astype(">i4").tobytes()
     # Integer & delta encoded
     # & two-byte-packed 32-bit floating-point number array
     elif codec == 10:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return _encode_packed(
                     True, _encode_delta(
                         _encode_integer(param, array).astype(np.int32)
@@ -82,35 +72,30 @@ def encode_array(np.ndarray array, int codec, int param):
                 ).astype(">i2").tobytes()
     # Integer encoded 32-bit floating-point number array
     elif codec == 11:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return _encode_integer(param, array).astype(">i2").tobytes()
     # Integer & two-byte-packed 32-bit floating-point number array
     elif codec == 12:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return _encode_packed(
                     True, _encode_integer(param, array).astype(np.int32) 
                 ).astype(">i2").tobytes()
     # Integer & one-byte-packed 32-bit floating-point number array
     elif codec == 13:
-        if array.dtype != np.float32:
-            raise TypeError("Array with dtype 'float32' is required")
+        array = array.astype(np.float32, copy=False)
         return _encode_packed(
                     False, _encode_integer(param, array).astype(np.int32)
                 ).astype(">i1").tobytes()
     # Two-byte-packed 32-bit signed integer array
     elif codec == 14:
-        if array.dtype != np.int32:
-            raise TypeError("Array with dtype 'int32' is required")
+        array = array.astype(np.int32, copy=False)
         return _encode_packed(True, array).astype(">i2").tobytes()
     # One-byte-packed 32-bit signed integer array
     elif codec == 15:
-        if array.dtype != np.int32:
-            raise TypeError("Array with dtype 'int32' is required")
+        array = array.astype(np.int32, copy=False)
         return _encode_packed(False, array).astype(">i1").tobytes()
     else:
-        raise ValueError("Unknown codec with ID " + str(codec))
+        raise ValueError(f"Unknown codec with ID {codec}")
 
 
 def _encode_delta(int32[:] array):

@@ -14,7 +14,8 @@ import numpy as np
 
 class DsspApp(LocalApp):
     r"""
-    Perform a multiple sequence alignment.
+    Annotate the secondary structure of a protein structure using the
+    DSSP software.
     
     Internally this creates a `Popen` instance, which handles
     the execution.
@@ -37,12 +38,10 @@ class DsspApp(LocalApp):
         The atom array to be annotated.
     bin_path : str, optional
         Path of the DDSP binary.
-    mute : bool, optional
-        If true, the console output goes into DEVNULL. (Default: True)
     """
     
-    def __init__(self, atom_array, bin_path="dssp", mute=True):
-        super().__init__(bin_path, mute)
+    def __init__(self, atom_array, bin_path="mkdssp"):
+        super().__init__(bin_path)
         self._array = atom_array
         self._in_file_name  = temp_file("pdb")
         self._out_file_name = temp_file("pdb")
@@ -64,7 +63,7 @@ class DsspApp(LocalApp):
             if line.startswith("  #  RESIDUE AA STRUCTURE"):
                 sse_start = i+1
         if sse_start is None:
-            raise VaueError("DSSP file does not contain SSE records")
+            raise ValueError("DSSP file does not contain SSE records")
         lines = [line for line in lines[sse_start:] if len(line) != 0]
         self._sse = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters
@@ -88,7 +87,7 @@ class DsspApp(LocalApp):
         return self._sse
     
     @staticmethod
-    def annotate_sse(atom_array, bin_path="dssp"):
+    def annotate_sse(atom_array, bin_path="mkdssp"):
         """
         Perform a secondary structure assignment to an atom array.
         

@@ -66,8 +66,7 @@ class BlastWebApp(WebApp):
         # you are redirected onto the blast mainpage
         if program not in ["blastn", "blastp",
                            "blastx", "tblastn", "tblastx"]:
-            raise ValueError("'{:}' is not a valid BLAST program"
-                             .format(program))
+            raise ValueError(f"'{program}' is not a valid BLAST program")
         self._program = program
         
         requires_protein = (program in ["blastp", "tblastn"])
@@ -91,7 +90,9 @@ class BlastWebApp(WebApp):
             ref_alphabet = NucleotideSequence.alphabet_amb
         for symbol in self._query:
             if not symbol.upper() in ref_alphabet:
-                raise ValueError("Query sequence contains unsuitable symbols")
+                raise ValueError(
+                    f"Query sequence contains unsuitable symbol {symbol}"
+                )
         
         self._database = database
         self._gap_openining = None
@@ -253,7 +254,10 @@ class BlastWebApp(WebApp):
         info_dict = BlastWebApp._get_info(request.text)
         if info_dict["Status"] == "UNKNOWN":
             # Indicates invalid query input values
-            raise ValueError("The input values seem to be invalid")
+            raise ValueError(
+                "The input values seem to be invalid"
+                "(Server responsed status 'UNKNOWN')"
+            )
         return info_dict["Status"] == "READY"
         
     def wait_interval(self):

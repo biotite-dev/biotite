@@ -2,47 +2,45 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import glob
+import itertools
+from os.path import join, splitext
+import pytest
+from pytest import approx
+import numpy as np
 import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
-import itertools
-import numpy as np
-import glob
-from os.path import join, basename
 from .util import data_dir
-import pytest
-from pytest import approx
 
 
-@pytest.mark.parametrize("path, is_stack", itertools.product(
-                            glob.glob(join(data_dir, "*.gro")),
-                            [False, True])
-                        )
-def test_array_conversion(path, is_stack):
-    model = None if is_stack else 1
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.gro")),
+        [False, True]
+    )
+)
+def test_array_conversion(path, single_model):
+    model = 1 if single_model else None
     gro_file = gro.GROFile()
     gro_file.read(path)
     array1 = gro_file.get_structure(model=model)
+    gro_file = gro.GROFile()
     gro_file.set_structure(array1)
     array2 = gro_file.get_structure(model=model)
     assert array1 == array2
 
 
-pdb_paths = sorted(glob.glob(join(data_dir, "*.pdb")))
-gro_paths = sorted(glob.glob(join(data_dir, "*.gro")))
-@pytest.mark.parametrize("file_index, is_stack", itertools.product(
-                          [i for i in range(len(pdb_paths))],
-                          [False, True])
-                        )
-def test_pdb_consistency(file_index, is_stack):
-    print("ID:", basename(gro_paths[file_index])[:-4], "stack:", is_stack)
-    model = None if is_stack else 1
+@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.gro")))
+def test_pdb_consistency(path):
+    pdb_path = splitext(path)[0] + ".pdb"
     pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_paths[file_index])
-    a1 = pdb_file.get_structure(model=model)
+    pdb_file.read(pdb_path)
+    a1 = pdb_file.get_structure(model=1)
     gro_file = gro.GROFile()
-    gro_file.read(gro_paths[file_index])
-    a2 = gro_file.get_structure(model=model)
+    gro_file.read(path)
+    a2 = gro_file.get_structure(model=1)
 
     assert a1.array_length() == a2.array_length()
 
@@ -54,18 +52,21 @@ def test_pdb_consistency(file_index, is_stack):
     assert a1.coord.flatten().tolist() \
         == approx(a2.coord.flatten().tolist(), abs=1e-2)
 
-@pytest.mark.parametrize("file_index, is_stack", itertools.product(
-                          [i for i in range(len(pdb_paths))],
-                          [False, True])
-                        )
-def test_pdb_to_gro(file_index, is_stack):
-    # converting stacks between formats should not change data
-    print("ID:", basename(pdb_paths[file_index])[:-4], "stack:", is_stack)
-    model = None if is_stack else 1
 
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_pdb_to_gro(path, single_model):
+    # Converting stacks between formats should not change data
+    model = 1 if single_model else None
+    
     # Read in data
     pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_paths[file_index])
+    pdb_file.read(path)
     a1 = pdb_file.get_structure(model=model)
 
     # Save stack as gro
