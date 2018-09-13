@@ -5,6 +5,8 @@
 Development guide
 =================
 
+
+
 Writing code
 ------------
 
@@ -117,8 +119,6 @@ used in type annotations
 
 
 
-
-
 Writing the documentation
 -------------------------
 
@@ -129,22 +129,30 @@ on *reStructuredText* files.
 The line length of these ``*.rst`` files is also limited to
 79 characters, with the exceptions already mentioned above. 
 
-Updating the tutorial
-^^^^^^^^^^^^^^^^^^^^^
-
-When adding new content for broad audience, it is appreciated to update the
-tutorial pages (``doc/tutorial``) as well.
-The corresponding figures are put into ``doc/static/assets/figures``.
-
 Contributing examples
 ^^^^^^^^^^^^^^^^^^^^^
 
 Do you have an application of *Biotite* and you want to share it with the world?
 Then the example gallery is the way to go.
-For gallery generation the package `sphinx-gallery` is used. Please refer to
+For gallery generation the package ``sphinx-gallery`` is used. Please refer to
 its `documentation <http://sphinx-gallery.readthedocs.io/en/latest/>`_
 for further information on script formatting.
 The example scripts are placed in ``doc/examples/scripts``.
+
+Updating the tutorial
+^^^^^^^^^^^^^^^^^^^^^
+
+When adding new content for broad audience, it is appreciated to update the
+tutorial pages (``doc/tutorial_src``) as well.
+The tutorial uses functionality from ``sphinx-gallery`` to generate
+the tutorial from example scripts.
+This has the advantage that the output of code snippets is not static but
+dynamically generated based on the current state of the *Biotite* source
+code.
+Consequently, the same script formatting as for the example gallery is
+required.
+Figures that connot be dynamically generated are put into
+``doc/static/assets/figures``.
 
 
 
@@ -253,7 +261,7 @@ If you use the *conda* package manager, there is a shortcut:
 Cou can download a *conda* environment from
 `here <http://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml>`_,
 that contains all of these requirements. How to create and activate the
-environment from the `environment.yaml` file, is explained in the
+environment from the ``environment.yaml`` file, is explained in the
 `conda documentation <http://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file>`_.
 
 
@@ -263,7 +271,8 @@ Extension packages
 ------------------
 
 *Biotite* extension packages are Python packages that provide further
-functionality for *Biotite* objects (`AtomArray`, `Sequence`, etc.)
+functionality for *Biotite* objects (:class:`AtomArray`, :class:`Sequence`,
+etc.)
 or offer objects that build up on these ones.
 
 There can be good reasons why one could choose to publish code as extension
@@ -284,7 +293,7 @@ If your code fulfills the following conditions
 you can contact the *Biotite* maintainer or open an issue
 to ask for official acceptance as extension package.
 
-The currentextension packages are displayed on the
+The current extension packages are displayed on the
 :doc:`extensions section <extensions>`
 in the
 documentation.
