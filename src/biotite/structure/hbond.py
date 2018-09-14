@@ -12,12 +12,12 @@ __all__ = ["hbond", "hbond_frequency"]
 from .geometry import distance, angle
 import numpy as np
 from .atoms import AtomArrayStack, stack
+from .celllist import CellList
 
 
 def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
-          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S'),
-          vectorized=True):
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
     """
     Find hydrogen bonds in a structure.
     
@@ -116,67 +116,85 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         single_model = True
     else:
         single_model = False
+    
+    # Mask for donor/acceptor elements
+    donor_element_mask = np.isin(atoms.element, donor_elements)
+    acceptor_element_mask = np.isin(atoms.element, acceptor_elements)
 
-    # Determine selection2 type
+    if selection1 is None:
+        selection1 = np.ones(atoms.array_length(), dtype=bool)
+    if selection2 is None:
+        selection2 = np.ones(atoms.array_length(), dtype=bool)
+
     if selection1_type == 'both':
-        selection2_type = selection1_type
-    elif selection1_type == 'acceptor':
-        selection2_type = 'donor'
+        # The two selections are separated into three selections:
+        # the original ones without the overlaping part
+        # and one containing the overlap
+        # This prevents redundant triplets and unnecessary computation 
+        overlap_selection = selection1 & selection2
+        # Original selections without overlaping part
+        exclusive_selection1 = selection1 & (~overlap_selection)
+        exclusive_selection2 = selection2 & (~overlap_selection)
+        
+        # Put selections to list for cleaner iteration
+        selections = [
+            exclusive_selection1, exclusive_selection2, overlap_selection
+        ]
+        selection_combinations = [
+            #(0,0),   is not excluded, would be same selection
+            #         as donor and acceptor simultaneously
+            (0,1),
+            (0,2),
+            (1,0),
+            #(1,1),   # same reason above
+            (1,2),
+            (2,0),
+            (2,1),
+            (2,2)     # overlaping part, combination is necessary
+        ]
+        
+        all_comb_triplets = []
+        all_comb_mask = []
+        for selection_index1, selection_index2 in selection_combinations:
+            donor_mask = selections[selection_index1]
+            acceptor_mask = selections[selection_index2]
+            if  np.count_nonzero(donor_mask) != 0 and \
+                np.count_nonzero(acceptor_mask) != 0:
+                    # Filter donor/acceptor elements
+                    donor_mask    &= donor_element_mask
+                    acceptor_mask &= acceptor_element_mask
+                    # Calculate triplets and mask
+                    triplets, mask = _hbond(
+                        atoms, donor_mask, acceptor_mask,
+                        cutoff_dist, cutoff_angle,
+                        donor_elements, acceptor_elements
+                    )
+                    all_comb_triplets.append(triplets)
+                    all_comb_mask.append(mask)
+        # Merge results from all combinations
+        triplets = np.concatenate(all_comb_triplets, axis=0)
+        mask = np.concatenate(all_comb_mask, axis=1)
+
     elif selection1_type == 'donor':
-        selection2_type = 'acceptor'
+        triplets, mask = _hbond(
+            atoms, selection1, selection2,
+            cutoff_dist, cutoff_angle,
+            donor_elements, acceptor_elements
+        )
+    
+    elif selection1_type == 'acceptor':
+        triplets, mask = _hbond(
+            atoms, selection2, selection1,
+            cutoff_dist, cutoff_angle,
+            donor_elements, acceptor_elements
+        )
+    
     else:
         raise ValueError(f"Unkown selection type '{selection1_type}'")
 
-    # Create donors and acceptors selections
-    def build_donor_acceptor_selections(selection, selection_type):
-        if selection is None:
-            selection = np.full(atoms.array_length(), True)
-
-        if selection_type in ['both', 'donor']:
-            donor_selection = selection
-        else:
-            donor_selection = np.full(atoms.array_length(), False)
-
-        if selection_type in ['both', 'acceptor']:
-            acceptor_selection = selection
-        else:
-            acceptor_selection = np.full(atoms.array_length(), False)
-        return donor_selection, acceptor_selection
-
-
-    donor1_selection, acceptor1_selection = \
-        build_donor_acceptor_selections(selection1, selection1_type)
-    donor2_selection, acceptor2_selection = \
-        build_donor_acceptor_selections(selection2, selection2_type)
-
-    # Find hydrogen bonds between selections
-    triplets, mask = _hbond(
-        atoms, donor1_selection, acceptor2_selection,
-        cutoff_dist, cutoff_angle,
-        donor_elements, acceptor_elements, vectorized
-    )
-
-    # If the selections are identical, we can skip the second run
-    if not (np.array_equal(donor1_selection, donor2_selection) and
-            np.array_equal(acceptor1_selection, acceptor2_selection)):
-        triplets2, mask2 = _hbond(
-            atoms, donor2_selection, acceptor1_selection,
-            cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements, vectorized
-        )
-        triplets = np.concatenate((triplets, triplets2), axis=0)
-        mask = np.concatenate((mask, mask2), axis=1)
-        if len(triplets) > 0:
-            # Each triplet array returned by both runs may have triplets
-            # that are already the other array
-            # -> filter unique triplets and apply also to mask
-            triplets, unique_indices = np.unique(
-                triplets, axis=0, return_index=True
-            )
-            mask = mask[:, unique_indices]
-
     if single_model:
-        # For a single model, hbond_mask contains only 'True' values,
+        # For a atom array (not stack),
+        # hbond_mask contains only 'True' values,
         # since all interaction are in the one model
         # -> Simply return triplets without hbond_mask
         return triplets
@@ -184,97 +202,90 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         return triplets, mask
 
 
-def _hbond(atoms, donor_selection, acceptor_selection,
-           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
-           vectorized):
-    """
-    Find hydrogen bonds between the donors and acceptors in a structure.
-    
-    See Also
-    --------
-    hbond
+def _hbond(atoms, donor_mask, acceptor_mask,
+           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements):
 
-    """
-    # Filter donor/acceptor elements
-    donor_selection \
-        = donor_selection & np.isin(atoms.element, donor_elements)
-    acceptor_selection \
-        = acceptor_selection & np.isin(atoms.element, acceptor_elements)
-
-    def _get_bonded_hydrogen(atoms, donor_mask, cutoff=1.5):
+    def _get_bonded_hydrogens(array, donor_mask, cutoff=1.5):
         """
         Helper function to find indices of associated hydrogens in atoms
         for all donors in atoms[donor_mask].
         The criterium is that the hydrogen must be in the same residue
-        and the distance must be smaller then 1.5 Angstroem.
+        and the distance must be smaller than the cutoff.
 
         """
-        hydrogens_mask = atoms.element == 'H'
-        donors = atoms[donor_mask]
-        donor_hs = []
-        for i in range(donors.array_length()):
-            donor = donors[i]
-            candidate_mask = hydrogens_mask & (atoms.res_id == donor.res_id)
-            candidate_distance = distance(
-                donor, atoms[candidate_mask & hydrogens_mask]
+        coord = array.coord
+        res_id = array.res_id
+        hydrogen_mask = (array.element == "H")
+        
+        donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
+        associated_donor_indices = np.full(len(array), -1, dtype=int)
+
+        donor_indices = np.where(donor_mask)[0]
+        for donor_i in donor_indices:
+            candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
+            distances = distance(
+                coord[donor_i], coord[candidate_mask]
             )
-
-            distances = np.full(atoms.array_length(), -1)
-            distances[candidate_mask & hydrogens_mask] = candidate_distance
-            donor_h_mask \
-                = candidate_mask & (distances <= cutoff) & (distances >= 0)
-            donor_hs.append(np.where(donor_h_mask)[0])
-
-        return np.array(donor_hs)
+            donor_h_indices = np.where(candidate_mask)[0][distances <= cutoff]
+            for i in donor_h_indices:
+                associated_donor_indices[i] = donor_i
+                donor_hydrogen_mask[i] = True
+        
+        return donor_hydrogen_mask, associated_donor_indices
+            
 
     # TODO use BondList if available
-    donor_i = np.where(donor_selection)[0]
-    acceptor_i = np.where(acceptor_selection)[0]
-    donor_hs_i = _get_bonded_hydrogen(atoms[0], donor_selection)
-
-    def _get_triplets(donor_i, donor_hs_i, acceptor_i):
-        """ build D-H..A triplets for every possible combination """
-        donor_i = np.repeat(donor_i, [len(h) for h in donor_hs_i])
-        donor_hs_i = np.array(
-            [item for sublist in donor_hs_i for item in sublist]
+    donor_h_mask, associated_donor_indices \
+        = _get_bonded_hydrogens(atoms[0], donor_mask)
+    donor_h_i = np.where(donor_h_mask)[0]
+    acceptor_i = np.where(acceptor_mask)[0]
+    if len(donor_h_i) == 0 or len(acceptor_i) == 0:
+        # Return empty triplets and mask
+        return (
+            np.zeros((0,3), dtype=int),
+            np.zeros((atoms.stack_depth(),0), dtype=bool)
         )
-        doublets = np.stack((donor_i, donor_hs_i)).T
-        # Otherwise, dtype of empty array does not match
-        if len(doublets) == 0:
-            return np.empty((0, 3), dtype=np.int)
-
-        doublets = np.repeat(doublets, acceptor_i.shape[0], axis=0)
-        acceptor_i = acceptor_i[:, np.newaxis]
-        acceptor_i = np.tile(
-            acceptor_i,
-            (int(doublets.shape[0] / acceptor_i.shape[0]), 1)
-        )
-
-        triplets = np.hstack((doublets, acceptor_i))
-        triplets = triplets[triplets[:, 0] != triplets[:, 2]]
-        return triplets
     
-    triplets = _get_triplets(donor_i, donor_hs_i, acceptor_i)
+    # Narrow the amount of possible acceptor to donor-H connections
+    # down via the distance cutoff parameter using a cell list
+    # Save in acceptor-to-hydrogen matrix
+    # (true when distance smaller than cutoff)
+    coord = atoms.coord
+    possible_bonds = np.zeros(
+        (len(acceptor_i), len(donor_h_i)),
+        dtype=bool
+    )
+    for model_i in range(atoms.stack_depth()):
+        donor_h_coord = coord[model_i, donor_h_mask]
+        acceptor_coord = coord[model_i, acceptor_mask]
+        cell_list = CellList(donor_h_coord, cell_size=cutoff_dist)
+        possible_bonds |= cell_list.get_atoms_in_cells(
+            acceptor_coord, as_mask=True
+        )
+    possible_bonds_i = np.where(possible_bonds)
+    # Narrow down
+    acceptor_i = acceptor_i[possible_bonds_i[0]]
+    donor_h_i = donor_h_i[possible_bonds_i[1]]
+    
+    # Build D-H..A triplets
+    donor_i = associated_donor_indices[donor_h_i]
+    triplets = np.stack((donor_i, donor_h_i, acceptor_i), axis=1)
+    # Remove entries where donor and acceptor are the same
+    triplets = triplets[donor_i != acceptor_i]
 
-    if len(triplets) == 0:
-        return triplets, np.empty((atoms.stack_depth(), 0), dtype=np.bool)
-
-    # Filter triplets that do not meet distance or angle condition
-    if vectorized:
-        donor_atoms = atoms[:, triplets[:, 0]]
-        donor_h_atoms = atoms[:, triplets[:, 1]]
-        acceptor_atoms = atoms[:, triplets[:, 2]]
-        hbond_mask = _is_hbond(donor_atoms, donor_h_atoms, acceptor_atoms,
-                  cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
-    else:
-        hbond_mask = np.full((len(atoms), len(triplets)), False)
-        for frame in range(len(atoms)):
-            donor_atoms = atoms[frame, triplets[:, 0]]
-            donor_h_atoms = atoms[frame, triplets[:, 1]]
-            acceptor_atoms = atoms[frame, triplets[:, 2]]
-            frame_mask = _is_hbond(donor_atoms, donor_h_atoms, acceptor_atoms,
-                               cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle)
-            hbond_mask[frame] = frame_mask
+     # Filter triplets that meet distance and angle condition
+    def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
+        cutoff_angle_rad = np.deg2rad(cutoff_angle)
+        theta = angle(donor, donor_h, acceptor)
+        dist = distance(donor_h, acceptor)
+        return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
+    
+    hbond_mask = _is_hbond(
+        coord[:, triplets[:,0]],  # donors
+        coord[:, triplets[:,1]],  # donor hydrogens
+        coord[:, triplets[:,2]],  # acceptors
+        cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle
+    )
 
     # Reduce output to contain only triplets counted at least once
     is_counted = hbond_mask.any(axis=0)
@@ -325,43 +336,3 @@ def hbond_frequency(mask):
      0.02631579 0.05263158 0.13157895 0.18421053]
     """
     return mask.sum(axis=0)/len(mask)
-
-
-def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
-    """
-    True if the angle and distance between donor, donor_h and acceptor
-    meets the criteria of a hydrogen bond
-    
-    The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) <= 2.5 A` (Baker and Hubbard, 1984)
-    
-    Parameters
-    ----------
-    donor, donor_h, acceptor : AtomArray, AtomArrayStack or ndarray
-        The atoms to measure the hydrogen bonding criterium between.
-        The three parameters must be of identical shape and either
-        contain a list of coordinates/atoms (N) or a set of list of
-        coordinates/atoms (MxN).
-    cutoff_dist: float
-        The maximal distance between the hydrogen and acceptor to be
-        considered a hydrogen bond. (default: 2.5)
-    cutoff_angle: float
-        The angle cutoff in degree between Donor-H..Acceptor to be
-        considered a hydrogen bond (default: 120).
-        
-    Returns
-    -------
-    mask : ndarray, type=bool_, shape=(MxN) or (N)
-        For each set of coordinates and dimension, returns a boolean to
-        indicate if the coordinates match the hydrogen bonding
-        criterium.
-        
-    See Also
-    --------
-    hbond
-    """
-    cutoff_angle_rad = np.deg2rad(cutoff_angle)
-    theta = angle(donor, donor_h, acceptor)
-    dist = distance(donor_h, acceptor)
-
-    return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)

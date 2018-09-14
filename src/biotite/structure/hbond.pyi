@@ -16,7 +16,6 @@ def hbond(
     cutoff_angle: float = 120,
     donor_elements: Sequence = ('O', 'N', 'S'),
     acceptor_elements: Sequence = ('O', 'N', 'S'),
-    vectorized = True
 ) -> np.ndarray: ...
 @overload
 def hbond(
