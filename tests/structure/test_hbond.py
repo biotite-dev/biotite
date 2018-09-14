@@ -4,9 +4,73 @@
 
 from os.path import join
 import numpy as np
+import pytest
+import biotite
 import biotite.structure as struc
-from biotite.structure.io import load_structure
+from biotite.structure.io import load_structure, save_structure
 from .util import data_dir
+
+
+# Ignore warning about dummy unit cell vector
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.parametrize("pdb_id", ["1l2y", "1gya", "1igy"])
+def test_hbond_structure(pdb_id):
+    file_name = join(data_dir, pdb_id+".mmtf")
+    
+    array = load_structure(file_name)
+    if isinstance(array, struc.AtomArrayStack):
+        triplets, mask = struc.hbond(array)
+    else:
+        triplets = struc.hbond(array)
+    
+    # Save to new pdb file for consistent treatment of inscode/altloc
+    # im MDTraj
+    file_name = biotite.temp_file("pdb")
+    save_structure(file_name, array)
+    
+    # Compare with MDTraj
+    import mdtraj
+    traj = mdtraj.load(file_name)
+    triplets_ref = mdtraj.baker_hubbard(
+        traj, freq=0, exclude_water=False, periodic=False
+    )
+
+    # Both packages may use different order
+    # -> use set for comparison
+    triplets_set = set([tuple(tri) for tri in triplets])
+    triplets_ref_set = set([tuple(tri) for tri in triplets_ref])
+
+    ###
+    import biotite.structure.io.pdbx as pdbx
+    file = pdbx.PDBxFile()
+    file.read(join(data_dir, pdb_id+".cif"))
+    array = pdbx.get_structure(file, extra_fields=["atom_id"], model=1)
+    print(traj.n_atoms)
+    print(array.array_length())
+    id_diff = np.diff(array.atom_id)
+    print(array[2536:2539])
+    print(array.atom_id[2536:2539])
+    print(np.where(id_diff != 1))
+    print()
+    print()
+    try:
+        for i1, i2, i3 in [
+            (5940, 5946, 6081),
+            (2205, 2213, 2829),
+            (9022, 9028, 8999),
+            (10059, 10066, 9984),
+            (10159, 10163, 10157),
+            (10687, 10694, 10685),
+            (11527, 11531, 11516)]:
+                print(array[[i1, i2, i3]])
+                print(struc.distance(array[i2], array[i3]))
+                print(np.rad2deg(struc.angle(array[i1], array[i2], array[i3])))
+                print()
+    except:
+        pass
+    ###
+    assert triplets_set == triplets_ref_set
 
 
 def test_hbond_same_res():
@@ -29,15 +93,8 @@ def test_hbond_total_count():
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
     (comparision with MDTraj results)
     """
-    # with vectorization
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
-    triplets, mask = struc.hbond(stack, vectorized=True)
-    freq = struc.hbond_frequency(mask)
-
-    assert len(freq[freq >= 0.1]) == 28
-
-    # without vectorization
-    triplets, mask = struc.hbond(stack, vectorized=False)
+    triplets, mask = struc.hbond(stack)
     freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
@@ -97,78 +154,3 @@ def test_hbond_frequency():
     ]).T
     freq = struc.hbond_frequency(mask)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
-
-
-def test_is_hbond():
-    from biotite.structure.hbond import _is_hbond as is_hbond
-    hbond_coords_valid = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0]  # acceptor
-    ])
-
-    hbond_coords_wrong_angle = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [2.0, 2.0, 0.0]   # acceptor
-    ])
-
-
-    hbond_coords_wrong_distance = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [4.0, 3.0, 0.0]  # acceptor
-    ])
-
-    assert is_hbond(*hbond_coords_valid)
-    assert not is_hbond(*hbond_coords_wrong_angle)
-    assert not is_hbond(*hbond_coords_wrong_distance)
-
-def test_is_hbond_multiple():
-    from biotite.structure.hbond import _is_hbond as is_hbond
-    hbonds_valid = np.array([
-    # first model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],  # acceptor
-    ],
-    # second model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],  # acceptor
-    ]])
-
-    hbonds_invalid = np.array([
-    # first model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 1.0, 0.0],  # acceptor
-    ]])
-
-    assert is_hbond(hbonds_valid[:, 0::3],
-                          hbonds_valid[:, 1::3],
-                          hbonds_valid[:, 2::3]).sum() == 4
-
-    assert is_hbond(hbonds_invalid[:, 0::3],
-                          hbonds_invalid[:, 1::3],
-                          hbonds_invalid[:, 2::3]).sum() == 1
-
-
