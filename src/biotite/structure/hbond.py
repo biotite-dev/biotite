@@ -160,12 +160,10 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             acceptor_mask = selections[selection_index2]
             if  np.count_nonzero(donor_mask) != 0 and \
                 np.count_nonzero(acceptor_mask) != 0:
-                    # Filter donor/acceptor elements
-                    donor_mask    &= donor_element_mask
-                    acceptor_mask &= acceptor_element_mask
                     # Calculate triplets and mask
                     triplets, mask = _hbond(
                         atoms, donor_mask, acceptor_mask,
+                        donor_element_mask, acceptor_element_mask,
                         cutoff_dist, cutoff_angle,
                         donor_elements, acceptor_elements
                     )
@@ -178,6 +176,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     elif selection1_type == 'donor':
         triplets, mask = _hbond(
             atoms, selection1, selection2,
+            donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
             donor_elements, acceptor_elements
         )
@@ -185,6 +184,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     elif selection1_type == 'acceptor':
         triplets, mask = _hbond(
             atoms, selection2, selection1,
+            donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
             donor_elements, acceptor_elements
         )
@@ -203,8 +203,13 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
 
 
 def _hbond(atoms, donor_mask, acceptor_mask,
+           donor_element_mask, acceptor_element_mask,
            cutoff_dist, cutoff_angle, donor_elements, acceptor_elements):
-
+    
+    # Filter donor/acceptor elements
+    donor_mask    &= donor_element_mask
+    acceptor_mask &= acceptor_element_mask
+    
     def _get_bonded_hydrogens(array, donor_mask, cutoff=1.5):
         """
         Helper function to find indices of associated hydrogens in atoms
