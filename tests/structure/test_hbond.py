@@ -19,10 +19,15 @@ def test_hbond_structure(pdb_id):
     file_name = join(data_dir, pdb_id+".mmtf")
     
     array = load_structure(file_name)
+    # Only consider amino acids for consistency
+    # with bonded hydrogen detection in MDTraj
+    array = array[..., struc.filter_amino_acids(array)]
     if isinstance(array, struc.AtomArrayStack):
-        triplets, mask = struc.hbond(array)
+        # For consistency with MDTraj 'S' cannot be acceptor element
+        # https://github.com/mdtraj/mdtraj/blob/master/mdtraj/geometry/hbond.py#L365
+        triplets, mask = struc.hbond(array, acceptor_elements=("O","N"))
     else:
-        triplets = struc.hbond(array)
+        triplets = struc.hbond(array, acceptor_elements=("O","N"))
     
     # Save to new pdb file for consistent treatment of inscode/altloc
     # im MDTraj
@@ -33,43 +38,13 @@ def test_hbond_structure(pdb_id):
     import mdtraj
     traj = mdtraj.load(file_name)
     triplets_ref = mdtraj.baker_hubbard(
-        traj, freq=0, exclude_water=False, periodic=False
+        traj, freq=0, periodic=False
     )
 
     # Both packages may use different order
     # -> use set for comparison
     triplets_set = set([tuple(tri) for tri in triplets])
     triplets_ref_set = set([tuple(tri) for tri in triplets_ref])
-
-    ###
-    import biotite.structure.io.pdbx as pdbx
-    file = pdbx.PDBxFile()
-    file.read(join(data_dir, pdb_id+".cif"))
-    array = pdbx.get_structure(file, extra_fields=["atom_id"], model=1)
-    print(traj.n_atoms)
-    print(array.array_length())
-    id_diff = np.diff(array.atom_id)
-    print(array[2536:2539])
-    print(array.atom_id[2536:2539])
-    print(np.where(id_diff != 1))
-    print()
-    print()
-    try:
-        for i1, i2, i3 in [
-            (5940, 5946, 6081),
-            (2205, 2213, 2829),
-            (9022, 9028, 8999),
-            (10059, 10066, 9984),
-            (10159, 10163, 10157),
-            (10687, 10694, 10685),
-            (11527, 11531, 11516)]:
-                print(array[[i1, i2, i3]])
-                print(struc.distance(array[i2], array[i3]))
-                print(np.rad2deg(struc.angle(array[i1], array[i2], array[i3])))
-                print()
-    except:
-        pass
-    ###
     assert triplets_set == triplets_ref_set
 
 
