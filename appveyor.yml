@@ -15,9 +15,7 @@ install:
   - conda update -q conda
   - conda create -q -n biotite-env python=%PY_VERSION%
   - activate biotite-env
-  - conda install -n biotite-env -c anaconda cython
-  - conda install -n biotite-env -c anaconda pytest
-  - conda install -n biotite-env -c anaconda numpy
+  - conda install cython numpy requests msgpack-python pytest
 
 build: false
 
