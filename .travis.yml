@@ -38,31 +38,21 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
   - wget https://repo.continuum.io/miniconda/$MINICONDA
+  - wget -q https://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml
   
   - bash $MINICONDA -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n biotite-env python=$PY_VERSION
-  - source activate biotite-env
-  
-  - conda install -n biotite-env -c anaconda cython
-  - conda install -n biotite-env -c anaconda pytest
-  - conda install -n biotite-env -c anaconda numpy
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge matplotlib; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda pandas; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda scipy; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge mdtraj; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c conda-forge sphinx-gallery; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c bioconda muscle; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c biocore mafft; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c bioconda clustalo; fi
-  - if [ $COMPLETE == true ]; then conda install -n biotite-env -c anaconda numpydoc; fi
-  - if [ $COMPLETE == true ]; then pip install msgpack; fi
+
+  - if [ $COMPLETE == true ]; then conda env create -q -f environment.yml python=$PY_VERSION; fi
+  - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
+  - if [ $COMPLETE == false ]; then conda install -n biotite-dev cython numpy requests msgpack-python pytest; fi
+  - source activate biotite-dev
 
 script:
-  - if [ $COMPLETE == true ]; then python setup.py test --pytest-args="--ignore=tests/application/"; else python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
+  - if [ $COMPLETE == true ]; then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
+  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
 
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
