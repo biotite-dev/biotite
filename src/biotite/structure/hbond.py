@@ -67,42 +67,36 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         
     Examples
     --------
-    Calculate the number and frequency of each hydrogen bond between
-    the p-Helix and the selecivity filter of KcsA (PDB: 2KB1)
-
-    >>> stack = load_structure("2KB1.pdb")
-    >>> a = a[:, a.chain_id == 'A']
-    >>> p_helix = (a.res_id >= 40) & (a.res_id <= 52)
-    >>> sf = (a.res_id >= 53) & (a.res_id <= 58)
-
-    Get hydrogen bonds and frequency :
-
-    >>> triplets, mask = hbond(a, selection1=p_helix, selection2=sf)
-    >>> freq = hbond_frequency(mask)
-
-    Create names of individual bonds:
-    >>> label = "{d_resid}{d_resnm}-{d_a} -- {a_resid}{a_resnm}-{a_a}"
-    >>> names = [label.format(
-    >>>     d_resid=a.res_id[donor],
-    >>>     d_resnm=a.res_name[donor],
-    >>>     d_a=a.atom_name[donor],
-    >>>     a_resid=a.res_id[acceptor],
-    >>>     a_resnm=a.res_name[acceptor],
-    >>>     a_a=a.atom_name[acceptor]) for donor, _, acceptor in triplets]
+    Calculate the total number of hydrogen bonds found in each model:
     
-    Print hydrogen bonds with their frequency:
-    >>> for name, freq in zip(names, freq):
-    >>>     print("{}: {}%".format(name, freq*100))
-    53THR-N -- 49VAL-O: 10.0%
-    53THR-N -- 50GLU-O: 25.0%
-    53THR-N -- 51THR-O: 5.0%
-    53THR-OG1 -- 49VAL-O: 5.0%
-    53THR-OG1 -- 50GLU-O: 10.0%
-    54THR-N -- 51THR-O: 90.0%
-    54THR-N -- 52ALA-O: 5.0%
-    55VAL-N -- 50GLU-O: 15.0%
-    56GLY-N -- 50GLU-O: 20.0%
-    57TYR-N -- 50GLU-OE1: 15.0%
+    >>> stack = load_structure("path/to/1l2y.pdb")
+    >>> triplets, mask = hbond(stack)
+    >>> hbonds_per_model = np.count_nonzero(mask, axis=1)
+    >>> print(hbonds_per_model)
+    [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
+     14 12 15 12 12 13 13 13 12 12 11 15 10 11]
+    
+    Get hydrogen bond donors of third model:
+    
+    >>> # Third model -> index 2
+    >>> triplets = triplets[mask[2,:]]
+    >>> # First column contains donors
+    >>> print(stack[2, triplets[:,0]])
+        A       1 ASN N      N        -6.589    7.754   -0.571
+        A       5 GLN N      N        -5.009   -0.575   -1.365
+        A       6 TRP N      N        -2.154   -0.497   -1.588
+        A       7 LEU N      N        -1.520   -1.904    0.893
+        A       8 LYS N      N        -2.716   -4.413    0.176
+        A       8 LYS NZ     N        -6.352   -4.311   -4.482
+        A       9 ASP N      N        -0.694   -5.301   -1.644
+        A      11 GLY N      N         2.142   -4.244    1.916
+        A      10 GLY N      N         1.135   -6.232    0.250
+        A      14 SER OG     O         4.689   -5.759   -2.390
+        A      13 SER N      N         6.424   -5.220    3.257
+        A      14 SER N      N         6.424   -5.506    0.464
+        A      15 GLY N      N         8.320   -3.632   -0.318
+        A      16 ARG N      N         8.043   -1.206   -1.866
+        A       6 TRP NE1    N         3.420    0.332   -0.121
 
     See Also
     --------
