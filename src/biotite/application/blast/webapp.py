@@ -255,7 +255,7 @@ class BlastWebApp(WebApp):
         if info_dict["Status"] == "UNKNOWN":
             # Indicates invalid query input values
             raise ValueError(
-                "The input values seem to be invalid"
+                "The input values seem to be invalid "
                 "(Server responsed status 'UNKNOWN')"
             )
         return info_dict["Status"] == "READY"
