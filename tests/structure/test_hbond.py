@@ -4,9 +4,48 @@
 
 from os.path import join
 import numpy as np
+import pytest
+import biotite
 import biotite.structure as struc
-from biotite.structure.io import load_structure
+from biotite.structure.io import load_structure, save_structure
 from .util import data_dir
+
+
+# Ignore warning about dummy unit cell vector
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.parametrize("pdb_id", ["1l2y", "1gya", "1igy"])
+def test_hbond_structure(pdb_id):
+    file_name = join(data_dir, pdb_id+".mmtf")
+    
+    array = load_structure(file_name)
+    # Only consider amino acids for consistency
+    # with bonded hydrogen detection in MDTraj
+    array = array[..., struc.filter_amino_acids(array)]
+    if isinstance(array, struc.AtomArrayStack):
+        # For consistency with MDTraj 'S' cannot be acceptor element
+        # https://github.com/mdtraj/mdtraj/blob/master/mdtraj/geometry/hbond.py#L365
+        triplets, mask = struc.hbond(array, acceptor_elements=("O","N"))
+    else:
+        triplets = struc.hbond(array, acceptor_elements=("O","N"))
+    
+    # Save to new pdb file for consistent treatment of inscode/altloc
+    # im MDTraj
+    file_name = biotite.temp_file("pdb")
+    save_structure(file_name, array)
+    
+    # Compare with MDTraj
+    import mdtraj
+    traj = mdtraj.load(file_name)
+    triplets_ref = mdtraj.baker_hubbard(
+        traj, freq=0, periodic=False
+    )
+
+    # Both packages may use different order
+    # -> use set for comparison
+    triplets_set = set([tuple(tri) for tri in triplets])
+    triplets_ref_set = set([tuple(tri) for tri in triplets_ref])
+    assert triplets_set == triplets_ref_set
 
 
 def test_hbond_same_res():
@@ -16,14 +55,12 @@ def test_hbond_same_res():
     (model 2).
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection = stack.res_id == 1
     # Focus on second model
     array = stack[1]
-    triplets = struc.hbond(array)
-    same_res_count = 0
-    for triplet in triplets:
-        if array.res_id[triplet[0]] == array.res_id[triplet[2]]:
-            same_res_count += 1
-    assert same_res_count >= 1
+    triplets = struc.hbond(array, selection, selection)
+    assert len(triplets) == 1
+
 
 def test_hbond_total_count():
     """
@@ -37,6 +74,53 @@ def test_hbond_total_count():
 
     assert len(freq[freq >= 0.1]) == 28
 
+
+def test_hbond_with_selections():
+    """
+    When selection1 and selection2 is defined, no hydrogen bonds outside
+    of this boundary should be found. Also, hbond should respect the
+    selection type.
+    """
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
+    selection2 = stack.res_id == 7
+
+    # backbone hbond should be found if selection1/2 type is both
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type="both")
+    assert len(triplets) == 1
+    assert triplets[0][0] == 116
+    assert triplets[0][2] == 38
+
+    # backbone hbond should be found if selection1 is acceptor and
+    # selection2 is donor
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type="acceptor")
+    assert len(triplets) == 1
+    assert triplets[0][0] == 116
+    assert triplets[0][2] == 38
+
+    # no hbond should be found,
+    # because the backbone oxygen cannot be a donor
+    triplets, mask = struc.hbond(stack, selection1, selection2,
+                                 selection1_type="donor")
+    assert len(triplets) == 0
+
+
+def test_hbond_single_selection():
+    """
+    If only selection1 or selection2 is defined, hbond should run
+    against all other atoms as the other selection
+    """
+    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    selection = (stack.res_id == 2) & (stack.atom_name == "O")  # 2LEU BB Ox
+    triplets, mask = struc.hbond(stack, selection1=selection)
+    assert len(triplets) == 2
+
+    triplets, mask = struc.hbond(stack, selection2=selection)
+    assert len(triplets) == 2
+
+
 def test_hbond_frequency():
     mask = np.array([
         [True, True, True, True, True], # 1.0
@@ -45,78 +129,3 @@ def test_hbond_frequency():
     ]).T
     freq = struc.hbond_frequency(mask)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
-
-
-def test_is_hbond():
-    from biotite.structure.hbond import _is_hbond as is_hbond
-    hbond_coords_valid = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0]  # acceptor
-    ])
-
-    hbond_coords_wrong_angle = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [2.0, 2.0, 0.0]   # acceptor
-    ])
-
-
-    hbond_coords_wrong_distance = np.array([
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [4.0, 3.0, 0.0]  # acceptor
-    ])
-
-    assert is_hbond(*hbond_coords_valid)
-    assert not is_hbond(*hbond_coords_wrong_angle)
-    assert not is_hbond(*hbond_coords_wrong_distance)
-
-def test_is_hbond_multiple():
-    from biotite.structure.hbond import _is_hbond as is_hbond
-    hbonds_valid = np.array([
-    # first model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],  # acceptor
-    ],
-    # second model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],  # acceptor
-    ]])
-
-    hbonds_invalid = np.array([
-    # first model
-    [
-        # first bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 3.0, 0.0],   # acceptor
-        # second bond
-        [1.0, 1.0, 0.0],  # donor
-        [1.0, 2.0, 0.0],  # donor_h
-        [1.0, 1.0, 0.0],  # acceptor
-    ]])
-
-    assert is_hbond(hbonds_valid[:, 0::3],
-                          hbonds_valid[:, 1::3],
-                          hbonds_valid[:, 2::3]).sum() == 4
-
-    assert is_hbond(hbonds_invalid[:, 0::3],
-                          hbonds_invalid[:, 1::3],
-                          hbonds_invalid[:, 2::3]).sum() == 1
-
-
