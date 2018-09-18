@@ -100,7 +100,7 @@ html_theme_options = {
 sphinx_gallery_conf = {
     "examples_dirs"             : "examples/scripts",
     "gallery_dirs"              : "examples/gallery",
-    "filename_pattern"          : "/",
+    "filename_pattern"          : "^((?!_noexec).)*$",
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time
