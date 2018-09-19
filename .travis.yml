@@ -45,7 +45,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-  - if [ $COMPLETE == true ]; then conda env create -q -f environment.yml python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ]; then conda env create -q -f environment.yaml python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda install -n biotite-dev cython numpy requests msgpack-python pytest; fi
   - source activate biotite-dev
