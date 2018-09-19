@@ -40,7 +40,7 @@ def decode_array(int codec, bytes raw_bytes, int param):
         return array
     # UTF8/ASCII fixed-length string array
     elif codec == 5:
-        array = np.fromstring(raw_bytes, np.dtype("S" + str(param)))
+        array = np.frombuffer(raw_bytes, np.dtype("S" + str(param)))
         return array.astype(np.dtype("U" + str(param)))
     # Run-length encoded character array
     elif codec == 6:
