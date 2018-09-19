@@ -26,7 +26,7 @@ file.read(file_name)
 ref_seq = fasta.get_sequence(file)
 # Find homologous proteins using NCBI Blast
 # Search only the UniProt/SwissProt database
-blast_app = blast.BlastWebApp("blastp", ref_seq, "swissprot")
+blast_app = blast.BlastWebApp("blastp", ref_seq, "swissprot", obey_rules=False)
 blast_app.start()
 blast_app.join()
 alignments = blast_app.get_alignments()
