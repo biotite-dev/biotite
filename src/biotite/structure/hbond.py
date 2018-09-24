@@ -18,11 +18,15 @@ from .celllist import CellList
 def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
           donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
-    """
-    Find hydrogen bonds in a structure.
-    
-    The default criteria is: :math:`\\theta > 120deg` and :math
-    :math:`\\text(H..Acceptor) <= 2.5 A` [1]_
+    r"""
+    Find hydrogen bonds in a structure using the Baker-Hubbard
+    algorithm. [1]_
+
+    This method identifies hydrogen bonds based on the bond angle
+    :math:`\theta` and the bond distance :math:`d_{H,A}`.
+    The default criteria is :math:`\theta > 120^{\circ}`
+    and :math:`d_{H,A} \le 2.5 \mathring{A}`.
+    .
     
     Parameters
     ----------
@@ -64,6 +68,16 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         *m x n* matrix that shows if an interaction with index *n* in
         `triplets` is present in the model *m* of the input `atoms`.
         Only returned if `atoms` is an `AtomArrayStack`.
+    
+    Notes
+    -----
+    The result of this function may include false positives:
+    Only the chemical elements and the bond geometry is checked.
+    However, there are some cases where a hydrogen bond is still not
+    reasonable.
+    For example, a nitrogen atom with positive charge could be
+    considered as acceptor atom by this method, although this does
+    make sense from a chemical perspective.
         
     Examples
     --------
