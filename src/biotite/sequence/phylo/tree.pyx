@@ -52,6 +52,8 @@ cdef class TreeNode:
                         "child nodes including the distance "
                         "(for intermediate node) must be set"
                     )
+            if child1 is child2:
+                raise ValueError("The child nodes cannot be the same object")
             self._index = -1
             self._child1 = child1
             self._child2 = child2
