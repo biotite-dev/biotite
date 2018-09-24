@@ -16,10 +16,13 @@ class Tree:
     
     @property
     def root(self):
-        return self.root
+        return self._root
 
     def get_distance(index1, index2):
-        pass
+        raise NotImplementedError()
+    
+    def get_tree_depth():
+        raise NotImplementedError()
     
     def __str__(self):
         return str(self._root)
@@ -96,7 +99,7 @@ cdef class TreeNode:
         self._is_root = True
     
     def distance_to(self, TreeNode node):
-        pass
+        raise NotImplementedError()
     
     def get_indices(self):
         index_list = []
