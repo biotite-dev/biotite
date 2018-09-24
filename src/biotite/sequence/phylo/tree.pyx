@@ -3,23 +3,14 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Tree"]
+__all__ = ["Tree", "TreeNode"]
 
 cimport cython
-cimport numpy as np
-from libc.stdlib cimport realloc, malloc, free
-
-from .atoms import coord as to_coord
-import numpy as np
-
-ctypedef np.float32_t float32
 
 
 class Tree:
     
-    cdef TreeNode _root
-    
-    def __cinit__(self, TreeNode root not None):
+    def __init__(self, TreeNode root not None):
         root.as_root()
         self._root = root
     
@@ -94,7 +85,7 @@ cdef class TreeNode:
         return None if self._parent is None else self._distance
 
     def is_terminal(self):
-        return False if self._index == -1 else True:
+        return False if self._index == -1 else True
     
     def is_root(self):
         return bool(self._is_root)
@@ -114,9 +105,9 @@ cdef class TreeNode:
     
     def __str__(self):
         if self.is_terminal():
-            return str(self._index):
+            return str(self._index)
         else:
-            return f"({str(self.child1)},{str(self.child2)})
+            return f"({str(self._child1)},{str(self._child2)})"
     
 
 cdef _get_indices(TreeNode node, list index_list):
@@ -126,4 +117,4 @@ cdef _get_indices(TreeNode node, list index_list):
         _get_indices(node._child2, index_list)
     else:
         # Terminal node -> add index -> terminate
-        index_list.append(self._index)
+        index_list.append(node._index)
