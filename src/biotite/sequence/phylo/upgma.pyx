@@ -13,6 +13,7 @@ import numpy as np
 
 ctypedef np.float32_t float32
 ctypedef np.uint8_t uint8
+ctypedef np.uint32_t uint32
 
 
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
@@ -35,8 +36,15 @@ def upgma(np.ndarray distances):
     cdef np.ndarray nodes = np.array(
         [TreeNode(index=i) for i in range(distances.shape[0])]
     )
+    # Indicates whether an index has already been clustered
+    # and the repsective rows and columns can be ignored
     cdef uint8[:] is_clustered_v = np.full(
         distances.shape[0], False, dtype=np.uint8
+    )
+    # Number of indices in the current node (cardinality)
+    # (required for proportional averaging)
+    cdef uint32[:] cluster_size_v = np.ones(
+        distances.shape[0], dtype=np.uint32
     )
 
 
@@ -45,12 +53,6 @@ def upgma(np.ndarray distances):
     
     # Exit loop via 'break'
     while True:
-        ###
-        print(distances)
-        print(", ".join([str(e) for e in nodes]))
-        print(np.asarray(is_clustered_v))
-        print("\n")
-        ###
 
         # Find minimum distance
         dist_min = MAX_FLOAT
@@ -86,9 +88,17 @@ def upgma(np.ndarray distances):
         # Calculate arithmetic mean distances of child nodes
         # as distances for new node and update matrix
         for k in range(distances_v.shape[0]):
-            mean = (distances_v[i_min,k] + distances_v[j_min,k]) / 2
-            distances_v[i_min,k] = mean
-            distances_v[k,i_min] = mean
+            if not is_clustered_v[k] and k != i_min:
+                mean = (
+                    (
+                          distances_v[i_min,k] * cluster_size_v[i_min]
+                        + distances_v[j_min,k] * cluster_size_v[j_min]
+                    ) / (cluster_size_v[i_min] + cluster_size_v[j_min])
+                )
+                distances_v[i_min,k] = mean
+                distances_v[k,i_min] = mean
+        # Updating cluster size of new node
+        cluster_size_v[i_min] = cluster_size_v[i_min] + cluster_size_v[j_min]
     
 
     # As each higher level node is always created on position i_min
