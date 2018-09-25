@@ -24,6 +24,7 @@ def upgma(np.ndarray distances):
     cdef int i_min=0, j_min=0
     cdef float32 dist, dist_min
     cdef float mean
+    cdef float height
     
 
     if distances.shape[0] != distances.shape[1] \
@@ -46,6 +47,11 @@ def upgma(np.ndarray distances):
     # (required for proportional averaging)
     cdef uint32[:] cluster_size_v = np.ones(
         distances.shape[0], dtype=np.uint32
+    )
+    # Distance of each node from terminal nodes,
+    # used for calculation of distance to child nodes
+    cdef float32[:] node_heights = np.zeros(
+        distances.shape[0], dtype=np.float32
     )
 
 
@@ -80,10 +86,15 @@ def upgma(np.ndarray distances):
         # replacing the node at position i_min
         # leaving the node at position j_min empty
         # (is_clustered_v -> True)
+        height = dist_min/2
         nodes[i_min] = TreeNode(
-            child1=nodes[i_min], child2=nodes[j_min],
-            child1_distance=0, child2_distance=0
+            child1=nodes[i_min],
+            child2=nodes[j_min],
+            child1_distance=height-node_heights[i_min],
+            child2_distance=height-node_heights[j_min]
         )
+        node_heights[i_min] = height
+        # Mark position j_min as clustered
         nodes[j_min] = None
         is_clustered_v[j_min] = True
         # Calculate arithmetic mean distances of child nodes
