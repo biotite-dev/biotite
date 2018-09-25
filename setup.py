@@ -104,11 +104,14 @@ setup(
     
     ext_modules = get_extensions(),
     
-    # Including substitution matrix data
-    package_data = {"biotite"                   : ["py.typed", "**/*.pyi"],
-                    "biotite.sequence.align"    : ["matrix_data/*.mat"],
-                    "biotite.sequence.graphics" : ["color_schemes/*.json"],
-                    "biotite.sequence"          : ["codon_tables.txt"],},
+    # Including additional data
+    package_data = {
+        "biotite"                   : ["py.typed", "**/*.pyi"],
+        "biotite.sequence.align"    : ["matrix_data/*.mat"],
+        "biotite.sequence.graphics" : ["color_schemes/*.json"],
+        "biotite.sequence"          : ["codon_tables.txt"],
+        "biotite.structure.info"    : ["*.json"]
+    },
     
     install_requires = ["requests >= 2.12",
                         "numpy >= 1.13",

@@ -116,8 +116,6 @@
             "dihedral",
             "dihedral_backbone",
             "centroid",
-            "mass_of_element",
-            "atom_masses",
             "mass_center",
             "gyration_radius"
         ],
