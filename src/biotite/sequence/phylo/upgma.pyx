@@ -18,6 +18,7 @@ ctypedef np.uint32_t uint32
 
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
+
 def upgma(np.ndarray distances):
     cdef int i=0, j=0, k=0
     cdef int i_min=0, j_min=0
