@@ -198,6 +198,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         affine_penalty = True
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
+    # Check if max_number is reasonable
+    if max_number < 1:
+        raise ValueError(
+            "Maximum number of returned alignments must be at least 1"
+        )
     # This implementation uses transposed tables in comparison
     # to the common implementation
     # Therefore the first sequence is one the left
