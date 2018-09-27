@@ -622,12 +622,12 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
 
 
 cdef void _follow_trace(uint8[:,:] trace_table,
-                    int i, int j, int pos,
-                    int64[:,:] trace,
-                    list trace_list,
-                    int state,
-                    int* curr_trace_count,
-                    int max_trace_count):
+                        int i, int j, int pos,
+                        int64[:,:] trace,
+                        list trace_list,
+                        int state,
+                        int* curr_trace_count,
+                        int max_trace_count):
     """
     Fill an alignment table with affine gap penalty using dynamic
     programming.

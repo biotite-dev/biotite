@@ -56,7 +56,7 @@ def upgma(np.ndarray distances):
 
 
     # Cluster indices
-    cdef float32[:,:] distances_v = distances.astype(np.float32, copy=False)
+    cdef float32[:,:] distances_v = distances.astype(np.float32, copy=True)
     
     # Exit loop via 'break'
     while True:
