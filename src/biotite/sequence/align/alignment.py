@@ -132,7 +132,7 @@ class Alignment(object):
             # Remove final line breaks
             return ali_str[:-2]
         else:
-            super().__str__()
+            return super().__str__()
     
     def __getitem__(self, index):
         if isinstance(index, tuple):

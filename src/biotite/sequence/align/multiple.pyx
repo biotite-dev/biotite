@@ -13,6 +13,7 @@ from .matrix import SubstitutionMatrix
 from .alignment import Alignment
 from .pairwise import align_optimal
 from ..sequence import Sequence
+from ..alphabet import Alphabet
 from ..phylo.upgma import upgma
 from ..phylo.tree import Tree, TreeNode
 import numpy as np
@@ -33,6 +34,34 @@ ctypedef fused CodeType:
     uint64
 
 
+cdef float32 MAX_FLOAT = np.finfo(np.float32).max
+
+
+class GapSymbol:
+    
+    _instance = None
+    
+    def __init__(self):
+        if GapSymbol._instance is not None:
+            raise ValueError(
+                "Cannot instantiate this singleton more than one time"
+            )
+        else:
+            GapSymbol._instance = self
+    
+    @staticmethod
+    def instance():
+        if GapSymbol._instance is None:
+            GapSymbol._instance = GapSymbol()
+        return GapSymbol._instance
+    
+    def __str__(self):
+        return "#"
+    
+    def __hash__(self):
+        return 0
+
+
 def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
     if not matrix.is_symmetric():
         raise ValueError("A symmetric substitution matrix is required")
@@ -48,11 +77,66 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
                 "for each sequence"
             )
     
+    # Create guide tree
+    # Template parameter workaround
+    _T = sequences[0].code
     distances = _get_distance_matrix(
-        sequences[0].code, sequences, matrix, gap_penalty, terminal_penalty
+        _T, sequences, matrix, gap_penalty, terminal_penalty
     )
     tree = upgma(distances)
-    print(tree)
+    
+    # Create new matrix with neutral gap symbol
+    gap_symbol = GapSymbol.instance()
+    new_alphabet = Alphabet(
+        matrix.get_alphabet1().get_symbols() + [gap_symbol]
+    )
+    new_score_matrix = np.zeros(
+        (len(new_alphabet), len(new_alphabet)), dtype=np.int32
+    )
+    # New substitution matrix is the same as the old one,
+    # except the neutral ghap symbol,
+    # that scores 0 with all other symbols
+    new_score_matrix[:-1,:-1] = matrix.score_matrix()
+    new_matrix = SubstitutionMatrix(
+        new_alphabet, new_alphabet, new_score_matrix
+    )
+
+    # Progressive alignment
+    gap_symbol_code = new_alphabet.encode(gap_symbol)
+    indices, aligned_seqs = _progressive_align(
+        _T, sequences, tree.root, distances, new_matrix,
+        gap_symbol_code, gap_penalty, terminal_penalty
+    )
+    """
+    from ..seqtypes import ProteinSequence
+    ProteinSequence.alphabet = new_alphabet
+    for e in aligned_seqs:
+        print(e[:100])
+    print()
+    print(indices)
+    """
+    aligned_seq_codes = [seq.code for seq in aligned_seqs]
+    
+    # Remove neutral gap symbols and create actual trace
+    seq_i = np.zeros(len(aligned_seqs))
+    trace = np.full(
+        (len(aligned_seqs[0]), len(aligned_seqs)), -1, dtype=np.int64)
+    for j in range(trace.shape[1]):
+        seq_code = aligned_seq_codes[j]
+        seq_i = 0
+        for i in range(trace.shape[0]):
+            if seq_code[i] == gap_symbol_code:
+                trace[i,j] = -1
+            else:
+                trace[i,j] = seq_i
+                seq_i += 1
+    aligned_seq_codes = [
+        code[code != gap_symbol_code] for code in aligned_seq_codes
+    ]
+    for i in range(len(aligned_seqs)):
+        aligned_seqs[i].code = aligned_seq_codes[i]
+    
+    return Alignment(aligned_seqs, trace)
 
 
 def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
@@ -77,7 +161,6 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
             )[0]
             scores[i,j] = alignment.score
             alignments[i,j] = alignment
-    print(scores)
     
     ### Distance calculation from similarity scores ###
     # Calculate the occurences of each symbol code in each sequence
@@ -124,22 +207,17 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
                                   * code_count[i,code1] \
                                   * code_count[j,code2]
             score_rand /= alignments[i,j].trace.shape[0]
-            print("Index", i,j)
-            print("")
-            print(alignments[i,j])
-            print("")
             gap_open_count, gap_ext_count = _count_gaps(
                 alignments[i,j].trace.astype(np.int64, copy=False),
                 terminal_penalty
             )
             score_rand += gap_open_count * gap_open
             score_rand += gap_ext_count * gap_ext
-            distances[i,j] = -log(
+            distances_v[i,j] = -log(
                 (scores_v[i,j] - score_rand) / (score_max - score_rand)
             )
             # Pairwise distance matrix is symmetric
-            distances[i,j] = distances[j,i]
-    print(distances)
+            distances_v[j,i] = distances_v[i,j]
     return distances
 
 
@@ -179,6 +257,88 @@ def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
                     gap_ext_count += 1
                 else:
                     gap_open_count += 1
-    print(gap_open_count, gap_ext_count)
     return gap_open_count, gap_ext_count
 
+
+def _progressive_align(CodeType[:] _T, sequences, tree_node,
+                       float32[:,:]distances_v, matrix,
+                       int gap_symbol_code, gap_penalty, terminal_penalty):
+    cdef int i=0, j=0
+    cdef int i_min, j_min
+    cdef float32 dist_min, dist
+    cdef int32[:] indices1_v, indices2_v
+    cdef np.ndarray incides1, incides2
+    cdef list aligned_seqs1, aligned_seqs2
+    
+    if tree_node.is_terminal():
+        # Copy sequences to avoid modification of input sequences
+        # when neutral gap character is inserted
+        return np.array([tree_node.index], dtype=np.int32), \
+               [sequences[tree_node.index].copy()]
+    
+    else:
+        child1, child2 = tree_node.childs
+        incides1, aligned_seqs1 = _progressive_align(
+            _T, sequences, child1, distances_v, matrix,
+            gap_symbol_code, gap_penalty, terminal_penalty
+        )
+        indices1_v = incides1
+        incides2, aligned_seqs2 = _progressive_align(
+            _T, sequences, child2, distances_v, matrix,
+            gap_symbol_code, gap_penalty, terminal_penalty
+        )
+        indices2_v = incides2
+        # Find sequence pair with lowest distance
+        dist_min = MAX_FLOAT
+        for i in indices1_v:
+            for j in indices2_v:
+                dist = distances_v[i,j]
+                if dist < dist_min:
+                    dist_min = dist
+                    i_min = i
+                    j_min = j
+        # Alignment of sequence pair with lowest distance
+        # For this method we only consider one alignment:
+        alignment = align_optimal(
+            sequences[i], sequences[j], matrix,
+            gap_penalty, terminal_penalty, max_number=1
+        )[0]
+        # Place neutral gap symbol for position of new gaps
+        # in both sequence groups 
+        for i in range(len(aligned_seqs1)):
+            seq = aligned_seqs1[i]
+            seq.code = _replace_gaps(
+                _T, alignment.trace[:,0], seq.code, gap_symbol_code
+            )
+        for i in range(len(aligned_seqs2)):
+            seq = aligned_seqs2[i]
+            seq.code = _replace_gaps(
+                _T, alignment.trace[:,1], seq.code, gap_symbol_code
+            )
+        return np.append(incides1, incides2), \
+               aligned_seqs1 + aligned_seqs2
+
+
+
+def _replace_gaps(CodeType[:] _T,
+                  int64[:] partial_trace_v,
+                  np.ndarray seq_code,
+                  int gap_symbol_code):
+    cdef int i, j
+    cdef int64 index
+    cdef CodeType code
+
+    cdef CodeType[:] seq_code_v = seq_code
+    cdef np.ndarray new_seq_code = np.zeros(
+        partial_trace_v.shape[0], dtype=seq_code.dtype
+    )
+    cdef CodeType[:] new_seq_code_v = new_seq_code
+    
+    for i in range(partial_trace_v.shape[0]):
+        index = partial_trace_v[i]
+        if index == -1:
+            new_seq_code_v[i] = gap_symbol_code
+        else:
+            new_seq_code_v[i] = seq_code[index]
+    
+    return new_seq_code
