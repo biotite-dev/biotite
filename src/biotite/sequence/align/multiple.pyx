@@ -29,9 +29,9 @@ ctypedef np.float32_t float32
 
 ctypedef fused CodeType:
     uint8
-    uint16
-    uint32
-    uint64
+#    uint16
+#    uint32
+#    uint64
 
 
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
@@ -56,7 +56,7 @@ class GapSymbol:
         return GapSymbol._instance
     
     def __str__(self):
-        return "#"
+        return "-"
     
     def __hash__(self):
         return 0
@@ -102,21 +102,29 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
     )
 
     # Progressive alignment
+    ###
+    for s in sequences:
+        print(len(s))
+    print()
+    ###
     gap_symbol_code = new_alphabet.encode(gap_symbol)
     indices, aligned_seqs = _progressive_align(
         _T, sequences, tree.root, distances, new_matrix,
         gap_symbol_code, gap_penalty, terminal_penalty
     )
+    aligned_seq_codes = [seq.code for seq in aligned_seqs]
+    ###
+    for s in aligned_seqs:
+        print(len(s))
+    print()
     """
     from ..seqtypes import ProteinSequence
     ProteinSequence.alphabet = new_alphabet
-    for e in aligned_seqs:
-        print(e[:100])
-    print()
-    print(indices)
+    with open("ali.txt", "w") as f:
+        f.write("\n".join([str(e) for e in aligned_seqs]))
     """
-    aligned_seq_codes = [seq.code for seq in aligned_seqs]
-    
+    ###
+
     # Remove neutral gap symbols and create actual trace
     seq_i = np.zeros(len(aligned_seqs))
     trace = np.full(
@@ -264,7 +272,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
                        float32[:,:]distances_v, matrix,
                        int gap_symbol_code, gap_penalty, terminal_penalty):
     cdef int i=0, j=0
-    cdef int i_min, j_min
+    cdef int i_min=0, j_min=0
     cdef float32 dist_min, dist
     cdef int32[:] indices1_v, indices2_v
     cdef np.ndarray incides1, incides2
@@ -290,9 +298,9 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         indices2_v = incides2
         # Find sequence pair with lowest distance
         dist_min = MAX_FLOAT
-        for i in indices1_v:
-            for j in indices2_v:
-                dist = distances_v[i,j]
+        for i in range(indices1_v.shape[0]):
+            for j in range(indices2_v.shape[0]):
+                dist = distances_v[indices1_v[i], indices2_v[j]]
                 if dist < dist_min:
                     dist_min = dist
                     i_min = i
@@ -300,11 +308,21 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         # Alignment of sequence pair with lowest distance
         # For this method we only consider one alignment:
         alignment = align_optimal(
-            sequences[i], sequences[j], matrix,
+            aligned_seqs1[i_min], aligned_seqs2[j_min], matrix,
             gap_penalty, terminal_penalty, max_number=1
         )[0]
         # Place neutral gap symbol for position of new gaps
         # in both sequence groups 
+        ###
+        print(np.asarray(indices1_v))
+        for seq in aligned_seqs1:
+            print(len(alignment.sequences[0]), len(seq), i_min)
+        print("")
+        print(np.asarray(indices2_v))
+        for seq in aligned_seqs2:
+            print(len(alignment.sequences[1]), len(seq), j_min)
+        print("\n")
+        ###
         for i in range(len(aligned_seqs1)):
             seq = aligned_seqs1[i]
             seq.code = _replace_gaps(
@@ -324,7 +342,7 @@ def _replace_gaps(CodeType[:] _T,
                   int64[:] partial_trace_v,
                   np.ndarray seq_code,
                   int gap_symbol_code):
-    cdef int i, j
+    cdef int i
     cdef int64 index
     cdef CodeType code
 
