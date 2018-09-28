@@ -25,7 +25,7 @@ class Tree:
         raise NotImplementedError()
     
     def __str__(self):
-        return str(self._root)
+        return str(self._root) + ";"
 
 
 cdef class TreeNode:
@@ -112,8 +112,7 @@ cdef class TreeNode:
         if self.is_leaf():
             return f"{self._index}:{self._distance}"
         else:
-            return f"({str(self._child1)},{str(self._child2)})" \
-                   f":{self._distance}"
+            return f"({self._child1},{self._child2}):{self._distance}"
     
 
 cdef _get_indices(TreeNode node, list index_list):
