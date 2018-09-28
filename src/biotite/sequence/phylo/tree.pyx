@@ -109,11 +109,11 @@ cdef class TreeNode:
         return index_list
     
     def __str__(self):
-        if self.is_terminal():
+        if self.is_leaf():
             return f"{self._index}:{self._distance}"
         else:
             return f"({str(self._child1)},{str(self._child2)})" \
-                   f":{self._distance:.2f}"
+                   f":{self._distance}"
     
 
 cdef _get_indices(TreeNode node, list index_list):

@@ -272,7 +272,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     cdef np.ndarray incides1, incides2
     cdef list aligned_seqs1, aligned_seqs2
     
-    if tree_node.is_terminal():
+    if tree_node.is_leaf():
         # Copy sequences to avoid modification of input sequences
         # when neutral gap character is inserted
         return np.array([tree_node.index], dtype=np.int32), \
