@@ -62,7 +62,8 @@ class GapSymbol:
         return 0
 
 
-def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
+def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
+                   distances=None, guide_tree=None):
     if not matrix.is_symmetric():
         raise ValueError("A symmetric substitution matrix is required")
     if not matrix.get_alphabet1().extends(sequences[0].get_alphabet()):
@@ -80,10 +81,14 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
     # Create guide tree
     # Template parameter workaround
     _T = sequences[0].code
-    distances = _get_distance_matrix(
-        _T, sequences, matrix, gap_penalty, terminal_penalty
-    )
-    tree = upgma(distances)
+    if distances is None:
+        distances = _get_distance_matrix(
+            _T, sequences, matrix, gap_penalty, terminal_penalty
+        )
+    else:
+        distances = distances.astype(np.float32, copy=True)
+    if guide_tree is None:
+        guide_tree = upgma(distances)
     
     # Create new matrix with neutral gap symbol
     gap_symbol = GapSymbol.instance()
@@ -102,28 +107,12 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
     )
 
     # Progressive alignment
-    ###
-    for s in sequences:
-        print(len(s))
-    print()
-    ###
     gap_symbol_code = new_alphabet.encode(gap_symbol)
-    indices, aligned_seqs = _progressive_align(
-        _T, sequences, tree.root, distances, new_matrix,
+    order, aligned_seqs = _progressive_align(
+        _T, sequences, guide_tree.root, distances, new_matrix,
         gap_symbol_code, gap_penalty, terminal_penalty
     )
     aligned_seq_codes = [seq.code for seq in aligned_seqs]
-    ###
-    for s in aligned_seqs:
-        print(len(s))
-    print()
-    """
-    from ..seqtypes import ProteinSequence
-    ProteinSequence.alphabet = new_alphabet
-    with open("ali.txt", "w") as f:
-        f.write("\n".join([str(e) for e in aligned_seqs]))
-    """
-    ###
 
     # Remove neutral gap symbols and create actual trace
     seq_i = np.zeros(len(aligned_seqs))
@@ -144,7 +133,12 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True):
     for i in range(len(aligned_seqs)):
         aligned_seqs[i].code = aligned_seq_codes[i]
     
-    return Alignment(aligned_seqs, trace)
+    # Reorder alignmets into original alignemnt
+    new_order = np.argsort(order)
+    aligned_seqs = [aligned_seqs[pos] for pos in new_order]
+    trace = trace[:, new_order]
+
+    return Alignment(aligned_seqs, trace), order, guide_tree, distances
 
 
 def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
@@ -313,16 +307,6 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         )[0]
         # Place neutral gap symbol for position of new gaps
         # in both sequence groups 
-        ###
-        print(np.asarray(indices1_v))
-        for seq in aligned_seqs1:
-            print(len(alignment.sequences[0]), len(seq), i_min)
-        print("")
-        print(np.asarray(indices2_v))
-        for seq in aligned_seqs2:
-            print(len(alignment.sequences[1]), len(seq), j_min)
-        print("\n")
-        ###
         for i in range(len(aligned_seqs1)):
             seq = aligned_seqs1[i]
             seq.code = _replace_gaps(
