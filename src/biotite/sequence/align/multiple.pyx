@@ -29,9 +29,9 @@ ctypedef np.float32_t float32
 
 ctypedef fused CodeType:
     uint8
-#    uint16
-#    uint32
-#    uint64
+    uint16
+    uint32
+    uint64
 
 
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
