@@ -370,6 +370,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
     where *S(x,y)* is the similarity score of the two symbols
     *x* and *y* described in the substitution matrix.
+    The similarity *S(x,-)* is always 0.
     As the normalization is conducted only with respect to *a*,
     the *normalized similarity* is not commutative.
 
