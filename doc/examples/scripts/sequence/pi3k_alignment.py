@@ -8,7 +8,7 @@ The following script visualizes the sequence alignment of six proteins
 of the human Phosphoinositide 3-kinase (PI3K) family, including PI3K
 itself.
 
-At first we retrieve the respective sequences. and align them using
+At first we fetch the respective sequences. and align them using
 *Clustal Omega*.
 """
 
@@ -93,7 +93,7 @@ figure.tight_layout()
 # the plot looks quite confusing.
 # It is not clearly visible, which parts of the sequences have a low or
 # high similarity to each other. 
-# Hence we create bins, that contain the mean similarity over a range of
+# Hence, we create bins, that contain the mean similarity over a range of
 # columns.
 
 def calculate_bins(similarities, bin_count):
