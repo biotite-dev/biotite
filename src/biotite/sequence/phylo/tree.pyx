@@ -6,6 +6,10 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Tree", "TreeNode"]
 
 cimport cython
+cimport numpy as np
+
+import copy
+import numpy as np
 
 
 class Tree:
@@ -13,19 +17,32 @@ class Tree:
     def __init__(self, TreeNode root not None):
         root.as_root()
         self._root = root
+        
+        cdef list leaves_unsorted = self._root.get_leaves()
+        cdef np.ndarray indices = np.array(
+            [leaf.index for leaf in leaves_unsorted]
+        )
+        self._leaves = [None] * len(leaves_unsorted)
+        cdef int i
+        for i in range(len(indices)):
+            self._leaves[indices[i]] = leaves_unsorted[i]
     
     @property
     def root(self):
         return self._root
+    
+    @property
+    def leaves(self):
+        return copy.copy(self._leaves)
 
-    def get_distance(index1, index2):
-        raise NotImplementedError()
+    def get_distance(self, index1, index2):
+        return self._leaves[index1].distance_to(self._leaves[index2])
     
-    def get_tree_depth():
-        raise NotImplementedError()
-    
+    def to_newick(self, labels=None, bint include_distance=True):
+        return self._root.to_newick(labels, include_distance) + ";"
+
     def __str__(self):
-        return str(self._root) + ";"
+        return self.to_newick()
 
 
 cdef class TreeNode:
@@ -101,25 +118,86 @@ cdef class TreeNode:
         self._is_root = True
     
     def distance_to(self, TreeNode node):
-        raise NotImplementedError()
+        # Sum distances until LCA has been reached
+        cdef float distance = 0
+        cdef TreeNode current_node = None
+        cdef TreeNode lca = self.lowest_common_ancestor(node)
+        if lca is None:
+            raise ValueError("The nodes do not have a common ancestor")
+        current_node = self
+        while current_node is not lca:
+            distance += current_node._distance
+            current_node = current_node._parent
+        current_node = node
+        while current_node is not lca:
+            distance += current_node._distance
+            current_node = current_node._parent
+        return distance
+    
+    def lowest_common_ancestor(self, TreeNode node):
+        cdef int i
+        cdef TreeNode lca = None
+        # Create two paths from the leaves to root
+        cdef list self_path = _create_path_to_root(self)
+        cdef list other_path = _create_path_to_root(node)
+        # Reverse Iteration through path (beginning from root)
+        # until the paths diverge
+        for i in range(-1, -min(len(self_path), len(other_path))-1, -1):
+            if self_path[i] is other_path[i]:
+                # Same node -> common ancestor
+                lca = self_path[i]
+            else:
+                # Different node -> Not common ancestor
+                # -> return last common ancewstor found
+                break
+        return lca
     
     def get_indices(self):
-        index_list = []
-        _get_indices(self, index_list)
-        return index_list
+        return np.array(
+            [leaf._index for leaf in self.get_leaves()], dtype=np.int32
+        )
+
+    def get_leaves(self):
+        cdef list leaf_list = []
+        _get_leaves(self, leaf_list)
+        return leaf_list
     
-    def __str__(self):
+    def to_newick(self, labels=None, bint include_distance=True):
         if self.is_leaf():
-            return f"{self._index}:{self._distance}"
+            if labels is not None:
+                label = labels[self._index]
+            else:
+                label = str(self._index)
+            if include_distance:
+                return f"{label}:{self._distance}"
+            else:
+                return f"{label}"
         else:
-            return f"({self._child1},{self._child2}):{self._distance}"
+            child1_str = self._child1.to_newick(labels, include_distance)
+            child2_str = self._child2.to_newick(labels, include_distance)
+            if include_distance:
+                return f"({child1_str},{child2_str}):{self._distance}"
+            else:
+                return f"({child1_str},{child2_str})"
+
+    def __str__(self):
+        return self.to_newick()
     
 
-cdef _get_indices(TreeNode node, list index_list):
+cdef _get_leaves(TreeNode node, list leaf_list):
     if node._index == -1:
         # Intermediatte node -> Recursive calls
-        _get_indices(node._child1, index_list)
-        _get_indices(node._child2, index_list)
+        _get_leaves(node._child1, leaf_list)
+        _get_leaves(node._child2, leaf_list)
     else:
-        # Terminal node -> add index -> terminate
-        index_list.append(node._index)
+        # Terminal node -> add node -> terminate
+        leaf_list.append(node)
+
+
+cdef list _create_path_to_root(TreeNode node):
+    cdef list path = []
+    cdef TreeNode current_node = node
+    while current_node is not None:
+        path.append(current_node)
+        current_node = current_node._parent
+    return path
