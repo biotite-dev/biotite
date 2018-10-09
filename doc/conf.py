@@ -90,6 +90,7 @@ html_theme_options = {
     "github_user"   : "biotite-dev",
     "github_repo"   : "biotite",
     "github_banner" : "true",
+    "github_button" : "false",
     "page_width"    : "85%",
     "fixed_sidebar" : "true",
     
@@ -99,7 +100,8 @@ html_theme_options = {
 sphinx_gallery_conf = {
     "examples_dirs"             : "examples/scripts",
     "gallery_dirs"              : "examples/gallery",
-    "filename_pattern"          : "/",
+    # Do not run example scripts with a trailing '_noexec'
+    "filename_pattern"          : "^((?!_noexec).)*$",
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time

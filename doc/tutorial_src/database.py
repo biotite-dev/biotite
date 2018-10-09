@@ -55,7 +55,7 @@ file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
 # The :func:`search()` method takes the :class:`Query` and returns a
-# list of PDB IDs, which itself can be used as inpt for :func:`fetch()`.
+# list of PDB IDs, which itself can be used as input for :func:`fetch()`.
 
 query = rcsb.ResolutionQuery(0.0, 0.6)
 pdb_ids = rcsb.search(query)

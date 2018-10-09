@@ -268,12 +268,15 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
                         trace_pos = (i+1) * self._symbols_per_line -1
                     seq_index = self._get_last_real_index(self._alignment,
                                                           trace_pos, j)
-                    number = self._number_func[j](seq_index)
-                    text = Text(fig_size_x - self._margin, y, str(number),
-                                color="black", ha="right", va="center",
-                                size=self._number_font_size, figure=fig,
-                                fontproperties=self._number_font)
-                    fig.texts.append(text)
+                    # if -1 -> terminal gap
+                    # -> skip number for this sequence in this line
+                    if seq_index != -1:
+                        number = self._number_func[j](seq_index)
+                        text = Text(fig_size_x - self._margin, y, str(number),
+                                    color="black", ha="right", va="center",
+                                    size=self._number_font_size, figure=fig,
+                                    fontproperties=self._number_font)
+                        fig.texts.append(text)
                     y -= self._box_size[1]
                 y -= self._spacing
 
@@ -319,8 +322,10 @@ class AlignmentVisualizer(Visualizer, metaclass=abc.ABCMeta):
     def _get_last_real_index(self, alignment, i, j):
         index_found = False
         while not index_found:
-            if i == 0:
-                index = 0
+            if i == -1:
+                # Terminal gap
+                # -> First symbol of sequence has not occured yet
+                index = -1
                 index_found = True
             else:
                 index = alignment.trace[i,j]
@@ -365,6 +370,7 @@ class AlignmentSimilarityVisualizer(AlignmentVisualizer):
 
     where *S(x,y)* is the similarity score of the two symbols
     *x* and *y* described in the substitution matrix.
+    The similarity *S(x,-)* is always 0.
     As the normalization is conducted only with respect to *a*,
     the *normalized similarity* is not commutative.
 

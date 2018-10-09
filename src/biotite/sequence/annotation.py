@@ -406,6 +406,9 @@ class Annotation(Copyable):
             if feature not in self._features:
                 return False
         return True
+    
+    def __len__(self):
+        return len(self._features)
 
 
 class AnnotatedSequence(Copyable):
