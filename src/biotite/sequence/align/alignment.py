@@ -151,6 +151,9 @@ class Alignment(object):
     def __iter__(self):
         raise TypeError("'Alignment' object is not iterable")
     
+    def __len__(self):
+        return len(self.trace)
+    
     @staticmethod
     def trace_from_strings(seq_str_list):
         """

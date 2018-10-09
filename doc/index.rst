@@ -28,6 +28,11 @@ like an `ndarray`.
 Even the actual internal `ndarray` instances are easily accessible allowing
 advanced users to implement their own algorithms upon the existing types.
 
+If you use *Biotite* in a scientific publication, please cite:
+
+| Kunzmann, P. & Hamacher, K. BMC Bioinformatics (2018) 19:346.
+| `<https://doi.org/10.1186/s12859-018-2367-z>`_
+
 
 **Sequence** subpackage
 -----------------------
