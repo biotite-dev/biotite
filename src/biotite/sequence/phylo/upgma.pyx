@@ -88,10 +88,8 @@ def upgma(np.ndarray distances):
         # (is_clustered_v -> True)
         height = dist_min/2
         nodes[i_min] = TreeNode(
-            child1=nodes[i_min],
-            child2=nodes[j_min],
-            child1_distance=height-node_heights[i_min],
-            child2_distance=height-node_heights[j_min]
+            nodes[i_min], nodes[j_min],
+            height-node_heights[i_min], height-node_heights[j_min]
         )
         node_heights[i_min] = height
         # Mark position j_min as clustered

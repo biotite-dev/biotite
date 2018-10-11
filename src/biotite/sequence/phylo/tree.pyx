@@ -46,6 +46,77 @@ class Tree:
 
 
 cdef class TreeNode:
+    """
+    __init__(child1=None, child2=None,
+             child1_distance=None, child2_distance=None,
+             index=None)
+    
+    `TreeNode` objects are part of a rooted binary tree
+    (e.g. phylogentic tree).
+    There are two `TreeNode` subtypes.:
+        
+        - Leaf node - Cannot have child nodes but has an index referring
+          to an array-like reference object.
+        - Intermediate node - Has two child nodes but no reference index
+    
+    This type is determined by the time of the object's creation.
+    
+    Every `TreeNode` has a reference to its parent node.
+    A root node is node without a parent node.
+    In order to prevent that a root node cannot be used as child,
+    the `as_root()` method can be called.
+
+    `TreeNode` objects are semi-immutable:
+    The child nodes or the reference index are fixed at the time of
+    creation.
+    Only the parent can be set once, when the parent node is created. 
+    `TreeNode` objects that are finalized using `as_root()` are
+    completely immutable.
+
+    All object attributes are read-only.
+
+    Parameters
+    ----------
+    child1, child2: TreeNode, optional
+        The childs of this node.
+        As this causes the creation of an intermediate node,
+        this parameter cannot be used in combination with `index`.
+    child1_distance, child2_distance: float, optional
+        The distances of the child nodes to this node.
+        Must be set if `child1` and `child2` are set.
+    index: int, optional
+        Index to a reference array-like object
+        (e.g. list of sequences or labels).
+        Must be a positive integer.
+        As this causes the creation of a leaf node, this parameter
+        cannot be used in combination with the other parameters.
+    
+    Attributes
+    ----------
+    parent : TreeNode
+        The parent node.
+        `None` if node has no parent.
+    childs : tuple(TreeNode, TreeNode)
+        The child nodes.
+        `None` if node has no child nodes.
+    index : int
+        The index to a reference array-like object.
+        `None` if node is not a leaf node.
+    distance : float
+        Distance to parent node.
+        `None` if `parent` is `Ǹone`.
+
+    Examples
+    --------
+    
+    >>> leaf1 = TreeNode(index=0)
+    >>> leaf2 = TreeNode(index=1)
+    >>> leaf3 = TreeNode(index=2)
+    >>> inter = TreeNode(leaf1, leaf2, 5.0, 7.0)
+    >>> root  = TreeNode(inter, leaf3, 3.0, 10.0)
+    >>> print(root)
+    ((0:5.0,1:7.0):3.0,2:10.0):0.0
+    """
 
     cdef int _index
     cdef float _distance
@@ -54,9 +125,8 @@ cdef class TreeNode:
     cdef TreeNode _child1
     cdef TreeNode _child2
 
-    def __cinit__(self, index=None,
-                  TreeNode child1=None, TreeNode child2=None,
-                  child1_distance=None, child2_distance=None):
+    def __cinit__(self, TreeNode child1=None, TreeNode child2=None,
+                  child1_distance=None, child2_distance=None, index=None):
         self._is_root = False
         self._distance = 0
         self._parent = None
@@ -85,8 +155,12 @@ cdef class TreeNode:
                     "Reference index and child nodes are mutually exclusive"
                 )
             self._index = index
+            self._child1 = None
+            self._child2 = None
     
     def _set_parent(self, TreeNode parent not None, float distance):
+        if self._parent is not None:
+            raise TreeError("Node already has a parent")
         self._parent = parent
         self._distance = distance
 
@@ -96,7 +170,11 @@ cdef class TreeNode:
     
     @property
     def childs(self):
-        return self._child1, self._child2
+        # If child1 is None child2 is also None
+        if self._child1 is not None:
+            return self._child1, self._child2
+        else:
+            return None
     
     @property
     def parent(self):
@@ -114,7 +192,7 @@ cdef class TreeNode:
     
     def as_root(self):
         if self._parent is not None:
-            raise ValueError("Node has parent, cannot be a root node")
+            raise TreeError("Node has parent, cannot be a root node")
         self._is_root = True
     
     def distance_to(self, TreeNode node):
@@ -123,7 +201,7 @@ cdef class TreeNode:
         cdef TreeNode current_node = None
         cdef TreeNode lca = self.lowest_common_ancestor(node)
         if lca is None:
-            raise ValueError("The nodes do not have a common ancestor")
+            raise TreeError("The nodes do not have a common ancestor")
         current_node = self
         while current_node is not lca:
             distance += current_node._distance
@@ -201,3 +279,10 @@ cdef list _create_path_to_root(TreeNode node):
         path.append(current_node)
         current_node = current_node._parent
     return path
+
+
+class TreeError(Exception):
+    """
+    An exception that occurs in context of tree topology.
+    """
+    pass
