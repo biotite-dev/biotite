@@ -43,7 +43,7 @@ cdef class CellList:
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The `AtomArray` to create the `CellList` for.
         Alternatively the atom coordiantes are accepted directly.
-    cell_size: float
+    cell_size : float
         The coordinate interval each cell has for x, y and z axis.
         The amount of cells depends on the range of coordinates in the
         `atom_array` and the `cell_size`.
@@ -196,7 +196,7 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        radius: float or ndarray, shape=(n,), dtype=float, optional
+        radius : float or ndarray, shape=(n,), dtype=float, optional
             The radius around `coord`, in which the atoms are searched,
             i.e. all atoms in `radius` distance to `coord` are returned.
             Either a single radius can be given as scalar, or individual
@@ -372,7 +372,7 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        cell_radius: int or ndarray, shape=(n,), dtype=int, optional
+        cell_radius : int or ndarray, shape=(n,), dtype=int, optional
             The radius around `coord` (in amount of cells), in which
             the atoms are searched. This does not correspond to the
             Euclidian distance used in `get_atoms()`. In this case, all
