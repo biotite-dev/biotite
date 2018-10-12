@@ -20,6 +20,44 @@ cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
 def upgma(np.ndarray distances):
+    """
+    upgma(distances)
+    
+    Perform hierarchical clustering using the
+    *unweighted pair group method with arithmetic mean* (UPGMA).
+
+    Parameters
+    ----------
+    distances : ndarray, shape=(n,n)
+        Pairwise distance matrix.
+
+    Returns
+    -------
+    tree : Tree
+        A rooted binary tree. The `index` attribute in the leaf
+        `TreeNode` objects refer to the indices of `distances`.
+
+    Raises
+    ------
+    ValueError
+        If the distance matrix is not symmetric
+        or if any matrix entry is below 0.
+
+    Examples
+    --------
+    
+    >>> distances = np.array([
+    ...     [0, 1, 7, 7, 9],
+    ...     [1, 0, 7, 6, 8],
+    ...     [7, 7, 0, 2, 4],
+    ...     [7, 6, 2, 0, 3],
+    ...     [9, 8, 4, 3, 0],
+    ... ])
+    >>>
+    >>> tree = upgma(distances)
+    >>> print(tree.to_newick(include_distance=False))
+    ((4,(3,2)),(1,0));
+    """
     cdef int i=0, j=0, k=0
     cdef int i_min=0, j_min=0
     cdef float32 dist, dist_min

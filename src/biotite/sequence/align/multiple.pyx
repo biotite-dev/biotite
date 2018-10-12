@@ -64,18 +64,130 @@ class GapSymbol:
 
 def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                    distances=None, guide_tree=None):
+    """
+    align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
+                   distances=None, guide_tree=None)
+    
+    Perform a multiple sequence alignment using a simple progressive
+    alignment algorithm. [1]_
+
+    Parameters
+    ----------
+    sequences : list of Sequence
+        The sequences to be aligned.
+        The alpahbet of the substitution matrix must be equal or
+        extend the alphabet of each sequence.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+        Must be symmetric.
+    gap_penalty : int or (tuple, dtype=int), optional
+        If an integer is provided, the value will be interpreted as
+        general gap penalty. If a tuple is provided, an affine gap
+        penalty is used. The first integer in the tuple is the gap
+        opening penalty, the second integer is the gap extension
+        penalty.
+        The values need to be negative. (Default: *-10*)
+    terminal_penalty : bool, optional
+        If true, gap penalties are applied to terminal gaps.
+        If `local` is true, this parameter has no effect. 
+        (Default: True)
+    distances : ndarray, shape=(n,n)
+        Pairwise distances of the sequences.
+        The matrix must be symmetric and all entries must be larger
+        than 0.
+        By default the pairwise distances are calculated from
+        similarities obtained from optimal global pairwise alignments
+        (`align_optimal()`).
+        The similarities are converted into distances using the method
+        proposed by Feng & Doolittle [2]_.
+    guide_tree : Tree
+        The guide tree to be used for the progressive alignment.
+        By default the guide tree is constructed from `distances`
+        via the UPGMA clustering method.
+
+    Returns
+    -------
+    alignment : Alignment
+        The global multiple sequence alignment of the input sequences.
+    order : ndarray, dtype=int
+        The sequence order represented by the guide tree.
+        When this order is applied to alignment sequence order,
+        similar sequences are adjacent to each other.
+    tree : Tree
+        The guide tree used for progressive alignment.
+        Equal to `guide_tree` if provided.
+    distance_matrix : ndarray, shape=(n,n), dtype=float32
+        The pairwise distance matrix used to construct the guide tree.
+        Equal to `distances` if provided.
+    
+    Notes
+    -----
+    The similarity to distance conversion is performed according to the
+    following formula:
+
+    .. math:: D_{i,j} = -\ln\left( \frac{ S_{i,j} - S_{i,j}^{rand} }{ S_{i,j} - S_{i,j}^{rand} } \right)
+
+    with
+
+    .. math:: S_{i,j}^{rand} = a
+
+    References
+    ----------
+    
+    .. [1] DF Feng, RF Doolittle,
+       "Progressive sequence alignment as a prerequisite to correct
+       phylogenetic trees"
+       J Mol Evol, 25, 351-360 (1987).
+    
+    .. [2] DF Feng, RF Doolittle,
+       "Progressive alignment of amino acid sequences and construction
+       of phylogenetic trees from them"
+       Methods Enzymol, 266, 368-382 (1996).
+
+    Examples
+    --------
+    
+    >>> seq1 = ProteinSequence("BIQTITE")
+    >>> seq2 = ProteinSequence("TITANITE")
+    >>> seq3 = ProteinSequence("BISMITE")
+    >>> seq4 = ProteinSequence("IQLITE")
+    >>> matrix = SubstitutionMatrix.std_protein_matrix()
+    >>>
+    >>> alignment, order, tree, distances = align_multiple(
+    ...     [seq1, seq2, seq3, seq4], matrix
+    ... )
+    >>>
+    >>> print(alignment)
+    BIQT-ITE
+    TITANITE
+    BISM-ITE
+    -IQL-ITE
+    >>> print(alignment[:, order.tolist()])
+    -IQL-ITE
+    BISM-ITE
+    BIQT-ITE
+    TITANITE
+    >>> print(distances)
+    [[-0.         1.0340737  0.3819849  0.5604919]
+    [ 1.0340737 -0.         0.9231636  1.1316341]
+    [ 0.3819849  0.9231636 -0.         0.6316943]
+    [ 0.5604919  1.1316341  0.6316943 -0.       ]]
+    >>>
+    >>> print(tree.to_newick(
+    ...     labels=["seq1", "seq2", "seq3", "seq4"], include_distance=False
+    ... ))
+    ((seq4,(seq3,seq1)),seq2);
+    """
     if not matrix.is_symmetric():
         raise ValueError("A symmetric substitution matrix is required")
-    if not matrix.get_alphabet1().extends(sequences[0].get_alphabet()):
-            raise ValueError("The sequences' alphabets do not fit the matrix")
-    for seq in sequences:
+    alphabet = matrix.get_alphabet1()
+    for i, seq in enumerate(sequences):
         if seq.code is None:
-            raise ValueError("sequence code must not be None")
-        dtype = sequences[0].code.dtype
-        if seq.code.dtype != dtype:
+            raise ValueError(f"Code of sequence {i} is 'None'")
+        if not alphabet.extends(seq.get_alphabet()):
             raise ValueError(
-                "The sequence codes must have the same data type "
-                "for each sequence"
+                f"The substitution matrix and sequence {i} have "
+                f"incompatible alphabets"
             )
     
     # Create guide tree

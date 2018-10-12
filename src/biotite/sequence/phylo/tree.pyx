@@ -526,20 +526,19 @@ cdef class TreeNode:
         >>> print(root.to_newick(labels=labels, include_distance=False))
         ((foo,bar),foobar)
         """
-        if labels is not None:
         if self.is_leaf():
             if labels is not None:
                 for label in labels:
-                    if any(x in str for x in a)
-                label = labels[self._index]
-                # Characters that are part of the Newick syntax
-                # are illegal
-                illegal_chars = [",",":",";","(",")"]
-                for char in illegal_chars
-                if char in label:
-                    raise ValueError(
-                        f"Label '{label}' contains illegal character '{char}'"
-                    )
+                    label = labels[self._index]
+                    # Characters that are part of the Newick syntax
+                    # are illegal
+                    illegal_chars = [",",":",";","(",")"]
+                    for char in illegal_chars:
+                        if char in label:
+                            raise ValueError(
+                                f"Label '{label}' contains "
+                                f"illegal character '{char}'"
+                            )
             else:
                 label = str(self._index)
             if include_distance:
