@@ -51,7 +51,7 @@ Preliminary note
 The files used in this tutorial will be stored in a temporary directory.
 The top level package :mod:`biotite` provides functionality to create
 a temporary directory,
-called ``.biotitetemp`` in your current working directory.
+called ``.biotitetemp``, in your current working directory.
 You can either obtain the path to this directory via
 :func:`temp_dir` or directly create an unambiguous file name in this
 directory using :func:`temp_file`.
