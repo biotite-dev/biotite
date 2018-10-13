@@ -64,12 +64,16 @@ class GapSymbol:
 
 def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                    distances=None, guide_tree=None):
-    """
+    r"""
     align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                    distances=None, guide_tree=None)
     
-    Perform a multiple sequence alignment using a simple progressive
+    Perform a multiple sequence alignment using a progressive
     alignment algorithm. [1]_
+
+    Based on pairwise sequence distances a guide tree is constructed.
+    The sequences are progessively aligned according to the tree,
+    following the rule 'Once a gap, always a gap'. 
 
     Parameters
     ----------
@@ -125,11 +129,37 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     The similarity to distance conversion is performed according to the
     following formula:
 
-    .. math:: D_{i,j} = -\ln\left( \frac{ S_{i,j} - S_{i,j}^{rand} }{ S_{i,j} - S_{i,j}^{rand} } \right)
+    .. math:: D_{a,b} = -\ln\left(
+                 \frac
+                    { S_{a,b} - S_{a,b}^{rand} }
+                    { S_{a,b}^{max} - S_{a,b}^{rand} }
+              \right)
 
-    with
+    .. math:: S_{a,b}^{max} = \frac{ S_{a,a} + S_{b,b} }{ 2 }
+    
+    .. math:: S_{a,b}^{rand} = \frac{1}{L_{a,b}}
+              \left(
+                 \sum_{x \in \Omega} \sum_{y \in \Omega}
+                 s_{x,y} \cdot N_a(x) \cdot N_b(y)
+              \right)
+              + N_{a,b}^{open} \cdot p^{open} + N_{a,b}^{ext} \cdot p^{ext}
+    
+    :math:`D_{a,b}` - The distance between the sequences *a* and *b*.
 
-    .. math:: S_{i,j}^{rand} = a
+    :math:`S_{a,b}` - The similarity score between the sequences *a* and *b*.
+
+    :math:`s_{x,y}` - The similarity score between the symbols *x* and *y*.
+
+    :math:`\Omega` - The sequence alphabet.
+
+    :math:`N_a(x)` - Number of occurences of symbol *x* in sequence *a*.
+
+    :math:`N_{a,b}^{open}, N_{a,b}^{ext}` - Number of gap openings/
+    extensions, in the alignment of *a* and *b*.
+
+    :math:`p^{open}, p^{ext}` - The penalty for a gap opening/extension.
+
+    :math:`L_{a,b}` - Number of columns in the alignment of *a* and *b*.
 
     References
     ----------
