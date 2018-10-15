@@ -3,26 +3,41 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["SequenceLogo"]
+__all__ = ["plot_sequence_logo"]
 
 import numpy as np
-from ...visualize import Visualizer
+from ...visualize import set_font_size_in_coord
+from ..alphabet import LetterAlphabet
 from .colorschemes import get_color_scheme
 
-class SequenceLogo(Visualizer):
-    """
-    This class is used for creation of sequence logos. [1]_
 
-    EXPERIMENTAL: Future API changes are probable.
+def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
+    """
+    Create a sequence logo. [1]_
+
+    A sequence logo is visualizes the positional composition and
+    conservation of an alignment encoded in the size of the letters.
+    Each position displays all symbols that are occuring at this
+    positionstacked on each other, with their relative heights depicting
+    their relative frequency.
+    The height of such a stack depicts its conservation.
+    It is the maximum possible Shannon entropy of the alphabet
+    subtracted by the positional entropy.
 
     Parameters
     ----------
+    axes : Axes
+        The axes to draw the logo one.
     alignment : Alignment
         The logo is created based on this alignment.
-    width : float
-        The width of the figure (pixels).
-    height : float
-        The height of the figure (pixels).
+    scheme : str or list of (tuple or str)
+        Either a valid color scheme name
+        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
+        or a list of `matplotlib` compatible colors.
+        The list length must be at least as long as the
+        length of the alphabet used by the sequences.
+    **kwargs
+        Additional `text parameters<https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
     
     References
     ----------
@@ -31,113 +46,73 @@ class SequenceLogo(Visualizer):
        "Sequence logos: a new way to display consensus sequences"
        Nucleic Acids Res, 18, 6097-6100 (1990).
     """
+    from matplotlib.text import Text
+
+    sequences = alignment.sequences
+    alphabet = sequences[0].get_alphabet()
+    for seq in sequences:
+        if seq.get_alphabet() != alphabet:
+            raise ValueError("Alphabets of the sequences in the alignment "
+                             "are not equal")
+    if not isinstance(alphabet, LetterAlphabet):
+        raise TypeError("The sequences' alphabet must be a letter alphabet")
+
+    if scheme is None:
+        colors = get_color_scheme("rainbow", alphabet)
+    elif isinstance(scheme, str):
+        colors = get_color_scheme(scheme, alphabet)
+    else:
+        colors = scheme
     
-    def __init__(self, alignment, width, height):
-        super().__init__()
-        # Check if all sequences share the same alphabet
-        sequences = alignment.sequences
-        self._alphabet = sequences[0].get_alphabet()
-        for seq in sequences:
-            if seq.get_alphabet() != self._alphabet:
-                raise ValueError("Alphabets of the sequences in the alignment "
-                                 "are not equal")
-        
-        trace = alignment.trace
-        self._freq = np.zeros((len(trace), len(self._alphabet)))
-        for i in range(trace.shape[0]):
-            for j in range(trace.shape[1]):
-                index = trace[i,j]
-                if index != -1:
-                    code = sequences[j].code[index]
-                    self._freq[i, code] += 1
-        self._freq = self._freq / np.sum(self._freq, axis=1)[:, np.newaxis]
-        # 0 * log2(0) = 0 -> Convert NaN to 0
-        no_zeros = self._freq != 0
-        pre_entropies = np.zeros(self._freq.shape)
-        pre_entropies[no_zeros] \
-            = self._freq[no_zeros] * np.log2(self._freq[no_zeros])
-        ## 0 * log2(0) = 0 -> Convert NaN to 0
-        #pre_entropies[np.isnan(pre_entropies)] = 0
-        self._entropies = -np.sum(pre_entropies, axis=1)
-        self._max_entropy = np.log2(len(self._alphabet))
-
-        self._width = width
-        self._height = height
-        self._font = None
-        self._colors = get_color_scheme("rainbow", self._alphabet)
+    # 'color' and 'size' property is not passed on to text
+    kwargs.pop("color", None)
+    kwargs.pop("size",  None)
     
-    def set_font(self, font):
-        """
-        Set the font used for the symbols in the logo.
-
-        Parameters
-        ----------
-        font : FontProperties
-            The font that should be used for symbol rendering.
-        """
-        self._font = font
+    frequencies, entropies, max_entropy = _get_entropy(alignment)
+    stack_heights = (max_entropy - entropies)
+    symbols_heights = stack_heights[:, np.newaxis] * frequencies
+    index_order = np.argsort(symbols_heights, axis=1)
+    for i in range(symbols_heights.shape[0]):
+        # Iterate over the alignment columns
+        index_order = np.argsort(symbols_heights)
+        start_height = 0
+        for j in index_order[i]:
+            # Stack the symbols at position on top of the preceeding one
+            height = symbols_heights[i,j]
+            if height > 0:
+                symbol = alphabet.decode(j)
+                text = axes.text(
+                    i+0.5, start_height, symbol,
+                    ha="left", va="bottom", color=colors[j],
+                    # Best results are obtained with this font size
+                    size=1,
+                    **kwargs
+                )
+                text.set_clip_on(True)
+                set_font_size_in_coord(text, width=1, height=height)
+                start_height += height
     
-    def set_color_scheme(self, scheme):
-        """
-        Set the color scheme used for the logo.
+    axes.set_xlim(0.5, len(alignment)+0.5)
+    axes.set_ylim(0, max_entropy)
 
-        Parameters
-        ----------
-        scheme : str or list of (tuple or str)
-            Either a valid color scheme name
-            (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
-            or a list of `matplotlib` compatible colors.
-            The list length must be at least as long as the
-            length of the alphabet used by the sequences.
-        """
-        if isinstance(scheme, str):
-            self._colors = get_color_scheme(scheme, self._alphabet)
-        else:
-            self._colors = scheme
 
-    def generate(self):
-        from matplotlib.patches import Rectangle
-        from matplotlib.text import Text
-        from matplotlib.patheffects import AbstractPathEffect
-
-        class ScaleEffect(AbstractPathEffect):
-            def __init__(self, scale_x, scale_y):
-                self._scale_x = scale_x
-                self._scale_y = scale_y
-
-            def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
-                affine = affine \
-                        .identity() \
-                        .scale(self._scale_x, self._scale_y) \
-                        + affine
-                renderer.draw_path(gc, tpath, affine, rgbFace)
-
-        fig = self.create_figure(size=(self._width, self._height))
-        renderer = fig.canvas.get_renderer()
-        
-        symbol_width = self._width / len(self._entropies)
-        pos_heights = (1 - self._entropies/self._max_entropy) * self._height
-        symbols_heights = pos_heights[:, np.newaxis] * self._freq
-        index_order = np.argsort(symbols_heights, axis=1)
-        for i in range(symbols_heights.shape[0]):
-            index_order = np.argsort(symbols_heights)
-            start_height = 0
-            for j in index_order[i]:
-                height = symbols_heights[i,j]
-                if height > 0:
-                    symbol = self._alphabet.decode(j)
-                    text = Text(i*symbol_width, start_height, symbol,
-                                ha="left", va="bottom", color=self._colors[j],
-                                fontproperties=self._font, figure=fig)
-                    fig.texts.append(text)
-                    # Rescale symbols,
-                    # so that they fit the given width and height
-                    # Scale factor is desired size
-                    # divided by current size
-                    bounds = text.get_window_extent(renderer=renderer).bounds
-                    text.set_path_effects([
-                        ScaleEffect(symbol_width / bounds[2],
-                                    height / bounds[3])
-                    ])
-                    start_height += height
-        return fig
+def _get_entropy(alignment):
+    alphabet = alignment.sequences[0].get_alphabet()
+    trace = alignment.trace
+    sequences = alignment.sequences
+    freq = np.zeros((len(trace), len(alphabet)))
+    for i in range(trace.shape[0]):
+        for j in range(trace.shape[1]):
+            index = trace[i,j]
+            if index != -1:
+                code = sequences[j].code[index]
+                freq[i, code] += 1
+    freq = freq / np.sum(freq, axis=1)[:, np.newaxis]
+    # 0 * log2(0) = 0 -> Convert NaN to 0
+    no_zeros = freq != 0
+    pre_entropies = np.zeros(freq.shape)
+    pre_entropies[no_zeros] \
+        = freq[no_zeros] * np.log2(freq[no_zeros])
+    entropies = -np.sum(pre_entropies, axis=1)
+    max_entropy = np.log2(len(alphabet))
+    return freq, entropies, max_entropy

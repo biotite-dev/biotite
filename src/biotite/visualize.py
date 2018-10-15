@@ -11,7 +11,6 @@ from collections import OrderedDict
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     from matplotlib.transforms import Bbox
-    from matplotlib.patches import Rectangle
     from matplotlib.text import Text
     from matplotlib.patheffects import AbstractPathEffect
 
