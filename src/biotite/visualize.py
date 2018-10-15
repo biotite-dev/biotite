@@ -3,65 +3,73 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Visualizer", "colors"]
+__all__ = ["colors", "set_font_size_in_coord"]
 
 import abc
 from collections import OrderedDict
 
-class Visualizer(metaclass=abc.ABCMeta):
-    """
-    Base class for all classes that are used for `matplotlib` based
-    visualization of bioinformatics objects
-    (sequences, alignments, etc.).
+
+def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
+    from matplotlib.transforms import Bbox
+    from matplotlib.patches import Rectangle
+    from matplotlib.text import Text
+    from matplotlib.patheffects import AbstractPathEffect
+
+    class TextScaler(AbstractPathEffect):
+        def __init__(self, text, width, height, mode):
+            self._text = text
+            self._mode = mode
+            self._width = width
+            self._height = height
+
+        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
+            ax = self._text.axes
+            renderer = ax.get_figure().canvas.get_renderer()
+            bbox = text.get_window_extent(renderer=renderer)
+            bbox = Bbox(ax.transData.inverted().transform(bbox))
+            
+            if self._mode == "proportional":
+                if self._width is None:
+                    # Proportional scaling based on height
+                    scale_y = self._height / bbox.height
+                    scale_x = scale_y
+                elif self._height is None:
+                    # Proportional scaling based on width
+                    scale_x = self._width / bbox.width
+                    scale_y = scale_x
+            elif self._mode == "unlocked":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+            elif self._mode == "minimum":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+                scale = max(scale_x, scale_y)
+                scale_x, scale_y = scale, scale
+            elif self._mode == "maximum":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+                scale = min(scale_x, scale_y)
+                scale_x, scale_y = scale, scale
+
+            affine = affine.identity().scale(scale_x, scale_y) + affine
+            renderer.draw_path(gc, tpath, affine, rgbFace)
     
-    This class merely provides the `create_figure()` method, which is
-    used by child classes to obtain an empty `matplotlib` `Figure` with
-    defined size (specified in pixels).
-
-    Child classes must override the `generate()` method.
-
-    EXPERIMENTAL: Future API changes are probable.
-    """
-
-    def __init__(self):
-        pass
-    
-    def create_figure(self, size, dpi=100):
-        """
-        Obtain an empty `matplotlib` `Figure` with defined size.
-
-        PROTECTED: Do not call from outside.
-        
-        Parameters
-        ----------
-        size : tuple, length=2
-            The size of the figure (x,y) in pixels (rather than inch).
-        dpi : int, optional
-            A custom DPI of the figure. Usually this does not have any
-            effect on the look of the resulting figure.
-        
-        Returns
-        -------
-        figure : Figure
-            An empty figure.
-        """
-        import matplotlib.pyplot as plt
-        return plt.figure(figsize=(size[0]/dpi, size[1]/dpi))
-
-    @abc.abstractmethod
-    def generate(self):
-        """
-        Generate the visualization.
-        
-        Returns
-        -------
-        figure : Figure
-            The generated visualization.
-            When saving the figure as vector graphics using `savefig()`,
-            use ``bbox_inches="tight"``, since otherwise the figure
-            might be truncated. 
-        """
-        pass
+    if mode in ["unlocked", "minimum", "maximum"]:
+        if width is None or height is None:
+            raise TypeError(
+                f"Width and height must be set in '{mode}' mode"
+            )
+    elif mode == "proportional":
+        if  not (width  is None and height is not None) or \
+            not (height is None and width  is not None):
+                raise TypeError(
+                    f"Either width or height must be set in '{mode}' mode"
+                )
+    else:
+        raise ValueError(
+                f"Unknown mode '{mode}'"
+            )
+    text.set_path_effects([TextScaler(text, width, height, mode)])
 
 
 # Biotite themed colors
