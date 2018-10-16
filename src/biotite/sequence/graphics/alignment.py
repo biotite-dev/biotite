@@ -4,7 +4,8 @@
 
 __author__ = "Patrick Kunzmann"
 __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
-           "LetterTypePlotter", "plot_alignment"]
+           "LetterTypePlotter", "plot_alignment",
+           "plot_alignment_similarity_based", "plot_alignment_type_based"]
 
 import abc
 import numpy as np
@@ -48,9 +49,11 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
 
 class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
 
-    def __init__(self, axes, color_symbols=False, font_param=None):
+    def __init__(self, axes, color_symbols=False, 
+                 font_size=None, font_param=None):
         super().__init__(axes)
         self._color_symbols = color_symbols
+        self._font_size = font_size
         self._font_param = font_param if font_param is not None else {}
 
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
@@ -68,9 +71,8 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
         text = self.axes.text(
             bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2,
             symbol, color="black", ha="center", va="center",
-            size=10, **self._font_param)
+            size=self._font_size, **self._font_param)
         text.set_clip_on(True)
-        #set_font_size_in_coord(text, bbox.width, bbox.height, "maximum")
         
         if self._color_symbols:
             box.set_color("None")
@@ -150,11 +152,11 @@ class LetterSimilarityPlotter(LetterPlotter):
     because *a* does also occur in *b*\ :sub:`i`.
     """
 
-    def __init__(self, axes, matrix=None,
-                 color_symbols=False, font_param=None):
+    def __init__(self, axes, matrix=None, color_symbols=False,
+                 font_size=None, font_param=None):
         from matplotlib import cm
 
-        super().__init__(axes, color_symbols, font_param)
+        super().__init__(axes, color_symbols, font_size, font_param)
         if matrix is not None:
             self._matrix = matrix.score_matrix()
         else:
@@ -264,15 +266,13 @@ class LetterTypePlotter(LetterPlotter):
         All sequences in the alignment must have an equal alphabet.
     """
 
-    def __init__(self, axes, color_scheme=None,
-                 color_symbols=False, font_param=None):
-        super().__init__(axes, color_symbols, font_param)
-        alphabet = alignment.sequences[0].get_alphabet()
+    def __init__(self, axes, alphabet, color_scheme=None, color_symbols=False,
+                 font_size=None, font_param=None):
+        super().__init__(axes, color_symbols, font_size, font_param)
         
         if color_scheme is None:
             self._colors = get_color_scheme("rainbow", alphabet)
         if isinstance(color_scheme, str):
-            alphabet = self._alignment.sequences[0].get_alphabet()
             self._colors = get_color_scheme(color_scheme, alphabet)
         else:
             self._colors = color_scheme
@@ -287,14 +287,17 @@ class LetterTypePlotter(LetterPlotter):
 
 
 def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
-                   show_numbers=False, number_font_size=None,
-                   number_font_param=None, number_func=None,
-                   labels=None, label_font_size=None, label_font_param=None,
+                   show_numbers=False, number_size=None, number_functions=None,
+                   labels=None, label_size=None,
+                   show_line_position=False,
                    spacing=1):
         from matplotlib.transforms import Bbox
 
-        if number_func is None:
-            number_func = [lambda x: x + 1] * len(alignment.sequences)
+        number_functions = [lambda x: x + 1] * len(alignment.sequences)
+        if number_functions is not None:
+            for i, func in enumerate(number_functions):
+                if func is not None:
+                    number_functions[i] = func
 
         seq_num = alignment.trace.shape[1]
         seq_len = alignment.trace.shape[0]
@@ -304,51 +307,8 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
         if seq_len % symbols_per_line != 0:
             line_count += 1
 
-        """
-        ### Draw labels ###
-        if self._labels is not None:
-            y = fig_size_y - self._margin
-            y -= self._box_size[1] / 2
-            for i in range(line_count):
-                for j in range(seq_num):
-                    label = self._labels[j]
-                    text = Text(self._margin, y, label,
-                                color="black", ha="left", va="center",
-                                size=self._label_font_size, figure=fig,
-                                fontproperties=self._label_font)
-                    fig.texts.append(text)
-                    y -= self._box_size[1]
-                y -= self._spacing
-        """
-        
-        """
-        ### Draw numbers  ###
-        if self._show_numbers:
-            y = fig_size_y - self._margin
-            y -= self._box_size[1] / 2
-            for i in range(line_count):
-                for j in range(seq_num):
-                    if i == line_count-1:
-                        # Last line -> get number of last column in trace
-                        trace_pos = len(self._alignment.trace) -1
-                    else:
-                        trace_pos = (i+1) * self._symbols_per_line -1
-                    seq_index = self._get_last_real_index(self._alignment,
-                                                          trace_pos, j)
-                    # if -1 -> terminal gap
-                    # -> skip number for this sequence in this line
-                    if seq_index != -1:
-                        number = self._number_func[j](seq_index)
-                        text = Text(fig_size_x - self._margin, y, str(number),
-                                    color="black", ha="right", va="center",
-                                    size=self._number_font_size, figure=fig,
-                                    fontproperties=self._number_font)
-                        fig.texts.append(text)
-                    y -= self._box_size[1]
-                y -= self._spacing
-        """
 
-        ### Draw symbols in boxes ###
+        ### Draw symbols ###
         x = 0
         y = 0
         y_start = 0
@@ -367,6 +327,147 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
             else:
                 x += 1
         
+        ### Draw labels ###
+        ticks = []
+        tick_labels = []
+        if labels is not None:
+            # Labels at center height of each line of symbols -> 0.5
+            y = 0.5
+            for i in range(line_count):
+                for j in range(seq_num):
+                    ticks.append(y)
+                    tick_labels.append(labels[j])
+                    y += 1
+                y += spacing
+        axes.set_yticks(ticks)
+        axes.set_yticklabels(tick_labels)
+        
+        ### Draw numbers  ###
+        # Create twin to allow different tick labels on right side
+        number_axes = axes.twinx()
+        ticks = []
+        tick_labels = []
+        if show_numbers:
+            # Numbers at center height of each line of symbols -> 0.5
+            y = 0.5
+            for i in range(line_count):
+                for j in range(seq_num):
+                    if i == line_count-1:
+                        # Last line -> get number of last column in trace
+                        trace_pos = len(alignment.trace) -1
+                    else:
+                        trace_pos = (i+1) * symbols_per_line -1
+                    seq_index = _get_last_valid_index(
+                        alignment, trace_pos, j
+                    )
+                    # if -1 -> terminal gap
+                    # -> skip number for this sequence in this line
+                    if seq_index != -1:
+                        # Convert sequence index to position
+                        # (default index + 1)
+                        number = number_functions[j](seq_index)
+                        ticks.append(y)
+                        tick_labels.append(str(number))
+                    y += 1
+                y += spacing
+        number_axes.set_yticks(ticks)
+        number_axes.set_yticklabels(tick_labels)
+
+
         axes.set_xlim(0, symbols_per_line)
         # y-axis starts from top
-        axes.set_ylim(seq_num*line_count + spacing*(line_count-1), 0)
+        lim = seq_num*line_count + spacing*(line_count-1)
+        axes.set_ylim(lim, 0)
+        number_axes.set_ylim(lim, 0)
+        axes.set_frame_on(False)
+        number_axes.set_frame_on(False)
+        # remove ticks and set label and number size
+        axes.yaxis.set_tick_params(
+            left=False, right=False, labelsize=label_size
+        )
+        number_axes.yaxis.set_tick_params(
+            left=False, right=False, labelsize=number_size
+        )
+        
+        if show_line_position:
+            axes.xaxis.set_tick_params(
+                top=False, bottom=True, labeltop=False, labelbottom=True
+            )
+        else:
+            axes.xaxis.set_tick_params(
+                top=False, bottom=False, labeltop=False, labelbottom=False
+            )
+
+
+def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
+                                    show_numbers=False, number_size=None,
+                                    number_functions=None,
+                                    labels=None, label_size=None,
+                                    show_line_position=False,
+                                    spacing=1,
+                                    color=None, cmap=None, matrix=None,
+                                    color_symbols=False,
+                                    symbol_size=None, symbol_param=None):
+    symbol_plotter = LetterSimilarityPlotter(
+        axes, matrix=matrix, font_size=symbol_size, font_param=symbol_param,
+        color_symbols=color_symbols
+    )
+    if color is not None or cmap is not None:
+        symbol_plotter.set_color(color=color, cmap=cmap)
+    plot_alignment(
+        axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
+        symbols_per_line=symbols_per_line,
+        show_numbers=show_numbers, number_size=number_size,
+        number_functions=number_functions,
+        labels=labels, label_size=label_size,
+        show_line_position=show_line_position,
+        spacing=spacing
+    )
+
+
+def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
+                              show_numbers=False, number_size=None,
+                              number_functions=None,
+                              labels=None, label_size=None,
+                              show_line_position=False,
+                              spacing=1,
+                              color_scheme=None, color_symbols=False,
+                              symbol_size=None, symbol_param=None):
+    alphabet = alignment.sequences[0].get_alphabet()
+    symbol_plotter = LetterTypePlotter(
+        axes, alphabet, font_size=symbol_size, font_param=symbol_param,
+        color_symbols=color_symbols, color_scheme=color_scheme
+    )
+    plot_alignment(
+        axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
+        symbols_per_line=symbols_per_line,
+        show_numbers=show_numbers, number_size=number_size,
+        number_functions=number_functions,
+        labels=labels, label_size=label_size,
+        show_line_position=show_line_position,
+        spacing=spacing
+    )
+
+
+def _get_last_valid_index(alignment, column_i, seq_i):
+    """
+    Find the last trace value that belongs to a valid sequence index
+    (no gap -> no -1) up to the specified column
+    """
+    index_found = False
+    while not index_found:
+        if column_i == -1:
+            # Iterated from column_i back to beyond the beginning
+            # and no index has been found
+            # -> Terminal gap
+            # -> First symbol of sequence has not occured yet
+            # -> return -1
+            index = -1
+            index_found = True
+        else:
+            index = alignment.trace[column_i, seq_i]
+            if index != -1:
+                index_found = True
+        column_i -= 1
+    return index
+
