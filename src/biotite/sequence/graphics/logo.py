@@ -37,7 +37,7 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
     **kwargs
-        Additional `text parameters<https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
+        Additional `text parameters <https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
     
     References
     ----------
