@@ -153,16 +153,16 @@ for i in range(len(trace)-1, -1, -1):
 alignment.trace = alignment.trace[start_index:stop_index]
 
 matrix = align.SubstitutionMatrix.std_protein_matrix()
-visualizer = graphics.AlignmentSimilarityVisualizer(alignment, matrix)
+fig = plt.figure(figsize=(8.0, 15))
+ax = fig.add_subplot(111)
 # The alignment is quite long
-# -> Reduce font and box size to reduce figure size
-visualizer.set_alignment_properties(
-    box_size=(8,14), symbols_per_line=80, font_size=6
+# -> Reduce font size to reduce figure size
+graphics.plot_alignment_similarity_based(
+    ax, alignment, matrix=matrix, symbols_per_line=80, labels=names,
+    show_numbers=True,
+    label_size=10, number_size=10, symbol_size=6,
+    color=biotite.colors["orange"]
 )
-visualizer.add_labels(names, font_size=10, size=80)
-visualizer.add_location_numbers(size=40, font_size=10)
-visualizer.set_color(color=biotite.colors["orange"])
-visualizer.set_margin(5.0)
-figure = visualizer.generate()
+fig.tight_layout()
 
 plt.show()

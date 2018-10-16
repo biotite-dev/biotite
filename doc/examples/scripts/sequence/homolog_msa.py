@@ -57,12 +57,14 @@ for i in range(len(gapped_seqs)):
 # Visualize the first 200 columns of the alignment
 # using AlignmentSymbolVisualizer
 # Reorder alignments to reflect sequence distance
+
+fig = plt.figure(figsize=(8.0, 8.0))
+ax = fig.add_subplot(111)
 order = app.get_alignment_order()
-vis = graphics.AlignmentSymbolVisualizer(alignment[:200, order.tolist()])
-vis.add_labels(labels=[hits[i] for i in order])
-vis.add_location_numbers()
-vis.set_alignment_properties(symbols_per_line=40)
-# Use Clustal X color scheme
-vis.set_color_scheme("clustalx")
-figure = vis.generate()
+graphics.plot_alignment_type_based(
+    ax, alignment[:200, order.tolist()], labels=[hits[i] for i in order],
+    show_numbers=True, color_scheme="clustalx"
+)
+fig.tight_layout()
+
 plt.show()
