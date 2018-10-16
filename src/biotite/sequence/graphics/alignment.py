@@ -291,112 +291,112 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
                    labels=None, label_size=None,
                    show_line_position=False,
                    spacing=1):
-        from matplotlib.transforms import Bbox
+    from matplotlib.transforms import Bbox
 
-        number_functions = [lambda x: x + 1] * len(alignment.sequences)
-        if number_functions is not None:
-            for i, func in enumerate(number_functions):
-                if func is not None:
-                    number_functions[i] = func
+    number_functions = [lambda x: x + 1] * len(alignment.sequences)
+    if number_functions is not None:
+        for i, func in enumerate(number_functions):
+            if func is not None:
+                number_functions[i] = func
 
-        seq_num = alignment.trace.shape[1]
-        seq_len = alignment.trace.shape[0]
-        line_count = seq_len // symbols_per_line
-        # Only extend line count by 1 if there is a remainder
-        # (remaining symbols)
-        if seq_len % symbols_per_line != 0:
-            line_count += 1
-
-
-        ### Draw symbols ###
-        x = 0
-        y = 0
-        y_start = 0
-        line_pos = 0
-        for i in range(seq_len):
-            y = y_start
-            for j in range(seq_num):
-                bbox = Bbox([[x,y],[x+1,y+1]])
-                symbol_plotter.plot_symbol(bbox, alignment, i, j)
-                y += 1
-            line_pos += 1
-            if line_pos >= symbols_per_line:
-                line_pos = 0
-                x = 0
-                y_start += seq_num + spacing
-            else:
-                x += 1
-        
-        ### Draw labels ###
-        ticks = []
-        tick_labels = []
-        if labels is not None:
-            # Labels at center height of each line of symbols -> 0.5
-            y = 0.5
-            for i in range(line_count):
-                for j in range(seq_num):
-                    ticks.append(y)
-                    tick_labels.append(labels[j])
-                    y += 1
-                y += spacing
-        axes.set_yticks(ticks)
-        axes.set_yticklabels(tick_labels)
-        
-        ### Draw numbers  ###
-        # Create twin to allow different tick labels on right side
-        number_axes = axes.twinx()
-        ticks = []
-        tick_labels = []
-        if show_numbers:
-            # Numbers at center height of each line of symbols -> 0.5
-            y = 0.5
-            for i in range(line_count):
-                for j in range(seq_num):
-                    if i == line_count-1:
-                        # Last line -> get number of last column in trace
-                        trace_pos = len(alignment.trace) -1
-                    else:
-                        trace_pos = (i+1) * symbols_per_line -1
-                    seq_index = _get_last_valid_index(
-                        alignment, trace_pos, j
-                    )
-                    # if -1 -> terminal gap
-                    # -> skip number for this sequence in this line
-                    if seq_index != -1:
-                        # Convert sequence index to position
-                        # (default index + 1)
-                        number = number_functions[j](seq_index)
-                        ticks.append(y)
-                        tick_labels.append(str(number))
-                    y += 1
-                y += spacing
-        number_axes.set_yticks(ticks)
-        number_axes.set_yticklabels(tick_labels)
+    seq_num = alignment.trace.shape[1]
+    seq_len = alignment.trace.shape[0]
+    line_count = seq_len // symbols_per_line
+    # Only extend line count by 1 if there is a remainder
+    # (remaining symbols)
+    if seq_len % symbols_per_line != 0:
+        line_count += 1
 
 
-        axes.set_xlim(0, symbols_per_line)
-        # y-axis starts from top
-        lim = seq_num*line_count + spacing*(line_count-1)
-        axes.set_ylim(lim, 0)
-        number_axes.set_ylim(lim, 0)
-        axes.set_frame_on(False)
-        number_axes.set_frame_on(False)
-        # remove ticks and set label and number size
-        axes.yaxis.set_tick_params(
-            left=False, right=False, labelsize=label_size
-        )
-        number_axes.yaxis.set_tick_params(
-            left=False, right=False, labelsize=number_size
-        )
-        
-        if show_line_position:
-            axes.xaxis.set_tick_params(
-                top=False, bottom=True, labeltop=False, labelbottom=True
-            )
+    ### Draw symbols ###
+    x = 0
+    y = 0
+    y_start = 0
+    line_pos = 0
+    for i in range(seq_len):
+        y = y_start
+        for j in range(seq_num):
+            bbox = Bbox([[x,y],[x+1,y+1]])
+            symbol_plotter.plot_symbol(bbox, alignment, i, j)
+            y += 1
+        line_pos += 1
+        if line_pos >= symbols_per_line:
+            line_pos = 0
+            x = 0
+            y_start += seq_num + spacing
         else:
-            axes.xaxis.set_tick_params(
-                top=False, bottom=False, labeltop=False, labelbottom=False
-            )
+            x += 1
+    
+    ### Draw labels ###
+    ticks = []
+    tick_labels = []
+    if labels is not None:
+        # Labels at center height of each line of symbols -> 0.5
+        y = 0.5
+        for i in range(line_count):
+            for j in range(seq_num):
+                ticks.append(y)
+                tick_labels.append(labels[j])
+                y += 1
+            y += spacing
+    axes.set_yticks(ticks)
+    axes.set_yticklabels(tick_labels)
+    
+    ### Draw numbers  ###
+    # Create twin to allow different tick labels on right side
+    number_axes = axes.twinx()
+    ticks = []
+    tick_labels = []
+    if show_numbers:
+        # Numbers at center height of each line of symbols -> 0.5
+        y = 0.5
+        for i in range(line_count):
+            for j in range(seq_num):
+                if i == line_count-1:
+                    # Last line -> get number of last column in trace
+                    trace_pos = len(alignment.trace) -1
+                else:
+                    trace_pos = (i+1) * symbols_per_line -1
+                seq_index = _get_last_valid_index(
+                    alignment, trace_pos, j
+                )
+                # if -1 -> terminal gap
+                # -> skip number for this sequence in this line
+                if seq_index != -1:
+                    # Convert sequence index to position
+                    # (default index + 1)
+                    number = number_functions[j](seq_index)
+                    ticks.append(y)
+                    tick_labels.append(str(number))
+                y += 1
+            y += spacing
+    number_axes.set_yticks(ticks)
+    number_axes.set_yticklabels(tick_labels)
+
+
+    axes.set_xlim(0, symbols_per_line)
+    # Y-axis starts from top
+    lim = seq_num*line_count + spacing*(line_count-1)
+    axes.set_ylim(lim, 0)
+    number_axes.set_ylim(lim, 0)
+    axes.set_frame_on(False)
+    number_axes.set_frame_on(False)
+    # Remove ticks and set label and number size
+    axes.yaxis.set_tick_params(
+        left=False, right=False, labelsize=label_size
+    )
+    number_axes.yaxis.set_tick_params(
+        left=False, right=False, labelsize=number_size
+    )
+    
+    if show_line_position:
+        axes.xaxis.set_tick_params(
+            top=False, bottom=True, labeltop=False, labelbottom=True
+        )
+    else:
+        axes.xaxis.set_tick_params(
+            top=False, bottom=False, labeltop=False, labelbottom=False
+        )
 
 
 def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
