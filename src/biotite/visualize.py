@@ -105,10 +105,10 @@ def draw_adaptive_arrow(axes, x, y, dx, dy,
         # Transfrom back to data coordinates for plotting
         arrow_box = axes.transData.inverted().transform_bbox(arrow_box_display)
         head_length = arrow_box.width
-        if head_length > dx:
+        if head_length > np.abs(dx):
             # If the head would be longer than the entire arrow,
             # only draw the arrow head with reduced length
-            head_length = dx
+            head_length = np.abs(dx)
         if not draw_head:
             head_length = 0
             head_width = tail_width
