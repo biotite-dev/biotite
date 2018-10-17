@@ -3,10 +3,11 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord"]
+__all__ = ["colors", "set_font_size_in_coord", "draw_adaptive_arrow"]
 
 import abc
 from collections import OrderedDict
+import numpy as np
 
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
@@ -69,6 +70,57 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
                 f"Unknown mode '{mode}'"
             )
     text.set_path_effects([TextScaler(text, width, height, mode)])
+
+
+def draw_adaptive_arrow(axes, x, y, dx, dy,
+                        tail_width, head_width, head_ratio, draw_head=True,
+                        shape="full", **kwargs):
+    from matplotlib.patches import FancyArrow
+    from matplotlib.transforms import Bbox
+
+    arrow = None
+    
+    def on_draw(event):
+        """
+        Callback function that is called, every time the figure is resized
+        Removes the current arrow and replaces it with an arrow with
+        recalcualted head
+        """
+        nonlocal tail_width
+        nonlocal head_width
+        nonlocal arrow
+        if arrow is not None:
+            arrow.remove()
+        # Create a head that looks equal, independent of the aspect
+        # ratio
+        # Hence, a transformation into display coordinates has to be
+        # performed to fix the head width to length ratio
+        # In this transformation only the height and width are
+        # interesting, absolute coordinates are not needed
+        # -> box origin at (0,0)
+        arrow_box = Bbox([(0,0),(0,head_width)])
+        arrow_box_display = axes.transData.transform_bbox(arrow_box)
+        head_length_display = np.abs(arrow_box_display.height * head_ratio)
+        arrow_box_display.x1 = arrow_box_display.x0 + head_length_display
+        # Transfrom back to data coordinates for plotting
+        arrow_box = axes.transData.inverted().transform_bbox(arrow_box_display)
+        head_length = arrow_box.width
+        if head_length > dx:
+            # If the head would be longer than the entire arrow,
+            # only draw the arrow head with reduced length
+            head_length = dx
+        if not draw_head:
+            head_length = 0
+            head_width = tail_width
+        arrow = FancyArrow(
+            x, y, dx, dy,
+            width=tail_width, head_width=head_width, head_length=head_length,
+            length_includes_head=True, **kwargs)
+        axes.add_patch(arrow)
+    
+    # Register callback function
+    axes.get_figure().canvas.mpl_connect("resize_event", on_draw)
+    
 
 
 # Biotite themed colors
