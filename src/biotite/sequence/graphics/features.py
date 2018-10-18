@@ -7,14 +7,14 @@ __all__ = ["plot_feature_map"]
 
 import copy
 import numpy as np
-from ...visualize import colors
+from ...visualize import colors, AdaptiveFancyArrow
 from ..annotation import Annotation, Feature, Location
 
 
 def plot_feature_map(axes, annotation, loc_range=None,
                      multi_line=True, symbols_per_line=1000,
                      show_numbers=False, number_size=None, line_width=0.05,
-                     show_line_position=False, spacing=0.5, draw_functions=None,
+                     show_line_position=False, spacing=0.25, draw_functions=None,
                      style_param=None):
     from matplotlib.transforms import Bbox
     from matplotlib.patches import Rectangle
@@ -42,7 +42,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
     if loc_range_length % symbols_per_line != 0:
         line_count += 1
 
-    
+
     ### Draw lines ###
     remaining_symbols = loc_range_length
     y = 0.5
@@ -156,35 +156,37 @@ def draw_gene(axes, feature, bbox, loc_index, style_param):
 
 
 def _draw_coding(axes, feature, bbox, loc_index, style_param, label_func):
-    from matplotlib.patches import FancyArrow
-
-    head_height = 0.8*bbox.height
-    tail_height = 0.5*bbox.height
-    head_width = 0.4*bbox.height
+    head_width = 0.8*bbox.height
+    tail_width = 0.5*bbox.height
 
     loc = feature.locs[loc_index]
-    tail_x = bbox.x0
-    arrow_y = bbox.y0 + bbox.height/2
-    dx = bbox.width
+    y = bbox.y0 + bbox.height/2
     dy = 0
-    if head_width > bbox.width:
-        head_width = bbox.width
-    if loc.strand == Location.Strand.REVERSE:
-        tail_x += dx
-        dx = -dx
-    if loc.strand == Location.Strand.FORWARD \
-        and loc.defect & Location.Defect.MISS_RIGHT:
-            head_width = 0
-            head_height = tail_height
-    if loc.strand == Location.Strand.REVERSE \
-        and loc.defect & Location.Defect.MISS_LEFT:
-            head_width = 0
-            head_height = tail_height
-    arrow = FancyArrow(tail_x, arrow_y, dx, dy,
-                       width=tail_height, head_width=head_height,
-                       head_length=head_width, length_includes_head=True,
-                       color=colors["dimgreen"], linewidth=0)
-    axes.add_patch(arrow)
+    if loc.strand == Location.Strand.FORWARD:
+        x = bbox.x0
+        dx = bbox.width
+    else:
+        x = bbox.x1
+        dx = -bbox.width
+    
+    if  (
+            loc.strand == Location.Strand.FORWARD 
+            and loc.defect & Location.Defect.MISS_RIGHT
+        ) or (
+            loc.strand == Location.Strand.REVERSE 
+            and loc.defect & Location.Defect.MISS_LEFT
+        ):
+            # If the feature extends into the prevoius or next line
+            # do not draw an arrow head
+            draw_head = False
+    else:
+            draw_head = True
+    
+    # Create head with 90 degrees tip -> head width/length ratio = 1/2
+    axes.add_patch(AdaptiveFancyArrow(
+        x, y, dx, dy, tail_width, head_width, head_ratio=0.5,
+        draw_head=draw_head, color=colors["dimgreen"], linewidth=0
+    ))
 
     label = label_func(feature)
     if label is not None:

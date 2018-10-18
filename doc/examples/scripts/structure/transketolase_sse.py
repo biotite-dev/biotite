@@ -26,19 +26,18 @@ import biotite.database.entrez as entrez
 import biotite.application.dssp as dssp
 
 # All 'FeatureMap' draw functions have the signature
-# draw(feature, x, y, width, height, figure, loc_index, style_dict)
-def draw_secondary_strucure(feature, x, y, width, height,
-                            figure, loc_index, style_dict):
+# draw(axes, feature, bbox, loc_index, style_param)
+def draw_secondary_strucure(axes, feature, bbox, loc_index, style_param):
     if feature.qual["sec_str_type"] == "helix":
         _draw_helix(
-            feature, x, y, width, height, figure, loc_index, style_dict
+            axes, feature, bbox, loc_index, style_param
         )
     if feature.qual["sec_str_type"] == "sheet":
         _draw_sheet(
-            feature, x, y, width, height, figure, loc_index, style_dict
+            axes, feature, bbox, loc_index, style_param
         )
 
-def _draw_helix(feature, x, y, width, height, figure, loc_index, style_dict):
+def _draw_helix(axes, feature, bbox, loc_index, style_param):
     from matplotlib.lines import Line2D
     from matplotlib.patches import Rectangle
 
@@ -50,54 +49,57 @@ def _draw_helix(feature, x, y, width, height, figure, loc_index, style_dict):
     y_val = (-0.4*np.sin(x_val) + 1) / 2
     
     # Transform values for correct location in feature map
-    x_val *= width / (n_turns * 2*np.pi)
-    x_val += x
-    y_val *= height
-    y_val += y
+    x_val *= bbox.width / (n_turns * 2*np.pi)
+    x_val += bbox.x0
+    y_val *= bbox.height
+    y_val += bbox.y0
     
     # Draw white background to overlay the guiding line
-    background = Rectangle((x,y), width, height, color="white", linewidth=0)
-    figure.patches.append(background)
-    helix = Line2D(
+    background = Rectangle(
+        bbox.p0, bbox.width, bbox.height, color="white", linewidth=0
+    )
+    axes.add_patch(background)
+    axes.plot(
         x_val, y_val, linewidth=2, color=biotite.colors["dimgreen"]
     )
-    figure.lines.append(helix)
 
-def _draw_sheet(feature, x, y, width, height, figure, loc_index, style_dict):
-    from matplotlib.patches import FancyArrow
+def _draw_sheet(axes, feature, bbox, loc_index, style_param):
+    head_width = 0.8*bbox.height
+    tail_width = 0.5*bbox.height
 
-    head_height = 0.8*height
-    tail_height = 0.5*height
-    head_width = 0.4*height
-
-    tail_x = x
-    arrow_y = y + height/2
-    dx = width
-    dy = 0
-    if head_width > width:
-        # If fteaure is to short, draw only narrowed head
-        head_width = width
     loc = feature.locs[loc_index]
-    if loc.defect & seq.Location.Defect.MISS_RIGHT:
-            head_width = 0
-            head_height = tail_height
-
-    arrow = FancyArrow(tail_x, arrow_y, dx, dy,
-                       width=tail_height, head_width=head_height,
-                       head_length=head_width, length_includes_head=True,
-                       color=biotite.colors["orange"], linewidth=0)
-    figure.patches.append(arrow)
+    x = bbox.x0
+    y = bbox.y0 + bbox.height/2
+    dx = bbox.width
+    dy = 0
+    
+    if  loc.defect & seq.Location.Defect.MISS_RIGHT:
+        # If the feature extends into the prevoius or next line
+        # do not draw an arrow head
+        draw_head = False
+    else:
+        draw_head = True
+    
+    # Create head with 90 degrees tip -> head width/length ratio = 1/2
+    axes.add_patch(biotite.AdaptiveFancyArrow(
+        x, y, dx, dy, tail_width, head_width, head_ratio=0.5,
+        draw_head=draw_head, color=biotite.colors["orange"], linewidth=0
+    ))
 
 # Test our drawing functions with example annotation
 annotation = seq.Annotation([
     seq.Feature("SecStr", [seq.Location(10, 40)], {"sec_str_type" : "helix"}),
     seq.Feature("SecStr", [seq.Location(60, 90)], {"sec_str_type" : "sheet"}),
 ])
-feature_map = graphics.FeatureMap(
-    annotation, loc_range=(1,100), multi_line=False
+
+fig = plt.figure(figsize=(8.0, 0.8))
+ax = fig.add_subplot(111)
+graphics.plot_feature_map(
+    ax, annotation, multi_line=False, loc_range=(1,100),
+    # Register our drawing function for the 'SecStr' feature type
+    draw_functions={"SecStr": draw_secondary_strucure}
 )
-feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-figure = feature_map.generate()
+fig.tight_layout()
 
 ########################################################################
 # Now let us do some serious application.
@@ -114,13 +116,17 @@ gb_file.read(file_name)
 annotation = gb_file.get_annotation(include_only=["SecStr"])
 # Length of the sequence
 length = int(gb_file.get_locus()["length"])
-# 'loc_range' takes exclusive stop -> length+1 is required
-feature_map = graphics.FeatureMap(
-    annotation, line_length=150, loc_range=(1,length+1)
+
+fig = plt.figure(figsize=(8.0, 3.0))
+ax = fig.add_subplot(111)
+graphics.plot_feature_map(
+    ax, annotation, symbols_per_line=150,
+    show_numbers=True, show_line_position=True,
+    # 'loc_range' takes exclusive stop -> length+1 is required
+    loc_range=(1,length+1),
+    draw_functions={"SecStr": draw_secondary_strucure}
 )
-feature_map.add_location_numbers(size=50)
-feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-figure = feature_map.generate()
+fig.tight_layout()
 
 ########################################################################
 # Another (more complicated) approach is the creation of an `Annotation`
@@ -208,12 +214,14 @@ def visualize_secondary_structure(sse, first_id):
     # Add last secondary structure element to annotation
     _add_sec_str(annotation, curr_start+first_id, i-1+first_id, curr_sse)
     
-    feature_map = graphics.FeatureMap(
-        annotation, line_length=150, loc_range=(1,length+1)
+    fig = plt.figure(figsize=(8.0, 3.0))
+    ax = fig.add_subplot(111)
+    graphics.plot_feature_map(
+        ax, annotation, symbols_per_line=150, loc_range=(1,length+1),
+        show_numbers=True, show_line_position=True,
+        draw_functions={"SecStr": draw_secondary_strucure}
     )
-    feature_map.add_location_numbers(size=50)
-    feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-    return feature_map.generate()
+    fig.tight_layout()
 
 # Visualize seconday structure array
 # Sine the residues may not start at 1,
