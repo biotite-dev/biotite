@@ -78,7 +78,14 @@ try:
     from matplotlib.patheffects import AbstractPathEffect
 
     class AdaptiveFancyArrow(FancyArrow):
-
+        """
+        A `FancyArrow` with fixed head shape.
+        The length of the head is proportional to the width the head
+        in display coordinates.
+        If the head length is longer than the length of the entire
+        arrow, the head length is limited to the arrow length.
+        """
+        
         def __init__(self, x, y, dx, dy,
                      tail_width, head_width, head_ratio, draw_head=True,
                      shape="full", **kwargs):
@@ -93,9 +100,25 @@ try:
             self.set_path_effects(
                 [_ArrowHeadCorrect(self, head_ratio, draw_head)]
             )
+        
+        # Override to replace docstring
+        # Removes warning:
+        # unknown document: /tutorials/intermediate/constrainedlayout_guide
+        def get_in_layout(self):
+            """
+            """
+            return super().get_in_layout()
+        def set_in_layout(self, in_layout):
+            """
+            """
+            return super().set_in_layout(in_layout)
     
 
     class _ArrowHeadCorrect(AbstractPathEffect):
+        """
+        Updates the arrow head length every time the arrow is rendered
+        """
+
         def __init__(self, arrow, head_ratio, draw_head):
             self._arrow = arrow
             self._head_ratio = head_ratio
