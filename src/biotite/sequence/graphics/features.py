@@ -3,9 +3,12 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["plot_feature_map"]
+__all__ = ["plot_feature_map", "FeaturePlotter", "MiscFeaturePlotter",
+           "CodingPlotter", "PromoterPlotter", "TerminatorPlotter",
+           "RBSPlotter"]
 
 import copy
+import abc
 import numpy as np
 from ...visualize import colors, AdaptiveFancyArrow
 from ..annotation import Annotation, Feature, Location
@@ -30,10 +33,15 @@ def plot_feature_map(axes, annotation, loc_range=None,
         # Line length covers the entire location range
         symbols_per_line = loc_range_length
     
-    drawfunc = copy.copy(DRAW_FUNCTIONS)
+    drawfunc = [
+        PromoterPlotter(),
+        TerminatorPlotter(),
+        RBSPlotter(),
+        CodingPlotter(),
+        MiscFeaturePlotter()
+    ]
     if draw_functions is not None:
-        for annot_type, func in draw_functions.items():
-            drawfunc[annot_type] = func
+        drawfunc = list(draw_functions) + drawfunc
 
     style_param = {} if style_param is None else style_param
 
@@ -69,10 +77,14 @@ def plot_feature_map(axes, annotation, loc_range=None,
             line_start_loc : line_start_loc + symbols_per_line
         ]
         for feature in annotation_for_line:
-            key = feature.key
-            if key == "regulatory":
-                key = feature.qual["regulatory_class"]
-            if key in drawfunc and drawfunc[key] is not None:
+            plotter = None
+            # Identify fitting plotter
+            for potentail_plotter in drawfunc:
+                if potentail_plotter.matches(feature):
+                    # Take first fitting plotter in list
+                    plotter = potentail_plotter
+                    break
+            if plotter is not None:
                 for i in range(len(feature.locs)):
                     loc = feature.locs[i]
                     loc_len = loc.last - loc.first + 1
@@ -83,7 +95,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
                     width = loc_len
                     height = 1
                     bbox = Bbox.from_bounds(x, y, width, height)
-                    drawfunc[key](
+                    plotter.draw(
                         axes, feature, bbox, loc_index=i,
                         style_param=style_param
                     )
@@ -135,152 +147,192 @@ def plot_feature_map(axes, annotation, loc_range=None,
         )
 
 
-def draw_cds(axes, feature, bbox, loc_index, style_param):
-    def label_func(feature):
-        if "product" not in feature.qual:
-            return None
-        elif feature.qual["product"] == "hypothetical protein":
-            return None
+class FeaturePlotter(metaclass=abc.ABCMeta):
+
+    def __init__(self):
+        pass
+
+    @abc.abstractmethod
+    def matches(self, feature):
+        pass
+    
+    @abc.abstractmethod
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+        pass
+
+
+class CodingPlotter(FeaturePlotter):
+    
+    def __init__(self, tail_width=0.5, head_width=0.8):
+        self._tail_width = tail_width
+        self._head_width = head_width
+
+    def matches(self, feature):
+        if feature.key in ["CDS", "gene"]:
+            return True
         else:
-            return feature.qual["product"]
-    _draw_coding(axes, feature, bbox, loc_index, style_param, label_func)
-
-
-def draw_gene(axes, feature, bbox, loc_index, style_param):
-    def label_func(feature):
-        if  "gene" not in feature.qual:
-            return None
+            return False
+        
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+        loc = feature.locs[loc_index]
+        y = bbox.y0 + bbox.height/2
+        dy = 0
+        if loc.strand == Location.Strand.FORWARD:
+            x = bbox.x0
+            dx = bbox.width
         else:
-            return feature.qual["gene"]
-    _draw_coding(axes, feature, bbox, loc_index, style_param, label_func)
+            x = bbox.x1
+            dx = -bbox.width
+        
+        if  (
+                loc.strand == Location.Strand.FORWARD 
+                and loc.defect & Location.Defect.MISS_RIGHT
+            ) or (
+                loc.strand == Location.Strand.REVERSE 
+                and loc.defect & Location.Defect.MISS_LEFT
+            ):
+                # If the feature extends into the prevoius or next line
+                # do not draw an arrow head
+                draw_head = False
+        else:
+                draw_head = True
+        
+        # Create head with 90 degrees tip -> head width/length ratio = 1/2
+        axes.add_patch(AdaptiveFancyArrow(
+            x, y, dx, dy, self._tail_width, self._head_width, head_ratio=0.5,
+            draw_head=draw_head, color=colors["dimgreen"], linewidth=0
+        ))
+
+        if feature.key == "CDS":
+            if "product" not in feature.qual:
+                label = None
+            elif feature.qual["product"] == "hypothetical protein":
+                label = None
+            else:
+                label = feature.qual["product"]
+        elif feature.key == "gene":
+            if  "gene" not in feature.qual:
+                label = None
+            else:
+                label = feature.qual["gene"]
+        
+        if label is not None:
+            center_x = bbox.x0 + bbox.width/2
+            center_y = bbox.y0 + bbox.height/2
+            axes.text(
+                center_x, center_y, label, color="black",
+                ha="center", va="center", size=11)
 
 
-def _draw_coding(axes, feature, bbox, loc_index, style_param, label_func):
-    head_width = 0.8*bbox.height
-    tail_width = 0.5*bbox.height
-
-    loc = feature.locs[loc_index]
-    y = bbox.y0 + bbox.height/2
-    dy = 0
-    if loc.strand == Location.Strand.FORWARD:
-        x = bbox.x0
-        dx = bbox.width
-    else:
-        x = bbox.x1
-        dx = -bbox.width
+class MiscFeaturePlotter(FeaturePlotter):
     
-    if  (
-            loc.strand == Location.Strand.FORWARD 
-            and loc.defect & Location.Defect.MISS_RIGHT
-        ) or (
-            loc.strand == Location.Strand.REVERSE 
-            and loc.defect & Location.Defect.MISS_LEFT
-        ):
-            # If the feature extends into the prevoius or next line
-            # do not draw an arrow head
-            draw_head = False
-    else:
-            draw_head = True
+    def __init__(self, height=0.4):
+        self._height = height
+
+    def matches(self, feature):
+        return True
+        
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+        from matplotlib.patches import Rectangle
+
+        rect = Rectangle(
+            (bbox.x0, bbox.y0 + bbox.height/2 * (1-self._height)),
+            bbox.width, bbox.height*self._height,
+            color="black", linewidth=0
+        )
+        axes.add_patch(rect)
+
+class PromoterPlotter(FeaturePlotter):
     
-    # Create head with 90 degrees tip -> head width/length ratio = 1/2
-    axes.add_patch(AdaptiveFancyArrow(
-        x, y, dx, dy, tail_width, head_width, head_ratio=0.5,
-        draw_head=draw_head, color=colors["dimgreen"], linewidth=0
-    ))
+    def __init__(self, line_width=2, head_width=2,
+                 head_length=6, head_height=0.8):
+        self._line_width = line_width
+        self._head_width = head_width
+        self._head_length = head_length
+        self._head_height = head_height
 
-    label = label_func(feature)
-    if label is not None:
-        center_x = bbox.x0 + bbox.width/2
-        center_y = bbox.y0 + bbox.height/2
-        axes.text(
-            center_x, center_y, label, color="black",
-            ha="center", va="center", size=11)
+    def matches(self, feature):
+        if feature.key == "regulatory":
+            if "regulatory_class" in feature.qual:
+                if feature.qual["regulatory_class"] == "promoter":
+                    return True
+        return False
+        
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+        from matplotlib.patches import FancyArrowPatch, ArrowStyle
+        from matplotlib.path import Path
+
+        x_center = bbox.x0 + bbox.width/2
+        y_center = bbox.y0 + bbox.height/2
+
+        path = Path(
+            vertices=[
+                (bbox.x0, y_center),
+                (bbox.x0, y_center - bbox.height/2 * self._head_height),
+                (bbox.x1, y_center - bbox.height/2 * self._head_height),
+            ],
+            codes=[
+                Path.MOVETO,
+                Path.CURVE3,
+                Path.CURVE3
+            ]
+        )
+        style = ArrowStyle.CurveFilledB(
+            head_width=self._head_width, head_length=self._head_length
+        )
+        arrow = FancyArrowPatch(
+            path=path, arrowstyle=style, linewidth=self._line_width,
+            color="black"
+        )
+        axes.add_patch(arrow)
+        
+        if "note" in feature.qual:
+            axes.text(
+                x_center, y_center + bbox.height/4, feature.qual["note"],
+                color="black", ha="center", va="center",
+                size=9
+            )
 
 
-def draw_misc(axes, feature, bbox, loc_index, style_param):
-    from matplotlib.patches import Rectangle
-    from matplotlib.text import Text
-
-    fraction = 0.4
-
-    rect = Rectangle(
-        (bbox.x0, bbox.y0 + bbox.height/2 * (1-fraction)),
-        bbox.width, bbox.height*fraction,
-        color="black", linewidth=0
-    )
-    axes.add_patch(rect)
-
-
-def draw_promoter(axes, feature, bbox, loc_index, style_param):
-    from matplotlib.patches import FancyArrowPatch, ArrowStyle
-    from matplotlib.path import Path
-
-    line_width = 2
-    head_width = 2
-    head_length = 6
-    head_height = 0.8
-
-    x_center = bbox.x0 + bbox.width/2
-    y_center = bbox.y0 + bbox.height/2
-
-    path = Path(
-        vertices=[
-            (bbox.x0, y_center),
-            (bbox.x0, y_center - bbox.height/2 * head_height),
-            (bbox.x1, y_center - bbox.height/2 * head_height),
-        ],
-        codes=[
-            Path.MOVETO,
-            Path.CURVE3,
-            Path.CURVE3
-        ]
-    )
-    style = ArrowStyle.CurveFilledB(
-        head_width=head_width, head_length=head_length
-    )
-    arrow = FancyArrowPatch(
-        path=path, arrowstyle=style, linewidth=line_width,
-        color="black"
-    )
-    axes.add_patch(arrow)
+class TerminatorPlotter(FeaturePlotter):
     
-    if "note" in feature.qual:
-        axes.text(
-            x_center, y_center + bbox.height/4, feature.qual["note"],
-            color="black", ha="center", va="center",
-            size=9
+    def __init__(self, bar_width=5):
+        self._bar_width = bar_width
+
+    def matches(self, feature):
+        if feature.key == "regulatory":
+            if "regulatory_class" in feature.qual:
+                if feature.qual["regulatory_class"] == "terminator":
+                    return True
+        return False
+        
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+
+        x = bbox.x0 + bbox.width/2
+
+        axes.plot(
+            (x, x), (bbox.y0, bbox.y1), color="black",
+            linestyle="-", linewidth=self._bar_width, marker="None"
         )
 
 
-def draw_terminator(axes, feature, bbox, loc_index, style_param):
-    from matplotlib.patches import Rectangle
-    from matplotlib.text import Text
+class RBSPlotter(FeaturePlotter):
+    
+    def __init__(self, height=0.4):
+        self._height = height
 
-    bar_width = 5
-    x = bbox.x0 + bbox.width/2
+    def matches(self, feature):
+        if feature.key == "regulatory":
+            if "regulatory_class" in feature.qual:
+                if feature.qual["regulatory_class"] == "ribosome_binding_site":
+                    return True
+        return False
+        
+    def draw(self, axes, feature, bbox, loc_index, style_param):
+        from matplotlib.patches import Ellipse
 
-    axes.plot(
-        (x, x), (bbox.y0, bbox.y1),
-        color="black", linestyle="-", linewidth=bar_width, marker="None"
-    )
-
-def draw_rbs(axes, feature, bbox, loc_index, style_param):
-    from matplotlib.patches import Ellipse
-
-    fraction = 0.4
-
-    ellipse = Ellipse(
-        (bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2),
-        bbox.width, fraction*bbox.height,
-        color=colors["dimorange"], linewidth=0)
-    axes.add_patch(ellipse)
-
-
-DRAW_FUNCTIONS = {
-    "CDS"                   : draw_cds,
-    "gene"                  : draw_gene,
-    "misc_structure"        : draw_misc,
-    "promoter"              : draw_promoter,
-    "terminator"            : draw_terminator,
-    "ribosome_binding_site" : draw_rbs
-}
+        ellipse = Ellipse(
+            (bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2),
+            bbox.width, self._height*bbox.height,
+            color=colors["dimorange"], linewidth=0)
+        axes.add_patch(ellipse)
