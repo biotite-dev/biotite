@@ -212,38 +212,41 @@ def draw_misc(axes, feature, bbox, loc_index, style_param):
 
 
 def draw_promoter(axes, feature, bbox, loc_index, style_param):
-    from matplotlib.patches import Rectangle
-    from matplotlib.patches import Wedge
-    from matplotlib.patches import FancyArrow
-    from matplotlib.text import Text
+    from matplotlib.patches import FancyArrowPatch, ArrowStyle
+    from matplotlib.path import Path
 
-    base_width = 0.08
-    head_width = 0.15
-    curve_radius = 0.20
+    line_width = 2
+    head_width = 2
+    head_length = 6
+    head_height = 0.8
 
+    x_center = bbox.x0 + bbox.width/2
     y_center = bbox.y0 + bbox.height/2
-    y_curve_max = bbox.y1 - bbox.height*head_width/2 + bbox.height*base_width/2
-    y_curve_min = y_curve_max - bbox.height*curve_radius
-    y_tip = bbox.y0 + bbox.height - bbox.height*head_width/2
 
-    vertical = Rectangle((bbox.x0, y_center), base_width, y_curve_min-y_center,
-                         color="black", linewidth=0)
-    axes.add_patch(vertical)
-    curve = Wedge(
-        center=(bbox.x0+curve_radius, y_curve_min), r=curve_radius,
-        theta1=90, theta2=180, width=base_width,
-        color="black", linewidth=0
+    path = Path(
+        vertices=[
+            (bbox.x0, y_center),
+            (bbox.x0, y_center - bbox.height/2 * head_height),
+            (bbox.x1, y_center - bbox.height/2 * head_height),
+        ],
+        codes=[
+            Path.MOVETO,
+            Path.CURVE3,
+            Path.CURVE3
+        ]
     )
-    axes.add_patch(curve)
-    horizontal = FancyArrow(
-        bbox.x0+curve_radius, y_tip, dx=bbox.width-curve_radius, dy=0,
-        width=base_width, head_width=head_width, head_length=head_width,
-        length_includes_head=True, color="black", linewidth=0
+    style = ArrowStyle.CurveFilledB(
+        head_width=head_width, head_length=head_length
     )
-    axes.add_patch(horizontal)
+    arrow = FancyArrowPatch(
+        path=path, arrowstyle=style, linewidth=line_width,
+        color="black"
+    )
+    axes.add_patch(arrow)
+    
     if "note" in feature.qual:
         axes.text(
-            bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/4, feature.qual["note"],
+            x_center, y_center + bbox.height/4, feature.qual["note"],
             color="black", ha="center", va="center",
             size=9
         )
