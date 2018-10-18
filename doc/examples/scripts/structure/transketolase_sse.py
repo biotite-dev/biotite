@@ -96,7 +96,7 @@ fig = plt.figure(figsize=(8.0, 0.8))
 ax = fig.add_subplot(111)
 graphics.plot_feature_map(
     ax, annotation, multi_line=False, loc_range=(1,100),
-    # Register our drawing function for the 'SecStr' feature type
+    # Register our drawing function for the 'SecStr' feature key
     draw_functions={"SecStr": draw_secondary_strucure}
 )
 fig.tight_layout()
