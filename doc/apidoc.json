@@ -84,12 +84,12 @@
     },
 
     "biotite.sequence.graphics" : {
-        "Visualizers" : [
-            "AlignmentVisualizer",
-            "AlignmentSimilarityVisualizer",
-            "AlignmentSymbolVisualizer",
-            "SequenceLogo",
-            "FeatureMap"
+        "Plotting functions" : [
+            "plot_feature_map",
+            "plot_sequence_logo",
+            "plot_alignment",
+            "plot_alignment_similarity_based",
+            "plot_alignment_type_based"
         ],
         "Color schemes" : [
             "load_color_scheme",
