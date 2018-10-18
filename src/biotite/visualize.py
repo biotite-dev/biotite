@@ -3,11 +3,12 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord", "draw_adaptive_arrow"]
+__all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
 import abc
 from collections import OrderedDict
 import numpy as np
+from numpy.linalg import norm
 
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
@@ -71,57 +72,84 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
             )
     text.set_path_effects([TextScaler(text, width, height, mode)])
 
-
-def draw_adaptive_arrow(axes, x, y, dx, dy,
-                        tail_width, head_width, head_ratio, draw_head=True,
-                        shape="full", **kwargs):
+try:
+    # Only create this class when matplotlib is installed
     from matplotlib.patches import FancyArrow
-    from matplotlib.transforms import Bbox
+    from matplotlib.patheffects import AbstractPathEffect
 
-    arrow = None
-    
-    def on_draw(event):
-        """
-        Callback function that is called, every time the figure is resized
-        Removes the current arrow and replaces it with an arrow with
-        recalcualted head
-        """
-        nonlocal tail_width
-        nonlocal head_width
-        nonlocal arrow
-        if arrow is not None:
-            arrow.remove()
-        # Create a head that looks equal, independent of the aspect
-        # ratio
-        # Hence, a transformation into display coordinates has to be
-        # performed to fix the head width to length ratio
-        # In this transformation only the height and width are
-        # interesting, absolute coordinates are not needed
-        # -> box origin at (0,0)
-        arrow_box = Bbox([(0,0),(0,head_width)])
-        arrow_box_display = axes.transData.transform_bbox(arrow_box)
-        head_length_display = np.abs(arrow_box_display.height * head_ratio)
-        arrow_box_display.x1 = arrow_box_display.x0 + head_length_display
-        # Transfrom back to data coordinates for plotting
-        arrow_box = axes.transData.inverted().transform_bbox(arrow_box_display)
-        head_length = arrow_box.width
-        if head_length > np.abs(dx):
-            # If the head would be longer than the entire arrow,
-            # only draw the arrow head with reduced length
-            head_length = np.abs(dx)
-        if not draw_head:
-            head_length = 0
-            head_width = tail_width
-        arrow = FancyArrow(
-            x, y, dx, dy,
-            width=tail_width, head_width=head_width, head_length=head_length,
-            length_includes_head=True, **kwargs)
-        axes.add_patch(arrow)
-    
-    # Register callback function
-    axes.get_figure().canvas.mpl_connect("resize_event", on_draw)
+    class AdaptiveFancyArrow(FancyArrow):
+
+        def __init__(self, x, y, dx, dy,
+                     tail_width, head_width, head_ratio, draw_head=True,
+                     shape="full", **kwargs):
+            if not draw_head:
+                head_width = tail_width
+            super().__init__(
+                x, y, dx, dy,
+                width=tail_width, head_width=head_width,
+                overhang=0, shape=shape,
+                length_includes_head=True, **kwargs
+            )
+            self.set_path_effects(
+                [_ArrowHeadCorrect(self, head_ratio, draw_head)]
+            )
     
 
+    class _ArrowHeadCorrect(AbstractPathEffect):
+        def __init__(self, arrow, head_ratio, draw_head):
+            self._arrow = arrow
+            self._head_ratio = head_ratio
+            self._draw_head = draw_head
+
+        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
+            # Indices to certain vertices in the arrow
+            TIP = 0
+            HEAD_OUTER_1 = 1
+            HEAD_INNER_1 = 2
+            TAIL_1 = 3
+            TAIL_2 = 4
+            HEAD_INNER_2 = 5
+            HEAD_OUTER_2 = 6
+
+            transform = self._arrow.axes.transData
+
+            vert = tpath.vertices
+            # Transform data coordiantes to display coordinates
+            vert = transform.transform(vert)
+            # The direction vector alnog the arrow
+            arrow_vec = vert[TIP] - (vert[TAIL_1] + vert[TAIL_2]) / 2
+            tail_width = norm(vert[TAIL_2] - vert[TAIL_1])
+            # Calculate head length from head width
+            head_width = norm(vert[HEAD_OUTER_2] - vert[HEAD_OUTER_1])
+            head_length = head_width * self._head_ratio
+            if head_length > norm(arrow_vec):
+                # If the head would be longer than the entire arrow,
+                # only draw the arrow head with reduced length
+                head_length = norm(arrow_vec)
+            # The new head start vector; is on the arrow vector
+            if self._draw_head:
+                head_start = \
+                vert[TIP] - head_length * arrow_vec/norm(arrow_vec)
+            else:
+                head_start = vert[TIP]
+            # vector that is orthogonal to the arrow vector
+            arrow_vec_ortho = vert[TAIL_2] - vert[TAIL_1]
+            # Make unit vector
+            arrow_vec_ortho = arrow_vec_ortho / norm(arrow_vec_ortho)
+            # Adjust vertices of the arrow head
+            vert[HEAD_OUTER_1] = head_start - arrow_vec_ortho * head_width/2
+            vert[HEAD_OUTER_2] = head_start + arrow_vec_ortho * head_width/2
+            vert[HEAD_INNER_1] = head_start - arrow_vec_ortho * tail_width/2
+            vert[HEAD_INNER_2] = head_start + arrow_vec_ortho * tail_width/2
+            # Transform back to data coordinates
+            # and modify path with manipulated vertices
+            tpath.vertices = transform.inverted().transform(vert)
+            renderer.draw_path(gc, tpath, affine, rgbFace)
+
+
+except ImportError:
+    pass
+    
 
 # Biotite themed colors
 colors = OrderedDict([
