@@ -3,6 +3,7 @@
 # information.
 
 from .alignment import *
-from .features import *
 from .colorschemes import *
+from .dendrogram import *
+from .features import *
 from .logo import *
