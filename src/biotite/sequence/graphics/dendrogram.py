@@ -82,7 +82,13 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     
     _plot_node(tree.root, 0)
 
-    labels = labels[indices] if labels is not None else [str(i) for i in indices]
+    if labels is not None:
+        # Sort labels using the order of indices in the tree
+        # A list cannot be directly indexed with a list,
+        # hence the conversion to a ndarray
+        labels = np.array(labels)[indices].tolist()
+    else:
+        [str(i) for i in indices]
     # The distance axis does not start at 0,
     # since the root line would not properly rendered
     # Hence the limit is set a to small fraction of the entire axis
