@@ -154,6 +154,17 @@ required.
 Figures that connot be dynamically generated are put into
 ``doc/static/assets/figures``.
 
+Structuring the API reference
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each  *Biotite* subpackage has a dedicated reference page, describing
+its classes and functions.
+The categories and classes/functions that are assigned to it can be set
+in ``apidoc.json``.
+Classes/functions that are not assigned to any category are placed in
+the 'Miscellaneous' category or, if no class/function is assigned,
+in the 'Content' category.
+
 
 
 Code testing

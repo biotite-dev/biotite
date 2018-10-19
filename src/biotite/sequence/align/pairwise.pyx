@@ -3,6 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
+__all__ = ["align_ungapped", "align_optimal"]
 
 cimport cython
 cimport numpy as np
@@ -11,8 +12,6 @@ from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
 from .alignment import Alignment
 import numpy as np
-import copy
-import textwrap
 
 
 ctypedef np.int32_t int32
@@ -34,10 +33,6 @@ ctypedef fused CodeType2:
     uint64
 
 cdef inline int32 int_max(int32 a, int32 b): return a if a >= b else b
-
-
-__all__ = ["align_ungapped", "align_optimal"]
-
 
 
 def align_ungapped(seq1, seq2, matrix, score_only=False):
@@ -103,10 +98,11 @@ def _add_scores(CodeType1[:] code1 not None,
 
 
 def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
-                  terminal_penalty=True, local=False):
+                  terminal_penalty=True, local=False,
+                  max_number=1000):
     """
     align_optimal(seq1, seq2, matrix, gap_penalty=-10,
-                  terminal_penalty=True, local=False)
+                  terminal_penalty=True, local=False, max_number=1000)
 
     Perform an optimal alignment of two sequences based on the
     dynamic programming algorithm. [1]_
@@ -149,6 +145,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     local : bool, optional
         If false, a global alignment is performed, otherwise a local
         alignment is performed. (Default: False)
+    max_number : int, optional
+        The maximum number of alignments returned.
+        When the number of branches exceeds this value in the traceback
+        step, no further branches are created.
+        (Default: 1000)
     
     Returns
     -------
@@ -197,6 +198,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         affine_penalty = True
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
+    # Check if max_number is reasonable
+    if max_number < 1:
+        raise ValueError(
+            "Maximum number of returned alignments must be at least 1"
+        )
     # This implementation uses transposed tables in comparison
     # to the common implementation
     # Therefore the first sequence is one the left
@@ -343,14 +349,17 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
             state_list = np.append(state_list, 0)
             max_score = score_table[i_start,j_start]
     # Follow the traces specified in state and indices lists
+    cdef int curr_trace_count
     for k in range(len(i_list)):
         i_start = i_list[k]
         j_start = j_list[k]
         state_start = state_list[k]
         # Pessimistic array allocation
         trace = np.full(( i_start+1 + j_start+1, 2 ), -1, dtype=np.int64)
+        curr_trace_count = 1
         _follow_trace(trace_table, i_start, j_start, 0, trace, trace_list,
-                      state=state_start)
+                      state=state_start, curr_trace_count=&curr_trace_count,
+                      max_trace_count=max_number)
     
     # Replace gap entries in trace with -1
     for i, trace in enumerate(trace_list):
@@ -374,6 +383,31 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       int gap_penalty,
                       bint term_penalty,
                       bint local):
+    """
+    Fill an alignment table with constant gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    code1, code2
+        The sequence code of each sequence to be aligned.
+    matrix
+        The score matrix obtained from the `SubstitutiuonMatrix` object.
+    trace_table
+        A matrix containing values indicating the direction for the
+        traceback step.
+        The matrix is filled in this function
+    score_table
+        The alignment table.
+        The matrix is filled in this function.
+    gap_penalty
+        The constant gap penalty.
+    term_penalty
+        Indicates, whether terminal gaps should be penalized.
+    local
+        Indicates, whether a local alignment should be performed.
+    """
+    
     cdef int i, j
     cdef int max_i, max_j
     cdef int32 from_diag, from_left, from_top
@@ -448,6 +482,36 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                              int gap_ext,
                              bint term_penalty,
                              bint local):
+    """
+    Fill an alignment table with affine gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    code1, code2
+        The sequence code of each sequence to be aligned.
+    matrix
+        The score matrix obtained from the `SubstitutiuonMatrix` object.
+    trace_table
+        A matrix containing values indicating the direction for the
+        traceback step.
+        The matrix is filled in this function
+    m_table, g1_table, g2_table
+        The alignment tables containing the scores.
+        `m_table` contains values for matches.
+        `g1_table` contains values for gaps in the first sequence.
+        `g2_table` contains values for gaps in the second sequence.
+        The matrix is filled in this function.
+    gap_open
+        The gap opening penalty.
+    gap_ext
+        The gap extension penalty.
+    term_penalty
+        Indicates, whether terminal gaps should be penalized.
+    local
+        Indicates, whether a local alignment should be performed.
+    """
+    
     cdef int i, j
     cdef int max_i, max_j
     cdef int32 mm_score, g1m_score, g2m_score
@@ -557,11 +621,46 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             trace_table[i,j] = trace
 
 
-cpdef _follow_trace(uint8[:,:] trace_table,
-                    int i, int j, int pos,
-                    int64[:,:] trace,
-                    list trace_list,
-                    int state):
+cdef void _follow_trace(uint8[:,:] trace_table,
+                        int i, int j, int pos,
+                        int64[:,:] trace,
+                        list trace_list,
+                        int state,
+                        int* curr_trace_count,
+                        int max_trace_count):
+    """
+    Fill an alignment table with affine gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    trace_table
+        A matrix containing values indicating the direction for the
+        traceback.
+    i, j
+        The current position in the trace table.
+        For the first branch, this is the start of the traceback.
+        For additional branches this is the start of the respective
+        branch.
+    pos
+        The index in the alignment trace to be created.
+        For the first branch, this is 0.
+        For additional branches the value of the mother branch is taken.
+    trace
+        The alignment trace to be filled
+    trace_list
+        When a trace is finished, it is appened to this list
+    state
+        The current table (m, g1, g2) the traceback is in, taken from
+        mother branch. Always 0 when a constant gap penalty is used.
+    curr_trace_count
+        The current number of branches. The value is a pointer, so that
+        updating this value propagates the value to all other branches
+    max_trace_count
+        The maximum number of branches created. When the number of
+        branches reaches this value, no new branches are created.
+    """
+    
     cdef list next_indices
     cdef list next_states
     cdef int trace_value
@@ -584,12 +683,15 @@ cpdef _follow_trace(uint8[:,:] trace_table,
                 next_indices.append((i, j-1))
             if trace_value & 4:
                 next_indices.append((i-1, j))
-            # Trace split
+            # Trace branching
             # -> Recursive call of _follow_trace() for indices[1:]
             for k in range(1, len(next_indices)):
-                new_i, new_j = next_indices[k]
-                _follow_trace(trace_table, new_i, new_j, pos,
-                              np.copy(trace), trace_list, 0)
+                if curr_trace_count[0] < max_trace_count:
+                    curr_trace_count[0] += 1
+                    new_i, new_j = next_indices[k]
+                    _follow_trace(trace_table, new_i, new_j, pos,
+                                np.copy(trace), trace_list, 0,
+                                curr_trace_count, max_trace_count)
             # Continue in this method with indices[0]
             i, j = next_indices[0]
     else:
@@ -642,13 +744,16 @@ cpdef _follow_trace(uint8[:,:] trace_table,
             if trace_value & 64:
                 next_indices.append((i-1, j))
                 next_states.append(3)
-            # Trace split
+            # Trace branching
             # -> Recursive call of _follow_trace() for indices[1:]
             for k in range(1, len(next_indices)):
-                new_i, new_j = next_indices[k]
-                new_state = next_states[k]
-                _follow_trace(trace_table, new_i, new_j, pos,
-                              np.copy(trace), trace_list, new_state)
+                if curr_trace_count[0] < max_trace_count:
+                    curr_trace_count[0] += 1
+                    new_i, new_j = next_indices[k]
+                    new_state = next_states[k]
+                    _follow_trace(trace_table, new_i, new_j, pos,
+                                np.copy(trace), trace_list, new_state,
+                                curr_trace_count, max_trace_count)
             # Continue in this method with indices[0] and states[0]
             i, j = next_indices[0]
             state = next_states[0]

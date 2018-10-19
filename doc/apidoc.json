@@ -72,6 +72,7 @@
         ],
         "Aligners" : [
             "align_optimal",
+            "align_multiple",
             "align_ungapped"
         ],
         "Alignments" : [
@@ -80,6 +81,16 @@
             "get_symbols",
             "get_sequence_identity",
             "score"
+        ]
+    },
+
+    "biotite.sequence.phylo" : {
+        "Data structure" : [
+            "Tree",
+            "TreeNode"
+        ],
+        "Clustering algorithms" : [
+            "upgma"
         ]
     },
 

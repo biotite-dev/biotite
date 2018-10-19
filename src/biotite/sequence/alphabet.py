@@ -250,7 +250,7 @@ class LetterAlphabet(Alphabet):
         symbols : ndarray
             Copy of the internal list of symbols.
         """
-        return np.copy(self._symbols)
+        return self._symbols.tolist()
     
     def encode(self, symbol):
         indices = np.where(self._symbols == symbol)[0]

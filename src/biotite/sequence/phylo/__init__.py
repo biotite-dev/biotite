@@ -2,7 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from .alignment import *
-from .pairwise import *
-from .multiple import *
-from .matrix import *
+
+__author__ = "Patrick Kunzmann"
+
+from .tree import *
+from .upgma import *
