@@ -99,6 +99,12 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
             The position index in the trace.
         seq_i : int
             The sequence index in the trace.
+        
+        Returns
+        -------
+        color : object
+            A *Matplotlib* compatible color used for the background
+            or the symbol itself at the specifed position
         """
         pass
 
