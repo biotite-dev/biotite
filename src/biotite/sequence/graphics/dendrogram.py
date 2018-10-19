@@ -9,7 +9,7 @@ import numpy as np
 
 def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
                     labels=None, label_size=None, color="black",
-                    show_distance=None, **kwargs):
+                    show_distance=True, **kwargs):
     
     indices = tree.root.get_indices()
     leaf_dict = {indices[i] : i for i in indices}
@@ -104,7 +104,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             labelsize=label_size
         )
         axes.xaxis.set_tick_params(
-            bottom=True, top=False, labelbottom=True, labeltop=False,
+            bottom=True, top=False, labelbottom=show_distance, labeltop=False,
             labelsize=label_size
         )
     elif orientation == "right":
@@ -117,7 +117,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             labelsize=label_size
         )
         axes.xaxis.set_tick_params(
-            bottom=True, top=False, labelbottom=True, labeltop=False,
+            bottom=True, top=False, labelbottom=show_distance, labeltop=False,
             labelsize=label_size
         )
     elif orientation == "bottom":
@@ -130,7 +130,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             labelsize=label_size
         )
         axes.yaxis.set_tick_params(
-            left=True, right=False, labelleft=True, labelright=False,
+            left=True, right=False, labelleft=show_distance, labelright=False,
             labelsize=label_size
         )
     elif orientation == "top":
@@ -143,7 +143,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             labelsize=label_size
         )
         axes.yaxis.set_tick_params(
-            left=True, right=False, labelleft=True, labelright=False,
+            left=True, right=False, labelleft=show_distance, labelright=False,
             labelsize=label_size
         )
     else:
