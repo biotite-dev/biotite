@@ -118,7 +118,7 @@ ax = fig.add_subplot(111)
 graphics.plot_feature_map(
     ax, annotation, multi_line=False, loc_range=(1,100),
     # Register our drawing functions
-    draw_functions=[HelixPlotter(), SheetPlotter()]
+    feature_plotters=[HelixPlotter(), SheetPlotter()]
 )
 fig.tight_layout()
 
@@ -145,7 +145,7 @@ graphics.plot_feature_map(
     show_numbers=True, show_line_position=True,
     # 'loc_range' takes exclusive stop -> length+1 is required
     loc_range=(1,length+1),
-    draw_functions=[HelixPlotter(), SheetPlotter()]
+    feature_plotters=[HelixPlotter(), SheetPlotter()]
 )
 fig.tight_layout()
 
@@ -240,7 +240,7 @@ def visualize_secondary_structure(sse, first_id):
     graphics.plot_feature_map(
         ax, annotation, symbols_per_line=150, loc_range=(1,length+1),
         show_numbers=True, show_line_position=True,
-        draw_functions=[HelixPlotter(), SheetPlotter()]
+        feature_plotters=[HelixPlotter(), SheetPlotter()]
     )
     fig.tight_layout()
 

@@ -17,8 +17,8 @@ from ..annotation import Annotation, Feature, Location
 def plot_feature_map(axes, annotation, loc_range=None,
                      multi_line=True, symbols_per_line=1000,
                      show_numbers=False, number_size=None, line_width=0.05,
-                     show_line_position=False, spacing=0.25, draw_functions=None,
-                     style_param=None):
+                     show_line_position=False, spacing=0.25,
+                     feature_plotters=None, style_param=None):
     from matplotlib.transforms import Bbox
     from matplotlib.patches import Rectangle
     
@@ -33,15 +33,15 @@ def plot_feature_map(axes, annotation, loc_range=None,
         # Line length covers the entire location range
         symbols_per_line = loc_range_length
     
-    drawfunc = [
+    plotters = [
         PromoterPlotter(),
         TerminatorPlotter(),
         RBSPlotter(),
         CodingPlotter(),
         MiscFeaturePlotter()
     ]
-    if draw_functions is not None:
-        drawfunc = list(draw_functions) + drawfunc
+    if feature_plotters is not None:
+        plotters = list(feature_plotters) + plotters
 
     style_param = {} if style_param is None else style_param
 
@@ -79,7 +79,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
         for feature in annotation_for_line:
             plotter = None
             # Identify fitting plotter
-            for potentail_plotter in drawfunc:
+            for potentail_plotter in plotters:
                 if potentail_plotter.matches(feature):
                     # Take first fitting plotter in list
                     plotter = potentail_plotter
