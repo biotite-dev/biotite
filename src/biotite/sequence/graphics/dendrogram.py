@@ -10,6 +10,35 @@ import numpy as np
 def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
                     labels=None, label_size=None, color="black",
                     show_distance=True, **kwargs):
+    """
+    Plot a dendrogram from a (phylogenetic) tree.
+
+    Parameters
+    ----------
+    tree : Tree
+        The tree to be visualized
+    orientation : {'left', 'right', 'bottom', 'top'}, optional
+        The position of the root node in the plot
+    use_distances : bool, optional
+        If true, the `distance` attribute of the `TreeNode` objects
+        are used as distance measure.
+        Otherwise the topological distance is used.
+    labels : list of str, optional 
+        The leaf node labels.
+        The label of a leaf node is the entry at the position of its
+        `index` attribute.
+    label_size : float, optional
+        The font size of the labels
+    color : tuple or str, optional
+        A `matplotlib` compatible color, that is used to draw the lines
+        of the dendrogram
+    show_distance : bool, optional
+        If true, the distance from the root is shown on the
+        corresponding axis.
+    **kwargs
+        Additional parameters that are used to draw the dendrogram
+        lines.
+    """
     
     indices = tree.root.get_indices()
     leaf_dict = {indices[i] : i for i in indices}
