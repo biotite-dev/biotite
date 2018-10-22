@@ -10,9 +10,10 @@ cimport numpy as np
 
 import copy
 import numpy as np
+from ...copyable import Copyable
 
 
-class Tree:
+class Tree(Copyable):
     """
     __init__(root)
     
@@ -23,6 +24,9 @@ class Tree:
     The property `leaves` contains a list of the leaf nodes, where the
     index of the leaf node in this list is equal to the reference index
     of the leaf node (``leaf.index``).
+
+    Two `Tree` objects are equal if they are the same object,
+    so the ``==`` operator is equal to the ``is`` operator.
 
     Objects of this class are immutable.
 
@@ -69,6 +73,9 @@ class Tree:
         cdef int i
         for i in range(len(indices)):
             self._leaves[indices[i]] = leaves_unsorted[i]
+    
+    def __copy_create__():
+        return Tree(self._root.copy())
     
     @property
     def root(self):
@@ -188,6 +195,9 @@ cdef class TreeNode:
 
     All object properties are read-only.
 
+    Two `TreeNode` objects are equal if they are the same object,
+    so the ``==`` operator is equal to the ``is`` operator.
+
     Parameters
     ----------
     child1, child2: TreeNode, optional
@@ -276,6 +286,24 @@ cdef class TreeNode:
             raise TreeError("Node already has a parent")
         self._parent = parent
         self._distance = distance
+    
+    def copy(self):
+        """
+        copy()
+
+        Create a deep copy of this `TreeNode`.
+
+        The copy includes this node, its reference index and deep copies
+        of its child nodes.
+        The parent node and the distance to it is not included.
+        """
+        if self.is_leaf():
+            return TreeNode(index=self._index)
+        else:
+            return TreeNode(
+                self._child1.copy(), self._child2.copy(),
+                self._child1._distance, self._child2._distance
+            )
 
     @property
     def index(self):
@@ -318,7 +346,7 @@ cdef class TreeNode:
 
         Returns
         -------
-        is_leaf : bool
+        is_root : bool
             True if the node is a root node, false otherwise.
         """
         return bool(self._is_root)
@@ -489,6 +517,18 @@ cdef class TreeNode:
         _get_leaves(self, leaf_list)
         return leaf_list
     
+    def get_leaf_count(self):
+        """"
+        get_leaf_count()
+
+        Get the number of direct or indirect leaves of this ńode.
+
+        This method identifies all leaf nodes, which have this node as
+        ancestor.
+        If this node is a leaf node itself, 1 is returned.
+        """
+        return _get_leaf_count(self)
+    
     def to_newick(self, labels=None, bint include_distance=True):
         """
         to_newick(labels=None, include_distance=True)
@@ -567,6 +607,15 @@ cdef _get_leaves(TreeNode node, list leaf_list):
     else:
         # Leaf node -> add node -> terminate
         leaf_list.append(node)
+
+
+cdef _get_leaf_count(TreeNode node):
+    if node._index == -1:
+        # Intermediate node -> Recursive calls
+        return _get_leaf_count(node._child1) + _get_leaf_count(node._child2)
+    else:
+        # Leaf node -> return count of itself = 1
+        return 1
 
 
 cdef list _create_path_to_root(TreeNode node):
