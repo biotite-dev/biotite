@@ -25,7 +25,7 @@ class Copyable(metaclass=abc.ABCMeta):
     
     def copy(self):
         """
-        Copy the object.
+        Create a deep copy of this object.
         
         Returns
         -------
