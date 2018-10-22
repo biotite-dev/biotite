@@ -14,6 +14,17 @@ from .colorschemes import get_color_scheme
 
 
 class SymbolPlotter(metaclass=abc.ABCMeta):
+    """
+    Subclasses of this abstract base class define how symbols in
+    an alignment are drawn onto an `axes` object.
+
+    Subclasses must override the `plot_symbol()` method.
+    
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    """
 
     def __init__(self, axes):
         self._axes = axes
@@ -31,8 +42,6 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
         The symbol is specified as position in the alignment's trace
         (``trace[pos_i, seq_i]``).
 
-        PROTECTED: Override when inheriting. 
-
         Parameters
         ----------
         bbox : Bbox
@@ -48,6 +57,27 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
 
 
 class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
+    """
+    This abstract `SymbolPlotter` is the most widely used one.
+    Symbols are visualized as character on a colored background box or
+    as colored character, if `color_symbols` is set to true.
+
+    Subclasses must override the `get_color()` method.
+    
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    color_symbols : bool, optional
+        If true, the symbols themselves are colored.
+        If false, the symbols are black, and the boxes behind the
+        symbols are colored.
+    font_size : float, optional
+        Font size of the sequence symbols.
+    font_param : dict, optional
+        Additional parameters that is given to the *Matplotlib* `Text`
+        instance of each symbol.
+    """
 
     def __init__(self, axes, color_symbols=False, 
                  font_size=None, font_param=None):
@@ -111,24 +141,30 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
 
 class LetterSimilarityPlotter(LetterPlotter):
     r"""
-    This `AlignmentVisualizer` colors the symbols based on the
+    This `SymbolPlotter` colors the symbols based on the
     similarity with the other symbols in the same column.
 
-    The color intensity (or colormap value, repsectively) of a symbols
+    The color intensity (or colormap value, respectively) of a symbol
     scales with similarity of the respective symbol to the other symbols
     in the same alignment column.
 
-    EXPERIMENTAL: Future API changes are probable.
-
     Parameters
     ----------
-    alignment : Alignment
-        The alignment to be visualized.
-        All sequences in the alignment must have an equal alphabet.
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
     matrix : SubstitutionMatrix, optional
         The substitution matrix to use the similarity scores from.
         By default the normalized similarity is 1 for identity and 0
         for non-identity.
+    color_symbols : bool, optional
+        If true, the symbols themselves are colored.
+        If false, the symbols are black, and the boxes behind the
+        symbols are colored.
+    font_size : float, optional
+        Font size of the sequence symbols.
+    font_param : dict, optional
+        Additional parameters that is given to the *Matplotlib* `Text`
+        instance of each symbol.
     
     Notes
     -----
@@ -173,7 +209,7 @@ class LetterSimilarityPlotter(LetterPlotter):
     
     def set_color(self, color=None, cmap=None):
         """
-        Set the alignemnt colors used by the `AlignmentVisualizer`.
+        Set the alignemnt colors used for plotting.
 
         This function takes either a color or a colormap.
 
@@ -267,9 +303,25 @@ class LetterTypePlotter(LetterPlotter):
 
     Parameters
     ----------
-    alignment : Alignment
-        The alignment to be visualized.
-        All sequences in the alignment must have an equal alphabet.
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    alphabet : Alphabet
+        The alphabet of the alignment(s) to be plotted
+    color_scheme : str or list of (tuple or str), optional
+        Either a valid color scheme name
+        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
+        or a list of `matplotlib` compatible colors.
+        The list length must be at least as long as the
+        length of the alphabet used by the sequences.
+    color_symbols : bool, optional
+        If true, the symbols themselves are colored.
+        If false, the symbols are black, and the boxes behind the
+        symbols are colored.
+    font_size : float, optional
+        Font size of the sequence symbols.
+    font_param : dict, optional
+        Additional parameters that is given to the *Matplotlib* `Text`
+        instance of each symbol.
     """
 
     def __init__(self, axes, alphabet, color_scheme=None, color_symbols=False,
@@ -297,6 +349,75 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
                    labels=None, label_size=None,
                    show_line_position=False,
                    spacing=1):
+    """
+    Plot a pairwise or multiple sequence alignment.
+
+    The output is similar to a string representation of an `Alignment`,
+    but with enhanced styling, symbol coloring and optional sequence
+    labels and sequence position numbering.
+    How each sysmbol of the alignment is drawn is determined by the
+    given `SymbolPlotter` object.
+
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    alignment : Alignment
+        The pairwise or multiple sequence alignment to be plotted.
+    symbol_plotter : SymbolPlotter
+        Defines how the symbols in the alignment are drawn.
+    symbols_per_line : int, optional
+        The amount of alignment columns that are diplayed per line.
+    show_numbers : bool, optional
+        If true, the sequence position of the symbols in the last
+        alignment column of a line is shown on the right side of the
+        plot.
+        If the last symbol is a gap, the position of the last actual
+        symbol before this gap is taken.
+        If the first symbol did not occur up to this point,
+        no number is shown for this line.
+        By default the first symbol of a sequence has the position 1,
+        but this behavior can be changed using the `number_functions`
+        parameter.
+    number_size : float, optional
+        The font size of the position numbers
+    number_functions : list of [(None or Callable(int -> int)], optional
+        By default the position of the first symbol in a sequence is 1,
+        i.e. the sequence position is the sequence index incremented by
+        1.
+        The behavior can be changed with this parameter:
+        If supplied, the length of the list must match the number of
+        sequences in the alignment.
+        Every entry is a function that maps a sequence index (*int*) to
+        a sequence position (*int*) for the respective sequence.
+        A `None` entry means, that the default numbering is applied
+        for the sequence.
+    labels : list of str, optional
+        The sequence labels.
+        Must be the same size and order as the sequences in the
+        alignment.
+    label_size : float, optional
+        Font size of the labels
+    show_line_position : bool, optional
+        If true the position within a line is plotted below the
+        alignment.
+    spacing : float, optional
+        The spacing between the alignment lines. 1.0 means that the size
+        is equal to the size of a symbol box.
+    
+    See also
+    --------
+    plot_alignment_similarity_based
+    plot_alignment_type_based
+
+    Notes
+    -----
+    The labels are placed on the Y-axis of the `axes` and the numbers
+    are placed on the Y-axis of the `axes` twin.
+    The position within a line is placed on the X-axis of the `axes`.
+    Further modification of these can be performed using the usual
+    *Matplotlib* API.
+    """
     from matplotlib.transforms import Bbox
 
     number_functions = [lambda x: x + 1] * len(alignment.sequences)
@@ -414,6 +535,122 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
                                     color=None, cmap=None, matrix=None,
                                     color_symbols=False,
                                     symbol_size=None, symbol_param=None):
+    r"""
+    Plot a pairwise or multiple sequence alignment highlighting
+    the similarity per alignment column.
+
+    This function works like `plot_alignment()` with a `SymbolPlotter`,
+    that colors the symbols based on the similarity with the other
+    symbols in the same column.
+    The color intensity (or colormap value, respectively) of a symbol
+    scales with similarity of the respective symbol to the other symbols
+    in the same alignment column.
+
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    alignment : Alignment
+        The pairwise or multiple sequence alignment to be plotted.
+        The alphabet of each sequence in the alignment must be the same.
+    symbol_plotter : SymbolPlotter
+        Defines how the symbols in the alignment are drawn.
+    symbols_per_line : int, optional
+        The amount of alignment columns that are diplayed per line.
+    show_numbers : bool, optional
+        If true, the sequence position of the symbols in the last
+        alignment column of a line is shown on the right side of the
+        plot.
+        If the last symbol is a gap, the position of the last actual
+        symbol before this gap is taken.
+        If the first symbol did not occur up to this point,
+        no number is shown for this line.
+        By default the first symbol of a sequence has the position 1,
+        but this behavior can be changed using the `number_functions`
+        parameter.
+    number_size : float, optional
+        The font size of the position numbers
+    number_functions : list of [(None or Callable(int -> int)], optional
+        By default the position of the first symbol in a sequence is 1,
+        i.e. the sequence position is the sequence index incremented by
+        1.
+        The behavior can be changed with this parameter:
+        If supplied, the length of the list must match the number of
+        sequences in the alignment.
+        Every entry is a function that maps a sequence index (*int*) to
+        a sequence position (*int*) for the respective sequence.
+        A `None` entry means, that the default numbering is applied
+        for the sequence.
+    labels : list of str, optional
+        The sequence labels.
+        Must be the same size and order as the sequences in the
+        alignment.
+    label_size : float, optional
+        Font size of the labels
+    show_line_position : bool, optional
+        If true the position within a line is plotted below the
+        alignment.
+    spacing : float, optional
+        The spacing between the alignment lines. 1.0 means that the size
+        is equal to the size of a symbol box.
+    color : tuple or str, optional
+        A `matplotlib` compatible color.
+        If this parameter is given, the box color in an interpolated
+        value between white and the given color,
+        or, if `color_symbols` is set to true, between the given color
+        and black.
+        The interpolation percentage is given by the average normalized
+        similarity.
+    cmap : Colormap, optional
+        The boxes (or symbols, if `color_symbols` is set) are
+        colored based on the normalized similarity value on the
+        given *Matplotlib* Colormap.
+    matrix : SubstitutionMatrix
+        The substitution matrix used to determine the similarity
+        of two symbols. By default an identity matrix is used, i.e.
+        only match and mismatch is distinguished.
+    color_symbols : bool, optional
+        If true, the symbols themselves are colored.
+        If false, the symbols are black, and the boxes behind the
+        symbols are colored.
+    symbol_size : float, optional
+        Font size of the sequence symbols.
+    symbol_param : dict
+        Additional parameters that is given to the *Matplotlib* `Text`
+        instance of each symbol.
+    
+    See also
+    --------
+    plot_alignment
+    LetterSimilarityPlotter
+
+    Notes
+    -----
+    For determination of the color, this `AlignmentVisualizer` uses a
+    measure called *average normalized similarity*.
+
+    The *normalized similarity* of one symbol *a* to another symbol *b*
+    (both in aphabet *X*) is defined as
+
+    .. math:: S_{norm}(a,b) = \frac{S(a,b) - \min\limits_x(S(a,x))} {\max\limits_x(S(a,x)) - \min\limits_x(S(a,x))}
+
+    .. math:: a,b,x \in X
+
+    where *S(x,y)* is the similarity score of the two symbols
+    *x* and *y* described in the substitution matrix.
+    The similarity *S(x,-)* is always 0.
+    As the normalization is conducted only with respect to *a*,
+    the *normalized similarity* is not commutative.
+
+    The *average normalized similarity* of a symbol *a* is
+    determined by averaging the normalized similarity over each
+    symbol *b*\ :sub:`i` in the same alignment column.
+
+    .. math:: S_{norm,av}(a) = \frac{1}{n-1} \left[\left(\sum\limits_{i=1}^n S_{norm}(a,b_i)\right) - S_{norm}(a,a)\right]
+
+    The normalized similarity of *a* to itself is subtracted,
+    because *a* does also occur in *b*\ :sub:`i`.
+    """
     symbol_plotter = LetterSimilarityPlotter(
         axes, matrix=matrix, font_size=symbol_size, font_param=symbol_param,
         color_symbols=color_symbols
@@ -439,6 +676,84 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
                               spacing=1,
                               color_scheme=None, color_symbols=False,
                               symbol_size=None, symbol_param=None):
+    """
+    Plot a pairwise or multiple sequence alignment coloring each symbol
+    based on the symbol type.
+
+    This function works like `plot_alignment()` with a `SymbolPlotter`,
+    that colors the symbols based on a color scheme.
+    The color intensity (or colormap value, respectively) of a symbol
+    scales with similarity of the respective symbol to the other symbols
+    in the same alignment column.
+
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    alignment : Alignment
+        The pairwise or multiple sequence alignment to be plotted.
+        The alphabet of each sequence in the alignment must be the same.
+    symbol_plotter : SymbolPlotter
+        Defines how the symbols in the alignment are drawn.
+    symbols_per_line : int, optional
+        The amount of alignment columns that are diplayed per line.
+    show_numbers : bool, optional
+        If true, the sequence position of the symbols in the last
+        alignment column of a line is shown on the right side of the
+        plot.
+        If the last symbol is a gap, the position of the last actual
+        symbol before this gap is taken.
+        If the first symbol did not occur up to this point,
+        no number is shown for this line.
+        By default the first symbol of a sequence has the position 1,
+        but this behavior can be changed using the `number_functions`
+        parameter.
+    number_size : float, optional
+        The font size of the position numbers
+    number_functions : list of [(None or Callable(int -> int)], optional
+        By default the position of the first symbol in a sequence is 1,
+        i.e. the sequence position is the sequence index incremented by
+        1.
+        The behavior can be changed with this parameter:
+        If supplied, the length of the list must match the number of
+        sequences in the alignment.
+        Every entry is a function that maps a sequence index (*int*) to
+        a sequence position (*int*) for the respective sequence.
+        A `None` entry means, that the default numbering is applied
+        for the sequence.
+    labels : list of str, optional
+        The sequence labels.
+        Must be the same size and order as the sequences in the
+        alignment.
+    label_size : float, optional
+        Font size of the labels
+    show_line_position : bool, optional
+        If true the position within a line is plotted below the
+        alignment.
+    spacing : float, optional
+        The spacing between the alignment lines. 1.0 means that the size
+        is equal to the size of a symbol box.
+    color_scheme : str or list of (tuple or str), optional
+        Either a valid color scheme name
+        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
+        or a list of `matplotlib` compatible colors.
+        The list length must be at least as long as the
+        length of the alphabet used by the sequences.
+    color_symbols : bool, optional
+        If true, the symbols themselves are colored.
+        If false, the symbols are black, and the boxes behind the
+        symbols are colored.
+    symbol_size : float, optional
+        Font size of the sequence symbols.
+    symbol_param : dict
+        Additional parameters that is given to the *Matplotlib* `Text`
+        instance of each symbol.
+    
+    See also
+    --------
+    plot_alignment
+    LetterTypePlotter
+    """
     alphabet = alignment.sequences[0].get_alphabet()
     symbol_plotter = LetterTypePlotter(
         axes, alphabet, font_size=symbol_size, font_param=symbol_param,
