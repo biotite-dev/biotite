@@ -2,8 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import overload, List, Iterable, Optional
+from typing import overload, List, Tuple, Iterable, Optional
 import numpy as np
+from ...copyable import Copyable
 
 
 class Tree(Copyable):

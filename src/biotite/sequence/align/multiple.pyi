@@ -11,10 +11,10 @@ from ..sequence import Sequence
 
 
 def align_multiple(
-    sequences: List[Sequence]:
+    sequences: List[Sequence],
     matrix: SubstitutionMatrix,
     gap_penalty: Union[Tuple[int, int], int] = -10,
     terminal_penalty: bool = True,
-    distances: Optional[np.ndarray]
-    guide_tree: Optional[Tree]
+    distances: Optional[np.ndarray] = None,
+    guide_tree: Optional[Tree] = None
 ) -> Tuple[Alignment, np.ndarray, Tree, np.ndarray]: ...

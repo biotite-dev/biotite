@@ -2,13 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import NewType, Optional
+from typing import Optional, Dict, Any
 try:
     from matplotlib.patches import FancyArrow
     from matplotlib.text import Text
 except ImportError:
-    FancyArrow = NewType("FancyArrow", object)
-    Text = NewType("Text", object)
+    FancyArrow = Any
+    Text = Any
 
 
 def set_font_size_in_coord(
@@ -16,7 +16,7 @@ def set_font_size_in_coord(
     width: Optional[float] = None,
     height: Optional[float] = None,
     mode: str = "unlocked"
-) -> None:
+) -> None: ...
 
 
 class AdaptiveFancyArrow(FancyArrow):

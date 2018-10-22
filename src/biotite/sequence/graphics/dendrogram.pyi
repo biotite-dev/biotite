@@ -2,12 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Optional, List, NewType
+from typing import Optional, List, Any
 from ..phylo.tree import Tree
 try:
     from matplotlib.axes import Axes
 except ImportError:
-    Axes = NewType("Axes", object)
+    Axes = Any
 
 
 def plot_dendrogram(

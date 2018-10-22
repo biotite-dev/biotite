@@ -2,18 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Optional, List, Dict, NewType, Callable
+from typing import Optional, List, Dict, Union, Tuple, Callable, Any
 from ..align.alignment import Alignment
 from ..align.matrix import SubstitutionMatrix
-from .colorschemes import Color
 try:
     from matplotlib.axes import Axes
     from matplotlib.transforms import Bbox
     from matplotlib.colors import Colormap
 except ImportError:
-    Axes = NewType("Axes", object)
-    Bbox = NewType("Bbox", object)
-    Colormap = NewType("Colormap", object)
+    Axes = Any
+    Bbox = Any
+    Colormap = Any
+
+
+Color = Union[str, Tuple[float, float, float]]
 
 
 class SymbolPlotter():
@@ -70,7 +72,7 @@ def plot_alignment(
     symbols_per_line: int = 50,
     show_numbers: bool = False,
     number_size: Optional[float] = None,
-    number_functions: Optional[List[Optional[Callable[int, int]]]] = None,
+    number_functions: Optional[List[Optional[Callable[[int], int]]]] = None,
     labels: Optional[List[str]] = None,
     label_size: Optional[float] = None,
     show_line_position: bool = False,
@@ -83,7 +85,7 @@ def plot_alignment_similarity_based(
     symbols_per_line: int = 50,
     show_numbers: bool = False,
     number_size: Optional[float] = None,
-    number_functions: Optional[List[Optional[Callable[int, int]]]] = None,
+    number_functions: Optional[List[Optional[Callable[[int], int]]]] = None,
     labels: Optional[List[str]] = None,
     label_size: Optional[float] = None,
     show_line_position: bool = False,
@@ -102,7 +104,7 @@ def plot_alignment_type_based(
     symbols_per_line: int = 50,
     show_numbers: bool = False,
     number_size: Optional[float] = None,
-    number_functions: Optional[List[Optional[Callable[int, int]]]] = None,
+    number_functions: Optional[List[Optional[Callable[[int], int]]]] = None,
     labels: Optional[List[str]] = None,
     label_size: Optional[float] = None,
     show_line_position: bool = False,

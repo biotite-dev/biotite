@@ -2,14 +2,14 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Optional, List, Dict, NewType, Callable
+from typing import Optional, List, Tuple, Dict, Callable, Any
 from ..annotation import Feature, Annotation
 try:
     from matplotlib.axes import Axes
     from matplotlib.transforms import Bbox
 except ImportError:
-    Axes = NewType("Axes", object)
-    Bbox = NewType("Bbox", object)
+    Axes = Any
+    Bbox = Any
 
 
 def plot_feature_map(
@@ -34,7 +34,7 @@ class FeaturePlotter():
         self,
         axes: Axes,
         feature: Feature,
-        bbox: BBox,
+        bbox: Bbox,
         loc_index: int,
         style_param: Optional[Dict[str, object]]
     ) -> None: ...
