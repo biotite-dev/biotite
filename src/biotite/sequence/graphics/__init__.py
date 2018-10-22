@@ -6,7 +6,7 @@
 A subpackage for visualization of sequence related objects.
 
 The visualizations make use of *Matplotlib* for plotting.
-Therefore, each plotting functions requires an `Axes` object,
+Therefore, each plotting function requires an `Axes` object,
 where the visualization should be performed.
 
 The resulting plots are customizable:
@@ -17,7 +17,7 @@ Some aspects of the plotting itself are also customizable: For example
 the `plot_alignment()` function uses a interchangable `SymbolPlotter`,
 that knows how to draw the symbols of an alignment.
 Similarily, the appearance of sequence features in the function
-`plot_feature_map()` is customized via `FeaturePlotter` objects.s
+`plot_feature_map()` is customized via `FeaturePlotter` objects.
 """
 
 __author__ = "Patrick Kunzmann"

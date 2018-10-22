@@ -19,6 +19,72 @@ def plot_feature_map(axes, annotation, loc_range=None,
                      show_numbers=False, number_size=None, line_width=0.05,
                      show_line_position=False, spacing=0.25,
                      feature_plotters=None, style_param=None):
+    """
+    Plot a sequence annotation, by showing the range of each feature
+    on one or multiple position depicting line(s).
+
+    This function uses `FeaturePlotter` objects to draw the features.
+    This function internally uses a list of plotters, where the
+    first plotter in the list, that supports a feature, is used to draw
+    that feature.
+    The amount of features that can be visualized by default is limited.
+    Features, that are not supported otherwise, are visualized as simple
+    rectangles.
+    Additional `FeaturePlotter` objects, that are supplied in the
+    `feature_plotters` parameters, can be used to add support for
+    further features or to customize the appearance of certain features.
+
+    Parameters
+    ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
+    annotation : Annotation
+        The annotation to be visualized
+    loc_range : tuple (int, int), optional
+        The start and exclusive stop location that is visualized.
+        By default, the location range starts from the first
+        base/residue and ends at the last base/residue of all features,
+        ensuring that the entire annotation is drawn.
+    multi_line : bool, optional
+        If true, the annotation is segmented into multiple lines with a
+        line break all `symbols_per_line` lines.
+        Otherwise, the entire location range is put into a single line.
+    symbols_per_line : int, optional
+        The amount of
+        Does not have an effect, if `multi_line` is false.
+    show_numbers : bool, optional
+        If true, the sequence position the base/residue of a line is
+        shown on the right side of the plot.
+    number_size : float, optional
+        The font size of the position numbers
+    line_width : float, optional
+        The size of the continious line as fraction of the height of
+        the drawn features.
+    show_line_position : bool, optional
+        If true the position within a line is plotted.
+    spacing : float, optional
+        The size of the spacing between the lines as fraction of the
+        height of the drawn features.
+    feature_plotters : list of FeaturePlotter, optional
+        Custom plotters for features.
+        The list is iterated from the beginning until a `FeaturePlotter`
+        matches the respective feature
+        (`FeaturePlotter.matches()` returns `True`).
+        This `FeaturePlotter` is then used to draw the feature.
+        Therefore, the `FeaturePlotter` instances in the list have
+        descending priority.
+        The default plotters are appended after this supplied list,
+        i.e. the default plotters have a lower prioriy.
+    style_param : dict
+        Additional style parameters that are given to the
+        `FeaturePlotter` objects.
+
+    Notes
+    -----
+    Good visulation results are obtained only for non-overlapping
+    features.
+    When two features overlap, their drawing area does also overlap.
+    """
     from matplotlib.transforms import Bbox
     from matplotlib.patches import Rectangle
     
@@ -65,7 +131,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
             (0, y-line_width/2), line_length, line_width,
             color="gray", linewidth=0
         ))
-        # Increment by spacing and width of feature (1)
+        # Increment by spacing and width (=1) of feature
         y += spacing + 1
         remaining_symbols -= symbols_per_line
     
@@ -99,7 +165,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
                         axes, feature, bbox, loc_index=i,
                         style_param=style_param
                     )
-        # Increment by spacing and width of feature (1)
+        # Increment by spacing and width (=1) of feature
         y += spacing + 1
         remaining_symbols += symbols_per_line
         line_start_loc += symbols_per_line
@@ -148,20 +214,78 @@ def plot_feature_map(axes, annotation, loc_range=None,
 
 
 class FeaturePlotter(metaclass=abc.ABCMeta):
+    """
+    A `FeaturePlotter` is an object, that 'knows' how to draw a certain
+    type of sequence feature onto a *Matplotlib* axes.
+
+    Whether the `FeaturePlotter` is able to draw a feature, is
+    checked via the `matches()` method.
+    The visualization of a compatible feature is conducted in the
+    `draw()` method.
+    """
 
     def __init__(self):
         pass
 
     @abc.abstractmethod
     def matches(self, feature):
+        """
+        Check, whether this object is able to draw a given sequence
+        feature.
+
+        Parameters
+        ----------
+        feature : Feature
+            The sequence feature to be checked.
+        
+        Returns
+        -------
+        compatibility : bool
+            True, if this object is able to draw the given `feature`,
+            false otherwise.
+        """
         pass
     
     @abc.abstractmethod
     def draw(self, axes, feature, bbox, loc_index, style_param):
+        """
+        Draw aa feature onto an axes.
+
+        Parameters
+        ----------
+        axes : Axes
+            A *Matplotlib* axes, that is used as plotting area.
+        feature : Feature
+            The feature to be drawn.
+        bbox : Bbox
+            The bounding box, that describes the area on the `axes`,
+            where the feature should be drawn.
+        loc_index : int
+            The index to the `Location` in ``feature.locs``, that
+            should be drawn.
+            Might be useful, when the visualization is dependent
+            on e.g. location defects.
+        style_param : dict
+            Additional style parameters.
+        """
         pass
 
 
 class CodingPlotter(FeaturePlotter):
+    """
+    A plotter for the *CDS* and *gene* features.
+
+    Draws an arrow with a 90 degrees tip.
+
+    Parameters
+    ----------
+    tail_width : float, optional
+        The width of the arrow tail
+        as fraction of the feature drawing area height.
+    head_width : float, optional
+        The width of the arrow head
+        as fraction of the feature drawing area height.
+    """
     
     def __init__(self, tail_width=0.5, head_width=0.8):
         self._tail_width = tail_width
@@ -225,7 +349,18 @@ class CodingPlotter(FeaturePlotter):
 
 
 class MiscFeaturePlotter(FeaturePlotter):
-    
+    """
+    A plotter that matches any feature.
+
+    Draws a simple Rectangle.
+
+    Parameters
+    ----------
+    height : float, optional
+        The width of the rectangle
+        as fraction of the feature drawing area height.
+    """
+
     def __init__(self, height=0.4):
         self._height = height
 
@@ -243,7 +378,24 @@ class MiscFeaturePlotter(FeaturePlotter):
         axes.add_patch(rect)
 
 class PromoterPlotter(FeaturePlotter):
-    
+    """
+    A plotter for *regulatory* features with the *promoter* class.
+
+    Draws a simple curved thin black arrow.
+
+    Parameters
+    ----------
+    line_width : float, optional
+        The width of the curved arrow tail.
+    head_width : float, optional
+        The width of the arrow head
+    head_length : float, optional
+        The length of the arrow.
+    head_height : float, optional
+        The Y-position of the arrow head
+        as fraction of the halffeature drawing area height.
+    """
+
     def __init__(self, line_width=2, head_width=2,
                  head_length=6, head_height=0.8):
         self._line_width = line_width
@@ -295,7 +447,17 @@ class PromoterPlotter(FeaturePlotter):
 
 
 class TerminatorPlotter(FeaturePlotter):
-    
+    """
+    A plotter for *regulatory* features with the *terminator* class.
+
+    Draws a vertical bar.
+
+    Parameters
+    ----------
+    bar_width : float, optional
+        The width of the line representing the bar.
+    """
+
     def __init__(self, bar_width=5):
         self._bar_width = bar_width
 
@@ -317,7 +479,19 @@ class TerminatorPlotter(FeaturePlotter):
 
 
 class RBSPlotter(FeaturePlotter):
-    
+    """
+    A plotter for *regulatory* features with the
+    *ribosome_binding_site* class.
+
+    Draws an ellipse.
+
+    Parameters
+    ----------
+    height : float, optional
+        The width of the ellipse
+        as fraction of the feature drawing area height.
+    """
+
     def __init__(self, height=0.4):
         self._height = height
 
