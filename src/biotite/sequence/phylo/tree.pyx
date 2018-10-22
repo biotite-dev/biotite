@@ -74,7 +74,7 @@ class Tree(Copyable):
         for i in range(len(indices)):
             self._leaves[indices[i]] = leaves_unsorted[i]
     
-    def __copy_create__():
+    def __copy_create__(self):
         return Tree(self._root.copy())
     
     @property
