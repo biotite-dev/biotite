@@ -18,7 +18,7 @@ def align_ungapped(
     seq1: Sequence,
     seq2: Sequence,
     matrix: SubstitutionMatrix,
-    score_only=False
+    score_only = False
 ) -> Union[Alignment, int]: ...
 
 def align_optimal(
