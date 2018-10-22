@@ -12,6 +12,53 @@ from numpy.linalg import norm
 
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
+    """
+    Specifiy the font size of an existing `Text` object in coordinates
+    of the object's reference coordiante system.
+
+    Instead of having the font size fixed in 'pt', the size of the text
+    scales to the specied width/height and adapts to changes in the
+    plot's width/height.
+    The scaling can be proportional or non-proportional, depending 
+    the `mode`.
+
+    Parameters
+    ----------
+    text : Text:
+        The matplotlib `Text` to be scaled.
+    width, height : float, optional
+        The new width/height of `text` in its
+        reference coordinate system.
+        At least one value must be supplied.
+    mode : {'proportional', 'unlocked', 'maximum', 'minimum'}, optional
+        The scaling mode:
+
+            - *proportional* - The width and height are scaled by the
+              same extent.
+              Either `width` or `height` must be set for this mode.
+            - *unlocked* - The width and the height are scaled by
+              different extents, changing the aspect ratio.
+              Both `width` and `height` must be set for this mode.
+            - *maximum* - The width and the height are scaled by
+              the same extent, so that they are at maximum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+            - *minimum* - The width and the height are scaled by
+              the same extent, so that they are at minimum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+
+    Notes
+    -----
+    This function us the `get_window_extent()` method of the `Text`
+    object.
+    According to experience, this function does not give the the exact
+    visual boundaries of the text.
+    Consequently, the scaled text might be slightly smaller or larger
+    than the specified width/height..
+    This behaviour is not equal for all initial font sizes (in 'pt'),
+    the boundaries for an inital size of 1 'pt' seems to be most exact.
+    """
     from matplotlib.transforms import Bbox
     from matplotlib.text import Text
     from matplotlib.patheffects import AbstractPathEffect
@@ -80,10 +127,31 @@ try:
     class AdaptiveFancyArrow(FancyArrow):
         """
         A `FancyArrow` with fixed head shape.
-        The length of the head is proportional to the width the head
+
+        The length of the head is proportional to the width of the head
         in display coordinates.
         If the head length is longer than the length of the entire
         arrow, the head length is limited to the arrow length.
+
+        Parameters
+        ----------
+        x,y  : float
+            The arrow's start position.
+        dx, dy : float
+            The arrow's direction vector, inclduing the arrow head.
+        tail_width, head_width : float
+            The width of the arrow's tail and head in its reference
+            coordinate system
+        head_ratio : float, optional
+            The length of the arrow head as faction of the arrow width
+            (display coordinates).
+        draw_head: bool, optional
+            If false, the arrow has no head. The result is a rectangle.
+        shape : str, optional
+            The `shape` parameter in the constructor of `FancyArrow`.
+        **kwargs
+            Other parameters that are used in the constructor of
+            `FancyArrow`.
         """
         
         def __init__(self, x, y, dx, dy,
@@ -116,7 +184,7 @@ try:
 
     class _ArrowHeadCorrect(AbstractPathEffect):
         """
-        Updates the arrow head length every time the arrow is rendered
+        Updates the arrow head length every time the arrow is rendered.
         """
 
         def __init__(self, arrow, head_ratio, draw_head):
