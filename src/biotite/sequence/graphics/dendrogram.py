@@ -117,7 +117,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         # hence the conversion to a ndarray
         labels = np.array(labels)[indices].tolist()
     else:
-        [str(i) for i in indices]
+        labels = [str(i) for i in indices]
     # The distance axis does not start at 0,
     # since the root line would not properly rendered
     # Hence the limit is set a to small fraction of the entire axis
