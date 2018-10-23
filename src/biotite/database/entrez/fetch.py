@@ -109,7 +109,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         E-utility database name.
     ret_type : str
         Retrieval type
-    ret_mode : str
+    ret_mode : str, optional
         Retrieval mode
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
