@@ -122,7 +122,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     # since the root line would not properly rendered
     # Hence the limit is set a to small fraction of the entire axis
     # beyond 0
-    zero_limit = -0.01 * len(indices)
+    zero_limit = -0.01 * max_distance
     if orientation == "left":
         axes.set_xlim(zero_limit, max_distance)
         axes.set_ylim(-1, len(indices))
