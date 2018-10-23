@@ -168,8 +168,8 @@ class LetterSimilarityPlotter(LetterPlotter):
     
     Notes
     -----
-    For determination of the color, this `AlignmentVisualizer` uses a
-    measure called *average normalized similarity*.
+    For determination of the color, this a measure called
+    *average normalized similarity* is used.
 
     The *normalized similarity* of one symbol *a* to another symbol *b*
     (both in aphabet *X*) is defined as
@@ -296,7 +296,7 @@ class LetterSimilarityPlotter(LetterPlotter):
 
 class LetterTypePlotter(LetterPlotter):
     """
-    This `AlignmentVisualizer` colors each symbol based on the general
+    This `SymbolPloter` colors each symbol based on the general
     color of that symbol defined by a color scheme.
 
     EXPERIMENTAL: Future API changes are probable.
@@ -626,8 +626,8 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
 
     Notes
     -----
-    For determination of the color, this `AlignmentVisualizer` uses a
-    measure called *average normalized similarity*.
+    For determination of the color, a measure called
+    *average normalized similarity* is used.
 
     The *normalized similarity* of one symbol *a* to another symbol *b*
     (both in aphabet *X*) is defined as

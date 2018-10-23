@@ -43,11 +43,11 @@ alignment = clustalo.ClustalOmegaApp.align(sequences)
 
 ########################################################################
 # Since the sequences are relatively long, the display of the entire
-# alignment using an :class:`AlignmentVisualizer` would be too big.
+# alignment using a :func:`plot_alignment` would be too big.
 # Instead we use a heat map, which highlights the similarity in the
 # alignment column using a color map.
 #
-# Like the :class:`AlignmentSimilarityVisualizer` we will use the
+# Like the :class:`LetterSimilarityPlotter` we will use the
 # *average normalized similarity* as measure.
 
 def get_average_normalized_similarity(trace_code, matrix, seq_i, pos_i):

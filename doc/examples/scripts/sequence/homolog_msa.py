@@ -55,7 +55,6 @@ for i in range(len(gapped_seqs)):
     print(hits[i], " "*3, gapped_seqs[i])
 
 # Visualize the first 200 columns of the alignment
-# using AlignmentSymbolVisualizer
 # Reorder alignments to reflect sequence distance
 
 fig = plt.figure(figsize=(8.0, 8.0))
