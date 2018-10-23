@@ -330,7 +330,7 @@ class LetterTypePlotter(LetterPlotter):
         
         if color_scheme is None:
             self._colors = get_color_scheme("rainbow", alphabet)
-        if isinstance(color_scheme, str):
+        elif isinstance(color_scheme, str):
             self._colors = get_color_scheme(color_scheme, alphabet)
         else:
             self._colors = color_scheme
