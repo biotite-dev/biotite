@@ -93,7 +93,6 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
         The values need to be negative. (Default: *-10*)
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
-        If `local` is true, this parameter has no effect. 
         (Default: True)
     distances : ndarray, shape=(n,n)
         Pairwise distances of the sequences.
