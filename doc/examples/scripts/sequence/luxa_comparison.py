@@ -42,7 +42,7 @@ for header, seq_str in fasta_file:
 
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 alignment, order, tree, distances = align.align_multiple(
-    sequences, matrix, gap_penalty=(-10,1), terminal_penalty=False
+    sequences, matrix, gap_penalty=(-10,-1), terminal_penalty=False
 )
 # Order alignment according to the guide tree
 alignment = alignment[:, order]
