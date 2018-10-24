@@ -193,8 +193,12 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
             raise ValueError("The sequences' alphabets do not fit the matrix")
     # Check if gap penalty is gernal or affine
     if type(gap_penalty) == int:
+        if gap_penalty > 0:
+            raise ValueError("Gap penalty must be negative")
         affine_penalty = False
     elif type(gap_penalty) == tuple:
+        if gap_penalty[0] > 0 or gap_penalty[1] > 0:
+                raise ValueError("Gap penalty must be negative")
         affine_penalty = True
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
