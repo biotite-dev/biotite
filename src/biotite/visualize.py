@@ -121,6 +121,7 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
 try:
     # Only create this class when matplotlib is installed
+    from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
     from matplotlib.patheffects import AbstractPathEffect
 
@@ -157,6 +158,17 @@ try:
         def __init__(self, x, y, dx, dy,
                      tail_width, head_width, head_ratio, draw_head=True,
                      shape="full", **kwargs):
+            import matplotlib.pyplot as plt
+            self._x = x
+            self._y = y
+            self._dx = dx
+            self._dy = dy
+            self._tail_width = tail_width
+            self._head_width = head_width
+            self._head_ratio = head_ratio
+            self._draw_head = draw_head
+            self._shape = shape
+            self._kwargs = kwargs
             if not draw_head:
                 head_width = tail_width
             super().__init__(
@@ -165,9 +177,37 @@ try:
                 overhang=0, shape=shape,
                 length_includes_head=True, **kwargs
             )
-            self.set_path_effects(
-                [_ArrowHeadCorrect(self, head_ratio, draw_head)]
+
+        def draw(self, renderer):
+            arrow_box = Bbox([(0,0), (0,self._head_width)])
+            arrow_box_display = self.axes.transData.transform_bbox(arrow_box)
+            head_length_display = np.abs(
+                arrow_box_display.height * self._head_ratio
             )
+            arrow_box_display.x1 = arrow_box_display.x0 + head_length_display
+            # Transfrom back to data coordinates for plotting
+            arrow_box = self.axes.transData.inverted().transform_bbox(
+                arrow_box_display
+            )
+            head_length = arrow_box.width
+            arrow_length = norm((self._dx, self._dy))
+            if head_length > arrow_length:
+                # If the head would be longer than the entire arrow,
+                # only draw the arrow head with reduced length
+                head_length = arrow_length
+            if not self._draw_head:
+                head_length = 0 
+
+            # Renew the arrow's properties
+            super().__init__(
+                self._x, self._y, self._dx, self._dy,
+                width=self._tail_width, head_width=self._head_width,
+                overhang=0, shape=self._shape,
+                head_length=head_length, length_includes_head=True,
+                axes=self.axes, transform=self.get_transform(), **self._kwargs
+            )
+            self.set_clip_path(self.axes.patch)
+            super().draw(renderer)
         
         # Override to replace docstring
         # Removes warning:
@@ -180,62 +220,6 @@ try:
             """
             """
             return super().set_in_layout(in_layout)
-    
-
-    class _ArrowHeadCorrect(AbstractPathEffect):
-        """
-        Updates the arrow head length every time the arrow is rendered.
-        """
-
-        def __init__(self, arrow, head_ratio, draw_head):
-            self._arrow = arrow
-            self._head_ratio = head_ratio
-            self._draw_head = draw_head
-
-        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
-            # Indices to certain vertices in the arrow
-            TIP = 0
-            HEAD_OUTER_1 = 1
-            HEAD_INNER_1 = 2
-            TAIL_1 = 3
-            TAIL_2 = 4
-            HEAD_INNER_2 = 5
-            HEAD_OUTER_2 = 6
-
-            transform = self._arrow.axes.transData
-
-            vert = tpath.vertices
-            # Transform data coordiantes to display coordinates
-            vert = transform.transform(vert)
-            # The direction vector alnog the arrow
-            arrow_vec = vert[TIP] - (vert[TAIL_1] + vert[TAIL_2]) / 2
-            tail_width = norm(vert[TAIL_2] - vert[TAIL_1])
-            # Calculate head length from head width
-            head_width = norm(vert[HEAD_OUTER_2] - vert[HEAD_OUTER_1])
-            head_length = head_width * self._head_ratio
-            if head_length > norm(arrow_vec):
-                # If the head would be longer than the entire arrow,
-                # only draw the arrow head with reduced length
-                head_length = norm(arrow_vec)
-            # The new head start vector; is on the arrow vector
-            if self._draw_head:
-                head_start = \
-                vert[TIP] - head_length * arrow_vec/norm(arrow_vec)
-            else:
-                head_start = vert[TIP]
-            # vector that is orthogonal to the arrow vector
-            arrow_vec_ortho = vert[TAIL_2] - vert[TAIL_1]
-            # Make unit vector
-            arrow_vec_ortho = arrow_vec_ortho / norm(arrow_vec_ortho)
-            # Adjust vertices of the arrow head
-            vert[HEAD_OUTER_1] = head_start - arrow_vec_ortho * head_width/2
-            vert[HEAD_OUTER_2] = head_start + arrow_vec_ortho * head_width/2
-            vert[HEAD_INNER_1] = head_start - arrow_vec_ortho * tail_width/2
-            vert[HEAD_INNER_2] = head_start + arrow_vec_ortho * tail_width/2
-            # Transform back to data coordinates
-            # and modify path with manipulated vertices
-            tpath.vertices = transform.inverted().transform(vert)
-            renderer.draw_path(gc, tpath, affine, rgbFace)
 
 
 except ImportError:
