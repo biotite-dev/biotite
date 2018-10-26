@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import overload, List, Tuple, Iterable, Optional
+from typing import overload, List, Tuple, Optional
 import numpy as np
 from ...copyable import Copyable
 
@@ -11,12 +11,21 @@ class Tree(Copyable):
     root: TreeNode
     leaves: List[TreeNode]
     def __init__(self, root: TreeNode) -> None: ...
-    def get_distance(self, index1: int, index2: int) -> float: ...
+    def get_distance(
+        self, index1: int,
+        index2: int,
+        topological: bool = False
+    ) -> float: ...
     def to_newick(
         self,
-        labels: Optional[Iterable[str]] = None,
+        labels: Optional[List[str]] = None,
         include_distance: bool = True
     ) -> str: ...
+    @staticmethod
+    def from_newick(
+        newick: str,
+        labels: Optional[List[str]] = None
+    ) -> Tree: ...
     def __str__(self) -> str: ...
 
 
@@ -42,16 +51,25 @@ class TreeNode:
     def is_leaf(self) -> bool: ...
     def is_root(self) -> bool: ...
     def as_root(self) -> None: ...
-    def distance_to(self, node: TreeNode) -> float: ...
+    def distance_to(
+        self,
+        node: TreeNode,
+        topological: bool = False
+    ) -> float: ...
     def lowest_common_ancestor(self, node: TreeNode) -> TreeNode: ...
     def get_indices(self) -> List[int]: ...
     def get_leaves(self) -> List[TreeNode]: ...
     def get_leaf_count(self) -> int: ...
     def to_newick(
         self,
-        labels: Optional[Iterable[str]] = None,
+        labels: Optional[List[str]] = None,
         include_distance: bool = True
     ) -> str: ...
+    @staticmethod
+    def from_newick(
+        newick: str,
+        labels: Optional[List[str]] = None
+    ) -> TreeNode: ...
     def __str__(self) -> str: ...
 
 

@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Tree", "TreeNode"]
+__all__ = ["Tree", "TreeNode", "TreeError"]
 
 cimport cython
 cimport numpy as np
@@ -85,9 +85,9 @@ class Tree(Copyable):
     def leaves(self):
         return copy.copy(self._leaves)
 
-    def get_distance(self, index1, index2):
+    def get_distance(self, index1, index2, bint topological=False):
         """
-        get_distance(index1, index2)
+        get_distance(index1, index2, topological=False)
         
         Get the distance between two leaf nodes.
 
@@ -121,6 +121,9 @@ class Tree(Copyable):
         >>> print(tree.get_distance(1,2))
         20.0
         """
+        return self._leaves[index1].distance_to(
+            self._leaves[index2], topological
+        )
     
     def to_newick(self, labels=None, bint include_distance=True):
         """
@@ -131,7 +134,7 @@ class Tree(Copyable):
         Parameters
         ----------
         labels : iterable object of str
-            The labels the indices in the leaf nodes refer to
+            The labels the indices in the leaf nodes srefer to
         include_distance : bool
             If true, the distances are displayed in the newick notation,
             otherwise they are omitted.
@@ -162,6 +165,37 @@ class Tree(Copyable):
     
     @staticmethod
     def from_newick(str newick, list labels=None):
+        """
+        from_newick(newick, labels=None)
+        
+        Create a tree from a Newick notation.
+
+        Parameters
+        ----------
+        newick : str
+            The Newick notation to create the tree from.
+        labels : list of str, optional
+            If the Newick notation contains labels, that are not
+            parseable into reference indices,
+            i.e. they are not integers, this parameter can be provided
+            to convert these labels into reference indices.
+            The corresponding index is the position of the label in the
+            provided list.
+
+        Results
+        -------
+        tree : Tree
+            A tree created from the Newick notation
+        
+        Notes
+        -----
+        This function does accept but does not require the Newick string
+        to have the terminal semicolon.
+        Keep in mind that the `Tree` class does support any labels on
+        intermeiate nodes.
+        If the string contains such labels, they are discarded.
+        Furthermore, only binary trees can be parsed. 
+        """
         newick = newick.strip()
         # Remove terminal colon as required by 'TreeNode.from_newick()'
         if newick[-1] == ";":
@@ -374,9 +408,9 @@ cdef class TreeNode:
             raise TreeError("Node has parent, cannot be a root node")
         self._is_root = True
     
-    def distance_to(self, TreeNode node):
+    def distance_to(self, TreeNode node, bint topological=False):
         """
-        distance_to(node)
+        distance_to(node, topological=False)
         
         Get the distance of this node to another node.
 
@@ -387,6 +421,7 @@ cdef class TreeNode:
         ----------
         node : TreeNode
             The second node for distance calculation.
+        
 
         Returns
         -------
@@ -419,11 +454,17 @@ cdef class TreeNode:
             raise TreeError("The nodes do not have a common ancestor")
         current_node = self
         while current_node is not lca:
-            distance += current_node._distance
+            if topological:
+                distance += 1
+            else:
+                distance += current_node._distance
             current_node = current_node._parent
         current_node = node
         while current_node is not lca:
-            distance += current_node._distance
+            if topological:
+                distance += 1
+            else:
+                distance += current_node._distance
             current_node = current_node._parent
         return distance
     
@@ -605,6 +646,38 @@ cdef class TreeNode:
     
     @staticmethod
     def from_newick(str newick, list labels=None):
+        """
+        from_newick(newick, labels=None)
+
+        Create a node and all its child nodes from a Newick notation.
+
+        Parameters
+        ----------
+        newick : str
+            The Newick notation to create the node from.
+        labels : list of str, optional
+            If the Newick notation contains labels, that are not
+            parseable into reference indices,
+            i.e. they are not integers, this parameter can be provided
+            to convert these labels into reference indices.
+            The corresponding index is the position of the label in the
+            provided list.
+
+        Results
+        -------
+        tree : Tree
+            A tree created from the Newick notation
+        
+        Notes
+        -----
+        The provided Newick notation must not have a terminal semicolon.
+        If you have a Newick notation that covers an entire tree, you
+        may use the same method in the `Tree` class instead.
+        Keep in mind that the `TreeNode` class does support any labels
+        on intermediate nodes.
+        If the string contains such labels, they are discarded.
+        Furthermore, only binary trees can be parsed. 
+        """
         cdef int i
         cdef int subnewick_start_i = -1
         cdef int subnewick_stop_i  = -1
@@ -632,8 +705,13 @@ cdef class TreeNode:
             # No sub-newwick -> Leaf node
             
             label_and_distance = newick
-            label, distance = label_and_distance.split(":")
-            distance = float(distance)
+            try:
+                label, distance = label_and_distance.split(":")
+                distance = float(distance)
+            except ValueError:
+                # No colon -> No distance is provided
+                distance = 0
+                label = label_and_distance
             index = int(label) if labels is None else labels.index(label)
             return TreeNode(index=index), distance
         
@@ -641,7 +719,7 @@ cdef class TreeNode:
             # Intermediate node
             
             if subnewick_stop_i == len(newick):
-                # Root node with neither distance nor label
+                # Node with neither distance nor label
                 label = None
                 distance = 0
             else:
@@ -682,11 +760,8 @@ cdef class TreeNode:
             )
             return TreeNode(child1, child2, child1_dist, child2_dist), distance
 
-
     def __str__(self):
         return self.to_newick()
-
-
 
 
 cdef _get_leaves(TreeNode node, list leaf_list):
@@ -699,7 +774,7 @@ cdef _get_leaves(TreeNode node, list leaf_list):
         leaf_list.append(node)
 
 
-cdef _get_leaf_count(TreeNode node):
+cdef int _get_leaf_count(TreeNode node):
     if node._index == -1:
         # Intermediate node -> Recursive calls
         return _get_leaf_count(node._child1) + _get_leaf_count(node._child2)
