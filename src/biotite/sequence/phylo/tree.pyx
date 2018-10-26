@@ -325,7 +325,7 @@ cdef class TreeNode:
             self._child2 = None
     
     def _set_parent(self, TreeNode parent not None, float distance):
-        if self._parent is not None:
+        if self._parent is not None or self._is_root:
             raise TreeError("Node already has a parent")
         self._parent = parent
         self._distance = distance
