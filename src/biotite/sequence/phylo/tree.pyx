@@ -66,13 +66,18 @@ class Tree(Copyable):
         self._root = root
         
         cdef list leaves_unsorted = self._root.get_leaves()
+        cdef int leaf_count = len(leaves_unsorted)
         cdef np.ndarray indices = np.array(
             [leaf.index for leaf in leaves_unsorted]
         )
-        self._leaves = [None] * len(leaves_unsorted)
+        self._leaves = [None] * leaf_count
         cdef int i
+        cdef int index
         for i in range(len(indices)):
-            self._leaves[indices[i]] = leaves_unsorted[i]
+            index = indices[i]
+            if index >= leaf_count or index < 0:
+                raise TreeError("The tree's indices are out of range")
+            self._leaves[index] = leaves_unsorted[i]
     
     def __copy_create__(self):
         return Tree(self._root.copy())
@@ -683,7 +688,8 @@ cdef class TreeNode:
         cdef int subnewick_stop_i  = -1
         cdef int level = 0
         
-        newick = newick.strip()
+        # Ignore any whitespace
+        newick = "".join(newick.split())
 
         # Find brackets belonging to sub-newick
         for i in range(len(newick)):
@@ -724,8 +730,14 @@ cdef class TreeNode:
                 distance = 0
             else:
                 label_and_distance = newick[subnewick_stop_i:]
+                try:
+                    label, distance = label_and_distance.split(":")
+                    distance = float(distance)
+                except ValueError:
+                    # No colon -> No distance is provided
+                    distance = 0
+                    label = label_and_distance
                 # Label of intermediate nodes is discarded 
-                label, distance = label_and_distance.split(":")
                 distance = float(distance)
             
             subnewick = newick[subnewick_start_i+1 : subnewick_stop_i-1]
@@ -746,7 +758,7 @@ cdef class TreeNode:
             
             # Expect binary tree -> only one comma
             if len(comma_i) != 1:
-                raise ValueError(
+                raise TreeError(
                     f"Node has {len(comma_i)} childs, "
                     f"but a node must have 2 childs in a binary tree"
                 )
