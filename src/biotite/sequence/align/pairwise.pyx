@@ -574,7 +574,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 if g1m_score > g2m_score:
                     trace, m_score = 2, g1m_score
                 elif g1m_score == g2m_score:
-                    trace, m_score = 6, mm_score
+                    trace, m_score = 6, g1m_score
                 else:
                     trace, m_score = 4, g2m_score
             #Secondly for gap tables (g1_table and g2_table)
