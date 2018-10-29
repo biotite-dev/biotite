@@ -191,7 +191,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    # Check if gap penalty is gernal or affine
+    # Check if gap penalty is general or affine
     if type(gap_penalty) == int:
         if gap_penalty > 0:
             raise ValueError("Gap penalty must be negative")
