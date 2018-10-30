@@ -187,7 +187,7 @@ class Tree(Copyable):
             The corresponding index is the position of the label in the
             provided list.
 
-        Results
+        Returns
         -------
         tree : Tree
             A tree created from the Newick notation
@@ -668,7 +668,7 @@ cdef class TreeNode:
             The corresponding index is the position of the label in the
             provided list.
 
-        Results
+        Returns
         -------
         tree : Tree
             A tree created from the Newick notation
