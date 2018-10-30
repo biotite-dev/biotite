@@ -373,13 +373,14 @@ class MiscFeaturePlotter(FeaturePlotter):
         rect = Rectangle(
             (bbox.x0, bbox.y0 + bbox.height/2 * (1-self._height)),
             bbox.width, bbox.height*self._height,
-            color="black", linewidth=0
+            color=colors["dimorange"], linewidth=0
         )
         axes.add_patch(rect)
 
 class PromoterPlotter(FeaturePlotter):
     """
-    A plotter for *regulatory* features with the *promoter* class.
+    A plotter for *regulatory* features with the *promoter* or
+    *TATA_box* class.
 
     Draws a simple curved thin black arrow.
 
@@ -406,7 +407,7 @@ class PromoterPlotter(FeaturePlotter):
     def matches(self, feature):
         if feature.key == "regulatory":
             if "regulatory_class" in feature.qual:
-                if feature.qual["regulatory_class"] == "promoter":
+                if feature.qual["regulatory_class"] in ["promoter","TATA_box"]:
                     return True
         return False
         
