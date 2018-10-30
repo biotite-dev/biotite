@@ -4,6 +4,7 @@
 
 from os.path import join
 import itertools
+import shutil
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -127,6 +128,10 @@ def test_align_optimal_simple(local, term, gap_penalty,
                             gap_penalty=gap_penalty, terminal_penalty=term)
         assert score == ali.score
 
+@pytest.mark.skipif(
+    shutil.which("muscle") is None,
+    reason="MUSCLE is not installed"
+)
 @pytest.mark.parametrize("gap_penalty, seq_indices", itertools.product(
     [-10, (-10,-1)], [(i,j) for i in range(10) for j in range(i+1)]
 ))
@@ -222,6 +227,10 @@ def test_scoring(sequences, gap_penalty, term, seq_indices):
         print(alignment)
         raise
 
+@pytest.mark.skipif(
+    shutil.which("muscle") is None,
+    reason="MUSCLE is not installed"
+)
 @pytest.mark.parametrize("gap_penalty", [-10, (-10,-1)])
 def test_align_multiple(sequences, gap_penalty):
     r"""
