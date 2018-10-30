@@ -655,8 +655,8 @@ print("Are the translated sequences equal?",
 # 
 # .. currentmodule:: biotite.sequence.phylo
 #
-# Trees have an important role in bioinformatics is they are used to
-# guide mutliple sequence alignments or to create phylogenies.
+# Trees have an important role in bioinformatics, as they are used to
+# guide multiple sequence alignments or to create phylogenies.
 #
 # In *Biotite* such a tree is represented by the :class:`Tree` class in
 # the :mod:`biotite.sequence.phylo` package.
@@ -675,8 +675,9 @@ print("Are the translated sequences equal?",
 # in the creation of a new node.
 
 import biotite.sequence.phylo as phylo
-# The reference object
+# The reference objects
 fruits = ["Apple", "Pear", "Orange", "Lemon", "Banana"]
+# Create nodes
 apple  = phylo.TreeNode(index=fruits.index("Apple"))
 pear   = phylo.TreeNode(index=fruits.index("Pear"))
 orange = phylo.TreeNode(index=fruits.index("Orange"))
@@ -688,6 +689,7 @@ intermediate1 = phylo.TreeNode(
 intermediate2 = phylo.TreeNode(orange, lemon, 1.0, 1.0)
 intermediate3 = phylo.TreeNode(intermediate2, banana, 2.0, 3.0)
 root = phylo.TreeNode(intermediate1, intermediate3, 2.0, 1.0)
+# Create tree from root node
 tree = phylo.Tree(root=root)
 # Trees can be converted into Newick notation
 print("Tree:", tree.to_newick(labels=fruits))
@@ -701,7 +703,7 @@ distance = tree.get_distance(fruits.index("Apple"), fruits.index("Banana"))
 print("Distance Apple-Banana:", distance)
 
 ########################################################################
-# You can also plot the tree as dendrogram.
+# You can also plot a tree as dendrogram.
 
 fig, ax = plt.subplots(figsize=(6.0, 6.0))
 graphics.plot_dendrogram(ax, tree, labels=fruits)
