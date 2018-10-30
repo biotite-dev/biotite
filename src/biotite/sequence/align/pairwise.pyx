@@ -133,10 +133,10 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         The substitution matrix used for scoring.
     gap_penalty : int or (tuple, dtype=int), optional
         If an integer is provided, the value will be interpreted as
-        general gap penalty. If a tuple is provided, an affine gap
-        penalty is used. The first integer in the tuple is the gap
-        opening penalty, the second integer is the gap extension
-        penalty.
+        general gap penalty.
+        If a tuple is provided, an affine gap penalty is used.
+        The first integer in the tuple is the gap opening penalty,
+        the second integer is the gap extension penalty.
         The values need to be negative. (Default: *-10*)
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.

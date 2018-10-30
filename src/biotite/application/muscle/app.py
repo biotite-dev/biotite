@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["MuscleApp"]
 
+import numbers
 from ...temp import temp_file
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
@@ -36,13 +37,34 @@ class MuscleApp(MSAApp):
     
     @requires_state(AppState.CREATED)
     def set_matrix(self, matrix):
+        """
+        Set the substitution matrix for the alignment.
+
+        Parameters
+        ----------
+        matix : SubstitutionMatrix
+            The substitution matrix to be used.
+        """
         self._matrix = matrix
         self._matrix_file_name = temp_file("mat")
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):
-         # Check if gap penalty is general or affine
-        if type(gap_penalty) == int:
+        """
+        Set the gap penalty for the alignment.
+
+        Parameters
+        ----------
+        gap_penalty : float or (tuple, dtype=int), optional
+            If a float is provided, the value will be interpreted as
+            general gap penalty.
+            If a tuple is provided, an affine gap penalty is used.
+            The first value in the tuple is the gap opening penalty,
+            the second value is the gap extension penalty.
+            The values need to be negative.
+            """
+        # Check if gap penalty is general or affine
+        if isinstance(gap_penalty, numbers.Real):
             if gap_penalty > 0:
                 raise ValueError("Gap penalty must be negative")
             self._gap_open = gap_penalty
