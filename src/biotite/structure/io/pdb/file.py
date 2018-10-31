@@ -47,7 +47,7 @@ class PDBFile(TextFile):
     
     Examples
     --------
-    Load a `\*.pdb` file, modify the structure and save the new
+    Load a `\\*.pdb` file, modify the structure and save the new
     structure into a new file:
     
     >>> file = PDBFile()

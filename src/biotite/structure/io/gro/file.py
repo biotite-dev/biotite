@@ -33,7 +33,7 @@ class GROFile(TextFile):
 
     Examples
     --------
-    Load a `\*.gro` file, modify the structure and save the new
+    Load a `\\*.gro` file, modify the structure and save the new
     structure into a new file:
     
     >>> file = GROFile()
