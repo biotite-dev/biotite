@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
+__all__ = ["colors", "set_font_size_in_coord"]
 
 import abc
 from collections import OrderedDict
@@ -121,6 +121,8 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
 try:
     # Only create this class when matplotlib is installed
+    __all__.append("AdaptiveFancyArrow")
+    
     from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
     from matplotlib.patheffects import AbstractPathEffect
