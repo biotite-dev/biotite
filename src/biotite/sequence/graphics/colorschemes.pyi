@@ -2,11 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Dict, List, NewType
+from typing import Dict, List, NewType, Union, Tuple
 from ..alphabet import Alphabet
 
 
-Color = NewType("Color", object)
+Color = Union[str, Tuple[float, float, float]]
 
 
 def load_color_scheme(file_name: str) -> Dict: ... 

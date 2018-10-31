@@ -3,66 +3,229 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Visualizer", "colors"]
+__all__ = ["colors", "set_font_size_in_coord"]
 
 import abc
 from collections import OrderedDict
+import numpy as np
+from numpy.linalg import norm
 
-class Visualizer(metaclass=abc.ABCMeta):
+
+def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     """
-    Base class for all classes that are used for `matplotlib` based
-    visualization of bioinformatics objects
-    (sequences, alignments, etc.).
-    
-    This class merely provides the `create_figure()` method, which is
-    used by child classes to obtain an empty `matplotlib` `Figure` with
-    defined size (specified in pixels).
+    Specifiy the font size of an existing `Text` object in coordinates
+    of the object's reference coordiante system.
 
-    Child classes must override the `generate()` method.
+    Instead of having the font size fixed in 'pt', the size of the text
+    scales to the specied width/height and adapts to changes in the
+    plot's width/height.
+    The scaling can be proportional or non-proportional, depending 
+    the `mode`.
 
-    EXPERIMENTAL: Future API changes are probable.
+    Parameters
+    ----------
+    text : Text:
+        The matplotlib `Text` to be scaled.
+    width, height : float, optional
+        The new width/height of `text` in its
+        reference coordinate system.
+        At least one value must be supplied.
+    mode : {'proportional', 'unlocked', 'maximum', 'minimum'}, optional
+        The scaling mode:
+
+            - *proportional* - The width and height are scaled by the
+              same extent.
+              Either `width` or `height` must be set for this mode.
+            - *unlocked* - The width and the height are scaled by
+              different extents, changing the aspect ratio.
+              Both `width` and `height` must be set for this mode.
+            - *maximum* - The width and the height are scaled by
+              the same extent, so that they are at maximum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+            - *minimum* - The width and the height are scaled by
+              the same extent, so that they are at minimum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+
+    Notes
+    -----
+    This function us the `get_window_extent()` method of the `Text`
+    object.
+    According to experience, this function does not give the the exact
+    visual boundaries of the text.
+    Consequently, the scaled text might be slightly smaller or larger
+    than the specified width/height..
+    This behaviour is not equal for all initial font sizes (in 'pt'),
+    the boundaries for an inital size of 1 'pt' seems to be most exact.
     """
+    from matplotlib.transforms import Bbox
+    from matplotlib.text import Text
+    from matplotlib.patheffects import AbstractPathEffect
 
-    def __init__(self):
-        pass
+    class TextScaler(AbstractPathEffect):
+        def __init__(self, text, width, height, mode):
+            self._text = text
+            self._mode = mode
+            self._width = width
+            self._height = height
+
+        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
+            ax = self._text.axes
+            renderer = ax.get_figure().canvas.get_renderer()
+            bbox = text.get_window_extent(renderer=renderer)
+            bbox = Bbox(ax.transData.inverted().transform(bbox))
+            
+            if self._mode == "proportional":
+                if self._width is None:
+                    # Proportional scaling based on height
+                    scale_y = self._height / bbox.height
+                    scale_x = scale_y
+                elif self._height is None:
+                    # Proportional scaling based on width
+                    scale_x = self._width / bbox.width
+                    scale_y = scale_x
+            elif self._mode == "unlocked":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+            elif self._mode == "minimum":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+                scale = max(scale_x, scale_y)
+                scale_x, scale_y = scale, scale
+            elif self._mode == "maximum":
+                scale_x = self._width / bbox.width
+                scale_y = self._height / bbox.height
+                scale = min(scale_x, scale_y)
+                scale_x, scale_y = scale, scale
+
+            affine = affine.identity().scale(scale_x, scale_y) + affine
+            renderer.draw_path(gc, tpath, affine, rgbFace)
     
-    def create_figure(self, size, dpi=100):
+    if mode in ["unlocked", "minimum", "maximum"]:
+        if width is None or height is None:
+            raise TypeError(
+                f"Width and height must be set in '{mode}' mode"
+            )
+    elif mode == "proportional":
+        if  not (width  is None and height is not None) or \
+            not (height is None and width  is not None):
+                raise TypeError(
+                    f"Either width or height must be set in '{mode}' mode"
+                )
+    else:
+        raise ValueError(
+                f"Unknown mode '{mode}'"
+            )
+    text.set_path_effects([TextScaler(text, width, height, mode)])
+
+try:
+    # Only create this class when matplotlib is installed
+    from matplotlib.transforms import Bbox
+    from matplotlib.patches import FancyArrow
+    from matplotlib.patheffects import AbstractPathEffect
+
+    class AdaptiveFancyArrow(FancyArrow):
         """
-        Obtain an empty `matplotlib` `Figure` with defined size.
+        A `FancyArrow` with fixed head shape.
 
-        PROTECTED: Do not call from outside.
-        
+        The length of the head is proportional to the width of the head
+        in display coordinates.
+        If the head length is longer than the length of the entire
+        arrow, the head length is limited to the arrow length.
+
         Parameters
         ----------
-        size : tuple, length=2
-            The size of the figure (x,y) in pixels (rather than inch).
-        dpi : int, optional
-            A custom DPI of the figure. Usually this does not have any
-            effect on the look of the resulting figure.
+        x,y  : float
+            The arrow's start position.
+        dx, dy : float
+            The arrow's direction vector, inclduing the arrow head.
+        tail_width, head_width : float
+            The width of the arrow's tail and head in its reference
+            coordinate system
+        head_ratio : float, optional
+            The length of the arrow head as faction of the arrow width
+            (display coordinates).
+        draw_head: bool, optional
+            If false, the arrow has no head. The result is a rectangle.
+        shape : str, optional
+            The `shape` parameter in the constructor of `FancyArrow`.
+        **kwargs
+            Other parameters that are used in the constructor of
+            `FancyArrow`.
+        """
         
-        Returns
-        -------
-        figure : Figure
-            An empty figure.
-        """
-        import matplotlib.pyplot as plt
-        return plt.figure(figsize=(size[0]/dpi, size[1]/dpi))
+        def __init__(self, x, y, dx, dy,
+                     tail_width, head_width, head_ratio, draw_head=True,
+                     shape="full", **kwargs):
+            import matplotlib.pyplot as plt
+            self._x = x
+            self._y = y
+            self._dx = dx
+            self._dy = dy
+            self._tail_width = tail_width
+            self._head_width = head_width
+            self._head_ratio = head_ratio
+            self._draw_head = draw_head
+            self._shape = shape
+            self._kwargs = kwargs
+            if not draw_head:
+                head_width = tail_width
+            super().__init__(
+                x, y, dx, dy,
+                width=tail_width, head_width=head_width,
+                overhang=0, shape=shape,
+                length_includes_head=True, **kwargs
+            )
 
-    @abc.abstractmethod
-    def generate(self):
-        """
-        Generate the visualization.
+        def draw(self, renderer):
+            arrow_box = Bbox([(0,0), (0,self._head_width)])
+            arrow_box_display = self.axes.transData.transform_bbox(arrow_box)
+            head_length_display = np.abs(
+                arrow_box_display.height * self._head_ratio
+            )
+            arrow_box_display.x1 = arrow_box_display.x0 + head_length_display
+            # Transfrom back to data coordinates for plotting
+            arrow_box = self.axes.transData.inverted().transform_bbox(
+                arrow_box_display
+            )
+            head_length = arrow_box.width
+            arrow_length = norm((self._dx, self._dy))
+            if head_length > arrow_length:
+                # If the head would be longer than the entire arrow,
+                # only draw the arrow head with reduced length
+                head_length = arrow_length
+            if not self._draw_head:
+                head_length = 0 
+
+            # Renew the arrow's properties
+            super().__init__(
+                self._x, self._y, self._dx, self._dy,
+                width=self._tail_width, head_width=self._head_width,
+                overhang=0, shape=self._shape,
+                head_length=head_length, length_includes_head=True,
+                axes=self.axes, transform=self.get_transform(), **self._kwargs
+            )
+            self.set_clip_path(self.axes.patch)
+            super().draw(renderer)
         
-        Returns
-        -------
-        figure : Figure
-            The generated visualization.
-            When saving the figure as vector graphics using `savefig()`,
-            use ``bbox_inches="tight"``, since otherwise the figure
-            might be truncated. 
-        """
-        pass
+        # Override to replace docstring
+        # Removes warning:
+        # unknown document: /tutorials/intermediate/constrainedlayout_guide
+        def get_in_layout(self):
+            """
+            """
+            return super().get_in_layout()
+        def set_in_layout(self, in_layout):
+            """
+            """
+            return super().set_in_layout(in_layout)
+    
+    __all__.append("AdaptiveFancyArrow")
 
+except ImportError:
+    pass
+    
 
 # Biotite themed colors
 colors = OrderedDict([

@@ -160,6 +160,8 @@ def search(query, db_name, number=20):
     ----------
     query : Query
         The search query.
+    db_name : str:
+        E-utility database name.
     number : Query
         The maximum number of UIDs that are obtained.
     

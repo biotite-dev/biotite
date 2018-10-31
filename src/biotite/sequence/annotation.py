@@ -355,16 +355,14 @@ class Annotation(Copyable):
                 i_last = sys.maxsize
             sub_annot = Annotation()
             for feature in self:
-                in_scope = False
+                locs_in_scope = []
                 for loc in feature.locs:
                     # Always true for maxsize values
                     # in case no start or stop index is given
                     if loc.first <= i_last and loc.last >= i_first:
-                        in_scope = True
-                if in_scope:
-                    # Create copy for new annotation
-                    new_feature = feature.copy()
-                    for loc in new_feature.locs:
+                        # The location is at least partly in the
+                        # given location range
+                        loc = loc.copy()
                         # Handle defects
                         if loc.first < i_first:
                             loc.defect |= Location.Defect.MISS_LEFT
@@ -372,6 +370,14 @@ class Annotation(Copyable):
                         if loc.last > i_last:
                             loc.defect |= Location.Defect.MISS_RIGHT
                             loc.last = i_last
+                        locs_in_scope.append(loc)
+                if len(locs_in_scope) > 0:
+                    # The feature is present in the new annotation
+                    # if any of the original locations is in the new
+                    # scope
+                    new_feature = Feature(
+                        key=feature.key, locs=locs_in_scope, qual=feature.qual
+                    )
                     sub_annot.add_feature(new_feature)
             return sub_annot
         else:

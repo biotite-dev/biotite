@@ -1,0 +1,3 @@
+tests/structure/data/* linguist-vendored
+tests/sequence/data/* linguist-vendored
+src/biotite/sequence/align/matrix_data/* linguist-vendored

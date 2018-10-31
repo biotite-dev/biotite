@@ -58,7 +58,7 @@ class _AtomArrayBase(Copyable):
 class Atom:
     coord: np.ndarray
     chain_id: str
-    res_id: imt
+    res_id: int
     res_name: str
     hetero: bool
     atom_name: str

@@ -207,12 +207,12 @@ colorscheme = [
 
 # Show only the first 600 alignment columns for the sake of brevity
 # This part contains all transmembrane helices
-visualizer = graphics.AlignmentSymbolVisualizer(alignment[:600])
-visualizer.set_color_scheme(colorscheme)
-visualizer.add_labels(names, size=75)
-visualizer.add_location_numbers(size=75)
+fig = plt.figure(figsize=(8.0, 15))
+ax = fig.add_subplot(111)
 # Color the symbols instead of the background
-visualizer.set_alignment_properties(symbols_per_line=40, color_symbols=True)
-figure = visualizer.generate()
+graphics.plot_alignment_type_based(
+    ax, alignment[:600], labels=names, show_numbers=True, color_symbols=True,
+    color_scheme=colorscheme
+)
 
 plt.show()
