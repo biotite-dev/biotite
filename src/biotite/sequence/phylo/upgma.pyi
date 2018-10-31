@@ -2,7 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from .alignment import *
-from .pairwise import *
-from .multiple import *
-from .matrix import *
+import numpy as np
+from .tree import Tree
+
+
+def upgma(distances: np.ndarray) -> Tree: ...

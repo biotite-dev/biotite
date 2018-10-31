@@ -131,7 +131,7 @@ print(relpath(file_path))
 # database, but in an even more powerful manner:
 # Due to the simple design of the search queries accepted by
 # *NCBI Entrez*, you can search in every
-# `field <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
+# `field <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_
 # of the database.
 
 # Search in all fields

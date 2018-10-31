@@ -85,13 +85,14 @@ alignment = rev_alignments[0]
 # Reverse sequence numbering for second sequence (genome) in alignment
 number_funcs = [None,   lambda x: len(alignment.sequences[1]) - x]
 # Visualize alignment, use custom color
-vis = graphics.AlignmentSimilarityVisualizer(alignment, matrix)
-vis.set_color(color=biotite.colors["lightorange"])
-vis.set_alignment_properties(symbols_per_line=30)
-vis.add_labels(labels=["E. coli (leuL)", "S. enterica"])
-# Apply new numbering scheme
-vis.add_location_numbers(size=100, number_functions=number_funcs)
-figure = vis.generate()
+fig = plt.figure(figsize=(8.0, 2.0))
+ax = fig.add_subplot(111)
+graphics.plot_alignment_similarity_based(
+    ax, alignment, matrix=matrix, labels=["E. coli (leuL)", "S. enterica"],
+    show_numbers=True, number_functions=number_funcs, show_line_position=True,
+    color=biotite.colors["lightorange"]
+)
+fig.tight_layout()
 
 ########################################################################
 # We will now go even further and align the translated protein
@@ -118,9 +119,11 @@ alignment = alignments[0]
 
 # Lets try a matplotlib colormap this time
 # Color the symbols rather than the background
-vis = graphics.AlignmentSimilarityVisualizer(alignment, matrix)
-vis.set_color(cmap="summer_r")
-vis.add_labels(labels=["E. coli", "S. enterica"])
-vis.set_alignment_properties(symbols_per_line=30, color_symbols=True)
-figure = vis.generate()
+fig = plt.figure(figsize=(8.0, 1.0))
+ax = fig.add_subplot(111)
+graphics.plot_alignment_similarity_based(
+    ax, alignment, matrix=matrix, labels=["E. coli (leuL)", "S. enterica"],
+    cmap="summer_r", color_symbols=True
+)
+fig.tight_layout()
 plt.show()

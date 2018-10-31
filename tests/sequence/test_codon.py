@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import unittest
 import biotite.sequence as seq
 import pytest
 

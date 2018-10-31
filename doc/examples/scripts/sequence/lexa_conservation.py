@@ -119,14 +119,27 @@ for site in binding_sites[:20]:
 # the alignment.
 
 alignment = clustalo.ClustalOmegaApp.align(binding_sites)
-vis = graphics.AlignmentSimilarityVisualizer(alignment[:,:20])
-vis.set_alignment_properties(symbols_per_line=25)
-vis.add_labels(labels=sources[:20], size=250)
-figure = vis.generate()
+fig = plt.figure(figsize=(4.5, 4.0))
+ax = fig.add_subplot(111)
+graphics.plot_alignment_similarity_based(
+    ax, alignment[:,:20], labels=sources[:20], symbols_per_line=len(alignment)
+)
+# Source names in italic
+ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle":"italic"})
+fig.tight_layout()
 
 ########################################################################
 # Finally we can generate our sequence logo.
 
-logo = graphics.SequenceLogo(alignment, 800, 200)
-figure = logo.generate()
+fig = plt.figure(figsize=(8.0, 3.0))
+ax = fig.add_subplot(111)
+graphics.plot_sequence_logo(ax, alignment)
+ax.set_xticks([5,10,15,20])
+ax.set_xlabel("Residue position")
+ax.set_ylabel("Bits")
+# Only show left and bottom spine
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+fig.tight_layout()
+
 plt.show()

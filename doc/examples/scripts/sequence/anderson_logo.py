@@ -50,6 +50,10 @@ alignment = align.Alignment(
     score     = 0
 )
 # Create sequence logo from alignment
-logo = graphics.SequenceLogo(alignment, 800, 100)
-fig = logo.generate()
+fig = plt.figure(figsize=(8.0, 1.5))
+ax = fig.add_subplot(111)
+graphics.plot_sequence_logo(ax, alignment)
+# Remove the entire frame
+ax.axis("off")
+fig.tight_layout()
 plt.show()

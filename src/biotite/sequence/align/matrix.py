@@ -261,14 +261,14 @@ class SubstitutionMatrix(object):
     
     def __str__(self):
         # Create matrix in NCBI format
-        string = "{:>1}".format("")
+        string = " "
         for symbol in self._alph2:
-            string += " {:>3}".format(str(symbol))
+            string += f" {symbol:>3}"
         string += "\n"
         for i, symbol in enumerate(self._alph1):
-            string += "{:>1}".format(str(symbol))
+            string += f"{symbol:>1}"
             for j in range(len(self._alph2)):
-                string += " {:>3d}".format(int(self._matrix[i,j]))
+                string += f" {int(self._matrix[i,j]):>3d}"
             string += "\n"
         # Remove terminal line break
         string = string[:-1]
