@@ -38,7 +38,6 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
   - wget https://repo.continuum.io/miniconda/$MINICONDA
-  - wget -q https://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml
   
   - bash $MINICONDA -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"

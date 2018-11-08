@@ -270,7 +270,7 @@ Furthermore, the following software must be installed:
 
 If you use the *conda* package manager, there is a shortcut:
 Cou can download a *conda* environment from
-`here <http://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml>`_,
+`here <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_,
 that contains all of these requirements. How to create and activate the
 environment from the ``environment.yaml`` file, is explained in the
 `conda documentation <http://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file>`_.
