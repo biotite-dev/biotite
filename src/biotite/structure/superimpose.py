@@ -92,22 +92,22 @@ def superimpose(fixed, mobile, atom_mask=None):
     >>> array2 = atom_array_stack[1]
     >>> array2 = translate(array2, [1,2,3])
     >>> array2 = rotate(array2, [1,2,3])
-    >>> print(rmsd(array1, array2))
-    10.849209557984844
+    >>> print("{:.3f}".format(rmsd(array1, array2)))
+    10.849
     
     Superimpose only CA atoms:
     
     >>> array2_fit, transformation = superimpose(
     ...     array1, array2, atom_mask=(array2.atom_name == "CA")
     ... )
-    >>> print(rmsd(array1, array2_fit))
-    1.9548088006404039
+    >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
+    1.955
 
     Superimpose only all atoms:
 
     >>> array2_fit, transformation = superimpose(array1, array2)
-    >>> print(rmsd(array1, array2_fit))
-    1.927926919166094
+    >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
+    1.928
         
     """
     mob_centroid = centroid(mobile)
