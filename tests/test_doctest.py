@@ -78,6 +78,3 @@ def _list_modules(package, recursive):
         else:
             modnames.append(abs_modname)
     return modnames
-
-
-test_doctest("biotite.sequence", "biotite.sequence")
