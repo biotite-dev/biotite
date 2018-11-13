@@ -49,9 +49,10 @@ def set_structure(file, array):
     Examples
     --------
 
+    >>> import os.path
     >>> file = MMTFFile()
     >>> set_structure(file, atom_array)
-    >>> file.write("structure.mmtf")
+    >>> file.write(os.path.join(path_to_directory, "structure.mmtf"))
     
     """
     cdef bint include_bonds = (array.bonds is not None)
