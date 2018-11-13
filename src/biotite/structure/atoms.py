@@ -383,7 +383,7 @@ class Atom(object):
     >>> print(atom.atom_name)
     CA
     >>> print(atom.coord)
-    [1 2 3]
+    [1. 2. 3.]
         
     """
     
@@ -510,9 +510,9 @@ class AtomArray(_AtomArrayBase):
     Accessing the coordinates:
     
     >>> print(atom_array.coord)
-    [[1 2 3]
-     [2 3 4]
-     [3 4 5]]
+    [[1. 2. 3.]
+     [2. 3. 4.]
+     [3. 4. 5.]]
     
     `NumPy` style filtering:
     
@@ -522,8 +522,8 @@ class AtomArray(_AtomArrayBase):
         
     Inserting an atom array:
         
-    >>> insert = array(Atom([7,8,9], chain_id="C"))
-    atom_array = atom_array[0:1] + insert + atom_array[1:2]
+    >>> insert = array([Atom([7,8,9], chain_id="C")])
+    >>> atom_array = atom_array[0:1] + insert + atom_array[1:2]
     >>> print(atom_array.chain_id)
     ['A' 'C' 'A']
     """
@@ -716,28 +716,28 @@ class AtomArrayStack(_AtomArrayBase):
     Creating an atom array stack from two arrays:
     
     >>> atom1 = Atom([1,2,3], chain_id="A")
-    >>> atom1 = Atom([2,3,4], chain_id="A")
-    >>> atom1 = Atom([3,4,5], chain_id="B")
-    >>> atom_array1 = array(atom_array)
+    >>> atom2 = Atom([2,3,4], chain_id="A")
+    >>> atom3 = Atom([3,4,5], chain_id="B")
+    >>> atom_array1 = array([atom1, atom2, atom3])
     >>> print(atom_array1.coord)
-    [[1 2 3]
-     [2 3 4]
-     [3 4 5]]
+    [[1. 2. 3.]
+     [2. 3. 4.]
+     [3. 4. 5.]]
     >>> atom_array2 = atom_array1.copy()
     >>> atom_array2.coord += 3
     >>> print(atom_array2.coord)
-    [[4 5 6]
-     [5 6 7]
-     [6 7 8]]
+    [[4. 5. 6.]
+     [5. 6. 7.]
+     [6. 7. 8.]]
     >>> array_stack = stack([atom_array1, atom_array2])
     >>> print(array_stack.coord)
-    [[[1 2 3]
-      [2 3 4]
-      [3 4 5]]
+    [[[1. 2. 3.]
+      [2. 3. 4.]
+      [3. 4. 5.]]
     <BLANKLINE>
-     [[4 5 6]
-      [5 6 7]
-      [6 7 8]]]
+     [[4. 5. 6.]
+      [5. 6. 7.]
+      [6. 7. 8.]]]
     """
     
     def __init__(self, depth, length):
@@ -998,28 +998,28 @@ def stack(arrays):
     Creating an atom array stack from two arrays:
     
     >>> atom1 = Atom([1,2,3], chain_id="A")
-    >>> atom1 = Atom([2,3,4], chain_id="A")
-    >>> atom1 = Atom([3,4,5], chain_id="B")
-    >>> atom_array1 = array(atom_array)
+    >>> atom2 = Atom([2,3,4], chain_id="A")
+    >>> atom3 = Atom([3,4,5], chain_id="B")
+    >>> atom_array1 = array([atom1, atom2, atom3])
     >>> print(atom_array1.coord)
-    [[1 2 3]
-     [2 3 4]
-     [3 4 5]]
+    [[1. 2. 3.]
+     [2. 3. 4.]
+     [3. 4. 5.]]
     >>> atom_array2 = atom_array1.copy()
     >>> atom_array2.coord += 3
     >>> print(atom_array2.coord)
-    [[4 5 6]
-     [5 6 7]
-     [6 7 8]]
+    [[4. 5. 6.]
+     [5. 6. 7.]
+     [6. 7. 8.]]
     >>> array_stack = stack([atom_array1, atom_array2])
     >>> print(array_stack.coord)
-    [[[1 2 3]
-      [2 3 4]
-      [3 4 5]]
+    [[[1. 2. 3.]
+      [2. 3. 4.]
+      [3. 4. 5.]]
     <BLANKLINE>
-    [[4 5 6]
-     [5 6 7]
-     [6 7 8]]]
+     [[4. 5. 6.]
+      [5. 6. 7.]
+      [6. 7. 8.]]]
     """
     array_count = 0
     for array in arrays:

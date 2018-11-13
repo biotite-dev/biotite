@@ -138,10 +138,11 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     Examples
     --------
     
-    >>> files = fetch(["1L2Y_A","3O5R_A"], temp_dir(), suffix="fa",
+    >>> import os.path
+    >>> files = fetch(["1L2Y_A","3O5R_A"], path_to_directory, suffix="fa",
     ...               db_name="protein", ret_type="fasta")
-    >>> print(files)
-    ['/home/padix/temp/1L2Y_A.fa', '/home/padix/temp/3O5R_A.fa']
+    >>> print([os.path.basename(file) for file in files])
+    ['1L2Y_A.fa', '3O5R_A.fa']
     """
     # If only a single UID is present,
     # put it into a single element list

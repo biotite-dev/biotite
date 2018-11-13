@@ -86,7 +86,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     >>> print(dna_seq.code)
     [0 1 2 3 0]
     >>> print(dna_seq.symbols)
-    ['A', 'C', 'G', 'T', 'A']
+    ['A' 'C' 'G' 'T' 'A']
     >>> print(list(dna_seq))
     ['A', 'C', 'G', 'T', 'A']
     
@@ -117,6 +117,12 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     >>> dna_copy[1:4] = np.array([0,1,2])
     >>> print(dna_copy)
     AACGA
+
+    Reverse sequence:
+
+    >>> dna_seq_rev = dna_seq.reverse()
+    >>> print(dna_seq_rev)
+    ATGCA
     
     Concatenate the two sequences:
         
@@ -202,7 +208,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         Examples
         --------
             
-        >>> dna_seq = DNASequence("ACGTA")
+        >>> dna_seq = NucleotideSequence("ACGTA")
         >>> dna_seq_rev = dna_seq.reverse()
         >>> print(dna_seq_rev)
         ATGCA

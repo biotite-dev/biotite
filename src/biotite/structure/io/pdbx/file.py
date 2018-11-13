@@ -48,8 +48,9 @@ class PDBxFile(TextFile):
     --------
     Read the file and get author names
 
+    >>> import os.path
     >>> file = PDBxFile()
-    >>> file.read("1l2y.cif")
+    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> author_dict = file.get_category("citation_author", block="1L2Y")
     >>> print(author_dict["name"])
     ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
@@ -72,7 +73,7 @@ class PDBxFile(TextFile):
     
     >>> arr_mod = rotate(arr, [1,2,3])
     >>> set_structure(file, arr_mod)
-    >>> file.write("1l2y_mod.cif")
+    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.cif"))
     """
     
     def __init__(self):

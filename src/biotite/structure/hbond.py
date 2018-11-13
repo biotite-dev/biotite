@@ -83,8 +83,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     --------
     Calculate the total number of hydrogen bonds found in each model:
     
-    >>> stack = load_structure("path/to/1l2y.pdb")
-    >>> triplets, mask = hbond(stack)
+    >>> triplets, mask = hbond(atom_array_stack)
     >>> hbonds_per_model = np.count_nonzero(mask, axis=1)
     >>> print(hbonds_per_model)
     [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
@@ -95,7 +94,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> # Third model -> index 2
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
-    >>> print(stack[2, triplets[:,0]])
+    >>> print(atom_array_stack[2, triplets[:,0]])
         A       1 ASN N      N        -6.589    7.754   -0.571
         A       5 GLN N      N        -5.009   -0.575   -1.365
         A       6 TRP N      N        -2.154   -0.497   -1.588
@@ -341,17 +340,16 @@ def hbond_frequency(mask):
     Examples
     --------
 
-    >>> stack = load_structure("path/to/1l2y.pdb")
-    >>> triplets, mask = hbond(stack)
+    >>> triplets, mask = hbond(atom_array_stack)
     >>> freq = hbond_frequency(mask)
     >>> print(freq)
-    [0.10526316 0.23684211 0.02631579 0.23684211 0.05263158 0.26315789
-     0.02631579 0.28947368 0.10526316 0.39473684 1.         1.
-     1.         1.         0.02631579 0.02631579 0.02631579 0.02631579
-     0.02631579 0.42105263 0.31578947 0.92105263 0.81578947 0.86842105
-     0.02631579 0.21052632 0.10526316 0.92105263 0.07894737 0.02631579
-     0.34210526 0.10526316 0.02631579 0.31578947 0.23684211 0.42105263
-     0.13157895 0.07894737 0.02631579 0.05263158 0.02631579 0.15789474
-     0.02631579 0.05263158 0.13157895 0.18421053]
+    [0.26315789 0.28947368 0.10526316 0.10526316 0.23684211 0.23684211
+     0.02631579 0.05263158 0.39473684 1.         1.         1.
+     0.02631579 0.42105263 0.02631579 0.02631579 0.31578947 0.81578947
+     0.02631579 0.92105263 0.02631579 0.34210526 0.02631579 0.10526316
+     0.02631579 0.13157895 0.05263158 0.02631579 0.15789474 0.02631579
+     0.86842105 0.21052632 0.02631579 0.92105263 0.31578947 0.07894737
+     0.23684211 0.10526316 0.42105263 0.07894737 0.02631579 1.
+     0.05263158 0.13157895 0.02631579 0.18421053]
     """
     return mask.sum(axis=0)/len(mask)

@@ -72,12 +72,13 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     Examples
     --------
 
+    >>> import os.path
     >>> file = MMTFFile()
-    >>> file.read(path)
+    >>> file.read(os.path.join(path_to_structures, "1l2y.mmtf"))
     >>> array = get_structure(file, model=1)
     >>> print(array.array_length())
-    >>> stack = get_structure(file)
     304
+    >>> stack = get_structure(file)
     >>> print(stack.stack_depth(), stack.array_length())
     38 304
     """

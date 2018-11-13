@@ -90,8 +90,9 @@ def get_structure(pdbx_file, model=None, data_block=None,
     Examples
     --------
 
+    >>> import os.path
     >>> file = PDBxFile()
-    >>> file.read("1l2y.cif")
+    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> arr = get_structure(file, model=1)
     >>> print(len(arr))
     304
@@ -217,9 +218,10 @@ def set_structure(pdbx_file, array, data_block=None):
     Examples
     --------
 
+    >>> import os.path
     >>> file = PDBxFile()
-    >>> set_structure(file, atom_array)
-    >>> file.write("structure.cif")
+    >>> set_structure(file, atom_array, data_block="structure")
+    >>> file.write(os.path.join(path_to_directory, "structure.cif"))
     
     """
     # Fill PDBx columns from information

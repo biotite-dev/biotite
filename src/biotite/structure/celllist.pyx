@@ -52,7 +52,7 @@ cdef class CellList:
     --------
     
     >>> cell_list = CellList(atom_array, cell_size=5)
-    >>> near_atoms = atom_array[cell_list.get_atoms([1,2,3], radius=7)]
+    >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7)]
     """
     
     cdef float32[:,:] _coord
@@ -160,7 +160,7 @@ cdef class CellList:
         Create adjacency matrix for CA atoms in a structure:
 
         >>> atom_array = atom_array[atom_array.atom_name == "CA"]
-        >>> cell_list = struc.CellList(atom_array, 5)
+        >>> cell_list = CellList(atom_array, 5)
         >>> matrix = cell_list.create_adjacency_matrix(5)
         """
         if threshold_distance < 0:
@@ -228,7 +228,7 @@ cdef class CellList:
         --------
         Get adjacent atoms for a single position:
 
-        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> cell_list = CellList(atom_array, 3)
         >>> pos = np.array([1.0, 2.0, 3.0])
         >>> indices = cell_list.get_atoms(pos, radius=2.0)
         >>> print(indices)
@@ -255,7 +255,7 @@ cdef class CellList:
         
         Get adjacent atoms for mutliple positions:
 
-        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> cell_list = CellList(atom_array, 3)
         >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(indices)

@@ -25,7 +25,7 @@ _atom_records = {"res_id"    : (0, 5),
 
 
 class GROFile(TextFile):
-    """
+    r"""
     This class represents a GRO file.
 
     This class only provides support for reading/writing the pure atom
@@ -36,13 +36,14 @@ class GROFile(TextFile):
     Load a `\\*.gro` file, modify the structure and save the new
     structure into a new file:
     
+    >>> import os.path
     >>> file = GROFile()
-    >>> file.read("1l2y.gro")
+    >>> file.read(os.path.join(path_to_structures, "1l2y.gro"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = GROFile()
     >>> file.set_structure(array_stack_mod)
-    >>> file.write("1l2y_mod.gro")
+    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.gro"))
     
     """
     

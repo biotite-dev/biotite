@@ -49,9 +49,10 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     Examples
     --------
     
-    >>> files = fetch(["1l2y", "3o5r"], "cif", "path/to/files")
-    >>> print(files)
-    ['/path/to/files/1l2y.cif', '/path/to/files/3o5r.cif']
+    >>> import os.path
+    >>> files = fetch(["1l2y", "3o5r"], "cif", path_to_directory)
+    >>> print([os.path.basename(file) for file in files])
+    ['1l2y.cif', '3o5r.cif']
     """
     # If only a single PDB ID is present,
     # put it into a single element list

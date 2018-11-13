@@ -198,9 +198,9 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     TITANITE
     >>> print(distances)
     [[-0.         1.0340737  0.3819849  0.5604919]
-    [ 1.0340737 -0.         0.9231636  1.1316341]
-    [ 0.3819849  0.9231636 -0.         0.6316943]
-    [ 0.5604919  1.1316341  0.6316943 -0.       ]]
+     [ 1.0340737 -0.         0.9231636  1.1316341]
+     [ 0.3819849  0.9231636 -0.         0.6316943]
+     [ 0.5604919  1.1316341  0.6316943 -0.       ]]
     >>>
     >>> print(tree.to_newick(
     ...     labels=["seq1", "seq2", "seq3", "seq4"], include_distance=False
