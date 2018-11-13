@@ -6,51 +6,68 @@ __author__ = "Patrick Kunzmann"
 
 import pkgutil
 import doctest
+import os.path
+import numpy as np
 from importlib import import_module
 import pytest
+import biotite
+import biotite.structure.io as strucio
 
 
-@pytest.mark.parametrize("package_name, context_package_name", [
-    ("biotite",                      "biotite"                ),
-    ("biotite.sequence",             "biotite.sequence"       ),
-    ("biotite.sequence.align",       "biotite.sequence"       ),
-    ("biotite.sequence.phylo",       "biotite.sequence"       ),
-    ("biotite.sequence.graphics",    "biotite.sequence"       ),
-    ("biotite.structure.io",         "biotite.sequence"       ),
-    ("biotite.structure.io.fasta",   "biotite.sequence"       ),
-    ("biotite.structure.io.genbank", "biotite.sequence"       ),
-    ("biotite.structure",            "biotite.structure"      ),
-    ("biotite.structure.io",         "biotite.structure"      ),
-    ("biotite.structure.io.pdb",     "biotite.structure"      ),
-    ("biotite.structure.io.pdbx",    "biotite.structure"      ),
-    ("biotite.structure.io.npz",     "biotite.structure"      ),
-    ("biotite.structure.io.mmtf",    "biotite.structure"      ),
-    ("biotite.database.entrez",      "biotite.database.entrez"),
-    ("biotite.database.rcsb",        "biotite.database.rcsb"  ),
-    ("biotite.application",          "biotite.application"    ),
-    ("biotite.application.blast",    "biotite.application"    ),
-    ("biotite.application.muscle",   "biotite.application"    ),
-    ("biotite.application.clustalo", "biotite.application"    ),
-    ("biotite.application.mafft",    "biotite.application"    ),
-    ("biotite.application.dssp",     "biotite.application"    ),
+@pytest.mark.parametrize("package_name, context_package_names", [
+    ("biotite",                      []                   ),
+    ("biotite.sequence",             []                   ),
+    ("biotite.sequence.align",       ["biotite.sequence"] ),
+    ("biotite.sequence.phylo",       ["biotite.sequence"] ),
+    ("biotite.sequence.graphics",    ["biotite.sequence"] ),
+    ("biotite.structure.io",         ["biotite.sequence"] ),
+    ("biotite.structure.io.fasta",   ["biotite.sequence"] ),
+    ("biotite.structure.io.genbank", ["biotite.sequence"] ),
+    ("biotite.structure",            []                   ),
+    ("biotite.structure.io",         ["biotite.structure"]),
+    ("biotite.structure.io.pdb",     ["biotite.structure"]),
+    ("biotite.structure.io.pdbx",    ["biotite.structure"]),
+    ("biotite.structure.io.npz",     ["biotite.structure"]),
+    ("biotite.structure.io.mmtf",    ["biotite.structure"]),
+    ("biotite.database.entrez",      []                   ),
+    ("biotite.database.rcsb",        []                   ),
+    ("biotite.application",          []                   ),
+    ("biotite.application.blast",    []                   ),
+    ("biotite.application.muscle",   []                   ),
+    ("biotite.application.clustalo", []                   ),
+    ("biotite.application.mafft",    []                   ),
+    ("biotite.application.dssp",     []                   ),
 ])
-def test_doctest(package_name, context_package_name):
+def test_doctest(package_name, context_package_names):
     """
     Run all doctest strings in all Biotite subpackages.
     """
     # Collect all attributes of this package and its subpackages
     # as globals for the doctests
     globs = {}
-    context_package = import_module(context_package_name)
-    mod_names = _list_modules(context_package, True)
+    mod_names = []
+    #The package itself is also used as context
+    for name in context_package_names + [package_name]:
+        context_package = import_module(name)
+        mod_names += _list_modules(context_package, False)
     for modname in mod_names:
         mod = import_module(modname)
         attrs = mod.__all__
         globs.update({attr : getattr(mod, attr) for attr in attrs})
+    # Add fixed names for certain paths
+    globs["path_to_directory"] = biotite.temp_dir()
+    globs["path_to_structures"] = "./tests/structure/data/"
+    # Add frequently used modules
+    globs["np"] = np
+    # Add frequently used objects
+    globs["atom_array_stack"] = strucio.load_structure(
+        "./tests/structure/data/1l2y.mmtf"
+    )
+    globs["atom_array"] = globs["atom_array_stack"][0]
 
     # Run doctests
     package = import_module(package_name)
-    mod_names = _list_modules(package, True)
+    mod_names = _list_modules(package, False)
     for modname in mod_names:
         mod = import_module(modname)
         results = doctest.testmod(
