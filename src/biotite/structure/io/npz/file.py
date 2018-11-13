@@ -11,7 +11,7 @@ from ....file import File
 
 
 class NpzFile(File):
-    """
+    r"""
     This class represents a NPZ file, the preferable format for
     Biotite internal structure storage. 
     

@@ -32,7 +32,7 @@ _atom_records = {"hetero"    : (0,  6),
 
 
 class PDBFile(TextFile):
-    """
+    r"""
     This class represents a PDB file.
     
     The usage of PDBxFile is encouraged in favor of this class.

@@ -25,7 +25,7 @@ _atom_records = {"res_id"    : (0, 5),
 
 
 class GROFile(TextFile):
-    """
+    r"""
     This class represents a GRO file.
 
     This class only provides support for reading/writing the pure atom
