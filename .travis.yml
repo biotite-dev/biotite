@@ -33,10 +33,39 @@ matrix:
       - COMPLETE=false
       - BIN=true
       - SRC=false
+  - os: windows
+    env:
+      - PY_VERSION='3.6'
+      - ARCH='x86'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: windows
+    env:
+      - PY_VERSION='3.6'
+      - ARCH='x86_64'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: windows
+    env:
+      - PY_VERSION='3.7'
+      - ARCH='x86'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: windows
+    env:
+      - PY_VERSION='3.7'
+      - ARCH='x86_64'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
 
 install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ];   then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ];     then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then MINICONDA=Miniconda3-latest-Windows-${ARCH}.exe
   - wget https://repo.continuum.io/miniconda/$MINICONDA
   
   - bash $MINICONDA -b -p $HOME/miniconda
@@ -44,7 +73,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-  - if [ $COMPLETE == true ]; then conda env create -q -f environment.yaml python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ] ; then conda env create -q -f environment.yaml python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda install -n biotite-dev cython numpy requests msgpack-python pytest; fi
   - source activate biotite-dev
