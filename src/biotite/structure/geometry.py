@@ -165,8 +165,6 @@ def dihedral_backbone(atom_array, chain_id):
     Examples
     --------
     
-    Input
-    
     >>> psi, omega, phi = dihedral_backbone(atom_array, "A")
     >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
     ...          linestyle="None", marker="o")
@@ -179,8 +177,6 @@ def dihedral_backbone(atom_array, chain_id):
     Text(0.5, 0, 'phi')
     >>> plt.ylabel("psi")
     Text(0, 0.5, 'psi')
-    
-    Output
     
     .. image:: /static/assets/figures/dihedral.svg
     """
