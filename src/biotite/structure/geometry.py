@@ -167,17 +167,18 @@ def dihedral_backbone(atom_array, chain_id):
     
     Input
     
-    >>> pdbx_file = PDBxFile()
-    >>> pdbx_file.read("1l2y.cif")
-    >>> atom_array = get_structure(pdbx_file, model=1)
-    >>> psi, omega, phi = struc.dihedral_backbone(atom_array, "A")
+    >>> psi, omega, phi = dihedral_backbone(atom_array, "A")
     >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
     ...          linestyle="None", marker="o")
+    [<matplotlib.lines.Line2D object at 0x...>]
     >>> plt.xlim(-180, 180)
+    (-180, 180)
     >>> plt.ylim(-180, 180)
+    (-180, 180)
     >>> plt.xlabel("phi")
+    Text(0.5, 0, 'phi')
     >>> plt.ylabel("psi")
-    >>> plt.show()
+    Text(0, 0.5, 'psi')
     
     Output
     

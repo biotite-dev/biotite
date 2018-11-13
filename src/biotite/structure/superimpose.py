@@ -88,22 +88,26 @@ def superimpose(fixed, mobile, atom_mask=None):
     rotate/translate one of them and superimpose it onto the other
     model:
     
-    >>> file = PDBxFile()
-    >>> file.read("1l2y.cif")
-    >>> array1 = get_structure(file, model=1)
-    >>> array2 = get_structure(file, model=2)
+    >>> array1 = atom_array_stack[0]
+    >>> array2 = atom_array_stack[1]
     >>> array2 = translate(array2, [1,2,3])
     >>> array2 = rotate(array2, [1,2,3])
     >>> print(rmsd(array1, array2))
-    10.8492095649
+    10.849209557984844
+    
+    Superimpose only CA atoms:
+    
     >>> array2_fit, transformation = superimpose(
-            array1, array2, mask=(array2.atom_name == "CA")
-        )
+    ...     array1, array2, atom_mask=(array2.atom_name == "CA")
+    ... )
     >>> print(rmsd(array1, array2_fit))
-    1.95480879468
+    1.9548088006404039
+
+    Superimpose only all atoms:
+
     >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print(rmsd(array1, array2_fit))
-    1.92792691375
+    1.927926919166094
         
     """
     mob_centroid = centroid(mobile)

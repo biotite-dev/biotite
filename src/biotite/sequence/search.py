@@ -35,8 +35,8 @@ def find_subsequence(sequence, query):
     Examples
     --------
     
-    >>> main_seq = DNASequence("ACTGAATGA")
-    >>> sub_seq = DNASequence("TGA")
+    >>> main_seq = NucleotideSequence("ACTGAATGA")
+    >>> sub_seq = NucleotideSequence("TGA")
     >>> print(find_subsequence(main_seq, sub_seq))
     [2 6]
     

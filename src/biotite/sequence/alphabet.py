@@ -56,7 +56,7 @@ class Alphabet(object):
     G
     >>> try:
     ...    alph.encode("foo")
-    >>> except Exception as e:
+    ... except Exception as e:
     ...    print(e)
     'foo' is not in the alphabet
     

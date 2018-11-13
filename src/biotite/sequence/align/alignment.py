@@ -75,7 +75,7 @@ class Alignment(object):
      [-1  4]
      [-1  5]]
     >>> print(ali[1:4].trace)
-     [ 1 -1]
+    [[ 1 -1]
      [ 2  0]
      [ 3  1]]
     >>> print(ali[1:4,0].trace)
@@ -216,7 +216,7 @@ def get_codes(alignment):
     >>> print(ali)
     CGTCAT--
     --TCATGC
-    >>> print(align.get_codes(ali))
+    >>> print(get_codes(ali))
     [[ 1  2  3  1  0  3 -1 -1]
      [-1 -1  3  1  0  3  2  1]]
     """

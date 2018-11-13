@@ -245,11 +245,13 @@ class Annotation(Copyable):
     >>> annotation4 = annotation3[40:150]
     >>> for f in annotation4:
     ...     loc = f.locs[0]
-    ...     print("{:}   {:3d} - {:3d}   {:}"
-    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
-    test2    40 -  50   1
+    ...     print(
+    ...         f"{f.qual['gene']}   {loc.first:3d} - {loc.last:3d}   "
+    ...         f"{str(loc.defect)}"
+    ...     )
+    test2    40 -  50   Defect.MISS_LEFT
     test3   100 - 130   Defect.NONE
-    test5    40 - 149   3
+    test5    40 - 149   Defect.MISS_RIGHT|MISS_LEFT
     """
     
     def __init__(self, features=None):
@@ -491,8 +493,8 @@ class AnnotatedSequence(Copyable):
     Indexing with integers, note the sequence start correction
     
     >>> print(annot_seq[2])
-    >>> print(annot_seq.sequence[2])
     T
+    >>> print(annot_seq.sequence[2])
     G
     
     indexing with slices

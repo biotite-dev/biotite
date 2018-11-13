@@ -37,11 +37,17 @@ class FastaFile(TextFile):
     Examples
     --------
     
+    >>> import os.path
     >>> file = FastaFile()
     >>> file["seq1"] = "ATACT"
     >>> print(file["seq1"])
     ATACT
     >>> file["seq2"] = "AAAATT"
+    >>> print(file)
+    >seq1
+    ATACT
+    >seq2
+    AAAATT
     >>> print(dict(file))
     {'seq1': 'ATACT', 'seq2': 'AAAATT'}
     >>> for header, seq in file:
@@ -51,7 +57,7 @@ class FastaFile(TextFile):
     >>> del file["seq1"]
     >>> print(dict(file))
     {'seq2': 'AAAATT'}
-    >>> file.write("test.fasta")
+    >>> file.write(os.path.join(path_to_directory, "test.fasta"))
     """
     
     def __init__(self, chars_per_line=80):

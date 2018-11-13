@@ -33,8 +33,9 @@ class GenBankFile(TextFile):
     Examples
     --------
     
-    >>> file = gb.GenBankFile()
-    >>> file.read("path/to/ec_bl21.gb")
+    >>> import os.path
+    >>> file = GenBankFile()
+    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> print(file.get_definition())
     Escherichia coli BL21(DE3), complete genome.
     >>> for f in file.get_annotation(include_only=["CDS"]):
@@ -93,8 +94,9 @@ class GenBankFile(TextFile):
         Examples
         --------
         
-        >>> file = gb.GenBankFile()
-        >>> file.read("path/to/ec_bl21.gb")
+        >>> import os.path
+        >>> file = GenBankFile()
+        >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
         >>> for key, val in file.get_locus().items():
         ...     print(key, ":", val)
         name : CP001509
@@ -180,8 +182,9 @@ class GenBankFile(TextFile):
         Examples
         --------
         
-        >>> file = gb.GenBankFile()
-        >>> file.read("path/to/ec_bl21.gb")
+        >>> import os.path
+        >>> file = GenBankFile()
+        >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
         >>> for key, val in file.get_db_link().items():
         ...     print(key, ":", val)
         BioProject : PRJNA20713
@@ -481,8 +484,9 @@ class GenPeptFile(GenBankFile):
         Examples
         --------
         
-        >>> file = gb.GenPeptFile()
-        >>> file.read("path/to/bt_lysozyme.gp")
+        >>> import os.path
+        >>> file = GenPeptFile()
+        >>> file.read(os.path.join(path_to_sequences, "bt_lysozyme.gp"))
         >>> for key, val in file.get_locus().items():
         ...     print(key, ":", val)
         name : AAC37312
@@ -546,10 +550,14 @@ class MultiFile(TextFile):
     Examples
     --------
     
-    >>> fetch_single_file(
-    ...     ["1L2Y_A", "3O5R_A", "5UGO_A"], "multifile.gp", "protein", "gp")
+    >>> import os.path
+    >>> file_name = fetch_single_file(
+    ...     ["1L2Y_A", "3O5R_A", "5UGO_A"],
+    ...     os.path.join(path_to_directory, "multifile.gp"),
+    ...     "protein", "gp"
+    ... )
     >>> multi_file = MultiFile(file_type="gp")
-    >>> multi_file.read("multifile.gp")
+    >>> multi_file.read(file_name)
     >>> for gp_file in multi_file:
     ...     print(gp_file.get_accession())
     1L2Y_A
