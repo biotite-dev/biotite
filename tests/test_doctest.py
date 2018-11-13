@@ -8,7 +8,6 @@ import pkgutil
 import doctest
 import os.path
 import numpy as np
-import matplotlib.pyplot as plt
 from importlib import import_module
 import pytest
 import biotite
@@ -62,7 +61,6 @@ def test_doctest(package_name, context_package_names):
     globs["path_to_sequences"]  = "./tests/sequence/data/"
     # Add frequently used modules
     globs["np"]  = np
-    globs["plt"] = plt
     # Add frequently used objects
     globs["atom_array_stack"] = strucio.load_structure(
         "./tests/structure/data/1l2y.mmtf"
