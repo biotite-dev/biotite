@@ -78,7 +78,7 @@ class FastaFile(TextFile):
                 "'FastaFile' only supports header strings as keys"
             )
         if not isinstance(seq_str, str):
-            raise IndexError("'FastaFile' only supports sequence strings "
+            raise TypeError("'FastaFile' only supports sequence strings "
                              "as values")
         # Delete lines of entry corresponding to the header,
         # if existing
@@ -87,7 +87,7 @@ class FastaFile(TextFile):
             del self.lines[start:stop]
             del self._entries[header]
         # Append header line
-        self.lines += [">" + header.replace(">","").replace("\n","").strip()]
+        self.lines += [">" + header.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
         self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
         self._find_entries()
@@ -99,11 +99,9 @@ class FastaFile(TextFile):
             )
         start, stop = self._entries[header]
         # Concatenate sequence string from following lines
-        seq_string = ""
-        i = start +1
-        while i < stop:
-            seq_string += self.lines[i].strip()
-            i += 1
+        seq_string = "".join(
+            [line.strip() for line in self.lines[start+1 : stop]])
+        )
         return seq_string
     
     def __delitem__(self, header):
@@ -126,8 +124,8 @@ class FastaFile(TextFile):
                 header_i.append(i)
         self._entries = OrderedDict()
         for j in range(len(header_i)):
-            # Remove '>' from header
-            header = self.lines[header_i[j]].replace(">","").strip()
+            # Remove leading '>' from header
+            header = self.lines[header_i[j]].strip()[1:]
             start = header_i[j]
             if j < len(header_i) -1:
                 # Header in mid or start of file
