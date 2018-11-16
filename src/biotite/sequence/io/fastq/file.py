@@ -66,9 +66,10 @@ class FastaFile(TextFile):
     def __getitem__(self, identifier):
         if not isinstance(identifier, str):
             raise IndexError(
-                "'FastqFile' only supports header strings as keys"
+                "'FastqFile' only supports identifier strings as keys"
             )
-        seq_start, seq_stop, score_start, score_stop = self._entries[header]
+        seq_start, seq_stop, score_start, score_stop \
+            = self._entries[identifier]
         # Concatenate sequence string from the sequence and score lines,
         # respectively
         sequence = NucleotideSequence("".join(
@@ -80,18 +81,18 @@ class FastaFile(TextFile):
         scores -= self._offset
         return sequence, scores
     
-    def __delitem__(self, header):
-        start, stop = self._entries[header]
-        del self.lines[start:stop]
-        del self._entries[header]
+    def __delitem__(self, identifier):
+        seq_start, seq_stop, score_start, score_stop \
+            = self._entries[identifier]
+        del self.lines[seq_start-1 : score_stop]
+        del self._entries[identifier]
         self._find_entries()
     
     def __len__(self):
         return len(self._entries)
     
     def __iter__(self):
-        for header in self._entries:
-            yield header, self[header]
+        return self._entries.__iter__()
     
     def _find_entries(self):
         self._entries = OrderedDict()
