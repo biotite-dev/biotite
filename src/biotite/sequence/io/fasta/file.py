@@ -7,11 +7,12 @@ __author__ = "Patrick Kunzmann"
 from ....file import TextFile
 import textwrap
 from collections import OrderedDict
+from collections.abc import MutableMapping
 
 __all__ = ["FastaFile"]
 
 
-class FastaFile(TextFile):
+class FastaFile(TextFile, MutableMapping):
     """
     This class represents a file in FASTA format.
     
@@ -48,9 +49,9 @@ class FastaFile(TextFile):
     ATACT
     >seq2
     AAAATT
-    >>> print(dict(file))
+    >>> print(dict(file.items()))
     {'seq1': 'ATACT', 'seq2': 'AAAATT'}
-    >>> for header, seq in file:
+    >>> for header, seq in file.items():
     ...     print(header, seq)
     seq1 ATACT
     seq2 AAAATT
@@ -69,7 +70,7 @@ class FastaFile(TextFile):
         super().read(file)
         # Filter out empty and comment lines
         self.lines = [line for line in self.lines
-                       if len(line.strip()) != 0 and line[0] != ";"]
+                      if len(line.strip()) != 0 and line[0] != ";"]
         self._find_entries()
         
     def __setitem__(self, header, seq_str):
@@ -82,10 +83,8 @@ class FastaFile(TextFile):
                              "as values")
         # Delete lines of entry corresponding to the header,
         # if existing
-        if header in self._entries:
-            start, stop = self._entries[header]
-            del self.lines[start:stop]
-            del self._entries[header]
+        if header in self:
+            del self[header]
         # Append header line
         self.lines += [">" + header.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
@@ -100,7 +99,7 @@ class FastaFile(TextFile):
         start, stop = self._entries[header]
         # Concatenate sequence string from following lines
         seq_string = "".join(
-            [line.strip() for line in self.lines[start+1 : stop]])
+            [line.strip() for line in self.lines[start+1 : stop]]
         )
         return seq_string
     
@@ -114,8 +113,10 @@ class FastaFile(TextFile):
         return len(self._entries)
     
     def __iter__(self):
-        for header in self._entries:
-            yield header, self[header]
+        return self._entries.__iter__()
+    
+    def __contains__(self, identifer):
+        return identifer in self._entries
     
     def _find_entries(self):
         header_i = []

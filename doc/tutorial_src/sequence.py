@@ -214,7 +214,7 @@ file_path = entrez.fetch(
 )
 file = fasta.FastaFile()
 file.read(file_path)
-for header, string in file:
+for header, string in file.items():
     print("Header:", header)
     print(len(string))
     print("Sequence:", string[:50], "...")

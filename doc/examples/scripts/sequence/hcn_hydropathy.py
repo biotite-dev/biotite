@@ -104,11 +104,11 @@ file_name = entrez.fetch_single_file(
 fasta_file = fasta.FastaFile()
 fasta_file.read(file_name)
 
-for header, seq_str in fasta_file:
+for header in fasta_file:
     print(header)
 
 sequences = []
-for header, seq_str in fasta_file:
+for seq_str in fasta_file.values():
     sequences.append(seq.ProteinSequence(seq_str))
 
 alignment = mafft.MafftApp.align(sequences)

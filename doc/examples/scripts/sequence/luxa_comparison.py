@@ -34,7 +34,7 @@ fasta_file.read(file_name)
 
 ids = []
 sequences = []
-for header, seq_str in fasta_file:
+for header, seq_str in fasta_file.items():
     # Extract the UniProt Entry name from header
     identifier = header.split("|")[-1].split()[0]
     ids.append(identifier)

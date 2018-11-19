@@ -24,7 +24,7 @@ file_name = entrez.fetch_single_file(["CAC34569", "ACL82594"],
                                      "protein", "fasta")
 file = fasta.FastaFile()
 file.read(file_name)
-for name, sequence in file:
+for name, sequence in file.items():
     if "CAC34569" in name:
         avidin_seq = seq.ProteinSequence(sequence)
     elif "ACL82594" in name:

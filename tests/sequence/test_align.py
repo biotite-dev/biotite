@@ -22,7 +22,7 @@ def sequences():
     """
     fasta_file = fasta.FastaFile()
     fasta_file.read(join(data_dir, "cas9.fasta"))
-    return [seq.ProteinSequence(sequence) for header, sequence in fasta_file]
+    return [seq.ProteinSequence(sequence) for sequence in fasta_file.values()]
 
 def test_alignment_str():
     """
