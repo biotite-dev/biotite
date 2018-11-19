@@ -177,7 +177,7 @@ def search(query, db_name, number=20):
     ...         SimpleQuery("90:100", "Sequence Length")
     >>> ids = search(query, "nuccore", number=5)
     >>> print(ids)
-    ['1502476473', '1502368349', '1502350510', '1502315570', '1502272816']
+    ['15...', '15...', '15...', '15...', '15...']
     """ 
     r = requests.get(
         (_base_url + _search_url).format(db_name, str(query), str(number))
