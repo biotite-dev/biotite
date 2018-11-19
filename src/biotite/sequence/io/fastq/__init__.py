@@ -14,4 +14,3 @@ the keys and the sequences and quality scores being the values.
 __author__ = "Patrick Kunzmann"
 
 from .file import *
-from .convert import *
