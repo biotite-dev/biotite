@@ -29,6 +29,33 @@ class FastqFile(TextFile, MutableMapping):
         # Filter out empty lines
         self.lines = [line for line in self.lines if len(line) != 0]
         self._find_entries()
+    
+    def get_sequence(self, identifier):
+        if not isinstance(identifier, str):
+            raise IndexError(
+                "'FastqFile' only supports identifier strings as keys"
+            )
+        seq_start, seq_stop, score_start, score_stop \
+            = self._entries[identifier]
+        # Concatenate sequence string from the sequence lines
+        sequence = NucleotideSequence("".join(
+            self.lines[seq_start : seq_stop]
+        ))
+        return sequence
+    
+    def get_quality(self, identifier):
+        if not isinstance(identifier, str):
+            raise IndexError(
+                "'FastqFile' only supports identifier strings as keys"
+            )
+        seq_start, seq_stop, score_start, score_stop \
+            = self._entries[identifier]
+        # Concatenate sequence string from the score lines
+        scores = np.fromstring("".join(
+            self.lines[score_start : score_stop]
+        ), dtype=np.int8)
+        scores -= self._offset
+        return scores
         
     def __setitem__(self, identifier, item):
         sequence, scores = item
@@ -64,22 +91,7 @@ class FastqFile(TextFile, MutableMapping):
         self._find_entries()
     
     def __getitem__(self, identifier):
-        if not isinstance(identifier, str):
-            raise IndexError(
-                "'FastqFile' only supports identifier strings as keys"
-            )
-        seq_start, seq_stop, score_start, score_stop \
-            = self._entries[identifier]
-        # Concatenate sequence string from the sequence and score lines,
-        # respectively
-        sequence = NucleotideSequence("".join(
-            self.lines[seq_start : seq_stop]
-        ))
-        scores = np.fromstring("".join(
-            self.lines[score_start : score_stop]
-        ), dtype=np.int8)
-        scores -= self._offset
-        return sequence, scores
+        return self.get_sequence(identifier), self.get_quality(identifier)
     
     def __delitem__(self, identifier):
         seq_start, seq_stop, score_start, score_stop \
