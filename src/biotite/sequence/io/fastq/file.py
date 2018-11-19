@@ -51,9 +51,12 @@ class FastqFile(TextFile, MutableMapping):
         seq_start, seq_stop, score_start, score_stop \
             = self._entries[identifier]
         # Concatenate sequence string from the score lines
-        scores = np.fromstring("".join(
-            self.lines[score_start : score_stop]
-        ), dtype=np.int8)
+        scores = np.frombuffer(
+            bytearray(
+                "".join(self.lines[score_start : score_stop]), encoding="ascii"
+            ),
+            dtype=np.int8
+        )
         scores -= self._offset
         return scores
         
@@ -73,7 +76,7 @@ class FastqFile(TextFile, MutableMapping):
         self.lines += ["@" + identifier.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
         if self._chars_per_line is None:
-            self.lines += str(sequence)
+            self.lines.append(str(sequence))
         else:
             self.lines += textwrap.wrap(
                 str(sequence), width=self._chars_per_line
@@ -81,9 +84,12 @@ class FastqFile(TextFile, MutableMapping):
         # Append sequence-score separator
         self.lines += ["+"]
         # Append scores
-        score_chars = scores.tobytes().decode("ascii")
+        scores = scores + self._offset
+        score_chars = scores.astype(np.int8, copy=False) \
+                            .tobytes() \
+                            .decode("ascii")
         if self._chars_per_line is None:
-            self.lines += score_chars
+            self.lines.append(score_chars)
         else:
             self.lines += textwrap.wrap(
                 score_chars, width=self._chars_per_line
