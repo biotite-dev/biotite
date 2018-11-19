@@ -56,7 +56,7 @@ class FastaFile(TextFile, MutableMapping):
     seq1 ATACT
     seq2 AAAATT
     >>> del file["seq1"]
-    >>> print(dict(file))
+    >>> print(dict(file.items()))
     {'seq2': 'AAAATT'}
     >>> file.write(os.path.join(path_to_directory, "test.fasta"))
     """

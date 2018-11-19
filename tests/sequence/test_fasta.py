@@ -18,15 +18,19 @@ def test_access():
     assert file["dna sequence"] == "ACGCTACGT"
     assert file["another dna sequence"] == "A"
     assert file["third dna sequence"] == "ACGT"
-    assert dict(file) == {"dna sequence" : "ACGCTACGT",
-                          "another dna sequence" : "A",
-                          "third dna sequence" : "ACGT"}
+    assert dict(file.items()) == {
+        "dna sequence" : "ACGCTACGT",
+        "another dna sequence" : "A",
+        "third dna sequence" : "ACGT"
+    }
     file["another dna sequence"] = "AA"
     del file["dna sequence"]
     file["yet another sequence"] = "ACGT"
-    assert dict(file) == {"another dna sequence" : "AA",
-                          "third dna sequence" : "ACGT",
-                          "yet another sequence" : "ACGT"}
+    assert dict(file.items()) == {
+        "another dna sequence" : "AA",
+        "third dna sequence"   : "ACGT",
+        "yet another sequence" : "ACGT"
+    }
 
 def test_sequence_conversion():
     path = os.path.join(data_dir, "nuc.fasta")
