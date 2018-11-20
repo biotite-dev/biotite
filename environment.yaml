@@ -16,6 +16,7 @@ dependencies:
   - wheel >=0.30
   - requests >=2.12
   - numpy >=1.13
+  - scipy >=0.14
   - msgpack-python >=0.5.6
   - cython >=0.28
   - mdtraj >=1.9

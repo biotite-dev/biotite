@@ -251,6 +251,7 @@ Required packages
 The following packages are required for the complete build process:
    
    - *numpy*
+   - *scipy*
    - *matplotlib*
    - *requests*
    - *msgpack*
