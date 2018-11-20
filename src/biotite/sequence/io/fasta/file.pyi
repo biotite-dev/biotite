@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Union, Tuple, Iterable, Iterator, TextIO, MutableMapping
+from typing import MutableMapping
 from ....file import TextFile
 
 
