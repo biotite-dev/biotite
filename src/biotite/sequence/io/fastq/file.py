@@ -50,7 +50,7 @@ class FastqFile(TextFile, MutableMapping):
     Parameters
     ----------
     offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
-        This value that is added to the score to obtain the ASCII code.
+        This value that is added to the quality score to obtain the ASCII code.
         Can either directly the value, or a string that indicates
         the score format.
     chars_per_line : int, optional
