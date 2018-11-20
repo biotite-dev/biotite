@@ -16,24 +16,26 @@ class FastaFile(TextFile, MutableMapping):
     """
     This class represents a file in FASTA format.
     
-    A FASTA file contains so called *header* lines, beginning with '>',
-    that describe following sequence. The corresponding sequence starts
-    at the line after the header line and ends at the next header line
-    or at the end of file. The header along with its sequence forms an
-    entry.
+    A FASTA file contains so called *header* lines, beginning with
+    ``>``, that describe following sequence.
+    The corresponding sequence starts at the line after the header line
+    and ends at the next header line or at the end of file.
+    The header along with its sequence forms an entry.
     
-    This class is used in a dictionary like manner,
-    headers (without the leading '>') are used as keys,
+    This class is used in a dictionary like manner, implementing the
+    `MutableMapping` interface:
+    Headers (without the leading ``>``) are used as keys,
     and strings containing the sequences are the corresponding values.
-    Therefore entries can be accessed using indexing, `del` deletes the
-    entry at the given index. In fact objects of this class can be
-    casted into actual `dict` instances.
-    
+    Entries can be accessed using indexing,
+    `del` deletes the entry at the given index.
+
     Parameters
     ----------
     chars_per_line : int, optional
         The number characters in a line containing sequence data
-        after which a line break is inserted. Default is 80.
+        after which a line break is inserted.
+        Only relevant, when adding sequences to a file.
+        Default is 80.
     
     Examples
     --------
