@@ -17,10 +17,10 @@ def test_access(chars_per_line):
     file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
     file.read(path)
     assert len(file) == 20
-    assert list(file.keys()) == [f"SIM:{i+1}" for i in range(20)]
-    del(file["SIM:5"])
+    assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)]
+    del(file["Read:05"])
     assert len(file) == 19
-    assert list(file.keys()) == [f"SIM:{i+1}" for i in range(20)
+    assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)
                                  if i+1 != 5]
     for sequence, scores in file.values():
         assert len(sequence) == len(scores)
