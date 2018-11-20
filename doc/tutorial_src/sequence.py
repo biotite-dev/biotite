@@ -214,7 +214,7 @@ file_path = entrez.fetch(
 )
 file = fasta.FastaFile()
 file.read(file_path)
-for header, string in file:
+for header, string in file.items():
     print("Header:", header)
     print(len(string))
     print("Sequence:", string[:50], "...")
@@ -264,7 +264,11 @@ file.write(biotite.temp_file("fa"))
 ########################################################################
 # As you see, our file contains our new ``'gibberish'`` and
 # ``'more gibberish'`` sequences now.
-# 
+#
+# In a similar manner sequences and sequence quality scores can be read
+# from FASTQ files. For further reference, have a look at the
+# :mod:`biotite.sequence.io.fastq` subpackage.
+#
 # Alternatively, a sequence can also be loaded from GenBank or GenPept
 # files,
 # using the :class:`GenBankFile` and :class:`GenPeptFile` class

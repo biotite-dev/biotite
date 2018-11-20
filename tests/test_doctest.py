@@ -23,6 +23,7 @@ import biotite.structure.io as strucio
                  marks=pytest.mark.xfail(raises=ImportError)                 ),
     pytest.param("biotite.sequence.io",          ["biotite.sequence"]        ),
     pytest.param("biotite.sequence.io.fasta",    ["biotite.sequence"]        ),
+    pytest.param("biotite.sequence.io.fastq",    ["biotite.sequence"]        ),
     pytest.param("biotite.sequence.io.genbank",  ["biotite.sequence",
                                                   "biotite.database.entrez"] ),
     pytest.param("biotite.structure",            []                          ),

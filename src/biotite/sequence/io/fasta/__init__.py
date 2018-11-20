@@ -8,9 +8,9 @@ using the popular FASTA format.
 
 This package contains the `FastaFile`, which provides a dictionary
 like interface to FASTA files, where the header lines are keys and
-the the strings containing sequence data are the corresponding values.
+the strings containing sequence data are the corresponding values.
 
-Furthermore the package contains convenience functions for
+Furthermore, the package contains convenience functions for
 getting/setting directly `Sequence` objects, rather than strings.
 """
 
