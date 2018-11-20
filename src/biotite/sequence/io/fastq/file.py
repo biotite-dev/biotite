@@ -28,8 +28,8 @@ class FastqFile(TextFile, MutableMapping):
     """
     This class represents a file in FASTQ format.
 
-    A FASTQ file stores one or multiple sequences along with
-    sequencing quality scores.
+    A FASTQ file stores one or multiple sequences (base calls) along
+    with sequencing quality scores.
     Each sequence is associated with an identifer string,
     beginning with an ``@``.
 
