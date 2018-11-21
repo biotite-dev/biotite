@@ -180,8 +180,8 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         return file_names
 
 
-def fetch_single_file(uids, file_name,
-                      db_name, ret_type, ret_mode="text", mail=None):
+def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
+                      overwrite=False, mail=None):
     """
     Almost the same as `fetch()`, but the data for the given UIDs will
     be stored in a single file.
@@ -190,15 +190,18 @@ def fetch_single_file(uids, file_name,
     ----------
     uids : iterable object of str
         A list of UIDs of the
-        file(s) to be downloaded .
+        file(s) to be downloaded.
     file_name : str
         The file path, including file name, to the target file.
     db_name : str:
         E-utility database name.
     ret_type : str
-        Retrieval type
-    ret_mode : str
-        Retrieval mode
+        Retrieval type.
+    ret_mode : str, optional
+        Retrieval mode.
+    overwrite : bool, optional
+        If false, the file is only downloaded, if no file with the same
+        name already exists.
     mail : str, optional
         A mail address that is appended to to HTML request. This address
         is contacted in case you contact the NCBI server too often.
@@ -213,6 +216,9 @@ def fetch_single_file(uids, file_name,
     --------
     fetch
     """
+    if os.path.isfile(file_name) and not overwrite:
+        # Do no redownload the already existing file
+        return file_name
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","
