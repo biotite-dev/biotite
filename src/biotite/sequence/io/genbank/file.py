@@ -57,23 +57,7 @@ class GenBankFile(TextFile):
     
     def read(self, file):
         super().read(file)
-        start = -1
-        stop = -1
-        name = ""
-        self._fields = []
-        for i, line in enumerate(self.lines):
-            # Check if line contains a new major field
-            # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " " and line[:2] != "//":
-                stop = i
-                if start != -1:
-                    # Store previous field
-                    self._fields.append((start, stop, name))
-                start = i
-                name = line[0:12].strip()
-        # Store last field
-        stop = i
-        self._fields.append((start, stop, name))
+        self._find_field_indices()
     
     def write(self, file):
         """
@@ -380,9 +364,35 @@ class GenBankFile(TextFile):
         for i in range(starts[0]+1, stops[0]):
             seq_str += regex.sub("", self.lines[i])
         return seq_str
-            
 
+    def _find_field_indices(self):
+        """
+        Identify the start and exclusive stop indices of lines
+        corresponding to a field name for all fields in the file.
+        """
+        start = -1
+        stop = -1
+        name = ""
+        self._fields = []
+        for i, line in enumerate(self.lines):
+            # Check if line contains a new major field
+            # (Header beginning from first column)
+            if len(line) != 0 and line[0] != " " and line[:2] != "//":
+                stop = i
+                if start != -1:
+                    # Store previous field
+                    self._fields.append((start, stop, name))
+                start = i
+                name = line[0:12].strip()
+        # Store last field
+        stop = i
+        self._fields.append((start, stop, name))
+    
     def _get_field_indices(self, name):
+        """
+        Get the start and exclusive stop indices of lines corresponding
+        to the given field name.
+        """
         starts = []
         stops = []
         for field in self._fields:
@@ -412,7 +422,6 @@ class GenBankFile(TextFile):
         # Store last minor field
         minor_field_dict[header] = content
         return minor_field_dict
-
 
 def _parse_locs(loc_str):
     locs = []
