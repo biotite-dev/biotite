@@ -70,6 +70,7 @@ class Annotation(Iterable[Feature], Container):
 
 
 class AnnotatedSequence:
+    sequence_start: int
     sequence: Sequence
     annotation: Annotation
     def __init__(
@@ -78,6 +79,7 @@ class AnnotatedSequence:
         sequence: Sequence,
         sequence_start: int = 1
     ) -> None: ...
+    def reverse_complement(self) -> None: ...
     @overload
     def __getitem__(self, index: slice) -> AnnotatedSequence: ...
     @overload

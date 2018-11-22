@@ -77,6 +77,10 @@ class Location(Copyable):
     
     def __init__(self, first, last, strand=Strand.FORWARD,
                  defect=Defect.NONE):
+        if first > last:
+            raise ValueError(
+                "The first position cannot be higher than the last position"
+            )
         self.first = first
         self.last = last
         self.strand = strand
@@ -539,6 +543,73 @@ class AnnotatedSequence(Copyable):
     def __copy_create__(self):
         return AnnotatedSequence(
             self._annotation.copy(), self._sequence.copy, self._seqstart)
+    
+    def reverse_complement(self, sequence_start=1):
+        """
+        Create the reverse complement of the annotated sequence.
+
+        This method accurately converts the position and the strand of
+        the annotation.
+        The information on the sequence start is lost.
+
+        Parameters
+        ----------
+        sequence_start : int, optional
+            The location of the first symbol in the reverse complement
+            sequence.
+        
+        Returns
+        -------
+            The reverse complement of the annotated sequence.
+        """
+        rev_seqstart = sequence_start
+        
+        rev_sequence = self._sequence.reverse().complement()
+        
+        seq_len = len(self._sequence)
+        rev_features = []
+        for feature in self._annotation:
+            rev_locs = []
+            for loc in feature.locs:
+                # Transform location to the reverse complement strand
+                # (seq_len-1) -> last sequence index
+                # (loc.last-self._seqstart) -> location to index
+                # ... + rev_seqstart -> index to location
+                rev_loc_first \
+                    = (seq_len-1) - (loc.last-self._seqstart) + rev_seqstart
+                rev_loc_last \
+                    = (seq_len-1) - (loc.first-self._seqstart) + rev_seqstart
+                
+                if loc.strand == Location.Strand.FORWARD:
+                    rev_loc_strand = Location.Strand.REVERSE
+                else:
+                    rev_loc_strand = Location.Strand.FORWARD
+                
+                rev_loc_defect = Location.Defect.NONE
+                if loc.defect & Location.Defect.MISS_LEFT:
+                    rev_loc_defect |= Location.Defect.MISS_RIGHT
+                if loc.defect & Location.Defect.MISS_RIGHT:
+                    rev_loc_defect |= Location.Defect.MISS_LEFT
+                if loc.defect & Location.Defect.BEYOND_RIGHT:
+                    rev_loc_defect |= Location.Defect.BEYOND_LEFT
+                if loc.defect & Location.Defect.BEYOND_LEFT:
+                    rev_loc_defect |= Location.Defect.BEYOND_RIGHT
+                if loc.defect & Location.Defect.UNK_LOC:
+                    rev_loc_defect |= Location.Defect.UNK_LOC
+                if loc.defect & Location.Defect.BETWEEN:
+                    rev_loc_defect |= Location.Defect.BETWEEN
+                
+                rev_locs.append(Location(
+                        rev_loc_first, rev_loc_last,
+                        rev_loc_strand, rev_loc_defect
+                ))
+            rev_features.append(Feature(
+                feature.key, rev_locs, feature.qual
+            )) 
+        
+        return AnnotatedSequence(
+            Annotation(rev_features), rev_sequence, rev_seqstart
+        )
     
     def __getitem__(self, index):
         if isinstance(index, Feature):

@@ -60,3 +60,9 @@ def test_annotated_sequence():
     assert annot_seq[feature2] == seq.NucleotideSequence("AAAAAAA")
     annot_seq[feature1] = seq.NucleotideSequence("CCCC")
     assert annot_seq.sequence == seq.NucleotideSequence("CCGGCGTACGCCTAGAAAAAAA")
+
+def test_reverse_complement():
+    gb_file = gb.GenBankFile()
+    gb_file.read(join(data_dir, "ec_bl21.gb"))
+    annot_seq = gb_file.get_annotated_sequence()
+    assert annot_seq == annot_seq.reverse_complement().reverse_complement()
