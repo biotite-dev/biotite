@@ -45,8 +45,7 @@ class HelixPlotter(graphics.FeaturePlotter):
         return False
     
     # The drawing function itself
-    def draw(self, axes, feature, bbox, loc_index, style_param):
-        loc = feature.locs[loc_index]
+    def draw(self, axes, feature, bbox, loc, style_param):
         # Approx. 1 turn per 3.6 residues to resemble natural helix
         n_turns = np.ceil((loc.last - loc.first + 1) / 3.6)
         x_val = np.linspace(0, n_turns * 2*np.pi, 100)
@@ -83,8 +82,7 @@ class SheetPlotter(graphics.FeaturePlotter):
                     return True
         return False
     
-    def draw(self, axes, feature, bbox, loc_index, style_param):
-        loc = feature.locs[loc_index]
+    def draw(self, axes, feature, bbox, loc, style_param):
         x = bbox.x0
         y = bbox.y0 + bbox.height/2
         dx = bbox.width

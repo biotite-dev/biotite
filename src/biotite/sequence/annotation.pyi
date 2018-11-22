@@ -9,7 +9,8 @@ from typing import (
     Optional,
     Iterable,
     Iterator,
-    List,
+    Set,
+    FrozenSet,
     Container,
     overload,
     Hashable
@@ -47,7 +48,7 @@ class Location:
 
 class Feature:
     key: str
-    locs: List[Location]
+    locs: FrozenSet[Location]
     qual: Dict[str, str]
     def __init__(
         self, key: str, locs: Iterable[Location], qual: Dict[str, str] = {}
@@ -57,7 +58,7 @@ class Feature:
 
 class Annotation(Iterable[Feature], Container):
     def __init__(self, features: Optional[Iterable[Feature]] = None) -> None: ...
-    def get_features(self) -> List[Feature]: ...
+    def get_features(self) -> Set[Feature]: ...
     def add_feature(self, feature: Feature) -> None: ...
     def get_location_range(self) -> Tuple[int, int]: ...
     def del_feature(self, feature: Feature) -> None: ...

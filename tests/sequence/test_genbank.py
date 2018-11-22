@@ -34,7 +34,10 @@ def test_genbank_conversion():
     assert feature.key == "CDS"
     assert feature.qual["gene"] == "yaaA"
     assert feature.qual["transl_table"] == "11"
-    assert str(feature.locs[0]) == "< 5681-6457"
+    # Get first loc
+    for loc in feature.locs:
+        break
+    assert str(loc) == "< 5681-6457"
 
 def test_genpept_conversion():
     gp_file = gb.GenPeptFile()

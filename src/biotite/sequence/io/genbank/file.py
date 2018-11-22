@@ -431,9 +431,10 @@ def _parse_locs(loc_str):
             locs.extend(_parse_locs(s))
     elif loc_str.startswith("complement"):
         compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
-        compl_locs = _parse_locs(compl_str)
-        for loc in compl_locs:
-            loc.strand = Location.Strand.REVERSE
+        compl_locs = [
+            Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect) 
+            for loc in _parse_locs(compl_str)
+        ]
         locs.extend(compl_locs)
     else:
         locs = [_parse_single_loc(loc_str)]

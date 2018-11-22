@@ -14,13 +14,15 @@ from .sequence import Sequence
 from ..copyable import Copyable
 
 
-class Location(Copyable):
+class Location():
     """
     A `Location` defines at which base(s)/residue(s) a feature is
     located.
     
     A feature can have multiple `Location` instances if multiple
     locations are joined.
+
+    Objects of this class are immutable.
     
     Attributes
     ----------
@@ -81,13 +83,26 @@ class Location(Copyable):
             raise ValueError(
                 "The first position cannot be higher than the last position"
             )
-        self.first = first
-        self.last = last
-        self.strand = strand
-        self.defect = defect
+        self._first = first
+        self._last = last
+        self._strand = strand
+        self._defect = defect
     
-    def __copy_create__(self):
-        return Location(self.first, self.last, self.strand, self.defect)
+    @property
+    def first(self):
+        return self._first
+    
+    @property
+    def last(self):
+        return self._last
+    
+    @property
+    def strand(self):
+        return self._strand
+    
+    @property
+    def defect(self):
+        return self._defect
     
     def __str__(self):
         string = "{:d}-{:d}".format(self.first, self.last)
@@ -103,15 +118,20 @@ class Location(Copyable):
                 and self.strand == item.strand
                 and self.defect == item.defect)
     
+    def __hash__(self):
+        return hash((self._first, self._last, self._strand, self._defect))
+    
 
 class Feature(Copyable):
     """
     This class represents a single sequence feature, for example from a
     GenBank feature table. 
     A feature describes a functional part of a sequence.
-    It consists of a feature key, describung the general class of the
+    It consists of a feature key, describing the general class of the
     feature, at least one location, describing its position on the
     reference, and qualifiers, describing the feature in detail.
+
+    Objects of this class are immutable.
 
     Parameters
     ----------
@@ -142,11 +162,8 @@ class Feature(Copyable):
     
     def __init__(self, key, locs, qual={}):
         self._key = key
-        self._locs = [loc.copy() for loc in locs]
+        self._locs = frozenset(locs)
         self._qual = copy.deepcopy(qual)
-    
-    def __copy_create__(self):
-        return Feature(self._key, self._locs, self._qual)
     
     def __eq__(self, item):
         if not isinstance(item, Feature):
@@ -161,16 +178,19 @@ class Feature(Copyable):
     
     @property
     def locs(self):
-        return self._locs
+        return copy.copy(self._locs)
     
     @property
     def qual(self):
-        return self._qual
+        return copy.copy(self._qual)
+    
+    def __hash__(self):
+        return hash(( self._key, self._locs, frozenset(self._qual.items()) ))
 
 
 class Annotation(Copyable):
     """
-    An `Annotation` is a list of features belonging to one sequence.
+    An `Annotation` is a set of features belonging to one sequence.
     
     Its advantage over a simple list is the base/residue position based
     indexing:
@@ -196,7 +216,7 @@ class Annotation(Copyable):
     Integers or other index types are not supported. If you want to
     obtain the `Feature` instances from the `Annotation` you need to 
     iterate over it. The iteration has no defined order.
-    Alternatively, you can obtain a copy of the internal `Feature` list
+    Alternatively, you can obtain a copy of the internal `Feature` set
     via `get_features()`.
     
     Multiple `Annotation` objects can be concatenated to one
@@ -208,7 +228,7 @@ class Annotation(Copyable):
     Parameters
     ----------
     features : iterable object of Feature, optional
-        The list of features to create the `Annotation` from. if not
+        The features to create the `Annotation` from. if not
         provided, an empty `Annotation` is created.
     
     Examples
@@ -219,9 +239,7 @@ class Annotation(Copyable):
     >>> feature2 = Feature("CDS", [Location(20,  50 )], qual={"gene" : "test2"})
     >>> annotation1 = Annotation([feature1, feature2])
     >>> for f in annotation1:
-    ...     loc = f.locs[0]
-    ...     print("{:}   {:3d} - {:3d}   {:}"
-    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
+    ...     print(f.qual["gene"], "".join(locs))
     test1   -10 -  30   Defect.NONE
     test2    20 -  50   Defect.NONE
     
@@ -233,9 +251,7 @@ class Annotation(Copyable):
     >>> feature5 = Feature("CDS", [Location(-50, 200 )], qual={"gene" : "test5"})
     >>> annotation3 = annotation1 + annotation2 + feature5
     >>> for f in annotation3:
-    ...     loc = f.locs[0]
-    ...     print("{:}   {:3d} - {:3d}   {:}"
-    ...           .format(f.qual["gene"], loc.first, loc.last, str(loc.defect)))
+    ...     print(f.qual["gene"], "".join(locs))
     test1   -10 -  30   Defect.NONE
     test2    20 -  50   Defect.NONE
     test3   100 - 130   Defect.NONE
@@ -248,11 +264,7 @@ class Annotation(Copyable):
     
     >>> annotation4 = annotation3[40:150]
     >>> for f in annotation4:
-    ...     loc = f.locs[0]
-    ...     print(
-    ...         f"{f.qual['gene']}   {loc.first:3d} - {loc.last:3d}   "
-    ...         f"{str(loc.defect)}"
-    ...     )
+    ...     print(f.qual["gene"], "".join(locs))
     test2    40 -  50   Defect.MISS_LEFT
     test3   100 - 130   Defect.NONE
     test5    40 - 149   Defect.MISS_RIGHT|MISS_LEFT
@@ -260,21 +272,21 @@ class Annotation(Copyable):
     
     def __init__(self, features=None):
         if features is None:
-            self._features = []
+            self._features = set()
         else:
-            self._features = list(features)
+            self._features = set(features)
         
     def __copy_create__(self):
         return Annotation(self._features)
     
     def get_features(self):
         """
-        Get a copy of the internal feature list.
+        Get a copy of the internal feature set.
         
         Returns
         -------
         feature_list : list of Feature
-            A copy of the internal feature list.
+            A copy of the internal feature set.
         """
         return copy.copy(self._features)
     
@@ -292,7 +304,7 @@ class Annotation(Copyable):
                 f"Only 'Feature' objects are supported, "
                 f"not {type(feature).__name__}"
             )
-        self._features.append(feature.copy())
+        self._features.add(feature)
     
     def get_location_range(self):
         """
@@ -331,24 +343,30 @@ class Annotation(Copyable):
         KeyError
             If the feature is not in the annotation
         """
-        if not feature in self._features:
-            raise KeyError("Feature is not in annotation")
         self._features.remove(feature)
     
     def __add__(self, item):
         if isinstance(item, Annotation):
-            feature_list = self._features
-            feature_list.extend(item._features)
-            return Annotation(feature_list)
+            return Annotation(self._features | item._features)
         elif isinstance(item, Feature):
-            feature_list = self._features
-            feature_list.append(item)
-            return Annotation(feature_list)
+            return Annotation(self._features | set([item]))
         else:
             raise TypeError(
-                f"Only 'Feature' objects are supported, "
+                f"Only 'Feature' and 'Annotation' objects are supported, "
                 f"not {type(item).__name__}"
             )
+    
+    def __iadd__(self, item):
+        if isinstance(item, Annotation):
+            self._features |= item._features
+        elif isinstance(item, Feature):
+            self._features.add(item)
+        else:
+            raise TypeError(
+                f"Only 'Feature' and 'Annotation' objects are supported, "
+                f"not {type(item).__name__}"
+            )
+        return self
     
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -368,15 +386,19 @@ class Annotation(Copyable):
                     if loc.first <= i_last and loc.last >= i_first:
                         # The location is at least partly in the
                         # given location range
-                        loc = loc.copy()
                         # Handle defects
+                        first = loc.first
+                        last = loc.last
+                        defect = loc.defect
                         if loc.first < i_first:
-                            loc.defect |= Location.Defect.MISS_LEFT
-                            loc.first = i_first
+                            defect |= Location.Defect.MISS_LEFT
+                            first = i_first
                         if loc.last > i_last:
-                            loc.defect |= Location.Defect.MISS_RIGHT
-                            loc.last = i_last
-                        locs_in_scope.append(loc)
+                            defect |= Location.Defect.MISS_RIGHT
+                            last = i_last
+                        locs_in_scope.append(Location(
+                            first, last, loc.strand, defect
+                        ))
                 if len(locs_in_scope) > 0:
                     # The feature is present in the new annotation
                     # if any of the original locations is in the new
@@ -400,10 +422,7 @@ class Annotation(Copyable):
         self.del_feature(item)
     
     def __iter__(self):
-        i = 0
-        while i < len(self._features):
-            yield self._features[i]
-            i += 1
+        return self._features.__iter__()
     
     def __contains__(self, item):
         return item in self._features
@@ -411,13 +430,7 @@ class Annotation(Copyable):
     def __eq__(self, item):
         if not isinstance(item, Annotation):
             return False
-        for feature in self._features:
-            if feature not in item._features:
-                return False
-        for feature in item._features:
-            if feature not in self._features:
-                return False
-        return True
+        return self._features == item._features
     
     def __len__(self):
         return len(self._features)

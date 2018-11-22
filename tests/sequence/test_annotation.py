@@ -16,9 +16,11 @@ def test_annotation_creation():
     feature2 = Feature("CDS", [], qual={"gene" : "test2"})
     feature_list = [feature1, feature2]
     annotation = Annotation(feature_list)
-    for i, f in enumerate(annotation):
-        assert f.key == feature_list[i].key
-        assert f.qual["gene"] == feature_list[i].qual["gene"]
+    for feature in annotation:
+        assert feature.key in [f.key for f in feature_list]
+        assert feature.qual["gene"] in [
+            f.qual["gene"] for f in feature_list
+        ]
 
 def test_annotation_concatenation():
     feature1 = Feature("CDS", [], qual={"gene" : "test1"})
@@ -29,8 +31,8 @@ def test_annotation_concatenation():
     annot2 = Annotation([feature3, feature4])
     feature5 = Feature("CDS", [], qual={"gene" : "test5"})
     concat = annot1 + annot2 + feature5
-    assert [f.qual["gene"] for f in concat] == ["test1", "test2", "test3",
-                                                "test4", "test5"]
+    assert set([f.qual["gene"] for f in concat]) \
+        == set(["test1", "test2", "test3", "test4", "test5"])
 
 def test_annotation_indexing():
     feature1 = Feature("CDS", [Location(-10,30 )], qual={"gene" : "test1"})
@@ -40,9 +42,10 @@ def test_annotation_indexing():
     feature5 = Feature("CDS", [Location(-50,200)], qual={"gene" : "test5"})
     annotation = Annotation([feature1,feature2,feature3,feature4,feature5])
     sub_annot = annotation[40:150]
-    assert [f.locs[0].defect for f in sub_annot] \
-                == [Location.Defect.MISS_LEFT, Location.Defect.NONE,
-                    (Location.Defect.MISS_LEFT | Location.Defect.MISS_RIGHT)]
+    # Only one location per feature
+    assert set([list(f.locs)[0].defect for f in sub_annot]) \
+        == set([Location.Defect.MISS_LEFT, Location.Defect.NONE,
+                (Location.Defect.MISS_LEFT | Location.Defect.MISS_RIGHT)])
     assert [f.qual["gene"] for f in sub_annot] == ["test2", "test3", "test5"]
 
 def test_annotated_sequence():
