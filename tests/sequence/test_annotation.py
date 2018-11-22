@@ -46,7 +46,8 @@ def test_annotation_indexing():
     assert set([list(f.locs)[0].defect for f in sub_annot]) \
         == set([Location.Defect.MISS_LEFT, Location.Defect.NONE,
                 (Location.Defect.MISS_LEFT | Location.Defect.MISS_RIGHT)])
-    assert [f.qual["gene"] for f in sub_annot] == ["test2", "test3", "test5"]
+    assert set([f.qual["gene"] for f in sub_annot]) \
+        == set(["test2", "test3", "test5"])
 
 def test_annotated_sequence():
     sequence = seq.NucleotideSequence("ATGGCGTACGATTAGAAAAAAA")
