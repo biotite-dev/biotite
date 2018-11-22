@@ -360,11 +360,10 @@ class GenBankFile(TextFile):
     
     def _get_seq_string(self):
         starts, stops = self._get_field_indices("ORIGIN")
-        seq_str = ""
+        seq_str = "".join(self.lines[starts[0]+1 : stops[0]])
         # Remove numbers, emtpy spaces and the '//' at end of file
         regex = re.compile("[0-9]| |/")
-        for i in range(starts[0]+1, stops[0]):
-            seq_str += regex.sub("", self.lines[i])
+        seq_str = regex.sub("", seq_str)
         return seq_str
 
     def _find_field_indices(self):
@@ -592,7 +591,7 @@ class MultiFile(TextFile):
             line = self.lines[i]
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
-                file_content = "\n".join(self.lines[start_i : i])
+                file_content = "\n".join(self.lines[start_i : i+1])
                 file = self._file_class()
                 file.read(io.StringIO(file_content))
                 # Reset file start index
