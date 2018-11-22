@@ -158,8 +158,7 @@ transmembrane_annotation = seq.Annotation(
      if feature.qual["region_name"] == "Transmembrane region"]
 )
 for feature in transmembrane_annotation:
-    first = np.min([loc.first for loc in feature.locs])
-    last = np.max([loc.last for loc in feature.locs])
+    first, last = feature.get_location_range()
     ax.axvspan(first, last, color=(0.0, 0.0, 0.0, 0.2), linewidth=0)
 
 # Plot similarity score as measure for conservation

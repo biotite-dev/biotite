@@ -113,6 +113,8 @@ class Location():
         return string
     
     def __eq__(self, item):
+        if not isinstance(item, Location):
+            return False
         return (    self.first  == item.first
                 and self.last   == item.last
                 and self.strand == item.strand
@@ -165,12 +167,59 @@ class Feature(Copyable):
         self._locs = frozenset(locs)
         self._qual = copy.deepcopy(qual)
     
+    def get_location_range(self):
+        """
+        Get the minimum first base/residue and maximum last base/residue
+        of all feature locations.
+
+        This can be used to create a location, that spans all of the
+        feature's locations.
+
+        Returns
+        -------
+        first : int
+            The minimum first base/residue of all locations.
+        last : int
+            The maximum last base/residue of all locations.
+        """
+        first = np.min([loc.first for loc in self._locs])
+        last = np.max([loc.last for loc in self._locs])
+        return first, last
+
     def __eq__(self, item):
         if not isinstance(item, Feature):
             return False
         return (    self._key  == item._key
                 and self._locs == item._locs
                 and self._qual == item._qual)
+    
+    def __lt__(self, item):
+        if not isinstance(item, Feature):
+            return False
+        first, last = self.get_location_range()
+        it_first, it_last = item.get_location_range()
+        # The first base/residue is most significant,
+        # if it is equal for both features, look at last base/residue
+        if first < it_first:
+            return True
+        elif first > it_first:
+            return False
+        else: # First is equal
+            return last < it_last
+    
+    def __gt__(self, item):
+        if not isinstance(item, Feature):
+            return False
+        first, last = self.get_location_range()
+        it_first, it_last = item.get_location_range()
+        # The first base/residue is most significant,
+        # if it is equal for both features, look at last base/residue
+        if first > it_first:
+            return True
+        elif first < it_first:
+            return False
+        else: # First is equal
+            return last > it_last
     
     @property
     def key(self):
@@ -238,10 +287,10 @@ class Annotation(Copyable):
     >>> feature1 = Feature("CDS", [Location(-10, 30 )], qual={"gene" : "test1"})
     >>> feature2 = Feature("CDS", [Location(20,  50 )], qual={"gene" : "test2"})
     >>> annotation1 = Annotation([feature1, feature2])
-    >>> for f in annotation1:
-    ...     print(f.qual["gene"], "".join(locs))
-    test1   -10 -  30   Defect.NONE
-    test2    20 -  50   Defect.NONE
+    >>> for f in sorted(list(annotation1)):
+    ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
+    test1 -10-30 >
+    test2 20-50 >
     
     Merging two annotations and a feature
     
@@ -250,24 +299,22 @@ class Annotation(Copyable):
     >>> annotation2 = Annotation([feature3, feature4])
     >>> feature5 = Feature("CDS", [Location(-50, 200 )], qual={"gene" : "test5"})
     >>> annotation3 = annotation1 + annotation2 + feature5
-    >>> for f in annotation3:
-    ...     print(f.qual["gene"], "".join(locs))
-    test1   -10 -  30   Defect.NONE
-    test2    20 -  50   Defect.NONE
-    test3   100 - 130   Defect.NONE
-    test4   150 - 250   Defect.NONE
-    test5   -50 - 200   Defect.NONE
+    >>> for f in sorted(list(annotation3)):
+    ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
+    test5 -50-200 >
+    test1 -10-30 >
+    test2 20-50 >
+    test3 100-130 >
+    test4 150-250 >
     
-    Location based indexing, note the defects:
-    1 = Defect.MISS_LEFT,
-    3 = Defect.MISS_LEFT and Defect.MISS_RIGHT
+    Location based indexing, note the defects
     
     >>> annotation4 = annotation3[40:150]
-    >>> for f in annotation4:
-    ...     print(f.qual["gene"], "".join(locs))
-    test2    40 -  50   Defect.MISS_LEFT
-    test3   100 - 130   Defect.NONE
-    test5    40 - 149   Defect.MISS_RIGHT|MISS_LEFT
+    >>> for f in sorted(list(annotation4)):
+    ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
+    test2 40-50 >
+    test5 40-149 >
+    test3 100-130 >
     """
     
     def __init__(self, features=None):
@@ -502,7 +549,7 @@ class AnnotatedSequence(Copyable):
     >>> annot_seq = AnnotatedSequence(annotation, sequence)
     >>> print(annot_seq.sequence)
     ATGGCGTACGATTAGAAAAAAA
-    >>> for f in annot_seq.annotation:
+    >>> for f in sorted(list(annot_seq.annotation)):
     ...     print(f.qual["note"])
     walker
     poly-A

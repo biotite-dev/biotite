@@ -38,7 +38,9 @@ class GenBankFile(TextFile):
     >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> print(file.get_definition())
     Escherichia coli BL21(DE3), complete genome.
-    >>> for f in file.get_annotation(include_only=["CDS"]):
+    >>> features = [f for f in file.get_annotation(include_only=["CDS"])
+    ...             if "gene" in f.qual and "lac" in f.qual["gene"]]
+    >>> for f in sorted(features):
     ...     if "gene" in f.qual and "lac" in f.qual["gene"]:
     ...         for loc in f.locs:
     ...             print(f.qual["gene"], loc.strand, loc.first, loc.last)

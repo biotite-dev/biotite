@@ -30,14 +30,18 @@ def test_genbank_conversion():
                                      "from F. William Studier "
                                      "(studier\x40bnl.gov).")
     annotation = gb_file.get_annotation(include_only=["CDS"])
-    feature = annotation.get_features()[5]
-    assert feature.key == "CDS"
-    assert feature.qual["gene"] == "yaaA"
-    assert feature.qual["transl_table"] == "11"
-    # Get first loc
-    for loc in feature.locs:
-        break
-    assert str(loc) == "< 5681-6457"
+    feature = seq.Feature(
+        "CDS",
+        [seq.Location(5681, 6457, seq.Location.Strand.REVERSE)],
+        {"gene": "yaaA", "transl_table": "11"}
+    )
+    in_annotation = False
+    for f in annotation:
+        if f.key == feature.key and f.locs == feature.locs and \
+           all([(key, val in f.qual.items())
+                for key, val in feature.qual.items()]):
+                    in_annotation = True
+    assert in_annotation
 
 def test_genpept_conversion():
     gp_file = gb.GenPeptFile()
@@ -54,14 +58,21 @@ def test_genpept_conversion():
     assert ref["location"] == (1,147)
     assert gp_file.get_comment() == "Method: conceptual translation."
     annotation = gp_file.get_annotation()
-    feature = annotation.get_features()[3]
-    assert feature.key == "Site"
-    assert feature.qual["note"] == "lysozyme catalytic cleft [active]"
-    assert feature.qual["site_type"] == "active"
-    firsts = [loc.first for loc in feature.locs]
-    lasts = [loc.last for loc in feature.locs]
-    assert firsts == [52,55,62,76,78,81,117,120,125]
-    assert lasts  == [53,55,62,76,78,81,117,120,126]
+    feature = seq.Feature(
+        "Site",
+        [seq.Location(start, stop) for start, stop in zip(
+            [52,55,62,76,78,81,117,120,125],
+            [53,55,62,76,78,81,117,120,126]
+        )],
+        {"note": "lysozyme catalytic cleft [active]", "site_type": "active"}
+    )
+    in_annotation = False
+    for f in annotation:
+        if f.key == feature.key and f.locs == feature.locs and \
+           all([(key, val in f.qual.items())
+                for key, val in feature.qual.items()]):
+                    in_annotation = True
+    assert in_annotation
 
 def test_multi_file():
     multi_file = gb.MultiFile(file_type="gp")
