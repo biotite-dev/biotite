@@ -690,6 +690,11 @@ class AnnotatedSequence(Copyable):
             if index.start is None:
                 seq_start = 0
             else:
+                if index.start < self._seqstart:
+                    raise IndexError(
+                        f"The start of the index ({index.start}) is lower "
+                        f"than the start of the sequence ({self._seqstart})"
+                    )
                 seq_start = index.start - self._seqstart
             if index.stop is None:
                 index.start = len(self._sequence)
