@@ -295,7 +295,13 @@ class GenBankFile(TextFile):
                 # Remove empty quals
                 qualifiers = [s for s in qualifiers if s]
                 # First string is location identifier
-                locs = _parse_locs(qualifiers.pop(0).strip())
+                loc_string = qualifiers.pop(0).strip()
+                try:
+                    locs = _parse_locs(loc_string)
+                except:
+                    raise InvalidFileError(
+                        f"'{loc_string}' is an invalid location identifier"
+                    )
                 qual_key = None
                 qual_val = None
                 for qual in qualifiers:
@@ -304,7 +310,7 @@ class GenBankFile(TextFile):
                         if qual_key is not None:
                             # In case of e.g. '/pseudo'
                             # 'qual_val' is 'None'
-                            qual_dict[qual_key] = qual_val
+                            _set_qual(qual_dict, qual_key, qual_val)
                             qual_key = None
                             qual_val = None
                         # Qualifier key
@@ -319,7 +325,7 @@ class GenBankFile(TextFile):
                             qual_val = qual
                 # Store final qualifier pair
                 if qual_key is not None:
-                    qual_dict[qual_key] = qual_val
+                    _set_qual(qual_dict, qual_key, qual_val)
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
     
@@ -445,7 +451,7 @@ def _parse_locs(loc_str):
 def _parse_single_loc(loc_str):
     if ".." in loc_str:
         split_char = ".."
-        defect = Location.Defect(0)
+        defect = Location.Defect.NONE
     elif "." in loc_str:
         split_char = "."
         defect = Location.Defect.UNK_LOC
@@ -454,11 +460,21 @@ def _parse_single_loc(loc_str):
         loc_str_split = loc_str.split("..")
         defect = Location.Defect.BETWEEN
     else:
+        # Parse single location
+        defect = Location.Defect.NONE
+        if loc_str[0] == "<":
+            loc_str = loc_str[1:]
+            defect |= Location.Defect.BEYOND_LEFT
+        elif loc_str[0] == ">":
+            loc_str = loc_str[1:]
+            defect |= Location.Defect.BEYOND_RIGHT
         first_and_last = int(loc_str)
-        return Location(first_and_last, first_and_last)
+        return Location(first_and_last, first_and_last, defect=defect)
+    # Parse location range
     loc_str_split = loc_str.split(split_char)
     first_str = loc_str_split[0]
     last_str = loc_str_split[1]
+    # Parse Defects
     if first_str[0] == "<":
         first = int(first_str[1:])
         defect |= Location.Defect.BEYOND_LEFT
@@ -471,6 +487,17 @@ def _parse_single_loc(loc_str):
         last = int(last_str)
     return Location(first, last, defect=defect)
 
+
+def _set_qual(qual_dict, key, val):
+    """
+    Set a mapping key to val in the dictionary.
+    If the key already exists in the dictionary, append the value (str)
+    to the existing value, separated by a line break
+    """
+    if key in qual_dict:
+        qual_dict[key] += "\n" + val
+    else:
+        qual_dict[key] = val
 
 
 class GenPeptFile(GenBankFile):
