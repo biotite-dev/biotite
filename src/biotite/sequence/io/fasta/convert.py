@@ -180,6 +180,7 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str):
+    seq_str = seq_str.upper()
     try:
         code = NucleotideSequence.alphabet.encode_multiple(seq_str)
         seq = NucleotideSequence()

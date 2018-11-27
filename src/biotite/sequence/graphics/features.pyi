@@ -3,7 +3,7 @@
 # information.
 
 from typing import Optional, List, Tuple, Dict, Callable, Any
-from ..annotation import Feature, Annotation
+from ..annotation import Location, Feature, Annotation
 try:
     from matplotlib.axes import Axes
     from matplotlib.transforms import Bbox
@@ -35,7 +35,7 @@ class FeaturePlotter():
         axes: Axes,
         feature: Feature,
         bbox: Bbox,
-        loc_index: int,
+        location: Location,
         style_param: Optional[Dict[str, object]]
     ) -> None: ...
 

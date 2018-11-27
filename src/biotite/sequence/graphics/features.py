@@ -151,8 +151,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
                     plotter = potentail_plotter
                     break
             if plotter is not None:
-                for i in range(len(feature.locs)):
-                    loc = feature.locs[i]
+                for loc in feature.locs:
                     loc_len = loc.last - loc.first + 1
                     # Get start location realtive to start if line
                     loc_in_line = loc.first - line_start_loc
@@ -162,7 +161,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
                     height = 1
                     bbox = Bbox.from_bounds(x, y, width, height)
                     plotter.draw(
-                        axes, feature, bbox, loc_index=i,
+                        axes, feature, bbox, loc,
                         style_param=style_param
                     )
         # Increment by spacing and width (=1) of feature
@@ -247,7 +246,7 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
         pass
     
     @abc.abstractmethod
-    def draw(self, axes, feature, bbox, loc_index, style_param):
+    def draw(self, axes, feature, bbox, location, style_param):
         """
         Draw aa feature onto an axes.
 
@@ -260,9 +259,8 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
         bbox : Bbox
             The bounding box, that describes the area on the `axes`,
             where the feature should be drawn.
-        loc_index : int
-            The index to the `Location` in ``feature.locs``, that
-            should be drawn.
+        location : int
+            The location of the feature, that should be drawn.
             Might be useful, when the visualization is dependent
             on e.g. location defects.
         style_param : dict
@@ -297,8 +295,7 @@ class CodingPlotter(FeaturePlotter):
         else:
             return False
         
-    def draw(self, axes, feature, bbox, loc_index, style_param):
-        loc = feature.locs[loc_index]
+    def draw(self, axes, feature, bbox, loc, style_param):
         y = bbox.y0 + bbox.height/2
         dy = 0
         if loc.strand == Location.Strand.FORWARD:
@@ -367,7 +364,7 @@ class MiscFeaturePlotter(FeaturePlotter):
     def matches(self, feature):
         return True
         
-    def draw(self, axes, feature, bbox, loc_index, style_param):
+    def draw(self, axes, feature, bbox, loc, style_param):
         from matplotlib.patches import Rectangle
 
         rect = Rectangle(
@@ -411,7 +408,7 @@ class PromoterPlotter(FeaturePlotter):
                     return True
         return False
         
-    def draw(self, axes, feature, bbox, loc_index, style_param):
+    def draw(self, axes, feature, bbox, loc, style_param):
         from matplotlib.patches import FancyArrowPatch, ArrowStyle
         from matplotlib.path import Path
 
@@ -469,7 +466,7 @@ class TerminatorPlotter(FeaturePlotter):
                     return True
         return False
         
-    def draw(self, axes, feature, bbox, loc_index, style_param):
+    def draw(self, axes, feature, bbox, loc, style_param):
 
         x = bbox.x0 + bbox.width/2
 
@@ -503,7 +500,7 @@ class RBSPlotter(FeaturePlotter):
                     return True
         return False
         
-    def draw(self, axes, feature, bbox, loc_index, style_param):
+    def draw(self, axes, feature, bbox, loc, style_param):
         from matplotlib.patches import Ellipse
 
         ellipse = Ellipse(

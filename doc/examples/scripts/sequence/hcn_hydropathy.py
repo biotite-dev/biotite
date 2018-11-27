@@ -158,8 +158,8 @@ transmembrane_annotation = seq.Annotation(
      if feature.qual["region_name"] == "Transmembrane region"]
 )
 for feature in transmembrane_annotation:
-    loc = feature.locs[0]
-    ax.axvspan(loc.first, loc.last, color=(0.0, 0.0, 0.0, 0.2), linewidth=0)
+    first, last = feature.get_location_range()
+    ax.axvspan(first, last, color=(0.0, 0.0, 0.0, 0.2), linewidth=0)
 
 # Plot similarity score as measure for conservation
 ax2 = ax.twinx()

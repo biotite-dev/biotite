@@ -505,7 +505,8 @@ for feature in annotation:
 for feature in annotation:
     if feature.key == "source":
         # loc_range has exclusive stop
-        loc_range = (feature.locs[0].first, feature.locs[0].last+1)
+        loc = list(feature.locs)[0]
+        loc_range = (loc.first, loc.last+1)
 fig, ax = plt.subplots(figsize=(8.0, 1.0))
 graphics.plot_feature_map(
     ax,
@@ -535,7 +536,7 @@ for feature in annotation:
 # Then we create a subannotation from the feature's location
 # Since the stop value of the slice is still exclusive,
 # the stop value is the position of the last base +1
-loc = gene_feature.locs[0]
+loc = list(gene_feature.locs)[0]
 sub_annot = annotation[loc.first : loc.last +1]
 # Print the remaining features and their locations
 for feature in sub_annot:
@@ -609,7 +610,7 @@ for feature in annot_seq.annotation:
     if feature.key == "regulatory" \
         and feature.qual["regulatory_class"] == "polyA_signal_sequence":
             polya_feature = feature
-loc = feature.locs[0]
+loc = list(feature.locs)[0]
 # Get annotated sequence containing only the poly-A signal region
 poly_a = annot_seq[loc.first : loc.last +1]
 print("Sequence start after indexing:", poly_a.sequence_start)

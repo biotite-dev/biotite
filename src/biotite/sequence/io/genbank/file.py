@@ -38,7 +38,9 @@ class GenBankFile(TextFile):
     >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> print(file.get_definition())
     Escherichia coli BL21(DE3), complete genome.
-    >>> for f in file.get_annotation(include_only=["CDS"]):
+    >>> features = [f for f in file.get_annotation(include_only=["CDS"])
+    ...             if "gene" in f.qual and "lac" in f.qual["gene"]]
+    >>> for f in sorted(features):
     ...     if "gene" in f.qual and "lac" in f.qual["gene"]:
     ...         for loc in f.locs:
     ...             print(f.qual["gene"], loc.strand, loc.first, loc.last)
@@ -57,23 +59,7 @@ class GenBankFile(TextFile):
     
     def read(self, file):
         super().read(file)
-        start = -1
-        stop = -1
-        name = ""
-        self._fields = []
-        for i, line in enumerate(self.lines):
-            # Check if line contains a new major field
-            # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " " and line[:2] != "//":
-                stop = i
-                if start != -1:
-                    # Store previous field
-                    self._fields.append((start, stop, name))
-                start = i
-                name = line[0:12].strip()
-        # Store last field
-        stop = i
-        self._fields.append((start, stop, name))
+        self._find_field_indices()
     
     def write(self, file):
         """
@@ -309,7 +295,13 @@ class GenBankFile(TextFile):
                 # Remove empty quals
                 qualifiers = [s for s in qualifiers if s]
                 # First string is location identifier
-                locs = _parse_locs(qualifiers.pop(0).strip())
+                loc_string = qualifiers.pop(0).strip()
+                try:
+                    locs = _parse_locs(loc_string)
+                except:
+                    raise InvalidFileError(
+                        f"'{loc_string}' is an invalid location identifier"
+                    )
                 qual_key = None
                 qual_val = None
                 for qual in qualifiers:
@@ -318,7 +310,7 @@ class GenBankFile(TextFile):
                         if qual_key is not None:
                             # In case of e.g. '/pseudo'
                             # 'qual_val' is 'None'
-                            qual_dict[qual_key] = qual_val
+                            _set_qual(qual_dict, qual_key, qual_val)
                             qual_key = None
                             qual_val = None
                         # Qualifier key
@@ -333,7 +325,7 @@ class GenBankFile(TextFile):
                             qual_val = qual
                 # Store final qualifier pair
                 if qual_key is not None:
-                    qual_dict[qual_key] = qual_val
+                    _set_qual(qual_dict, qual_key, qual_val)
                 annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
     
@@ -374,15 +366,40 @@ class GenBankFile(TextFile):
     
     def _get_seq_string(self):
         starts, stops = self._get_field_indices("ORIGIN")
-        seq_str = ""
+        seq_str = "".join(self.lines[starts[0]+1 : stops[0]])
         # Remove numbers, emtpy spaces and the '//' at end of file
         regex = re.compile("[0-9]| |/")
-        for i in range(starts[0]+1, stops[0]):
-            seq_str += regex.sub("", self.lines[i])
+        seq_str = regex.sub("", seq_str)
         return seq_str
-            
 
+    def _find_field_indices(self):
+        """
+        Identify the start and exclusive stop indices of lines
+        corresponding to a field name for all fields in the file.
+        """
+        start = -1
+        stop = -1
+        name = ""
+        self._fields = []
+        for i, line in enumerate(self.lines):
+            # Check if line contains a new major field
+            # (Header beginning from first column)
+            if len(line) != 0 and line[0] != " " and line[:2] != "//":
+                stop = i
+                if start != -1:
+                    # Store previous field
+                    self._fields.append((start, stop, name))
+                start = i
+                name = line[0:12].strip()
+        # Store last field
+        stop = i
+        self._fields.append((start, stop, name))
+    
     def _get_field_indices(self, name):
+        """
+        Get the start and exclusive stop indices of lines corresponding
+        to the given field name.
+        """
         starts = []
         stops = []
         for field in self._fields:
@@ -413,7 +430,6 @@ class GenBankFile(TextFile):
         minor_field_dict[header] = content
         return minor_field_dict
 
-
 def _parse_locs(loc_str):
     locs = []
     if loc_str.startswith(("join", "order")):
@@ -422,9 +438,10 @@ def _parse_locs(loc_str):
             locs.extend(_parse_locs(s))
     elif loc_str.startswith("complement"):
         compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
-        compl_locs = _parse_locs(compl_str)
-        for loc in compl_locs:
-            loc.strand = Location.Strand.REVERSE
+        compl_locs = [
+            Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect) 
+            for loc in _parse_locs(compl_str)
+        ]
         locs.extend(compl_locs)
     else:
         locs = [_parse_single_loc(loc_str)]
@@ -434,7 +451,7 @@ def _parse_locs(loc_str):
 def _parse_single_loc(loc_str):
     if ".." in loc_str:
         split_char = ".."
-        defect = Location.Defect(0)
+        defect = Location.Defect.NONE
     elif "." in loc_str:
         split_char = "."
         defect = Location.Defect.UNK_LOC
@@ -443,11 +460,21 @@ def _parse_single_loc(loc_str):
         loc_str_split = loc_str.split("..")
         defect = Location.Defect.BETWEEN
     else:
+        # Parse single location
+        defect = Location.Defect.NONE
+        if loc_str[0] == "<":
+            loc_str = loc_str[1:]
+            defect |= Location.Defect.BEYOND_LEFT
+        elif loc_str[0] == ">":
+            loc_str = loc_str[1:]
+            defect |= Location.Defect.BEYOND_RIGHT
         first_and_last = int(loc_str)
-        return Location(first_and_last, first_and_last)
+        return Location(first_and_last, first_and_last, defect=defect)
+    # Parse location range
     loc_str_split = loc_str.split(split_char)
     first_str = loc_str_split[0]
     last_str = loc_str_split[1]
+    # Parse Defects
     if first_str[0] == "<":
         first = int(first_str[1:])
         defect |= Location.Defect.BEYOND_LEFT
@@ -460,6 +487,17 @@ def _parse_single_loc(loc_str):
         last = int(last_str)
     return Location(first, last, defect=defect)
 
+
+def _set_qual(qual_dict, key, val):
+    """
+    Set a mapping key to val in the dictionary.
+    If the key already exists in the dictionary, append the value (str)
+    to the existing value, separated by a line break
+    """
+    if key in qual_dict:
+        qual_dict[key] += "\n" + val
+    else:
+        qual_dict[key] = val
 
 
 class GenPeptFile(GenBankFile):
@@ -580,7 +618,7 @@ class MultiFile(TextFile):
             line = self.lines[i]
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
-                file_content = "\n".join(self.lines[start_i : i])
+                file_content = "\n".join(self.lines[start_i : i+1])
                 file = self._file_class()
                 file.read(io.StringIO(file_content))
                 # Reset file start index

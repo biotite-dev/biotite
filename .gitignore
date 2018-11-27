@@ -8,7 +8,7 @@ doc/_build/
 *.egg-info/
 
 # Ignore folder created by mypy
-/.mypy_cache/
+.mypy_cache/
 
 # Ignore folder created by pytest
 .pytest_cache

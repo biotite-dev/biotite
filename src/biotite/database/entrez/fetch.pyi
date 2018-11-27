@@ -38,5 +38,6 @@ def fetch_single_file(
     db_name: str,
     ret_type: str,
     ret_mode: str = 'text',
+    overwrite: bool = False,
     mail: None = None
 ) -> str: ...
