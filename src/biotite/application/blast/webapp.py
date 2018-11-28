@@ -273,6 +273,8 @@ class BlastWebApp(WebApp):
                 param_dict["THRESHOLD"] = self._threshold
         
         request = requests.get(self.app_url(), params=param_dict)
+        if "Submitted URI too large" in request.text:
+            raise ValueError("The URI is too large, try a shorter sequence")
         self._contact()
         self._request()
         info_dict = BlastWebApp._get_info(request.text)
