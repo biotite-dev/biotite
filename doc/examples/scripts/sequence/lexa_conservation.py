@@ -98,8 +98,10 @@ for file, source in zip(files, all_sources):
     annot_seq = file.get_annotated_sequence(include_only=["Site"])
     # Find the feature for DNA-binding site
     for feature in annot_seq.annotation:
+        # DNA binding site is a helix-turn-helix motif
         if "site_type" in feature.qual \
-            and feature.qual["site_type"] == "DNA binding":
+            and feature.qual["site_type"] == "DNA binding" \
+            and "H-T-H motif" in feature.qual["note"]:
                 bind_feature = feature
     if bind_feature is not None:
         # If the feature is found,
