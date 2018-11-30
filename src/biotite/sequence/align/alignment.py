@@ -75,7 +75,7 @@ class Alignment(object):
      [-1  4]
      [-1  5]]
     >>> print(ali[1:4].trace)
-     [ 1 -1]
+    [[ 1 -1]
      [ 2  0]
      [ 3  1]]
     >>> print(ali[1:4,0].trace)
@@ -132,7 +132,7 @@ class Alignment(object):
             # Remove final line breaks
             return ali_str[:-2]
         else:
-            super().__str__()
+            return super().__str__()
     
     def __getitem__(self, index):
         if isinstance(index, tuple):
@@ -150,6 +150,9 @@ class Alignment(object):
     
     def __iter__(self):
         raise TypeError("'Alignment' object is not iterable")
+    
+    def __len__(self):
+        return len(self.trace)
     
     @staticmethod
     def trace_from_strings(seq_str_list):
@@ -213,7 +216,7 @@ def get_codes(alignment):
     >>> print(ali)
     CGTCAT--
     --TCATGC
-    >>> print(align.get_codes(ali))
+    >>> print(get_codes(ali))
     [[ 1  2  3  1  0  3 -1 -1]
      [-1 -1  3  1  0  3  2  1]]
     """

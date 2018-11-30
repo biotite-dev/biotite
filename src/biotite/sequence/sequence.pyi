@@ -22,8 +22,8 @@ from ..copyable import Copyable
 from .alphabet import Alphabet
 
 
-_T = TypeVar("_T", bound="Sequence")
-_V = TypeVar("_V", bound="Hashable")
+_T = TypeVar("_T", bound=Sequence)
+_V = TypeVar("_V", bound=Hashable)
 
 class Sequence(Generic[_V], _Sequence[_V], Copyable):
     symbols : List[_V]

@@ -35,23 +35,23 @@ matrix:
       - SRC=false
 
 install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh;  fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ];   then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
   - wget https://repo.continuum.io/miniconda/$MINICONDA
-  - wget -q https://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml
   
   - bash $MINICONDA -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-  - if [ $COMPLETE == true ]; then conda env create -q -f environment.yaml python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ];  then conda env create -q -f environment.yaml; fi
+  - if [ $COMPLETE == true ];  then conda install -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda install -n biotite-dev cython numpy requests msgpack-python pytest; fi
   - source activate biotite-dev
 
 script:
-  - if [ $COMPLETE == true ]; then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
+  - if [ $COMPLETE == true ];  then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
   - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
 
 before_deploy:

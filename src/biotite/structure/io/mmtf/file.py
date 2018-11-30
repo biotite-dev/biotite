@@ -29,8 +29,9 @@ class MMTFFile(File):
     Examples
     --------
     
+    >>> import os.path
     >>> mmtf_file = MMTFFile()
-    >>> mmtf_file.read("path/to/1l2y.mmtf")
+    >>> mmtf_file.read(os.path.join(path_to_structures, "1l2y.mmtf"))
     >>> print(mmtf_file["title"])
     NMR Structure of Trp-Cage Miniprotein Construct TC5b
     >>> print(mmtf_file["chainNameList"])

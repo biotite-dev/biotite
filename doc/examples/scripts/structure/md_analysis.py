@@ -35,12 +35,9 @@ template = strucio.load_structure(templ_file_path)
 # In contrast to the trajectory, the template still has water and ions,
 # that need to be removed
 template = template[(template.res_name != "CL") & (template.res_name != "SOL")]
-# Gromacs does not set the element symbol in its PDB files
-# Therefore we simply determine the symbol
-# from the first character in the atom name
-# Since hydrogens may have leading numbers we simply ignore numbers
-for i in range(template.array_length()):
-    template.element[i] = re.sub(r"\d", "", template.atom_name[i])[0]
+# Gromacs does not set the element symbol in its PDB files,
+# but Biotite guesses the element names from the atom names,
+# emitting a warning
 trajectory = strucio.load_structure(traj_file_path, template=template)
 
 ########################################################################

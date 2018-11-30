@@ -154,6 +154,17 @@ required.
 Figures that connot be dynamically generated are put into
 ``doc/static/assets/figures``.
 
+Structuring the API reference
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each  *Biotite* subpackage has a dedicated reference page, describing
+its classes and functions.
+The categories and classes/functions that are assigned to it can be set
+in ``apidoc.json``.
+Classes/functions that are not assigned to any category are placed in
+the 'Miscellaneous' category or, if no class/function is assigned,
+in the 'Content' category.
+
 
 
 Code testing
@@ -240,6 +251,7 @@ Required packages
 The following packages are required for the complete build process:
    
    - *numpy*
+   - *scipy*
    - *matplotlib*
    - *requests*
    - *msgpack*
@@ -259,7 +271,7 @@ Furthermore, the following software must be installed:
 
 If you use the *conda* package manager, there is a shortcut:
 Cou can download a *conda* environment from
-`here <http://raw.githubusercontent.com/biotite-dev/biotite-conda/master/environment.yaml>`_,
+`here <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_,
 that contains all of these requirements. How to create and activate the
 environment from the ``environment.yaml`` file, is explained in the
 `conda documentation <http://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file>`_.

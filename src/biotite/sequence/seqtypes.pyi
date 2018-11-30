@@ -19,7 +19,7 @@ from .alphabet import Alphabet, LetterAlphabet
 from .codon import CodonTable
 
 
-_T = TypeVar("_T", bound="Hashable")
+_T = TypeVar("_T", bound=Hashable)
 
 class GeneralSequence(Sequence[_T]):
     def __init__(

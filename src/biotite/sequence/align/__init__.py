@@ -30,4 +30,5 @@ __author__ = "Patrick Kunzmann"
 
 from .alignment import *
 from .pairwise import *
+from .multiple import *
 from .matrix import *

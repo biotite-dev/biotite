@@ -39,7 +39,7 @@ def requires_state(app_state):
     if `Application` is not in one of the specified states:
     
     >>> @requires_state(AppState.RUNNING | AppState.FINISHED)
-    >>> def function(self):
+    ... def function(self):
     ...     pass
     """
     def decorator(func):

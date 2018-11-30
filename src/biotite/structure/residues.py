@@ -119,15 +119,13 @@ def apply_residue_wise(array, data, function, axis=None):
     >>> print(len(sasa_per_residue))
     20
     >>> print(sasa_per_residue)
-    [ 173.71750737  114.52487523   99.08331902  111.95128253  115.81167158
-       20.58874161   96.50972632  138.9740059    74.63418835   37.31709418
-        0.          113.23807888  118.38526428   28.30951972   84.92855916
-      110.66448618  110.66448618   72.06059565   45.03787228  189.15906358]
+    [171.01521    111.95127    101.39954    109.50637    116.96978
+      21.875536    93.80745    146.43741     69.22964     36.158974
+       0.25735924 112.72334    119.67204     28.180838    85.82931
+     109.12033    108.86296     70.77379     44.394466   190.57451   ]
 
     Calculate the controids of each residue for the same peptide.
         
-    >>> file = fetch("1l2y","cif",temp_dir())
-    >>> atom_array = get_structure_from(file)[0]
     >>> print(len(atom_array))
     304
     >>> centroids = apply_residue_wise(atom_array, atom_array.coord,
@@ -135,26 +133,26 @@ def apply_residue_wise(array, data, function, axis=None):
     >>> print(len(centroids))
     20
     >>> print(centroids)
-    [[ -9.5819375    3.3778125   -2.0728125 ]
-     [ -4.66952632   5.81573684  -1.85989474]
-     [ -2.46080952   3.05966667   3.07604762]
-     [ -7.21084211  -0.39636842   1.01315789]
-     [ -4.69782353  -1.08047059  -4.28411765]
-     [  1.172125     0.20641667   1.038375  ]
-     [ -2.16005263  -2.24494737   3.54052632]
-     [ -3.68231818  -5.53977273  -2.89527273]
-     [  0.71108333  -5.40941667  -2.5495    ]
-     [  2.00242857  -6.32171429   1.69528571]
-     [  2.79857143  -3.14         2.32742857]
-     [  5.90071429  -2.48892857   4.84457143]
-     [  6.75372727  -6.71236364   3.09418182]
-     [  5.69927273  -5.10063636  -1.20918182]
-     [  9.29542857  -2.96957143  -1.83528571]
-     [  5.51795833  -1.52125     -3.47266667]
-     [  7.21892857   3.67321429  -0.68435714]
-     [  4.00664286   4.364        2.67385714]
-     [  0.34114286   5.57528571  -0.25428571]
-     [  1.194       10.41625      1.13016667]]    
+    [[-9.581938    3.3778126  -2.0728126 ]
+     [-4.6695266   5.815737   -1.8598946 ]
+     [-2.4608097   3.0596666   3.0760477 ]
+     [-7.2108426  -0.39636838  1.0131578 ]
+     [-4.6978235  -1.0804706  -4.284117  ]
+     [ 1.1721249   0.20641668  1.038375  ]
+     [-2.1600525  -2.2449472   3.5405266 ]
+     [-3.6823182  -5.5397725  -2.8952727 ]
+     [ 0.71108335 -5.4094167  -2.5495    ]
+     [ 2.0024288  -6.321715    1.6952857 ]
+     [ 2.7985713  -3.1399999   2.3274286 ]
+     [ 5.9007144  -2.4889286   4.844571  ]
+     [ 6.7537274  -6.7123637   3.0941818 ]
+     [ 5.6992726  -5.100636   -1.2091817 ]
+     [ 9.295427   -2.9695716  -1.8352858 ]
+     [ 5.517959   -1.5212501  -3.472667  ]
+     [ 7.218929    3.6732144  -0.6843571 ]
+     [ 4.006643    4.3640003   2.673857  ]
+     [ 0.34114286  5.575286   -0.25428572]
+     [ 1.194      10.416249    1.1301666 ]]
     """
     starts = np.append(get_residue_starts(array), [array.array_length()])
     # The result array
@@ -272,19 +270,32 @@ def get_residues(array):
     Get the residue names of a 20 residue peptide.
     
         >>> print(atom_array.res_name)
-        ['ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'LEU' 'LEU' 'LEU' 'LEU'
-         'LEU' 'LEU' 'LEU' 'LEU' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR'
-         'TYR' 'TYR' 'TYR' 'TYR' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE'
-         'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'TRP' 'TRP' 'TRP'
-         'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'LEU'
-         'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
-         'LYS' 'LYS' 'LYS' 'LYS' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP'
-         'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
-         'SER' 'SER' 'SER' 'GLY' 'GLY' 'GLY' 'GLY' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG'
-         'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+        ['ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN'
+         'ASN' 'ASN' 'ASN' 'ASN' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
+         'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'TYR'
+         'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR'
+         'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'ILE' 'ILE' 'ILE' 'ILE'
+         'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE'
+         'ILE' 'ILE' 'ILE' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN'
+         'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'TRP' 'TRP' 'TRP' 'TRP'
+         'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP'
+         'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'LEU' 'LEU' 'LEU' 'LEU'
+         'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
+         'LEU' 'LEU' 'LEU' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
+         'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
+         'LYS' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP'
+         'ASP' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY'
+         'GLY' 'GLY' 'GLY' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+         'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+         'SER' 'SER' 'SER' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'ARG' 'ARG'
+         'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG'
+         'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'PRO' 'PRO'
          'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER']
+         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+         'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+         'SER' 'SER' 'SER' 'SER']
         >>> ids, names = get_residues(atom_array)
         >>> print(names)
         ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'

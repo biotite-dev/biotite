@@ -214,7 +214,7 @@ file_path = entrez.fetch(
 )
 file = fasta.FastaFile()
 file.read(file_path)
-for header, string in file:
+for header, string in file.items():
     print("Header:", header)
     print(len(string))
     print("Sequence:", string[:50], "...")
@@ -264,7 +264,11 @@ file.write(biotite.temp_file("fa"))
 ########################################################################
 # As you see, our file contains our new ``'gibberish'`` and
 # ``'more gibberish'`` sequences now.
-# 
+#
+# In a similar manner sequences and sequence quality scores can be read
+# from FASTQ files. For further reference, have a look at the
+# :mod:`biotite.sequence.io.fastq` subpackage.
+#
 # Alternatively, a sequence can also be loaded from GenBank or GenPept
 # files,
 # using the :class:`GenBankFile` and :class:`GenPeptFile` class
@@ -365,7 +369,7 @@ for ali in alignments:
     print(ali)
 
 ########################################################################
-# The alignment functions return a list of `Alignment` objects.
+# The alignment functions return a list of :class:`Alignment` objects.
 # This object saves the input sequences together with a so called trace
 # - the indices to symbols in these sequences that are aligned to each
 # other (*-1* for a gap).
@@ -373,6 +377,25 @@ for ali in alignments:
 # Furthermore, this object can prettyprint the alignment into a human
 # readable form.
 #
+# For publication purposes you can create an actual figure based
+# on *Matplotlib*.
+# You can either decide to color the symbols based on the symbol type 
+# or based on the similarity within the alignment columns.
+# In this case we will go with the similarity visualization.
+
+import matplotlib.pyplot as plt
+import biotite.sequence.graphics as graphics
+
+fig, ax = plt.subplots(figsize=(2.0, 0.8))
+graphics.plot_alignment_similarity_based(
+    ax, alignments[0], matrix=matrix, symbols_per_line=len(alignments[0])
+)
+fig.tight_layout()
+
+########################################################################
+# If you are interested in more advanced visualization examples, have a
+# look at the :doc:`example gallery <../examples/gallery/index>`.
+# 
 # You can also do some simple analysis on these objects, like
 # determining the sequence identity or calculating the score.
 # For further custom analysis, it can be convenient to have directly the
@@ -395,6 +418,12 @@ print(align.get_codes(alignment))
 # already been directly calculated via :func:`align_optimal()`.
 # The answer is, that you might load an alignment from an external
 # alignment program as FASTA file using :func:`get_alignment()`.
+# 
+# .. currentmodule:: biotite.sequence.align
+#
+# If you want to perform a multiple sequence alignment, have a look at
+# the :func:`align_multiple()` function or the interfaces to external
+# MSA software in the :mod:`biotite.application` subpackage.
 #
 # Sequence features
 # -----------------
@@ -466,6 +495,30 @@ for feature in annotation:
     if feature.key == "regulatory":
         print(feature.qual["regulatory_class"])
 
+
+########################################################################
+# Similarily to :class:`Alignment` objects, we can visualize an
+# Annotation in a *feature map*.
+# In order to avoid overlaping features, we draw only the *CDS* feature.
+
+# Get the range of the entire annotation via the *source* feature
+for feature in annotation:
+    if feature.key == "source":
+        # loc_range has exclusive stop
+        loc = list(feature.locs)[0]
+        loc_range = (loc.first, loc.last+1)
+fig, ax = plt.subplots(figsize=(8.0, 1.0))
+graphics.plot_feature_map(
+    ax,
+    seq.Annotation(
+        [feature for feature in annotation if feature.key == "CDS"]
+    ),
+    multi_line=False,
+    loc_range=loc_range,
+    show_line_position=True
+)
+fig.tight_layout()
+
 ########################################################################
 # :class:`Annotation` objects can be indexed with slices, that represent
 # the start and the stop base/residue of the annotation from which the
@@ -483,7 +536,7 @@ for feature in annotation:
 # Then we create a subannotation from the feature's location
 # Since the stop value of the slice is still exclusive,
 # the stop value is the position of the last base +1
-loc = gene_feature.locs[0]
+loc = list(gene_feature.locs)[0]
 sub_annot = annotation[loc.first : loc.last +1]
 # Print the remaining features and their locations
 for feature in sub_annot:
@@ -557,7 +610,7 @@ for feature in annot_seq.annotation:
     if feature.key == "regulatory" \
         and feature.qual["regulatory_class"] == "polyA_signal_sequence":
             polya_feature = feature
-loc = feature.locs[0]
+loc = list(feature.locs)[0]
 # Get annotated sequence containing only the poly-A signal region
 poly_a = annot_seq[loc.first : loc.last +1]
 print("Sequence start after indexing:", poly_a.sequence_start)
@@ -594,10 +647,89 @@ print(dna_seq[:60], "...")
 # stop symbol after translation and we need to remove the space
 # characters in the translation given by the CDS feature.
 
-import biotite.sequence as seq
 # This step make the alphabet unambiguous
 dna_seq = seq.NucleotideSequence(dna_seq)
 prot_seq = dna_seq.translate(complete=True)
 print("Are the translated sequences equal?",
         (str(prot_seq.remove_stops()) == \
         cds_feature.qual["translation"].replace(" ", "")))
+
+########################################################################
+# Phylogenetic and guide trees
+# ----------------------------
+# 
+# .. currentmodule:: biotite.sequence.phylo
+#
+# Trees have an important role in bioinformatics, as they are used to
+# guide multiple sequence alignments or to create phylogenies.
+#
+# In *Biotite* such a tree is represented by the :class:`Tree` class in
+# the :mod:`biotite.sequence.phylo` package.
+# A tree is rooted and binary, that means each tree node has two childs,
+# or none in case of leaf nodes.
+# Each node in a tree is represented by a :class:`TreeNode`.
+# When a :class:`TreeNode` is created, you have to provide either two
+# child nodes and their distances to this node (leaf node) or a
+# reference index (intermediate node).
+# This reference index is dependent on the context and can refer to
+# anything: sequences, organisms, etc.
+#
+# The childs and the reference index cannot be changed after object
+# creation.
+# Also the parent can only be set once - when the node is used as child
+# in the creation of a new node.
+
+import biotite.sequence.phylo as phylo
+# The reference objects
+fruits = ["Apple", "Pear", "Orange", "Lemon", "Banana"]
+# Create nodes
+apple  = phylo.TreeNode(index=fruits.index("Apple"))
+pear   = phylo.TreeNode(index=fruits.index("Pear"))
+orange = phylo.TreeNode(index=fruits.index("Orange"))
+lemon  = phylo.TreeNode(index=fruits.index("Lemon"))
+banana = phylo.TreeNode(index=fruits.index("Banana"))
+intermediate1 = phylo.TreeNode(
+    child1=apple, child2=pear, child1_distance=2.0, child2_distance=2.0
+)
+intermediate2 = phylo.TreeNode(orange, lemon, 1.0, 1.0)
+intermediate3 = phylo.TreeNode(intermediate2, banana, 2.0, 3.0)
+root = phylo.TreeNode(intermediate1, intermediate3, 2.0, 1.0)
+# Create tree from root node
+tree = phylo.Tree(root=root)
+# Trees can be converted into Newick notation
+print("Tree:", tree.to_newick(labels=fruits))
+# Distances can be omitted
+print(
+    "Tree w/o distances:",
+    tree.to_newick(labels=fruits, include_distance=False)
+)
+# Distances can be measured
+distance = tree.get_distance(fruits.index("Apple"), fruits.index("Banana"))
+print("Distance Apple-Banana:", distance)
+
+########################################################################
+# You can also plot a tree as dendrogram.
+
+fig, ax = plt.subplots(figsize=(6.0, 6.0))
+graphics.plot_dendrogram(ax, tree, labels=fruits)
+fig.tight_layout()
+
+########################################################################
+# From distances to trees
+# ^^^^^^^^^^^^^^^^^^^^^^^
+#
+# When you want to create a :class:`Tree` from distances obtained for
+# example from sequence alignments, you can use the UPGMA algorithm
+# implemented in the function of the same name :func:`upgma()`.
+
+distances = np.array([
+    [ 0, 17, 21, 31, 23],
+    [17, 0,  30, 34, 21],
+    [21, 30, 0,  28, 39],
+    [31, 34, 28,  0, 43],
+    [23, 21, 39, 43,  0]
+])
+tree = phylo.upgma(distances)
+fig, ax = plt.subplots(figsize=(6.0, 3.0))
+graphics.plot_dendrogram(ax, tree, orientation="top")
+fig.tight_layout()

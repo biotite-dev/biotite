@@ -84,14 +84,15 @@ class SubstitutionMatrix(object):
     Examples
     --------
     
-    Creating a matrix via a matrix dictionary:
+    Creating a matrix for two different (nonsense) alphabets
+    via a matrix dictionary:
     
     >>> alph1 = Alphabet(["foo","bar"])
     >>> alph2 = Alphabet([1,2,3])
     >>> matrix_dict = {("foo",1):5,  ("foo",2):10, ("foo",3):15,
     ...                ("bar",1):42, ("bar",2):42, ("bar",3):42}
     >>> matrix = SubstitutionMatrix(alph1, alph2, matrix_dict)
-    >>> print(matrix.get_matrix())
+    >>> print(matrix.score_matrix())
     [[ 5 10 15]
      [42 42 42]]
     >>> print(matrix.get_score("foo", 2))
@@ -261,14 +262,14 @@ class SubstitutionMatrix(object):
     
     def __str__(self):
         # Create matrix in NCBI format
-        string = "{:>1}".format("")
+        string = " "
         for symbol in self._alph2:
-            string += " {:>3}".format(str(symbol))
+            string += f" {symbol:>3}"
         string += "\n"
         for i, symbol in enumerate(self._alph1):
-            string += "{:>1}".format(str(symbol))
+            string += f"{symbol:>1}"
             for j in range(len(self._alph2)):
-                string += " {:>3d}".format(int(self._matrix[i,j]))
+                string += f" {int(self._matrix[i,j]):>3d}"
             string += "\n"
         # Remove terminal line break
         string = string[:-1]

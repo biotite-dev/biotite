@@ -95,10 +95,14 @@ class BlastWebApp(WebApp):
                 )
         
         self._database = database
+        
         self._gap_openining = None
         self._gap_extension = None
         self._word_size = None
+        
         self._expect_value = None
+        self._max_results = None
+        self._entrez_query = None
         
         self._reward = None
         self._penalty = None
@@ -108,6 +112,31 @@ class BlastWebApp(WebApp):
         
         self._mail=mail
         self._rid = None
+    
+    @requires_state(AppState.CREATED)
+    def set_entrez_query(self, query):
+        """
+        Limit the size of the database.
+        Only sequences that match the query are searched.
+
+        Parameters
+        ----------
+        query : Query
+            An NCBI Entrez query.
+        """
+        self._entrez_query = str(query)
+    
+    @requires_state(AppState.CREATED)
+    def set_max_results(self, number):
+        """
+        Limit the maximum number of results.
+
+        Parameters
+        ----------
+        number : int
+            The maximum number of results.
+        """
+        self._max_results = number
     
     @requires_state(AppState.CREATED)
     def set_max_expect_value(self, value):
@@ -219,6 +248,10 @@ class BlastWebApp(WebApp):
         param_dict["PROGRAM"] = self._program
         param_dict["QUERY"] = str(self._query)
         param_dict["DATABASE"] = self._database
+        if self._entrez_query is not None:
+            param_dict["ENTREZ_QUERY"] = self._entrez_query
+        if self._max_results is not None:
+            param_dict["HITLIST_SIZE"] = str(self._max_results)
         if self._expect_value is not None:
             param_dict["EXPECT"] = self._expect_value
         if self._gap_openining is not None and self._gap_extension is not None:
@@ -240,6 +273,8 @@ class BlastWebApp(WebApp):
                 param_dict["THRESHOLD"] = self._threshold
         
         request = requests.get(self.app_url(), params=param_dict)
+        if "Submitted URI too large" in request.text:
+            raise ValueError("The URI is too large, try a shorter sequence")
         self._contact()
         self._request()
         info_dict = BlastWebApp._get_info(request.text)
@@ -255,7 +290,7 @@ class BlastWebApp(WebApp):
         if info_dict["Status"] == "UNKNOWN":
             # Indicates invalid query input values
             raise ValueError(
-                "The input values seem to be invalid"
+                "The input values seem to be invalid "
                 "(Server responsed status 'UNKNOWN')"
             )
         return info_dict["Status"] == "READY"

@@ -43,7 +43,7 @@ cdef class CellList:
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The `AtomArray` to create the `CellList` for.
         Alternatively the atom coordiantes are accepted directly.
-    cell_size: float
+    cell_size : float
         The coordinate interval each cell has for x, y and z axis.
         The amount of cells depends on the range of coordinates in the
         `atom_array` and the `cell_size`.
@@ -52,7 +52,7 @@ cdef class CellList:
     --------
     
     >>> cell_list = CellList(atom_array, cell_size=5)
-    >>> near_atoms = atom_array[cell_list.get_atoms([1,2,3], radius=7)]
+    >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7)]
     """
     
     cdef float32[:,:] _coord
@@ -160,7 +160,7 @@ cdef class CellList:
         Create adjacency matrix for CA atoms in a structure:
 
         >>> atom_array = atom_array[atom_array.atom_name == "CA"]
-        >>> cell_list = struc.CellList(atom_array, 5)
+        >>> cell_list = CellList(atom_array, 5)
         >>> matrix = cell_list.create_adjacency_matrix(5)
         """
         if threshold_distance < 0:
@@ -196,7 +196,7 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        radius: float or ndarray, shape=(n,), dtype=float, optional
+        radius : float or ndarray, shape=(n,), dtype=float, optional
             The radius around `coord`, in which the atoms are searched,
             i.e. all atoms in `radius` distance to `coord` are returned.
             Either a single radius can be given as scalar, or individual
@@ -228,7 +228,7 @@ cdef class CellList:
         --------
         Get adjacent atoms for a single position:
 
-        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> cell_list = CellList(atom_array, 3)
         >>> pos = np.array([1.0, 2.0, 3.0])
         >>> indices = cell_list.get_atoms(pos, radius=2.0)
         >>> print(indices)
@@ -255,7 +255,7 @@ cdef class CellList:
         
         Get adjacent atoms for mutliple positions:
 
-        >>> cell_list = struc.CellList(atom_array, 3)
+        >>> cell_list = CellList(atom_array, 3)
         >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(indices)
@@ -372,7 +372,7 @@ cdef class CellList:
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
-        cell_radius: int or ndarray, shape=(n,), dtype=int, optional
+        cell_radius : int or ndarray, shape=(n,), dtype=int, optional
             The radius around `coord` (in amount of cells), in which
             the atoms are searched. This does not correspond to the
             Euclidian distance used in `get_atoms()`. In this case, all

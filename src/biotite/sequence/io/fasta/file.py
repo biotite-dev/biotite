@@ -7,51 +7,60 @@ __author__ = "Patrick Kunzmann"
 from ....file import TextFile
 import textwrap
 from collections import OrderedDict
+from collections.abc import MutableMapping
 
 __all__ = ["FastaFile"]
 
 
-class FastaFile(TextFile):
+class FastaFile(TextFile, MutableMapping):
     """
     This class represents a file in FASTA format.
     
-    A FASTA file contains so called *header* lines, beginning with '>',
-    that describe following sequence. The corresponding sequence starts
-    at the line after the header line and ends at the next header line
-    or at the end of file. The header along with its sequence forms an
-    entry.
+    A FASTA file contains so called *header* lines, beginning with
+    ``>``, that describe following sequence.
+    The corresponding sequence starts at the line after the header line
+    and ends at the next header line or at the end of file.
+    The header along with its sequence forms an entry.
     
-    This class is used in a dictionary like manner,
-    headers (without the leading '>') are used as keys,
+    This class is used in a dictionary like manner, implementing the
+    `MutableMapping` interface:
+    Headers (without the leading ``>``) are used as keys,
     and strings containing the sequences are the corresponding values.
-    Therefore entries can be accessed using indexing, `del` deletes the
-    entry at the given index. In fact objects of this class can be
-    casted into actual `dict` instances.
-    
+    Entries can be accessed using indexing,
+    `del` deletes the entry at the given index.
+
     Parameters
     ----------
     chars_per_line : int, optional
         The number characters in a line containing sequence data
-        after which a line break is inserted. Default is 80.
+        after which a line break is inserted.
+        Only relevant, when adding sequences to a file.
+        Default is 80.
     
     Examples
     --------
     
+    >>> import os.path
     >>> file = FastaFile()
     >>> file["seq1"] = "ATACT"
     >>> print(file["seq1"])
     ATACT
     >>> file["seq2"] = "AAAATT"
-    >>> print(dict(file))
+    >>> print(file)
+    >seq1
+    ATACT
+    >seq2
+    AAAATT
+    >>> print(dict(file.items()))
     {'seq1': 'ATACT', 'seq2': 'AAAATT'}
-    >>> for header, seq in file:
+    >>> for header, seq in file.items():
     ...     print(header, seq)
     seq1 ATACT
     seq2 AAAATT
     >>> del file["seq1"]
-    >>> print(dict(file))
+    >>> print(dict(file.items()))
     {'seq2': 'AAAATT'}
-    >>> file.write("test.fasta")
+    >>> file.write(os.path.join(path_to_directory, "test.fasta"))
     """
     
     def __init__(self, chars_per_line=80):
@@ -63,7 +72,7 @@ class FastaFile(TextFile):
         super().read(file)
         # Filter out empty and comment lines
         self.lines = [line for line in self.lines
-                       if len(line.strip()) != 0 and line[0] != ";"]
+                      if len(line.strip()) != 0 and line[0] != ";"]
         self._find_entries()
         
     def __setitem__(self, header, seq_str):
@@ -72,16 +81,14 @@ class FastaFile(TextFile):
                 "'FastaFile' only supports header strings as keys"
             )
         if not isinstance(seq_str, str):
-            raise IndexError("'FastaFile' only supports sequence strings "
+            raise TypeError("'FastaFile' only supports sequence strings "
                              "as values")
         # Delete lines of entry corresponding to the header,
         # if existing
-        if header in self._entries:
-            start, stop = self._entries[header]
-            del self.lines[start:stop]
-            del self._entries[header]
+        if header in self:
+            del self[header]
         # Append header line
-        self.lines += [">" + header.replace(">","").replace("\n","").strip()]
+        self.lines += [">" + header.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
         self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
         self._find_entries()
@@ -93,11 +100,9 @@ class FastaFile(TextFile):
             )
         start, stop = self._entries[header]
         # Concatenate sequence string from following lines
-        seq_string = ""
-        i = start +1
-        while i < stop:
-            seq_string += self.lines[i].strip()
-            i += 1
+        seq_string = "".join(
+            [line.strip() for line in self.lines[start+1 : stop]]
+        )
         return seq_string
     
     def __delitem__(self, header):
@@ -110,8 +115,10 @@ class FastaFile(TextFile):
         return len(self._entries)
     
     def __iter__(self):
-        for header in self._entries:
-            yield header, self[header]
+        return self._entries.__iter__()
+    
+    def __contains__(self, identifer):
+        return identifer in self._entries
     
     def _find_entries(self):
         header_i = []
@@ -120,8 +127,8 @@ class FastaFile(TextFile):
                 header_i.append(i)
         self._entries = OrderedDict()
         for j in range(len(header_i)):
-            # Remove '>' from header
-            header = self.lines[header_i[j]].replace(">","").strip()
+            # Remove leading '>' from header
+            header = self.lines[header_i[j]].strip()[1:]
             start = header_i[j]
             if j < len(header_i) -1:
                 # Header in mid or start of file

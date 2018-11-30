@@ -24,7 +24,7 @@ file_name = entrez.fetch_single_file(["CAC34569", "ACL82594"],
                                      "protein", "fasta")
 file = fasta.FastaFile()
 file.read(file_name)
-for name, sequence in file:
+for name, sequence in file.items():
     if "CAC34569" in name:
         avidin_seq = seq.ProteinSequence(sequence)
     elif "ACL82594" in name:
@@ -37,10 +37,12 @@ alignments = align.align_optimal(avidin_seq, streptavidin_seq, matrix,
                                  gap_penalty=(-10, -1), terminal_penalty=False)
 # Draw first and only alignment
 # The color intensity indicates the similiarity
-vis = graphics.AlignmentSimilarityVisualizer(
-    alignments[0], matrix=matrix)
-vis.add_labels(labels=["Avidin", "Streptavidin"])
-vis.add_location_numbers()
-vis.set_alignment_properties(symbols_per_line=40)
-fig = vis.generate()
+fig = plt.figure(figsize=(8.0, 2.5))
+ax = fig.add_subplot(111)
+graphics.plot_alignment_similarity_based(
+    ax, alignments[0], matrix=matrix, labels=["Avidin", "Streptavidin"],
+    show_numbers=True, show_line_position=True
+)
+fig.tight_layout()
+
 plt.show()

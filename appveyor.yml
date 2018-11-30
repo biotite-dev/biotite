@@ -20,7 +20,7 @@ install:
 build: false
 
 test_script:
-  - python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"
+  - python setup.py test --pytest-args="--ignore=tests//structure//test_trajectory.py --ignore=tests//application"
 
 after_test:
   - python setup.py bdist_wheel

@@ -32,7 +32,7 @@ _atom_records = {"hetero"    : (0,  6),
 
 
 class PDBFile(TextFile):
-    """
+    r"""
     This class represents a PDB file.
     
     The usage of PDBxFile is encouraged in favor of this class.
@@ -47,16 +47,17 @@ class PDBFile(TextFile):
     
     Examples
     --------
-    Load a `\*.pdb` file, modify the structure and save the new
+    Load a `\\*.pdb` file, modify the structure and save the new
     structure into a new file:
     
+    >>> import os.path
     >>> file = PDBFile()
-    >>> file.read("1l2y.pdb")
+    >>> file.read(os.path.join(path_to_structures, "1l2y.pdb"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = PDBFile()
     >>> file.set_structure(array_stack_mod)
-    >>> file.write("1l2y_mod.pdb")
+    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
 
     def get_structure(self, model=None, insertion_code=[], altloc=[],

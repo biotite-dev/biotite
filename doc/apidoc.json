@@ -1,4 +1,19 @@
-{
+{   
+    "biotite" : {
+        "File classes" : [
+            "File",
+            "TextFile"
+        ],
+        "Temporary files" : [
+            "temp_dir",
+            "temp_file"
+        ],
+        "Visualization utilities":[
+            "set_font_size_in_coord",
+            "AdaptiveFancyArrow"
+        ]
+    },
+    
     "biotite.application" : {
         "Application classes" : [
             "Application",
@@ -72,6 +87,7 @@
         ],
         "Aligners" : [
             "align_optimal",
+            "align_multiple",
             "align_ungapped"
         ],
         "Alignments" : [
@@ -83,13 +99,38 @@
         ]
     },
 
+    "biotite.sequence.phylo" : {
+        "Data structure" : [
+            "Tree",
+            "TreeNode"
+        ],
+        "Clustering algorithms" : [
+            "upgma"
+        ]
+    },
+
     "biotite.sequence.graphics" : {
-        "Visualizers" : [
-            "AlignmentVisualizer",
-            "AlignmentSimilarityVisualizer",
-            "AlignmentSymbolVisualizer",
-            "SequenceLogo",
-            "FeatureMap"
+        "Plotting functions" : [
+            "plot_feature_map",
+            "plot_sequence_logo",
+            "plot_alignment",
+            "plot_alignment_similarity_based",
+            "plot_alignment_type_based",
+            "plot_dendrogram"
+        ],
+        "Symbol plotters" : [
+            "SymbolPlotter",
+            "LetterPlotter",
+            "LetterSimilarityPlotter",
+            "LetterTypePlotter"
+        ],
+        "Feature plotters" : [
+            "FeaturePlotter",
+            "CodingPlotter",
+            "PromoterPlotter",
+            "TerminatorPlotter",
+            "RBSPlotter",
+            "MiscFeaturePlotter"
         ],
         "Color schemes" : [
             "load_color_scheme",

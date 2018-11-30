@@ -55,7 +55,7 @@ file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
 # The :func:`search()` method takes the :class:`Query` and returns a
-# list of PDB IDs, which itself can be used as inpt for :func:`fetch()`.
+# list of PDB IDs, which itself can be used as input for :func:`fetch()`.
 
 query = rcsb.ResolutionQuery(0.0, 0.6)
 pdb_ids = rcsb.search(query)
@@ -131,7 +131,7 @@ print(relpath(file_path))
 # database, but in an even more powerful manner:
 # Due to the simple design of the search queries accepted by
 # *NCBI Entrez*, you can search in every
-# `field <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
+# `field <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_
 # of the database.
 
 # Search in all fields

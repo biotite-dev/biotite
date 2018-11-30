@@ -150,7 +150,7 @@ class SimpleQuery(Query):
 
 
 def search(query, db_name, number=20):
-    """
+    r"""
     Get all PDB IDs that meet the given query requirements,
     via the NCBI ESearch service.
     
@@ -160,6 +160,10 @@ def search(query, db_name, number=20):
     ----------
     query : Query
         The search query.
+    db_name : str:
+        E-utility database name.
+    number : Query
+        The maximum number of UIDs that are obtained.
     
     Returns
     -------
@@ -169,11 +173,11 @@ def search(query, db_name, number=20):
     
     Examples
     --------
-    >>> query = SimpleQuery("Escherichia coli", "Organism") & \\
+    >>> query = SimpleQuery("Escherichia coli", "Organism") & \
     ...         SimpleQuery("90:100", "Sequence Length")
     >>> ids = search(query, "nuccore", number=5)
     >>> print(ids)
-    ['1447562463', '1447562199', '1447561837', '1447561836', '1447561835']
+    ['15...', '15...', '15...', '15...', '15...']
     """ 
     r = requests.get(
         (_base_url + _search_url).format(db_name, str(query), str(number))

@@ -43,7 +43,7 @@ def get_sequence(fasta_file, header=None):
     else:
         # Return first (and probably only) sequence of file
         seq_str = None
-        for header, seq_str in fasta_file:
+        for seq_str in fasta_file.values():
             break
         if seq_str is None:
             raise ValueError("File does not contain any sequences")
@@ -76,7 +76,7 @@ def get_sequences(fasta_file):
         into a `NucleotideSequence` nor a `ProteinSequence`.
     """
     seq_dict = {}
-    for header, seq_str in fasta_file:
+    for header, seq_str in fasta_file.items():
         seq_dict[header] = _convert_to_sequence(seq_str)
     return seq_dict
 
@@ -143,7 +143,7 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
     alignment : Alignment
         The alignment from the `FastaFile`.
     """
-    seq_strings = [seq_str for header, seq_str in fasta_file]
+    seq_strings = list(fasta_file.values())
     # Replace additional gap symbols with default gap symbol ('-')
     for char in additional_gap_chars:
         for i, seq_str in enumerate(seq_strings):
@@ -180,6 +180,7 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str):
+    seq_str = seq_str.upper()
     try:
         code = NucleotideSequence.alphabet.encode_multiple(seq_str)
         seq = NucleotideSequence()

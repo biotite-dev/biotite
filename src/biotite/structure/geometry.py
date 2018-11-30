@@ -165,23 +165,28 @@ def dihedral_backbone(atom_array, chain_id):
     Examples
     --------
     
-    Input
-    
-    >>> pdbx_file = PDBxFile()
-    >>> pdbx_file.read("1l2y.cif")
-    >>> atom_array = get_structure(pdbx_file, model=1)
-    >>> psi, omega, phi = struc.dihedral_backbone(atom_array, "A")
-    >>> plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
-    ...          linestyle="None", marker="o")
-    >>> plt.xlim(-180, 180)
-    >>> plt.ylim(-180, 180)
-    >>> plt.xlabel("phi")
-    >>> plt.ylabel("psi")
-    >>> plt.show()
-    
-    Output
-    
-    .. image:: /static/assets/figures/dihedral.svg
+    >>> phi, psi, omega = dihedral_backbone(atom_array, "A")
+    >>> print(np.stack([phi * 360/(2*np.pi), psi * 360/(2*np.pi)]).T)
+    [[          nan  -56.14491122]
+     [ -43.98001079  -51.30875902]
+     [ -66.46585868  -30.89801505]
+     [ -65.21943089  -45.94467406]
+     [ -64.74659263  -30.346291  ]
+     [ -73.13553596  -43.42456851]
+     [ -64.88203916  -43.25451315]
+     [ -59.50867772  -25.69819463]
+     [ -77.98930479   -8.82307681]
+     [ 110.78405639    8.07924448]
+     [  55.24420794 -124.37141223]
+     [ -57.98304696  -28.76563093]
+     [ -81.83404402   19.12508041]
+     [-124.05653736   13.40120726]
+     [  67.93147348   25.21773833]
+     [-143.95159184  131.29701851]
+     [ -70.10004605  160.06790798]
+     [ -69.48368612  145.66883187]
+     [ -77.26416822  124.22289316]
+     [ -78.10009149           nan]]
     """
     # Filter all backbone atoms
     bb_coord = atom_array[...,

@@ -15,6 +15,8 @@ sheets in feature maps.
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
@@ -25,79 +27,98 @@ import biotite.database.rcsb as rcsb
 import biotite.database.entrez as entrez
 import biotite.application.dssp as dssp
 
-# All 'FeatureMap' draw functions have the signature
-# draw(feature, x, y, width, height, figure, loc_index, style_dict)
-def draw_secondary_strucure(feature, x, y, width, height,
-                            figure, loc_index, style_dict):
-    if feature.qual["sec_str_type"] == "helix":
-        _draw_helix(
-            feature, x, y, width, height, figure, loc_index, style_dict
-        )
-    if feature.qual["sec_str_type"] == "sheet":
-        _draw_sheet(
-            feature, x, y, width, height, figure, loc_index, style_dict
-        )
 
-def _draw_helix(feature, x, y, width, height, figure, loc_index, style_dict):
-    from matplotlib.lines import Line2D
-    from matplotlib.patches import Rectangle
+# Create 'FeaturePlotter' subclasses
+# for drawing the scondary structure features
 
-    loc = feature.locs[loc_index]
-    # Approx. 1 turn per 3.6 residues to resemble natural helix
-    n_turns = np.ceil((loc.last - loc.first + 1) / 3.6)
-    x_val = np.linspace(0, n_turns * 2*np.pi, 100)
-    # Curve ranges from 0.3 to 0.7
-    y_val = (-0.4*np.sin(x_val) + 1) / 2
+class HelixPlotter(graphics.FeaturePlotter):
+
+    def __init__(self):
+        pass
+
+    # Check whether this class is applicable for drawing a feature
+    def matches(self, feature):
+        if feature.key == "SecStr":
+            if "sec_str_type" in feature.qual:
+                if feature.qual["sec_str_type"] == "helix":
+                    return True
+        return False
     
-    # Transform values for correct location in feature map
-    x_val *= width / (n_turns * 2*np.pi)
-    x_val += x
-    y_val *= height
-    y_val += y
+    # The drawing function itself
+    def draw(self, axes, feature, bbox, loc, style_param):
+        # Approx. 1 turn per 3.6 residues to resemble natural helix
+        n_turns = np.ceil((loc.last - loc.first + 1) / 3.6)
+        x_val = np.linspace(0, n_turns * 2*np.pi, 100)
+        # Curve ranges from 0.3 to 0.7
+        y_val = (-0.4*np.sin(x_val) + 1) / 2
+        
+        # Transform values for correct location in feature map
+        x_val *= bbox.width / (n_turns * 2*np.pi)
+        x_val += bbox.x0
+        y_val *= bbox.height
+        y_val += bbox.y0
+        
+        # Draw white background to overlay the guiding line
+        background = Rectangle(
+            bbox.p0, bbox.width, bbox.height, color="white", linewidth=0
+        )
+        axes.add_patch(background)
+        axes.plot(
+            x_val, y_val, linewidth=2, color=biotite.colors["dimgreen"]
+        )
+
+
+class SheetPlotter(graphics.FeaturePlotter):
+
+    def __init__(self, head_width=0.8, tail_width=0.5):
+        self._head_width = head_width
+        self._tail_width = tail_width
+
+
+    def matches(self, feature):
+        if feature.key == "SecStr":
+            if "sec_str_type" in feature.qual:
+                if feature.qual["sec_str_type"] == "sheet":
+                    return True
+        return False
     
-    # Draw white background to overlay the guiding line
-    background = Rectangle((x,y), width, height, color="white", linewidth=0)
-    figure.patches.append(background)
-    helix = Line2D(
-        x_val, y_val, linewidth=2, color=biotite.colors["dimgreen"]
-    )
-    figure.lines.append(helix)
+    def draw(self, axes, feature, bbox, loc, style_param):
+        x = bbox.x0
+        y = bbox.y0 + bbox.height/2
+        dx = bbox.width
+        dy = 0
+        
+        if  loc.defect & seq.Location.Defect.MISS_RIGHT:
+            # If the feature extends into the prevoius or next line
+            # do not draw an arrow head
+            draw_head = False
+        else:
+            draw_head = True
+        
+        axes.add_patch(biotite.AdaptiveFancyArrow(
+            x, y, dx, dy,
+            self._tail_width*bbox.height, self._head_width*bbox.height,
+            # Create head with 90 degrees tip
+            # -> head width/length ratio = 1/2
+            head_ratio=0.5, draw_head=draw_head,
+            color=biotite.colors["orange"], linewidth=0
+        ))
 
-def _draw_sheet(feature, x, y, width, height, figure, loc_index, style_dict):
-    from matplotlib.patches import FancyArrow
-
-    head_height = 0.8*height
-    tail_height = 0.5*height
-    head_width = 0.4*height
-
-    tail_x = x
-    arrow_y = y + height/2
-    dx = width
-    dy = 0
-    if head_width > width:
-        # If fteaure is to short, draw only narrowed head
-        head_width = width
-    loc = feature.locs[loc_index]
-    if loc.defect & seq.Location.Defect.MISS_RIGHT:
-            head_width = 0
-            head_height = tail_height
-
-    arrow = FancyArrow(tail_x, arrow_y, dx, dy,
-                       width=tail_height, head_width=head_height,
-                       head_length=head_width, length_includes_head=True,
-                       color=biotite.colors["orange"], linewidth=0)
-    figure.patches.append(arrow)
 
 # Test our drawing functions with example annotation
 annotation = seq.Annotation([
     seq.Feature("SecStr", [seq.Location(10, 40)], {"sec_str_type" : "helix"}),
     seq.Feature("SecStr", [seq.Location(60, 90)], {"sec_str_type" : "sheet"}),
 ])
-feature_map = graphics.FeatureMap(
-    annotation, loc_range=(1,100), multi_line=False
+
+fig = plt.figure(figsize=(8.0, 0.8))
+ax = fig.add_subplot(111)
+graphics.plot_feature_map(
+    ax, annotation, multi_line=False, loc_range=(1,100),
+    # Register our drawing functions
+    feature_plotters=[HelixPlotter(), SheetPlotter()]
 )
-feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-figure = feature_map.generate()
+fig.tight_layout()
 
 ########################################################################
 # Now let us do some serious application.
@@ -114,13 +135,17 @@ gb_file.read(file_name)
 annotation = gb_file.get_annotation(include_only=["SecStr"])
 # Length of the sequence
 length = int(gb_file.get_locus()["length"])
-# 'loc_range' takes exclusive stop -> length+1 is required
-feature_map = graphics.FeatureMap(
-    annotation, line_length=150, loc_range=(1,length+1)
+
+fig = plt.figure(figsize=(8.0, 3.0))
+ax = fig.add_subplot(111)
+graphics.plot_feature_map(
+    ax, annotation, symbols_per_line=150,
+    show_numbers=True, show_line_position=True,
+    # 'loc_range' takes exclusive stop -> length+1 is required
+    loc_range=(1,length+1),
+    feature_plotters=[HelixPlotter(), SheetPlotter()]
 )
-feature_map.add_location_numbers(size=50)
-feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-figure = feature_map.generate()
+fig.tight_layout()
 
 ########################################################################
 # Another (more complicated) approach is the creation of an `Annotation`
@@ -208,12 +233,14 @@ def visualize_secondary_structure(sse, first_id):
     # Add last secondary structure element to annotation
     _add_sec_str(annotation, curr_start+first_id, i-1+first_id, curr_sse)
     
-    feature_map = graphics.FeatureMap(
-        annotation, line_length=150, loc_range=(1,length+1)
+    fig = plt.figure(figsize=(8.0, 3.0))
+    ax = fig.add_subplot(111)
+    graphics.plot_feature_map(
+        ax, annotation, symbols_per_line=150, loc_range=(1,length+1),
+        show_numbers=True, show_line_position=True,
+        feature_plotters=[HelixPlotter(), SheetPlotter()]
     )
-    feature_map.add_location_numbers(size=50)
-    feature_map.drawfunc["SecStr"] = draw_secondary_strucure
-    return feature_map.generate()
+    fig.tight_layout()
 
 # Visualize seconday structure array
 # Sine the residues may not start at 1,
