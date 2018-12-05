@@ -103,11 +103,6 @@ def set_box_center(array, center):
         centered_array.coord += np.sum(array.box/2, axis=-2)[:, np.newaxis, :]
     else:
         raise TypeError("An atom array or stack is required")
-    #
-    #coord = centered_array.coord
-    #print(((coord < 50) & (coord > 0)).all())
-    #print(np.where((coord > 50) | (coord < 0)))
-    #
     # Move atoms outside the box into the box
     # (periodic boundary condition)
     fractions = coord_to_fraction(centered_array.coord, array.box)
