@@ -9,7 +9,8 @@ from .atoms import AtomArray, AtomArrayStack
 
 def distance(
     atoms1: Union[AtomArrayStack, AtomArray, np.ndarray],
-    atoms2: Union[AtomArrayStack, AtomArray, np.ndarray]
+    atoms2: Union[AtomArrayStack, AtomArray, np.ndarray],
+    periodic: bool = False
 ) -> Union[np.ndarray, float]: ...
 
 def centroid(
