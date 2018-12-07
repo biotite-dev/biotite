@@ -7,10 +7,12 @@ import numpy as np
 import glob
 from os.path import join, splitext
 import pytest
+from pytest import approx
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
+from biotite.structure.atoms import AtomArray
 from .util import data_dir
 
 
@@ -93,4 +95,39 @@ def test_guess_elements():
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
+
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_box_shape(path, single_model):
+    model = 1 if single_model else None
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    a = pdb_file.get_structure(model=model)
+
+    if isinstance(a, AtomArray):
+        expected_box_dim = (3, 3)
+    else:
+        expected_box_dim = (len(a), 3, 3)
+    assert expected_box_dim == a.box.shape
+
+
+def test_box_parsing():
+    path = join(data_dir, "1igy.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    a = pdb_file.get_structure()
+    expected_box = np.array([[
+        [66.65,   0, 0],
+        [0, 190.66, 0],
+        [-24.59361092, 0, 68.83868]
+    ]])
+
+    assert expected_box.flatten().tolist() \
+           == approx(a.box.flatten().tolist(), abs=1e-2)
+
 

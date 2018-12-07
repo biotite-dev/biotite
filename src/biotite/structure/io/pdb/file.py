@@ -7,6 +7,7 @@ __all__ = ["PDBFile"]
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
+from ...box import get_box_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
@@ -225,11 +226,34 @@ class PDBFile(TextFile):
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
-                
-        # Final filter and return
-        return array[..., filter_inscode_and_altloc(
+
+        # Final filter
+        array = array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
+
+        # TODO "Final filter" somehow removes the boxvectors. why? (appears to be a problem with slicing)
+        # Fill in box vectors
+        # PDB does not support changing box dimensions. CRYST1 is a one-time
+        # record so we can extract it directly
+        for line in self.lines:
+            if line.startswith("CRYST1"):
+                len_a = float(line[6:15])
+                len_b = float(line[15:24])
+                len_c = float(line[24:33])
+                alpha = np.deg2rad(float(line[33:40]))
+                beta = np.deg2rad(float(line[40:47]))
+                gamma = np.deg2rad(float(line[47:54]))
+                box = get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma)
+
+                if isinstance(array, AtomArray):
+                    array.box = box
+                else:
+                    array.box = np.array([box, ] * len(array))
+                break
+
+        return array
+
 
     def set_structure(self, array):
         """
