@@ -232,7 +232,6 @@ class PDBFile(TextFile):
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
 
-        # TODO "Final filter" somehow removes the boxvectors. why? (appears to be a problem with slicing)
         # Fill in box vectors
         # PDB does not support changing box dimensions. CRYST1 is a one-time
         # record so we can extract it directly
@@ -318,6 +317,7 @@ class PDBFile(TextFile):
         
         elif isinstance(array, AtomArrayStack):
             self.lines = []
+
             # The entire information, but the coordinates,
             # is equal for each model
             # Therefore template lines are created
@@ -355,5 +355,28 @@ class PDBFile(TextFile):
                     modellines[j] = line
                 self.lines.extend(modellines)
                 self.lines.append("ENDMDL")
-                
-            
+
+        # prepend a single CRYST1 record if we have box information
+        if array.box is not None:
+            box = array.box
+            if len(box.shape) == 3:
+                box = box[0]
+            a = np.linalg.norm(box[0])
+            b = np.linalg.norm(box[1])
+            c = np.linalg.norm(box[2])
+            gamma = np.arctan(box[1, 1] / box[1, 0])
+            beta = np.arccos(box[2, 0] / c)
+            alpha = np.arccos( (box[2, 1]*np.sin(gamma))/c + np.cos(beta)*np.cos(gamma) )
+            gamma = np.rad2deg(gamma)
+            beta = np.rad2deg(beta)
+            alpha = np.rad2deg(alpha)
+            if gamma < 0:
+                gamma += 180
+            self.lines.insert(0,
+                              "CRYST1{:>9.3f}".format(a) +
+                              "{:>9.3f}".format(b) +
+                              "{:>9.3f}".format(c) +
+                              "{:>7.2f}".format(alpha) +
+                              "{:>7.2f}".format(beta) +
+                              "{:>7.2f}".format(gamma) +
+                              " P 1           1")

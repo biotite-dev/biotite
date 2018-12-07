@@ -32,6 +32,9 @@ def test_array_conversion(path, single_model):
     pdb_file.set_structure(array1)
     array2 = pdb_file.get_structure(model=model)
     assert array1 == array2
+    # TODO AtomArray.__eq__ should probabily account for box equality
+    if array1.box is not None: # if pdb has a CRYST1 record..
+        assert np.array_equal(array1.box, array2.box)
 
 
 @pytest.mark.parametrize(
@@ -122,9 +125,9 @@ def test_box_parsing():
     pdb_file.read(path)
     a = pdb_file.get_structure()
     expected_box = np.array([[
-        [66.65,   0, 0],
-        [0, 190.66, 0],
-        [-24.59361092, 0, 68.83868]
+        [66.65,   0.00, 0.00],
+        [0.00,  190.66, 0.00],
+        [-24.59,  0.00, 68.84]
     ]])
 
     assert expected_box.flatten().tolist() \
