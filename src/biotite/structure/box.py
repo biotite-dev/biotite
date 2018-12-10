@@ -8,9 +8,9 @@ of a structure
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_box_vectors", "get_box_volume", "repeat_box", "center_in_box",
-           "move_inside_box", "coord_to_fraction", "fraction_to_coord",
-           "is_orthogonal"]
+__all__ = ["vectors_from_unitcell", "box_volume", "repeat_box",
+           "center_in_box", "move_inside_box", "coord_to_fraction",
+           "fraction_to_coord", "is_orthogonal"]
 
 from numbers import Integral
 import numpy as np
@@ -19,7 +19,7 @@ from .util import vector_dot
 from .atoms import AtomArray, AtomArrayStack
 
 
-def get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma):
+def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     """
     Calculate the three vectors spanning a box from the unit cell
     lengths and angles.
@@ -63,7 +63,7 @@ def get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma):
     return box
 
 
-def get_box_volume(box):
+def box_volume(box):
     """
     Get the volume of one ore multiple boxes.
 
