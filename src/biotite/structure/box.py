@@ -8,9 +8,9 @@ of a structure
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["vectors_from_unitcell", "box_volume", "repeat_box",
-           "move_inside_box", "coord_to_fraction", "fraction_to_coord",
-           "is_orthogonal"]
+__all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
+           "repeat_box", "move_inside_box",
+           "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
 
 from numbers import Integral
 import numpy as np
@@ -42,6 +42,10 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     The three box vectors.
     The vector components are in the last dimension.
     The value can be directly used as `box` attribute in an atom array.
+    
+    See also
+    --------
+    unitcell_from_vectors
     """
     a_x = len_a
     b_x = len_b * np.cos(gamma)
@@ -61,6 +65,44 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     box[np.abs(box) < tol] = 0
     
     return box
+
+
+def unitcell_from_vectors(box):
+    """
+    Get the unit cell lengths and angles from box vectors.
+
+    This is the reverse operation of `vectors_from_unitcell()`.
+
+    Parameters
+    ----------
+    box : ndarray, shape=(3,3)
+        The box vectors
+    
+    Returns
+    -------
+    len_a : float
+    len_b : float
+    len_c : float
+        The lengths of the three box/unit cell vectors *a*, *b* and *c*.
+    alpha : float
+    beta  : float
+    gamma : float
+        The angles between the box vectors in radians.
+
+    See also
+    --------
+    vectors_from_unitcell
+    """
+    a = box[0]
+    b = box[1]
+    c = box[2]
+    len_a = np.norm(a)
+    len_b = np.norm(b)
+    len_c = np.norm(c)
+    alpha = np.arccos(np.dot(b, c) / (len_b * len_c))
+    beta  = np.arccos(np.dot(a, c) / (len_a * len_c))
+    gamma = np.arccos(np.dot(a, b) / (len_a * len_b))
+    return len_a, len_b, len_c, alpha, beta, gamma
 
 
 def box_volume(box):
@@ -317,7 +359,7 @@ def fraction_to_coord(fraction, box):
     """
     Transform fractions of box vectors to coordinates.
 
-    This is the reverse operation of `coord_to_fraction()`
+    This is the reverse operation of `coord_to_fraction()`.
 
     Parameters
     ----------
