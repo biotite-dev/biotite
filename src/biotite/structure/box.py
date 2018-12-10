@@ -9,8 +9,8 @@ of a structure
 
 __author__ = "Patrick Kunzmann"
 __all__ = ["vectors_from_unitcell", "box_volume", "repeat_box",
-           "center_in_box", "move_inside_box", "coord_to_fraction",
-           "fraction_to_coord", "is_orthogonal"]
+           "move_inside_box", "coord_to_fraction", "fraction_to_coord",
+           "is_orthogonal"]
 
 from numbers import Integral
 import numpy as np
@@ -215,33 +215,6 @@ def repeat_box(atoms, amount=1):
         np.arange(atoms.array_length()),
         (1 + 2 * amount) ** 3
     )
-
-
-def center_in_box(atoms, center):
-    centered_atoms = atoms.copy()
-    if len(center.shape) == 1:
-        # Constant center for all frames
-        centered_atoms.coord -= center
-    if len(center.shape) == 2:
-        if not isinstance(centered_atoms, AtomArrayStack):
-            raise TypeError("An AtomArrayStack must be provided if multiple "
-                            "centers are given")
-        # Frame-wise centering
-        centered_atoms.coord -= center[:, np.newaxis, :]
-    # Put the center into the center of the box
-    if isinstance(centered_atoms, AtomArray):
-        centered_atoms.coord += np.sum(atoms.box/2, axis=-2)
-    elif isinstance(centered_atoms, AtomArrayStack):
-        centered_atoms.coord += np.sum(atoms.box/2, axis=-2)[:, np.newaxis, :]
-    else:
-        raise TypeError("An atom array or stack is required")
-    # Move atoms outside the box into the box
-    # (periodic boundary condition)
-    centered_atoms.coord = move_inside_box(
-        centered_atoms.coord,
-        centered_atoms.box
-    )
-    return centered_atoms
 
 
 def move_inside_box(coord, box):
