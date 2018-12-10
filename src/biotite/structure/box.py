@@ -96,9 +96,9 @@ def unitcell_from_vectors(box):
     a = box[0]
     b = box[1]
     c = box[2]
-    len_a = np.norm(a)
-    len_b = np.norm(b)
-    len_c = np.norm(c)
+    len_a = linalg.norm(a)
+    len_b = linalg.norm(b)
+    len_c = linalg.norm(c)
     alpha = np.arccos(np.dot(b, c) / (len_b * len_c))
     beta  = np.arccos(np.dot(a, c) / (len_a * len_c))
     gamma = np.arccos(np.dot(a, b) / (len_a * len_b))
@@ -230,6 +230,8 @@ def repeat_box(atoms, amount=1):
     [0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
      1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1]
     """
+    if atoms.box is None:
+        raise TypeError("Structure has no box")
     if not isinstance(amount, Integral):
         raise TypeError("The amount must be an integer")
     repeat_atoms = atoms.copy()
