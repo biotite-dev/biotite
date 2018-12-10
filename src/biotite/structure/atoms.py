@@ -154,6 +154,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         new_object._coord = new_coord
         if self._bonds is not None:
             new_object._bonds = self._bonds[index]
+        if self._box is not None:
+            new_object._box = self._box
         for annotation in self._annot:
             new_object._annot[annotation] = (self._annot[annotation]
                                              .__getitem__(index))
@@ -894,7 +896,6 @@ class AtomArrayStack(_AtomArrayBase):
                 array = self.get_array(index[0])
                 return array.__getitem__(index[1])
             else:
-                # Prevent reduction in dimensionality in second dimension
                 if isinstance(index[1], numbers.Integral):
                     # Prevent reduction in dimensionality
                     # in second dimension
@@ -903,6 +904,7 @@ class AtomArrayStack(_AtomArrayBase):
                     new_stack = self._subarray(index[1])
                 if index[0] is not Ellipsis:
                     new_stack._coord = new_stack._coord[index[0]]
+                    new_stack._box = new_stack._box[index[0]]
                 return new_stack
         else:
             new_stack = AtomArrayStack(depth=0, length=self.array_length())
