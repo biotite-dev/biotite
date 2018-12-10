@@ -20,6 +20,29 @@ from .atoms import AtomArray, AtomArrayStack
 
 
 def get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma):
+    """
+    Calculate the three vectors spanning a box from the unit cell
+    lengths and angles.
+
+    The return value of this function are the three box vectors as
+    required for the `box` attribute in atom arrays and stacks.
+
+    Parameters
+    ----------
+    len_a, len_b, len_c : float
+        The lengths of the three box/unit cell vectors *a*, *b* and *c*.
+    alpha, beta, gamma:
+        The angles between the box vectors in radians.
+        *alpha* is the angle between *b* and *c*,
+        *beta* between *a* and *c*, *gamma* between *a* and *b*
+    
+    Returns
+    -------
+    box : ndarray, dtype=float, shape=(3,3)
+    The three box vectors.
+    The vector components are in the last dimension.
+    The value can be directly used as `box` attribute in an atom array.
+    """
     a_x = len_a
     b_x = len_b * np.cos(gamma)
     b_y = len_b * np.sin(gamma)
@@ -41,6 +64,18 @@ def get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma):
 
 
 def get_box_volume(box):
+    """
+    Get the volume of one ore multiple boxes.
+
+    Parameters
+    ----------
+    box : ndarray, shape=(3,3) or shape=(m,3,3)
+        One or multiple boxes to get the volume for.
+    
+    Returns
+    -------
+    volume : float or ndarray, shape=(m,)
+    """
     # Using the triple product
     return np.abs(
         vector_dot(
@@ -53,8 +88,106 @@ def get_box_volume(box):
 
 
 def repeat_box(atoms, amount=1):
+    r"""
+    Repeat the atoms in a box by duplicating and placing them in
+    adjacent boxes.
+
+    The output atom array (stack) contains the original atoms (central
+    box) and duplicates of them in the given amount of adjacent boxes.
+    The coordinates of the duplicate atoms are translated accordingly
+    by the box coordinates.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The atoms to be repeated.
+        If `atoms` is a `AtomArrayStack`, the atoms are repeated for
+        each model, according to the box of each model.
+    amount : int, optional
+        The amount of boxes that are created in each direction of the
+        central box.
+        Hence, the total amount of boxes is
+        :math:`(1 + 2 \cdot \text{amount}) ^ 3`.
+        By default, one box is created in each direction, totalling in
+        27 boxes.
+
+    Returns
+    -------
+    repeated : AtomArray or AtomArrayStack
+        The repeated atoms.
+        Includes the original atoms (central box) in the beginning of
+        the atom array (stack).
+    indices : ndarray, dtype=int
+        Indices to the atoms in the original atom array (stack).
+    
+    Examples
+    --------
+
+    >>> array = AtomArray(length=2)
+    >>> array.coord = np.array([[1,5,3], [-1,2,5]], dtype=float)
+    >>> array.box = np.array([[10,0,0], [0,10,0], [0,0,10]], dtype=float)
+    >>> repeated, indices = repeat_box(array)
+    >>> print(repeated.coord)
+    [[  1.   5.   3.]
+     [ -1.   2.   5.]
+     [ -9.  -5.  -7.]
+     [-11.  -8.  -5.]
+     [ -9.  -5.   3.]
+     [-11.  -8.   5.]
+     [ -9.  -5.  13.]
+     [-11.  -8.  15.]
+     [ -9.   5.  -7.]
+     [-11.   2.  -5.]
+     [ -9.   5.   3.]
+     [-11.   2.   5.]
+     [ -9.   5.  13.]
+     [-11.   2.  15.]
+     [ -9.  15.  -7.]
+     [-11.  12.  -5.]
+     [ -9.  15.   3.]
+     [-11.  12.   5.]
+     [ -9.  15.  13.]
+     [-11.  12.  15.]
+     [  1.  -5.  -7.]
+     [ -1.  -8.  -5.]
+     [  1.  -5.   3.]
+     [ -1.  -8.   5.]
+     [  1.  -5.  13.]
+     [ -1.  -8.  15.]
+     [  1.   5.  -7.]
+     [ -1.   2.  -5.]
+     [  1.   5.  13.]
+     [ -1.   2.  15.]
+     [  1.  15.  -7.]
+     [ -1.  12.  -5.]
+     [  1.  15.   3.]
+     [ -1.  12.   5.]
+     [  1.  15.  13.]
+     [ -1.  12.  15.]
+     [ 11.  -5.  -7.]
+     [  9.  -8.  -5.]
+     [ 11.  -5.   3.]
+     [  9.  -8.   5.]
+     [ 11.  -5.  13.]
+     [  9.  -8.  15.]
+     [ 11.   5.  -7.]
+     [  9.   2.  -5.]
+     [ 11.   5.   3.]
+     [  9.   2.   5.]
+     [ 11.   5.  13.]
+     [  9.   2.  15.]
+     [ 11.  15.  -7.]
+     [  9.  12.  -5.]
+     [ 11.  15.   3.]
+     [  9.  12.   5.]
+     [ 11.  15.  13.]
+     [  9.  12.  15.]]
+    >>> print(indices)
+    [0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+     1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1]
+    """
     if not isinstance(amount, Integral):
-        raise TypeError("Amouint must be an integer")
+        raise TypeError("The amount must be an integer")
     repeat_atoms = atoms.copy()
     for i in range(-amount, amount+1):
         for j in range(-amount, amount+1):
@@ -77,7 +210,7 @@ def repeat_box(atoms, amount=1):
                             )
                         repeat_atoms += temp_atoms
     return repeat_atoms, np.tile(
-        np.arange(atoms.array_length),
+        np.arange(atoms.array_length()),
         (1 + 2 * amount) ** 3
     )
 
