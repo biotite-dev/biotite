@@ -119,6 +119,8 @@ def repeat_box(atoms, amount=1):
         the atom array (stack).
     indices : ndarray, dtype=int
         Indices to the atoms in the original atom array (stack).
+        Equal to
+        ``numpy.tile(np.arange(atoms.array_length()), (1 + 2 * amount) ** 3)``.
     
     Examples
     --------
@@ -243,20 +245,151 @@ def center_in_box(atoms, center):
 
 
 def move_inside_box(coord, box):
+    """
+    Move all coordinates into the given box, with the box vectors
+    originating at *(0,0,0)*.
+
+    Coordinates are outside the box, when they cannot be represented by
+    a linear combination of the box vectors with scalar factors greater
+    than 0 and less than 1.
+    In this case the affected coordinates are translated by the box
+    vectors, so that they are inside the box.
+
+    Parameters
+    ----------
+    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The coordinates for one or multiple models.
+    box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
+        The box(es) for one or multiple models.
+        When `coord` is given for multiple models, `box` must be given
+        for multiple models as well.
+    
+    Returns
+    -------
+    moved_coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The moved coordinates.
+        Has the same shape is the input `coord`.
+    
+    Examples
+    --------
+    
+    >>> box = np.array([[10,0,0], [0,10,0], [0,0,10]], dtype=float)
+    >>> inside_coord        = [ 1,  2,  3]
+    >>> outside_coord       = [ 1, 22, 54]
+    >>> other_outside_coord = [-4,  8,  6]
+    >>> coord = np.stack([inside_coord, outside_coord, other_outside_coord])
+    >>> print(coord)
+    [[ 1  2  3]
+     [ 1 22 54]
+     [-4  8  6]]
+    >>> moved_coord = move_inside_box(coord, box)
+    >>> print(moved_coord.astype(int))
+    [[1 2 3]
+     [1 2 4]
+     [6 8 6]]
+
+
+    """
     fractions = coord_to_fraction(coord, box)
     fractions_rem = fractions % 1
     return fraction_to_coord(fractions_rem, box)
 
 
 def coord_to_fraction(coord, box):
+    """
+    Transform coordinates to fractions of box vectors.
+
+    Parameters
+    ----------
+    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The coordinates for one or multiple models.
+    box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
+        The box(es) for one or multiple models.
+        When `coord` is given for multiple models, `box` must be given
+        for multiple models as well.
+    
+    Returns
+    -------
+    fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The fractions of the box vectors.
+    
+    See also
+    --------
+    fraction_to_coord
+
+    Examples
+    --------
+    
+    >>> box = np.array([[5,0,0], [0,5,0], [0,5,5]], dtype=float)
+    >>> coord = np.array(
+    ...     [[1,1,1], [10,0,0], [0,0,10], [-5,2,1]],
+    ...     dtype=float
+    ... )
+    >>> print(coord)
+    [[ 1.  1.  1.]
+     [10.  0.  0.]
+     [ 0.  0. 10.]
+     [-5.  2.  1.]]
+    >>> fractions = coord_to_fraction(coord, box)
+    >>> print(fractions)
+    [[ 0.2  0.   0.2]
+     [ 2.   0.   0. ]
+     [ 0.  -2.   2. ]
+     [-1.   0.2  0.2]]
+    """
     return np.matmul(coord, linalg.inv(box))
 
 
 def fraction_to_coord(fraction, box):
+    """
+    Transform fractions of box vectors to coordinates.
+
+    This is the reverse operation of `coord_to_fraction()`
+
+    Parameters
+    ----------
+    fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The fractions of the box vectors for one or multiple models.
+    box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
+        The box(es) for one or multiple models.
+        When `coord` is given for multiple models, `box` must be given
+        for multiple models as well.
+    
+    Returns
+    -------
+    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The coordinates.
+    
+    See also
+    --------
+    coord_to_fraction
+    """
     return np.matmul(fraction, box)
 
 
 def is_orthogonal(box):
+    """
+    Check, whether a box or multiple boxes is/are orthogonal.
+
+    A box is orthogonal when the dot product of all box vectors with
+    each other is 0.
+
+    Parameters
+    ----------
+    box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
+        A single box or multiple boxes.
+    
+    Returns
+    -------
+    is_orthgonal : bool or ndarray, shape=(m,), dtype=bool
+        True, if the box vectors are orthogonal, false otherwise
+    
+    Notes
+    -----
+    Due to possible numerical errors, this function also evaluates two
+    vectors as orthogonal, when their dot product is not exactly zero,
+    but it is within a small tolerance (:math:`10^{-6}`).
+    """
     # Fix numerical errors, as values, that are actually 0,
     # might not be calculated as such
     tol = 1e-6
