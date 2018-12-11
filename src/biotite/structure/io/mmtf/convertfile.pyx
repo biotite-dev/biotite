@@ -203,9 +203,9 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         
         if "unitCell" in file:
             a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
-            alpha = alpha * 2*np.pi / 360
-            beta  = beta  * 2*np.pi / 360
-            gamma = gamma * 2*np.pi / 360
+            alpha *= 2*np.pi / 360
+            beta  *= 2*np.pi / 360
+            gamma *= 2*np.pi / 360
             box = vectors_from_unitcell(
                 a_len, b_len, c_len, alpha, beta, gamma
             )
