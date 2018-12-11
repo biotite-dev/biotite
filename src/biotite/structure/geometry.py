@@ -17,7 +17,7 @@ from .util import vector_dot, norm_vector
 from .filter import filter_backbone
 from .box import (coord_to_fraction, fraction_to_coord,
                   move_inside_box, is_orthogonal)
-from .pbcdistance import _pair_distance_orthogonal_triclinic
+#from .pbcdistance import _pair_distance_triclinic_box
 from .error import BadStructureError
 
 
@@ -358,3 +358,39 @@ def _pair_distance_orthogonal_box(fractions, box, dist):
     diff = fraction_to_coord(fractions, box)
     # Calculate distance from difference vector
     dist[:] = np.sqrt(vector_dot(diff, diff))
+
+
+def _pair_distance_triclinic_box(fractions, box, dist):
+    if box.shape[0] != 3 or box.shape[1] != 3:
+        raise ValueError("Invalid shape for box vectors")
+    if fractions.shape[1] != 3:
+        raise ValueError("Invalid shape for fraction vectors")
+    if dist.shape[0] != fractions.shape[0]:
+        raise ValueError(
+            f"Distance array has length {dist.shape[0]}, but fractions array "
+            f"has length {fractions.shape[0]}"
+        )
+    diffs = fraction_to_coord(fractions, box)
+    
+    # Fraction components are guaranteed to be positive 
+    # Test all 3 fraction vector components
+    # with positive and negative sign
+    # (i,j,k in {-1, 0})
+    # Hence, 8 periodic copies are tested
+    periodic_shift = []
+    for i in range(-1, 1):
+        for j in range(-1, 1):
+            for k in range(-1, 1):
+                x = i*box[0,0] + j*box[1,0] + k*box[2,0]
+                y = i*box[0,1] + j*box[1,1] + k*box[2,1]
+                z = i*box[0,2] + j*box[1,2] + k*box[2,2]
+    periodic_shift = np.array(periodic_shift, dtype=diffs.dtype)
+    # Create 8 periodically shifted variants for each atom
+    shifted_diffs = diffs[:, np.newaxis, :] + periodic_shift[np.newaxis, :, :]
+    # Find for each atom the periodically shifted variant with lowest
+    # distance
+    # Lowest squared distance -> lowest distance
+    sq_distance = vector_dot(shifted_diffs, shifted_diffs)
+    min_sq_distance = np.min(sq_distance, axis=1)
+    # Take square root to obtain actual distance
+    dist[:] = np.sqrt(min_sq_distance)
