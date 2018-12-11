@@ -87,8 +87,8 @@ def pair_distance(atoms, pairs, periodic=False, box=None):
     -------
     dist : ndarray, shape=(n,) or shape=(m,n)
         The pairwise distances.
-        If `atoms` contains multiple models, The distances are
-        calculated for each frame.
+        If `atoms` is an atom array stack, The distances are
+        calculated for each model.
     
     See also
     --------
