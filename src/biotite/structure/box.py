@@ -262,13 +262,13 @@ def repeat_box(atoms, amount=1):
 
 
 def move_inside_box(coord, box):
-    """
+    r"""
     Move all coordinates into the given box, with the box vectors
     originating at *(0,0,0)*.
 
     Coordinates are outside the box, when they cannot be represented by
-    a linear combination of the box vectors with scalar factors greater
-    than 0 and less than 1.
+    a linear combination of the box vectors with scalar factors
+    :math:`0 \le a_i \le 1`.
     In this case the affected coordinates are translated by the box
     vectors, so that they are inside the box.
 
