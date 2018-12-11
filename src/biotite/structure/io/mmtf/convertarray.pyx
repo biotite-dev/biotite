@@ -292,7 +292,11 @@ def set_structure(file, array):
             # Use box of first model, since MMTF does not support
             # multiple boxes
             box = array.box[0]
-        file["unitCell"] = list(unitcell_from_vectors(box))
+        len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
+        file["unitCell"] = [
+            len_a, len_b, len_c,
+            alpha * 360/(2*np.pi), beta * 360/(2*np.pi), gamma * 360/(2*np.pi)
+        ]
     
     ### Add additional information ###
     # Only set additional information, if not already set
