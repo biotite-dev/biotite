@@ -8,16 +8,20 @@ in a structure, mainly lenghts and angles.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["distance", "centroid", "angle", "dihedral", "dihedral_backbone"]
+__all__ = ["distance", "pair_distance", "centroid", "angle", "dihedral",
+           "dihedral_backbone"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .filter import filter_backbone
+from .box import (coord_to_fraction, fraction_to_coord,
+                  move_inside_box, is_orthogonal)
+from .pbcdistance import _pair_distance_orthogonal_triclinic
 from .error import BadStructureError
 
 
-def distance(atoms1, atoms2):
+def distance(atoms1, atoms2, periodic=False, box=None):
     """
     Measure the euclidian distance between atoms.
     
@@ -26,7 +30,7 @@ def distance(atoms1, atoms2):
     atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the distances between. The dimensions may
         vary. Alternatively an ndarray containing the coordinates can be
-        provided.
+        provided. Usual *NumPy* broadcasting rules apply.
     
     Returns
     -------
@@ -34,17 +38,127 @@ def distance(atoms1, atoms2):
         The atom distances. The shape is equal to the shape of
         the input `atoms` with the highest dimensionality minus the last
         axis.
+    
+    See also
+    --------
+    pair_distance
     """
     v1 = coord(atoms1)
     v2 = coord(atoms2)
-    # decide subtraction order based on shape,
-    # since an array can be only subtracted by an array with less dimensions
+    # Decide subtraction order based on shape, since an array can be
+    # only subtracted by an array with less dimensions
     if len(v1.shape) <= len(v2.shape):
         dif = v2 - v1
     else:
         dif = v1 - v2
     dist = np.sqrt(vector_dot(dif, dif))
     return dist
+
+
+def pair_distance(atoms, pairs, periodic=False, box=None):
+    """
+    Measure the euclidian distance between pairs of atoms.
+
+    The pairs refer to indices of a given atom array, whose pairwise
+    distances should be calculated.
+    If an atom array stack is provided, the distances are calculated for
+    each frame/model.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack or ndarray, shape=(n,3) or shape=(m,n,3)
+        The atoms the `pairs` parameter refers to.
+        The pairwise distances are calculated for these pairs.
+        Alternatively, the atom coordinates can be directly provided as
+        `ndarray`.
+    pairs : ndarray, shape=(k,2)
+        Pairs of indices that point to `atoms`.
+    periodic : bool, optional
+        If set to true, periodic boundary conditions are taken into
+        account. The `box` attribute of the `atoms` parameter is used for
+        calculation.
+        An alternative box can be provided via the `box` parameter.
+        By default, periodicity is ignored.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, the given box is used instead of the
+        `box` attribute of `atoms`.
+    
+    Returns
+    -------
+    dist : ndarray, shape=(n,) or shape=(m,n)
+        The pairwise distances.
+        If `atoms` contains multiple models, The distances are
+        calculated for each frame.
+    
+    See also
+    --------
+    distance
+    """
+    coord1 = coord(atoms)[..., pairs[:,0], :]
+    coord2 = coord(atoms)[..., pairs[:,1], :]
+    diff = coord2 - coord2
+    
+    if periodic:
+        if box is None:
+            if not isinstance(atoms, AtomArray) and \
+               not isinstance(atoms, AtomArrayStack):
+                    raise TypeError(
+                        "An atom array or stack is required, if the box "
+                        "parameter is not explicitly set"
+                    )
+            elif atoms.box is None:
+                    raise ValueError(
+                        "The atom array (stack) must have a box, if the box "
+                        "parameter is not explicitly set"
+                    )
+            else:
+                box = atoms.box
+        # Transform difference vector
+        # from coordinates into fractions of box vectors
+        # for faster calculation laster on
+        fractions = coord_to_fraction(diff, box)
+        # Move vectors into box
+        fractions = fractions % 1
+        # Check for each model if the box vectors are orthogonal
+        orthogonality = is_orthogonal(box)
+        if len(fractions.shape) == 2:
+            # Single model
+            dist = np.zeros(len(fractions), dtype=np.float64)
+            if orthogonality:
+                _pair_distance_orthogonal_box(
+                    fractions, box, dist
+                )
+            else:
+                _pair_distance_triclinic_box(
+                    fractions.astype(np.float64, copy=False),
+                    box.astype(np.float64, copy=False),
+                    dist
+                )
+        elif len(fractions.shape) == 3:
+            # Multiple models
+            # Model count x Atom count
+            dist = np.zeros(
+                (fractions.shape[0], fractions.shape[1]),
+                dtype=np.float64
+            )
+            for i in range(len(fractions)):
+                if orthogonality[i]:
+                    _pair_distance_orthogonal_box(
+                        fractions[i], box[i], dist[i]
+                    )
+                else:
+                    _pair_distance_triclinic_box(
+                        fractions[i].astype(np.float64, copy=False),
+                        box[i].astype(np.float64, copy=False),
+                        dist[i]
+                    )
+        else:
+            raise ValueError(
+                f"{atoms.coord} is an invalid shape for atom coordinates"
+            )
+    
+    else:
+        return np.sqrt(vector_dot(diff, diff))
 
 
 def centroid(atoms):
@@ -234,3 +348,13 @@ def dihedral_backbone(atom_array, chain_id):
                         omega_coord[...,2], omega_coord[...,3])
     
     return phi, psi, omega
+
+
+def _pair_distance_orthogonal_box(fractions, box, dist):
+    # Fraction components are guaranteed to be positive 
+    # Use fraction vector components with lower absolute
+    # -> new_vec[i] = vec[i] - 1 if vec[i] > 0.5 else vec[i]
+    fractions[fractions > 0.5] -= 1
+    diff = fraction_to_coord(fractions, box)
+    # Calculate distance from difference vector
+    dist[:] = np.sqrt(vector_dot(diff, diff))
