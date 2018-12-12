@@ -420,11 +420,18 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     """
     from matplotlib.transforms import Bbox
 
-    number_functions = [lambda x: x + 1] * len(alignment.sequences)
-    if number_functions is not None:
+    if number_functions is None:
+        number_functions = [lambda x: x + 1] * len(alignment.sequences)
+    else:
+        if len(number_functions) != len(alignment.sequences):
+            raise ValueError(
+                f"The amount of renumbering functions is "
+                f"{len(number_functions)} but the amount if sequences in the "
+                f"alignment is {len(alignment.sequences)}"
+            )
         for i, func in enumerate(number_functions):
-            if func is not None:
-                number_functions[i] = func
+            if func is None:
+                number_functions[i] = (lambda x: x + 1)
 
     seq_num = alignment.trace.shape[1]
     seq_len = alignment.trace.shape[0]
