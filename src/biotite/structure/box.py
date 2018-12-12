@@ -119,14 +119,7 @@ def box_volume(box):
     volume : float or ndarray, shape=(m,)
     """
     # Using the triple product
-    return np.abs(
-        vector_dot(
-            np.cross(
-                box[..., 0, :], box[..., 1, :]
-            ),
-            box[..., 2, :]
-        )
-    )
+    return np.abs(linalg.det(box))
 
 
 def repeat_box(atoms, amount=1):
