@@ -342,6 +342,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         if not self.equal_annotations(item):
             return False
+        if self._bonds != item._bonds:
+            return False
+        if self._box != item._box:
+            return False
         return np.array_equal(self._coord, item._coord)
     
     def __len__(self):
