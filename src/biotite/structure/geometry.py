@@ -8,7 +8,7 @@ in a structure, mainly lenghts and angles.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["distance", "pair_distance", "centroid", "angle", "dihedral",
+__all__ = ["distance", "distance_indices", "centroid", "angle", "dihedral",
            "dihedral_backbone"]
 
 import numpy as np
@@ -55,7 +55,7 @@ def distance(atoms1, atoms2, periodic=False, box=None):
     return dist
 
 
-def pair_distance(atoms, pairs, periodic=False, box=None):
+def distance_indices(atoms, indices, periodic=False, box=None):
     """
     Measure the euclidian distance between pairs of atoms.
 
@@ -94,8 +94,8 @@ def pair_distance(atoms, pairs, periodic=False, box=None):
     --------
     distance
     """
-    coord1 = coord(atoms)[..., pairs[:,0], :]
-    coord2 = coord(atoms)[..., pairs[:,1], :]
+    coord1 = coord(atoms)[..., indices[:,0], :]
+    coord2 = coord(atoms)[..., indices[:,1], :]
     diff = coord2 - coord2
     
     if periodic:
