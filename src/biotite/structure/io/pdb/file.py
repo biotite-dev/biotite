@@ -6,8 +6,8 @@ __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBFile"]
 
 import numpy as np
-from ...atoms import Atom, AtomArray, AtomArrayStack
-from ...box import get_box_vectors
+from ...atoms import AtomArray, AtomArrayStack
+from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
@@ -243,7 +243,7 @@ class PDBFile(TextFile):
                 alpha = np.deg2rad(float(line[33:40]))
                 beta = np.deg2rad(float(line[40:47]))
                 gamma = np.deg2rad(float(line[47:54]))
-                box = get_box_vectors(len_a, len_b, len_c, alpha, beta, gamma)
+                box = vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
                 if isinstance(array, AtomArray):
                     array.box = box
@@ -361,22 +361,12 @@ class PDBFile(TextFile):
             box = array.box
             if len(box.shape) == 3:
                 box = box[0]
-            a = np.linalg.norm(box[0])
-            b = np.linalg.norm(box[1])
-            c = np.linalg.norm(box[2])
-            gamma = np.arctan(box[1, 1] / box[1, 0])
-            beta = np.arccos(box[2, 0] / c)
-            alpha = np.arccos( (box[2, 1]*np.sin(gamma))/c + np.cos(beta)*np.cos(gamma) )
-            gamma = np.rad2deg(gamma)
-            beta = np.rad2deg(beta)
-            alpha = np.rad2deg(alpha)
-            if gamma < 0:
-                gamma += 180
-            self.lines.insert(0,
-                              "CRYST1{:>9.3f}".format(a) +
-                              "{:>9.3f}".format(b) +
-                              "{:>9.3f}".format(c) +
-                              "{:>7.2f}".format(alpha) +
-                              "{:>7.2f}".format(beta) +
-                              "{:>7.2f}".format(gamma) +
+            unitcell = unitcell_from_vectors(box)
+            self.lines.insert(0, "CRYST1" +
+                              "{:>9.3f}".format(unitcell[0]) +
+                              "{:>9.3f}".format(unitcell[1]) +
+                              "{:>9.3f}".format(unitcell[2]) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[3])) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[4])) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[5])) +
                               " P 1           1")
