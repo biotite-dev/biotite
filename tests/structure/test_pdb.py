@@ -32,9 +32,6 @@ def test_array_conversion(path, single_model):
     pdb_file.set_structure(array1)
     array2 = pdb_file.get_structure(model=model)
     assert array1 == array2
-    # TODO AtomArray.__eq__ should probabily account for box equality
-    if array1.box is not None: # if pdb has a CRYST1 record..
-        assert np.array_equal(array1.box, array2.box)
 
 
 @pytest.mark.parametrize(
