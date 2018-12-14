@@ -110,6 +110,8 @@ def test_index_distance_periodic_orthogonal(shift):
     assert np.allclose(dist, ref_dist, atol=1e-5)
 
 
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize(
     "shift, angles", itertools.product(
     [
@@ -145,7 +147,21 @@ def test_index_distance_periodic_triclinic(shift, angles):
             np.tile(np.arange(length), length)
     ], axis=1)
     ref_dist = struc.index_distance(array, dist_indices, periodic=True)
+
+    # Compare with MDTraj
+    import mdtraj
+    traj = mdtraj.load(join(data_dir, "3o5r.pdb"))
+    traj.unitcell_vectors = array.box[np.newaxis, :, :]
+    # Nanometers to Angstrom
+    traj.xyz *= 10
+    mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0]
+    ind = np.where(~np.isclose(ref_dist, mdtraj_dist))[0]
+    #print(ind)
+    #print(   ref_dist[ind])
+    #print(mdtraj_dist[ind])
+    assert np.allclose(ref_dist, mdtraj_dist, atol=1e-5)
     
+    # Compare with shifted variant
     array.coord += shift
     array.coord = struc.move_inside_box(array.coord, array.box)
     dist = struc.index_distance(array, dist_indices, periodic=True)
