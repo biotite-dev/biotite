@@ -73,9 +73,25 @@ def test_volume():
     "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
     [box+coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)]
 )
+def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
+    box = struc.vectors_from_unitcell(
+        len_a, len_b, len_c,
+        alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360
+    )
+    coord = np.array([x,y,z])
+
+    moved_coord = struc.move_inside_box(coord, box)
+    fractions = struc.coord_to_fraction(moved_coord, box)
+    assert ((fractions >= 0) & (fractions <=1)).all()
+
+
+@pytest.mark.parametrize(
+    "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
+    [box+coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)]
+)
 def test_conversion_to_fraction(len_a, len_b, len_c,
                                 alpha, beta, gamma,
-                                x, y,z):
+                                x, y, z):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c,
         alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360
