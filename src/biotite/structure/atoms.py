@@ -344,8 +344,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             return False
         if self._bonds != item._bonds:
             return False
-        if self._box != item._box:
-            return False
+        if self._box is None:
+            if item._box is not None:
+                return False
+        else:
+            if not np.array_equal(self._box, item._box):
+                return False
         return np.array_equal(self._coord, item._coord)
     
     def __len__(self):
