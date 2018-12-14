@@ -227,11 +227,6 @@ class PDBFile(TextFile):
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
 
-        # Final filter
-        array = array[..., filter_inscode_and_altloc(
-            array, insertion_code, altloc, inscode_array, altloc_array
-        )]
-
         # Fill in box vectors
         # PDB does not support changing box dimensions. CRYST1 is a one-time
         # record so we can extract it directly
@@ -251,7 +246,13 @@ class PDBFile(TextFile):
                     array.box = np.array([box, ] * len(array))
                 break
 
-        return array
+
+        # Apply final filter and return
+        return array[..., filter_inscode_and_altloc(
+            array, insertion_code, altloc, inscode_array, altloc_array
+        )]
+
+
 
 
     def set_structure(self, array):
