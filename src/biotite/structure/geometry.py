@@ -96,7 +96,7 @@ def index_distance(atoms, indices, periodic=False, box=None):
     """
     coord1 = coord(atoms)[..., indices[:,0], :]
     coord2 = coord(atoms)[..., indices[:,1], :]
-    diff = coord2 - coord2
+    diff = coord2 - coord1
     
     if periodic:
         if box is None:
@@ -125,11 +125,11 @@ def index_distance(atoms, indices, periodic=False, box=None):
             # Single model
             dist = np.zeros(len(fractions), dtype=np.float64)
             if orthogonality:
-                _pair_distance_orthogonal_box(
+                _distance_orthogonal_box(
                     fractions, box, dist
                 )
             else:
-                _pair_distance_triclinic_box(
+                _distance_triclinic_box(
                     fractions.astype(np.float64, copy=False),
                     box.astype(np.float64, copy=False),
                     dist
@@ -143,11 +143,11 @@ def index_distance(atoms, indices, periodic=False, box=None):
             )
             for i in range(len(fractions)):
                 if orthogonality[i]:
-                    _pair_distance_orthogonal_box(
+                    _distance_orthogonal_box(
                         fractions[i], box[i], dist[i]
                     )
                 else:
-                    _pair_distance_triclinic_box(
+                    _distance_triclinic_box(
                         fractions[i].astype(np.float64, copy=False),
                         box[i].astype(np.float64, copy=False),
                         dist[i]
@@ -156,6 +156,7 @@ def index_distance(atoms, indices, periodic=False, box=None):
             raise ValueError(
                 f"{atoms.coord} is an invalid shape for atom coordinates"
             )
+        return dist
     
     else:
         return np.sqrt(vector_dot(diff, diff))
@@ -350,7 +351,7 @@ def dihedral_backbone(atom_array, chain_id):
     return phi, psi, omega
 
 
-def _pair_distance_orthogonal_box(fractions, box, dist):
+def _distance_orthogonal_box(fractions, box, dist):
     # Fraction components are guaranteed to be positive 
     # Use fraction vector components with lower absolute
     # -> new_vec[i] = vec[i] - 1 if vec[i] > 0.5 else vec[i]
@@ -360,7 +361,7 @@ def _pair_distance_orthogonal_box(fractions, box, dist):
     dist[:] = np.sqrt(vector_dot(diff, diff))
 
 
-def _pair_distance_triclinic_box(fractions, box, dist):
+def _distance_triclinic_box(fractions, box, dist):
     if box.shape[0] != 3 or box.shape[1] != 3:
         raise ValueError("Invalid shape for box vectors")
     if fractions.shape[1] != 3:
@@ -384,6 +385,7 @@ def _pair_distance_triclinic_box(fractions, box, dist):
                 x = i*box[0,0] + j*box[1,0] + k*box[2,0]
                 y = i*box[0,1] + j*box[1,1] + k*box[2,1]
                 z = i*box[0,2] + j*box[1,2] + k*box[2,2]
+                periodic_shift.append([x,y,z])
     periodic_shift = np.array(periodic_shift, dtype=diffs.dtype)
     # Create 8 periodically shifted variants for each atom
     shifted_diffs = diffs[:, np.newaxis, :] + periodic_shift[np.newaxis, :, :]
