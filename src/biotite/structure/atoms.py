@@ -912,7 +912,8 @@ class AtomArrayStack(_AtomArrayBase):
                     new_stack = self._subarray(index[1])
                 if index[0] is not Ellipsis:
                     new_stack._coord = new_stack._coord[index[0]]
-                    new_stack._box = new_stack._box[index[0]]
+                    if new_stack._box is not None:
+                        new_stack._box = new_stack._box[index[0]]
                 return new_stack
         else:
             new_stack = AtomArrayStack(depth=0, length=self.array_length())
