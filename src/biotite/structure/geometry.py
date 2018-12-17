@@ -63,6 +63,8 @@ def index_distance(atoms, indices, periodic=False, box=None):
     distances should be calculated.
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
+    In contrast to the `distance()` function, this function is able
+    to take periodic boundary conditions into account
 
     Parameters
     ----------
@@ -90,6 +92,16 @@ def index_distance(atoms, indices, periodic=False, box=None):
         If `atoms` is an atom array stack, The distances are
         calculated for each model.
     
+    Warnings
+    --------
+    In case `periodic` is set to true and if the box is not orthorhombic
+    (at least one angle deviates from 90 degrees),
+    the calculation requires approximately 7 times longer than in the
+    orthorhombic case.
+    Furthermore, it is not guaranteed, that the lowest-distance periodic
+    copy is found for non-orthorhombic boxes; this is especially true
+    for heavily skewed boxes.
+
     See also
     --------
     distance
