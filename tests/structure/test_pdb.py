@@ -96,6 +96,7 @@ def test_guess_elements():
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
 
+
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(

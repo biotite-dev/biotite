@@ -243,7 +243,9 @@ class PDBFile(TextFile):
                 if isinstance(array, AtomArray):
                     array.box = box
                 else:
-                    array.box = np.array([box, ] * len(array))
+                    array.box = np.repeat(
+                        box[np.newaxis, ...], array.stack_depth(), axis=0
+                    )
                 break
 
 
