@@ -64,7 +64,7 @@ def index_distance(atoms, indices, periodic=False, box=None):
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
     In contrast to the `distance()` function, this function is able
-    to take periodic boundary conditions into account
+    to take periodic boundary conditions into account.
 
     Parameters
     ----------
