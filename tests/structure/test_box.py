@@ -40,7 +40,7 @@ SAMPLE_COORD = [
 def test_box_vector_calculation(len_a, len_b, len_c, alpha, beta, gamma):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c,
-        alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360
+        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
     )
 
     from mdtraj.utils import lengths_and_angles_to_box_vectors
@@ -76,7 +76,7 @@ def test_volume():
 def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c,
-        alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360
+        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
     )
     coord = np.array([x,y,z])
 
@@ -94,7 +94,7 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
                                 x, y, z):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c,
-        alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360
+        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
     )
     coord = np.array([x,y,z])
 

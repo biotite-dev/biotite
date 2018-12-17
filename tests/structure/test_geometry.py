@@ -121,7 +121,7 @@ def test_index_distance_periodic_orthogonal(shift):
     ],
     [
         np.array([ 50,  90,  90]),
-        np.array([120,  50,  80]),
+        np.array([ 90,  90, 120]),
         np.array([ 60,  60,  60])
     ]
     )
@@ -135,7 +135,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     boundaries = np.max(array.coord, axis=0) - np.min(array.coord, axis=0) + 1
-    angles = angles * 2*np.pi / 360
+    angles = np.deg2rad(angles)
     array.box = struc.vectors_from_unitcell(
         boundaries[0], boundaries[1], boundaries[2],
         angles[0], angles[1], angles[2]
@@ -144,22 +144,19 @@ def test_index_distance_periodic_triclinic(shift, angles):
     length = array.array_length()
     dist_indices = np.stack([
         np.repeat(np.arange(length), length),
-            np.tile(np.arange(length), length)
+          np.tile(np.arange(length), length)
     ], axis=1)
     ref_dist = struc.index_distance(array, dist_indices, periodic=True)
 
     # Compare with MDTraj
     import mdtraj
     traj = mdtraj.load(join(data_dir, "3o5r.pdb"))
-    traj.unitcell_vectors = array.box[np.newaxis, :, :]
+    # Angstrom to Nanometers
+    traj.unitcell_vectors = array.box[np.newaxis, :, :] / 10
     # Nanometers to Angstrom
-    traj.xyz *= 10
-    mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0]
-    ind = np.where(~np.isclose(ref_dist, mdtraj_dist))[0]
-    #print(ind)
-    #print(   ref_dist[ind])
-    #print(mdtraj_dist[ind])
-    assert np.allclose(ref_dist, mdtraj_dist, atol=1e-5)
+    mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0] * 10
+    ind = np.where(~np.isclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3))[0]
+    assert np.allclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3)
     
     # Compare with shifted variant
     array.coord += shift
