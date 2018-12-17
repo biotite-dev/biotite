@@ -163,6 +163,7 @@
         ],
         "Geometry" : [
             "distance",
+            "index_distance",
             "angle",
             "dihedral",
             "dihedral_backbone",
