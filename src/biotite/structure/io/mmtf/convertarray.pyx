@@ -295,7 +295,7 @@ def set_structure(file, array):
         len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
         file["unitCell"] = [
             len_a, len_b, len_c,
-            alpha * 360/(2*np.pi), beta * 360/(2*np.pi), gamma * 360/(2*np.pi)
+            np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
         ]
     
     ### Add additional information ###
