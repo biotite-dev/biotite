@@ -71,7 +71,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             # nm to Angstrom
             self._coord = result[self.output_value_index("coord")] * 10
             self._time  = result[self.output_value_index("time")]
-            self._box   = result[self.output_value_index("box")]
+            self._box   = result[self.output_value_index("box")] * 10
     
     def get_coord(self):
         """
@@ -79,7 +79,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         
         Returns
         -------
-        indices : ndarray, dtype=float
+        indices : ndarray, dtype=float, shape=(m,n,1)
             The coordinates stored in the trajectory file.
         """
         return self._coord
@@ -122,7 +122,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         
         Returns
         -------
-        time : ndarray, dtype=float
+        time : ndarray, dtype=float, shape=(m,)
             A one dimensional array containing the time values for the
             frames, that were read fro the file.
         """
@@ -130,11 +130,11 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def get_box(self):
         """
-        Get the box dimensions for each frame (nm).
+        Get the box dimensions for each frame.
         
         Returns
         -------
-        time : ndarray, dtype=float, shape=(n,3)
+        box : ndarray, dtype=float, shape=(m,3,3)
             An array containing the box dimensions for the
             frames, that were read from the file.
         """
