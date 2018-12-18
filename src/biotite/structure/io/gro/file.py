@@ -67,7 +67,6 @@ class GROFile(TextFile):
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-
         def is_int(line):
             """
             helper function: returns true
@@ -102,6 +101,8 @@ class GROFile(TextFile):
             box_vectors : ndarray, dtype=float, shape=(3,3)
                 The atom array compatible box vectors.
             """
+            if not any(box_param):
+                return None
             if len(box_param) == 3:
                 x, y, z = box_param
                 return np.array([[x,0,0], [0,y,0], [0,0,z]], dtype=float)
@@ -169,7 +170,7 @@ class GROFile(TextFile):
         if isinstance(array, AtomArray):
             atom_i = annot_i
             for i, line_i in enumerate(atom_i):
-                line = self.lines[line_i],
+                line = self.lines[line_i]
                 # gro files use nm instead of A
                 array.coord[i,0] = float(line[20:28])*10
                 array.coord[i,1] = float(line[28:36])*10
@@ -192,26 +193,12 @@ class GROFile(TextFile):
                 # Box is stored in last line (after coordinates)
                 box_i = atom_i[-1] + 1
                 box_param = [float(e)*10 for e in self.lines[box_i].split()]
-                array.box[m] = set_box_dimen(box_param)
-        
-        # Fill in box vectors
-        for line in self.lines:
-            if line.startswith("CRYST1"):
-                len_a = float(line[6:15])
-                len_b = float(line[15:24])
-                len_c = float(line[24:33])
-                alpha = np.deg2rad(float(line[33:40]))
-                beta = np.deg2rad(float(line[40:47]))
-                gamma = np.deg2rad(float(line[47:54]))
-                box = vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
-
-                if isinstance(array, AtomArray):
-                    array.box = box
-                else:
-                    array.box = np.repeat(
-                        box[np.newaxis, ...], array.stack_depth(), axis=0
-                    )
-                break
+                box = set_box_dimen(box_param)
+                # Create a box in the stack if not already existing
+                # and the box is not a dummy
+                if array.box is None and box is not None:
+                    array.box = np.zeros((array.stack_depth(), 3, 3))
+                array.box[m] = box
 
         return array
 
@@ -254,16 +241,17 @@ class GROFile(TextFile):
             else:
                 box = array.box
                 if is_orthogonal(box):
-                    bx, by, bz = np.diag(box)
-                    return f"{bx:>8.3f} {by:>8.3f} {bz:>8.3f}"
+                    bx, by, bz = np.diag(box) / 10
+                    return f"{bx:>9.5f} {by:>9.5f} {bz:>9.5f}"
                 else:
+                    box = box / 10
                     box_elements = (
                         box[0,0], box[1,1], box[2,2],
                         box[0,1], box[0,2],
                         box[1,0], box[1,2],
                         box[2,0], box[2,1],
                     )
-                    return " ".join([f"{e:>8.3f}" for e in box_elements])
+                    return " ".join([f"{e:>9.5f}" for e in box_elements])
 
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)
@@ -282,8 +270,7 @@ class GROFile(TextFile):
                     array.coord[i,2]/10
                 )
             # Write box lines
-            if array.box is None:
-                self.lines[-1] = get_box_dimen(array)
+            self.lines[-1] = get_box_dimen(array)
         elif isinstance(array, AtomArrayStack):
             self.lines = []
             # The entire information, but the coordinates,
@@ -313,4 +300,6 @@ class GROFile(TextFile):
                     modellines[j] = line
                 self.lines.extend(modellines)
                 self.lines.append(get_box_dimen(array[i]))
+        else:
+            raise TypeError("An atom array or stack must be provided")
 
