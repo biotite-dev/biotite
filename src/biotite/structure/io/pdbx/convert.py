@@ -198,9 +198,9 @@ def _get_model_dict(atom_site_dict, model):
 
 def _get_box(pdbx_file, data_block):
     if data_block is None:
-        cell_dict = pdbx_file.get(["cell"])
+        cell_dict = pdbx_file.get("cell")
     else:
-        cell_dict = pdbx_file.get(data_block, "cell"])
+        cell_dict = pdbx_file.get((data_block, "cell"))
     if cell_dict is None:
         return None
     len_a, len_b, len_c = [float(cell_dict[length_qual]) for length_qual

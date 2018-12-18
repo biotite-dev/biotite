@@ -102,7 +102,7 @@ class GROFile(TextFile):
             box_vectors : ndarray, dtype=float, shape=(3,3)
                 The atom array compatible box vectors.
             """
-            if len(box_param) == 3
+            if len(box_param) == 3:
                 x, y, z = box_param
                 return np.array([[x,0,0], [0,y,0], [0,0,z]], dtype=float)
             elif len(box_param) == 9:
