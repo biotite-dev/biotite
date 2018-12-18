@@ -430,6 +430,10 @@ class PDBxFile(TextFile, MutableMapping):
     def __iter__(self):
         return self._categories.__iter__()
     
+
+    def __len__(self):
+        return len(self._categories)
+    
     
     def _full_index(self, index):
         """
