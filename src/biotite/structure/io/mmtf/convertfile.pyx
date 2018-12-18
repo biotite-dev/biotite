@@ -201,18 +201,6 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 atoms_per_res, res_per_chain, chains_per_model
             )
         
-        if "unitCell" in file:
-            a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
-            alpha *= 2*np.pi / 360
-            beta  *= 2*np.pi / 360
-            gamma *= 2*np.pi / 360
-            box = vectors_from_unitcell(
-                a_len, b_len, c_len, alpha, beta, gamma
-            )
-            array.box = np.repeat(
-                box[np.newaxis, ...], array.stack_depth(), axis=0
-            )
-        
     else:
         length = _get_model_length(model, res_type_i, chains_per_model,
                                    res_per_chain, atoms_per_res)
@@ -260,14 +248,21 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 atoms_per_res, res_per_chain, chains_per_model
             )
         
-        if "unitCell" in file:
-            a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
-            alpha = alpha * 360 / (2*np.pi)
-            beta  = beta  * 360 / (2*np.pi)
-            gamma = gamma * 360 / (2*np.pi)
-            array.box = vectors_from_unitcell(
-                a_len, b_len, c_len, alpha, beta, gamma
+    if "unitCell" in file:
+        a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
+        alpha = np.deg2rad(alpha)
+        beta  = np.deg2rad(beta )
+        gamma = np.deg2rad(gamma)
+        box = vectors_from_unitcell(
+            a_len, b_len, c_len, alpha, beta, gamma
+        )
+        if isinstance(array, AtomArrayStack):
+            array.box = np.repeat(
+                box[np.newaxis, ...], array.stack_depth(), axis=0
             )
+        else:
+            # AtomArray
+            array.box = box
     
     # Filter inscode and altloc and return
     # Format arrays for filter function
