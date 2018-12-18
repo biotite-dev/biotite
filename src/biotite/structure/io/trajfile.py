@@ -104,7 +104,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         -------
         array_stack : AtomArrayStack
             A stack containing the annontation arrays from `template`
-            but the coordinates from the trajectory file.
+            but the coordinates and the simulation boxes from the
+            trajectory file.
         """
         if template.array_length() != self._coord.shape[-2]:
             raise ValueError("Template and trajectory have "
@@ -114,6 +115,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         else:
             array_stack = template.copy()
         array_stack.coord = np.copy(self._coord)
+        array_stack.box = np.copy(self._box)
         return array_stack
     
     def get_time(self):
