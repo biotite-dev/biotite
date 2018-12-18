@@ -31,7 +31,13 @@ def test_array_conversion(path, single_model):
     pdb_file = pdb.PDBFile()
     pdb_file.set_structure(array1)
     array2 = pdb_file.get_structure(model=model)
-    assert array1 == array2
+    if array1.box is not None:
+        assert np.allclose(array1.box, array2.box)
+    assert array1.bonds == array2.bonds
+    for category in array1.get_annotation_categories():
+        assert array1.get_annotation(category).tolist() == \
+               array2.get_annotation(category).tolist()
+    assert array1.coord.tolist() == array2.coord.tolist()
 
 
 @pytest.mark.parametrize(
