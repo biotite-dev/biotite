@@ -56,6 +56,7 @@ def test_array_conversion(path, single_model):
     assert a1.coord.flatten().tolist() == \
            approx(a2.coord.flatten().tolist(), abs=1e-3)
     assert a1.bonds == a2.bonds
+    assert np.allclose(a1.box, a2.box)
 
 
 @pytest.mark.parametrize(

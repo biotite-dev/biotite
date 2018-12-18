@@ -55,6 +55,8 @@ def test_conversion(path, single_model):
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
     array2 = pdbx.get_structure(pdbx_file, model=model)
+    assert np.allclose(array1.box, array2.box)
+    assert array1.bonds == array2.bonds
     for category in array1.get_annotation_categories():
         assert array1.get_annotation(category).tolist() == \
                array2.get_annotation(category).tolist()

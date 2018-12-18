@@ -50,6 +50,8 @@ def test_pdbx_consistency(path, single_model):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    assert np.allclose(a1.box, a2.box)
+    assert a1.bonds == a2.bonds
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
