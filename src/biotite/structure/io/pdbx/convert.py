@@ -9,6 +9,7 @@ import numpy as np
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...filter import filter_inscode_and_altloc
+from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ....sequence.seqtypes import ProteinSequence
 from collections import OrderedDict
 
@@ -123,6 +124,7 @@ def get_structure(pdbx_file, model=None, data_block=None,
                                                                 model_length))
         stack = _filter_inscode_altloc(stack, model_dict,
                                           insertion_code, altloc)
+        stack.box = get_box(pdbx_file, data_block)
         return stack
     else:
         model_dict = _get_model_dict(atom_site_dict, model)
@@ -136,6 +138,7 @@ def get_structure(pdbx_file, model=None, data_block=None,
         array.coord[:,2]= atom_site_dict["Cartn_z"][model_filter].astype(float)
         array = _filter_inscode_altloc(array, model_dict,
                                        insertion_code, altloc)
+        array.box = get_box(pdbx_file, data_block)
         return array
         
 
@@ -191,6 +194,20 @@ def _get_model_dict(atom_site_dict, model):
     for key in atom_site_dict.keys():
         model_dict[key] = atom_site_dict[key][models == str(model)]
     return model_dict
+
+
+def _get_box(pdbx_file, data_block):
+    if data_block is None:
+        cell_dict = pdbx_file.get(["cell"])
+    else:
+        cell_dict = pdbx_file.get(data_block, "cell"])
+    if cell_dict is None:
+        return None
+    len_a, len_b, len_c = [float(cell_dict[length_qual]) for length_qual
+                           in ["length_a", "length_b", "length_c"]]
+    alpha, beta, gamma =  [float(cell_dict[angle_qual]) for angle_qual
+                           in ["angle_alpha", "angle_beta", "angle_gamma"]]
+    return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
 def set_structure(pdbx_file, array, data_block=None):
