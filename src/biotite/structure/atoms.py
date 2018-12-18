@@ -295,7 +295,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 raise TypeError("Value must be 'BondList'")
         
         elif attr == "box":
-            if isinstance(self, AtomArray):
+            if value is None:
+                self._box = None
+            elif isinstance(self, AtomArray):
                 if len(value.shape) != 2:
                     raise ValueError(
                         "A 2-dimensional ndarray is expected "
