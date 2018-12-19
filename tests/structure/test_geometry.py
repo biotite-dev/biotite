@@ -74,7 +74,6 @@ def test_index_distance_non_periodic():
               np.tile(np.arange(length), length)
         ], axis=1)
     )
-    print(dist[:100])
     assert np.allclose(dist, ref_dist)
 
 
