@@ -14,8 +14,9 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
-from .atoms import coord as to_coord
 import numpy as np
+from .atoms import coord as to_coord
+from .box import repeat_box
 
 ctypedef np.uint64_t ptr
 ctypedef np.float32_t float32
@@ -24,7 +25,7 @@ ctypedef np.uint8_t uint8
 
 cdef class CellList:
     """
-    __init__(atom_array, cell_size)
+    __init__(atom_array, cell_size, periodic=False)
     
     This class enables the efficient search of atoms in vicinity of a
     defined location.
@@ -42,11 +43,16 @@ cdef class CellList:
     ----------
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The `AtomArray` to create the `CellList` for.
-        Alternatively the atom coordiantes are accepted directly.
+        Alternatively the atom coordiantes are accepted directly
+        (only if `periodic` is false).
     cell_size : float
         The coordinate interval each cell has for x, y and z axis.
         The amount of cells depends on the range of coordinates in the
         `atom_array` and the `cell_size`.
+    periodic : bool, optional
+        If true, the cell list considers periodic copies of atoms.
+        The periodicity is based on the `box` attribute of `atom_array`.
+        (Default: False)
             
     Examples
     --------
@@ -62,16 +68,33 @@ cdef class CellList:
     cdef float32[:] _min_coord
     cdef float32[:] _max_coord
     cdef int _max_cell_length
+    cdef bint periodic
+    cdef int[:] periodic_indices
+    cdef int orig_length
+    cdef float32[:] _orig_min_coord
+    cdef float32[:] _orig_max_coord
     
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def __cinit__(self, atom_array not None, float cell_size):
+    def __cinit__(self, atom_array not None,
+                  float cell_size, bint periodic=False):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
         cdef int* cell_ptr = NULL
         cdef int length
+
+        # the length of the array before appending periodic copies
+        orig_length = array.array_length()
+        if periodic:
+            atom_array, indices = repeat_box(atom_array)
+            periodic_indices = indices.astpype(np.int32, copy=False)
+            if len(periodic_indices) != atom_array.array_length():
+                raise ValueError(
+                    f"Inde array has length {len(periodic_indices)}, "
+                    f"but atom array has length {atom_array.array_length()}"
+                )
         
         if self._has_initialized_cells():
             raise Exception("Duplicate call of constructor")
@@ -83,6 +106,8 @@ cdef class CellList:
             raise ValueError("Atom array must not be empty")
         if np.isnan(coord).any():
             raise ValueError("Coordinates contain NaN values")
+
+        self._periodic = periodic
         self._coord = coord.astype(np.float32)
         self._cellsize = cell_size
         # calculate how many cells are required for each dimension
@@ -91,6 +116,12 @@ cdef class CellList:
         self._min_coord = min_coord
         self._max_coord = max_coord
         cell_count = (((max_coord - min_coord) / cell_size) +1).astype(int)
+        if self._periodic:
+            self._orig_min_coord = np.min(coord[:orig_length], axis=0) \
+                                   .astype(np.float32)
+            self._orig_max_coord = np.max(coord[:orig_length], axis=0) \
+                                   .astype(np.float32)
+        
         # ndarray of pointers to C-arrays
         # containing indices to atom array
         self._cells = np.zeros(cell_count, dtype=np.uint64)
@@ -113,7 +144,10 @@ cdef class CellList:
             if length > self._max_cell_length:
                 self._max_cell_length = length
             # Store atom array index in respective cell
-            cell_ptr[length-1] = atom_array_i
+            if self._periodic:
+                cell_ptr[length-1] = periodic_indices[atom_array_i]
+            else:
+                cell_ptr[length-1] = atom_array_i
             # Store new cell pointer and length
             self._cell_length[i,j,k] = length
             self._cells[i,j,k] = <ptr> cell_ptr
@@ -167,8 +201,9 @@ cdef class CellList:
             raise ValueError("Threshold must be a positive value")
         cdef int i=0, j=0
         cdef int index
-        cdef int[:,:] adjacent_indices = self.get_atoms(
-            np.asarray(self._coord), threshold_distance
+        cdef int[:,:] adjacent_indices
+        adjacent_indices= self.get_atoms(
+            np.asarray(self._coord[:orig_length]), threshold_distance
         )
         return self._as_mask(adjacent_indices)
         
@@ -468,6 +503,9 @@ cdef class CellList:
             self._get_cell_index(x, y, z, &i, &j, &k)
             # Look into cells of the indices and adjacent cells
             # in all 3 dimensions
+
+
+            
             for adj_i in range(i-cell_r, i+cell_r+1):
                 if (adj_i >= 0 and adj_i < cells.shape[0]):
                     for adj_j in range(j-cell_r, j+cell_r+1):
