@@ -16,7 +16,7 @@ from libc.stdlib cimport realloc, malloc, free
 
 import numpy as np
 from .atoms import coord as to_coord
-from .box import repeat_box
+from .box import repeat_box_coord, move_inside_box
 
 ctypedef np.uint64_t ptr
 ctypedef np.float32_t float32
@@ -58,19 +58,29 @@ cdef class CellList:
     --------
     
     >>> cell_list = CellList(atom_array, cell_size=5)
-    >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7)]
+    >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7.0)]
     """
     
+    # The atom coordinates
     cdef float32[:,:] _coord
+    # The cells to store the coordinates in; an ndarray of pointers
     cdef ptr[:,:,:] _cells
+    # The amount elements in each C-array in '_cells'
     cdef int[:,:,:] _cell_length
+    # The maximum value of '_cell_length' over all cells,
+    # required for worst case assumption on size of output arrays
+    cdef int _max_cell_length
+    # The length of the cell in each direction (x,y,z)
     cdef float _cellsize
+    # The minimum and maximum coordinates for all atoms
+    # Used as origin ('_min_coord' is at _cells[0,0,0])
+    # and for bound checks
     cdef float32[:] _min_coord
     cdef float32[:] _max_coord
-    cdef int _max_cell_length
-    cdef bint periodic
-    cdef int[:] periodic_indices
-    cdef int orig_length
+    # Indicates whether the cell list takes periodicity into account
+    cdef bint _periodic
+    cdef np.ndarray _box
+    cdef int _orig_length
     cdef float32[:] _orig_min_coord
     cdef float32[:] _orig_max_coord
     
@@ -86,27 +96,32 @@ cdef class CellList:
         cdef int length
 
         # the length of the array before appending periodic copies
-        orig_length = array.array_length()
-        if periodic:
-            atom_array, indices = repeat_box(atom_array)
-            periodic_indices = indices.astpype(np.int32, copy=False)
-            if len(periodic_indices) != atom_array.array_length():
-                raise ValueError(
-                    f"Inde array has length {len(periodic_indices)}, "
-                    f"but atom array has length {atom_array.array_length()}"
-                )
-        
-        if self._has_initialized_cells():
-            raise Exception("Duplicate call of constructor")
-        self._cells = None
-        if cell_size <= 0:
-            raise ValueError("Cell size must be greater than 0")
+        # if 'periodic' is true
+        orig_length = atom_array.array_length()
+        box = None
         coord = to_coord(atom_array)
         if len(coord) == 0:
             raise ValueError("Atom array must not be empty")
         if np.isnan(coord).any():
             raise ValueError("Coordinates contain NaN values")
 
+        if periodic:
+            if atom_array.box is None:
+                raise ValueError(
+                    "AtomArray must have a box to enable periodicity"
+                )
+            else:
+                box = atom_array.box
+            if np.isnan(box).any():
+                raise ValueError("Box contains NaN values")
+            coord = move_inside_box(coord, box)
+            atom_array, indices = repeat_box_coord(coord, box)
+        
+        if self._has_initialized_cells():
+            raise Exception("Duplicate call of constructor")
+        self._cells = None
+        if cell_size <= 0:
+            raise ValueError("Cell size must be greater than 0")
         self._periodic = periodic
         self._coord = coord.astype(np.float32)
         self._cellsize = cell_size
@@ -144,10 +159,7 @@ cdef class CellList:
             if length > self._max_cell_length:
                 self._max_cell_length = length
             # Store atom array index in respective cell
-            if self._periodic:
-                cell_ptr[length-1] = periodic_indices[atom_array_i]
-            else:
-                cell_ptr[length-1] = atom_array_i
+            cell_ptr[length-1] = atom_array_i
             # Store new cell pointer and length
             self._cell_length[i,j,k] = length
             self._cells[i,j,k] = <ptr> cell_ptr
@@ -202,8 +214,8 @@ cdef class CellList:
         cdef int i=0, j=0
         cdef int index
         cdef int[:,:] adjacent_indices
-        adjacent_indices= self.get_atoms(
-            np.asarray(self._coord[:orig_length]), threshold_distance
+        adjacent_indices = self.get_atoms(
+            np.asarray(self._coord[:self._orig_length]), threshold_distance
         )
         return self._as_mask(adjacent_indices)
         
@@ -362,6 +374,13 @@ cdef class CellList:
             if array_i > max_array_length:
                 max_array_length = array_i
         
+        if self._periodic:
+            # Map indices of repeated coordinates to original
+            # coordinates, i.e. the coordiantes in the central box
+            # -> Remainder of dividing index by original array length
+            indices_array = np.asarray(indices)
+            indices_array %= self._orig_length
+
         if as_mask:
             matrix = self._as_mask(indices)
             if is_multi_coord:
@@ -446,7 +465,7 @@ cdef class CellList:
         else:
             # All radii are equal
             max_cell_radius = cell_radius[0]
-        # Wort case assumption on index array length requirement:
+        # Worst case assumption on index array length requirement:
         # At maximum, the amount of adjacent atoms can only be the
         # maximum amount of atoms per cell times the amount of cells
         # Since the cells extend in 3 dimensions the amount of cells is
