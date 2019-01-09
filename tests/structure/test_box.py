@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import biotite
 import biotite.structure as struc
-from biotite.structure.io import load_structure, save_structure
+from biotite.structure.io import load_structure
 from .util import data_dir
 
 
@@ -109,3 +109,9 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
     fractions = struc.coord_to_fraction(coords, boxes)
     new_coords = struc.fraction_to_coord(fractions, boxes)
     assert np.allclose(coords, new_coords)
+
+
+def test_repeat_box():
+    array = load_structure(join(data_dir, "3o5r.mmtf"))
+    repeat_array, _ = struc.repeat_box(array)
+    assert repeat_array[:array.array_length()] == array

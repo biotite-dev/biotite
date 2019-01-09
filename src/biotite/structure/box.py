@@ -152,11 +152,15 @@ def repeat_box(atoms, amount=1):
         The repeated atoms.
         Includes the original atoms (central box) in the beginning of
         the atom array (stack).
-    indices : ndarray, dtype=int
+    indices : ndarray, dtype=int, shape=(n,3)
         Indices to the atoms in the original atom array (stack).
         Equal to
         ``numpy.tile(np.arange(atoms.array_length()), (1 + 2 * amount) ** 3)``.
     
+    See also
+    --------
+    repeat_box_coord
+
     Examples
     --------
 
@@ -227,30 +231,91 @@ def repeat_box(atoms, amount=1):
         raise TypeError("Structure has no box")
     if not isinstance(amount, Integral):
         raise TypeError("The amount must be an integer")
-    repeat_atoms = atoms.copy()
+    box_count = (1 + 2 * amount) ** 3
+    if isinstance(atoms, AtomArray):
+        repeat_atoms = AtomArray(
+            box_count * atoms.array_length()
+        )
+    elif isinstance(atoms, AtomArrayStack):
+        repeat_atoms = AtomArrayStack(
+            atoms.stack_depth(), box_count * atoms.array_length()
+        )
+    else:
+        raise TypeError("An atom array or stack is required")
+    
+    repeat_atoms.box = atoms.box.copy()
+    if atoms.bonds is not None:
+        repeat_bonds = atoms.bonds.copy()
+        # Repeat the bonds list 'box_count' times
+        for i in range(box_count-1):
+            repeat_bonds += repeat_bonds
+        repeat_atoms.bonds = atoms.repeat_bonds
+    for category in atoms.get_annotation_categories():
+        annot_array = atoms.get_annotation(category)
+        # The atoms have the same annotation in all boxes
+        repeat_atoms.set_annotation(category, np.tile(annot_array, box_count))
+    
+    repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box)
+    repeat_atoms.coord = repeat_coord
+    return repeat_atoms, indices
+
+
+def repeat_box_coord(coord, box, amount=1):
+    r"""
+    Similar to `repeat_box()`, repeat the coordinates in a box by
+    duplicating and placing them in adjacent boxes.
+
+    Parameters
+    ----------
+    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The coordinates to be repeated.
+    box :  ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
+        The reference box.
+        If only one box is provided, i.e. the shape is *(3,3)*,
+        the box is used for all models *m*, if the coordinates shape
+        is *(m,n,3)*.
+    amount : int, optional
+        The amount of boxes that are created in each direction of the
+        central box.
+        Hence, the total amount of boxes is
+        :math:`(1 + 2 \cdot \text{amount}) ^ 3`.
+        By default, one box is created in each direction, totalling in
+        27 boxes.
+
+    Returns
+    -------
+    repeated : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        The repeated coordinates, with the same shape as the input
+        `coord`.
+        Includes the original coordinates (central box) in the beginning
+        of the array.
+    indices : ndarray, dtype=int, shape=(n,3)
+        Indices to the coordiantes in the original array.
+        Equal to
+        ``numpy.tile(np.arange(coord.shape[-2]), (1 + 2 * amount) ** 3)``.
+    """
+    if not isinstance(amount, Integral):
+        raise TypeError("The amount must be an integer")
+    # List of numpy arrays for each box repeat
+    coords_for_boxes = [coord]
     for i in range(-amount, amount+1):
         for j in range(-amount, amount+1):
             for k in range(-amount, amount+1):
                 # Omit the central box
-                    if i != 0 or j != 0 or k != 0:
-                        temp_atoms = atoms.copy()
-                        # Shift coordinates to adjacent box/unit cell
-                        translation_vec = np.sum(
-                            atoms.box * np.array([i,j,k])[:, np.newaxis],
-                            axis=-2
-                        )
-                        if isinstance(temp_atoms, AtomArray):
-                            temp_atoms.coord += translation_vec
-                        elif isinstance(temp_atoms, AtomArrayStack):
-                            temp_atoms.coord += translation_vec[:,np.newaxis,:]
-                        else:
-                            raise TypeError(
-                                "An atom array or stack is required"
-                            )
-                        repeat_atoms += temp_atoms
-    return repeat_atoms, np.tile(
-        np.arange(atoms.array_length()),
-        (1 + 2 * amount) ** 3
+                if i != 0 or j != 0 or k != 0:
+                    temp_coord = coord.copy()
+                    # Shift coordinates to adjacent box/unit cell
+                    translation_vec = np.sum(
+                        box * np.array([i,j,k])[:, np.newaxis],
+                        axis=-2
+                    )
+                    # 'newaxis' to perform same translation on all
+                    # atoms for each model
+                    temp_coord += translation_vec[..., np.newaxis, :]
+                    coords_for_boxes.append(temp_coord)
+    return (
+        np.concatenate(coords_for_boxes, axis=-2),
+        np.tile(np.arange(coord.shape[-2]), (1 + 2 * amount) ** 3)
     )
 
 
