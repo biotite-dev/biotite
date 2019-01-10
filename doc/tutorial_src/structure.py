@@ -31,6 +31,10 @@ attributes in `NumPy` arrays. This approach has multiple advantages:
 Based on the implementation using :class:`ndarray` objects, this package
 also contains functions for structure analysis and manipulation.
 
+.. Note::
+    The universal length unit in *Biotite* is Å.
+    This includes coordinates, distances, surface areas, etc.
+
 Creating structures
 -------------------
 
