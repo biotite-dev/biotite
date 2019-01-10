@@ -119,7 +119,7 @@ cdef class CellList:
                 raise ValueError("Box contains NaN values")
             self._box = atom_array.box
             coord = move_inside_box(coord, self._box)
-            atom_array, indices = repeat_box_coord(coord, self._box)
+            coord, indices = repeat_box_coord(coord, self._box)
         
         if self._has_initialized_cells():
             raise Exception("Duplicate call of constructor")
