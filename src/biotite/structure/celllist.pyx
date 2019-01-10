@@ -331,6 +331,7 @@ cdef class CellList:
         cdef int[:,:] indices
         cdef float32[:,:] coord_v
         
+        # Convert input parameters into a uniform format
         coord, radius, is_multi_coord, is_multi_radius \
             = _prepare_vectorization(coord, radius, np.float32)
         if is_multi_radius:
@@ -347,7 +348,9 @@ cdef class CellList:
                 len(coord), int(radius[0]/self._cellsize)+1, dtype=np.int32
             )
 
-        all_indices = self.get_atoms_in_cells(coord, cell_radii)
+        all_indices = self._get_atoms_in_cells(
+            coord, cell_radii, is_multi_radius
+        )
         
         # Filter all indices from all_indices,
         # where squared distance is smaller than squared radius
@@ -456,15 +459,40 @@ cdef class CellList:
         --------
         get_atoms
         """
+        # This function is a thin wrapper around the private method
+        # with the same name, with addition of handling periodicty
+        # and the ability to return a mask instead of indices
+
+        # Convert input parameters into a uniform format
         coord, cell_radius, is_multi_coord, is_multi_radius \
             = _prepare_vectorization(coord, cell_radius, np.int32)
-        
+        array_indices = self._get_atoms_in_cells(
+            coord, cell_radius, is_multi_radius
+        )
+        if as_mask:
+            matrix = self._as_mask(array_indices)
+            if is_multi_coord:
+                return matrix
+            else:
+                return matrix[0]
+        else:
+            if is_multi_coord:
+                return array_indices[:]
+            else:
+                return array_indices[0]
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def _get_atoms_in_cells(self,
+                            np.ndarray coord,
+                            np.ndarray cell_radii,
+                            bint is_multi_radius):        
         cdef int max_cell_radius
         if is_multi_radius:
-            max_cell_radius = np.max(cell_radius)
+            max_cell_radius = np.max(cell_radii)
         else:
             # All radii are equal
-            max_cell_radius = cell_radius[0]
+            max_cell_radius = cell_radii[0]
         # Worst case assumption on index array length requirement:
         # At maximum, the amount of adjacent atoms can only be the
         # maximum amount of atoms per cell times the amount of cells
@@ -474,33 +502,24 @@ cdef class CellList:
         array_indices = np.full((len(coord), length), -1, dtype=np.int32)
         # Fill index array
         cdef int max_array_length \
-            = self._get_atoms_in_cells(coord, array_indices, cell_radius)
-        if as_mask:
-            matrix = self._as_mask(array_indices)
-            if is_multi_coord:
-                return matrix
-            else:
-                return matrix[0]
-        else:
-            if is_multi_coord:
-                return array_indices[:, :max_array_length]
-            else:
-                return array_indices[0, :max_array_length]
-            
+            = self._find_adjacent_atoms(coord, array_indices, cell_radii)
+        return array_indices[:, :max_array_length]
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef int _get_atoms_in_cells(self,
-                                 float32[:,:] coord,
-                                 int[:,:] indices,
-                                 int[:] cell_radius):
-        # This method fills the given empty index array
-        # with actual indices of adjacent atoms
-        #
-        # Since the length of 'indices' (second dimension) is
-        # the wort case assumption, this method returns the actual
-        # required length, i.e. the highest length of all arrays
-        # in this 'array of arrays'
+    cdef int _find_adjacent_atoms(self,
+                                  float32[:,:] coord,
+                                  int[:,:] indices,
+                                  int[:] cell_radius):
+        """
+        This method fills the given empty index array
+        with actual indices of adjacent atoms.
+    
+        Since the length of 'indices' (second dimension) is
+        the worst case assumption, this method returns the actual
+        required length, i.e. the highest length of all arrays
+        in this 'array of arrays'.
+        """
         cdef int length
         cdef int* list_ptr
         cdef float32 x, y,z
@@ -523,8 +542,6 @@ cdef class CellList:
             # Look into cells of the indices and adjacent cells
             # in all 3 dimensions
 
-
-            
             for adj_i in range(i-cell_r, i+cell_r+1):
                 if (adj_i >= 0 and adj_i < cells.shape[0]):
                     for adj_j in range(j-cell_r, j+cell_r+1):
@@ -611,9 +628,9 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
 
     The shapes before and after conversion are:
        
-       - coord: (3, ), radius: (scalar) -> coord: (1,3), radius: (1, )
-       - coord: (n,3), radius: (scalar) -> coord: (n,3), radius: (n, )
-       - coord: (n,3), radius: (n,    ) -> coord: (n,3), radius: (n,3)
+       - coord: (3, ), radius: scalar -> coord: (1,3), radius: (1,)
+       - coord: (n,3), radius: scalar -> coord: (n,3), radius: (n,)
+       - coord: (n,3), radius: (n,  ) -> coord: (n,3), radius: (n,)
     
     Thes resulting values have the same dimensionality for all cases and
     can be handeled uniformly by `get_atoms()` and
