@@ -98,11 +98,16 @@ cdef class CellList:
 
         # the length of the array before appending periodic copies
         # if 'periodic' is true
-        self._orig_length = atom_array.array_length()
-        self._box = None
         coord = to_coord(atom_array)
-        if len(coord) == 0:
-            raise ValueError("Atom array must not be empty")
+        print(coord.shape)
+        self._orig_length = coord.shape[0]
+        self._box = None
+        if coord.ndim != 2:
+            raise ValueError("Coordinates must have shape (n,3)")
+        if coord.shape[0] == 0:
+            raise ValueError("Coordinates must not be empty")
+        if coord.shape[1] != 3:
+            raise ValueError("Coordinates must have form (x,y,z)")
         if np.isnan(coord).any():
             raise ValueError("Coordinates contain NaN values")
 
