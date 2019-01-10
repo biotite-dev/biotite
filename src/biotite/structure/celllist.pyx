@@ -84,6 +84,7 @@ cdef class CellList:
     cdef float32[:] _orig_min_coord
     cdef float32[:] _orig_max_coord
     
+    
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -97,8 +98,8 @@ cdef class CellList:
 
         # the length of the array before appending periodic copies
         # if 'periodic' is true
-        orig_length = atom_array.array_length()
-        box = None
+        self._orig_length = atom_array.array_length()
+        self._box = None
         coord = to_coord(atom_array)
         if len(coord) == 0:
             raise ValueError("Atom array must not be empty")
@@ -110,12 +111,15 @@ cdef class CellList:
                 raise ValueError(
                     "AtomArray must have a box to enable periodicity"
                 )
-            else:
-                box = atom_array.box
-            if np.isnan(box).any():
+            if atom_array.box.shape != (3,3):
+                raise ValueError(
+                    "Box has ionvalid shape"
+                )
+            if np.isnan(atom_array.box).any():
                 raise ValueError("Box contains NaN values")
-            coord = move_inside_box(coord, box)
-            atom_array, indices = repeat_box_coord(coord, box)
+            self._box = atom_array.box
+            coord = move_inside_box(coord, self._box)
+            atom_array, indices = repeat_box_coord(coord, self._box)
         
         if self._has_initialized_cells():
             raise Exception("Duplicate call of constructor")
@@ -132,9 +136,9 @@ cdef class CellList:
         self._max_coord = max_coord
         cell_count = (((max_coord - min_coord) / cell_size) +1).astype(int)
         if self._periodic:
-            self._orig_min_coord = np.min(coord[:orig_length], axis=0) \
+            self._orig_min_coord = np.min(coord[:self._orig_length], axis=0) \
                                    .astype(np.float32)
-            self._orig_max_coord = np.max(coord[:orig_length], axis=0) \
+            self._orig_max_coord = np.max(coord[:self._orig_length], axis=0) \
                                    .astype(np.float32)
         
         # ndarray of pointers to C-arrays
@@ -163,10 +167,14 @@ cdef class CellList:
             # Store new cell pointer and length
             self._cell_length[i,j,k] = length
             self._cells[i,j,k] = <ptr> cell_ptr
+        print()
+        print("test 1")
             
+    
     def __dealloc__(self):
         if self._has_initialized_cells():
             deallocate_ptrs(self._cells)
+    
     
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
@@ -331,6 +339,9 @@ cdef class CellList:
         cdef int[:,:] indices
         cdef float32[:,:] coord_v
         
+        # Handle periodicity for the input coordinates
+        if self._periodic:
+            coord = move_inside_box(coord, self._box)
         # Convert input parameters into a uniform format
         coord, radius, is_multi_coord, is_multi_radius \
             = _prepare_vectorization(coord, radius, np.float32)
@@ -348,12 +359,17 @@ cdef class CellList:
                 len(coord), int(radius[0]/self._cellsize)+1, dtype=np.int32
             )
 
+        # Get indices for adjacent atoms, based on a cell radius
         all_indices = self._get_atoms_in_cells(
             coord, cell_radii, is_multi_radius
         )
+        # These have to be narrowed down in the next step
+        # using the Euclidian distance
         
-        # Filter all indices from all_indices,
+        # Filter all indices from all_indices
         # where squared distance is smaller than squared radius
+        # Using the squared distance is computationally cheaper than
+        # calculating the sqaure root for every distance
         indices = np.full(
             (all_indices.shape[0], all_indices.shape[1]), -1, dtype=np.int32
         )
@@ -377,24 +393,11 @@ cdef class CellList:
             if array_i > max_array_length:
                 max_array_length = array_i
         
-        if self._periodic:
-            # Map indices of repeated coordinates to original
-            # coordinates, i.e. the coordiantes in the central box
-            # -> Remainder of dividing index by original array length
-            indices_array = np.asarray(indices)
-            indices_array %= self._orig_length
-
-        if as_mask:
-            matrix = self._as_mask(indices)
-            if is_multi_coord:
-                return matrix
-            else:
-                return matrix[0]
-        else:
-            if is_multi_coord:
-                return np.asarray(indices)[:, :max_array_length]
-            else:
-                return np.asarray(indices)[0, :max_array_length]
+        return self.post_process(
+            np.asarray(indices)[:, :max_array_length],
+            as_mask, is_multi_coord
+        )
+    
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -463,30 +466,43 @@ cdef class CellList:
         # with the same name, with addition of handling periodicty
         # and the ability to return a mask instead of indices
 
+        # Handle periodicity for the input coordinates
+        if self._periodic:
+            coord = move_inside_box(coord, self._box)
         # Convert input parameters into a uniform format
         coord, cell_radius, is_multi_coord, is_multi_radius \
             = _prepare_vectorization(coord, cell_radius, np.int32)
+        # Get adjacent atom indices
         array_indices = self._get_atoms_in_cells(
             coord, cell_radius, is_multi_radius
         )
-        if as_mask:
-            matrix = self._as_mask(array_indices)
-            if is_multi_coord:
-                return matrix
-            else:
-                return matrix[0]
-        else:
-            if is_multi_coord:
-                return array_indices[:]
-            else:
-                return array_indices[0]
+        return self.post_process(array_indices, as_mask, is_multi_coord)
+    
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def _get_atoms_in_cells(self,
                             np.ndarray coord,
                             np.ndarray cell_radii,
-                            bint is_multi_radius):        
+                            bint is_multi_radius):
+        """
+        Get the indices of atoms in `cell_radii` adjacency of `coord`.
+        
+        Parameters
+        ----------
+        coord : ndarray, dtype=float32, shape=(n,3)
+            The position to find adjacent atoms for.
+        cell_radii : ndarray, dtype=int32, shape=(n)
+            The radius for each position.
+        is_multi_radius : bool
+            True indicates, that all values in `cell_radii` are the same.
+        
+        Returns
+        -------
+        array_indices : ndarray, dtype=int32, shape=
+            Indices of adjancent atoms.
+        """
+
         cdef int max_cell_radius
         if is_multi_radius:
             max_cell_radius = np.max(cell_radii)
@@ -504,6 +520,7 @@ cdef class CellList:
         cdef int max_array_length \
             = self._find_adjacent_atoms(coord, array_indices, cell_radii)
         return array_indices[:, :max_array_length]
+    
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -560,6 +577,38 @@ cdef class CellList:
                 max_array_length = array_i
         return max_array_length
     
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def post_process(self,
+                     np.ndarray indices,
+                     bint as_mask,
+                     bint is_multi_coord):
+        """
+        Post process the resulting indices of adjacent atoms,
+        including periodicity handling and optional conversion into a
+        boolean matrix.
+        """
+        # Handle periodicity for the output indices
+        if self._periodic:
+            # Map indices of repeated coordinates to original
+            # coordinates, i.e. the coordiantes in the central box
+            # -> Remainder of dividing index by original array length
+            # Furthermore this ensures, that the indices have valid
+            # values for '_as_mask()'
+            indices %= self._orig_length
+        if as_mask:
+            matrix = self._as_mask(indices)
+            if is_multi_coord:
+                return matrix
+            else:
+                return matrix[0]
+        else:
+            if is_multi_coord:
+                return indices
+            else:
+                return indices[0]
+    
     
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
@@ -590,7 +639,7 @@ cdef class CellList:
         cdef int i,j
         cdef int index
         cdef uint8[:,:] matrix = np.zeros(
-            (indices.shape[0], self._coord.shape[0]), dtype=np.uint8
+            (indices.shape[0], self._orig_length), dtype=np.uint8
         )
         # Fill matrix
         for i in range(indices.shape[0]):
