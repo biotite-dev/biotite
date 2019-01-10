@@ -9,7 +9,7 @@ of a structure
 
 __author__ = "Patrick Kunzmann"
 __all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
-           "repeat_box", "move_inside_box",
+           "repeat_box", "repeat_box_coord", "move_inside_box",
            "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
 
 from numbers import Integral
