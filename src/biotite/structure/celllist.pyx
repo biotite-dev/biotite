@@ -167,8 +167,6 @@ cdef class CellList:
             # Store new cell pointer and length
             self._cell_length[i,j,k] = length
             self._cells[i,j,k] = <ptr> cell_ptr
-        print()
-        print("test 1")
             
     
     def __dealloc__(self):
@@ -596,7 +594,7 @@ cdef class CellList:
             # -> Remainder of dividing index by original array length
             # Furthermore this ensures, that the indices have valid
             # values for '_as_mask()'
-            indices %= self._orig_length
+            indices[indices != -1] %= self._orig_length
         if as_mask:
             matrix = self._as_mask(indices)
             if is_multi_coord:
