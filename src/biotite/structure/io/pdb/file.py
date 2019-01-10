@@ -112,9 +112,10 @@ class PDBFile(TextFile):
             model_start_i = np.array([0])
         
         if model is None:
-            # Very lazy check for length equlity check:
+            # Very simple check for length equality check:
             # If all models have the same amount of atoms
-            # the amount of atom lines is a 
+            # the amount of atom lines is a multiple
+            # of the amount of models
             if len(atom_line_i) % len(model_start_i):
                 raise BadStructureError("The models in the file have unequal "
                                         "amount of atoms, give an explicit "
@@ -133,8 +134,6 @@ class PDBFile(TextFile):
             coord_i = atom_line_i
         
         else:
-            length = len(atom_line_i) // len(model_start_i)
-            array = AtomArray(length)
             last_model = len(model_start_i)
             if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
@@ -146,8 +145,8 @@ class PDBFile(TextFile):
                     f"Requested model number {model} is larger than the "
                     f"amount of models ({last_model})"
                 )
-            annot_i = atom_line_i[line_filter]
-            coord_i = atom_line_i[line_filter]
+            annot_i = coord_i = atom_line_i[line_filter]
+            array = AtomArray(len(coord_i))
         
         # Create inscode and altloc arrays for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
