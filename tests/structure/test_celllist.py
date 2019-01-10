@@ -86,7 +86,7 @@ def test_adjacency_matrix(cell_size, threshold, periodic):
     
     # Both ways to create an adjacency matrix
     # should give the same result
-    assert matrix.tolist() == expected_matrix.tolist()
+    assert np.array_equal(matrix, expected_matrix)
 
 
 def test_outside_location():
