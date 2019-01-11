@@ -5,6 +5,7 @@
 import itertools
 from os.path import join
 import numpy as np
+import numpy.random as random
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -162,3 +163,46 @@ def test_index_distance_periodic_triclinic(shift, angles):
     array.coord = struc.move_inside_box(array.coord, array.box)
     dist = struc.index_distance(array, dist_indices, periodic=True)
     assert np.allclose(dist, ref_dist, atol=1e-5)
+
+
+def test_index_functions():
+    """
+    The `index_xxx()` functions should give the same result as the
+    corresponding `xxx` functions.
+    """
+    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    array = stack[0]
+    # Test for atom array, stack and raw coordinates
+    samples = (array, stack, struc.coord(array), struc.coord(stack))
+    # Generate random indices
+    random.seed(42)
+    indices = random.randint(array.array_length(), size=(100,4), dtype=int)
+    for sample in samples:
+        if isinstance(sample, np.ndarray):
+            atoms1 = sample[..., indices[:,0], :]
+            atoms2 = sample[..., indices[:,1], :]
+            atoms3 = sample[..., indices[:,2], :]
+            atoms4 = sample[..., indices[:,3], :]
+        else:
+            atoms1 = sample[..., indices[:,0]]
+            atoms2 = sample[..., indices[:,1]]
+            atoms3 = sample[..., indices[:,2]]
+            atoms4 = sample[..., indices[:,3]]
+        assert np.allclose(
+            struc.distance(atoms1, atoms2),
+            struc.index_distance(sample, indices[:,:2]),
+            atol=1e-5
+        )
+        assert np.allclose(
+            struc.angle(atoms1, atoms2, atoms3),
+            struc.index_angle(sample, indices[:,:3]),
+            atol=1e-5
+        )
+        assert np.allclose(
+            struc.dihedral(atoms1, atoms2, atoms3, atoms4),
+            struc.index_dihedral(sample, indices[:,:4]),
+            atol=1e-5
+        )
+
+
+

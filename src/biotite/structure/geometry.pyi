@@ -13,22 +13,23 @@ def distance(
     periodic: bool = False
 ) -> Union[np.ndarray, float]: ...
 
-def pair_distance(
-    atoms: Union[AtomArrayStack, AtomArray],
-    pairs: np.ndarray,
+def index_distance(
+    atoms: Union[AtomArrayStack, AtomArray, np.ndarray],
+    indices: np.ndarray,
     periodic: bool = False,
     box: Optional[np.ndarray] = None
 ) -> np.ndarray: ...
-
-def centroid(
-    atoms: Union[AtomArrayStack, AtomArray, np.ndarray]
-) -> Union[np.ndarray, float]: ...
 
 def angle(
     atom1: Union[AtomArrayStack, AtomArray, np.ndarray],
     atom2: Union[AtomArrayStack, AtomArray, np.ndarray],
     atom3: Union[AtomArrayStack, AtomArray, np.ndarray]
 ) -> Union[np.ndarray, float]: ...
+
+def index_angle(
+    atoms: Union[AtomArrayStack, AtomArray, np.ndarray],
+    indices: np.ndarray
+) -> np.ndarray: ...
 
 def dihedral(
     atom1: Union[AtomArrayStack, AtomArray, np.ndarray],
@@ -37,7 +38,16 @@ def dihedral(
     atom4: Union[AtomArrayStack, AtomArray, np.ndarray]
 ) -> Union[np.ndarray, float]: ...
 
+def index_dihedral(
+    atoms: Union[AtomArrayStack, AtomArray, np.ndarray],
+    indices: np.ndarray
+) -> np.ndarray: ...
+
 def dihedral_backbone(
     atom_array: Union[AtomArrayStack, AtomArray],
     chain_id: str
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: ...
+
+def centroid(
+    atoms: Union[AtomArrayStack, AtomArray, np.ndarray]
+) -> Union[np.ndarray, float]: ...

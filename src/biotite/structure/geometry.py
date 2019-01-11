@@ -8,8 +8,8 @@ in a structure, mainly lenghts and angles.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["distance", "index_distance", "centroid", "angle", "dihedral",
-           "dihedral_backbone"]
+__all__ = ["distance", "index_distance", "angle", "index_angle", "dihedral",
+           "index_dihedral", "dihedral_backbone", "centroid"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
@@ -69,11 +69,11 @@ def index_distance(atoms, indices, periodic=False, box=None):
     Parameters
     ----------
     atoms : AtomArray or AtomArrayStack or ndarray, shape=(n,3) or shape=(m,n,3)
-        The atoms the `pairs` parameter refers to.
+        The atoms the `indices` parameter refers to.
         The pairwise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
         `ndarray`.
-    pairs : ndarray, shape=(k,2)
+    indices : ndarray, shape=(k,2)
         Pairs of indices that point to `atoms`.
     periodic : bool, optional
         If set to true, periodic boundary conditions are taken into
@@ -87,7 +87,7 @@ def index_distance(atoms, indices, periodic=False, box=None):
     
     Returns
     -------
-    dist : ndarray, shape=(n,) or shape=(m,n)
+    dist : ndarray, shape=(k,) or shape=(m,k)
         The pairwise distances.
         If `atoms` is an atom array stack, The distances are
         calculated for each model.
@@ -106,8 +106,7 @@ def index_distance(atoms, indices, periodic=False, box=None):
     --------
     distance
     """
-    coord1 = coord(atoms)[..., indices[:,0], :]
-    coord2 = coord(atoms)[..., indices[:,1], :]
+    coord1, coord2 = _get_coord_from_indices(atoms, indices, 2)
     diff = coord2 - coord1
     
     if periodic:
@@ -174,26 +173,6 @@ def index_distance(atoms, indices, periodic=False, box=None):
         return np.sqrt(vector_dot(diff, diff))
 
 
-def centroid(atoms):
-    """
-    Measure the centroid of a structure.
-    
-    Parameters
-    ----------
-    atoms: ndarray or AtomArray or AtomArrayStack
-        The structures to determine the centroid from.
-        Alternatively an ndarray containing the coordinates can be
-        provided.
-    
-    Returns
-    -------
-    centroid : float or ndarray
-        The centroid of the structure(s). `ndarray` is returned when
-        an `AtomArrayStack` is given (centroid for each model).
-    """
-    return np.mean(coord(atoms), axis=-2)
-
-
 def angle(atom1, atom2, atom3):
     """
     Measure the angle between 3 atoms.
@@ -210,12 +189,50 @@ def angle(atom1, atom2, atom3):
         The angle(s) between the atoms. The shape is equal to the shape
         of the input `atoms` with the highest dimensionality minus the
         last axis.
+    
+    See also
+    --------
+    index_angle
     """
     v1 = coord(atom1) - coord(atom2)
     v2 = coord(atom3) - coord(atom2)
     norm_vector(v1)
     norm_vector(v2)
     return np.arccos(vector_dot(v1,v2))
+
+
+def index_angle(atoms, indices):
+    """
+    Measure the angle between triples of atoms.
+
+    The triples refer to indices of a given atom array, whose triplewise
+    angles should be calculated.
+    If an atom array stack is provided, the distances are calculated for
+    each frame/model.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack or ndarray, shape=(n,3) or shape=(m,n,3)
+        The atoms the `indices` parameter refers to.
+        The triplewise distances are calculated for these pairs.
+        Alternatively, the atom coordinates can be directly provided as
+        `ndarray`.
+    indices : ndarray, shape=(k,3)
+        Triples of indices that point to `atoms`.
+    
+    Returns
+    -------
+    angle : ndarray, shape=(k,) or shape=(m,k)
+        The triplewise angles.
+        If `atoms` is an atom array stack, The distances are
+        calculated for each model.
+
+    See also
+    --------
+    angle
+    """
+    coord1, coord2, coord3 = _get_coord_from_indices(atoms, indices, 3)
+    return angle(coord1, coord2, coord3)
 
 
 def dihedral(atom1, atom2, atom3, atom4):
@@ -238,6 +255,7 @@ def dihedral(atom1, atom2, atom3, atom4):
     
     See Also
     --------
+    index_dihedral
     dihedral_backbone
     """
     v1 = coord(atom2) - coord(atom1)
@@ -254,6 +272,42 @@ def dihedral(atom1, atom2, atom3, atom4):
     x = vector_dot(n1,n2)
     y = vector_dot(np.cross(n1,n2), v2)
     return np.arctan2(y,x)
+
+
+def index_dihedral(atoms, indices):
+    """
+    Measure the dihedral angle between quadruples of atoms.
+
+    The triples refer to indices of a given atom array, whose
+    quadruplewise dihedral angles should be calculated.
+    If an atom array stack is provided, the distances are calculated for
+    each frame/model.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack or ndarray, shape=(n,3) or shape=(m,n,3)
+        The atoms the `indices` parameter refers to.
+        The quadruplewise dihedral angles are calculated for these
+        pairs.
+        Alternatively, the atom coordinates can be directly provided as
+        `ndarray`.
+    indices : ndarray, shape=(k,4)
+        Quadruples of indices that point to `atoms`.
+    
+    Returns
+    -------
+    dihedral : ndarray, shape=(k,) or shape=(m,k)
+        The quadruplewise dihedral angles.
+        If `atoms` is an atom array stack, The distances are
+        calculated for each model.
+
+    See also
+    --------
+    dihedral
+    dihedral_backbone
+    """
+    coord1, coord2, coord3, coord4 = _get_coord_from_indices(atoms, indices, 4)
+    return dihedral(coord1, coord2, coord3, coord4)
 
 
 def dihedral_backbone(atom_array, chain_id):
@@ -361,6 +415,43 @@ def dihedral_backbone(atom_array, chain_id):
                         omega_coord[...,2], omega_coord[...,3])
     
     return phi, psi, omega
+
+
+def centroid(atoms):
+    """
+    Measure the centroid of a structure.
+    
+    Parameters
+    ----------
+    atoms: ndarray or AtomArray or AtomArrayStack
+        The structures to determine the centroid from.
+        Alternatively an ndarray containing the coordinates can be
+        provided.
+    
+    Returns
+    -------
+    centroid : float or ndarray
+        The centroid of the structure(s). `ndarray` is returned when
+        an `AtomArrayStack` is given (centroid for each model).
+    """
+    return np.mean(coord(atoms), axis=-2)
+
+
+def _get_coord_from_indices(atoms, indices, expected_amount):
+    """
+    Get the coordinates from an atom array (stack) at the given indices.
+    Required for the `index_xxx()` methods.
+    """
+    if indices.shape[-1] != expected_amount:
+        raise ValueError(
+            f"Expected length {expected_amount} in the last dimension "
+            f"of the indices, but got length {pairs.shape[-1]}"
+        )
+    coord_list = []
+    for i in range(expected_amount):
+        coord_list.append(coord(atoms)[..., indices[:,i], :])
+    return tuple(coord_list)
+    
 
 
 def _distance_orthogonal_box(fractions, box, dist):
