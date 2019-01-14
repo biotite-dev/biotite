@@ -7,10 +7,12 @@ import numpy as np
 import glob
 from os.path import join, splitext
 import pytest
+from pytest import approx
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
+from biotite.structure.atoms import AtomArray
 from .util import data_dir
 
 
@@ -29,7 +31,13 @@ def test_array_conversion(path, single_model):
     pdb_file = pdb.PDBFile()
     pdb_file.set_structure(array1)
     array2 = pdb_file.get_structure(model=model)
-    assert array1 == array2
+    if array1.box is not None:
+        assert np.allclose(array1.box, array2.box)
+    assert array1.bonds == array2.bonds
+    for category in array1.get_annotation_categories():
+        assert array1.get_annotation(category).tolist() == \
+               array2.get_annotation(category).tolist()
+    assert array1.coord.tolist() == array2.coord.tolist()
 
 
 @pytest.mark.parametrize(
@@ -48,6 +56,9 @@ def test_pdbx_consistency(path, single_model):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    if a2.box is not None:
+        assert np.allclose(a1.box, a2.box)
+    assert a1.bonds == a2.bonds
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
@@ -93,4 +104,40 @@ def test_guess_elements():
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
+
+
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_box_shape(path, single_model):
+    model = 1 if single_model else None
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    a = pdb_file.get_structure(model=model)
+
+    if isinstance(a, AtomArray):
+        expected_box_dim = (3, 3)
+    else:
+        expected_box_dim = (len(a), 3, 3)
+    assert expected_box_dim == a.box.shape
+
+
+def test_box_parsing():
+    path = join(data_dir, "1igy.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    a = pdb_file.get_structure()
+    expected_box = np.array([[
+        [66.65,   0.00, 0.00],
+        [0.00,  190.66, 0.00],
+        [-24.59,  0.00, 68.84]
+    ]])
+
+    assert expected_box.flatten().tolist() \
+           == approx(a.box.flatten().tolist(), abs=1e-2)
+
 

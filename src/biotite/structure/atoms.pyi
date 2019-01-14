@@ -30,6 +30,7 @@ class _AtomArrayBase(Copyable):
     b_factor: np.ndarray
     occupancy: np.ndarray
     charge: np.ndarray
+    box: np.ndarray
     bonds: Union[BondList, None]
     def __init__(self, length: int) -> None: ...
     def __add__(

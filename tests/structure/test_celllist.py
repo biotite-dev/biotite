@@ -41,27 +41,52 @@ def test_get_atoms(cell_size):
     assert indices[indices != -1].tolist() == expected_indices
 
 
-@pytest.mark.parametrize("cell_size, threshold", itertools.product(
-                            [0.5, 1, 2, 5, 10],
-                            [2,5,10])
-                        )
-def test_adjacency_matrix(cell_size, threshold):
+@pytest.mark.parametrize(
+    "cell_size, threshold, periodic",
+    itertools.product(
+        [0.5, 1, 2, 5, 10],
+        [2, 5, 10],
+        [False, True]
+    )
+)
+def test_adjacency_matrix(cell_size, threshold, periodic):
+    """
+    Compare the construction of an adjacency matrix using a cell list
+    and using a computationally expensive but simpler distance matrix
+    """
     array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
-    array = array[struc.filter_amino_acids(array)]
-    cell_list = struc.CellList(array, cell_size=cell_size)
+    if periodic:
+        # Create an orthorhombic box
+        # with the outer coordinates as bounds
+        array.box = np.diag(
+            np.max(array.coord, axis=-2) - np.min(array.coord, axis=-2)
+        )
+    cell_list = struc.CellList(array, cell_size=cell_size, periodic=periodic)
     matrix = cell_list.create_adjacency_matrix(threshold)
-    coord = array.coord
+    
     # Create distance matrix
-    diff = coord[:, np.newaxis, :] - coord[np.newaxis, :, :]
     # Convert to float64 to avoid errorenous warning
     # https://github.com/ContinuumIO/anaconda-issues/issues/9129
-    diff = diff.astype(np.float64)
-    distance = np.sqrt(np.sum(diff**2, axis=-1))
+    array.coord = array.coord.astype(np.float64)
+    length = array.array_length()
+    distance = struc.index_distance(
+        array,
+        np.stack(
+            [
+                np.repeat(np.arange(length), length),
+                  np.tile(np.arange(length), length)
+            ],
+            axis=-1
+        ),
+        periodic
+    )
+    distance = np.reshape(distance, (length, length))
     # Create adjacency matrix from distance matrix
     expected_matrix = (distance <= threshold)
+    
     # Both ways to create an adjacency matrix
     # should give the same result
-    assert matrix.tolist() == expected_matrix.tolist()
+    assert np.array_equal(matrix, expected_matrix)
 
 
 def test_outside_location():

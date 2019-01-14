@@ -82,6 +82,7 @@ __author__ = "Patrick Kunzmann"
 
 from .atoms import *
 from .bonds import *
+from .box import *
 from .celllist import *
 from .compare import *
 from .error import *

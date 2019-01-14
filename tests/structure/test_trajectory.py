@@ -27,6 +27,9 @@ def test_PDBx_consistency(format):
         traj_file = xtc.XTCFile()
         traj_file.read(join(data_dir, "1l2y.xtc"))
     array2 = traj_file.get_structure(template)
+    # 1l2y has no box
+    # assert np.array_equal(array1.box, array2.box)
+    assert array1.bonds == array2.bonds
     for cat in array1. get_annotation_categories():
         assert array1.get_annotation(cat).tolist() == \
                array2.get_annotation(cat).tolist()
