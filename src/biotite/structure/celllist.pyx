@@ -53,6 +53,9 @@ cdef class CellList:
         If true, the cell list considers periodic copies of atoms.
         The periodicity is based on the `box` attribute of `atom_array`.
         (Default: False)
+    box : ndarray, dtype=float, shape=(3,3), optional
+        If provided, this parameter will be used instead of the
+        `box` attribute of `atom_array`.
             
     Examples
     --------
@@ -89,7 +92,7 @@ cdef class CellList:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def __cinit__(self, atom_array not None,
-                  float cell_size, bint periodic=False):
+                  float cell_size, bint periodic=False, box=None):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
@@ -112,17 +115,20 @@ cdef class CellList:
             raise ValueError("Coordinates contain NaN values")
 
         if periodic:
-            if atom_array.box is None:
+            if box is not None:
+                self._box = box
+            elif atom_array.box is not None:
+                if atom_array.box.shape != (3,3):
+                    raise ValueError(
+                        "Box has invalid shape"
+                    )
+                self._box = atom_array.box
+            else:
                 raise ValueError(
                     "AtomArray must have a box to enable periodicity"
                 )
-            if atom_array.box.shape != (3,3):
-                raise ValueError(
-                    "Box has ionvalid shape"
-                )
-            if np.isnan(atom_array.box).any():
+            if np.isnan(self._box).any():
                 raise ValueError("Box contains NaN values")
-            self._box = atom_array.box
             coord = move_inside_box(coord, self._box)
             coord, indices = repeat_box_coord(coord, self._box)
         
