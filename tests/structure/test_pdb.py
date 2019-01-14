@@ -27,10 +27,12 @@ def test_array_conversion(path, single_model):
     model = 1 if single_model else None
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
-    array1 = pdb_file.get_structure(model=model)
+    # Test also the thin wrapper around the methods
+    # 'get_structure()' and 'set_structure()'
+    array1 = pdb.get_structure(pdb_file, model=model)
     pdb_file = pdb.PDBFile()
-    pdb_file.set_structure(array1)
-    array2 = pdb_file.get_structure(model=model)
+    pdb.set_structure(pdb_file, array1)
+    array2 = pdb.get_structure(pdb_file, model=model)
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
