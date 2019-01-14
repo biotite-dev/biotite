@@ -102,7 +102,6 @@ cdef class CellList:
         # the length of the array before appending periodic copies
         # if 'periodic' is true
         coord = to_coord(atom_array)
-        print(coord.shape)
         self._orig_length = coord.shape[0]
         self._box = None
         if coord.ndim != 2:
