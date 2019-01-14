@@ -7,6 +7,19 @@ import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
 
+def displacement(
+    atoms1: Union[AtomArrayStack, AtomArray, np.ndarray],
+    atoms2: Union[AtomArrayStack, AtomArray, np.ndarray],
+    periodic: bool = False
+) -> np.ndarray: ...
+
+def index_displacement(
+    atoms: Union[AtomArrayStack, AtomArray, np.ndarray],
+    indices: np.ndarray,
+    periodic: bool = False,
+    box: Optional[np.ndarray] = None
+) -> np.ndarray: ...
+
 def distance(
     atoms1: Union[AtomArrayStack, AtomArray, np.ndarray],
     atoms2: Union[AtomArrayStack, AtomArray, np.ndarray],

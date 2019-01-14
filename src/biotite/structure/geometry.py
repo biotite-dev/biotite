@@ -38,8 +38,8 @@ def displacement(atoms1, atoms2):
     
     Returns
     -------
-    disp : float or ndarray
-        The displacement vectors. The shape is equal to the shape of
+    disp : ndarray
+        The displacement vector(s). The shape is equal to the shape of
         the input `atoms` with the highest dimensionality minus the last
         axis.
     
