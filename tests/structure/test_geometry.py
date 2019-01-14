@@ -189,6 +189,11 @@ def test_index_functions():
             atoms3 = sample[..., indices[:,2]]
             atoms4 = sample[..., indices[:,3]]
         assert np.allclose(
+            struc.displacement(atoms1, atoms2),
+            struc.index_displacement(sample, indices[:,:2]),
+            atol=1e-5
+        )
+        assert np.allclose(
             struc.distance(atoms1, atoms2),
             struc.index_distance(sample, indices[:,:2]),
             atol=1e-5

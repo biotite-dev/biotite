@@ -162,10 +162,14 @@
             "BondType"
         ],
         "Geometry" : [
+            "displacement",
+            "index_displacement",
             "distance",
             "index_distance",
             "angle",
+            "index_angle",
             "dihedral",
+            "index_dihedral",
             "dihedral_backbone",
             "centroid",
             "mass_of_element",
