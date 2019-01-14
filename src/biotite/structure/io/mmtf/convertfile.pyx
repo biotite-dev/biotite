@@ -15,6 +15,7 @@ from ...bonds import BondList
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
+from ...box import vectors_from_unitcell
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -199,7 +200,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 0, length, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-    
+        
     else:
         length = _get_model_length(model, res_type_i, chains_per_model,
                                    res_per_chain, atoms_per_res)
@@ -239,12 +240,29 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                           chain_names, chains_per_model, res_per_chain,
                           res_type_i, res_ids, atoms_per_res, res_names,
                           hetero_res, atom_names, elements, charges)
+        
         if include_bonds:
             array.bonds = _create_bond_list(
                 model, file["bondAtomList"], file["bondOrderList"],
                 start_i, stop_i, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
+        
+    if "unitCell" in file:
+        a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
+        alpha = np.deg2rad(alpha)
+        beta  = np.deg2rad(beta )
+        gamma = np.deg2rad(gamma)
+        box = vectors_from_unitcell(
+            a_len, b_len, c_len, alpha, beta, gamma
+        )
+        if isinstance(array, AtomArrayStack):
+            array.box = np.repeat(
+                box[np.newaxis, ...], array.stack_depth(), axis=0
+            )
+        else:
+            # AtomArray
+            array.box = box
     
     # Filter inscode and altloc and return
     # Format arrays for filter function
