@@ -56,6 +56,8 @@ def test_array_conversion(path, single_model):
     assert a1.coord.flatten().tolist() == \
            approx(a2.coord.flatten().tolist(), abs=1e-3)
     assert a1.bonds == a2.bonds
+    if a1.box is not None:
+        assert np.allclose(a1.box, a2.box)
 
 
 @pytest.mark.parametrize(
@@ -74,6 +76,12 @@ def test_pdbx_consistency(path, single_model):
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    # Sometimes mmCIF files can have 'cell' entry
+    # but corresponding MMTF file has not 'unitCell' entry
+    # -> Do not assert for dummy entry in mmCIF file
+    # (all vector elements = {0, 1})
+    if a2.box is not None and not ((a2.box == 0) | (a2.box == 1)).all():
+        assert np.allclose(a1.box, a2.box)
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()

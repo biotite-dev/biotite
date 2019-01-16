@@ -81,6 +81,10 @@ def rotate(atoms, angles):
     transformed.coord = np.dot(transformed.coord, rot_x)
     transformed.coord = np.dot(transformed.coord, rot_y)
     transformed.coord = np.dot(transformed.coord, rot_z)
+    if transformed.box is not None:
+        transformed.box = np.dot(transformed.box, rot_x)
+        transformed.box = np.dot(transformed.box, rot_y)
+        transformed.box = np.dot(transformed.box, rot_z)
     return transformed
 
 def rotate_centered(atoms, angles):
