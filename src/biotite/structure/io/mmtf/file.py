@@ -5,17 +5,18 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["MMTFFile"]
 
-import numpy as np
-import msgpack
+from collections.abc import MutableMapping
 import struct
 import copy
+import numpy as np
+import msgpack
 from ....file import File
 from ...error import BadStructureError
 from .decode import decode_array
 from .encode import encode_array
 
 
-class MMTFFile(File):
+class MMTFFile(File, MutableMapping):
     """
     This class represents a MMTF file.
     
@@ -192,3 +193,6 @@ class MMTFFile(File):
     
     def __len__(self):
         return len(self._content)
+    
+    def __contains__(self, item):
+        return item in self._content
