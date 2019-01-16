@@ -21,7 +21,7 @@ from .box import (coord_to_fraction, fraction_to_coord,
 from .error import BadStructureError
 
 
-def displacement(atoms1, atoms2):
+def displacement(atoms1, atoms2, box=None):
     """
     Measure the displacement vector, i.e. the vector difference, from
     one array of atom coordinates to another array of coordinates.
@@ -35,6 +35,12 @@ def displacement(atoms1, atoms2):
         Alternatively an ndarray containing the coordinates can be
         provided.
         Usual *NumPy* broadcasting rules apply.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     Returns
     -------
@@ -52,13 +58,69 @@ def displacement(atoms1, atoms2):
     # Decide subtraction order based on shape, since an array can be
     # only subtracted by an array with less dimensions
     if len(v1.shape) <= len(v2.shape):
-        return v2 - v1
+        diff = v2 - v1
     else:
-        return -(v1 - v2)
+        diff = -(v1 - v2)
+    
+    # Use minimum-image convention if box is given
+    if box is not None:
+        # Transform difference vector
+        # from coordinates into fractions of box vectors
+        # for faster calculation laster on
+        fractions = coord_to_fraction(diff, box)
+        # Move vectors into box
+        fractions = fractions % 1
+        # Check for each model if the box vectors are orthogonal
+        orthogonality = is_orthogonal(box)
+        disp = np.zeros(fractions.shape, dtype=np.float64)
+        if fractions.ndim == 2:
+            # Single model
+            if orthogonality:
+                _displacement_orthogonal_box(
+                    fractions, box, disp
+                )
+            else:
+                _displacement_triclinic_box(
+                    fractions.astype(np.float64, copy=False),
+                    box.astype(np.float64, copy=False),
+                    disp
+                )
+        elif fractions.ndim == 3:
+            # Multiple models
+            # (Model count) x (Atom count)
+            for i in range(len(fractions)):
+                if box.ndim == 2:
+                    box_for_model = box
+                    orthogonality_for_model = orthogonality
+                elif box.ndim == 3:
+                    box_for_model = box[i]
+                    orthogonality_for_model = orthogonality[i]
+                else:
+                    raise ValueError(f"{box.ndim} are to many box dimensions")
+                if orthogonality_for_model:
+                    _displacement_orthogonal_box(
+                        fractions[i], box_for_model, disp[i]
+                    )
+                else:
+                    _displacement_triclinic_box(
+                        fractions[i].astype(np.float64, copy=False),
+                        box_for_model.astype(np.float64, copy=False),
+                        disp[i]
+                    )
+        else:
+            raise ValueError(
+                f"{diff.shape} is an invalid shape for atom coordinates"
+            )
+        return disp
+    
+    else:
+        return diff
 
 
-def index_displacement(atoms, indices, periodic=False, box=None):
+def index_displacement(*args, **kwargs):
     """
+    index_displacement(atoms, indices, periodic=False, box=None)
+    
     Measure the displacement, i.e. the vector difference, between pairs
     of atoms.
 
@@ -112,71 +174,10 @@ def index_displacement(atoms, indices, periodic=False, box=None):
     --------
     displacement
     """
-    coord1, coord2 = _get_coord_from_indices(atoms, indices, 2)
-    diff = coord2 - coord1
-    
-    if periodic:
-        if box is None:
-            if not isinstance(atoms, AtomArray) and \
-               not isinstance(atoms, AtomArrayStack):
-                    raise TypeError(
-                        "An atom array or stack is required, if the box "
-                        "parameter is not explicitly set"
-                    )
-            elif atoms.box is None:
-                    raise ValueError(
-                        "The atom array (stack) must have a box, if the box "
-                        "parameter is not explicitly set"
-                    )
-            else:
-                box = atoms.box
-        # Transform difference vector
-        # from coordinates into fractions of box vectors
-        # for faster calculation laster on
-        fractions = coord_to_fraction(diff, box)
-        # Move vectors into box
-        fractions = fractions % 1
-        # Check for each model if the box vectors are orthogonal
-        orthogonality = is_orthogonal(box)
-        disp = np.zeros(fractions.shape, dtype=np.float64)
-        if len(fractions.shape) == 2:
-            # Single model
-            if orthogonality:
-                _displacement_orthogonal_box(
-                    fractions, box, disp
-                )
-            else:
-                _displacement_triclinic_box(
-                    fractions.astype(np.float64, copy=False),
-                    box.astype(np.float64, copy=False),
-                    disp
-                )
-        elif len(fractions.shape) == 3:
-            # Multiple models
-            # (Model count) x (Atom count)
-            for i in range(len(fractions)):
-                if orthogonality[i]:
-                    _displacement_orthogonal_box(
-                        fractions[i], box[i], disp[i]
-                    )
-                else:
-                    _displacement_triclinic_box(
-                        fractions[i].astype(np.float64, copy=False),
-                        box[i].astype(np.float64, copy=False),
-                        disp[i]
-                    )
-        else:
-            raise ValueError(
-                f"{atoms.coord} is an invalid shape for atom coordinates"
-            )
-        return disp
-    
-    else:
-        return diff
+    return _call_non_index_function(displacement, 2, *args, **kwargs)
 
 
-
-def distance(atoms1, atoms2):
+def distance(atoms1, atoms2, box=None):
     """
     Measure the euclidian distance between atoms.
     
@@ -195,17 +196,25 @@ def distance(atoms1, atoms2):
         The atom distances.
         The shape is equal to the shape of the input `atoms` with the
         highest dimensionality minus the last axis.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     See also
     --------
     index_distance
     """
-    diff = displacement(atoms1, atoms2)
+    diff = displacement(atoms1, atoms2, box)
     return np.sqrt(vector_dot(diff, diff))
 
 
-def index_distance(atoms, indices, periodic=False, box=None):
+def index_distance(*args, **kwargs):
     """
+    index_distance(atoms, indices, periodic=False, box=None)
+    
     Measure the euclidian distance between pairs of atoms.
 
     The pairs refer to indices of a given atom array, whose pairwise
@@ -256,11 +265,10 @@ def index_distance(atoms, indices, periodic=False, box=None):
     --------
     distance
     """
-    diff = index_displacement(atoms, indices, periodic, box)
-    return np.sqrt(vector_dot(diff, diff))
+    return _call_non_index_function(distance, 2, *args, **kwargs)
 
 
-def angle(atom1, atom2, atom3):
+def angle(atoms1, atoms2, atoms3, box=None):
     """
     Measure the angle between 3 atoms.
     
@@ -276,20 +284,28 @@ def angle(atom1, atom2, atom3):
         The angle(s) between the atoms. The shape is equal to the shape
         of the input `atoms` with the highest dimensionality minus the
         last axis.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     See also
     --------
     index_angle
     """
-    v1 = coord(atom1) - coord(atom2)
-    v2 = coord(atom3) - coord(atom2)
+    v1 = displacement(atoms1, atoms2, box)
+    v2 = displacement(atoms3, atoms2, box)
     norm_vector(v1)
     norm_vector(v2)
     return np.arccos(vector_dot(v1,v2))
 
 
-def index_angle(atoms, indices, periodic=False, box=None):
+def index_angle(*args, **kwargs):
     """
+    index_angle(atoms, indices, periodic=False, box=None)
+    
     Measure the angle between triples of atoms.
 
     The triples refer to indices of a given atom array, whose triplewise
@@ -338,20 +354,16 @@ def index_angle(atoms, indices, periodic=False, box=None):
     --------
     angle
     """
-    v1 = index_displacement(atoms, indices[:, [1,0]], periodic, box)
-    v2 = index_displacement(atoms, indices[:, [1,2]], periodic, box)
-    norm_vector(v1)
-    norm_vector(v2)
-    return np.arccos(vector_dot(v1,v2))
+    return _call_non_index_function(angle, 3, *args, **kwargs)
 
 
-def dihedral(atom1, atom2, atom3, atom4):
+def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
     """
     Measure the dihedral angle between 4 atoms.
     
     Parameters
     ----------
-    atoms1, atoms2, atoms3, atom4 : ndarray or Atom or AtomArray or AtomArrayStack
+    atoms1, atoms2, atoms3, atoms4 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the dihedral angle between.
         Alternatively an ndarray containing the coordinates can be
         provided.
@@ -362,15 +374,21 @@ def dihedral(atom1, atom2, atom3, atom4):
         The dihedral angle(s) between the atoms. The shape is equal to
         the shape of the input `atoms` with the highest dimensionality
         minus the last axis.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     See Also
     --------
     index_dihedral
     dihedral_backbone
     """
-    v1 = coord(atom2) - coord(atom1)
-    v2 = coord(atom3) - coord(atom2)
-    v3 = coord(atom4) - coord(atom3)
+    v1 = displacement(atoms1, atoms2, box)
+    v2 = displacement(atoms2, atoms3, box)
+    v3 = displacement(atoms3, atoms4, box)
     norm_vector(v1)
     norm_vector(v2)
     norm_vector(v3)
@@ -384,8 +402,10 @@ def dihedral(atom1, atom2, atom3, atom4):
     return np.arctan2(y,x)
 
 
-def index_dihedral(atoms, indices, periodic=False, box=None):
+def index_dihedral(*args, **kwargs):
     """
+    index_dihedral(atoms, indices, periodic=False, box=None)
+    
     Measure the dihedral angle between quadruples of atoms.
 
     The triples refer to indices of a given atom array, whose
@@ -436,20 +456,7 @@ def index_dihedral(atoms, indices, periodic=False, box=None):
     dihedral
     dihedral_backbone
     """
-    v1 = index_displacement(atoms, indices[:, [0,1]], periodic, box)
-    v2 = index_displacement(atoms, indices[:, [1,2]], periodic, box)
-    v3 = index_displacement(atoms, indices[:, [2,3]], periodic, box)
-    norm_vector(v1)
-    norm_vector(v2)
-    norm_vector(v3)
-    
-    n1 = np.cross(v1, v2)
-    n2 = np.cross(v2, v3)
-    
-    # Calculation using atan2, to ensure the correct sign of the angle 
-    x = vector_dot(n1,n2)
-    y = vector_dot(np.cross(n1,n2), v2)
-    return np.arctan2(y,x)
+    return _call_non_index_function(dihedral, 4, *args, **kwargs)
 
 
 def dihedral_backbone(atom_array, chain_id):
@@ -579,10 +586,11 @@ def centroid(atoms):
     return np.mean(coord(atoms), axis=-2)
 
 
-def _get_coord_from_indices(atoms, indices, expected_amount):
+def _call_non_index_function(function, expected_amount,
+                             atoms, indices, periodic=False, box=None):
     """
-    Get the coordinates from an atom array (stack) at the given indices.
-    Required for the `index_xxx()` methods.
+    Call an `xxx()` function based on the parameters given to a
+    `index_xxx()` function.
     """
     if indices.shape[-1] != expected_amount:
         raise ValueError(
@@ -592,7 +600,12 @@ def _get_coord_from_indices(atoms, indices, expected_amount):
     coord_list = []
     for i in range(expected_amount):
         coord_list.append(coord(atoms)[..., indices[:,i], :])
-    return tuple(coord_list)
+    if periodic:
+        if box is None:
+            box = atoms.box
+    else:
+        box = None
+    return function(*coord_list, box)
 
 
 def _displacement_orthogonal_box(fractions, box, disp):
