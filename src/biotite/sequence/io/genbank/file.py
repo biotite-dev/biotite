@@ -247,15 +247,20 @@ class GenBankFile(TextFile):
             comment += line[12:].strip() + " "
         return comment.strip()
     
-    def get_annotation(self, include_only=None):
+    def get_annotation(self, include_only=None, ignore=None):
         """
         Get the sequence annotation from the *ANNOTATION* field.
         
         Parameters
         ----------
-        include_only : iterable object, optional
-            List of names of feature keys (`str`), which should included
-            in the annotation. By default all features are included.
+        include_only : iterable object of string, optional
+            List of names of feature keys, which should be included
+            in the annotation.
+            By default all features are included.
+        ignore: iterable object of string, optional
+            List of names of feature keys, which should not be included
+            in the annotation.
+            By default all features are included.
         
         Returns
         ----------
@@ -289,44 +294,45 @@ class GenBankFile(TextFile):
         annotation = Annotation()
         regex = re.compile(r"""(".*?"|/.*?=)""")
         for key, val in feature_list:
-            if include_only is None or key in include_only:
-                qual_dict = {}
-                qualifiers = [s.strip() for s in regex.split(val)]
-                # Remove empty quals
-                qualifiers = [s for s in qualifiers if s]
-                # First string is location identifier
-                loc_string = qualifiers.pop(0).strip()
-                try:
-                    locs = _parse_locs(loc_string)
-                except:
-                    raise InvalidFileError(
-                        f"'{loc_string}' is an invalid location identifier"
-                    )
-                qual_key = None
-                qual_val = None
-                for qual in qualifiers:
-                    if qual[0] == "/":
-                        # Store previous qualifier pair
-                        if qual_key is not None:
-                            # In case of e.g. '/pseudo'
-                            # 'qual_val' is 'None'
-                            _set_qual(qual_dict, qual_key, qual_val)
-                            qual_key = None
-                            qual_val = None
-                        # Qualifier key
-                        # -> remove "/" and "="
-                        qual_key = qual[1:-1]
-                    else:
-                        # Qualifier value
-                        # -> remove potential quotes
-                        if qual[0] == '"':
-                            qual_val = qual[1:-1]
+            if (include_only is None or key     in include_only) and \
+               (ignore       is None or key not in ignore):
+                    qual_dict = {}
+                    qualifiers = [s.strip() for s in regex.split(val)]
+                    # Remove empty quals
+                    qualifiers = [s for s in qualifiers if s]
+                    # First string is location identifier
+                    loc_string = qualifiers.pop(0).strip()
+                    try:
+                        locs = _parse_locs(loc_string)
+                    except:
+                        raise InvalidFileError(
+                            f"'{loc_string}' is an invalid location identifier"
+                        )
+                    qual_key = None
+                    qual_val = None
+                    for qual in qualifiers:
+                        if qual[0] == "/":
+                            # Store previous qualifier pair
+                            if qual_key is not None:
+                                # In case of e.g. '/pseudo'
+                                # 'qual_val' is 'None'
+                                _set_qual(qual_dict, qual_key, qual_val)
+                                qual_key = None
+                                qual_val = None
+                            # Qualifier key
+                            # -> remove "/" and "="
+                            qual_key = qual[1:-1]
                         else:
-                            qual_val = qual
-                # Store final qualifier pair
-                if qual_key is not None:
-                    _set_qual(qual_dict, qual_key, qual_val)
-                annotation.add_feature(Feature(key, locs, qual_dict))
+                            # Qualifier value
+                            # -> remove potential quotes
+                            if qual[0] == '"':
+                                qual_val = qual[1:-1]
+                            else:
+                                qual_val = qual
+                    # Store final qualifier pair
+                    if qual_key is not None:
+                        _set_qual(qual_dict, qual_key, qual_val)
+                    annotation.add_feature(Feature(key, locs, qual_dict))
         return annotation
     
     def get_sequence(self):
@@ -344,16 +350,21 @@ class GenBankFile(TextFile):
                                    "sequence information")
         return NucleotideSequence(seq_str)
     
-    def get_annotated_sequence(self, include_only=None):
+    def get_annotated_sequence(self, include_only=None, ignore=None):
         """
         Get an annotated sequence by combining the *ANNOTATION* and
         *ORIGIN* fields.
         
         Parameters
         ----------
-        include_only : iterable object, optional
-            List of names of feature keys (`str`), which should included
-            in the annotation. By default all features are included.
+        include_only : iterable object of string, optional
+            List of names of feature keys, which should be included
+            in the annotation.
+            By default all features are included.
+        ignore: iterable object of string, optional
+            List of names of feature keys, which should not be included
+            in the annotation.
+            By default all features are included.
         
         Returns
         ----------
@@ -361,7 +372,7 @@ class GenBankFile(TextFile):
             The annotated sequence.
         """
         sequence = self.get_sequence()
-        annotation = self.get_annotation(include_only)
+        annotation = self.get_annotation(include_only, ignore)
         return AnnotatedSequence(annotation, sequence)
     
     def _get_seq_string(self):

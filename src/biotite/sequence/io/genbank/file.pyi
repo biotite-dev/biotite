@@ -32,11 +32,17 @@ class GenBankFile:
     ) -> List[Dict[str, Union[Tuple[int, int], str]]]: ...
     def get_comment(self) -> str: ...
     def get_annotation(
-        self, include_only: Optional[List[str]] = None
+        self,
+        include_only:
+        Optional[List[str]] = None,
+        ignore: Optional[List[str]] = None
     ) -> Annotation: ...
     def get_sequence(self) -> NucleotideSequence: ...
     def get_annotated_sequence(
-        self, include_only: Optional[List[str]] = None
+        self,
+        include_only:
+        Optional[List[str]] = None,
+        ignore: Optional[List[str]] = None
     ) -> AnnotatedSequence: ...
 
 
