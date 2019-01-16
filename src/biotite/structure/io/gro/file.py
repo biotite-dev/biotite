@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__author__ = "Daniel Bauer"
+__author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["GROFile"]
 
 import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
-from ....file import TextFile
+from ...box import is_orthogonal
+from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
 import copy
 from datetime import datetime
@@ -66,7 +67,6 @@ class GROFile(TextFile):
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-
         def is_int(line):
             """
             helper function: returns true
@@ -77,6 +77,44 @@ class GROFile(TextFile):
                 return True
             except ValueError:
                 return False
+        
+        def get_atom_line_i(model_start_i, model_atom_counts):
+            """
+            Helper function to get the indices of all atoms for a model
+            """
+            return np.arange(
+                model_start_i+1, model_start_i+1+model_atom_counts
+            )
+        
+        def set_box_dimen(box_param):
+            """
+            Helper function to create the box vectors from the values
+            in the GRO file
+
+            Parameters
+            ----------
+            box_param : list of float
+                The box dimensions in the GRO file.
+            
+            Returns
+            -------
+            box_vectors : ndarray, dtype=float, shape=(3,3)
+                The atom array compatible box vectors.
+            """
+            if not any(box_param):
+                return None
+            if len(box_param) == 3:
+                x, y, z = box_param
+                return np.array([[x,0,0], [0,y,0], [0,0,z]], dtype=float)
+            elif len(box_param) == 9:
+                x1, y2, z3, x2, x3, y1, y3, z1, z2 = box_param
+                return np.array(
+                    [[x1,x2,x3], [y1,y2,y3], [z1,z2,z3]], dtype=float
+                )
+            else:
+                raise InvalidFileError(
+                    f"Invalid amount of box parameters: {len(box_param)}"
+                )
 
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
@@ -87,12 +125,6 @@ class GROFile(TextFile):
         model_atom_counts = np.array(
             [int(self.lines[i]) for i in model_start_i]
         )
-
-        # Helper function to get the indeces of all atoms for a model
-        def get_atom_line_i(model_start_i, model_atom_counts):
-            return np.arange(
-                model_start_i+1, model_start_i+1+model_atom_counts
-            )
 
         if model is None:
             # Check if all models have the same length
@@ -118,7 +150,6 @@ class GROFile(TextFile):
             array = AtomArray(length)
 
             annot_i = get_atom_line_i(model_start_i[model-1], length)
-            coord_i = get_atom_line_i(model_start_i[model-1], length)
 
         # Fill in elements
         def guess_element(atom_name):
@@ -135,23 +166,39 @@ class GROFile(TextFile):
             array.atom_name[i] = line[10:15].strip()
             array.element[i] = guess_element(line[10:15].strip())
 
-        # Fill in coordinates
+        # Fill in coordinates and boxes
         if isinstance(array, AtomArray):
-            for i, line_i in enumerate(coord_i):
+            atom_i = annot_i
+            for i, line_i in enumerate(atom_i):
                 line = self.lines[line_i]
                 # gro files use nm instead of A
                 array.coord[i,0] = float(line[20:28])*10
                 array.coord[i,1] = float(line[28:36])*10
                 array.coord[i,2] = float(line[36:44])*10
+            # Box is stored in last line (after coordinates)
+            box_i = atom_i[-1] + 1
+            box_param = [float(e)*10 for e in self.lines[box_i].split()]
+            array.box = set_box_dimen(box_param)
+        
         elif isinstance(array, AtomArrayStack):
             for m in range(len(model_start_i)):
-                atom_i = np.arange(0, model_atom_counts[0])
-                line_i = get_atom_line_i(model_start_i[m], model_atom_counts[m])
-                for atom_i, line_i in zip(atom_i, line_i):
+                atom_i = get_atom_line_i(
+                    model_start_i[m], model_atom_counts[m]
+                )
+                for i, line_i in enumerate(atom_i):
                     line = self.lines[line_i]
-                    array.coord[m,atom_i,0] = float(line[20:28])*10
-                    array.coord[m,atom_i,1] = float(line[28:36])*10
-                    array.coord[m,atom_i,2] = float(line[36:44])*10
+                    array.coord[m,i,0] = float(line[20:28])*10
+                    array.coord[m,i,1] = float(line[28:36])*10
+                    array.coord[m,i,2] = float(line[36:44])*10
+                # Box is stored in last line (after coordinates)
+                box_i = atom_i[-1] + 1
+                box_param = [float(e)*10 for e in self.lines[box_i].split()]
+                box = set_box_dimen(box_param)
+                # Create a box in the stack if not already existing
+                # and the box is not a dummy
+                if array.box is None and box is not None:
+                    array.box = np.zeros((array.stack_depth(), 3, 3))
+                array.box[m] = box
 
         return array
 
@@ -171,11 +218,40 @@ class GROFile(TextFile):
 
         def get_box_dimen(array):
             """
-            GRO files have the box dimensions as last line for each model.
-            Because we cannot properly detect the box shape, we simply use
-            the min and max coordinates in xyz to get the correct size
+            GRO files have the box dimensions as last line for each
+            model.
+            In case, the `box` attribute of the atom array is
+            `None`, we simply use the min and max coordinates in xyz
+            to get the correct size
+
+            Parameters
+            ----------
+            array : AtomArray
+                The atom array to get the box dimensions from.
+            
+            Returns
+            -------
+            box : str
+                The box, properly formatted for GRO files.
             """
-            return np.abs(array.coord.max(axis=0) - array.coord.min(axis=0))/10
+            if array.box is None:
+                coord = array.coord
+                bx, by, bz = (coord.max(axis=0) - coord.min(axis=0)) / 10
+                return f"{bx:>8.3f} {by:>8.3f} {bz:>8.3f}"
+            else:
+                box = array.box
+                if is_orthogonal(box):
+                    bx, by, bz = np.diag(box) / 10
+                    return f"{bx:>9.5f} {by:>9.5f} {bz:>9.5f}"
+                else:
+                    box = box / 10
+                    box_elements = (
+                        box[0,0], box[1,1], box[2,2],
+                        box[0,1], box[0,2],
+                        box[1,0], box[1,2],
+                        box[2,0], box[2,1],
+                    )
+                    return " ".join([f"{e:>9.5f}" for e in box_elements])
 
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)
@@ -185,7 +261,7 @@ class GROFile(TextFile):
             self.lines[1] = str(array.array_length())
 
             # Write atom lines
-            fmt = '{:>5d}{:5s}{:>5s}{:>5d}{:>8.3f}{:>8.3f}{:>8.3f}'
+            fmt = "{:>5d}{:5s}{:>5s}{:>5d}{:>8.3f}{:>8.3f}{:>8.3f}"
             for i in range(array.array_length()):
                 # gro format is in nm -> multiply coords by 10
                 self.lines[i+2] = fmt.format(
@@ -193,8 +269,8 @@ class GROFile(TextFile):
                     atom_id[i], array.coord[i,0]/10, array.coord[i,1]/10,
                     array.coord[i,2]/10
                 )
-            self.lines[-1] = "{:>8.3f} {:>8.3f} {:>8.3f}" \
-                              .format(*get_box_dimen(array))
+            # Write box lines
+            self.lines[-1] = get_box_dimen(array)
         elif isinstance(array, AtomArrayStack):
             self.lines = []
             # The entire information, but the coordinates,
@@ -223,6 +299,7 @@ class GROFile(TextFile):
                                     array.coord[i,j,2]/10))
                     modellines[j] = line
                 self.lines.extend(modellines)
-                self.lines.append("{:>8.3f} {:>8.3f} {:>8.3f}"
-                                   .format(*get_box_dimen(array[i])))
+                self.lines.append(get_box_dimen(array[i]))
+        else:
+            raise TypeError("An atom array or stack must be provided")
 

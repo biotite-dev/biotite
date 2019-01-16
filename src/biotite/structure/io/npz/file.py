@@ -7,6 +7,7 @@ __all__ = ["NpzFile"]
 
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
+from ...bonds import BondList
 from ....file import File
 
 
@@ -107,9 +108,15 @@ class NpzFile(File):
             array = AtomArrayStack(coord.shape[0], coord.shape[1])
         else:
             array = AtomArray(coord.shape[0])
-        array.coord = coord
+        
         for key, value in self._data_dict.items():
-            if key != "coord":
+            if key == "coord":
+                array.coord = value
+            elif key == "bonds":
+                array.bonds = BondList(array.array_length(), value)
+            elif key == "box":
+                array.box = value
+            else:
                 array.set_annotation(key, value)
         return array
         
@@ -124,5 +131,9 @@ class NpzFile(File):
         """
         self._data_dict = {}
         self._data_dict["coord"] = np.copy(array.coord)
+        if array.bonds is not None:
+            self._data_dict["bonds"] = array.bonds.as_array()
+        if array.box is not None:
+            self._data_dict["box"] = np.copy(array.box)
         for annot in array.get_annotation_categories():
             self._data_dict[annot] = np.copy(array.get_annotation(annot))

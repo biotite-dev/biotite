@@ -9,6 +9,7 @@ import numpy as np
 from ...error import BadStructureError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...filter import filter_inscode_and_altloc
+from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ....sequence.seqtypes import ProteinSequence
 from collections import OrderedDict
 
@@ -123,6 +124,10 @@ def get_structure(pdbx_file, model=None, data_block=None,
                                                                 model_length))
         stack = _filter_inscode_altloc(stack, model_dict,
                                           insertion_code, altloc)
+        box = _get_box(pdbx_file, data_block)
+        if box is not None:
+            # Duplicate same box for each model
+            stack.box = np.repeat(box[np.newaxis, ...], model_count, axis=0)
         return stack
     else:
         model_dict = _get_model_dict(atom_site_dict, model)
@@ -136,6 +141,7 @@ def get_structure(pdbx_file, model=None, data_block=None,
         array.coord[:,2]= atom_site_dict["Cartn_z"][model_filter].astype(float)
         array = _filter_inscode_altloc(array, model_dict,
                                        insertion_code, altloc)
+        array.box = _get_box(pdbx_file, data_block)
         return array
         
 
@@ -191,6 +197,20 @@ def _get_model_dict(atom_site_dict, model):
     for key in atom_site_dict.keys():
         model_dict[key] = atom_site_dict[key][models == str(model)]
     return model_dict
+
+
+def _get_box(pdbx_file, data_block):
+    if data_block is None:
+        cell_dict = pdbx_file.get("cell")
+    else:
+        cell_dict = pdbx_file.get((data_block, "cell"))
+    if cell_dict is None:
+        return None
+    len_a, len_b, len_c = [float(cell_dict[length]) for length
+                           in ["length_a", "length_b", "length_c"]]
+    alpha, beta, gamma =  [np.deg2rad(float(cell_dict[angle])) for angle
+                           in ["angle_alpha", "angle_beta", "angle_gamma"]]
+    return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
 def set_structure(pdbx_file, array, data_block=None):
@@ -316,6 +336,25 @@ def set_structure(pdbx_file, array, data_block=None):
         else:
             data_block = data_blocks[0]
     pdbx_file.set_category("atom_site", atom_site_dict, data_block)
+    
+    # Write box into file
+    if array.box is not None:
+        # PDBx files can only store one box for all models
+        # -> Use first box
+        if array.box.ndim == 3:
+            box = array.box[0]
+        else:
+            box = array.box
+        len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
+        cell_dict = OrderedDict()
+        cell_dict["length_a"] = "{:6.3f}".format(len_a)
+        cell_dict["length_b"] = "{:6.3f}".format(len_b)
+        cell_dict["length_c"] = "{:6.3f}".format(len_c)
+        cell_dict["angle_alpha"] = "{:5.3f}".format(np.rad2deg(alpha))
+        cell_dict["angle_beta"]  = "{:5.3f}".format(np.rad2deg(beta ))
+        cell_dict["angle_gamma"] = "{:5.3f}".format(np.rad2deg(gamma))
+        pdbx_file.set_category("cell", cell_dict, data_block)
+
 
 
 def _determine_entity_id(chain_id):

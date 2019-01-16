@@ -14,6 +14,7 @@ __all__ = ["check_id_continuity", "check_bond_continuity",
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
+from .box import coord_to_fraction
 
 
 def check_id_continuity(array):
@@ -97,8 +98,8 @@ def check_duplicate_atoms(array):
     Returns
     -------
     duplicate : ndarray, dtype=bool
-        Contains the indices of duplicate atoms. The first occurence of
-        an atom is not counted as duplicate.
+        Contains the indices of duplicate atoms.
+        The first occurence of an atom is not counted as duplicate.
     """
     duplicates = []
     annots = [array.get_annotation(category) for category
@@ -119,3 +120,28 @@ def check_duplicate_atoms(array):
             duplicates.append(i)
     return np.array(duplicates)
 
+
+def check_in_box(array):
+    r"""
+    Check if a structure contains atoms whose position is outside the
+    box.
+
+    Coordinates are outside the box, when they cannot be represented by
+    a linear combination of the box vectors with scalar factors
+    :math:`0 \le a_i \le 1`.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    outside : ndarray, dtype=bool
+        Contains the indices of atoms outside the atom array's box.
+    """
+    if array.box is None:
+        raise TypeError("Structure has no box")
+    box = array.box
+    fractions = coord_to_fraction(array, box)
+    return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]
