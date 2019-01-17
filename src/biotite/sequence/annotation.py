@@ -205,7 +205,7 @@ class Feature(Copyable):
         elif first > it_first:
             return False
         else: # First is equal
-            return last < it_last
+            return last > it_last
     
     def __gt__(self, item):
         if not isinstance(item, Feature):
@@ -219,7 +219,7 @@ class Feature(Copyable):
         elif first < it_first:
             return False
         else: # First is equal
-            return last > it_last
+            return last < it_last
     
     @property
     def key(self):
