@@ -38,7 +38,7 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
     axes.grid(False)
     # Setup ticks: Angle is replaced by sequence location
     ticks = [loc_range[0]] \
-            + [i * tick_step for i in range(1, loc_range[1] // tick_step)]
+            + [(i+1) * tick_step for i in range(0, loc_range[1] // tick_step)]
     axes.xaxis.set_ticks([_loc_to_rad(tick, loc_range) for tick in ticks])
     axes.xaxis.set_ticklabels(ticks)
 
