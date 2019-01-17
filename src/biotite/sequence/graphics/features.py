@@ -90,8 +90,6 @@ def plot_feature_map(axes, annotation, loc_range=None,
     
     if loc_range is None:
         loc_range = annotation.get_location_range()
-    else:
-        loc_range = loc_range
     loc_range_length = loc_range[1] - loc_range[0]
     if multi_line:
         symbols_per_line = symbols_per_line
