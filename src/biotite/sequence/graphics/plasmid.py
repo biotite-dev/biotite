@@ -12,9 +12,10 @@ from ...visualize import colors
 from ..annotation import Annotation, Feature, Location
 
 
-def plot_plasmid_map(axes, annotation, loc_range=None,
-                     feature_width=1.0, ring_width=0.2, spacing=0.2,
-                     radius=15, arrow_head_width=0.5, label_properties=None):
+def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
+                     tick_length= 0.2, tick_step=200, ring_width=0.2,
+                     feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
+                     label_properties=None):
     from matplotlib.patches import Rectangle, Polygon
     
     ### Setup parameters ###
@@ -34,20 +35,31 @@ def plot_plasmid_map(axes, annotation, loc_range=None,
     axes.set_theta_zero_location("N")
     axes.set_theta_direction("clockwise")
     axes.spines["polar"].set_visible(False)
-    #axes.grid(False)
+    axes.grid(False)
+    # Setup ticks: Angle is replaced by sequence location
+    ticks = [loc_range[0]] \
+            + [i * tick_step for i in range(1, loc_range[1] // tick_step)]
+    axes.xaxis.set_ticks([_loc_to_rad(tick, loc_range) for tick in ticks])
+    axes.xaxis.set_ticklabels(ticks)
 
     
-    ### Draw plasmid ring ###
+    ### Draw plasmid ring with ticks ###
     axes.barh(
-        radius-ring_width, 2*np.pi, ring_width,
+        radius-ring_width-tick_length, 2*np.pi, ring_width,
         align="edge", color="black"
     )
+    for tick in ticks:
+        angle = _loc_to_rad(tick, loc_range)
+        axes.plot(
+            (angle, angle), (radius-tick_length, radius),
+            color="black", linewidth=1, linestyle="-"
+        )
 
     
     ### Draw features ###
     # Find the maximum amount of feature rows
     # (used for overlapping features)
-    radius_eff = radius - ring_width
+    radius_eff = radius - ring_width - tick_length
     row_count = int(radius_eff // (feature_width + spacing))
     # Draw features as curved arrows
     # Tracks the last feature's location range that was added to a row
