@@ -21,6 +21,8 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
     ### Setup parameters ###
     if loc_range is None:
         loc_range = annotation.get_location_range()
+    else:
+        annotation = annotation[loc_range[0] : loc_range[1]]
     if label_properties is None:
          label_properties = {}
     
@@ -61,24 +63,36 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
     # (used for overlapping features)
     radius_eff = radius - ring_width - tick_length
     row_count = int(radius_eff // (feature_width + spacing))
-    # Draw features as curved arrows
-    # Tracks the last feature's location range that was added to a row
-    # in order to check if that row is currently occupied
-    current_ranges = [None] * row_count
+    # Tracks the location ranges of feature that were added to a row
+    # in order to check if that row is occupied
+    ranges_in_row = [[] for i in range(row_count)]
     # Stores the bottom coordinate (radius) for each row
     row_bottoms = [radius_eff - (row+1) * (feature_width+spacing)
                   for row in range(row_count)]
-    features = sorted(list(annotation))
+    features = sorted(
+        [_merge_over_periodic_boundary(feature, loc_range)
+         for feature in annotation],
+        # Features are sorted by the length of their location range
+        # The shortest come first
+        key = lambda feature: np.diff(feature.get_location_range())[0],
+        reverse = True
+    )
 
     for feature in features:
         row_bottom = None
         first, last = feature.get_location_range()
-        for row_i, curr_range in enumerate(current_ranges):
-            if curr_range is None or first > curr_range[1]:
+        for row_i, curr_range in enumerate(ranges_in_row):
+            is_occupied = False
+            if curr_range is not None:
+                # Check if row is occupied
+                for curr_first, curr_last in curr_range:
+                    if first <= curr_last and last >= curr_first:
+                        is_occupied = True
+            if not is_occupied:
                 # Row is not occupied by another feature
                 # in the location range of the new feature
                 # -> Use this row
-                current_ranges[row_i] = (first, last)
+                ranges_in_row[row_i].append((first, last))
                 row_bottom = row_bottoms[row_i]
                 break
         if row_bottom is None:
@@ -88,6 +102,7 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                 "or decrease the feature width or spacing"
             )
         for loc in feature.locs:
+            # Draw features as curved arrows
             # Calculate arrow shape parameters
             row_center = row_bottom + feature_width/2
             row_top = row_bottom + feature_width
@@ -134,12 +149,42 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                 **label_properties
             )
 
+
 def _loc_to_rad(loc, loc_range):
     start = loc_range[0]
     stop = loc_range[1]
     return (loc-start) / (stop-start) * 2*np.pi
 
+
 def _rad_to_loc(rad, loc_range):
     start = loc_range[0]
     stop = loc_range[1]
     return rad / (2*np.pi) * (stop-start) + start
+
+
+def _merge_over_periodic_boundary(feature, loc_range):
+    if len(feature.locs) == 1:
+        # Only one location -> no merge possible
+        return feature
+    first_loc = None
+    last_loc  = None
+    for loc in feature.locs:
+        if first_loc is None or loc.first < first_loc.first:
+            first_loc = loc
+    for loc in feature.locs:
+        if last_loc is None or loc.last > last_loc.last:
+            last_loc = loc
+    if first_loc.first == loc_range[0] and last_loc.last == loc_range[1]-1 \
+        and first_loc.strand == last_loc.strand:
+            new_locs = set(feature.locs)
+            new_locs.remove(first_loc)
+            new_locs.remove(last_loc)
+            new_locs.add(Location(
+                first  = loc_range[0] - (loc_range[1] - last_loc.first),
+                last   = first_loc.last,
+                strand = first_loc.strand,
+                defect = first_loc.defect | last_loc.defect
+            ))
+            return Feature(feature.key, new_locs, feature.qual)
+    else:
+        return feature
