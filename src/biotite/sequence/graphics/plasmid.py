@@ -15,16 +15,32 @@ from ..annotation import Annotation, Feature, Location
 def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                      tick_length= 0.2, tick_step=200, ring_width=0.2,
                      feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
-                     label_properties=None):
-    from matplotlib.patches import Rectangle, Polygon
+                     label=None, face_properties=None, label_properties=None,
+                     feature_formatters=None):
+    from matplotlib.transforms import Bbox
     
     ### Setup parameters ###
     if loc_range is None:
         loc_range = annotation.get_location_range()
     else:
         annotation = annotation[loc_range[0] : loc_range[1]]
+    if face_properties is None:
+         face_properties = {}
     if label_properties is None:
          label_properties = {}
+    default_formatters = [
+        TerminatorFormatter(),
+        PromoterFormatter(),
+        CodingFormatter(),
+        OriFormatter(),
+        SourceFormatter(),
+        MiscFeatureFormatter()
+    ]
+    if feature_formatters is None:
+        feature_formatters = default_formatters
+    else:
+        feature_formatters = copy.copy(feature_formatters) \
+                             .append(default_formatters)
     
     
     ### Setup matplotlib ###
@@ -45,7 +61,7 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
     axes.xaxis.set_ticklabels(ticks)
 
     
-    ### Draw plasmid ring with ticks ###
+    ### Draw plasmid ring with ticks and central label ###
     axes.barh(
         radius-ring_width-tick_length, 2*np.pi, ring_width,
         align="edge", color="black"
@@ -55,6 +71,11 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
         axes.plot(
             (angle, angle), (radius-tick_length, radius),
             color="black", linewidth=1, linestyle="-"
+        )
+    if label is not None:
+        axes.text(
+            0, 0, label, ha="center", va="center",
+            color="black", size=32, fontweight="bold"
         )
 
     
@@ -106,48 +127,88 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
             # Calculate arrow shape parameters
             row_center = row_bottom + feature_width/2
             row_top = row_bottom + feature_width
+            # Same apparent width for all arrows,
+            # irrespective of the radius of the polar plot
             head_angle_width = arrow_head_width / row_center
             start_angle = _loc_to_rad(loc.first, loc_range)
             stop_angle  = _loc_to_rad(loc.last, loc_range)
-            center_angle = start_angle + stop_angle/2
-            # Check if the feature location is too small for
-            # arrow tail AND head to be drawn
-            if head_angle_width > stop_angle - start_angle:
-                draw_rect = False
-                # Limit size of arrow head to range of location
-                head_angle_width = stop_angle - start_angle
-            else:
-                draw_rect = True
-            # Draw arrow as compostion of a rectangle and a triangle
-            # FancyArrow does not properly work for polar plots
-            if draw_rect:
-                # Linewidth is set to 1 to avoid strange artifact
-                # in the transition from rectangle to polygon
-                axes.add_patch(Rectangle(
-                    (start_angle, row_bottom),
-                    stop_angle-start_angle-head_angle_width, feature_width,
-                    color=colors["dimorange"], linewidth=1
-                ))
-            axes.add_patch(Polygon(
-                [
-                    (stop_angle-head_angle_width, row_bottom),
-                    (stop_angle-head_angle_width, row_top),
-                    (stop_angle,                  row_center)
-                ],
-                color=colors["dimorange"], linewidth=1
-            ))
-            # Draw feature label
-            center_angle = (start_angle + stop_angle) / 2
-            text_rot = 360 - np.rad2deg(center_angle)
-            # Do not draw text upside down
-            if text_rot > 90 and text_rot < 270:
-                text_rot += 180
-            axes.text(
-                center_angle, row_center, "text",
-                ha="center", va="center",
-                rotation=text_rot,
-                **label_properties
+            bbox = Bbox.from_extents(
+                start_angle, row_bottom, stop_angle, row_top
             )
+            _draw_location(
+                axes, feature, loc, bbox, head_angle_width,
+                face_properties, label_properties, feature_formatters
+            )
+            
+
+def _draw_location(axes, feature, loc, bbox, head_width,
+                   face_properties, label_properties, feature_formatters):
+    from matplotlib.patches import Rectangle, Polygon
+    
+    # Determine how to draw the feature
+    for formatter in feature_formatters:
+        if formatter.matches(feature):
+            directional, face_color, text_color, text \
+                = formatter.format(feature)
+            break
+
+    center_x = (bbox.x0 + bbox.x1) / 2
+    center_y = (bbox.y0 + bbox.y1) / 2
+    # Check if the feature location is too small for
+    # arrow tail AND head to be drawn
+    if not directional:
+        draw_rect = True
+        draw_head = False
+        head_width = 0
+    elif head_width > bbox.width:
+        draw_rect = False
+        draw_head = True
+        # Limit size of arrow head to range of location
+        head_width = bbox.width
+    else:
+        draw_rect = True
+        draw_head = True
+    if loc.strand == Location.Strand.FORWARD:
+        # (x0, y0), width, height
+        rect_coord = (bbox.p0, bbox.width-head_width, bbox.height)
+        # (x0, y0), (x1, y1), (x2, y2)
+        triangle_coord = [
+            (bbox.x1 - head_width, bbox.y0),
+            (bbox.x1 - head_width, bbox.y1),
+            (bbox.x1,              center_y)
+        ]
+    else:
+        rect_coord = (bbox.p0+head_width, bbox.width-head_width, bbox.height)
+        triangle_coord = [
+            (bbox.x0 + head_width, bbox.y0),
+            (bbox.x0 + head_width, bbox.y1),
+            (bbox.x0,              center_y)
+        ]
+    # Draw arrow as composition of a rectangle and a triangle
+    # FancyArrow does not properly work for polar plots
+    if draw_rect:
+        # Line width is set to 1 to avoid strange artifact
+        # in the transition from rectangle to polygon
+        axes.add_patch(Rectangle(
+            *rect_coord,
+            color=face_color, linewidth=1, **face_properties
+        ))
+    if draw_head:
+        axes.add_patch(Polygon(
+            triangle_coord,
+            color=face_color, linewidth=1, **face_properties
+        ))
+    # Draw feature label
+    text_rot = 360 - np.rad2deg(center_x)
+    # Do not draw text upside down
+    if text_rot > 90 and text_rot < 270:
+        text_rot += 180
+    if text is not None:
+        axes.text(
+            center_x, center_y, text,
+            ha="center", va="center", rotation=text_rot, color=text_color,
+            **label_properties
+        )
 
 
 def _loc_to_rad(loc, loc_range):
@@ -188,3 +249,139 @@ def _merge_over_periodic_boundary(feature, loc_range):
             return Feature(feature.key, new_locs, feature.qual)
     else:
         return feature
+
+
+class FeatureFormatter(metaclass=abc.ABCMeta):
+    """
+    A `FeatureFormatter` is an object, that 'knows' how to format a
+    certain type of sequence feature for a plasmid map.
+    """
+
+    @abc.abstractmethod
+    def matches(self, feature):
+        pass
+    
+    @abc.abstractmethod
+    def format(self, feature):
+        """
+        Returns
+        -------
+        directional : bool
+        face_color
+        text_color
+        text
+        """
+        pass
+
+
+class MiscFeatureFormatter(FeatureFormatter):
+    """
+    A formatter that matches any feature.
+    """
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = colors["dimorange"]
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        return True
+        
+    def format(self, feature):
+        text = feature.qual.get("gene")
+        return True, self._color, "black", text
+
+
+class SourceFormatter(FeatureFormatter):
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = colors["darkorange"]
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        return feature.key == "source"
+        
+    def format(self, feature):
+        text = feature.qual.get("organism")
+        return False, self._color, "white", text
+
+
+class OriFormatter(FeatureFormatter):
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = colors["dimorange"]
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        return feature.key == "rep_origin"
+        
+    def format(self, feature):
+        if "standard_name" in feature.qual:
+            text = feature.qual["standard_name"]
+        else:
+            text = "ori"
+        return False, self._color, "black", text
+
+
+class CodingFormatter(FeatureFormatter):
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = colors["darkgreen"]
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        return feature.key in ["gene", "CDS", "rRNA"]
+        
+    def format(self, feature):
+        text = feature.qual.get("gene")
+        return True, self._color, "black", text
+
+
+class PromoterFormatter(FeatureFormatter):
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = colors["green"]
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        if feature.key == "regulatory":
+            if "regulatory_class" in feature.qual:
+                if feature.qual["regulatory_class"] in [
+                    "promoter", "TATA_box", "minus_35_signal",
+                    "minus_10_signal"
+                ]:
+                    return True
+        return False
+        
+    def format(self, feature):
+        text = feature.qual.get("gene")
+        return True, self._color, "black", text
+
+
+class TerminatorFormatter(FeatureFormatter):
+
+    def __init__(self, color=None):
+        if color is None:
+            self._color = "black"
+        else:
+            self._color = color
+
+    def matches(self, feature):
+        if feature.key == "regulatory":
+            if "regulatory_class" in feature.qual:
+                if feature.qual["regulatory_class"] in ["terminator"]:
+                    return True
+        return False
+        
+    def format(self, feature):
+        text = feature.qual.get("gene")
+        return True, self._color, "white", text
