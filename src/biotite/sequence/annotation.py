@@ -164,28 +164,10 @@ class Feature(Copyable):
     
     def __init__(self, key, locs, qual={}):
         self._key = key
+        if len(locs) == 0:
+            raise ValueError("A feature must have at least one location")
         self._locs = frozenset(locs)
         self._qual = copy.deepcopy(qual)
-    
-    def merge_locations(loc_range=None):
-        """
-        """
-        new_locs = set()
-        locs = list[feature.locs]
-        while len(locs) != 0:
-            new_loc = None
-            loc1 = locs[0]
-            for i, loc2 in enumerate(locs[1:]):
-                if True:
-                    new_loc = ...
-                    del locs[i]
-                    break
-                else:
-            if new_loc is None:
-                new_loc = ...
-            del locs[0]
-
-
     
     def get_location_range(self):
         """
