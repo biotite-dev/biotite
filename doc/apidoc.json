@@ -152,6 +152,7 @@
             "unitcell_from_vectors",
             "box_volume",
             "repeat_box",
+            "repeat_box_coord",
             "move_inside_box",
             "coord_to_fraction",
             "fraction_to_coord",
@@ -200,7 +201,8 @@
             "get_residues",
             "apply_residue_wise",
             "spread_residue_wise",
-            "get_residue_count"
+            "get_residue_count",
+            "residue_iter"
         ],
         "Structure comparison" : [
             "average",
