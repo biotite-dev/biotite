@@ -24,5 +24,5 @@ References
 
 __author__ = "Patrick Kunzmann"
 
-from .atoms import *
+from .masses import *
 from .residues import *

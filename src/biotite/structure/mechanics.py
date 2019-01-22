@@ -15,7 +15,7 @@ from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .error import BadStructureError
 from .geometry import distance
-from .info.atoms import atom_masses
+from .info.masses import mass
 
 
 def gyration_radius(array, masses=None):
@@ -70,7 +70,7 @@ def mass_center(array, masses=None):
         masses = np.zeros(array.array_length())
         for i, element in enumerate(array.element):
             try:
-                masses[i] = atom_masses[element]
+                masses[i] = mass(element)
             except KeyError:
                 raise ValueError(f"'{element}' is not a valid element")
     return np.sum(masses[:,np.newaxis] * array.coord, axis=-2) / np.sum(masses)
