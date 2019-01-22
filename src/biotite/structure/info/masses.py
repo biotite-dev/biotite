@@ -14,7 +14,11 @@ _info_dir = dirname(realpath(__file__))
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 with open(join(_info_dir, "atom_masses.json")) as file:
     _atom_masses = json.load(file)
-_res_masses = {}
+# Masses are taken from
+# http://education.expasy.org/student_projects/isotopident/htdocs/aa-list.html
+# (2019/01/22)
+with open(join(_info_dir, "residue_masses.json")) as file:
+    _res_masses = json.load(file)
 
 def mass(item, is_residue=None):
     if isinstance(item, str):
