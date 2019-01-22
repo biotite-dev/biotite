@@ -40,7 +40,11 @@ if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
     try:
         from Cython.Build import cythonize
         import numpy
-        cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
+        cythonize(
+            "src/**/*.pyx",
+            include_path=[numpy.get_include()],
+            language_level=3
+        )
     except ValueError:
         pass
 

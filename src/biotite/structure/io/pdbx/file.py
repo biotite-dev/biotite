@@ -6,11 +6,13 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["PDBxFile"]
 
 import shlex
+import copy
+from collections.abc import MutableMapping
 import numpy as np
 from ....file import TextFile
 
 
-class PDBxFile(TextFile):
+class PDBxFile(TextFile, MutableMapping):
     """
     This class represents a PDBx/mmCIF file.
     
@@ -395,19 +397,59 @@ class PDBxFile(TextFile):
         
         
     def __setitem__(self, index, item):
-        if isinstance(index, tuple):
-            self.set_category(index[1], item, block=index[0])
-        else:
-            self.set_category(index, item)
+        block, category_name = self._full_index(index)
+        self.set_category(category_name, item, block=block)
     
     
     def __getitem__(self, index):
+        block, category_name = self._full_index(index)
+        return self.get_category(category_name, block=block)
+    
+
+    def __delitem__(self, index):
+        block, category_name = self._full_index(index)
+        category_info = self._categories[(block, category_name)]
+        # Insertion point of new lines
+        category_start = category_info["start"]
+        category_stop = category_info["stop"]
+        del self.lines[category_start : category_stop]
+        # Update start and stop of all categories appearing after the
+        # deleted category
+        len_diff = category_stop - category_start
+        for category_info in self._categories.values():
+            if category_info["start"] > category_start:
+                category_info["start"] -= len_diff
+                category_info["stop"] -= len_diff
+    
+
+    def __contains__(self, index):
+        block, category_name = self._full_index(index)
+        return (block, category_name) in self._categories
+    
+
+    def __iter__(self):
+        return self._categories.__iter__()
+    
+
+    def __len__(self):
+        return len(self._categories)
+    
+    
+    def _full_index(self, index):
+        """
+        Converts a an integer or tuple index into a block and a category
+        name.
+        """
         if isinstance(index, tuple):
-            return self.get_category(index[1], block=index[0])
+            return index[0], index[1]
+        elif isinstance(index, str):
+            return self.get_block_names()[0], index
         else:
-            return self.get_category(index)
-    
-    
+            raise TypeError(
+                f"'{type(index).__name__}' is an invalid index type"
+            )
+
+
     def _add_category(self, block, category_name,
                       start, stop, is_loop, is_multilined):
         # Before the first category starts,

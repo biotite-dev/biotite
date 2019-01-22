@@ -147,14 +147,29 @@
             "array",
             "stack"
         ],
+        "Boxes and unit cells" : [
+            "vectors_from_unitcell",
+            "unitcell_from_vectors",
+            "box_volume",
+            "repeat_box",
+            "move_inside_box",
+            "coord_to_fraction",
+            "fraction_to_coord",
+            "is_orthogonal"
+        ],
         "Bonds" : [
             "BondList",
             "BondType"
         ],
         "Geometry" : [
+            "displacement",
+            "index_displacement",
             "distance",
+            "index_distance",
             "angle",
+            "index_angle",
             "dihedral",
+            "index_dihedral",
             "dihedral_backbone",
             "centroid",
             "mass_center",
