@@ -150,8 +150,6 @@ def test_atoms_overflow(recwarn):
     a = array(atoms)
     a.res_id = np.array([1] * 100000)
     a.atom_name = np.array(['CA'] * 100000)
-    for i in range(150000):
-        atom = Atom([1,2,3])
     
     # write stack to pdb file and make sure a warning is thrown
     with pytest.warns(UserWarning):
