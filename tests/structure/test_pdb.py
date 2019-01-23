@@ -144,25 +144,25 @@ def test_box_parsing():
            == approx(a.box.flatten().tolist(), abs=1e-2)
 
 
-def test_atoms_overflow(recwarn):
-    # create a stack > 100k atoms
+def test_atoms_overflow():
+    # Create a stack > 100k atoms
     atoms = [Atom([1,2,3]) for i in range(100000)]
     a = array(atoms)
     a.res_id = np.array([1] * 100000)
     a.atom_name = np.array(['CA'] * 100000)
     
-    # write stack to pdb file and make sure a warning is thrown
+    # Write stack to pdb file and make sure a warning is thrown
     with pytest.warns(UserWarning):
         tmp_file_name = biotite.temp_file(".pdb")
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a)
         tmp_pdb_file.write(tmp_file_name)
 
-    # assert file can be read properly
+    # Assert file can be read properly
     a2 = io.load_structure(tmp_file_name)
     assert(a2.array_length() == a.array_length())
     
-    # manually check if the written atom id is correct
+    # Manually check if the written atom id is correct
     with open(tmp_file_name) as output:
         last_line = output.readlines()[-1]
         atom_id = int(last_line.split()[1])
