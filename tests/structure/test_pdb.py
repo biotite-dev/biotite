@@ -3,16 +3,16 @@
 # information.
 
 import itertools
-import numpy as np
 import glob
 from os.path import join, splitext
 import pytest
 from pytest import approx
+import numpy as np
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-from biotite.structure.atoms import AtomArray
+import biotite.structure.io as io
 from .util import data_dir
 
 
@@ -121,7 +121,7 @@ def test_box_shape(path, single_model):
     pdb_file.read(path)
     a = pdb_file.get_structure(model=model)
 
-    if isinstance(a, AtomArray):
+    if isinstance(a, struc.AtomArray):
         expected_box_dim = (3, 3)
     else:
         expected_box_dim = (len(a), 3, 3)
@@ -143,3 +143,30 @@ def test_box_parsing():
            == approx(a.box.flatten().tolist(), abs=1e-2)
 
 
+def test_atoms_overflow():
+    # Create an atom array >= 100k atoms
+    length = 100000
+    a = struc.AtomArray(length)
+    a.chain_id = np.full(length, "A")
+    a.res_id = np.full(length, 1)
+    a.res_name = np.full(length, "GLY")
+    a.hetero = np.full(length, False)
+    a.atom_name = np.full(length, "CA")
+    a.element = np.full(length, "C")
+    
+    # Write stack to pdb file and make sure a warning is thrown
+    with pytest.warns(UserWarning):
+        tmp_file_name = biotite.temp_file(".pdb")
+        tmp_pdb_file = pdb.PDBFile()
+        tmp_pdb_file.set_structure(a)
+        tmp_pdb_file.write(tmp_file_name)
+
+    # Assert file can be read properly
+    a2 = io.load_structure(tmp_file_name)
+    assert(a2.array_length() == a.array_length())
+    
+    # Manually check if the written atom id is correct
+    with open(tmp_file_name) as output:
+        last_line = output.readlines()[-1]
+        atom_id = int(last_line.split()[1])
+        assert(atom_id == 1)
