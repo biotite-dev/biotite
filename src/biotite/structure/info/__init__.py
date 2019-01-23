@@ -25,4 +25,4 @@ References
 __author__ = "Patrick Kunzmann"
 
 from .masses import *
-from .residues import *
+from .bonds import *
