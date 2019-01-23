@@ -15,7 +15,7 @@ coordinates.
 An `Atom` contains data for a single atom, it stores the annotations as
 scalar values and the coordinates as length 3 `ndarray`.
 An `AtomArray` stores data for an entire structure model containing *n*
-atoms. Therefore the annotations are represented as `ndarray`s of
+atoms. Therefore the annotations are represented as `ndarray` objects of
 length *n*, so called annotation arrays. The coordinates are a (n x 3)
 `ndarray`.
 `AtomArrayStack` stores data for *m* models. Each `AtomArray` in
