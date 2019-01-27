@@ -1,3 +1,19 @@
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+"""
+This module provides functions to calculate the radial distribution function.
+"""
+
+__author__ = "Daniel Bauer"
+__all__ = ["rdf"]
+
+from .atoms import Atom, AtomArray, stack, array, AtomArrayStack
+from .geometry import distance
+from .box import box_volume
+import numpy as np
+
 def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
         periodic=False):
     r"""
@@ -6,7 +22,7 @@ def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
     Parameters
     ----------
     center : ndArray or Atom or AtomArray or AtomArrayStack
-        Coordinates or Atoms(s) to use as origin for rdf calculation
+        Coordinates or Atoms(s) to use as origin(s) for rdf calculation
     atoms : AtomArray or AtomArrayStack
         Simulation cell to use for rdf calculation. Please not that atoms must
         have an associated box.
@@ -45,5 +61,39 @@ def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
 
     """
 
-    if box is None and atoms.box is None:
-        raise ValueError("Please supply a box.")
+    if box is None:
+        if atoms.box is None:
+            raise ValueError("Please supply a box.")
+        else:
+            box = atoms.box
+
+    if isinstance(atoms, AtomArray):
+        atoms = stack(atoms)
+
+    if isinstance(center, AtomArray) or isinstance(center, AtomArrayStack) or isinstance(center, Atom):
+        center = center.coord
+
+    if box.shape[0] != center.shape[0] or box.shape[0] != len(atoms):
+        raise ValueError("center, box, and atoms must have the same model count.")
+
+    # only use selection of atoms if there is one
+    if selection is not None:
+        atoms = atoms[:, selection]
+
+    # calculate distance histogram
+    if periodic:
+        distances = distance(center, atoms, box=box)
+    else:
+        distances = distance(center, atoms)
+    hist, bin_edges = np.histogram(distances, range=range, bins=bins)
+
+    # Normalize with average particle density (N/V) in each bin
+    bin_volume = (4 / 3 * np.pi * np.power(bin_edges[1:], 3)) - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
+    n_frames = len(atoms)
+    volume = box_volume(box).mean()
+    density = atoms.array_length() / volume
+    g_r = hist / (bin_volume * density * n_frames)
+
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
+
+    return bin_centers, g_r
