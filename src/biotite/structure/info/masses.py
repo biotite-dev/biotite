@@ -7,22 +7,30 @@ __all__ = ["mass"]
 
 import json
 from os.path import join, dirname, realpath
+import msgpack
 from ..atoms import Atom, AtomArray, AtomArrayStack
 
 
 _info_dir = dirname(realpath(__file__))
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
-with open(join(_info_dir, "atom_masses.json")) as file:
+with open(join(_info_dir, "atom_masses.json"), "r") as file:
     _atom_masses = json.load(file)
 # Masses are taken from
-# http://education.expasy.org/student_projects/isotopident/htdocs/aa-list.html
-# (2019/01/22)
-with open(join(_info_dir, "residue_masses.json")) as file:
-    _res_masses = json.load(file)
+# ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
+# (2019/01/27)
+with open(join(_info_dir, "residue_masses.msgpack"), "rb") as file:
+    _res_masses = msgpack.load(file, raw=False)
 
 def mass(item, is_residue=None):
     """
     Calculate the mass for the given object. [1]_
+
+    If a residue name is given, the mass values refer to the masses of
+    the complete molecule without additional or missing protons.
+    In case of residues in a longer chain, some atoms might be missing
+    from the molecule.
+    For example non-terminal residues in a protein or nucleotide chain
+    miss the mass of a water molecule.
     
     Parameters
     ----------
@@ -33,8 +41,8 @@ def mass(item, is_residue=None):
     
     Returns
     -------
-    mass : float
-        The mass of the given object.
+    mass : float or None
+        The mass of the given object. None if the mass is unknown.
     
     References
     ----------
