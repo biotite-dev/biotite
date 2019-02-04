@@ -175,14 +175,18 @@ class PDBxFile(TextFile, MutableMapping):
             
         Returns
         -------
-        category_dict : dict
+        category_dict : dict or None
             A entry keyed dictionary. The corresponding values are
             strings or `ndarrays` of strings for *non-looped* and
             *looped* categories, respectively.
+            Returns None, if the data block does not contain the given
+            category.
         """
         if block is None:
             block = self.get_block_names()[0]
-        category_info = self._categories[(block, category)]
+        category_info = self._categories.get((block, category))
+        if category_info is None:
+            return None
         start = category_info["start"]
         stop = category_info["stop"]
         is_loop = category_info["loop"]
