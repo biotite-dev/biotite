@@ -14,7 +14,7 @@ from .geometry import distance
 from .box import box_volume
 import numpy as np
 
-def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
+def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         periodic=False):
     r"""
     Compute the radial distribution function g(r) for a given point and a selection.
@@ -29,7 +29,7 @@ def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
     selection : ndarray or None, optional
         Boolean mask for atoms to limit the RDF calculation on specific atoms
         (Default: None).
-    range : tuple or None, optional
+    interval : tuple or None, optional
         The range for the RDF in Angstroem (Default: (0, 10)).
     bins : int or sequence of scalars or str, optional
         Bins for the RDF. If bins is an int, it defines the number of bins for
@@ -69,8 +69,11 @@ def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
 
     if isinstance(atoms, AtomArray):
         atoms = stack(atoms)
-
-    if isinstance(center, AtomArray) or isinstance(center, AtomArrayStack) or isinstance(center, Atom):
+    if isinstance(center, AtomArray):
+        center = stack(center)
+    elif isinstance(center, Atom):
+        center = stack(array([center]))
+    if isinstance(center, AtomArrayStack):
         center = center.coord
 
     if box.shape[0] != center.shape[0] or box.shape[0] != len(atoms):
@@ -80,12 +83,14 @@ def rdf(center, atoms, selection=None, range=(0,10), bins=100, box=None,
     if selection is not None:
         atoms = atoms[:, selection]
 
+
+
     # calculate distance histogram
     if periodic:
         distances = distance(center, atoms, box=box)
     else:
         distances = distance(center, atoms)
-    hist, bin_edges = np.histogram(distances, range=range, bins=bins)
+    hist, bin_edges = np.histogram(distances, range=interval, bins=bins)
 
     # Normalize with average particle density (N/V) in each bin
     bin_volume = (4 / 3 * np.pi * np.power(bin_edges[1:], 3)) - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
