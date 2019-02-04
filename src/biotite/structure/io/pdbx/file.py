@@ -204,12 +204,12 @@ class PDBxFile(TextFile, MutableMapping):
             while i < len(prelines):
                 if prelines[i][0] == ";":
                     # multiline values
-                    lines[k-1] += " '" + prelines[i][1:]
+                    multi_line_str = prelines[i][1:]
                     j = i+1
                     while prelines[j] != ";":
-                        lines[k-1] += prelines[j]
+                        multi_line_str += prelines[j]
                         j += 1
-                    lines[k-1] += "'"
+                    lines[k-1] += " " + shlex.quote(multi_line_str)
                     i = j+1
                 elif not is_loop and prelines[i][0] in ["'",'"']:
                     # Singleline values where value is in the line
