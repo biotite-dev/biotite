@@ -25,6 +25,9 @@ def _init_dataset():
         # Database is already initialized
         return
 
+    # Bonds are taken from
+    # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
+    # (2019/01/27)
     _info_dir = dirname(realpath(__file__))
     with open(join(_info_dir, "intra_bonds.msgpack"), "rb") as file:
         _intra_bonds_raw = msgpack.unpack(
