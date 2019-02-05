@@ -24,7 +24,7 @@ def test_single(pdb_id):
     array = file.get_structure(model=1)
     sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
     
-    from biotite.structure.sasa import _single_radii as radii
+    from biotite.structure.info.radii import _SINGLE_RADII as radii
     import mdtraj
     # Use the same atom radii
     radii = {element.capitalize() : radius / 10
@@ -64,12 +64,12 @@ def test_coarse_grained(pdb_id):
     )
 
     # Assert that more than 90% of atoms
-    # have less than 20% SASA difference
+    # have less than 10% SASA difference
     assert np.count_nonzero(
-        np.isclose(sasa, sasa_exp, rtol=2e-1, atol=1)
+        np.isclose(sasa, sasa_exp, rtol=1e-1, atol=1)
     ) / len(sasa) > 0.9
     # Assert that more than 98% of atoms
-    # have less than 50% SASA difference
+    # have less than 40% SASA difference
     assert np.count_nonzero(
-        np.isclose(sasa, sasa_exp, rtol=5e-1, atol=1)
+        np.isclose(sasa, sasa_exp, rtol=4e-1, atol=1)
     ) / len(sasa) > 0.98
