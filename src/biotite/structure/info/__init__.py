@@ -12,3 +12,4 @@ __author__ = "Patrick Kunzmann"
 from .masses import *
 from .bonds import *
 from .misc import *
+from .radii import *
