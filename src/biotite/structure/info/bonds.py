@@ -49,7 +49,7 @@ def get_bond_dataset():
 
 def get_bond_order(res_name, atom_name1, atom_name2):
     _init_dataset()
-    group_bonds = _intra_bonds.get(res_name)
+    group_bonds = _intra_bonds.get(res_name.upper())
     if group_bonds is None:
         return None
     else:
@@ -58,4 +58,4 @@ def get_bond_order(res_name, atom_name1, atom_name2):
 
 def get_bonds_for_residue(res_name):
     _init_dataset()
-    return copy.copy(_intra_bonds.get(res_name))
+    return copy.copy(_intra_bonds.get(res_name.upper()))
