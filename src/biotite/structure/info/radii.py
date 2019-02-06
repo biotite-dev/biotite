@@ -8,7 +8,7 @@ __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 from .bonds import get_bonds_for_residue
 
 
-_PROTOR_DEFAULT = 1.80
+_PROTOR_DEFAULT = 1.80 # Not taken from the corresponding paper
 # Contains tuples for the different ProtOr groups:
 # Element, valency, H count
 _PROTOR_RADII = {
@@ -21,21 +21,18 @@ _PROTOR_RADII = {
     ("N",  3, 1) : 1.64,
     ("N",  3, 2) : 1.64,
     ("N",  4, 3) : 1.64,
-    ("N",  4, 4) : 1.64, # Not official, added for completeness
     ("O",  1, 0) : 1.42,
-    ("O",  2, 0) : 1.46, # Not official, added for completeness
     ("O",  2, 1) : 1.46,
     ("S",  1, 0) : 1.77,
-    ("S",  2, 0) : 1.77, # Not official, added for completeness
+    ("S",  2, 0) : 1.77, # Not official, added for completeness (MET)
     ("S",  2, 1) : 1.77,
-    ("S",  2, 2) : 1.77, # Not official, added for completeness
     ("F",  1, 0) : 1.47, # Taken from _SINGLE_RADII
     ("CL", 1, 0) : 1.75, # Taken from _SINGLE_RADII
     ("BR", 1, 0) : 1.85, # Taken from _SINGLE_RADII
     ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
-_SINGLE_DEFAULT = 1.50
+_SINGLE_DEFAULT = 1.50 # Not taken from the corresponding paper
 _SINGLE_RADII = {
     "H":  1.20,
     "C":  1.70,
@@ -56,13 +53,26 @@ _protor_radii = {}
 
 def vdw_radius_protor(res_name, atom_name):
     res_name = res_name.upper()
+    if atom_name[0] == "H":
+        raise ValueError(
+            f"Calculating the ProtOr radius for the atom '{atom_name}'' is "
+            f"not meaningful"
+        )
     if res_name in _protor_radii:
         # Use cached radii for the residue, if already calculated
-        return _protor_radii[res_name][atom_name]
+        radius = _protor_radii[res_name].get(atom_name)
+        if radius is None:
+            raise KeyError(
+                f"Residue '{res_name}' does not contain an atom named "
+                f"'{atom_name}'"
+            )
+        return radius
     else:
-        # Otherwise calculate radii for the given residue
+        # Otherwise calculate radii for the given residue and cache
         _protor_radii[res_name] = _calculate_protor_radii(res_name)
-        return _protor_radii[res_name][atom_name]
+        # Recursive call, but this time the radii for the given residue
+        # are cached
+        return vdw_radius_protor(res_name, atom_name)
 
 def _calculate_protor_radii(res_name):
     """
@@ -79,11 +89,19 @@ def _calculate_protor_radii(res_name):
         # One time the first atom is the one to get valency and H count
         # for and the other time vice versa
         for main_atom, bound_atom in ((atom1, atom2), (atom2, atom1)):
-            # Only for these atoms ProtOr radii exist
-            if main_atom[0] not in ["C", "N", "O", "S"]:
+            element = main_atom[0]
+            # Calculating ProtOr radii for hydrogens in not meaningful
+            if element == "H":
+                continue
+            # Only for these elements ProtOr groups exist
+            # Calculation of group for all other elements would be
+            # pointless
+            if element not in ["C", "N", "O", "S"]:
+                # Empty tuple to indicate nonexistent entry
+                groups[main_atom] = ()
                 continue
             # Update existing entry if already existing
-            group = groups.get(main_atom, [main_atom[0], 0, 0])
+            group = groups.get(main_atom, [element, 0, 0])
             # Increase valency by one, since the bond entry exists
             group[1] += 1
             # If the atom is bonded to hydrogen, increase H count
