@@ -68,9 +68,9 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
             box = atoms.box
 
     if isinstance(atoms, AtomArray):
-        atoms = stack(atoms)
+        atoms = stack([atoms])
     if isinstance(center, AtomArray):
-        center = stack(center)
+        center = stack([center])
     elif isinstance(center, Atom):
         center = stack(array([center]))
     if isinstance(center, AtomArrayStack):

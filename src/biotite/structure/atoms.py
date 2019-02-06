@@ -1065,7 +1065,7 @@ def stack(arrays):
     
     Parameters
     ----------
-    arrays : iterable object, type=AtomArray
+    arrays : iterable object of AtomArray
         The atom arrays to be combined in a stack.
     
     Returns
