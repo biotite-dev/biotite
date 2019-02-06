@@ -59,3 +59,49 @@ def test_bonds(path):
             assert frozenset((atom1, atom2)) \
                    in bond_data[group_name]
 
+
+def test_protOr_radii():
+    """
+    Assert that ProtOr VdW radii (except hydrogen) can be calculated for
+    all atoms in the given structure, since the structure (1GYA)
+    does only contain standard amino acids after thge removal of
+    glycosylation.
+    This means, that none of the resulting radii should be the default
+    value, that is used for atoms where the ProtOr radius cannot be
+    calculated.
+    """
+    from biotite.structure.info.radii import _PROTOR_DEFAULT as default_radius
+    array = load_structure(join(data_dir, "1gya.mmtf"))
+    array = array[..., array.element != "H"]
+    array = array[..., struc.filter_amino_acids(array)]
+    for res_name, atom_name in zip(array.res_name, array.atom_name):
+        radius = strucinfo.vdw_radius_protor(res_name, atom_name)
+        assert isinstance(radius, float)
+        print(res_name, atom_name)
+        assert radius != default_radius
+
+
+def test_protor_radii_invalid():
+    from biotite.structure.info.radii import _PROTOR_DEFAULT as default_radius
+    with pytest.raises(ValueError):
+        # Expect raised exception for hydrogen atoms
+        strucinfo.vdw_radius_protor("FOO", "H1")
+    with pytest.raises(KeyError):
+        # Expect raised exception when a residue does not contain an atom
+        assert strucinfo.vdw_radius_protor("ALA", "K") == default_radius
+    # For all other unknown radii expect default radius
+    assert strucinfo.vdw_radius_protor("HOH", "O") == default_radius
+
+
+def test_single_radii():
+    assert strucinfo.vdw_radius_single("N") == 1.55
+
+
+def test_full_name():
+    assert strucinfo.full_name("Ala").upper() == "ALANINE"
+    assert strucinfo.full_name("ALA").upper() == "ALANINE"
+
+
+def test_link_type():
+    assert strucinfo.link_type("Ala").upper() == "L-PEPTIDE LINKING"
+    assert strucinfo.link_type("ALA").upper() == "L-PEPTIDE LINKING"
