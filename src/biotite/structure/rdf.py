@@ -73,7 +73,8 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         center = stack([center])
     elif isinstance(center, Atom):
         center = stack(array([center]))
-    center = center.coord
+    if isinstance(center, AtomArrayStack):
+        center = center.coord
 
     if box.shape[0] != center.shape[0] or box.shape[0] != len(atoms):
         raise ValueError("center, box, and atoms must have the same model count.")
