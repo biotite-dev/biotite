@@ -12,23 +12,27 @@ _PROTOR_DEFAULT = 1.80
 # Contains tuples for the different ProtOr groups:
 # Element, valency, H count
 _PROTOR_RADII = {
-    ("C", 3, 0) : 1.61,
-    ("C", 3, 1) : 1.76,
-    ("C", 4, 1) : 1.88,
-    ("C", 4, 2) : 1.88,
-    ("C", 4, 3) : 1.88,
-    ("N", 3, 0) : 1.64,
-    ("N", 3, 1) : 1.64,
-    ("N", 3, 2) : 1.64,
-    ("N", 4, 3) : 1.64,
-    ("N", 4, 4) : 1.64, # Not official, added for completeness
-    ("O", 1, 0) : 1.42,
-    ("O", 2, 0) : 1.46, # Not official, added for completeness
-    ("O", 2, 1) : 1.46,
-    ("S", 1, 0) : 1.77,
-    ("S", 2, 0) : 1.77, # Not official, added for completeness
-    ("S", 2, 1) : 1.77,
-    ("S", 2, 2) : 1.77  # Not official, added for completeness
+    ("C",  3, 0) : 1.61,
+    ("C",  3, 1) : 1.76,
+    ("C",  4, 1) : 1.88,
+    ("C",  4, 2) : 1.88,
+    ("C",  4, 3) : 1.88,
+    ("N",  3, 0) : 1.64,
+    ("N",  3, 1) : 1.64,
+    ("N",  3, 2) : 1.64,
+    ("N",  4, 3) : 1.64,
+    ("N",  4, 4) : 1.64, # Not official, added for completeness
+    ("O",  1, 0) : 1.42,
+    ("O",  2, 0) : 1.46, # Not official, added for completeness
+    ("O",  2, 1) : 1.46,
+    ("S",  1, 0) : 1.77,
+    ("S",  2, 0) : 1.77, # Not official, added for completeness
+    ("S",  2, 1) : 1.77,
+    ("S",  2, 2) : 1.77, # Not official, added for completeness
+    ("F",  1, 0) : 1.47, # Taken from _SINGLE_RADII
+    ("CL", 1, 0) : 1.75, # Taken from _SINGLE_RADII
+    ("BR", 1, 0) : 1.85, # Taken from _SINGLE_RADII
+    ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
 _SINGLE_DEFAULT = 1.50
