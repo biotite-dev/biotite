@@ -6,7 +6,7 @@
 This module provides functions to calculate the radial distribution function.
 """
 
-__author__ = "Daniel Bauer"
+__author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["rdf"]
 
 from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
@@ -17,43 +17,69 @@ import numpy as np
 def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         periodic=False):
     r"""
-    Compute the radial distribution function g(r) for a given point and a selection.
+    Compute the radial distribution function *g(r)* (RDF) for one or
+    multiple given central positions based on a given system of
+    particles.
 
     Parameters
     ----------
-    center : ndArray or Atom or AtomArray or AtomArrayStack
-        Coordinates or Atoms(s) to use as origin(s) for rdf calculation
+    center : Atom or AtomArray or AtomArrayStack or ndarray, dtype=float
+        Coordinates or atoms(s) to use as origin(s) for RDF calculation.
+        
+        - If a single `Atom` or an `ndarray` with shape *(3,)* is given,
+          the RDF is only calculated for this position.
+        - If an `AtomArray` or an `ndarray` with shape *(n,3)* is given,
+          the calculated RDF histogram is an average over *n*
+          postions.
+        - If an `AtomArrayStack` or an `ndarray` with shape *(m,n,3)* is
+          given, different centers are used for each model *m*.
+          The calculated RDF histogram is an average over *m*
+          models and *n* positions.
+          This requires `atoms` to be an `AtomArrayStack`.
+    
     atoms : AtomArray or AtomArrayStack
-        Simulation cell to use for rdf calculation. Please not that atoms must
-        have an associated box.
-    selection : ndarray or None, optional
-        Boolean mask for atoms to limit the RDF calculation on specific atoms
-        (Default: None).
-    interval : tuple or None, optional
-        The range for the RDF in Angstroem (Default: (0, 10)).
+        The distribution is calculated based on these atoms.
+        When an an `AtomArrayStack` is provided, the RDF histogram is
+        averaged over all models.
+        Please not that `atoms` must have an associated box,
+        unless `box` is set.
+    selection : ndarray, dtype=bool, shape=(n,), optional
+        Boolean mask for `atoms` to limit the RDF calculation to
+        specific atoms.
+    interval : tuple, optional
+        The range in which the RDF is calculated.
     bins : int or sequence of scalars or str, optional
-        Bins for the RDF. If bins is an int, it defines the number of bins for
-        given range. If bins is a sequence, it defines the bin edges. If bins is
-        a string, it defines the function used to calculate the bins
-        (Default: 100).
+        Bins for the RDF.
+        
+        - If `bins` is an `int`, it defines the number of bins for the
+          given `interval`.
+        - If `bins` is a sequence, it defines the bin edges, ignoring
+          the `interval` parameter. The output `bins` has the length
+          of this input parameter reduced by one.
+        - If `bins` is a string, it defines the function used to
+          calculate the bins.
+        
+        See `numpy.histogram()` for further details.
     box : ndarray, shape=(3,3) or shape=(m,3,3), optional
         If this parameter is set, the given box is used instead of the
         `box` attribute of `atoms`.
+        Must have shape *(3,3)* if atoms is an `AtomArray` or
+        *(m,3,3)* if atoms is an `AtomArrayStack`, respectively.
     periodic : bool, optional
-        Defines if periodic boundary conditions are taken into account
-        (Default: False).
+        Defines if periodic boundary conditions are taken into account.
 
     Returns
     -------
     bins : ndarray, dtype=float, shape=n
-        The n bin coordinates of the RDF where n is defined by bins
+        The centers of the histogram bins.
+        The length of the array is given by the `bins` input parameter.
     rdf : ndarry, dtype=float, shape=n
-        RDF values for every bin
+        RDF values for every bin.
 
     Notes
     -----
-    Since the RDF depends on the average particle density of the system, this
-    function strictly requires an box.
+    Since the RDF depends on the average particle density of the system,
+    this function strictly requires an box.
 
     Examples
     --------
@@ -87,9 +113,9 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     # calculate distance histogram
     if periodic:
-        distances = distance(center, atoms, box=box)
+        distances = distance(center, atom_coord, box=box)
     else:
-        distances = distance(center, atoms)
+        distances = distance(center, atom_coord)
     hist, bin_edges = np.histogram(distances, range=interval, bins=bins)
 
     # Normalize with average particle density (N/V) in each bin
