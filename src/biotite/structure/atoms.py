@@ -1114,6 +1114,9 @@ def stack(arrays):
     array_stack._coord = np.stack(coord_list, axis=0)
     # Take bond list from first array
     array_stack._bonds = arrays[0]._bonds
+    # When all atom arrays provide a box, copy the boxes
+    if all([array.box is not None for array in arrays]):
+        array_stack.box = np.array([array.box for array in arrays])
     return array_stack
 
 
