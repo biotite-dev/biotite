@@ -9,7 +9,7 @@ This module provides functions to calculate the radial distribution function.
 __author__ = "Daniel Bauer"
 __all__ = ["rdf"]
 
-from .atoms import Atom, AtomArray, stack, array, AtomArrayStack
+from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
 from .geometry import distance
 from .box import box_volume
 import numpy as np
@@ -60,30 +60,30 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     TODO
 
     """
+    if isinstance(atoms, AtomArray):
+        # Reshape always to a stack for easier calculation
+        atoms = stack([atoms])
+    if selection is not None:
+        atoms = atoms[..., selection]
+    
+    atom_coord = atoms.coord
 
     if box is None:
         if atoms.box is None:
-            raise ValueError("Please supply a box.")
+            raise ValueError("A box must be supplied")
         else:
             box = atoms.box
-
-    if isinstance(atoms, AtomArray):
-        atoms = stack([atoms])
-    if isinstance(center, AtomArray):
-        center = stack([center])
-    elif isinstance(center, Atom):
-        center = stack(array([center]))
-    if isinstance(center, AtomArrayStack):
-        center = center.coord
-
-    if box.shape[0] != center.shape[0] or box.shape[0] != len(atoms):
-        raise ValueError("center, box, and atoms must have the same model count.")
-
-    # only use selection of atoms if there is one
-    if selection is not None:
-        atoms = atoms[:, selection]
-
-
+    
+    center = coord(center)
+    if center.ndim == 1:
+        center = center.reshape((1, 1) + center.shape)
+    elif center.ndim == 2:
+        center = center.reshape((1) + center.shape)
+    
+    if box.shape[0] != center.shape[0] or box.shape[0] != atom_coord.shape[0]:
+        raise ValueError(
+            "Center, box, and atoms must have the same model count"
+        )
 
     # calculate distance histogram
     if periodic:
