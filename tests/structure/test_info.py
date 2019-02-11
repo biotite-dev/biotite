@@ -64,7 +64,7 @@ def test_protOr_radii():
     """
     Assert that ProtOr VdW radii (except hydrogen) can be calculated for
     all atoms in the given structure, since the structure (1GYA)
-    does only contain standard amino acids after thge removal of
+    does only contain standard amino acids after the removal of
     glycosylation.
     This means, that none of the resulting radii should be the default
     value, that is used for atoms where the ProtOr radius cannot be

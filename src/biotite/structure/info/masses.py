@@ -21,6 +21,7 @@ with open(join(_info_dir, "atom_masses.json"), "r") as file:
 with open(join(_info_dir, "residue_masses.msgpack"), "rb") as file:
     _res_masses = msgpack.load(file, raw=False)
 
+
 def mass(item, is_residue=None):
     """
     Calculate the mass for the given object. [1]_
@@ -35,9 +36,18 @@ def mass(item, is_residue=None):
     Parameters
     ----------
     item : str or Atom or AtomArray or AtomArrayStack
-        [description]
+        The atom or molecule to get the mass for.
+        If a string is given, it is interpreted as residue name or
+        chemical element.
+        If an `Atom` is given the mass is taken from its element.
+        If an `AtomArray` or `AtomArrayStack` is given the mass
+        is the sum of the mass of its atoms.
     is_residue : bool, optional
-        [description] (the default is None, which [default_description])
+        If set to true and a string is given for `item`, the string
+        will be strictly interpreted as residue.
+        If set to false, the string is strictly interpreted as element.
+        By default the string will be interpreted as element at first
+        and secondly as residue name, if the element is unknown.
     
     Returns
     -------
@@ -52,6 +62,39 @@ def mass(item, is_residue=None):
         and T Prohaska
         "Atomic weights of the elements 2013 (IUPAC Technical Report)."
         Pure Appl Chem, 88, 265-291 (2016).
+    
+    Examples
+    --------
+
+    >>> print(mass(atom_array))
+    2170.438
+    >>> first_residue = list(residue_iter(atom_array))[0]
+    >>> print(first_residue)
+        A       1 ASN N      N        -8.901    4.127   -0.555
+        A       1 ASN CA     C        -8.608    3.135   -1.618
+        A       1 ASN C      C        -7.117    2.964   -1.897
+        A       1 ASN O      O        -6.634    1.849   -1.758
+        A       1 ASN CB     C        -9.437    3.396   -2.889
+        A       1 ASN CG     C       -10.915    3.130   -2.611
+        A       1 ASN OD1    O       -11.269    2.700   -1.524
+        A       1 ASN ND2    N       -11.806    3.406   -3.543
+        A       1 ASN H1     H        -8.330    3.957    0.261
+        A       1 ASN H2     H        -8.740    5.068   -0.889
+        A       1 ASN H3     H        -9.877    4.041   -0.293
+        A       1 ASN HA     H        -8.930    2.162   -1.239
+        A       1 ASN HB2    H        -9.310    4.417   -3.193
+        A       1 ASN HB3    H        -9.108    2.719   -3.679
+        A       1 ASN HD21   H       -11.572    3.791   -4.444
+        A       1 ASN HD22   H       -12.757    3.183   -3.294
+    >>> print(mass("ASN"))
+    132.118
+    >>> first_atom = first_residue[0]
+    >>> print(first_atom)
+        A       1 ASN N      N        -8.901    4.127   -0.555
+    >>> print(mass(first_atom))
+    14.007
+    >>> print(mass("N"))
+    14.007
     """
 
     if isinstance(item, str):

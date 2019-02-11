@@ -10,7 +10,7 @@ from .bonds import get_bonds_for_residue
 
 _PROTOR_DEFAULT = 1.80 # Not taken from the corresponding paper
 # Contains tuples for the different ProtOr groups:
-# Element, valency, H count
+# Tuple contains: element, valency, H count
 _PROTOR_RADII = {
     ("C",  3, 0) : 1.61,
     ("C",  3, 1) : 1.76,
@@ -32,7 +32,7 @@ _PROTOR_RADII = {
     ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
-_SINGLE_DEFAULT = 1.50 # Not taken from the corresponding paper
+_SINGLE_DEFAULT = 1.50 # Placeholder, not taken from the corresponding paper
 _SINGLE_RADII = {
     "H":  1.20,
     "C":  1.70,
@@ -52,11 +52,53 @@ _protor_radii = {}
 
 
 def vdw_radius_protor(res_name, atom_name):
+    """
+    Estimate the Van-der-Waals radius of an non-hydrogen atom,
+    that includes the radius added by potential bonded hydrogen atoms.
+    The respective radii are taken from the ProtOr dataset. [1]_.
+
+    This is especially useful for macromolecular structures where no
+    hydrogen atoms are resolved, e.g. crystal structures.
+    The valency of the non-hydrogen atom and the amount of normally
+    bonded hydrogen atoms is taken from the chemical compound dictionary
+    dataset.
+
+    Parameters
+    ----------
+    res_name : str
+        The up to 3-letter residue name the non-hydrogen atom belongs
+        to.
+    atom_name : str
+        The name of the non-hydrogen atom.
+    
+    Returns
+    -------
+    The Van-der-Waals radius of the given atom.
+    If the radius cannot be estimated for the atom, the default value
+    is 1.8.
+
+    See also
+    --------
+    vdw_radius_single
+    
+    References
+    ----------
+   
+    .. [1] J Tsai R Taylor, C Chotia and M Gerstein,
+       "The packing densitiy in proteins: standard radii and volumes."
+       J Mol Biol, 290, 253-299 (1999).
+    
+    Examples
+    --------
+
+    >>> print(vdw_radius_protor("GLY", "CA"))
+    1.88
+    """
     res_name = res_name.upper()
     if atom_name[0] == "H":
         raise ValueError(
-            f"Calculating the ProtOr radius for the atom '{atom_name}'' is "
-            f"not meaningful"
+            f"Calculating the ProtOr radius for the hydrogen atom "
+            f"'{atom_name}' is not meaningful"
         )
     if res_name in _protor_radii:
         # Use cached radii for the residue, if already calculated
@@ -115,4 +157,35 @@ def _calculate_protor_radii(res_name):
 
 
 def vdw_radius_single(element):
+    """
+    Get the Van-der-Waals radius of an atom from the given element. [1]_
+
+    Parameters
+    ----------
+    element : str
+        The chemical element of the atoms.
+    
+    Returns
+    -------
+    The Van-der-Waals radius of the atom.
+    If the radius cannot be estimated for the atom, the default value is
+    1.5.
+    
+    See also
+    --------
+    vdw_radius_protor
+    
+    References
+    ----------
+       
+    .. [1] A Bondi,
+       "Van der Waals volumes and radii."
+       J Phys Chem, 86, 441-451 (1964).
+    
+    Examples
+    --------
+
+    >>> print(vdw_radius_single("C"))
+    1.7
+    """
     return _SINGLE_RADII.get(element.upper(), _SINGLE_DEFAULT)

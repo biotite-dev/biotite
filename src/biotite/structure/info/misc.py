@@ -20,8 +20,52 @@ with open(join(_info_dir, "link_types.msgpack"), "rb") as file:
 
 
 def full_name(res_name):
+    """
+    Get the full name of a residue/compound from the up to 3-letter
+    residue name, based on the PDB chemical compound dictionary.
+
+    Parameters
+    ----------
+    res_name : str
+        The up to 3-letter residue name.
+    
+    Returns
+    -------
+    name : str
+        The full name of the residue.
+    
+    Examples
+    --------
+
+    >>> print(full_name("MAN"))
+    ALPHA-D-MANNOSE
+    """
     return _res_names.get(res_name.upper())
 
 
 def link_type(res_name):
+    """
+    Get the linking type of a residue/compound,
+    based on the PDB chemical compound dictionary.
+
+    Parameters
+    ----------
+    res_name : str
+        The up to 3-letter residue name.
+    
+    Returns
+    -------
+    link_type : str
+        The link type.
+    
+    Examples
+    --------
+
+    >>> print(link_type("MAN"))
+    D-SACCHARIDE
+    >>> print(link_type("TRP"))
+    L-PEPTIDE LINKING
+    >>> print(link_type("HOH"))
+    NON-POLYMER
+    """
     return _link_types.get(res_name.upper())
