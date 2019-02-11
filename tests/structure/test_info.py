@@ -41,7 +41,7 @@ def test_bonds(path):
     Test whether the bond data is consistent with the content of MMTF
     files.
     """
-    bond_data = strucinfo.get_bond_dataset()
+    bond_data = strucinfo.bond_dataset()
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
     for group in mmtf_file["groupList"]:
@@ -53,9 +53,9 @@ def test_bonds(path):
             atom1 = atom_names[bond_indices[i]]
             atom2 = atom_names[bond_indices[i+1]]
             order = bond_orders[i//2]
-            assert strucinfo.get_bond_order(group_name, atom1, atom2) == order
+            assert strucinfo.bond_order(group_name, atom1, atom2) == order
             assert frozenset((atom1, atom2)) \
-                   in strucinfo.get_bonds_for_residue(group_name)
+                   in strucinfo.bonds_in_residue(group_name)
             assert frozenset((atom1, atom2)) \
                    in bond_data[group_name]
 

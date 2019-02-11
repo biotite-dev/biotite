@@ -5,7 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 
-from .bonds import get_bonds_for_residue
+from .bonds import bonds_in_residue
 
 
 # Contains tuples for the different ProtOr groups:
@@ -117,7 +117,7 @@ def _calculate_protor_radii(res_name):
     Calculate the ProtOr VdW radii for all atoms (atom names) in
     a residue.
     """
-    bonds = get_bonds_for_residue(res_name)
+    bonds = bonds_in_residue(res_name)
     # Maps atom names to a ProtOr group
     # -> tuple(element, valency, H count)
     # Based on the group the radius is chosen from _PROTOR_RADII

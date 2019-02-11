@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_bond_dataset", "get_bond_order", "get_bonds_for_residue"]
+__all__ = ["bond_dataset", "bond_order", "bonds_in_residue"]
 
 import msgpack
 import copy
@@ -42,7 +42,7 @@ def _init_dataset():
             _intra_bonds[group] = group_bonds
 
 
-def get_bond_dataset():
+def bond_dataset():
     """
     Get a copy of the complete bond dataset extracted from the chemical 
     compound dictionary.
@@ -64,7 +64,7 @@ def get_bond_dataset():
     return copy.copy(_intra_bonds)
 
 
-def get_bond_order(res_name, atom_name1, atom_name2):
+def bond_order(res_name, atom_name1, atom_name2):
     """
     Get the bond order for two atoms of the same residue, based
     on the PDB chemical compound dictionary.
@@ -88,13 +88,13 @@ def get_bond_order(res_name, atom_name1, atom_name2):
     Examples
     --------
 
-    >>> print(get_bond_order("ALA", "CA", "CB"))
+    >>> print(bond_order("ALA", "CA", "CB"))
     1
-    >>> print(get_bond_order("ALA", "C", "O"))
+    >>> print(bond_order("ALA", "C", "O"))
     2
-    >>> print(get_bond_order("ALA", "C", "CB"))
+    >>> print(bond_order("ALA", "C", "CB"))
     None
-    >>> print(get_bond_order("ALA", "FOO", "BAR"))
+    >>> print(bond_order("ALA", "FOO", "BAR"))
     None
     """
     _init_dataset()
@@ -105,7 +105,7 @@ def get_bond_order(res_name, atom_name1, atom_name2):
         return group_bonds.get(frozenset((atom_name1, atom_name2)))
 
 
-def get_bonds_for_residue(res_name):
+def bonds_in_residue(res_name):
     """
     Get a dictionary containing all atoms inside a given residue
     that form a bond.
@@ -124,7 +124,7 @@ def get_bonds_for_residue(res_name):
     
     Examples
     --------
-    >>> bonds = get_bonds_for_residue("MAN")
+    >>> bonds = bonds_in_residue("MAN")
     >>> for atoms, order in sorted(bonds.items()):
     ...     atom1, atom2 = sorted(atoms)
     ...     print(f"{atom1:3} + {atom2:3} -> {order}")

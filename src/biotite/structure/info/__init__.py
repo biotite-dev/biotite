@@ -3,7 +3,7 @@
 # information.
 
 """
-A subpackage for obtaining all kinds of chemical information of atoms
+A subpackage for obtaining all kinds of chemical information about atoms
 and residues, including masses, radii, bonds, etc.
 
 Most information is extracted from the chemical compound dictionary
