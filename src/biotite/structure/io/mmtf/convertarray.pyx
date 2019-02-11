@@ -16,6 +16,7 @@ from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
 from ...box import unitcell_from_vectors
+from ...info.misc import link_type
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -142,11 +143,11 @@ def set_structure(file, array):
             else:
                 curr_res["formalChargeList"] = [0] * (stop-start)
             curr_res["groupName"] = res_name
-            if arr_hetero[start]:
-                curr_res["chemCompType"] = "NON-POLYMER"
-            else:
-                curr_res["chemCompType"] = "PEPTIDE LINKING"
-                # TODO: Differentiate cases of different polymers
+            link = link_type(res_name)
+            # Use 'NON-POLYMER' as default
+            if link is None:
+                link = "NON-POLYMER"
+            curr_res["chemCompType"] = link
             # Add intra-residue bonds
             if include_bonds:
                 intra_bonds = array.bonds[start:stop]
