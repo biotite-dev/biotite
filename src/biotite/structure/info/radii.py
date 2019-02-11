@@ -8,7 +8,6 @@ __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 from .bonds import get_bonds_for_residue
 
 
-_PROTOR_DEFAULT = 1.80 # Not taken from the corresponding paper
 # Contains tuples for the different ProtOr groups:
 # Tuple contains: element, valency, H count
 _PROTOR_RADII = {
@@ -32,7 +31,6 @@ _PROTOR_RADII = {
     ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
-_SINGLE_DEFAULT = 1.50 # Placeholder, not taken from the corresponding paper
 _SINGLE_RADII = {
     "H":  1.20,
     "C":  1.70,
@@ -74,8 +72,7 @@ def vdw_radius_protor(res_name, atom_name):
     Returns
     -------
     The Van-der-Waals radius of the given atom.
-    If the radius cannot be estimated for the atom, the default value
-    is 1.8.
+    If the radius cannot be estimated for the atom, `None` is returned.
 
     See also
     --------
@@ -102,13 +99,12 @@ def vdw_radius_protor(res_name, atom_name):
         )
     if res_name in _protor_radii:
         # Use cached radii for the residue, if already calculated
-        radius = _protor_radii[res_name].get(atom_name)
-        if radius is None:
+        if atom_name not in _protor_radii[res_name]:
             raise KeyError(
                 f"Residue '{res_name}' does not contain an atom named "
                 f"'{atom_name}'"
             )
-        return radius
+        return _protor_radii[res_name].get(atom_name)
     else:
         # Otherwise calculate radii for the given residue and cache
         _protor_radii[res_name] = _calculate_protor_radii(res_name)
@@ -151,7 +147,7 @@ def _calculate_protor_radii(res_name):
                 group[2] += 1
             groups[main_atom] = group
     # Get radii based on ProtOr groups
-    radii = {atom : _PROTOR_RADII.get(tuple(group), _PROTOR_DEFAULT)
+    radii = {atom : _PROTOR_RADII.get(tuple(group))
              for atom, group in groups.items()}
     return radii
 
@@ -168,8 +164,7 @@ def vdw_radius_single(element):
     Returns
     -------
     The Van-der-Waals radius of the atom.
-    If the radius cannot be estimated for the atom, the default value is
-    1.5.
+    If the radius is unknown for the element, `None` is returned.
     
     See also
     --------
@@ -188,4 +183,4 @@ def vdw_radius_single(element):
     >>> print(vdw_radius_single("C"))
     1.7
     """
-    return _SINGLE_RADII.get(element.upper(), _SINGLE_DEFAULT)
+    return _SINGLE_RADII.get(element.upper())

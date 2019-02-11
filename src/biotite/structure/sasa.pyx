@@ -153,11 +153,15 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         occl_filter = occl_filter & filter
         radii = np.full(len(array), np.nan, dtype=np.float32)
         for i in np.arange(len(radii))[occl_filter]:
-            radii[i] = vdw_radius_protor(array.res_name[i], array.atom_name[i])
+            rad = vdw_radius_protor(array.res_name[i], array.atom_name[i])
+            # 1.8 is default radius
+            radii[i] = rad if rad is not None else 1.8
     elif vdw_radii == "Single":
         radii = np.full(len(array), np.nan, dtype=np.float32)
         for i in np.arange(len(radii))[occl_filter]:
-            radii[i] = vdw_radius_single(array.element[i])
+            rad = vdw_radius_single(array.element[i])
+            # 1.5 is default radius
+            radii[i] = rad if rad is not None else 1.8
     else:
         raise KeyError(f"'{vdw_radii}' is not a valid radii set")
     # Increase atom radii by probe size ("rolling probe")

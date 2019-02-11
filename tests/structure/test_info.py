@@ -66,11 +66,8 @@ def test_protOr_radii():
     all atoms in the given structure, since the structure (1GYA)
     does only contain standard amino acids after the removal of
     glycosylation.
-    This means, that none of the resulting radii should be the default
-    value, that is used for atoms where the ProtOr radius cannot be
-    calculated.
+    This means, that none of the resulting radii should be the None.
     """
-    from biotite.structure.info.radii import _PROTOR_DEFAULT as default_radius
     array = load_structure(join(data_dir, "1gya.mmtf"))
     array = array[..., array.element != "H"]
     array = array[..., struc.filter_amino_acids(array)]
@@ -78,19 +75,18 @@ def test_protOr_radii():
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
         assert isinstance(radius, float)
         print(res_name, atom_name)
-        assert radius != default_radius
+        assert radius != None
 
 
 def test_protor_radii_invalid():
-    from biotite.structure.info.radii import _PROTOR_DEFAULT as default_radius
     with pytest.raises(ValueError):
         # Expect raised exception for hydrogen atoms
         strucinfo.vdw_radius_protor("FOO", "H1")
     with pytest.raises(KeyError):
         # Expect raised exception when a residue does not contain an atom
-        assert strucinfo.vdw_radius_protor("ALA", "K") == default_radius
-    # For all other unknown radii expect default radius
-    assert strucinfo.vdw_radius_protor("HOH", "O") == default_radius
+        strucinfo.vdw_radius_protor("ALA", "K")
+    # For all other unknown radii expect None
+    assert strucinfo.vdw_radius_protor("HOH", "O") == None
 
 
 def test_single_radii():
