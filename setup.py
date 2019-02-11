@@ -110,11 +110,16 @@ setup(
     
     # Including additional data
     package_data = {
+        # Type annotations
         "biotite"                   : ["py.typed", "**/*.pyi"],
+        # Substitution matrices
         "biotite.sequence.align"    : ["matrix_data/*.mat"],
+        # Color schmemes
         "biotite.sequence.graphics" : ["color_schemes/*.json"],
+        # Codon tables
         "biotite.sequence"          : ["codon_tables.txt"],
-        "biotite.structure.info"    : ["*.json"]
+        # Structure data (masses, bonds, etc.)
+        "biotite.structure.info"    : ["*.json", "*.msgpack"]
     },
     
     install_requires = ["requests >= 2.12",
