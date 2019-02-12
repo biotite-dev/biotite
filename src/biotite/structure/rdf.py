@@ -91,7 +91,8 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     >>> bins, g_r = rdf(oxygens, oxygens, bins=50, interval=(0, 10), \
     >>>     periodic=True)
 
-    Print the RDF function. Print the RDF function. Bins are in Angstroem
+    Print the RDF function. Print the RDF function.
+    Bins are in Angstroem.
 
     >>> print("r    g_r")
     >>> for x, y in zip(bins, g_r):
@@ -124,6 +125,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     4.90 0.99
 
     Find the radius for the first solvation shell
+    
     >>> from scipy.signal import find_peaks
     >>> peak_positions = find_peaks(g_r)[0]
     >>> peak_positions = peak_positions[0]
@@ -155,7 +157,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
             "Center, box, and atoms must have the same model count"
         )
 
-    # calculate distance histogram
+    # Calculate distance histogram
     dist_box = box if periodic else None
     if center.shape[1] > 1:
         distances = np.full((center.shape[1], atom_coord.shape[0],
@@ -169,7 +171,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     hist, bin_edges = np.histogram(distances, range=interval, bins=bins)
 
     # Normalize with average particle density (N/V) in each bin
-    bin_volume = (4 / 3 * np.pi * np.power(bin_edges[1:], 3))\
+    bin_volume =   (4 / 3 * np.pi * np.power(bin_edges[1: ], 3)) \
                  - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
     n_frames = len(atoms)
     volume = box_volume(box).mean()
