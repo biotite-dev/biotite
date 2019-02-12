@@ -112,18 +112,28 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         )
 
     # calculate distance histogram
-    if periodic:
-        distances = distance(center, atom_coord, box=box)
+    dist_box = box if periodic else None
+    if center.shape[1] > 1:
+        distances = np.full((center.shape[1], atom_coord.shape[0],
+                             atom_coord.shape[1]), np.nan)
+        for c in range(center.shape[1]):
+            distances[c] = distance(center[:, c:c+1, :],
+                                    atom_coord,
+                                    box=dist_box)
     else:
-        distances = distance(center, atom_coord)
+        distances = distance(center, atom_coord, box=dist_box)
     hist, bin_edges = np.histogram(distances, range=interval, bins=bins)
 
     # Normalize with average particle density (N/V) in each bin
-    bin_volume = (4 / 3 * np.pi * np.power(bin_edges[1:], 3)) - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
+    bin_volume = (4 / 3 * np.pi * np.power(bin_edges[1:], 3))\
+                 - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
     n_frames = len(atoms)
     volume = box_volume(box).mean()
     density = atoms.array_length() / volume
     g_r = hist / (bin_volume * density * n_frames)
+
+    # Normalize with number of centers
+    g_r /= center.shape[1]
 
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
 

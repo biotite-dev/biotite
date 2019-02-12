@@ -55,7 +55,7 @@ def test_rdf_with_selection():
     oxygen = stack[:, stack.atom_name == 'OW']
     interval = np.array([0, 10])
     n_bins = 100
-    sele = (stack.atom_name=='OW') & (stack.res_id >= 3)
+    sele = (stack.atom_name == 'OW') & (stack.res_id >= 3)
     bins, g_r = rdf(oxygen[:, 0].coord, stack, selection=sele,
                     interval=interval, bins=n_bins, periodic=False)
 
@@ -95,14 +95,14 @@ def test_rdf_multiple_center():
     n_bins = 100
 
     # averaging individual calculations
-    bins1, g_r1 = rdf(oxygen[:, 1].coord, oxygen, interval=interval,
+    bins1, g_r1 = rdf(oxygen[:, 1].coord, oxygen[:, 2:], interval=interval,
                     bins=n_bins, periodic=False)
-    bins2, g_r2 = rdf(oxygen[:, 0].coord, oxygen, interval=interval,
+    bins2, g_r2 = rdf(oxygen[:, 0].coord, oxygen[:, 2:], interval=interval,
                     bins=n_bins, periodic=False)
     mean = np.mean([g_r1, g_r2], axis=0)
 
     # this should give the same result as averaging for oxygen 0 and 1
-    bins, g_r = rdf(oxygen[:, 0:2].coord, oxygen, interval=interval,
+    bins, g_r = rdf(oxygen[:, 0:2].coord, oxygen[:, 2:], interval=interval,
                     bins=n_bins, periodic=False)
 
     assert np.allclose(g_r, mean, rtol=0.0001)
@@ -165,8 +165,7 @@ def test_rdf_normalized():
     interval = np.array([0, 5])
     n_bins = 100
 
-    bins, g_r = rdf(oxygen[:, 0].coord, oxygen[:, 1:], interval=interval,
+    bins, g_r = rdf(oxygen.coord, oxygen, interval=interval,
                     bins=n_bins, periodic=True)
-
-    assert np.allclose(g_r, np.ones(n_bins), atol=0.1)
+    assert np.allclose(g_r[-10:], np.ones(10), atol=0.1)
 
