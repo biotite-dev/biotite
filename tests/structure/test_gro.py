@@ -38,7 +38,8 @@ def test_array_conversion(path, single_model):
     assert array1.coord.tolist() == array2.coord.tolist()
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.gro")))
+@pytest.mark.parametrize("path", glob.glob(join(data_dir,
+                                                "[!(waterbox)]*.gro")))
 def test_pdb_consistency(path):
     pdb_path = splitext(path)[0] + ".pdb"
     pdb_file = pdb.PDBFile()
