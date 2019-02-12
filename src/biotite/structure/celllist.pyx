@@ -25,7 +25,7 @@ ctypedef np.uint8_t uint8
 
 cdef class CellList:
     """
-    __init__(atom_array, cell_size, periodic=False)
+    __init__(atom_array, cell_size, periodic=False, box=None)
     
     This class enables the efficient search of atoms in vicinity of a
     defined location.
@@ -36,15 +36,15 @@ cdef class CellList:
     the relevant cells are checked. Effectively this decreases the
     operation time for finding atoms with a maximum distance to given
     coordinates from *O(n)* to *O(1)*, after the `CellList` has been
-    created. Therefore an `CellList` saves calculation time in those
+    created. Therefore a `CellList` saves calculation time in those
     cases, where vicinity is checked for multiple locations.
     
     Parameters
     ----------
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The `AtomArray` to create the `CellList` for.
-        Alternatively the atom coordiantes are accepted directly
-        (only if `periodic` is false).
+        Alternatively the atom coordiantes are accepted directly.
+        In this case `box` must be set, if `periodic` is true.
     cell_size : float
         The coordinate interval each cell has for x, y and z axis.
         The amount of cells depends on the range of coordinates in the
