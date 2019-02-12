@@ -19,14 +19,14 @@ def test_rdf():
     oxygen = stack[:, stack.atom_name == 'OW']
     interval = np.array([0, 10])
     n_bins = 100
-    bins, g_r = rdf(oxygen[:, 0].coord, oxygen[:, 1:], interval=interval,
+    bins, g_r = rdf(oxygen[:, 0].coord, oxygen, interval=interval,
                     bins=n_bins, periodic=False)
 
     # Compare with MDTraj
     import mdtraj
     traj = mdtraj.load(TEST_FILE)
     ow = [a.index for a in traj.topology.atoms if a.name == 'O']
-    pairs = itertools.product([ow[0]], ow[1:])
+    pairs = itertools.product([ow[0]], ow)
     mdt_bins, mdt_g_r = mdtraj.compute_rdf(traj, list(pairs),
                                            r_range=interval/10, n_bins=n_bins,
                                            periodic=False)
@@ -74,15 +74,14 @@ def test_rdf_atom_argument():
     oxygen = stack[:, stack.atom_name == 'OW']
     interval = np.array([0, 10])
     n_bins = 100
-    sele = (stack.atom_name == 'OW') & (stack.res_id >= 3)
-    bins, g_r = rdf(oxygen[:, 0].coord, stack, selection=sele,
-                    interval=interval, bins=n_bins, periodic=False)
 
-    nosel_bins, nosel_g_r = rdf(oxygen[:, 0].coord, oxygen[:, 1:],
-                                interval=interval, bins=n_bins, periodic=False)
+    bins, g_r = rdf(oxygen[:, 0], stack, interval=interval,
+                    bins=n_bins, periodic=False)
 
-    assert np.allclose(bins, nosel_bins)
-    assert np.allclose(g_r, nosel_g_r)
+    atom_bins, atoms_g_r = rdf(oxygen[:, 0].coord, stack, interval=interval,
+                    bins=n_bins, periodic=False)
+
+    assert np.allclose(g_r, atoms_g_r)
 
 
 def test_rdf_multiple_center():
