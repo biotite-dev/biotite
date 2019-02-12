@@ -3,7 +3,7 @@
 # information.
 
 import biotite.structure as struc
-import biotite.structure.io.npz as npz
+import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
 from .util import data_dir
@@ -12,9 +12,7 @@ import pytest
 
 @pytest.fixture
 def array():
-    file = npz.NpzFile()
-    file.read(join(data_dir, "1l2y.npz"))
-    return file.get_structure()[0]
+    return strucio.load_structure(join(data_dir, "1l2y.mmtf"))[0]
 
 def test_apply_residue_wise(array):
     data = struc.apply_residue_wise(array, np.ones(len(array)), np.sum)
@@ -33,3 +31,11 @@ def test_get_residues(array):
                               "ASP","GLY","GLY","PRO","SER","SER","GLY","ARG",
                               "PRO","PRO","PRO","SER"]
     assert len(ids) == struc.get_residue_count(array)
+
+def test_residue_iter(array):
+    centroid = [struc.centroid(res).tolist()
+                for res in struc.residue_iter(array)]
+    ref_centroid = struc.apply_residue_wise(
+        array, array.coord, np.average, axis=0
+    )
+    assert centroid == ref_centroid.tolist()

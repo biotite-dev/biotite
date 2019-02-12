@@ -175,14 +175,18 @@ class PDBxFile(TextFile, MutableMapping):
             
         Returns
         -------
-        category_dict : dict
+        category_dict : dict or None
             A entry keyed dictionary. The corresponding values are
             strings or `ndarrays` of strings for *non-looped* and
             *looped* categories, respectively.
+            Returns None, if the data block does not contain the given
+            category.
         """
         if block is None:
             block = self.get_block_names()[0]
-        category_info = self._categories[(block, category)]
+        category_info = self._categories.get((block, category))
+        if category_info is None:
+            return None
         start = category_info["start"]
         stop = category_info["stop"]
         is_loop = category_info["loop"]
@@ -200,12 +204,12 @@ class PDBxFile(TextFile, MutableMapping):
             while i < len(prelines):
                 if prelines[i][0] == ";":
                     # multiline values
-                    lines[k-1] += " '" + prelines[i][1:]
+                    multi_line_str = prelines[i][1:]
                     j = i+1
                     while prelines[j] != ";":
-                        lines[k-1] += prelines[j]
+                        multi_line_str += prelines[j]
                         j += 1
-                    lines[k-1] += "'"
+                    lines[k-1] += " " + shlex.quote(multi_line_str)
                     i = j+1
                 elif not is_loop and prelines[i][0] in ["'",'"']:
                     # Singleline values where value is in the line

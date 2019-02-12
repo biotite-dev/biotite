@@ -32,6 +32,7 @@ import biotite.structure.io as strucio
     pytest.param("biotite.structure.io.pdbx",    ["biotite.structure"]       ),
     pytest.param("biotite.structure.io.npz",     ["biotite.structure"]       ),
     pytest.param("biotite.structure.io.mmtf",    ["biotite.structure"]       ),
+    pytest.param("biotite.structure.info",       ["biotite.structure"]       ),
     pytest.param("biotite.database.entrez",      []                          ),
     pytest.param("biotite.database.rcsb",        []                          ),
     pytest.param("biotite.application",          []                          ),
