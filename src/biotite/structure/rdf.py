@@ -14,6 +14,7 @@ from .geometry import distance
 from .box import box_volume
 import numpy as np
 
+
 def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         periodic=False):
     r"""
