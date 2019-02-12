@@ -150,7 +150,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     if center.ndim == 1:
         center = center.reshape((1, 1) + center.shape)
     elif center.ndim == 2:
-        center = center.reshape((1) + center.shape)
+        center = center.reshape((1,) + center.shape)
     
     if box.shape[0] != center.shape[0] or box.shape[0] != atom_coord.shape[0]:
         raise ValueError(
