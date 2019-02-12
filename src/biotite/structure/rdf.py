@@ -26,7 +26,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     ----------
     center : Atom or AtomArray or AtomArrayStack or ndarray, dtype=float
         Coordinates or atoms(s) to use as origin(s) for RDF calculation.
-        
+
         - If a single `Atom` or an `ndarray` with shape *(3,)* is given,
           the RDF is only calculated for this position.
         - If an `AtomArray` or an `ndarray` with shape *(n,3)* is given,
@@ -37,7 +37,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
           The calculated RDF histogram is an average over *m*
           models and *n* positions.
           This requires `atoms` to be an `AtomArrayStack`.
-    
+
     atoms : AtomArray or AtomArrayStack
         The distribution is calculated based on these atoms.
         When an an `AtomArrayStack` is provided, the RDF histogram is
@@ -51,7 +51,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         The range in which the RDF is calculated.
     bins : int or sequence of scalars or str, optional
         Bins for the RDF.
-        
+
         - If `bins` is an `int`, it defines the number of bins for the
           given `interval`.
         - If `bins` is a sequence, it defines the bin edges, ignoring
@@ -59,7 +59,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
           of this input parameter reduced by one.
         - If `bins` is a string, it defines the function used to
           calculate the bins.
-        
+
         See `numpy.histogram()` for further details.
     box : ndarray, shape=(3,3) or shape=(m,3,3), optional
         If this parameter is set, the given box is used instead of the
@@ -84,8 +84,51 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     Examples
     --------
-    TODO
+    Calculate the oxygen-oxygen radial distribution function of water:
 
+    >>> s = io.load_structure("water.gro")
+    >>> oxygens = s[:, s.atom_name == 'OW']
+    >>> bins, g_r = rdf(oxygens, oxygens, bins=50, interval=(0, 10), \
+    >>>     periodic=True)
+
+    Print the RDF function. Print the RDF function. Bins are in Angstroem
+
+    >>> print("r    g_r")
+    >>> for x, y in zip(bins, g_r):
+    >>> print(f"{x:.2f} {y:.2f}")
+    r    g_r
+    0.10 889.50
+    0.30 0.00
+    0.50 0.00
+    0.70 0.00
+    0.90 0.00
+    1.10 0.00
+    1.30 0.00
+    1.50 0.00
+    1.70 0.00
+    1.90 0.00
+    2.10 0.00
+    2.30 0.00
+    2.50 0.10
+    2.70 2.07
+    2.90 2.31
+    3.10 1.35
+    3.30 1.03
+    3.50 0.97
+    3.70 0.94
+    3.90 0.96
+    4.10 0.96
+    4.30 0.97
+    4.50 0.96
+    4.70 0.96
+    4.90 0.99
+
+    Find the radius for the first solvation shell
+    >>> from scipy.signal import find_peaks
+    >>> peak_positions = find_peaks(g_r)[0]
+    >>> peak_positions = peak_positions[0]
+    >>> print(f"{bins[peak_positions]/10:.2f} nm")
+    0.29 nm
     """
     if isinstance(atoms, AtomArray):
         # Reshape always to a stack for easier calculation
