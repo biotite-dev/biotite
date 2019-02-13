@@ -9,10 +9,12 @@ This module provides functions to calculate the radial distribution function.
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["rdf"]
 
+from numbers import Integral
+import numpy as np
 from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
 from .geometry import distance
 from .box import box_volume
-import numpy as np
+from .celllist import CellList
 
 
 def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
@@ -158,14 +160,21 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         )
 
     # Calculate distance histogram
-    dist_box = box if periodic else None
-    distances = np.full((center.shape[1], atom_coord.shape[0],
-                            atom_coord.shape[1]), np.nan)
-    for c in range(center.shape[1]):
-        distances[c] = distance(center[:, c:c+1, :],
-                                atom_coord,
-                                box=dist_box)
-    hist, bin_edges = np.histogram(distances, range=interval, bins=bins)
+    edges = _calculate_edges(interval, bins)
+    threshold_dist = edges[-1]
+    cell_size = threshold_dist
+    distances = []
+    for i in range(atoms.stack_depth()):
+        cell_list = CellList(atom_coord[i], cell_size, periodic, box[i])
+        near_atom_mask = cell_list.get_atoms_in_cells(center[i], as_mask=True)
+        for j in range(center.shape[1]):
+            dist_box = box[i] if periodic else None
+            distances.append(distance(
+                center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
+            ))
+    # Make one array from multiple arrays with different length
+    distances = np.concatenate(distances)
+    hist, bin_edges = np.histogram(distances, bins=edges)
 
     # Normalize with average particle density (N/V) in each bin
     bin_volume =   (4 / 3 * np.pi * np.power(bin_edges[1: ], 3)) \
@@ -181,3 +190,13 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
 
     return bin_centers, g_r
+
+
+def _calculate_edges(interval, bins):
+    if isinstance(bins, Integral):
+        if bins < 1:
+            raise ValueError("At least one bin is requires")
+        return np.linspace(*interval, bins+1)
+    else:
+        # 'bins' contains edges
+        return np.array(bins, dtype=float)
