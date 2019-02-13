@@ -10,6 +10,7 @@ import itertools
 TEST_FILE = join(data_dir, "waterbox.gro")
 
 
+@pytest.mark.xfail(raises=ImportError)
 def test_rdf():
     """ General test to reproduce oxygen RDF for a box of water"""
     test_file = TEST_FILE
@@ -107,6 +108,7 @@ def test_rdf_multiple_center():
     assert np.allclose(g_r, mean, rtol=0.0001)
 
 
+@pytest.mark.xfail(raises=ImportError)
 def test_rdf_periodic():
     """ Test if the periodic argument gives the correct results"""
     test_file = TEST_FILE
