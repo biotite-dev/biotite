@@ -175,7 +175,8 @@
             "mass_of_element",
             "atom_masses",
             "mass_center",
-            "gyration_radius"
+            "gyration_radius",
+            "rdf"
         ],
         "Manipulation" : [
             "translate",
