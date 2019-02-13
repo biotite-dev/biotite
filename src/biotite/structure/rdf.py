@@ -149,12 +149,12 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     9.70 1.01
     9.90 1.00
 
-    Find the radius for the first solvation shell
+    Find the radius for the first solvation shell.
+    In this simple case, the density peak is identified by finding
+    the maximum of the function.
     
-    >>> from scipy.signal import find_peaks
-    >>> peak_positions = find_peaks(g_r)[0]
-    >>> peak_positions = peak_positions[0]
-    >>> print(f"{bins[peak_positions]/10:.2f} nm")
+    >>> peak_position = np.argmax(g_r)
+    >>> print(f"{bins[peak_position]/10:.2f} nm")
     0.29 nm
     """
     if isinstance(atoms, AtomArray):
