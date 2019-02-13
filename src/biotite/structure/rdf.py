@@ -165,8 +165,16 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     cell_size = threshold_dist
     distances = []
     for i in range(atoms.stack_depth()):
+        # Use cell list to efficiently preselect atoms that are in range
+        # of the desired bin range
         cell_list = CellList(atom_coord[i], cell_size, periodic, box[i])
+        # 'cell_radius=1' is used in 'get_atoms_in_cells()'
+        # This is enough to find all atoms that are in the given
+        # interval (and more), since the size of each cell is as large
+        # as the last edge of the bins
         near_atom_mask = cell_list.get_atoms_in_cells(center[i], as_mask=True)
+        # Calculate distances of each center to preselected atoms
+        # for each center
         for j in range(center.shape[1]):
             dist_box = box[i] if periodic else None
             distances.append(distance(
