@@ -26,7 +26,7 @@ import biotite.structure.io as strucio
     pytest.param("biotite.sequence.io.fastq",    ["biotite.sequence"]        ),
     pytest.param("biotite.sequence.io.genbank",  ["biotite.sequence",
                                                   "biotite.database.entrez"] ),
-    pytest.param("biotite.structure",            []                          ),
+    pytest.param("biotite.structure",            ["biotite.structure.io"]    ),
     pytest.param("biotite.structure.io",         ["biotite.structure"]       ),
     pytest.param("biotite.structure.io.pdb",     ["biotite.structure"]       ),
     pytest.param("biotite.structure.io.pdbx",    ["biotite.structure"]       ),
