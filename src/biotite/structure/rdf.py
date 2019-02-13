@@ -226,7 +226,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 def _calculate_edges(interval, bins):
     if isinstance(bins, Integral):
         if bins < 1:
-            raise ValueError("At least one bin is requires")
+            raise ValueError("At least one bin is required")
         return np.linspace(*interval, bins+1)
     else:
         # 'bins' contains edges
