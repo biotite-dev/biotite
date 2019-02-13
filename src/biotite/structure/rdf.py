@@ -86,21 +86,19 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     Examples
     --------
-    Calculate the oxygen-oxygen radial distribution function of water:
+    Calculate the oxygen-oxygen radial distribution function of water.
+    The range of the histogram starts at 0.2 Angstroem, in order to
+    ignore the counts for the density for each oxygen to itself.
 
-    >>> s = io.load_structure("water.gro")
-    >>> oxygens = s[:, s.atom_name == 'OW']
-    >>> bins, g_r = rdf(oxygens, oxygens, bins=50, interval=(0, 10), \
-    >>>     periodic=True)
+    >>> from os.path import join
+    >>> waterbox = load_structure(join(path_to_structures, "waterbox.gro"))
+    >>> oxygens = waterbox[:, waterbox.atom_name == 'OW']
+    >>> bins, g_r = rdf(oxygens, oxygens, bins=49, interval=(0.2, 10), periodic=True)
 
-    Print the RDF function. Print the RDF function.
-    Bins are in Angstroem.
+    Print the RDF depending on the radius. Bins are in Angstroem.
 
-    >>> print("r    g_r")
     >>> for x, y in zip(bins, g_r):
-    >>> print(f"{x:.2f} {y:.2f}")
-    r    g_r
-    0.10 889.50
+    ...     print(f"{x:.2f} {y:.2f}")
     0.30 0.00
     0.50 0.00
     0.70 0.00
@@ -125,6 +123,31 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     4.50 0.96
     4.70 0.96
     4.90 0.99
+    5.10 0.97
+    5.30 1.03
+    5.50 1.01
+    5.70 0.99
+    5.90 0.97
+    6.10 0.97
+    6.30 1.00
+    6.50 1.04
+    6.70 1.03
+    6.90 0.99
+    7.10 1.02
+    7.30 1.02
+    7.50 0.99
+    7.70 1.01
+    7.90 0.98
+    8.10 0.99
+    8.30 0.99
+    8.50 1.00
+    8.70 0.99
+    8.90 1.00
+    9.10 1.01
+    9.30 1.01
+    9.50 1.00
+    9.70 1.01
+    9.90 1.00
 
     Find the radius for the first solvation shell
     
