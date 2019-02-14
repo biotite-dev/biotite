@@ -333,8 +333,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         attr = super().__dir__()
         attr.append("coord")
         attr.append("bonds")
+        attr.append("box")
         for name in self._annot.keys():
             attr.append(name)
+        return attr
     
     def __eq__(self, item):
         """
@@ -819,7 +821,7 @@ class AtomArrayStack(_AtomArrayBase):
         if depth == None or length == None:
             self._coord = None
         else:
-            self._coord = np.zeros((depth, length, 3), dtype=float)
+            self._coord = np.full((depth, length, 3), np.nan, dtype=float)
     
     def get_array(self, index):
         """
