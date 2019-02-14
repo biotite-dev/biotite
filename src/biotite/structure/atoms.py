@@ -333,8 +333,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         attr = super().__dir__()
         attr.append("coord")
         attr.append("bonds")
+        attr.append("box")
         for name in self._annot.keys():
             attr.append(name)
+        return attr
     
     def __eq__(self, item):
         """
