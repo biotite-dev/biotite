@@ -293,12 +293,18 @@ class PDBFile(TextFile):
                       for charge in array.get_annotation("charge")]
         else:
             charge = [""] * array.array_length()
+
+        if array.array_length() >= 100000:
+            warn("More then 100,000 atoms per model.")
         
         if isinstance(array, AtomArray):
             self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
+                pdb_id = atom_id[i]
+                if pdb_id >= 100000:
+                    pdb_id = pdb_id % 100000 + 1
                 self.lines[i] = ("{:6}".format(hetero[i]) + 
-                                  "{:>5d}".format(atom_id[i]) +
+                                  "{:>5d}".format(pdb_id) +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
                                   " " +
@@ -326,8 +332,11 @@ class PDBFile(TextFile):
             # which are afterwards applied for each model
             templines = [None] * array.array_length()
             for i in range(array.array_length()):
+                pdb_id = atom_id[i]
+                if pdb_id >= 100000:
+                    pdb_id % 100000 + 1
                 templines[i] = ("{:6}".format(hetero[i]) + 
-                                 "{:>5d}".format(atom_id[i]) +
+                                 "{:>5d}".format(pdb_id) +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
                                  " " +

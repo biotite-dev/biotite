@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Union, Tuple, Callable, Any, overload
+from typing import Union, Generator, Tuple, Callable, Any, overload
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
@@ -36,3 +36,6 @@ def get_residues(
 
 def get_residue_count(array: Union[AtomArrayStack, AtomArray]) -> int: ...
 
+def residue_iter(
+    array: Union[AtomArrayStack, AtomArray]
+) -> Generator[Union[AtomArrayStack, AtomArray]]
