@@ -15,6 +15,8 @@ from ...bonds import BondList
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
+from ...box import unitcell_from_vectors
+from ...info.misc import link_type
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -30,12 +32,12 @@ def set_structure(file, array):
     """
     set_structure(file, array)
 
-    Set the relevant fiels of an MMTF file with the content of an
+    Set the relevant fields of an MMTF file with the content of an
     `AtomArray` or `AtomArrayStack`.
     
     All required and some optional fields of the MMTF file will be set
-    or overriden if the field does already exist. Files are removed when
-    they are optional and when setting the structure information
+    or overriden if the field does already exist. Fields are removed
+    when they are optional and when setting the structure information
     could invalidate its content (e.g. altLocList). 
     
     Parameters
@@ -45,6 +47,13 @@ def set_structure(file, array):
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
+    
+    Notes
+    -----
+    As the MMTF format only supports one unit cell, individual unit
+    cells for each model are not supported.
+    Instead only the first box in an `AtomArrayStack` is written
+    into the file.
     
     Examples
     --------
@@ -134,11 +143,11 @@ def set_structure(file, array):
             else:
                 curr_res["formalChargeList"] = [0] * (stop-start)
             curr_res["groupName"] = res_name
-            if arr_hetero[start]:
-                curr_res["chemCompType"] = "NON-POLYMER"
-            else:
-                curr_res["chemCompType"] = "PEPTIDE LINKING"
-                # TODO: Differentiate cases of different polymers
+            link = link_type(res_name)
+            # Use 'NON-POLYMER' as default
+            if link is None:
+                link = "NON-POLYMER"
+            curr_res["chemCompType"] = link
             # Add intra-residue bonds
             if include_bonds:
                 intra_bonds = array.bonds[start:stop]
@@ -275,6 +284,20 @@ def set_structure(file, array):
         file["numBonds"] = array.bonds.get_bond_count() * model_count
     else:
         file["numBonds"] = 0
+    
+    ### Add unit cell ###
+    if array.box is not None:
+        if isinstance(array, AtomArray):
+            box = array.box
+        elif isinstance(array, AtomArrayStack):
+            # Use box of first model, since MMTF does not support
+            # multiple boxes
+            box = array.box[0]
+        len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
+        file["unitCell"] = [
+            len_a, len_b, len_c,
+            np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
+        ]
     
     ### Add additional information ###
     # Only set additional information, if not already set

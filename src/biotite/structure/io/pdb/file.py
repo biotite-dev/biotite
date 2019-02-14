@@ -6,7 +6,8 @@ __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBFile"]
 
 import numpy as np
-from ...atoms import Atom, AtomArray, AtomArrayStack
+from ...atoms import AtomArray, AtomArrayStack
+from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
@@ -112,9 +113,10 @@ class PDBFile(TextFile):
             model_start_i = np.array([0])
         
         if model is None:
-            # Very lazy check for length equlity check:
+            # Very simple check for length equality check:
             # If all models have the same amount of atoms
-            # the amount of atom lines is a 
+            # the amount of atom lines is a multiple
+            # of the amount of models
             if len(atom_line_i) % len(model_start_i):
                 raise BadStructureError("The models in the file have unequal "
                                         "amount of atoms, give an explicit "
@@ -133,8 +135,6 @@ class PDBFile(TextFile):
             coord_i = atom_line_i
         
         else:
-            length = len(atom_line_i) // len(model_start_i)
-            array = AtomArray(length)
             last_model = len(model_start_i)
             if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
@@ -146,8 +146,8 @@ class PDBFile(TextFile):
                     f"Requested model number {model} is larger than the "
                     f"amount of models ({last_model})"
                 )
-            annot_i = atom_line_i[line_filter]
-            coord_i = atom_line_i[line_filter]
+            annot_i = coord_i = atom_line_i[line_filter]
+            array = AtomArray(len(coord_i))
         
         # Create inscode and altloc arrays for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
@@ -225,11 +225,36 @@ class PDBFile(TextFile):
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
-                
-        # Final filter and return
+
+        # Fill in box vectors
+        # PDB does not support changing box dimensions. CRYST1 is a one-time
+        # record so we can extract it directly
+        for line in self.lines:
+            if line.startswith("CRYST1"):
+                len_a = float(line[6:15])
+                len_b = float(line[15:24])
+                len_c = float(line[24:33])
+                alpha = np.deg2rad(float(line[33:40]))
+                beta = np.deg2rad(float(line[40:47]))
+                gamma = np.deg2rad(float(line[47:54]))
+                box = vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
+
+                if isinstance(array, AtomArray):
+                    array.box = box
+                else:
+                    array.box = np.repeat(
+                        box[np.newaxis, ...], array.stack_depth(), axis=0
+                    )
+                break
+
+
+        # Apply final filter and return
         return array[..., filter_inscode_and_altloc(
             array, insertion_code, altloc, inscode_array, altloc_array
         )]
+
+
+
 
     def set_structure(self, array):
         """
@@ -268,12 +293,18 @@ class PDBFile(TextFile):
                       for charge in array.get_annotation("charge")]
         else:
             charge = [""] * array.array_length()
+
+        if array.array_length() >= 100000:
+            warn("More then 100,000 atoms per model.")
         
         if isinstance(array, AtomArray):
             self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
+                pdb_id = atom_id[i]
+                if pdb_id >= 100000:
+                    pdb_id = pdb_id % 100000 + 1
                 self.lines[i] = ("{:6}".format(hetero[i]) + 
-                                  "{:>5d}".format(atom_id[i]) +
+                                  "{:>5d}".format(pdb_id) +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
                                   " " +
@@ -294,14 +325,18 @@ class PDBFile(TextFile):
         
         elif isinstance(array, AtomArrayStack):
             self.lines = []
+
             # The entire information, but the coordinates,
             # is equal for each model
             # Therefore template lines are created
             # which are afterwards applied for each model
             templines = [None] * array.array_length()
             for i in range(array.array_length()):
+                pdb_id = atom_id[i]
+                if pdb_id >= 100000:
+                    pdb_id % 100000 + 1
                 templines[i] = ("{:6}".format(hetero[i]) + 
-                                 "{:>5d}".format(atom_id[i]) +
+                                 "{:>5d}".format(pdb_id) +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
                                  " " +
@@ -331,5 +366,18 @@ class PDBFile(TextFile):
                     modellines[j] = line
                 self.lines.extend(modellines)
                 self.lines.append("ENDMDL")
-                
-            
+
+        # prepend a single CRYST1 record if we have box information
+        if array.box is not None:
+            box = array.box
+            if len(box.shape) == 3:
+                box = box[0]
+            unitcell = unitcell_from_vectors(box)
+            self.lines.insert(0, "CRYST1" +
+                              "{:>9.3f}".format(unitcell[0]) +
+                              "{:>9.3f}".format(unitcell[1]) +
+                              "{:>9.3f}".format(unitcell[2]) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[3])) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[4])) +
+                              "{:>7.2f}".format(np.rad2deg(unitcell[5])) +
+                              " P 1           1")

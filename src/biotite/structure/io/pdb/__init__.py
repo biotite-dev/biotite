@@ -15,3 +15,4 @@ encouraged.
 __author__ = "Patrick Kunzmann"
 
 from .file import *
+from .convert import *

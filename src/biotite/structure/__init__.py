@@ -15,14 +15,14 @@ coordinates.
 An `Atom` contains data for a single atom, it stores the annotations as
 scalar values and the coordinates as length 3 `ndarray`.
 An `AtomArray` stores data for an entire structure model containing *n*
-atoms. Therefore the annotations are represented as `ndarray`s of
+atoms. Therefore the annotations are represented as `ndarray` objects of
 length *n*, so called annotation arrays. The coordinates are a (n x 3)
-`ndarray` .
+`ndarray`.
 `AtomArrayStack` stores data for *m* models. Each `AtomArray` in
 the `AtomArrayStack` has the same annotation arrays, since each atom
 must be represented in all models in the stack. Each model may differ in
 atom coordinates. Therefore the annotation arrays are represented as
-`ndarrays` of length *n*, while the coordinates are a (m x n x 3)
+`ndarray`s of length *n*, while the coordinates are a (m x n x 3)
 `ndarray` .
 All types must not be subclassed.
 
@@ -65,23 +65,26 @@ and `AtomArrayStack` support `NumPy` style indexing, the index is
 propagated to each attribute. If a single integer is used as index,
 an object with one dimension less is returned
 (`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
-Do not expect a deep copy, when sclicing an `AtomArray` or
+Do not expect a deep copy, when slicing an `AtomArray` or
 `AtomArrayStack`. The attributes of the sliced object may still point
 to the original `ndarray`.
 
 An optional attribute for `AtomArray` and `AtomArrayStack` instances
-are associated `BondList` objects, that specifiy the indices of atoms
+are associated `BondList` objects, that specify the indices of atoms
 that form a chemical bonds.
 
 Based on the implementation in `NumPy` arrays, this package furthermore
 contains functions for structure analysis, manipulation and
-visualisation.
+visualization.
+
+The universal length unit in this package is Å. 
 """
 
 __author__ = "Patrick Kunzmann"
 
 from .atoms import *
 from .bonds import *
+from .box import *
 from .celllist import *
 from .compare import *
 from .error import *
@@ -90,6 +93,7 @@ from .geometry import *
 from .hbond import *
 from .integrity import *
 from .mechanics import *
+from .rdf import *
 from .residues import *
 from .sasa import *
 from .sse import *

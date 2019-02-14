@@ -2,14 +2,18 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 from .atoms import AtomArray
 
 
 class CellList:
     def __init__(
-        self, atom_array: Union[AtomArray, np.ndarray], cell_size: float
+        self,
+        atom_array: Union[AtomArray, np.ndarray],
+        cell_size: float,
+        periodic: bool = False
+        box: Optional[np.ndarray] = None
     ) -> None: ...
     def create_adjacency_matrix(
         self, threshold_distance: float

@@ -40,7 +40,11 @@ if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
     try:
         from Cython.Build import cythonize
         import numpy
-        cythonize("src/**/*.pyx", include_path=[numpy.get_include()])
+        cythonize(
+            "src/**/*.pyx",
+            include_path=[numpy.get_include()],
+            language_level=3
+        )
     except ValueError:
         pass
 
@@ -104,11 +108,19 @@ setup(
     
     ext_modules = get_extensions(),
     
-    # Including substitution matrix data
-    package_data = {"biotite"                   : ["py.typed", "**/*.pyi"],
-                    "biotite.sequence.align"    : ["matrix_data/*.mat"],
-                    "biotite.sequence.graphics" : ["color_schemes/*.json"],
-                    "biotite.sequence"          : ["codon_tables.txt"],},
+    # Including additional data
+    package_data = {
+        # Type annotations
+        "biotite"                   : ["py.typed", "**/*.pyi"],
+        # Substitution matrices
+        "biotite.sequence.align"    : ["matrix_data/*.mat"],
+        # Color schmemes
+        "biotite.sequence.graphics" : ["color_schemes/*.json"],
+        # Codon tables
+        "biotite.sequence"          : ["codon_tables.txt"],
+        # Structure data (masses, bonds, etc.)
+        "biotite.structure.info"    : ["*.json", "*.msgpack"]
+    },
     
     install_requires = ["requests >= 2.12",
                         "numpy >= 1.13",

@@ -19,7 +19,7 @@ An :class:`Atom` contains data for a single atom, an :class:`AtomArray`
 stores data for an entire model and :class:`AtomArrayStack` stores data
 for multiple models, where each model contains the same atoms but
 differs in the atom coordinates.
-Both, :class:`AtomArrray` and :class:`AtomArrayStack`, store the
+Both, :class:`AtomArray` and :class:`AtomArrayStack`, store the
 attributes in `NumPy` arrays. This approach has multiple advantages:
     
     - Convenient selection of atoms in a structure
@@ -30,6 +30,10 @@ attributes in `NumPy` arrays. This approach has multiple advantages:
     
 Based on the implementation using :class:`ndarray` objects, this package
 also contains functions for structure analysis and manipulation.
+
+.. Note::
+    The universal length unit in *Biotite* is Å.
+    This includes coordinates, distances, surface areas, etc.
 
 Creating structures
 -------------------
