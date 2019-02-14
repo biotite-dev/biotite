@@ -174,7 +174,8 @@
             "dihedral_backbone",
             "centroid",
             "mass_center",
-            "gyration_radius"
+            "gyration_radius",
+            "rdf"
         ],
         "Manipulation" : [
             "translate",

@@ -93,6 +93,7 @@ from .geometry import *
 from .hbond import *
 from .integrity import *
 from .mechanics import *
+from .rdf import *
 from .residues import *
 from .sasa import *
 from .sse import *
