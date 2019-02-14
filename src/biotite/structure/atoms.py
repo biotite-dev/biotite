@@ -821,7 +821,7 @@ class AtomArrayStack(_AtomArrayBase):
         if depth == None or length == None:
             self._coord = None
         else:
-            self._coord = np.zeros((depth, length, 3), dtype=float)
+            self._coord = np.full((depth, length, 3), np.nan, dtype=float)
     
     def get_array(self, index):
         """
