@@ -16,6 +16,7 @@ from libc.stdlib cimport realloc, malloc, free
 
 import numpy as np
 from .atoms import coord as to_coord
+from .atoms import AtomArrayStack
 from .box import repeat_box_coord, move_inside_box
 
 ctypedef np.uint64_t ptr
@@ -99,9 +100,11 @@ cdef class CellList:
         cdef int* cell_ptr = NULL
         cdef int length
 
+        if isinstance(atom_array, AtomArrayStack):
+            raise TypeError("Expected 'AtomArray' but got 'AtomArrayStack'")
+        coord = to_coord(atom_array)
         # the length of the array before appending periodic copies
         # if 'periodic' is true
-        coord = to_coord(atom_array)
         self._orig_length = coord.shape[0]
         self._box = None
         if coord.ndim != 2:
