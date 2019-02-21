@@ -6,6 +6,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
 
 import copy
+import string
 import numpy as np
 
 
@@ -108,8 +109,8 @@ class Alphabet(object):
         elif len(alphabet) > len(self):
             return False
         else:
-            return list(alphabet._symbols) \
-                == list(self._symbols[:len(alphabet)])
+            return list(alphabet.get_symbols()) \
+                == list(self.get_symbols()[:len(alphabet)])
     
     def encode(self, symbol):
         """
@@ -194,19 +195,16 @@ class Alphabet(object):
         return [self.decode(c) for c in code]
     
     def __str__(self):
-        return str(self._symbols)
+        return str(self.get_symbols())
     
     def __len__(self):
-        return len(self._symbols)
+        return len(self.get_symbols())
     
     def __iter__(self):
-        i = 0
-        while i < len(self):
-            yield self._symbols[i]
-            i += 1
+        return self.get_symbols().__iter__()
     
     def __contains__(self, symbol):
-        return symbol in self._symbols
+        return symbol in self.get_symbols()
     
     def __hash__(self):
         return hash(tuple(self._symbols))
@@ -219,7 +217,7 @@ class LetterAlphabet(Alphabet):
     The alphabet size is limited to a maximum of 128 symbols, the size
     of the ASCII charcater set.
     The encoding and decoding process is a lot faster than for a
-    nromal `Alphabet`.
+    normal `Alphabet`.
 
     The performance gain comes through the use of *NumPy* for encoding
     and decoding:
@@ -229,17 +227,33 @@ class LetterAlphabet(Alphabet):
     All symbols/codes in the sequence, that are equal to the current
     symbol/code, are converted using a boolean mask with *Numpy*.
     This approach is most viable for small alphabets.
+
+    Parameters
+    ----------
+    symbols : iterable object or str or bytes
+        The symbols, that are allowed in this alphabet. The
+        corresponding code for a symbol, is the index of that symbol
+        in this list.
     """
     
+    PRINATBLES = (string.digits + string.ascii_letters + string.punctuation) \
+                 .encode("ASCII")
+
     def __init__(self, symbols):
         if len(symbols) == 0:
             raise ValueError("Symbol list is empty")
-        if len(symbols) > 128:
-            raise ValueError("Symbol list is too large")
+        self._symbols = []
         for symbol in symbols:
-            if not isinstance(symbol, str) or len(symbol) > 1:
+            if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
                 raise ValueError(f"Symbol '{symbol}' is not a single letter")
-        self._symbols = np.array(list(symbols), dtype="U1")
+            if isinstance(symbol, str):
+                symbol = symbol.encode("ASCII")
+            if symbol not in LetterAlphabet.PRINATBLES:
+                raise ValueError(
+                    f"Symbol '{symbol}' is not printable or whitespace"
+                )
+            self._symbols.append(symbol)
+        self._symbols = np.array(self._symbols, dtype="|S1")
     
     def get_symbols(self):
         """
@@ -250,13 +264,18 @@ class LetterAlphabet(Alphabet):
         symbols : ndarray
             Copy of the internal list of symbols.
         """
-        return self._symbols.tolist()
+        return [symbol.decode("ASCII") for symbol in self._symbols]
     
     def encode(self, symbol):
+        if isinstance(symbol, str):
+            symbol = symbol.encode("ASCII")
         indices = np.where(self._symbols == symbol)[0]
         if len(indices) == 0:
             raise AlphabetError(f"'{symbol}' is not in the alphabet")
         return indices[0]
+    
+    def decode(self, code):
+        return super().decode(code).decode("ASCII")
     
     def encode_multiple(self, symbols, dtype=None):
         """
@@ -276,7 +295,9 @@ class LetterAlphabet(Alphabet):
             The sequence code.
         """
         if not isinstance(symbols, np.ndarray):
-            symbols = np.array(list(symbols), dtype="U1")
+            symbols = np.array(list(symbols), dtype="|S1")
+        else:
+            symbols = symbols.astype("|S1", copy=False)
         # Initially fill the sequence code
         # with the last allowed symbol code + 1
         # Since this code cannot occur from symbol encoding
@@ -292,7 +313,6 @@ class LetterAlphabet(Alphabet):
             illegal_symbol = symbols[code == illegal_code][0]
             raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
         return code
-            
     
     def decode_multiple(self, code):
         """
@@ -308,7 +328,7 @@ class LetterAlphabet(Alphabet):
         symbols : ndarray, dtype='U1'
             The decoded list of symbols.
         """
-        symbols = np.zeros(len(code), dtype="U1")
+        symbols = np.zeros(len(code), dtype="|S1")
         try:
             # This is only efficient for short alphabets
             # Therefore it is only used in the LetterAlphabet class
@@ -316,10 +336,15 @@ class LetterAlphabet(Alphabet):
                 symbols[code == i] = symbol
         except IndexError:
             raise AlphabetError(f"'{i:d}' is not a valid code")
-        return symbols
+        return symbols.astype("U1")
     
-    def __str__(self):
-        return str(self._symbols.tolist())
+    def __contains__(self, symbol):
+        if isinstance(symbol, str):
+            symbol = symbol.encode("ASCII")
+        return symbol in self._symbols
+    
+    def __len__(self):
+        return len(self._symbols)
     
 
 class AlphabetMapper(object):
