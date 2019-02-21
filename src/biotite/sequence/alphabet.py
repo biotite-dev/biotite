@@ -297,7 +297,11 @@ class LetterAlphabet(Alphabet):
         code : ndarray
             The sequence code.
         """
-        if not isinstance(symbols, np.ndarray):
+        if isinstance(symbols, str):
+            symbols = np.frombuffer(symbols.encode("ASCII"), dtype="|S1")
+        elif isinstance(symbols, bytes):
+            symbols = np.frombuffer(symbols, dtype="|S1")
+        elif not isinstance(symbols, np.ndarray):
             symbols = np.array(list(symbols), dtype="|S1")
         else:
             symbols = symbols.astype("|S1", copy=False)
