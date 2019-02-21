@@ -274,8 +274,11 @@ class LetterAlphabet(Alphabet):
             raise AlphabetError(f"'{symbol}' is not in the alphabet")
         return indices[0]
     
-    def decode(self, code):
-        return super().decode(code).decode("ASCII")
+    def decode(self, code, as_bytes=False):
+        symbol = super().decode(code)
+        if not as_bytes:
+            symbol = symbol.decode("ASCII")
+        return symbol
     
     def encode_multiple(self, symbols, dtype=None):
         """
@@ -314,7 +317,7 @@ class LetterAlphabet(Alphabet):
             raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
         return code
     
-    def decode_multiple(self, code):
+    def decode_multiple(self, code, as_bytes=False):
         """
         Decode a sequence code into a list of symbols.
         
@@ -336,7 +339,9 @@ class LetterAlphabet(Alphabet):
                 symbols[code == i] = symbol
         except IndexError:
             raise AlphabetError(f"'{i:d}' is not a valid code")
-        return symbols.astype("U1")
+        if not as_bytes:
+            symbols = symbols.astype("U1")
+        return symbols
     
     def __contains__(self, symbol):
         if isinstance(symbol, str):
