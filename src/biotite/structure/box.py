@@ -81,13 +81,9 @@ def unitcell_from_vectors(box):
     
     Returns
     -------
-    len_a : float
-    len_b : float
-    len_c : float
+    len_a, len_b, len_c : float
         The lengths of the three box/unit cell vectors *a*, *b* and *c*.
-    alpha : float
-    beta  : float
-    gamma : float
+    alpha, beta, gamma : float
         The angles between the box vectors in radians.
 
     See also
