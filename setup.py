@@ -110,8 +110,6 @@ setup(
     
     # Including additional data
     package_data = {
-        # Type annotations
-        "biotite"                   : ["py.typed", "**/*.pyi"],
         # Substitution matrices
         "biotite.sequence.align"    : ["matrix_data/*.mat"],
         # Color schmemes
