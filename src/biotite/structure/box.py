@@ -39,9 +39,10 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     Returns
     -------
     box : ndarray, dtype=float, shape=(3,3)
-    The three box vectors.
-    The vector components are in the last dimension.
-    The value can be directly used as `box` attribute in an atom array.
+        The three box vectors.
+        The vector components are in the last dimension.
+        The value can be directly used as `box` attribute in an atom
+        array.
     
     See also
     --------
@@ -80,13 +81,9 @@ def unitcell_from_vectors(box):
     
     Returns
     -------
-    len_a : float
-    len_b : float
-    len_c : float
+    len_a, len_b, len_c : float
         The lengths of the three box/unit cell vectors *a*, *b* and *c*.
-    alpha : float
-    beta  : float
-    gamma : float
+    alpha, beta, gamma : float
         The angles between the box vectors in radians.
 
     See also
