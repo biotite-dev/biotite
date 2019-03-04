@@ -81,7 +81,7 @@ class PyTestCommand(TestCommand):
 setup(
     name="biotite",
     version = __version__,
-    description = ("A comprehensive framework for "
+    description = ("A comprehensive library for "
                    "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
