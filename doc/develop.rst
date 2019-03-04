@@ -206,7 +206,7 @@ In order to check if your new awesome code breaks anything in *Biotite*,
 you should run unit tests before you open a pull request.
 To achieve that, run the following command in the top-level directory.
 
-.. code-block:: bash
+.. code-block:: console
 
    $ python setup.py test
 
@@ -226,7 +226,7 @@ Code deployment
 The binary distribution and the source distribution are created with
 the following commands, respectively:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ python setup.py bdist_wheel
    $ python setup.py sdist
@@ -236,7 +236,7 @@ Building the documentation
 
 The Sphinx documentation is created using
 
-.. code-block:: bash
+.. code-block:: console
 
    $ python setup.py build_sphinx
 

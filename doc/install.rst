@@ -38,7 +38,7 @@ Install via Conda
 If you want to install *Biotite* into a *Conda* environment, you can do
 that directly via *Conda*:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ conda install -c conda-forge biotite
 
@@ -51,7 +51,7 @@ Install from PyPI
 
 By default, *Biotite* uses *wheels* for its package distribution. Simply type
 
-.. code-block:: bash
+.. code-block:: console
 
    $ pip install biotite
 
@@ -61,14 +61,14 @@ it will download and install it. Congratulations, you just installed
 distribution. If you want to prevent *pip* to do that,
 use the following command:
 
-.. code-block:: bash
+.. code-block:: console
 
   $ pip install biotite --only-binary :all:
 
 The source distribution can be used if there is no *wheel* available for you or
 you want to compile the package on your own for other reasons:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ pip install biotite --no-binary :all:
 
@@ -83,7 +83,7 @@ If you want to install your own *Biotite* build, navigate to the top-level
 directory of your local *Biotite* clone (the one ``setup.py`` is in) and type
 the following:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ pip install .
 
@@ -92,14 +92,14 @@ Note that this requires a C-compiler (typically GCC) and the packages
 Having the *Biotite* package always pointing to your development directory is
 also possible. Type the following in the top-level directory:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ pip install -e .
 
 To generate the wheels and source distribution for upload to PyPI (most
 probably you won't need that, but just in case), simply type:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ python setup.py bdist_wheel
    $ python setup.py sdist
