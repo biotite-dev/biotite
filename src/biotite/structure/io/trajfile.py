@@ -108,8 +108,10 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             trajectory file.
         """
         if template.array_length() != self._coord.shape[-2]:
-            raise ValueError("Template and trajectory have "
-                             "unequal amount of atoms")
+            raise ValueError(
+                f"Template has {template.array_length()} atoms and trajectory "
+                f"has {self._coord.shape[-2]} atoms, must be equal"
+            )
         if isinstance(template, AtomArray):
             array_stack = stack([template])
         else:

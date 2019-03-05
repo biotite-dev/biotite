@@ -847,7 +847,7 @@ class AtomArrayStack(_AtomArrayBase):
         if self._bonds is not None:
             array._bonds = self._bonds.copy()
         if self._box is not None:
-            array._box = self._box[index] 
+            array._box = self._box[index]
 
         return array
     
@@ -923,6 +923,8 @@ class AtomArrayStack(_AtomArrayBase):
             new_stack = AtomArrayStack(depth=0, length=self.array_length())
             self._copy_annotations(new_stack)
             new_stack._coord = self._coord[index]
+            if self._box is not None:
+                new_stack._box = self._box[index]
             return new_stack
             
     
