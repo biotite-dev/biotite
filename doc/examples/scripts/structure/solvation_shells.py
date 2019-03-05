@@ -15,7 +15,7 @@ The trajectory file can be downloaded
 and the template PDB can be downloaded
 :download:`here </static/assets/download/waterbox_md.pdb>`.
 
-Two things are peculiar is this plot:
+Two things are peculiar in this plot:
 At first, the first solvation shell has a smaller distance from chloride
 ions than from sodium ions, although the radius of chlorine is higher.
 Furthermore, the second solvation shell of the chloride ions seems to be
