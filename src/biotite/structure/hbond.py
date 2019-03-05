@@ -17,7 +17,8 @@ from .celllist import CellList
 
 def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
-          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S'),
+          periodic=False):
     r"""
     Find hydrogen bonds in a structure using the Baker-Hubbard
     algorithm. [1]_
@@ -42,18 +43,20 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         The type of `selection2` is chosen accordingly
         ('both' or the opposite).
         (Default: 'both')
-    cutoff_dist: float
+    cutoff_dist : float, optional
         The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (Default: 2.5)
-    cutoff_angle: float
+    cutoff_angle : float, optional
         The angle cutoff in degree between Donor-H..Acceptor to be
         considered a hydrogen bond (default: 120).
     donor_elements, acceptor_elements: tuple of str
         Elements to be considered as possible donors or acceptors
-        (default: O, N, S).
-    vectorized: bool
-        Enable/Disable vectorization across models. Vectorization is
-        faster, but requires more memory (default: True).
+        (Default: O, N, S).
+    periodic : bool, optional
+        If true, hydrogen bonds can also be detected in periodic
+        boundary conditions.
+        The `box` attribute of `atoms` is required in this case.
+        (Default: False).
         
     Returns
     -------
@@ -130,6 +133,11 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     else:
         single_model = False
     
+    if periodic:
+        box = atoms.box
+    else:
+        box = None
+    
     # Mask for donor/acceptor elements
     donor_element_mask = np.isin(atoms.element, donor_elements)
     acceptor_element_mask = np.isin(atoms.element, acceptor_elements)
@@ -154,7 +162,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             exclusive_selection1, exclusive_selection2, overlap_selection
         ]
         selection_combinations = [
-            #(0,0),   is not excluded, would be same selection
+            #(0,0),   is not included, would be same selection
             #         as donor and acceptor simultaneously
             (0,1),
             (0,2),
@@ -178,7 +186,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
                         atoms, donor_mask, acceptor_mask,
                         donor_element_mask, acceptor_element_mask,
                         cutoff_dist, cutoff_angle,
-                        donor_elements, acceptor_elements
+                        donor_elements, acceptor_elements,
+                        box
                     )
                     all_comb_triplets.append(triplets)
                     all_comb_mask.append(mask)
@@ -191,7 +200,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection1, selection2,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements
+            donor_elements, acceptor_elements,
+            box
         )
     
     elif selection1_type == 'acceptor':
@@ -199,7 +209,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection2, selection1,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements
+            donor_elements, acceptor_elements,
+            box
         )
     
     else:
@@ -217,13 +228,14 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
 
 def _hbond(atoms, donor_mask, acceptor_mask,
            donor_element_mask, acceptor_element_mask,
-           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements):
+           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
+           box):
     
     # Filter donor/acceptor elements
     donor_mask    &= donor_element_mask
     acceptor_mask &= acceptor_element_mask
     
-    def _get_bonded_hydrogens(array, donor_mask, cutoff=1.5):
+    def _get_bonded_hydrogens(array, donor_mask, box, cutoff=1.5):
         """
         Helper function to find indices of associated hydrogens in atoms
         for all donors in atoms[donor_mask].
@@ -242,7 +254,7 @@ def _hbond(atoms, donor_mask, acceptor_mask,
         for donor_i in donor_indices:
             candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
             distances = distance(
-                coord[donor_i], coord[candidate_mask]
+                coord[donor_i], coord[candidate_mask], box=box
             )
             donor_h_indices = np.where(candidate_mask)[0][distances <= cutoff]
             for i in donor_h_indices:
@@ -253,8 +265,9 @@ def _hbond(atoms, donor_mask, acceptor_mask,
             
 
     # TODO use BondList if available
+    first_model_box = box[0] if box is not None else None
     donor_h_mask, associated_donor_indices \
-        = _get_bonded_hydrogens(atoms[0], donor_mask)
+        = _get_bonded_hydrogens(atoms[0], donor_mask, first_model_box)
     donor_h_i = np.where(donor_h_mask)[0]
     acceptor_i = np.where(acceptor_mask)[0]
     if len(donor_h_i) == 0 or len(acceptor_i) == 0:
@@ -273,10 +286,15 @@ def _hbond(atoms, donor_mask, acceptor_mask,
         (len(acceptor_i), len(donor_h_i)),
         dtype=bool
     )
+    periodic = False if box is None else True
     for model_i in range(atoms.stack_depth()):
         donor_h_coord = coord[model_i, donor_h_mask]
         acceptor_coord = coord[model_i, acceptor_mask]
-        cell_list = CellList(donor_h_coord, cell_size=cutoff_dist)
+        box_for_model = box[model_i] if box is not None else None
+        cell_list = CellList(
+            donor_h_coord, cell_size=cutoff_dist,
+            periodic=periodic, box=box_for_model
+        )
         possible_bonds |= cell_list.get_atoms_in_cells(
             acceptor_coord, as_mask=True
         )
@@ -292,17 +310,18 @@ def _hbond(atoms, donor_mask, acceptor_mask,
     triplets = triplets[donor_i != acceptor_i]
 
      # Filter triplets that meet distance and angle condition
-    def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
+    def _is_hbond(donor, donor_h, acceptor, box,
+                  cutoff_dist=2.5, cutoff_angle=120):
         cutoff_angle_rad = np.deg2rad(cutoff_angle)
-        theta = angle(donor, donor_h, acceptor)
-        dist = distance(donor_h, acceptor)
+        theta = angle(donor, donor_h, acceptor, box=box)
+        dist = distance(donor_h, acceptor, box=box)
         return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
     
     hbond_mask = _is_hbond(
         coord[:, triplets[:,0]],  # donors
         coord[:, triplets[:,1]],  # donor hydrogens
         coord[:, triplets[:,2]],  # acceptors
-        cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle
+        box, cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle
     )
 
     # Reduce output to contain only triplets counted at least once
