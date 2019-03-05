@@ -83,7 +83,7 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "buttons.html"]}
 html_theme_options = {
-    "description"   : "A comprehensive framework for " \
+    "description"   : "A comprehensive library for " \
                       "computational molecular biology",
     "logo"          : "assets/general/biotite_logo_s.png",
     "logo_name"     : "false",
