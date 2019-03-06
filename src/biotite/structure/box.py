@@ -10,12 +10,14 @@ of a structure
 __author__ = "Patrick Kunzmann"
 __all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
            "repeat_box", "repeat_box_coord", "move_inside_box",
+           "remove_pbc", "remove_pbc_from_coord",
            "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
 
 from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
 from .util import vector_dot
+from .residues import get_residue_starts
 from .atoms import AtomArray, AtomArrayStack
 
 
@@ -359,12 +361,97 @@ def move_inside_box(coord, box):
     [[1 2 3]
      [1 2 4]
      [6 8 6]]
-
-
     """
     fractions = coord_to_fraction(coord, box)
     fractions_rem = fractions % 1
     return fraction_to_coord(fractions_rem, box)
+
+
+def remove_pbc(atoms, selection=None, chain_id=None):
+    """[summary]
+    
+    Parameters
+    ----------
+    atoms : [type]
+        [description]
+    selection : [type]
+        [description]
+    chain : [type]
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    new_atoms = atoms.copy()
+    
+    if selection is None and chain_id is None:
+        res_starts = get_residue_starts(atoms)
+        # Remove starts that belong to residues from the same chain,
+        # as the PBC is removed for the entire chain
+        retain_mask = np.full(len(res_starts), True, dtype=bool)
+        current_chain = None
+        for i, start_index in enumerate(res_starts):
+            chain = atoms.chain_id[start_index]
+            hetero = atoms.hetero[start_index]
+            if not hetero and chain == current_chain:
+                retain_mask[i] = False
+            current_chain = chain
+        res_starts = res_starts[retain_mask]
+        # Append stop index for easier iteration
+        res_starts = np.append(res_starts, [atoms.array_length()])
+        # Remove PCB from each chain or hetero residue
+        for i in range(len(res_starts)-1):
+            start = res_starts[i]
+            stop = res_starts[i+1]
+            new_atoms.coord[..., start:stop, :] = remove_pbc_from_coord(
+                atoms.coord[..., start:stop, :], atoms.box
+            )
+    
+    elif selection is not None and chain_id is None:
+        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+            atoms.coord[..., selection, :], atoms.box
+        )
+   
+    elif selection is None and chain_id is not None:
+        selection = (atoms.chain_id == chain_id)
+        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+            atoms.coord[..., selection, :], atoms.box
+        )
+    
+    else: # Both are not None
+        raise TypeError("Cannot set both, 'selection' and 'chain_id'")
+    
+    return new_atoms
+
+
+def remove_pbc_from_coord(coord, box):
+    # Import in function to avoid circular import
+    from .geometry import index_displacement
+    # Get the PBC-sanitized displacements of all coordinates
+    # to the respective coordinate
+    index_pairs = np.stack(
+        [
+            np.arange(0, coord.shape[-2] - 1), 
+            np.arange(1, coord.shape[-2]    )
+        ],
+        axis=1
+    )
+    neighbour_disp = index_displacement(
+        coord, index_pairs, box=box, periodic=True
+    )
+    # Get the PBC-sanitized displacements of all but the first
+    # coordinates to (0,0,0)
+    absolute_disp = np.cumsum(neighbour_disp, axis=-2)
+    # The first coordinate should be inside the box
+    base_coord = move_inside_box(coord[..., 0, :], box)
+    # The new coordinates are obtained by adding the displacements
+    # to the new origin
+    sanitized_coord = np.zeros(coord.shape, coord.dtype)
+    sanitized_coord[..., 0, :] = base_coord
+    sanitized_coord[..., 1:, :] = base_coord + absolute_disp
+    return sanitized_coord
 
 
 def coord_to_fraction(coord, box):
