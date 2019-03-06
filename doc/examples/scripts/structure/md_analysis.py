@@ -7,13 +7,13 @@ simulation:
 The trajectory contains simulation data of lysozyme over the course of
 1 ns.
 The data is the result of the famous *Gromacs*
-'`Lysozyme in Water <http://www.mdtutorials.com/gmx/lysozyme/index.html>_`'
+'`Lysozyme in Water <http://www.mdtutorials.com/gmx/lysozyme/index.html>`_'
 tutorial.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/1l2y_md.xtc>`
+:download:`here </static/assets/download/lysozyme_md.xtc>`
 and the template PDB can be downloaded
-:download:`here </static/assets/download/1l2y_md_start.pdb>`.
+:download:`here </static/assets/download/lysozyme_md.pdb>`.
 
 We begin by loading the template PDB file as `AtomArray`, sanitizing it
 and using it to load the trajectory as `AtomArrayStack`.

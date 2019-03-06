@@ -87,7 +87,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     Examples
     --------
     Calculate the oxygen-oxygen radial distribution function of water.
-    The range of the histogram starts at 0.2 Angstroem, in order to
+    The range of the histogram starts at 0.2 Å, in order to
     ignore the counts for the density for each oxygen to itself.
 
     >>> from os.path import join
@@ -95,59 +95,59 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     >>> oxygens = waterbox[:, waterbox.atom_name == 'OW']
     >>> bins, g_r = rdf(oxygens, oxygens, bins=49, interval=(0.2, 10), periodic=True)
 
-    Print the RDF depending on the radius. Bins are in Angstroem.
+    Print the RDF depending on the radius. Bins are in Å.
 
     >>> for x, y in zip(bins, g_r):
     ...     print(f"{x:.2f} {y:.2f}")
     0.30 0.00
     0.50 0.00
-    0.70 0.00
-    0.90 0.00
-    1.10 0.00
-    1.30 0.00
-    1.50 0.00
-    1.70 0.00
-    1.90 0.00
-    2.10 0.00
-    2.30 0.00
-    2.50 0.10
-    2.70 2.07
-    2.90 2.31
-    3.10 1.35
-    3.30 1.03
+    0.70 0.04
+    0.90 0.02
+    1.10 0.03
+    1.30 0.06
+    1.50 0.03
+    1.70 0.04
+    1.90 0.04
+    2.10 0.04
+    2.30 0.04
+    2.50 0.16
+    2.70 1.99
+    2.90 2.22
+    3.10 1.34
+    3.30 1.04
     3.50 0.97
     3.70 0.94
-    3.90 0.96
-    4.10 0.96
-    4.30 0.97
-    4.50 0.96
+    3.90 0.97
+    4.10 0.94
+    4.30 0.98
+    4.50 0.97
     4.70 0.96
     4.90 0.99
-    5.10 0.97
-    5.30 1.03
-    5.50 1.01
+    5.10 0.99
+    5.30 1.02
+    5.50 1.02
     5.70 0.99
-    5.90 0.97
-    6.10 0.97
-    6.30 1.00
-    6.50 1.04
-    6.70 1.03
-    6.90 0.99
-    7.10 1.02
-    7.30 1.02
-    7.50 0.99
+    5.90 0.98
+    6.10 0.98
+    6.30 0.99
+    6.50 1.02
+    6.70 1.02
+    6.90 1.00
+    7.10 1.01
+    7.30 1.01
+    7.50 1.00
     7.70 1.01
-    7.90 0.98
+    7.90 0.99
     8.10 0.99
     8.30 0.99
-    8.50 1.00
+    8.50 0.99
     8.70 0.99
     8.90 1.00
     9.10 1.01
     9.30 1.01
     9.50 1.00
-    9.70 1.01
-    9.90 1.00
+    9.70 1.00
+    9.90 0.99
 
     Find the radius for the first solvation shell.
     In this simple case, the density peak is identified by finding

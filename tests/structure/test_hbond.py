@@ -110,7 +110,7 @@ def test_hbond_with_selections():
 def test_hbond_single_selection():
     """
     If only selection1 or selection2 is defined, hbond should run
-    against all other atoms as the other selection
+    against all other atoms as the other selection.
     """
     stack = load_structure(join(data_dir, "1l2y.mmtf"))
     selection = (stack.res_id == 2) & (stack.atom_name == "O")  # 2LEU BB Ox
@@ -129,3 +129,28 @@ def test_hbond_frequency():
     ]).T
     freq = struc.hbond_frequency(mask)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
+
+
+@pytest.mark.parametrize("translation_vector", [(10,20,30), (-5, 3, 18)])
+def test_hbond_periodicity(translation_vector):
+    """
+    Test whether hydrogen bond identification uses periodic boundary
+    conditions correctly.
+    For this purpose a structure containing water is loaded and the
+    hydrogen bonds are identified.
+    Then the position of the periodic boundary is changed and it is
+    expected that all hydrogen bonds are still the same
+    """
+    stack = load_structure(join(data_dir, "waterbox.gro"))
+    array = stack[0]
+    ref_hbonds = struc.hbond(array, periodic=True)
+    # Put H-bond triplets into as stack for faster comparison with
+    # set for moved atoms
+    ref_hbonds = set([tuple(triplet) for triplet in ref_hbonds])
+    # Move system and put back into box
+    # -> Equal to move of periodic boundary
+    array = struc.translate(array, translation_vector)
+    array.coord = struc.move_inside_box(array.coord, array.box)
+    hbonds = struc.hbond(array, periodic=True)
+    hbonds = set([tuple(triplet) for triplet in hbonds])
+    assert ref_hbonds == hbonds
