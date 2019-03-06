@@ -368,46 +368,55 @@ def move_inside_box(coord, box):
 
 
 def remove_pbc(atoms, selection=None, chain_id=None):
-    """[summary]
+    """
+    Removes segmentation caused by periodic boundary conditions from a
+    given structure.
+
+    In this process the first atom is taken as origin and
+    is moved inside the box.
+    All other coordinates are assembled relative to the origin.
     
     Parameters
     ----------
-    atoms : [type]
-        [description]
-    selection : [type]
-        [description]
-    chain : [type]
-        [description]
+    atoms : AtomArray or AtomArrayStack
+        The potentially segmented structure.
+        The `box` attribute must be set in the structure.
+    selection : ndarray, dtype=bool, shape=(n,), optional
+        A boolean mask for atom selection.
+        If set, the segmentation will be removed only from the selected
+        atoms.
+        Cannot be combined with the `chain_id` parameter.
+    chain_id : str, optional
+        If set, the segmentation will be removed only from the atoms in
+        the given chain.
+        Cannot be combined with the `selection` parameter.
     
     Returns
     -------
-    [type]
-        [description]
+    sanitized_atoms : AtomArray or AtomArrayStack
+        The input structure with removed periodic boundary conditions.
+    
+    See also
+    --------
+    remove_pbc_from_coord
+
+    Notes
+    -----
+    It is not recommended to apply this function on regions of the
+    structure with distances from one atom to the next atom that are
+    larger than half of the box size
+    (e.g. the solvent, chain transitions).
+    In this case, the function should rather be called multiple times,
+    with a single molecule selected in each invocation.
+
+    Internally the function uses `remove_pbc_from_coord()`.
     """
     new_atoms = atoms.copy()
     
     if selection is None and chain_id is None:
-        res_starts = get_residue_starts(atoms)
-        # Remove starts that belong to residues from the same chain,
-        # as the PBC is removed for the entire chain
-        retain_mask = np.full(len(res_starts), True, dtype=bool)
-        current_chain = None
-        for i, start_index in enumerate(res_starts):
-            chain = atoms.chain_id[start_index]
-            hetero = atoms.hetero[start_index]
-            if not hetero and chain == current_chain:
-                retain_mask[i] = False
-            current_chain = chain
-        res_starts = res_starts[retain_mask]
-        # Append stop index for easier iteration
-        res_starts = np.append(res_starts, [atoms.array_length()])
-        # Remove PCB from each chain or hetero residue
-        for i in range(len(res_starts)-1):
-            start = res_starts[i]
-            stop = res_starts[i+1]
-            new_atoms.coord[..., start:stop, :] = remove_pbc_from_coord(
-                atoms.coord[..., start:stop, :], atoms.box
-            )
+        new_atoms.coord = remove_pbc_from_coord(
+            atoms.coord, atoms.box
+        )
     
     elif selection is not None and chain_id is None:
         new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
@@ -427,10 +436,49 @@ def remove_pbc(atoms, selection=None, chain_id=None):
 
 
 def remove_pbc_from_coord(coord, box):
+    """
+    Removes segmentation caused by periodic boundary conditions from
+    given coordinates.
+
+    In this process the first coordinate is taken as origin and
+    is moved inside the box.
+    All other coordinates are assembled relative to the origin by using
+    the displacement coordinates in adjacent array positions.
+    Basically, this function performs the reverse action of
+    `move_inside_box()`.
+    
+    Parameters
+    ----------
+    coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
+        The coordinates of the potentially segmented structure. 
+    box : ndarray, dtype=float, shape=(m,3,3) or shape=(3,3)
+        The simulation box or unit cell that is used as periodic
+        boundary.
+        The amount of dimensions must fit the `coord` parameter.
+
+    Returns
+    -------
+    sanitized_coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
+        The reassembled coordinates.
+    
+    See also
+    --------
+    remove_pbc_from_coord
+    move_inside_box
+
+    Notes
+    -----
+    This function solves a common problem from MD simulation output:
+    When atoms move over the periodic boundary, they reappear on the
+    other side of the box, segmenting the structure.
+    This function reassembles the given coordinates, removing the
+    segmentation.
+    """
+
     # Import in function to avoid circular import
     from .geometry import index_displacement
     # Get the PBC-sanitized displacements of all coordinates
-    # to the respective coordinate
+    # to the respective next coordinate
     index_pairs = np.stack(
         [
             np.arange(0, coord.shape[-2] - 1), 
@@ -445,11 +493,11 @@ def remove_pbc_from_coord(coord, box):
     # coordinates to (0,0,0)
     absolute_disp = np.cumsum(neighbour_disp, axis=-2)
     # The first coordinate should be inside the box
-    base_coord = move_inside_box(coord[..., 0, :], box)
+    base_coord = move_inside_box(coord[..., 0:1, :], box)
     # The new coordinates are obtained by adding the displacements
     # to the new origin
     sanitized_coord = np.zeros(coord.shape, coord.dtype)
-    sanitized_coord[..., 0, :] = base_coord
+    sanitized_coord[..., 0:1, :] = base_coord
     sanitized_coord[..., 1:, :] = base_coord + absolute_disp
     return sanitized_coord
 

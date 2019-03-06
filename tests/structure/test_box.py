@@ -115,3 +115,96 @@ def test_repeat_box():
     array = load_structure(join(data_dir, "3o5r.mmtf"))
     repeat_array, _ = struc.repeat_box(array)
     assert repeat_array[:array.array_length()] == array
+
+
+def test_remove_pbc_unsegmented():
+    """
+    `remove_pbc()` should not alter unsegmented structures,
+    when the structure is entirely in the box.
+    Exclude the solvent, due to high distances between each atom. 
+    """
+    ref_array = load_structure(join(data_dir, "3o5r.mmtf"))
+    # Center structure in box
+    centroid = struc.centroid(ref_array)
+    box_center = np.diag(ref_array.box) / 2
+    ref_array = struc.translate(ref_array, box_center-centroid)
+    # Remove solvent
+    ref_array = ref_array[~struc.filter_solvent(ref_array)]
+    array = struc.remove_pbc(ref_array)
+
+    assert ref_array.equal_annotation_categories(array)
+    print(ref_array.coord[:10])
+    print(array.coord[:10])
+    print(np.max(np.abs(ref_array.coord - array.coord)))
+    assert np.allclose(ref_array.coord, array.coord)
+
+
+@pytest.mark.parametrize(
+    "multi_model, translation_vector",
+    itertools.product(
+        [False, True],
+        [(20,30,40), (-11, 33, 22), (-40, -50, -60)]
+    )
+)
+def test_remove_pbc_restore(multi_model, translation_vector):
+    stack = load_structure(join(data_dir, "1gya.mmtf"))
+    stack.box = np.array([
+        np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + 10)
+        for coord in stack.coord
+    ])
+    stack.coord -= np.min(stack.coord, axis=-2)[:, np.newaxis, :] - 5
+    #!#
+    #stack = stack[:8]
+    #!#
+    if multi_model:
+        array = stack
+    else:
+        array = stack[0]
+    #!#
+    array = stack[7]
+    #!#
+
+    def get_matrices(array):
+        if isinstance(array, struc.AtomArray):
+            matrix     = struc.CellList(array, 5, periodic=False) \
+                        .create_adjacency_matrix(5)
+            matrix_pbc = struc.CellList(array, 5, periodic=True) \
+                        .create_adjacency_matrix(5)
+        elif isinstance(array, struc.AtomArrayStack):
+            matrix     = np.array([struc.CellList(model, 5, periodic=False)
+                                   .create_adjacency_matrix(5)
+                                   for model in array])
+            matrix_pbc = np.array([struc.CellList(model, 5, periodic=True)
+                                   .create_adjacency_matrix(5)
+                                    for model in array])
+        return matrix, matrix_pbc
+
+    # Use adjacency matrices instead of pairwise distances
+    # for compuational efficiency
+    ref_matrix, ref_matrix_pbc = get_matrices(array)
+
+    array = struc.translate(array, translation_vector)
+    array.coord = struc.move_inside_box(array.coord, array.box)
+    moved_matrix, moved_matrix_pbc = get_matrices(array)
+    #!#
+    print(np.where(ref_matrix_pbc != moved_matrix_pbc))
+    i = 1811
+    j = 1809
+    matrix = ref_matrix_pbc
+    print(matrix[i,j], matrix[j,i])
+    print(array[1800:1820])
+    #!#
+    # The translation and the periodic move should not
+    # alter PBC-aware pairwise distances
+    assert (ref_matrix_pbc == moved_matrix_pbc).all()
+    # Non-PBC-aware distances should change,
+    # otherwise the atoms do not go over the periodic boundary
+    # and the test makes no sense
+    assert not (ref_matrix == moved_matrix).all()
+
+    array = struc.remove_pbc(array)
+    restored_matrix, restored_matrix_pbc = get_matrices(array)
+    # Both adjacency matrices should be equal to the original ones,
+    # as the structure should be completely restored
+    assert (ref_matrix_pbc == restored_matrix_pbc).all()
+    assert (ref_matrix     == restored_matrix).all()

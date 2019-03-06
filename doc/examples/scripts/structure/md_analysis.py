@@ -62,7 +62,7 @@ trajectory = xtc_file.get_structure(template)
 # in *Gromacs* we could have used ``gmx trjconv`` for this, but this
 # problem can be handled in *Biotite*, too.
 
-#trajectory = struc.assemble_from_pcb(trajectory)
+trajectory = struc.remove_pbc(trajectory)
 
 ########################################################################
 # Now our trajectory is ready for some analysis!
