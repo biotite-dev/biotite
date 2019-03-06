@@ -87,7 +87,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     Examples
     --------
     Calculate the oxygen-oxygen radial distribution function of water.
-    The range of the histogram starts at 0.2 Angstroem, in order to
+    The range of the histogram starts at 0.2 Å, in order to
     ignore the counts for the density for each oxygen to itself.
 
     >>> from os.path import join
@@ -95,7 +95,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     >>> oxygens = waterbox[:, waterbox.atom_name == 'OW']
     >>> bins, g_r = rdf(oxygens, oxygens, bins=49, interval=(0.2, 10), periodic=True)
 
-    Print the RDF depending on the radius. Bins are in Angstroem.
+    Print the RDF depending on the radius. Bins are in Å.
 
     >>> for x, y in zip(bins, g_r):
     ...     print(f"{x:.2f} {y:.2f}")
