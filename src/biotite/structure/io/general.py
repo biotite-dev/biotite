@@ -127,6 +127,25 @@ def load_structure(file_path, template=None):
 
 
 def save_structure(file_path, array):
+    """
+    Save an atom array or stack to a structure file without the need
+    to manually instantiate a `File` object.
+    
+    Internally this function uses a `File` object, based on the file
+    extension.
+    
+    Parameters
+    ----------
+    file_path : str
+        The path to structure file.
+    array : AtomArray or AtomArrayStack
+        The structure to be saved.
+    
+    Raises
+    ------
+    ValueError
+        If the file format (i.e. the file extension) is unknown.
+    """
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
