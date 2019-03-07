@@ -89,15 +89,15 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             A file-like-object cannot be used.
         """
         traj_type = self.traj_type()
-        xyz = self._coord.astype(np.float32, copy=False) \
+        xyz = np.divide(self._coord, 10, dtype=np.float32) \
               if self._coord is not None else None
         time = self._time.astype(np.float32, copy=False) \
               if self._time is not None else None
-        box = self._box.astype(np.float32, copy=False) \
+        box = np.divide(self._box, 10, dtype=np.float32) \
               if self._box is not None else None
         with traj_type(file_name, 'w') as f:
             # Angstrom to nm
-            f.write(xyz=xyz/10, time=time, box=box/10)
+            f.write(xyz=xyz, time=time, box=box)
     
     def get_coord(self):
         """
