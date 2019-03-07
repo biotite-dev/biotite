@@ -133,9 +133,6 @@ def test_remove_pbc_unsegmented():
     array = struc.remove_pbc(ref_array)
 
     assert ref_array.equal_annotation_categories(array)
-    print(ref_array.coord[:10])
-    print(array.coord[:10])
-    print(np.max(np.abs(ref_array.coord - array.coord)))
     assert np.allclose(ref_array.coord, array.coord)
 
 
@@ -147,37 +144,72 @@ def test_remove_pbc_unsegmented():
     )
 )
 def test_remove_pbc_restore(multi_model, translation_vector):
+    CUTOFF = 5.0
+    
+    def get_matrices(array):
+        """
+        Create a periodic and non-periodic adjacency matrix.
+        """
+        nonlocal CUTOFF
+        if isinstance(array, struc.AtomArray):
+            matrix     = struc.CellList(array, CUTOFF, periodic=False) \
+                        .create_adjacency_matrix(CUTOFF)
+            matrix_pbc = struc.CellList(array, CUTOFF, periodic=True) \
+                        .create_adjacency_matrix(CUTOFF)
+        elif isinstance(array, struc.AtomArrayStack):
+            matrix = np.array(
+                [struc.CellList(model, CUTOFF, periodic=False)
+                 .create_adjacency_matrix(CUTOFF)
+                 for model in array]
+                )
+            matrix_pbc = np.array(
+                [struc.CellList(model, CUTOFF, periodic=True)
+                 .create_adjacency_matrix(CUTOFF)
+                 for model in array]
+            )
+        return matrix, matrix_pbc
+    
+    def assert_equal_matrices(array, matrix1, matrix2, periodic):
+        """
+        Due to numerical instability, entries in both matrices might
+        be different, when the distance of atoms is almost equal to
+        the cutoff distance of the matrix.
+        This function checks, whether two atoms with unequal entries
+        in the matrices are near the cutoff distance.
+        """
+        nonlocal CUTOFF
+        indices = np.where(matrix1 != matrix2)
+        for index in range(len(indices[0])):
+            if len(indices) == 2:
+                # multi_model = False -> AtomArray
+                m = None
+                i = indices[0][index]
+                j = indices[1][index]
+                box = array.box if periodic else None
+                distance = struc.distance(array[i], array[j], box=box)
+            if len(indices) == 3:
+                # multi_model = True -> AtomArrayStack
+                m = indices[0][index]
+                i = indices[1][index]
+                j = indices[2][index]
+                box = array.box[m] if periodic else None
+                distance = struc.distance(array[m,i], array[m,j], box=box)
+            try:
+                assert distance == pytest.approx(CUTOFF, abs=1e-5)
+            except AssertionError:
+                print(f"Model {m}, Atoms {i} and {j}")
+                raise
+    
     stack = load_structure(join(data_dir, "1gya.mmtf"))
     stack.box = np.array([
         np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + 10)
         for coord in stack.coord
     ])
     stack.coord -= np.min(stack.coord, axis=-2)[:, np.newaxis, :] - 5
-    #!#
-    #stack = stack[:8]
-    #!#
     if multi_model:
         array = stack
     else:
         array = stack[0]
-    #!#
-    array = stack[7]
-    #!#
-
-    def get_matrices(array):
-        if isinstance(array, struc.AtomArray):
-            matrix     = struc.CellList(array, 5, periodic=False) \
-                        .create_adjacency_matrix(5)
-            matrix_pbc = struc.CellList(array, 5, periodic=True) \
-                        .create_adjacency_matrix(5)
-        elif isinstance(array, struc.AtomArrayStack):
-            matrix     = np.array([struc.CellList(model, 5, periodic=False)
-                                   .create_adjacency_matrix(5)
-                                   for model in array])
-            matrix_pbc = np.array([struc.CellList(model, 5, periodic=True)
-                                   .create_adjacency_matrix(5)
-                                    for model in array])
-        return matrix, matrix_pbc
 
     # Use adjacency matrices instead of pairwise distances
     # for compuational efficiency
@@ -186,25 +218,18 @@ def test_remove_pbc_restore(multi_model, translation_vector):
     array = struc.translate(array, translation_vector)
     array.coord = struc.move_inside_box(array.coord, array.box)
     moved_matrix, moved_matrix_pbc = get_matrices(array)
-    #!#
-    print(np.where(ref_matrix_pbc != moved_matrix_pbc))
-    i = 1811
-    j = 1809
-    matrix = ref_matrix_pbc
-    print(matrix[i,j], matrix[j,i])
-    print(array[1800:1820])
-    #!#
     # The translation and the periodic move should not
     # alter PBC-aware pairwise distances
-    assert (ref_matrix_pbc == moved_matrix_pbc).all()
+    assert_equal_matrices(array, ref_matrix_pbc, moved_matrix_pbc, True)
     # Non-PBC-aware distances should change,
     # otherwise the atoms do not go over the periodic boundary
-    # and the test makes no sense
-    assert not (ref_matrix == moved_matrix).all()
+    # and the test does not make sense
+    with pytest.raises(AssertionError):
+        assert_equal_matrices(array, ref_matrix, moved_matrix, False)
 
     array = struc.remove_pbc(array)
     restored_matrix, restored_matrix_pbc = get_matrices(array)
     # Both adjacency matrices should be equal to the original ones,
     # as the structure should be completely restored
-    assert (ref_matrix_pbc == restored_matrix_pbc).all()
-    assert (ref_matrix     == restored_matrix).all()
+    assert_equal_matrices(array, ref_matrix_pbc, restored_matrix_pbc, True)
+    assert_equal_matrices(array, ref_matrix,     restored_matrix,     False)
