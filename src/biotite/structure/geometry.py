@@ -73,6 +73,24 @@ def displacement(atoms1, atoms2, box=None):
         # Check for each model if the box vectors are orthogonal
         orthogonality = is_orthogonal(box)
         disp = np.zeros(fractions.shape, dtype=np.float64)
+        if fractions.ndim == 1:
+            # Single atom
+            # Transform into two dimensions
+            # to match signature of '_displacement_xxx()'
+            fractions = fractions[np.newaxis, :]
+            disp = disp[np.newaxis, :]
+            if orthogonality:
+                _displacement_orthogonal_box(
+                    fractions, box, disp
+                )
+            else:
+                _displacement_triclinic_box(
+                    fractions.astype(np.float64, copy=False),
+                    box.astype(np.float64, copy=False),
+                    disp
+                )
+            # Transform back
+            disp = disp[0]
         if fractions.ndim == 2:
             # Single model
             if orthogonality:
