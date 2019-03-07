@@ -220,6 +220,12 @@ cdef class CellList:
         optinal: The resulting adjacency matrix is the same for every
         cell size.
 
+        Although the adjacency matrix should be symmetric in most cases,
+        it may occur that ``m[i,j] != m[j,i]``, when ``distance(i,j)``
+        is very close to the `threshold_distance` due to numerical
+        errors.
+        The matrix can be symmetrized with ``numpy.maximum(a, a.T)``.
+
         Examples
         --------
         Create adjacency matrix for CA atoms in a structure:
