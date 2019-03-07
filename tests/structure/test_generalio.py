@@ -32,8 +32,11 @@ def test_loading_template_with_trj():
     assert len(stack) > 1
 
 
-@pytest.mark.parametrize("suffix", ["pdb","cif","gro","pdbx","mmtf"])
+@pytest.mark.parametrize(
+    "suffix", ["pdb","cif","gro","pdbx","mmtf","trr","xtc","tng"]
+)
 def test_saving(suffix):
     array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
-    strucio.save_structure(biotite.temp_file("1l2y." + suffix),
-                           array)
+    strucio.save_structure(
+        biotite.temp_file("1l2y." + suffix), array
+    )
