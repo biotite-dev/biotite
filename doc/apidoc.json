@@ -154,6 +154,8 @@
             "repeat_box",
             "repeat_box_coord",
             "move_inside_box",
+            "remove_pbc",
+            "remove_pbc_from_coord",
             "coord_to_fraction",
             "fraction_to_coord",
             "is_orthogonal"
