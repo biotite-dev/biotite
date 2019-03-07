@@ -22,6 +22,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     in relatively small space.
     Since all `TrajectoryFile` subclasses interface `MDtraj` trajectory
     file classes, `MDtraj` must be installed to use any of them.
+
+    When extracting data from or setting data in the file, only a
+    shallow copy as created.
     """
     
     def __init__(self):
@@ -29,6 +32,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._coord = None
         self._time = None
         self._box = None
+        self._model_count = None
     
     def read(self, file_name, start=None, stop=None, step=None, atom_i=None):
         """
@@ -72,6 +76,28 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             self._coord = result[self.output_value_index("coord")] * 10
             self._time  = result[self.output_value_index("time")]
             self._box   = result[self.output_value_index("box")] * 10
+        self._model_count = len(self._coord)
+    
+    def write(self, file_name):
+        """
+        Write the content into a trajectory file.
+
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be written to.
+            A file-like-object cannot be used.
+        """
+        traj_type = self.traj_type()
+        xyz = self._coord.astype(np.float32, copy=False) \
+              if self._coord is not None else None
+        time = self._time.astype(np.float32, copy=False) \
+              if self._time is not None else None
+        box = self._box.astype(np.float32, copy=False) \
+              if self._box is not None else None
+        with traj_type(file_name, 'w') as f:
+            # Angstrom to nm
+            f.write(xyz=xyz/10, time=time, box=box/10)
     
     def get_coord(self):
         """
@@ -79,10 +105,71 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         
         Returns
         -------
-        indices : ndarray, dtype=float, shape=(m,n,1)
+        coord : ndarray, dtype=float, shape=(m,n,3)
             The coordinates stored in the trajectory file.
         """
         return self._coord
+    
+    def get_time(self):
+        """
+        Get the time values for each frame.
+        
+        Returns
+        -------
+        time : ndarray, dtype=float, shape=(m,)
+            A one dimensional array containing the time values for the
+            frames, that were read fro the file.
+        """
+        return self._time
+    
+    def get_box(self):
+        """
+        Get the box vectors for each frame.
+        
+        Returns
+        -------
+        box : ndarray, dtype=float, shape=(m,3,3)
+            An array containing the box dimensions for the
+            frames, that were read from the file.
+        """
+        return self._box
+    
+    def set_coord(self, coord):
+        """
+        Set the coordinates in the trajectory file.
+        
+        Parameters
+        ----------
+        coord : ndarray, dtype=float, shape=(m,n,3)
+            The coordinates to be set.
+        """
+        self._check_model_count(coord)
+        self._coord = coord
+    
+    def set_time(self, time):
+        """
+        Set the simulation time of each frame in the trajectory file.
+        
+        Parameters
+        ----------
+        time : ndarray, dtype=float, shape=(m,)
+            The simulation time to be set.
+        """
+        self._check_model_count(time)
+        self._time = time
+    
+    def set_box(self, box):
+        """
+        Set the periodic box vectors of each frame in the trajectory
+        file.
+        
+        Parameters
+        ----------
+        time : ndarray, dtype=float, shape=(m,3,3)
+            The box vectors to be set.
+        """
+        self._check_model_count(box)
+        self._box = box
     
     def get_structure(self, template):
         """
@@ -107,56 +194,45 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             but the coordinates and the simulation boxes from the
             trajectory file.
         """
-        if template.array_length() != self._coord.shape[-2]:
+        if template.array_length() != self.get_coord().shape[-2]:
             raise ValueError(
                 f"Template has {template.array_length()} atoms and trajectory "
-                f"has {self._coord.shape[-2]} atoms, must be equal"
+                f"has {self.get_coord().shape[-2]} atoms, must be equal"
             )
         if isinstance(template, AtomArray):
             array_stack = stack([template])
         else:
             array_stack = template.copy()
-        array_stack.coord = np.copy(self._coord)
-        array_stack.box = np.copy(self._box)
+        array_stack.coord = self.get_coord()
+        array_stack.box = self.get_box()
         return array_stack
     
-    def get_time(self):
+    def set_structure(self, structure, time=None):
         """
-        Get the time values for each frame.
+        Write an atom array (stack) into the trajectory file object.
         
-        Returns
-        -------
-        time : ndarray, dtype=float, shape=(m,)
-            A one dimensional array containing the time values for the
-            frames, that were read fro the file.
-        """
-        return self._time
-    
-    def get_box(self):
-        """
-        Get the box dimensions for each frame.
+        The topology information (chain, residue, etc.) is not saved in
+        the file.
         
-        Returns
-        -------
-        box : ndarray, dtype=float, shape=(m,3,3)
-            An array containing the box dimensions for the
-            frames, that were read from the file.
-        """
-        return self._box
-    
-    def write(self, file_name):
-        """
-        Write the content into a trajectory file.
-
         Parameters
         ----------
-        file_name : str
-            The path of the file to be written to.
-            A file-like-object cannot be used.
+        structure : AtomArray or AtomArrayStack
+            The structure to be put into the trajectory file.
+        time : ndarray, dtype=float, shape=(n,), optional
+            The simulation time for each frame in `structure`.
         """
-        traj_type = self.traj_type()
-        with traj_type(file_name, 'w') as f:
-            f.write(xyz=self._coord, time=self._time, box=self._box)
+        coord = structure.coord
+        box = structure.box
+        if coord.ndim == 2:
+            coord = coord[np.newaxis, :, :]
+        if box is not None and box.ndim == 2:
+            box = box[np.newaxis, :, :]
+        self.set_coord(coord)
+        if box is not None:
+            self.set_box(box)
+        if time is not None:
+            self.set_time(time)
+
     
     def copy(self):
         """
@@ -203,3 +279,20 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
     
+
+    def _check_model_count(self, array):
+        """
+        Check if the amount of models in the given array is equal to
+        the amount of models in the file.
+        If not, raise an exception.
+        If the amount of models in the file is not set, set it with
+        the amount of models in the array
+        """
+        if self._model_count is None:
+            self._model_count = len(array)
+        else:
+            if self._model_count != len(array):
+                raise ValueError(
+                    f"{len(array)} models were given, "
+                    f"but the file contains {self._model_count} models"
+                )
