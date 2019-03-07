@@ -13,6 +13,7 @@ __all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
            "remove_pbc", "remove_pbc_from_coord",
            "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
 
+from collections.abc import Iterable
 from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
@@ -367,13 +368,13 @@ def move_inside_box(coord, box):
     return fraction_to_coord(fractions_rem, box)
 
 
-def remove_pbc(atoms, selection=None, chain_id=None):
+def remove_pbc(atoms, selection=None):
     """
-    Removes segmentation caused by periodic boundary conditions from a
+    Remove segmentation caused by periodic boundary conditions from a
     given structure.
 
-    In this process the first atom is taken as origin and
-    is moved inside the box.
+    In this process the first atom (of the selection) is taken as origin
+    and is moved inside the box.
     All other coordinates are assembled relative to the origin.
     
     Parameters
@@ -381,15 +382,21 @@ def remove_pbc(atoms, selection=None, chain_id=None):
     atoms : AtomArray or AtomArrayStack
         The potentially segmented structure.
         The `box` attribute must be set in the structure.
-    selection : ndarray, dtype=bool, shape=(n,), optional
-        A boolean mask for atom selection.
-        If set, the segmentation will be removed only from the selected
-        atoms.
-        Cannot be combined with the `chain_id` parameter.
-    chain_id : str, optional
-        If set, the segmentation will be removed only from the atoms in
-        the given chain.
-        Cannot be combined with the `selection` parameter.
+    selection : str or (iterable object of) ndarray, dtype=bool, shape=(n,), optional
+        Specifies which part(s) of structure are sanitized, i.e the
+        segmentation is removed.
+        If a string is given, the value is interpreted as the chain ID
+        to be selected.
+        If a boolean mask is given, the corresponding atoms are
+        selected. 
+        If multiple boolean masks are given, each selection
+        is treated as separate assembly process, independent of all
+        other selections.
+        Consequently, giving multiple boolean masks has the same result
+        as calling the functions multiple times with each mask
+        separately.
+        An atom must not be selected more than one time.
+
     
     Returns
     -------
@@ -402,42 +409,57 @@ def remove_pbc(atoms, selection=None, chain_id=None):
 
     Notes
     -----
-    It is not recommended to apply this function on regions of the
+    It is not recommended to select regions of the
     structure with distances from one atom to the next atom that are
     larger than half of the box size
     (e.g. the solvent, chain transitions).
-    In this case, the function should rather be called multiple times,
-    with a single molecule selected in each invocation.
+    In this case, multiple selections should be given, with a single
+    molecule selected in each selection.
 
     Internally the function uses `remove_pbc_from_coord()`.
     """
     new_atoms = atoms.copy()
     
-    if selection is None and chain_id is None:
+    if selection is None:
         new_atoms.coord = remove_pbc_from_coord(
             atoms.coord, atoms.box
         )
-    
-    elif selection is not None and chain_id is None:
-        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
-            atoms.coord[..., selection, :], atoms.box
-        )
-   
-    elif selection is None and chain_id is not None:
-        selection = (atoms.chain_id == chain_id)
+
+    elif isinstance(selection, str):
+        # Chain ID
+        selection = (atoms.chain_id == selection)
         new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
             atoms.coord[..., selection, :], atoms.box
         )
     
-    else: # Both are not None
-        raise TypeError("Cannot set both, 'selection' and 'chain_id'")
+    elif isinstance(selection, np.ndarray) and selection.ndim == 1:
+        # Single boolean mask
+        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+            atoms.coord[..., selection, :], atoms.box
+        )
     
+    elif isinstance(selection, Iterable):
+        # Iterable of boolean masks
+        selections = np.stack(list(selection))
+        # Test whether an atom was selected multiple times
+        sel_count = np.count_nonzero(selections, axis=0)
+        if (sel_count > 1).any():
+            first_pos = np.where((sel_count > 1))[0][0]
+            raise ValueError(
+                f"Atom at index {first_pos} was selected "
+                f"{sel_count[first_pos]} times"
+            )
+        for selection in selections:
+            new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+                atoms.coord[..., selection, :], atoms.box
+            )
+
     return new_atoms
 
 
 def remove_pbc_from_coord(coord, box):
     """
-    Removes segmentation caused by periodic boundary conditions from
+    Remove segmentation caused by periodic boundary conditions from
     given coordinates.
 
     In this process the first coordinate is taken as origin and

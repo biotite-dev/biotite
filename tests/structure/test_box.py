@@ -233,3 +233,24 @@ def test_remove_pbc_restore(multi_model, translation_vector):
     # as the structure should be completely restored
     assert_equal_matrices(array, ref_matrix_pbc, restored_matrix_pbc, True)
     assert_equal_matrices(array, ref_matrix,     restored_matrix,     False)
+
+
+@pytest.mark.parametrize("multi_model", [True, False])
+def test_remove_pbc_selections(multi_model):
+    """
+    This test makes no assertions, it only test whether an exception
+    occurs, when the `selection` parameter is given in `remove_pbc()`.
+    """
+    array = load_structure(join(data_dir, "3o5r.mmtf"))
+    if multi_model:
+        array = struc.stack([array, array])
+    
+    struc.remove_pbc(array)
+    struc.remove_pbc(array, array.chain_id[0])
+    struc.remove_pbc(array, struc.filter_amino_acids(array))
+    struc.remove_pbc(array, [struc.filter_amino_acids(array),
+                       (array.res_name == "FK5")])
+    # Expect error when selectinf an atom multiple times
+    with pytest.raises(ValueError):
+        struc.remove_pbc(array, [struc.filter_amino_acids(array),
+                                 (array.atom_name == "CA")])
