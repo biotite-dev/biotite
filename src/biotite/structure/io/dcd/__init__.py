@@ -2,6 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+"""
+This subpackage is used for reading and writing trajectories in the
+CDC format used by software like *CHARMM*, *OpenMM* and *NAMD*.
+"""
+
 __author__ = "Patrick Kunzmann"
 
 from .file import *
