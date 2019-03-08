@@ -32,6 +32,7 @@ def test_loading_template_with_trj():
     assert len(stack) > 1
 
 
+@pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize(
     "suffix",
     ["pdb", "cif", "gro", "pdbx", "mmtf",
