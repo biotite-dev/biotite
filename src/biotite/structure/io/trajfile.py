@@ -73,11 +73,11 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 result = f.read(stride=step, atom_indices=atom_i)
             else:
                 result = f.read(stop-start, step, atom_i)
-            # nm to Angstrom
-            self._coord, self._box, self._time = self.process_read_values(
-                result
-            )
-        self._model_count = len(self._coord)
+        # nm to Angstrom
+        coord, box, time = self.process_read_values(result)
+        self.set_coord(coord)
+        self.set_box(box)
+        self.set_time(time)
     
     def write(self, file_name):
         """
@@ -314,6 +314,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         If the amount of models in the file is not set yet, set it with
         the amount of models in the array.
         """
+        if array is None:
+            return
         if self._model_count is None:
             self._model_count = len(array)
         else:

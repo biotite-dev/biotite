@@ -21,7 +21,9 @@ class TRRFile(TrajectoryFile):
     def process_read_values(self, read_values):
         # nm to Angstrom
         coord = read_values[0] * 10
-        box = read_values[3] * 10
+        box = read_values[3]
+        if box is not None:
+            box *= 10
         time = read_values[1]
         return coord, box, time
     
