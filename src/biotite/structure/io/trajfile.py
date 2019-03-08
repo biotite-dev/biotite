@@ -39,8 +39,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Read a trajectory file.
         
         A trajectory file can be seen as a file representation of an
-        `AtomArrayStack`. `start`, `stop` and `step` represent therefore
-        slice parameters of the index of the first dimension and
+        `AtomArrayStack`.
+        Therefore, `start`, `stop` and `step` represent slice parameters
+        of the index of the first dimension and
         `atom_i` represents an index array for the second dimension.
         
         Parameters
@@ -73,9 +74,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             else:
                 result = f.read(stop-start, step, atom_i)
             # nm to Angstrom
-            self._coord = result[self.output_value_index("coord")] * 10
-            self._time  = result[self.output_value_index("time")]
-            self._box   = result[self.output_value_index("box")] * 10
+            self._coord, self._box, self._time = self.process_read_values(
+                result
+            )
         self._model_count = len(self._coord)
     
     def write(self, file_name):
@@ -89,19 +90,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             A file-like-object cannot be used.
         """
         traj_type = self.traj_type()
-        xyz = np.divide(self._coord, 10, dtype=np.float32) \
-              if self._coord is not None else None
-        time = self._time.astype(np.float32, copy=False) \
-              if self._time is not None else None
-        box = np.divide(self._box, 10, dtype=np.float32) \
-              if self._box is not None else None
+        param = self.prepare_write_values(self._coord, self._box, self._time)
         with traj_type(file_name, 'w') as f:
-            # Angstrom to nm
-            f.write(xyz=xyz, time=time, box=box)
+            f.write(**param)
     
     def get_coord(self):
         """
-        Extract only the coordinates from the trajectory file.
+        Extract only the atom coordinates from the trajectory file.
         
         Returns
         -------
@@ -112,7 +107,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def get_time(self):
         """
-        Get the time values for each frame.
+        Get the simlation time in ps values for each frame.
         
         Returns
         -------
@@ -136,7 +131,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def set_coord(self, coord):
         """
-        Set the coordinates in the trajectory file.
+        Set the atom coordinates in the trajectory file.
         
         Parameters
         ----------
@@ -260,33 +255,64 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         pass
     
     @abc.abstractmethod
-    def output_value_index(self, value):
+    def process_read_values(self, read_values):
         """
-        Map the values "coord", "time" and "box" to indices in the
-        tuple returned from `MDtraj` `TrajectoryFile.read()` method.
+        Convert the return value of the `read()` method of the
+        respective *MDTraj* `TrajectoryFile` into coordinates,
+        simulation box and simulation time.
         
         PROTECTED: Override when inheriting.
         
         Parameters
         ----------
-        value : str
-            "coord", "time" or "box".
+        read_values : tuple
+            The return value of the respective *MDTraj* `TrajectoryFile`
+            `read()` method.
         
         Returns
         -------
-        int
-            The index where `value` is in the returned tuple.
+        coord : ndarray, dtype=float, shape=(m,n,3)
+            The atom coordinates in Å for each frame.
+        box : ndarray, dtype=float, shape=(m,3,3) or None
+            The box vectors in Å for each frame.
+        time : ndarray, dtype=float, shape=(m,) or None
+            The simulation time in ps for each frame.
         """
         pass
     
+    @abc.abstractmethod
+    def prepare_write_values(self, coord, box, time):
+        """
+        Convert the `coord`, `box` and `time` attribute into a
+        dictionary that is given as *kwargs* to the respective
+        *MDTraj* `TrajectoryFile` `write()` method.
+
+        PROTECTED: Override when inheriting.
+
+        Parameters
+        ----------
+        coord : ndarray, dtype=float, shape=(m,n,3)
+            The atom coordinates in Å for each frame.
+        box : ndarray, dtype=float, shape=(m,3,3)
+            The box vectors in Å for each frame.
+        time : ndarray, dtype=float, shape=(m,)
+            The simulation time in ps for each frame.
+        
+        Returns
+        -------
+        parameters : dict
+            This dictionary is given as *kwargs* parameter to the
+            respective *MDTraj* `TrajectoryFile` `write()` method.
+        """
+        pass
 
     def _check_model_count(self, array):
         """
         Check if the amount of models in the given array is equal to
         the amount of models in the file.
         If not, raise an exception.
-        If the amount of models in the file is not set, set it with
-        the amount of models in the array
+        If the amount of models in the file is not set yet, set it with
+        the amount of models in the array.
         """
         if self._model_count is None:
             self._model_count = len(array)
