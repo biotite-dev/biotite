@@ -4,7 +4,7 @@
 
 """
 This subpackage is used for reading and writing trajectories in the
-compressed *Gromacs* XTC format.
+CDC format used by software like *CHARMM*, *OpenMM* and *NAMD*.
 """
 
 __author__ = "Patrick Kunzmann"

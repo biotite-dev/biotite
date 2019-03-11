@@ -16,7 +16,7 @@ import pytest
 @pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize("path", glob.glob(join(data_dir, "1l2y.*")))
 def test_loading(path):
-    if splitext(path)[1] in [".trr", ".xtc", ".tng"]:
+    if splitext(path)[1] in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         template = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
         array = strucio.load_structure(path, template)
     else:
@@ -32,8 +32,14 @@ def test_loading_template_with_trj():
     assert len(stack) > 1
 
 
-@pytest.mark.parametrize("suffix", ["pdb","cif","gro","pdbx","mmtf"])
+@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.parametrize(
+    "suffix",
+    ["pdb", "cif", "gro", "pdbx", "mmtf",
+     "trr", "xtc", "tng", "dcd", "netcdf"]
+)
 def test_saving(suffix):
     array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
-    strucio.save_structure(biotite.temp_file("1l2y." + suffix),
-                           array)
+    strucio.save_structure(
+        biotite.temp_file("1l2y." + suffix), array
+    )

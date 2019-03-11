@@ -4,7 +4,7 @@
 
 """
 This subpackage is used for reading and writing trajectories in the
-compressed *Gromacs* XTC format.
+*AMBER* NetCDF format.
 """
 
 __author__ = "Patrick Kunzmann"

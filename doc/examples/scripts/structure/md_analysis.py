@@ -53,6 +53,8 @@ template = template[protein_mask]
 xtc_file = xtc.XTCFile()
 xtc_file.read(traj_file_path, atom_i=np.where(protein_mask)[0])
 trajectory = xtc_file.get_structure(template)
+# Get simulation time for plotting purposes
+time = xtc_file.get_time()
 
 ########################################################################
 # Since the MD simulation used periodic boundaries, the protein might be
@@ -74,14 +76,11 @@ trajectory = struc.remove_pbc(trajectory)
 
 trajectory, transform = struc.superimpose(trajectory[0], trajectory)
 rmsd = struc.rmsd(trajectory[0], trajectory)
-# Simulation was 1000 ps long
-SIM_TIME = 1000
-time = np.linspace(0, SIM_TIME, len(trajectory))
 
 figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, rmsd, color=biotite.colors["dimorange"])
-ax.set_xlim(0, SIM_TIME)
+ax.set_xlim(time[0], time[-1])
 ax.set_ylim(0, 2)
 ax.set_xlabel("Time (ps)")
 ax.set_ylabel("RMSD (Å)")
@@ -102,7 +101,7 @@ radius = struc.gyration_radius(trajectory)
 figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, radius, color=biotite.colors["dimorange"])
-ax.set_xlim(0, 1000)
+ax.set_xlim(time[0], time[-1])
 ax.set_ylim(14.0, 14.5)
 ax.set_xlabel("Time (ps)")
 ax.set_ylabel("Radius of gyration (Å)")

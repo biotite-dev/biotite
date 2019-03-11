@@ -101,25 +101,25 @@ def load_structure(file_path, template=None):
             return array[0]
         else:
             return array
-    elif suffix == ".trr":
+    elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
             raise TypeError("Template must be specified for trajectory files")
         from .trr import TRRFile
-        file = TRRFile()
-        file.read(file_path)
-        return file.get_structure(template)
-    elif suffix == ".xtc":
-        if template is None:
-            raise TypeError("Template must be specified for trajectory files")
         from .xtc import XTCFile
-        file = XTCFile()
-        file.read(file_path)
-        return file.get_structure(template)
-    elif suffix == ".tng":
-        if template is None:
-            raise TypeError("Template must be specified for trajectory files")
         from .tng import TNGFile
-        file = TNGFile()
+        from .dcd import DCDFile
+        from .netcdf import NetCDFFile
+        if suffix == ".trr":
+            traj_file_cls = TRRFile
+        if suffix == ".xtc":
+            traj_file_cls = XTCFile
+        if suffix == ".tng":
+            traj_file_cls = TNGFile
+        if suffix == ".dcd":
+            traj_file_cls = DCDFile
+        if suffix == ".netcdf":
+            traj_file_cls = NetCDFFile
+        file = traj_file_cls()
         file.read(file_path)
         return file.get_structure(template)
     else:
@@ -173,8 +173,24 @@ def save_structure(file_path, array):
         file = NpzFile()
         file.set_structure(array)
         file.write(file_path)
-    elif suffix == ".trr" or suffix == ".xtc" or suffix == ".tng":
-        raise NotImplementedError("Writing trajectory files is not "
-                                  "implemented yet")
+    elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
+        from .trr import TRRFile
+        from .xtc import XTCFile
+        from .tng import TNGFile
+        from .dcd import DCDFile
+        from .netcdf import NetCDFFile
+        if suffix == ".trr":
+            traj_file_cls = TRRFile
+        if suffix == ".xtc":
+            traj_file_cls = XTCFile
+        if suffix == ".tng":
+            traj_file_cls = TNGFile
+        if suffix == ".dcd":
+            traj_file_cls = DCDFile
+        if suffix == ".netcdf":
+            traj_file_cls = NetCDFFile
+        file = traj_file_cls()
+        file.set_structure(array)
+        file.write(file_path)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")

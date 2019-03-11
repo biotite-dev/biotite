@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["TNGFile"]
 
+import numpy as np
 from ..trajfile import TrajectoryFile
 
 
@@ -17,10 +18,25 @@ class TNGFile(TrajectoryFile):
         import mdtraj.formats as traj
         return traj.TNGTrajectoryFile
     
-    def output_value_index(self, value):
-        if value == "coord":
-            return 0
-        if value == "time":
-            return 1
-        if value == "box":
-            return 3
+    def process_read_values(self, read_values):
+        # nm to Angstrom
+        coord = read_values[0] * 10
+        box = read_values[2]
+        if box is not None:
+            box *= 10
+        time = read_values[1]
+        return coord, box, time
+    
+    def prepare_write_values(self, coord, box, time):
+        # Angstrom to nm
+        xyz = np.divide(coord, 10, dtype=np.float32) \
+              if coord is not None else None
+        time = time.astype(np.float32, copy=False) \
+               if time is not None else None
+        box = np.divide(box, 10, dtype=np.float32) \
+              if box is not None else None
+        return {
+            "xyz"  : xyz,
+            "box"  : box,
+            "time" : time,
+        }
