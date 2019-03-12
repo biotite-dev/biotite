@@ -59,7 +59,7 @@ def filter_solvent(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
-    return ( np.in1d(array.res_name, _solvent_list) & (array.hetero == True) )
+    return np.in1d(array.res_name, _solvent_list)
 
 
 def filter_amino_acids(array):
