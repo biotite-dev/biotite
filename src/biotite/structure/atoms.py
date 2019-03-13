@@ -260,13 +260,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if not isinstance(value, np.ndarray):
                 raise TypeError("Value must be ndarray of floats")
             if isinstance(self, AtomArray):
-                if len(value.shape) != 2:
+                if value.ndim != 2:
                     raise ValueError(
                         "A 2-dimensional ndarray is expected "
                         "for an AtomArray"
                 )
             elif isinstance(self, AtomArrayStack):
-                if len(value.shape) != 3:
+                if value.ndim != 3:
                     raise ValueError(
                         "A 3-dimensional ndarray is expected "
                         "for an AtomArrayStack"
@@ -278,7 +278,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 )
             if value.shape[-1] != 3:
                 raise TypeError("Expected 3 coordinates for each atom")
-            self._coord = value
+            self._coord = value.astype(np.float32, copy=False)
         
         elif attr == "bonds":
             if isinstance(value, BondList):
@@ -298,13 +298,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if value is None:
                 self._box = None
             elif isinstance(self, AtomArray):
-                if len(value.shape) != 2:
+                if value.ndim != 2:
                     raise ValueError(
                         "A 2-dimensional ndarray is expected "
                         "for an AtomArray"
                 )
             elif isinstance(self, AtomArrayStack):
-                if len(value.shape) != 3:
+                if value.ndim != 3:
                     raise ValueError(
                         "A 3-dimensional ndarray is expected "
                         "for an AtomArrayStack"
@@ -312,7 +312,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if isinstance(value, np.ndarray):
                 if value.shape[-2:] != (3,3):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
-                self._box = value
+                self._box = value.astype(np.float32, copy=False)
             elif value is None:
                 # Remove bond list
                 self._box = None
@@ -453,7 +453,7 @@ class Atom(object):
             kwargs = kwargs["kwargs"]
         for name, annotation in kwargs.items():
             self._annot[name] = annotation
-        coord = np.array(coord, dtype=float)
+        coord = np.array(coord, dtype=np.float32)
         # Check if coord contains x,y and z coordinates
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
@@ -603,7 +603,7 @@ class AtomArray(_AtomArrayBase):
         if length is None:
             self._coord = None
         else:
-            self._coord = np.full((length, 3), np.nan, dtype=float)
+            self._coord = np.full((length, 3), np.nan, dtype=np.float32)
     
     def get_atom(self, index):
         """
@@ -821,7 +821,7 @@ class AtomArrayStack(_AtomArrayBase):
         if depth == None or length == None:
             self._coord = None
         else:
-            self._coord = np.full((depth, length, 3), np.nan, dtype=float)
+            self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
     
     def get_array(self, index):
         """
@@ -1147,6 +1147,6 @@ def coord(item):
     if type(item) in (Atom, AtomArray, AtomArrayStack):
         return item.coord
     elif isinstance(item, np.ndarray):
-        return item.astype(float, copy=False)
+        return item.astype(np.float32, copy=False)
     else:
-        return np.array(item, dtype=float)
+        return np.array(item, dtype=np.float32)
