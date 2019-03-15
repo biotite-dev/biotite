@@ -115,7 +115,7 @@ def get_structure(pdbx_file, model=None, data_block=None,
             raise BadStructureError("The models in the file have unequal "
                                     "amount of atoms, give an explicit model "
                                     "instead")
-        stack.coord = np.zeros((model_count, model_length, 3), dtype=float)
+        stack.coord = np.zeros((model_count,model_length,3), dtype=np.float32)
         stack.coord[:,:,0] = atom_site_dict["Cartn_x"].reshape((model_count,
                                                                 model_length))
         stack.coord[:,:,1] = atom_site_dict["Cartn_y"].reshape((model_count,
@@ -135,10 +135,13 @@ def get_structure(pdbx_file, model=None, data_block=None,
         array = AtomArray(model_length)
         _fill_annotations(array, model_dict, extra_fields)
         model_filter = (models == str(model))
-        array.coord = np.zeros((model_length, 3), dtype=float)
-        array.coord[:,0]= atom_site_dict["Cartn_x"][model_filter].astype(float)
-        array.coord[:,1]= atom_site_dict["Cartn_y"][model_filter].astype(float)
-        array.coord[:,2]= atom_site_dict["Cartn_z"][model_filter].astype(float)
+        array.coord = np.zeros((model_length, 3), dtype=np.float32)
+        array.coord[:,0] = atom_site_dict["Cartn_x"][model_filter] \
+                           .astype(np.float32)
+        array.coord[:,1] = atom_site_dict["Cartn_y"][model_filter] \
+                           .astype(np.float32)
+        array.coord[:,2] = atom_site_dict["Cartn_z"][model_filter] \
+                           .astype(np.float32)
         array = _filter_inscode_altloc(array, model_dict,
                                        insertion_code, altloc)
         array.box = _get_box(pdbx_file, data_block)

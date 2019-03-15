@@ -195,7 +195,7 @@ def test_remove_pbc_restore(multi_model, translation_vector):
                 box = array.box[m] if periodic else None
                 distance = struc.distance(array[m,i], array[m,j], box=box)
             try:
-                assert distance == pytest.approx(CUTOFF, abs=1e-5)
+                assert distance == pytest.approx(CUTOFF, abs=1e-4)
             except AssertionError:
                 print(f"Model {m}, Atoms {i} and {j}")
                 raise
