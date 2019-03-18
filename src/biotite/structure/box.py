@@ -61,11 +61,11 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
         [a_x,   0,   0],
         [b_x, b_y,   0],
         [c_x, c_y, c_z]
-    ], dtype=float)
+    ], dtype=np.float32)
     
     # Fix numerical errors, as values, that are actually 0,
     # might not be calculated as such
-    tol = 1e-6 * (len_a + len_b + len_c)
+    tol = 1e-4 * (len_a + len_b + len_c)
     box[np.abs(box) < tol] = 0
     
     return box
@@ -561,10 +561,10 @@ def coord_to_fraction(coord, box):
      [-5.  2.  1.]]
     >>> fractions = coord_to_fraction(coord, box)
     >>> print(fractions)
-    [[ 0.2  0.   0.2]
-     [ 2.   0.   0. ]
-     [ 0.  -2.   2. ]
-     [-1.   0.2  0.2]]
+    [[ 0.2  0.0  0.2]
+     [ 2.0  0.0  0.0]
+     [ 0.0 -2.0  2.0]
+     [-1.0  0.2  0.2]]
     """
     return np.matmul(coord, linalg.inv(box))
 

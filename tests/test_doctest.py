@@ -68,12 +68,14 @@ def test_doctest(package_name, context_package_names):
     globs["path_to_structures"] = "./tests/structure/data/"
     globs["path_to_sequences"]  = "./tests/sequence/data/"
     # Add frequently used modules
-    globs["np"]  = np
+    globs["np"] = np
     # Add frequently used objects
     globs["atom_array_stack"] = strucio.load_structure(
         "./tests/structure/data/1l2y.mmtf"
     )
     globs["atom_array"] = globs["atom_array_stack"][0]
+    # Adjust NumPy print formatting
+    np.set_printoptions(precision=3, floatmode="maxprec_equal")
 
     # Run doctests
     package = import_module(package_name)
@@ -97,7 +99,7 @@ def _list_modules(package, recursive):
     Recursively list module names.
     """
     modnames = []
-    for finder, modname, ispkg in pkgutil.walk_packages(package.__path__):
+    for finder, modname, ispkg in pkgutil.iter_modules(package.__path__):
         abs_modname = f"{package.__name__}.{modname}"
         if ispkg:
             if recursive:
