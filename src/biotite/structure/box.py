@@ -561,10 +561,10 @@ def coord_to_fraction(coord, box):
      [-5.  2.  1.]]
     >>> fractions = coord_to_fraction(coord, box)
     >>> print(fractions)
-    [[ 0.2  0.   0.2]
-     [ 2.   0.   0. ]
-     [ 0.  -2.   2. ]
-     [-1.   0.2  0.2]]
+    [[ 0.2  0.0  0.2]
+     [ 2.0  0.0  0.0]
+     [ 0.0 -2.0  2.0]
+     [-1.0  0.2  0.2]]
     """
     return np.matmul(coord, linalg.inv(box))
 
