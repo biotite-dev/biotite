@@ -56,7 +56,6 @@ def test_doctest(package_name, context_package_names):
     globs = {}
     mod_names = []
     #The package itself is also used as context
-    print(package_name)
     for name in context_package_names + [package_name]:
         context_package = import_module(name)
         mod_names += _list_modules(context_package, False)
@@ -100,9 +99,7 @@ def _list_modules(package, recursive):
     Recursively list module names.
     """
     modnames = []
-    print(package.__path__)
-    for finder, modname, ispkg in pkgutil.walk_packages(package.__path__):
-        print(modname, ispkg)
+    for finder, modname, ispkg in pkgutil.iter_modules(package.__path__):
         abs_modname = f"{package.__name__}.{modname}"
         if ispkg:
             if recursive:
