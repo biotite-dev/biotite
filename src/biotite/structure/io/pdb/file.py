@@ -293,25 +293,32 @@ class PDBFile(TextFile):
                       for charge in array.get_annotation("charge")]
         else:
             charge = [""] * array.array_length()
+        
+        # Atom IDs are supported up to 99999
+        # Residue IDs are supported up to 9999
+        pdb_atom_id = ((atom_id - 1) % 99999) + 1
+        pdb_res_id = ((array.res_id - 1) % 9999) + 1
 
+        # Do checks on atom array (stack)
         if array.array_length() >= 100000:
-            warn("More then 100,000 atoms per model.")
+            warn("More then 100,000 atoms per model")
+        if (array.res_id >= 10000).any():
+            warn("Residue IDs exceed 9999")
+        if np.isnan(array.coord).any():
+            raise ValueError("Coordinates contain 'NaN' values")
         
         if isinstance(array, AtomArray):
             self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
-                pdb_id = atom_id[i]
-                if pdb_id >= 100000:
-                    pdb_id = pdb_id % 100000 + 1
                 self.lines[i] = ("{:6}".format(hetero[i]) + 
-                                  "{:>5d}".format(pdb_id) +
+                                  "{:>5d}".format(pdb_atom_id[i]) +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
                                   " " +
                                   "{:3}".format(array.res_name[i]) +
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
-                                  "{:>4d}".format(array.res_id[i]) +
+                                  "{:>4d}".format(pdb_res_id[i]) +
                                   (" " * 4) +
                                   "{:>8.3f}".format(array.coord[i,0]) +
                                   "{:>8.3f}".format(array.coord[i,1]) +
@@ -332,18 +339,15 @@ class PDBFile(TextFile):
             # which are afterwards applied for each model
             templines = [None] * array.array_length()
             for i in range(array.array_length()):
-                pdb_id = atom_id[i]
-                if pdb_id >= 100000:
-                    pdb_id % 100000 + 1
                 templines[i] = ("{:6}".format(hetero[i]) + 
-                                 "{:>5d}".format(pdb_id) +
+                                 "{:>5d}".format(pdb_atom_id[i]) +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
                                  " " +
                                  "{:3}".format(array.res_name[i]) +
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
-                                 "{:>4d}".format(array.res_id[i]) +
+                                 "{:>4d}".format(pdb_res_id[i]) +
                                  (" " * 28) +
                                  "{:>6.2f}".format(occupancy[i]) +
                                  "{:>6.3f}".format(b_factor[i]) +

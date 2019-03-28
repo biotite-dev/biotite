@@ -143,12 +143,14 @@ def test_box_parsing():
            == approx(a.box.flatten().tolist(), abs=1e-2)
 
 
-def test_atoms_overflow():
+def test_id_overflow():
     # Create an atom array >= 100k atoms
     length = 100000
     a = struc.AtomArray(length)
+    a.coord = np.zeros(a.coord.shape)
     a.chain_id = np.full(length, "A")
-    a.res_id = np.full(length, 1)
+    # Create residue IDs over 10000
+    a.res_id = np.arange(1, length+1)
     a.res_name = np.full(length, "GLY")
     a.hetero = np.full(length, False)
     a.atom_name = np.full(length, "CA")
