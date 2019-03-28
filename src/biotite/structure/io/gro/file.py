@@ -302,4 +302,6 @@ class GROFile(TextFile):
                 self.lines.append(get_box_dimen(array[i]))
         else:
             raise TypeError("An atom array or stack must be provided")
+        # Add terminal newline, since PyMOL requires it
+        self.lines.append("")
 
