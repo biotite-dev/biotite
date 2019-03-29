@@ -5,6 +5,7 @@ import logging
 from sphinx.util.logging import getLogger
 from sphinx.util import status_iterator
 import sphinx_gallery.gen_rst as genrst
+import sphinx_gallery.scrapers as scrapers
 import sphinx_gallery.py_source_parser as parser
 import biotite
 
@@ -60,8 +61,12 @@ def _create_tutorial_section(fname, src_dir, target_dir):
     image_path_template = os.path.join(target_dir,
                                        base_image_name+"_{0:02}.png")
 
-    block_vars = {'execute_script': True, 'fig_count': 0,
-                  'image_path': image_path_template, 'src_file': src_file}
+    script_vars = {
+        "execute_script": True,
+        "image_path_iterator": scrapers.ImagePathIterator(image_path_template),
+        "src_file": src_file,
+        "memory_delta": [],
+    }
     tutorial_globals = {
         "__doc__": "",
         "__name__": "__main__"
@@ -70,13 +75,20 @@ def _create_tutorial_section(fname, src_dir, target_dir):
 
     content_rst = ""
     for block_label, block_content, line_no in script_blocks:
-        if block_label == 'code':
+        if block_label == "code":
             # Run code and save output images
-            code_output, rtime = genrst.execute_code_block(
-                compiler=compiler, src_file=src_file, code_block=block_content,
-                lineno=line_no, example_globals=tutorial_globals,
-                block_vars=block_vars,
-                gallery_conf = {"abort_on_example_error": True, "src_dir":"."}
+            code_output = genrst.execute_code_block(
+                compiler=compiler,
+                block=(block_label, block_content, line_no),
+                example_globals=tutorial_globals,
+                script_vars=script_vars,
+                gallery_conf = {
+                    "abort_on_example_error": True,
+                    "src_dir": ".",
+                    "execute_script": True,
+                    "show_memory": False,
+                    "image_scrapers": (scrapers.matplotlib_scraper,),
+                }
             )
             content_rst += genrst.codestr2rst(
                 block_content, lineno=None
