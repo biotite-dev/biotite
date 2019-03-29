@@ -297,27 +297,27 @@ print(file["groupIdList"])
 # In case of atom arrays and stacks, the annotation arrays and
 # coordinates are written/read to/from *npz* files via the
 # :class:`NpzFile` class.
-# Since no expensive data conversion has o be performed,
+# Since no expensive data conversion has to be performed,
 # this format is the fastest way to save and load atom arrays and
 # stacks.
 # 
 # .. currentmodule:: biotite.structure.io
 # 
-# Since programmers are usually lazy and do not want to write more code than
-# necessary, there are two convenient function for loading and saving
-# atom arrays or stacks, unifying the forementioned file formats:
+# Since programmers are usually lazy and do not want to write more code
+# than necessary, there are two convenient function for loading and
+# saving atom arrays or stacks, unifying the forementioned file formats:
 # :func:`load_structure()` takes a file path and outputs an array
 # (or stack, if the files contains multiple models).
-# Internally, this function uses the appropriate `File` class,
+# Internally, this function uses the appropriate :class:`File` class,
 # depending on the file format.
-# The analogous `save_structure()` function provides a shortcut for
+# The analogous :func:`save_structure()` function provides a shortcut for
 # writing to structure files.
-# The desired file format is inferred from the provided file name.
+# The desired file format is inferred from the the extension of the
+# provided file name.
 
 import biotite.structure.io as strucio
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
-print("Are both stacks equal?", stack_from_pdb == stack_from_cif)
 strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 
 ########################################################################
@@ -430,7 +430,7 @@ print(backbone.atom_name)
 # ------------------
 # 
 # Up to now we only looked into atom arrays whose atoms are merely
-# described by its coordinates and annotations
+# described by its coordinates and annotations.
 # But there is more: Chemcial bonds can be described, too, using a
 # :class:`BondList`!
 # 

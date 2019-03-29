@@ -31,7 +31,7 @@ print(relpath(file_path))
 
 ########################################################################
 # In case you want to download multiple files, you are able to specify a
-# list of PDB IDs, which in return gives you a list of file_paths.
+# list of PDB IDs, which in return gives you a list of file paths.
 
 # Download files in the more modern mmCIF format
 file_paths = rcsb.fetch(["1l2y", "1aki"], "cif", biotite.temp_dir())
