@@ -68,7 +68,7 @@ class NonsenseSequence(seq.Sequence):
         return NonsenseSequence.alphabet
 
 sequence = NonsenseSequence(["foo", b"bar", 42, "foo", "foo", 42])
-print("Alphabet:", sequence.get_alphabet())
+print("Alphabet:", sequence.alphabet)
 print("Symbols:", sequence.symbols)
 print("Code:", sequence.code)
 
