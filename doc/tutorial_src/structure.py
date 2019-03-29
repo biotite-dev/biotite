@@ -515,7 +515,7 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 # information of the third residue, a tyrosine.
 
 import biotite.database.rcsb as rcsb
-import biotite.structure.io as strucio
+import biotite.structure.io.mmtf as mmtf
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 mmtf_file = mmtf.MMTFFile()
 mmtf_file.read(file_path)
@@ -532,7 +532,60 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # are also defined:
 # Here we have both, ``BondType.SINGLE`` and ``BondType.DOUBLE``
 # bonds (*1* and *2*, repectively).
-# 
+#
+# Simulation boxes and unit cells
+# -------------------------------
+#
+# Depending on the source of the macromolecular structure, there might
+# be an associated unit cell or simulation box.
+# In this package such boxes are represented by *(3,3)*-shaped
+# :class:`ndarray` objects, where each element in the array is one of
+# the three vectors spanning the box or unit cell.
+# Let's create an orthorhombic box from the vector lengths and the
+# angles between the vectors.
+
+import numpy as np
+import biotite.structure as struc
+# The function uses angles in radians
+box = struc.vectors_from_unitcell(10, 20, 30, np.pi/2, np.pi/2, np.pi/2)
+print("Box:")
+print(box)
+print("Box volume:", struc.box_volume(box))
+print("Is orthogonal?:", struc.is_orthogonal(box))
+cell = struc.unitcell_from_vectors(box)
+print("Cell:")
+print(cell)
+
+########################################################################
+# An atom array can have an associated box, which is used in functions,
+# that consider periodic boundary conditions.
+# Atom array stacks require a *(m,3,3)*-shaped :class:`ndarray`, 
+# that contains the box vectors for each model.
+# The box is accessed via the `box` attribute, which is ``None`` by
+# default.
+# When loaded from a structure file, the box described in the file is
+# automatically used.
+
+import biotite.database.rcsb as rcsb
+import biotite.structure.io as strucio
+array = struc.AtomArray(length=100)
+print(array.box)
+array.box = box
+print(array.box)
+file_path = rcsb.fetch("3o5r", "mmtf", biotite.temp_dir())
+array = strucio.load_structure(file_path)
+print(array.box)
+
+########################################################################
+# When loading a trajectory from an MD simulation, the molecules are
+# often fragmented over the periodic boundary.
+# While a lot of analysis functions can handle such periodic boundary
+# conditions automatically, some require completed molecules.
+# In this case you should use :func:`remove_pbc()`.
+
+array = struc.remove_pbc(array)
+
+########################################################################
 # Structure analysis
 # ------------------
 # 
@@ -547,7 +600,7 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # 
 # The examples shown in this section do not represent the full spectrum
 # of analysis tools in this package.
-# Look into the API reference for more information.
+# Have a look into the API reference for more information.
 # 
 # Geometry measures
 # ^^^^^^^^^^^^^^^^^
@@ -556,12 +609,10 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # for example atom distances of CA atoms.
 
 import biotite.structure as struc
-import biotite.structure.io.pdbx as pdbx
+import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
-file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
-file = pdbx.PDBxFile()
-file.read(file_path)
-stack = pdbx.get_structure(file)
+file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+stack = strucio.load_structure(file_path)
 # Filter only CA atoms
 stack = stack[:, stack.atom_name == "CA"]
 # Calculate distance between first and second CA in first frame
@@ -601,6 +652,14 @@ print("Angle:", struc.angle(array[0],array[1],array[2]))
 print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 
 ########################################################################
+# .. note:: The :func:`distance()`, :func:`angle()` and
+#    :func:`dihedral()` functions all have their :func:`pair_...()`
+#    counterparts, that take can atom array (stack) and
+#    pairs/triplets/quadruplets of atoms, of which distance/angle should
+#    be calculated.
+#    Both variants can be setup to consider periodic boundary conditions
+#    by setting the `box` or `periodic` parameter, respectively.
+# 
 # In some cases one is interested in the dihedral angles of the peptide
 # backbone, :math:`\phi`, :math:`\psi` and :math:`\omega`.
 # In the following code snippet we measure these angles and create a
@@ -608,7 +667,7 @@ print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 
 import matplotlib.pyplot as plt
 import numpy as np
-array = pdbx.get_structure(file, model=1)
+array = strucio.load_structure(file_path)[0]
 phi, psi, omega = struc.dihedral_backbone(array, chain_id="A")
 plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
         marker="o", linestyle="None")
@@ -633,7 +692,7 @@ plt.show()
 # model on a reference model (we choose the first model),
 # which minimizes the *root mean square deviation* (RMSD).
 
-stack = pdbx.get_structure(file)
+stack = strucio.load_structure(file_path)
 # We consider only CA atoms
 stack = stack[:, stack.atom_name == "CA"]
 # Superimposing all models of the structure onto the first model
@@ -676,7 +735,7 @@ plt.show()
 # radius to every single atom (including hydrogens), hence we use the
 # *Single* set.
 
-array = pdbx.get_structure(file, model=1)
+array = strucio.load_structure(file_path)[0]
 # The following line calculates the atom-wise SASA of the atom array
 atom_sasa = struc.sasa(array, vdw_radii="Single")
 # Sum up SASA for each residue in atom array
@@ -699,7 +758,7 @@ plt.show()
 # An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means
 # coil.
 
-array = pdbx.get_structure(file, model=1)
+array = strucio.load_structure(file_path)[0]
 # Estimate secondary structure
 sse = struc.annotate_sse(array, chain_id="A")
 # Pretty print

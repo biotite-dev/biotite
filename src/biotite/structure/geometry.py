@@ -620,7 +620,13 @@ def _call_non_index_function(function, expected_amount,
         coord_list.append(coord(atoms)[..., indices[:,i], :])
     if periodic:
         if box is None:
-            box = atoms.box
+            if isinstance(atoms, (AtomArray, AtomArrayStack)):
+                box = atoms.box
+            else:
+                raise ValueError(
+                    "If `atoms` are coordinates, "
+                    "the box must be set explicitly"
+                )
     else:
         box = None
     return function(*coord_list, box)
