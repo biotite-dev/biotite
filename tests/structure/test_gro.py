@@ -108,7 +108,7 @@ def test_gro_id_overflow():
     atoms.box = np.array([[1,0,0], [0,1,0], [0,0,1]])
 
     # Write .gro file
-    tmp_file_name = "/tmp/test.gro" #biotite.temp_file(".gro")
+    tmp_file_name = biotite.temp_file(".gro")
     io.save_structure(tmp_file_name, atoms)
 
     # Read .gro file
