@@ -9,8 +9,10 @@ import pytest
 from pytest import approx
 import numpy as np
 import biotite
+import biotite.structure.io as io
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
+from biotite.structure import Atom, array
 from .util import data_dir
 
 
@@ -96,6 +98,25 @@ def test_pdb_to_gro(path, single_model):
     # Mind rounding errors when converting pdb to gro (A -> nm)
     assert a1.coord.flatten().tolist() \
         == approx(a2.coord.flatten().tolist(), abs=1e-2)
+
+
+def test_gro_id_overflow():
+    # Create an oversized AtomArray where atom_id > 100000 and res_id > 10000
+    num_atoms = 100005
+    atoms = array([Atom([1,2,3], atom_name="CA", element="C", res_name="X",
+                        res_id=i+1) for i in range(num_atoms)])
+    atoms.box = np.array([[1,0,0], [0,1,0], [0,0,1]])
+
+    # Write .gro file
+    tmp_file_name = "/tmp/test.gro" #biotite.temp_file(".gro")
+    io.save_structure(tmp_file_name, atoms)
+
+    # Read .gro file
+    gro_file = gro.GROFile()
+    gro_file.read(tmp_file_name)
+    s = gro_file.get_structure()
+
+    assert s.array_length() == num_atoms
 
 
 
