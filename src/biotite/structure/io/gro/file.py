@@ -253,9 +253,9 @@ class GROFile(TextFile):
 
         atom_id = np.arange(1, array.array_length() + 1)
         # Atom IDs are supported up to 99999
-        # Residue IDs are supported up to 9999
+        # Residue IDs are supported up to 99999
         gro_atom_id = ((atom_id - 1) % 99999) + 1
-        gro_res_id = ((array.res_id - 1) % 9999) + 1
+        gro_res_id = ((array.res_id - 1) % 99999) + 1
 
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)
