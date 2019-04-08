@@ -214,8 +214,6 @@ class GROFile(TextFile):
             is given, each array in the stack is saved as separate
             model.
         """
-        atom_id = np.arange(1, array.array_length()+1)
-
         def get_box_dimen(array):
             """
             GRO files have the box dimensions as last line for each
@@ -253,6 +251,12 @@ class GROFile(TextFile):
                     )
                     return " ".join([f"{e:>9.5f}" for e in box_elements])
 
+        atom_id = np.arange(1, array.array_length() + 1)
+        # Atom IDs are supported up to 99999
+        # Residue IDs are supported up to 99999
+        gro_atom_id = ((atom_id - 1) % 99999) + 1
+        gro_res_id = ((array.res_id - 1) % 99999) + 1
+
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)
 
@@ -265,8 +269,8 @@ class GROFile(TextFile):
             for i in range(array.array_length()):
                 # gro format is in nm -> multiply coords by 10
                 self.lines[i+2] = fmt.format(
-                    array.res_id[i], array.res_name[i], array.atom_name[i],
-                    atom_id[i], array.coord[i,0]/10, array.coord[i,1]/10,
+                    gro_res_id[i], array.res_name[i], array.atom_name[i],
+                    gro_atom_id[i], array.coord[i,0]/10, array.coord[i,1]/10,
                     array.coord[i,2]/10
                 )
             # Write box lines
@@ -280,8 +284,8 @@ class GROFile(TextFile):
             templines = [None] * array.array_length()
             fmt = '{:>5d}{:5s}{:>5s}{:5d}'
             for i in range(array.array_length()):
-                templines[i] = fmt.format(array.res_id[i], array.res_name[i],
-                                           array.atom_name[i], atom_id[i])
+                templines[i] = fmt.format(gro_res_id[i], array.res_name[i],
+                                           array.atom_name[i], gro_atom_id[i])
 
             for i in range(array.stack_depth()):
                 self.lines.append(
