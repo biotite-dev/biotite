@@ -20,10 +20,12 @@ build: false
 
 test_script:
   - activate biotite-env
+  - where.exe python
   - python setup.py test --pytest-args="--ignore=tests//structure//test_trajectory.py --ignore=tests//application --ignore=tests//database"
 
 after_test:
   - activate biotite-env
+  - where.exe python
   - python setup.py bdist_wheel
 
 artifacts:
