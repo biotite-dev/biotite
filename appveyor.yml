@@ -15,11 +15,14 @@ install:
   - conda update -q conda
   - conda create -q -n biotite-env python=%PY_VERSION%
   - activate biotite-env
+  - where.exe python
+  - where.exe conda
   - conda install -n biotite-env cython numpy requests msgpack-python pytest
 
 build: false
 
 test_script:
+  - where.exe python
   - python setup.py test --pytest-args="--ignore=tests//structure//test_trajectory.py --ignore=tests//application --ignore=tests//database"
 
 after_test:
