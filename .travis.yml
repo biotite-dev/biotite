@@ -52,7 +52,7 @@ install:
 
 script:
   - if [ $COMPLETE == true ];  then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
-  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
+  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/"; fi
 
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
