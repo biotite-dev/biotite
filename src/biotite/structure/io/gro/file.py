@@ -196,10 +196,11 @@ class GROFile(TextFile):
                 box = set_box_dimen(box_param)
                 # Create a box in the stack if not already existing
                 # and the box is not a dummy
-                if array.box is None and box is not None:
-                    array.box = np.zeros((array.stack_depth(), 3, 3))
-                array.box[m] = box
-
+                if box is not None:
+                    if array.box is None: 
+                        array.box = np.zeros((array.stack_depth(), 3, 3))
+                    array.box[m] = box
+                    
         return array
 
             
