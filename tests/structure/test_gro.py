@@ -119,4 +119,25 @@ def test_gro_id_overflow():
     assert s.array_length() == num_atoms
 
 
+def test_gro_no_box():
+    """
+    .gro file format requires valid box parameters at the end of each
+    model. However, if we read such a file in, the resulting object should not
+    have an assigned box.
+    """
 
+    # Create an AtomArray
+    atom = Atom([1,2,3], atom_name="CA", element="C", res_name="X", res_id=1)
+    atoms = array([atom])
+
+    # Write .gro file
+    tmp_file_name = biotite.temp_file(".gro")
+    io.save_structure(tmp_file_name, atoms)
+    
+    # Read in file
+    gro_file = gro.GROFile()
+    gro_file.read(tmp_file_name)
+    s = gro_file.get_structure()
+
+    # Assert no box with 0 dimension
+    assert s.box is None
