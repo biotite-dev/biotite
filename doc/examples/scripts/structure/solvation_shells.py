@@ -11,9 +11,9 @@ is calculated for water molecules (specifically the oxygen atom)
 centered on these ions.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/waterbox_md.xtc>`
+:download:`here </examples/download/waterbox_md.xtc>`
 and the template PDB can be downloaded
-:download:`here </static/assets/download/waterbox_md.pdb>`.
+:download:`here </examples/download/waterbox_md.pdb>`.
 
 Two things are peculiar in this plot:
 At first, the first solvation shell has a smaller distance from chloride
@@ -33,8 +33,8 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 
 # Put here the path of the downloaded files
-templ_file_path = "../../../static/assets/download/waterbox_md.pdb"
-traj_file_path  = "../../../static/assets/download/waterbox_md.xtc"
+templ_file_path = "../../download/waterbox_md.pdb"
+traj_file_path  = "../../download/waterbox_md.xtc"
 
 # Load the trajectory
 traj = strucio.load_structure(traj_file_path, template=templ_file_path)

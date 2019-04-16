@@ -12,7 +12,7 @@ For this purpose a trajectory file obtained from a MD simulation
 in an MMTF file.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/lysozyme_md.xtc>`.
+:download:`here </examples/download/lysozyme_md.xtc>`.
 
 Using the MMTF format for macromolecular trajectories takes advantage
 of the precise and open specification of the format and the wide support
@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 import os.path
 
 # Put here the path of the downloaded trajectory file
-xtc_file_path = "../../../static/assets/download/lysozyme_md.xtc"
+xtc_file_path = "../../download/lysozyme_md.xtc"
 mmtf_file_path = biotite.temp_file("lysozyme_md.mmtf")
 
 xtc_file = xtc.XTCFile()
