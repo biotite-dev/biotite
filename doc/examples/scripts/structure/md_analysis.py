@@ -11,9 +11,9 @@ The data is the result of the famous *Gromacs*
 tutorial.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/lysozyme_md.xtc>`
+:download:`here </examples/download/lysozyme_md.xtc>`
 and the template PDB can be downloaded
-:download:`here </static/assets/download/lysozyme_md.pdb>`.
+:download:`here </examples/download/lysozyme_md.pdb>`.
 
 We begin by loading the template PDB file as `AtomArray`, sanitizing it
 and using it to load the trajectory as `AtomArrayStack`.
@@ -30,8 +30,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Put here the path of the downloaded files
-templ_file_path = "../../../static/assets/download/lysozyme_md.pdb"
-traj_file_path  = "../../../static/assets/download/lysozyme_md.xtc"
+templ_file_path = "../../download/lysozyme_md.pdb"
+traj_file_path  = "../../download/lysozyme_md.xtc"
 
 # Gromacs does not set the element symbol in its PDB files,
 # but Biotite guesses the element names from the atom names,
