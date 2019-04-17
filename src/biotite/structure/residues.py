@@ -35,7 +35,7 @@ def get_residue_starts(array):
         
     Returns
     -------
-    starts : ndarray
+    starts : ndarray, dtype=int
         The start indices of residues in `array`.
     """
     chain_ids = array.chain_id
