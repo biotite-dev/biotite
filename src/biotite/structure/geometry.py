@@ -16,7 +16,7 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .filter import filter_backbone
-from .residues import get_residue_starts
+from .chains import chain_iter
 from .box import (coord_to_fraction, fraction_to_coord,
                   move_inside_box, is_orthogonal)
 from .error import BadStructureError
@@ -478,7 +478,7 @@ def index_dihedral(*args, **kwargs):
     return _call_non_index_function(dihedral, 4, *args, **kwargs)
 
 
-def dihedral_backbone(atom_array, chain_id=None):
+def dihedral_backbone(atom_array):
     """
     Measure the characteristic backbone dihedral angles of a structure.
     
@@ -487,15 +487,10 @@ def dihedral_backbone(atom_array, chain_id=None):
     atom_array: AtomArray or AtomArrayStack
         The protein structure. A complete backbone, without gaps,
         is required here.
+        Chain transitions are allowed, the angles at the transition are
+        `NaN`.
         The order of the backbone atoms for each residue must be
         (N, CA, C).
-    chain_id: string, optional
-        The ID of the polypeptide chain. The dihedral angles are
-        calculated for ``atom_array[atom_array.chain_id == chain_id]``.
-        By default, this filtering is not performed.
-        When not setting this parameter, make sure the atom array
-        contains only one chain, otherwise the dihedral angles will
-        contain wrong values.
     
     Returns
     -------
@@ -544,8 +539,6 @@ def dihedral_backbone(atom_array, chain_id=None):
      [ -78.100      nan]]
     """
     bb_filter = filter_backbone(atom_array)
-    if chain_id is not None:
-        bb_filter &= (atom_array.chain_id == chain_id)
     backbone = atom_array[..., bb_filter]
     
     if backbone.array_length() % 3 != 0 \
@@ -556,16 +549,28 @@ def dihedral_backbone(atom_array, chain_id=None):
                 "The backbone is invalid, must be repeats of (N, CA, C), "
                 "maybe a backbone atom is missing"
             )
-    
-    bb_coord = backbone.coord
+    phis = []
+    psis = []
+    omegas = []
+    for chain_bb in chain_iter(backbone):
+        phi, psi, omega = _dihedral_backbone(chain_bb)
+        phis.append(phi)
+        psis.append(psi)
+        omegas.append(omega)
+    return np.concatenate(phis), np.concatenate(psis), np.concatenate(omegas)
+
+
+
+def _dihedral_backbone(chain_bb):
+    bb_coord = chain_bb.coord
     # Coordinates for dihedral angle calculation
     # Dim 0: Model index (only for atom array stacks)
     # Dim 1: Angle index
     # Dim 2: X, Y, Z coordinates
     # Dim 3: Atoms involved in dihedral angle
-    if isinstance(atom_array, AtomArray):
+    if isinstance(chain_bb, AtomArray):
         angle_coord_shape = (len(bb_coord)//3, 3, 4)
-    elif isinstance(atom_array, AtomArrayStack):
+    elif isinstance(chain_bb, AtomArrayStack):
         angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1]//3, 3, 4)
     phi_coord   = np.full(angle_coord_shape, np.nan)
     psi_coord   = np.full(angle_coord_shape, np.nan)
