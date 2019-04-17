@@ -38,7 +38,9 @@ def get_chain_starts(array):
     get_residue_starts
     """
     chain_ids = array.chain_id
-    return np.where((chain_ids[:-1] != chain_ids[1:]))[0] + 1
+    chain_changes = np.where((chain_ids[:-1] != chain_ids[1:]))[0] + 1
+    chain_starts = np.append([0], chain_changes)
+    return chain_starts
 
 
 def get_chains(array):
@@ -55,7 +57,7 @@ def get_chains(array):
         
     Returns
     -------
-    ids : ndarray, dtype=int
+    ids : ndarray, dtype=str
         List of chain IDs.
         
     See also
