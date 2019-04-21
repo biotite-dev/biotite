@@ -207,6 +207,12 @@
             "get_residue_count",
             "residue_iter"
         ],
+        "Chain level utility" : [
+            "get_chain_starts",
+            "get_chains",
+            "get_chain_count",
+            "chain_iter"
+        ],
         "Structure comparison" : [
             "average",
             "rmsd",

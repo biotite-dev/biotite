@@ -95,6 +95,7 @@ from .integrity import *
 from .mechanics import *
 from .rdf import *
 from .residues import *
+from .chains import *
 from .sasa import *
 from .sse import *
 from .superimpose import *

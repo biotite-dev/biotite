@@ -43,13 +43,13 @@ def test_dihedral_backbone():
     stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
     array = stack[0]
     # Test array
-    phi, psi, omega = struc.dihedral_backbone(array, "A")
+    phi, psi, omega = struc.dihedral_backbone(array)
     assert omega.shape == (20,)
     # Remove nan values
     omega = np.abs(omega)[:-1]
     assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
     # Test stack
-    phi, psi, omega = struc.dihedral_backbone(stack, "A")
+    phi, psi, omega = struc.dihedral_backbone(stack)
     assert omega.shape == (38,20)
     # Remove nan values
     omega = np.abs(omega)[:, :-1]
