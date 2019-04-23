@@ -668,7 +668,7 @@ print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 import matplotlib.pyplot as plt
 import numpy as np
 array = strucio.load_structure(file_path)[0]
-phi, psi, omega = struc.dihedral_backbone(array, chain_id="A")
+phi, psi, omega = struc.dihedral_backbone(array)
 plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
         marker="o", linestyle="None")
 plt.xlim(-180,180)

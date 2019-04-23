@@ -25,7 +25,9 @@ file = rcsb.fetch("3vkh", "cif", biotite.temp_dir())
 atom_array = strucio.load_structure(file)
 # Calculate backbone dihedral angles
 # from one of the two identical chains in the asymmetric unit
-phi, psi, omega = struc.dihedral_backbone(atom_array, "A")
+phi, psi, omega = struc.dihedral_backbone(
+    atom_array[atom_array.chain_id == "A"]
+)
 # Conversion from radians into degree
 phi *= 180/np.pi
 psi *= 180/np.pi
