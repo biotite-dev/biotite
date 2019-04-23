@@ -515,8 +515,8 @@ def dihedral_backbone(atom_array):
     Examples
     --------
     
-    >>> phi, psi, omega = dihedral_backbone(atom_array, "A")
-    >>> print(np.stack([phi * 360/(2*np.pi), psi * 360/(2*np.pi)]).T)
+    >>> phi, psi, omega = dihedral_backbone(atom_array)
+    >>> print(np.stack([np.rad2deg(phi), np.rad2deg(psi)]).T)
     [[     nan  -56.145]
      [ -43.980  -51.309]
      [ -66.466  -30.898]
