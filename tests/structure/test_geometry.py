@@ -3,12 +3,15 @@
 # information.
 
 import itertools
+import glob
 from os.path import join
 import numpy as np
 import numpy.random as random
 import pytest
+import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
+import biotite.structure.io.mmtf as mmtf
 from .util import data_dir
 
 
@@ -39,7 +42,7 @@ def test_dihedral():
            == pytest.approx(0.5*np.pi)
 
 
-def test_dihedral_backbone():
+def test_dihedral_backbone_general():
     stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
     array = stack[0]
     # Test array
@@ -55,6 +58,36 @@ def test_dihedral_backbone():
     omega = np.abs(omega)[:, :-1]
     omega = np.average(omega, axis=0)
     assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
+
+
+@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.parametrize("file_name", glob.glob(join(data_dir, "*.mmtf")))
+def test_dihedral_backbone_result(file_name):
+    import mdtraj
+    
+    mmtf_file = mmtf.MMTFFile()
+    mmtf_file.read(file_name)
+    array = mmtf.get_structure(mmtf_file, model=1)
+    array = array[struc.filter_amino_acids(array)]
+    for chain in struc.chain_iter(array):
+        print("Chain: ", chain.chain_id[0])
+        if len(struc.check_id_continuity(chain)) != 0:
+            # Do not test discontinuous chains
+            return
+        test_phi, test_psi, test_ome = struc.dihedral_backbone(chain)
+
+        temp_file_name = biotite.temp_file("pdb")
+        strucio.save_structure(temp_file_name, chain)
+        traj = mdtraj.load(temp_file_name)
+        _, ref_phi = mdtraj.compute_phi(traj)
+        _, ref_psi = mdtraj.compute_psi(traj)
+        _, ref_ome = mdtraj.compute_omega(traj)
+        ref_phi, ref_psi, ref_ome = ref_phi[0], ref_psi[0], ref_ome[0]
+
+        assert test_phi[1: ] == pytest.approx(ref_phi, abs=1e-5, rel=1e-3)
+        assert test_psi[:-1] == pytest.approx(ref_psi, abs=1e-5, rel=1e-3)
+        assert test_ome[:-1] == pytest.approx(ref_ome, abs=1e-5, rel=1e-3)
+
 
 
 def test_index_distance_non_periodic():

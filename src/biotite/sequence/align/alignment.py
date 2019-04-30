@@ -163,13 +163,18 @@ class Alignment(object):
         ----------
         seq_str_list : list of str
             The strings, where each each one represents a sequence
-            in an alignment.
+            (with gaps) in an alignment.
+            A ``-`` is interpreted as gap.
         
         Returns
         -------
         trace : ndarray, dtype=int, shape=(n,2)
             The created trace.
         """
+        if len(seq_str_list) < 2:
+            raise ValueError(
+                "An alignment must contain at least two sequences"
+            )
         seq_i = np.zeros(len(seq_str_list))
         trace = np.full(( len(seq_str_list[0]), len(seq_str_list) ),
                         -1, dtype=int)

@@ -238,7 +238,7 @@ def test_align_multiple(sequences, gap_penalty):
     compared to the output of MUSCLE.
     Both alignment methods are heuristic, the exact same result is not
     expected.
-    Just ssert that the resulting score is at least the 50 % of the
+    Just assert that the resulting score is at least the 50 % of the
     score of the MUSCLE alignment.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
