@@ -17,7 +17,8 @@ from matplotlib.patches import Rectangle
 def plot_colors(ax, alphabet):
     x_space=0.1
     y_space=0.3
-    scheme_names = graphics.list_color_scheme_names(alphabet)
+    scheme_names = sorted(graphics.list_color_scheme_names(alphabet))
+    scheme_names.reverse()
     schemes = [graphics.get_color_scheme(name, alphabet)
                for name in scheme_names]
     for i, scheme in enumerate(schemes):
@@ -39,12 +40,15 @@ def plot_colors(ax, alphabet):
     ax.xaxis.set_ticks_position("none")
     ax.yaxis.set_ticks_position("none") 
 
-figure = plt.figure()
-ax = figure.add_subplot(211)
+figure = plt.figure(figsize=(8.0, 5.0))
+ax = figure.add_subplot(311)
 ax.set_title("Nucleotide color schemes")
 plot_colors(ax, seq.NucleotideSequence.alphabet)
-ax = figure.add_subplot(212)
+ax = figure.add_subplot(312)
 ax.set_title("Protein color schemes")
 plot_colors(ax, seq.ProteinSequence.alphabet)
+ax = figure.add_subplot(313)
+ax.set_title("Protein block color schemes")
+plot_colors(ax, seq.LetterAlphabet("abcdefghijklmnop"))
 plt.tight_layout()
 plt.show()
