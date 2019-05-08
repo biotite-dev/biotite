@@ -1,6 +1,35 @@
 """
 Structural alignment of lysozyme variants using 'Protein Blocks'
 ================================================================
+
+In this example we perform a structural alignment of mutiple lysozyme
+variants from different organisms.
+A feasible approach to perfrom such a multiple structure alignment is the
+usage of a structural alphabet:
+At first the structure is translated into a sequence that represents
+the structure.
+Then the sequences can be aligned with the standard sequence alignment
+techniques, using the substitution matrix of the structural alphabet.
+
+In this example, the structural alphabet we will use is called
+*protein blocks* (PBs) [1]_ [2]_:
+There are 16 different PBs, represented by the symbols ``a`` to ``p``.
+Each one depicts a different set of the backbone dihedral angles of a
+peptide 5-mer.
+To assign a PB to an amino acid, the 5-mer centered on the respective
+residue is taken, its backbone dihedral angles are calculated and the
+PB with the least deviation to this set of angles is chosen.
+
+.. [1] AG de Brevern, C Etchebest and S Hazout,
+   "Bayesian probabilistic approach for predicting backbone structures
+   in terms of protein blocks."
+   Proteins, 41, 271-288 (2000).
+
+.. [2] J Barnoud, H Santuz, P Craveur, AP Joseph,
+   V Jallu, AG de Brevern, P Poulain,
+   "PBxplore: a tool to analyze local protein structure and deformabilit
+   with Protein Blocks."
+   PeerJ, 5, (2017).
 """
 
 # Code source: Patrick Kunzmann
@@ -69,7 +98,7 @@ lyso_files = rcsb.fetch(
 )
 organisms = ["H. sapiens", "G. gallus", "C. viginianus", "B. mori"]
 
-# Create PB sequence from the structures
+# Create a PB sequence from each structure
 pb_seqs = []
 for file_name in lyso_files:
     file = mmtf.MMTFFile()
@@ -83,10 +112,10 @@ for file_name in lyso_files:
     # Calculate backbone dihedral angles,
     # as the PBs are determined from them
     phi, psi, omega = struc.dihedral_backbone(array)
-    # A PB requires the 8 phi/angles of 5 amino acids,
+    # A PB requires the 8 phi/psi angles of 5 amino acids,
     # centered on the amino acid to calculate the PB for
     # Hence, the PBs are not defined for the two amino acids
-    # at the termini
+    # at each terminus
     pb_angles = np.full((len(phi)-4, 8), np.nan)
     pb_angles[:, 0] = psi[  : -4]
     pb_angles[:, 1] = phi[1 : -3]
@@ -129,6 +158,7 @@ alignment = alignment[:, order.tolist()]
 labels = [organisms[i] for i in order]
 fig = plt.figure(figsize=(8.0, 4.0))
 ax = fig.add_subplot(111)
+# The color scheme was generated with the 'Gecos' software
 graphics.plot_alignment_type_based(
     ax, alignment, labels=labels, symbols_per_line=45, spacing=2,
     show_numbers=True, color_scheme="spring"
