@@ -4,6 +4,27 @@ Biotite color schemes for protein sequences
 
 This script shows the same multiple protein sequence alignment
 in the different color schemes available in *Biotite*.
+
+    - **rainbow** - Default color scheme in *Biotite*
+    - **clustalx** - Default color scheme of the *ClustalX* software
+    - Color schemes generated with the software *Gecos*:
+        - **flower** - Color scheme with high saturation, based on *BLOSMUM62*
+        - **blossom** - Color scheme with high saturation,
+          based on *BLOSMUM62*, depicts symbol similarity better than *flower*
+        - **spring** - Light color scheme, based on *BLOSMUM62*
+        - **autumn** - Dark color scheme, based on *BLOSMUM62*
+        - **ocean** - Blue shifted, light color scheme, based on *BLOSMUM62*
+    - Color schemes adapted from *JalView*:
+        - **zappo** - Color scheme that depicts physicochemical properties
+        - **taylor** - Color scheme invented by Willie Taylor
+        - **buried** - Color scheme depicting the *buried index* 
+        - **hydrophobicity** - Color scheme depicting hydrophobicity
+        - **prophelix** - Color scheme depicting secondary structure
+          propensities
+        - **propstrand** - Color scheme depicting secondary structure
+          propensities
+        - **propturn** - Color scheme depicting secondary structure
+          propensities
 """
 
 # Code source: Patrick Kunzmann
@@ -11,6 +32,7 @@ in the different color schemes available in *Biotite*.
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
@@ -38,23 +60,33 @@ alignment = alignment[220:300]
 
 # Get color scheme names
 alphabet = seq.ProteinSequence.alphabet
-names = sorted(graphics.list_color_scheme_names(alphabet))
-count = len(names)
+schemes = [
+    "rainbow", "clustalx",
+    "flower", "blossom", "spring", "autumn", "ocean",
+    "zappo", "taylor", "buried", "hydrophobicity",
+    "prophelix", "propstrand", "propturn"
+]
+count = len(schemes)
+# Assert that this example displays all available amino acid color schemes
+all_schemes = graphics.list_color_scheme_names(alphabet)
+assert set(schemes) == set(all_schemes)
+
 
 # Visualize each scheme using the example alignment
 fig = plt.figure(figsize=(8.0, count*2.0))
-for i, name in enumerate(names):
+gridspec = GridSpec(2, count)
+for i, name in enumerate(schemes):
     for j, color_symbols in enumerate([False, True]):
-        ax = fig.add_subplot(len(names), 2, 2*i + j + 1)
+        ax = fig.add_subplot(count, 2, 2*i + j + 1)
         if j == 0:
-            alignment_part = alignment[:40]
             ax.set_ylabel(name)
+            alignment_part = alignment[:40]
         else:
             alignment_part = alignment[40:]
         graphics.plot_alignment_type_based(
             ax, alignment_part, symbols_per_line=len(alignment_part),
             color_scheme=name, color_symbols=color_symbols, symbol_size=8
         )
-fig.subplots_adjust(hspace=0)
 fig.tight_layout()
+fig.subplots_adjust(wspace=0)
 plt.show()
