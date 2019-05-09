@@ -38,8 +38,8 @@ def plot_colors(ax, alphabet):
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines["top"].set_visible(False)
-    ax.xaxis.set_ticks_position("none")
-    ax.yaxis.set_ticks_position("none") 
+    ax.xaxis.set_ticks_position("none") 
+    ax.yaxis.set_ticks_position("none")
 
 nuc_alphabet = seq.NucleotideSequence.alphabet_amb
 prot_alphabet = seq.ProteinSequence.alphabet
