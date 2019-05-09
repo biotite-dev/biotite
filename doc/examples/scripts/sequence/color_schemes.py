@@ -12,6 +12,7 @@ import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
 
 def plot_colors(ax, alphabet):
@@ -40,15 +41,24 @@ def plot_colors(ax, alphabet):
     ax.xaxis.set_ticks_position("none")
     ax.yaxis.set_ticks_position("none") 
 
+nuc_alphabet = seq.NucleotideSequence.alphabet
+prot_alphabet = seq.ProteinSequence.alphabet
+pb_alphabet = seq.LetterAlphabet("abcdefghijklmnop")
+
 figure = plt.figure(figsize=(8.0, 5.0))
-ax = figure.add_subplot(311)
+gs = GridSpec(
+    3, 1,
+    height_ratios=[len(graphics.list_color_scheme_names(alphabet))
+                   for alphabet in (nuc_alphabet, prot_alphabet, pb_alphabet)],
+)
+ax = figure.add_subplot(gs[0,0])
 ax.set_title("Nucleotide color schemes")
-plot_colors(ax, seq.NucleotideSequence.alphabet)
-ax = figure.add_subplot(312)
+plot_colors(ax, nuc_alphabet)
+ax = figure.add_subplot(gs[1,0])
 ax.set_title("Protein color schemes")
-plot_colors(ax, seq.ProteinSequence.alphabet)
-ax = figure.add_subplot(313)
+plot_colors(ax, prot_alphabet)
+ax = figure.add_subplot(gs[2,0])
 ax.set_title("Protein block color schemes")
-plot_colors(ax, seq.LetterAlphabet("abcdefghijklmnop"))
+plot_colors(ax, pb_alphabet)
 plt.tight_layout()
 plt.show()
