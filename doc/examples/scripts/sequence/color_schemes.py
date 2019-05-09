@@ -41,7 +41,7 @@ def plot_colors(ax, alphabet):
     ax.xaxis.set_ticks_position("none")
     ax.yaxis.set_ticks_position("none") 
 
-nuc_alphabet = seq.NucleotideSequence.alphabet
+nuc_alphabet = seq.NucleotideSequence.alphabet_amb
 prot_alphabet = seq.ProteinSequence.alphabet
 pb_alphabet = seq.LetterAlphabet("abcdefghijklmnop")
 
