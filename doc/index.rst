@@ -7,13 +7,13 @@ Biotite documentation
 #####################
 
 The *Biotite* package bundles popular tasks in computational molecular biology
-into an unifying *Python* framework.
+into a unifying *Python* framework.
 It can handle the complete molecular biology workflow
-for sequence and macromolecular sructure data:
+for sequence and macromolecular structure data:
 
    - Downloading data from biological databases
    - Loading data from popular structure and sequence files
-   - Analyzing and modificating the data
+   - Analyzing and modifying the data
    - Saving the data back to file
    - Interfacing external applications
 
@@ -24,7 +24,7 @@ highly efficient.
 
 Additionally, the package aims for simple usability and extensibility:
 The objects representing structures and sequences can be indexed and sliced
-like an `ndarray`.
+like a `ndarray`.
 Even the actual internal `ndarray` instances are easily accessible allowing
 advanced users to implement their own algorithms upon the existing types.
 
@@ -41,7 +41,7 @@ of any kind.
 The package contains by default sequence types for nucleotides and proteins,
 but the alphabet-based implementation allows simple integration of own sequence
 types, even if they do not rely on letters.
-Beside the standard I/O operations, the package includes general purpose
+Besides the standard I/O operations, the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 On top of the actual sequence data, the subpackage can also handle sequence
 features, to annotate your sequences with the respective functionality.
