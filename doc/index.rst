@@ -12,7 +12,7 @@ It can handle the complete molecular biology workflow
 for sequence and macromolecular structure data:
 
    - Downloading data from biological databases
-   - Loading data from popular structure and sequence files
+   - Loading data from structure and sequence files
    - Analyzing and modifying the data
    - Saving the data back to file
    - Interfacing external applications
