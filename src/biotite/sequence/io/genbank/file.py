@@ -59,6 +59,19 @@ class GenBankFile(TextFile):
             if fname == name:
                 indices.append(i)
         return indices
+    
+    def set_field(self, name, content, subfield_dict=None):
+        name = name.upper()
+        indices = self.get_indices(name)
+        if len(indices) > 1:
+            raise InvalidFileError(f"File contains multiple '{name}' fields")
+        elif len(indices) == 1:
+            # Replace existing entry
+            index = indices[0]
+            self[index] = name, content, subfield_dict
+        else:
+            # Add new entry as no entry exists yet
+            self.append(name, content, subfield_dict)
 
     def __getitem__(self, index):
         index = self._translate_idx(index)

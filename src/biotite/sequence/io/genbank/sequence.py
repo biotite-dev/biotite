@@ -78,6 +78,8 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     return AnnotatedSequence(annotation, sequence, sequence_start=seq_start)
 
 
+
+
 def set_sequence(gb_file, sequence, sequence_start=1):
     lines = []
     seq_str = str(sequence)
@@ -90,17 +92,7 @@ def set_sequence(gb_file, sequence, sequence_start=1):
         line += " " + str(seq_str[i : i + _SYMBOLS_PER_CHUNK])
     # Append last line
     lines.append(line)
-
-    indices = gb_file.get_indices("ORIGIN")
-    if len(indices) > 1:
-        raise InvalidFileError("File contains multiple 'ORIGIN' fields")
-    elif len(indices) == 1:
-        # Replace existing entry
-        index = indices[0]
-        gb_file[index] = "ORIGIN", lines
-    else:
-        # Add new entry as no entry exists yet
-        gb_file.append("ORIGIN", lines)
+    gb_file.set_field("ORIGIN", lines)
 
 
 def set_annotated_sequence(gb_file, annot_sequence):

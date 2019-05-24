@@ -174,6 +174,8 @@ def _set_qual(qual_dict, key, val):
         qual_dict[key] = val
 
 
+
+
 def set_annotation(gb_file, annotation):
     lines = []
     for feature in sorted(list(annotation)):
@@ -189,17 +191,7 @@ def set_annotation(gb_file, annotation):
                 else:
                     line +=  f'/{key}="{val}"'
                 lines.append(line)
-
-    indices = gb_file.get_indices("FEATURES")
-    if len(indices) > 1:
-        raise InvalidFileError("File contains multiple 'FEATURES' fields")
-    elif len(indices) == 1:
-        # Replace existing entry
-        index = indices[0]
-        gb_file[index] = "FEATURES", lines
-    else:
-        # Add new entry as no entry exists yet
-        gb_file.append("FEATURES", lines)
+    gb_file.set_field("FEATURES", lines)
 
 
 def _convert_to_loc_string(locs):
