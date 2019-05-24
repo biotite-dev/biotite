@@ -145,8 +145,11 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict, optional
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
 
     Attributes
     ----------
@@ -158,8 +161,11 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
     """
     
     def __init__(self, key, locs, qual={}):
