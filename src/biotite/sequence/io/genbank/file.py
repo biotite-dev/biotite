@@ -51,6 +51,14 @@ class GenBankFile(TextFile):
                 _, content, subfields = self[i]
                 fields.append((content, subfields))
         return fields
+    
+    def get_indices(self, name):
+        name = name.upper()
+        indices = []
+        for i, (_, _, fname) in enumerate(self._field_pos):
+            if fname == name:
+                indices.append(i)
+        return indices
 
     def __getitem__(self, index):
         index = self._translate_idx(index)
@@ -189,17 +197,20 @@ class GenBankFile(TextFile):
         for i, line in enumerate(self.lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " " and line[:2] != "//":
-                stop = i
-                if start != -1:
-                    # Store previous field
-                    self._field_pos.append((start, stop, name))
-                start = i
-                name = line[0:12].strip()
-        # Store last field (if any field exists)
-        if start is not None:
-            stop = i
-            self._field_pos.append((start, stop, name))
+            if len(line) != 0 and line[0] != " ":
+                if line[:2] != "//":
+                    stop = i
+                    if start != -1:
+                        # Store previous field
+                        self._field_pos.append((start, stop, name))
+                    start = i
+                    name = line[0:12].strip()
+                else:
+                    # '//' means end of file
+                    # -> Store last field
+                    if start is not None:
+                        stop = i
+                        self._field_pos.append((start, stop, name))
 
     def _get_field_content(self, start, stop, indent):
         if indent == 0:
@@ -278,12 +289,6 @@ class MultiFile(TextFile):
     file.
     Objects of this class can be iterated to obtain a `GenBankFile`
     or `GenPeptFile` for each entry in the file.
-
-    Parameters
-    ----------
-    file_type : {'gb', 'gp'}
-        Determines whether the objects should be used for GenBank or
-        GenPept files.
     
     Examples
     --------
