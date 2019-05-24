@@ -7,7 +7,7 @@ Functions for converting an annotation from/to a GenBank file.
 """
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_annotation"]
+__all__ = ["get_annotation", "set_annotation"]
 
 import re
 from ....file import InvalidFileError
@@ -172,3 +172,56 @@ def _set_qual(qual_dict, key, val):
         qual_dict[key] += "\n" + val
     else:
         qual_dict[key] = val
+
+
+def set_annotation(gb_file, annotation):
+    lines = []
+    for feature in sorted(list(annotation)):
+        line = " " * _KEY_START
+        line += feature.key.ljust(_QUAL_START - _KEY_START)
+        line += _convert_to_loc_string(feature.locs)
+        lines.append(line)
+        for key, values in feature.qual.items():
+            for val in values.split("\n"):
+                line = " " * _QUAL_START
+                if val is None:
+                    line +=  f"/{key}"
+                else:
+                    line +=  f'/{key}="{val}"'
+                lines.append(line)
+
+    indices = gb_file.get_indices("FEATURES")
+    if len(indices) > 1:
+        raise InvalidFileError("File contains multiple 'FEATURES' fields")
+    elif len(indices) == 1:
+        # Replace existing entry
+        index = indices[0]
+        gb_file[index] = "FEATURES", lines
+    else:
+        # Add new entry as no entry exists yet
+        gb_file.append("FEATURES", lines)
+
+
+def _convert_to_loc_string(locs):
+    """
+    Create GenBank comptabile location strings from a list of `Location`
+    objects.
+    """
+    if len(locs) == 1:
+        loc = list(locs)[0]
+        if loc.first == loc.last:
+            loc_string = str(loc.first)
+        elif loc.defect & Location.Defect.UNK_LOC:
+            loc_string = str(loc.first) + "." + str(loc.last)
+        elif loc.defect & Location.Defect.BETWEEN:
+            loc_string = str(loc.first) + "^" + str(loc.last)
+        else:
+            loc_string = str(loc.first) + ".." + str(loc.last)
+        if loc.strand == Location.Strand.REVERSE:
+            loc_string = f"complement({loc_string})"
+    else:
+        loc_string = ",".join(
+            [_convert_to_loc_string([loc]) for loc in locs]
+        )
+        loc_string = f"join({loc_string})"
+    return loc_string

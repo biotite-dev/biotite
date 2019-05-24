@@ -8,14 +8,14 @@ Functions for converting a sequence from/to a GenBank file.
 
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_sequence", "get_annotated_sequence",
-           "set_sequence"]
+           "set_sequence", "set_annotated_sequence"]
 
 import re
 from ....file import InvalidFileError
 from ...seqtypes import ProteinSequence, NucleotideSequence
 from ...annotation import AnnotatedSequence
 from .file import GenBankFile
-from .annotation import get_annotation
+from .annotation import get_annotation, set_annotation
 
 
 _SYMBOLS_PER_CHUNK = 10
@@ -46,14 +46,7 @@ def get_sequence(gb_file, format="gb"):
         raise InvalidFileError("File has multiple 'ORIGIN' fields")
     lines, _ = fields[0]
     seq_str = _field_to_seq_string(lines)
-    if len(seq_str) == 0:
-        raise InvalidFileError("The file's 'ORIGIN' field is empty")
-    if format == "gb":
-        return NucleotideSequence(seq_str)
-    elif format == "gp":
-        return ProteinSequence(seq_str)
-    else:
-        raise ValueError(f"Unknown format '{format}'")
+    return _convert_seq_str(seq_str, format)
 
 
 def get_annotated_sequence(gb_file, format="gb", include_only=None):
@@ -72,20 +65,28 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     annot_seq : AnnotatedSequence
         The annotated sequence.
     """
-    sequence = get_sequence(gb_file, format)
+    fields = gb_file.get_fields("ORIGIN")
+    if len(fields) == 0:
+        raise InvalidFileError("File has no 'ORIGIN' field")
+    if len(fields) > 1:
+        raise InvalidFileError("File has multiple 'ORIGIN' fields")
+    lines, _ = fields[0]
+    seq_str = _field_to_seq_string(lines)
+    sequence = _convert_seq_str(seq_str, format)
+    seq_start = _get_seq_start(lines)
     annotation = get_annotation(gb_file, include_only)
-    return AnnotatedSequence(annotation, sequence)
+    return AnnotatedSequence(annotation, sequence, sequence_start=seq_start)
 
 
-def set_sequence(gb_file, sequence, seqstart=1):
+def set_sequence(gb_file, sequence, sequence_start=1):
     lines = []
     seq_str = str(sequence)
-    line = "{:>9d}".format(seqstart)
+    line = "{:>9d}".format(sequence_start)
     for i in range(0, len(sequence), _SYMBOLS_PER_CHUNK):
         # New line after 5 sequence chunks
         if i != 0 and i % _SYMBOLS_PER_LINE == 0:
             lines.append(line)
-            line = "{:>9d}".format(seqstart + i)
+            line = "{:>9d}".format(sequence_start + i)
         line += " " + str(seq_str[i : i + _SYMBOLS_PER_CHUNK])
     # Append last line
     lines.append(line)
@@ -101,8 +102,13 @@ def set_sequence(gb_file, sequence, seqstart=1):
         # Add new entry as no entry exists yet
         gb_file.append("ORIGIN", lines)
 
-    return lines
 
+def set_annotated_sequence(gb_file, annot_sequence):
+    set_annotation(gb_file, annot_sequence.annotation)
+    set_sequence(
+        gb_file, annot_sequence.sequence, annot_sequence.sequence_start
+    )
+    
 
 
 def _field_to_seq_string(origin_content):
@@ -111,3 +117,20 @@ def _field_to_seq_string(origin_content):
     regex = re.compile("[0-9]| ")
     seq_str = regex.sub("", seq_str)
     return seq_str
+
+
+def _convert_seq_str(seq_str, format):
+    if len(seq_str) == 0:
+        raise InvalidFileError("The file's 'ORIGIN' field is empty")
+    if format == "gb":
+        return NucleotideSequence(seq_str)
+    elif format == "gp":
+        return ProteinSequence(seq_str)
+    else:
+        raise ValueError(f"Unknown format '{format}'")
+    
+
+def _get_seq_start(origin_content):
+    # Start of sequence is the sequence position indicator
+    # at the beginning of the first line
+    return int(origin_content[0].split()[0])
