@@ -557,7 +557,8 @@ def dihedral_backbone(atom_array):
         phis.append(phi)
         psis.append(psi)
         omegas.append(omega)
-    return np.concatenate(phis), np.concatenate(psis), np.concatenate(omegas)
+    return np.concatenate(phis, axis=1), np.concatenate(psis, axis=1), \
+        np.concatenate(omegas, axis=1)
 
 
 
