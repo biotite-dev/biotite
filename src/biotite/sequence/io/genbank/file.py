@@ -111,8 +111,10 @@ class GenBankFile(TextFile):
                 )
             # Only include lines in field content,
             # that are not part of a subfield
+            if first_subfield_start is not None:
+                stop = first_subfield_start
             content = self._get_field_content(
-                start, first_subfield_start, indent=12
+                start, stop, indent=12
             )
         
         return name, content, subfield_dict
@@ -213,7 +215,7 @@ class GenBankFile(TextFile):
             if len(line) != 0 and line[0] != " ":
                 if line[:2] != "//":
                     stop = i
-                    if start != -1:
+                    if start is not None:
                         # Store previous field
                         self._field_pos.append((start, stop, name))
                     start = i

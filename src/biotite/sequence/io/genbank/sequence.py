@@ -78,31 +78,6 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     return AnnotatedSequence(annotation, sequence, sequence_start=seq_start)
 
 
-
-
-def set_sequence(gb_file, sequence, sequence_start=1):
-    lines = []
-    seq_str = str(sequence)
-    line = "{:>9d}".format(sequence_start)
-    for i in range(0, len(sequence), _SYMBOLS_PER_CHUNK):
-        # New line after 5 sequence chunks
-        if i != 0 and i % _SYMBOLS_PER_LINE == 0:
-            lines.append(line)
-            line = "{:>9d}".format(sequence_start + i)
-        line += " " + str(seq_str[i : i + _SYMBOLS_PER_CHUNK])
-    # Append last line
-    lines.append(line)
-    gb_file.set_field("ORIGIN", lines)
-
-
-def set_annotated_sequence(gb_file, annot_sequence):
-    set_annotation(gb_file, annot_sequence.annotation)
-    set_sequence(
-        gb_file, annot_sequence.sequence, annot_sequence.sequence_start
-    )
-    
-
-
 def _field_to_seq_string(origin_content):
     seq_str = "".join(origin_content)
     # Remove numbers and emtpy spaces
@@ -126,3 +101,27 @@ def _get_seq_start(origin_content):
     # Start of sequence is the sequence position indicator
     # at the beginning of the first line
     return int(origin_content[0].split()[0])
+
+
+
+
+def set_sequence(gb_file, sequence, sequence_start=1):
+    lines = []
+    seq_str = str(sequence).lower()
+    line = "{:>9d}".format(sequence_start)
+    for i in range(0, len(sequence), _SYMBOLS_PER_CHUNK):
+        # New line after 5 sequence chunks
+        if i != 0 and i % _SYMBOLS_PER_LINE == 0:
+            lines.append(line)
+            line = "{:>9d}".format(sequence_start + i)
+        line += " " + str(seq_str[i : i + _SYMBOLS_PER_CHUNK])
+    # Append last line
+    lines.append(line)
+    gb_file.set_field("ORIGIN", lines)
+
+
+def set_annotated_sequence(gb_file, annot_sequence):
+    set_annotation(gb_file, annot_sequence.annotation)
+    set_sequence(
+        gb_file, annot_sequence.sequence, annot_sequence.sequence_start
+    )

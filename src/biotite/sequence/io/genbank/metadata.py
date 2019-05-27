@@ -130,7 +130,7 @@ def get_db_link(gb_file):
     lines, _ = _expect_single_field(gb_file, "DBLINK")
     link_dict = {}
     for line in lines:
-        key, value = line[12:].split(":")
+        key, value = line.split(":")
         link_dict[key.strip()] = value.strip()
     return link_dict
 

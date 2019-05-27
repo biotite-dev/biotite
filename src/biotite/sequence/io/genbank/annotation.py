@@ -89,7 +89,8 @@ def get_annotation(gb_file, include_only=None):
                         qual_val = None
                     # Qualifier key
                     # -> remove "/" and "="
-                    qual_key = qual[1:-1]
+                    # "=" is not existing in e.g. '/pseudo'
+                    qual_key = qual[1:].replace("=", "")
                 else:
                     # Qualifier value
                     # -> remove potential quotes
@@ -184,13 +185,15 @@ def set_annotation(gb_file, annotation):
         line += _convert_to_loc_string(feature.locs)
         lines.append(line)
         for key, values in feature.qual.items():
-            for val in values.split("\n"):
+            if values is None:
                 line = " " * _QUAL_START
-                if val is None:
-                    line +=  f"/{key}"
-                else:
-                    line +=  f'/{key}="{val}"'
+                line +=  f'/{key}'
                 lines.append(line)
+            else:
+                for val in values.split("\n"):
+                    line = " " * _QUAL_START
+                    line +=  f'/{key}="{val}"'
+                    lines.append(line)
     gb_file.set_field("FEATURES", lines)
 
 
@@ -201,14 +204,20 @@ def _convert_to_loc_string(locs):
     """
     if len(locs) == 1:
         loc = list(locs)[0]
+        loc_first_str = str(loc.first)
+        loc_last_str  = str(loc.last)
+        if loc.defect & Location.Defect.BEYOND_LEFT:
+            loc_first_str = "<" + loc_first_str
+        if loc.defect & Location.Defect.BEYOND_RIGHT:
+            loc_last_str  = ">" + loc_last_str
         if loc.first == loc.last:
-            loc_string = str(loc.first)
+            loc_string = loc_first_str
         elif loc.defect & Location.Defect.UNK_LOC:
-            loc_string = str(loc.first) + "." + str(loc.last)
+            loc_string = loc_first_str + "." + loc_last_str
         elif loc.defect & Location.Defect.BETWEEN:
-            loc_string = str(loc.first) + "^" + str(loc.last)
+            loc_string = loc_first_str + "^" + loc_last_str
         else:
-            loc_string = str(loc.first) + ".." + str(loc.last)
+            loc_string = loc_first_str + ".." + loc_last_str
         if loc.strand == Location.Strand.REVERSE:
             loc_string = f"complement({loc_string})"
     else:
