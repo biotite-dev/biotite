@@ -44,13 +44,9 @@ class GenBankFile(TextFile):
         self._find_field_indices()
     
     def get_fields(self, name):
-        name = name.upper()
-        fields = []
-        for i, (_, _, fname) in enumerate(self._field_pos):
-            if fname == name:
-                _, content, subfields = self[i]
-                fields.append((content, subfields))
-        return fields
+        indices = self.get_indices(name)
+        # Omit the field name
+        return [self[i][1:] for i in indices]
     
     def get_indices(self, name):
         name = name.upper()
