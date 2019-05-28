@@ -30,6 +30,31 @@ def test_contiguous_field_pos(path):
         assert start == stop
 
 
+def test_file_access():
+    """
+    Test getting, setting, deleting and inserting fields in a GenBank
+    file.
+    """
+    gb_file = gb.GenBankFile()
+    gb_file.append("SOMEFIELD", ["Some content", "some other content"])
+    gb_file.insert(0, "OTHERFIELD", ["Additional content"])
+    assert gb_file[1] \
+        == ("SOMEFIELD", ["Some content", "some other content"], {})
+    gb_file[1] \
+        = "NEWFIELD", ["Extra content"], {"SUBFIELD" : ["L 1", "L 2"]}
+    gb_file.append("THIRDFIELD", ["Supplementary content"])
+    assert len(gb_file) == 3
+    assert gb_file[0] == ("OTHERFIELD", ["Additional content"], {})
+    del gb_file[0]
+    assert gb_file[0] \
+        == ("NEWFIELD", ["Extra content"], {"SUBFIELD" : ["L 1", "L 2"]})
+    del gb_file[0]
+    assert gb_file[0] == ("THIRDFIELD", ["Supplementary content"], {})
+    del gb_file[0]
+    assert len(gb_file) == 0
+
+
+
 @pytest.mark.parametrize(
     "path",
     glob.glob(join(data_dir, "*.gb")) + \
