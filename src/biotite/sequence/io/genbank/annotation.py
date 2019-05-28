@@ -21,7 +21,8 @@ _QUAL_START = 21
 
 def get_annotation(gb_file, include_only=None):
     """
-    Get the sequence annotation from the *FEATURES* field.
+    Get the sequence annotation from the *FEATURES* field of a
+    GenBank file.
     
     Parameters
     ----------
