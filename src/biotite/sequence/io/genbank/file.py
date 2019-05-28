@@ -99,7 +99,7 @@ class GenBankFile(TextFile):
                             subfield_start, i, indent=12
                         )
                     header = line[:12].strip()
-                    subfield_st0art = i
+                    subfield_start = i
             # Store last subfield
             if subfield_start is not None:
                 subfield_dict[header] = self._get_field_content(
