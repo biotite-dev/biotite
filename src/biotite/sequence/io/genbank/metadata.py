@@ -8,7 +8,7 @@ Functions for obtaining metadata fields of a GenBank file.
 
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_locus", "get_definition", "get_accession", "get_version",
-           "get_gi", "get_db_link",
+           "get_gi", "get_db_link", "get_source",
            "set_locus"]
 
 from ....file import InvalidFileError
@@ -17,12 +17,12 @@ from .file import GenBankFile
 
 def get_locus(gb_file):
     """
-    Parse the *LOCUS* field of the file.
+    Parse the *LOCUS* field of a GenBank or GenPept file.
     
     Parameters
     ----------
     gb_file : GenBankFile
-        The GenBank file to read the *LOCUS* field from
+        The GenBank file to read the *LOCUS* field from.
 
     Returns
     -------
@@ -74,10 +74,15 @@ def get_locus(gb_file):
 
 def get_definition(gb_file):
     """
-    Parse the *DEFINITION* field of the file.
+    Parse the *DEFINITION* field of a GenBank or GenPept file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *DEFINITION* field from.
     
     Returns
-    ----------
+    -------
     definition : str
         Content of the *DEFINITION* field.
     
@@ -95,12 +100,17 @@ def get_definition(gb_file):
 
 def get_accession(gb_file):
     """
-    Parse the *ACCESSION* field of the file.
+    Parse the *ACCESSION* field of a GenBank or GenPept file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *ACCESSION* field from.
     
     Returns
-    ----------
+    -------
     accession : str
-        Content of the *ACCESSION* field.
+        The accession ID of the file.
     
     Examples
     --------
@@ -117,10 +127,16 @@ def get_accession(gb_file):
 
 def get_version(gb_file):
     """
-    Parse the *VERSION* field of the file.
+    Parse the version from the *VERSION* field of a GenBank or GenPept
+    file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *VERSION* field from.
     
     Returns
-    ----------
+    -------
     version : str
         Content of the *VERSION* field. Does not include GI.
     """
@@ -130,10 +146,16 @@ def get_version(gb_file):
 
 def get_gi(gb_file):
     """
-    Get the GI of the file.
+    Parse the GI from the *VERSION* field of a GenBank or GenPept
+    file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *VERSION* field from.
     
     Returns
-    ----------
+    -------
     gi : str
         The GI of the file.
     """
@@ -147,10 +169,15 @@ def get_gi(gb_file):
 
 def get_db_link(gb_file):
     """
-    Parse the *DBLINK* field of the file.
+    Parse the *DBLINK* field of a GenBank or GenPept file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *DBLINK* field from.
     
     Returns
-    ----------
+    -------
     link_dict : dict
         A dictionary storing the database links, with the database
         name as key, and the corresponding ID as value.
@@ -174,6 +201,25 @@ def get_db_link(gb_file):
     return link_dict
 
 
+def get_source(gb_file):
+    """
+    Parse the *SOURCE* field of a GenBank or GenPept file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *SOURCE* field from.
+    
+    Returns
+    -------
+    accession : str
+        The name of the source organism.
+    """
+    lines, _ = _expect_single_field(gb_file, "SOURCE")
+    # 'SOURCE' field has only one line
+    return lines[0]
+
+
 def _expect_single_field(gb_file, name):
     fields = gb_file.get_fields(name)
     if len(fields) == 0:
@@ -181,7 +227,6 @@ def _expect_single_field(gb_file, name):
     if len(fields) > 1:
         raise InvalidFileError(f"File has multiple '{name}' fields")
     return fields[0]
-
 
 
 
