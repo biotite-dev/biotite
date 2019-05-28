@@ -30,14 +30,14 @@ def get_locus(gb_file):
         The locus name.
     length : int
         Sequence length.
-    mol_type : str
+    mol_type : str, optional
         The molecule type.
         Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
-    is_circular : bool
+    is_circular : bool, optional
         True, if the sequence is circular, false otherwise.
-    division : str
+    division : str, optional
         The GenBank division to which the file belongs.
-    date : str
+    date : str, optional
         The date of last modification.
     
     Examples
@@ -232,6 +232,27 @@ def _expect_single_field(gb_file, name):
 
 def set_locus(gb_file, name, length, mol_type=None, is_circular=False,
               division=None, date=None):
+    """
+    Set the *LOCUS* field of a GenBank file.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to be edited.
+    name : str
+        The locus name.
+    length : int
+        Sequence length.
+    mol_type : str, optional
+        The molecule type.
+        Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
+    is_circular : bool, optional
+        True, if the sequence is circular, false otherwise.
+    division : str, optional
+        The GenBank division to which the file belongs.
+    date : str, optional
+        The date of last modification.
+    """
     mol_type = "" if mol_type is None else mol_type
     restype_abbr = "aa" if mol_type in ["", "Protein"] else "bp"
     circularity = "circular" if is_circular else "linear"

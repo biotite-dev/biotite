@@ -25,8 +25,10 @@ def get_annotation(gb_file, include_only=None):
     
     Parameters
     ----------
-    include_only : iterable object, optional
-        List of names of feature keys (`str`), which should included
+    gb_file : GenBankFile
+        The GenBank file to read the *FEATURES* field from.
+    include_only : iterable object of str, optional
+        List of names of feature keys, which should included
         in the annotation. By default all features are included.
     
     Returns
@@ -178,6 +180,16 @@ def _set_qual(qual_dict, key, val):
 
 
 def set_annotation(gb_file, annotation):
+    """
+    Set the *FEATURES* field of a GenBank file with an annotation.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to be edited.
+    annotation : Annotation
+        The annotation that is put into the GenBank file.
+    """
     lines = []
     for feature in sorted(list(annotation)):
         line = " " * _KEY_START

@@ -29,6 +29,8 @@ def get_sequence(gb_file, format="gb"):
 
     Parameters
     ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *ORIGIN* field from.
     format : {'gb', 'gp'}
         Indicates whether the file is a GenBank or a GenPept file.
         Depending on this parameter a `NucleotideSequence` or a
@@ -56,8 +58,10 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     
     Parameters
     ----------
-    include_only : iterable object, optional
-        List of names of feature keys (`str`), which should included
+    gb_file : GenBankFile
+        The GenBank file to read the fields from.
+    include_only : iterable object of str, optional
+        List of names of feature keys, which should included
         in the annotation. By default all features are included.
     
     Returns
@@ -106,6 +110,18 @@ def _get_seq_start(origin_content):
 
 
 def set_sequence(gb_file, sequence, sequence_start=1):
+    """
+    Set the *ORIGIN* field of a GenBank file with a sequence.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to be edited.
+    sequence : NucleotideSequence or ProteinSequence
+        The sequence that is put into the GenBank file.
+    sequence_start : int, optional
+        The number of the first base of the sequence.
+    """
     lines = []
     seq_str = str(sequence).lower()
     line = "{:>9d}".format(sequence_start)
@@ -121,6 +137,17 @@ def set_sequence(gb_file, sequence, sequence_start=1):
 
 
 def set_annotated_sequence(gb_file, annot_sequence):
+    """
+    Set the *FEATURES* and *ORIGIN* fields of a GenBank file with the
+    annotation and sequence of an annotated sequence.
+    
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to be edited.
+    annot_sequence : AnnotatedSequence
+        The annotated sequence that is put into the GenBank file.
+    """
     set_annotation(gb_file, annot_sequence.annotation)
     set_sequence(
         gb_file, annot_sequence.sequence, annot_sequence.sequence_start

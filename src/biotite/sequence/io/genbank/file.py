@@ -31,7 +31,7 @@ class GenBankFile(TextFile):
     For example, the *SOURCE* field contains the *ORGANISM* subfield.
     Some fields may occur multiple times, e.g. the *REFERENCE* field.
     A sample GenBank file can be viewed at
-    `https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html`_.
+    `<https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>`_.
     
     This class provides a low-level interface for parsing, editing and
     writing GenBank files.
@@ -105,7 +105,7 @@ class GenBankFile(TextFile):
     OTHERFIELD  Another line
     //
 
-    Parsing fields from an existing GenBank file:
+    Parsing fields from a real GenBank file:
 
     >>> import os.path
     >>> file = GenBankFile()
@@ -174,11 +174,46 @@ class GenBankFile(TextFile):
         self._find_field_indices()
     
     def get_fields(self, name):
+        """
+        Get all GenBank fields associated with a given field name.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        
+        Returns
+        -------
+        fields : list of (list of str, OrderedDict of str -> str)
+            A list containing the fields.
+            For most field names, the list will only contain one
+            element, but fields like *REFERENCE* are an exception.
+            Each field is represented by a tuple.
+            Each tuple contains as first element the content lines and
+            as second element the subfields as dictionary.
+            If the field has no subfields, the dictionary is empty.
+        """
         indices = self.get_indices(name)
         # Omit the field name
         return [self[i][1:] for i in indices]
     
     def get_indices(self, name):
+        """
+        Get the indices to all GenBank fields associated with a given field
+        name.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        
+        Returns
+        -------
+        fields : list of int
+            A list of indices.
+            For most field names, the list will only contain one
+            element, but fields like *REFERENCE* are an exception.
+        """
         name = name.upper()
         indices = []
         for i, (_, _, fname) in enumerate(self._field_pos):
@@ -187,6 +222,30 @@ class GenBankFile(TextFile):
         return indices
     
     def set_field(self, name, content, subfield_dict=None):
+        """
+        Set a GenBank field with the given content.
+
+        If the field already exists in the file, the field is
+        overwritten, otherwise a new field is created at the end of
+        the file.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        
+        Raises
+        ------
+        InvalidFileError
+            If the field occurs multiple times in the file.
+            In this case it is ambiguous which field to overwrite.
+        """
         name = name.upper()
         indices = self.get_indices(name)
         if len(indices) > 1:
@@ -296,6 +355,25 @@ class GenBankFile(TextFile):
         return len(self._field_pos)
 
     def insert(self, index, name, content, subfields=None):
+        """
+        Insert a GenBank field at the given position.
+        
+        Parameters
+        ----------
+        index : int
+            The new field is inserted before the current field at this
+            index.
+            If the index is after the last field, the new field
+            is appended to the end of the file.
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        """
         index = self._translate_idx(index, length_exclusive=False)
         inserted_lines = self._to_lines(name, content, subfields)
         
@@ -324,6 +402,20 @@ class GenBankFile(TextFile):
         )
     
     def append(self, name, content, subfields=None):
+        """
+        Create a new GenBank field at the end of the file.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        """
         self.insert(len(self), name, content, subfields)
 
     
