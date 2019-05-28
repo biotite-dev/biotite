@@ -19,11 +19,26 @@ def get_locus(gb_file):
     """
     Parse the *LOCUS* field of the file.
     
-    Returns
+    Parameters
     ----------
-    locus_dict : dict
-        A dictionary storing the locus *name*, *length*, *type*,
-        *division* and *date*.
+    gb_file : GenBankFile
+        The GenBank file to read the *LOCUS* field from
+
+    Returns
+    -------
+    name : str
+        The locus name.
+    length : int
+        Sequence length.
+    mol_type : str
+        The molecule type.
+        Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
+    is_circular : bool
+        True, if the sequence is circular, false otherwise.
+    division : str
+        The GenBank division to which the file belongs.
+    date : str
+        The date of last modification.
     
     Examples
     --------
@@ -31,13 +46,19 @@ def get_locus(gb_file):
     >>> import os.path
     >>> file = GenBankFile()
     >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-    >>> for key, val in file.get_locus().items():
-    ...     print(key, ":", val)
-    name : CP001509
-    length : 4558953
-    type : DNA circular
-    division : BCT
-    date : 16-FEB-2017
+    >>> name, length, mol_type, is_circular, division, date = get_locus(file)
+    >>> print(name)
+    CP001509
+    >>> print(length)
+    4558953
+    >>> print(mol_type)
+    DNA
+    >>> print(is_circular)
+    True
+    >>> print(division)
+    BCT
+    >>> print(date)
+    16-FEB-2017
     """
     lines, _ = _expect_single_field(gb_file, "LOCUS")
     # 'LOCUS' field has only one line
@@ -59,6 +80,15 @@ def get_definition(gb_file):
     ----------
     definition : str
         Content of the *DEFINITION* field.
+    
+    Examples
+    --------
+    
+    >>> import os.path
+    >>> file = GenBankFile()
+    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> print(get_definition(file))
+    Escherichia coli BL21(DE3), complete genome.
     """
     lines, _ = _expect_single_field(gb_file, "DEFINITION")
     return " ".join([line.strip() for line in lines])
@@ -71,6 +101,15 @@ def get_accession(gb_file):
     ----------
     accession : str
         Content of the *ACCESSION* field.
+    
+    Examples
+    --------
+    
+    >>> import os.path
+    >>> file = GenBankFile()
+    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> print(get_accession(file))
+    CP001509
     """
     lines, _ = _expect_single_field(gb_file, "ACCESSION")
     # 'ACCESSION' field has only one line
@@ -122,7 +161,7 @@ def get_db_link(gb_file):
     >>> import os.path
     >>> file = GenBankFile()
     >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-    >>> for key, val in file.get_db_link().items():
+    >>> for key, val in get_db_link(file).items():
     ...     print(key, ":", val)
     BioProject : PRJNA20713
     BioSample : SAMN02603478

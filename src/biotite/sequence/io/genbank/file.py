@@ -17,17 +17,147 @@ from collections import OrderedDict
 
 class GenBankFile(TextFile):
     """
-    This class represents a file in GenBank format.
+    This class represents a file in GenBank format (including GenPept).
+
+    A GenBank file annotates a reference sequence with features such as
+    positions of genes, promoters, etc.
+    Additionally, it provides metadata further describing the file.s
+
+    A file is divided into separate fields, e.g. the *DEFINITION*
+    field contains a description of the file.
+    The field name starts at the beginning of a line,
+    followed by the content.
+    A field may contain subfields, whose name is indented.
+    For example, the *SOURCE* field contains the *ORGANISM* subfield.
+    Some fields may occur multiple times, e.g. the *REFERENCE* field.
+    A sample GenBank file can be viewed at
+    `https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html`_.
     
-    A GenBank file provides 3 kinds of information:
-    At first it contains some metadata about the file, like
-    IDs, database relations and source organism.
-    Secondly it contains sequence annotations, i.e. the positions of
-    a reference sequence, that fulfill certain roles, like promoters or
-    coding sequences.
-    Finally, the file contains optionally the reference sequence.
+    This class provides a low-level interface for parsing, editing and
+    writing GenBank files.
+    It works like a list of field entries, where a field consists of the
+    field name, the field content and the subfields.
+    The field content is separated into the lines belonging to the
+    content.
+    While the content of metadata fields starts at the standard
+    GenBank indentation of 12, the content of the *FEATURES*
+    (contains the annotation) and *ORIGIN* (contains the sequence)
+    fields starts without indentation.
+    The subfields are represented by a dictionary, with subfield names
+    being keys and the corresponding lines being values.
+    The *FEATURES* and *ORIGIN* fields have no subfields.
     
-    This class provides a low-level interface to the file content.
+    Every entry can be obtained, set and deleted via the index operator.
+    
+    Examples
+    --------
+    Create a GenBank file from scratch:
+
+    >>> file = GenBankFile()
+    >>> file.append(
+    ...     "SOMEFIELD", ["One line", "A second line"],
+    ...     subfields={"SUBFIELD1": ["Single Line"], "SUBFIELD2": ["Two", "lines"]}
+    ... )
+    >>> print(file)
+    SOMEFIELD   One line
+                A second line
+      SUBFIELD1 Single Line
+      SUBFIELD2 Two
+                lines
+    //
+    >>> name, content, subfields = file[0]
+    >>> print(name)
+    SOMEFIELD
+    >>> print(content)
+    ['One line', 'A second line']
+    >>> print(subfields)
+    OrderedDict([('SUBFIELD1', ['Single Line']), ('SUBFIELD2', ['Two', 'lines'])])
+    
+    Adding an additional field:
+    
+    >>> file.insert(0, "OTHERFIELD", ["Another line"])
+    >>> print(len(file))
+    2
+    >>> print(file)
+    OTHERFIELD  Another line
+    SOMEFIELD   One line
+                A second line
+      SUBFIELD1 Single Line
+      SUBFIELD2 Two
+                lines
+    //
+
+    Overwriting and deleting an existing field:
+
+    >>> file[1] = "NEWFIELD", ["Yet another line"]
+    >>> print(file)
+    OTHERFIELD  Another line
+    NEWFIELD    Yet another line
+    //
+    >>> file[1] = "NEWFIELD", ["Yet another line"], {"NEWSUB": ["Subfield line"]}
+    >>> print(file)
+    OTHERFIELD  Another line
+    NEWFIELD    Yet another line
+      NEWSUB    Subfield line
+    //
+    >>> del file[1]
+    >>> print(file)
+    OTHERFIELD  Another line
+    //
+
+    Parsing fields from an existing GenBank file:
+
+    >>> import os.path
+    >>> file = GenBankFile()
+    >>> file.read(os.path.join(path_to_sequences, "gg_avidin.gb"))
+    >>> print(file)
+    LOCUS       AJ311647                1224 bp    DNA     linear   VRT 14-NOV-2006
+    DEFINITION  Gallus gallus AVD gene for avidin, exons 1-4.
+    ACCESSION   AJ311647
+    VERSION     AJ311647.1  GI:13397825
+    KEYWORDS    AVD gene; avidin.
+    SOURCE      Gallus gallus (chicken)
+      ORGANISM  Gallus gallus
+                Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+                Archelosauria; Archosauria; Dinosauria; Saurischia; Theropoda;
+                Coelurosauria; Aves; Neognathae; Galloanserae; Galliformes;
+                Phasianidae; Phasianinae; Gallus.
+    REFERENCE   1
+      AUTHORS   Wallen,M.J., Laukkanen,M.O. and Kulomaa,M.S.
+      TITLE     Cloning and sequencing of the chicken egg-white avidin-encoding
+                gene and its relationship with the avidin-related genes Avr1-Avr5
+      JOURNAL   Gene 161 (2), 205-209 (1995)
+       PUBMED   7665080
+    REFERENCE   2
+      AUTHORS   Ahlroth,M.K., Kola,E.H., Ewald,D., Masabanda,J., Sazanov,A.,
+                Fries,R. and Kulomaa,M.S.
+      TITLE     Characterization and chromosomal localization of the chicken avidin
+                gene family
+      JOURNAL   Anim. Genet. 31 (6), 367-375 (2000)
+       PUBMED   11167523
+    REFERENCE   3  (bases 1 to 1224)
+      AUTHORS   Ahlroth,M.K.
+      TITLE     Direct Submission
+      JOURNAL   Submitted (09-MAR-2001) Ahlroth M.K., Department of Biological and
+                Environmental Science, University of Jyvaskyla, PO Box 35,
+                FIN-40351 Jyvaskyla, FINLAND
+    FEATURES             Location/Qualifiers
+         source          1..1224
+                         /organism="Gallus gallus"
+                         /mol_type="genomic DNA"
+    ...
+    >>> name, content, _ = file[3]
+    >>> print(name)
+    VERSION
+    >>> print(content)
+    ['AJ311647.1  GI:13397825']
+    >>> name, content, subfields = file[5]
+    >>> print(name)
+    SOURCE
+    >>> print(content)
+    ['Gallus gallus (chicken)']
+    >>> print(dict(subfields))
+    {'ORGANISM': ['Gallus gallus', 'Eukaryota; Metazoa; Chordata; ...', ...]}
     """
 
     def __init__(self):
@@ -310,10 +440,10 @@ class MultiFile(TextFile):
     ...     os.path.join(path_to_directory, "multifile.gp"),
     ...     "protein", "gp"
     ... )
-    >>> multi_file = MultiFile(file_type="gp")
+    >>> multi_file = MultiFile()
     >>> multi_file.read(file_name)
     >>> for gp_file in multi_file:
-    ...     print(gp_file.get_accession())
+    ...     print(get_accession(gp_file))
     1L2Y_A
     3O5R_A
     5UGO_A
