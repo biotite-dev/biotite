@@ -192,7 +192,7 @@ def set_annotation(gb_file, annotation):
         The annotation that is put into the GenBank file.
     """
     lines = []
-    for feature in sorted(list(annotation)):
+    for feature in sorted(annotation):
         line = " " * _KEY_START
         line += feature.key.ljust(_QUAL_START - _KEY_START)
         line += _convert_to_loc_string(feature.locs)
