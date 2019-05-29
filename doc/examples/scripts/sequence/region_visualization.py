@@ -22,8 +22,9 @@ file_name = entrez.fetch("CP001509", biotite.temp_dir(), suffix="gb",
                          db_name="nuccore", ret_type="gb")
 gb_file = gb.GenBankFile()
 gb_file.read(file_name)
-seq_length = int(gb_file.get_locus()["length"])
-annotation = gb_file.get_annotation(include_only=["gene"])
+print(gb_file.lines[:10])
+_, seq_length, _, _, _, _ = gb.get_locus(gb_file)
+annotation = gb.get_annotation(gb_file, include_only=["gene"])
 # Find the minimum and maximum locations of lac genes
 min_loc = seq_length
 max_loc = 1

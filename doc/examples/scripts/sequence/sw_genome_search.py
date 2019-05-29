@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 file_name = entrez.fetch("CP001509", biotite.temp_dir(), "gb", "nuccore", "gb")
 gb_file = gb.GenBankFile()
 gb_file.read(file_name)
-annot_seq = gb_file.get_annotated_sequence(include_only=["gene"])
+annot_seq = gb.get_annotated_sequence(gb_file, include_only=["gene"])
 # Find leuL gene
 for feature in annot_seq.annotation:
     if "gene" in feature.qual and feature.qual["gene"] == "leuL":

@@ -38,17 +38,17 @@ file_name = entrez.fetch_single_file(uids, biotite.temp_file("gp"),
                               db_name="protein", ret_type="gp")
 # The file contains multiple concatenated GenPept files
 # -> Usage of MultiFile
-multi_file = gb.MultiFile("gp")
+multi_file = gb.MultiFile()
 multi_file.read(file_name)
 # Separate MultiFile into single GenPeptFile instances
 files = [f for f in multi_file]
 print("Definitions:")
 for file in files[:20]:
-    print(file.get_definition())
+    print(gb.get_definition(file))
 print()
 print("Sources:")
 for file in files[:20]:
-    print(file.get_source())
+    print(gb.get_source(file))
 
 ########################################################################
 # The names of the sources are too long to be properly displayed later
@@ -62,7 +62,7 @@ def abbreviate(species):
     return "{:}. {:}".format(splitted_species[0][0], splitted_species[1])
 
 print("Sources:")
-all_sources = [abbreviate(file.get_source()) for file in files]
+all_sources = [abbreviate(gb.get_source(file)) for file in files]
 for source in all_sources[:20]:
     print(source)
 
@@ -95,7 +95,9 @@ for file, source in zip(files, all_sources):
         # Ignore already listed species
         continue
     bind_feature = None
-    annot_seq = file.get_annotated_sequence(include_only=["Site"])
+    annot_seq = gb.get_annotated_sequence(
+        file, include_only=["Site"], format="gp"
+    )
     # Find the feature for DNA-binding site
     for feature in annot_seq.annotation:
         # DNA binding site is a helix-turn-helix motif
