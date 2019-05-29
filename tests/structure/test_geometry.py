@@ -42,22 +42,36 @@ def test_dihedral():
            == pytest.approx(0.5*np.pi)
 
 
-def test_dihedral_backbone_general():
+@pytest.mark.parametrize("multiple_chains", [False, True])
+def test_dihedral_backbone_general(multiple_chains):
     stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    n_models = stack.stack_depth()
+    n_res = stack.res_id[-1]
+    if multiple_chains:
+        stack2 = stack.copy()
+        stack2.chain_id[:] = "B"
+        stack = stack + stack2
+        n_res = n_res * 2
     array = stack[0]
     # Test array
     phi, psi, omega = struc.dihedral_backbone(array)
-    assert omega.shape == (20,)
-    # Remove nan values
-    omega = np.abs(omega)[:-1]
-    assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
+    assert   phi.shape == (n_res,)
+    assert   psi.shape == (n_res,)
+    assert omega.shape == (n_res,)
+    _assert_plausible_omega(omega)
     # Test stack
     phi, psi, omega = struc.dihedral_backbone(stack)
-    assert omega.shape == (38,20)
+    assert   phi.shape == (n_models, n_res)
+    assert   psi.shape == (n_models, n_res)
+    assert omega.shape == (n_models, n_res)
+    _assert_plausible_omega(omega)
+
+def _assert_plausible_omega(omega):
     # Remove nan values
-    omega = np.abs(omega)[:, :-1]
-    omega = np.average(omega, axis=0)
-    assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.05)
+    omega = omega.flatten()
+    omega = np.abs(omega[~np.isnan(omega)])
+    # Omega should be always approximately pi
+    assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.6)
 
 
 @pytest.mark.xfail(raises=ImportError)
