@@ -23,8 +23,7 @@ The package features
 - Access to common biological databases (*RCSB PDB*, *NCBI Entrez*)
 - Interfaces to external software (MSA software, *BLAST*, *DSSP*)
 
-*Biotite*'s complete documentation is hosted at
-`<www.biotite-python.org>`_
+*Biotite*'s complete documentation is hosted at www.biotite-python.org
 
 
 Installation
