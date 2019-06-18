@@ -2,8 +2,8 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
-Install instructions
-====================
+Installation
+============
 
 Requirements
 ------------

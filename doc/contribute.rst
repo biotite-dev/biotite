@@ -2,8 +2,8 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
-Development guide
-=================
+Contributing
+============
 
 
 
@@ -41,8 +41,8 @@ In this case, put the import statement for the dependency directly into the
 function or class, rather than module level, to ensure that the package is not
 required for any other functionality or for building the API documentation.
 
-If your added code has a dependency that is too special, consider publishing it
-as :ref:`extension package <extensions>`.
+If your added code has a dependency that is too special, consider publishing
+the code as :ref:`extension package <extensions>`.
 
 Code efficiency
 ^^^^^^^^^^^^^^^
@@ -105,17 +105,17 @@ variable with all publicly accessible attributes of the module.
 When using *Biotite* internal imports, always use relative imports. Otherwise
 :ref:`in-development testing <tests>` is not possible.
 
-Type annotations
-^^^^^^^^^^^^^^^^
-
-*Biotite* obligatorily uses type annotations (:PEP:`484`) for its public API.
-This enables static type checkers (e.g. *mypy*) to detect programming errors
-at compile time.
-Instead of using inline type annotations, the type hints are outsourced
-into ``*.pyi`` stub files, that exist alongside ``*.py`` files with the same
-module name.
-Although, *NumPy* does not support type hints yet, the `ndarray` type is still
-used in type annotations
+.. Type annotations
+   ^^^^^^^^^^^^^^^^
+   
+   *Biotite* obligatorily uses type annotations (:PEP:`484`) for its public API.
+   This enables static type checkers (e.g. *mypy*) to detect programming errors
+   at compile time.
+   Instead of using inline type annotations, the type hints are outsourced
+   into ``*.pyi`` stub files, that exist alongside ``*.py`` files with the same
+   module name.
+   Although, *NumPy* does not support type hints yet, the `ndarray` type is still
+   used in type annotations
 
 
 
