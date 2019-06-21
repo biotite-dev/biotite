@@ -132,9 +132,9 @@ fig.tight_layout()
 file_name = entrez.fetch("1QGD_A", biotite.temp_dir(), "gb", "protein", "gb")
 gb_file = gb.GenBankFile()
 gb_file.read(file_name)
-annotation = gb_file.get_annotation(include_only=["SecStr"])
+annotation = gb.get_annotation(gb_file, include_only=["SecStr"])
 # Length of the sequence
-length = int(gb_file.get_locus()["length"])
+_, length, _, _, _, _ = gb.get_locus(gb_file)
 
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)

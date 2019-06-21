@@ -48,7 +48,7 @@ class PDBxFile(TextFile, MutableMapping):
     
     Examples
     --------
-    Read the file and get author names
+    Read the file and get author names:
 
     >>> import os.path
     >>> file = PDBxFile()

@@ -114,6 +114,6 @@ databases, including the probably most important ones: the *RCSB PDB* and the
    apidoc/index
    examples/gallery/index
    extensions
-   develop
+   contribute
    logo
 

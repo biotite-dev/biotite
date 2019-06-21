@@ -317,7 +317,7 @@ class LetterAlphabet(Alphabet):
             code[symbols == symbol] = i
         if (code == illegal_code).any():
             # Check, which symbol is illegal and raise
-            illegal_symbol = symbols[code == illegal_code][0]
+            illegal_symbol = symbols[code == illegal_code][0].decode("ASCII")
             raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
         return code
     

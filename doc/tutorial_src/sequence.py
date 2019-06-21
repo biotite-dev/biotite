@@ -270,9 +270,7 @@ file.write(biotite.temp_file("fa"))
 # :mod:`biotite.sequence.io.fastq` subpackage.
 #
 # Alternatively, a sequence can also be loaded from GenBank or GenPept
-# files,
-# using the :class:`GenBankFile` and :class:`GenPeptFile` class
-# (more on this later).
+# files, using the :class:`GenBankFile` class (more on this later).
 # 
 # Sequence search
 # ---------------
@@ -435,10 +433,15 @@ print(align.get_codes(alignment))
 # One popular source to obtain information about sequence features are
 # GenBank (for DNA and RNA) and GenPept (for peptides) files.
 # As example for sequence features we will work with the GenBank file
-# for the DNA sequence of the avidin gene (Accession: ``AJ311647```),
+# for the DNA sequence of the avidin gene (Accession: ``AJ311647``),
 # that we can download from the NCBI Entrez database.
 # After downloading we can load the file using the :class:`GenBankFile`
 # class from :mod:`biotite.sequence.io.genbank`.
+# Similar to the other file classes we have encountered, a
+# :class:`GenBankFile` provides a low-level interface.
+# In contrast, the :mod:`biotite.sequence.io.genbank` module contains
+# high-level functions to directly obtain useful objects from a
+# :class:`GenBankFile` object.
 
 import biotite.sequence.io.genbank as gb
 file_path = entrez.fetch(
@@ -447,8 +450,8 @@ file_path = entrez.fetch(
 )
 file = gb.GenBankFile()
 file.read(file_path)
-print("Accession:", file.get_accession())
-print("Definition:", file.get_definition())
+print("Accession:", gb.get_accession(file))
+print("Definition:", gb.get_definition(file))
 
 ########################################################################
 # 
@@ -472,10 +475,10 @@ print("Definition:", file.get_definition())
 # In the next example we will print the keys of the features and their
 # locations:
 
-annotation = file.get_annotation()
+annotation = gb.get_annotation(file)
 for feature in annotation:
     # Convert the feature locations in better readable format
-    locs = [str(loc) for loc in feature.locs]
+    locs = [str(loc) for loc in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {locs}")
 
 ########################################################################
@@ -540,7 +543,7 @@ loc = list(gene_feature.locs)[0]
 sub_annot = annotation[loc.first : loc.last +1]
 # Print the remaining features and their locations
 for feature in sub_annot:
-    locs = [str(loc) for loc in feature.locs]
+    locs = [str(loc) for loc in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {locs}")
 
 ########################################################################
@@ -559,7 +562,8 @@ for feature in sub_annot:
 # Let's have a closer look at the location defects of our subannotation:
 
 for feature in sub_annot:
-    defects = [str(location.defect) for location in feature.locs]
+    defects = [str(location.defect) for location
+               in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {defects}")
 
 ########################################################################
@@ -567,11 +571,11 @@ for feature in sub_annot:
 # This means that multiple defects can be combined to one value.
 # ``NONE`` means that the location has no defect, which is true for most
 # of the features.
-# The *source* feature has a defect has a combination of ``MISS_LEFT``
+# The *source* feature has a defect - a combination of ``MISS_LEFT``
 # and ``MISS_RIGHT``. ``MISS_LEFT`` is applied, if a feature was
 # truncated before the first base, and ``MISS_RIGHT`` is applied, if
 # a feature was truncated after the last base.
-# Since *source* was truncated from both sides, the combinated is
+# Since *source* was truncated from both sides, the combination is
 # applied.
 # *gene* has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
 # These defects already appear in the GenBank file, since
@@ -585,6 +589,9 @@ for feature in sub_annot:
 # hence ``BEYOND_RIGHT`` is applied.
 # These two defects are also reflected in the *mRNA* feature.
 # 
+# Annotated sequences
+# ^^^^^^^^^^^^^^^^^^^
+#
 # Now, that you have understood what annotations are, we proceed to the
 # next topic: annotated sequences.
 # An :class:`AnnotatedSequence` is like an annotation, but the sequence
@@ -593,7 +600,7 @@ for feature in sub_annot:
 # sequence corresponding to the feature table, we can directly obtain the
 # :class:`AnnotatedSequence`.
 
-annot_seq = file.get_annotated_sequence()
+annot_seq = gb.get_annotated_sequence(file)
 print("Same annotation as before?", (annotation == annot_seq.annotation))
 print(annot_seq.sequence[:60], "...")
 
@@ -610,7 +617,7 @@ for feature in annot_seq.annotation:
     if feature.key == "regulatory" \
         and feature.qual["regulatory_class"] == "polyA_signal_sequence":
             polya_feature = feature
-loc = list(feature.locs)[0]
+loc = list(polya_feature.locs)[0]
 # Get annotated sequence containing only the poly-A signal region
 poly_a = annot_seq[loc.first : loc.last +1]
 print("Sequence start after indexing:", poly_a.sequence_start)
@@ -629,30 +636,38 @@ print(poly_a.sequence)
 # There is also a convenient way to obtain the sequence corresponding to
 # a feature, even if the feature contains multiple locations or a
 # location is on the reverse strand:
-# Simply use a `Feature` object as index.
+# Simply use a :class:`Feature` object as index.
 
 for feature in annot_seq.annotation:
     if feature.key == "CDS":
         cds_feature = feature
-dna_seq = annot_seq[cds_feature]
-print(dna_seq[:60], "...")
+cds_seq = annot_seq[cds_feature]
+print(cds_seq[:60], "...")
 
 ########################################################################
 # Awesome.
 # Now we can translate the sequence and compare it with the translation
 # given by the CDS feature.
 # But before we can do that, we have to prepare the data:
-# The DNA sequence uses currently an ambiguous alphabet due to the nasty
+# The DNA sequence uses an ambiguous alphabet due to the nasty
 # ``'M'`` at position 28 of the original sequence, we have to remove the
-# stop symbol after translation and we need to remove the space
+# stop symbol after translation and we need to remove the whitespace
 # characters in the translation given by the CDS feature.
 
-# This step make the alphabet unambiguous
-dna_seq = seq.NucleotideSequence(dna_seq)
-prot_seq = dna_seq.translate(complete=True)
-print("Are the translated sequences equal?",
-        (str(prot_seq.remove_stops()) == \
-        cds_feature.qual["translation"].replace(" ", "")))
+# To make alphabet unambiguous we create a new NucleotideSequence
+# containing only the CDS portion, which is unambiguous
+# Thus, the resulting NucleotideSequence has an unambiguous alphabet
+cds_seq = seq.NucleotideSequence(cds_seq)
+# Now we can translate the unambiguous sequence.
+prot_seq = cds_seq.translate(complete=True)
+print(prot_seq[:60], "...")
+print(
+    "Are the translated sequences equal?",
+    # Remove stops of our translation
+    (str(prot_seq.remove_stops()) == 
+    # Remove whitespace characters from translation given by CDS feature
+    cds_feature.qual["translation"].replace(" ", ""))
+)
 
 ########################################################################
 # Phylogenetic and guide trees

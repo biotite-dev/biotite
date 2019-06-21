@@ -10,7 +10,7 @@ highlighting the hydropathy of the amino acid.
 The HCN1 sequence is required for the hydropathy calculation.
 As the sequence annotation is also needed for the comparison of the
 hydropathy with the actual position of the transmembrane helices,
-the corresponding GenBank file is downloaded.
+the corresponding GenPept file is downloaded.
 """
 
 # Code source: Patrick Kunzmann
@@ -63,12 +63,12 @@ query =   entrez.SimpleQuery("HCN1", "Gene Name") \
         & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
 uids = entrez.search(query, db_name="protein")
 file_name = entrez.fetch(
-    uids[0], biotite.temp_dir(), "gb", db_name="protein", ret_type="gp"
+    uids[0], biotite.temp_dir(), "gp", db_name="protein", ret_type="gp"
 )
 
-gp_file = gb.GenPeptFile()
+gp_file = gb.GenBankFile()
 gp_file.read(file_name)
-hcn1 = seq.ProteinSequence(gp_file.get_sequence())
+hcn1 = seq.ProteinSequence(gb.get_sequence(gp_file, format="gp"))
 print(hcn1)
 
 ########################################################################
@@ -152,7 +152,7 @@ ax.set_ylabel("Hydropathy (15 residues moving average)")
 
 # Draw boxes for annotated transmembrane helices for comparison
 # with hydropathy plot
-annotation = gp_file.get_annotation(include_only=["Region"])
+annotation = gb.get_annotation(gp_file, include_only=["Region"])
 transmembrane_annotation = seq.Annotation(
     [feature for feature in annotation
      if feature.qual["region_name"] == "Transmembrane region"]
