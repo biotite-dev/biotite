@@ -74,7 +74,7 @@ def decode_to_chars(const unsigned char[:] alphabet, const uint8[:] code):
     cdef uint8 symbol_code
     for i in range(code.shape[0]):
         symbol_code = code[i]
-        if symbol_code > alphabet_length:
+        if symbol_code >= alphabet_length:
             # Local import to avoid circular imports
             from .alphabet import AlphabetError
             raise AlphabetError(f"'{symbol_code:d}' is not a valid code")

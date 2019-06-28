@@ -156,10 +156,9 @@ class Alphabet(object):
         AlphabetError
             If `code` is not a valid code in the alphabet.
         """
-        try:
-            return self._symbols[code]
-        except IndexError:
+        if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
+        return self._symbols[code]
     
     def encode_multiple(self, symbols, dtype=np.int64):
         """
@@ -268,16 +267,17 @@ class LetterAlphabet(Alphabet):
                 in self._symbols_as_bytes()]
     
     def encode(self, symbol):
+        if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
+            raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
         indices = np.where(self._symbols == ord(symbol))[0]
         if len(indices) == 0:
             raise AlphabetError(f"'{symbol}' is not in the alphabet")
         return indices[0]
     
     def decode(self, code, as_bytes=False):
-        try:
-            return chr(self._symbols[code])
-        except IndexError:
+        if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
+        return chr(self._symbols[code])
     
     def encode_multiple(self, symbols, dtype=None):
         """
@@ -301,7 +301,9 @@ class LetterAlphabet(Alphabet):
         elif isinstance(symbols, bytes):
             symbols = np.frombuffer(symbols, dtype=np.ubyte)
         elif isinstance(symbols, np.ndarray):
-            symbols = np.frombuffer(symbols, dtype=np.ubyte)
+            symbols = np.frombuffer(
+                symbols.astype(dtype="|S1"), dtype=np.ubyte
+            )
         else:
             symbols = np.frombuffer(
                 np.array(list(symbols), dtype="|S1"),
