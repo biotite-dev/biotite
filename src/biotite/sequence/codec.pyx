@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["encode_chars", "decode_chars"]
+__all__ = ["encode_chars", "decode_to_chars"]
 
 cimport cython
 cimport numpy as np
