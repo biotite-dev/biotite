@@ -51,7 +51,6 @@ class GenBankFile(TextFile):
 
     Notes
     -----
-
     This class does not support location identifiers with references
     to other Entrez database entries, e.g.
     ``join(1..100,J00194.1:100..202)``.
