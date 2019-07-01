@@ -6,7 +6,7 @@ from os.path import join
 import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.gff as gff
-import biotite.sequence.io.gb as gb
+import biotite.sequence.io.genbank as gb
 import numpy as np
 import pytest
 from .util import data_dir
@@ -100,9 +100,9 @@ def test_file_access():
     assert file[0] == entry
     file.append(*(("b",) + entry_scaffold))
     file.insert(1, *(("c",) + entry_scaffold))
-    file[1] = ("d",) + entry_scaffold)
+    file[1] = ("d",) + entry_scaffold
     file.insert(3, *(("e",) + entry_scaffold))
-    def file[2]
+    del file[2]
     assert [seqid for seqid, _, _, _, _, _, _, _, _ in file] \
         == ["a", "d", "e", ]
 
@@ -175,4 +175,13 @@ def test_feature_without_id():
     A feature without 'ID' should raise an error if it has multiple
     locations and consequently multiple entries in the GFF3 file.
     """
-    pass
+    annot = seq.Annotation(
+        [seq.Feature(
+            key  = "CDS",
+            locs = [seq.Location(1,2), seq.Location(4,5)],
+            qual = {"some" : "qualifiers"}
+        )]
+    )
+    file = gff.GFFFile
+    with pytest.raises(ValueError):
+        gff.set_annotation(file, annot)
