@@ -168,10 +168,10 @@ class Feature(Copyable):
         line break.
     """
     
-    def __init__(self, key, locs, qual={}):
+    def __init__(self, key, locs, qual=None):
         self._key = key
         self._locs = frozenset(locs)
-        self._qual = copy.deepcopy(qual)
+        self._qual = copy.deepcopy(qual) if qual is not None else None
     
     def get_location_range(self):
         """
