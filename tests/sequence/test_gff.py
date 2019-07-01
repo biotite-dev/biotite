@@ -118,9 +118,10 @@ def test_entry_indexing():
     assert file._directives == [
         ("directive 1", 1),
         ("directive 2", 2),
-        ("directive 3", 8),
+        ("directive 3", 7),
+        ("FASTA", 8),
     ]
-    assert file._entries.tolist() == [3,4,6]
+    assert file._entries == [3,4,6]
 
 
 
@@ -134,12 +135,12 @@ def test_percent_encoding():
     seqid, source, type, start, end, score, strand, phase, attrib \
         = file[0]
     assert seqid == "123,456"
-    assert source == "äääh"
+    assert source == "ääh"
     assert type == "regi&n"
     assert attrib == {
         "ID"   : "AnID;AnotherID",
         "Name" : "Ångström",
-        "c$l$r": "read\tgreen\tblue"
+        "c$l$r": "red\tgreen\tblue"
     }
 
     file2 = gff.GFFFile()
@@ -153,19 +154,19 @@ def test_error():
     Assert that certain exceptions are raised
     """
     file = gff.GFFFile()
-    with pytest.raises("ValueError"):
+    with pytest.raises(ValueError):
         # 'seqid' beginning with '>' is not legal
         file.append(">xyz", "ab", "cd", 1, 2, None, None, None, {"Id":"foo"})
-    with pytest.raises("ValueError"):
+    with pytest.raises(ValueError):
         # String fields must not be empty
         file.append("", "ab", "cd", 1, 2, None, None, None, {"Id":"foo"})
-    with pytest.raises("ValueError"):
+    with pytest.raises(ValueError):
         # String fields must not be empty
         file.append("xyz", "", "cd", 1, 2, None, None, None, {"Id":"foo"})
-    with pytest.raises("ValueError"):
+    with pytest.raises(ValueError):
         # String fields must not be empty
         file.append("xyz", "ab", "", 1, 2, None, None, None, {"Id":"foo"})
-    with pytest.raises("ValueError"):
+    with pytest.raises(ValueError):
         # Attributes not be empty
         file.append("xyz", "ab", "cd", 1, 2, None, None, None, {})
 
@@ -182,6 +183,6 @@ def test_feature_without_id():
             qual = {"some" : "qualifiers"}
         )]
     )
-    file = gff.GFFFile
+    file = gff.GFFFile()
     with pytest.raises(ValueError):
         gff.set_annotation(file, annot)

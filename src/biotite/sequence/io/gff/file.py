@@ -8,7 +8,6 @@ __all__ = ["GFFFile"]
 from collections.abc import MutableSequence
 from urllib.parse import quote, unquote
 import warnings
-import numpy as np
 from ....file import TextFile, InvalidFileError
 from ...annotation import Location
 
@@ -18,11 +17,16 @@ class GFFFile(TextFile, MutableSequence):
     This class represents a file in GFF3 format.
     """
     
-    def __init__(self, chars_per_line=80):
+    def __init__(self):
+        super().__init__()
         # Maps entry indices to line indices
         self._entries = None
         # Stores the directives as (directive text, line index)-tuple
         self._directives = None
+        # Stores whether the file has FASTA data
+        self._has_fasta = None
+        self.append_directive("gff-version", "1.23.0")
+        self._index_entries()
     
     def read(self, file):
         super().read(file)
@@ -30,19 +34,39 @@ class GFFFile(TextFile, MutableSequence):
     
     def insert(self, index, seqid, source, type, start, end,
                score, strand, phase, attributes):
-        line = GFFFile._create_line(
-            seqid, source, type, start, end, score, strand, phase, attributes
-        )
-        line_index = self._entries[index]
-        self.lines.insert(line_index, line)
-        self._index_entries()
+        if index == len(self):
+            self.append(seqid, source, type, start, end,
+                        score, strand, phase, attributes)
+        else:
+            line_index = self._entries[index]
+            line = GFFFile._create_line(
+                seqid, source, type, start, end,
+                score, strand, phase, attributes
+            )
+            self.lines.insert(line_index, line)
+            self._index_entries()
     
     def append(self, seqid, source, type, start, end,
                score, strand, phase, attributes):
-        self.insert(
-            len(self), seqid, source, type, start, end,
-            score, strand, phase, attributes
+        if self._has_fasta:
+            raise NotImplementedError(
+                "Cannot append feature entries, "
+                "as this file contains additional FASTA data"
+            )
+        line = GFFFile._create_line(
+            seqid, source, type, start, end, score, strand, phase, attributes
         )
+        self.lines.append(line)
+        # Fast update of entry index by adding last line
+        self._entries.append(len(self.lines) - 1)
+    
+    def append_directive(self, directive, *args):
+        if directive.startswith("FASTA"):
+            raise NotImplementedError(
+                "Adding FASTA information is not supported"
+            )
+        directive_line = "##" + directive + " " + " ".join(args)
+        self.lines.append(directive_line)
         
     def __setitem__(self, index, item):
         seqid, source, type, start, end, score, strand, phase, attrib = item
@@ -102,7 +126,8 @@ class GFFFile(TextFile, MutableSequence):
         """
         self._directives = []
         # Worst case allocation -> all lines contain actual entries
-        self._entries = np.zeros(len(self.lines), dtype=int)
+        self._entries = [None] * len(self.lines)
+        self._has_fasta = False
         entry_counter = 0
         for line_i, line in enumerate(self.lines):
             if len(line) == 0 or line[0] == " ":
@@ -115,6 +140,7 @@ class GFFFile(TextFile, MutableSequence):
                     # Omit the leading '##'
                     self._directives.append((line[2:], line_i))
                     if line[2:] == "FASTA":
+                        self._has_fasta = True
                         # This parser does not support bundled FASTA
                         # data
                         warnings.warn(
@@ -160,6 +186,7 @@ class GFFFile(TextFile, MutableSequence):
             strand = "-"
         else:
             strand = "."
+        phase = str(phase) if phase is not None else "."
         attributes = ";".join(
             [quote(key) + "=" + quote(val) for key, val in attributes.items()]
         )
