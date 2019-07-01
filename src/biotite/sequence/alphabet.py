@@ -351,6 +351,11 @@ class AlphabetMapper(object):
     """
     This class is used for symbol code conversion from a source
     alphabet into a target alphabet.
+
+    This means that the symbol codes are converted from one to another
+    alphabet so that the symbol itself is preserved.
+    This class works for single symbol codes or an entire sequence code
+    likewise.
     
     Parameters
     ----------
@@ -360,7 +365,7 @@ class AlphabetMapper(object):
     
     Examples
     --------
-        
+
     >>> source_alph = Alphabet(["A","C","G","T"])
     >>> target_alph = Alphabet(["T","U","A","G","C"])
     >>> mapper = AlphabetMapper(source_alph, target_alph)
@@ -368,19 +373,30 @@ class AlphabetMapper(object):
     2
     >>> print(mapper[1])
     4
-    >>> print(mapper[2])
-    3
-    >>> print(mapper[3])
-    0
+    >>> print(mapper[[1,1,3]])
+    [4 4 0]
+    >>> in_sequence = GeneralSequence(source_alph, "GCCTAT")
+    >>> print(in_sequence.code)
+    [2 1 1 3 0 3]
+    >>> print(in_sequence)
+    GCCTAT
+    >>> out_sequence = GeneralSequence(target_alph)
+    >>> out_sequence.code = mapper[in_sequence.code]
+    >>> print(out_sequence.code)
+    [3 4 4 0 2 0]
+    >>> print(out_sequence)
+    GCCTAT
+
+
         
     """
     
     def __init__(self, source_alphabet, target_alphabet):
-        self._mapper = [-1] * len(source_alphabet)
-        for i in range(len(source_alphabet)):
-            symbol = source_alphabet.decode(i)
+        self._mapper = np.zeros(len(source_alphabet), dtype=int)
+        for old_code in range(len(source_alphabet)):
+            symbol = source_alphabet.decode(old_code)
             new_code = target_alphabet.encode(symbol)
-            self._mapper[i] = new_code
+            self._mapper[old_code] = new_code
         
     def __getitem__(self, code):
         return self._mapper[code]
