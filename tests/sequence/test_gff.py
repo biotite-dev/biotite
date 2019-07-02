@@ -75,7 +75,7 @@ def test_conversion_highlevel(path):
 
 
 @pytest.mark.parametrize(
-    "path", ["bt_lysozyme.gp", "gg_avidin.gb"]
+    "path", ["bt_lysozyme.gp", "gg_avidin.gb", "ec_bl21.gb", "sc_chrom1.gb"]
 )
 def test_genbank_consistency(path):
     """
