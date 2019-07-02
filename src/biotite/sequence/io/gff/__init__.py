@@ -4,7 +4,7 @@
 
 """
 This subpackage is used for reading and writing sequence features in the
-GFF3 format.
+*Generic Feature Format 3* (GFF3).
 
 It provides the `GFFFile` class, a low-level line-based interface to
 this format, and high-level functions for extracting `Annotation`

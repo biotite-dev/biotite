@@ -14,7 +14,8 @@ from ...annotation import Location
 
 class GFFFile(TextFile, MutableSequence):
     """
-    This class represents a file in GFF3 format.
+    This class represents a file in *Generic Feature Format 3* (GFF3)
+    format.
     """
     
     def __init__(self):
@@ -163,8 +164,8 @@ class GFFFile(TextFile, MutableSequence):
         """
         Create a line for a newly created entry.
         """
-        seqid = seqid.strip()
-        source = source.strip()
+        seqid = seqid.strip() if seqid is not None else "."
+        source = source.strip() if source is not None else "."
         type = type.strip()
 
         # Perform checks
