@@ -13,7 +13,8 @@ from .util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path", ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3"]
+    "path",
+    ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
 )
 def test_conversion_lowlevel(path):
     """
@@ -37,32 +38,44 @@ def test_conversion_lowlevel(path):
 
 
 @pytest.mark.parametrize(
-    "path", ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3"]
+    "path",
+    ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
 )
 def test_conversion_highlevel(path):
     """
     Test whether the high-level GFF3 interface can properly read
     the features from a GFF3 file and write these properties to a file
     without data changing.
+    The 'phase' is tested additionally, since it is not part of a
+    `Feature` object.
     """
     file = gff.GFFFile()
     file.read(join(data_dir, path))
     ref_annot = gff.get_annotation(file)
+    ref_phases = []
+    for _, _, type, _, _, _, _, phase, _ in file:
+        if type == "CDS":
+            ref_phases.append(phase)
 
     file = gff.GFFFile()
-    file.set_annotation(ref_annot)
+    gff.set_annotation(file, ref_annot)
     temp_file_name = biotite.temp_file("gff3")
     file.write(temp_file_name)
 
     file = gff.GFFFile()
-    file.read(path)
+    file.read(temp_file_name)
     test_annot = gff.get_annotation(file)
+    test_phases = []
+    for _, _, type, _, _, _, _, phase, _ in file:
+        if type == "CDS":
+            test_phases.append(phase)
     
     assert ref_annot == test_annot
+    assert test_phases == ref_phases
 
 
 @pytest.mark.parametrize(
-    "path", ["bt_lysozyme", "gg_avidin"]
+    "path", ["bt_lysozyme.gp", "gg_avidin.gb"]
 )
 def test_genbank_consistency(path):
     """
@@ -70,11 +83,11 @@ def test_genbank_consistency(path):
     GFF3 file and a GenBank file.
     """
     file = gb.GenBankFile()
-    file.read(join(data_dir, path + ".gb"))
+    file.read(join(data_dir, path))
     ref_annot = gb.get_annotation(file)
 
     file = gff.GFFFile()
-    file.read(join(data_dir, path + ".gff3"))
+    file.read(join(data_dir, path[:-3] + ".gff3"))
     test_annot = gff.get_annotation(file)
     
     # Remove qualifiers, since they will be different
@@ -85,7 +98,17 @@ def test_genbank_consistency(path):
     test_annot = seq.Annotation(
         [seq.Feature(feature.key, feature.locs) for feature in test_annot]
     )
-    assert ref_annot == test_annot
+    for feature in test_annot:
+        # Only CDS, gene, intron and exon should be equal
+        # in GenBank and GFF3
+        if feature.key in ["CDS", "gene", "intron", "exon"]:
+            try:
+                assert feature in test_annot
+            except AssertionError:
+                print(feature.key)
+                for loc in feature.locs:
+                    print(loc)
+                raise
 
 
 def test_file_access():
