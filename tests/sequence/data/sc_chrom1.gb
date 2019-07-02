@@ -1,0 +1,3439 @@
+LOCUS       NC_001133             230218 bp    DNA     linear   CON 08-JUN-2019
+DEFINITION  Saccharomyces cerevisiae S288C chromosome I, complete sequence.
+ACCESSION   NC_001133
+VERSION     NC_001133.9
+DBLINK      BioProject: PRJNA128
+            Assembly: GCF_000146045.2
+KEYWORDS    RefSeq.
+SOURCE      Saccharomyces cerevisiae S288C
+  ORGANISM  Saccharomyces cerevisiae S288C
+            Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina;
+            Saccharomycetes; Saccharomycetales; Saccharomycetaceae;
+            Saccharomyces.
+REFERENCE   1  (bases 1 to 230218)
+  AUTHORS   Goffeau,A., Barrell,B.G., Bussey,H., Davis,R.W., Dujon,B.,
+            Feldmann,H., Galibert,F., Hoheisel,J.D., Jacq,C., Johnston,M.,
+            Louis,E.J., Mewes,H.W., Murakami,Y., Philippsen,P., Tettelin,H. and
+            Oliver,S.G.
+  TITLE     Life with 6000 genes
+  JOURNAL   Science 274 (5287), 546 (1996)
+   PUBMED   8849441
+REFERENCE   2  (bases 1 to 230218)
+  AUTHORS   Bussey,H., Kaback,D.B., Zhong,W., Vo,D.T., Clark,M.W., Fortin,N.,
+            Hall,J., Ouellette,B.F., Keng,T., Barton,A.B. et al.
+  TITLE     The nucleotide sequence of chromosome I from Saccharomyces
+            cerevisiae
+  JOURNAL   Proc. Natl. Acad. Sci. U.S.A. 92 (9), 3809-3813 (1995)
+   PUBMED   7731988
+REFERENCE   3  (bases 1 to 230218)
+  CONSRTM   NCBI Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (29-MAY-2019) National Center for Biotechnology
+            Information, NIH, Bethesda, MD 20894, USA
+REFERENCE   4  (bases 1 to 230218)
+  CONSRTM   Saccharomyces Genome Database
+  TITLE     Direct Submission
+  JOURNAL   Submitted (31-MAR-2011) Department of Genetics, Stanford
+            University, Stanford, CA 94305-5120, USA
+  REMARK    Sequence update by submitter
+REFERENCE   5  (bases 1 to 230218)
+  CONSRTM   Saccharomyces Genome Database
+  TITLE     Direct Submission
+  JOURNAL   Submitted (11-DEC-2009) Department of Genetics, Stanford
+            University, Stanford, CA 94305-5120, USA
+COMMENT     REVIEWED REFSEQ: This record has been curated by SGD. The reference
+            sequence is identical to BK006935.
+            On Apr 26, 2011 this sequence version replaced NC_001133.8.
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider :: SGD
+            Annotation Status   :: Full Annotation
+            Annotation Version  :: R64-2-1
+            URL                 :: http://www.yeastgenome.org/
+            ##Genome-Annotation-Data-END##
+            COMPLETENESS: full length.
+FEATURES             Location/Qualifiers
+     source          1..230218
+                     /organism="Saccharomyces cerevisiae S288C"
+                     /mol_type="genomic DNA"
+                     /strain="S288C"
+                     /db_xref="taxon:559292"
+                     /chromosome="I"
+     telomere        complement(1..801)
+                     /note="TEL01L; Telomeric region on the left arm of
+                     Chromosome I; composed of an X element core sequence, X
+                     element combinatorial repeats, and a short terminal
+                     stretch of telomeric repeats"
+                     /db_xref="SGD:S000028862"
+     rep_origin      707..776
+                     /note="ARS102;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000121252"
+     gene            complement(<1807..>2169)
+                     /gene="PAU8"
+                     /locus_tag="YAL068C"
+                     /db_xref="GeneID:851229"
+     mRNA            complement(<1807..>2169)
+                     /gene="PAU8"
+                     /locus_tag="YAL068C"
+                     /product="seripauperin PAU8"
+                     /transcript_id="NM_001180043.1"
+                     /db_xref="GeneID:851229"
+     CDS             complement(1807..2169)
+                     /gene="PAU8"
+                     /locus_tag="YAL068C"
+                     /note="hypothetical protein; member of the seripauperin
+                     multigene family encoded mainly in subtelomeric regions"
+                     /codon_start=1
+                     /product="seripauperin PAU8"
+                     /protein_id="NP_009332.1"
+                     /db_xref="GeneID:851229"
+                     /db_xref="SGD:S000002142"
+                     /translation="MVKLTSIAAGVAAIAATASATTTLAQSDERVNLVELGVYVSDIR
+                     AHLAQYYMFQAAHPTETYPVEVAEAVFNYGDFTTMLTGIAPDQVTRMITGVPWYSSRL
+                     KPAISSALSKDGIYTIAN"
+     gene            <2480..>2707
+                     /locus_tag="YAL067W-A"
+                     /db_xref="GeneID:1466426"
+     mRNA            <2480..>2707
+                     /locus_tag="YAL067W-A"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001184582.1"
+                     /db_xref="GeneID:1466426"
+     CDS             2480..2707
+                     /locus_tag="YAL067W-A"
+                     /note="hypothetical protein; identified by gene-trapping,
+                     microarray-based expression analysis, and genome-wide
+                     homology searching"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_878038.1"
+                     /db_xref="GeneID:1466426"
+                     /db_xref="SGD:S000028593"
+                     /translation="MPIIGVPRCLIKPFSVPVTFPFSVKKNIRILDLDPRTEAYCLSL
+                     NSVCFKRLPRRKYFHLLNSYNIKRVLGVVYC"
+     gene            complement(<7235..>9016)
+                     /gene="SEO1"
+                     /locus_tag="YAL067C"
+                     /db_xref="GeneID:851230"
+     mRNA            complement(<7235..>9016)
+                     /gene="SEO1"
+                     /locus_tag="YAL067C"
+                     /product="putative permease SEO1"
+                     /transcript_id="NM_001178208.1"
+                     /db_xref="GeneID:851230"
+     CDS             complement(7235..9016)
+                     /gene="SEO1"
+                     /locus_tag="YAL067C"
+                     /note="Putative permease; member of the allantoate
+                     transporter subfamily of the major facilitator
+                     superfamily; mutation confers resistance to ethionine
+                     sulfoxide"
+                     /codon_start=1
+                     /product="putative permease SEO1"
+                     /protein_id="NP_009333.1"
+                     /db_xref="GeneID:851230"
+                     /db_xref="SGD:S000000062"
+                     /translation="MYSIVKEIIVDPYKRLKWGFIPVKRQVEDLPDDLNSTEIVTISN
+                     SIQSHETAENFITTTSEKDQLHFETSSYSEHKDNVNVTRSYEYRDEADRPWWRFFDEQ
+                     EYRINEKERSHNKWYSWFKQGTSFKEKKLLIKLDVLLAFYSCIAYWVKYLDTVNINNA
+                     YVSGMKEDLGFQGNDLVHTQVMYTVGNIIFQLPFLIYLNKLPLNYVLPSLDLCWSLLT
+                     VGAAYVNSVPHLKAIRFFIGAFEAPSYLAYQYLFGSFYKHDEMVRRSAFYYLGQYIGI
+                     LSAGGIQSAVYSSLNGVNGLEGWRWNFIIDAIVSVVVGLIGFYSLPGDPYNCYSIFLT
+                     DDEIRLARKRLKENQTGKSDFETKVFDIKLWKTIFSDWKIYILTLWNIFCWNDSNVSS
+                     GAYLLWLKSLKRYSIPKLNQLSMITPGLGMVYLMLTGIIADKLHSRWFAIIFTQVFNI
+                     IGNSILAAWDVAEGAKWFAFMLQCFGWAMAPVLYSWQNDICRRDAQTRAITLVTMNIM
+                     AQSSTAWISVLVWKTEEAPRYLKGFTFTACSAFCLSIWTFVVLYFYKRDERNNAKKNG
+                     IVLYNSKHGVEKPTSKDVETLSVSDEK"
+     rep_origin      7997..8547
+                     /note="ARS103;
+                     Autonomously Replicating Sequence; replication origin of
+                     very weak function"
+                     /db_xref="SGD:S000121253"
+     gene            complement(<11565..>11951)
+                     /locus_tag="YAL065C"
+                     /db_xref="GeneID:851232"
+     mRNA            complement(<11565..>11951)
+                     /locus_tag="YAL065C"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001179897.1"
+                     /db_xref="GeneID:851232"
+     CDS             complement(11565..11951)
+                     /locus_tag="YAL065C"
+                     /note="hypothetical protein; shows sequence similarity to
+                     FLO1 and other flocculins"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009335.1"
+                     /db_xref="GeneID:851232"
+                     /db_xref="SGD:S000001817"
+                     /translation="MNSATSETTTNTGAAETTTSTGAAETKTVVTSSISRFNHAETQT
+                     ASATDVIGHSSSVVSVSETGNTKSLITSGLSTMSQQPRSTPASSIIGSSTASLEISTY
+                     VGIANGLLTNNGISVFISTVLLAIVW"
+     gene            <12046..>12426
+                     /locus_tag="YAL064W-B"
+                     /db_xref="GeneID:851233"
+     mRNA            <12046..>12426
+                     /locus_tag="YAL064W-B"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001180042.1"
+                     /db_xref="GeneID:851233"
+     CDS             12046..12426
+                     /locus_tag="YAL064W-B"
+                     /note="Fungal-specific hypothetical protein"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009336.1"
+                     /db_xref="GeneID:851233"
+                     /db_xref="SGD:S000002141"
+                     /translation="MAGEAVSEHTPDSQEVTVTSVVCCLDSVVEIGHHVVYSVVTPLI
+                     VAVLIDTMAGEAVLEHTSDSQEEIVTTVVCSVVPLVCFVVSVVCFVISVVEIGHHVVY
+                     SVVAPLTVTVAVETIAEEMDSVHT"
+     gene            complement(<13363..>13743)
+                     /gene="TDA8"
+                     /locus_tag="YAL064C-A"
+                     /gene_synonym="YAL065C-A"
+                     /db_xref="GeneID:851234"
+     mRNA            complement(<13363..>13743)
+                     /gene="TDA8"
+                     /locus_tag="YAL064C-A"
+                     /gene_synonym="YAL065C-A"
+                     /product="Tda8p"
+                     /transcript_id="NM_001180041.1"
+                     /db_xref="GeneID:851234"
+     CDS             complement(13363..13743)
+                     /gene="TDA8"
+                     /locus_tag="YAL064C-A"
+                     /gene_synonym="YAL065C-A"
+                     /note="hypothetical protein; null mutant is sensitive to
+                     expression of the top1-T722A allele; not an essential
+                     gene"
+                     /codon_start=1
+                     /product="Tda8p"
+                     /protein_id="NP_058136.1"
+                     /db_xref="GeneID:851234"
+                     /db_xref="SGD:S000002140"
+                     /translation="MTGYFLPPQTSSYTFRFAKVDDSAILSVGGDVAFGCCAQEQPPI
+                     TSTNFTINGIKPWQGRLPDNIAGTVYMYAGFYCPMKIVYSNAVSWHTLPVSVELPDVT
+                     TVSDDFAGHVYSFDDDLTAQLYYP"
+     gene            <21566..>21850
+                     /locus_tag="YAL064W"
+                     /db_xref="GeneID:851235"
+     mRNA            <21566..>21850
+                     /locus_tag="YAL064W"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001178206.2"
+                     /db_xref="GeneID:851235"
+     CDS             21566..21850
+                     /locus_tag="YAL064W"
+                     /note="hypothetical protein; may interact with ribosomes,
+                     based on co-purification experiments"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009337.2"
+                     /db_xref="GeneID:851235"
+                     /db_xref="SGD:S000000060"
+                     /translation="MNPFASLEGQDNISSVFFLHMQQFESQVKDRFRFPIFRLERKTF
+                     GNSCYQVETLKVKCRPRHAKSCNLLTLLFKSRTQSVLVPNFGFLILNSEP"
+     repeat_region   22230..22552
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006787"
+     gene            complement(<22395..>22685)
+                     /locus_tag="YAL063C-A"
+                     /db_xref="GeneID:1466427"
+     mRNA            complement(<22395..>22685)
+                     /locus_tag="YAL063C-A"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001184642.1"
+                     /db_xref="GeneID:1466427"
+     CDS             complement(22395..22685)
+                     /locus_tag="YAL063C-A"
+                     /note="hypothetical protein; identified by expression
+                     profiling and mass spectrometry"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_878039.1"
+                     /db_xref="GeneID:1466427"
+                     /db_xref="SGD:S000028813"
+                     /translation="MCPRTVLLIININHWFYDKNIVRIILTFRLDSGHISDICFINKN
+                     LANALITADISLLKRHDIRCTKYIITYYQRYRNKEKGKFISLCKNTIISSSV"
+     gene            complement(<24000..>27968)
+                     /gene="FLO9"
+                     /locus_tag="YAL063C"
+                     /db_xref="GeneID:851236"
+     mRNA            complement(<24000..>27968)
+                     /gene="FLO9"
+                     /locus_tag="YAL063C"
+                     /product="flocculin FLO9"
+                     /transcript_id="NM_001178205.1"
+                     /db_xref="GeneID:851236"
+     CDS             complement(24000..27968)
+                     /gene="FLO9"
+                     /locus_tag="YAL063C"
+                     /note="Lectin-like protein with similarity to Flo1p;
+                     thought to be expressed and involved in flocculation"
+                     /codon_start=1
+                     /product="flocculin FLO9"
+                     /protein_id="NP_009338.1"
+                     /db_xref="GeneID:851236"
+                     /db_xref="SGD:S000000059"
+                     /translation="MSLAHYCLLLAIVTLLGLTNVVSATTAACLPANSRKNGMNVNFY
+                     QYSLRDSSTYSNAAYMAYGYASKTKLGSVGGQTDISIDYNIPCVSSSGTFPCPQEDLY
+                     GNWGCKGIGACSNNPIIAYWSTDLFGFYTTPTNVTLEMTGYFLPPQTGSYTFKFATVD
+                     DSAILSVGGSIAFECCAQEQPPITSTNFTINGIKPWNGSPPDNITGTVYMYAGFYYPM
+                     KIVYSNAVAWGTLPISVTLPDGTTVSDDFEGYVYTFDNNLSQPNCTIPDPSNYTVSTT
+                     ITTTEPWTGTFTSTSTEMTTVTGTNGVPTDETVIVIRTPTTASTIITTTEPWNSTFTS
+                     TSTELTTVTGTNGVRTDETIIVIRTPTTATTAITTTEPWNSTFTSTSTELTTVTGTNG
+                     LPTDETIIVIRTPTTATTAMTTTQPWNDTFTSTSTELTTVTGTNGLPTDETIIVIRTP
+                     TTATTAMTTTQPWNDTFTSTSTELTTVTGTNGLPTDETIIVIRTPTTATTAMTTTQPW
+                     NDTFTSTSTEITTVTGTNGLPTDETIIVIRTPTTATTAMTTTQPWNDTFTSTSTEMTT
+                     VTGTNGLPTDETIIVIRTPTTATTAITTTEPWNSTFTSTSTEMTTVTGTNGLPTDETI
+                     IVIRTPTTATTAITTTQPWNDTFTSTSTEMTTVTGTNGLPTDETIIVIRTPTTATTAM
+                     TTTQPWNDTFTSTSTEITTVTGTNGLPTDETIIVIRTPTTATTAMTTTQPWNDTFTST
+                     STEMTTVTGTNGVPTDETVIVIRTPTSEGLISTTTEPWTGTFTSTSTEMTTVTGTNGQ
+                     PTDETVIVIRTPTSEGLVTTTTEPWTGTFTSTSTEMTTITGTNGQPTDETVIIVKTPT
+                     TAISSSLSSSSGQITSFITSARPIITPFYPSNGTSVISSSVISSSDTSSLVISSSVTS
+                     SLVTSSPVISSSFISSPVISSTTTSASILSESSKSSVIPTSSSTSGSSESETGSASSA
+                     SSSSSISSESPKSTYSSSSLPPVTSATTSQEITSSLPPVTTTKTSEQTTLVTVTSCES
+                     HVCTESISSAIVSTATVTVSGATTEYTTWCPISTTEITKQTTETTKQTKGTTEQTTET
+                     TKQTTVVTISSCESDVCSKTASPAIVSTSTATINGVTTEYTTWCPISTTESKQQTTLV
+                     TVTSCGSGVCSETTSPAIVSTATATVNDVVTVYSTWRPQTTNEQSVSSKMNSATSETT
+                     TNTGAAETTTSTGAAETKTVVTSSISRFNHAETQTASATDVIGHSSSVVSVSETGNTK
+                     SLTSSGLSTMSQQPRSTPASSMVGSSTASLEISTYAGSANSLLAGSGLSVFIASLLLA
+                     II"
+     rep_origin      30946..31183
+                     /note="ARS104;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000118317"
+     gene            <31567..>32940
+                     /gene="GDH3"
+                     /locus_tag="YAL062W"
+                     /gene_synonym="FUN51"
+                     /db_xref="GeneID:851237"
+     mRNA            <31567..>32940
+                     /gene="GDH3"
+                     /locus_tag="YAL062W"
+                     /gene_synonym="FUN51"
+                     /product="glutamate dehydrogenase (NADP(+)) GDH3"
+                     /transcript_id="NM_001178204.1"
+                     /db_xref="GeneID:851237"
+     CDS             31567..32940
+                     /gene="GDH3"
+                     /locus_tag="YAL062W"
+                     /gene_synonym="FUN51"
+                     /EC_number="1.4.1.4"
+                     /note="NADP(+)-dependent glutamate dehydrogenase;
+                     synthesizes glutamate from ammonia and
+                     alpha-ketoglutarate; rate of alpha-ketoglutarate
+                     utilization differs from Gdh1p; expression regulated by
+                     nitrogen and carbon sources; GDH3 has a paralog, GDH1,
+                     that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="glutamate dehydrogenase (NADP(+)) GDH3"
+                     /protein_id="NP_009339.1"
+                     /db_xref="GeneID:851237"
+                     /db_xref="SGD:S000000058"
+                     /translation="MTSEPEFQQAYDEIVSSVEDSKIFEKFPQYKKVLPIVSVPERII
+                     QFRVTWENDNGEQEVAQGYRVQFNSAKGPYKGGLRFHPSVNLSILKFLGFEQIFKNAL
+                     TGLDMGGGKGGLCVDLKGKSDNEIRRICYAFMRELSRHIGKDTDVPAGDIGVGGREIG
+                     YLFGAYRSYKNSWEGVLTGKGLNWGGSLIRPEATGFGLVYYTQAMIDYATNGKESFEG
+                     KRVTISGSGNVAQYAALKVIELGGIVVSLSDSKGCIISETGITSEQIHDIASAKIRFK
+                     SLEEIVDEYSTFSESKMKYVAGARPWTHVSNVDIALPCATQNEVSGDEAKALVASGVK
+                     FVAEGANMGSTPEAISVFETARSTATNAKDAVWFGPPKAANLGGVAVSGLEMAQNSQK
+                     VTWTAERVDQELKKIMINCFNDCIQAAQEYSTEKNTNTLPSLVKGANIASFVMVADAM
+                     LDQGDVF"
+     gene            <33448..>34701
+                     /gene="BDH2"
+                     /locus_tag="YAL061W"
+                     /db_xref="GeneID:851238"
+     mRNA            <33448..>34701
+                     /gene="BDH2"
+                     /locus_tag="YAL061W"
+                     /product="putative dehydrogenase BDH2"
+                     /transcript_id="NM_001178203.1"
+                     /db_xref="GeneID:851238"
+     CDS             33448..34701
+                     /gene="BDH2"
+                     /locus_tag="YAL061W"
+                     /EC_number="1.1.1.303"
+                     /note="Putative medium-chain alcohol dehydrogenase with
+                     similarity to BDH1; transcription induced by
+                     constitutively active PDR1 and PDR3"
+                     /codon_start=1
+                     /product="putative dehydrogenase BDH2"
+                     /protein_id="NP_009340.1"
+                     /db_xref="GeneID:851238"
+                     /db_xref="SGD:S000000057"
+                     /translation="MRALAYFGKGNIRFTNHLKEPHIVAPDELVIDIEWCGICGTDLH
+                     EYTDGPIFFPEDGHTHEISHNPLPQAMGHEMAGTVLEVGPGVKNLKVGDKVVVEPTGT
+                     CRDRYRWPLSPNVDKEWCAACKKGYYNICSYLGLCGAGVQSGGFAERVVMNESHCYKV
+                     PDFVPLDVAALIQPLAVCWHAIRVCEFKAGSTALIIGAGPIGLGTILALNAAGCKDIV
+                     VSEPAKVRRELAEKMGARVYDPTAHAAKESIDYLRSIADGGDGFDYTFDCSGLEVTLN
+                     AAIQCLTFRGTAVNLAMWGHHKIQFSPMDITLHERKYTGSMCYTHHDFEAVIEALEEG
+                     RIDIDRARHMITGRVNIEDGLDGAIMKLINEKESTIKIILTPNNHGELNREADNEKKE
+                     ISELSSRKDQERLRESINEAKLRHT"
+     gene            <35155..>36303
+                     /gene="BDH1"
+                     /locus_tag="YAL060W"
+                     /db_xref="GeneID:851239"
+     mRNA            <35155..>36303
+                     /gene="BDH1"
+                     /locus_tag="YAL060W"
+                     /product="(R,R)-butanediol dehydrogenase"
+                     /transcript_id="NM_001178202.2"
+                     /db_xref="GeneID:851239"
+     CDS             35155..36303
+                     /gene="BDH1"
+                     /locus_tag="YAL060W"
+                     /EC_number="1.1.1.4"
+                     /note="NAD-dependent (R,R)-butanediol dehydrogenase;
+                     catalyzes oxidation of (R,R)-2,3-butanediol to
+                     (3R)-acetoin, oxidation of meso-butanediol to
+                     (3S)-acetoin, and reduction of acetoin; enhances use of
+                     2,3-butanediol as an aerobic carbon source"
+                     /codon_start=1
+                     /product="(R,R)-butanediol dehydrogenase"
+                     /protein_id="NP_009341.2"
+                     /db_xref="GeneID:851239"
+                     /db_xref="SGD:S000000056"
+                     /translation="MRALAYFKKGDIHFTNDIPRPEIQTDDEVIIDVSWCGICGSDLH
+                     EYLDGPIFMPKDGECHKLSNAALPLAMGHEMSGIVSKVGPKVTKVKVGDHVVVDAASS
+                     CADLHCWPHSKFYNSKPCDACQRGSENLCTHAGFVGLGVISGGFAEQVVVSQHHIIPV
+                     PKEIPLDVAALVEPLSVTWHAVKISGFKKGSSALVLGAGPIGLCTILVLKGMGASKIV
+                     VSEIAERRIEMAKKLGVEVFNPSKHGHKSIEILRGLTKSHDGFDYSYDCSGIQVTFET
+                     SLKALTFKGTATNIAVWGPKPVPFQPMDVTLQEKVMTGSIGYVVEDFEEVVRAIHNGD
+                     IAMEDCKQLITGKQRIEDGWEKGFQELMDHKESNVKILLTPNNHGEMK"
+     gene            <36509..>37147
+                     /gene="ECM1"
+                     /locus_tag="YAL059W"
+                     /db_xref="GeneID:851240"
+     mRNA            <36509..>37147
+                     /gene="ECM1"
+                     /locus_tag="YAL059W"
+                     /product="Ecm1p"
+                     /transcript_id="NM_001178201.2"
+                     /db_xref="GeneID:851240"
+     CDS             36509..37147
+                     /gene="ECM1"
+                     /locus_tag="YAL059W"
+                     /note="Pre-ribosomal factor involved in 60S ribosomal
+                     protein subunit export; associates with the pre-60S
+                     particle; shuttles between the nucleus and cytoplasm"
+                     /codon_start=1
+                     /product="Ecm1p"
+                     /protein_id="NP_009342.2"
+                     /db_xref="GeneID:851240"
+                     /db_xref="SGD:S000000055"
+                     /translation="MWEQRRQKVVFSLTILVRYRLKQSMAKKISKNSRAARQSDALEP
+                     EVKDLSELPRAEKTDLTNILIRTAAKNEALLEAKISKKANKSKRGKKLNKKALEDKLA
+                     NSISSMDRDRLVKALNFTNRLDGKIAKSISRAKYIQNTRKAGWDSTNETIKKELAFLN
+                     GGLSVQAKSASEGNAEKEDEEIPEVFDSLAEDNTVQKTPTNRFGVLPDDVEE"
+     gene            <37464..>38972
+                     /gene="CNE1"
+                     /locus_tag="YAL058W"
+                     /gene_synonym="FUN48"
+                     /db_xref="GeneID:851241"
+     mRNA            <37464..>38972
+                     /gene="CNE1"
+                     /locus_tag="YAL058W"
+                     /gene_synonym="FUN48"
+                     /product="calnexin"
+                     /transcript_id="NM_001178200.1"
+                     /db_xref="GeneID:851241"
+     CDS             37464..38972
+                     /gene="CNE1"
+                     /locus_tag="YAL058W"
+                     /gene_synonym="FUN48"
+                     /note="Calnexin; integral membrane ER chaperone involved
+                     in folding and quality control of glycoproteins; chaperone
+                     activity is inhibited by Mpd1p, with which Cne1p
+                     interacts; 24% identical to mammalian calnexin; Ca+
+                     binding not yet shown in yeast"
+                     /codon_start=1
+                     /product="calnexin"
+                     /protein_id="NP_009343.1"
+                     /db_xref="GeneID:851241"
+                     /db_xref="SGD:S000000054"
+                     /translation="MKFSAYLWWLFLNLALVKGTSLLSNVTLAEDSFWEHFQAYTNTK
+                     HLNQEWITSEAVNNEGSKIYGAQWRLSQGRLQGSAWDKGIAVRTGNAAAMIGHLLETP
+                     INVSETDTLVVQYEIKLDNSLTCGGAFIKLMSGFMNVEALKHYAPDTEGVELVFGPDY
+                     CAPEINGVQFAINKVDKITHESKLRYLQEMPLSKLTDTSQSHLYTLIIDESAQSFQIL
+                     IDGKTVMVREHIEDKKKVNFEPPITPPLMIPDVSVAKPHDWDDRIRIPDPEAVKLSDR
+                     DERDPLMIPHPDGTEPPEWNSSIPEYILDPNAQKPSWWKELEHGEWIPPMIKNPLCTA
+                     ERGCGQQIPGLINNAKYKGPGELNEIINPNYMGEWHPPEIENPLYYEEQHPLRIENVI
+                     SGVILEFWSGSPNMLISNIYVGKNVTEAQIIGNKTWLMRDRAFRGSDGPTERKFMNSR
+                     LGNLQTTFHNERESPNPFDRIIDRILEQPLKFVLTAAVVLLTTSVLCCVVFT"
+     gene            <39259..>41901
+                     /gene="GPB2"
+                     /locus_tag="YAL056W"
+                     /gene_synonym="KRH1"
+                     /db_xref="GeneID:851243"
+     mRNA            <39259..>41901
+                     /gene="GPB2"
+                     /locus_tag="YAL056W"
+                     /gene_synonym="KRH1"
+                     /product="Gpb2p"
+                     /transcript_id="NM_001178199.2"
+                     /db_xref="GeneID:851243"
+     CDS             39259..41901
+                     /gene="GPB2"
+                     /locus_tag="YAL056W"
+                     /gene_synonym="KRH1"
+                     /note="Multistep regulator of cAMP-PKA signaling; inhibits
+                     PKA downstream of Gpa2p and Cyr1p, thereby increasing cAMP
+                     dependency; inhibits Ras activity through direct
+                     interactions with Ira1p/2p; regulated by G-alpha protein
+                     Gpa2p; GPB2 has a paralog, GPB1, that arose from the whole
+                     genome duplication"
+                     /codon_start=1
+                     /product="Gpb2p"
+                     /protein_id="NP_009345.3"
+                     /db_xref="GeneID:851243"
+                     /db_xref="SGD:S000000052"
+                     /translation="MEISSSPWNDGGYSPYERNRVAVSPFSSALEGEERIETSRSLGD
+                     HCFEPLPYVTNYLSIFALFGKEIFGDKGNVSSRNEYLLKKYYSLKKPFVLRHNGHALK
+                     NPDMPLQRNDILQTNFMVDKFLNRTVRSVNFNNFKIISDMQSKSGRGTKSGTNQNQSA
+                     DAIQNICLPSIPSALPYFQYYRKLLTVNTKEWDILKLHSLWVPKLRKDFKDFSLYGDK
+                     NSLKPIDSHYDEDNTMKKNLFFERSPSRQTLDGKGCASKGYDISSGNMIIPSLFSEDK
+                     LPALTYHCSVELNGNIYIFGGLMPCYSYEEDAPMLNDFFVDGIKNLPPPLLPQVINNP
+                     SMVNNPHLYVASIPSCRFSKPKMGGYIPPPLLCVQGSKLTDRHIFFYGGFEIRTETRG
+                     DENGKYHLKKRLYVNNTGYILDIMSFKFTKIDIIVQPSKYNAYPTMSSRFGHLQISID
+                     NPNRRASVHSSSMNEIHKMGSASMKQGSSITSGRLEKAAVLSSLPHNTVHTVIIFGGY
+                     RQTGDDRYEAMNDLWKIEIPVIRRGKKGYCKFSETANAILLTPSEKDKSDWPEERAFS
+                     AFSVHGTSLMDRSSLDMRLLNNLKNHFVLKPSYISQDRVVSPKPVFPMMVHGTHQDLF
+                     NSGSAAQESPKAGASASSASAASFDPDMDDNLENYIVNPGRKSSSIPMTAIGRQRLIL
+                     SQEKPVGKTVVLHGGSNGLNVLDDMWLMDLECETWTPIETFAKADSSEDGDEKLDSVN
+                     VGLVGHRMESIGRICVCIGGMVQEDVDQFYSENDDEPPRKRKVDTLPLGGNFLNTIDL
+                     STQCWEEHKITLSKKEDDEDRQDSENEDTNSNIVVGVGGTSLQCDKSIILIGGLISRR
+                     SNVKEIYLHGTITKSIFPSVNPSA"
+     rep_origin      41992..42151
+                     /note="ARS105;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000121254"
+     gene            <42177..>42719
+                     /gene="PEX22"
+                     /locus_tag="YAL055W"
+                     /gene_synonym="YAF5"
+                     /db_xref="GeneID:851244"
+     mRNA            <42177..>42719
+                     /gene="PEX22"
+                     /locus_tag="YAL055W"
+                     /gene_synonym="YAF5"
+                     /product="ubiquitin-protein transferase activating protein
+                     PEX22"
+                     /transcript_id="NM_001178198.1"
+                     /db_xref="GeneID:851244"
+     CDS             42177..42719
+                     /gene="PEX22"
+                     /locus_tag="YAL055W"
+                     /gene_synonym="YAF5"
+                     /note="Putative peroxisomal membrane protein; required for
+                     import of peroxisomal proteins; functionally complements a
+                     Pichia pastoris pex22 mutation"
+                     /codon_start=1
+                     /product="ubiquitin-protein transferase activating protein
+                     PEX22"
+                     /protein_id="NP_009346.1"
+                     /db_xref="GeneID:851244"
+                     /db_xref="SGD:S000000051"
+                     /translation="MPPPSRSRINKTRTLGIVGTAIAVLVTSYYIYQKVTSAKEDNGA
+                     RPPEGDSVKENKKARKSKCIIMSKSIQGLPIKWEEYAADEVVLLVPTSHTDGSMKQAI
+                     GDAFRKTKNEHKIIYCDSMDGLWSCVRRLGKFQCILNSRDFTSSGGSDAAVVPEDIGR
+                     FVKFVVDSDVEDVLIDTLCN"
+     gene            complement(<42881..>45022)
+                     /gene="ACS1"
+                     /locus_tag="YAL054C"
+                     /gene_synonym="FUN44"
+                     /db_xref="GeneID:851245"
+     mRNA            complement(<42881..>45022)
+                     /gene="ACS1"
+                     /locus_tag="YAL054C"
+                     /gene_synonym="FUN44"
+                     /product="acetate--CoA ligase 1"
+                     /transcript_id="NM_001178197.1"
+                     /db_xref="GeneID:851245"
+     CDS             complement(42881..45022)
+                     /gene="ACS1"
+                     /locus_tag="YAL054C"
+                     /gene_synonym="FUN44"
+                     /EC_number="6.2.1.1"
+                     /note="Acetyl-coA synthetase isoform; along with Acs2p,
+                     acetyl-coA synthetase isoform is the nuclear source of
+                     acetyl-coA for histone acetylation; expressed during
+                     growth on nonfermentable carbon sources and under aerobic
+                     conditions"
+                     /codon_start=1
+                     /product="acetate--CoA ligase 1"
+                     /protein_id="NP_009347.1"
+                     /db_xref="GeneID:851245"
+                     /db_xref="SGD:S000000050"
+                     /translation="MSPSAVQSSKLEEQSSEIDKLKAKMSQSAATAQQKKEHEYEHLT
+                     SVKIVPQRPISDRLQPAIATHYSPHLDGLQDYQRLHKESIEDPAKFFGSKATQFLNWS
+                     KPFDKVFIPDPKTGRPSFQNNAWFLNGQLNACYNCVDRHALKTPNKKAIIFEGDEPGQ
+                     GYSITYKELLEEVCQVAQVLTYSMGVRKGDTVAVYMPMVPEAIITLLAISRIGAIHSV
+                     VFAGFSSNSLRDRINDGDSKVVITTDESNRGGKVIETKRIVDDALRETPGVRHVLVYR
+                     KTNNPSVAFHAPRDLDWATEKKKYKTYYPCTPVDSEDPLFLLYTSGSTGAPKGVQHST
+                     AGYLLGALLTMRYTFDTHQEDVFFTAGDIGWITGHTYVVYGPLLYGCATLVFEGTPAY
+                     PNYSRYWDIIDEHKVTQFYVAPTALRLLKRAGDSYIENHSLKSLRCLGSVGEPIAAEV
+                     WEWYSEKIGKNEIPIVDTYWQTESGSHLVTPLAGGVTPMKPGSASFPFFGIDAVVLDP
+                     NTGEELNTSHAEGVLAVKAAWPSFARTIWKNHDRYLDTYLNPYPGYYFTGDGAAKDKD
+                     GYIWILGRVDDVVNVSGHRLSTAEIEAAIIEDPIVAECAVVGFNDDLTGQAVAAFVVL
+                     KNKSSWSTATDDELQDIKKHLVFTVRKDIGPFAAPKLIILVDDLPKTRSGKIMRRILR
+                     KILAGESDQLGDVSTLSNPGIVRHLIDSVKL"
+     gene            <45899..>48250
+                     /gene="FLC2"
+                     /locus_tag="YAL053W"
+                     /db_xref="GeneID:851246"
+     mRNA            <45899..>48250
+                     /gene="FLC2"
+                     /locus_tag="YAL053W"
+                     /product="flavin adenine dinucleotide transporter FLC2"
+                     /transcript_id="NM_001178196.2"
+                     /db_xref="GeneID:851246"
+     CDS             45899..48250
+                     /gene="FLC2"
+                     /locus_tag="YAL053W"
+                     /note="Putative calcium channel involved in calcium
+                     release under hypotonic stress; required for uptake of FAD
+                     into endoplasmic reticulum; involved in cell wall
+                     maintenance; FLC2 has a paralog, YOR365C, that arose from
+                     the whole genome duplication"
+                     /codon_start=1
+                     /product="flavin adenine dinucleotide transporter FLC2"
+                     /protein_id="NP_009348.2"
+                     /db_xref="GeneID:851246"
+                     /db_xref="SGD:S000000049"
+                     /translation="MIFLNTFARCLLTCFVLCSGTARSSDTNDTTPASAKHLQTTSLL
+                     TCMDNSQLTASFFDVKFYPDNNTVIFDIDATTTLNGNVTVKAELLTYGLKVLDKTFDL
+                     CSLGQVSLCPLSAGRIDVMSTQVIESSITKQFPGIAYTIPDLDAQVRVVAYAQNDTEF
+                     ETPLACVQAILSNGKTVQTKYAAWPIAAISGVGVLTSGFVSVIGYSATAAHIASNSIS
+                     LFIYFQNLAITAMMGVSRVPPIAAAWTQNFQWSMGIINTNFMQKIFDWYVQATNGVSN
+                     VVVANKDVLSISVQKRAISMASSSDYNFDTILDDSNLYTTSEKDPSNYSAKILVLRGI
+                     ERVAYLANIELSNFFLTGIVFFLFFLFVVVVSLIFFKALLEVLTRARILKETSNFFQY
+                     RKNWGSIIKGTLFRLSIIAFPQVSLLAIWEFTQVNSPAIVVDAVVILLIITGLLVYGT
+                     IRVFIKGRESLRLYKNPAYLLYSDTYFLNKFGFLYVQFKADKFWWLLPLLSYAFLRSL
+                     FVAVLQNQGKAQAMIIFVIELAYFVCLCWIRPYLDKRTNVFNIAIHLVNLINAFFFLF
+                     FSNLFKQPAVVSSVMAVILFVLNAVFALFLLLFTIVTCTLALLHRNPDVRYQPMKDDR
+                     VSFIPKIQNDFDGKNKNDSELFELRKAVMDTNENEEEKMFRDDTFGKNLNANTNTARL
+                     FDDETSSSSFKQNSSPFDASEVTEQPVQPTSAVMGTGGSFLSPQYQRASSASRTNLAP
+                     NNTSTSSLMKPESSLYLGNSNKSYSHFNNNGSNENARNNNPYL"
+     gene            <48564..>51707
+                     /gene="OAF1"
+                     /locus_tag="YAL051W"
+                     /gene_synonym="YAF1"
+                     /db_xref="GeneID:851247"
+     mRNA            <48564..>51707
+                     /gene="OAF1"
+                     /locus_tag="YAL051W"
+                     /gene_synonym="YAF1"
+                     /product="oleate-activated transcription factor OAF1"
+                     /transcript_id="NM_001178195.2"
+                     /db_xref="GeneID:851247"
+     CDS             48564..51707
+                     /gene="OAF1"
+                     /locus_tag="YAL051W"
+                     /gene_synonym="YAF1"
+                     /note="Oleate-activated transcription factor; subunit of a
+                     heterodimeric complex with Pip2p, which binds to
+                     oleate-response elements (ORE) in the promoter of genes
+                     involved in beta-oxidation of fatty acids, peroxisome
+                     organization and biogenesis, activating transcription in
+                     the presence of oleate; regulates chromatin silencing at
+                     telomeres; involved in diauxic shift; OAF1 has a paralog,
+                     PIP2, that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="oleate-activated transcription factor OAF1"
+                     /protein_id="NP_009349.3"
+                     /db_xref="GeneID:851247"
+                     /db_xref="SGD:S000000048"
+                     /translation="MVENSTQKAPHAGNDDNSSTKPYSEAFFLGFNNPTPGLEAEHSS
+                     TSPAPENSETHNRKRNRILFVCQACRKSKTKCDREKPECGRCVKHGLKCVYDVSKQPA
+                     PRIPSKDAIISRLEKDMFYWKDKAMKLLTEREVNESGKRSASPINTNNASGDSPDTKK
+                     QHKMEPIYEQSGNGDINNGTRNDIEINLYRSHPTMIMSKVMKREVKPLSENYIIIQDC
+                     FLKILVTSVFLDTSKNTMIPALTANANITRAQPSVANNLLKLKEMLIRQCQTEDEKNR
+                     VNEFTDRILQNTNSNRNLKIGMLLSMLYNSVGYQYLEDHCPQGGEYSDLLRNLINECE
+                     AILPSYEIIERYKNHFYEYVYPSLPFIELEIFEESLSQTIFPDPNNPSKVQIRMGSTH
+                     LRAKVENLSLLLVILKLSYMSIRFLDHSTADSSFYLSKEIIDKYPIPNDFILLSQRCL
+                     ASENWCACANENIISCLLYIWSFFAFSPEEGDFFLEHPTDVISSLIMMLSTSIGLHRD
+                     PSDFPQLISPSTSDKRTLNHRRILWLSIVTVCSFEASLKGRHSVSPISLMALFLNIKD
+                     PDSLTVYMNRVRGDLSDINNHKLLRIHKFTFKRAQLALLLSDLDNLTMTYYGSFHLHS
+                     IEFIREKIEIFVEENFPIVPLKSVAQDKSDLDDMNVISEMNILSSENSSSFHNRIMNK
+                     LLMLRTSMAVFLHFETLITKDKSIFPFYKKYFMVSCMDALSLINYFNKFFNGEYRHAI
+                     SSLTSFNVTKFIQLALSSTIFSLLGIILRIGLAIHMLSSEVQKLSGTTDPRIKELNTK
+                     VEKFSTLQRDLESALEGIYCSASEHLRFTYFPVFKMLALFDVIVQRMRKGELWHGIFT
+                     MIQMEQMHSRIIKTLSITLGVKLDKKDRLLEELMACNHVANFSVEDIDELNRNIKKEI
+                     QISSGLKPPVNTIDLTNGEPFGNAVPTFTKTWSSSLDNLEKLSSAAAVGQSLDYNSGL
+                     RQGPLAGGGSKEQTPIAGMNNLNNSINATPIVDNSSGSQLPNGFDRGQANNTPFPGYF
+                     GGLDLFDYDFLFGNDFA"
+     gene            complement(<51855..>52595)
+                     /gene="AIM2"
+                     /locus_tag="YAL049C"
+                     /db_xref="GeneID:851248"
+     mRNA            complement(<51855..>52595)
+                     /gene="AIM2"
+                     /locus_tag="YAL049C"
+                     /product="protein AIM2"
+                     /transcript_id="NM_001178194.1"
+                     /db_xref="GeneID:851248"
+     CDS             complement(51855..52595)
+                     /gene="AIM2"
+                     /locus_tag="YAL049C"
+                     /note="Cytoplasmic protein involved in mitochondrial
+                     function or organization; null mutant displays reduced
+                     frequency of mitochondrial genome loss; potential Hsp82p
+                     interactor"
+                     /codon_start=1
+                     /product="protein AIM2"
+                     /protein_id="NP_009350.1"
+                     /db_xref="GeneID:851248"
+                     /db_xref="SGD:S000000047"
+                     /translation="MASNQPGKCCFEGVCHDGTPKGRREEIFGLDTYAAGSTSPKEKV
+                     IVILTDVYGNKFNNVLLTADKFASAGYMVFVPDILFGDAISSDKPIDRDAWFQRHSPE
+                     VTKKIVDGFMKLLKLEYDPKFIGVVGYCFGAKFAVQHISGDGGLANAAAIAHPSFVSI
+                     EEIEAIDSKKPILISAAEEDHIFPANLRHLTEEKLKDNHATYQLDLFSGVAHGFAARG
+                     DISIPAVKYAKEKVLLDQIYWFNHFSNV"
+     gene            complement(<52801..>54789)
+                     /gene="GEM1"
+                     /locus_tag="YAL048C"
+                     /gene_synonym="GON1"
+                     /db_xref="GeneID:851249"
+     mRNA            complement(<52801..>54789)
+                     /gene="GEM1"
+                     /locus_tag="YAL048C"
+                     /gene_synonym="GON1"
+                     /product="ERMES complex Ca(2+)-binding regulatory GTPase
+                     GEM1"
+                     /transcript_id="NM_001178193.1"
+                     /db_xref="GeneID:851249"
+     CDS             complement(52801..54789)
+                     /gene="GEM1"
+                     /locus_tag="YAL048C"
+                     /gene_synonym="GON1"
+                     /EC_number="3.6.5.-"
+                     /note="Outer mitochondrial membrane GTPase, subunit of the
+                     ERMES complex; potential regulatory subunit of the ERMES
+                     complex that links the ER to mitochondria and may promote
+                     inter-organellar calcium and phospholipid exchange as well
+                     as coordinating mitochondrial DNA replication and growth;
+                     cells lacking Gem1p contain collapsed, globular, or
+                     grape-like mitochondria; ortholog of metazoan Miro
+                     GTPases"
+                     /codon_start=1
+                     /product="ERMES complex Ca(2+)-binding regulatory GTPase
+                     GEM1"
+                     /protein_id="NP_009351.1"
+                     /db_xref="GeneID:851249"
+                     /db_xref="SGD:S000000046"
+                     /translation="MTKETIRVVICGDEGVGKSSLIVSLTKAEFIPTIQDVLPPISIP
+                     RDFSSSPTYSPKNTVLIDTSDSDLIALDHELKSADVIWLVYCDHESYDHVSLFWLPHF
+                     RSLGLNIPVILCKNKCDSISNVNANAMVVSENSDDDIDTKVEDEEFIPILMEFKEIDT
+                     CIKTSAKTQFDLNQAFYLCQRAITHPISPLFDAMVGELKPLAVMALKRIFLLSDLNQD
+                     SYLDDNEILGLQKKCFNKSIDVNELNFIKDLLLDISKHDQEYINRKLYVPGKGITKDG
+                     FLVLNKIYAERGRHETTWAILRTFHYTDSLCINDKILHPRLVVPDTSSVELSPKGYRF
+                     LVDIFLKFDIDNDGGLNNQELHRLFKCTPGLPKLWTSTNFPFSTVVNNKGCITLQGWL
+                     AQWSMTTFLNYSTTTAYLVYFGFQEDARLALQVTKPRKMRRRSGKLYRSNINDRKVFN
+                     CFVIGKPCCGKSSLLEAFLGRSFSEEYSPTIKPRIAVNSLELKGGKQYYLILQELGEQ
+                     EYAILENKDKLKECDVICLTYDSSDPESFSYLVSLLDKFTHLQDLPLVFVASKADLDK
+                     QQQRCQIQPDELADELFVNHPLHISSRWLSSLNELFIKITEAALDPGKNTPGLPEETA
+                     AKDVDYRQTALIFGSTVGFVALCSFTLMKLFKSSKFSK"
+     gene            complement(<54989..>56857)
+                     /gene="SPC72"
+                     /locus_tag="YAL047C"
+                     /gene_synonym="LDB4"
+                     /db_xref="GeneID:851250"
+     mRNA            complement(<54989..>56857)
+                     /gene="SPC72"
+                     /locus_tag="YAL047C"
+                     /gene_synonym="LDB4"
+                     /product="gamma-tubulin complex subunit SPC72"
+                     /transcript_id="NM_001178192.2"
+                     /db_xref="GeneID:851250"
+     CDS             complement(54989..56857)
+                     /gene="SPC72"
+                     /locus_tag="YAL047C"
+                     /gene_synonym="LDB4"
+                     /note="Gamma-tubulin small complex (gamma-TuSC) receptor;
+                     recruits the gamma-TuSC complex to the cytoplasmic side of
+                     the SPB, connecting nuclear microtubules to the SPB;
+                     involved in astral microtubule formation, stabilization,
+                     and with Stu2p, anchoring astral MTs at the cytoplasmic
+                     face of the SPB, and regulating plus-end MT dynamics;
+                     regulated by Cdc5 kinase"
+                     /codon_start=1
+                     /product="gamma-tubulin complex subunit SPC72"
+                     /protein_id="NP_009352.2"
+                     /db_xref="GeneID:851250"
+                     /db_xref="SGD:S000000045"
+                     /translation="MVRRWIPSGRHLRNNDNTGDDDDSEFTNSMDSGMSIPSLRDSMT
+                     TRSSHNDPIKPALMNDSNKVKNLEKELTNAKIKIQVLYEYIRRIPNKDGNAPSLGNDT
+                     DFRNSIIEGLNLEINKLKQDLKAKEVEYQDTLQFVQENLENSESIVNTINHLLSFILT
+                     HFNEQDENAHLLDKEERETLEETLELSSDYVLEKMDTLSKFIIQFLQDFLHSKSRAES
+                     KQDKEEFLSLAQSSPAGSQLESRDSPSSKEENTDGGYQNDEIHDSNNHIDTENVMANS
+                     TSLPISAVESRFEKTLDTQLEIVIENLHKEYDQFINSIRLKFEKSQKLEKIIASKLNE
+                     QSHLLDSLELEENSSSVIEKQDHLISQLKEKIESQSVLINNLEKLKEDIIKMKQNEKV
+                     LTKELETQTKINKLKENNWDSYINDLEKQINDLQIDKSEEFHVIQNQLDKLDLENYQL
+                     KNQLNTLDNQKLILSQYESNFIKFNQNLLLHLDSIFNILQKILQESSIAQFDRKMKSI
+                     KSVPNALKNLNLIQPKLESLYTFIETALESIINSYISSLISMETPEQPHQQGNELTAT
+                     PNKELTLRIEELQRRWISERERRKLDANASEARIKALEQENESLRSKLFNLSINNP"
+     gene            complement(<57029..>57385)
+                     /gene="BOL3"
+                     /locus_tag="YAL046C"
+                     /gene_synonym="AIM1"
+                     /db_xref="GeneID:851251"
+     mRNA            complement(<57029..>57385)
+                     /gene="BOL3"
+                     /locus_tag="YAL046C"
+                     /gene_synonym="AIM1"
+                     /product="Bol3p"
+                     /transcript_id="NM_001178191.1"
+                     /db_xref="GeneID:851251"
+     CDS             complement(57029..57385)
+                     /gene="BOL3"
+                     /locus_tag="YAL046C"
+                     /gene_synonym="AIM1"
+                     /note="Protein involved in Fe-S cluster transfer to
+                     mitochondrial clients; protects [4Fe-4S] clusters from
+                     damage due to oxidative stress by acting along with Nfu1p
+                     at a late step in the transfer of [4Fe-4S] clusters from
+                     the ISA complex to mitochondrial client proteins like
+                     lipoate synthase and succinate dehydrogenase; sequence
+                     similarity to human BOLA family member, BOLA3, mutations
+                     of which are associated with Multiple Mitochondria
+                     Dysfunctions Syndrome (MMDS2)"
+                     /codon_start=1
+                     /product="Bol3p"
+                     /protein_id="NP_009353.1"
+                     /db_xref="GeneID:851251"
+                     /db_xref="SGD:S000000044"
+                     /translation="MKLPQTMLRSISVKHVRWPRILTGSKLWYSTQMAMTPEEKMITD
+                     KLQQELEPEVCKVQDVSGGCGSMFAINITSKKFNGLSLIKQHQLVNRILRDDISRWHG
+                     LQLTTKKSTGKGPASS"
+     gene            <57518..>57850
+                     /gene="BOL1"
+                     /locus_tag="YAL044W-A"
+                     /db_xref="GeneID:851252"
+     mRNA            <57518..>57850
+                     /gene="BOL1"
+                     /locus_tag="YAL044W-A"
+                     /product="Bol1p"
+                     /transcript_id="NM_001184453.1"
+                     /db_xref="GeneID:851252"
+     CDS             57518..57850
+                     /gene="BOL1"
+                     /locus_tag="YAL044W-A"
+                     /note="Mitochondrial matrix protein involved in Fe-S
+                     cluster biogenesis; facilitates [4Fe-2S] cluster inception
+                     into mitochondrial proteins such as lipoate synthase and
+                     succinate dehydrogenase; interacts and may function with
+                     Grx5p at an early step in Fe-S cluster biosynthesis; forms
+                     dimeric complexes with Grx5p and Nfu1p that alter the
+                     stability of shared Fe/S clusters; sequence similarity to
+                     human BOLA family member, BOLA1 and S. pombe uvi31, a
+                     putative DNA repair protein"
+                     /codon_start=1
+                     /product="Bol1p"
+                     /protein_id="NP_075206.1"
+                     /db_xref="GeneID:851252"
+                     /db_xref="SGD:S000007586"
+                     /translation="MFKRAMSTDGPVARTILKRLECGFPDYKNFAFGLYNDSHKHKGH
+                     AGVQGNVSAETHFRIEMVSKKFEGLKLPQRHRMVYSLLQDEMAQANGIHALQLSLKTP
+                     QEYESKAK"
+     gene            complement(<57950..>58462)
+                     /gene="GCV3"
+                     /locus_tag="YAL044C"
+                     /db_xref="GeneID:851254"
+     mRNA            complement(<57950..>58462)
+                     /gene="GCV3"
+                     /locus_tag="YAL044C"
+                     /product="glycine decarboxylase subunit H"
+                     /transcript_id="NM_001178189.1"
+                     /db_xref="GeneID:851254"
+     CDS             complement(57950..58462)
+                     /gene="GCV3"
+                     /locus_tag="YAL044C"
+                     /note="H subunit of the mitochondrial glycine
+                     decarboxylase complex; glycine decarboxylase is required
+                     for the catabolism of glycine to 5,10-methylene-THF; also
+                     required for all protein lipoylation; expression is
+                     regulated by levels of 5,10-methylene-THF"
+                     /codon_start=1
+                     /product="glycine decarboxylase subunit H"
+                     /protein_id="NP_009355.3"
+                     /db_xref="GeneID:851254"
+                     /db_xref="SGD:S000000042"
+                     /translation="MLRTTRLWTTRMPTVSKLFLRNSSGNALNKNKLPFLYSSQGPQA
+                     VRYTSQHEWIAVHQDKTAFVGITKYATDALGDATYVELPEVGTEIAQGESLGSIESVK
+                     SASEIYQPADGTVEEINTNLEENPGVVNEDPMGDGWLVKMKLGEGVNVEQVEGLMSLE
+                     QYEKTLVHDD"
+     gene            complement(<58695..>61052)
+                     /gene="PTA1"
+                     /locus_tag="YAL043C"
+                     /gene_synonym="FUN39"
+                     /db_xref="GeneID:851255"
+     mRNA            complement(<58695..>61052)
+                     /gene="PTA1"
+                     /locus_tag="YAL043C"
+                     /gene_synonym="FUN39"
+                     /product="RNA-processing protein PTA1"
+                     /transcript_id="NM_001178188.1"
+                     /db_xref="GeneID:851255"
+     CDS             complement(58695..61052)
+                     /gene="PTA1"
+                     /locus_tag="YAL043C"
+                     /gene_synonym="FUN39"
+                     /note="Subunit of holo-CPF; holo-CPF is a multiprotein
+                     complex and functional homolog of mammalian CPSF, required
+                     for the cleavage and polyadenylation of mRNA and snoRNA 3'
+                     ends; involved in pre-tRNA processing; binds to the
+                     phosphorylated CTD of RNAPII"
+                     /codon_start=1
+                     /product="RNA-processing protein PTA1"
+                     /protein_id="NP_009356.1"
+                     /db_xref="GeneID:851255"
+                     /db_xref="SGD:S000000041"
+                     /translation="MSSAEMEQLLQAKTLAMHNNPTEMLPKVLETTASMYHNGNLSKL
+                     KLPLAKFFTQLVLDVVSMDSPIANTERPFIAAQYLPLLLAMAQSTADVLVYKNIVLIM
+                     CASYPLVLDLVAKTSNQEMFDQLCMLKKFVLSHWRTAYPLRATVDDETDVEQWLAQID
+                     QNIGVKLATIKFISEVVLSQTKSPSGNEINSSTIPDNHPVLNKPALESEAKRLLDMLL
+                     NYLIEEQYMVSSVFIGIINSLSFVIKRRPQTTIRILSGLLRFNVDAKFPLEGKSDLNY
+                     KLSKRFVERAYKNFVQFGLKNQIITKSLSSGSGSSIYSKLTKISQTLHVIGEETKSKG
+                     ILNFDPSKGNSKKTLSRQDKLKYISLWKRQLSALLSTLGVSTKTPTPVSAPATGSSTE
+                     NMLDQLKILQKYTLNKASHQGNTFFNNSPKPISNTYSSVYSLMNSSNSNQDVTQLPND
+                     ILIKLSTEAILQMDSTKLITGLSIVASRYTDLMNTYINSVPSSSSSKRKSDDDDDGND
+                     NEEVGNDGPTANSKKIKMETEPLAEEPEEPEDDDRMQKMLQEEESAQEISGDANKSTS
+                     AIKEIAPPFEPDSLTQDEKLKYLSKLTKKLFELSGRQDTTRAKSSSSSSILLDDDDSS
+                     SWLHVLIRLVTRGIEAQEASDLIREELLGFFIQDFEQRVSLIIEWLNEEWFFQTSLHQ
+                     DPSNYKKWSLRVLESLGPFLENKHRRFFIRLMSELPSLQSDHLEALKPICLDPARSSL
+                     GFQTLKFLIMFRPPVQDTVRDLLHQLKQEDEGLHKQCDSLLDRLK"
+     gene            <61316..>62563
+                     /gene="ERV46"
+                     /locus_tag="YAL042W"
+                     /gene_synonym="FUN9"
+                     /db_xref="GeneID:851256"
+     mRNA            <61316..>62563
+                     /gene="ERV46"
+                     /locus_tag="YAL042W"
+                     /gene_synonym="FUN9"
+                     /product="Erv46p"
+                     /transcript_id="NM_001178187.1"
+                     /db_xref="GeneID:851256"
+     CDS             61316..62563
+                     /gene="ERV46"
+                     /locus_tag="YAL042W"
+                     /gene_synonym="FUN9"
+                     /note="Protein localized to COPII-coated vesicles; forms a
+                     complex with Erv41p; involved in the membrane fusion stage
+                     of transport"
+                     /codon_start=1
+                     /product="Erv46p"
+                     /protein_id="NP_009358.1"
+                     /db_xref="GeneID:851256"
+                     /db_xref="SGD:S000000040"
+                     /translation="MKRSTLLSLDAFAKTEEDVRVRTRAGGLITLSCILTTLFLLVNE
+                     WGQFNSVVTRPQLVVDRDRHAKLELNMDVTFPSMPCDLVNLDIMDDSGEMQLDILDAG
+                     FTMSRLNSEGRPVGDATELHVGGNGDGTAPVNNDPNYCGPCYGAKDQSQNENLAQEEK
+                     VCCQDCDAVRSAYLEAGWAFFDGKNIEQCEREGYVSKINEHLNEGCRIKGSAQINRIQ
+                     GNLHFAPGKPYQNAYGHFHDTSLYDKTSNLNFNHIINHLSFGKPIQSHSKLLGNDKRH
+                     GGAVVATSPLDGRQVFPDRNTHFHQFSYFAKIVPTRYEYLDNVVIETAQFSATFHSRP
+                     LAGGRDKDHPNTLHVRGGIPGMFVFFEMSPLKVINKEQHGQTWSGFILNCITSIGGVL
+                     AVGTVMDKLFYKAQRSIWGKKSQ"
+     gene            <62840..>65404
+                     /gene="CDC24"
+                     /locus_tag="YAL041W"
+                     /gene_synonym="CLS4"
+                     /db_xref="GeneID:851190"
+     mRNA            <62840..>65404
+                     /gene="CDC24"
+                     /locus_tag="YAL041W"
+                     /gene_synonym="CLS4"
+                     /product="Rho family guanine nucleotide exchange factor
+                     CDC24"
+                     /transcript_id="NM_001178186.1"
+                     /db_xref="GeneID:851190"
+     CDS             62840..65404
+                     /gene="CDC24"
+                     /locus_tag="YAL041W"
+                     /gene_synonym="CLS4"
+                     /note="Guanine nucleotide exchange factor (GEF) for
+                     Cdc42p; required for polarity establishment and
+                     maintenance, and mutants have morphological defects in bud
+                     formation and shmooing; relocalizes from nucleus to
+                     cytoplasm upon DNA replication stress; thermosensitivity
+                     of the cdc24-4 mutant in the presence of sorbitol is
+                     functionally complemented by human CDC42"
+                     /codon_start=1
+                     /product="Rho family guanine nucleotide exchange factor
+                     CDC24"
+                     /protein_id="NP_009359.1"
+                     /db_xref="GeneID:851190"
+                     /db_xref="SGD:S000000039"
+                     /translation="MAIQTRFASGTSLSDLKPKPSATSISIPMQNVMNKPVTEQDSLF
+                     HICANIRKRLEVLPQLKPFLQLAYQSSEVLSERQSLLLSQKQHQELLKSNGANRDSSD
+                     LAPTLRSSSISTATSLMSMEGISYTNSNPSATPNMEDTLLTFSMGILPITMDCDPVTQ
+                     LSQLFQQGAPLCILFNSVKPQFKLPVIASDDLKVCKKSIYDFILGCKKHFAFNDEELF
+                     TISDVFANSTSQLVKVLEVVETLMNSSPTIFPSKSKTQQIMNAENQHRHQPQQSSKKH
+                     NEYVKIIKEFVATERKYVHDLEILDKYRQQLLDSNLITSEELYMLFPNLGDAIDFQRR
+                     FLISLEINALVEPSKQRIGALFMHSKHFFKLYEPWSIGQNAAIEFLSSTLHKMRVDES
+                     QRFIINNKLELQSFLYKPVQRLCRYPLLVKELLAESSDDNNTKELEAALDISKNIARS
+                     INENQRRTENHQVVKKLYGRVVNWKGYRISKFGELLYFDKVFISTTNSSSEPEREFEV
+                     YLFEKIIILFSEVVTKKSASSLILKKKSSTSASISASNITDNNGSPHHSYHKRHSNSS
+                     SSNNIHLSSSSAAAIIHSSTNSSDNNSNNSSSSSLFKLSANEPKLDLRGRIMIMNLNQ
+                     IIPQNNRSLNITWESIKEQGNFLLKFKNEETRDNWSSCLQQLIHDLKNEQFKARHHSS
+                     TSTTSSTAKSSSMMSPTTTMNTPNHHNSRQTHDSMASFSSSHMKRVSDVLPKRRTTSS
+                     SFESEIKSISENFKNSIPESSILFRISYNNNSNNTSSSEIFTLLVEKVWNFDDLIMAI
+                     NSKISNTHNNNISPITKIKYQDEDGDFVVLGSDEDWNVAKEMLAENNEKFLNIRLY"
+     gene            complement(<65778..>67520)
+                     /gene="CLN3"
+                     /locus_tag="YAL040C"
+                     /gene_synonym="DAF1; FUN10; WHI1"
+                     /db_xref="GeneID:851191"
+     mRNA            complement(<65778..>67520)
+                     /gene="CLN3"
+                     /locus_tag="YAL040C"
+                     /gene_synonym="DAF1; FUN10; WHI1"
+                     /product="cyclin CLN3"
+                     /transcript_id="NM_001178185.1"
+                     /db_xref="GeneID:851191"
+     CDS             complement(65778..67520)
+                     /gene="CLN3"
+                     /locus_tag="YAL040C"
+                     /gene_synonym="DAF1; FUN10; WHI1"
+                     /note="G1 cyclin involved in cell cycle progression;
+                     activates Cdc28p kinase to promote G1 to S phase
+                     transition; plays a role in regulating transcription of
+                     other G1 cyclins, CLN1 and CLN2; regulated by
+                     phosphorylation and proteolysis; acetyl-CoA induces CLN3
+                     transcription in response to nutrient repletion to promote
+                     cell-cycle entry; cell cycle arrest phenotype of the cln1
+                     cln2 cln3 triple null mutant is complemented by any of
+                     human cyclins CCNA2, CCNB1, CCNC, CCND1, or CCNE1"
+                     /codon_start=1
+                     /product="cyclin CLN3"
+                     /protein_id="NP_009360.1"
+                     /db_xref="GeneID:851191"
+                     /db_xref="SGD:S000000038"
+                     /translation="MAILKDTIIRYANARYATASGTSTATAASVSAASCPNLPLLLQK
+                     RRAIASAKSKNPNLVKRELQAHHSAISEYNNDQLDHYFRLSHTERPLYNLTNFNSQPQ
+                     VNPKMRFLIFDFIMYCHTRLNLSTSTLFLTFTILDKYSSRFIIKSYNYQLLSLTALWI
+                     SSKFWDSKNRMATLKVLQNLCCNQYSIKQFTTMEMHLFKSLDWSICQSATFDSYIDIF
+                     LFQSTSPLSPGVVLSAPLEAFIQQKLALLNNAAGTAINKSSSSQGPSLNINEIKLGAI
+                     MLCELASFNLELSFKYDRSLIALGAINLIKLSLNYYNSNLWENINLALEENCQDLDIK
+                     LSEISNTLLDIAMDQNSFPSSFKSKYLNSNKTSLAKSLLDALQNYCIQLKLEEFYRSQ
+                     ELETMYNTIFAQSFDSDSLTCVYSNATTPKSATVSSAATDYFSDHTHLRRLTKDSISP
+                     PFAFTPTSSSSSPSPFNSPYKTSSSMTTPDSASHHSHSGSFSSTQNSFKRSLSIPQNS
+                     SIFWPSPLTPTTPSLMSNRKLLQNLSVRSKRLFPVRPMATAHPCSAPTQLKKRSTSSV
+                     DCDFNDSSNLKKTR"
+     gene            complement(<68716..>69525)
+                     /gene="CYC3"
+                     /locus_tag="YAL039C"
+                     /db_xref="GeneID:851192"
+     mRNA            complement(<68716..>69525)
+                     /gene="CYC3"
+                     /locus_tag="YAL039C"
+                     /product="holocytochrome c synthase CYC3"
+                     /transcript_id="NM_001178184.1"
+                     /db_xref="GeneID:851192"
+     CDS             complement(68716..69525)
+                     /gene="CYC3"
+                     /locus_tag="YAL039C"
+                     /EC_number="4.4.1.17"
+                     /note="Cytochrome c heme lyase (holocytochrome c
+                     synthase); attaches heme to apo-cytochrome c (Cyc1p or
+                     Cyc7p) in mitochondrial intermembrane space; human homolog
+                     HCCS implicated in microphthalmia with linear skin defects
+                     (MLS), and can complement yeast null mutant"
+                     /codon_start=1
+                     /product="holocytochrome c synthase CYC3"
+                     /protein_id="NP_009361.1"
+                     /db_xref="GeneID:851192"
+                     /db_xref="SGD:S000000037"
+                     /translation="MGWFWADQKTTGKDIGGAAVSSMSGCPVMHESSSSSPPSSECPV
+                     MQGDNDRINPLNNMPELAASKQPGQKMDLPVDRTISSIPKSPDSNEFWEYPSPQQMYN
+                     AMVRKGKIGGSGEVAEDAVESMVQVHNFLNEGCWQEVLEWEKPHTDESHVQPKLLKFM
+                     GKPGVLSPRARWMHLCGLLFPSHFSQELPFDRHDWIVLRGERKAEQQPPTFKEVRYVL
+                     DFYGGPDDENGMPTFHVDVRPALDSLDNAKDRMTRFLDRMISGPSSSSSAP"
+     rep_origin      70300..70469
+                     /note="ARS106;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000118318"
+     gene            <71786..>73288
+                     /gene="CDC19"
+                     /locus_tag="YAL038W"
+                     /gene_synonym="PYK1"
+                     /db_xref="GeneID:851193"
+     mRNA            <71786..>73288
+                     /gene="CDC19"
+                     /locus_tag="YAL038W"
+                     /gene_synonym="PYK1"
+                     /product="pyruvate kinase CDC19"
+                     /transcript_id="NM_001178183.1"
+                     /db_xref="GeneID:851193"
+     CDS             71786..73288
+                     /gene="CDC19"
+                     /locus_tag="YAL038W"
+                     /gene_synonym="PYK1"
+                     /EC_number="2.7.1.40"
+                     /note="Pyruvate kinase; functions as a homotetramer in
+                     glycolysis to convert phosphoenolpyruvate to pyruvate, the
+                     input for aerobic (TCA cycle) or anaerobic (glucose
+                     fermentation) respiration; regulated via allosteric
+                     activation by fructose bisphosphate; CDC19 has a paralog,
+                     PYK2, that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="pyruvate kinase CDC19"
+                     /protein_id="NP_009362.1"
+                     /db_xref="GeneID:851193"
+                     /db_xref="SGD:S000000036"
+                     /translation="MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAG
+                     LNIVRMNFSHGSYEYHKSVIDNARKSEELYPGRPLAIALDTKGPEIRTGTTTNDVDYP
+                     IPPNHEMIFTTDDKYAKACDDKIMYVDYKNITKVISAGRIIYVDDGVLSFQVLEVVDD
+                     KTLKVKALNAGKICSHKGVNLPGTDVDLPALSEKDKEDLRFGVKNGVHMVFASFIRTA
+                     NDVLTIREVLGEQGKDVKIIVKIENQQGVNNFDEILKVTDGVMVARGDLGIEIPAPEV
+                     LAVQKKLIAKSNLAGKPVICATQMLESMTYNPRPTRAEVSDVGNAILDGADCVMLSGE
+                     TAKGNYPINAVTTMAETAVIAEQAIAYLPNYDDMRNCTPKPTSTTETVAASAVAAVFE
+                     QKAKAIIVLSTSGTTPRLVSKYRPNCPIILVTRCPRAARFSHLYRGVFPFVFEKEPVS
+                     DWTDDVEARINFGIEKAKEFGILKKGDTYVSIQGFKAGAGHSNTLQVSTV"
+     gene            complement(<73426..>73518)
+                     /locus_tag="YAL037C-A"
+                     /db_xref="GeneID:1466428"
+     mRNA            complement(<73426..>73518)
+                     /locus_tag="YAL037C-A"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001184629.1"
+                     /db_xref="GeneID:1466428"
+     CDS             complement(73426..73518)
+                     /locus_tag="YAL037C-A"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_878040.1"
+                     /db_xref="GeneID:1466428"
+                     /db_xref="SGD:S000028732"
+                     /translation="MSISFPKMQHLIVMTTIGDKKVNNNIILFL"
+     gene            <74020..>74823
+                     /locus_tag="YAL037W"
+                     /db_xref="GeneID:851194"
+     mRNA            <74020..>74823
+                     /locus_tag="YAL037W"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001178182.1"
+                     /db_xref="GeneID:851194"
+     CDS             74020..74823
+                     /locus_tag="YAL037W"
+                     /note="hypothetical protein; YAL037W has a paralog,
+                     YOR342C, that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009363.1"
+                     /db_xref="GeneID:851194"
+                     /db_xref="SGD:S000000035"
+                     /translation="MDMEIEDSSPIDDLKLQKLDTNVYFGPCEILTQPILLQYENIKF
+                     IIGVNLSTEKIASFYTQYFRNSNSVVVNLCSPTTAAVATKKAAIDLYIRNNTILLQKF
+                     VGQYLQMGKKIKTSLTQAQTDTIQSLPQFCNSNVLSGEPLVQYQAFNDLLALFKSFSH
+                     FGNILVISSHSYDCALLKFLISRVMTYYPLVTIQDSLQYMKATLNISISTSDEFDILN
+                     DKELWEFGQTQEILKRRQTSSVKRRCVNLPENSTIDNRMLMGTTKRGRF"
+     gene            complement(<75043..>76152)
+                     /gene="RBG1"
+                     /locus_tag="YAL036C"
+                     /gene_synonym="FUN11"
+                     /db_xref="GeneID:851195"
+     mRNA            complement(<75043..>76152)
+                     /gene="RBG1"
+                     /locus_tag="YAL036C"
+                     /gene_synonym="FUN11"
+                     /product="GTP-binding protein RBG1"
+                     /transcript_id="NM_001178181.1"
+                     /db_xref="GeneID:851195"
+     CDS             complement(75043..76152)
+                     /gene="RBG1"
+                     /locus_tag="YAL036C"
+                     /gene_synonym="FUN11"
+                     /note="Member of the DRG family of GTP-binding proteins;
+                     associates with translating ribosomes; interacts with
+                     Tma46p, Ygr250cp, Gir2p and Yap1p via two-hybrid"
+                     /codon_start=1
+                     /product="GTP-binding protein RBG1"
+                     /protein_id="NP_009364.1"
+                     /db_xref="GeneID:851195"
+                     /db_xref="SGD:S000000034"
+                     /translation="MSTTVEKIKAIEDEMARTQKNKATSFHLGQLKAKLAKLRRELLT
+                     SASSGSGGGAGIGFDVARTGVASVGFVGFPSVGKSTLLSKLTGTESEAAEYEFTTLVT
+                     VPGVIRYKGAKIQMLDLPGIIDGAKDGRGRGKQVIAVARTCNLLFIILDVNKPLHHKQ
+                     IIEKELEGVGIRLNKTPPDILIKKKEKGGISITNTVPLTHLGNDEIRAVMSEYRINSA
+                     EIAFRCDATVDDLIDVLEASSRRYMPAIYVLNKIDSLSIEELELLYRIPNAVPISSGQ
+                     DWNLDELLQVMWDRLNLVRIYTKPKGQIPDFTDPVVLRSDRCSVKDFCNQIHKSLVDD
+                     FRNALVYGSSVKHQPQYVGLSHILEDEDVVTILKK"
+     gene            <76427..>79435
+                     /gene="FUN12"
+                     /locus_tag="YAL035W"
+                     /gene_synonym="yIF2"
+                     /db_xref="GeneID:851196"
+     mRNA            <76427..>79435
+                     /gene="FUN12"
+                     /locus_tag="YAL035W"
+                     /gene_synonym="yIF2"
+                     /product="translation initiation factor eIF5B"
+                     /transcript_id="NM_001178180.1"
+                     /db_xref="GeneID:851196"
+     CDS             76427..79435
+                     /gene="FUN12"
+                     /locus_tag="YAL035W"
+                     /gene_synonym="yIF2"
+                     /EC_number="3.6.5.3"
+                     /note="Translation initiation factor eIF5B; GTPase that
+                     promotes Met-tRNAiMet binding to ribosomes and ribosomal
+                     subunit joining; promotes GTP-dependent maturation of 18S
+                     rRNA by Nob1p; protein abundance increases in response to
+                     DNA replication stress; homolog of bacterial IF2"
+                     /codon_start=1
+                     /product="translation initiation factor eIF5B"
+                     /protein_id="NP_009365.1"
+                     /db_xref="GeneID:851196"
+                     /db_xref="SGD:S000000033"
+                     /translation="MAKKSKKNQQNYWDEEFEEDAAQNEEISATPTPNPESSAGADDT
+                     SREASASAEGAEAIEGDFMSTLKQSKKKQEKKVIEEKKDGKPILKSKKEKEKEKKEKE
+                     KQKKKEQAARKKAQQQAQKEKNKELNKQNVEKAAAEKAAAEKSQKSKGESDKPSASAK
+                     KPAKKVPAGLAALRRQLELKKQLEEQEKLEREEEERLEKEEEERLANEEKMKEEAKAA
+                     KKEKEKAKREKRKAEGKLLTRKQKEEKKLLERRRAALLSSGNVKVAGLAKKDGEENKP
+                     KKVVYSKKKKRTTQENASEAIKSDSKKDSEVVPDDELKESEDVLIDDWENLALGDDDE
+                     EGTNEETQESTASHENEDQNQGEEEEEGEEEEEEEEERAHVHEVAKSTPAATPAATPT
+                     PSSASPNKKDLRSPICCILGHVDTGKTKLLDKIRQTNVQGGEAGGITQQIGATYFPID
+                     AIKAKTKVMAEYEKQTFDVPGLLVIDTPGHESFSNLRSRGSSLCNIAILVIDIMHGLE
+                     QQTIESIKLLRDRKAPFVVALNKIDRLYDWKAIPNNSFRDSFAKQSRAVQEEFQSRYS
+                     KIQLELAEQGLNSELYFQNKNMSKYVSIVPTSAVTGEGVPDLLWLLLELTQKRMSKQL
+                     MYLSHVEATILEVKVVEGFGTTIDVILSNGYLREGDRIVLCGMNGPIVTNIRALLTPQ
+                     PLRELRLKSEYVHHKEVKAALGVKIAANDLEKAVSGSRLLVVGPEDDEDELMDDVMDD
+                     LTGLLDSVDTTGKGVVVQASTLGSLEALLDFLKDMKIPVMSIGLGPVYKRDVMKASTM
+                     LEKAPEYAVMLCFDVKVDKEAEQYAEQEGIKIFNADVIYHLFDSFTAYQEKLLEERRK
+                     DFLDYAIFPCVLQTLQIINKRGPMIIGVDVLEGTLRVGTPICAVKTDPTTKERQTLIL
+                     GKVISLEINHQPVQEVKKGQTAAGVAVRLEDPSGQQPIWGRHVDENDTLYSLVSRRSI
+                     DTLKDKAFRDQVARSDWLLLKKLKVVFGIE"
+     gene            <79718..>80587
+                     /gene="MTW1"
+                     /locus_tag="YAL034W-A"
+                     /gene_synonym="DSN3; NSL2"
+                     /db_xref="GeneID:851197"
+     mRNA            <79718..>80587
+                     /gene="MTW1"
+                     /locus_tag="YAL034W-A"
+                     /gene_synonym="DSN3; NSL2"
+                     /product="MIND complex subunit MTW1"
+                     /transcript_id="NM_001178179.1"
+                     /db_xref="GeneID:851197"
+     CDS             79718..80587
+                     /gene="MTW1"
+                     /locus_tag="YAL034W-A"
+                     /gene_synonym="DSN3; NSL2"
+                     /note="Essential component of the MIND kinetochore
+                     complex; joins kinetochore subunits contacting DNA to
+                     those contacting microtubules; critical to kinetochore
+                     assembly; complex consists of Mtw1p Including
+                     Nnf1p-Nsl1p-Dsn1p (MIND)"
+                     /codon_start=1
+                     /product="MIND complex subunit MTW1"
+                     /protein_id="NP_009367.1"
+                     /db_xref="GeneID:851197"
+                     /db_xref="SGD:S000000032"
+                     /translation="MSAPTMRSTSILTEHLGYPPISLVDDIINAVNEIMYKCTAAMEK
+                     YLLSKSKIGEEDYGEEIKSGVAKLESLLENSVDKNFDKLELYVLRNVLRIPEEYLDAN
+                     VFRLENQKDLVIVDENELKKSEEKLREKVNDVELAFKKNEMLLKRVTKVKRLLFTIRG
+                     FKQKLNELLKCKDDVQLQKILESLKPIDDTMTLLTDSLRKLYVDSESTSSTEEVEALL
+                     QRLKTNGKQNNKDFRTRYIDIRTNNVLRKLGLLGDKEDEKQSAKPDARTQAGDIVSID
+                     IEEPQLDLLDDVL"
+     gene            complement(<80710..>81951)
+                     /gene="FUN19"
+                     /locus_tag="YAL034C"
+                     /db_xref="GeneID:851199"
+     mRNA            complement(<80710..>81951)
+                     /gene="FUN19"
+                     /locus_tag="YAL034C"
+                     /product="Fun19p"
+                     /transcript_id="NM_001180035.1"
+                     /db_xref="GeneID:851199"
+     CDS             complement(80710..81951)
+                     /gene="FUN19"
+                     /locus_tag="YAL034C"
+                     /note="Non-essential hypothetical protein; expression
+                     induced in response to heat stress; FUN19 has a paralog,
+                     YOR338W, that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="Fun19p"
+                     /protein_id="NP_009368.2"
+                     /db_xref="GeneID:851199"
+                     /db_xref="SGD:S000002134"
+                     /translation="MGLYSPESEKSQLNMNYIGKDDSQSIFRRLNQNLKASNNNNDSN
+                     KNGLNMSDYSNNSPYGRSYDVRINQNSQNNGNGCFSGSIDSLVDEHIIPSPPLSPKLE
+                     SKISHNGSPRMASSVLVGSTPKGAVENVLFVKPVWPNGLSRKRYRYATYGFLSQYKIF
+                     SNLAQPYSKNIINRYNNLAYNARHKYSKYNDDMTPPPLPSSSSRLPSPLASPNLNRQA
+                     RYNMRKQALYNNNLGKFESDTEWIPRKRKVYSPQRRTMTTSPHRAKKFSPSASTPHTN
+                     IASIEAIHDAPQYIPNVSWKKLPDYSPPLSTLPTDSNKSLKIEWKGSPMDLSTDPLRN
+                     ELHPAELVLAQTLRLPCDLYLDSKRRLFLEKVYRLKKGLPFRRTDAQKACRIDVNKAS
+                     RLFQAFEKVGWLQDSNFTKYL"
+     gene            <82706..>83227
+                     /gene="POP5"
+                     /locus_tag="YAL033W"
+                     /gene_synonym="FUN53"
+                     /db_xref="GeneID:851200"
+     mRNA            <82706..>83227
+                     /gene="POP5"
+                     /locus_tag="YAL033W"
+                     /gene_synonym="FUN53"
+                     /product="RNA-binding protein POP5"
+                     /transcript_id="NM_001178178.1"
+                     /db_xref="GeneID:851200"
+     CDS             82706..83227
+                     /gene="POP5"
+                     /locus_tag="YAL033W"
+                     /gene_synonym="FUN53"
+                     /EC_number="3.1.26.5"
+                     /note="Subunit of both RNase MRP and nuclear RNase P;
+                     RNase MRP cleaves pre-rRNA, while nuclear RNase P cleaves
+                     tRNA precursors to generate mature 5' ends and facilitates
+                     turnover of nuclear RNAs"
+                     /codon_start=1
+                     /product="RNA-binding protein POP5"
+                     /protein_id="NP_009369.1"
+                     /db_xref="GeneID:851200"
+                     /db_xref="SGD:S000000031"
+                     /translation="MVRLKSRYILFEIIFPPTDTNVEESVSKADILLSHHRASPADVS
+                     IKSILQEIRRSLSLNLGDYGSAKCNSLLQLKYFSNKTSTGIIRCHREDCDLVIMALML
+                     MSKIGDVDGLIVNPVKVSGTIKKIEQFAMRRNSKILNIIKCSQSSHLSDNDFIINDFK
+                     KIGRENENENEDD"
+     gene            complement(<83335..>84474)
+                     /gene="PRP45"
+                     /locus_tag="YAL032C"
+                     /gene_synonym="FUN20"
+                     /db_xref="GeneID:851201"
+     mRNA            complement(<83335..>84474)
+                     /gene="PRP45"
+                     /locus_tag="YAL032C"
+                     /gene_synonym="FUN20"
+                     /product="mRNA splicing protein PRP45"
+                     /transcript_id="NM_001178177.1"
+                     /db_xref="GeneID:851201"
+     CDS             complement(83335..84474)
+                     /gene="PRP45"
+                     /locus_tag="YAL032C"
+                     /gene_synonym="FUN20"
+                     /note="Protein required for pre-mRNA splicing; associates
+                     with the spliceosome and interacts with splicing factors
+                     Prp22p and Prp46p; orthologous to human transcriptional
+                     coactivator SKIP and can activate transcription of a
+                     reporter gene"
+                     /codon_start=1
+                     /product="mRNA splicing protein PRP45"
+                     /protein_id="NP_009370.1"
+                     /db_xref="GeneID:851201"
+                     /db_xref="SGD:S000000030"
+                     /translation="MFSNRLPPPKHSQGRVSTALSSDRVEPAILTDQIAKNVKLDDFI
+                     PKRQSNFELSVPLPTKAEIQECTARTKSYIQRLVNAKLANSNNRASSRYVTETHQAPA
+                     NLLLNNSHHIEVVSKQMDPLLPRFVGKKARKVVAPTENDEVVPVLHMDGSNDRGEADP
+                     NEWKIPAAVSNWKNPNGYTVALERRVGKALDNENNTINDGFMKLSEALENADKKARQE
+                     IRSKMELKRLAMEQEMLAKESKLKELSQRARYHNGTPQTGAIVKPKKQTSTVARLKEL
+                     AYSQGRDVSEKIILGAAKRSEQPDLQYDSRFFTRGANASAKRHEDQVYDNPLFVQQDI
+                     ESIYKTNYEKLDEAVNVKSEGASGSHGPIQFTKAESDDKSDNYGA"
+     gene            complement(<84749..>87031)
+                     /gene="GIP4"
+                     /locus_tag="YAL031C"
+                     /gene_synonym="FUN21"
+                     /db_xref="GeneID:851202"
+     mRNA            complement(<84749..>87031)
+                     /gene="GIP4"
+                     /locus_tag="YAL031C"
+                     /gene_synonym="FUN21"
+                     /product="protein phosphatase regulator GIP4"
+                     /transcript_id="NM_001178176.1"
+                     /db_xref="GeneID:851202"
+     CDS             complement(84749..87031)
+                     /gene="GIP4"
+                     /locus_tag="YAL031C"
+                     /gene_synonym="FUN21"
+                     /note="Cytoplasmic protein that regulates protein
+                     phosphatase 1 Glc7p; protein overexpression relocalizes
+                     Glc7p from the nucleus and prevents chromosome
+                     segregation; potential Cdc28p substrate"
+                     /codon_start=1
+                     /product="protein phosphatase regulator GIP4"
+                     /protein_id="NP_009371.1"
+                     /db_xref="GeneID:851202"
+                     /db_xref="SGD:S000000029"
+                     /translation="MVDVQKRKKLLAKAAASASIPAIKGSVPLDSYDIKIIQYKNALY
+                     KLNELNRLLNVLVPHLKKKRDNDESYKIIPLVNFILSLCEGPIFNVSPVLAKRYHLLC
+                     RFQLIKLSEVQQRLSTNFIDVEGWMFPEEVPLDHYKSCIYNNSLQWKILNSLSCIAQN
+                     AIKIYNAKLRQILLERDAYKARSLPFDTSIIEDLLNPVEMTLILDLAVLINDPVRDKS
+                     THSFYKLQWQVMEKLNSCVHSKIFPILRTYYNQLQKFSETRPTSLSNLQKDLPHWEWT
+                     LHRIYTFHLRVFSVLCVIISFSRQIFLPNKQHFLDIKTRLSSENVYHYDLIICELMAL
+                     LSPECDDVTALFELQENLKFWTQTARTDNNSSRTPIFHLQPGLVVELFNNHICKIIPK
+                     LRSIMGLLSNWMDCWKYIEKNYKTFDETNDLRENLKEKLERDKALYLEVKNAKSKLKK
+                     KPSITKLPASSSPSPSPTSSASPSRQASLESIRTRARAHLASNSSRSPSVSPVRTTFN
+                     NKNAETKKSVVSPEKRKLINGRRPRSSSLQSYTNKQQTSYLNSTRHPSIAPPSKLNNQ
+                     RSNSLQSSTMTLNQKIVQDTVRHLMNKSASTPNPSASSSLAPSPKVSSINNTSSGKSS
+                     STLIANSSDTLAIETLTLDPESNSSELSIKRVRFAGVPPMTEAENPKPTKVGWYKKPA
+                     VLHYPPIPASAMIKPLQHKSKYNTLRQEEGFTFRKSLRDGLEWENGESGSETTMMPFG
+                     IEIKESTGHRIASKIRSKLR"
+     gene            <87286..>87752
+                     /gene="SNC1"
+                     /locus_tag="YAL030W"
+                     /db_xref="GeneID:851203"
+     mRNA            join(<87286..87387,87501..>87752)
+                     /gene="SNC1"
+                     /locus_tag="YAL030W"
+                     /product="SNAP receptor SNC1"
+                     /transcript_id="NM_001178175.1"
+                     /db_xref="GeneID:851203"
+     CDS             join(87286..87387,87501..87752)
+                     /gene="SNC1"
+                     /locus_tag="YAL030W"
+                     /note="Vesicle membrane receptor protein (v-SNARE);
+                     involved in the fusion between Golgi-derived secretory
+                     vesicles with the plasma membrane; proposed to be involved
+                     in endocytosis; member of the synaptobrevin/VAMP family of
+                     R-type v-SNARE proteins; SNC1 has a paralog, SNC2, that
+                     arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="SNAP receptor SNC1"
+                     /protein_id="NP_009372.1"
+                     /db_xref="GeneID:851203"
+                     /db_xref="SGD:S000000028"
+                     /translation="MSSSTPFDPYALSEHDEERPQNVQSKSRTAELQAEIDDTVGIMR
+                     DNINKVAERGERLTSIEDKADNLAVSAQGFKRGANRVRKAMWYKDLKMKMCLALVIII
+                     LLVVIIVPIAVHFSR"
+     gene            complement(<87855..>92270)
+                     /gene="MYO4"
+                     /locus_tag="YAL029C"
+                     /gene_synonym="FUN22; SHE1"
+                     /db_xref="GeneID:851204"
+     mRNA            complement(<87855..>92270)
+                     /gene="MYO4"
+                     /locus_tag="YAL029C"
+                     /gene_synonym="FUN22; SHE1"
+                     /product="myosin 4"
+                     /transcript_id="NM_001178174.1"
+                     /db_xref="GeneID:851204"
+     CDS             complement(87855..92270)
+                     /gene="MYO4"
+                     /locus_tag="YAL029C"
+                     /gene_synonym="FUN22; SHE1"
+                     /note="Type V myosin motor involved in actin-based
+                     transport of cargos; required for mRNA transport,
+                     including ASH1 mRNA, and facilitating the growth and
+                     movement of ER tubules into the growing bud along with
+                     She3p; MYO4 has a paralog, MYO2, that arose from the whole
+                     genome duplication"
+                     /codon_start=1
+                     /product="myosin 4"
+                     /protein_id="NP_009373.1"
+                     /db_xref="GeneID:851204"
+                     /db_xref="SGD:S000000027"
+                     /translation="MSFEVGTKCWYPHKEQGWIGGEVTKNDFFEGTFHLELKLEDGET
+                     VSIETNSFENDDDHPTLPVLRNPPILESTDDLTTLSYLNEPAVLHAIKKRYMNGQIYT
+                     YSGIVLIAANPFDKVDHLYSREMIQNYSSKRKDELEPHLFAIAEEAYRFMVHEKANQT
+                     VVVSGESGAGKTVSAKYIMRYFASVQESNNREGEVEMSQIESQILATNPIMEAFGNAK
+                     TTRNDNSSRFGKYLQILFDENTTIRGSKIRTYLLEKSRLVYQPETERNYHIFYQILEG
+                     LPEPVKQELHLSSPKDYHYTNQGGQPNIAGIDEAREYKITTDALSLVGINHETQLGIF
+                     KILAGLLHIGNIEMKMTRNDASLSSEEQNLQIACELLGIDPFNFAKWIVKKQIVTRSE
+                     KIVTNLNYNQALIARDSVAKFIYSTLFDWLVDNINKTLYDPELDQQDHVFSFIGILDI
+                     YGFEHFEKNSFEQFCINYANEKLQQEFNQHVFKLEQEEYVKEEIEWSFIEFSDNQPCI
+                     DLIENKLGILSLLDEESRLPSGSDESWASKLYSAFNKPPSNEVFSKPRFGQTKFIVSH
+                     YAVDVEYEVEGFIEKNRDSVSLGHLDVFKATTNPIFKQILDNRELRSDDAPEEQNTEK
+                     KIMIPARLSQKKPTLGSMFKKSLGELMAIINSTNVHYIRCIKPNSEKKPWEFDNLMVL
+                     SQLRACGVLETIRISCAGFPSRWTFDEFVQRYFLLTDYSLWSGILYNPDLPKEAIVNF
+                     CQSILDATISDSAKYQIGNTKIFFKAGMLAFLEKLRTNKMNEICIIIQKKIRARYYRL
+                     QYLQTMESIKKCQSQIRSLLVRTRVDHELKTRAAILLQTNIRALWKREYYRAAIGQII
+                     KLQCTCKRKLILDSVNRKFMLMAAVIIQSYIRSYGHKTDYRTLKRSSILVQSAMRMQL
+                     ARRRYIVLQKEVEERNIRASYGIGLLEEAIEFKNSFILNLEMLNDSYTRLTQLLQGDL
+                     SNIPSKQRQEYETIVNGYNDKISKLKTLQVEIMNTLNKKNALKERKKKQSSLIQSHMQ
+                     SLAAIKGNKPSRLSDEVKSMKQELAFIENVIAQDFTTTYSANKNDKVKGLGIAGQQVK
+                     PKLVNVIRRESGNPDLLELLMDLNCYTLEVTEGYLKKVNVTEVNGDNVLGPIHVITTV
+                     VSSLVRNGLLIQSSKFISKVLLTVESIVMSLPKDETMLGGIFWLSNLSRLPAFAANQK
+                     TLYEANGGDEKDKLTLIYLNDLENETLKVFDKIYSTWLVKFMKHASAHIEIFDMVLNE
+                     KLFKNSGDEKFAKLFTFLNEFDAVLCKFQVVDSMHTKIFNDTLKYLNVMLFNDLITKC
+                     PALNWKYGYEVDRNIERLVSWFEPRIEDVRPNLIQIIQAVKILQLKISNLNEFKLLFD
+                     FWYALNPAQIQAILLKYKPANKGEAGVPNEILNYLANVIKRENLSLPGKMEIMLSAQF
+                     DSAKNHLRYDTSAITQNSNTEGLATVSKIIKLDRK"
+     gene            <92900..>94486
+                     /gene="FRT2"
+                     /locus_tag="YAL028W"
+                     /gene_synonym="HPH2"
+                     /db_xref="GeneID:851205"
+     mRNA            <92900..>94486
+                     /gene="FRT2"
+                     /locus_tag="YAL028W"
+                     /gene_synonym="HPH2"
+                     /product="Frt2p"
+                     /transcript_id="NM_001178173.1"
+                     /db_xref="GeneID:851205"
+     CDS             92900..94486
+                     /gene="FRT2"
+                     /locus_tag="YAL028W"
+                     /gene_synonym="HPH2"
+                     /note="Tail-anchored ER membrane hypothetical protein;
+                     interacts with homolog Frt1p; promotes growth in
+                     conditions of high Na+, alkaline pH, or cell wall stress,
+                     possibly via a role in posttranslational translocation;
+                     potential Cdc28p substrate; FRT2 has a paralog, FRT1, that
+                     arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="Frt2p"
+                     /protein_id="NP_009374.1"
+                     /db_xref="GeneID:851205"
+                     /db_xref="SGD:S000000026"
+                     /translation="MQNAQIKSSSKGSGIDGTDRNSKDGVEKRPLEDVKQMIDAGTPD
+                     VGHKSTVETKPNVGWQASHSNLAALHEKEQKYEMEHHHARHKLHRQVIPDYTSASTAM
+                     FSDCMFNAAPDKVRSLSTMKSSGLSPKHPFNVVATFKGPFPQHSVESKPLDGGYSAKD
+                     HFPSFKMLQAQQHPAHRHYKDNDKYGLKSPSRSFVKDKKRLVHRFLKSMEPSSSGQSK
+                     DSSALAPAFDPILPNVISKPSKRPTHHSHSSDGSSSTQTDISLQSLLYHDLESSPKKH
+                     VSPSRPPSVASESSPAVANPIGLSPKDACNASFSQSSSSSLSSSSSSSSSTSFSQSVA
+                     VDPLEPPGNITYSSSNLSLNSDELDYYQRHIGLQLQQTEALLKHSLKDEVLKDENDLV
+                     KNIANFDKIVKELRDLRSRTIGWKELVEEDYLMNLKQDFDKENPESFEARLSDTINTN
+                     VAKLQDLEKRMASCKDRLASRKEVMRKMESLLSLENSLMISKKNVTFASKYRNEALDI
+                     VFLIIIIVICYTFKHLVSHK"
+     gene            <94687..>95472
+                     /gene="SAW1"
+                     /locus_tag="YAL027W"
+                     /db_xref="GeneID:851206"
+     mRNA            <94687..>95472
+                     /gene="SAW1"
+                     /locus_tag="YAL027W"
+                     /product="DNA-binding protein SAW1"
+                     /transcript_id="NM_001178172.1"
+                     /db_xref="GeneID:851206"
+     CDS             94687..95472
+                     /gene="SAW1"
+                     /locus_tag="YAL027W"
+                     /note="5'- and 3'-flap DNA binding protein; recruits
+                     Rad1p-Rad10p to single-strand annealing intermediates with
+                     3' non-homologous tails for removal during double-strand
+                     break repair; complexes with Rad1p-Rad10p and stimulates
+                     its endonuclease activity; green fluorescent protein
+                     (GFP)-fusion protein localizes to the nucleus"
+                     /codon_start=1
+                     /product="DNA-binding protein SAW1"
+                     /protein_id="NP_009375.1"
+                     /db_xref="GeneID:851206"
+                     /db_xref="SGD:S000000025"
+                     /translation="MAPSIATVKIARDMVLPLRIFVNRKQILQTNDKTSNKSNATIFE
+                     APLLSNNSIICLKSPNTRIYLSQQDKKNLCDEIKEDLLLIVYELASPEIISSVLSKIR
+                     VGHSTDFQINVLPKLFAGADTDNAVTSHIQSVTRLAKFKYKLHYKHKWELDIFINSIK
+                     KIANLRHYLMFQTLTLNGFSLNAGPKTLLARKIEKQPQVPNLLIENGDADALDTPVEE
+                     DIKPVIEFMYKPVINLGEIIDVHVLHRPRRHKVRTQSKQPQEE"
+     gene            complement(<95630..>99697)
+                     /gene="DRS2"
+                     /locus_tag="YAL026C"
+                     /gene_synonym="FUN38; SWA3"
+                     /db_xref="GeneID:851207"
+     mRNA            complement(<95630..>99697)
+                     /gene="DRS2"
+                     /locus_tag="YAL026C"
+                     /gene_synonym="FUN38; SWA3"
+                     /product="aminophospholipid-translocating P4-type ATPase
+                     DRS2"
+                     /transcript_id="NM_001178171.2"
+                     /db_xref="GeneID:851207"
+     CDS             complement(95630..99697)
+                     /gene="DRS2"
+                     /locus_tag="YAL026C"
+                     /gene_synonym="FUN38; SWA3"
+                     /EC_number="7.6.2.1"
+                     /note="Trans-golgi network aminophospholipid translocase
+                     (flippase); maintains membrane lipid asymmetry in
+                     post-Golgi secretory vesicles; contributes to
+                     clathrin-coated vesicle formation, endocytosis, protein
+                     trafficking between the Golgi and endosomal system and the
+                     cellular response to mating pheromone; autoinhibited by
+                     its C-terminal tail; localizes to the trans-Golgi network;
+                     mutations in human homolog ATP8B1 result in liver disease"
+                     /codon_start=1
+                     /product="aminophospholipid-translocating P4-type ATPase
+                     DRS2"
+                     /protein_id="NP_009376.2"
+                     /db_xref="GeneID:851207"
+                     /db_xref="SGD:S000000024"
+                     /translation="MNDDRETPPKRKPGEDDTLFDIDFLDDTTSHSGSRSKVTNSHAN
+                     ANYIPPSHVLPEETIDLDADDDNIENDVHENLFMSNNHDDQTSWNANRFDSDAYQPQS
+                     LRAVKPPGLFARFGNGLKNAFTFKRKKGPESFEMNHYNAVTNNELDDNYLDSRNKFNI
+                     KILFNRYILRKNVGDAEGNGEPRVIHINDSLANSSFGYSDNHISTTKYNFATFLPKFL
+                     FQEFSKYANLFFLCTSAIQQVPHVSPTNRYTTIGTLLVVLIVSAMKECIEDIKRANSD
+                     KELNNSTAEIFSEAHDDFVEKRWIDIRVGDIIRVKSEEPIPADTIILSSSEPEGLCYI
+                     ETANLDGETNLKIKQSRVETAKFIDVKTLKNMNGKVVSEQPNSSLYTYEGTMTLNDRQ
+                     IPLSPDQMILRGATLRNTAWIFGLVIFTGHETKLLRNATATPIKRTAVEKIINRQIIA
+                     LFTVLIVLILISSIGNVIMSTADAKHLSYLYLEGTNKAGLFFKDFLTFWILFSNLVPI
+                     SLFVTVELIKYYQAFMIGSDLDLYYEKTDTPTVVRTSSLVEELGQIEYIFSDKTGTLT
+                     RNIMEFKSCSIAGHCYIDKIPEDKTATVEDGIEVGYRKFDDLKKKLNDPSDEDSPIIN
+                     DFLTLLATCHTVIPEFQSDGSIKYQAASPDEGALVQGGADLGYKFIIRKPNSVTVLLE
+                     ETGEEKEYQLLNICEFNSTRKRMSAIFRFPDGSIKLFCKGADTVILERLDDEANQYVE
+                     ATMRHLEDYASEGLRTLCLAMRDISEGEYEEWNSIYNEAATTLDNRAEKLDEAANLIE
+                     KNLILIGATAIEDKLQDGVPETIHTLQEAGIKIWVLTGDRQETAINIGMSCRLLSEDM
+                     NLLIINEETRDDTERNLLEKINALNEHQLSTHDMNTLALVIDGKSLGFALEPELEDYL
+                     LTVAKLCKAVICCRVSPLQKALVVKMVKRKSSSLLLAIGDGANDVSMIQAAHVGVGIS
+                     GMEGMQAARSADIAVGQFKFLKKLLLVHGSWSYQRISVAILYSFYKNTALYMTQFWYV
+                     FANAFSGQSIMESWTMSFYNLFFTVWPPFVIGVFDQFVSSRLLERYPQLYKLGQKGQF
+                     FSVYIFWGWIINGFFHSAIVFIGTILIYRYGFALNMHGELADHWSWGVTVYTTSVIIV
+                     LGKAALVTNQWTKFTLIAIPGSLLFWLIFFPIYASIFPHANISREYYGVVKHTYGSGV
+                     FWLTLIVLPIFALVRDFLWKYYKRMYEPETYHVIQEMQKYNISDSRPHVQQFQNAIRK
+                     VRQVQRMKKQRGFAFSQAEEGGQEKIVRMYDTTQKRGKYGELQDASANPFNDNNGLGS
+                     NDFESAEPFIENPFADGNQNSNRFSSSRDDISFDI"
+     gene            99305..99868
+                     /locus_tag="HRA1"
+                     /db_xref="GeneID:9164866"
+     ncRNA           99305..99868
+                     /ncRNA_class="other"
+                     /locus_tag="HRA1"
+                     /product="HRA1"
+                     /note="ncRNA; Non-protein-coding RNA; substrate of RNase
+                     P, possibly involved in rRNA processing, specifically
+                     maturation of 20S precursor into the mature 18S rRNA"
+                     /transcript_id="NR_132149.1"
+                     /db_xref="GeneID:9164866"
+                     /db_xref="SGD:S000119380"
+     gene            complement(<100225..>101145)
+                     /gene="MAK16"
+                     /locus_tag="YAL025C"
+                     /db_xref="GeneID:851208"
+     mRNA            complement(<100225..>101145)
+                     /gene="MAK16"
+                     /locus_tag="YAL025C"
+                     /product="ribosome biosynthesis protein MAK16"
+                     /transcript_id="NM_001178170.2"
+                     /db_xref="GeneID:851208"
+     CDS             complement(100225..101145)
+                     /gene="MAK16"
+                     /locus_tag="YAL025C"
+                     /note="Essential nuclear protein; constituent of 66S
+                     pre-ribosomal particles; required for maturation of 25S
+                     and 5.8S rRNAs; required for maintenance of M1 satellite
+                     double-stranded RNA of the L-A virus"
+                     /codon_start=1
+                     /product="ribosome biosynthesis protein MAK16"
+                     /protein_id="NP_009377.2"
+                     /db_xref="GeneID:851208"
+                     /db_xref="SGD:S000000023"
+                     /translation="MSDEIVWQVINQSFCSHRIKAPNGQNFCRNEYNVTGLCTRQSCP
+                     LANSKYATVKCDNGKLYLYMKTPERAHTPAKLWERIKLSKNYTKALQQIDEHLLHWSK
+                     FFRHKCKQRFTKLTQVMITERRLALREEERHYVGVAPKVKRREQNRERKALVAAKIEK
+                     AIEKELMDRLKSGAYGDKPLNVDEKVWKKIMGQMEEENSQDEEEDWDEEEESDDGEVE
+                     YVADDGEGEYVDVDDLEKWLADSDREASSASESESDSESESDSDSDEENKNSAKRRKK
+                     GTSAKTKRPKVEIEYEEEHEVQNAEQEVAQ"
+     gene            complement(<101565..>105872)
+                     /gene="LTE1"
+                     /locus_tag="YAL024C"
+                     /gene_synonym="MSI2"
+                     /db_xref="GeneID:851209"
+     mRNA            complement(<101565..>105872)
+                     /gene="LTE1"
+                     /locus_tag="YAL024C"
+                     /gene_synonym="MSI2"
+                     /product="mitotic regulator LTE1"
+                     /transcript_id="NM_001178169.1"
+                     /db_xref="GeneID:851209"
+     CDS             complement(101565..105872)
+                     /gene="LTE1"
+                     /locus_tag="YAL024C"
+                     /gene_synonym="MSI2"
+                     /note="Protein similar to GDP/GTP exchange factors;
+                     without detectable GEF activity; required for asymmetric
+                     localization of Bfa1p at daughter-directed spindle pole
+                     bodies and for mitotic exit at low temperatures"
+                     /codon_start=1
+                     /product="mitotic regulator LTE1"
+                     /protein_id="NP_009378.1"
+                     /db_xref="GeneID:851209"
+                     /db_xref="SGD:S000000022"
+                     /translation="MEIFSQKDYYPTPSSNVISYESDCVSKPVNSADLPALIVHLSSP
+                     LEGVDYNASADFFLIYRNFITPQDLHDLLIYRFRWCIREITTNAAKAKRRRIGEVALV
+                     RTFVLLRHSILNYFVQDFLPNITLRLRLIEFLNDKHIEQYPKIISSCIINLKKNWVHC
+                     SKLVWENIELNEPDKLDFDAWLHYSLKDFTQLESLHKRGSRLSIYARQSFASPDFRNQ
+                     SVLSLYKTSDVFRLPEKLQSSNSSKNQRSPSMLLFPDNTSNVYSKHRIAKEPSVDNES
+                     EDMSDSKQKISHLSKVTLVSTLMKGVDYPSSYAVDKIMPPTPAKKVEFILNSLYIPED
+                     LNEQSGTLQGTSTTSSLDNNSNSNSRSNTSSMSVLHRSAIGLLAKWMKNHNRHDSSND
+                     KKFMSAIKPANQKPEMDAFVKYVVSISSLNRKSSKEEEEEFLNSDSSKFDILSARTID
+                     EVESLLHLQNQLIEKVQTHSNNNRGPTVNVDCERREHIHDIKILQQNSFKPSNDNFSA
+                     MDNLDLYQTVSSIAQSVISLTNTLNKQLQNNESNMQPSPSYDALQRRKVKSLTTAYYN
+                     KMHGSYSAESMRLFDKDNSSSRTDENGPQRLLFHETDKTNSEAITNMTPRRKNHSQSQ
+                     KSMTSSPLKNVLPDLKESSPLNDSREDTESITYSYDSELSSSSPPRDTVTKKSRKVRN
+                     IVNNTDSPTLKTKTGFLNLREFTFEDTKSLDEKKSTIDGLEKNYDNKENQESEYESTK
+                     KLDNSLDASSEANNYDITTRKKHSSCNHKIKQAVVRPASGRISISRVQSIAITPTKEL
+                     SIVDPEQNKSNSVIEEISEIEPLNLEYNKKSALYSDTSSTVISISTSKLFESAQNSPL
+                     KQTQNPQREFPNGTSVSETNRIRLSIAPTIESVVSDLNSITTGSTVETFETSRDLPVP
+                     HQRIINLREEYQRGNQDIISNTSSLHELKTIDLSDSNNDLESPSTHAKNNKYFFSPDD
+                     GSIDVASPMKNVEELKSKFLKNESETNSNISGSVLTMDDIDINDTSSARNTRRANSES
+                     AFTGSLNKKNLNEIANMLDDSINDDPITVALMKLEGTYEKIPEKPENTKSSDAIGIKT
+                     SKLADEVEMLNLNNLPSFQNSPAEKRKSLLIERRRQTIMNIPFTPDQSEKEGFTSSSP
+                     EKIDVSANVDVAVQAAQIQELIGQYRIHDSRLMISNNESHVPFILMYDSLSVAQQMTL
+                     IEKEILGEIDWKDLLDLKMKHEGPQVISWLQLLVRNETLSGIDLAISRFNLTVDWIIS
+                     EILLTKSSKMKRNVIQRFIHVADHCRTFQNFNTLMEIILALSSSVVQKFTDAWRLIEP
+                     GDLLTWEELKKIPSLDRNYSTIRNLLNSVNPLVGCVPFIVVYLSDLSANAEKKDWILE
+                     DKVVNYNKFDTNVQIVKNFIQRVQWSKFYTFKVNHELLSKCVYISTLTQEEINELST"
+     gene            complement(<106272..>108551)
+                     /gene="PMT2"
+                     /locus_tag="YAL023C"
+                     /gene_synonym="FUN25"
+                     /db_xref="GeneID:851210"
+     mRNA            complement(<106272..>108551)
+                     /gene="PMT2"
+                     /locus_tag="YAL023C"
+                     /gene_synonym="FUN25"
+                     /product="dolichyl-phosphate-mannose-protein
+                     mannosyltransferase PMT2"
+                     /transcript_id="NM_001178168.1"
+                     /db_xref="GeneID:851210"
+     CDS             complement(106272..108551)
+                     /gene="PMT2"
+                     /locus_tag="YAL023C"
+                     /gene_synonym="FUN25"
+                     /EC_number="2.4.1.109"
+                     /note="Protein O-mannosyltransferase of the ER membrane;
+                     transfers mannose residues from dolichyl
+                     phosphate-D-mannose to protein serine/threonine residues;
+                     involved in ER quality control; acts in a complex with
+                     Pmt1p, can instead interact with Pmt5p; antifungal drug
+                     target; PMT2 has a paralog, PMT3, that arose from the
+                     whole genome duplication"
+                     /codon_start=1
+                     /product="dolichyl-phosphate-mannose-protein
+                     mannosyltransferase PMT2"
+                     /protein_id="NP_009379.2"
+                     /db_xref="GeneID:851210"
+                     /db_xref="SGD:S000000021"
+                     /translation="MSSSSSTGYSKNNAAHIKQENTLRQRESSSISVSEELSSADERD
+                     AEDFSKEKPAAQSSLLRLESVVMPVIFTALALFTRMYKIGINNHVVWDEAHFGKFGSY
+                     YLRHEFYHDVHPPLGKMLVGLSGYLAGYNGSWDFPSGEIYPDYLDYVKMRLFNASFSA
+                     LCVPLAYFTAKAIGFSLPTVWLMTVLVLFENSYSTLGRFILLDSMLLFFTVASFFSFV
+                     MFHNQRSKPFSRKWWKWLLITGISLGCTISVKMVGLFIITMVGIYTVIDLWTFLADKS
+                     MSWKTYINHWLARIFGLIIVPFCIFLLCFKIHFDLLSHSGTGDANMPSLFQARLVGSD
+                     VGQGPRDIALGSSVVSIKNQALGGSLLHSHIQTYPDGSNQQQVTCYGYKDANNEWFFN
+                     RERGLPSWSENETDIEYLKPGTSYRLVHKSTGRNLHTHPVAAPVSKTQWEVSGYGDNV
+                     VGDNKDNWVIEIMDQRGDEDPEKLHTLTTSFRIKNLEMGCYLAQTGNSLPEWGFRQQE
+                     VVCMKNPFKRDKRTWWNIETHENERLPPRPEDFQYPKTNFLKDFIHLNLAMMATNNAL
+                     VPDPDKFDYLASSAWQWPTLNVGLRLCGWGDDNPKYFLLGTPASTWASSVAVLAFMAT
+                     VVILLIRWQRQYVDLRNPSNWNVFLMGGFYPLLAWGLHYMPFVIMSRVTYVHHYLPAL
+                     YFALIILAYCFDAGLQKWSRSKCGRIMRFVLYAGFMALVIGCFWYFSPISFGMEGPSS
+                     NFRYLNWFSTWDIADKQEA"
+     gene            complement(<108877..>110430)
+                     /gene="FUN26"
+                     /locus_tag="YAL022C"
+                     /db_xref="GeneID:851211"
+     mRNA            complement(<108877..>110430)
+                     /gene="FUN26"
+                     /locus_tag="YAL022C"
+                     /product="nucleoside transmembrane transporter FUN26"
+                     /transcript_id="NM_001178167.1"
+                     /db_xref="GeneID:851211"
+     CDS             complement(108877..110430)
+                     /gene="FUN26"
+                     /locus_tag="YAL022C"
+                     /note="High affinity, broad selectivity,
+                     nucleoside/nucleobase transporter; vacuolar membrane
+                     localized transporter which may regulate the balance of
+                     nicotinamide riboside (NmR) levels between the cytosol and
+                     vacuole, contributing to salvage of NmR for use in
+                     cytosolic NAD+ synthesis; equilibrative nucleoside
+                     transporter (ENT) family member"
+                     /codon_start=1
+                     /product="nucleoside transmembrane transporter FUN26"
+                     /protein_id="NP_009380.1"
+                     /db_xref="GeneID:851211"
+                     /db_xref="SGD:S000000020"
+                     /translation="MSTSADTDTIKKPILAVPEPALADTHSEEISRSGEEHESENNEH
+                     SDEEGDNYSEREQSVSTEPLDTLPLRKKLKNLSYITFFAIGIGLLWPWNCILSASQYF
+                     KHDIFKDTSIWAKIFTSSMMSFSTISSMLFNIYLAKRQYKYSRRVINGLVWEIIVFTV
+                     MCFFTILHFLLPKWFNFMFIMMLVVISSMGTAMTQNGIMAIANVFGSEYSQGVMVGQA
+                     VAGVLPSLVLFALAFIENSSVSTTGGILLYFFTTTLVVTICVVMFSVSKISRKVNENW
+                     NVEDGHITDVLLGSLRSNEEEIRIVGRIDQMEDEDHRRTNGTRDDNDEGEELQLKVPF
+                     EVLFAKLKYLVLSIFTTFVVTLVFPVFASATYVTGLPLSNAQYIPLIFTLWNLGDLYG
+                     RVIADWPMFRDQKFTPRKTFIYSLLRVAAIPLFLMFTAITSSSSGDEEHNGSVIVDLC
+                     YMLLQFLFGVTNGHVISMSFMKVPEQLDNDDEKEAAGGFTNIFVSTGLALGSIISYVF
+                     VFIIDFIIR"
+     gene            complement(<110846..>113359)
+                     /gene="CCR4"
+                     /locus_tag="YAL021C"
+                     /gene_synonym="FUN27; NUT21"
+                     /db_xref="GeneID:851212"
+     mRNA            complement(<110846..>113359)
+                     /gene="CCR4"
+                     /locus_tag="YAL021C"
+                     /gene_synonym="FUN27; NUT21"
+                     /product="CCR4-NOT core exoribonuclease subunit CCR4"
+                     /transcript_id="NM_001178166.1"
+                     /db_xref="GeneID:851212"
+     CDS             complement(110846..113359)
+                     /gene="CCR4"
+                     /locus_tag="YAL021C"
+                     /gene_synonym="FUN27; NUT21"
+                     /EC_number="3.1.13.4"
+                     /note="Component of the CCR4-NOT transcriptional complex;
+                     CCR4-NOT is involved in regulation of gene expression;
+                     component of the major cytoplasmic deadenylase, which is
+                     involved in mRNA poly(A) tail shortening"
+                     /codon_start=1
+                     /product="CCR4-NOT core exoribonuclease subunit CCR4"
+                     /protein_id="NP_009381.1"
+                     /db_xref="GeneID:851212"
+                     /db_xref="SGD:S000000019"
+                     /translation="MNDPSLLGYPNVGPQQQQQQQQQQHAGLLGKGTPNALQQQLHMN
+                     QLTGIPPPGLMNNSDVHTSSNNNSRQLLDQLANGNANMLNMNMDNNNNNNNNNNNNNN
+                     NGGGSGVMMNASTAAVNSIGMVPTVGTPVNINVNASNPLLHPHLDDPSLLNNPIWKLQ
+                     LHLAAVSAQSLGQPNIYARQNAMKKYLATQQAQQAQQQAQQQAQQQVPGPFGPGPQAA
+                     PPALQPTDFQQSHIAEASKSLVDCTKQALMEMADTLTDSKTAKKQQPTGDSTPSGTAT
+                     NSAVSTPLTPKIELFANGKDEANQALLQHKKLSQYSIDEDDDIENRMVMPKDSKYDDQ
+                     LWHALDLSNLQIFNISANIFKYDFLTRLYLNGNSLTELPAEIKNLSNLRVLDLSHNRL
+                     TSLPAELGSCFQLKYFYFFDNMVTTLPWEFGNLCNLQFLGVEGNPLEKQFLKILTEKS
+                     VTGLIFYLRDNRPEIPLPHERRFIEINTDGEPQREYDSLQQSTEHLATDLAKRTFTVL
+                     SYNTLCQHYATPKMYRYTPSWALSWDYRRNKLKEQILSYDSDLLCLQEVESKTFEEYW
+                     VPLLDKHGYTGIFHAKARAKTMHSKDSKKVDGCCIFFKRDQFKLITKDAMDFSGAWMK
+                     HKKFQRTEDYLNRAMNKDNVALFLKLQHIPSGDTIWAVTTHLHWDPKFNDVKTFQVGV
+                     LLDHLETLLKEETSHNFRQDIKKFPVLICGDFNSYINSAVYELINTGRVQIHQEGNGR
+                     DFGYMSEKNFSHNLALKSSYNCIGELPFTNFTPSFTDVIDYIWFSTHALRVRGLLGEV
+                     DPEYVSKFIGFPNDKFPSDHIPLLARFEFMKTNTGSKKV"
+     gene            complement(<113614..>114615)
+                     /gene="ATS1"
+                     /locus_tag="YAL020C"
+                     /gene_synonym="FUN28; KTI13"
+                     /db_xref="GeneID:851213"
+     mRNA            complement(<113614..>114615)
+                     /gene="ATS1"
+                     /locus_tag="YAL020C"
+                     /gene_synonym="FUN28; KTI13"
+                     /product="Ats1p"
+                     /transcript_id="NM_001178165.2"
+                     /db_xref="GeneID:851213"
+     CDS             complement(113614..114615)
+                     /gene="ATS1"
+                     /locus_tag="YAL020C"
+                     /gene_synonym="FUN28; KTI13"
+                     /note="Protein required for modification of wobble
+                     nucleosides in tRNA; acts with Elongator complex, Kti11p,
+                     and Kti12p; has a potential role in regulatory
+                     interactions between microtubules and the cell cycle;
+                     forms a stable heterodimer with Kti11p"
+                     /codon_start=1
+                     /product="Ats1p"
+                     /protein_id="NP_009382.2"
+                     /db_xref="GeneID:851213"
+                     /db_xref="SGD:S000000018"
+                     /translation="MSCVYAFGSNGQRQLGLGHDEDMDTPQRSVPGDDGAIVRKIACG
+                     GNHSVMLTNDGNLVGCGDNRRGELDSAQALRQVHDWRPVEVPAPVVDVACGWDTTVIV
+                     DADGRVWQRGGGCYEFTQQHVPLNSNDERIAVYGCFQNFVVVQGTRVYGWGSNTKCQL
+                     QEPKSRSLKEPVLVYDTGSVAVDYVAMGKDFMVIVDEGGRIVHASGRLPTGFELKQQQ
+                     KRHNLVVLCMWTSIHLWNARLNTVESFGRGTHSQLFPQERLDFPIVGVATGSEHGILT
+                     TANQEGKSHCYNVYCWGWGEHGNCGPQKGSQPGLQLVGQYSGKPRVFGGCATTWIVL"
+     gene            <114919..>118314
+                     /gene="FUN30"
+                     /locus_tag="YAL019W"
+                     /db_xref="GeneID:851214"
+     mRNA            <114919..>118314
+                     /gene="FUN30"
+                     /locus_tag="YAL019W"
+                     /product="DNA-dependent ATPase FUN30"
+                     /transcript_id="NM_001178164.1"
+                     /db_xref="GeneID:851214"
+     CDS             114919..118314
+                     /gene="FUN30"
+                     /locus_tag="YAL019W"
+                     /EC_number="3.6.4.12"
+                     /note="Snf2p family member with ATP-dependent chromatin
+                     remodeling activity; has a role in silencing at the mating
+                     type locus, telomeres and centromeres; enriched at
+                     centromeres and is required for correct chromatin
+                     structure around centromeres, as well as at the boundary
+                     element of the silent HMR; recruited to DNA double-strand
+                     breaks (DSBs) where it promotes 5' strand resection of
+                     DSBs; potential Cdc28p substrate"
+                     /codon_start=1
+                     /product="DNA-dependent ATPase FUN30"
+                     /protein_id="NP_009383.1"
+                     /db_xref="GeneID:851214"
+                     /db_xref="SGD:S000000017"
+                     /translation="MSGSHSNDEDDVVQVPETSSPTKVASSSPLKPTSPTVPDASVAS
+                     LRSRFTFKPSDPSEGAHTSKPLPSGSPEVALVNLAREFPDFSQTLVQAVFKSNSFNLQ
+                     SARERLTRLRQQRQNWTWNKNASPKKSETPPPVKKSLPLANTGRLSSIHGNINNKSSK
+                     ITVAKQKTSIFDRYSNVINQKQYTFELPTNLNIDSEALSKLPVNYNKKRRLVRADQHP
+                     IGKSYESSATQLGSAREKLLANRKYGRHANDNDEEEEESMMTDDDDASGDDYTESTPQ
+                     INLDEQVLQFINDSDIVDLSDLSDTTMHKAQLIASHRPYSSLNAFVNTNFNDKDTEEN
+                     ASNKRKRRAAASANESERLLDKITQSIRGYNAIESVIKKCSSYGDLVTSQMKKWGVQV
+                     EGDNSELDLMNLGEDDDDDNDDGNNDNNNSNNNNTAGADATSKEKEDTKAVVEGFDET
+                     SAEPTPAPAPAPVERETKRIRNTTKPKVVEDEDDDVDLEAIDDELPQSEHEDDDYEEE
+                     DEDYNDEEEDVEYDDGDDDDDDDDEFVATRKNTHVISTTSRNGRKPIVKFFKGKPRLL
+                     SPEISLKDYQQTGINWLNLLYQNKMSCILADDMGLGKTCQVISFFAYLKQINEPGPHL
+                     VVVPSSTLENWLREFQKFAPALKIEPYYGSLQEREELRDILERNAGKYDVIVTTYNLA
+                     AGNKYDVSFLKNRNFNVVVYDEGHMLKNSTSERFAKLMKIRANFRLLLTGTPLQNNLK
+                     ELMSLLEFIMPNLFISKKESFDAIFKQRAKTTDDNKNHNPLLAQEAITRAKTMMKPFI
+                     LRRRKDQVLKHLPPKHTHIQYCELNAIQKKIYDKEIQIVLEHKRMIKDGELPKDAKEK
+                     SKLQSSSSKNLIMALRKASLHPLLFRNIYNDKIITKMSDAILDEPAYAENGNKEYIKE
+                     DMSYMTDFELHKLCCNFPNTLSKYQLHNDEWMQSGKIDALKKLLKTIIVDKQEKVLIF
+                     SLFTQVLDILEMVLSTLDYKFLRLDGSTQVNDRQLLIDKFYEDKDIPIFILSTKAGGF
+                     GINLVCANNVIIFDQSFNPHDDRQAADRAHRVGQTKEVNITTLITKDSIEEKIHQLAK
+                     NKLALDSYISEDKKSQDVLESKVSDMLEDIIYDENSKPKGTKE"
+     gene            complement(<118564..>119541)
+                     /gene="LDS1"
+                     /locus_tag="YAL018C"
+                     /db_xref="GeneID:851215"
+     mRNA            complement(<118564..>119541)
+                     /gene="LDS1"
+                     /locus_tag="YAL018C"
+                     /product="Lds1p"
+                     /transcript_id="NM_001178163.1"
+                     /db_xref="GeneID:851215"
+     CDS             complement(118564..119541)
+                     /gene="LDS1"
+                     /locus_tag="YAL018C"
+                     /note="Protein Involved in spore wall assembly; localizes
+                     to lipid droplets found on or outside of the prospore
+                     membrane; shares similarity with Lds2p and Rrt8p, and a
+                     strain mutant for all 3 genes exhibits reduced dityrosine
+                     fluorescence relative to the single mutants"
+                     /codon_start=1
+                     /product="Lds1p"
+                     /protein_id="NP_009384.1"
+                     /db_xref="GeneID:851215"
+                     /db_xref="SGD:S000000016"
+                     /translation="MSFTGSLALAGIGGLVYKFGGGQSYEKLPYVNIPFNQYLDKVYK
+                     KHFSKVMSRTRYVLMNFFKDAFTGGAFMYPFKGFLEFNTNKSSYSTTMLGILSSYLIM
+                     FALVSFVYWATITPMYTAFLIVLGPIGLFIAIFHSFLQANVFTLLFMRLSHFNNHLVE
+                     VCLEKNGLEENLSEVKPIKYYAPINSIYFWAYYFPFKLVKYMLGLSVLFVLLVISFFP
+                     LIGPILFHILISPFITQIYFTKVLRLQNFDNIQRRENIYLHAGQYASFGFLAGLIESV
+                     PILAGFAISTNTIGSVLFNLDHPMVPENLVETQAEIEAAPQDINQQPNQ"
+     gene            <120225..>124295
+                     /gene="PSK1"
+                     /locus_tag="YAL017W"
+                     /gene_synonym="FUN31"
+                     /db_xref="GeneID:851216"
+     mRNA            <120225..>124295
+                     /gene="PSK1"
+                     /locus_tag="YAL017W"
+                     /gene_synonym="FUN31"
+                     /product="serine/threonine protein kinase PSK1"
+                     /transcript_id="NM_001178162.2"
+                     /db_xref="GeneID:851216"
+     CDS             120225..124295
+                     /gene="PSK1"
+                     /locus_tag="YAL017W"
+                     /gene_synonym="FUN31"
+                     /EC_number="2.7.11.1"
+                     /note="PAS domain-containing serine/threonine protein
+                     kinase; coordinately regulates protein synthesis and
+                     carbohydrate metabolism and storage in response to a
+                     unknown metabolite that reflects nutritional status; PSK1
+                     has a paralog, PSK2, that arose from the whole genome
+                     duplication"
+                     /codon_start=1
+                     /product="serine/threonine protein kinase PSK1"
+                     /protein_id="NP_009385.2"
+                     /db_xref="GeneID:851216"
+                     /db_xref="SGD:S000000015"
+                     /translation="MPYIGASNLSEHSFVNLKEKHAITHKGTSSSVASLQTPPSPDQE
+                     NHIDNELENYDTSLSDVSTPNKKEGDEFEQSLRDTFASFRKTKPPPPLDFEQPRLPST
+                     ASSSVDSTVSSPLTDEDIKELEFLPNESTHSYSYNPLSPNSLAVRLRILKRSLEIIIQ
+                     NPSMLLEPTPDDLPPLKEFAGRRSSLPRTSASANHLMNRNKSQIWNTTSATLNAFVNN
+                     TSSSSAASSALSNKKPGTPVFPNLDPTHSQTFHRANSLAYLPSILPEQDPLLKHNNSL
+                     FRGDYGNNISPERPSFRQPFKDQTSNLRNSSLLNERAYQEDETFLPHHGPSMDLLNEQ
+                     RANLKSLLNLLNETLEKNTSERASDLHMISLFNLNKLMLGDPKKNNSERDKRTEKLKK
+                     ILLDSLAEPFFEHYNFIGDNPIADTDELKEEIDEFTGSGDTTAITDIRPQQDYGRILR
+                     TFTSTKNSAPQAIFTCSQEDPWQFRAANDLACLVFGISQNAIRALTLMDLIHTDSRNF
+                     VLHKLLSTEGQEMVFTGEIIGIVQPETLSSSKVVWASFWAKRKNGLLVCVFEKVPCDY
+                     VDVLLNLDDFGAENIVDKCELLSDGPTLSSSSTLSLPKMASSPTGSKLEYSLERKILE
+                     KSYTKPTSTENRNGDENQLDGDSHSEPSLSSSPVRSKKSVKFANDIKDVKSISQSLAK
+                     LMDDVRNGVVFDPDDDLLPMPIKVCNHINETRYFTLNHLSYNIPCAVSSTVLEDELKL
+                     KIHSLPYQAGLFIVDSHTLDIVSSNKSILKNMFGYHFAELVGKSITEIIPSFPKFLQF
+                     INDKYPALDITLHKNKGLVLTEHFFRKIQAEIMGDRKSFYTSVGIDGLHRDGCEIKID
+                     FQLRVMNSKVILLWVTHSRDVVFEEYNTNPSQLKMLKESELSLMSSASSSASSSKKSS
+                     SRISTGTLKDMSNLSTYEDLAHRTNKLKYEIGDDSRAHSQSTLSEQEQVPLENDKDSG
+                     EMMLADPEMKHKLELARIYSRDKSQFVKEGNFKVDENLIISKISLSPSTESLADSKSS
+                     GKGLSPLEEEKLIDENATENGLAGSPKDEDGIIMTNKRGNQPVSTFLRTPEKNIGAQK
+                     HVKKFSDFVSLQKMGEGAYGKVNLCIHKKNRYIVVIKMIFKERILVDTWVRDRKLGTI
+                     PSEIQIMATLNKKPHENILRLLDFFEDDDYYYIETPVHGETGCIDLFDLIEFKTNMTE
+                     FEAKLIFKQVVAGIKHLHDQGIVHRDIKDENVIVDSKGFVKIIDFGSAAYVKSGPFDV
+                     FVGTIDYAAPEVLGGNPYEGQPQDIWAIGILLYTVVFKENPFYNIDEILEGDLKFNNA
+                     EEVSEDCIELIKSILNRCVPKRPTIDDINNDKWLVI"
+     rep_origin      124349..124597
+                     /note="ARS107;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000118319"
+     gene            <124879..>126786
+                     /gene="TPD3"
+                     /locus_tag="YAL016W"
+                     /gene_synonym="FUN32"
+                     /db_xref="GeneID:851217"
+     mRNA            <124879..>126786
+                     /gene="TPD3"
+                     /locus_tag="YAL016W"
+                     /gene_synonym="FUN32"
+                     /product="protein phosphatase 2A structural subunit TPD3"
+                     /transcript_id="NM_001178161.1"
+                     /db_xref="GeneID:851217"
+     CDS             124879..126786
+                     /gene="TPD3"
+                     /locus_tag="YAL016W"
+                     /gene_synonym="FUN32"
+                     /note="Regulatory subunit A of the heterotrimeric PP2A
+                     complex; the heterotrimeric protein phosphatase 2A (PP2A)
+                     complex also contains regulatory subunit Cdc55p and either
+                     catalytic subunit Pph21p or Pph22p; required for cell
+                     morphogenesis and transcription by RNA polymerase III"
+                     /codon_start=1
+                     /product="protein phosphatase 2A structural subunit TPD3"
+                     /protein_id="NP_009386.1"
+                     /db_xref="GeneID:851217"
+                     /db_xref="SGD:S000000014"
+                     /translation="MSGARSTTAGAVPSAATTSTTSTTSNSKDSDSNESLYPLALLMD
+                     ELKHDDIANRVEAMKKLDTIALALGPERTRNELIPFLTEVAQDDEDEVFAVLAEQLGK
+                     FVPYIGGPQYATILLPVLEILASAEETLVREKAVDSLNNVAQELSQEQLFSDFVPLIE
+                     HLATADWFSSKVSACGLFKSVIVRIKDDSLRKNILALYLQLAQDDTPMVKRAVGKNLP
+                     ILIDLLTQNLGLSTDEDWDYISNIFQKIINDNQDSVKFLAVDCLISILKFFNAKGDES
+                     HTQDLLNSAVKLIGDEAWRVRYMAADRFSDLASQFSSNQAYIDELVQPFLNLCEDNEG
+                     DVREAVAKQVSGFAKFLNDPSIILNKILPAVQNLSMDESETVRSALASKITNIVLLLN
+                     KDQVINNFLPILLNMLRDEFPDVRLNIIASLKVVNDVIGIELLSDSLLPAITELAKDV
+                     NWRVRMAIIEYIPILAEQLGMQFFDQQLSDLCLSWLWDTVYSIREAAVNNLKRLTEIF
+                     GSDWCRDEIISRLLKFDLQLLENFVSRFTILSALTTLVPVVSLDVVTEQLLPFISHLA
+                     DDGVPNIRFNVAKSYAVIVKVLIKDEAKYDALIKNTILPSLQTLCQDEDVDVKYFAKK
+                     SLAECQELLKN"
+     gene            complement(<126903..>128102)
+                     /gene="NTG1"
+                     /locus_tag="YAL015C"
+                     /gene_synonym="FUN33; ogg2; SCR1"
+                     /db_xref="GeneID:851218"
+     mRNA            complement(<126903..>128102)
+                     /gene="NTG1"
+                     /locus_tag="YAL015C"
+                     /gene_synonym="FUN33; ogg2; SCR1"
+                     /product="bifunctional N-glycosylase/AP lyase NTG1"
+                     /transcript_id="NM_001178160.1"
+                     /db_xref="GeneID:851218"
+     CDS             complement(126903..128102)
+                     /gene="NTG1"
+                     /locus_tag="YAL015C"
+                     /gene_synonym="FUN33; ogg2; SCR1"
+                     /EC_number="3.2.2.-"
+                     /EC_number="4.2.99.18"
+                     /note="DNA N-glycosylase and apurinic/apyrimidinic (AP)
+                     lyase; involved in base excision repair; acts in both
+                     nucleus and mitochondrion; creates a double-strand break
+                     at mtDNA origins that stimulates replication in response
+                     to oxidative stress; required for maintaining
+                     mitochondrial genome integrity; NTG1 has a paralog, NTG2,
+                     that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="bifunctional N-glycosylase/AP lyase NTG1"
+                     /protein_id="NP_009387.1"
+                     /db_xref="GeneID:851218"
+                     /db_xref="SGD:S000000013"
+                     /translation="MQKISKYSSMAILRKRPLVKTETGPESELLPEKRTKIKQEEVVP
+                     QPVDIDWVKSLPNKQYFEWIVVRNGNVPNRWATPLDPSILVTPASTKVPYKFQETYAR
+                     MRVLRSKILAPVDIIGGSSIPVTVASKCGISKEQISPRDYRLQVLLGVMLSSQTKDEV
+                     TAMAMLNIMRYCIDELHSEEGMTLEAVLQINETKLDELIHSVGFHTRKAKYILSTCKI
+                     LQDQFSSDVPATINELLGLPGVGPKMAYLTLQKAWGKIEGICVDVHVDRLTKLWKWVD
+                     AQKCKTPDQTRTQLQNWLPKGLWTEINGLLVGFGQIITKSRNLGDMLQFLPPDDPRSS
+                     LDWDLQSQLYKEIQQNIMSYPKWVKYLEGKRELNVEAEINVKHEEKTVEETMVKLEND
+                     ISVKVED"
+     gene            complement(<128252..>129019)
+                     /gene="SYN8"
+                     /locus_tag="YAL014C"
+                     /gene_synonym="SLT2; UIP2"
+                     /db_xref="GeneID:851219"
+     mRNA            complement(<128252..>129019)
+                     /gene="SYN8"
+                     /locus_tag="YAL014C"
+                     /gene_synonym="SLT2; UIP2"
+                     /product="syntaxin"
+                     /transcript_id="NM_001178159.1"
+                     /db_xref="GeneID:851219"
+     CDS             complement(128252..129019)
+                     /gene="SYN8"
+                     /locus_tag="YAL014C"
+                     /gene_synonym="SLT2; UIP2"
+                     /note="Endosomal SNARE related to mammalian syntaxin 8"
+                     /codon_start=1
+                     /product="syntaxin"
+                     /protein_id="NP_009388.2"
+                     /db_xref="GeneID:851219"
+                     /db_xref="SGD:S000000012"
+                     /translation="MDVLKLGYELDQLSDLVEERTRLVSVLKLAPTSNDNVTLKRQLG
+                     SILELLQKCAPNDELISRYNTILDKIPDTAVDKELYRFQQQVARNTDEVSKESLKKVR
+                     FKNDDELTVMYKDDDEQDEESPLPSTHTPYKDEPLQSQLQSQSQPQPPQPMVSNQELF
+                     INQQQQLLEQDSHLGALSQSIGRTHDISLDLNNEIVSQNDSLLVDLENLIDNNGRNLN
+                     RASRSMHGFNNSRFKDNGNCVIILVLIVVLLLLLLVL"
+     gene            <129270..>130487
+                     /gene="DEP1"
+                     /locus_tag="YAL013W"
+                     /gene_synonym="FUN54"
+                     /db_xref="GeneID:851220"
+     mRNA            <129270..>130487
+                     /gene="DEP1"
+                     /locus_tag="YAL013W"
+                     /gene_synonym="FUN54"
+                     /product="Rpd3L histone deacetylase complex subunit DEP1"
+                     /transcript_id="NM_001178158.2"
+                     /db_xref="GeneID:851220"
+     CDS             129270..130487
+                     /gene="DEP1"
+                     /locus_tag="YAL013W"
+                     /gene_synonym="FUN54"
+                     /note="Component of the Rpd3L histone deacetylase complex;
+                     required for diauxic shift-induced histone H2B deposition
+                     onto rDNA genes; transcriptional modulator involved in
+                     regulation of structural phospholipid biosynthesis genes
+                     and metabolically unrelated genes, as well as maintenance
+                     of telomeres, mating efficiency, and sporulation"
+                     /codon_start=1
+                     /product="Rpd3L histone deacetylase complex subunit DEP1"
+                     /protein_id="NP_009389.3"
+                     /db_xref="GeneID:851220"
+                     /db_xref="SGD:S000000011"
+                     /translation="MSQQTPQESEQTTAKEQDLDQESVLSNIDFNTDLNHNLNLSEYC
+                     ISSDAGTEKMDSDEEKSLANLPELKYAPKLSSLVKQETLTESLKRPHEDEKEAIDEAK
+                     KMKVPGENEDESKEEEKSQELEEAIDSKEKSTDARDEQGDEGDNEEENNEEDNENENE
+                     HTAPPALVMPSPIEMEEQRMTALKEITDIEYKFAQLRQKLYDNQLVRLQTELQMCLEG
+                     SHPELQVYYSKIAAIRDYKLHRAYQRQKYELSCINTETIATRTFIHQDFHKKVTDLRA
+                     RLLNRTTQTWYDINKERRDMDIVIPDVNYHVPIKLDNKTLSCITGYASAAQLCYPGEP
+                     VAEDLACESIEYRYRANPVDKLEVIVDRMRLNNEISDLEGLRKYFHSFPGAPELNPLR
+                     DSEINDDFHQWAQ"
+     gene            <130799..>131983
+                     /gene="CYS3"
+                     /locus_tag="YAL012W"
+                     /gene_synonym="CYI1; FUN35; STR1"
+                     /db_xref="GeneID:851221"
+     mRNA            <130799..>131983
+                     /gene="CYS3"
+                     /locus_tag="YAL012W"
+                     /gene_synonym="CYI1; FUN35; STR1"
+                     /product="cystathionine gamma-lyase CYS3"
+                     /transcript_id="NM_001178157.1"
+                     /db_xref="GeneID:851221"
+     CDS             130799..131983
+                     /gene="CYS3"
+                     /locus_tag="YAL012W"
+                     /gene_synonym="CYI1; FUN35; STR1"
+                     /EC_number="4.4.1.1"
+                     /note="Cystathionine gamma-lyase; catalyzes one of the two
+                     reactions involved in the transsulfuration pathway that
+                     yields cysteine from homocysteine with the intermediary
+                     formation of cystathionine; protein abundance increases in
+                     response to DNA replication stress"
+                     /codon_start=1
+                     /product="cystathionine gamma-lyase CYS3"
+                     /protein_id="NP_009390.1"
+                     /db_xref="GeneID:851221"
+                     /db_xref="SGD:S000000010"
+                     /translation="MTLQESDKFATKAIHAGEHVDVHGSVIEPISLSTTFKQSSPANP
+                     IGTYEYSRSQNPNRENLERAVAALENAQYGLAFSSGSATTATILQSLPQGSHAVSIGD
+                     VYGGTHRYFTKVANAHGVETSFTNDLLNDLPQLIKENTKLVWIETPTNPTLKVTDIQK
+                     VADLIKKHAAGQDVILVVDNTFLSPYISNPLNFGADIVVHSATKYINGHSDVVLGVLA
+                     TNNKPLYERLQFLQNAIGAIPSPFDAWLTHRGLKTLHLRVRQAALSANKIAEFLAADK
+                     ENVVAVNYPGLKTHPNYDVVLKQHRDALGGGMISFRIKGGAEAASKFASSTRLFTLAE
+                     SLGGIESLLEVPAVMTHGGIPKEAREASGVFDDLVRISVGIEDTDDLLEDIKQALKQA
+                     TN"
+     gene            <132199..>134076
+                     /gene="SWC3"
+                     /locus_tag="YAL011W"
+                     /gene_synonym="SWC1"
+                     /db_xref="GeneID:851222"
+     mRNA            <132199..>134076
+                     /gene="SWC3"
+                     /locus_tag="YAL011W"
+                     /gene_synonym="SWC1"
+                     /product="Swc3p"
+                     /transcript_id="NM_001178156.1"
+                     /db_xref="GeneID:851222"
+     CDS             132199..134076
+                     /gene="SWC3"
+                     /locus_tag="YAL011W"
+                     /gene_synonym="SWC1"
+                     /note="hypothetical protein; component of the SWR1
+                     complex, which exchanges histone variant H2AZ (Htz1p) for
+                     chromatin-bound histone H2A; required for formation of
+                     nuclear-associated array of smooth endoplasmic reticulum
+                     known as karmellae"
+                     /codon_start=1
+                     /product="Swc3p"
+                     /protein_id="NP_009391.2"
+                     /db_xref="GeneID:851222"
+                     /db_xref="SGD:S000000009"
+                     /translation="MPAVLRTRSKESSIEQKPASRTRTRSRRGKRGRDDDDDDDDEES
+                     DDAYDEVGNDYDEYASRAKLATNRPFEIVAGLPASVELPNYNSSLTHPQSIKNSGVLY
+                     DSLVSSRRTWVQGEMFELYWRRPKKIVSESTPAATESPTSGTIPLIRDKMQKMCDCVM
+                     SGGPHTFKVRLFILKNDKIEQKWQDEQELKKKEKELKRKNDAEAKRLRMEERKRQQMQ
+                     KKIAKEQKLQLQKENKAKQKLEQEALKLKRKEEMKKLKEQNKNKQGSPSSSMHDPRMI
+                     MNLNLMAQEDPKLNTLMETVAKGLANNSQLEEFKKFIEIAKKRSLEENPVNKRPSVTT
+                     TRPAPPSKAKDVAEDHRLNSITLVKSSKTAATEPEPKKADDENAEKQQSKEAKTTAES
+                     TQVDVKKEEEDVKEKGVKSEDTQKKEDNQVVPKRKRRKNAIKEDKDMQLTAFQQKYVQ
+                     GAEIILEYLEFTHSRYYLPKKSVVEFLEDTDEIIISWIVIHNSKEIEKFKTKKIKAKL
+                     KADQKLNKEDAKPGSDVEKEVSFNPLFEADCPTPLYTPMTMKLSGIHKRFNQIIRNSV
+                     SPMEEVVKEMEKILQIGTRLSGYNLWYQLDGYDDEALSESLRFELNEWEHAMRSRRHK
+                     R"
+     gene            complement(<134184..>135665)
+                     /gene="MDM10"
+                     /locus_tag="YAL010C"
+                     /gene_synonym="FUN37"
+                     /db_xref="GeneID:851223"
+     mRNA            complement(<134184..>135665)
+                     /gene="MDM10"
+                     /locus_tag="YAL010C"
+                     /gene_synonym="FUN37"
+                     /product="Mdm10p"
+                     /transcript_id="NM_001178155.2"
+                     /db_xref="GeneID:851223"
+     CDS             complement(134184..135665)
+                     /gene="MDM10"
+                     /locus_tag="YAL010C"
+                     /gene_synonym="FUN37"
+                     /note="Subunit of both the ERMES and the SAM complex;
+                     component of ERMES complex which acts as a molecular
+                     tether between the mitochondria and the ER, necessary for
+                     efficient phospholipid exchange between organelles and for
+                     mitophagy; SAM/TOB complex component that functions in the
+                     assembly of outer membrane beta-barrel proteins; involved
+                     in mitochondrial inheritance and morphology; ERMES complex
+                     is often co-localized with peroxisomes and concentrated
+                     areas of pyruvate dehydrogenase"
+                     /codon_start=1
+                     /product="Mdm10p"
+                     /protein_id="NP_009392.2"
+                     /db_xref="GeneID:851223"
+                     /db_xref="SGD:S000000008"
+                     /translation="MLPYMDQVLRAFYQSTHWSTQNSYEDITATSRTLLDFRIPSAIH
+                     LQISNKSTPNTFNSLDFSTRSRINGSLSYLYSDAQQLEKFMRNSTDIPLQDATETYRQ
+                     LQPNLNFSVSSANTLSSDNTTVDNDKKLLHDSKFVKKSLYYGRMYYPSSDLEAMIIKR
+                     LSPQTQFMLKGVSSFKESLNVLTCYFQRDSHRNLQEWIFSTSDLLCGYRVLHNFLTTP
+                     SKFNTSLYNNSSLSLGAEFWLGLVSLSPGCSTTLRYYTHSTNTGRPLTLTLSWNPLFG
+                     HISSTYSAKTGTNSTFCAKYDFNLYSIESNLSFGCEFWQKKHHLLETNKNNNDKLEPI
+                     SDELVDINPNSRATKLLHENVPDLNSAVNDIPSTLDIPVHKQKLLNDLTYAFSSSLRK
+                     IDEERSTIEKFDNKINSSIFTSVWKLSTSLRDKTLKLLWEGKWRGFLISAGTELVFTR
+                     GFQESLSDDEKNDNAISISATDTENGNIPVFPAKFGIQFQYST"
+     gene            <135854..>136633
+                     /gene="SPO7"
+                     /locus_tag="YAL009W"
+                     /db_xref="GeneID:851224"
+     mRNA            <135854..>136633
+                     /gene="SPO7"
+                     /locus_tag="YAL009W"
+                     /product="Nem1-Spo7 phosphatase regulatory subunit SPO7"
+                     /transcript_id="NM_001178154.1"
+                     /db_xref="GeneID:851224"
+     CDS             135854..136633
+                     /gene="SPO7"
+                     /locus_tag="YAL009W"
+                     /note="Putative regulatory subunit of Nem1p-Spo7p
+                     phosphatase holoenzyme; regulates nuclear growth by
+                     controlling phospholipid biosynthesis, required for normal
+                     nuclear envelope morphology, premeiotic replication, and
+                     sporulation"
+                     /codon_start=1
+                     /product="Nem1-Spo7 phosphatase regulatory subunit SPO7"
+                     /protein_id="NP_009393.1"
+                     /db_xref="GeneID:851224"
+                     /db_xref="SGD:S000000007"
+                     /translation="MEPESIGDVGNHAQDDSASIVSGPRRRSTSKTSSAKNIRNSSNI
+                     SPASMIFRNLLILEDDLRRQAHEQKILKWQFTLFLASMAGVGAFTFYELYFTSDYVKG
+                     LHRVILQFTLSFISITVVLFHISGQYRRTIVIPRRFFTSTNKGIRQFNVKLVKVQSTW
+                     DEKYTDSVRFVSRTIAYCNIYCLKKFLWLKDDNAIVKFWKSVTIQSQPRIGAVDVKLV
+                     LNPRAFSAEIREGWEIYRDEFWAREGARRRKQAHELRPKSE"
+     gene            <136914..>137510
+                     /gene="FUN14"
+                     /locus_tag="YAL008W"
+                     /gene_synonym="MCP3"
+                     /db_xref="GeneID:851225"
+     mRNA            <136914..>137510
+                     /gene="FUN14"
+                     /locus_tag="YAL008W"
+                     /gene_synonym="MCP3"
+                     /product="Fun14p"
+                     /transcript_id="NM_001178153.1"
+                     /db_xref="GeneID:851225"
+     CDS             136914..137510
+                     /gene="FUN14"
+                     /locus_tag="YAL008W"
+                     /gene_synonym="MCP3"
+                     /note="Integral mitochondrial outer membrane (MOM)
+                     protein; dosage suppressor of an MDM10 null that reduces
+                     ERMES-related phenotypes, such as alterations in
+                     mitochondrial morphology, protein complex assembly, and
+                     lipid profile; dosage suppressor of MDM12, MDM34, and MMM1
+                     null mutant growth defects; novel mechanism of MOM import
+                     involving Tom70p, the TOM complex, and the TIM23 complex,
+                     requiring mitochondrial membrane potential and processing
+                     by the IMP complex for correct biogenesis"
+                     /codon_start=1
+                     /product="Fun14p"
+                     /protein_id="NP_009394.1"
+                     /db_xref="GeneID:851225"
+                     /db_xref="SGD:S000000006"
+                     /translation="MTLAFNMQRLVFRNLNVGKRMFKNVPLWRFNVANKLGKPLTRSV
+                     GLGGAGIVAGGFYLMNRQPSKLIFNDSLGAAVKQQGPLEPTVGNSTAITEERRNKISS
+                     HKQMFLGSLFGVVLGVTVAKISILFMYVGITSMLLCEWLRYKGWIRINLKNIKSVIVL
+                     KDVDLKKLLIDGLLGTEYMGFKVFFTLSFVLASLNANK"
+     gene            complement(<137698..>138345)
+                     /gene="ERP2"
+                     /locus_tag="YAL007C"
+                     /db_xref="GeneID:851226"
+     mRNA            complement(<137698..>138345)
+                     /gene="ERP2"
+                     /locus_tag="YAL007C"
+                     /product="Erp2p"
+                     /transcript_id="NM_001178152.1"
+                     /db_xref="GeneID:851226"
+     CDS             complement(137698..138345)
+                     /gene="ERP2"
+                     /locus_tag="YAL007C"
+                     /note="Member of the p24 family involved in ER to Golgi
+                     transport; similar to Emp24p and Erv25p; role in misfolded
+                     protein quality control; forms a heterotrimeric complex
+                     with Erp1p, Emp24p, and Erv25p; localized to COPII-coated
+                     vesicles; ERP2 has a paralog, ERP4, that arose from the
+                     whole genome duplication"
+                     /codon_start=1
+                     /product="Erp2p"
+                     /protein_id="NP_009395.1"
+                     /db_xref="GeneID:851226"
+                     /db_xref="SGD:S000000005"
+                     /translation="MIKSTIALPSFFIVLILALVNSVAASSSYAPVAISLPAFSKECL
+                     YYDMVTEDDSLAVGYQVLTGGNFEIDFDITAPDGSVITSEKQKKYSDFLLKSFGVGKY
+                     TFCFSNNYGTALKKVEITLEKEKTLTDEHEADVNNDDIIANNAVEEIDRNLNKITKTL
+                     NYLRAREWRNMSTVNSTESRLTWLSILIIIIIAVISIAQVLLIQFLFTGRQKNYV"
+     repeat_region   complement(138831..138992)
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006786"
+     gene            139152..139254
+                     /gene="TRN1"
+                     /locus_tag="tP(UGG)A"
+                     /db_xref="GeneID:851227"
+     tRNA            join(139152..139187,139219..139254)
+                     /gene="TRN1"
+                     /locus_tag="tP(UGG)A"
+                     /product="tRNA-Pro"
+                     /note="Proline tRNA (tRNA-Pro), predicted by tRNAscan-SE
+                     analysis; target of K. lactis zymocin; can mutate to
+                     suppress +1 frameshift mutations in proline codons"
+                     /db_xref="GeneID:851227"
+                     /db_xref="SGD:S000006680"
+     gene            complement(<139503..>141431)
+                     /gene="SSA1"
+                     /locus_tag="YAL005C"
+                     /gene_synonym="YG100"
+                     /db_xref="GeneID:851259"
+     mRNA            complement(<139503..>141431)
+                     /gene="SSA1"
+                     /locus_tag="YAL005C"
+                     /gene_synonym="YG100"
+                     /product="Hsp70 family ATPase SSA1"
+                     /transcript_id="NM_001178151.1"
+                     /db_xref="GeneID:851259"
+     CDS             complement(139503..141431)
+                     /gene="SSA1"
+                     /locus_tag="YAL005C"
+                     /gene_synonym="YG100"
+                     /note="ATPase involved in protein folding and NLS-directed
+                     nuclear transport; member of HSP70 family; required for
+                     ubiquitin-dependent degradation of short-lived proteins;
+                     forms chaperone complex with Ydj1p; localized to nucleus,
+                     cytoplasm, cell wall; 98% identical to paralog Ssa2p with
+                     different functional specificity in propagation of yeast
+                     [URE3] prions, vacuolar-mediated degradations of
+                     gluconeogenesis enzymes; general targeting factor of
+                     Hsp104p to prion fibrils"
+                     /codon_start=1
+                     /product="Hsp70 family ATPase SSA1"
+                     /protein_id="NP_009396.2"
+                     /db_xref="GeneID:851259"
+                     /db_xref="SGD:S000000004"
+                     /translation="MSKAVGIDLGTTYSCVAHFANDRVDIIANDQGNRTTPSFVAFTD
+                     TERLIGDAAKNQAAMNPSNTVFDAKRLIGRNFNDPEVQADMKHFPFKLIDVDGKPQIQ
+                     VEFKGETKNFTPEQISSMVLGKMKETAESYLGAKVNDAVVTVPAYFNDSQRQATKDAG
+                     TIAGLNVLRIINEPTAAAIAYGLDKKGKEEHVLIFDLGGGTFDVSLLSIEDGIFEVKA
+                     TAGDTHLGGEDFDNRLVNHFIQEFKRKNKKDLSTNQRALRRLRTACERAKRTLSSSAQ
+                     TSVEIDSLFEGIDFYTSITRARFEELCADLFRSTLDPVEKVLRDAKLDKSQVDEIVLV
+                     GGSTRIPKVQKLVTDYFNGKEPNRSINPDEAVAYGAAVQAAILTGDESSKTQDLLLLD
+                     VAPLSLGIETAGGVMTKLIPRNSTIPTKKSEIFSTYADNQPGVLIQVFEGERAKTKDN
+                     NLLGKFELSGIPPAPRGVPQIEVTFDVDSNGILNVSAVEKGTGKSNKITITNDKGRLS
+                     KEDIEKMVAEAEKFKEEDEKESQRIASKNQLESIAYSLKNTISEAGDKLEQADKDTVT
+                     KKAEETISWLDSNTTASKEEFDDKLKELQDIANPIMSKLYQAGGAPGGAAGGAPGGFP
+                     GGAPPAPEAEGPTVEEVD"
+     gene            <142174..>143160
+                     /gene="EFB1"
+                     /locus_tag="YAL003W"
+                     /gene_synonym="TEF5"
+                     /db_xref="GeneID:851260"
+     mRNA            join(<142174..142253,142620..>143160)
+                     /gene="EFB1"
+                     /locus_tag="YAL003W"
+                     /gene_synonym="TEF5"
+                     /product="translation elongation factor 1 subunit beta"
+                     /transcript_id="NM_001178150.1"
+                     /db_xref="GeneID:851260"
+     CDS             join(142174..142253,142620..143160)
+                     /gene="EFB1"
+                     /locus_tag="YAL003W"
+                     /gene_synonym="TEF5"
+                     /note="Translation elongation factor 1 beta; stimulates
+                     nucleotide exchange to regenerate EF-1 alpha-GTP for the
+                     next elongation cycle; part of the EF-1 complex, which
+                     facilitates binding of aminoacyl-tRNA to the ribosomal A
+                     site; human homolog EEF1B2 can complement yeast efb1
+                     mutants"
+                     /codon_start=1
+                     /product="translation elongation factor 1 subunit beta"
+                     /protein_id="NP_009398.1"
+                     /db_xref="GeneID:851260"
+                     /db_xref="SGD:S000000003"
+                     /translation="MASTDFSKIETLKQLNASLADKSYIEGTAVSQADVTVFKAFQSA
+                     YPEFSRWFNHIASKADEFDSFPAASAAAAEEEEDDDVDLFGSDDEEADAEAEKLKAER
+                     IAAYNAKKAAKPAKPAAKSIVTLDVKPWDDETNLEEMVANVKAIEMEGLTWGAHQFIP
+                     IGFGIKKLQINCVVEDDKVSLDDLQQSIEEDEDHVQSTDIAAMQKL"
+     gene            142367..142468
+                     /locus_tag="snR18"
+                     /db_xref="GeneID:9164867"
+     ncRNA           142367..142468
+                     /ncRNA_class="snoRNA"
+                     /locus_tag="snR18"
+                     /product="SNR18"
+                     /note="C/D box small nucleolar RNA (snoRNA); commonly
+                     referred to as U18; guides 2'-O-methylation of large
+                     subunit (LSU) rRNA at positions A649 and C650"
+                     /transcript_id="NR_132150.1"
+                     /db_xref="GeneID:9164867"
+                     /db_xref="SGD:S000007500"
+     gene            <143707..>147531
+                     /gene="VPS8"
+                     /locus_tag="YAL002W"
+                     /gene_synonym="FUN15; VPL8; VPT8"
+                     /db_xref="GeneID:851261"
+     mRNA            <143707..>147531
+                     /gene="VPS8"
+                     /locus_tag="YAL002W"
+                     /gene_synonym="FUN15; VPL8; VPT8"
+                     /product="CORVET complex membrane-binding subunit VPS8"
+                     /transcript_id="NM_001178149.1"
+                     /db_xref="GeneID:851261"
+     CDS             143707..147531
+                     /gene="VPS8"
+                     /locus_tag="YAL002W"
+                     /gene_synonym="FUN15; VPL8; VPT8"
+                     /note="Membrane-binding component of the CORVET complex;
+                     involved in endosomal vesicle tethering and fusion in the
+                     endosome to vacuole protein targeting pathway; interacts
+                     with Vps21p; contains RING finger motif"
+                     /codon_start=1
+                     /product="CORVET complex membrane-binding subunit VPS8"
+                     /protein_id="NP_009399.2"
+                     /db_xref="GeneID:851261"
+                     /db_xref="SGD:S000000002"
+                     /translation="MEQNGLDHDSRSSIDTTINDTQKTFLEFRSYTQLSEKLASSSSY
+                     TAPPLNEDGPKGVASAVSQGSESVVSWTTLTHVYSILGAYGGPTCLYPTATYFLMGTS
+                     KGCVLIFNYNEHLQTILVPTLSEDPSIHSIRSPVKSIVICSDGTHVAASYETGNICIW
+                     NLNVGYRVKPTSEPTNGMTPTPALPAVLHIDDHVNKEITGLDFFGARHTALIVSDRTG
+                     KVSLYNGYRRGFWQLVYNSKKILDVNSSKEKLIRSKLSPLISREKISTNLLSVLTTTH
+                     FALILLSPHVSLMFQETVEPSVQNSLVVNSSISWTQNCSRVAYSVNNKISVISISSSD
+                     FNVQSASHSPEFAESILSIQWIDQLLLGVLTISHQFLVLHPQHDFKILLRLDFLIHDL
+                     MIPPNKYFVISRRSFYLLTNYSFKIGKFVSWSDITLRHILKGDYLGALEFIESLLQPY
+                     CPLANLLKLDNNTEERTKQLMEPFYNLSLAALRFLIKKDNADYNRVYQLLMVVVRVLQ
+                     QSSKKLDSIPSLDVFLEQGLEFFELKDNAVYFEVVANIVAQGSVTSISPVLFRSIIDY
+                     YAKEENLKVIEDLIIMLNPTTLDVDLAVKLCQKYNLFDLLIYIWNKIFDDYQTPVVDL
+                     IYRISNQSEKCVIFNGPQVPPETTIFDYVTYILTGRQYPQNLSISPSDKCSKIQRELS
+                     AFIFSGFSIKWPSNSNHKLYICENPEEEPAFPYFHLLLKSNPSRFLAMLNEVFEASLF
+                     NDDNDMVASVGEAELVSRQYVIDLLLDAMKDTGNSDNIRVLVAIFIATSISKYPQFIK
+                     VSNQALDCVVNTICSSRVQGIYEISQIALESLLPYYHSRTTENFILELKEKNFNKVLF
+                     HIYKSENKYASALSLILETKDIEKEYNTDIVSITDYILKKCPPGSLECGKVTEVIETN
+                     FDLLLSRIGIEKCVTIFSDFDYNLHQEILEVKNEETQQKYLDKLFSTPNINNKVDKRL
+                     RNLHIELNCKYKSKREMILWLNGTVLSNAESLQILDLLNQDSNFEAAAIIHERLESFN
+                     LAVRDLLSFIEQCLNEGKTNISTLLESLRRAFDDCNSAGTEKKSCWILLITFLITLYG
+                     KYPSHDERKDLCNKLLQEAFLGLVRSKSSSQKDSGGEFWEIMSSVLEHQDVILMKVQD
+                     LKQLLLNVFNTYKLERSLSELIQKIIEDSSQDLVQQYRKFLSEGWSIHTDDCEICGKK
+                     IWGAGLDPLLFLAWENVQRHQDMISVDLKTPLVIFKCHHGFHQTCLENLAQKPDEYSC
+                     LICQTESNPKIV"
+     rep_origin      147398..147717
+                     /note="ARS108;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000121255"
+     gene            complement(<147594..>151166)
+                     /gene="TFC3"
+                     /locus_tag="YAL001C"
+                     /gene_synonym="FUN24; TSV115"
+                     /db_xref="GeneID:851262"
+     mRNA            complement(join(<147594..151006,151097..>151166))
+                     /gene="TFC3"
+                     /locus_tag="YAL001C"
+                     /gene_synonym="FUN24; TSV115"
+                     /product="transcription factor TFIIIC subunit TFC3"
+                     /transcript_id="NM_001178148.1"
+                     /db_xref="GeneID:851262"
+     CDS             complement(join(147594..151006,151097..151166))
+                     /gene="TFC3"
+                     /locus_tag="YAL001C"
+                     /gene_synonym="FUN24; TSV115"
+                     /note="Subunit of RNA polymerase III transcription
+                     initiation factor complex; part of the TauB domain of
+                     TFIIIC that binds DNA at the BoxB promoter sites of tRNA
+                     and similar genes; cooperates with Tfc6p in DNA binding;
+                     largest of six subunits of the RNA polymerase III
+                     transcription initiation factor complex (TFIIIC)"
+                     /codon_start=1
+                     /product="transcription factor TFIIIC subunit TFC3"
+                     /protein_id="NP_009400.1"
+                     /db_xref="GeneID:851262"
+                     /db_xref="SGD:S000000001"
+                     /translation="MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKK
+                     VKQFVLSCVILKKDIEVYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKK
+                     ESTIGNSAFELLLEVAKSGEKGINTMDLAQVTGQDPRSVTGRIKKINHLLTSSQLIYK
+                     GHVVKQLKLKKFSHDGVDSNPYINIRDHLATIVEVVKRSKNGIRQIIDLKRELKFDKE
+                     KRLSKAFIAAIAWLDEKEYLKKVLVVSPKNPAIKIRCVKYVKDIPDSKGSPSFEYDSN
+                     SADEDSVSDSKAAFEDEDLVEGLDNFNATDLLQNQGLVMEEKEDAVKNEVLLNRFYPL
+                     QNQTYDIADKSGLKGISTMDVVNRITGKEFQRAFTKSSEYYLESVDKQKENTGGYRLF
+                     RIYDFEGKKKFFRLFTAQNFQKLTNAEDEISVPKGFDELGKSRTDLKTLNEDNFVALN
+                     NTVRFTTDSDGQDIFFWHGELKIPPNSKKTPNKNKRKRQVKNSTNASVAGNISNPKRI
+                     KLEQHVSTAQEPKSAEDSPSSNGGTVVKGKVVNFGGFSARSLRSLQRQRAILKVMNTI
+                     GGVAYLREQFYESVSKYMGSTTTLDKKTVRGDVDLMVESEKLGARTEPVSGRKIIFLP
+                     TVGEDAIQRYILKEKDSKKATFTDVIHDTEIYFFDQTEKNRFHRGKKSVERIRKFQNR
+                     QKNAKIKASDDAISKKSTSVNVSDGKIKRRDKKVSAGRTTVVVENTKEDKTVYHAGTK
+                     DGVQALIRAVVVTKSIKNEIMWDKITKLFPNNSLDNLKKKWTARRVRMGHSGWRAYVD
+                     KWKKMLVLAIKSEKISLRDVEELDLIKLLDIWTSFDEKEIKRPLFLYKNYEENRKKFT
+                     LVRDDTLTHSGNDLAMSSMIQREISSLKKTYTRKISASTKDLSKSQSDDYIRTVIRSI
+                     LIESPSTTRNEIEALKNVGNESIDNVIMDMAKEKQIYLHGSKLECTDTLPDILENRGN
+                     YKDFGVAFQYRCKVNELLEAGNAIVINQEPSDISSWVLIDLISGELLNMDVIPMVRNV
+                     RPLTYTSRRFEIRTLTPPLIIYANSQTKLNTARKSAVKVPLGKPFSRLWVNGSGSIRP
+                     NIWKQVVTMVVNEIIFHPGITLSRLQSRCREVLSLHEISEICKWLLERQVLITTDFDG
+                     YWVNHNWYSIYEST"
+     centromere      151465..151582
+                     /note="CEN1; Chromosome I centromere"
+                     /db_xref="SGD:S000006463"
+     centromere      151465..151474
+                     /note="CEN1_CDEI of CEN1"
+     centromere      151475..151557
+                     /note="CEN1_CDEII of CEN1"
+     centromere      151558..151582
+                     /note="CEN1_CDEIII of CEN1"
+     gene            <152257..>153876
+                     /gene="NUP60"
+                     /locus_tag="YAR002W"
+                     /db_xref="GeneID:851263"
+     mRNA            <152257..>153876
+                     /gene="NUP60"
+                     /locus_tag="YAR002W"
+                     /product="FG-nucleoporin NUP60"
+                     /transcript_id="NM_001178209.1"
+                     /db_xref="GeneID:851263"
+     CDS             152257..153876
+                     /gene="NUP60"
+                     /locus_tag="YAR002W"
+                     /note="FG-nucleoporin component of central core of the
+                     nuclear pore complex; contributes directly to
+                     nucleocytoplasmic transport and maintenance of the nuclear
+                     pore complex (NPC) permeability barrier and is involved in
+                     gene tethering at the nuclear periphery; relocalizes to
+                     the cytosol in response to hypoxia; both NUP1 and NUP60
+                     are homologous to human NUP153"
+                     /codon_start=1
+                     /product="FG-nucleoporin NUP60"
+                     /protein_id="NP_009401.1"
+                     /db_xref="GeneID:851263"
+                     /db_xref="SGD:S000000063"
+                     /translation="MHRKSLRRASATVPSAPYRKQIISNAHNKPSLFSKIKTFFTQKD
+                     SARVSPRNNVANKQPRNESFNRRISSMPGGYFHSEISPDSTVNRSVVVSAVGEARNDI
+                     ENKEEEYDETHETNISNAKLANFFSKKGNEPLSEIEIEGVMSLLQKSSKSMITSEGEQ
+                     KSAEGNNIDQSLILKESGSTPISISNAPTFNPKYDTSNASMNTTLGSIGSRKYSFNYS
+                     SLPSPYKTTVYRYSAAKKIPDTYTANTSAQSIASAKSVRSGVSKSAPSKKISNTAAAL
+                     VSLLDENDSKKNNAASELANPYSSYVSQIRKHKRVSPNAAPRQEISEEETTVKPLFQN
+                     VPEQGEEPMKQLNATKISPSAPSKDSFTKYKPARSSSLRSNVVVAETSPEKKDGGDKP
+                     PSSAFNFSFNTSRNVEPTENAYKSENAPSASSKEFNFTNLQAKPLVGKPKTELTKGDS
+                     TPVQPDLSVTPQKSSSKGFVFNSVQKKSRSNLSQENDNEGKHISASIDNDFSEEKAEE
+                     FDFNVPVVSKQLGNGLVDENKVEAFKSLYTF"
+     gene            complement(<154065..>154724)
+                     /gene="ERP1"
+                     /locus_tag="YAR002C-A"
+                     /db_xref="GeneID:851264"
+     mRNA            complement(<154065..>154724)
+                     /gene="ERP1"
+                     /locus_tag="YAR002C-A"
+                     /product="Erp1p"
+                     /transcript_id="NM_001180033.1"
+                     /db_xref="GeneID:851264"
+     CDS             complement(154065..154724)
+                     /gene="ERP1"
+                     /locus_tag="YAR002C-A"
+                     /note="Member of the p24 family involved in ER to Golgi
+                     transport; role in misfolded protein quality control;
+                     forms heterotrimeric complex with Erp2p, Emp24p, and
+                     Erv25p; localized to COPII-coated vesicles; ERP1 has a
+                     paralog, ERP6, that arose from the whole genome
+                     duplication"
+                     /codon_start=1
+                     /product="Erp1p"
+                     /protein_id="NP_009402.1"
+                     /db_xref="GeneID:851264"
+                     /db_xref="SGD:S000002129"
+                     /translation="MLLTSLLQVFACCLVLPAQVTAFYYYTSGAERKCFHKELSKGTL
+                     FQATYKAQIYDDQLQNYRDAGAQDFGVLIDIEETFDDNHLVVHQKGSASGDLTFLASD
+                     SGEHKICIQPEAGGWLIKAKTKIDVEFQVGSDEKLDSKGKATIDILHAKVNVLNSKIG
+                     EIRREQKLMRDREATFRDASEAVNSRAMWWIVIQLIVLAVTCGWQMKHLGKFFVKQKI
+                     L"
+     gene            <155005..>156285
+                     /gene="SWD1"
+                     /locus_tag="YAR003W"
+                     /gene_synonym="CPS50; FUN16; SAF49"
+                     /db_xref="GeneID:851265"
+     mRNA            <155005..>156285
+                     /gene="SWD1"
+                     /locus_tag="YAR003W"
+                     /gene_synonym="CPS50; FUN16; SAF49"
+                     /product="COMPASS subunit protein SWD1"
+                     /transcript_id="NM_001178210.1"
+                     /db_xref="GeneID:851265"
+     CDS             155005..156285
+                     /gene="SWD1"
+                     /locus_tag="YAR003W"
+                     /gene_synonym="CPS50; FUN16; SAF49"
+                     /note="Subunit of the COMPASS (Set1C) complex; COMPASS
+                     methylates histone H3 on lysine 4 and is required in
+                     transcriptional silencing near telomeres; WD40 beta
+                     propeller superfamily member with similarity to mammalian
+                     Rbbp7"
+                     /codon_start=1
+                     /product="COMPASS subunit protein SWD1"
+                     /protein_id="NP_009403.1"
+                     /db_xref="GeneID:851265"
+                     /db_xref="SGD:S000000064"
+                     /translation="MNILLQDPFAVLKEHPEKLTHTIENPLRTECLQFSPCGDYLALG
+                     CANGALVIYDMDTFRPICVPGNMLGAHVRPITSIAWSPDGRLLLTSSRDWSIKLWDLS
+                     KPSKPLKEIRFDSPIWGCQWLDAKRRLCVATIFEESDAYVIDFSNDPVASLLSKSDEK
+                     QLSSTPDHGYVLVCTVHTKHPNIIIVGTSKGWLDFYKFHSLYQTECIHSLKITSSNIK
+                     HLIVSQNGERLAINCSDRTIRQYEISIDDENSAVELTLEHKYQDVINKLQWNCILFSN
+                     NTAEYLVASTHGSSAHELYIWETTSGTLVRVLEGAEEELIDINWDFYSMSIVSNGFES
+                     GNVYVWSVVIPPKWSALAPDFEEVEENVDYLEKEDEFDEVDEAEQQQGLEQEEEIAID
+                     LRTREQYDVRGNNLLVERFTIPTDYTRIIKMQSS"
+     gene            complement(<156754..>158619)
+                     /gene="RFA1"
+                     /locus_tag="YAR007C"
+                     /gene_synonym="BUF2; FUN3; RPA1; RPA70"
+                     /db_xref="GeneID:851266"
+     mRNA            complement(<156754..>158619)
+                     /gene="RFA1"
+                     /locus_tag="YAR007C"
+                     /gene_synonym="BUF2; FUN3; RPA1; RPA70"
+                     /product="replication factor A subunit protein RFA1"
+                     /transcript_id="NM_001178211.1"
+                     /db_xref="GeneID:851266"
+     CDS             complement(156754..158619)
+                     /gene="RFA1"
+                     /locus_tag="YAR007C"
+                     /gene_synonym="BUF2; FUN3; RPA1; RPA70"
+                     /note="Subunit of heterotrimeric Replication Protein A
+                     (RPA); RPA is a highly conserved single-stranded DNA
+                     binding protein involved in DNA replication, repair, and
+                     recombination; RPA protects against inappropriate telomere
+                     recombination, and upon telomere uncapping, prevents cell
+                     proliferation by a checkpoint-independent pathway; role in
+                     DNA catenation/decatenation pathway of chromosome
+                     disentangling; relocalizes to the cytosol in response to
+                     hypoxia"
+                     /codon_start=1
+                     /product="replication factor A subunit protein RFA1"
+                     /protein_id="NP_009404.1"
+                     /db_xref="GeneID:851266"
+                     /db_xref="SGD:S000000065"
+                     /translation="MSSVQLSRGDFHSIFTNKQRYDNPTGGVYQVYNTRKSDGANSNR
+                     KNLIMISDGIYHMKALLRNQAASKFQSMELQRGDIIRVIIAEPAIVRERKKYVLLVDD
+                     FELVQSRADMVNQTSTFLDNYFSEHPNETLKDEDITDSGNVANQTNASNAGVPDMLHS
+                     NSNLNANERKFANENPNSQKTRPIFAIEQLSPYQNVWTIKARVSYKGEIKTWHNQRGD
+                     GKLFNVNFLDTSGEIRATAFNDFATKFNEILQEGKVYYVSKAKLQPAKPQFTNLTHPY
+                     ELNLDRDTVIEECFDESNVPKTHFNFIKLDAIQNQEVNSNVDVLGIIQTINPHFELTS
+                     RAGKKFDRRDITIVDDSGFSISVGLWNQQALDFNLPEGSVAAIKGVRVTDFGGKSLSM
+                     GFSSTLIPNPEIPEAYALKGWYDSKGRNANFITLKQEPGMGGQSAASLTKFIAQRITI
+                     ARAQAENLGRSEKGDFFSVKAAISFLKVDNFAYPACSNENCNKKVLEQPDGTWRCEKC
+                     DTNNARPNWRYILTISIIDETNQLWLTLFDDQAKQLLGVDANTLMSLKEEDPNEFTKI
+                     TQSIQMNEYDFRIRAREDTYNDQSRIRYTVANLHSLNYRAEADYLADELSKALLA"
+     gene            <158966..>159793
+                     /gene="SEN34"
+                     /locus_tag="YAR008W"
+                     /gene_synonym="FUN4"
+                     /db_xref="GeneID:851267"
+     mRNA            <158966..>159793
+                     /gene="SEN34"
+                     /locus_tag="YAR008W"
+                     /gene_synonym="FUN4"
+                     /product="tRNA splicing endonuclease subunit SEN34"
+                     /transcript_id="NM_001178212.1"
+                     /db_xref="GeneID:851267"
+     CDS             158966..159793
+                     /gene="SEN34"
+                     /locus_tag="YAR008W"
+                     /gene_synonym="FUN4"
+                     /EC_number="4.6.1.16"
+                     /note="Subunit of the tRNA splicing endonuclease; tRNA
+                     splicing endonuclease (Sen complex) is composed of Sen2p,
+                     Sen15p, Sen34p, and Sen54p; Sen complex also cleaves the
+                     CBP1 mRNA at the mitochondrial surface; Sen34p contains
+                     the active site for tRNA 3' splice site cleavage and has
+                     similarity to Sen2p and to Archaeal tRNA splicing
+                     endonuclease"
+                     /codon_start=1
+                     /product="tRNA splicing endonuclease subunit SEN34"
+                     /protein_id="NP_009405.1"
+                     /db_xref="GeneID:851267"
+                     /db_xref="SGD:S000000066"
+                     /translation="MPPLVFDIDHIKLLRKWGICGVLSGTLPTAAQQNVFLSVPLRLM
+                     LEDVLWLHLNNLADVKLIRQEGDEIMEGITLERGAKLSKIVNDRLNKSFEYQRKFKKD
+                     EHIAKLKKIGRINDKTTAEELQRLDKSSNNDQLIESSLFIDIANTSMILRDIRSDSDS
+                     LSRDDISDLLFKQYRQAGKMQTYFLYKALRDQGYVLSPGGRFGGKFIAYPGDPLRFHS
+                     HLTIQDAIDYHNEPIDLISMISGARLGTTVKKLWVIGGVAEETKETHFFSIEWAGFG"
+     rep_origin      159907..160127
+                     /note="ARS101;
+                     ARS containing multiple redundant ORC binding sites; ORC
+                     is the acronym for origin recognition complex"
+                     /db_xref="SGD:S000077372"
+     repeat_region   complement(160105..160237)
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006788"
+     mobile_element  complement(160238..166162)
+                     /note="YARCTy1-1; Ty1 element, LTR retrotransposon of the
+                     Copia (Pseudoviridae) group; contains genes TYA Gag and
+                     TYB Pol, encoding proteins involved in structure and
+                     function of virus-like particles, flanked by two direct
+                     repeats; mutated in S288C"
+                     /mobile_element_type="retrotransposon:YARCTy1-1"
+                     /db_xref="SGD:S000006792"
+     repeat_region   complement(160238..160574)
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006789"
+     gene            complement(<160597..>164187)
+                     /locus_tag="YAR009C"
+                     /db_xref="GeneID:851268"
+     mRNA            complement(<160597..>164187)
+                     /locus_tag="YAR009C"
+                     /product="truncated gag-pol fusion protein"
+                     /transcript_id="NM_001178213.1"
+                     /db_xref="GeneID:851268"
+     CDS             complement(160597..164187)
+                     /locus_tag="YAR009C"
+                     /EC_number="3.1.26.4"
+                     /EC_number="2.7.7.7"
+                     /EC_number="2.7.7.49"
+                     /note="Retrotransposon TYA Gag and TYB Pol genes; Gag
+                     processing produces capsid proteins, Pol is cleaved to
+                     produce protease, reverse transcriptase and integrase
+                     activities; in YARCTy1-1 TYB is mutant and probably
+                     non-functional; protein product forms cytoplasmic foci
+                     upon DNA replication stress"
+                     /codon_start=1
+                     /product="truncated gag-pol fusion protein"
+                     /protein_id="NP_009406.1"
+                     /db_xref="GeneID:851268"
+                     /db_xref="SGD:S000000067"
+                     /translation="METFTGYLKSTCFHQISPYPPSIMSIQVKVHANILILSFIECLR
+                     MPMHRQIRYSLKNNTITYFNESDVDWSSAIDYQCPDCLIGKSTKHRHIKGSRLKYQNS
+                     YEPFQYLHTDIFGPVHNLPKSAPSYFISFTDETTKLRWVYPLHDRREDSILDVFTTIL
+                     AFIKNQFQASVLVIQMDRGSEYTNRTLHKFLEKNGITPCYTTTADSRAHGVAERLNRT
+                     LLDDCRTQLQCSGLPNHLWFSAIEFSTIVRNSLASPKSKKSARQHAGLAGLDISTLLP
+                     FGQPVIVNDHNPNSKIHPRGIPGYALHPSRNSYGYIIYLPSLKKTVDTTNYVILQGKE
+                     SRLDQFNYDALTFDEDLNRLTASYHSFIASNEIQESNDLNIESDHDFQSDIELHPEQP
+                     RNVLSKAVSPTDSTPPSTHTEDSKRVSKTNIRAPREVDPNISESNILPSKKRSSTPQI
+                     SNIESTGSGGMHKLNVPLLAPMSQSNTHESSHASKSKDFRHSDSYSENETNHTNVPIS
+                     STGGTNNKTVPQISDQETEKRIIHRSPSIDASPPENNSSHNIVPIKTPTTVSEQNTEE
+                     SIIADLPLPDLPPESPTEFPDPFKELPPINSHQTNSSLGGIGDSNAYTTINSKKRSLE
+                     DNETEIKVSRDTWNTKNMRSLEPPRSKKRIHLIAAVKAVKSIKPIRTTLRYDEAITYN
+                     KDIKEKEKYIEAYHKEVNQLLKMNTWDTDKYYDRKEIDPKRVINSMFIFNKKRDGTHK
+                     ARFVARGDIQHPDTYDTGMQSNTVHHYALMTSLSLALDNNYYITQLDISSAYLYADIK
+                     EELYIRPPPHLGMNDKLIRLKKSLYGLKQSGANWYETIKSYLIKQCGMEEVRGWSCVF
+                     KNSQVTICLFVDDMILFSKDLNANKKIITTLKKQYDTKIINLGESDNEIQYDILGLEI
+                     KYQRGKYMKLGMEKSLTEKLPKLNVPLNPKGKKLRAPGQPGLYIDQDELEIDEDEYKE
+                     KVHEMQKLIGLASYVGYKFRFDLLYYINTLAQHILFPSRQVLDMTYELIQFMWDTRDK
+                     QLIWHKNKPTEPDNKLVAISDASYGNQPYYKSQIGNIYLLNGKVIGGKSTKASLTCTS
+                     TTEAEIHAISESVPLLNNLSYLIQELNKKPIIKGLLTDSRSTISIIKSTNEEKFRNRF
+                     FGTKAMRLRDEVSGNNLYVYYIETKKNIADVMTKPLPIKTFKLLTNKWIH"
+     gene            complement(<164544..>165866)
+                     /locus_tag="YAR010C"
+                     /db_xref="GeneID:851269"
+     mRNA            complement(<164544..>165866)
+                     /locus_tag="YAR010C"
+                     /product="gag protein"
+                     /transcript_id="NM_001178214.1"
+                     /db_xref="GeneID:851269"
+     CDS             complement(164544..165866)
+                     /locus_tag="YAR010C"
+                     /note="Retrotransposon TYA Gag gene co-transcribed with
+                     TYB Pol; Gag processing produces capsid proteins; in
+                     YARCTy1-1 TYB is mutant and probably non-functional"
+                     /codon_start=1
+                     /product="gag protein"
+                     /protein_id="NP_009407.1"
+                     /db_xref="GeneID:851269"
+                     /db_xref="SGD:S000000068"
+                     /translation="MESQQLSQHSPISHGSACASVTSKEVHTNQDPLDVSASKTEECE
+                     KASTKANSQQTTTPASSAVPENPHHASPQTAQSHSPQNGPYPQQCMMTQNQANPSGWS
+                     FYGHPSMIPYTPYQMSPMYFPPGPQSQFPQYPSSVGTPLSTPSPESGNTFTDSSSADS
+                     DMTSTKKYVRPPPMLTSPNDFPNWVKTYIKFLQNSNLGGIIPTVNGKPVRQITDDELT
+                     FLYNTFQIFAPSQFLPTWVKDILSVDYTDIMKILSKSIEKMQSDTQEANDIVTLANLQ
+                     YNGSTPADAFETKVTNIIDRLNNNGIHINNKVACQLIMRGLSGEYKFLRYTRHRHLNM
+                     TVAELFLDIHAIYEEQQGSRNSKPNYRRNPSDEKNDSRSYTNTTKPKVIARNPQKTNN
+                     SKSKTARAHNVSTSNNSPSTDNDSISKSTTEPIQLNNKHDLHLRPETY"
+     repeat_region   complement(165826..166162)
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006790"
+     gene            166267..166339
+                     /gene="TGA1"
+                     /locus_tag="tA(UGC)A"
+                     /db_xref="GeneID:851270"
+     tRNA            166267..166339
+                     /gene="TGA1"
+                     /locus_tag="tA(UGC)A"
+                     /product="tRNA-Ala"
+                     /note="Alanine tRNA (tRNA-Ala), predicted by tRNAscan-SE
+                     analysis; one of 5 nuclear tRNA genes containing the
+                     tDNA-anticodon TGC (mature tRNA may be UGC or may contain
+                     modified bases), decodes GCA and probably GCG codons into
+                     alanine, one of 16 nuclear tRNAs for alanine"
+                     /db_xref="GeneID:851270"
+                     /db_xref="SGD:S000006521"
+     gene            complement(<166742..>168871)
+                     /gene="BUD14"
+                     /locus_tag="YAR014C"
+                     /db_xref="GeneID:851271"
+     mRNA            complement(<166742..>168871)
+                     /gene="BUD14"
+                     /locus_tag="YAR014C"
+                     /product="protein phosphatase regulator BUD14"
+                     /transcript_id="NM_001178215.2"
+                     /db_xref="GeneID:851271"
+     CDS             complement(166742..168871)
+                     /gene="BUD14"
+                     /locus_tag="YAR014C"
+                     /note="Protein involved in bud-site selection;
+                     Bud14p-Glc7p complex is a cortical regulator of dynein;
+                     forms a complex with Kel1p and Kel2p that regulates Bnr1p
+                     (formin) to affect actin cable assembly, cytokinesis, and
+                     polarized growth; diploid mutants display a random budding
+                     pattern instead of the wild-type bipolar pattern; relative
+                     distribution to the nucleus increases upon DNA replication
+                     stress"
+                     /codon_start=1
+                     /product="protein phosphatase regulator BUD14"
+                     /protein_id="NP_009408.3"
+                     /db_xref="GeneID:851271"
+                     /db_xref="SGD:S000000069"
+                     /translation="MSNKEEHVDETSASGVKEVSSIAARHDNGYAPSLITSTSGMDSF
+                     QSHALLNDPTLIEDYSDIINNRPTSGSKLTLGNEDSESMGGSVVVTPTSNKSSPFNSK
+                     LNILSNAAEKGHDVLRNRDDDKELEEENVEKHMHSNSKRDQRHYKENSSELPDSYDYS
+                     DSEFEDNLERRLQEIETDSVDSADKDEVHFSVNNTMNPDVDDFSDGLKYAISEDEDEE
+                     ENYSDDDDFDRKFQDSGFQGEKDDLEEENDDYQPLSPPRELDPDKLYALYAFNGHDSS
+                     HCQLGQDEPCILLNDQDAYWWLVKRITDGKIGFAPAEILETFPERLARLNCWKNENMS
+                     SQSVASSDSKDDSISSGNKNQSDAESIIPTPALNGYGKGNKSVSFNDVVGYADRFIDD
+                     AIEDTSLDSNDDGGEGNGQSYDDDVDNDKETKVTHRDEYTEAKLNFGKFQDDDTSDVV
+                     SDVSFSTSLNTPLNVKKVRRQDNKNESEPKTSSSKDREDDYNANRYVGQEKSEPVDSD
+                     YDTDLKKVFEAPRMPFANGMAKSDSQNSLSTIGEFSPSSSEWTNESPSTPIVEESSSI
+                     PSSRAIKDISQYIHAKSKIEETTNVENTEGQIQASLGSSGGMANQTDAEQPKEELEKH
+                     HSTPEEEKQSTLSLHSSSEEDFYMDEQRAVSSASINSSLSGSRALSNTNMSDPASKPN
+                     SLVQHLYAPVFDRMDVLMKQLDEIIRK"
+     gene            <169375..>170295
+                     /gene="ADE1"
+                     /locus_tag="YAR015W"
+                     /db_xref="GeneID:851272"
+     mRNA            <169375..>170295
+                     /gene="ADE1"
+                     /locus_tag="YAR015W"
+                     /product="phosphoribosylaminoimidazolesuccinocarboxamide
+                     synthase"
+                     /transcript_id="NM_001178216.1"
+                     /db_xref="GeneID:851272"
+     CDS             169375..170295
+                     /gene="ADE1"
+                     /locus_tag="YAR015W"
+                     /EC_number="6.3.2.6"
+                     /note="N-succinyl-5-aminoimidazole-4-carboxamide ribotide
+                     synthetase; required for 'de novo' purine nucleotide
+                     biosynthesis; red pigment accumulates in mutant cells
+                     deprived of adenine; protein abundance increases in
+                     response to DNA replication stress"
+                     /codon_start=1
+                     /product="phosphoribosylaminoimidazolesuccinocarboxamide
+                     synthase"
+                     /protein_id="NP_009409.1"
+                     /db_xref="GeneID:851272"
+                     /db_xref="SGD:S000000070"
+                     /translation="MSITKTELDGILPLVARGKVRDIYEVDAGTLLFVATDRISAYDV
+                     IMENSIPEKGILLTKLSEFWFKFLSNDVRNHLVDIAPGKTIFDYLPAKLSEPKYKTQL
+                     EDRSLLVHKHKLIPLEVIVRGYITGSAWKEYVKTGTVHGLKQPQGLKESQEFPEPIFT
+                     PSTKAEQGEHDENISPAQAAELVGEDLSRRVAELAVKLYSKCKDYAKEKGIIIADTKF
+                     EFGIDEKTNEIILVDEVLTPDSSRFWNGASYKVGESQDSYDKQFLRDWLTANKLNGVN
+                     GVKMPQDIVDRTRAKYIEAYETLTGSKWSH"
+     gene            complement(<170396..>171703)
+                     /gene="KIN3"
+                     /locus_tag="YAR018C"
+                     /gene_synonym="FUN52; NPK1"
+                     /db_xref="GeneID:851273"
+     mRNA            complement(<170396..>171703)
+                     /gene="KIN3"
+                     /locus_tag="YAR018C"
+                     /gene_synonym="FUN52; NPK1"
+                     /product="serine/threonine protein kinase KIN3"
+                     /transcript_id="NM_001178217.1"
+                     /db_xref="GeneID:851273"
+     CDS             complement(170396..171703)
+                     /gene="KIN3"
+                     /locus_tag="YAR018C"
+                     /gene_synonym="FUN52; NPK1"
+                     /EC_number="2.7.11.1"
+                     /note="Nonessential serine/threonine protein kinase;
+                     possible role in DNA damage response; influences tolerance
+                     to high levels of ethanol"
+                     /codon_start=1
+                     /product="serine/threonine protein kinase KIN3"
+                     /protein_id="NP_009410.1"
+                     /db_xref="GeneID:851273"
+                     /db_xref="SGD:S000000071"
+                     /translation="MHRRQFFQEYRSPQQQQGHPPRSEYQVLEEIGRGSFGSVRKVIH
+                     IPTKKLLVRKDIKYGHMNSKERQQLIAECSILSQLKHENIVEFYNWDFDEQKEVLYLY
+                     MEYCSRGDLSQMIKHYKQEHKYIPEKIVWGILAQLLTALYKCHYGVELPTLTTIYDRM
+                     KPPVKGKNIVIHRDLKPGNIFLSYDDSDYNINEQVDGHEEVNSNYYRDHRVNSGKRGS
+                     PMDYSQVVVKLGDFGLAKSLETSIQFATTYVGTPYYMSPEVLMDQPYSPLSDIWSLGC
+                     VIFEMCSLHPPFQAKNYLELQTKIKNGKCDTVPEYYSRGLNAIIHSMIDVNLRTRPST
+                     FELLQDIQIRTARKSLQLERFERKLLDYENELTNIEKILEKQAIEYERELSQLKEQFT
+                     QAVEERAREVISGKKVGKVPESINGYYGKKFAKPAYHWQTRYR"
+     gene            complement(<172211..>175135)
+                     /gene="CDC15"
+                     /locus_tag="YAR019C"
+                     /gene_synonym="LYT1"
+                     /db_xref="GeneID:851274"
+     mRNA            complement(<172211..>175135)
+                     /gene="CDC15"
+                     /locus_tag="YAR019C"
+                     /gene_synonym="LYT1"
+                     /product="serine/threonine protein kinase CDC15"
+                     /transcript_id="NM_001178218.2"
+                     /db_xref="GeneID:851274"
+     CDS             complement(172211..175135)
+                     /gene="CDC15"
+                     /locus_tag="YAR019C"
+                     /gene_synonym="LYT1"
+                     /EC_number="2.7.11.1"
+                     /note="Protein kinase of the Mitotic Exit Network;
+                     localized to the spindle pole bodies at late anaphase;
+                     promotes mitotic exit by directly switching on the kinase
+                     activity of Dbf2p; required for spindle disassembly after
+                     meiosis II; relocalizes to the cytoplasm upon DNA
+                     replication stress"
+                     /codon_start=1
+                     /product="serine/threonine protein kinase CDC15"
+                     /protein_id="NP_009411.2"
+                     /db_xref="GeneID:851274"
+                     /db_xref="SGD:S000000072"
+                     /translation="MNSMADTDRVNLTPIQRASEKSVQYHLKQVIGRGSYGVVYKAIN
+                     KHTDQVVAIKEVVYENDEELNDIMAEISLLKNLNHNNIVKYHGFIRKSYELYILLEYC
+                     ANGSLRRLISRSSTGLSENESKTYVTQTLLGLKYLHGEGVIHRDIKAANILLSADNTV
+                     KLADFGVSTIVNSSALTLAGTLNWMAPEILGNRGASTLSDIWSLGATVVEMLTKNPPY
+                     HNLTDANIYYAVENDTYYPPSSFSEPLKDFLSKCFVKNMYKRPTADQLLKHVWINSTE
+                     NVKVDKLNKFKEDFTDADYHWDADFQEEKLNISPSKFSLAAAPAAWAENNQELDLMPP
+                     TESQLLSQLKSSSKPLTDLHVLFSVCSLENIADTIIECLSRTTVDKRLITAFGSIFVY
+                     DTQHNHSRLRLKFIAMGGIPLIIKFEHLAKEFVIDYPQTLIECGIMYPPNFASLKTPK
+                     YILELVYRFYDLTSTAFWCRWCFKHLDISLLLNNIHERRAQSILLKLSSYAPWSFEKI
+                     LPSLIDSKLKKKILISPQITYVVFKSINYMITTNDDKIHKSAIPSSSSLPLSSSPTRN
+                     SPVNSVQSPSRSPVHSLMATRPSSPMRHKSISNFPHLTISSKSRLLIELPEGFFTWLT
+                     SFFVDMAQIKDLSVLKYFTKLCYLTVHINSTFLNDLLDNDAFFAFIRNIDTIIPFIDD
+                     AKTAAFIWKQITAICVEMSLDMDQMSASLFSTAMNFIRKKNNTSISGLEIILNCLHFT
+                     LRNVNDDVAPTVGSSESHSVFLIKVNNDAAIELPIDQLVDLFYALNDDDVNLSKLISI
+                     FTKICSLPGFENLTINIIFHPNFYEKIVSFFDTYFNSLLIQIDLLKFIKLIFSKSLLK
+                     LYDYTGQPDPIKQTEPNRRNKATVFKLRAILVQITEFLNNNWNKDVPKRNSNQVGGDS
+                     VLICQLCEDIRSLSKKGSLQKVSSVTAAIGSSPTKDERSNLRSSKDKSDGFSVPITTF
+                     QT"
+     rep_origin      176157..176404
+                     /note="ARS110;
+                     Autonomously Replicating Sequence; originally referred to
+                     as ADE1 ARS"
+                     /db_xref="SGD:S000114488"
+     gene            complement(<176856..>177023)
+                     /gene="PAU7"
+                     /locus_tag="YAR020C"
+                     /db_xref="GeneID:851275"
+     mRNA            complement(<176856..>177023)
+                     /gene="PAU7"
+                     /locus_tag="YAR020C"
+                     /product="seripauperin PAU7"
+                     /transcript_id="NM_001178219.1"
+                     /db_xref="GeneID:851275"
+     CDS             complement(176856..177023)
+                     /gene="PAU7"
+                     /locus_tag="YAR020C"
+                     /note="Member of the seripauperin multigene family; active
+                     during alcoholic fermentation, regulated by anaerobiosis,
+                     inhibited by oxygen, repressed by heme"
+                     /codon_start=1
+                     /product="seripauperin PAU7"
+                     /protein_id="NP_009412.1"
+                     /db_xref="GeneID:851275"
+                     /db_xref="SGD:S000000073"
+                     /translation="MVKLTSIAAGVAAIAAGASAAATTTLSQSDERVNLVELGVYVSD
+                     IRAHLAEYYSF"
+     gene            complement(<179281..>179820)
+                     /locus_tag="YAR023C"
+                     /db_xref="GeneID:851276"
+     mRNA            complement(<179281..>179820)
+                     /locus_tag="YAR023C"
+                     /product="DUP240 family protein"
+                     /transcript_id="NM_001178220.2"
+                     /db_xref="GeneID:851276"
+     CDS             complement(179281..179820)
+                     /locus_tag="YAR023C"
+                     /note="Putative integral membrane protein; member of
+                     DUP240 gene family"
+                     /codon_start=1
+                     /product="DUP240 family protein"
+                     /protein_id="NP_009413.2"
+                     /db_xref="GeneID:851276"
+                     /db_xref="SGD:S000000074"
+                     /translation="MINFLLFVLTILATLTNIWFSGVLSPAMVIRICLGGSMVVLQIW
+                     SFSRPISNETFRTKLLLEVITHRPSIAGKEWKTITYNMNQYLFKAGLWKTPYHFFCEH
+                     QCYEFFKDLIKGKYPDVQWDTANTQPFISVPENQAATQNSDVEPTVKWCLFKAAEIQA
+                     HAVREYWQSQYPDVGIPAI"
+     gene            181141..181254
+                     /gene="SUP56"
+                     /locus_tag="tL(CAA)A"
+                     /db_xref="GeneID:851277"
+     tRNA            join(181141..181178,181211..181254)
+                     /gene="SUP56"
+                     /locus_tag="tL(CAA)A"
+                     /product="tRNA-Leu"
+                     /note="Leucine tRNA (tRNA-Leu), predicted by tRNAscan-SE
+                     analysis; can mutate to suppress amber nonsense mutations"
+                     /db_xref="GeneID:851277"
+                     /db_xref="SGD:S000006636"
+     gene            complement(182522..182603)
+                     /locus_tag="tS(AGA)A"
+                     /db_xref="GeneID:851278"
+     tRNA            complement(182522..182603)
+                     /locus_tag="tS(AGA)A"
+                     /product="tRNA-Ser"
+                     /note="Serine tRNA (tRNA-Ser), predicted by tRNAscan-SE
+                     analysis"
+                     /db_xref="GeneID:851278"
+                     /db_xref="SGD:S000006719"
+     repeat_region   182620..182959
+                     /note="Ty3 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006795"
+     repeat_region   183142..183474
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006793"
+     gene            <183770..>184477
+                     /gene="UIP3"
+                     /locus_tag="YAR027W"
+                     /db_xref="GeneID:851279"
+     mRNA            <183770..>184477
+                     /gene="UIP3"
+                     /locus_tag="YAR027W"
+                     /product="DUP240 family protein UIP3"
+                     /transcript_id="NM_001178221.1"
+                     /db_xref="GeneID:851279"
+     CDS             183770..184477
+                     /gene="UIP3"
+                     /locus_tag="YAR027W"
+                     /note="Putative integral membrane hypothetical protein;
+                     interacts with Ulp1p at the nuclear periphery; member of
+                     DUP240 gene family"
+                     /codon_start=1
+                     /product="DUP240 family protein UIP3"
+                     /protein_id="NP_009414.1"
+                     /db_xref="GeneID:851279"
+                     /db_xref="SGD:S000000075"
+                     /translation="MQTPSENTDVKLDTLDEPSAHLIEENVALPEDTFNSYWSYILNE
+                     IARCKPLMIMFLIPVCLVLLITFFHDIKGILVFLVISLILSIIILLIGITAFVSETLN
+                     KGFIIKLLVEVITRKPAVGGKEWRIIAYNMNQYLFDHGIWHTPYYFFCEHRCHKFFKS
+                     LIKQTRSNAHLSSPTNGAENTQSNTPAKEVSNEMVKPYIFSSDPVLEAYLIKAAEIHK
+                     EAEFEYWRKQYPEVDLP"
+     gene            <184892..>185596
+                     /locus_tag="YAR028W"
+                     /db_xref="GeneID:851280"
+     mRNA            <184892..>185596
+                     /locus_tag="YAR028W"
+                     /product="DUP240 family protein"
+                     /transcript_id="NM_001178222.1"
+                     /db_xref="GeneID:851280"
+     CDS             184892..185596
+                     /locus_tag="YAR028W"
+                     /note="Putative integral membrane protein; member of
+                     DUP240 gene family; GFP-fusion protein is induced in
+                     response to the DNA-damaging agent MMS"
+                     /codon_start=1
+                     /product="DUP240 family protein"
+                     /protein_id="NP_009415.1"
+                     /db_xref="GeneID:851280"
+                     /db_xref="SGD:S000000076"
+                     /translation="MQTPSENTDVKMDTLDEPSAHLIEENVALPEDTFSSHLSYVLYE
+                     IAHCKPIMFMIIIIVSLISLIVLFHDNDGCTVILVMSLIVASMALMVVAAFTFGKAIT
+                     EQEFMIKLLVEVIARKPAGKEWGTVAYNMNQYLFMKRLWYTPYYFYSGKKCHEFFTTL
+                     IKEVNSGSHSDSSSNSAEDTQSPVSAGKTSNGLNNFYSIRSDPILMAYVLKATQIEKE
+                     AQSEYWRKQYPDADLP"
+     gene            <186321..>186545
+                     /locus_tag="YAR029W"
+                     /db_xref="GeneID:851281"
+     mRNA            <186321..>186545
+                     /locus_tag="YAR029W"
+                     /product="DUP240 family protein"
+                     /transcript_id="NM_001178223.1"
+                     /db_xref="GeneID:851281"
+     CDS             186321..186545
+                     /locus_tag="YAR029W"
+                     /note="Member of DUP240 gene family but contains no
+                     transmembrane domains; green fluorescent protein
+                     (GFP)-fusion protein localizes to the cytoplasm in a
+                     punctate pattern"
+                     /codon_start=1
+                     /product="DUP240 family protein"
+                     /protein_id="NP_009416.1"
+                     /db_xref="GeneID:851281"
+                     /db_xref="SGD:S000000077"
+                     /translation="MNKYLFDHKIWSTPYYFYCEEDCHRLFLSFIEGRTFEKPTSNAE
+                     ENVQETEAGESFTLNPGEDFQNCFPRQRIL"
+     gene            <186836..>187732
+                     /gene="PRM9"
+                     /locus_tag="YAR031W"
+                     /db_xref="GeneID:851282"
+     mRNA            <186836..>187732
+                     /gene="PRM9"
+                     /locus_tag="YAR031W"
+                     /product="pheromone-regulated DUP240 family protein PRM9"
+                     /transcript_id="NM_001178224.1"
+                     /db_xref="GeneID:851282"
+     CDS             186836..187732
+                     /gene="PRM9"
+                     /locus_tag="YAR031W"
+                     /note="Pheromone-regulated protein; contains 3 predicted
+                     transmembrane segments and an FF sequence, a motif
+                     involved in COPII binding; member of DUP240 gene family;
+                     PRM9 has a paralog, PRM8, that arose from a segmental
+                     duplication"
+                     /codon_start=1
+                     /product="pheromone-regulated DUP240 family protein PRM9"
+                     /protein_id="NP_009418.1"
+                     /db_xref="GeneID:851282"
+                     /db_xref="SGD:S000000078"
+                     /translation="MSPQYHFYFVSFRNLVLNEKCLRSKKQVMKSFNWYKTDRYFDPH
+                     NILQHHSRAIEKTRYKLGMQTSSESTDAKSDFLDEPSAYLIEKNVALPKDIFGSYLSY
+                     WIYEVTRHKAAVILLVLIVTSILLLVFFYNTEFCVAFEILLFSFCFPGTCMVVIAFSE
+                     PIGDREFKVKLLMEIITRKPAVKGKEWRTITYKMNQYLFDHGLWDTPYYFYRDEDCHR
+                     YFLSLIKGRTFKKQKESSASNVKDAQSNDETAGTPNEAAESSSFSAGPNFIKLLTKAA
+                     EIEQQFQKEYWRQEYPGVDEFF"
+     gene            <188107..>188811
+                     /gene="MST28"
+                     /locus_tag="YAR033W"
+                     /db_xref="GeneID:851284"
+     mRNA            <188107..>188811
+                     /gene="MST28"
+                     /locus_tag="YAR033W"
+                     /product="DUP240 family protein MST28"
+                     /transcript_id="NM_001178225.1"
+                     /db_xref="GeneID:851284"
+     CDS             188107..188811
+                     /gene="MST28"
+                     /locus_tag="YAR033W"
+                     /note="Putative integral membrane protein, involved in
+                     vesicle formation; forms complex with Mst27p; member of
+                     DUP240 gene family; binds COPI and COPII vesicles; MST28
+                     has a paralog, MST27, that arose from a segmental
+                     duplication"
+                     /codon_start=1
+                     /product="DUP240 family protein MST28"
+                     /protein_id="NP_009419.1"
+                     /db_xref="GeneID:851284"
+                     /db_xref="SGD:S000000079"
+                     /translation="MQTPPESTDVKLDTLNEPSAHLIEKNVALPKDIFRSYLSYWIYE
+                     IARYTPVMILSLVIGVLVLLIIFFNDNEACVFNSAIFAFTSLVGLLIILSDGNPKLVS
+                     RRNFRTELLVDVITRKPAVEGKEWRIITYNMNQYLFNHGQWHTPYYFYSDEDCYRYFL
+                     RLVEGVTPKKQTATSIGNSPVTAKPEDAIESASPSSRLNYQNFLLKAAEIERQAQENY
+                     WRRRHPNIDALLKKTE"
+     repeat_region   189426..189757
+                     /note="Ty2 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006794"
+     gene            <190193..>192256
+                     /gene="YAT1"
+                     /locus_tag="YAR035W"
+                     /db_xref="GeneID:851285"
+     mRNA            <190193..>192256
+                     /gene="YAT1"
+                     /locus_tag="YAR035W"
+                     /product="carnitine O-acetyltransferase YAT1"
+                     /transcript_id="NM_001178226.1"
+                     /db_xref="GeneID:851285"
+     CDS             190193..192256
+                     /gene="YAT1"
+                     /locus_tag="YAR035W"
+                     /EC_number="2.3.1.7"
+                     /note="Outer mitochondrial carnitine acetyltransferase;
+                     minor ethanol-inducible enzyme involved in transport of
+                     activated acyl groups from the cytoplasm into the
+                     mitochondrial matrix; phosphorylated"
+                     /codon_start=1
+                     /product="carnitine O-acetyltransferase YAT1"
+                     /protein_id="NP_009420.1"
+                     /db_xref="GeneID:851285"
+                     /db_xref="SGD:S000000080"
+                     /translation="MPNLKRLPIPPLQDTLNRYLARVEPLQDERQNRRTRRTVLSAEN
+                     LDALNTLHERLLEYDARLAESNPESSYIEQFWYDAYLLYDATVVLNVNPYFQLQDDPT
+                     IKDTPETAAQGPYGAHTVQVRRAARLTTSILKFIRQIRHGTLRTDTVRGKTPLSMDQY
+                     ERLFGSSRIPPGPGEPSCHLQTDATSHHVVAMYRGQFYWFDVLDTRNEPIFATPEQLE
+                     WNLYSIIMDAESAGSGSAPFGVFTTESRRVWSNIRDYLFHADDCTNWRNLKLIDSALF
+                     VVCLDDVAFAADQQDELTRSMLCGTSTINLDPHQHQPPLNVQTGTCLNRWYDKLQLIV
+                     TKNGKAGINFEHTGVDGHTVLRLATDIYTDSILSFARGVTKNVVDIFSDDDGKPSSSS
+                     LASAAHSANLITIPRKLEWRTDNFLQSSLHFAETRISDLISQYEFVNLDFSNYGASHI
+                     KTVFKCSPDAFVQQVFQVAYFALYGRFETVYEPAMTKAFQNGRTEAIRSVTGQSKLFV
+                     KSLLDQDASDATKIQLLHDACTAHSQITRECSQGLGQDRHLYALYCLWNQWYKDKLEL
+                     PPIFRDKSWTTMQNNVLSTSNCGNPCLKSFGFGPVTANGFGIGYIIRDHSVSVVVSSR
+                     HRQTARFASLMEKSLLEIDRIFKRQQARAAKPAARTTASANTKSEDMKYLLSGYDYFD
+                     VSVSG"
+     gene            complement(<192337..>192417)
+                     /locus_tag="YAR035C-A"
+                     /db_xref="GeneID:1466430"
+     mRNA            complement(<192337..>192417)
+                     /locus_tag="YAR035C-A"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001184583.1"
+                     /db_xref="GeneID:1466430"
+     CDS             complement(192337..192417)
+                     /locus_tag="YAR035C-A"
+                     /note="hypothetical protein; identified by gene-trapping,
+                     microarray-based expression analysis, and genome-wide
+                     homology searching; predicted to have a role in cell
+                     budding based on computational 'guilt by association'
+                     analysis"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_878042.1"
+                     /db_xref="GeneID:1466430"
+                     /db_xref="SGD:S000028595"
+                     /translation="MRLNYSRCYYSSQRRRQSLPKRFPLI"
+     gene            <192619..>196185
+                     /gene="SWH1"
+                     /locus_tag="YAR042W"
+                     /gene_synonym="OSH1; YAR044W"
+                     /db_xref="GeneID:851286"
+     mRNA            <192619..>196185
+                     /gene="SWH1"
+                     /locus_tag="YAR042W"
+                     /gene_synonym="OSH1; YAR044W"
+                     /product="oxysterol-binding protein related protein SWH1"
+                     /transcript_id="NM_001178227.1"
+                     /db_xref="GeneID:851286"
+     CDS             192619..196185
+                     /gene="SWH1"
+                     /locus_tag="YAR042W"
+                     /gene_synonym="OSH1; YAR044W"
+                     /note="Protein similar to mammalian oxysterol-binding
+                     protein; contains ankyrin repeats and FFAT motif;
+                     interacts with ER anchor Scs2p at the nucleus-vacuole
+                     junction; regulated by sterol binding; SWH1 has a paralog,
+                     OSH2, that arose from the whole genome duplication"
+                     /codon_start=1
+                     /product="oxysterol-binding protein related protein SWH1"
+                     /protein_id="NP_009421.3"
+                     /db_xref="GeneID:851286"
+                     /db_xref="SGD:S000000081"
+                     /translation="MEQPDLSSVAISKPLLKLKLLDALRQGSFPNLQDLLKKQFQPLD
+                     DPNVQQVLHLMLHYAVQVAPMAVIKEIVHHWVSTTNTTFLNIHLDLNERDSNGNTPLH
+                     IAAYQSRGDIVAFLLDQPTINDCVLNNSHLQAIEMCKNLNIAQMMQVKRSTYVAETAQ
+                     EFRTAFNNRDFGHLESILSSPRNAELLDINGMDPETGDTVLHEFVKKRDVIMCRWLLE
+                     HGADPFKRDRKGKLPIELVRKVNENDTATNTKIAIDIELKKLLERATREQSVIDVTNN
+                     NLHEAPTYKGYLKKWTNFAQGYKLRWFILSSDGKLSYYIDQADTKNACRGSLNMSSCS
+                     LHLDSSEKLKFEIIGGNNGVIRWHLKGNHPIETNRWVWAIQGAIRYAKDREILLHNGP
+                     YSPSLALSHGLSSKVSNKENLHATSKRLTKSPHLSKSTLTQNDHDNDDDSTNNNNNKS
+                     NNDYDDNNNNNNNDDDDYDDDDESRPLIEPLPLISSRSQSLSEITPGPHSRKSTVSST
+                     RAADIPSDDEGYSEDDSDDDGNSSYTMENGGENDGDEDLNAIYGPYIQKLHMLQRSIS
+                     IELASLNELLQDKQQHDEYWNTVNTSIETVSEFFDKLNRLTSQREKRMIAQMTKQRDV
+                     NNVWIQSVKDLEMELVDKDEKLVALDKERKNLKKMLQKKLNNQPQVETEANEESDDAN
+                     SMIKGSQESTNTLEEIVKFIEATKESDEDSDADEFFDAEEAASDKKANDSEDLTTNKE
+                     TPANAKPQEEAPEDESLIVISSPQVEKKNQLLKEGSFVGYEDPVRTKLALDEDNRPKI
+                     GLWSVLKSMVGQDLTKLTLPVSFNEPTSLLQRVSEDIEYSHILDQAATFEDSSLRMLY
+                     VAAFTASMYASTTNRVSKPFNPLLGETFEYARTDGQYRFFTEQVSHHPPISATWTESP
+                     KWDFYGECNVDSSFNGRTFAVQHLGLWYITIRPDHNISVPEETYSWKKPNNTVIGILM
+                     GKPQVDNSGDVKVTNHTTGDYCMLHYKAHGWTSAGAYEVRGEVFNKDDKKLWVLGGHW
+                     NDSIYGKKVTARGGELTLDRIKTANSATGGPKLDGSKFLIWKANERPSVPFNLTSFAL
+                     TLNALPPHLIPYLAPTDSRLRPDQRAMENGEYDKAAAEKHRVEVKQRAAKKEREQKGE
+                     EYRPKWFVQEEHPVTKSLYWKFNGEYWNKRKNHDFKDCADIF"
+     gene            <203403..>208016
+                     /gene="FLO1"
+                     /locus_tag="YAR050W"
+                     /gene_synonym="FLO2; FLO4"
+                     /db_xref="GeneID:851289"
+     mRNA            <203403..>208016
+                     /gene="FLO1"
+                     /locus_tag="YAR050W"
+                     /gene_synonym="FLO2; FLO4"
+                     /product="flocculin FLO1"
+                     /transcript_id="NM_001178230.1"
+                     /db_xref="GeneID:851289"
+     CDS             203403..208016
+                     /gene="FLO1"
+                     /locus_tag="YAR050W"
+                     /gene_synonym="FLO2; FLO4"
+                     /note="Lectin-like protein involved in flocculation; cell
+                     wall protein that binds mannose chains on the surface of
+                     other cells, confers floc-forming ability that is
+                     chymotrypsin sensitive and heat resistant; important for
+                     co-flocculation with other yeasts, mediating interaction
+                     with specific species; FLO1 has a paralog, FLO5, that
+                     arose from a segmental duplication"
+                     /codon_start=1
+                     /product="flocculin FLO1"
+                     /protein_id="NP_009424.1"
+                     /db_xref="GeneID:851289"
+                     /db_xref="SGD:S000000084"
+                     /translation="MTMPHRYMFLAVFTLLALTSVASGATEACLPAGQRKSGMNINFY
+                     QYSLKDSSTYSNAAYMAYGYASKTKLGSVGGQTDISIDYNIPCVSSSGTFPCPQEDSY
+                     GNWGCKGMGACSNSQGIAYWSTDLFGFYTTPTNVTLEMTGYFLPPQTGSYTFKFATVD
+                     DSAILSVGGATAFNCCAQQQPPITSTNFTIDGIKPWGGSLPPNIEGTVYMYAGYYYPM
+                     KVVYSNAVSWGTLPISVTLPDGTTVSDDFEGYVYSFDDDLSQSNCTVPDPSNYAVSTT
+                     TTTTEPWTGTFTSTSTEMTTVTGTNGVPTDETVIVIRTPTTASTIITTTEPWNSTFTS
+                     TSTELTTVTGTNGVRTDETIIVIRTPTTATTAITTTEPWNSTFTSTSTELTTVTGTNG
+                     LPTDETIIVIRTPTTATTAMTTTQPWNDTFTSTSTELTTVTGTNGLPTDETIIVIRTP
+                     TTATTAMTTTQPWNDTFTSTSTELTTVTGTNGLPTDETIIVIRTPTTATTAMTTTQPW
+                     NDTFTSTSTEITTVTGTNGLPTDETIIVIRTPTTATTAMTTPQPWNDTFTSTSTEMTT
+                     VTGTNGLPTDETIIVIRTPTTATTAITTTEPWNSTFTSTSTEMTTVTGTNGLPTDETI
+                     IVIRTPTTATTAITTTQPWNDTFTSTSTEMTTVTGTNGLPTDETIIVIRTPTTATTAM
+                     TTTQPWNDTFTSTSTEITTVTGTTGLPTDETIIVIRTPTTATTAMTTTQPWNDTFTST
+                     STEMTTVTGTNGVPTDETVIVIRTPTSEGLISTTTEPWTGTFTSTSTEMTTVTGTNGQ
+                     PTDETVIVIRTPTSEGLVTTTTEPWTGTFTSTSTEMTTITGTNGVPTDETVIVIRTPT
+                     SEGLISTTTEPWTGTFTSTSTEMTTITGTNGQPTDETVIVIRTPTSEGLISTTTEPWT
+                     GTFTSTSTEMTHVTGTNGVPTDETVIVIRTPTSEGLISTTTEPWTGTFTSTSTEVTTI
+                     TGTNGQPTDETVIVIRTPTSEGLISTTTEPWTGTFTSTSTEMTTVTGTNGQPTDETVI
+                     VIRTPTSEGLVTTTTEPWTGTFTSTSTEMSTVTGTNGLPTDETVIVVKTPTTAISSSL
+                     SSSSSGQITSSITSSRPIITPFYPSNGTSVISSSVISSSVTSSLFTSSPVISSSVISS
+                     STTTSTSIFSESSKSSVIPTSSSTSGSSESETSSAGSVSSSSFISSESSKSPTYSSSS
+                     LPLVTSATTSQETASSLPPATTTKTSEQTTLVTVTSCESHVCTESISPAIVSTATVTV
+                     SGVTTEYTTWCPISTTETTKQTKGTTEQTTETTKQTTVVTISSCESDVCSKTASPAIV
+                     STSTATINGVTTEYTTWCPISTTESRQQTTLVTVTSCESGVCSETASPAIVSTATATV
+                     NDVVTVYPTWRPQTANEESVSSKMNSATGETTTNTLAAETTTNTVAAETITNTGAAET
+                     KTVVTSSLSRSNHAETQTASATDVIGHSSSVVSVSETGNTKSLTSSGLSTMSQQPRST
+                     PASSMVGYSTASLEISTYAGSANSLLAGSGLSVFIASLLLAII"
+     repeat_region   complement(209448..209778)
+                     /note="Ty1 LTR"
+                     /rpt_type=long_terminal_repeat
+                     /db_xref="SGD:S000006791"
+     rep_origin      214888..215644
+                     /note="ARS111;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000121256"
+     gene            218140..219145
+                     /locus_tag="YAR061W"
+                     /gene_synonym="YAR062W"
+                     /note="Pseudogenic fragment with similarity to flocculins;
+                     YAR061W has a paralog, YHR212W-A, that arose from a
+                     segmental duplication"
+                     /pseudo
+                     /db_xref="GeneID:851292"
+                     /db_xref="SGD:S000000087"
+     mRNA            218140..219145
+                     /locus_tag="YAR061W"
+                     /gene_synonym="YAR062W"
+                     /pseudo
+                     /db_xref="GeneID:851292"
+                     /db_xref="SGD:S000000087"
+     gene            <220198..>220497
+                     /locus_tag="YAR064W"
+                     /db_xref="GeneID:851294"
+     mRNA            <220198..>220497
+                     /locus_tag="YAR064W"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001178235.1"
+                     /db_xref="GeneID:851294"
+     CDS             220198..220497
+                     /locus_tag="YAR064W"
+                     /note="Pseudogenic fragment with similarity to flocculins;
+                     YAR064W has a paralog, YHR213W-B, that arose from a
+                     segmental duplication"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009429.1"
+                     /db_xref="GeneID:851294"
+                     /db_xref="SGD:S000000089"
+                     /translation="MLIDFCCSYIAGTHGRERAPSFTGTFVSHVSGENNCRPRRSEIT
+                     QPCASGTEKKHFAATEKPCTNSLEGSRKDFLSLPLGHSYLFLFCFWRMICSEPKL"
+     gene            <221049..>221660
+                     /locus_tag="YAR066W"
+                     /db_xref="GeneID:851295"
+     mRNA            <221049..>221660
+                     /locus_tag="YAR066W"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001180045.1"
+                     /db_xref="GeneID:851295"
+     CDS             221049..221660
+                     /locus_tag="YAR066W"
+                     /note="Putative GPI protein; SWAT-GFP and mCherry fusion
+                     proteins localize to the endoplasmic reticulum and vacuole
+                     respectively; YAR066W has a paralog, YHR214W, that arose
+                     from a segmental duplication"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009430.1"
+                     /db_xref="GeneID:851295"
+                     /db_xref="SGD:S000002144"
+                     /translation="MFNRFNKFQAAVALALLSRGALGDSYTNSTSSADLSSITSVSSA
+                     SASATASDSLSSSDGTVYLPSTTISGDLTVTGKVIATEAVEVAAGGKLTLLDGEKYVF
+                     SSDLKVHGDLVVEKSEASYEGTAFDVSGETFEVSGNFSAEETGAVSASIYSFTPSSFK
+                     SSGDISLSLSKAKKGEVTFSPYSNAGTFSLSNAILNGGSVSGL"
+     gene            <222406..>222891
+                     /locus_tag="YAR068W"
+                     /db_xref="GeneID:851296"
+     mRNA            <222406..>222891
+                     /locus_tag="YAR068W"
+                     /product="uncharacterized protein"
+                     /transcript_id="NM_001178236.1"
+                     /db_xref="GeneID:851296"
+     CDS             222406..222891
+                     /locus_tag="YAR068W"
+                     /note="Fungal-specific hypothetical protein; induced in
+                     respiratory-deficient cells; YAR068W has a paralog,
+                     YHR214W-A, that arose from a segmental duplication"
+                     /codon_start=1
+                     /product="uncharacterized protein"
+                     /protein_id="NP_009431.1"
+                     /db_xref="GeneID:851296"
+                     /db_xref="SGD:S000000091"
+                     /translation="MPQVQSWFPVQKQPTLAVTFTPLPQLSHAHLPLPPSHLVTKTDA
+                     MFQHQLLPTQLQPFPPSHTPLLLLLTVTTMAVTPRLSLLNVLKKLQQPPFLQNHTLLL
+                     PLLTVTTTAVTPRLSLPRLPNKHHWPLAQSPSLLLQLLILLLPAPSLVLSFNPKVWLL
+                     V"
+     rep_origin      222880..224046
+                     /note="ARS112;
+                     Autonomously Replicating Sequence"
+                     /db_xref="SGD:S000121257"
+     gene            <225460..>226863
+                     /gene="PHO11"
+                     /locus_tag="YAR071W"
+                     /db_xref="GeneID:851299"
+     mRNA            <225460..>226863
+                     /gene="PHO11"
+                     /locus_tag="YAR071W"
+                     /product="acid phosphatase PHO11"
+                     /transcript_id="NM_001178239.1"
+                     /db_xref="GeneID:851299"
+     CDS             225460..226863
+                     /gene="PHO11"
+                     /locus_tag="YAR071W"
+                     /EC_number="3.1.3.2"
+                     /note="One of three repressible acid phosphatases;
+                     glycoprotein that is transported to the cell surface by
+                     the secretory pathway; induced by phosphate starvation and
+                     coordinately regulated by PHO4 and PHO2; PHO11 has a
+                     paralog, PHO12, that arose from a segmental duplication"
+                     /codon_start=1
+                     /product="acid phosphatase PHO11"
+                     /protein_id="NP_009434.1"
+                     /db_xref="GeneID:851299"
+                     /db_xref="SGD:S000000094"
+                     /translation="MLKSAVYSILAASLVNAGTIPLGKLSDIDKIGTQTEIFPFLGGS
+                     GPYYSFPGDYGISRDLPESCEMKQVQMVGRHGERYPTVSKAKSIMTTWYKLSNYTGQF
+                     SGALSFLNDDYEFFIRDTKNLEMETTLANSVNVLNPYTGEMNAKRHARDFLAQYGYMV
+                     ENQTSFAVFTSNSNRCHDTAQYFIDGLGDKFNISLQTISEAESAGANTLSAHHSCPAW
+                     DDDVNDDILKKYDTKYLSGIAKRLNKENKGLNLTSSDANTFFAWCAYEINARGYSDIC
+                     NIFTKDELVRFSYGQDLETYYQTGPGYDVVRSVGANLFNASVKLLKESEVQDQKVWLS
+                     FTHDTDILNYLTTIGIIDDKNNLTAEHVPFMENTFHRSWYVPQGARVYTEKFQCSNDT
+                     YVRYVINDAVVPIETCSTGPGFSCEINDFYDYAEKRVAGTDFLKVCNVSSVSNSTELT
+                     FFWDWNTKHYNDTLLKQ"
+     telomere        229411..230218
+                     /note="TEL01R; Telomeric region on the right arm of
+                     Chromosome I; composed of an X element core sequence and a
+                     short terminal stretch of telomeric repeats"
+                     /db_xref="SGD:S000028937"
+CONTIG      join(BK006935.2:1..230218)
+//
+
