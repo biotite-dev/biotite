@@ -7,8 +7,16 @@ This subpackage is used for reading and writing sequence features in the
 GFF3 format.
 
 It provides the `GFFFile` class, a low-level line-based interface to
-this format, and high-level functions for extracting `Feature` and
-`Annotation` objects.
+this format, and high-level functions for extracting `Annotation`
+objects.
+
+.. note: This package cannot create hierarchical data structures from
+   GFF 3 files. This means, that you cannot directly access the the
+   parent or child of a feature.
+   However, the ``Id`` and ``Name`` attributes are stored in the
+   qualifiers of the created `Feature` objects. 
+   Hence, it is possible to implement such a data structure from this
+   information.
 """
 
 __author__ = "Patrick Kunzmann"
