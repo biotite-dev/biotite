@@ -171,7 +171,7 @@ class Feature(Copyable):
     def __init__(self, key, locs, qual=None):
         self._key = key
         self._locs = frozenset(locs)
-        self._qual = copy.deepcopy(qual) if qual is not None else None
+        self._qual = copy.deepcopy(qual) if qual is not None else {}
     
     def get_location_range(self):
         """
