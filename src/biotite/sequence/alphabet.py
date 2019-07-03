@@ -317,14 +317,17 @@ class LetterAlphabet(Alphabet):
         
         Parameters
         ----------
-        code : ndarray, dtype=uint8
-            The sequence code to decode.
+        code : array-like object of int
+            The sequence code to decode. Works fastest when `code` is
+            `ndarray`. 
         
         Returns
         -------
         symbols : ndarray, dtype='U1'
             The decoded list of symbols.
         """
+        if not isinstance(code, np.ndarray):
+            code = np.array(code, dtype=np.uint8)
         code = code.astype(np.uint8, copy=False)
         symbols = decode_to_chars(alphabet=self._symbols, code=code)
         # Symbols must be convverted from 'np.ubyte' to '|S1'
