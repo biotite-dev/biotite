@@ -32,7 +32,8 @@ def get_annotation(gff_file):
             current_locs.append(Location(start, end, strand))
         current_id = id
     # Save last feature
-    annot.add_feature(Feature(current_key, current_locs, current_qual))
+    if current_key is not None:
+        annot.add_feature(Feature(current_key, current_locs, current_qual))
     return annot
 
 
