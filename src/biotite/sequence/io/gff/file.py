@@ -33,8 +33,9 @@ class GFFFile(TextFile, MutableSequence):
     However, it does not provide additional meta information.
 
     This class serves as low-level API for accessing GFF3 files.
-    It is used as a sequence of entries:
-    Each entry consists of of values corresponding to the 9 columns of
+    It is used as a sequence of entries, where each entry is defined as
+    a non-comment and non-directive line.
+    Each entry consists of values corresponding to the 9 columns of
     GFF3:
 
     ==============  ===============================  ==========================================================
