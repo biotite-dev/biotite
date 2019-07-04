@@ -28,7 +28,29 @@ class GFFFile(TextFile, MutableSequence):
     format.
 
     Similar to GenBank files, GFF3 files contain information about
-    features of a reference sequence, but in a more concise
+    features of a reference sequence, but in a more concise and better
+    parsable way.
+    However, it does not provide additional meta information.
+
+    This class serves as low-level API for accessing GFF3 files.
+    It is used as a sequence of entries:
+    Each entry consists of of values corresponding to the 9 columns of
+    GFF3:
+
+    ==============  ===========================  ====================================================================
+    **seqid**       ``str``                      The ID of the reference sequence
+    **source**      ``str``                      Source of the data (e.g. ``Genbank``)
+    **type**        ``str``                      Type of the feature (e.g. ``CDS``)
+    **start**       ``int``                      Start coordinate of feature on the reference sequence
+    **end**         ``int``                      End coordinate of feature on the reference sequence
+    **score**       ``float or None``            Optional score (e.g. an E-value)
+    **strand**      ``Location.Strand or None``  Strand of the feature, ``None`` if feature is not stranded
+    **phase**       ``int or None``              Shift according top the reading frame, ``None`` for non-CDS features
+    **attributes**  ``dict``                     Additional properties of the feature
+    ==============  ===========================  ====================================================================
+
+    Note that the entry index is not equal to the line index, because
+    GFF3 files
 
     Notes
     -----
@@ -36,14 +58,26 @@ class GFFFile(TextFile, MutableSequence):
     data in FASTA format via the ``##FASTA`` directive, this class does
     not support extracting the sequence information.
     The content after the ``##FASTA`` directive is simply ignored.
-    Please provide the sequence via a separate file, or read the FASTA
-    data directly via the `lines` attribute.
+    Please provide the sequence via a separate file or read the FASTA
+    data directly via the `lines` attribute:
     
-    >>> 
+    >>> import os.path
+    >>> from io import StringIO
+    >>> gff_file = GFFFile()
+    >>> gff_file.read(os.path.join(path_to_sequences, "indexing_test.gff3"))
+    >>> fasta_start_index = None
+    >>> for directive, line_index in gff_file.directives():
+    ...     if directive == "FASTA":
+    ...         fasta_start_index = line_index + 1
+    >>> fasta_data = StringIO("\\n".join(gff_file.lines[fasta_start_index:]))
+    >>> fasta_file = FastaFile()
+    >>> fasta_file.read(fasta_data)
+    >>> for seq_string in fasta_file.values():
+    ...     print(seq_string[:60] + "...")
+    TACGTAGCTAGCTGATCGATGTTGTGTGTATCGATCTAGCTAGCTAGCTGACTACACAAT...
     """
     
     def __init__(self):
-        print(_NOT_QUOTED)
         super().__init__()
         # Maps entry indices to line indices
         self._entries = None
@@ -51,8 +85,8 @@ class GFFFile(TextFile, MutableSequence):
         self._directives = None
         # Stores whether the file has FASTA data
         self._has_fasta = None
-        self.append_directive("gff-version", "3")
         self._index_entries()
+        self.append_directive("gff-version", "3")
     
     def read(self, file):
         super().read(file)
@@ -92,7 +126,12 @@ class GFFFile(TextFile, MutableSequence):
                 "Adding FASTA information is not supported"
             )
         directive_line = "##" + directive + " " + " ".join(args)
+        self._directives.append((directive_line[2:], len(self.lines)))
         self.lines.append(directive_line)
+    
+    def directives(self):
+        # Sort in line order
+        return sorted(self._directives, key=lambda directive: directive[1])
         
     def __setitem__(self, index, item):
         seqid, source, type, start, end, score, strand, phase, attrib = item
