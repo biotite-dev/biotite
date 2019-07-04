@@ -33,7 +33,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be read.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         pass
     
@@ -46,7 +46,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be written to.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         pass
         
@@ -76,7 +76,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be read.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         def _read(file):
             nonlocal self
@@ -96,7 +96,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be written to.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         def _write(file):
             nonlocal self

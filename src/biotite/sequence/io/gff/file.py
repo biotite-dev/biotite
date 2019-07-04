@@ -37,20 +37,20 @@ class GFFFile(TextFile, MutableSequence):
     Each entry consists of of values corresponding to the 9 columns of
     GFF3:
 
-    ==============  ===========================  ====================================================================
-    **seqid**       ``str``                      The ID of the reference sequence
-    **source**      ``str``                      Source of the data (e.g. ``Genbank``)
-    **type**        ``str``                      Type of the feature (e.g. ``CDS``)
-    **start**       ``int``                      Start coordinate of feature on the reference sequence
-    **end**         ``int``                      End coordinate of feature on the reference sequence
-    **score**       ``float or None``            Optional score (e.g. an E-value)
-    **strand**      ``Location.Strand or None``  Strand of the feature, ``None`` if feature is not stranded
-    **phase**       ``int or None``              Shift according top the reading frame, ``None`` for non-CDS features
-    **attributes**  ``dict``                     Additional properties of the feature
-    ==============  ===========================  ====================================================================
+    ==============  ===============================  ==========================================================
+    **seqid**       ``str``                          The ID of the reference sequence
+    **source**      ``str``                          Source of the data (e.g. ``Genbank``)
+    **type**        ``str``                          Type of the feature (e.g. ``CDS``)
+    **start**       ``int``                          Start coordinate of feature on the reference sequence
+    **end**         ``int``                          End coordinate of feature on the reference sequence
+    **score**       ``float`` or ``None``            Optional score (e.g. an E-value)
+    **strand**      ``Location.Strand`` or ``None``  Strand of the feature, ``None`` if feature is not stranded
+    **phase**       ``int`` or ``None``              Reading frame shift, ``None`` for non-CDS features
+    **attributes**  ``dict``                         Additional properties of the feature
+    ==============  ===============================  ==========================================================
 
-    Note that the entry index is not equal to the line index, because
-    GFF3 files
+    Note that the entry index may not be equal to the line index,
+    because GFF3 files can contain comment and directive lines.
 
     Notes
     -----
@@ -75,6 +75,53 @@ class GFFFile(TextFile, MutableSequence):
     >>> for seq_string in fasta_file.values():
     ...     print(seq_string[:60] + "...")
     TACGTAGCTAGCTGATCGATGTTGTGTGTATCGATCTAGCTAGCTAGCTGACTACACAAT...
+
+    Examples
+    --------
+    Reading and editing of an existing GFF3 file:
+
+    >>> import os.path
+    >>> gff_file = GFFFile()
+    >>> gff_file.read(os.path.join(path_to_sequences, "gg_avidin.gff3"))
+    >>> # Get content of first entry
+    >>> seqid, source, type, start, end, score, strand, phase, attrib = gff_file[0]
+    >>> print(seqid)
+    AJ311647.1
+    >>> print(source)
+    EMBL
+    >>> print(type)
+    region
+    >>> print(start)
+    1
+    >>> print(end)
+    1224
+    >>> print(score)
+    None
+    >>> print(strand)
+    Strand.FORWARD
+    >>> print(phase)
+    None
+    >>> print(attrib)
+    {'ID': 'AJ311647.1:1..1224', 'Dbxref': 'taxon:9031', 'Name': 'Z', 'chromosome': 'Z', 'gbkey': 'Src', 'mol_type': 'genomic DNA'}
+    >>> # Edit the first entry: Simply add a score
+    >>> score = 1.0
+    >>> gff_file[0] = seqid, source, type, start, end, score, strand, phase, attrib
+    >>> # Delete first entry
+    >>> del gff_file[0]
+
+    Writing a new GFF3 file:
+
+    >>> gff_file = GFFFile()
+    >>> gff_file.append_directive("Example directive", "param1", "param2")
+    >>> gff_file.append(
+    ...     "SomeSeqID", "Biotite", "CDS", 1, 99,
+    ...     None, Location.Strand.FORWARD, 0,
+    ...     {"ID": "FeatureID", "product":"A protein"}
+    ... )
+    >>> print(gff_file)   #doctest: +NORMALIZE_WHITESPACE
+    ##gff-version 3
+    ##Example directive param1 param2
+    SomeSeqID   Biotite CDS     1       99      .       +       0       ID=FeatureID;product=A protein
     """
     
     def __init__(self):
@@ -94,6 +141,34 @@ class GFFFile(TextFile, MutableSequence):
     
     def insert(self, index, seqid, source, type, start, end,
                score, strand, phase, attributes):
+        """
+        Insert an entry at the given index.
+        
+        Parameters
+        ----------
+        index : int
+            Index where the entry is inserted.
+            If the index is equal to the length of the file, the entry
+            is appended at the end of the file. 
+        seqid : str
+            The ID of the reference sequence.
+        source : str
+            Source of the data (e.g. ``Genbank``).
+        type : str
+            Type of the feature (e.g. ``CDS``).
+        start : int
+            Start coordinate of feature on the reference sequence.
+        end : int
+            End coordinate of feature on the reference sequence.
+        score : float or None
+            Optional score (e.g. an E-value).
+        strand : Location.Strand or None
+            Strand of the feature, ``None`` if feature is not stranded.
+        phase : int or None
+            Reading frame shift, ``None`` for non-CDS features.
+        attributes : dict
+            Additional properties of the feature.
+        """
         if index == len(self):
             self.append(seqid, source, type, start, end,
                         score, strand, phase, attributes)
@@ -108,6 +183,30 @@ class GFFFile(TextFile, MutableSequence):
     
     def append(self, seqid, source, type, start, end,
                score, strand, phase, attributes):
+        """
+        Append an entry to the end of the file.
+        
+        Parameters
+        ----------
+        seqid : str
+            The ID of the reference sequence.
+        source : str
+            Source of the data (e.g. ``Genbank``).
+        type : str
+            Type of the feature (e.g. ``CDS``).
+        start : int
+            Start coordinate of feature on the reference sequence.
+        end : int
+            End coordinate of feature on the reference sequence.
+        score : float or None
+            Optional score (e.g. an E-value).
+        strand : Location.Strand or None
+            Strand of the feature, ``None`` if feature is not stranded.
+        phase : int or None
+            Reading frame shift, ``None`` for non-CDS features.
+        attributes : dict
+            Additional properties of the feature.
+        """
         if self._has_fasta:
             raise NotImplementedError(
                 "Cannot append feature entries, "
@@ -121,6 +220,33 @@ class GFFFile(TextFile, MutableSequence):
         self._entries.append(len(self.lines) - 1)
     
     def append_directive(self, directive, *args):
+        """
+        Append a directive line to the end of the file.
+        
+        Parameters
+        ----------
+        directive : str
+            Name of the directive.
+        *args : str
+            Optional parameters for the directive.
+            Each argument is simply appended to the directive, separated
+            by a single space character.
+        
+        Raises
+        ------
+        NotImplementedError
+            If the ``##FASTA`` directive is used, which is not
+            supported.
+        
+        Examples
+        --------
+
+        >>> gff_file = GFFFile()
+        >>> gff_file.append_directive("Example directive", "param1", "param2")
+        >>> print(gff_file)
+        ##gff-version 3
+        ##Example directive param1 param2
+        """
         if directive.startswith("FASTA"):
             raise NotImplementedError(
                 "Adding FASTA information is not supported"
@@ -130,6 +256,17 @@ class GFFFile(TextFile, MutableSequence):
         self.lines.append(directive_line)
     
     def directives(self):
+        """
+        Get the directives in the file.
+        
+        Returns
+        -------
+        directives : list of tuple(str, int)
+            A list of directives, sorted by their line order.
+            The first element of each tuple is the name of the
+            directive (without ``##``), the second element is the index
+            of the corresponding line.
+        """
         # Sort in line order
         return sorted(self._directives, key=lambda directive: directive[1])
         
