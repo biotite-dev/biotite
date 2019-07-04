@@ -9,6 +9,29 @@ from ...annotation import Location, Feature, Annotation
 
 
 def get_annotation(gff_file):
+    """
+    Parse a GFF3 file into an `Annotation`.
+
+    The *type* column as used as the `Features`'s `key`` attribute,
+    the locations (``loc``) are taken from the *start*, *end* and
+    *strand* columns and  the *attributes* column is parsed into the
+    ``qual`` attribute.
+    Multiple entries with the same ``ID`` attribute are interpreted
+    as the same feature.
+    Thus, for entries with the same ``ID``, the *type* and *attributes*
+    are only parsed once and the locations are aggregated from each
+    entry.
+    
+    Parameters
+    ----------
+    gff_file : GFFFile
+        The file tro extract the `Annotation` object from.
+    
+    Returns
+    -------
+    annotation : Annotation
+        The extracted annotation.
+    """
     annot = Annotation()
     current_key = None
     current_locs = None
@@ -39,6 +62,27 @@ def get_annotation(gff_file):
 
 def set_annotation(gff_file, annotation,
                    seqid=None, source=None, is_stranded=True):
+    """
+    Write an `Annotation` object into a GFF3 file.
+
+    Each feature will get one entry for each location it has.
+    `Feature` objects with multiple locations require the ``ID``
+    qualifier in its ``qual`` attribute.
+    
+    Parameters
+    ----------
+    gff_file : GFFFile
+        The GFF3 file to write into.
+    annotation : Annotation
+        The annoation which is written to the GFF3 file.
+    seqid : str, optional
+        The content for the *seqid* column.
+    source : str, optional
+        The content for the *source* column.
+    is_stranded : bool, optional
+        If true, the strand of each feature is taken into account.
+        Otherwise the *strand* column is filled with '``.``'.
+    """
     for feature in sorted(annotation):
         if len(feature.locs) > 1 and "ID" not in feature.qual:
             raise ValueError(
