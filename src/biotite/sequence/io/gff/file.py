@@ -26,7 +26,7 @@ class GFFFile(TextFile, MutableSequence):
         self._directives = None
         # Stores whether the file has FASTA data
         self._has_fasta = None
-        self.append_directive("gff-version", "1.23.0")
+        self.append_directive("gff-version", "3")
         self._index_entries()
     
     def read(self, file):
