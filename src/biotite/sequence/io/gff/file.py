@@ -5,11 +5,19 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["GFFFile"]
 
+import string
 from collections.abc import MutableSequence
 from urllib.parse import quote, unquote
 import warnings
 from ....file import TextFile, InvalidFileError
 from ...annotation import Location
+
+
+# All punctuation characters except
+# percent, semicolon, equals, ampersand, comma
+_NOT_QUOTED = "".join(
+    [char for char in string.punctuation if char not in "%;=&,"]
+) + " "
 
 
 class GFFFile(TextFile, MutableSequence):
@@ -19,6 +27,7 @@ class GFFFile(TextFile, MutableSequence):
     """
     
     def __init__(self):
+        print(_NOT_QUOTED)
         super().__init__()
         # Maps entry indices to line indices
         self._entries = None
@@ -164,8 +173,10 @@ class GFFFile(TextFile, MutableSequence):
         """
         Create a line for a newly created entry.
         """
-        seqid = seqid.strip() if seqid is not None else "."
-        source = source.strip() if source is not None else "."
+        seqid = quote(seqid.strip(), safe=_NOT_QUOTED) \
+                if seqid is not None else "."
+        source = quote(source.strip(), safe=_NOT_QUOTED) \
+                 if source is not None else "."
         type = type.strip()
 
         # Perform checks
@@ -189,7 +200,8 @@ class GFFFile(TextFile, MutableSequence):
             strand = "."
         phase = str(phase) if phase is not None else "."
         attributes = ";".join(
-            [quote(key) + "=" + quote(val) for key, val in attributes.items()]
+            [quote(key, safe=_NOT_QUOTED) + "=" + quote(val, safe=_NOT_QUOTED)
+             for key, val in attributes.items()]
         )
 
         return "\t".join(
