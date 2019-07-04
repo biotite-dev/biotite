@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["GFFFile"]
 
+import copy
 import string
 from collections.abc import MutableSequence
 from urllib.parse import quote, unquote
@@ -22,8 +23,23 @@ _NOT_QUOTED = "".join(
 
 class GFFFile(TextFile, MutableSequence):
     """
-    This class represents a file in *Generic Feature Format 3* (GFF3)
+    This class represents a file in *Generic Feature Format 3*
+    (`GFF3 <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_)
     format.
+
+    Similar to GenBank files, GFF3 files contain information about
+    features of a reference sequence, but in a more concise
+
+    Notes
+    -----
+    Although the GFF3 specification allows mixing in reference sequence
+    data in FASTA format via the ``##FASTA`` directive, this class does
+    not support extracting the sequence information.
+    The content after the ``##FASTA`` directive is simply ignored.
+    Please provide the sequence via a separate file, or read the FASTA
+    data directly via the `lines` attribute.
+    
+    >>> 
     """
     
     def __init__(self):
