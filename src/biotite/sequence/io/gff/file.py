@@ -7,7 +7,6 @@ __all__ = ["GFFFile"]
 
 import copy
 import string
-from collections.abc import MutableSequence
 from urllib.parse import quote, unquote
 import warnings
 from ....file import TextFile, InvalidFileError
@@ -21,7 +20,7 @@ _NOT_QUOTED = "".join(
 ) + " "
 
 
-class GFFFile(TextFile, MutableSequence):
+class GFFFile(TextFile):
     """
     This class represents a file in *Generic Feature Format 3*
     (`GFF3 <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_)
