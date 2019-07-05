@@ -48,6 +48,12 @@ class GenBankFile(TextFile):
     The *FEATURES* and *ORIGIN* fields have no subfields.
     
     Every entry can be obtained, set and deleted via the index operator.
+
+    Notes
+    -----
+    This class does not support location identifiers with references
+    to other Entrez database entries, e.g.
+    ``join(1..100,J00194.1:100..202)``.
     
     Examples
     --------

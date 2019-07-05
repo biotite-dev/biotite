@@ -49,7 +49,7 @@ def encode_chars(const unsigned char[:] alphabet,
         symbol_code = sym_to_code[symbols[i]]
         # Check if the symbols is valid
         if symbol_code == illegal_code:
-            illegal_symbol = symbols[i]
+            illegal_symbol = chr(symbols[i])
             # Local import to avoid circular imports
             from .alphabet import AlphabetError
             raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
