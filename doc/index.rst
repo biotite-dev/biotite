@@ -57,7 +57,7 @@ features, to annotate your sequences with the respective functionality.
 Eventually, the data can be visualized in different *Matplotlib* based
 representations, ranging from sequence alignments to feature maps.
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_sw_genome_search_001.png
+.. image:: /examples/gallery/sequence/images/sphx_glr_hcn_hydropathy_001.png
    :width: 48 %
    :target: examples/gallery/sequence/sw_genome_search.html
 
