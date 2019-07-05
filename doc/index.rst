@@ -6,13 +6,21 @@
 Biotite documentation
 #####################
 
+.. sidebar:: Name origin
+
+   Biotite is a mineral within the mica group.
+   It can form brownish pseudohexagonal crystals.
+
+   .. image:: https://upload.wikimedia.org/wikipedia/commons/3/3b/Biotite%2C_Sanidine_and_Nepheline_-_Ochtendung%2C_Eifel%2C_Germany.jpg
+      :alt: Biotite image
+
 The *Biotite* package bundles popular tasks in computational molecular biology
 into a unifying *Python* framework.
 It can handle the complete molecular biology workflow
 for sequence and macromolecular structure data:
 
    - Downloading data from biological databases
-   - Loading data from structure and sequence files
+   - Loading data from structure/sequence files
    - Analyzing and modifying the data
    - Saving the data back to file
    - Interfacing external applications
@@ -33,6 +41,7 @@ If you use *Biotite* in a scientific publication, please cite:
 | Kunzmann, P. & Hamacher, K. BMC Bioinformatics (2018) 19:346.
 | `<https://doi.org/10.1186/s12859-018-2367-z>`_
 
+----
 
 **Sequence** subpackage
 -----------------------
@@ -56,6 +65,7 @@ representations, ranging from sequence alignments to feature maps.
    :width: 48 %
    :target: examples/gallery/sequence/avidin_alignment.html
 
+----
 
 **Structure** subpackage
 ------------------------
@@ -77,6 +87,7 @@ accessible surface area calculation, structure superimposition and more.
    :width: 48 %
    :target: examples/gallery/structure/adjacency_matrix.html
 
+----
 
 **Application** subpackage
 --------------------------
@@ -97,6 +108,7 @@ It is basically very similar to using normal `Python` functions.
    :width: 48 %
    :target: examples/gallery/structure/transketolase_sse.html
 
+----
 
 **Database** subpackage
 -----------------------
