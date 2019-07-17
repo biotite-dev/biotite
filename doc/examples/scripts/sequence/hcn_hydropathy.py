@@ -124,11 +124,14 @@ alignment = mafft.MafftApp.align(sequences)
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 scores = np.zeros(len(hcn1))
 for i in range(len(alignment)):
-    # The column is also an alignment with löength 1
+    # The column is also an alignment with length 1
     column = alignment[i:i+1]
     hcn1_index = column.trace[0,0]
     if hcn1_index == -1:
         # Gap in HCN1 row
+        # As similarity score should be analyzed in dependence of the
+        # HCN1 sequence position, alignment columns with a gap in HCN1
+        # are ignored
         continue
     scores[hcn1_index] = align.score(column, matrix, gap_penalty=-5)
 
@@ -147,7 +150,7 @@ ax.plot(
 )
 ax.axhline(0, color="gray", linewidth=0.5)
 ax.set_xlim(1, len(hcn1)+1)
-ax.set_xlabel("Sequence position")
+ax.set_xlabel("HCN1 sequence position")
 ax.set_ylabel("Hydropathy (15 residues moving average)")
 
 # Draw boxes for annotated transmembrane helices for comparison
