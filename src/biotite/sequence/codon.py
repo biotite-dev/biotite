@@ -7,7 +7,12 @@ __all__ = ["CodonTable"]
 
 import copy
 from os.path import join, dirname, realpath
+import numpy as np
 from .seqtypes import NucleotideSequence, ProteinSequence
+
+
+_NUC_ALPH = NucleotideSequence.alphabet
+_PROT_ALPH = ProteinSequence.alphabet
 
 
 class CodonTable(object):
@@ -54,65 +59,108 @@ class CodonTable(object):
     ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
     """
     
-    # file for codon tables
+    # For efficient mapping of codon codes to amino acid codes,
+    # especially in in the 'map_codon_codes()' function, the class
+    # maps each possible codon into a unique number using a radix based
+    # approach.
+    # For example the codon (3,1,2) would be represented as
+    # 3*16 + 1*4 + 2**1 = 53
+
+    # file for builtin codon tables from NCBI
     _table_file = join(dirname(realpath(__file__)), "codon_tables.txt")
+    # Multiplier array that converts a codon in code representation
+    # into a unique integer
+    _radix = len(_NUC_ALPH)
+    _radix_multiplier = np.array(
+        [_radix**n for n in (2,1,0)],
+        dtype=int
+    )
     
     def __init__(self, codon_dict, starts):
-        # Check if 'starts' is iterable objectof length 3 strings
+        # Check if 'starts' is iterable object of length 3 string
         for start in starts:
             if not isinstance(start, str) or len(start) != 3:
                 raise ValueError(f"Invalid codon '{start}' as start codon")
-        self._symbol_dict = dict(codon_dict.items())
-        self._code_dict = {}
-        for key, value in self._symbol_dict.items():
-            key_code = tuple(NucleotideSequence.alphabet.encode_multiple(key))
-            val_code = ProteinSequence.alphabet.encode(value)
-            self._code_dict[key_code] = val_code
-        self._start_symbols = tuple((starts))
-        self._start_codes = tuple(
-            [tuple(NucleotideSequence.alphabet.encode_multiple(start))
-             for start in self._start_symbols]
-        )
+        # Internally store codons as single unique numbers
+        self._starts = CodonTable._to_number(starts)
+        # Use -1 as error code
+        # The array uses the number representation of codons as index
+        # and stores the corresponding symbol codes for amino acids
+        self._codons = np.full(CodonTable._radix**3, -1, dtype=int)
+        for key, value in codon_dict:
+            codon_code = _NUC_ALPH.encode_multiple(key)
+            codon_number = CodonTable._to_number(codon_code)
+            aa_code = _PROT_ALPH.encode(value)
+            self._codons[codon_number] = aa_code
+        if (self._codons == -1).any():
+            # Find the missing codon
+            missing_index = np.where(self._codons == -1)[0][0]
+            codon_code = CodonTable._to_codon(missing_index) 
+            codon = _NUC_ALPH.decode_multiple(codon_code)
+            codon_str = "".join(codon)
+            raise ValueError(
+                f"Codon dictionary does not contain codon '{codon_str}'"
+            )
     
     def __getitem__(self, item):
         if isinstance(item, str):
             if len(item) == 1:
                 # Amino acid -> return possible codons
-                codons = []
-                for key, val in self._symbol_dict.items():
-                    if val == item:
-                        codons.append(key)
-                return tuple(codons)
+                aa_code = _PROT_ALPH.encode(item)
+                codon_numbers = np.where(self._codons == aa_code)[0]
+                codon_codes = CodonTable._to_codon(codon_numbers)
+                codons = tuple(
+                    [_NUC_ALPH.decode_multiple(codon_code)
+                    for codon_code in codon_codes]
+                )
+                return codons
             elif len(item) == 3:
                 # Codon -> return corresponding amino acid
-                return self._symbol_dict[item]
+                codon_code = _NUC_ALPH.encode_multiple(item)
+                codon_number = CodonTable._to_number(codon_code)
+                aa_code = self._codons[codon_number]
+                aa = _PROT_ALPH.decode(aa_code)
+                return aa
             else:
                 raise ValueError(f"'{item}' is an invalid index")
         elif isinstance(item, int):
             # Code for amino acid -> return possible codon codes
-            codons = []
-            for key, val in self._code_dict.items():
-                if val == item:
-                    codons.append(key)
-            return tuple(codons)
-        elif isinstance(item, tuple):
-            # Code for codon -> return corresponding amino acid code
-            return self._code_dict[item]
+            codon_numbers = np.where(self._codons == item)[0]
+            codon_codes = CodonTable._to_codon(codon_numbers)
+            return codon_codes
         else:
-            raise TypeError(
-                f"'{type(item).__name__}' objects are invalid indices"
+            # Code for codon as any iterable object
+            # Code for codon -> return corresponding amino acid codes
+            if len(item != 3):
+                raise ValueError(
+                    f"{item} is an invalid sequence code for a codon"
+                )
+            codon_number = CodonTable._to_number(item)
+            aa_code = self._codons[codon_number]
+            return aa_code
+    
+    def map_codon_codes(self, codon_codes):
+        if codon_codes.shape[-1] != 3:
+            raise ValueError(
+                f"Codons must be length 3, "
+                f"but size of last dimension is {codon_codes.shape[-1]}"
             )
+        codon_numbers = CodonTable._to_number(codon_codes)
+        aa_codes = self._codons[codon_numbers]
+        return aa_codes
     
     def __str__(self):
         string = ""
-        bases = ["A","C","G","T"]
+        # ['A', 'C', 'G', 'T']
+        bases = _NUC_ALPH.get_symbols()
         for b1 in bases:
             for b2 in bases:
                 for b3 in bases:
                     codon = b1 + b2 + b3
-                    string += codon + " " + self._symbol_dict[codon]
+                    string += codon + " " + self[codon]
                     # Indicator for start codon
-                    if codon in self._start_symbols:
+                    codon_code = _NUC_ALPH.encode_multiple(codon)
+                    if CodonTable._to_number(codon_code) in self._starts:
                         string += " i "
                     else:
                         string += "   "
@@ -146,9 +194,16 @@ class CodonTable(object):
             The dictionary mapping codons to amino acids.
         """
         if code:
-            return copy.copy(self._code_dict)
+            return {CodonTable._to_codon(codon_number): aa_code
+                    for codon_number, aa_code in enumerate(self._codons)}
         else:
-            return copy.copy(self._symbol_dict)
+            return {_NUC_ALPH.decode_multiple(codon_code):
+                        _PROT_ALPH.decode(aa_code)
+                    for codon_code, aa_code in self.codon_dict(code=True)}
+    
+    def is_start_codon(codon_codes):
+        codon_numbers = CodonTable._to_number(codon_codes)
+        return np.isin(codon_numbers, self._starts)
     
     def start_codons(self, code=False):
         """
@@ -167,10 +222,35 @@ class CodonTable(object):
             the `code` parameter.
         """
         if code:
-            return self._start_codes
+            return tuple(
+                [tuple(CodonTable._to_codon(codon_number))
+                 for codon_number in self._starts]
+            )
         else:
-            return self._start_symbols
+            return tuple(
+                ["".join(_NUC_ALPH.decode_multiple(codon_code))
+                 for codon_code in self.start_codons(code=True)]
+            )
+
+    @staticmethod
+    def _to_number(codons):
+        if not isinstance(codons, np.ndarray):
+            codons = np.array(list(codons), dtype=int)
+        return np.sum(CodonTable._radix_multiplier * codons, axis=-1)
     
+
+    @staticmethod
+    def _to_codon(numbers):
+        if not isinstance(numbers, np.ndarray):
+            numbers = np.array(list(numbers), dtype=int)
+        radix = len(_NUC_ALPH)
+        codons = np.zeros(numbers.shape + (3), dtype=int)
+        for n in (2,1,0):
+            digit = numbers // radix**digit
+            codons[..., -(n+1)] = digit
+            numbers = numbers - digit
+        return codons
+
     @staticmethod
     def load(table_name):
         """
@@ -240,7 +320,7 @@ class CodonTable(object):
                 return CodonTable(symbol_dict, starts)
         else:
             raise ValueError(f"Codon table '{table_name}' was not found")
-    
+
     @staticmethod
     def table_names():
         """
