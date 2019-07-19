@@ -152,34 +152,6 @@ class CodonTable(object):
         codon_numbers = CodonTable._to_number(codon_codes)
         aa_codes = self._codons[codon_numbers]
         return aa_codes
-    
-    def __str__(self):
-        string = ""
-        # ['A', 'C', 'G', 'T']
-        bases = _NUC_ALPH.get_symbols()
-        for b1 in bases:
-            for b2 in bases:
-                for b3 in bases:
-                    codon = b1 + b2 + b3
-                    string += codon + " " + self[codon]
-                    # Indicator for start codon
-                    codon_code = _NUC_ALPH.encode_multiple(codon)
-                    if CodonTable._to_number(codon_code) in self._starts:
-                        string += " i "
-                    else:
-                        string += "   "
-                    # Add space for next codon
-                    string += " "*3
-                # Remove terminal space
-                string = string [:-6]
-                # Jump to next line
-                string += "\n"
-            # Add empty line
-            string += "\n"
-        # Remove the two terminal new lines
-        string = string[:-2]
-        return string
-            
         
     def codon_dict(self, code=False):
         """
@@ -236,6 +208,53 @@ class CodonTable(object):
                 ["".join(_NUC_ALPH.decode_multiple(codon_code))
                  for codon_code in self.start_codons(code=True)]
             )
+    
+    def with_start_codons(self, starts):
+        # Copy this table and replace the start codons
+        new_table = copy.deepcopy(self)
+        start_codon_codes = np.array(
+            [_NUC_ALPH.encode_multiple(start) for start in starts], dtype=int
+        )
+        new_table._starts = CodonTable._to_number(start_codon_codes)
+        return new_table
+    
+    def with_codon_mappings(self, codon_dict):
+        # Copy this table and replace the codon
+        new_table = copy.deepcopy(self)
+        for key, value in codon_dict.items():
+            codon_code = _NUC_ALPH.encode_multiple(key)
+            codon_number = CodonTable._to_number(codon_code)
+            aa_code = _PROT_ALPH.encode(value)
+            new_table._codons[codon_number] = aa_code
+        return new_table
+
+    
+    def __str__(self):
+        string = ""
+        # ['A', 'C', 'G', 'T']
+        bases = _NUC_ALPH.get_symbols()
+        for b1 in bases:
+            for b2 in bases:
+                for b3 in bases:
+                    codon = b1 + b2 + b3
+                    string += codon + " " + self[codon]
+                    # Indicator for start codon
+                    codon_code = _NUC_ALPH.encode_multiple(codon)
+                    if CodonTable._to_number(codon_code) in self._starts:
+                        string += " i "
+                    else:
+                        string += "   "
+                    # Add space for next codon
+                    string += " "*3
+                # Remove terminal space
+                string = string [:-6]
+                # Jump to next line
+                string += "\n"
+            # Add empty line
+            string += "\n"
+        # Remove the two terminal new lines
+        string = string[:-2]
+        return string
 
     @staticmethod
     def _to_number(codons):
@@ -313,7 +332,7 @@ class CodonTable(object):
                 elif line.startswith("Base3"):
                     base3 = line[5:].strip()
         
-        # Create codon tbale from data
+        # Create codon table from data
         if aa is not None and init is not None \
             and base1 is not None and base2 is not None and base3 is not None:
                 symbol_dict = {}
@@ -360,6 +379,6 @@ class CodonTable(object):
         """
         return _default_table
 
-_default_table = CodonTable(CodonTable.load("Standard").codon_dict(), ["ATG"])
+_default_table = CodonTable.load("Standard").with_start_codons(["ATG"])
     
     
