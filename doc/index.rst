@@ -16,7 +16,7 @@ Biotite documentation
 
 The *Biotite* package bundles popular tasks in computational molecular biology
 into a unifying *Python* framework.
-It can handle a major part of molecular biology workflow
+It can handle a major part of the molecular biology workflow
 for sequence and biomolecular structure data:
 
    - Fetching data from biological databases
