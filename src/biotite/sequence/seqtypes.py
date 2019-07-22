@@ -253,6 +253,10 @@ class NucleotideSequence(Sequence):
                     # Codon indices are transformed
                     # to nucleotide sequence indices
                     pos.append((shift + start_i*3, shift + (start_i+stop_i)*3))
+            # Sort by start position
+            order = np.argsort([start for start, stop in pos])
+            pos = [pos[i] for i in order]
+            protein_seqs = [protein_seqs[i] for i in order]
             return protein_seqs, pos
     
     @staticmethod
