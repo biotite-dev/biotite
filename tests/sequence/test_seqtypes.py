@@ -58,12 +58,12 @@ def test_frame_translation(dna_str, protein_str_list):
 def test_translation_met_start():
     """
     Test whether the start amino acid is replaced by methionine,
-    i.e. the correct function of the 'use_met' parameter
+    i.e. the correct function of the 'met_start' parameter.
     """
     codon_table = seq.CodonTable.default_table().with_start_codons("AAA")
-    dna = seq.NucleotideSequence("GAAACTGTAAGAAC")
+    dna = seq.NucleotideSequence("GAAACTGAAATAAGAAC")
     proteins, _ = dna.translate(codon_table=codon_table, met_start=True)
-    assert [str(protein) for protein in proteins] == ["ML*"]
+    assert [str(protein) for protein in proteins] == ["MLK*", "M*"]
 
 
 def test_letter_conversion():

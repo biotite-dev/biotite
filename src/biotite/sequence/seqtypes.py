@@ -203,6 +203,7 @@ class NucleotideSequence(Sequence):
             from .codon import CodonTable
             codon_table = CodonTable.default_table()
         stop_code = ProteinSequence.alphabet.encode("*")
+        met_code  = ProteinSequence.alphabet.encode("M")
         
         if complete:
             if len(self) % 3 != 0:
@@ -215,11 +216,6 @@ class NucleotideSequence(Sequence):
             return protein_seq
         
         else:
-            if met_start:
-                codon_table = codon_table.with_codon_mappings(
-                    {start_codon: "M" for start_codon
-                     in codon_table.start_codons()}
-                )
             protein_seqs = []
             pos = []
             code = self.code
@@ -247,7 +243,12 @@ class NucleotideSequence(Sequence):
                              else len(code_from_start)
                     code_from_start_to_stop = code_from_start[:stop_i]
                     prot_seq = ProteinSequence()
-                    prot_seq.code = code_from_start_to_stop
+                    if met_start:
+                        # Copy as the slice is edited
+                        prot_seq.code = code_from_start_to_stop.copy()
+                        prot_seq.code[0] = met_code
+                    else:
+                        prot_seq.code = code_from_start_to_stop
                     protein_seqs.append(prot_seq)
                     # Codon indices are transformed
                     # to nucleotide sequence indices

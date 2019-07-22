@@ -33,7 +33,6 @@ def test_incomplete_input_dict():
         seq.CodonTable(codon_dict, starts=["ATG"])
 
 
-
 def test_codon_dict():
     """
     Assert that the 'codon_dict()' method returns a correct dictionary.
