@@ -37,11 +37,11 @@ class CodonTable(object):
     
     Parameters
     ----------
-    codon_dict : dict
+    codon_dict : dict of (str -> str)
         A dictionary that maps codons to amino acids. The keys must be
         strings of length 3 and the values strings of length 1
-        (all upper case). The dictionary must provide entries for all
-        64 possible codons.
+        (all upper case).
+        The dictionary must provide entries for all 64 possible codons.
     starts : iterable object of str
         The start codons. Each entry must be a string of length 3
         (all upper case).
@@ -63,7 +63,7 @@ class CodonTable(object):
     >>> print(table["M"])
     ('ATG',)
     >>> print(table[14])
-    ((1, 2, 3), (1, 2, 1), (1, 2, 0), (1, 2, 2), (0, 2, 0), (0, 2, 2))
+    ((0, 2, 0), (0, 2, 2), (1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3))
     """
     
     # For efficient mapping of codon codes to amino acid codes,
@@ -144,6 +144,44 @@ class CodonTable(object):
             return aa_code
     
     def map_codon_codes(self, codon_codes):
+        """
+        Efficiently map multiple codons to the corresponding amino
+        acids.
+        
+        Parameters
+        ----------
+        codon_codes : ndarray, dtype=int, shape=(n,3)
+            The codons to be translated into amino acids.
+            The codons are given as symbol codes.
+            *n* is the amount of codons.
+        
+        Returns
+        -------
+        aa_codes : ndarray, dtype=int, shape=(n,)
+            The amino acids as symbol codes.
+        
+        Examples
+        --------
+        >>> dna = NucleotideSequence("ATGGTTTAA")
+        >>> sequence_code = dna.code
+        >>> print(sequence_code)
+        [0 3 2 2 3 3 3 0 0]
+        >>> # Reshape to get codons
+        >>> codon_codes = sequence_code.reshape(-1, 3)
+        >>> print(codon_codes)
+        [[0 3 2]
+         [2 3 3]
+         [3 0 0]]
+        >>> # Map to amino acids
+        >>> aa_codes = CodonTable.default_table().map_codon_codes(codon_codes)
+        >>> print(aa_codes)
+        [10 17 23]
+        >>> # Put into a protein sequence
+        >>> protein = ProteinSequence()
+        >>> protein.code = aa_codes
+        >>> print(protein)
+        MV*
+        """
         if codon_codes.shape[-1] != 3:
             raise ValueError(
                 f"Codons must be length 3, "
@@ -210,6 +248,20 @@ class CodonTable(object):
             )
     
     def with_start_codons(self, starts):
+        """
+        Create an new `CodonTable` with the same codon mappings, but
+        changed start codons.
+        
+        Parameters
+        ----------
+        starts : iterable object of str
+            The new start codons.
+        
+        Returns
+        -------
+        new_table : CodonTable
+            The codon table with the new start codons.
+        """
         # Copy this table and replace the start codons
         new_table = copy.deepcopy(self)
         start_codon_codes = np.array(
@@ -219,6 +271,20 @@ class CodonTable(object):
         return new_table
     
     def with_codon_mappings(self, codon_dict):
+        """
+        Create an new `CodonTable` with partially changed codon
+        mappings.
+        
+        Parameters
+        ----------
+        codon_dict : dict of (str -> str)
+            The changed codon mappings.
+        
+        Returns
+        -------
+        new_table : CodonTable
+            The codon table with changed codon mappings.
+        """
         # Copy this table and replace the codon
         new_table = copy.deepcopy(self)
         for key, value in codon_dict.items():
