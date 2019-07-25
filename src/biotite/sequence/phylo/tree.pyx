@@ -101,9 +101,14 @@ class Tree(Copyable):
 
         Parameters
         ----------
-        index1, index2
+        index1, index2 : int
             The reference indices of the two leaf nodes, to calculate
             the distance for.
+        topological : bool, optional
+            If True the topological distance is measured, i.e. all
+            child-parent distance is 1.
+            Otherwise, the distances from the `distance` attribute are
+            used.
 
         Returns
         -------
