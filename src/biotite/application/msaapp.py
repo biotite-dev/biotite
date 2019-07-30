@@ -33,14 +33,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         will be used.
     """
     
-    def __init__(self, sequences, bin_path=None):
+    def __init__(self, sequences, bin_path):
         # Check if all sequences share the same alphabet
         alphabet = sequences[0].get_alphabet()
         for seq in sequences:
             if seq.get_alphabet() != alphabet:
                 raise ValueError("Alphabets of the sequences are not equal")
-        if bin_path is None:
-            bin_path = self.get_default_bin_path()
         super().__init__(bin_path)
         self._sequences = sequences
         self._in_file_name  = temp_file("fa")
@@ -113,26 +111,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         """
         return self._order
     
-    @staticmethod
-    @abc.abstractmethod
-    def get_default_bin_path():
-        """
-        Get the default path for the MSA software executable.
-        
-        PROTECTED: Override when inheriting.
-        
-        Returns
-        -------
-        bin_path : str
-            Absolute path to executable.
-        """
-        pass
-    
     @abc.abstractmethod
     def get_cli_arguments(self):
         """
         Get the arguments for the MSA execution on the command line
-        (the executable path is exclusive).
+        (the path of the executable is exclusive).
         
         PROTECTED: Override when inheriting.
         

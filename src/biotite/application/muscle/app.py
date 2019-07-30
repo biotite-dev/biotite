@@ -27,7 +27,7 @@ class MuscleApp(MSAApp):
         Path of the MUSCLE binary.
     """
     
-    def __init__(self, sequences, bin_path=None):
+    def __init__(self, sequences, bin_path="muscle"):
         super().__init__(sequences, bin_path)
         self._matrix_file_name = None
         self._matrix = None
@@ -76,10 +76,6 @@ class MuscleApp(MSAApp):
             self._gap_ext = gap_penalty[1]
         else:
             raise TypeError("Gap penalty must be either float or tuple")
-    
-    @staticmethod
-    def get_default_bin_path():
-        return "muscle"
     
     def get_cli_arguments(self):
         args = [

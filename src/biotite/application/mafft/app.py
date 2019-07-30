@@ -25,7 +25,7 @@ class MafftApp(MSAApp):
         Path of the MUSCLE binary.
     """
     
-    def __init__(self, sequences, bin_path=None):
+    def __init__(self, sequences, bin_path="mafft"):
         super().__init__(sequences, bin_path)
     
     def evaluate(self):
@@ -34,10 +34,6 @@ class MafftApp(MSAApp):
             # -> write console output to output file name
             f.write(self.get_stdout())
         super().evaluate()
-    
-    @staticmethod
-    def get_default_bin_path():
-        return "mafft"
     
     def get_cli_arguments(self):
         return ["--auto",

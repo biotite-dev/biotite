@@ -25,16 +25,12 @@ class ClustalOmegaApp(MSAApp):
         Path of the Custal-Omega binary.
     """
     
-    def __init__(self, sequences, bin_path=None):
+    def __init__(self, sequences, bin_path="clustalo"):
         if isinstance(sequences[0], NucleotideSequence):
             self._seqtype = "DNA"
         else:
             self._seqtype = "Protein"
         super().__init__(sequences, bin_path)
-    
-    @staticmethod
-    def get_default_bin_path():
-        return "clustalo"
     
     def get_cli_arguments(self):
         return ["--in", self.get_input_file_path(),
