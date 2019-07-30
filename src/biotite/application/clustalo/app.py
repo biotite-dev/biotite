@@ -32,8 +32,12 @@ class ClustalOmegaApp(MSAApp):
             self._seqtype = "Protein"
         super().__init__(sequences, bin_path)
     
-    def get_cli_arguments(self):
-        return ["--in", self.get_input_file_path(),
-                "--out", self.get_output_file_path(),
-                "--seqtype", self._seqtype,
-                "--output-order=tree-order"]
+    def run(self):
+        self.set_arguments(
+            ["--in", self.get_input_file_path(),
+             "--out", self.get_output_file_path(),
+             "--seqtype", self._seqtype,
+             # Tree order for get_alignment_order() to work properly 
+             "--output-order=tree-order"]
+        )
+        super().run()

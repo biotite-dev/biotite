@@ -35,9 +35,9 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._stdout_file = None
     
     @requires_state(AppState.CREATED)
-    def set_options(self, options):
+    def set_arguments(self, options):
         """
-        Set command line options for the application run.
+        Set command line arguments for the application run.
         
         PROTECTED: Do not call from outside.
         

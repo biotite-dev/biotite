@@ -49,7 +49,6 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         for i, seq in enumerate(self._sequences):
             in_file[str(i)] = str(seq)
         in_file.write(self._in_file_name)
-        self.set_options(self.get_cli_arguments())
         super().run()
     
     def evaluate(self):
@@ -86,12 +85,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Get the order of the resulting multiple sequence alignment.
 
         Usually the order of sequences in the output file is
-        different from the input file, e.g. the sequences are sorted by
-        distances.
+        different from the input file, e.g. the sequences are ordered
+        according to the guide tree.
         When using `align()` this order is rearranged so that its is the
         same as the input order. This method returns the original order 
         of the sequences that can be used to restore the MSA software
-        intended order
+        intended order.
         
         Returns
         -------
@@ -110,21 +109,6 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         alignment = alignment[:, order]
         """
         return self._order
-    
-    @abc.abstractmethod
-    def get_cli_arguments(self):
-        """
-        Get the arguments for the MSA execution on the command line
-        (the path of the executable is exclusive).
-        
-        PROTECTED: Override when inheriting.
-        
-        Returns
-        -------
-        arguments : list of str
-            Command line arguments.
-        """
-        pass
     
     def get_input_file_path(self):
         """

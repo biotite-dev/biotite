@@ -28,14 +28,19 @@ class MafftApp(MSAApp):
     def __init__(self, sequences, bin_path="mafft"):
         super().__init__(sequences, bin_path)
     
+    def run(self):
+        self.set_arguments(
+            ["--auto",
+             # Get the reordered alignment in order for
+             # get_alignment_order() to work properly 
+             "--reorder",
+             self.get_input_file_path()]
+        )
+        super().run()
+    
     def evaluate(self):
         with open(self.get_output_file_path(), "w") as f:
-            # MAFFT outputs alignment to console
-            # -> write console output to output file name
+            # MAFFT outputs alignment to stdout
+            # -> write stdout to output file name
             f.write(self.get_stdout())
         super().evaluate()
-    
-    def get_cli_arguments(self):
-        return ["--auto",
-                "--reorder",
-                self.get_input_file_path()]

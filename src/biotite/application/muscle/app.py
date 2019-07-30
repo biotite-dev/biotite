@@ -35,6 +35,26 @@ class MuscleApp(MSAApp):
         self._gap_ext = None
         self._terminal_penalty = None
     
+    def run(self):
+        args = [
+            "-in",  self.get_input_file_path(),
+            "-out", self.get_output_file_path()
+        ]
+        if self._matrix is not None:
+            with open(self._matrix_file_name, "w") as file:
+                file.write(str(self._matrix))
+            args += ["-matrix", self._matrix_file_name]
+        if self._gap_open is not None and self._gap_ext is not None:
+            args += ["-gapopen",   f"{self._gap_open:.1f}"]
+            args += ["-gapextend", f"{self._gap_ext:.1f}"]
+            # When the gap penalty is set,
+            # use the penalty also for hydrophobic regions
+            args += ["-hydrofactor", "1.0"]
+            # Use the recommendation of the documentation
+            args += ["-center", "0.0"]
+        self.set_arguments(args)
+        super().run()
+    
     @requires_state(AppState.CREATED)
     def set_matrix(self, matrix):
         """
@@ -76,29 +96,6 @@ class MuscleApp(MSAApp):
             self._gap_ext = gap_penalty[1]
         else:
             raise TypeError("Gap penalty must be either float or tuple")
-    
-    def get_cli_arguments(self):
-        args = [
-            "-in",  self.get_input_file_path(),
-            "-out", self.get_output_file_path()
-        ]
-        if self._matrix is not None:
-            args += ["-matrix", self._matrix_file_name]
-        if self._gap_open is not None and self._gap_ext is not None:
-            args += ["-gapopen",   f"{self._gap_open:.1f}"]
-            args += ["-gapextend", f"{self._gap_ext:.1f}"]
-            # When the gap penalty is set,
-            # use the penalty also for hydrophobic regions
-            args += ["-hydrofactor", "1.0"]
-            # Use the recommendation of the documentation
-            args += ["-center", "0.0"]
-        return args
-    
-    def run(self):
-        if self._matrix is not None:
-            with open(self._matrix_file_name, "w") as file:
-                file.write(str(self._matrix))
-        super().run()
     
     @classmethod
     def align(cls, sequences, bin_path=None, matrix=None,

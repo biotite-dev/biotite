@@ -50,7 +50,9 @@ class DsspApp(LocalApp):
         in_file = PDBFile()
         in_file.set_structure(self._array)
         in_file.write(self._in_file_name)
-        self.set_options(["-i", self._in_file_name, "-o", self._out_file_name])
+        self.set_arguments(
+            ["-i", self._in_file_name, "-o", self._out_file_name]
+        )
         super().run()
     
     def evaluate(self):
