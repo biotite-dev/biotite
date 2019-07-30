@@ -125,7 +125,6 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         >>> seq2 = ProteinSequence("TITANITE")
         >>> seq3 = ProteinSequence("BISMITE")
         >>> seq4 = ProteinSequence("IQLITE")
-        >>> # Run application without additional arguments
         >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
         >>> app.start()
         >>> print(app.get_command())

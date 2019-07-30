@@ -25,6 +25,23 @@ class MuscleApp(MSAApp):
         The sequences to be aligned.
     bin_path : str, optional
         Path of the MUSCLE binary.
+    
+    Examples
+    --------
+
+    >>> seq1 = ProteinSequence("BIQTITE")
+    >>> seq2 = ProteinSequence("TITANITE")
+    >>> seq3 = ProteinSequence("BISMITE")
+    >>> seq4 = ProteinSequence("IQLITE")
+    >>> app = MuscleApp([seq1, seq2, seq3, seq4])
+    >>> app.start()
+    >>> app.join()
+    >>> alignment = app.get_alignment()
+    >>> print(alignment)
+    BIQT-ITE
+    TITANITE
+    BISM-ITE
+    -IQL-ITE
     """
     
     def __init__(self, sequences, bin_path="muscle"):

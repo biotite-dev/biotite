@@ -23,6 +23,23 @@ class ClustalOmegaApp(MSAApp):
         The sequences to be aligned.
     bin_path : str, optional
         Path of the Custal-Omega binary.
+    
+    Examples
+    --------
+
+    >>> seq1 = ProteinSequence("BIQTITE")
+    >>> seq2 = ProteinSequence("TITANITE")
+    >>> seq3 = ProteinSequence("BISMITE")
+    >>> seq4 = ProteinSequence("IQLITE")
+    >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+    >>> app.start()
+    >>> app.join()
+    >>> alignment = app.get_alignment()
+    >>> print(alignment)
+    -BIQTITE
+    TITANITE
+    -BISMITE
+    --IQLITE
     """
     
     def __init__(self, sequences, bin_path="clustalo"):

@@ -38,6 +38,16 @@ class DsspApp(LocalApp):
         The atom array to be annotated.
     bin_path : str, optional
         Path of the DDSP binary.
+    
+    Examples
+    --------
+
+    >>> app = DsspApp(atom_array)
+    >>> app.start()
+    >>> app.join()
+    >>> print(app.get_sse())
+    ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'C' 'C'
+     'C' 'C']
     """
     
     def __init__(self, atom_array, bin_path="mkdssp"):
