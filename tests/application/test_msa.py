@@ -47,3 +47,21 @@ def test_msa(app_cls, exp_ali, exp_order):
     print(order)
     assert str(alignment) == exp_ali
     assert order.tolist() == exp_order
+
+
+def test_additional_options():
+    seq1 = seq.ProteinSequence("BIQTITE")
+    seq2 = seq.ProteinSequence("TITANITE")
+    seq3 = seq.ProteinSequence("BISMITE")
+    seq4 = seq.ProteinSequence("IQLITE")
+    
+    app1 = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+    app1.start()
+    
+    app2 = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+    app2.add_additional_options(["--full"])
+    app2.start()
+    
+    app1.join()
+    app2.join()
+    assert app1.get_alignment() == app2.get_alignment()
