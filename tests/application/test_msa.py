@@ -64,4 +64,6 @@ def test_additional_options():
     
     app1.join()
     app2.join()
+    assert "--full" not in app1.get_command()
+    assert "--full"     in app2.get_command()
     assert app1.get_alignment() == app2.get_alignment()

@@ -36,6 +36,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._process = None
         self._stdout_file_path = None
         self._stdout_file = None
+        self._command = None
     
     @requires_state(AppState.CREATED)
     def set_arguments(self, arguments):
@@ -46,11 +47,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        arguments : list
+        arguments : list of str
             A list of strings representing the command line options.
         """
         self._arguments = copy.copy(arguments)
     
+    @requires_state(AppState.CREATED)
     def add_additional_options(self, options):
         """
         Add additional options for the command line program.
@@ -68,7 +70,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        options : list
+        options : list of str
             A list of strings representing the command line options.
         
         Notes
@@ -78,8 +80,59 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
 
         Examples
         --------
+
+        >>> seq1 = ProteinSequence("BIQTITE")
+        >>> seq2 = ProteinSequence("TITANITE")
+        >>> seq3 = ProteinSequence("BISMITE")
+        >>> seq4 = ProteinSequence("IQLITE")
+        >>> # Run application without additional arguments
+        >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_command())
+        clustalo --in ...fa --out ...fa --seqtype Protein --output-order=tree-order
+        >>> # Run application with additional argument
+        >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+        >>> app.add_additional_options(["--full"])
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_command())
+        clustalo --full --in ...fa --out ...fa --seqtype Protein --output-order=tree-order
         """
         self._options += options
+    
+    @requires_state(
+        AppState.RUNNING | \
+        AppState.CANCELLED | \
+        AppState.FINISHED | \
+        AppState.JOINED
+    )
+    def get_command(self):
+        """
+        Get the executed command.
+
+        Cannot be called until the application has been started.
+        
+        Returns
+        -------
+        command : str
+            The executed command.
+        
+        Examples
+        --------
+        
+        >>> seq1 = ProteinSequence("BIQTITE")
+        >>> seq2 = ProteinSequence("TITANITE")
+        >>> seq3 = ProteinSequence("BISMITE")
+        >>> seq4 = ProteinSequence("IQLITE")
+        >>> # Run application without additional arguments
+        >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+        >>> app.start()
+        >>> print(app.get_command())
+        clustalo --in ...fa --out ...fa --seqtype Protein --output-order=tree-order
+        """
+        return " ".join(self._command)
+
     
     @requires_state(AppState.CREATED)
     def set_exec_dir(self, exec_dir):
@@ -136,9 +189,9 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     def run(self):
         cwd = getcwd()
         chdir(self._exec_dir) 
+        self._command = [self._bin_path] + self._options + self._arguments
         self._process = Popen(
-            [self._bin_path] + self._options + self._arguments,
-            stdout=PIPE, stderr=PIPE, encoding="UTF-8"
+            self._command, stdout=PIPE, stderr=PIPE, encoding="UTF-8"
         ) 
         chdir(cwd)
     
