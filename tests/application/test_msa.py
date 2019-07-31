@@ -3,12 +3,24 @@
 # information.
 
 import biotite.sequence as seq
+import biotite.sequence.phylo as phylo
 from biotite.application.muscle import MuscleApp
 from biotite.application.mafft import MafftApp
 from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
 import pytest
 import shutil
+
+
+@pytest.fixture
+def sequences():
+    return [seq.ProteinSequence(string) for string in [
+        "BIQTITE",
+        "TITANITE",
+        "BISMITE",
+        "IQLITE"
+]]
+
 
 @pytest.mark.skipif(shutil.which("muscle")   is None or
                     shutil.which("mafft")    is None or
@@ -34,12 +46,8 @@ import shutil
       "--IQLITE",
      [1,2,0,3])]
 )
-def test_msa(app_cls, exp_ali, exp_order):
-    seq1 = seq.ProteinSequence("BIQTITE")
-    seq2 = seq.ProteinSequence("TITANITE")
-    seq3 = seq.ProteinSequence("BISMITE")
-    seq4 = seq.ProteinSequence("IQLITE")
-    app = app_cls([seq1, seq2, seq3, seq4])
+def test_msa(sequences, app_cls, exp_ali, exp_order):
+    app = app_cls(sequences)
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -49,16 +57,11 @@ def test_msa(app_cls, exp_ali, exp_order):
     assert order.tolist() == exp_order
 
 
-def test_additional_options():
-    seq1 = seq.ProteinSequence("BIQTITE")
-    seq2 = seq.ProteinSequence("TITANITE")
-    seq3 = seq.ProteinSequence("BISMITE")
-    seq4 = seq.ProteinSequence("IQLITE")
-    
-    app1 = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+def test_additional_options(sequences):
+    app1 = ClustalOmegaApp(sequences)
     app1.start()
     
-    app2 = ClustalOmegaApp([seq1, seq2, seq3, seq4])
+    app2 = ClustalOmegaApp(sequences)
     app2.add_additional_options(["--full"])
     app2.start()
     
@@ -67,3 +70,38 @@ def test_additional_options():
     assert "--full" not in app1.get_command()
     assert "--full"     in app2.get_command()
     assert app1.get_alignment() == app2.get_alignment()
+
+
+def test_clustalo_matrix(sequences):
+    ref_matrix = [
+        [0, 1, 2, 3],
+        [1, 0, 1, 2],
+        [2, 1, 0, 1],
+        [3, 2, 1, 0]
+    ]
+    app = ClustalOmegaApp(sequences)
+    app.full_matrix_calculation()
+    app.set_distance_matrix(np.array(ref_matrix))
+    app.start()
+    app.join()
+    test_matrix = app.get_distance_matrix()
+    assert np.allclose(ref_matrix, test_matrix)
+
+
+def test_clustalo_tree(sequences):
+    leaves = [phylo.TreeNode(index=i) for i in range(len(sequences))]
+    inter1 = phylo.TreeNode(leaves[0], leaves[1], 1.0, 1.0)
+    inter2 = phylo.TreeNode(leaves[2], leaves[3], 2.5, 2.5)
+    root = phylo.TreeNode(inter1, inter2, 3.5, 2)
+    tree = phylo.Tree(root)
+    # You cannot simultaneously set and get a tree in ClustalOmega
+    # -> Test whether both is possible in separate calls
+    app = ClustalOmegaApp(sequences)
+    app.set_guide_tree(tree)
+    app.start()
+    app.join()
+
+    app = ClustalOmegaApp(sequences)
+    app.start()
+    app.join()
+    app.get_guide_tree()

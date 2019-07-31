@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["ClustalOmegaApp"]
 
+import numpy as np
 from ...temp import temp_file
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -66,15 +67,36 @@ class ClustalOmegaApp(MSAApp):
             "--seqtype", self._seqtype,
             # Tree order for get_alignment_order() to work properly 
             "--output-order=tree-order",
-            "--guidetree-out", self._out_tree_file_name,
         ]
+        if self._tree is None:
+            # ClustalOmega does not like when a tree is set
+            # as input and output#
+            # -> Only request tree output when not tree is input
+            args += [
+                "--guidetree-out", self._out_tree_file_name,
+            ]
         if not self._mbed:
             args += [
                 "--full",
                 "--distmat-out", self._out_dist_matrix_file_name
             ]
         if self._dist_matrix is not None:
-            pass
+            # Add the sequence names (0, 1, 2, 3 ...) as first column
+            dist_matrix_with_index = np.concatenate(
+                (
+                    np.arange(self._seq_count)[:, np.newaxis],
+                    self._dist_matrix
+                ), axis=1
+            )
+            np.savetxt(
+                self._in_dist_matrix_file_name, dist_matrix_with_index,
+                # The first line contains the amount of sequences
+                comments = "",
+                header = str(self._seq_count),
+                # The sequence indices are integers, the rest are floats
+                fmt = ["%d"] + ["%.5f"] * self._seq_count
+            )
+            args += ["--distmat-in", self._in_dist_matrix_file_name]
         if self._tree is not None:
             with open(self._in_tree_file_name, "w") as file:
                 file.write(str(self._tree))
@@ -84,11 +106,22 @@ class ClustalOmegaApp(MSAApp):
     
     def evaluate(self):
         super().evaluate()
+        
         if not self._mbed:
-            with open(self._out_dist_matrix_file_name, "r") as file:
-                self._dist_matrix = file.read()
-        with open(self._out_tree_file_name, "r") as file:
-            self._tree = Tree.from_newick(file.read().replace("\n", ""))
+            self._dist_matrix = np.loadtxt(
+                self._out_dist_matrix_file_name,
+                # The first row only contains the number of sequences
+                skiprows = 1,
+                dtype = float
+            )
+            # The first column contains only the name of the
+            # sequences, in this case 0, 1, 2, 3 ...
+            # -> Omit the first column
+            self._dist_matrix = self._dist_matrix[:, 1:]
+        # Only read output tree if no tree was input
+        if self._tree is None:
+            with open(self._out_tree_file_name, "r") as file:
+                self._tree = Tree.from_newick(file.read().replace("\n", ""))
     
     @requires_state(AppState.CREATED)
     def full_matrix_calculation(self):
@@ -96,7 +129,7 @@ class ClustalOmegaApp(MSAApp):
     
     @requires_state(AppState.CREATED)
     def set_distance_matrix(self, matrix):
-        self._dist_matrix = matrix
+        self._dist_matrix = matrix.astype(float, copy=False)
     
     @requires_state(AppState.JOINED)
     def get_distance_matrix(self):

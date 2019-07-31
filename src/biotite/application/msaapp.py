@@ -5,6 +5,9 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["MSAApp"]
 
+import abc
+from collections import OrderedDict
+import numpy as np
 from .localapp import LocalApp
 from .application import AppState, requires_state
 from ..sequence.sequence import Sequence
@@ -12,9 +15,6 @@ from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
 from ..temp import temp_file
-import numpy as np
-import abc
-from collections import OrderedDict
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
