@@ -11,7 +11,7 @@ from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
-from ...sequence.phylo import Tree
+from ...sequence.phylo.tree import Tree
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 

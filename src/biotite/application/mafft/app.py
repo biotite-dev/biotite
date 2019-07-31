@@ -5,12 +5,18 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
+import re
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
+from ...sequence.phylo.tree import Tree
+
+
+_prefix_pattern = re.compile("._")
+
 
 
 class MafftApp(MSAApp):
@@ -44,6 +50,8 @@ class MafftApp(MSAApp):
     
     def __init__(self, sequences, bin_path="mafft"):
         super().__init__(sequences, bin_path)
+        self._tree = None
+        self._out_tree_file_name = self.get_input_file_path() + ".tree"
     
     def run(self):
         self.set_arguments(
@@ -51,6 +59,7 @@ class MafftApp(MSAApp):
              # Get the reordered alignment in order for
              # get_alignment_order() to work properly 
              "--reorder",
+             "--treeout",
              self.get_input_file_path()]
         )
         super().run()
@@ -61,3 +70,14 @@ class MafftApp(MSAApp):
             # -> write stdout to output file name
             f.write(self.get_stdout())
         super().evaluate()
+        with open(self._out_tree_file_name, "r") as file:
+            raw_newick = file.read().replace("\n", "")
+            # Mafft uses sequences label in the form '<n>_<seqname>'
+            # Only the <seqname> is required
+            # -> remove the '<n>_' prefix
+            newick = re.sub(_prefix_pattern, "", raw_newick)
+            self._tree = Tree.from_newick(newick)
+    
+    @requires_state(AppState.JOINED)
+    def get_guide_tree(self):
+        return self._tree

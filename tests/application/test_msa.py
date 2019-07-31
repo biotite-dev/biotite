@@ -104,4 +104,12 @@ def test_clustalo_tree(sequences):
     app = ClustalOmegaApp(sequences)
     app.start()
     app.join()
-    app.get_guide_tree()
+    assert app.get_guide_tree() is not None
+
+
+def test_mafft_tree(sequences):
+    app = MafftApp(sequences)
+    app.start()
+    app.join()
+    tree = app.get_guide_tree()
+    assert tree is not None
