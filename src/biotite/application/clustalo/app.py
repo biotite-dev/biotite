@@ -48,8 +48,13 @@ class ClustalOmegaApp(MSAApp):
     def __init__(self, sequences, bin_path="clustalo"):
         if isinstance(sequences[0], NucleotideSequence):
             self._seqtype = "DNA"
-        else:
+        elif isinstance(sequences[0], ProteinSequence):
             self._seqtype = "Protein"
+        else:
+            raise TypeError(
+                f"Clustal-Omega cannot align sequences of type "
+                f"{type(sequences[0]).__name__}"
+            )
         self._seq_count = len(sequences)
         self._mbed = True
         self._dist_matrix = None

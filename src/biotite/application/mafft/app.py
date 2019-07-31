@@ -50,16 +50,26 @@ class MafftApp(MSAApp):
     
     def __init__(self, sequences, bin_path="mafft"):
         super().__init__(sequences, bin_path)
+        if isinstance(sequences[0], NucleotideSequence):
+            self._seqtype_arg = "--nuc"
+        elif isinstance(sequences[0], ProteinSequence):
+            self._seqtype_arg = "--amino"
+        else:
+            raise TypeError(
+                f"MAFFT cannot align sequences of type "
+                f"{type(sequences[0]).__name__}"
+            )
         self._tree = None
         self._out_tree_file_name = self.get_input_file_path() + ".tree"
     
     def run(self):
         self.set_arguments(
             ["--auto",
+             self._seqtype_arg,
+             "--treeout",
              # Get the reordered alignment in order for
              # get_alignment_order() to work properly 
              "--reorder",
-             "--treeout",
              self.get_input_file_path()]
         )
         super().run()
