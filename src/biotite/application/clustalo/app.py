@@ -22,10 +22,12 @@ class ClustalOmegaApp(MSAApp):
     
     Parameters
     ----------
-    sequences : iterable object of ProteinSequence or NucleotideSequence
+    sequences : list of ProteinSequence or NucleotideSequence
         The sequences to be aligned.
     bin_path : str, optional
         Path of the Custal-Omega binary.
+    matrix : None
+        This parameter is used for compatibility reasons and is ignored.
     
     Examples
     --------
@@ -45,16 +47,8 @@ class ClustalOmegaApp(MSAApp):
     --IQLITE
     """
     
-    def __init__(self, sequences, bin_path="clustalo"):
-        if isinstance(sequences[0], NucleotideSequence):
-            self._seqtype = "DNA"
-        elif isinstance(sequences[0], ProteinSequence):
-            self._seqtype = "Protein"
-        else:
-            raise TypeError(
-                f"Clustal-Omega cannot align sequences of type "
-                f"{type(sequences[0]).__name__}"
-            )
+    def __init__(self, sequences, bin_path="clustalo", matrix=None):
+        super().__init__(sequences, bin_path, None)
         self._seq_count = len(sequences)
         self._mbed = True
         self._dist_matrix = None
@@ -63,16 +57,18 @@ class ClustalOmegaApp(MSAApp):
         self._out_dist_matrix_file_name = temp_file("mat")
         self._in_tree_file_name = temp_file("tree")
         self._out_tree_file_name = temp_file("tree")
-        super().__init__(sequences, bin_path)
     
     def run(self):
         args = [
             "--in", self.get_input_file_path(),
             "--out", self.get_output_file_path(),
-            "--seqtype", self._seqtype,
             # Tree order for get_alignment_order() to work properly 
             "--output-order=tree-order",
         ]
+        if self.get_seqtype() == "protein":
+            args += ["--seqtype", "Protein"]
+        else:
+            args += ["--seqtype", "DNA"]
         if self._tree is None:
             # ClustalOmega does not like when a tree is set
             # as input and output#
@@ -157,3 +153,19 @@ class ClustalOmegaApp(MSAApp):
     @requires_state(AppState.JOINED)
     def get_guide_tree(self):
         return self._tree
+    
+    @staticmethod
+    def supports_nucleotide():
+        True
+    
+    @staticmethod
+    def supports_protein():
+        True
+    
+    @staticmethod
+    def supports_custom_nucleotide_matrix():
+        False
+    
+    @staticmethod
+    def supports_custom_protein_matrix():
+        False

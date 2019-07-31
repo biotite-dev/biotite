@@ -21,10 +21,12 @@ class MuscleApp(MSAApp):
     
     Parameters
     ----------
-    sequences : iterable object of ProteinSequence
+    sequences : list of Sequence
         The sequences to be aligned.
     bin_path : str, optional
         Path of the MUSCLE binary.
+    matrix : SubstitutionMatrix, optional
+        A custom substitution matrix.
     
     Examples
     --------
@@ -44,8 +46,8 @@ class MuscleApp(MSAApp):
     -IQL-ITE
     """
     
-    def __init__(self, sequences, bin_path="muscle"):
-        super().__init__(sequences, bin_path)
+    def __init__(self, sequences, bin_path="muscle", matrix=None):
+        super().__init__(sequences, bin_path, matrix)
         self._matrix_file_name = None
         self._matrix = None
         self._gap_open = None
@@ -57,10 +59,8 @@ class MuscleApp(MSAApp):
             "-in",  self.get_input_file_path(),
             "-out", self.get_output_file_path()
         ]
-        if self._matrix is not None:
-            with open(self._matrix_file_name, "w") as file:
-                file.write(str(self._matrix))
-            args += ["-matrix", self._matrix_file_name]
+        if self.get_matrix_file_path() is not None:
+            args += ["-matrix", self.get_matrix_file_path()]
         if self._gap_open is not None and self._gap_ext is not None:
             args += ["-gapopen",   f"{self._gap_open:.1f}"]
             args += ["-gapextend", f"{self._gap_ext:.1f}"]
@@ -71,19 +71,6 @@ class MuscleApp(MSAApp):
             args += ["-center", "0.0"]
         self.set_arguments(args)
         super().run()
-    
-    @requires_state(AppState.CREATED)
-    def set_substitution_matrix(self, matrix):
-        """
-        Set the substitution matrix for the alignment.
-
-        Parameters
-        ----------
-        matix : SubstitutionMatrix
-            The substitution matrix to be used.
-        """
-        self._matrix = matrix
-        self._matrix_file_name = temp_file("mat")
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):
@@ -114,6 +101,22 @@ class MuscleApp(MSAApp):
         else:
             raise TypeError("Gap penalty must be either float or tuple")
     
+    @staticmethod
+    def supports_nucleotide():
+        False
+    
+    @staticmethod
+    def supports_protein():
+        True
+    
+    @staticmethod
+    def supports_custom_nucleotide_matrix():
+        False
+    
+    @staticmethod
+    def supports_custom_protein_matrix():
+        True
+    
     @classmethod
     def align(cls, sequences, bin_path=None, matrix=None,
               gap_penalty=None):
@@ -136,9 +139,7 @@ class MuscleApp(MSAApp):
         alignment : Alignment
             The global multiple sequence alignment.
         """
-        app = cls(sequences, bin_path)
-        if matrix is not None:
-            app.set_matrix(matrix)
+        app = cls(sequences, bin_path, matrix)
         if gap_penalty is not None:
             app.set_gap_penalty(gap_penalty)
         app.start()

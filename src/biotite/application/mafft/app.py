@@ -6,6 +6,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
 import re
+from ...temp import temp_file
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
@@ -25,10 +26,12 @@ class MafftApp(MSAApp):
     
     Parameters
     ----------
-    sequences : iterable object of ProteinSequence or NucleotideSequence
+    sequences : list of Sequence
         The sequences to be aligned.
     bin_path : str, optional
         Path of the MUSCLE binary.
+    matrix : SubstitutionMatrix, optional
+        A custom substitution matrix.
     
     Examples
     --------
@@ -48,30 +51,27 @@ class MafftApp(MSAApp):
     --IQLITE
     """
     
-    def __init__(self, sequences, bin_path="mafft"):
-        super().__init__(sequences, bin_path)
-        if isinstance(sequences[0], NucleotideSequence):
-            self._seqtype_arg = "--nuc"
-        elif isinstance(sequences[0], ProteinSequence):
-            self._seqtype_arg = "--amino"
-        else:
-            raise TypeError(
-                f"MAFFT cannot align sequences of type "
-                f"{type(sequences[0]).__name__}"
-            )
+    def __init__(self, sequences, bin_path="mafft", matrix=None):
+        super().__init__(sequences, bin_path, matrix)
         self._tree = None
         self._out_tree_file_name = self.get_input_file_path() + ".tree"
     
     def run(self):
-        self.set_arguments(
-            ["--auto",
-             self._seqtype_arg,
-             "--treeout",
-             # Get the reordered alignment in order for
-             # get_alignment_order() to work properly 
-             "--reorder",
-             self.get_input_file_path()]
-        )
+        args = [
+            "--auto",
+            "--treeout",
+            # Get the reordered alignment in order for
+            # get_alignment_order() to work properly 
+            "--reorder",
+        ]
+        if self.get_seqtype() == "protein":
+            args += ["--amino"]
+        else:
+            args += ["--nuc"]
+        if self.get_matrix_file_path() is not None:
+            args += ["--aamatrix", self.get_matrix_file_path()]
+        args += [self.get_input_file_path()]
+        self.set_arguments(args)
         super().run()
     
     def evaluate(self):
@@ -87,7 +87,23 @@ class MafftApp(MSAApp):
             # -> remove the '<n>_' prefix
             newick = re.sub(_prefix_pattern, "", raw_newick)
             self._tree = Tree.from_newick(newick)
-    
+
     @requires_state(AppState.JOINED)
     def get_guide_tree(self):
         return self._tree
+    
+    @staticmethod
+    def supports_nucleotide():
+        True
+    
+    @staticmethod
+    def supports_protein():
+        True
+    
+    @staticmethod
+    def supports_custom_nucleotide_matrix():
+        True
+    
+    @staticmethod
+    def supports_custom_protein_matrix():
+        True
