@@ -73,7 +73,7 @@ class MuscleApp(MSAApp):
         super().run()
     
     @requires_state(AppState.CREATED)
-    def set_matrix(self, matrix):
+    def set_substitution_matrix(self, matrix):
         """
         Set the substitution matrix for the alignment.
 
