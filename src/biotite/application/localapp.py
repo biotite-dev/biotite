@@ -211,7 +211,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._command = [self._bin_path] + self._options + self._arguments
         self._process = Popen(
             self._command, stdout=PIPE, stderr=PIPE, encoding="UTF-8"
-        ) 
+        )
         chdir(cwd)
     
     def is_finished(self):

@@ -371,13 +371,18 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         bin_path : str, optional
             Path of the MSA software binary. By default, the default path
             will be used.
+        matrix : SubstitutionMatrix, optional
+        A custom substitution matrix.
         
         Returns
         -------
         alignment : Alignment
             The global multiple sequence alignment.
         """
-        app = cls(sequences, bin_path, matrix)
+        if bin_path is None:
+            app = cls(sequences, matrix=matrix)
+        else:
+            app = cls(sequences, bin_path, matrix=matrix)
         app.start()
         app.join()
         return app.get_alignment()

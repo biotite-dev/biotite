@@ -106,14 +106,14 @@ class MuscleApp(MSAApp):
 
         Parameters
         ----------
-        gap_penalty : float or (tuple, dtype=int), optional
+        gap_penalty : float or (tuple, dtype=int)
             If a float is provided, the value will be interpreted as
             general gap penalty.
             If a tuple is provided, an affine gap penalty is used.
             The first value in the tuple is the gap opening penalty,
             the second value is the gap extension penalty.
             The values need to be negative.
-            """
+        """
         # Check if gap penalty is general or affine
         if isinstance(gap_penalty, numbers.Real):
             if gap_penalty > 0:
@@ -187,13 +187,25 @@ class MuscleApp(MSAApp):
         bin_path : str, optional
             Path of the MSA software binary. By default, the default path
             will be used.
+        matrix : SubstitutionMatrix, optional
+            A custom substitution matrix.
+        gap_penalty : float or (tuple, dtype=int), optional
+            If a float is provided, the value will be interpreted as
+            general gap penalty.
+            If a tuple is provided, an affine gap penalty is used.
+            The first value in the tuple is the gap opening penalty,
+            the second value is the gap extension penalty.
+            The values need to be negative.
         
         Returns
         -------
         alignment : Alignment
             The global multiple sequence alignment.
         """
-        app = cls(sequences, bin_path, matrix)
+        if bin_path is None:
+            app = cls(sequences, matrix=matrix)
+        else:
+            app = cls(sequences, bin_path, matrix=matrix)
         if gap_penalty is not None:
             app.set_gap_penalty(gap_penalty)
         app.start()
