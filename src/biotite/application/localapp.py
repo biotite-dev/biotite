@@ -90,14 +90,14 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         >>> app.start()
         >>> app.join()
         >>> print(app.get_command())
-        clustalo --in ...fa --out ...fa --seqtype Protein --output-order=tree-order --guidetree-out ...tree
+        clustalo --in ...fa --out ...fa --output-order=tree-order --seqtype Protein --guidetree-out ...tree
         >>> # Run application with additional argument
         >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
         >>> app.add_additional_options(["--full"])
         >>> app.start()
         >>> app.join()
         >>> print(app.get_command())
-        clustalo --full --in ...fa --out ...fa --seqtype Protein --output-order=tree-order --guidetree-out ...tree
+        clustalo --full --in ...fa --out ...fa --output-order=tree-order --seqtype Protein --guidetree-out ...tree
         """
         self._options += options
     
@@ -128,7 +128,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
         >>> app.start()
         >>> print(app.get_command())
-        clustalo --in ...fa --out ...fa --seqtype Protein --output-order=tree-order --guidetree-out ...tree
+        clustalo --in ...fa --out ...fa --output-order=tree-order --seqtype Protein --guidetree-out ...tree
         """
         return " ".join(self._command)
 
