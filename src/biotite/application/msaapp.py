@@ -317,7 +317,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
                 f"Cannot be converted into protein sequences"
             )
         mapped_sequences = []
-        for seq in mapped_sequences:
+        for seq in sequences:
             # Mapping is done by simply taking over the sequence
             # code of the original sequence
             prot_seq = ProteinSequence()

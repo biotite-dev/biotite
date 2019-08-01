@@ -53,7 +53,6 @@ def test_msa(sequences, app_cls, exp_ali, exp_order):
     app.join()
     alignment = app.get_alignment()
     order = app.get_alignment_order()
-    print(order)
     assert str(alignment) == exp_ali
     assert order.tolist() == exp_order
 
@@ -73,24 +72,18 @@ def test_additional_options(sequences):
     assert app1.get_alignment() == app2.get_alignment()
 
 
-@pytest.mark.parametrize(
-    "app_cls, exp_ali",
-    [(MuscleApp,
-      "BIQT-ITE\n"
-      "TITANITE\n"
-      "BISM-ITE\n"
-      "-IQL-ITE"),
-     (MafftApp,
-      "BI-QTITE\n"
-      "TITANITE\n"
-      "BI-SMITE\n"
-      "-I-QLITE")]
-)
-def test_custom_substitution_matrix(sequences, app_cls, exp_ali):
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
+def test_custom_substitution_matrix(sequences, app_cls):
     alph = seq.ProteinSequence.alphabet
     # Strong identity matrix
     score_matrix = np.identity(len(alph)) * 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
+    exp_ali = (
+        "BI-QTITE\n"
+        "TITANITE\n"
+        "BI-SMITE\n"
+        "-I-QLITE"
+    )
     app = app_cls(sequences, matrix=matrix)
     app.start()
     app.join()
@@ -102,18 +95,30 @@ def test_custom_substitution_matrix(sequences, app_cls, exp_ali):
 def test_custom_sequence_type(app_cls):
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
-        ["foo", "foo", 42, "bar",        "foo", 42, 42],
-        ["foo",        42, "bar", "bar", "foo", 42, 42],
+        ["foo", "bar", 42, "foo",        "foo", 42, 42],
+        ["foo",        42, "foo", "bar", "foo", 42, 42],
     ]]
+    exp_trace = [
+        [ 0,  0],
+        [ 1, -1],
+        [ 2,  1],
+        [ 3,  2],
+        [-1,  3],
+        [ 4,  4],
+        [ 5,  5],
+        [ 6,  6],
+    ]
     # Strong identity matrix
-    score_matrix = np.identity(len(alph)) * 1000
+    score_matrix = np.identity(len(alph))
+    score_matrix[score_matrix == 0] = -1000
+    score_matrix[score_matrix == 1] = 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
     app = app_cls(sequences, matrix=matrix)
     app.start()
     app.join()
     alignment = app.get_alignment()
-    print(alignment)
-    raise
+    assert alignment.sequences == sequences
+    assert alignment.trace.tolist() == exp_trace
 
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])

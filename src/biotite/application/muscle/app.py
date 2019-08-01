@@ -48,8 +48,6 @@ class MuscleApp(MSAApp):
     
     def __init__(self, sequences, bin_path="muscle", matrix=None):
         super().__init__(sequences, bin_path, matrix)
-        self._matrix_file_name = None
-        self._matrix = None
         self._gap_open = None
         self._gap_ext = None
         self._terminal_penalty = None
