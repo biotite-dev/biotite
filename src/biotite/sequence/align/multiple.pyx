@@ -327,7 +327,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
 
-    cdef int32[:,:] score_matrix = matrix.score_matrix()
+    cdef const int32[:,:] score_matrix = matrix.score_matrix()
     cdef int32[:,:] scores_v = scores
     cdef np.ndarray distances = np.zeros(
         (scores.shape[0], scores.shape[1]), dtype=np.float32
