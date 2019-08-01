@@ -107,7 +107,6 @@ class ClustalOmegaApp(MSAApp):
     
     def evaluate(self):
         super().evaluate()
-        
         if not self._mbed:
             self._dist_matrix = np.loadtxt(
                 self._out_dist_matrix_file_name,

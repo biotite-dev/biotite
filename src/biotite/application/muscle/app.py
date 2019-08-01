@@ -6,6 +6,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MuscleApp"]
 
 import numbers
+import warnings
 from ...temp import temp_file
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
@@ -13,6 +14,7 @@ from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.align.matrix import SubstitutionMatrix
 from ...sequence.align.alignment import Alignment
+from ...sequence.phylo.tree import Tree
 
 
 class MuscleApp(MSAApp):
@@ -51,11 +53,17 @@ class MuscleApp(MSAApp):
         self._gap_open = None
         self._gap_ext = None
         self._terminal_penalty = None
+        self._tree1 = None
+        self._tree2 = None
+        self._out_tree1_file_name = temp_file("tree")
+        self._out_tree2_file_name = temp_file("tree")
     
     def run(self):
         args = [
-            "-in",  self.get_input_file_path(),
-            "-out", self.get_output_file_path()
+            "-in",    self.get_input_file_path(),
+            "-out",   self.get_output_file_path(),
+            "-tree1", self._out_tree1_file_name,
+            "-tree2", self._out_tree2_file_name,
         ]
         if self.get_matrix_file_path() is not None:
             args += ["-matrix", self.get_matrix_file_path()]
@@ -69,6 +77,23 @@ class MuscleApp(MSAApp):
             args += ["-center", "0.0"]
         self.set_arguments(args)
         super().run()
+    
+    def evaluate(self):
+        super().evaluate()
+        try:
+            with open(self._out_tree1_file_name, "r") as file:
+                self._tree1 = Tree.from_newick(file.read().replace("\n", ""))
+        except FileNotFoundError:
+            warnings.warn(
+                "MUSCLE did not write a tree file from the first iteration"
+            )
+        try:
+            with open(self._out_tree2_file_name, "r") as file:
+                self._tree2 = Tree.from_newick(file.read().replace("\n", ""))
+        except FileNotFoundError:
+            warnings.warn(
+                "MUSCLE did not write a tree file from the second iteration"
+            )
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):
@@ -98,6 +123,15 @@ class MuscleApp(MSAApp):
             self._gap_ext = gap_penalty[1]
         else:
             raise TypeError("Gap penalty must be either float or tuple")
+    
+    @requires_state(AppState.JOINED)
+    def get_guide_tree(self, iteration="kmer"):
+        if iteration == "kmer":
+            return self._tree1
+        elif iteration == "identity":
+            return self._tree2
+        else:
+            raise ValueError("Iteration must be 'kmer' or 'identity'")
     
     @staticmethod
     def supports_nucleotide():

@@ -91,6 +91,8 @@ def test_custom_substitution_matrix(sequences, app_cls):
     assert str(alignment) == exp_ali
 
 
+# Ignore warnings about missing tree output in MUSCLE
+@pytest.mark.filterwarnings("ignore")
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
 def test_custom_sequence_type(app_cls):
     alph = seq.Alphabet(("foo", "bar", 42))
@@ -119,16 +121,6 @@ def test_custom_sequence_type(app_cls):
     alignment = app.get_alignment()
     assert alignment.sequences == sequences
     assert alignment.trace.tolist() == exp_trace
-
-
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
-def test_invalid_sequence_type_no_matrix(app_cls):
-    alph = seq.Alphabet(("foo", "bar", 42))
-    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
-        ["foo", "bar", 42, "foo",        "foo", 42, 42],
-        ["foo",        42, "foo", "bar", "foo", 42, 42],
-    ]]
-    app = app_cls(sequences)
 
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
@@ -202,3 +194,13 @@ def test_mafft_tree(sequences):
     app.join()
     tree = app.get_guide_tree()
     assert tree is not None
+
+
+def test_muscle_tree(sequences):
+    app = MuscleApp(sequences)
+    app.start()
+    app.join()
+    tree1 = app.get_guide_tree(iteration="kmer")
+    tree2 = app.get_guide_tree(iteration="identity")
+    assert tree1 is not None
+    assert tree2 is not None
