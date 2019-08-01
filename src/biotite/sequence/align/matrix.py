@@ -291,7 +291,7 @@ class SubstitutionMatrix(object):
         matrix_dict : dict
             A dictionary representing the substitution matrix.
         """
-        lines = string.split("\n")
+        lines = [line.strip() for line in string.split("\n")]
         lines = [line for line in lines if len(line) != 0 and line[0] != "#"]
         symbols1 = [line.split()[0] for line in lines[1:]]
         symbols2 = [e for e in lines[0].split()]

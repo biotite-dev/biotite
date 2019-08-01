@@ -1,0 +1,23 @@
+##sequence-region AJ311647.1 1 1224
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9031
+AJ311647.1	EMBL	region	1	1224	.	+	.	ID=AJ311647.1:1..1224;Dbxref=taxon:9031;Name=Z;chromosome=Z;gbkey=Src;mol_type=genomic DNA
+AJ311647.1	EMBL	region	26	33	.	+	.	ID=id-AJ311647.1:26..33;gbkey=TATA_signal
+AJ311647.1	EMBL	gene	98	1152	.	+	.	ID=gene-AVD;Name=AVD;end_range=1152,.;gbkey=Gene;gene=AVD;gene_biotype=protein_coding;partial=true;start_range=.,98
+AJ311647.1	EMBL	mRNA	98	1152	.	+	.	ID=rna-AVD;Parent=gene-AVD;end_range=1152,.;gbkey=mRNA;gene=AVD;partial=true;product=avidin;start_range=.,98
+AJ311647.1	EMBL	exon	98	178	.	+	.	ID=exon-AVD-1;Parent=rna-AVD;gbkey=mRNA;gene=AVD;partial=true;product=avidin;start_range=.,98
+AJ311647.1	EMBL	exon	263	473	.	+	.	ID=exon-AVD-2;Parent=rna-AVD;gbkey=mRNA;gene=AVD;partial=true;product=avidin
+AJ311647.1	EMBL	exon	899	1019	.	+	.	ID=exon-AVD-3;Parent=rna-AVD;gbkey=mRNA;gene=AVD;partial=true;product=avidin
+AJ311647.1	EMBL	exon	1107	1152	.	+	.	ID=exon-AVD-4;Parent=rna-AVD;end_range=1152,.;gbkey=mRNA;gene=AVD;partial=true;product=avidin
+AJ311647.1	EMBL	CDS	98	178	.	+	0	ID=cds-CAC34569.1;Parent=rna-AVD;Dbxref=GOA:P02701,InterPro:IPR005468,InterPro:IPR005469,InterPro:IPR017889,PDB:1AVD,PDB:1AVE,PDB:1IJ8,PDB:1LDO,PDB:1LDQ,PDB:1LEL,PDB:1NQN,PDB:1RAV,PDB:1VYO,PDB:2A5B,PDB:2A5C,PDB:2A8G,PDB:2AVI,PDB:2C4I,PDB:2CAM,PDB:2JGS,PDB:3FDC,UniProtKB/Swiss-Prot:P02701,NCBI_GP:CAC34569.1;Name=CAC34569.1;gbkey=CDS;gene=AVD;product=avidin;protein_id=CAC34569.1
+AJ311647.1	EMBL	CDS	263	473	.	+	0	ID=cds-CAC34569.1;Parent=rna-AVD;Dbxref=GOA:P02701,InterPro:IPR005468,InterPro:IPR005469,InterPro:IPR017889,PDB:1AVD,PDB:1AVE,PDB:1IJ8,PDB:1LDO,PDB:1LDQ,PDB:1LEL,PDB:1NQN,PDB:1RAV,PDB:1VYO,PDB:2A5B,PDB:2A5C,PDB:2A8G,PDB:2AVI,PDB:2C4I,PDB:2CAM,PDB:2JGS,PDB:3FDC,UniProtKB/Swiss-Prot:P02701,NCBI_GP:CAC34569.1;Name=CAC34569.1;gbkey=CDS;gene=AVD;product=avidin;protein_id=CAC34569.1
+AJ311647.1	EMBL	CDS	899	1019	.	+	2	ID=cds-CAC34569.1;Parent=rna-AVD;Dbxref=GOA:P02701,InterPro:IPR005468,InterPro:IPR005469,InterPro:IPR017889,PDB:1AVD,PDB:1AVE,PDB:1IJ8,PDB:1LDO,PDB:1LDQ,PDB:1LEL,PDB:1NQN,PDB:1RAV,PDB:1VYO,PDB:2A5B,PDB:2A5C,PDB:2A8G,PDB:2AVI,PDB:2C4I,PDB:2CAM,PDB:2JGS,PDB:3FDC,UniProtKB/Swiss-Prot:P02701,NCBI_GP:CAC34569.1;Name=CAC34569.1;gbkey=CDS;gene=AVD;product=avidin;protein_id=CAC34569.1
+AJ311647.1	EMBL	CDS	1107	1152	.	+	1	ID=cds-CAC34569.1;Parent=rna-AVD;Dbxref=GOA:P02701,InterPro:IPR005468,InterPro:IPR005469,InterPro:IPR017889,PDB:1AVD,PDB:1AVE,PDB:1IJ8,PDB:1LDO,PDB:1LDQ,PDB:1LEL,PDB:1NQN,PDB:1RAV,PDB:1VYO,PDB:2A5B,PDB:2A5C,PDB:2A8G,PDB:2AVI,PDB:2C4I,PDB:2CAM,PDB:2JGS,PDB:3FDC,UniProtKB/Swiss-Prot:P02701,NCBI_GP:CAC34569.1;Name=CAC34569.1;gbkey=CDS;gene=AVD;product=avidin;protein_id=CAC34569.1
+AJ311647.1	EMBL	exon	98	178	.	+	.	ID=id-AVD-1;Parent=gene-AVD;exon_number=1;gbkey=exon;gene=AVD;number=1
+AJ311647.1	EMBL	exon	263	473	.	+	.	ID=id-AVD-2;Parent=gene-AVD;exon_number=2;gbkey=exon;gene=AVD;number=2
+AJ311647.1	EMBL	exon	899	1019	.	+	.	ID=id-AVD-3;Parent=gene-AVD;exon_number=3;gbkey=exon;gene=AVD;number=3
+AJ311647.1	EMBL	exon	1107	1152	.	+	.	ID=id-AVD-4;Parent=gene-AVD;exon_number=4;gbkey=exon;gene=AVD;number=4
+AJ311647.1	EMBL	intron	179	262	.	+	.	ID=id-AVD;exon_number=1;gbkey=intron;gene=AVD;number=1
+AJ311647.1	EMBL	intron	474	898	.	+	.	ID=id-AVD-5;exon_number=2;gbkey=intron;gene=AVD;number=2
+AJ311647.1	EMBL	intron	1020	1106	.	+	.	ID=id-AVD-6;exon_number=3;gbkey=intron;gene=AVD;number=3
+AJ311647.1	EMBL	region	1215	1220	.	+	.	ID=id-AJ311647.1:1215..1220;gbkey=polyA_signal
+

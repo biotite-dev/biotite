@@ -8,6 +8,7 @@ __all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
 import copy
 import string
 import numpy as np
+from .codec import encode_chars, decode_to_chars
 
 
 class Alphabet(object):
@@ -155,10 +156,9 @@ class Alphabet(object):
         AlphabetError
             If `code` is not a valid code in the alphabet.
         """
-        try:
-            return self._symbols[code]
-        except IndexError:
+        if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
+        return self._symbols[code]
     
     def encode_multiple(self, symbols, dtype=np.int64):
         """
@@ -219,14 +219,8 @@ class LetterAlphabet(Alphabet):
     The encoding and decoding process is a lot faster than for a
     normal `Alphabet`.
 
-    The performance gain comes through the use of *NumPy* for encoding
-    and decoding:
-    Instead of iterating over each symbol/code of the sequence to be
-    encoded or decoded, this class iterates over the symbols/codes in
-    the alphabet:
-    All symbols/codes in the sequence, that are equal to the current
-    symbol/code, are converted using a boolean mask with *Numpy*.
-    This approach is most viable for small alphabets.
+    The performance gain comes through the use of *NumPy* and *Cython*
+    for encoding and decoding, without the need of a dictionary.
 
     Parameters
     ----------
@@ -253,7 +247,12 @@ class LetterAlphabet(Alphabet):
                     f"Symbol '{symbol}' is not printable or whitespace"
                 )
             self._symbols.append(symbol)
-        self._symbols = np.array(self._symbols, dtype="|S1")
+        # Direct 'astype' conversion is not allowed by numpy
+        # -> frombuffer()
+        self._symbols = np.frombuffer(
+            np.array(self._symbols, dtype="|S1"),
+            dtype=np.ubyte
+        )
     
     def get_symbols(self):
         """
@@ -264,21 +263,21 @@ class LetterAlphabet(Alphabet):
         symbols : ndarray
             Copy of the internal list of symbols.
         """
-        return [symbol.decode("ASCII") for symbol in self._symbols]
+        return [symbol.decode("ASCII") for symbol
+                in self._symbols_as_bytes()]
     
     def encode(self, symbol):
-        if isinstance(symbol, str):
-            symbol = symbol.encode("ASCII")
-        indices = np.where(self._symbols == symbol)[0]
+        if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
+            raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
+        indices = np.where(self._symbols == ord(symbol))[0]
         if len(indices) == 0:
             raise AlphabetError(f"'{symbol}' is not in the alphabet")
         return indices[0]
     
     def decode(self, code, as_bytes=False):
-        symbol = super().decode(code)
-        if not as_bytes:
-            symbol = symbol.decode("ASCII")
-        return symbol
+        if code < 0 or code >= len(self._symbols):
+            raise AlphabetError(f"'{code:d}' is not a valid code")
+        return chr(self._symbols[code])
     
     def encode_multiple(self, symbols, dtype=None):
         """
@@ -298,28 +297,19 @@ class LetterAlphabet(Alphabet):
             The sequence code.
         """
         if isinstance(symbols, str):
-            symbols = np.frombuffer(symbols.encode("ASCII"), dtype="|S1")
+            symbols = np.frombuffer(symbols.encode("ASCII"), dtype=np.ubyte)
         elif isinstance(symbols, bytes):
-            symbols = np.frombuffer(symbols, dtype="|S1")
-        elif not isinstance(symbols, np.ndarray):
-            symbols = np.array(list(symbols), dtype="|S1")
+            symbols = np.frombuffer(symbols, dtype=np.ubyte)
+        elif isinstance(symbols, np.ndarray):
+            symbols = np.frombuffer(
+                symbols.astype(dtype="|S1"), dtype=np.ubyte
+            )
         else:
-            symbols = symbols.astype("|S1", copy=False)
-        # Initially fill the sequence code
-        # with the last allowed symbol code + 1
-        # Since this code cannot occur from symbol encoding
-        # it can be later used to check for illegal symbols
-        illegal_code = len(self)
-        code = np.full(len(symbols), illegal_code, dtype=np.uint8)
-        # This is only efficient for short alphabets
-        # Therefore it is only used in the LetterAlphabet class
-        for i, symbol in enumerate(self._symbols):
-            code[symbols == symbol] = i
-        if (code == illegal_code).any():
-            # Check, which symbol is illegal and raise
-            illegal_symbol = symbols[code == illegal_code][0].decode("ASCII")
-            raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
-        return code
+            symbols = np.frombuffer(
+                np.array(list(symbols), dtype="|S1"),
+                dtype=np.ubyte
+            )
+        return encode_chars(alphabet=self._symbols, symbols=symbols)
     
     def decode_multiple(self, code, as_bytes=False):
         """
@@ -327,39 +317,48 @@ class LetterAlphabet(Alphabet):
         
         Parameters
         ----------
-        code : ndarray
-            The sequence code to decode.
+        code : array-like object of int
+            The sequence code to decode. Works fastest when `code` is
+            `ndarray`. 
         
         Returns
         -------
         symbols : ndarray, dtype='U1'
             The decoded list of symbols.
         """
-        symbols = np.zeros(len(code), dtype="|S1")
-        try:
-            # This is only efficient for short alphabets
-            # Therefore it is only used in the LetterAlphabet class
-            for i, symbol in enumerate(self._symbols):
-                symbols[code == i] = symbol
-        except IndexError:
-            raise AlphabetError(f"'{i:d}' is not a valid code")
+        if not isinstance(code, np.ndarray):
+            code = np.array(code, dtype=np.uint8)
+        code = code.astype(np.uint8, copy=False)
+        symbols = decode_to_chars(alphabet=self._symbols, code=code)
+        # Symbols must be convverted from 'np.ubyte' to '|S1'
+        symbols = np.frombuffer(symbols, dtype="|S1")
         if not as_bytes:
             symbols = symbols.astype("U1")
         return symbols
     
     def __contains__(self, symbol):
-        if isinstance(symbol, str):
-            symbol = symbol.encode("ASCII")
-        return symbol in self._symbols
+        if not isinstance(symbol, (str, bytes)):
+            return False
+        return ord(symbol) in self._symbols
     
     def __len__(self):
         return len(self._symbols)
+    
+    def _symbols_as_bytes(self):
+        "Properly convert from dtype 'np.ubyte' to '|S1'"
+        return np.frombuffer(self._symbols, dtype="|S1")
+
     
 
 class AlphabetMapper(object):
     """
     This class is used for symbol code conversion from a source
     alphabet into a target alphabet.
+
+    This means that the symbol codes are converted from one to another
+    alphabet so that the symbol itself is preserved.
+    This class works for single symbol codes or an entire sequence code
+    likewise.
     
     Parameters
     ----------
@@ -369,7 +368,7 @@ class AlphabetMapper(object):
     
     Examples
     --------
-        
+
     >>> source_alph = Alphabet(["A","C","G","T"])
     >>> target_alph = Alphabet(["T","U","A","G","C"])
     >>> mapper = AlphabetMapper(source_alph, target_alph)
@@ -377,19 +376,30 @@ class AlphabetMapper(object):
     2
     >>> print(mapper[1])
     4
-    >>> print(mapper[2])
-    3
-    >>> print(mapper[3])
-    0
+    >>> print(mapper[[1,1,3]])
+    [4 4 0]
+    >>> in_sequence = GeneralSequence(source_alph, "GCCTAT")
+    >>> print(in_sequence.code)
+    [2 1 1 3 0 3]
+    >>> print(in_sequence)
+    GCCTAT
+    >>> out_sequence = GeneralSequence(target_alph)
+    >>> out_sequence.code = mapper[in_sequence.code]
+    >>> print(out_sequence.code)
+    [3 4 4 0 2 0]
+    >>> print(out_sequence)
+    GCCTAT
+
+
         
     """
     
     def __init__(self, source_alphabet, target_alphabet):
-        self._mapper = [-1] * len(source_alphabet)
-        for i in range(len(source_alphabet)):
-            symbol = source_alphabet.decode(i)
+        self._mapper = np.zeros(len(source_alphabet), dtype=int)
+        for old_code in range(len(source_alphabet)):
+            symbol = source_alphabet.decode(old_code)
             new_code = target_alphabet.encode(symbol)
-            self._mapper[i] = new_code
+            self._mapper[old_code] = new_code
         
     def __getitem__(self, code):
         return self._mapper[code]

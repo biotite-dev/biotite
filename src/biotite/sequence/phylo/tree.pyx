@@ -28,6 +28,9 @@ class Tree(Copyable):
     Two `Tree` objects are equal if they are the same object,
     so the ``==`` operator is equal to the ``is`` operator.
 
+    The amount of leaves in a tree can be determined via the `len()`
+    function.
+
     Objects of this class are immutable.
 
     Parameters
@@ -202,7 +205,7 @@ class Tree(Copyable):
         This function does accept but does not require the Newick string
         to have the terminal semicolon.
         Keep in mind that the `Tree` class does support any labels on
-        intermeiate nodes.
+        intermediate nodes.
         If the string contains such labels, they are discarded.
         Furthermore, only binary trees can be parsed. 
         """
@@ -215,6 +218,9 @@ class Tree(Copyable):
 
     def __str__(self):
         return self.to_newick()
+    
+    def __len__(self):
+        return len(self._leaves)
 
 
 cdef class TreeNode:
