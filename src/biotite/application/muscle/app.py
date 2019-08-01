@@ -65,6 +65,10 @@ class MuscleApp(MSAApp):
             "-tree1", self._out_tree1_file_name,
             "-tree2", self._out_tree2_file_name,
         ]
+        if self.get_seqtype() == "protein":
+            args += ["-seqtype", "protein"]
+        else:
+            args += ["-seqtype", "nucleo"]
         if self.get_matrix_file_path() is not None:
             args += ["-matrix", self.get_matrix_file_path()]
         if self._gap_open is not None and self._gap_ext is not None:
@@ -125,7 +129,7 @@ class MuscleApp(MSAApp):
             raise TypeError("Gap penalty must be either float or tuple")
     
     @requires_state(AppState.JOINED)
-    def get_guide_tree(self, iteration="kmer"):
+    def get_guide_tree(self, iteration="identity"):
         """
         Get the guide tree created for the progressive alignment.
         
@@ -153,7 +157,7 @@ class MuscleApp(MSAApp):
     
     @staticmethod
     def supports_nucleotide():
-        return False
+        return True
     
     @staticmethod
     def supports_protein():
