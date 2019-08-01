@@ -35,7 +35,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     After the alignment the sequences are mapped back into the original
     sequence type.
     The mapping does not work, when the alphabet of the exotic
-    sequences is larger than the amino acid alphabet.
+    sequences is larger than the amino acid alphabet, if the program
+    does not accept custom substitution matrices or if the program
+    cannot align protein sequences.
     
     Internally this creates a `Popen` instance, which handles
     the execution.
@@ -63,37 +65,39 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         self._matrix = None
         # Check whether the program supports the alignment for the given
         # sequence type
-        if ProteinSequence.alphabet.extends(alphabet):
-            if not self.supports_protein():
-                raise TypeError(
-                    "The software does not support protein sequences"
-                )
-            self._is_mapped = False
-            self._seqtype = "protein"
-            if matrix is not None:
-                if not self.supports_custom_protein_matrix():
-                    raise TypeError(
-                        "The software does not support custom substitution "
-                        "matrices for protein sequences"
-                    )
-                self._matrix = matrix
-        elif NucleotideSequence.alphabet_amb.extends(alphabet):
-            if not self.supports_nucleotide():
-                raise TypeError(
-                    "The software does not support nucleotide sequences"
-                )
-            self._is_mapped = False
-            self._seqtype = "nucleotide"
-            if matrix is not None:
-                if not self.supports_custom_nucleotide_matrix():
-                    raise TypeError(
-                        "The software does not support custom substitution "
-                        "matrices for nucleotide sequences"
-                    )
-                self._matrix = matrix
+        if ProteinSequence.alphabet.extends(alphabet) \
+            and self.supports_protein():
+                self._is_mapped = False
+                self._seqtype = "protein"
+                if matrix is not None:
+                    if not self.supports_custom_protein_matrix():
+                        raise TypeError(
+                            "The software does not support custom "
+                            "substitution matrices for protein sequences"
+                        )
+                    self._matrix = matrix
+        elif NucleotideSequence.alphabet_amb.extends(alphabet) \
+            and self.supports_nucleotide():
+                self._is_mapped = False
+                self._seqtype = "nucleotide"
+                if matrix is not None:
+                    if not self.supports_custom_nucleotide_matrix():
+                        raise TypeError(
+                            "The software does not support custom "
+                            "substitution matrices for nucleotide sequences"
+                        )
+                    self._matrix = matrix
         else:
             # For all other sequence types, try to map the sequence into
             # a protein sequence
+            if not self.supports_protein():
+                # Alignment of a custom sequence type requires mapping
+                # into a protein sequence
+                raise TypeError(
+                    f"The software cannot align sequences of type "
+                    f"{type(sequences[0]).__name__}: "
+                    f"No support for alignment of the mapped sequences"
+                )
             if not self.supports_custom_protein_matrix():
                 # Alignment of a custom sequence type requires a custom
                 # substitution matrix

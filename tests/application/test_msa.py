@@ -122,8 +122,43 @@ def test_custom_sequence_type(app_cls):
 
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
-def test_invalid_sequence_type(app_cls):
-    pass
+def test_invalid_sequence_type_no_matrix(app_cls):
+    alph = seq.Alphabet(("foo", "bar", 42))
+    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
+        ["foo", "bar", 42, "foo",        "foo", 42, 42],
+        ["foo",        42, "foo", "bar", "foo", 42, 42],
+    ]]
+    app = app_cls(sequences)
+
+
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
+def test_invalid_sequence_type_no_matrix(app_cls):
+    """
+    A custom substitution matrix is required for normally unsupported
+    sequence types.
+    """
+    alph = seq.Alphabet(("foo", "bar", 42))
+    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
+        ["foo", "bar", 42, "foo",        "foo", 42, 42],
+        ["foo",        42, "foo", "bar", "foo", 42, 42],
+    ]]
+    with pytest.raises(TypeError):
+        app = app_cls(sequences)
+
+
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
+def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
+    """
+    The alphabet of the custom sequence type cannot be longer than the
+    amino acid alphabet.
+    """
+    alph = seq.Alphabet(range(50))
+    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
+        [1,2,3],
+        [1,2,3],
+    ]]
+    with pytest.raises(TypeError):
+        pp = app_cls(sequences)
 
 
 def test_clustalo_matrix(sequences):
