@@ -94,16 +94,16 @@ class MafftApp(MSAApp):
     
     @staticmethod
     def supports_nucleotide():
-        True
+        return True
     
     @staticmethod
     def supports_protein():
-        True
+        return True
     
     @staticmethod
     def supports_custom_nucleotide_matrix():
-        True
+        return True
     
     @staticmethod
     def supports_custom_protein_matrix():
-        True
+        return True

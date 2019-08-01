@@ -156,16 +156,16 @@ class ClustalOmegaApp(MSAApp):
     
     @staticmethod
     def supports_nucleotide():
-        True
+        return True
     
     @staticmethod
     def supports_protein():
-        True
+        return True
     
     @staticmethod
     def supports_custom_nucleotide_matrix():
-        False
+        return False
     
     @staticmethod
     def supports_custom_protein_matrix():
-        False
+        return False

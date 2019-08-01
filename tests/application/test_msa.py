@@ -4,6 +4,7 @@
 
 import biotite.sequence as seq
 import biotite.sequence.phylo as phylo
+import biotite.sequence.align as align
 from biotite.application.muscle import MuscleApp
 from biotite.application.mafft import MafftApp
 from biotite.application.clustalo import ClustalOmegaApp
@@ -70,6 +71,54 @@ def test_additional_options(sequences):
     assert "--full" not in app1.get_command()
     assert "--full"     in app2.get_command()
     assert app1.get_alignment() == app2.get_alignment()
+
+
+@pytest.mark.parametrize(
+    "app_cls, exp_ali",
+    [(MuscleApp,
+      "BIQT-ITE\n"
+      "TITANITE\n"
+      "BISM-ITE\n"
+      "-IQL-ITE"),
+     (MafftApp,
+      "BI-QTITE\n"
+      "TITANITE\n"
+      "BI-SMITE\n"
+      "-I-QLITE")]
+)
+def test_custom_substitution_matrix(sequences, app_cls, exp_ali):
+    alph = seq.ProteinSequence.alphabet
+    # Strong identity matrix
+    score_matrix = np.identity(len(alph)) * 1000
+    matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
+    app = app_cls(sequences, matrix=matrix)
+    app.start()
+    app.join()
+    alignment = app.get_alignment()
+    assert str(alignment) == exp_ali
+
+
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
+def test_custom_sequence_type(app_cls):
+    alph = seq.Alphabet(("foo", "bar", 42))
+    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
+        ["foo", "foo", 42, "bar",        "foo", 42, 42],
+        ["foo",        42, "bar", "bar", "foo", 42, 42],
+    ]]
+    # Strong identity matrix
+    score_matrix = np.identity(len(alph)) * 1000
+    matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
+    app = app_cls(sequences, matrix=matrix)
+    app.start()
+    app.join()
+    alignment = app.get_alignment()
+    print(alignment)
+    raise
+
+
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
+def test_invalid_sequence_type(app_cls):
+    pass
 
 
 def test_clustalo_matrix(sequences):

@@ -60,6 +60,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             if seq.get_alphabet() != alphabet:
                 raise ValueError("Alphabets of the sequences are not equal")
         
+        self._matrix = None
         # Check whether the program supports the alignment for the given
         # sequence type
         if ProteinSequence.alphabet.extends(alphabet):
@@ -120,6 +121,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         for i, seq in enumerate(sequences):
             in_file[str(i)] = str(seq)
         in_file.write(self._in_file_name)
+        if self._matrix is not None:
+            with open(self._matrix_file_name, "w") as matrix_file:
+                matrix_file.write(str(self._matrix))
         super().run()
     
     def evaluate(self):
@@ -219,7 +223,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             Path of substitution matrix.
             None if no matrix was given.
         """
-        return self._out_file_name
+        return self._matrix_file_name if self._matrix is not None else None
     
     def get_seqtype(self):
         """
