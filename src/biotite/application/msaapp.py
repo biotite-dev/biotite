@@ -30,14 +30,17 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
 
     Furthermore, this class can handle custom substitution matrices,
     if the underlying program supports these.
-    Using custom matrices, exotic sequences, that normally could not be
-    aligned, are automatically mapped into protein sequences.
-    After the alignment the sequences are mapped back into the original
-    sequence type.
+
+    MSA software that supports alignment of protein sequences and custom
+    substitution matrices, can be used to align exotic, normally
+    unsupported sequence types:
+    At first the exotic sequences are mapped into protein sequences and
+    the custom substitution matrix is converted into a protein sequence
+    substitution matrix.
+    Then the protein sequences are aligned and finally the protein
+    sequences are mapped back into the original sequence types.
     The mapping does not work, when the alphabet of the exotic
-    sequences is larger than the amino acid alphabet, if the program
-    does not accept custom substitution matrices or if the program
-    cannot align protein sequences.
+    sequences is larger than the amino acid alphabet.
     
     Internally this creates a `Popen` instance, which handles
     the execution.

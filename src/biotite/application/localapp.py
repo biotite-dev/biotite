@@ -179,10 +179,30 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     
     @requires_state(AppState.JOINED)
     def get_stdout(self):
+        """
+        Get the STDOUT pipe content of the process.
+        
+        PROTECTED: Do not call from outside.
+        
+        Returns
+        -------
+        stdout : str
+            The standard outpout.
+        """
         return self._stdout
     
     @requires_state(AppState.JOINED)
     def get_stderr(self):
+        """
+        Get the STDERR pipe content of the process.
+        
+        PROTECTED: Do not call from outside.
+        
+        Returns
+        -------
+        stdout : str
+            The standard error.
+        """
         return self._stderr
 
     def run(self):

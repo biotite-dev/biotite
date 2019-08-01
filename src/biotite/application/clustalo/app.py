@@ -129,10 +129,33 @@ class ClustalOmegaApp(MSAApp):
     
     @requires_state(AppState.CREATED)
     def set_distance_matrix(self, matrix):
+        """
+        Set the pairwise sequence distances, the program should use to
+        calculate the guide tree. 
+        
+        Parameters
+        ----------
+        matrix : ndarray, shape=(n,n), dtype=float
+            The pairwise distances.
+        """
+        if matrix.shape != (self._seq_count, self._seq_count):
+            raise ValueError(
+                f"Matrix with shape {matrix.shape} is not sufficient for "
+                f"{self._seq_count} sequences"
+            )
         self._dist_matrix = matrix.astype(float, copy=False)
     
     @requires_state(AppState.JOINED)
     def get_distance_matrix(self):
+        """
+        Get the pairwise sequence distances the program used to
+        calculate the guide tree. 
+        
+        Returns
+        -------
+        matrix : ndarray, shape=(n,n), dtype=float
+            The pairwise distances.
+        """
         if self._mbed:
             raise ValueError(
                 "Getting the distance matrix requires "
@@ -142,6 +165,15 @@ class ClustalOmegaApp(MSAApp):
     
     @requires_state(AppState.CREATED)
     def set_guide_tree(self, tree):
+        """
+        Set the guide tree, the program should use for the
+        progressive alignment.
+        
+        Parameters
+        ----------
+        tree : Tree
+            The guide tree.
+        """
         if self._seq_count != len(tree):
             raise ValueError(
                 f"Tree with {len(tree)} leaves is not sufficient for "
@@ -151,6 +183,14 @@ class ClustalOmegaApp(MSAApp):
     
     @requires_state(AppState.JOINED)
     def get_guide_tree(self):
+        """
+        Get the guide tree created for the progressive alignment.
+        
+        Returns
+        -------
+        tree : Tree
+            The guide tree.
+        """
         return self._tree
     
     @staticmethod

@@ -90,6 +90,14 @@ class MafftApp(MSAApp):
 
     @requires_state(AppState.JOINED)
     def get_guide_tree(self):
+        """
+        Get the guide tree created for the progressive alignment.
+        
+        Returns
+        -------
+        tree : Tree
+            The guide tree.
+        """
         return self._tree
     
     @staticmethod

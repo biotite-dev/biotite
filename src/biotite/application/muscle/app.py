@@ -126,6 +126,24 @@ class MuscleApp(MSAApp):
     
     @requires_state(AppState.JOINED)
     def get_guide_tree(self, iteration="kmer"):
+        """
+        Get the guide tree created for the progressive alignment.
+        
+        Parameters
+        ----------
+        iteration : {'kmer', 'identity'}
+            If 'kmer', the first iteration tree is returned.
+            This tree uses the sequences common *k*-mers as distance
+            measure.
+            If 'identity' the second iteration tree is returned.
+            This tree uses distances based on the pairwise sequence
+            identity after the first progressive alignment iteration.
+        
+        Returns
+        -------
+        tree : Tree
+            The guide tree.
+        """
         if iteration == "kmer":
             return self._tree1
         elif iteration == "identity":
