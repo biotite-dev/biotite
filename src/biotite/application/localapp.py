@@ -177,7 +177,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         """
         return self._code
     
-    @requires_state(AppState.JOINED)
+    @requires_state(AppState.FINISHED | AppState.JOINED)
     def get_stdout(self):
         """
         Get the STDOUT pipe content of the process.
@@ -191,7 +191,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         """
         return self._stdout
     
-    @requires_state(AppState.JOINED)
+    @requires_state(AppState.FINISHED | AppState.JOINED)
     def get_stderr(self):
         """
         Get the STDERR pipe content of the process.
