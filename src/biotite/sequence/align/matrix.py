@@ -130,13 +130,16 @@ class SubstitutionMatrix(object):
                     f"Matrix has shape {score_matrix.shape}, "
                     f"but {alph_shape} is required"
                 )
-            self._matrix = np.copy(score_matrix.astype(np.int32))
+            self._matrix = score_matrix.astype(np.int32)
         elif isinstance(score_matrix, str):
             matrix_dict = SubstitutionMatrix.dict_from_db(score_matrix)
-            self._fill_with_matrix_dict(matrix_dict)      
+            self._fill_with_matrix_dict(matrix_dict)
         else:
             raise TypeError("Matrix must be either a dictionary, "
                             "an 2-D ndarray or a string")
+        # This class is immutable and has a getter function for the
+        # score matrix -> make the score matrix read-only
+        self._matrix.setflags(write=False)
     
     def _fill_with_matrix_dict(self, matrix_dict):
         self._matrix = np.zeros(( len(self._alph1), len(self._alph2) ),
@@ -173,14 +176,11 @@ class SubstitutionMatrix(object):
         """
         Get the 2-D `ndarray` containing the score values.
         
-        In the strict sense, this breaks the immutability of the
-        `SubstitutionMatrix` object. Therefore, using the returned
-        `ndarray` read-only is strongly recommended.
-        
         Returns
         -------
-        matrix : ndarray
+        matrix : ndarray, shape=(m,n), dtype=np.int32
             The symbol code indexed score matrix.
+            The array is read-only.
         """
         return self._matrix
     
