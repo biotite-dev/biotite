@@ -4,6 +4,7 @@
 
 __author__ = "Patrick Kunzmann"
 
+from shutil import which
 import pkgutil
 import doctest
 import os.path
@@ -20,7 +21,7 @@ import biotite.structure.io as strucio
     pytest.param("biotite.sequence.align",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.phylo",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.graphics",   ["biotite.sequence"],
-                marks=pytest.mark.xfail(raises=ImportError)                  ),
+                 marks=pytest.mark.xfail(raises=ImportError)                 ),
     pytest.param("biotite.sequence.io",         ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fasta",   ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fastq",   ["biotite.sequence"]         ),
@@ -28,7 +29,7 @@ import biotite.structure.io as strucio
                                                  "biotite.database.entrez"]  ),
     pytest.param("biotite.sequence.io.gff",     ["biotite.sequence",
                                                  "biotite.sequence.io.fasta"],
-                marks=pytest.mark.filterwarnings("ignore:")                  ),
+                 marks=pytest.mark.filterwarnings("ignore:")                 ),
     pytest.param("biotite.structure",           ["biotite.structure.io"]     ),
     pytest.param("biotite.structure.io",        ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.pdb",    ["biotite.structure"]        ),
@@ -39,17 +40,22 @@ import biotite.structure.io as strucio
     pytest.param("biotite.database.entrez",     []                           ),
     pytest.param("biotite.database.rcsb",       []                           ),
     pytest.param("biotite.application",      ["biotite.application.clustalo",
-                                              "biotite.sequence"]            ),
-    pytest.param("biotite.application.blast",   [],
-                marks=pytest.mark.xfail(raises=OSError)                      ),
+                                              "biotite.sequence"],            
+                 marks=pytest.mark.skipif(which("clustalo") is None,
+                                          reason="Software is not installed")),
+    pytest.param("biotite.application.blast",   [],                          ),
     pytest.param("biotite.application.muscle",  ["biotite.sequence"],
-                marks=pytest.mark.xfail(raises=OSError)                      ),
+                 marks=pytest.mark.skipif(which("muscle") is None,
+                                          reason="Software is not installed")),
     pytest.param("biotite.application.clustalo",["biotite.sequence"],
-                marks=pytest.mark.xfail(raises=OSError)                      ),
+                 marks=pytest.mark.skipif(which("clustalo") is None,
+                                          reason="Software is not installed")),
     pytest.param("biotite.application.mafft",   ["biotite.sequence"],
-                marks=pytest.mark.xfail(raises=OSError)                      ),
+                 marks=pytest.mark.skipif(which("mafft") is None,
+                                          reason="Software is not installed")),
     pytest.param("biotite.application.dssp",    ["biotite.structure"],
-                marks=pytest.mark.xfail(raises=OSError)                      ),
+                 marks=pytest.mark.skipif(which("mkdssp") is None,
+                                          reason="Software is not installed")),
 ])
 def test_doctest(package_name, context_package_names):
     """
