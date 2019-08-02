@@ -147,6 +147,7 @@ class Application(metaclass=abc.ABCMeta):
             raise
         except:
             self._state = AppState.CANCELLED
+            raise
         else:
             self._state = AppState.JOINED
         self.clean_up()
