@@ -141,8 +141,14 @@ class Application(metaclass=abc.ABCMeta):
             else:
                 time.sleep(self.wait_interval())
         time.sleep(self.wait_interval())
-        self.evaluate()
-        self._state = AppState.JOINED
+        try:
+            self.evaluate()
+        except AppStateError:
+            raise
+        except:
+            self._state = AppState.CANCELLED
+        else:
+            self._state = AppState.JOINED
         self.clean_up()
     
     @requires_state(AppState.RUNNING | AppState.FINISHED)
