@@ -52,3 +52,18 @@ class BlastAlignment(Alignment):
         self.hit_interval = hit_interval
         self.hit_id = hit_id
         self.hit_definition = hit_definition
+    
+    def __eq__(self, item):
+        if not isinstance(item, BlastAlignment):
+            return False
+        if self.e_value != item.e_value:
+            return False
+        if self.query_interval != item.query_interval:
+            return False
+        if self.hit_interval != item.hit_interval:
+            return False
+        if self.hit_id != item.hit_id:
+            return False
+        if self.hit_definition != item.hit_definition:
+            return False
+        return super().__eq__(item)

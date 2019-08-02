@@ -152,8 +152,8 @@ print("Hit name: ", best_ali.hit_definition)
 # :class:`BlastWebApp` constructor, if we omitted this parameter and
 # we started the last two code snippets in quick succession, a
 # :class:`RuleViolationError` would be raised.
-# This is because normally the :class:`BlastWebApp` respects NCBI's code of
-# conduct and prevents you from submitting two queries within one
+# This is because normally the :class:`BlastWebApp` respects NCBI's code
+# of conduct and prevents you from submitting two queries within one
 # minute. If you want to be rude to the NCBI server, create the
 # instance with :obj:`obey_rules` set to false.
 # 
@@ -183,8 +183,25 @@ alignment = app.get_alignment()
 print(alignment)
 
 ########################################################################
+# In most MSA software even more information than the mere alignment can
+# be extracted.
+# For instance the guide tree that was used for the alignment can be
+# obtained from the MUSCLE output.
+
+import matplotlib.pyplot as plt
+import biotite.sequence.graphics as graphics
+tree = app.get_guide_tree()
+fig, ax = plt.subplots()
+graphics.plot_dendrogram(
+    ax, tree, labels=[str(sequence) for sequence in [seq1, seq2, seq3, seq4]]
+)
+ax.set_xlabel("Distance")
+fig.tight_layout()
+
+########################################################################
 # For the lazy people there is also a convenience method,
 # that handles the :class:`Application` execution internally.
+# However, this shortcut returns only the :class:`Alignment`.
 
 alignment = muscle.MuscleApp.align([seq1, seq2, seq3, seq4])
 
@@ -200,9 +217,38 @@ print(alignment)
 ########################################################################
 # As shown in the output, the alignment with Clustal-Omega slightly
 # differs from the one performed with MUSCLE.
-# In contrast to MUSCLE, Clustal-Omega and MAFFT also support alignments
-# of :class:`NucleotideSequence` instances.
-# 
+#
+# If the MSA software supports protein sequence alignment AND
+# custom substitution matrices, e.g. MUSCLE and MAFFT, almost any type
+# of sequence can be aligned:
+# Internally the sequences and the matrix are converted into protein
+# sequences/matrix.
+# Then the masquerading sequences are aligned via the software and
+# finally the sequences are mapped back into the original sequence type.
+# Let's show this on the example of a nonsense alphabet.
+
+import numpy as np
+import biotite.application.mafft as mafft
+import biotite.sequence.align as align
+alphabet = seq.Alphabet(("foo", "bar", 42))
+sequences = [seq.GeneralSequence(alphabet, sequence) for sequence in [
+    ["foo", "bar", 42, "foo", "foo", 42, 42],
+    ["foo", 42, "foo", "bar", "foo", 42, 42],
+]]
+matrix = align.SubstitutionMatrix(
+    alphabet, alphabet, np.array([
+        [ 100, -100, -100],
+        [-100,  100, -100],
+        [-100, -100,  100]
+    ])
+)
+alignment = mafft.MafftApp.align(sequences, matrix=matrix)
+# As the alphabet do not has characters as symbols
+# the alignment cannot be directly printed
+# However, we can print the trace
+print(alignment.trace)
+
+########################################################################
 # Secondary structure annotation
 # ------------------------------
 # 

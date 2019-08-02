@@ -154,6 +154,17 @@ class Alignment(object):
     def __len__(self):
         return len(self.trace)
     
+    def __eq__(self, item):
+        if not isinstance(item, Alignment):
+            return False
+        if self.sequences != item.sequences:
+            return False
+        if (self.trace != item.trace).any():
+            return False
+        if self.score != item.score:
+            return False
+        return True
+    
     @staticmethod
     def trace_from_strings(seq_str_list):
         """
