@@ -7,12 +7,13 @@ div.body > .section {
 p.caption {
     font-size: 0.8em;
 }
-div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 
-div.sphinxsidebar h3 {
-    text-align: start;
-    font-weight: bold;
-    font-family: "Nanito", "Sans-Serif" !important; 
-    font-variant: small-caps;
+h1, h2, h3, h4, h5, h6 {
+    text-align: start !important;
+    font-family: "Nunito", "Sans-Serif" !important; 
+    font-variant: small-caps !important; 
+}
+div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
+    font-weight: 700;
 }
 a {
     border: none !important;    
