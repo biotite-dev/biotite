@@ -1,0 +1,42 @@
+body {
+    font-family: "Fira Sans", "Helvetica", "Sans-Serif";
+}
+div.body > .section {
+    text-align: justify;
+}
+p.caption {
+    font-size: 0.8em;
+}
+div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 
+div.sphinxsidebar h3 {
+    text-align: start;
+    font-weight: bold;
+    font-family: "Nanito", "Sans-Serif" !important; 
+    font-variant: small-caps;
+}
+a {
+    border: none !important;    
+}
+a.toc-backref {
+    color: #3E4349;
+    text-decoration-line: none
+}
+div.body p, div.body dd, div.body li {
+    list-style-type: square;
+}
+.toctree-wrapper ul, ol {
+    margin: 0px 0 10px 0px;
+    margin-bottom: 2em;
+}
+div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
+    list-style-type: none;
+}
+.toctree-wrapper li.toctree-l2 {
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+.toctree-wrapper li.toctree-l1 {
+    margin-bottom: 1em;
+    font-weight: bold;
+}
