@@ -13,7 +13,7 @@ h1, h2, h3, h4, h5, h6 {
     font-variant: small-caps !important; 
 }
 div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
-    font-weight: 700;
+    font-weight: 600;
 }
 a {
     border: none !important;    
@@ -24,6 +24,11 @@ a.toc-backref {
 }
 div.body p, div.body dd, div.body li {
     list-style-type: square;
+}
+hr.docutils {
+    border: none;
+    border-bottom: 1px solid #656768;
+    margin-top: 2em;
 }
 .toctree-wrapper ul, ol {
     margin: 0px 0 10px 0px;
