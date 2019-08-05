@@ -24,7 +24,7 @@ installed).
 In case you are using Windows, I recommend installing *numpy* and
 *matplotlib* via `Conda <https://conda.io/docs/>`_, or alternatively
 `Anaconda <https://www.anaconda.com/download/>`_ which already contains the
-forementioned packages.
+aforementioned packages.
 
 Some functions require some extra packages:
 
