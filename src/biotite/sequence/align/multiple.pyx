@@ -15,7 +15,7 @@ from .pairwise import align_optimal
 from ..sequence import Sequence
 from ..alphabet import Alphabet
 from ..phylo.upgma import upgma
-from ..phylo.tree import Tree, TreeNode
+from ..phylo.tree import Tree, TreeNode, as_binary
 import numpy as np
 
 
@@ -230,6 +230,9 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
         distances = distances.astype(np.float32, copy=True)
     if guide_tree is None:
         guide_tree = upgma(distances)
+    else:
+        # Assure that every node in the guide tree is binary
+        guide_tree = as_binary(guide_tree)
     
     # Create new matrix with neutral gap symbol
     gap_symbol = GapSymbol.instance()
@@ -284,6 +287,32 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
 
 def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
                          gap_penalty, terminal_penalty):
+    """
+    Create all pairwise alignments for the given sequences and use the
+    method proposed by Feng & Doolittle to calculate the pairwise
+    distance matrix
+    
+    Parameters
+    ----------
+    _T : ndarray, dtype=VARAIBLE
+        A little bit hacky workaround to get the correct dtype for the
+        sequence code of the sequences in a static way
+        (important for Cython).
+    sequences : list of Sequence, length=n
+        The sequences to get the distance matrix for.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for the alignments.
+    gap_penalty : int or tuple(int, int)
+        A linear or affine gap penalty for the alignments.
+    terminal_penalty : bool
+        Whether to or not count terminal gap penalties for the
+        alignments.
+    
+    Returns
+    -------
+    distances : ndarray, shape=(n,n), dtype=float32
+        The pairwise distance matrix.
+    """
     cdef int i, j
 
     cdef np.ndarray scores = np.zeros(
@@ -365,6 +394,22 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
 
 
 def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
+    """
+    Count the number of gap openings and gap extensions in an alignment
+    trace.
+    
+    Parameters
+    ----------
+    trace_v : ndarary, shape=(n,2), dtype=int
+        The alignemnt trace.
+    terminal_penalty : bool
+        Whether to or not count terminal gap penalties.
+    
+    Returns
+    -------
+    gap_open_count, gap_ext_count: int
+        The number of gap opening and gap extension columns
+    """
     cdef int i, j
     cdef int gap_open_count=0, gap_ext_count=0
     cdef int start_index=-1, stop_index=-1
@@ -406,6 +451,56 @@ def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
 def _progressive_align(CodeType[:] _T, sequences, tree_node,
                        float32[:,:]distances_v, matrix,
                        int gap_symbol_code, gap_penalty, terminal_penalty):
+    """
+    Conduct the progressive alignemt of the sequences that are
+    referred to by the given guide tree node.
+
+    At first the the two sub-MSAs are calculated from the child nodes
+    of the given node.
+    Then the sub-MSAs are combined to one MSA by aligning the two
+    sequences from both sub-MSAs with the lowest distance to each other,
+    taken from the pairwise distance matrix.
+    The gaps introduced in this pairwise alignment are also introduced
+    into all other sequences in the respective sub-MSA at the same
+    position.
+    
+    Parameters
+    ----------
+    _T : ndarray, dtype=VARAIBLE
+        A little bit hacky workaround to get the correct dtype for the
+        sequence code of the sequences in a static way
+        (important for Cython).
+    sequences : list of Sequence, lebgth=n
+        All sequences that should be aligned in the MSA.
+    tree_node : TreeNode
+        This guide tree node defines, which of sequences in the
+        `sequences` parameter should be aligned in this call.
+        This is the only parameter that changes in the series of
+        recursive calls of this function.
+    distances_v : ndarray, shape=(n,n)
+        The pairwise distance matrix.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for the alignments.
+    gap_symbol_code : int
+        The symbol code for the gap symbol. 
+    gap_penalty : int or tuple(int, int)
+        A linear or affine gap penalty for the alignments.
+    terminal_penalty : bool
+        Whether to or not count terminal gap penalties for the
+        alignments.
+    
+    Returns
+    -------
+    order : ndarray, shape=(m,), dtype=int
+        The index of each element in `aligned_sequences` in the
+        orginal `sequences` parameter.
+    aligned_sequences : list of Sequence, length=m
+        A list of the sequences that were aligned.
+        Instead of an `Alignment` object that represents the gaps as
+        ``-1`` in the trace, the gaps are represented as dedicated
+        gap symbols in this case.
+        This allows for the pairwise alignemt of gapped sequences.
+    """
     cdef int i=0, j=0
     cdef int i_min=0, j_min=0
     cdef float32 dist_min, dist
@@ -414,12 +509,15 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     cdef list aligned_seqs1, aligned_seqs2
     
     if tree_node.is_leaf():
+        # Child node -> Cannot do an alignment
+        # -> Just return the sequence corresponding to the leaf node
         # Copy sequences to avoid modification of input sequences
         # when neutral gap character is inserted
         return np.array([tree_node.index], dtype=np.int32), \
                [sequences[tree_node.index].copy()]
     
     else:
+        # Multiple alignment of sequences corresponding to both child nodes
         child1, child2 = tree_node.children
         incides1, aligned_seqs1 = _progressive_align(
             _T, sequences, child1, distances_v, matrix,
@@ -431,6 +529,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
             gap_symbol_code, gap_penalty, terminal_penalty
         )
         indices2_v = incides2
+        
         # Find sequence pair with lowest distance
         dist_min = MAX_FLOAT
         for i in range(indices1_v.shape[0]):
@@ -467,6 +566,32 @@ def _replace_gaps(CodeType[:] _T,
                   int64[:] partial_trace_v,
                   np.ndarray seq_code,
                   int gap_symbol_code):
+    """
+    Replace gaps in a sequence in an `Alignemnt` with a dedicated
+    gap symbol.
+
+    The replacement is required by the progressive alignment algorithm
+    to be able to align gapped sequences with each other.
+    
+    Parameters
+    ----------
+    _T : ndarray, dtype=VARAIBLE
+        A little bit hacky workaround to get the correct dtype for the
+        sequence code of the sequences in a static way
+        (important for Cython).
+    partial_trace_v : ndarary, shape=(m,), dtype=int
+        The row of the alignemnt trace reffering to the given sequence.
+    seq_code : ndarary, shape=(n,)
+        The sequence code representing the given sequence.
+    gap_symbol_code : int
+        The symbol code for the gap symbol. 
+    
+    Returns
+    -------
+    new_seq_code : ndarary, shape=(m,)
+        The sequence code representing a new sequence, that is the given
+        sequence with inserted gap symbols.
+    """
     cdef int i
     cdef int64 index
     cdef CodeType code
