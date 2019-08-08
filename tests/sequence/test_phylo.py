@@ -5,6 +5,7 @@
 from os.path import join
 import numpy as np
 import pytest
+import biotite
 import biotite.sequence.phylo as phylo
 from .util import data_dir
 
@@ -33,12 +34,40 @@ def tree(distances):
 
 
 def test_upgma(tree, upgma_newick):
+    """
+    Compare the results of `upgma()` with DendroUPGMA.
+    """
     ref_tree = phylo.Tree.from_newick(upgma_newick)
     assert _tree_equal(tree, ref_tree)
 
 
 def test_node_distance(tree):
-    pass
+    """
+    Test whether the `distance_to()` and `lowest_common_ancestor()` work
+    correctly.
+    """
+    # Tree is created via UPGMA
+    # -> The distances to root should be equal for all leaf nodes
+    dist = tree.root.distance_to(tree.leaves[0])
+    for leaf in tree.leaves:
+        assert leaf.distance_to(tree.root) == dist
+    # Example topological distances
+    assert tree.get_distance(0, 19, True) == 9
+    assert tree.get_distance(4,  2, True) == 10
+    
+    # All pairwise leaf node distances should be sufficient
+    # to reconstruct the same tree via UPGMA
+    ref_dist_mat = np.zeros((len(tree), len(tree)))
+    for i in range(len(tree)):
+        for j in range(len(tree)):
+            ref_dist_mat[i,j] = tree.get_distance(i,j)
+    assert np.allclose(ref_dist_mat, ref_dist_mat.T)
+    new_tree = phylo.upgma(ref_dist_mat)
+    test_dist_mat = np.zeros((len(tree), len(tree)))
+    for i in range(len(tree)):
+        for j in range(len(tree)):
+            test_dist_mat[i,j] = new_tree.get_distance(i,j)
+    assert np.allclose(test_dist_mat, ref_dist_mat)
 
 
 def test_leaf_list(tree):
@@ -75,7 +104,7 @@ def test_immutability():
     node = phylo.TreeNode(index=0)
     # Attributes are not writable
     with pytest.raises(AttributeError):
-        node.childs = None
+        node.children = None
     with pytest.raises(AttributeError):
         node.parent = None
     with pytest.raises(AttributeError):
@@ -107,20 +136,19 @@ def test_immutability():
         phylo.Tree(node1)
 
 
-# Reference index out of range
-# Empty string
-# Empty node
 @pytest.mark.parametrize("newick, labels, error", [
     # Reference index out of range
-    ("((1,0),4),2);", None, ValueError),
+    ("((1,0),4),2);", None, biotite.InvalidFileError),
     # Empty string
-    ("", None, ValueError),
+    ("", None, biotite.InvalidFileError),
     # Empty node
-    ("();", None, ValueError),
+    ("();", None, biotite.InvalidFileError),
     # Missing brackets
-    ("((0,1,(2,3));", None, ValueError),
-    # A non-binary tree
+    ("((0,1,(2,3));", None, biotite.InvalidFileError),
+    # A node with three leaves
     ("((0,1),(2,3),(4,5));", None, None),
+    # A node with one leaf
+    ("((0,1),(2,3),(4));", None, None),
     # Named intermediate nodes
     ("((0,1,3)A,2)B;", None, None),
     # Named intermediate nodes and distances
