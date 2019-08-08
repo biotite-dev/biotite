@@ -186,6 +186,42 @@ def test_newick_complex(upgma_newick, use_labels):
     assert _tree_equal(tree1, tree2)
 
 
+@pytest.mark.parametrize("newick_in, exp_newick_out", [
+    ("(0:1.0, 1:2.0);",                     "(0:1.0,1:2.0):0.0;"             ),
+    ("(0:1.0, 1:2.0, 2:3.0);",              "((0:1.0,1:2.0):0.0,2:3.0):0.0;" ),
+    ("(((0:1.0, 1:2.0):10.0):5.0, 2:8.0);", "((0:1.0,1:2.0):15.0,2:8.0):0.0;"),
+    ("((0:1.0, 1:2.0):10.0):5.0;",          "(0:1.0,1:2.0):0.0;"             ),
+])
+def test_as_binary_cases(newick_in, exp_newick_out):
+    """
+    Test the `as_binary()` function based on known cases.
+    """
+    tree = phylo.Tree.from_newick(newick_in)
+    bin_tree = phylo.as_binary(tree)
+    assert bin_tree.to_newick() == exp_newick_out
+
+
+def test_as_binary_distances():
+    """
+    Test the preservation of all pairwise leaf distances after calling
+    `as_binary()`.
+    """
+    # Some random newick
+    newick = "((((0:5, 1:1, 2:13, 5:9):4, (4:2, 6:9):7):18), 3:12);"
+    tree = phylo.Tree.from_newick(newick)
+    ref_dist_mat = np.zeros((len(tree), len(tree)))
+    for i in range(len(tree)):
+        for j in range(len(tree)):
+            ref_dist_mat[i,j] = tree.get_distance(i,j)
+    
+    bin_tree = phylo.as_binary(tree)
+    test_dist_mat = np.zeros((len(tree), len(tree)))
+    for i in range(len(tree)):
+        for j in range(len(tree)):
+            test_dist_mat[i,j] = bin_tree.get_distance(i,j)
+    assert np.allclose(test_dist_mat, ref_dist_mat)
+
+
 def _tree_equal(t1, t2):
     # The topological and actual distances between all nodes should
     # be identical for both trees

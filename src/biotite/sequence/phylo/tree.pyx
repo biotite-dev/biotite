@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Tree", "TreeNode", "TreeError"]
+__all__ = ["Tree", "TreeNode", "as_binary", "TreeError"]
 
 cimport cython
 cimport numpy as np
@@ -871,6 +871,140 @@ cdef list _create_path_to_root(TreeNode node):
         path.append(current_node)
         current_node = current_node._parent
     return path
+
+
+
+def as_binary(tree_or_node):
+    """
+    Convert a tree into a binary tree.
+
+    In general a `TreeNode` can have more or less than two children.
+    However guide trees usually expect each intermediate node to have
+    exactly two child nodes.
+    This function creates a binary `Tree` (or `TreeNode`) for the given
+    `Tree` (or `TreeNode`):
+    Intermediate nodes that have only a single child are deleted and its
+    parent node is directly connected to its child node.
+    Intermediate nodes that have more than two childs are divided into
+    multiple nodes (distances are preserved).
+    
+    Parameters
+    ----------
+    tree_or_node : Tree or TreeNode
+        The tree or node to be converted into a binary tree or node.
+    
+    Returns
+    -------
+    binary_tree_or_node : Tree or TreeNode
+        The converted tree or node.
+    """
+    if isinstance(tree_or_node, Tree):
+        node, _ = _as_binary(tree_or_node.root)
+        return Tree(node)
+    elif isinstance(tree_or_node, TreeNode):
+        node, _ = _as_binary(tree_or_node)
+        return _as_binary(node)
+    else:
+        raise TypeError(
+            f"Expected 'Tree' or 'TreeNode', not {type(tree_or_node).__name__}"
+        )
+
+cdef _as_binary(TreeNode node):
+    """
+    The actual logic wrapped by `as_binary()`.
+    
+    Parameters
+    ----------
+    node : TreeNode
+        The node to be converted.
+    
+    Returns
+    -------
+    binary_node: TreeNode
+        The converted node.
+    distance : float
+        The distance of the converted node to its parent
+    """
+    cdef TreeNode child
+    cdef TreeNode current_div_node
+    cdef tuple children
+    cdef list rem_children
+    cdef list distances
+    cdef float distance
+
+    children = node.children
+    if children is None:
+        # Leaf node
+        return TreeNode(index=node.index), node.distance
+    elif len(children) == 1:
+        # Intermediate node with one child
+        # -> Omit node and directly connect its child to its parent
+        # The distances are added
+        #
+        #      |--            |--   
+        #      |              |   
+        # --|--|--   ->   ----|--  
+        #      |              |   
+        #      |--            |-- 
+        #
+        child, distance = _as_binary(node.children[0])
+        if node.is_root():
+            # Child is new root -> No distance to parent
+            return child, None
+        else:
+            return child, node.distance + distance
+        
+        return child, node.distance + distance
+    elif len(children) > 2:
+        # Intermediate node with more than two childs
+        # -> Create a new node having two childs:
+        #    - One of the childs of the original node
+        #    - The original node with one child less (distance = 0)
+        # Repeat until all children as put into binary nodes
+        #
+        #   |--          |--
+        #   |          --|  |--
+        # --|--   ->     |--|
+        #   |               |--
+        #   |--
+        #
+        # The remaining children
+        rem_children, distances = [list(tup) for tup in zip(
+            *[_as_binary(child) for child in children]
+        )]
+        current_div_node = None
+        while len(rem_children) > 0:
+            if current_div_node is None:
+                # The bottom-most node is created
+                #-> Gets two of the remaining childs
+                current_div_node = TreeNode(
+                    rem_children[:2],
+                    distances[:2]
+                )
+                # Pop the two utilized remaining childs from the list
+                rem_children.pop(0)
+                rem_children.pop(0)
+                distances.pop(0)
+                distances.pop(0)
+            else:
+                # A node is created that gets one remaining child
+                # and the intermediate node from the last step
+                current_div_node = TreeNode(
+                    (current_div_node, rem_children[0]),
+                    (0, distances[0]) 
+                )
+                # Pop the utilized remaining child from the list
+                rem_children.pop(0)
+                distances.pop(0)
+        return current_div_node, node.distance
+    else:
+        # Intermediate node with exactly two childs
+        # -> Keep node unchanged
+        binary_children, distances = [list(tup) for tup in zip(
+            *[_as_binary(child) for child in children]
+        )]
+        return TreeNode(binary_children, distances), node.distance
+
 
 
 class TreeError(Exception):
