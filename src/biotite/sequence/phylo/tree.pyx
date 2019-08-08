@@ -10,6 +10,7 @@ cimport numpy as np
 
 import copy
 import numpy as np
+from ...file import InvalidFileError
 from ...copyable import Copyable
 
 
@@ -209,6 +210,8 @@ class Tree(Copyable):
         If the string contains such labels, they are discarded.
         """
         newick = newick.strip()
+        if len(newick) == 0:
+            raise InvalidFileError("Newick string is empty")
         # Remove terminal colon as required by 'TreeNode.from_newick()'
         if newick[-1] == ";":
             newick = newick[:-1]
@@ -732,14 +735,14 @@ cdef class TreeNode:
                 subnewick_start_i = i
                 break
             if char == ")":
-                raise ValueError("Bracket closed before it was opened")
+                raise InvalidFileError("Bracket closed before it was opened")
         for i in reversed(range(len(newick))):
             char = newick[i]
             if char == ")":
                 subnewick_stop_i = i+1
                 break
             if char == "(":
-                raise ValueError("Bracket was opened but not closed")
+                raise InvalidFileError("Bracket was opened but not closed")
         
         if subnewick_start_i == -1 and subnewick_stop_i == -1:
             # No brackets -> no sub-newwick -> Leaf node
@@ -773,6 +776,10 @@ cdef class TreeNode:
                 distance = float(distance)
             
             subnewick = newick[subnewick_start_i+1 : subnewick_stop_i-1]
+            if len(subnewick) == 0:
+                raise InvalidFileError(
+                    "Intermediate node must at least have one child"
+                )
             # Parse childs
             # Split subnewick at ',' if ',' is at current level
             # (not in a subsubnewick)
@@ -786,7 +793,9 @@ cdef class TreeNode:
                     if level == 0:
                         comma_pos.append(i)
                 if level < 0:
-                    raise ValueError("Bracket closed before it was opened")
+                    raise InvalidFileError(
+                        "Bracket closed before it was opened"
+                    )
         
             children = []
             distances = []
@@ -810,9 +819,15 @@ cdef class TreeNode:
             # Node after last comma
             # (A,B),(C,D),(E,F)
             #             -----
-            child, dist = TreeNode.from_newick(
-                subnewick[comma_pos[-1]+1:], labels=labels
-            )
+            if len(comma_pos) != 0:
+                child, dist = TreeNode.from_newick(
+                    subnewick[comma_pos[-1]+1:], labels=labels
+                )
+            else:
+                # Single child node:
+                child, dist = TreeNode.from_newick(
+                    subnewick, labels=labels
+                )
             children.append(child)
             distances.append(dist)
             return TreeNode(children, distances), distance
