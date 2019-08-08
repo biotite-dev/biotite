@@ -23,6 +23,15 @@ def distances():
 def upgma_newick():
     # Newick notation of the tree created from 'distances.txt',
     # created via DendroUPGMA
+    with open(join(data_dir, "newick_upgma.txt"), "r") as file:
+        newick = file.read().strip()
+    return newick
+
+
+@pytest.fixture
+def nj_newick():
+    # Newick notation of the tree created from 'distances.txt',
+    # created via Trex-online (http://trex.uqam.ca/)
     with open(join(data_dir, "newick.txt"), "r") as file:
         newick = file.read().strip()
     return newick
@@ -33,12 +42,25 @@ def tree(distances):
     return phylo.upgma(distances)
 
 
+@pytest.fixture
+def nj_tree(distances):
+    return phylo.neighbour_join(distances)
+
+
 def test_upgma(tree, upgma_newick):
     """
     Compare the results of `upgma()` with DendroUPGMA.
     """
     ref_tree = phylo.Tree.from_newick(upgma_newick)
     assert _tree_equal(tree, ref_tree)
+
+
+def test_neighbor_join(nj_tree, nj_newick):
+    """
+    Compare the results of `neighbor_join()` with Trex-online.
+    """
+    ref_tree = phylo.Tree.from_newick(nj_newick)
+    assert _tree_equal(nj_tree, ref_tree)
 
 
 def test_node_distance(tree):
