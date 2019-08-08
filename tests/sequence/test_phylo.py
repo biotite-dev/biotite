@@ -8,6 +8,7 @@ import pytest
 import biotite.sequence.phylo as phylo
 from .util import data_dir
 
+
 @pytest.fixture
 def distances():
     # Distances are based on the example
@@ -15,6 +16,7 @@ def distances():
     # with the small modification M[i,j] += i+j
     # to reduce ambiguity in the tree construction.
     return np.loadtxt(join(data_dir, "distances.txt"), dtype=int)
+
 
 @pytest.fixture
 def upgma_newick():
@@ -24,17 +26,25 @@ def upgma_newick():
         newick = file.read().strip()
     return newick
 
+
 @pytest.fixture
 def tree(distances):
     return phylo.upgma(distances)
+
 
 def test_upgma(tree, upgma_newick):
     ref_tree = phylo.Tree.from_newick(upgma_newick)
     assert _tree_equal(tree, ref_tree)
 
+
+def test_node_distance(tree):
+    pass
+
+
 def test_leaf_list(tree):
     for i, leaf in enumerate(tree.leaves):
         assert i == leaf.index
+
 
 def test_distances(tree):
     # Tree is created via UPGMA
@@ -46,6 +56,7 @@ def test_distances(tree):
     assert tree.get_distance(0, 19, True) == 9
     assert tree.get_distance(4,  2, True) == 10
 
+
 def test_get_leaves(tree):
     # Manual example cases
     node = tree.leaves[6]
@@ -54,9 +65,11 @@ def test_get_leaves(tree):
     )
     assert set(tree.leaves[10].get_indices()) == set([10])
     assert tree.root.get_leaf_count() == 20
-    
+
+ 
 def test_copy(tree):
     assert _tree_equal(tree, tree.copy())
+
 
 def test_immutability():
     node = phylo.TreeNode(index=0)
@@ -72,33 +85,46 @@ def test_immutability():
     node2 = phylo.TreeNode(index=1)
     node1.as_root()
     with pytest.raises(phylo.TreeError):
-        phylo.TreeNode(node1, node2, 0, 0)
+        phylo.TreeNode([node1, node2], [0, 0])
     # A child node cannot be root
     node1 = phylo.TreeNode(index=0)
     node2 = phylo.TreeNode(index=1)
-    phylo.TreeNode(node1, node2, 0, 0)
+    phylo.TreeNode([node1, node2], [0, 0])
     with pytest.raises(phylo.TreeError):
         node1.as_root()
     # A node cannot be child of a two nodes
     node1 = phylo.TreeNode(index=0)
     node2 = phylo.TreeNode(index=1)
-    phylo.TreeNode(node1, node2, 0, 0)
+    phylo.TreeNode([node1, node2], [0, 0])
     with pytest.raises(phylo.TreeError):
-        phylo.TreeNode(node1, node2, 0, 0)
+        phylo.TreeNode([node1, node2], [0, 0])
     # Tree cannot be constructed from child nodes
     node1 = phylo.TreeNode(index=0)
-    node2 = phylo.TreeNode(index=1)
-    phylo.TreeNode(node1, node2, 0, 0)
+    node2 = phylo.TreeNode(index=0)
+    # node1 and node2 have now a parent
+    phylo.TreeNode([node1, node2], [0, 0])
     with pytest.raises(phylo.TreeError):
         phylo.Tree(node1)
 
+
+# Reference index out of range
+# Empty string
+# Empty node
 @pytest.mark.parametrize("newick, labels, error", [
-    # Not a binary tree
-    ("((0,1),(2,3),(4,6));", None, phylo.TreeError),
+    # Reference index out of range
+    ("((1,0),4),2);", None, ValueError),
+    # Empty string
+    ("", None, ValueError),
+    # Empty node
+    ("();", None, ValueError),
+    # Missing brackets
+    ("((0,1,(2,3));", None, ValueError),
+    # A non-binary tree
+    ("((0,1),(2,3),(4,5));", None, None),
     # Named intermediate nodes
-    ("((0,1)A,2)B;", None, None),
+    ("((0,1,3)A,2)B;", None, None),
     # Named intermediate nodes and distances
-    ("((0:1.0,1:3.0)A:2.0,2:5.0)B;", None, None),
+    ("((0:1.0,1:3.0,3:5.0)A:2.0,2:5.0)B;", None, None),
     # Nodes with labels
     ("((((A,B),(C,D)),E),F);", ["A","B","C","D","E","F"], None),
     # Nodes with labels and distances
@@ -117,6 +143,7 @@ def test_newick_simple(newick, labels, error):
     else:
          with pytest.raises(error):
              tree1 = phylo.Tree.from_newick(newick, labels)
+
 
 @pytest.mark.parametrize("use_labels", [False, True])
 def test_newick_complex(upgma_newick, use_labels):

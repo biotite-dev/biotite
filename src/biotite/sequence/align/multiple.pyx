@@ -420,7 +420,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
                [sequences[tree_node.index].copy()]
     
     else:
-        child1, child2 = tree_node.childs
+        child1, child2 = tree_node.children
         incides1, aligned_seqs1 = _progressive_align(
             _T, sequences, child1, distances_v, matrix,
             gap_symbol_code, gap_penalty, terminal_penalty

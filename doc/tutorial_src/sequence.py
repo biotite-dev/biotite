@@ -680,12 +680,12 @@ print(
 #
 # In *Biotite* such a tree is represented by the :class:`Tree` class in
 # the :mod:`biotite.sequence.phylo` package.
-# A tree is rooted and binary, that means each tree node has two childs,
+# A tree is rooted, that means each tree node has at least one child,
 # or none in case of leaf nodes.
 # Each node in a tree is represented by a :class:`TreeNode`.
-# When a :class:`TreeNode` is created, you have to provide either two
-# child nodes and their distances to this node (leaf node) or a
-# reference index (intermediate node).
+# When a :class:`TreeNode` is created, you have to provide either child
+# nodes and their distances to this node (intermediate node) or a
+# reference index (leaf node).
 # This reference index is dependent on the context and can refer to
 # anything: sequences, organisms, etc.
 #
@@ -704,11 +704,11 @@ orange = phylo.TreeNode(index=fruits.index("Orange"))
 lemon  = phylo.TreeNode(index=fruits.index("Lemon"))
 banana = phylo.TreeNode(index=fruits.index("Banana"))
 intermediate1 = phylo.TreeNode(
-    child1=apple, child2=pear, child1_distance=2.0, child2_distance=2.0
+    children=(apple, pear), distances=(2.0, 2.0)
 )
-intermediate2 = phylo.TreeNode(orange, lemon, 1.0, 1.0)
-intermediate3 = phylo.TreeNode(intermediate2, banana, 2.0, 3.0)
-root = phylo.TreeNode(intermediate1, intermediate3, 2.0, 1.0)
+intermediate2 = phylo.TreeNode((orange, lemon), (1.0, 1.0))
+intermediate3 = phylo.TreeNode((intermediate2, banana), (2.0, 3.0))
+root = phylo.TreeNode((intermediate1, intermediate3), (2.0, 1.0))
 # Create tree from root node
 tree = phylo.Tree(root=root)
 # Trees can be converted into Newick notation
