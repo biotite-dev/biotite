@@ -876,6 +876,8 @@ cdef list _create_path_to_root(TreeNode node):
 
 def as_binary(tree_or_node):
     """
+    as_binary(tree_or_node)
+
     Convert a tree into a binary tree.
 
     In general a `TreeNode` can have more or less than two children.
