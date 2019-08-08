@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["upgma"]
+__all__ = ["neighbor_join"]
 
 cimport cython
 cimport numpy as np
@@ -19,17 +19,15 @@ ctypedef np.uint32_t uint32
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
-def upgma(np.ndarray distances):
+def neighbor_join(np.ndarray distances):
     """
-    upgma(distances)
+    neighbor_join(distances)
     
     Perform hierarchical clustering using the
-    *unweighted pair group method with arithmetic mean* (UPGMA).
-    
-    This algorithm produces leaf nodes with the same distance to the
-    root node.
-    In the context of evolution this means a constant evolution rate
-    (molecular clock).
+    *neighbor joining* algorithm [1]_.
+
+    In contrast to UPGMA this algorithm does not assume a constant
+    evolution rate.
 
     Parameters
     ----------
@@ -39,7 +37,7 @@ def upgma(np.ndarray distances):
     Returns
     -------
     tree : Tree
-        A rooted binary tree. The `index` attribute in the leaf
+        A rooted tree. The `index` attribute in the leaf
         `TreeNode` objects refer to the indices of `distances`.
 
     Raises
@@ -47,6 +45,19 @@ def upgma(np.ndarray distances):
     ValueError
         If the distance matrix is not symmetric
         or if any matrix entry is below 0.
+    
+    Notes
+    -----
+    The created tree is binary except for the root node, that has three
+    child notes
+    
+    References
+    ----------
+    
+    .. [1] N Saitou, M Nei,
+       "The neighbor-joining method: a new method for reconstructing
+       phylogenetic trees."
+       Mol Biol Evol, 4, 406-425 (1987).
 
     Examples
     --------
@@ -58,9 +69,8 @@ def upgma(np.ndarray distances):
     ...     [7, 6, 2, 0, 3],
     ...     [9, 8, 4, 3, 0],
     ... ])
-    >>> tree = upgma(distances)
+    >>> tree = neighbor_join(distances)
     >>> print(tree.to_newick(include_distance=False))
-    ((4,(3,2)),(1,0));
     """
     cdef int i=0, j=0, k=0
     cdef int i_min=0, j_min=0
