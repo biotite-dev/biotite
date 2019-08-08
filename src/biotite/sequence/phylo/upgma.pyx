@@ -66,7 +66,7 @@ def upgma(np.ndarray distances):
     
 
     if distances.shape[0] != distances.shape[1] \
-        or not np.array_equal(distances.T, distances):
+        or not np.allclose(distances.T, distances):
             raise ValueError("Distance matrix must be symmetric")
     if (distances < 0).any():
         raise ValueError("Distances must be positive")
