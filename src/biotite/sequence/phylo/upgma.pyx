@@ -82,8 +82,8 @@ def upgma(np.ndarray distances):
     cdef np.ndarray nodes = np.array(
         [TreeNode(index=i) for i in range(distances.shape[0])]
     )
-    # Indicates whether an index has already been clustered
-    # and the repsective rows and columns can be ignored
+    # Indicates whether an index in the distance matrix has already been
+    # clustered and the repsective rows and columns can be ignored
     cdef uint8[:] is_clustered_v = np.full(
         distances.shape[0], False, dtype=np.uint8
     )
@@ -101,7 +101,6 @@ def upgma(np.ndarray distances):
 
     # Cluster indices
     cdef float32[:,:] distances_v = distances.astype(np.float32, copy=True)
-    
     # Exit loop via 'break'
     while True:
 

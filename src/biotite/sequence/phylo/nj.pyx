@@ -24,10 +24,10 @@ def neighbor_joining(np.ndarray distances):
     neighbor_join(distances)
     
     Perform hierarchical clustering using the
-    *neighbor joining* algorithm [1]_.
+    *neighbor joining* algorithm [1,2]_.
 
     In contrast to UPGMA this algorithm does not assume a constant
-    evolution rate.
+    evolution rate. The resulting tree is considered to be unrooted.
 
     Parameters
     ----------
@@ -58,6 +58,9 @@ def neighbor_joining(np.ndarray distances):
        "The neighbor-joining method: a new method for reconstructing
        phylogenetic trees."
        Mol Biol Evol, 4, 406-425 (1987).
+    .. [2] JA Studier, KJ Keppler,
+       "A note on the neighbor-joining algorithm of Saitou and Neil."
+       Mol Biol Evol, 5, 729-731 (1988).
 
     Examples
     --------
@@ -90,21 +93,21 @@ def neighbor_joining(np.ndarray distances):
     cdef np.ndarray nodes = np.array(
         [TreeNode(index=i) for i in range(distances.shape[0])]
     )
-    # Indicates whether an index has already been clustered
-    # and the repsective rows and columns can be ignored
+    # Indicates whether an index in the distance matrix has already been
+    # clustered and the repsective rows and columns can be ignored
     cdef uint8[:] is_clustered_v = np.full(
         distances.shape[0], False, dtype=np.uint8
     )
-    # Number of indices in the current node (cardinality)
-    # (required for proportional averaging)
-    cdef uint32[:] cluster_size_v = np.ones(
-        distances.shape[0], dtype=np.uint32
-    )
-    # Distance of each node from leaf nodes,
-    # used for calculation of distance to child nodes
-    cdef float32[:] node_heights = np.zeros(
+    # The divergence of of a 'taxum'
+    # describes the relative evolution rate
+    cdef float32[:] divergence_v = np.zeros(
         distances.shape[0], dtype=np.float32
     )
+    # Triangular matrix for stroing the divergence corrected distances
+    cdef float32[:,:] corre_distances_v = np.zeros(
+        (distances.shape[0],) * 2, dtype=np.float32
+    )
+
 
 
     # Cluster indices

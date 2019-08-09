@@ -55,7 +55,7 @@ def test_upgma(tree, upgma_newick):
     assert _tree_equal(tree, ref_tree)
 
 
-def test_neighbor_join(nj_tree, nj_newick):
+def test_neighbor_joining(nj_tree, nj_newick):
     """
     Compare the results of `neighbor_join()` with Trex-online.
     """
