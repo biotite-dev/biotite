@@ -106,7 +106,7 @@
         ],
         "Clustering algorithms" : [
             "upgma",
-            "neighbor_join"
+            "neighbor_joining"
         ]
     },
 

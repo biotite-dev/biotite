@@ -32,7 +32,7 @@ def upgma_newick():
 def nj_newick():
     # Newick notation of the tree created from 'distances.txt',
     # created via Trex-online (http://trex.uqam.ca/)
-    with open(join(data_dir, "newick.txt"), "r") as file:
+    with open(join(data_dir, "newick_nj.txt"), "r") as file:
         newick = file.read().strip()
     return newick
 
@@ -44,7 +44,7 @@ def tree(distances):
 
 @pytest.fixture
 def nj_tree(distances):
-    return phylo.neighbour_join(distances)
+    return phylo.neighbor_joining(distances)
 
 
 def test_upgma(tree, upgma_newick):

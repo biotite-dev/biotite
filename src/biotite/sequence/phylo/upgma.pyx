@@ -19,6 +19,8 @@ ctypedef np.uint32_t uint32
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def upgma(np.ndarray distances):
     """
     upgma(distances)
@@ -90,7 +92,7 @@ def upgma(np.ndarray distances):
     cdef uint32[:] cluster_size_v = np.ones(
         distances.shape[0], dtype=np.uint32
     )
-    # Distance of each node from terminal nodes,
+    # Distance of each node from leaf nodes,
     # used for calculation of distance to child nodes
     cdef float32[:] node_heights = np.zeros(
         distances.shape[0], dtype=np.float32
@@ -120,7 +122,7 @@ def upgma(np.ndarray distances):
                     j_min = j
         
         if i_min == -1 or j_min == -1:
-            # No distance found -> all terminal nodes are clustered
+            # No distance found -> all leaf nodes are clustered
             # -> exit loop
             break
         
@@ -156,4 +158,4 @@ def upgma(np.ndarray distances):
     # As each higher level node is always created on position i_min
     # and i is always higher than j in minimum distance calculation,
     # the root node must be at the last index
-    return Tree(nodes[-1])
+    return Tree(nodes[len(nodes)-1])
