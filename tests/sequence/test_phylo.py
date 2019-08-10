@@ -60,6 +60,16 @@ def test_neighbor_joining(nj_tree, nj_newick):
     Compare the results of `neighbor_join()` with Trex-online.
     """
     ref_tree = phylo.Tree.from_newick(nj_newick)
+    ###
+    import matplotlib.pyplot as plt
+    import biotite.sequence.graphics as graphics
+    fig = plt.figure()
+    ax = fig.add_subplot(211)
+    graphics.plot_dendrogram(ax, ref_tree, use_distances=False)
+    ax = fig.add_subplot(212)
+    graphics.plot_dendrogram(ax, nj_tree, use_distances=False)
+    plt.show()
+    ###
     assert _tree_equal(nj_tree, ref_tree)
 
 

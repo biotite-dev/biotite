@@ -955,8 +955,6 @@ cdef _as_binary(TreeNode node):
             return child, None
         else:
             return child, node.distance + distance
-        
-        return child, node.distance + distance
     elif len(children) > 2:
         # Intermediate node with more than two childs
         # -> Create a new node having two childs:
