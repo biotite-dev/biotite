@@ -29,22 +29,8 @@ def upgma_newick():
 
 
 @pytest.fixture
-def nj_newick():
-    # Newick notation of the tree created from 'distances.txt',
-    # created via Trex-online (http://trex.uqam.ca/)
-    with open(join(data_dir, "newick_nj.txt"), "r") as file:
-        newick = file.read().strip()
-    return newick
-
-
-@pytest.fixture
 def tree(distances):
     return phylo.upgma(distances)
-
-
-@pytest.fixture
-def nj_tree(distances):
-    return phylo.neighbor_joining(distances)
 
 
 def test_upgma(tree, upgma_newick):
@@ -52,25 +38,52 @@ def test_upgma(tree, upgma_newick):
     Compare the results of `upgma()` with DendroUPGMA.
     """
     ref_tree = phylo.Tree.from_newick(upgma_newick)
-    assert _tree_equal(tree, ref_tree)
+    assert tree == ref_tree
 
 
-def test_neighbor_joining(nj_tree, nj_newick):
+def test_neighbor_joining():
     """
-    Compare the results of `neighbor_join()` with Trex-online.
+    Compare the results of `neighbor_join()` with a known tree.
     """
-    ref_tree = phylo.Tree.from_newick(nj_newick)
-    ###
-    import matplotlib.pyplot as plt
-    import biotite.sequence.graphics as graphics
-    fig = plt.figure()
-    ax = fig.add_subplot(211)
-    graphics.plot_dendrogram(ax, ref_tree, use_distances=False)
-    ax = fig.add_subplot(212)
-    graphics.plot_dendrogram(ax, nj_tree, use_distances=False)
-    plt.show()
-    ###
-    assert _tree_equal(nj_tree, ref_tree)
+    dist = np.array([
+        [ 0,  5,  4,  7,  6,  8],
+        [ 5,  0,  7, 10,  9, 11],
+        [ 4,  7,  0,  7,  6,  8],
+        [ 7, 10,  7,  0,  5,  9],
+        [ 6,  9,  6,  5,  0,  8],
+        [ 8, 11,  8,  9,  8,  0],
+    ])
+
+    ref_tree = phylo.Tree(phylo.TreeNode(
+        [
+            phylo.TreeNode(
+                [
+                    phylo.TreeNode(
+                        [
+                            phylo.TreeNode(index=0),
+                            phylo.TreeNode(index=1),
+                        ],
+                        [1,4]
+                    ),
+                    phylo.TreeNode(index=2),
+                ],
+                [1, 2]
+            ),
+            phylo.TreeNode(
+                [
+                    phylo.TreeNode(index=3),
+                    phylo.TreeNode(index=4),
+                ],
+                [3,2]
+            ),
+            phylo.TreeNode(index=5),
+        ],
+        [1,1,1]
+    ))
+
+    test_tree = phylo.neighbor_joining(dist)
+
+    assert test_tree == ref_tree
 
 
 def test_node_distance(tree):
@@ -129,7 +142,8 @@ def test_get_leaves(tree):
 
  
 def test_copy(tree):
-    assert _tree_equal(tree, tree.copy())
+    assert tree is not tree.copy()
+    assert tree == tree.copy()
 
 
 def test_immutability():
@@ -199,7 +213,7 @@ def test_newick_simple(newick, labels, error):
         tree1 = phylo.Tree.from_newick(newick, labels)
         newick = tree1.to_newick(labels, include_distance=True)
         tree2 = phylo.Tree.from_newick(newick, labels)
-        assert _tree_equal(tree1, tree2)
+        assert tree1 == tree2
     else:
          with pytest.raises(error):
              tree1 = phylo.Tree.from_newick(newick, labels)
@@ -215,7 +229,7 @@ def test_newick_complex(upgma_newick, use_labels):
     tree1 = phylo.Tree.from_newick(upgma_newick, labels)
     newick = tree1.to_newick(labels, include_distance=True)
     tree2 = phylo.Tree.from_newick(newick, labels)
-    assert _tree_equal(tree1, tree2)
+    assert tree1 == tree2
 
 
 @pytest.mark.parametrize("newick_in, exp_newick_out", [
@@ -254,22 +268,35 @@ def test_as_binary_distances():
     assert np.allclose(test_dist_mat, ref_dist_mat)
 
 
-def _tree_equal(t1, t2):
-    # The topological and actual distances between all nodes should
-    # be identical for both trees
-    shape = (len(t1.leaves),) * 2
-    dist = np.zeros(shape)
-    dist_top = np.zeros(shape)
-    ref_dist = np.zeros(shape)
-    ref_dist_top = np.zeros(shape)
-    for i in range(shape[0]):
-        for j in range(shape[0]):
-            dist[i,j]         = t1.get_distance(i, j)
-            dist_top[i,j]     = t1.get_distance(i, j, True)
-            ref_dist[i,j]     = t2.get_distance(i, j)
-            ref_dist_top[i,j] = t2.get_distance(i, j, True)
-    return np.allclose(dist, ref_dist, rtol=1e-3) & \
-           np.array_equal(dist_top, ref_dist_top)
+def test_equality(tree):
+    """
+    Assert that equal trees equal each other, and non-equal trees do not
+    equal each other.
+    """
+    assert tree == tree.copy()
+    # Order of children is not important
+    assert tree == phylo.Tree(phylo.TreeNode(
+        [tree.root.children[1].copy(), tree.root.children[0].copy()],
+        [tree.root.children[1].distance, tree.root.children[0].distance]
+    ))
+    # Different distance -> Unequal tree
+    assert tree != phylo.Tree(phylo.TreeNode(
+        [tree.root.children[0].copy(), tree.root.children[1].copy()],
+        [tree.root.children[0].distance, 42]
+    ))
+    # Additional node -> Unequal tree
+    assert tree != phylo.Tree(phylo.TreeNode(
+        [
+            tree.root.children[0].copy(),
+            tree.root.children[1].copy(),
+            phylo.TreeNode(index=len(tree))
+        ],
+        [
+            tree.root.children[0].distance,
+            tree.root.children[1].distance,
+            42
+        ]
+    ))
 
 
 def _show_tree(tree):
