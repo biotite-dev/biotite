@@ -38,7 +38,15 @@ def test_upgma(tree, upgma_newick):
     Compare the results of `upgma()` with DendroUPGMA.
     """
     ref_tree = phylo.Tree.from_newick(upgma_newick)
-    assert tree == ref_tree
+    # Cannot apply direct tree equality assertion because the distance
+    # might not be exactly equal due to floating point rounding errors
+    for i in range(len(tree)):
+        for j in range(len(tree)):
+            # Check for equal distances and equal topologies
+            assert                   tree.get_distance(i,j) \
+                == pytest.approx(ref_tree.get_distance(i,j), abs=1e-3)
+            assert     tree.get_distance(i,j, topological=True) \
+                == ref_tree.get_distance(i,j, topological=True)
 
 
 def test_neighbor_joining():
@@ -78,7 +86,7 @@ def test_neighbor_joining():
             ),
             phylo.TreeNode(index=5),
         ],
-        [1,1,1]
+        [1,1,5]
     ))
 
     test_tree = phylo.neighbor_joining(dist)
