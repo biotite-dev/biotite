@@ -72,13 +72,14 @@ def neighbor_joining(np.ndarray distances):
     ...     [7, 6, 2, 0, 3],
     ...     [9, 8, 4, 3, 0],
     ... ])
-    >>> tree = neighbor_join(distances)
+    >>> tree = neighbor_joining(distances)
     >>> print(tree.to_newick(include_distance=False))
+    (3,(2,(1,0)),4);
     """
     cdef int i=0, j=0, k=0, u=0
     cdef int i_min=0, j_min=0
-    cdef float32 dist, dist_min, dist_sum
-    cdef float32 node_dist_i, node_dist_j
+    cdef float32 dist=0, dist_min, dist_sum=0
+    cdef float32 node_dist_i=0, node_dist_j=0, node_dist_k=0
     
 
     if distances.shape[0] != distances.shape[1] \
@@ -130,7 +131,11 @@ def neighbor_joining(np.ndarray distances):
         
         # Calculate corrected distance matrix
         for i in range(distances_v.shape[0]):
+            if is_clustered_v[i]:
+                    continue
             for j in range(i):
+                if is_clustered_v[j]:
+                    continue
                 corr_distances_v[i,j] = \
                     (n_rem_nodes - 2) * distances_v[i,j] \
                     - divergence_v[i] - divergence_v[j]
@@ -169,14 +174,37 @@ def neighbor_joining(np.ndarray distances):
             distances_v[i_min,j_min]
             + 1/(n_rem_nodes-2) * (divergence_v[j_min] - divergence_v[i_min])
         )
-        nodes[i_min] = TreeNode(
-            (nodes[i_min], nodes[j_min]),
-            (node_dist_i, node_dist_j)
-        )
-        # Mark position j_min as clustered
-        nodes[j_min] = None
-        is_clustered_v[j_min] = True
+        if n_rem_nodes > 3:
+            # Clustering is not finished
+            # -> Create a node with two children
+            nodes[i_min] = TreeNode(
+                (nodes[i_min], nodes[j_min]),
+                (node_dist_i, node_dist_j)
+            )
+            # Mark position j_min as clustered
+            nodes[j_min] = None
+            is_clustered_v[j_min] = True
+        else:
+            # Clustering is finished
+            # Combine ast three nodes into root node
+            # Find the index of the remaining one of the three nodes
+            # (other than i_min and j_min)
+            is_clustered_v[i_min] = True
+            is_clustered_v[j_min] = True
+            # The index of the remaining one
+            k = np.where(~np.asarray(is_clustered_v, dtype=bool))[0][0]
+            node_dist_k = 0.5 * (
+                distances_v[i_min,k] + distances_v[j_min,k]
+                - distances_v[i_min,j_min]
+            )
+            root = TreeNode(
+                (nodes[i_min], nodes[j_min], nodes[k]),
+                (node_dist_i, node_dist_j, node_dist_k)
+            )
+            # Clustering is finished -> put into tree and return
+            return Tree(root)
         
+        # Update distance matrix
         # Calculate distances of new node to all other nodes
         for k in range(distances_v.shape[0]):
             if not is_clustered_v[k] and k != i_min:
@@ -190,11 +218,3 @@ def neighbor_joining(np.ndarray distances):
         # Update the amount of remaining nodes
         n_rem_nodes = \
             len(distances) - np.count_nonzero(np.asarray(is_clustered_v))
-        
-        # Check if all nodes have been clustered
-        if n_rem_nodes <= 3:
-            # The 'root' node has the 3 remianing nodes as child nodes
-            rem_nodes = nodes[
-                np.where(~np.asarray(is_clustered_v, dtype=bool))
-            ]
-            return Tree(TreeNode(rem_nodes, [0,0,0]))
