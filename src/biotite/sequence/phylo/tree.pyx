@@ -26,9 +26,6 @@ class Tree(Copyable):
     index of the leaf node in this list is equal to the reference index
     of the leaf node (``leaf.index``).
 
-    Two `Tree` objects are equal if they are the same object,
-    so the ``==`` operator is equal to the ``is`` operator.
-
     The amount of leaves in a tree can be determined via the `len()`
     function.
 
@@ -223,6 +220,14 @@ class Tree(Copyable):
     
     def __len__(self):
         return len(self._leaves)
+    
+    def __eq__(self, item):
+        if not isinstance(item, Tree):
+            return False
+        return self._root == item._root
+    
+    def __hash__(self):
+        return hash(self._root)
 
 
 cdef class TreeNode:
@@ -255,9 +260,6 @@ cdef class TreeNode:
     completely immutable.
 
     All object properties are read-only.
-
-    Two `TreeNode` objects are equal if they are the same object,
-    so the ``==`` operator is equal to the ``is`` operator.
 
     Parameters
     ----------
@@ -834,6 +836,26 @@ cdef class TreeNode:
 
     def __str__(self):
         return self.to_newick()
+    
+    def __eq__(self, item):
+        if not isinstance(item, TreeNode):
+            return False
+        cdef TreeNode node = item
+        if self._distance != node._distance:
+            return False
+        if self._index !=-1:
+            if self._index != node._index:
+                return False
+        else:
+            if frozenset(self._children) != frozenset(node._children):
+                return False
+        return True
+    
+    def __hash__(self):
+        # Order of children is not important -> set
+        children_set = frozenset(self._children) \
+                       if self._children is not None else None
+        return hash((self._index, children_set, self._distance))
 
 
 cdef _get_leaves(TreeNode node, list leaf_list):
