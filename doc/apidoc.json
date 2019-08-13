@@ -100,12 +100,13 @@
     },
 
     "biotite.sequence.phylo" : {
-        "Data structure" : [
+        "Data structures" : [
             "Tree",
             "TreeNode"
         ],
         "Clustering algorithms" : [
-            "upgma"
+            "upgma",
+            "neighbor_joining"
         ]
     },
 

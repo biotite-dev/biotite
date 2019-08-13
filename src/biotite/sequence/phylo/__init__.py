@@ -7,3 +7,4 @@ __author__ = "Patrick Kunzmann"
 
 from .tree import *
 from .upgma import *
+from .nj import *
