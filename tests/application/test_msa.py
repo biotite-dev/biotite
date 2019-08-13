@@ -171,9 +171,9 @@ def test_clustalo_matrix(sequences):
 
 def test_clustalo_tree(sequences):
     leaves = [phylo.TreeNode(index=i) for i in range(len(sequences))]
-    inter1 = phylo.TreeNode(leaves[0], leaves[1], 1.0, 1.0)
-    inter2 = phylo.TreeNode(leaves[2], leaves[3], 2.5, 2.5)
-    root = phylo.TreeNode(inter1, inter2, 3.5, 2)
+    inter1 = phylo.TreeNode([leaves[0], leaves[1]], [1.0, 1.0])
+    inter2 = phylo.TreeNode([leaves[2], leaves[3]], [2.5, 2.5])
+    root = phylo.TreeNode([inter1, inter2], [3.5, 2])
     tree = phylo.Tree(root)
     # You cannot simultaneously set and get a tree in ClustalOmega
     # -> Test whether both is possible in separate calls
