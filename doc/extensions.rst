@@ -18,10 +18,10 @@ Python packages that are developed independently.
 
 .. only:: html
 
-    .. figure:: https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/WLE_Austria_Logo_%28no_text%29.svg/70px-WLE_Austria_Logo_%28no_text%29.svg.png
-        :target: https://de.wikipedia.org/wiki/Wikipedia:Hauptseite
+    .. figure:: https://gecos.biotite-python.org/_downloads/3ebefd489b8ac7424d85cd4967cb06b1/gecos_icon.svg
+        :target: https://gecos.biotite-python.org/
 
-        `Gecos - Generated color schemes <https://de.wikipedia.org/wiki/Wikipedia:Hauptseite>`_
+        `Gecos - Generated color schemes <https://gecos.biotite-python.org/>`_
 
 .. raw:: html
 
