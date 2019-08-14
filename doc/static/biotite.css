@@ -7,7 +7,7 @@ div.body > .section {
 p.caption {
     font-size: 0.8em;
 }
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p.sidebar-title {
     text-align: start !important;
     font-family: "Crete Round", "Sans-Serif" !important;
 }
