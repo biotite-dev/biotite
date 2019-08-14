@@ -9,7 +9,7 @@ Biotite documentation
 .. sidebar:: Name origin
 
    Biotite is a mineral within the mica group.
-   It can form brownish pseudohexagonal crystals.
+   It usually forms brownish pseudohexagonal crystals.
 
    .. image:: https://upload.wikimedia.org/wikipedia/commons/3/3b/Biotite%2C_Sanidine_and_Nepheline_-_Ochtendung%2C_Eifel%2C_Germany.jpg
       :alt: Biotite image
