@@ -132,12 +132,14 @@ def test_align_optimal_simple(local, term, gap_penalty,
     shutil.which("muscle") is None,
     reason="MUSCLE is not installed"
 )
+# Ignore warning about MUSCLE writing no second guide tree
+@pytest.mark.filterwarnings("ignore")
 @pytest.mark.parametrize("gap_penalty, seq_indices", itertools.product(
     [-10, (-10,-1)], [(i,j) for i in range(10) for j in range(i+1)]
 ))
 def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     """
-    Test `align_optimal()` function using actual long sequences,
+    Test `align_optimal()` function using real world sequences,
     compared to the output of MUSCLE.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()

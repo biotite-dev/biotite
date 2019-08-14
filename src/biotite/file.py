@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["File", "TextFile"]
+__all__ = ["File", "TextFile", "InvalidFileError"]
 
 import abc
 from .copyable import Copyable

@@ -17,7 +17,7 @@ matrix:
     dist: trusty
     sudo: false
     env:
-      - PY_VERSION='3.7'
+      - PY_VERSION='3.7.3'
       - COMPLETE=false
       - BIN=true
       - SRC=false
