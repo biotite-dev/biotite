@@ -79,7 +79,7 @@ html_static_path = ["static"]
 html_css_files = [
     "biotite.css",
     "https://fonts.googleapis.com/css?" \
-        "family=Fira+Sans|Nunito&display=swap",
+        "family=Crete+Round|Fira+Sans|&display=swap",
 ]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"
