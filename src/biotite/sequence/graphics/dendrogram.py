@@ -60,6 +60,10 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         pos : float
             the postion of the node on the 'label' axis
         """
+        # The term 'distance'
+        # refers to positions along the 'distance' axis
+        # the term 'pos'
+        # refers to positions along the other axis
         nonlocal max_distance
         if max_distance < distance:
             max_distance = distance
@@ -67,47 +71,45 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             # No children -> no line can be drawn
             return leaf_dict[node.index]
         else:
-            childs = node.childs
+            children = node.children
             if use_distances:
-                child0_distance = distance + childs[0].distance
-                child1_distance = distance + childs[1].distance
+                child_distances = [distance + c.distance for c in children]
             else:
-                # Use topologic distance of childs to this node, which is one
-                child0_distance = distance + 1
-                child1_distance = distance + 1
-            child_pos0 = _plot_node(childs[0], child0_distance)
-            child_pos1 = _plot_node(childs[1], child1_distance)
+                # Use topologic distance of children to this node, which is one
+                child_distances = [distance + 1 for c in children]
+            child_pos = [
+                _plot_node(child, child_distance)
+                for child, child_distance in zip(children, child_distances)
+            ]
             # Position of this node is in the center of the child nodes
-            pos = (child_pos0 + child_pos1) / 2
+            center_pos = sum(child_pos) / len(child_pos)
             if orientation in ["left", "right"]:
+                # Line connecting the childs
                 axes.plot(
-                    [distance, distance],        [child_pos0, child_pos1],
+                    [distance, distance], [child_pos[0], child_pos[-1]],
                     color=color, marker="None", **kwargs
                 )
-                axes.plot(
-                    [distance, child0_distance], [child_pos0, child_pos0],
-                    color=color, marker="None", **kwargs
-                )
-                axes.plot(
-                    [distance, child1_distance], [child_pos1, child_pos1],
-                    color=color, marker="None", **kwargs
-                )
+                # Lines depicting the distances of the childs
+                for child_dist, pos in zip(child_distances, child_pos):
+                    axes.plot(
+                        [distance, child_dist], [pos, pos],
+                        color=color, marker="None", **kwargs
+                    )
             elif orientation in ["bottom", "top"]:
+                # Line connecting the childs
                 axes.plot(
-                    [child_pos0, child_pos1], [distance, distance],
+                    [child_pos[0], child_pos[-1]], [distance, distance],
                     color=color, marker="None", **kwargs
                 )
-                axes.plot(
-                    [child_pos0, child_pos0], [distance, child0_distance],
-                    color=color, marker="None", **kwargs
-                )
-                axes.plot(
-                    [child_pos1, child_pos1], [distance, child1_distance],
-                    color=color, marker="None", **kwargs
-                )
+                # Lines depicting the distances of the childs
+                for child_dist, pos in zip(child_distances, child_pos):
+                    axes.plot(
+                        [pos, pos], [distance, child_dist],
+                        color=color, marker="None", **kwargs
+                    )
             else:
                 raise ValueError(f"'{orientation}' is not a valid orientation")
-            return pos
+            return center_pos
     
     _plot_node(tree.root, 0)
 

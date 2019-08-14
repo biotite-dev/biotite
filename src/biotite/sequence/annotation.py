@@ -145,8 +145,11 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict, optional
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
 
     Attributes
     ----------
@@ -158,14 +161,17 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
     """
     
-    def __init__(self, key, locs, qual={}):
+    def __init__(self, key, locs, qual=None):
         self._key = key
         self._locs = frozenset(locs)
-        self._qual = copy.deepcopy(qual)
+        self._qual = copy.deepcopy(qual) if qual is not None else {}
     
     def get_location_range(self):
         """
@@ -674,9 +680,36 @@ class AnnotatedSequence(Copyable):
     def __getitem__(self, index):
         if isinstance(index, Feature):
             # Concatenate subsequences for each location of the feature
+            locs = index.locs
+            if len(locs) == 0:
+                raise ValueError("Feature does not contain any locations")
             # Start by creating an empty sequence
             sub_seq = self._sequence.copy(new_seq_code=np.array([]))
-            for loc in index.locs:
+            # Locations need to be sorted, as otherwise the locations
+            # chunks would be merged in the wrong order
+            # The order depends on whether the locs are on the forward
+            # or reverse strand
+            strand = None
+            for loc in locs:
+                if loc.strand == strand:
+                    pass
+                elif strand is None:
+                    strand = loc.strand
+                else: # loc.strand != strand
+                    raise ValueError(
+                        "All locations of the feature must have the same "
+                        "strand direction"
+                    )
+            if strand == Location.Strand.FORWARD:
+                sorted_locs = sorted(
+                    locs, key=lambda loc: loc.first
+                )
+            else:
+                sorted_locs = sorted(
+                    locs, key=lambda loc: loc.last, reverse=True
+                )
+            # Merge the sequences corresponding to the ordered locations
+            for loc in sorted(locs, key=lambda loc: loc.first):
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart +1
@@ -685,6 +718,7 @@ class AnnotatedSequence(Copyable):
                     add_seq = add_seq.reverse().complement()
                 sub_seq += add_seq
             return sub_seq
+        
         elif isinstance(index, slice):
             # Sequence start correction
             if index.start is None:
@@ -708,8 +742,10 @@ class AnnotatedSequence(Copyable):
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
                                      rel_seq_start)
+        
         elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
+        
         else:
             raise TypeError(
                 f"'{type(index).__name__}' instances are invalid indices"

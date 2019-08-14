@@ -2,13 +2,40 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
-Development guide
-=================
+Contributing
+============
+
+As the aim of *Biotite* is to create a comprehensive library, we welcome
+developers who would like to extend the package with new functionalities or
+improve existing code.
+The complete development workflow is hosted on
+`GitHub <https://github.com/biotite-dev/biotite>`_.
+This is also the place where you would post feature propositions,
+questions, bug reports, etc.
+
+The following page explains the development guidelines in order to keep
+*Biotite*'s source code consistent.
 
 
 
 Writing code
 ------------
+
+Scope
+^^^^^
+The scope of *Biotite* are methods that make up the backbone of
+computational molecular biology. Thus, new functionalities added to
+*Biotite* should be relatively general and well established.
+
+Code of which the purpose is too special could be published as
+:ref:`extension package <extensions>`.
+
+Consistency
+^^^^^^^^^^^
+New functionalities should work with existing types, if applicable.
+Specifically, this includes for example :class:`AtomArray`,
+:class:`AtomArrayStack`, :class:`Sequence`, :class:`Annotation`
+and of course :class:`ndarray`.
 
 Python version and interpreter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,8 +68,8 @@ In this case, put the import statement for the dependency directly into the
 function or class, rather than module level, to ensure that the package is not
 required for any other functionality or for building the API documentation.
 
-If your added code has a dependency that is too special, consider publishing it
-as :ref:`extension package <extensions>`.
+If your added code has a dependency that is too special, consider publishing
+the code as :ref:`extension package <extensions>`.
 
 Code efficiency
 ^^^^^^^^^^^^^^^
@@ -77,7 +104,7 @@ Methods do not need to be summarized in the class docstring.
 Module imports
 ^^^^^^^^^^^^^^
 
-In *Biotite*, the user imports packages in conrast to single modules
+In *Biotite*, the user imports packages in contrast to single modules
 (similar to *NumPy*).
 In order for that to work, the ``__init__.py`` file of each *Biotite*
 subpackage needs to import all of its modules, whose content is publicly
@@ -105,17 +132,17 @@ variable with all publicly accessible attributes of the module.
 When using *Biotite* internal imports, always use relative imports. Otherwise
 :ref:`in-development testing <tests>` is not possible.
 
-Type annotations
-^^^^^^^^^^^^^^^^
-
-*Biotite* obligatorily uses type annotations (:PEP:`484`) for its public API.
-This enables static type checkers (e.g. *mypy*) to detect programming errors
-at compile time.
-Instead of using inline type annotations, the type hints are outsourced
-into ``*.pyi`` stub files, that exist alongside ``*.py`` files with the same
-module name.
-Although, *NumPy* does not support type hints yet, the `ndarray` type is still
-used in type annotations
+.. Type annotations
+   ^^^^^^^^^^^^^^^^
+   
+   *Biotite* obligatorily uses type annotations (:PEP:`484`) for its public API.
+   This enables static type checkers (e.g. *mypy*) to detect programming errors
+   at compile time.
+   Instead of using inline type annotations, the type hints are outsourced
+   into ``*.pyi`` stub files, that exist alongside ``*.py`` files with the same
+   module name.
+   Although, *NumPy* does not support type hints yet, the `ndarray` type is still
+   used in type annotations
 
 
 
@@ -124,8 +151,8 @@ Writing the documentation
 
 Any documentation apart from the API reference is placed in the ``doc``
 folder.
-*Biotite* uses *Sphinx* for building its documentation and therefore is based
-on *reStructuredText* files.
+*Biotite* uses *Sphinx* for building its documentation and therefore the
+documentation is based on *reStructuredText* files.
 The line length of these ``*.rst`` files is also limited to
 79 characters, with the exceptions already mentioned above. 
 
@@ -134,8 +161,9 @@ Contributing examples
 
 Do you have an application of *Biotite* and you want to share it with the world?
 Then the example gallery is the way to go.
-For gallery generation the package ``sphinx-gallery`` is used. Please refer to
-its `documentation <http://sphinx-gallery.readthedocs.io/en/latest/>`_
+For gallery generation the package ``sphinx-gallery`` is used.
+Please refer to its
+`documentation <http://sphinx-gallery.readthedocs.io/en/latest/>`_
 for further information on script formatting.
 The example scripts are placed in ``doc/examples/scripts``.
 
@@ -151,7 +179,7 @@ dynamically generated based on the current state of the *Biotite* source
 code.
 Consequently, the same script formatting as for the example gallery is
 required.
-Figures that connot be dynamically generated are put into
+Figures that cannot be dynamically generated are put into
 ``doc/static/assets/figures``.
 
 Structuring the API reference

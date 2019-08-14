@@ -6,14 +6,22 @@
 Biotite documentation
 #####################
 
-The *Biotite* package bundles popular tasks in computational molecular biology
-into an unifying *Python* framework.
-It can handle the complete molecular biology workflow
-for sequence and macromolecular sructure data:
+.. sidebar:: Name origin
 
-   - Downloading data from biological databases
-   - Loading data from popular structure and sequence files
-   - Analyzing and modificating the data
+   Biotite is a mineral within the mica group.
+   It can form brownish pseudohexagonal crystals.
+
+   .. image:: https://upload.wikimedia.org/wikipedia/commons/3/3b/Biotite%2C_Sanidine_and_Nepheline_-_Ochtendung%2C_Eifel%2C_Germany.jpg
+      :alt: Biotite image
+
+The *Biotite* package bundles popular tasks in computational molecular biology
+into a unifying *Python* framework.
+It can handle a major part of the molecular biology workflow
+for sequence and biomolecular structure data:
+
+   - Fetching data from biological databases
+   - Loading data from structure/sequence files
+   - Analyzing and editing the data
    - Saving the data back to file
    - Interfacing external applications
 
@@ -24,7 +32,7 @@ highly efficient.
 
 Additionally, the package aims for simple usability and extensibility:
 The objects representing structures and sequences can be indexed and sliced
-like an `ndarray`.
+like a `ndarray`.
 Even the actual internal `ndarray` instances are easily accessible allowing
 advanced users to implement their own algorithms upon the existing types.
 
@@ -33,6 +41,7 @@ If you use *Biotite* in a scientific publication, please cite:
 | Kunzmann, P. & Hamacher, K. BMC Bioinformatics (2018) 19:346.
 | `<https://doi.org/10.1186/s12859-018-2367-z>`_
 
+----
 
 **Sequence** subpackage
 -----------------------
@@ -41,14 +50,14 @@ of any kind.
 The package contains by default sequence types for nucleotides and proteins,
 but the alphabet-based implementation allows simple integration of own sequence
 types, even if they do not rely on letters.
-Beside the standard I/O operations, the package includes general purpose
+Besides the standard I/O operations, the package includes general purpose
 functions for sequence manipulations and global/local alignments.
 On top of the actual sequence data, the subpackage can also handle sequence
 features, to annotate your sequences with the respective functionality.
 Eventually, the data can be visualized in different *Matplotlib* based
 representations, ranging from sequence alignments to feature maps.
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_sw_genome_search_001.png
+.. image:: /examples/gallery/sequence/images/sphx_glr_hcn_hydropathy_001.png
    :width: 48 %
    :target: examples/gallery/sequence/sw_genome_search.html
 
@@ -56,6 +65,7 @@ representations, ranging from sequence alignments to feature maps.
    :width: 48 %
    :target: examples/gallery/sequence/avidin_alignment.html
 
+----
 
 **Structure** subpackage
 ------------------------
@@ -77,6 +87,7 @@ accessible surface area calculation, structure superimposition and more.
    :width: 48 %
    :target: examples/gallery/structure/adjacency_matrix.html
 
+----
 
 **Application** subpackage
 --------------------------
@@ -97,6 +108,7 @@ It is basically very similar to using normal `Python` functions.
    :width: 48 %
    :target: examples/gallery/structure/transketolase_sse.html
 
+----
 
 **Database** subpackage
 -----------------------
@@ -114,6 +126,6 @@ databases, including the probably most important ones: the *RCSB PDB* and the
    apidoc/index
    examples/gallery/index
    extensions
-   develop
+   contribute
    logo
 

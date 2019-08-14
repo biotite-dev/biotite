@@ -56,7 +56,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017-2018, the Biotite contributors"
+copyright = "2017-2019, the Biotite contributors"
 version = biotite.__version__
 
 exclude_patterns = ["build"]
@@ -76,6 +76,11 @@ autodoc_member_order = "bysource"
 
 html_theme = "alabaster"
 html_static_path = ["static"]
+html_css_files = [
+    "biotite.css",
+    "https://fonts.googleapis.com/css?" \
+        "family=Fira+Sans|Nunito&display=swap",
+]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"
 html_sidebars = {"**": ["about.html",

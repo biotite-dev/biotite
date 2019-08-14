@@ -1,0 +1,13 @@
+# This file tests whether the entry-to-line-index conversion is done properly
+##directive 1
+##directive 2
+DUMMY	DUMMY	dummy	1	100	.	+	.	ID=AnID
+DUMMY	DUMMY	dummy	1	100	.	+	.	ID=AnID
+# Comment
+DUMMY	DUMMY	dummy	1	100	.	+	.	ID=AnID
+##directive 3
+##FASTA
+>header
+TACGTAGCTAGCTGATCGATGTTGTGTGT
+ATCGATCTAGCTAGCTAGCTGACTACACA
+ATCGATCGTGACTGACTGAGCTAGCTGCA

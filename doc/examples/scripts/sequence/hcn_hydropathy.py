@@ -10,7 +10,7 @@ highlighting the hydropathy of the amino acid.
 The HCN1 sequence is required for the hydropathy calculation.
 As the sequence annotation is also needed for the comparison of the
 hydropathy with the actual position of the transmembrane helices,
-the corresponding GenBank file is downloaded.
+the corresponding GenPept file is downloaded.
 """
 
 # Code source: Patrick Kunzmann
@@ -63,12 +63,12 @@ query =   entrez.SimpleQuery("HCN1", "Gene Name") \
         & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
 uids = entrez.search(query, db_name="protein")
 file_name = entrez.fetch(
-    uids[0], biotite.temp_dir(), "gb", db_name="protein", ret_type="gp"
+    uids[0], biotite.temp_dir(), "gp", db_name="protein", ret_type="gp"
 )
 
-gp_file = gb.GenPeptFile()
+gp_file = gb.GenBankFile()
 gp_file.read(file_name)
-hcn1 = seq.ProteinSequence(gp_file.get_sequence())
+hcn1 = seq.ProteinSequence(gb.get_sequence(gp_file, format="gp"))
 print(hcn1)
 
 ########################################################################
@@ -124,11 +124,14 @@ alignment = mafft.MafftApp.align(sequences)
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 scores = np.zeros(len(hcn1))
 for i in range(len(alignment)):
-    # The column is also an alignment with löength 1
+    # The column is also an alignment with length 1
     column = alignment[i:i+1]
     hcn1_index = column.trace[0,0]
     if hcn1_index == -1:
         # Gap in HCN1 row
+        # As similarity score should be analyzed in dependence of the
+        # HCN1 sequence position, alignment columns with a gap in HCN1
+        # are ignored
         continue
     scores[hcn1_index] = align.score(column, matrix, gap_penalty=-5)
 
@@ -147,12 +150,12 @@ ax.plot(
 )
 ax.axhline(0, color="gray", linewidth=0.5)
 ax.set_xlim(1, len(hcn1)+1)
-ax.set_xlabel("Sequence position")
+ax.set_xlabel("HCN1 sequence position")
 ax.set_ylabel("Hydropathy (15 residues moving average)")
 
 # Draw boxes for annotated transmembrane helices for comparison
 # with hydropathy plot
-annotation = gp_file.get_annotation(include_only=["Region"])
+annotation = gb.get_annotation(gp_file, include_only=["Region"])
 transmembrane_annotation = seq.Annotation(
     [feature for feature in annotation
      if feature.qual["region_name"] == "Transmembrane region"]

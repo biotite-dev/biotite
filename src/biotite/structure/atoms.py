@@ -941,12 +941,17 @@ class AtomArrayStack(_AtomArrayBase):
         array : AtomArray
             The atom array to be set.
         """
-        if not super(AtomArray, array).__eq__(array):
+        if not self.equal_annotations(array):
             raise ValueError(
                 "The stack and the array have unequal annotations"
             )
+        if self.bonds != array.bonds:
+            raise ValueError(
+                "The stack and the array have unequal bonds"
+            )
         if isinstance(index, numbers.Integral):
-            self._coord[index] = array._coord
+            self.coord[index] = array.coord
+            self.box[index] = array.box
         else:
             raise TypeError(
                 f"Index must be integer, not '{type(index).__name__}'"

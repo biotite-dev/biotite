@@ -89,7 +89,7 @@ def align_ungapped(seq1, seq2, matrix, score_only=False):
 @cython.wraparound(False)
 def _add_scores(CodeType1[:] code1 not None,
                 CodeType2[:] code2 not None,
-                int32[:,:] matrix not None):
+                const int32[:,:] matrix not None):
     cdef int32 score = 0
     cdef int i
     for i in range(code1.shape[0]):
@@ -381,7 +381,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
 @cython.wraparound(False)
 def _fill_align_table(CodeType1[:] code1 not None,
                       CodeType2[:] code2 not None,
-                      int32[:,:] matrix not None,
+                      const int32[:,:] matrix not None,
                       uint8[:,:] trace_table not None,
                       int32[:,:] score_table not None,
                       int gap_penalty,
@@ -477,7 +477,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
 @cython.wraparound(False)
 def _fill_align_table_affine(CodeType1[:] code1 not None,
                              CodeType2[:] code2 not None,
-                             int32[:,:] matrix not None,
+                             const int32[:,:] matrix not None,
                              uint8[:,:] trace_table not None,
                              int32[:,:] m_table not None,
                              int32[:,:] g1_table not None,

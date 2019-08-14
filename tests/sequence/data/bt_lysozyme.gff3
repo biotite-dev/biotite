@@ -1,0 +1,19 @@
+##sequence-region AAC37312.1 1 147
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9913
+AAC37312.1	Genbank	region	1	147	.	+	.	ID=AAC37312.1:1..147;Dbxref=taxon:9913;gbkey=Src;mol_type=unassigned
+AAC37312.1	Genbank	region	1	147	.	+	.	ID=id-AAC37312.1:1..147;gbkey=Prot
+AAC37312.1	Genbank	region	19	145	.	+	.	ID=id-AAC37312.1:19..145;Dbxref=CDD:197612;Note=Alpha-lactalbumin / lysozyme C;gbkey=Region
+AAC37312.1	Genbank	region	52	53	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=1/9
+AAC37312.1	Genbank	region	55	55	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=2/9
+AAC37312.1	Genbank	region	62	62	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=3/9
+AAC37312.1	Genbank	region	76	76	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=4/9
+AAC37312.1	Genbank	region	78	78	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=5/9
+AAC37312.1	Genbank	region	81	81	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=6/9
+AAC37312.1	Genbank	region	117	117	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=7/9
+AAC37312.1	Genbank	region	120	120	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=8/9
+AAC37312.1	Genbank	region	125	126	.	+	.	ID=id-AAC37312.1:52..126;Dbxref=CDD:238066;Note=lysozyme catalytic cleft [active];gbkey=Site;is_ordered=true;part=9/9
+AAC37312.1	Genbank	region	53	53	.	+	.	ID=id-AAC37312.1:53..71;Dbxref=CDD:238066;Note=lysozyme catalytic site [active];gbkey=Site;is_ordered=true;part=1/2
+AAC37312.1	Genbank	region	71	71	.	+	.	ID=id-AAC37312.1:53..71;Dbxref=CDD:238066;Note=lysozyme catalytic site [active];gbkey=Site;is_ordered=true;part=2/2
+AAC37312.1	Genbank	region	104	104	.	+	.	ID=id-AAC37312.1:104..110;Dbxref=CDD:238066;Note=Ca2+ binding site [ion binding];gbkey=Site;is_ordered=true;part=1/2
+AAC37312.1	Genbank	region	109	110	.	+	.	ID=id-AAC37312.1:104..110;Dbxref=CDD:238066;Note=Ca2+ binding site [ion binding];gbkey=Site;is_ordered=true;part=2/2
+
