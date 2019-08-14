@@ -26,7 +26,10 @@ in the different color schemes available in *Biotite*.
         - **propturn** - Color scheme depicting secondary structure
           propensities
 
-.. [1] TODO
+.. [1] P Kunzmann, B Mayer,
+   "Substitution matrix based color schemes for sequence alignment
+   visualizations."
+   Unpublished
 
 .. [2] M Clamp, J Cuff, SM Searle, GJ Barton,
    "The Jalview Java alignment editor."
