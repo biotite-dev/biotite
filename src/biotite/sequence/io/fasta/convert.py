@@ -180,9 +180,14 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str):
+    # Biotite alphabets for nucleotide and proteins
+    # do not accept lower case letters
     seq_str = seq_str.upper()
+    # For nucleotides uracil is represented by thymine
+    # and theres is only one letter for completely unknown nucleotides
+    nuc_seq_str = seq_str.replace("U","T").replace("X","N")
     try:
-        code = NucleotideSequence.alphabet.encode_multiple(seq_str)
+        code = NucleotideSequence.alphabet.encode_multiple(nuc_seq_str)
         seq = NucleotideSequence()
         seq.code = code
         return seq
@@ -196,7 +201,7 @@ def _convert_to_sequence(seq_str):
     except AlphabetError:
         pass
     try:
-        code = NucleotideSequence.alphabet_amb.encode_multiple(seq_str)
+        code = NucleotideSequence.alphabet_amb.encode_multiple(nuc_seq_str)
         seq = NucleotideSequence()
         seq.code = code
         return seq

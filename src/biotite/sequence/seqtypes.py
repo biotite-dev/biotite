@@ -61,7 +61,7 @@ class NucleotideSequence(Sequence):
     
     alphabet     = LetterAlphabet(["A","C","G","T"])
     alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
-                                   "M","K","H","B","V","D","N","X"])
+                                   "M","K","H","B","V","D","N"])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -77,7 +77,6 @@ class NucleotideSequence(Sequence):
                          "H" : "D",
                          "D" : "H",
                          "B" : "V",
-                         "X" : "X",
                          "N" : "N"}
     _compl_dict = {}
     for _key, _value in compl_symbol_dict.items():

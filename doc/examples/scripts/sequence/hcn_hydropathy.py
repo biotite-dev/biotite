@@ -214,7 +214,7 @@ fig = plt.figure(figsize=(8.0, 15))
 ax = fig.add_subplot(111)
 # Color the symbols instead of the background
 graphics.plot_alignment_type_based(
-    ax, alignment[:600], labels=names, show_numbers=True, color_symbols=True,
+    ax, alignment[:600], labels=names, show_numbers=True,
     color_scheme=colorscheme
 )
 

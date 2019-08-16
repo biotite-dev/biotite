@@ -9,7 +9,7 @@ import pytest
 
 def test_nucleotide_construction():
     string = "AATGCGTTA"
-    string_amb = "ANNGCBRTAX"
+    string_amb = "ANNGCBRTAN"
     dna = seq.NucleotideSequence(string)
     assert dna.get_alphabet() == seq.NucleotideSequence.alphabet
     assert str(dna) == string

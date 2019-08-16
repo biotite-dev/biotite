@@ -1,6 +1,7 @@
 {
     "name" : "clustalx",
-    "alphabet" : ["A", "C", "G", "T"],
+    "alphabet" : ["A","C","G","T",
+                  "R","Y","W","S","M","K","H","B","V","D","N"],
     "colors" : {
         "A" : "#e53319",
         "C" : "#197fe5",
