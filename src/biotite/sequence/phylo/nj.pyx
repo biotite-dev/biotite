@@ -19,6 +19,8 @@ ctypedef np.uint32_t uint32
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def neighbor_joining(np.ndarray distances):
     """
     neighbor_join(distances)
