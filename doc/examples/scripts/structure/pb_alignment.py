@@ -27,7 +27,7 @@ PB with the least deviation to this set of angles is chosen.
 
 .. [2] J Barnoud, H Santuz, P Craveur, AP Joseph,
    V Jallu, AG de Brevern, P Poulain,
-   "PBxplore: a tool to analyze local protein structure and deformabilit
+   "PBxplore: a tool to analyze local protein structure and deformability
    with Protein Blocks."
    PeerJ, 5, (2017).
 """
