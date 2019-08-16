@@ -161,7 +161,7 @@ ax = fig.add_subplot(111)
 # The color scheme was generated with the 'Gecos' software
 graphics.plot_alignment_type_based(
     ax, alignment, labels=labels, symbols_per_line=45, spacing=2,
-    show_numbers=True, color_scheme="spring"
+    show_numbers=True, color_scheme="flower"
 )
 # Organism names in italic
 ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle":"italic"})

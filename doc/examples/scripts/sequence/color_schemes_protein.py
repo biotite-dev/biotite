@@ -8,12 +8,17 @@ in the different color schemes available in *Biotite*.
     - **rainbow** - Default color scheme in *Biotite*
     - **clustalx** - Default color scheme of the *ClustalX* software
     - Color schemes generated with the software *Gecos* [1]_:
-        - **flower** - Color scheme with high saturation, based on *BLOSMUM62*
-        - **blossom** - Color scheme with high saturation,
-          based on *BLOSMUM62*, depicts symbol similarity better than *flower*
-        - **spring** - Light color scheme, based on *BLOSMUM62*
-        - **autumn** - Dark color scheme, based on *BLOSMUM62*
-        - **ocean** - Blue shifted, light color scheme, based on *BLOSMUM62*
+        - **flower** - Light color scheme, based on *BLOSUM62*
+        - **blossom** - Light color scheme with high contrast, based on
+          *BLOSUM62*, depicts symbol similarity worse than *flower*
+        - **spring** - Light color scheme, based on *BLOSUM62*,
+          with alanine fixed to gray
+        - **wither** - Dark color scheme, analogous to *blossom*
+        - **autumn** - Dark color scheme, analogous to *spring*
+        - **sunset** - Red-green color vision deficiency adapated color
+          scheme, based on *BLOSUM62*
+        - **ocean** - Blue shifted, light color scheme,
+          based on *BLOSUM62*
     - Color schemes adapted from *JalView* [2]_:
         - **zappo** - Color scheme that depicts physicochemical properties
         - **taylor** - Color scheme invented by Willie Taylor
@@ -71,7 +76,7 @@ alignment = alignment[220:300]
 alphabet = seq.ProteinSequence.alphabet
 schemes = [
     "rainbow", "clustalx",
-    "flower", "blossom", "spring", "autumn", "ocean",
+    "flower", "blossom", "spring", "wither", "autumn", "sunset", "ocean",
     "zappo", "taylor", "buried", "hydrophobicity",
     "prophelix", "propstrand", "propturn"
 ]
