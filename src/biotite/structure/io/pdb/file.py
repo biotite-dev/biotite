@@ -11,6 +11,7 @@ from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
+from .hybrid_36 import hy36encode
 import copy
 from warnings import warn
 
@@ -256,7 +257,7 @@ class PDBFile(TextFile):
 
 
 
-    def set_structure(self, array):
+    def set_structure(self, array, hybrid36=False):
         """
         Set the `AtomArray` or `AtomArrayStack` for the file.
         
@@ -269,6 +270,8 @@ class PDBFile(TextFile):
             The array or stack to be saved into this file. If a stack
             is given, each array in the stack is saved as separate
             model.
+        hybrid36: boolean, optional
+            Defines wether the file should be written in hybrid-36 format.
         """
         # Save list of annotation categories for checks,
         # if an optional category exists
@@ -293,32 +296,42 @@ class PDBFile(TextFile):
                       for charge in array.get_annotation("charge")]
         else:
             charge = [""] * array.array_length()
-        
-        # Atom IDs are supported up to 99999
-        # Residue IDs are supported up to 9999
-        pdb_atom_id = ((atom_id - 1) % 99999) + 1
-        pdb_res_id = ((array.res_id - 1) % 9999) + 1
 
         # Do checks on atom array (stack)
-        if array.array_length() >= 100000:
-            warn("More then 100,000 atoms per model")
-        if (array.res_id >= 10000).any():
-            warn("Residue IDs exceed 9999")
+        if hybrid36:
+            max_atoms, max_residues = 87440031, 2436111
+        else:
+            max_atoms, max_residues = 100000, 10000
+        if array.array_length() >= max_atoms:
+            warn(f"More then {max_atoms:,} atoms per model")
+        if (array.res_id >= max_residues).any():
+            warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
             raise ValueError("Coordinates contain 'NaN' values")
-        
+
+        if hybrid36:
+            pdb_atom_id = [hy36encode(5, i).rjust(5) for i in atom_id]
+            pdb_res_id = [hy36encode(4, i).rjust(4) for i in array.res_id]
+        else:
+            # Atom IDs are supported up to 99999
+            # Residue IDs are supported up to 9999
+            pdb_atom_id = ((atom_id - 1) % 99999) + 1
+            pdb_atom_id = ["{:>5d}".format(i) for i in pdb_atom_id]
+            pdb_res_id = ((array.res_id - 1) % 9999) + 1
+            pdb_res_id = ["{:>4d}".format(i) for i in pdb_res_id]
+
         if isinstance(array, AtomArray):
             self.lines = [None] * array.array_length()
             for i in range(array.array_length()):
                 self.lines[i] = ("{:6}".format(hetero[i]) + 
-                                  "{:>5d}".format(pdb_atom_id[i]) +
+                                  pdb_atom_id[i] +
                                   " " +
                                   "{:4}".format(array.atom_name[i]) +
                                   " " +
                                   "{:3}".format(array.res_name[i]) +
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
-                                  "{:>4d}".format(pdb_res_id[i]) +
+                                  pdb_res_id[i] +
                                   (" " * 4) +
                                   "{:>8.3f}".format(array.coord[i,0]) +
                                   "{:>8.3f}".format(array.coord[i,1]) +
@@ -340,14 +353,14 @@ class PDBFile(TextFile):
             templines = [None] * array.array_length()
             for i in range(array.array_length()):
                 templines[i] = ("{:6}".format(hetero[i]) + 
-                                 "{:>5d}".format(pdb_atom_id[i]) +
+                                 pdb_atom_id[i] +
                                  " " +
                                  "{:4}".format(array.atom_name[i]) +
                                  " " +
                                  "{:3}".format(array.res_name[i]) +
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
-                                 "{:>4d}".format(pdb_res_id[i]) +
+                                 pdb_res_id[i] +
                                  (" " * 28) +
                                  "{:>6.2f}".format(occupancy[i]) +
                                  "{:>6.3f}".format(b_factor[i]) +

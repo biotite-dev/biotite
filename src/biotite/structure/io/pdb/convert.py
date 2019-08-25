@@ -59,7 +59,7 @@ def get_structure(pdb_file, model=None,
     return pdb_file.get_structure(model, insertion_code, altloc, extra_fields)
 
 
-def set_structure(pdb_file, array):
+def set_structure(pdb_file, array, hybrid36=False):
     """
     write an `AtomArray` or `AtomArrayStack` into a `PDBFile`.
 
@@ -78,5 +78,7 @@ def set_structure(pdb_file, array):
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
+    hybrid36: boolean, optional
+        Defines wether the file should be written in hybrid-36 format.
     """
-    pdb_file.set_structure(array)
+    pdb_file.set_structure(array, hybrid36)
