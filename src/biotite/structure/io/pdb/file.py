@@ -11,7 +11,7 @@ from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
-from .hybrid_36 import hy36encode
+from .hybrid_36 import hy36encode,hy36decode
 import copy
 from warnings import warn
 
@@ -65,7 +65,8 @@ class PDBFile(TextFile):
     def get_structure(self, model=None, insertion_code=[], altloc=[],
                       extra_fields=[]):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the PDB file.
+        Get an `AtomArray` or `AtomArrayStack` from the PDB file. Reads
+        standard base-10 PDB files as well as hybrid-36 PDB.
         
         Parameters
         ----------
@@ -170,12 +171,12 @@ class PDBFile(TextFile):
             altloc_array[i] = line[16]
             inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
-            array.res_id[i] = int(line[22:26])
+            array.res_id[i] = hy36decode(4, line[22:26])
             array.res_name[i] = line[17:20].strip()
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
             array.element[i] = line[76:78].strip()
-        
+
         # Replace empty strings for elements with guessed types
         # This is used e.g. for PDB files created by Gromacs
         def guess_element(atom_name):
@@ -196,7 +197,7 @@ class PDBFile(TextFile):
             for i, line_i in enumerate(annot_i):
                 line = self.lines[line_i]
                 if "atom_id" in extra_fields:
-                    array.atom_id[i] = int(line[6:11].strip())
+                    array.atom_id[i] = hy36decode(5, line[6:11])
                 if "occupancy" in extra_fields:
                     array.occupancy[i] = float(line[54:60].strip())
                 if "b_factor" in extra_fields:

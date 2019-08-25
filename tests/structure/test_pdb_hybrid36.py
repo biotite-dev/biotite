@@ -66,3 +66,31 @@ def test_id_overflow():
         assert(atom_id == "A0005")
         res_id = last_line.split()[4][1:]
         assert(res_id == "BXG5")
+
+
+@pytest.mark.parametrize(
+    "path, single_model",
+    itertools.product(
+        glob.glob(join(data_dir, "*.pdb")),
+        [False, True]
+    )
+)
+def test_pdb_to_hybrid36(path, single_model):
+    model = 1 if single_model else None
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    s = pdb_file.get_structure(extra_fields="atom_id")
+
+    # Save stack as hybrid
+    tmp_file_name = biotite.temp_file("pdb")
+    hy36_file = pdb.PDBFile()
+    hy36_file.set_structure(s)
+    hy36_file.write(tmp_file_name)
+
+    # Load hybrid file
+    s2 = hy36_file.get_structure(extra_fields="atom_id")
+
+    assert s.array_length() == s2.array_length()
+    for annot in ["res_id", "atom_id"]:
+        assert s.get_annotation(annot).tolist() == \
+               s2.get_annotation(annot).tolist()
