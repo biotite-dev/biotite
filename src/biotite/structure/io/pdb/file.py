@@ -11,7 +11,7 @@ from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
-from .hybrid_36 import hy36encode,hy36decode
+from .hybrid36 import encode_hybrid36, decode_hybrid36
 import copy
 from warnings import warn
 
@@ -171,7 +171,7 @@ class PDBFile(TextFile):
             altloc_array[i] = line[16]
             inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
-            array.res_id[i] = hy36decode(4, line[22:26])
+            array.res_id[i] = decode_hybrid36(4, line[22:26])
             array.res_name[i] = line[17:20].strip()
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
@@ -197,7 +197,7 @@ class PDBFile(TextFile):
             for i, line_i in enumerate(annot_i):
                 line = self.lines[line_i]
                 if "atom_id" in extra_fields:
-                    array.atom_id[i] = hy36decode(5, line[6:11])
+                    array.atom_id[i] = decode_hybrid36(5, line[6:11])
                 if "occupancy" in extra_fields:
                     array.occupancy[i] = float(line[54:60].strip())
                 if "b_factor" in extra_fields:
@@ -311,8 +311,8 @@ class PDBFile(TextFile):
             raise ValueError("Coordinates contain 'NaN' values")
 
         if hybrid36:
-            pdb_atom_id = [hy36encode(5, i).rjust(5) for i in atom_id]
-            pdb_res_id = [hy36encode(4, i).rjust(4) for i in array.res_id]
+            pdb_atom_id = [encode_hybrid36(5, i).rjust(5) for i in atom_id]
+            pdb_res_id = [encode_hybrid36(4, i).rjust(4) for i in array.res_id]
         else:
             # Atom IDs are supported up to 99999
             # Residue IDs are supported up to 9999
