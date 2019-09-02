@@ -38,7 +38,7 @@ def encode_hybrid36(int number, int length):
         num += 10 * 36**(length-1)
         return _encode_base36(num, length, _ASCII_FIRST_LETTER_LOWER)
     raise ValueError(
-        f"Value {num} is too large for hybrid-36 encoding "
+        f"Value {number} is too large for hybrid-36 encoding "
         f"at a string length of {length}"
     )
 
@@ -69,8 +69,10 @@ def decode_hybrid36(str string):
     cdef int base_value
     cdef int length
     
-    if string.isdigit():
+    try:
         return int(string)
+    except ValueError:
+        pass
     
     # String is not parseable -> expect base36 string
     cdef bytearray char_array = bytearray(string.strip().encode("ascii"))
@@ -94,7 +96,7 @@ def decode_hybrid36(str string):
             return base_value + (26-10) * 36**(length-1) + 10**length
     else:
         raise ValueError(
-            f"String contains unparseable character '{string.strip()[0]}'"
+            f"Illegal hybrid-36 string '{string.strip()}'"
         )
 
 
