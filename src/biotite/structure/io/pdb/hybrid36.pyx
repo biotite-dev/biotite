@@ -75,8 +75,8 @@ def decode_hybrid36(str string):
         pass
     
     # String is not parseable -> expect base36 string
-    cdef bytearray char_array = bytearray(string.strip().encode("ascii"))
-    cdef unsigned char[:] char_array_v = char_array
+    cdef bytes char_array = string.strip().encode("ascii")
+    cdef const unsigned char[:] char_array_v = char_array
     length = char_array_v.shape[0]
     if length == 0:
         raise ValueError("Cannot parse empty string into integer")
@@ -102,7 +102,7 @@ def decode_hybrid36(str string):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef int _decode_base36(unsigned char[:] char_array_v,
+cdef int _decode_base36(const unsigned char[:] char_array_v,
                         int ascii_letter_offset):
     cdef int i
     cdef int number = 0
