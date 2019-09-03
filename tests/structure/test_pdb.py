@@ -11,19 +11,21 @@ import numpy as np
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
+import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io as io
 from .util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, single_model, hybrid36",
     itertools.product(
         glob.glob(join(data_dir, "*.pdb")),
+        [False, True],
         [False, True]
     )
 )
-def test_array_conversion(path, single_model):
+def test_array_conversion(path, single_model, hybrid36):
     model = 1 if single_model else None
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
@@ -31,7 +33,7 @@ def test_array_conversion(path, single_model):
     # 'get_structure()' and 'set_structure()'
     array1 = pdb.get_structure(pdb_file, model=model)
     pdb_file = pdb.PDBFile()
-    pdb.set_structure(pdb_file, array1)
+    pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
     array2 = pdb.get_structure(pdb_file, model=model)
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
@@ -66,13 +68,15 @@ def test_pdbx_consistency(path, single_model):
                a2.get_annotation(category).tolist()
     assert a1.coord.tolist() == a2.coord.tolist()
 
-def test_extra_fields():
+
+@pytest.mark.parametrize("hybrid36", [False, True])
+def test_extra_fields(hybrid36):
     path = join(data_dir, "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     stack1 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
                                                   "occupancy","charge"])
-    pdb_file.set_structure(stack1)
+    pdb_file.set_structure(stack1, hybrid36=hybrid36)
     stack2 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
                                                   "occupancy","charge"])
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
@@ -172,3 +176,45 @@ def test_id_overflow():
         last_line = output.readlines()[-1]
         atom_id = int(last_line.split()[1])
         assert(atom_id == 1)
+    
+    # Write stack as hybrid-36 pdb file: no warning should be thrown
+    with pytest.warns(None) as record:
+        tmp_file_name = biotite.temp_file(".pdb")
+        tmp_pdb_file = pdb.PDBFile()
+        tmp_pdb_file.set_structure(a, hybrid36=True)
+        tmp_pdb_file.write(tmp_file_name)
+    assert len(record) == 0
+
+    # Manually check if the output is written as correct hybrid-36
+    with open(tmp_file_name) as output:
+        last_line = output.readlines()[-1]
+        atom_id = last_line.split()[1]
+        assert(atom_id == "A0000")
+        res_id = last_line.split()[4][1:]
+        assert(res_id == "BXG0")
+
+
+np.random.seed(0)
+N = 200
+LENGTHS = [3, 4, 5]
+@pytest.mark.parametrize(
+    "number, length",
+    zip(
+        list(itertools.chain(*[
+            np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
+            for length in LENGTHS
+        ])),
+        list(itertools.chain(*[
+            [length] * N for length in LENGTHS
+        ]))
+    )
+)
+def test_hybrid36_codec(number, length):
+    string = hybrid36.encode_hybrid36(number, length)
+    test_number = hybrid36.decode_hybrid36(string)
+    assert test_number == number
+
+
+def test_max_hybrid36_number():
+    assert hybrid36.max_hybrid36_number(4) == 2436111
+    assert hybrid36.max_hybrid36_number(5) == 87440031
