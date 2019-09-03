@@ -61,6 +61,152 @@ class PDBFile(TextFile):
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
+    
+    def get_coord(self, model=None):
+        """
+        Get only the coordinates of the PDB file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return a
+            2D coordinate array from the atoms corresponding to the
+            given model ID.
+            If this parameter is omitted, an 2D coordinate array
+            containing all models will be returned, even if
+            the structure contains only one model.
+        
+        Returns
+        -------
+        coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
+            The coordinates read from the ATOM and HETATM records of the
+            file.
+        
+        Notes
+        -----
+        Note that `get_coord()` may output more coordinates than the
+        coordinates of the atom array (stack) from the corresponding
+        `get_structure()` call have.
+        The reason for this is, that `get_structure()` filters
+        insertion codes and altlocs, while `get_coord()` does not.
+        
+        Examples
+        --------
+        Read an `AtomArrayStack` from multiple PDB files, where each
+        PDB file contains the same atoms but different positions.
+        This is an efficient approach when a trajectory is spread into
+        multiple PDB files, as done e.g. by the Rosetta modeling
+        software. 
+
+        For the purpose of this example, the PDB files are created from
+        an existing `AtomArrayStack`.
+        
+        >>> import os.path
+        >>> file_names = []
+        >>> for i in range(atom_array_stack.stack_depth()):
+        ...     pdb_file = PDBFile()
+        ...     pdb_file.set_structure(atom_array_stack[i])
+        ...     file_name = os.path.join(temp_dir(), f"model_{i+1}.pdb")
+        ...     pdb_file.write(file_name)
+        ...     file_names.append(file_name)
+        >>> print(file_names)
+        ['.../model_1.pdb', '.../model_2.pdb', ..., '.../model_38.pdb']
+
+        Now the PDB files are used to create an `AtomArrayStack`,
+        where each model represents a different model.
+
+        Construct a new `AtomArrayStack` with annotations taken from
+        one of the created files used as template.
+
+        >>> template_file = PDBFile()
+        >>> template_file.read(file_names[0])
+        >>> template_array = template_file.get_structure(model=1)
+        >>> new_stack = AtomArrayStack(len(file_names), template_array.array_length())
+        >>> for category in template_array.get_annotation_categories():
+        ...     annot = template_array.get_annotation(category)
+        ...     new_stack.set_annotation(category, annot)
+
+        Fill coordinates of new `AtomArrayStack` with coordinates of the
+        PDB files.
+
+        >>> for i, file_name in enumerate(file_names):
+        ...     pdb_file = PDBFile()
+        ...     pdb_file.read(file_name)
+        ...     new_stack.coord[i] = pdb_file.get_coord(model=1)
+
+        The newly created `AtomArrayStack` should now be equal to the
+        `AtomArrayStack` the PDB files were created from.
+
+        >>> print(new_stack == atom_array_stack)
+        True
+        """
+        # Line indices where a new model starts
+        model_start_i = np.array([i for i in range(len(self.lines))
+                                  if self.lines[i].startswith(("MODEL"))],
+                                 dtype=int)
+        # Line indices with ATOM or HETATM records
+        # Filter out lines of altlocs and insertion codes
+        atom_line_i = np.array([i for i in range(len(self.lines)) if
+                                self.lines[i].startswith(("ATOM", "HETATM"))],
+                               dtype=int)
+        # Structures containing only one model may omit MODEL record
+        # In these cases model starting index is set to 0
+        if len(model_start_i) == 0:
+            model_start_i = np.array([0])
+        
+        if model is None:
+            # Very simple check for length equality check:
+            # If all models have the same amount of atoms
+            # the amount of atom lines is a multiple
+            # of the amount of models
+            if len(atom_line_i) % len(model_start_i):
+                raise BadStructureError("The models in the file have unequal "
+                                        "amount of atoms, give an explicit "
+                                        "model instead")
+            depth = len(model_start_i)
+            length = len(atom_line_i) // len(model_start_i)
+            coord_i = atom_line_i
+        
+        else:
+            last_model = len(model_start_i)
+            if model < last_model:
+                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
+                                ( atom_line_i <  model_start_i[model  ] ) )
+            elif model == last_model:
+                line_filter = (atom_line_i >= model_start_i[model-1])
+            else:
+                raise ValueError(
+                    f"Requested model number {model} is larger than the "
+                    f"amount of models ({last_model})"
+                )
+            coord_i = atom_line_i[line_filter]
+            length = len(coord_i)
+        
+        # Fill in coordinates
+        if model is None:
+            coord = np.zeros((depth, length, 3), dtype=np.float32)
+            m = 0
+            i = 0
+            for line_i in atom_line_i:
+                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+                    m += 1
+                    i = 0
+                line = self.lines[line_i]
+                coord[m,i,0] = float(line[30:38])
+                coord[m,i,1] = float(line[38:46])
+                coord[m,i,2] = float(line[46:54])
+                i += 1
+            return coord
+        
+        else:
+            coord = np.zeros((length, 3), dtype=np.float32)
+            for i, line_i in enumerate(coord_i):
+                line = self.lines[line_i]
+                coord[i,0] = float(line[30:38])
+                coord[i,1] = float(line[38:46])
+                coord[i,2] = float(line[46:54])
+            return coord
+
 
     def get_structure(self, model=None, insertion_code=[], altloc=[],
                       extra_fields=[]):
@@ -140,7 +286,11 @@ class PDBFile(TextFile):
         
         else:
             last_model = len(model_start_i)
-            if model < last_model:
+            if model < 1:
+                raise ValueError(
+                    f"Requested model number {model} is smaller than 1"
+                )
+            elif model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
                                 ( atom_line_i <  model_start_i[model  ] ) )
             elif model == last_model:
@@ -252,7 +402,6 @@ class PDBFile(TextFile):
                         box[np.newaxis, ...], array.stack_depth(), axis=0
                     )
                 break
-
 
         # Apply final filter and return
         return array[..., filter_inscode_and_altloc(
