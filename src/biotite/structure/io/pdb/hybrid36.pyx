@@ -169,9 +169,10 @@ def decode_hybrid36(str string):
             # Transform and add the value range represented
             # by upper case hybrid-36:
             # 
-            #      
             #   |----- e.g. A000 to 10000 -----| |---- upper hy36 ---|
             # - 10 * 36**(length-1) + 10**length + 26 * 36**(length-1)
+            #
+            # The following formula results from factoring out
             return base_value + (26-10) * 36**(length-1) + 10**length
     else:
         raise ValueError(
