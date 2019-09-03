@@ -11,7 +11,7 @@ from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
-from .hybrid36 import encode_hybrid36, decode_hybrid36
+from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 import copy
 from warnings import warn
 
@@ -65,8 +65,10 @@ class PDBFile(TextFile):
     def get_structure(self, model=None, insertion_code=[], altloc=[],
                       extra_fields=[]):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the PDB file. Reads
-        standard base-10 PDB files as well as hybrid-36 PDB.
+        Get an `AtomArray` or `AtomArrayStack` from the PDB file.
+        
+        This function parses standard base-10 PDB files as well as
+        hybrid-36 PDB.
         
         Parameters
         ----------
@@ -239,7 +241,9 @@ class PDBFile(TextFile):
                 alpha = np.deg2rad(float(line[33:40]))
                 beta = np.deg2rad(float(line[40:47]))
                 gamma = np.deg2rad(float(line[47:54]))
-                box = vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
+                box = vectors_from_unitcell(
+                    len_a, len_b, len_c, alpha, beta, gamma
+                )
 
                 if isinstance(array, AtomArray):
                     array.box = box
@@ -271,8 +275,9 @@ class PDBFile(TextFile):
             The array or stack to be saved into this file. If a stack
             is given, each array in the stack is saved as separate
             model.
-        hybrid36: boolean, optional
-            Defines wether the file should be written in hybrid-36 format.
+        hybrid36: bool, optional
+            Defines wether the file should be written in hybrid-36
+            format.
         """
         # Save list of annotation categories for checks,
         # if an optional category exists
@@ -300,12 +305,13 @@ class PDBFile(TextFile):
 
         # Do checks on atom array (stack)
         if hybrid36:
-            max_atoms, max_residues = 87440031, 2436111
+            max_atoms, max_residues \
+                = max_hybrid36_number(5), max_hybrid36_number(4)
         else:
-            max_atoms, max_residues = 100000, 10000
-        if array.array_length() >= max_atoms:
+            max_atoms, max_residues = 99999, 9999
+        if array.array_length() > max_atoms:
             warn(f"More then {max_atoms:,} atoms per model")
-        if (array.res_id >= max_residues).any():
+        if (array.res_id > max_residues).any():
             warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
             raise ValueError("Coordinates contain 'NaN' values")

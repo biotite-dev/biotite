@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["encode_hybrid36", "decode_hybrid36"]
+__all__ = ["encode_hybrid36", "decode_hybrid36", "max_hybrid36_number"]
 
 cimport cython
 
@@ -115,3 +115,6 @@ cdef int _decode_base36(const unsigned char[:] char_array_v,
         else:
             number += ascii_code - ascii_letter_offset + 10
     return number
+
+def max_hybrid36_number(length):
+    return 10**length - 1  +  2 * (26 * 36**(length-1))
