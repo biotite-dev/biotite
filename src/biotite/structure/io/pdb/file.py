@@ -110,7 +110,7 @@ class PDBFile(TextFile):
         ...     pdb_file.write(file_name)
         ...     file_names.append(file_name)
         >>> print(file_names)
-        ['.../model_1.pdb', '.../model_2.pdb', ..., '.../model_38.pdb']
+        ['...model_1.pdb', '...model_2.pdb', ..., '...model_38.pdb']
 
         Now the PDB files are used to create an `AtomArrayStack`,
         where each model represents a different model.
