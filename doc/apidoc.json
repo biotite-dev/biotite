@@ -43,7 +43,6 @@
             "CompositeQuery",
             "SimpleQuery",
             "BFactorQuery",
-            "CompositeQuery",
             "MethodQuery",
             "MolecularWeightQuery",
             "ResolutionQuery"
