@@ -194,6 +194,19 @@ def test_id_overflow():
         assert(res_id == "BXG0")
 
 
+@pytest.mark.parametrize("model", [None, 1, 10])
+def test_get_coord(model):
+    # Choose a structure without inscodes and altlocs
+    # to avoid atom filtering in reference atom array (stack)
+    path = join(data_dir, "1l2y.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    ref_coord = pdb_file.get_structure(model=model).coord
+    test_coord = pdb_file.get_coord(model=model)
+    assert test_coord.shape == ref_coord.shape
+    assert (test_coord == ref_coord).all()
+
+
 np.random.seed(0)
 N = 200
 LENGTHS = [3, 4, 5]
