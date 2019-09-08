@@ -26,7 +26,7 @@ ctypedef np.uint8_t uint8
 
 cdef class CellList:
     """
-    __init__(atom_array, cell_size, periodic=False, box=None)
+    __init__(atom_array, cell_size, periodic=False, box=None, selection=None)
     
     This class enables the efficient search of atoms in vicinity of a
     defined location.
@@ -57,6 +57,9 @@ cdef class CellList:
     box : ndarray, dtype=float, shape=(3,3), optional
         If provided, this parameter will be used instead of the
         `box` attribute of `atom_array`.
+    selection : ndarray, dtype=bool, shape=(n,), optional
+        If provided, only the atoms masked by this array are stored in
+        the cell list.
             
     Examples
     --------
@@ -92,8 +95,8 @@ cdef class CellList:
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def __cinit__(self, atom_array not None,
-                  float cell_size, bint periodic=False, box=None):
+    def __cinit__(self, atom_array not None, float cell_size,
+                  bint periodic=False, box=None, np.ndarray selection=None):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
@@ -159,8 +162,22 @@ cdef class CellList:
         self._cells = np.zeros(cell_count, dtype=np.uint64)
         # Stores the length of the C-arrays
         self._cell_length = np.zeros(cell_count, dtype=np.int32)
+        # Prepare mask from selection
+        cdef bint has_mask = selection is not None
+        cdef uint8[:] mask
+        if has_mask:
+            mask = np.frombuffer(selection, dtype=np.uint8)
+            if mask.shape[0] != self._coord.shape[0]:
+                raise IndexError(
+                    f"Atom array has length {self._coord.shape[0]}, "
+                    f"but selection has length {mask.shape[0]}"
+                )
         # Fill cells
         for atom_array_i in range(self._coord.shape[0]):
+            if has_mask and not mask[atom_array_i]:
+                # Atom is not masked
+                # -> do not put this atom into cell list
+                continue
             x = self._coord[atom_array_i, 0]
             y = self._coord[atom_array_i, 1]
             z = self._coord[atom_array_i, 2]
