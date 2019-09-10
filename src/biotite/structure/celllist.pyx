@@ -59,7 +59,8 @@ cdef class CellList:
         `box` attribute of `atom_array`.
     selection : ndarray, dtype=bool, shape=(n,), optional
         If provided, only the atoms masked by this array are stored in
-        the cell list.
+        the cell list. However, the indices stored in the cell list
+        will still refer to the original unfiltered `atom_array`.
             
     Examples
     --------
