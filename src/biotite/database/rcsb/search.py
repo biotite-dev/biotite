@@ -199,55 +199,60 @@ class ResolutionQuery(SimpleQuery):
     
     Parameters
     ----------
-    min: float
+    min: float, optional
         The minimum resolution value.
-    max: float
+    max: float, optional
         The maximum resolution value.
     """
     
-    def __init__(self, min, max):
+    def __init__(self, min=None, max=None):
         super().__init__("ResolutionQuery", "refine.ls_d_res_high")
         self.add_param("comparator", "between")
-        self.add_param("min", f"{min:.2f}")
-        self.add_param("max", f"{max:.2f}")
+        if min is not None:
+            self.add_param("min", f"{min:.5f}")
+        if max is not None:
+            self.add_param("max", f"{max:.5f}")
     
 class BFactorQuery(SimpleQuery):
     """
     Query that filters structures within a defined B-factor range.
     
-    
     Parameters
     ----------
-    min: float
+    min: float, optional
         The minimum resolution value.
-    max: float
+    max: float, optional
         The maximum resolution value.
     """
     
-    def __init__(self, min, max):
+    def __init__(self, min=None, max=None):
         super().__init__("ResolutionQuery", "refine.B_iso_mean")
         self.add_param("comparator", "between")
-        self.add_param("min", f"{min:.2f}")
-        self.add_param("max", f"{max:.2f}")
+        if min is not None:
+            self.add_param("min", f"{min:.5f}")
+        if max is not None:
+            self.add_param("max", f"{max:.5f}")
 
 class MolecularWeightQuery(SimpleQuery):
     """
     Query that filters structures within a molecular weight range.
-    
+    Water molecules are excluded from the molecular weight.
     
     Parameters
     ----------
-    min: float
+    min: float, optional
         The minimum molecular weight (g/mol).
-    max: float
+    max: float, optional
         The maximum molecular weight (g/mol).
     """
     
-    def __init__(self, min, max):
+    def __init__(self, min=None, max=None):
         super().__init__("MolecularWeightQuery",
                          "mvStructure.structureMolecularWeight")
-        self.add_param("min", f"{min:.1f}")
-        self.add_param("max", f"{max:.1f}")
+        if min is not None:
+            self.add_param("min", f"{min:.5f}")
+        if max is not None:
+            self.add_param("max", f"{max:.5f}")
 
 
 def search(query):
