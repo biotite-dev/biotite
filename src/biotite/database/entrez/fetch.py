@@ -60,8 +60,8 @@ _databases = {"BioProject"        : "bioproject",
 
 def get_database_name(database):
     """
-    Map an NCBI Entrez database name to an E-utility database name.
-    The returned value can be used for `db_name` parameter in `fetch()`.
+    Map a common NCBI Entrez database name to an E-utility database
+    name.
     
     Parameters
     ----------
@@ -106,7 +106,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         The file suffix of the downloaded files. This value is
         independent of the retrieval type.
     db_name : str:
-        E-utility database name.
+        E-utility or common database name.
     ret_type : str
         Retrieval type
     ret_mode : str, optional
@@ -163,9 +163,12 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         file_name = os.path.join(target_path, id + "." + suffix)
         file_names.append(file_name)
         if not os.path.isfile(file_name) or overwrite == True:
-            r = requests.get((_base_url + _fetch_url)
-                             .format(db_name, id, ret_type, ret_mode,
-                                     "BiotiteClient", mail))
+            r = requests.get(
+                (_base_url + _fetch_url).format(
+                    _sanitize_db_name(db_name), id, ret_type, ret_mode,
+                    "BiotiteClient", mail
+                )
+            )
             content = r.text
             if content.startswith(" Error"):
                 raise ValueError(content[8:])
@@ -194,7 +197,7 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     file_name : str
         The file path, including file name, to the target file.
     db_name : str:
-        E-utility database name.
+        E-utility or common database name.
     ret_type : str
         Retrieval type.
     ret_mode : str, optional
@@ -224,10 +227,23 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
         uid_list_str += id + ","
     # Remove terminal comma
     uid_list_str = uid_list_str[:-1]
-    r = requests.get((_base_url + _fetch_url)
-                     .format(db_name, uid_list_str, ret_type, ret_mode,
-                             "BiotiteClient", mail))
+    r = requests.get(
+        (_base_url + _fetch_url).format(
+            _sanitize_db_name(db_name), uid_list_str, ret_type, ret_mode,
+            "BiotiteClient", mail)
+    )
     content = r.text
     with open(file_name, "w+") as f:
         f.write(content)
     return file_name
+
+
+def _sanitize_db_name(db_name):
+    if db_name in _databases.keys():
+        # Convert into E-utility database name
+        return _databases[db_name]
+    elif db_name in _databases.values():
+        # Is already E-utility database name
+        return db_name
+    else:
+        raise ValueError("Database '{db_name}' is not existing")

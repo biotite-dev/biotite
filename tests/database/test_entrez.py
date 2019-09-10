@@ -11,8 +11,10 @@ import pytest
 
 
 @pytest.mark.xfail(raises=ConnectionError)
-def test_fetch():
-    file = entrez.fetch("1L2Y_A", biotite.temp_dir(), "fa", "protein",
+@pytest.mark.parametrize("common_name", [False, True])
+def test_fetch(common_name):
+    db_name = "Protein" if common_name else "protein"
+    file = entrez.fetch("1L2Y_A", biotite.temp_dir(), "fa", db_name,
                         "fasta", overwrite=True)
     fasta_file = fasta.FastaFile()
     fasta_file.read(file)
