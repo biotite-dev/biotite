@@ -3,8 +3,9 @@
 # information.
 
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
-__all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
+__all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
+           "MoleculeTypeQuery", "MethodQuery", "PubMedIDQuery",
            "search"]
 
 import requests
@@ -55,7 +56,6 @@ class CompositeQuery(Query):
     queries : iterable object of SimpleQuery
         The queries to be combined.
     """
-    
     def __init__(self, operator, queries):
         super().__init__()
         self.query = Element("orgPdbCompositeQuery")
@@ -85,7 +85,6 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
         If specifed, this string is the prefix for all parameters
         (XML tags) of the query.
     """
-    
     def __init__(self, query_type, parameter_class=""):
         super().__init__()
         self.query = Element("orgPdbQuery")
@@ -111,6 +110,99 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
         child.text = content
 
 
+class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
+    """
+    The abstract base class for all non-composite queries, that allow
+    a minimum and a maximum value
+    (comparator ``between`` in the XML query).
+    
+    Parameters
+    ----------
+    query_type: str
+        The name of the query type. This is the suffix for the
+        'QueryType' XML tag.
+    parameter_class : optional
+        If specifed, this string is the prefix for all parameters
+        (XML tags) of the query.
+    """
+    def __init__(self, query_type, parameter_class, min, max):
+        super().__init__(query_type, parameter_class)
+        self.add_param("comparator", "between")
+        if min is not None:
+            self.add_param("min", f"{min:.5f}")
+        if max is not None:
+            self.add_param("max", f"{max:.5f}")
+    
+    def add_param(self, param, content):
+        """
+        Add a parameter (XML tag/text pair) to the query.
+        
+        Parameters
+        ----------
+        param: str
+            The XML tag name for the parameter.
+        content : str
+            The text content for the parameter.
+        """
+        if self._param_cls == "":
+            child = SubElement(self.query, param)
+        else:
+            child = SubElement(self.query, self._param_cls + "." + param)
+        child.text = content
+
+
+class ResolutionQuery(RangeQuery):
+    """
+    Query that filters X-ray elucidated structures within a defined
+    resolution range.
+    
+    Parameters
+    ----------
+    min: float, optional
+        The minimum resolution value.
+    max: float, optional
+        The maximum resolution value.
+    """
+    def __init__(self, min=None, max=None):
+        super().__init__(
+            "ResolutionQuery", "refine.ls_d_res_high",
+            min, max
+        )
+    
+class BFactorQuery(RangeQuery):
+    """
+    Query that filters structures within a defined average B-factor
+    range.
+    
+    Parameters
+    ----------
+    min: float, optional
+        The minimum resolution value.
+    max: float, optional
+        The maximum resolution value.
+    """
+    def __init__(self, min=None, max=None):
+        super().__init__("AverageBFactorQuery", "refine.B_iso_mean", min, max)
+
+class MolecularWeightQuery(RangeQuery):
+    """
+    Query that filters structures within a molecular weight range.
+    Water molecules are excluded from the molecular weight.
+    
+    Parameters
+    ----------
+    min: float, optional
+        The minimum molecular weight (g/mol).
+    max: float, optional
+        The maximum molecular weight (g/mol).
+    """
+    def __init__(self, min=None, max=None):
+        super().__init__(
+            "MolecularWeightQuery", "mvStructure.structureMolecularWeight",
+            min, max
+        )
+
+
 class MoleculeTypeQuery(SimpleQuery):
     """
     Query that filters structures with a defined molecular type.
@@ -132,7 +224,6 @@ class MoleculeTypeQuery(SimpleQuery):
         selected.
         By default, the occurrence of this molecule type is ignored.
     """
-
     def __init__(self, rna=None, dna=None, hybrid=None, protein=None):
         super().__init__("ChainTypeQuery","")
         
@@ -164,7 +255,6 @@ class MoleculeTypeQuery(SimpleQuery):
         else:
             self.add_param("containsProtein","N")
 
-
 class MethodQuery(SimpleQuery):
     """
     Query that filters structures, that were elucidated with a certain
@@ -183,7 +273,6 @@ class MethodQuery(SimpleQuery):
         If specified, the query additionally filters structures, that
         store or do not store experimental data, respectively.
     """
-    
     def __init__(self, method, has_data=None):
         super().__init__("ExpTypeQuery", "mvStructure")
         self.add_param("expMethod.value", method.upper())
@@ -192,67 +281,23 @@ class MethodQuery(SimpleQuery):
         elif has_data == False:
             self.add_param("hasExperimentalData.value", "N")
 
-class ResolutionQuery(SimpleQuery):
+class PubMedIDQuery(SimpleQuery):
     """
-    Query that filters X-ray elucidated structures within a defined
-    resolution range.
+    Query that filters structures, that are published by any article
+    in the given list of PubMed IDs.
     
     Parameters
     ----------
-    min: float, optional
-        The minimum resolution value.
-    max: float, optional
-        The maximum resolution value.
+    ids: iterable object of int
+        A list of PubMed IDs.
     """
-    
-    def __init__(self, min=None, max=None):
-        super().__init__("ResolutionQuery", "refine.ls_d_res_high")
-        self.add_param("comparator", "between")
-        if min is not None:
-            self.add_param("min", f"{min:.5f}")
-        if max is not None:
-            self.add_param("max", f"{max:.5f}")
-    
-class BFactorQuery(SimpleQuery):
-    """
-    Query that filters structures within a defined B-factor range.
-    
-    Parameters
-    ----------
-    min: float, optional
-        The minimum resolution value.
-    max: float, optional
-        The maximum resolution value.
-    """
-    
-    def __init__(self, min=None, max=None):
-        super().__init__("ResolutionQuery", "refine.B_iso_mean")
-        self.add_param("comparator", "between")
-        if min is not None:
-            self.add_param("min", f"{min:.5f}")
-        if max is not None:
-            self.add_param("max", f"{max:.5f}")
+    def __init__(self, ids):
+        super().__init__("PubmedIdQuery")
+        self.add_param(
+            "pubMedIdList", ", ".join((str(id) for id in ids))
+        )
 
-class MolecularWeightQuery(SimpleQuery):
-    """
-    Query that filters structures within a molecular weight range.
-    Water molecules are excluded from the molecular weight.
-    
-    Parameters
-    ----------
-    min: float, optional
-        The minimum molecular weight (g/mol).
-    max: float, optional
-        The maximum molecular weight (g/mol).
-    """
-    
-    def __init__(self, min=None, max=None):
-        super().__init__("MolecularWeightQuery",
-                         "mvStructure.structureMolecularWeight")
-        if min is not None:
-            self.add_param("min", f"{min:.5f}")
-        if max is not None:
-            self.add_param("max", f"{max:.5f}")
+
 
 
 def search(query):
@@ -276,7 +321,7 @@ def search(query):
     Examples
     --------
     
-    >>> query = ResolutionQuery(0.0, 0.6)
+    >>> query = ResolutionQuery(0.6)
     >>> ids = search(query)
     >>> print(ids)
     ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
