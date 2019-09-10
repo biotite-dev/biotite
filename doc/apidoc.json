@@ -48,7 +48,10 @@
             "MethodQuery",
             "MolecularWeightQuery",
             "ResolutionQuery",
-            "PubMedIDQuery"
+            "PubMedIDQuery",
+            "UniProtIDQuery",
+            "PfamIDQuery",
+            "TextSearchQuery"
         ],
         "Search and fetch" : [
             "search",

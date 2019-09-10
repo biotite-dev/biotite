@@ -5,7 +5,9 @@
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
-           "MoleculeTypeQuery", "MethodQuery", "PubMedIDQuery",
+           "MoleculeTypeQuery", "MethodQuery",
+           "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
+           "TextSearchQuery",
            "search"]
 
 import requests
@@ -288,14 +290,54 @@ class PubMedIDQuery(SimpleQuery):
     
     Parameters
     ----------
-    ids: iterable object of int
+    ids: iterable object of str
         A list of PubMed IDs.
     """
     def __init__(self, ids):
         super().__init__("PubmedIdQuery")
-        self.add_param(
-            "pubMedIdList", ", ".join((str(id) for id in ids))
-        )
+        self.add_param("pubMedIdList", ", ".join(ids))
+
+class UniProtIDQuery(SimpleQuery):
+    """
+    Query that filters structures, that are referenced by any entry
+    in the given list of UniProtKB IDs.
+    
+    Parameters
+    ----------
+    ids: iterable object of str
+        A list of UniProtKB IDs.
+    """
+    def __init__(self, ids):
+        super().__init__("UpAccessionIdQuery")
+        self.add_param("accessionIdList", ", ".join(ids))
+
+class PfamIDQuery(SimpleQuery):
+    """
+    Query that filters structures, that are referenced by any entry
+    in the given list of Pfam family IDs.
+    
+    Parameters
+    ----------
+    ids: iterable object of str
+        A list of Pfam family IDs.
+    """
+    def __init__(self, ids):
+        super().__init__("PfamIdQuery")
+        self.add_param("pfamID", ", ".join(ids))
+
+class TextSearchQuery(SimpleQuery):
+    """
+    Query that filters structures, that have the given text in its
+    corresponding *mmCIF* coordinate file.
+    
+    Parameters
+    ----------
+    tex: str
+        The text to search.
+    """
+    def __init__(self, text):
+        super().__init__("AdvancedKeywordQuery")
+        self.add_param("keywords", text)
 
 
 

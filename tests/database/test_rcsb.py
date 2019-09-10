@@ -93,8 +93,23 @@ def test_search_invalid():
         ),
         (
             rcsb.PubMedIDQuery,
-            {"ids": [6726807, 10490104]},
+            {"ids": ["6726807", "10490104"]},
             ["2HHB", "3HHB", "4HHB", "9GAA", "9GAC", "9GAF",]
+        ),
+        (
+            rcsb.UniProtIDQuery,
+            {"ids": ["P69905"]},
+            262
+        ),
+        (
+            rcsb.PfamIDQuery,
+            {"ids": ["PF00104"]},
+            1427
+        ),
+        (
+            rcsb.TextSearchQuery,
+            {"text": "Miniprotein Construct TC5b"},
+            ["1L2Y"]
         ),
     ]
 )
