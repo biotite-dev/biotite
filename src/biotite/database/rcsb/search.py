@@ -113,7 +113,7 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
 
 class MoleculeTypeQuery(SimpleQuery):
     """
-    Query that filters structures with a defines molecular type.
+    Query that filters structures with a defined molecular type.
 
     Parameters
     ----------
