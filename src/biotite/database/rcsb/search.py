@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "CompositeQuery", "SimpleQuery", "MethodQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
            "search"]
@@ -109,6 +109,60 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
         else:
             child = SubElement(self.query, self._param_cls + "." + param)
         child.text = content
+
+
+class MoleculeTypeQuery(SimpleQuery):
+    """
+    Query that filters structures with a defines molecular type.
+
+    Parameters
+    ----------
+    rna: bool, optional
+        If true, RNA structures are selected, otherwise excluded.
+        By default, the occurrence of this molecule type is ignored.
+    dna: bool, optional
+        If true, DNA structures are selected, otherwise excluded.
+        By default, the occurrence of this molecule type is ignored.
+    hyrbid: bool, optional
+        If true, DNA/RNA hybrid structures are selected,
+        otherwise excluded.
+        By default, the occurrence of this molecule type is ignored.
+    protein: bool, optional
+        If true, protein structures are selected, otherwise excluded.
+        selected.
+        By default, the occurrence of this molecule type is ignored.
+    """
+
+    def __init__(self, rna=None, dna=None, hybrid=None, protein=None):
+        super().__init__("ChainTypeQuery","")
+        
+        if rna is None:
+            self.add_param("containsRna","?")
+        elif rna:
+            self.add_param("containsRna","Y")
+        else:
+            self.add_param("containsRna","N")
+        
+        if dna is None:
+            self.add_param("containsDna","?")
+        elif dna:
+            self.add_param("containsDna","Y")
+        else:
+            self.add_param("containsDna","N")
+        
+        if hybrid is None:
+            self.add_param("containsHybrid","?")
+        elif hybrid:
+            self.add_param("containsHybrid","Y")
+        else:
+            self.add_param("containsHybrid","N")
+        
+        if protein is None:
+            self.add_param("containsProtein","?")
+        elif protein:
+            self.add_param("containsProtein","Y")
+        else:
+            self.add_param("containsProtein","N")
 
 
 class MethodQuery(SimpleQuery):
