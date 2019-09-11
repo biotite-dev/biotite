@@ -410,7 +410,7 @@ def search(query, omit_chain=True):
     Examples
     --------
     
-    >>> query = ResolutionQuery(0.6)
+    >>> query = ResolutionQuery(max=0.6)
     >>> ids = search(query)
     >>> print(ids)
     ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
