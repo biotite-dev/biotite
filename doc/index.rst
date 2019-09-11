@@ -23,7 +23,7 @@ into a uniform *Python* library.
 It can handle a major part of the typical workflow
 for sequence and biomolecular structure data:
    
-   - Searching in and fetching data from biological databases
+   - Searching and fetching data from biological databases
    - Reading and writing popular sequence/structure file formats
    - Analyzing and editing sequence/structure data
    - Visualizing sequence/structure data
@@ -116,7 +116,7 @@ It is basically very similar to using normal `Python` functions.
 
 **Database** subpackage
 -----------------------
-This subpackage is all about searching in and downloading data from biological
+This subpackage is all about searching and downloading data from biological
 databases, including the arguably most important ones: the *RCSB PDB* and the
 *NCBI Entrez* database.
 
