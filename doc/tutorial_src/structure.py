@@ -161,6 +161,8 @@ print(tc5b.array_length())
 # The method :func:`PDBFile.get_structure()` returns an atom array stack
 # unless the :obj:`model` parameter is specified,
 # even if the file contains only one model.
+# Alternatively, the module level function :func:`get_structure()`
+# can be used.
 # The following example
 # shows how to write an array or stack back into a PDB file:
 
