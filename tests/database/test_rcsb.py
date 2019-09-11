@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite
-import biotite.database.rcsb as rcsb
-import biotite.structure.io as strucio
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
+import biotite
+import biotite.database.rcsb as rcsb
+import biotite.structure.io as strucio
+from biotite.database import RequestError
 
 
 @pytest.mark.xfail(raises=ConnectionError)
@@ -24,7 +25,7 @@ def test_fetch_pdb():
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_invalid():
-    with pytest.raises(ValueError):
+    with pytest.raises(RequestError):
         file = rcsb.fetch("xxxx", "cif", biotite.temp_dir(), overwrite=True)
 
 
@@ -54,7 +55,7 @@ def test_search_invalid():
         def __init__(self):
             super().__init__("InvalidQuery", "gibberish")
             self.add_param("foo", "bar")
-    with pytest.raises(ValueError):
+    with pytest.raises(RequestError):
         ids = rcsb.search(InvalidQuery())
 
 
@@ -103,8 +104,8 @@ def test_search_invalid():
         ),
         (
             rcsb.PfamIDQuery,
-            {"ids": ["PF00104"]},
-            1427
+            {"ids": ["PF07388"]},
+            ["5WC6" "5WC8" "5WCN" "5WD7"]
         ),
         (
             rcsb.TextSearchQuery,

@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite
-import biotite.database.entrez as entrez
-import biotite.sequence.io.fasta as fasta
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
+import biotite
+import biotite.database.entrez as entrez
+import biotite.sequence.io.fasta as fasta
+from biotite.database import RequestError
 
 
 @pytest.mark.xfail(raises=ConnectionError)
@@ -32,6 +33,6 @@ def test_fetch_single_file():
 
 @pytest.mark.xfail(raises=ConnectionError)
 def test_fetch_invalid():
-    with pytest.raises(ValueError):
+    with pytest.raises(RequestError):
         file = entrez.fetch("xxxx", biotite.temp_dir(), "fa", "protein",
                             "fasta", overwrite=True)

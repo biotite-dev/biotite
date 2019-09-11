@@ -19,3 +19,5 @@ temporary directory by using `biotite.temp_dir()` or
 """
 
 __author__ = "Patrick Kunzmann"
+
+from .error import *

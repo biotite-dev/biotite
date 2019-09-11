@@ -382,5 +382,11 @@ def search(query):
     r = requests.post(_search_url, data=str(query), headers=headers)
     if r.text.startswith("Problem creating Query from XML"):
         raise RequestError(r.text)
-    return r.text.split()
+    ids = r.text.split()
+    # The returned ID might be in the form 'XXXX:1'
+    # and must be converted into 'XXXX'
+    for i, id in enumerate(ids):
+        if ":" in id:
+            ids[i] = id.split(":")[0]
+    return ids
     
