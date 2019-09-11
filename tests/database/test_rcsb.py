@@ -2,25 +2,39 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
 import biotite
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+import biotite.structure.io.pdb as pdb
+import biotite.structure.io.pdbx as pdbx
+import biotite.structure.io.mmtf as mmtf
 from biotite.database import RequestError
 
 
 @pytest.mark.xfail(raises=ConnectionError)
-def test_fetch_cif():
-    file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
-    array = strucio.load_structure(file)
-
-
-@pytest.mark.xfail(raises=ConnectionError)
-def test_fetch_pdb():
-    file = rcsb.fetch("1l2y", "cif", biotite.temp_dir(), overwrite=True)
-    array = strucio.load_structure(file)
+@pytest.mark.parametrize(
+    "format, as_file_like",
+    itertools.product(["pdb", "cif", "mmtf"], [False, True])
+)
+def test_fetch(format, as_file_like):
+    path = None if as_file_like else biotite.temp_dir()
+    file_path_or_obj = rcsb.fetch("1l2y", format, path, overwrite=True)
+    if format == "pdb":
+        file = pdb.PDBFile()
+        file.read(file_path_or_obj)
+        pdb.get_structure(file)
+    elif format == "pdbx":
+        file = pdbx.PDBxFile()
+        file.read(file_path_or_obj)
+        pdbx.get_structure(file)
+    elif format == "mmtf":
+        file = mmtf.MMTFFile()
+        file.read(file_path_or_obj)
+        mmtf.get_structure(file)
 
 
 @pytest.mark.xfail(raises=ConnectionError)
