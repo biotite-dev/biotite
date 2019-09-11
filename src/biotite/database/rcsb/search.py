@@ -13,6 +13,7 @@ __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
 import requests
 import abc
 from xml.etree.ElementTree import Element, SubElement, tostring
+from ..error import RequestError
 
 
 _search_url = "https://www.rcsb.org/pdb/rest/search"
@@ -380,6 +381,6 @@ def search(query):
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     r = requests.post(_search_url, data=str(query), headers=headers)
     if r.text.startswith("Problem creating Query from XML"):
-        raise ValueError(r.text)
+        raise RequestError(r.text)
     return r.text.split()
     

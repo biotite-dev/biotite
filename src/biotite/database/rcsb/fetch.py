@@ -9,6 +9,7 @@ import requests
 import os.path
 import os
 import glob
+from ..error import RequestError
 
 
 _standard_url = "https://files.rcsb.org/download/"
@@ -117,4 +118,4 @@ def _assert_valid_file(response_text, pdb_id):
     or the response a *404* error due to invalid PDB ID.
     """
     if "404 Not Found" in response_text:
-        raise ValueError("PDB ID {:} is invalid".format(pdb_id))
+        raise RequestError("PDB ID {:} is invalid".format(pdb_id))

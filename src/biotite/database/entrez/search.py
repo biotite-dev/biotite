@@ -8,6 +8,7 @@ __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 import requests
 import abc
 from xml.etree import ElementTree
+from .check import check_for_errors
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -196,6 +197,7 @@ def search(query, db_name, number=20):
         (_base_url + _search_url).format(db_name, str(query), str(number))
     )
     xml_response = r.text
+    check_for_errors(xml_response)
     root = ElementTree.fromstring(xml_response)
     xpath = ".//IdList/Id"
     uids = [element.text for element in root.findall(xpath)]

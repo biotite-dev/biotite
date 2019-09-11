@@ -9,6 +9,8 @@ import requests
 import os.path
 import os
 import glob
+from .check import check_for_errors
+from ..error import RequestError
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -178,8 +180,9 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
                 )
             )
             content = r.text
+            check_for_errors(content)
             if content.startswith(" Error"):
-                raise ValueError(content[8:])
+                raise RequestError(content[8:])
             with open(file_name, "w+") as f:
                 f.write(content)
     if verbose:
@@ -249,6 +252,9 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
             "BiotiteClient", mail)
     )
     content = r.text
+    check_for_errors(content)
+    if content.startswith(" Error"):
+        raise RequestError(content[8:])
     with open(file_name, "w+") as f:
         f.write(content)
     return file_name
