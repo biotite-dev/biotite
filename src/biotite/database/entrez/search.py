@@ -122,7 +122,12 @@ class SimpleQuery(Query):
         "Modification Date", "Molecular Weight", "Organism", "Page Number",
         "Primary Accession", "Properties", "Protein Name", "Publication Date",
         "SeqID String", "Sequence Length", "Substance Name", "Text Word",
-        "Title", "Volume"
+        "Title", "Volume",
+        # Abbreviations
+        "ACCN", "ALL", "AU", "AUTH", "ECNO", "FKEY", "FILT", "SB", "GENE",
+        "ISS", "JOUR", "KYWD", "MDAT", "MOLWT", "ORGN", "PAGE", "PACC",
+        "PORGN", "PROP", "PROT", "PDAT", "SQID", "SLEN", "SUBS", "WORD",  "TI",
+        "TITL" "VOL"
     ]
 
     def __init__(self, term, field=None):
