@@ -51,7 +51,9 @@
             "PubMedIDQuery",
             "UniProtIDQuery",
             "PfamIDQuery",
-            "TextSearchQuery"
+            "SequenceClusterQuery",
+            "TextSearchQuery",
+            "KeywordQuery"
         ],
         "Search and fetch" : [
             "search",

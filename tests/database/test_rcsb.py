@@ -105,17 +105,29 @@ def test_search_invalid():
         (
             rcsb.PfamIDQuery,
             {"ids": ["PF07388"]},
-            ["5WC6" "5WC8" "5WCN" "5WD7"]
+            ["5WC6", "5WC8", "5WCN", "5WD7"]
+        ),
+        (
+            rcsb.SequenceClusterQuery,
+            {"cluster_id": "5000"},
+            ["1WFD", "1XRI", "2Q47", "2RNO"]
         ),
         (
             rcsb.TextSearchQuery,
             {"text": "Miniprotein Construct TC5b"},
             ["1L2Y"]
         ),
+        (
+            rcsb.KeywordQuery,
+            {"keyword": "ION CHANNEL INHIBITOR"},
+            ["2CK4", "2CK5"]
+        ),
     ]
 )
 def test_simple_query_types(query_type, params, exp_ids):
     query = query_type(**params)
+    print("Query:")
+    print(query)
     ids = rcsb.search(query)
     if isinstance(exp_ids, int):
         assert len(ids) == exp_ids

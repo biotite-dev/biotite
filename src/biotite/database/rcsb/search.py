@@ -7,7 +7,8 @@ __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
            "MoleculeTypeQuery", "MethodQuery",
            "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
-           "TextSearchQuery",
+           "SequenceClusterQuery",
+           "TextSearchQuery", "KeywordQuery",
            "search"]
 
 import requests
@@ -127,6 +128,8 @@ class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
     parameter_class : optional
         If specifed, this string is the prefix for all parameters
         (XML tags) of the query.
+    min, max: float
+        The value range.
     """
     def __init__(self, query_type, parameter_class, min, max):
         super().__init__(query_type, parameter_class)
@@ -326,6 +329,21 @@ class PfamIDQuery(SimpleQuery):
         super().__init__("PfamIdQuery")
         self.add_param("pfamID", ", ".join(ids))
 
+class SequenceClusterQuery(SimpleQuery):
+    """
+    Query that filters structures, that are in part of a
+    `PDB sequence cluster <http://www.rcsb.org/pdb/statistics/clusterStatistics.do>`_
+    with the given ID.
+    
+    Parameters
+    ----------
+    cluster_id: int
+        The sequence cluster ID.
+    """
+    def __init__(self, cluster_id):
+        super().__init__("SequenceClusterQuery")
+        self.add_param("sequenceClusterName", cluster_id)
+
 class TextSearchQuery(SimpleQuery):
     """
     Query that filters structures, that have the given text in its
@@ -340,10 +358,24 @@ class TextSearchQuery(SimpleQuery):
         super().__init__("AdvancedKeywordQuery")
         self.add_param("keywords", text)
 
+class KeywordQuery(SimpleQuery):
+    """
+    Query that filters structures, that have the given keyword in its
+    corresponding *mmCIF* field ``_struct_keywords.pdbx_keywords``.
+    
+    Parameters
+    ----------
+    keyword: str
+        The text to search.
+    """
+    def __init__(self, keyword):
+        super().__init__("TokenKeywordQuery", "struct_keywords.pdbx_keywords")
+        self.add_param("value", keyword)
 
 
 
-def search(query):
+
+def search(query, omit_chain=True):
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB SEARCH service.
@@ -360,6 +392,11 @@ def search(query):
     ids : list of str
         A list of strings containing all PDB IDs that meet the query
         requirements.
+    omit_chain: bool, optional
+        If true, the chain information is removed from the IDs,
+        e.g. '1L2Y:1' is converted into '1L2Y'.
+        Only the ID without the chain information can be used as input
+        to `fetch()`.
     
     Warnings
     --------
@@ -383,10 +420,9 @@ def search(query):
     if r.text.startswith("Problem creating Query from XML"):
         raise RequestError(r.text)
     ids = r.text.split()
-    # The returned ID might be in the form 'XXXX:1'
-    # and must be converted into 'XXXX'
-    for i, id in enumerate(ids):
-        if ":" in id:
-            ids[i] = id.split(":")[0]
+    if omit_chain:
+        for i, id in enumerate(ids):
+            if ":" in id:
+                ids[i] = id.split(":")[0]
     return ids
     
