@@ -131,6 +131,14 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
     
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
+    
     See also
     --------
     fetch_single_file
@@ -214,6 +222,14 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     -------
     file : str
         The file name of the downloaded file.
+    
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
     
     See also
     --------

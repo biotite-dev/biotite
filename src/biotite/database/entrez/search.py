@@ -176,6 +176,14 @@ def search(query, db_name, number=20):
         A list of strings containing all NCBI UIDs (accession number)
         that meet the query requirements.
     
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
+    
     Examples
     --------
     >>> query = SimpleQuery("Escherichia coli", "Organism") & \
