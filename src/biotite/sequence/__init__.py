@@ -11,7 +11,7 @@ The set of symbols, that can occur in a sequence, is defined by an
 For example, an unambiguous DNA sequence has an :class:`Alphabet`, that
 includes the 4 letters (strings) ``'A'``, ``'C'``, ``'G'`` and ``'T'``.
 But furthermore, an :class:`Alphabet` can also contain any immutable and
-hashable Python object like :class:`int`, :class:`tuple`. etc.
+hashable Python object like :class:`int`, :class:`tuple`, etc.
 If a :class:`Sequence` is created with at least a symbol,
 that is not in the given :class:`Alphabet`, an :class:`AlphabetError` is
 raised.
