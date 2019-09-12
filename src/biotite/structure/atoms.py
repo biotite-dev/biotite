@@ -419,13 +419,15 @@ class Atom(object):
     A representation of a single atom.
     
     The coordinates an annotations can be accessed directly.
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
     Parameters
     ----------
     coord: list or ndarray
-        the x, y and z coordinates
+        The x, y and z coordinates.
     kwargs
-        atom annotations as key value pair
+        Atom annotations as key value pair.
     
     Attributes
     ----------
@@ -512,6 +514,8 @@ class AtomArray(_AtomArrayBase):
     or the `get_annotation()`, `set_annotation()` method. Usage of
     custom annotations is achieved via `add_annotation()` or
     `set_annotation()`.
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
     In order to get an an subarray of an `AtomArray`, `NumPy` style
     indexing is used. This includes slices, boolean arrays,
@@ -743,8 +747,10 @@ class AtomArrayStack(_AtomArrayBase):
     Effectively, this means that each atom is occuring in every array in
     the stack at differing coordinates. This situation arises e.g. in
     NMR-elucidated or simulated structures. Since the annotations are
-    equal for each array the annotaion arrays are 1-D, while the
+    equal for each array, the annotation arrays are 1-D, while the
     coordinate array is 3-D (m x n x 3).
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
     Indexing works similar to `AtomArray`, with the difference, that two
     index dimensions are possible: The first index dimension specifies

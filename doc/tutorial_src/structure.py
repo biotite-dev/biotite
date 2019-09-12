@@ -53,11 +53,15 @@ atom3 = struc.Atom([0,0,2], chain_id="A", res_id=1, res_name="GLY",
 # The first parameter are the coordinates (internally converted into an
 # :class:`ndarray`), the other parameters are annotations.
 # The annotations shown in this example are mandatory:
-# If you miss one of these, *Python* will not diretcly complain, 
+# The chain ID, residue ID, residue name, atom name, element and whether
+# the atom is in a protein/nucleotide chain (*hetero*).
+# If you miss one of these, *Python* will not directly complain, 
 # but some operations might not work properly
 # (especially true, when we go to atom arrays and stacks).
-# The mandatory annotation categories are originated in *ATOM* records
-# in the PDB format.
+# The mandatory annotation categories are originated in *ATOM* and
+# *HETATM* records in the PDB format.
+# The description of each annotation can be viewed in the
+# :doc:`API reference </apidoc/biotite.structure>`.
 # Additionally, you can specify an arbitrary amount of custom
 # annotations, like B-factors, charge, etc.
 # In most cases you won't work with :class:`Atom` instances and in even
@@ -157,6 +161,8 @@ print(tc5b.array_length())
 # The method :func:`PDBFile.get_structure()` returns an atom array stack
 # unless the :obj:`model` parameter is specified,
 # even if the file contains only one model.
+# Alternatively, the module level function :func:`get_structure()`
+# can be used.
 # The following example
 # shows how to write an array or stack back into a PDB file:
 
