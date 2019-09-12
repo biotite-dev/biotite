@@ -9,6 +9,6 @@ __all__ = ["RequestError"]
 class RequestError(Exception):
     """
     Indicates that the database returned a response with an error
-    message or contains other malformed content.
+    message or other malformed content.
     """
     pass
