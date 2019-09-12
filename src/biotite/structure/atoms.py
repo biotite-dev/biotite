@@ -67,7 +67,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : str
             The annotation category to be added.
         dtype : type or str
-            A type instance or a valid *NumPy* *dtype*` string.
+            A type instance or a valid *NumPy* *dtype* string.
             Defines the type of the annotation
         
         See Also
