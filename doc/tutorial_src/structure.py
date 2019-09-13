@@ -349,7 +349,7 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 # Integer indices have a special role here, as they reduce the
 # dimensionality of the data type:
 # Indexing an :class:`AtomArrayStack` with an integer results in an
-# `AtomArray` at the specified frame, indexing an :class:`AtomArray`
+# :class:`AtomArray` at the specified frame, indexing an :class:`AtomArray`
 # with an integer yields the specified :class:`Atom`.
 # Iterating over arrays and stacks reduces the dimensionality in an
 # analogous way.
