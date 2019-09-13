@@ -156,7 +156,7 @@ def index_displacement(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The pairwise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,2)
         Pairs of indices that point to `atoms`.
         The displacement is measured from ``indices[x,0]`` to 
@@ -249,7 +249,7 @@ def index_distance(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The pairwise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,2)
         Pairs of indices that point to `atoms`.
     periodic : bool, optional
@@ -338,7 +338,7 @@ def index_angle(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The triplewise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,3)
         Triples of indices that point to `atoms`.
     periodic : bool, optional
@@ -439,7 +439,7 @@ def index_dihedral(*args, **kwargs):
         The quadruplewise dihedral angles are calculated for these
         pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,4)
         Quadruples of indices that point to `atoms`.
     periodic : bool, optional
@@ -616,7 +616,7 @@ def centroid(atoms):
     Returns
     -------
     centroid : float or ndarray
-        The centroid of the structure(s). `ndarray` is returned when
+        The centroid of the structure(s). :class:`ndarray` is returned when
         an :class:`AtomArrayStack` is given (centroid for each model).
     """
     return np.mean(coord(atoms), axis=-2)

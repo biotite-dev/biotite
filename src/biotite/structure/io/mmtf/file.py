@@ -25,7 +25,7 @@ class MMTFFile(File, MutableMapping):
     This dictionary is accessed by indexing the :class:`MMTFFile` instance
     directly with the dictionary keys. If the value is an encoded
     array, the value automatically decoded. Decoded arrays are always
-    returned as `ndarray` instances.
+    returned as :class:`ndarray` instances.
     
     Examples
     --------

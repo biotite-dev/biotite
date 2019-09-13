@@ -27,7 +27,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     A :class:`Sequence` can be seen as a succession of symbols, that are
     elements in the allowed set of symbols, the :class:`Alphabet`. Internally,
-    a :class:`Sequence` object uses a `NumPy` `ndarray` of integers, where each
+    a :class:`Sequence` object uses a `NumPy` :class:`ndarray` of integers, where each
     integer represents a symbol. The :class:`Alphabet` of a :class:`Sequence` object
     is used to encode each symbol, that is used to create the
     :class:`Sequence`, into an integer. These integer values are called
@@ -44,14 +44,14 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     Comparison with a string or list of symbols evaluates always to
     false.
     
-    A :class:`Sequence` can be indexed by any 1-D index a `ndarray` accepts.
+    A :class:`Sequence` can be indexed by any 1-D index a :class:`ndarray` accepts.
     If the index is a single integer, the decoded symbol at that
     position is returned, otherwise a subsequence is returned.
     
     Individual symbols of the sequence can also be exchanged in indexed
     form: If the an integer is used as index, the item is treated as a
     symbol. Any other index (slice, index list, boolean mask) expects
-    multiple symbols, either as list of symbols, as `ndarray`
+    multiple symbols, either as list of symbols, as :class:`ndarray`
     containing a sequence code or another :class:`Sequence` instance.
     Concatenation of two sequences is achieved with the '+' operator.
     

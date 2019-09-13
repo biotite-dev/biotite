@@ -287,7 +287,7 @@ class LetterAlphabet(Alphabet):
         ----------
         symbols : array-like
             The symbols to encode. The method is faster when a
-            `ndarray` is provided.
+            :class:`ndarray` is provided.
         dtype : dtype, optional
             For compatibility with superclass. The value is ignored
             
@@ -319,7 +319,7 @@ class LetterAlphabet(Alphabet):
         ----------
         code : array-like object of int
             The sequence code to decode. Works fastest when `code` is
-            `ndarray`. 
+            :class:`ndarray`. 
         
         Returns
         -------

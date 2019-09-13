@@ -38,7 +38,7 @@ def gyration_radius(array, masses=None):
     masses : float or ndarray, dtype=float
         If `array` is an :class:`AtomArray`, the radius of gyration is
         returned as single float.
-        If `array` is an :class:`AtomArrayStack`, an `ndarray` containing the
+        If `array` is an :class:`AtomArrayStack`, an :class:`ndarray` containing the
         radii of gyration for every model is returned.
     """
     if masses is None:
@@ -66,8 +66,8 @@ def mass_center(array, masses=None):
     radius : ndarray, ndarray, dtype=float
         Array containing the the coordinates of the center of mass.
         If `array` is an :class:`AtomArray`, this will be an length 3
-        `ndarray`; if it is an :class:`AtomArrayStack` with *n* models,
-        a (*n x 3*) `ndarray` is returned.
+        :class:`ndarray`; if it is an :class:`AtomArrayStack` with *n* models,
+        a (*n x 3*) :class:`ndarray` is returned.
     """
     if masses is None:
         masses = np.array([mass(element) for element in array.element])

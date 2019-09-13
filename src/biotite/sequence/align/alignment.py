@@ -23,7 +23,7 @@ class Alignment(object):
     Instead of saving a list of aligned symbols, this class saves the
     original *n* sequences, that were aligned, and a so called *trace*,
     which indicate the aligned symbols of these sequences.
-    The trace is a *(m x n)* `ndarray` with alignment length *m* and
+    The trace is a *(m x n)* :class:`ndarray` with alignment length *m* and
     sequence count *n*.
     Each element of the trace is the index in the corresponding
     sequence. A gap is represented by the value -1.

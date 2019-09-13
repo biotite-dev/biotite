@@ -9,7 +9,7 @@ In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
 about polypetide chain id, residue id, residue name, hetero atom
 information, atom name and optionally more. The coordinates are a
-`NumPy` float `ndarray` of length 3, containing the x, y and z
+`NumPy` float :class:`ndarray` of length 3, containing the x, y and z
 coordinates.
 
 An :class:`Atom` contains data for a single atom, it stores the

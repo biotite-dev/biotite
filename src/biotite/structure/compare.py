@@ -38,7 +38,7 @@ def rmsd(reference, subject):
     rmsd : float or ndarray, dtype=float, shape=(n,)
         RMSD between subject and reference.
         If subject is an :class:`AtomArray` a float is returned.
-        If subject is an :class:`AtomArrayStack` an `ndarray`
+        If subject is an :class:`AtomArrayStack` an :class:`ndarray`
         containing the RMSD for each :class:`AtomArray` is returned.
     
     See Also
