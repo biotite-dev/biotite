@@ -4,7 +4,7 @@
 
 """
 This subpackage is used for reading and writing an :class:`AtomArray` or
-`AtomArrayStack` using the popular PDB format. Since this format has
+:class:`AtomArrayStack` using the popular PDB format. Since this format has
 some limitations, it will be completely replaced someday by the modern
 PDBx/mmCIF format. Therefore this subpackage should only be used, if
 usage of the PDBx/mmCIF format is not suitable (e.g. when interfacing

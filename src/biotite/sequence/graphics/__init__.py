@@ -17,7 +17,7 @@ Some aspects of the plotting itself are also customizable: For example
 the :func:`plot_alignment()` function uses a interchangable :class:`SymbolPlotter`,
 that knows how to draw the symbols of an alignment.
 Similarily, the appearance of sequence features in the function
-`plot_feature_map()` is customized via :class:`FeaturePlotter` objects.
+:func:`plot_feature_map()` is customized via :class:`FeaturePlotter` objects.
 """
 
 __author__ = "Patrick Kunzmann"

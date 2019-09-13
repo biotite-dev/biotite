@@ -9,7 +9,7 @@ The two central classes involved are :class:`SubstitutionMatrix` and
 `Àlignment`:
 
 Every function that performs an alignment requires a
-`SubstitutionMatrix` that provides similarity scores for each symbol
+:class:`SubstitutionMatrix` that provides similarity scores for each symbol
 combination of two alphabets (usually both alphabets are equal).
 The alphabets in the :class:`SubstitutionMatrix` must match or extend the
 alphabets of the sequences to be aligned.
