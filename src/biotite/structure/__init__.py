@@ -83,9 +83,9 @@ The attributes of the sliced object may still point to the original
 :class:`ndarray`.
 Use the :func:`copy()` method if a deep copy is required.
 
-An optional attribute for :class:`AtomArray` and :class:`AtomArrayStack` instances
-are associated :class:`BondList` objects, that specify the indices of
-atoms that form a chemical bonds.
+An optional attribute for :class:`AtomArray` and :class:`AtomArrayStack`
+instances are associated :class:`BondList` objects, that specify the
+indices of atoms that form a chemical bonds.
 
 Based on the implementation in *NumPy* arrays, this package furthermore
 contains a comprehensive set of functions for structure analysis,

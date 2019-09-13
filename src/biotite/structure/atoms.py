@@ -547,8 +547,8 @@ class AtomArray(_AtomArrayBase):
     :class:`AtomArray` will contain the merged :class:`BondList` if at
     least one of the operands contains bond information.
 
-    The :attr:`box` attribute contains the box vectors of the unit cell or
-    the MD simulation box, respectively.
+    The :attr:`box` attribute contains the box vectors of the unit cell
+    or the MD simulation box, respectively.
     Hence, it is a *3 x 3* *ndarray* with the vectors in the last
     dimension.
     If no box is provided, the attribute is ``None``.
