@@ -23,8 +23,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     This is an abstract base class for multiple sequence alignment
     software.
     
-    It handles conversion of `Sequence` objects to FASTA input and
-    FASTA output to an `Alignment` object.
+    It handles conversion of :class:`Sequence` objects to FASTA input and
+    FASTA output to an :class:`Alignment` object.
     Inheriting subclasses only need to incorporate the file path
     of these FASTA files into the program arguments.
 
@@ -361,7 +361,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         """
         Perform a multiple sequence alignment.
         
-        This is a convenience function, that wraps the `MSAApp`
+        This is a convenience function, that wraps the :class:`MSAApp`
         execution.
         
         Parameters

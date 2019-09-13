@@ -3,7 +3,7 @@
 # information.
 
 """
-This subpackage is used for reading and writing an `AtomArray` or
+This subpackage is used for reading and writing an :class:`AtomArray` or
 `AtomArrayStack` using the Gro format used by the gromacs software
 package.
 """

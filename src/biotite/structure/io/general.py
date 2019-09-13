@@ -18,9 +18,9 @@ from ..atoms import AtomArray, AtomArrayStack
 def load_structure(file_path, template=None):
     """
     Load an atom array or stack from a structure file without the need
-    to manually instantiate a `File` object.
+    to manually instantiate a :class:`File` object.
     
-    Internally this function uses a `File` object, based on the file
+    Internally this function uses a :class:`File` object, based on the file
     extension. Trajectory files furthermore require specification of
     the `template` parameter.
     
@@ -129,9 +129,9 @@ def load_structure(file_path, template=None):
 def save_structure(file_path, array):
     """
     Save an atom array or stack to a structure file without the need
-    to manually instantiate a `File` object.
+    to manually instantiate a :class:`File` object.
     
-    Internally this function uses a `File` object, based on the file
+    Internally this function uses a :class:`File` object, based on the file
     extension.
     
     Parameters

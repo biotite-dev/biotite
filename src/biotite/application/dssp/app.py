@@ -103,7 +103,7 @@ class DsspApp(LocalApp):
         """
         Perform a secondary structure assignment to an atom array.
         
-        This is a convenience function, that wraps the `DsspApp`
+        This is a convenience function, that wraps the :class:`DsspApp`
         execution.
         
         Parameters

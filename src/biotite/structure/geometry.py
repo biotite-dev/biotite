@@ -147,7 +147,7 @@ def index_displacement(*args, **kwargs):
     displacement should be calculated.
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
-    In contrast to the `distance()` function, this function is able
+    In contrast to the :func:`distance()` function, this function is able
     to take periodic boundary conditions into account.
 
     Parameters
@@ -240,7 +240,7 @@ def index_distance(*args, **kwargs):
     distances should be calculated.
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
-    In contrast to the `distance()` function, this function is able
+    In contrast to the :func:`distance()` function, this function is able
     to take periodic boundary conditions into account.
 
     Parameters
@@ -498,7 +498,7 @@ def dihedral_backbone(atom_array):
         An array containing the 3 backbone dihedral angles for every
         CA. 'phi' is not defined at the N-terminus, 'psi' and 'omega'
         are not defined at the C-terminus. In these places the arrays
-        have `NaN` values. If an `AtomArrayStack` is given, the output
+        have `NaN` values. If an :class:`AtomArrayStack` is given, the output
         angles are 2-dimensional, the first dimension corresponds to
         the model number.
     
@@ -617,7 +617,7 @@ def centroid(atoms):
     -------
     centroid : float or ndarray
         The centroid of the structure(s). `ndarray` is returned when
-        an `AtomArrayStack` is given (centroid for each model).
+        an :class:`AtomArrayStack` is given (centroid for each model).
     """
     return np.mean(coord(atoms), axis=-2)
 

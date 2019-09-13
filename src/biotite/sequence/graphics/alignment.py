@@ -58,7 +58,7 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
 
 class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
     """
-    This abstract `SymbolPlotter` is the most widely used one.
+    This abstract :class:`SymbolPlotter` is the most widely used one.
     Symbols are visualized as character on a colored background box or
     as colored character, if `color_symbols` is set to true.
 
@@ -141,7 +141,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
 
 class LetterSimilarityPlotter(LetterPlotter):
     r"""
-    This `SymbolPlotter` colors the symbols based on the
+    This :class:`SymbolPlotter` colors the symbols based on the
     similarity with the other symbols in the same column.
 
     The color intensity (or colormap value, respectively) of a symbol
@@ -352,11 +352,11 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     """
     Plot a pairwise or multiple sequence alignment.
 
-    The output is similar to a string representation of an `Alignment`,
+    The output is similar to a string representation of an :class:`Alignment`,
     but with enhanced styling, symbol coloring and optional sequence
     labels and sequence position numbering.
     How each sysmbol of the alignment is drawn is determined by the
-    given `SymbolPlotter` object.
+    given :class:`SymbolPlotter` object.
 
     Parameters
     ----------
@@ -546,7 +546,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
     Plot a pairwise or multiple sequence alignment highlighting
     the similarity per alignment column.
 
-    This function works like `plot_alignment()` with a `SymbolPlotter`,
+    This function works like :func:`plot_alignment()` with a :class:`SymbolPlotter`,
     that colors the symbols based on the similarity with the other
     symbols in the same column.
     The color intensity (or colormap value, respectively) of a symbol
@@ -687,7 +687,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
     Plot a pairwise or multiple sequence alignment coloring each symbol
     based on the symbol type.
 
-    This function works like `plot_alignment()` with a `SymbolPlotter`,
+    This function works like :func:`plot_alignment()` with a :class:`SymbolPlotter`,
     that colors the symbols based on a color scheme.
     The color intensity (or colormap value, respectively) of a symbol
     scales with similarity of the respective symbol to the other symbols

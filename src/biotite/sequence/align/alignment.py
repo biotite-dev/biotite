@@ -16,7 +16,7 @@ __all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
 
 class Alignment(object):
     """
-    An `Alignment` object stores information about which symbols of
+    An :class:`Alignment` object stores information about which symbols of
     *n* sequences are aligned to each other and it stores the
     corresponding alignment score.
     
@@ -32,7 +32,7 @@ class Alignment(object):
     conversion into strings in order to make the alignment human
     readable.
     
-    Unless an `Alignment` object is the result of an multiple sequence
+    Unless an :class:`Alignment` object is the result of an multiple sequence
     alignment, the object will contain only two sequences.
     
     All attributes of this class are publicly accessible.
@@ -252,7 +252,7 @@ def get_codes(alignment):
 
 def get_symbols(alignment):
     """
-    Similar to `get_codes()`, but contains the decoded symbols instead
+    Similar to :func:`get_codes()`, but contains the decoded symbols instead
     of codes.
     Gaps are still represented by *None* values.
     

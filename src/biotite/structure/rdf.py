@@ -29,20 +29,20 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     center : Atom or AtomArray or AtomArrayStack or ndarray, dtype=float
         Coordinates or atoms(s) to use as origin(s) for RDF calculation.
 
-        - If a single `Atom` or an `ndarray` with shape *(3,)* is given,
+        - If a single :class:`Atom` or an `ndarray` with shape *(3,)* is given,
           the RDF is only calculated for this position.
-        - If an `AtomArray` or an `ndarray` with shape *(n,3)* is given,
+        - If an :class:`AtomArray` or an `ndarray` with shape *(n,3)* is given,
           the calculated RDF histogram is an average over *n*
           postions.
-        - If an `AtomArrayStack` or an `ndarray` with shape *(m,n,3)* is
+        - If an :class:`AtomArrayStack` or an `ndarray` with shape *(m,n,3)* is
           given, different centers are used for each model *m*.
           The calculated RDF histogram is an average over *m*
           models and *n* positions.
-          This requires `atoms` to be an `AtomArrayStack`.
+          This requires `atoms` to be an :class:`AtomArrayStack`.
 
     atoms : AtomArray or AtomArrayStack
         The distribution is calculated based on these atoms.
-        When an an `AtomArrayStack` is provided, the RDF histogram is
+        When an an :class:`AtomArrayStack` is provided, the RDF histogram is
         averaged over all models.
         Please not that `atoms` must have an associated box,
         unless `box` is set.
@@ -66,8 +66,8 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     box : ndarray, shape=(3,3) or shape=(m,3,3), optional
         If this parameter is set, the given box is used instead of the
         `box` attribute of `atoms`.
-        Must have shape *(3,3)* if atoms is an `AtomArray` or
-        *(m,3,3)* if atoms is an `AtomArrayStack`, respectively.
+        Must have shape *(3,3)* if atoms is an :class:`AtomArray` or
+        *(m,3,3)* if atoms is an :class:`AtomArrayStack`, respectively.
     periodic : bool, optional
         Defines if periodic boundary conditions are taken into account.
 

@@ -177,7 +177,7 @@ class MuscleApp(MSAApp):
         """
         Perform a multiple sequence alignment.
         
-        This is a convenience function, that wraps the `MSAApp`
+        This is a convenience function, that wraps the :class:`MSAApp`
         execution.
         
         Parameters

@@ -49,7 +49,7 @@ Instead usually the concrete subclasses :class:`NucleotideSequence`
 (for amino acid sequences) are used.
 These classes have defined alphabets and provide additional sequence
 type specific methods.
-The class :class:`GeneralSequence` allows the usage of a custom `Alphabet`
+The class :class:`GeneralSequence` allows the usage of a custom :class:`Alphabet`
 without the need to subclass :class:`Sequence`.
 
 Additionally, this subpackage provides support for sequence features,

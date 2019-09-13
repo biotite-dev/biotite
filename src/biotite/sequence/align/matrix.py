@@ -15,8 +15,8 @@ __all__ = ["SubstitutionMatrix"]
 
 class SubstitutionMatrix(object):
     """
-    A `SubstitutionMatrix` is the foundation for scoring in sequence
-    alignments. A `SubstitutionMatrix` maps each possible pairing
+    A :class:`SubstitutionMatrix` is the foundation for scoring in sequence
+    alignments. A :class:`SubstitutionMatrix` maps each possible pairing
     of a symbol of a first alphabet with a symbol of a second alphabet
     to a score (integer).
     
@@ -340,7 +340,7 @@ class SubstitutionMatrix(object):
     @staticmethod
     def std_protein_matrix():
         """
-        Get the default `SubstitutionMatrix` for protein sequence
+        Get the default :class:`SubstitutionMatrix` for protein sequence
         alignments, which is BLOSUM62.
         
         Returns
@@ -353,7 +353,7 @@ class SubstitutionMatrix(object):
     @staticmethod
     def std_nucleotide_matrix():
         """
-        Get the default `SubstitutionMatrix` for DNA sequence
+        Get the default :class:`SubstitutionMatrix` for DNA sequence
         alignments.
         
         Returns

@@ -33,7 +33,7 @@ def load_color_scheme(file_name):
         keys, if the input file is proper:
         
            - **name** - Name of the scheme.
-           - **alphabet** - `Alphabet` instance describing the type of
+           - **alphabet** - :class:`Alphabet` instance describing the type of
              sequence the scheme can be used for.
            - **colors** - List of *Matplotlib* compatible colors
     """
