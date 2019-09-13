@@ -40,7 +40,7 @@ def neighbor_joining(np.ndarray distances):
     -------
     tree : Tree
         A rooted tree. The `index` attribute in the leaf
-        `TreeNode` objects refer to the indices of `distances`.
+        :class:`TreeNode` objects refer to the indices of `distances`.
 
     Raises
     ------

@@ -42,7 +42,7 @@ def upgma(np.ndarray distances):
     -------
     tree : Tree
         A rooted binary tree. The `index` attribute in the leaf
-        `TreeNode` objects refer to the indices of `distances`.
+        :class:`TreeNode` objects refer to the indices of `distances`.
 
     Raises
     ------

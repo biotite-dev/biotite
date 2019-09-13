@@ -33,7 +33,7 @@ def set_structure(file, array):
     set_structure(file, array)
 
     Set the relevant fields of an MMTF file with the content of an
-    `AtomArray` or `AtomArrayStack`.
+    :class:`AtomArray` or :class:`AtomArrayStack`.
     
     All required and some optional fields of the MMTF file will be set
     or overriden if the field does already exist. Fields are removed
@@ -52,7 +52,7 @@ def set_structure(file, array):
     -----
     As the MMTF format only supports one unit cell, individual unit
     cells for each model are not supported.
-    Instead only the first box in an `AtomArrayStack` is written
+    Instead only the first box in an :class:`AtomArrayStack` is written
     into the file.
     
     Examples

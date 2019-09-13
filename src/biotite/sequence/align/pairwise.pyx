@@ -113,7 +113,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     because both scale linearly with each sequence length.
     
     The aligned sequences do not need to be instances from the same
-    `Sequence` subclass, since they do not need to have the same
+    :class:`Sequence` subclass, since they do not need to have the same
     alphabet. The only requirement is that the substitution matrix'
     alphabets extend the alphabets of the two sequences.
     
