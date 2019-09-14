@@ -54,7 +54,7 @@ class CompositeQuery(Query):
     combined either with an 'AND', 'OR' or 'NOT' operator.
 
     Usually the user does not create instances of this class directly,
-    but `Query` instances are combined with
+    but :class:`Query` instances are combined with
     ``|`` (OR), ``&`` (AND) or ``^`` (NOT).
     
     Parameters

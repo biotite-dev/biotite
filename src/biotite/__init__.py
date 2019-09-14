@@ -2,6 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+"""
+This is the top-level package of *Biotite*.
+Although it does not provide useful functionality for most user,
+it does provide utilities and base classes used by a lot of *Biotite*'s
+modules.
+"""
+
 __version__ = "0.16.0"
 __author__ = "Patrick Kunzmann"
 

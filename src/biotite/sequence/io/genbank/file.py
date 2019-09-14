@@ -526,7 +526,7 @@ class MultiFile(TextFile):
     
     The information for each UID are appended to each other in such a
     file.
-    Objects of this class can be iterated to obtain a `GenBankFile`
+    Objects of this class can be iterated to obtain a :class:`GenBankFile`
     or `GenPeptFile` for each entry in the file.
     
     Examples

@@ -57,15 +57,15 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         """
         Add additional options for the command line program.
         These options are put before the arguments automatically
-        determined by the respective `LocalApp` subclass.
+        determined by the respective :class:`LocalApp` subclass.
 
         This method is focused on advanced users, who have knowledge on
         the available options of the command line program and the
-        options already used by the `LocalApp` subclasses.
+        options already used by the :class:`LocalApp` subclasses.
         Ignoring the already used options may result in conflicting
         CLI arguments and potential unexpected results.
         It is recommended to use this method only, when the respective
-        `LocalApp` subclass does not provide a method to set the
+        :class:`LocalApp` subclass does not provide a method to set the
         desired option.
         
         Parameters

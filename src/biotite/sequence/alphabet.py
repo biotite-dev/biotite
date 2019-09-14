@@ -13,10 +13,10 @@ from .codec import encode_chars, decode_to_chars
 
 class Alphabet(object):
     """
-    This class defines the allowed symbols for a `Sequence` and handles
+    This class defines the allowed symbols for a :class:`Sequence` and handles
     the encoding/decoding between symbols and symbol codes.
     
-    An `Alphabet` is created with the list of symbols, that can be used
+    An :class:`Alphabet` is created with the list of symbols, that can be used
     in this context. In most cases a symbol will be simply a letter,
     hence a string of length 1. But in principal every hashable Python
     object can serve as symbol.
@@ -25,7 +25,7 @@ class Alphabet(object):
     done in the following way: Find the first index in the symbol list,
     where the list element equals the symbol. This index is the
     symbol code. If the symbol is not found in the list, an
-    `AlphabetError` is raised.
+    :class:`AlphabetError` is raised.
     
     Internally, a dictionary is used for encoding, with symbols as keys
     and symbol codes as values. Therefore, every symbol must be
@@ -212,12 +212,12 @@ class Alphabet(object):
 
 class LetterAlphabet(Alphabet):
     """
-    `LetterAlphabet` is a an `Alphabet` subclass specialized for letter
+    :class:`LetterAlphabet` is a an :class:`Alphabet` subclass specialized for letter
     based alphabets, like DNA or protein sequence alphabets.
     The alphabet size is limited to a maximum of 128 symbols, the size
     of the ASCII charcater set.
     The encoding and decoding process is a lot faster than for a
-    normal `Alphabet`.
+    normal :class:`Alphabet`.
 
     The performance gain comes through the use of *NumPy* and *Cython*
     for encoding and decoding, without the need of a dictionary.
@@ -287,7 +287,7 @@ class LetterAlphabet(Alphabet):
         ----------
         symbols : array-like
             The symbols to encode. The method is faster when a
-            `ndarray` is provided.
+            :class:`ndarray` is provided.
         dtype : dtype, optional
             For compatibility with superclass. The value is ignored
             
@@ -319,7 +319,7 @@ class LetterAlphabet(Alphabet):
         ----------
         code : array-like object of int
             The sequence code to decode. Works fastest when `code` is
-            `ndarray`. 
+            :class:`ndarray`. 
         
         Returns
         -------
@@ -408,6 +408,6 @@ class AlphabetMapper(object):
 class AlphabetError(Exception):
     """
     This exception is raised, when a code or a symbol is not in an
-    `Alphabet`.
+    :class:`Alphabet`.
     """
     pass

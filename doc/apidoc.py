@@ -141,6 +141,8 @@ f"""
 
 .. automodule:: {package_name}
 
+.. currentmodule:: {package_name}
+
 {attributes_string}
 
 """

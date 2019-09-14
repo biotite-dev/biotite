@@ -33,7 +33,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     get_structure(file, model=None, insertion_code=[], altloc=[],
                   extra_fields=[], include_bonds=False)
     
-    Get an `AtomArray` or `AtomArrayStack` from the MMTF file.
+    Get an :class:`AtomArray` or :class:`AtomArrayStack` from the MMTF file.
     
     Parameters
     ----------
@@ -41,8 +41,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        `AtomArray` from the atoms corresponding to the given model ID.
-        If this parameter is omitted, an `AtomArrayStack` containing all
+        :class:`AtomArray` from the atoms corresponding to the given model ID.
+        If this parameter is omitted, an :class:`AtomArrayStack` containing all
         models will be returned, even if the structure contains only one
         model.
     insertion_code : list of tuple, optional
@@ -61,8 +61,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         There are 4 optional annotation identifiers:
         'atom_id', 'b_factor', 'occupancy' and 'charge'.
     include_bonds : bool
-        If set to true, an `BondList` will be created for the resulting
-        `AtomArray` containing the bond information from the file.
+        If set to true, an :class:`BondList` will be created for the resulting
+        :class:`AtomArray` containing the bond information from the file.
         (Default: False)
     
     Returns

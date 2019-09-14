@@ -20,7 +20,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     frames. The file formats are usually binary and involve sometimes
     heavy compression, so that a large number of frames can be stored
     in relatively small space.
-    Since all `TrajectoryFile` subclasses interface `MDtraj` trajectory
+    Since all :class:`TrajectoryFile` subclasses interface `MDtraj` trajectory
     file classes, `MDtraj` must be installed to use any of them.
 
     When extracting data from or setting data in the file, only a
@@ -39,7 +39,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Read a trajectory file.
         
         A trajectory file can be seen as a file representation of an
-        `AtomArrayStack`.
+        :class:`AtomArrayStack`.
         Therefore, `start`, `stop` and `step` represent slice parameters
         of the index of the first dimension and
         `atom_i` represents an index array for the second dimension.
@@ -168,7 +168,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def get_structure(self, template):
         """
-        Convert the trajectory file content into an `AtomArrayStack`.
+        Convert the trajectory file content into an :class:`AtomArrayStack`.
         
         Since trajectory files usually only contain atom coordinate
         information and no topology information, this method requires
@@ -250,7 +250,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Returns
         -------
         class
-            An `MDtraj` subclass of `TrajectoryFile`.
+            An `MDtraj` subclass of :class:`TrajectoryFile`.
         """
         pass
     
@@ -258,7 +258,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     def process_read_values(self, read_values):
         """
         Convert the return value of the `read()` method of the
-        respective *MDTraj* `TrajectoryFile` into coordinates,
+        respective *MDTraj* :class:`TrajectoryFile` into coordinates,
         simulation box and simulation time.
         
         PROTECTED: Override when inheriting.
@@ -266,7 +266,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Parameters
         ----------
         read_values : tuple
-            The return value of the respective *MDTraj* `TrajectoryFile`
+            The return value of the respective *MDTraj* :class:`TrajectoryFile`
             `read()` method.
         
         Returns
@@ -285,7 +285,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         Convert the `coord`, `box` and `time` attribute into a
         dictionary that is given as *kwargs* to the respective
-        *MDTraj* `TrajectoryFile` `write()` method.
+        *MDTraj* :class:`TrajectoryFile` `write()` method.
 
         PROTECTED: Override when inheriting.
 
@@ -302,7 +302,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         -------
         parameters : dict
             This dictionary is given as *kwargs* parameter to the
-            respective *MDTraj* `TrajectoryFile` `write()` method.
+            respective *MDTraj* :class:`TrajectoryFile` `write()` method.
         """
         pass
 

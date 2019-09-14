@@ -14,14 +14,14 @@ import copy
 class GeneralSequence(Sequence):
     """
     This class allows the creation of a sequence with custom
-    `Alphabet` without the need to subclass `Sequence`.
+    :class:`Alphabet` without the need to subclass :class:`Sequence`.
         
     Parameters
     ----------
     alphabet : Alphabet
         The alphabet of this sequence.
     sequence : iterable object, optional
-        The symbol sequence, the `Sequence` is initialized with. For
+        The symbol sequence, the :class:`Sequence` is initialized with. For
         alphabets containing single letter strings, this parameter
         may also be a `str` object. By default the sequence is empty.
     """
@@ -168,17 +168,17 @@ class NucleotideSequence(Sequence):
         -------
         protein : ProteinSequence or list of ProteinSequence
             The translated protein sequence. If `complete` is true,
-            only a single `ProteinSequence` is returned. Otherwise
-            a list of `ProteinSequence` is returned, which contains
+            only a single :class:`ProteinSequence` is returned. Otherwise
+            a list of :class:`ProteinSequence` is returned, which contains
             every ORF.
         pos : list of tuple (int, int)
             Is only returned if `complete` is false. The list contains
             a tuple for each ORF.
             The first element of the tuple is the index of the 
-            `NucleotideSequence`, where the translation starts.
+            :class:`NucleotideSequence`, where the translation starts.
             The second element is the exclusive stop index, it
             represents the first nucleotide in the
-            `NucleotideSequence` after a stop codon.
+            :class:`NucleotideSequence` after a stop codon.
         
         Examples
         --------

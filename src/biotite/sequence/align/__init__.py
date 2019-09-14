@@ -5,18 +5,18 @@
 """
 This subpackage provides functionality for sequence alignemnts.
 
-The two central classes involved are `SubstitutionMatrix` and
+The two central classes involved are :class:`SubstitutionMatrix` and
 `Àlignment`:
 
 Every function that performs an alignment requires a
-`SubstitutionMatrix` that provides similarity scores for each symbol
+:class:`SubstitutionMatrix` that provides similarity scores for each symbol
 combination of two alphabets (usually both alphabets are equal).
-The alphabets in the `SubstitutionMatrix` must match or extend the
+The alphabets in the :class:`SubstitutionMatrix` must match or extend the
 alphabets of the sequences to be aligned.
 
-An alignment cannot be directly represented as list of `Sequence`
+An alignment cannot be directly represented as list of :class:`Sequence`
 objects, since a gap indicates the absence of any symbol.
-Instead, the aligning functions return one or more `Alignment`
+Instead, the aligning functions return one or more :class:`Alignment`
 instances.
 These objects contain the original sequences and a trace, that describe
 which positions (indices) in the sequences are aligned.
