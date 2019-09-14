@@ -20,7 +20,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     orientation : {'left', 'right', 'bottom', 'top'}, optional
         The position of the root node in the plot
     use_distances : bool, optional
-        If true, the `distance` attribute of the `TreeNode` objects
+        If true, the `distance` attribute of the :class:`TreeNode` objects
         are used as distance measure.
         Otherwise the topological distance is used.
     labels : list of str, optional 

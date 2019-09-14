@@ -75,7 +75,7 @@ def unitcell_from_vectors(box):
     """
     Get the unit cell lengths and angles from box vectors.
 
-    This is the reverse operation of `vectors_from_unitcell()`.
+    This is the reverse operation of :func:`vectors_from_unitcell()`.
 
     Parameters
     ----------
@@ -136,7 +136,7 @@ def repeat_box(atoms, amount=1):
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms to be repeated.
-        If `atoms` is a `AtomArrayStack`, the atoms are repeated for
+        If `atoms` is a :class:`AtomArrayStack`, the atoms are repeated for
         each model, according to the box of each model.
     amount : int, optional
         The amount of boxes that are created in each direction of the
@@ -262,7 +262,7 @@ def repeat_box(atoms, amount=1):
 
 def repeat_box_coord(coord, box, amount=1):
     r"""
-    Similar to `repeat_box()`, repeat the coordinates in a box by
+    Similar to :func:`repeat_box()`, repeat the coordinates in a box by
     duplicating and placing them in adjacent boxes.
 
     Parameters
@@ -416,7 +416,7 @@ def remove_pbc(atoms, selection=None):
     In this case, multiple selections should be given, with a single
     molecule selected in each selection.
 
-    Internally the function uses `remove_pbc_from_coord()`.
+    Internally the function uses :func:`remove_pbc_from_coord()`.
     """
     new_atoms = atoms.copy()
     
@@ -467,7 +467,7 @@ def remove_pbc_from_coord(coord, box):
     All other coordinates are assembled relative to the origin by using
     the displacement coordinates in adjacent array positions.
     Basically, this function performs the reverse action of
-    `move_inside_box()`.
+    :func:`move_inside_box()`.
     
     Parameters
     ----------
@@ -573,7 +573,7 @@ def fraction_to_coord(fraction, box):
     """
     Transform fractions of box vectors to coordinates.
 
-    This is the reverse operation of `coord_to_fraction()`.
+    This is the reverse operation of :func:`coord_to_fraction()`.
 
     Parameters
     ----------

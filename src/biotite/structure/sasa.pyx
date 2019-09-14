@@ -60,7 +60,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     point_distr : str or function, optional
         If a function is given, the function is used to calculate the
         point distribution for the mesh (the function must take `float`
-        *n* as parameter and return a *(n x 3)* `ndarray`).
+        *n* as parameter and return a *(n x 3)* :class:`ndarray`).
         Alternatively a string can be given to choose a built-in
         distribution:
             
@@ -70,7 +70,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         By default *Fibonacci* is used.
     vdw_radii : str or ndarray, dtype=float, optional
         Indicates the set of VdW radii to be used. If an `array`-length
-        `ndarray` is given, each atom gets the radius at the
+        :class:`ndarray` is given, each atom gets the radius at the
         corresponding index. Radii given for atoms that are not used in
         SASA calculation (e.g. solvent atoms) can have arbitrary values
         (e.g. `NaN`). If instead a string is given, one of the

@@ -42,10 +42,18 @@
             "Query",
             "CompositeQuery",
             "SimpleQuery",
+            "RangeQuery",
+            "MoleculeTypeQuery",
             "BFactorQuery",
             "MethodQuery",
             "MolecularWeightQuery",
-            "ResolutionQuery"
+            "ResolutionQuery",
+            "PubMedIDQuery",
+            "UniProtIDQuery",
+            "PfamIDQuery",
+            "SequenceClusterQuery",
+            "TextSearchQuery",
+            "KeywordQuery"
         ],
         "Search and fetch" : [
             "search",

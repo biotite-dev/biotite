@@ -95,8 +95,9 @@ html_theme_options = {
     "github_user"   : "biotite-dev",
     "github_repo"   : "biotite",
     "github_banner" : "true",
-    "github_button" : "false",
-    "page_width"    : "85%",
+    "github_button" : "true",
+    "github_type"   : "star",
+    "page_width"    : "1200px",
     "fixed_sidebar" : "true",
     
     "sidebar_link_underscore" : "#FFFFFF"

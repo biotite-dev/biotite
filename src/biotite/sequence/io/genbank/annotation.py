@@ -212,7 +212,7 @@ def set_annotation(gb_file, annotation):
 
 def _convert_to_loc_string(locs):
     """
-    Create GenBank comptabile location strings from a list of `Location`
+    Create GenBank comptabile location strings from a list of :class:`Location`
     objects.
     """
     if len(locs) == 1:

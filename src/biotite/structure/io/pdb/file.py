@@ -86,20 +86,20 @@ class PDBFile(TextFile):
         -----
         Note that `get_coord()` may output more coordinates than the
         coordinates of the atom array (stack) from the corresponding
-        `get_structure()` call have.
-        The reason for this is, that `get_structure()` filters
+        :func:`get_structure()` call have.
+        The reason for this is, that :func:`get_structure()` filters
         insertion codes and altlocs, while `get_coord()` does not.
         
         Examples
         --------
-        Read an `AtomArrayStack` from multiple PDB files, where each
+        Read an :class:`AtomArrayStack` from multiple PDB files, where each
         PDB file contains the same atoms but different positions.
         This is an efficient approach when a trajectory is spread into
         multiple PDB files, as done e.g. by the Rosetta modeling
         software. 
 
         For the purpose of this example, the PDB files are created from
-        an existing `AtomArrayStack`.
+        an existing :class:`AtomArrayStack`.
         
         >>> import os.path
         >>> file_names = []
@@ -112,10 +112,10 @@ class PDBFile(TextFile):
         >>> print(file_names)
         ['...model_1.pdb', '...model_2.pdb', ..., '...model_38.pdb']
 
-        Now the PDB files are used to create an `AtomArrayStack`,
+        Now the PDB files are used to create an :class:`AtomArrayStack`,
         where each model represents a different model.
 
-        Construct a new `AtomArrayStack` with annotations taken from
+        Construct a new :class:`AtomArrayStack` with annotations taken from
         one of the created files used as template.
 
         >>> template_file = PDBFile()
@@ -126,7 +126,7 @@ class PDBFile(TextFile):
         ...     annot = template_array.get_annotation(category)
         ...     new_stack.set_annotation(category, annot)
 
-        Fill coordinates of new `AtomArrayStack` with coordinates of the
+        Fill coordinates of new :class:`AtomArrayStack` with coordinates of the
         PDB files.
 
         >>> for i, file_name in enumerate(file_names):
@@ -134,8 +134,8 @@ class PDBFile(TextFile):
         ...     pdb_file.read(file_name)
         ...     new_stack.coord[i] = pdb_file.get_coord(model=1)
 
-        The newly created `AtomArrayStack` should now be equal to the
-        `AtomArrayStack` the PDB files were created from.
+        The newly created :class:`AtomArrayStack` should now be equal to the
+        :class:`AtomArrayStack` the PDB files were created from.
 
         >>> print(new_stack == atom_array_stack)
         True
@@ -211,7 +211,7 @@ class PDBFile(TextFile):
     def get_structure(self, model=None, insertion_code=[], altloc=[],
                       extra_fields=[]):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the PDB file.
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
         
         This function parses standard base-10 PDB files as well as
         hybrid-36 PDB.
@@ -220,9 +220,9 @@ class PDBFile(TextFile):
         ----------
         model : int, optional
             If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model
+            :class:`AtomArray` from the atoms corresponding to the given model
             ID.
-            If this parameter is omitted, an `AtomArrayStack` containing
+            If this parameter is omitted, an :class:`AtomArrayStack` containing
             all models will be returned, even if the structure contains
             only one model.
         insertion_code : list of tuple, optional
@@ -413,7 +413,7 @@ class PDBFile(TextFile):
 
     def set_structure(self, array, hybrid36=False):
         """
-        Set the `AtomArray` or `AtomArrayStack` for the file.
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the file.
         
         This makes also use of the optional annotation arrays
         'atom_id', 'b_factor', 'occupancy' and 'charge'.

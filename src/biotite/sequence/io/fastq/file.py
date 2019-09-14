@@ -41,7 +41,7 @@ class FastqFile(TextFile, MutableMapping):
     must be provided explicitly, either as number or format
     (e.g. ``'Illumina-1.8'``).
 
-    Similar to the `FastaFile` class, this class implements the
+    Similar to the :class:`FastaFile` class, this class implements the
     `MutableMapping` interface:
     An identifier string (without the leading ``@``) is used as index
     to get and set the corresponding sequence and quality.

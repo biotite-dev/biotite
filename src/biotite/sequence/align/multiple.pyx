@@ -496,7 +496,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         orginal `sequences` parameter.
     aligned_sequences : list of Sequence, length=m
         A list of the sequences that were aligned.
-        Instead of an `Alignment` object that represents the gaps as
+        Instead of an :class:`Alignment` object that represents the gaps as
         ``-1`` in the trace, the gaps are represented as dedicated
         gap symbols in this case.
         This allows for the pairwise alignemt of gapped sequences.

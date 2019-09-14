@@ -23,14 +23,14 @@ def plot_feature_map(axes, annotation, loc_range=None,
     Plot a sequence annotation, by showing the range of each feature
     on one or multiple position depicting line(s).
 
-    This function uses `FeaturePlotter` objects to draw the features.
+    This function uses :class:`FeaturePlotter` objects to draw the features.
     This function internally uses a list of plotters, where the
     first plotter in the list, that supports a feature, is used to draw
     that feature.
     The amount of features that can be visualized by default is limited.
     Features, that are not supported otherwise, are visualized as simple
     rectangles.
-    Additional `FeaturePlotter` objects, that are supplied in the
+    Additional :class:`FeaturePlotter` objects, that are supplied in the
     `feature_plotters` parameters, can be used to add support for
     further features or to customize the appearance of certain features.
 
@@ -67,17 +67,17 @@ def plot_feature_map(axes, annotation, loc_range=None,
         height of the drawn features.
     feature_plotters : list of FeaturePlotter, optional
         Custom plotters for features.
-        The list is iterated from the beginning until a `FeaturePlotter`
+        The list is iterated from the beginning until a :class:`FeaturePlotter`
         matches the respective feature
         (`FeaturePlotter.matches()` returns `True`).
-        This `FeaturePlotter` is then used to draw the feature.
-        Therefore, the `FeaturePlotter` instances in the list have
+        This :class:`FeaturePlotter` is then used to draw the feature.
+        Therefore, the :class:`FeaturePlotter` instances in the list have
         descending priority.
         The default plotters are appended after this supplied list,
         i.e. the default plotters have a lower prioriy.
     style_param : dict
         Additional style parameters that are given to the
-        `FeaturePlotter` objects.
+        :class:`FeaturePlotter` objects.
 
     Notes
     -----
@@ -214,10 +214,10 @@ def plot_feature_map(axes, annotation, loc_range=None,
 
 class FeaturePlotter(metaclass=abc.ABCMeta):
     """
-    A `FeaturePlotter` is an object, that 'knows' how to draw a certain
+    A :class:`FeaturePlotter` is an object, that 'knows' how to draw a certain
     type of sequence feature onto a *Matplotlib* axes.
 
-    Whether the `FeaturePlotter` is able to draw a feature, is
+    Whether the :class:`FeaturePlotter` is able to draw a feature, is
     checked via the `matches()` method.
     The visualization of a compatible feature is conducted in the
     `draw()` method.

@@ -8,6 +8,7 @@ __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 import requests
 import abc
 from xml.etree import ElementTree
+from .check import check_for_errors
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -53,7 +54,7 @@ class CompositeQuery(Query):
     combined either with an 'AND', 'OR' or 'NOT' operator.
 
     Usually the user does not create instances of this class directly,
-    but `Query` instances are combined with
+    but :class:`Query` instances are combined with
     ``|`` (OR), ``&`` (AND) or ``^`` (NOT).
     
     Parameters
@@ -122,7 +123,12 @@ class SimpleQuery(Query):
         "Modification Date", "Molecular Weight", "Organism", "Page Number",
         "Primary Accession", "Properties", "Protein Name", "Publication Date",
         "SeqID String", "Sequence Length", "Substance Name", "Text Word",
-        "Title", "Volume"
+        "Title", "Volume",
+        # Abbreviations
+        "ACCN", "ALL", "AU", "AUTH", "ECNO", "FKEY", "FILT", "SB", "GENE",
+        "ISS", "JOUR", "KYWD", "MDAT", "MOLWT", "ORGN", "PAGE", "PACC",
+        "PORGN", "PROP", "PROT", "PDAT", "SQID", "SLEN", "SUBS", "WORD",  "TI",
+        "TITL" "VOL"
     ]
 
     def __init__(self, term, field=None):
@@ -171,6 +177,14 @@ def search(query, db_name, number=20):
         A list of strings containing all NCBI UIDs (accession number)
         that meet the query requirements.
     
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
+    
     Examples
     --------
     >>> query = SimpleQuery("Escherichia coli", "Organism") & \
@@ -183,6 +197,7 @@ def search(query, db_name, number=20):
         (_base_url + _search_url).format(db_name, str(query), str(number))
     )
     xml_response = r.text
+    check_for_errors(xml_response)
     root = ElementTree.fromstring(xml_response)
     xpath = ".//IdList/Id"
     uids = [element.text for element in root.findall(xpath)]

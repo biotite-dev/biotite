@@ -14,27 +14,31 @@ Biotite documentation
    .. image:: https://upload.wikimedia.org/wikipedia/commons/3/3b/Biotite%2C_Sanidine_and_Nepheline_-_Ochtendung%2C_Eifel%2C_Germany.jpg
       :alt: Biotite image
 
-The *Biotite* package bundles popular tasks in computational molecular biology
-into a unifying *Python* framework.
-It can handle a major part of the molecular biology workflow
+*Biotite* is your Swiss army knife for bioinformatics.
+Whether you want to identify homologous sequence regions in a protein family
+or you would like to find disulfide bonds in a protein structure: *Biotite*
+has the right tool for you.
+This package bundles popular tasks in computational molecular biology
+into a uniform *Python* library.
+It can handle a major part of the typical workflow
 for sequence and biomolecular structure data:
+   
+   - Searching and fetching data from biological databases
+   - Reading and writing popular sequence/structure file formats
+   - Analyzing and editing sequence/structure data
+   - Visualizing sequence/structure data
+   - Interfacing external applications for further analysis
 
-   - Fetching data from biological databases
-   - Loading data from structure/sequence files
-   - Analyzing and editing the data
-   - Saving the data back to file
-   - Interfacing external applications
+*Biotite* internally stores most of the data as *NumPy* `ndarray` objects,
+enabling
 
-The internal structure and sequence representations are based on *NumPy*
-`ndarray` objects.
-Vectorization and *Cython* based C-extensions render most operations
-highly efficient.
+   - fast C-accelerated analysis,
+   - intuitive usability through *NumPy*-like indexing syntax,
+   - extensibility through direct access of the internal *NumPy* arrays.
 
-Additionally, the package aims for simple usability and extensibility:
-The objects representing structures and sequences can be indexed and sliced
-like a `ndarray`.
-Even the actual internal `ndarray` instances are easily accessible allowing
-advanced users to implement their own algorithms upon the existing types.
+As a result the user can skip writing code for basic functionality (like
+file parsers) and can focus on what their code makes unique - from
+small analysis scripts to entire bioinformatics software packages.
 
 If you use *Biotite* in a scientific publication, please cite:
 
@@ -94,11 +98,11 @@ accessible surface area calculation, structure superimposition and more.
 This subpackage provides interfaces for external software, in case *Biotite*'s
 integrated functionality is not sufficient for your tasks.
 These interfaces range from locally installed software (e.g. MSA software) to
-web apps (e.g. BLAST).
+web services (e.g. BLAST).
 The speciality is that the interfaces are seamless:
 You do not have to write input files and read output files, you only have to
-input `Python` objects and you get `Python` objects.
-It is basically very similar to using normal `Python` functions.
+input *Python* objects and you get *Python* objects.
+It is basically very similar to using normal *Python* functions.
 
 .. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_001.png
    :width: 48 %
@@ -112,8 +116,8 @@ It is basically very similar to using normal `Python` functions.
 
 **Database** subpackage
 -----------------------
-This subpackage is all about searching in and downloading data from biological
-databases, including the probably most important ones: the *RCSB PDB* and the
+This subpackage is all about searching and downloading data from biological
+databases, including the arguably most important ones: the *RCSB PDB* and the
 *NCBI Entrez* database.
 
 

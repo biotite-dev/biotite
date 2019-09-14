@@ -33,8 +33,8 @@ def get_sequence(gb_file, format="gb"):
         The GenBank file to read the *ORIGIN* field from.
     format : {'gb', 'gp'}
         Indicates whether the file is a GenBank or a GenPept file.
-        Depending on this parameter a `NucleotideSequence` or a
-        `ProteinSequence` is returned.
+        Depending on this parameter a :class:`NucleotideSequence` or a
+        :class:`ProteinSequence` is returned.
     
     Returns
     -------

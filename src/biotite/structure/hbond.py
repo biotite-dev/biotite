@@ -70,7 +70,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     mask : ndarry, dtype=bool, shape=(m,n)
         *m x n* matrix that shows if an interaction with index *n* in
         `triplets` is present in the model *m* of the input `atoms`.
-        Only returned if `atoms` is an `AtomArrayStack`.
+        Only returned if `atoms` is an :class:`AtomArrayStack`.
     
     Notes
     -----

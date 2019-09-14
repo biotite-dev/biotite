@@ -22,10 +22,10 @@ class MMTFFile(File, MutableMapping):
     
     When reading a file, the *MessagePack* unpacker is used to create
     a dictionary of the file content.
-    This dictionary is accessed by indexing the `MMTFFile` instance
+    This dictionary is accessed by indexing the :class:`MMTFFile` instance
     directly with the dictionary keys. If the value is an encoded
     array, the value automatically decoded. Decoded arrays are always
-    returned as `ndarray` instances.
+    returned as :class:`ndarray` instances.
     
     Examples
     --------

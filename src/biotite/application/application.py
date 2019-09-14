@@ -24,9 +24,9 @@ class AppState(Flag):
 
 def requires_state(app_state):
     """
-    A decorator for methods of `Application` subclasses that raises an
-    `AppStateError` in case the method is called, when the
-    `Application` is not in the specified `AppState`.
+    A decorator for methods of :class:`Application` subclasses that raises an
+    :class:`AppStateError` in case the method is called, when the
+    :class:`Application` is not in the specified :class:`AppState`.
     
     Parameters
     ----------
@@ -35,8 +35,8 @@ def requires_state(app_state):
     
     Examples
     --------
-    Raises `AppStateError` when `function` is called,
-    if `Application` is not in one of the specified states:
+    Raises :class:`AppStateError` when `function` is called,
+    if :class:`Application` is not in one of the specified states:
     
     >>> @requires_state(AppState.RUNNING | AppState.FINISHED)
     ... def function(self):
@@ -64,21 +64,21 @@ class Application(metaclass=abc.ABCMeta):
     specify the respective kind of software and the way of interacting
     with it.
     
-    Every `Application` runs through a different app states (instances
-    of enum `AppState`) from its creation until its termination:
+    Every :class:`Application` runs through a different app states (instances
+    of enum :class:`AppState`) from its creation until its termination:
     Directly after its instantiation the app is in the *CREATED* state.
     In this state further parameters can be set for the application run.
     After the user calls the `start()` method, the app state is set to
-    *RUNNING* and the `Application` type specific `run()` method is
+    *RUNNING* and the :class:`Application` type specific `run()` method is
     called.
     When the application finishes the AppState changes to *FINISHED*.
-    This is checked via the `Application` type specific `is_finished()`
+    This is checked via the :class:`Application` type specific `is_finished()`
     method.
     The user can now call the `join()` method, concluding the
     application in the *JOINED* state and making the results of the
-    application accessible by executing the `Application`
+    application accessible by executing the :class:`Application`
     type specific `evaluate()` method. Furthermore this executes the
-    `Application` type specific `clean_up()` method. `join()` can even
+    :class:`Application` type specific `clean_up()` method. `join()` can even
     be called in the *RUNNING* state: This will constantly check
     `is_finished()` and will directly go into the *JOINED* state as soon
     as the application reaches the *FINISHED* state.
@@ -87,7 +87,7 @@ class Application(metaclass=abc.ABCMeta):
     This triggers the `clean_up()` method, too, but there are no
     accessible results.
     If a method is called in an unsuitable app state, an
-    `AppStateError` is called.
+    :class:`AppStateError` is called.
     
     The application run behaves like an additional thread: Between the
     call of `start()` and `join()` other Python code can be executed,
@@ -120,7 +120,7 @@ class Application(metaclass=abc.ABCMeta):
         Parameters
         ----------
         timeout : float, optional
-            If this parameter is specified, the `Application` only waits
+            If this parameter is specified, the :class:`Application` only waits
             for finishing until this value (in seconds) runs out.
             After this time is exceeded a `TimeoutError` is raised
             and the application is cancelled.

@@ -43,7 +43,7 @@ class BlastWebApp(WebApp):
         This can be changed to a private server or another cloud
         provider.
     obey_rules : bool, optional
-        If true, the application raises an `RuleViolationError`, if
+        If true, the application raises an :class:`RuleViolationError`, if
         the server is contacted too often, based on the NCBI BLAST
         usage rules. (Default: True)
     mail : str, optional

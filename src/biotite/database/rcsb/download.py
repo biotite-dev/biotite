@@ -9,12 +9,14 @@ import requests
 import os.path
 import os
 import glob
+import io
+from ..error import RequestError
 
 
 _standard_url = "https://files.rcsb.org/download/"
 _mmtf_url = "https://mmtf.rcsb.org/v1.0/full/"
 
-def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
+def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     """
     Download structure files from the RCSB PDB in various formats.
     
@@ -28,8 +30,10 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     format : str
         The format of the files to be downloaded.
         'pdb', 'pdbx', 'cif' or 'mmtf' are allowed.
-    target_path : str
+    target_path : str, optional
         The target directory of the downloaded files.
+        By default, the file content is stored in a file-like object
+        (`StringIO` or `BytesIO`, respectively).
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
@@ -40,11 +44,21 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     
     Returns
     -------
-    files : str or list of str
+    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
         If a single string (a single ID) was given in `pdb_ids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
+        If no `target_path` was given, the file contents are stored in
+        either `StringIO` or `BytesIO` objects.
+    
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
     
     Examples
     --------
@@ -62,45 +76,57 @@ def fetch(pdb_ids, format, target_path, overwrite=False, verbose=False):
     else:
         single_element = False
     # Create the target folder, if not existing
-    if not os.path.isdir(target_path):
+    if target_path is not None and not os.path.isdir(target_path):
         os.makedirs(target_path)
-    file_names = []
+    files = []
     for i, id in enumerate(pdb_ids):
         # Verbose output
         if verbose:
             print(f"Fetching file {i+1:d} / {len(pdb_ids):d} ({id})...",
                   end="\r")
         # Fetch file from database
-        file_name = os.path.join(target_path, id + "." + format)
-        file_names.append(file_name)
-        if not os.path.isfile(file_name) or overwrite == True:
+        if target_path is not None:
+            file = os.path.join(target_path, id + "." + format)
+        else:
+            file = None
+        if file is None or not os.path.isfile(file) or overwrite:
             if format == "pdb":
                 r = requests.get(_standard_url + id + ".pdb")
                 content = r.text
                 _assert_valid_file(content, id)
-                with open(file_name, "w+") as f:
-                    f.write(content)
+                if file is None:
+                    file = io.StringIO(content)
+                else:
+                    with open(file, "w+") as f:
+                        f.write(content)
             elif format == "cif" or format == "pdbx":
                 r = requests.get(_standard_url + id + ".cif")
                 content = r.text
                 _assert_valid_file(content, id)
-                with open(file_name, "w+") as f:
-                    f.write(content)
+                if file is None:
+                    file = io.StringIO(content)
+                else:
+                    with open(file, "w+") as f:
+                        f.write(content)
             elif format == "mmtf":
                 r = requests.get(_mmtf_url + id)
                 content = r.content
                 _assert_valid_file(r.text, id)
-                with open(file_name, "wb+") as f:
-                    f.write(content)
+                if file is None:
+                    file = io.BytesIO(content)
+                else:
+                    with open(file, "wb+") as f:
+                        f.write(content)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
+        files.append(file)
     if verbose:
         print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
-        return file_names[0]
+        return files[0]
     else:
-        return file_names
+        return files
 
 
 def _assert_valid_file(response_text, pdb_id):
@@ -109,4 +135,4 @@ def _assert_valid_file(response_text, pdb_id):
     or the response a *404* error due to invalid PDB ID.
     """
     if "404 Not Found" in response_text:
-        raise ValueError("PDB ID {:} is invalid".format(pdb_id))
+        raise RequestError("PDB ID {:} is invalid".format(pdb_id))

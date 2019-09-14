@@ -125,7 +125,7 @@ fig.tight_layout()
 # We want to visualize the secondary structure of one monomer of the
 # homodimeric transketolase (PDB: 1QGD).
 # The simplest way to do that, is to fetch the corresponding GenBank
-# file, extract an `Annotation` object from the file and draw the
+# file, extract an :class:`Annotation` object from the file and draw the
 # annotation.
 
 # Fetch GenBank files of the TK's first chain and extract annotatation
@@ -148,7 +148,7 @@ graphics.plot_feature_map(
 fig.tight_layout()
 
 ########################################################################
-# Another (more complicated) approach is the creation of an `Annotation`
+# Another (more complicated) approach is the creation of an :class:`Annotation`
 # containing the secondary structure from a structure file.
 # All file formats distributed by the *RCSB PDB* contain this
 # information, but it is most easily extracted from the

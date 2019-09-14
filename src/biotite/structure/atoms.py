@@ -3,8 +3,8 @@
 # information.
 
 """
-This module contains the main types of the `Structure` subpackage:
-`Atom`, `AtomArray` and `AtomArrayStack`. 
+This module contains the main types of the ``structure`` subpackage:
+:class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`. 
 """
 
 __author__ = "Patrick Kunzmann"
@@ -19,8 +19,9 @@ from ..copyable import Copyable
 
 class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     """
-    Private base class for `AtomArray` and `AtomArrayStack`. It
-    implements functionality for annotation arrays and also
+    Private base class for :class:`AtomArray` and
+    :class:`AtomArrayStack`.
+    It implements functionality for annotation arrays and also
     rudimentarily for coordinates.
     """
     
@@ -45,7 +46,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         Get the length of the atom array.
         
         This value is equivalent to the length of each annotation array.
-        For `AtomArray` it is the same as ``len(array)``.
+        For :class:`AtomArray` it is the same as ``len(array)``.
         
         Returns
         -------
@@ -58,7 +59,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         Add an annotation category, if not already existing.
         
-        Initially the new annotation is filled with the `zero`
+        Initially the new annotation is filled with the *zero*
         representation of the given type.
         
         Parameters
@@ -66,7 +67,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : str
             The annotation category to be added.
         dtype : type or str
-            A type instance or a valid `NumPy` `dtype` string.
+            A type instance or a valid *NumPy* *dtype* string.
             Defines the type of the annotation
         
         See Also
@@ -192,7 +193,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def equal_annotations(self, item):
         """
         Check, if this object shares equal annotation arrays with the
-        given `AtomArray` or `AtomArrayStack`.
+        given :class:`AtomArray` or :class:`AtomArrayStack`.
         
         Parameters
         ----------
@@ -216,7 +217,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     def equal_annotation_categories(self, item):
         """
         Check, if this object shares equal annotation array catgeories
-        with the given `AtomArray` or `AtomArrayStack`.
+        with the given :class:`AtomArray` or :class:`AtomArrayStack`.
         
         Parameters
         ----------
@@ -251,10 +252,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def __setattr__(self, attr, value):
         """
-        If the attribute is an annotation, the `value` is saved to the
-        annotation in the dictionary.
+        If the attribute is an annotation, the :attr:`value` is saved
+        to the annotation in the dictionary.
         Exposes coordinates.
-        `value` must have same length as `array_length()`.
+        :attr:`value` must have same length as :func:`array_length()`.
         """
         if attr == "coord":
             if not isinstance(value, np.ndarray):
@@ -419,13 +420,15 @@ class Atom(object):
     A representation of a single atom.
     
     The coordinates an annotations can be accessed directly.
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
     Parameters
     ----------
     coord: list or ndarray
-        the x, y and z coordinates
+        The x, y and z coordinates.
     kwargs
-        atom annotations as key value pair
+        Atom annotations as key value pair.
     
     Attributes
     ----------
@@ -504,43 +507,53 @@ class AtomArray(_AtomArrayBase):
     """
     An array representation of a model consisting of multiple atoms.
     
-    An `AtomArray` can be seen as a list of `Atom` instances.
-    Instead of using directly a list, this class uses an `NumPy`
-    `ndarray` for each annotation category and the coordinates. These
-    coordinates can be accessed directly via the `coord` attribute. The
-    annotations are accessed either via the category as attribute name
-    or the `get_annotation()`, `set_annotation()` method. Usage of
-    custom annotations is achieved via `add_annotation()` or
-    `set_annotation()`.
+    An :class:`AtomArray` can be seen as a list of :class:`Atom`
+    instances.
+    Instead of using directly a list, this class uses an *NumPy*
+    :class:`ndarray` for each annotation category and the coordinates.
+    These
+    coordinates can be accessed directly via the :attr:`coord`
+    attribute.
+    The annotations are accessed either via the category as attribute
+    name or the :func:`get_annotation()`, :func:`set_annotation()`
+    method.
+    Usage of custom annotations is achieved via :func:`add_annotation()`
+    or :func:`set_annotation()`.
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
-    In order to get an an subarray of an `AtomArray`, `NumPy` style
-    indexing is used. This includes slices, boolean arrays,
-    index arrays and even *Ellipsis* notation. Using a single integer as
-    index returns a single `Atom` instance.
+    In order to get an an subarray of an :class:`AtomArray`,
+    *NumPy* style indexing is used.
+    This includes slices, boolean arrays, index arrays and even
+    *Ellipsis* notation.
+    Using a single integer as index returns a single :class:`Atom`
+    instance.
     
-    Inserting or appending an `AtomArray` into another `AtomArray` is
-    done with the '+' operator. Only the annotation categories, which
-    are existing in both arrays, are transferred to the new array.
+    Inserting or appending an :class:`AtomArray` to another
+    :class:`AtomArray` is done with the '+' operator.
+    Only the annotation categories, which are existing in both arrays,
+    are transferred to the new array.
 
-    Optionally, an `AtomArray` can store chemical bond information via
-    a `BondList` object. It can be accessed using the `bonds` attribute.
-    If no bond information is available, `bonds` is *None*.
+    Optionally, an :class:`AtomArray` can store chemical bond
+    information via a :class:`BondList` object.
+    It can be accessed using the :attr:`bonds` attribute.
+    If no bond information is available, :attr:`bonds` is ``None``.
     Consequently the bond information can be removed from the
-    `AtomArray`, by setting `bonds` to *None*.
-    When indexing the `AtomArray` the atom indices in the associated
-    `BondList` are updated as well, hence the indices in the `BondList`
-    will always point to the same atoms.
-    If two `AtomArray` instances are concatenated, the resulting
-    `AtomArray` will contain the merged `BondList` if at least one of
-    the operands contains bond information.
+    :class:`AtomArray`, by setting :attr:`bonds` to ``None``.
+    When indexing the :class:`AtomArray` the atom indices in the
+    associated :class:`BondList` are updated as well, hence the indices
+    in the :class:`BondList` will always point to the same atoms.
+    If two :class:`AtomArray` instances are concatenated, the resulting
+    :class:`AtomArray` will contain the merged :class:`BondList` if at
+    least one of the operands contains bond information.
 
-    The `box` attribute contains the box vectors of the unit cell or
-    the MD simulation box, respectively.
+    The :attr:`box` attribute contains the box vectors of the unit cell
+    or the MD simulation box, respectively.
     Hence, it is a *3 x 3* *ndarray* with the vectors in the last
     dimension.
-    If no box is provided, the attribute is `None`.
-    Setting the `box` attribute to `None` means removing the box from
-    the atom array.
+    If no box is provided, the attribute is ``None``.
+    Setting the :attr:`box` attribute to ``None`` means removing the
+    box from the atom array.
 
     Parameters
     ----------
@@ -555,7 +568,7 @@ class AtomArray(_AtomArrayBase):
         ndarray containing the x, y and z coordinate of the
         atoms.
     bonds: BondList or None
-        A `BondList`, specifying the indices of atoms
+        A :class:`BondList`, specifying the indices of atoms
         that form a chemical bond.
     box: ndarray, dtype=float, shape=(3,3) or None
         The surrounding box. May represent a MD simulation box
@@ -584,7 +597,7 @@ class AtomArray(_AtomArrayBase):
      [2. 3. 4.]
      [3. 4. 5.]]
     
-    `NumPy` style filtering:
+    *NumPy* style filtering:
     
     >>> atom_array = atom_array[atom_array.chain_id == "A"]
     >>> print(atom_array.array_length())
@@ -651,8 +664,10 @@ class AtomArray(_AtomArrayBase):
         Returns
         -------
         sub_array : Atom or AtomArray
-            If `index` is an integer an `Atom` instance,
-            otherwise an `AtomArray` with reduced length is returned.
+            If `index` is an integer an :class:`Atom` instance is
+            returned.
+            Otherwise an :class:`AtomArray` with reduced length is
+            returned.
         """
         if isinstance(index, numbers.Integral):
             return self.get_atom(index)
@@ -704,7 +719,7 @@ class AtomArray(_AtomArrayBase):
     
     def __eq__(self, item):
         """
-        Check if the array equals another `AtomArray`
+        Check if the array equals another :class:`AtomArray`
         
         Parameters
         ----------
@@ -714,7 +729,7 @@ class AtomArray(_AtomArrayBase):
         Returns
         -------
         equal : bool
-            True, if `item` is an `AtomArray`
+            True, if `item` is an :class:`AtomArray`
             and all its attribute arrays equals the ones of this object.
         """
         if not super().__eq__(item):
@@ -737,27 +752,31 @@ class AtomArray(_AtomArrayBase):
 
 class AtomArrayStack(_AtomArrayBase):
     """
-    A collection of multiple `AtomArray` instances, where each atom
-    array has equal annotation arrays.
+    A collection of multiple :class:`AtomArray` instances, where each
+    atom array has equal annotation arrays.
     
     Effectively, this means that each atom is occuring in every array in
     the stack at differing coordinates. This situation arises e.g. in
     NMR-elucidated or simulated structures. Since the annotations are
-    equal for each array the annotaion arrays are 1-D, while the
+    equal for each array, the annotation arrays are 1-D, while the
     coordinate array is 3-D (m x n x 3).
+    A detailed description of each annotation category can be viewed
+    :doc:`here </apidoc/biotite.structure>`.
     
-    Indexing works similar to `AtomArray`, with the difference, that two
-    index dimensions are possible: The first index dimension specifies
-    the array(s), the second index dimension specifies the atoms in each
-    array (same as the index in `AtomArray`). Using a single integer as
-    first dimension index returns a single `AtomArray` instance.
+    Indexing works similar to :class:`AtomArray`, with the difference,
+    that two index dimensions are possible:
+    The first index dimension specifies the array(s), the second index
+    dimension specifies the atoms in each array (same as the index
+    in :class:`AtomArray`).
+    Using a single integer as first dimension index returns a single
+    :class:`AtomArray` instance.
     
     Concatenation of atoms for each array in the stack is done using the
     '+' operator. For addition of atom arrays onto the stack use the
-    `stack()` method.
+    :func:`stack()` method.
 
-    The `box` attribute has the shape *m x 3 x 3*, as the cell might be
-    different for each frame in the atom array stack.
+    The :attr:`box` attribute has the shape *m x 3 x 3*, as the cell
+    might be different for each frame in the atom array stack.
     
     Parameters
     ----------
@@ -777,7 +796,7 @@ class AtomArrayStack(_AtomArrayBase):
         ndarray containing the x, y and z coordinate of the
         atoms.
     bonds: BondList or None
-        A `BondList`, specifying the indices of atoms
+        A :class:`BondList`, specifying the indices of atoms
         that form a chemical bond.
     box: ndarray, dtype=float, shape=(m,3,3) or None
         The surrounding box. May represent a MD simulation box
@@ -886,15 +905,17 @@ class AtomArrayStack(_AtomArrayBase):
         Parameters
         ----------
         index : object
-            All index types `NumPy` accepts are valid.
+            All index types *NumPy* accepts are valid.
         
         Returns
         -------
         sub_array : AtomArray or AtomArrayStack
-            If `index` is an integer an `AtomArray` instance,
-            otherwise an `AtomArrayStack` with reduced depth and length
-            is returned. In case the index is a tuple(int, int) an
-            `Atom` instance is returned.  
+            If `index` is an integer an :class:`AtomArray` instance is
+            returned.
+            Otherwise an :class:`AtomArrayStack` with reduced depth and
+            length is returned.
+            In case the index is a tuple(int, int) an :class:`Atom`
+            instance is returned.  
         """
         if isinstance(index, numbers.Integral):
             return self.get_array(index)
@@ -987,7 +1008,7 @@ class AtomArrayStack(_AtomArrayBase):
     
     def __eq__(self, item):
         """
-        Check if the array equals another `AtomArray`
+        Check if the array equals another :class:`AtomArray`
         
         Parameters
         ----------
@@ -997,7 +1018,7 @@ class AtomArrayStack(_AtomArrayBase):
         Returns
         -------
         equal : bool
-            True, if `item` is an `AtomArray`
+            True, if `item` is an :class:`AtomArray`
             and all its attribute arrays equals the ones of this object.
         """
         if not super().__eq__(item):
@@ -1010,7 +1031,7 @@ class AtomArrayStack(_AtomArrayBase):
         """
         Get a string representation of the stack.
         
-        `AtomArray` strings eparated by blank lines
+        :class:`AtomArray` strings eparated by blank lines
         and a line indicating the index.
         """
         string = ""
@@ -1025,7 +1046,7 @@ class AtomArrayStack(_AtomArrayBase):
 
 def array(atoms):
     """
-    Create an `AtomArray` from a list of `Atom`.
+    Create an :class:`AtomArray` from a list of :class:`Atom`.
     
     Parameters
     ----------
@@ -1068,7 +1089,7 @@ def array(atoms):
 
 def stack(arrays):
     """
-    Create an `AtomArrayStack` from a list of `AtomArray`.
+    Create an :class:`AtomArrayStack` from a list of :class:`AtomArray`.
     
     All atom arrays must have equal annotation arrays.
     
@@ -1133,15 +1154,17 @@ def coord(item):
     """
     Get the atom coordinates of the given array.
     
-    This may be directly and `Atom`, `AtomArray` or `AtomArrayStack` or
-    alternatively an (n x 3) or (m x n x 3) `ndarray`
+    This may be directly and :class:`Atom`, :class:`AtomArray` or
+    :class:`AtomArrayStack` or
+    alternatively an (n x 3) or (m x n x 3)  :class:`ndarray`
     containing the coordinates.
     
     Parameters
     ----------
-    item : `Atom`, `AtomArray` or `AtomArrayStack` or ndarray
-        Takes the coord attribute, if `item` is `Atom`, `AtomArray` or
-        `AtomArrayStack`, or directly returns a given `ndarray`.
+    item : Atom or AtomArray or AtomArrayStack or ndarray
+        Returns the :attr:`coord` attribute, if `item` is an
+        :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
+        Directly returns the input, if `item` is an :class:`ndarray`.
     
     Returns
     -------

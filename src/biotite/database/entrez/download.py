@@ -5,10 +5,13 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_database_name", "fetch", "fetch_single_file"]
 
-import requests
 import os.path
 import os
 import glob
+import io
+import requests
+from .check import check_for_errors
+from ..error import RequestError
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -60,8 +63,8 @@ _databases = {"BioProject"        : "bioproject",
 
 def get_database_name(database):
     """
-    Map an NCBI Entrez database name to an E-utility database name.
-    The returned value can be used for `db_name` parameter in `fetch()`.
+    Map a common NCBI Entrez database name to an E-utility database
+    name.
     
     Parameters
     ----------
@@ -100,13 +103,15 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     uids : str or iterable object of str
         A single *unique identifier* (UID) or a list of UIDs of the
         file(s) to be downloaded .
-    target_path : str
+    target_path : str or None
         The target directory of the downloaded files.
+        If ``None``, the file content is stored in a file-like object
+        (`StringIO` or `BytesIO`, respectively).
     suffix : str
         The file suffix of the downloaded files. This value is
         independent of the retrieval type.
     db_name : str:
-        E-utility database name.
+        E-utility or common database name.
     ret_type : str
         Retrieval type
     ret_mode : str, optional
@@ -125,11 +130,21 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     
     Returns
     -------
-    files : str or list of str
+    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
         If a single string (a single UID) was given in `uids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
+        If `target_path` is ``None``, the file contents are stored in
+        either `StringIO` or `BytesIO` objects.
+    
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
     
     See also
     --------
@@ -152,38 +167,48 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     else:
         single_element = False
     # Create the target folder, if not existing
-    if not os.path.isdir(target_path):
+    if target_path is not None and not os.path.isdir(target_path):
         os.makedirs(target_path)
-    file_names = []
+    files = []
     for i, id in enumerate(uids):
         # Verbose output
         if verbose:
             print(f"Fetching file {i+1:d} / {len(uids):d} ({id})...", end="\r")
         # Fetch file from database
-        file_name = os.path.join(target_path, id + "." + suffix)
-        file_names.append(file_name)
-        if not os.path.isfile(file_name) or overwrite == True:
-            r = requests.get((_base_url + _fetch_url)
-                             .format(db_name, id, ret_type, ret_mode,
-                                     "BiotiteClient", mail))
+        if target_path is not None:
+            file = os.path.join(target_path, id + "." + suffix)
+        else:
+            file = None
+        if file is None or not os.path.isfile(file) or overwrite:
+            r = requests.get(
+                (_base_url + _fetch_url).format(
+                    _sanitize_db_name(db_name), id, ret_type, ret_mode,
+                    "BiotiteClient", mail
+                )
+            )
             content = r.text
+            check_for_errors(content)
             if content.startswith(" Error"):
-                raise ValueError(content[8:])
-            with open(file_name, "w+") as f:
-                f.write(content)
+                raise RequestError(content[8:])
+            if file is None:
+                file = io.StringIO(content)
+            else:
+                with open(file, "w+") as f:
+                    f.write(content)
+        files.append(file)
     if verbose:
         print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
-        return file_names[0]
+        return files[0]
     else:
-        return file_names
+        return files
 
 
 def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
                       overwrite=False, mail=None):
     """
-    Almost the same as `fetch()`, but the data for the given UIDs will
+    Almost the same as :func:`fetch()`, but the data for the given UIDs will
     be stored in a single file.
     
     Parameters
@@ -191,10 +216,10 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     uids : iterable object of str
         A list of UIDs of the
         file(s) to be downloaded.
-    file_name : str
+    file_name : str or None
         The file path, including file name, to the target file.
     db_name : str:
-        E-utility database name.
+        E-utility or common database name.
     ret_type : str
         Retrieval type.
     ret_mode : str, optional
@@ -209,14 +234,24 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     
     Returns
     -------
-    file : str
+    file : str or StringIO or BytesIO
         The file name of the downloaded file.
+        If `file_name` is ``None``, the file content is stored in
+        either a `StringIO` or a `BytesIO` object.
+    
+    Warnings
+    --------
+    Even if you give valid input to this function, in rare cases the
+    database might return no or malformed data to you.
+    In these cases the request should be retried.
+    When the issue occurs repeatedly, the error is probably in your
+    input.
     
     See also
     --------
     fetch
     """
-    if os.path.isfile(file_name) and not overwrite:
+    if file_name is not None and os.path.isfile(file_name) and not overwrite:
         # Do no redownload the already existing file
         return file_name
     uid_list_str = ""
@@ -224,10 +259,29 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
         uid_list_str += id + ","
     # Remove terminal comma
     uid_list_str = uid_list_str[:-1]
-    r = requests.get((_base_url + _fetch_url)
-                     .format(db_name, uid_list_str, ret_type, ret_mode,
-                             "BiotiteClient", mail))
+    r = requests.get(
+        (_base_url + _fetch_url).format(
+            _sanitize_db_name(db_name), uid_list_str, ret_type, ret_mode,
+            "BiotiteClient", mail)
+    )
     content = r.text
-    with open(file_name, "w+") as f:
-        f.write(content)
-    return file_name
+    check_for_errors(content)
+    if content.startswith(" Error"):
+        raise RequestError(content[8:])
+    if file_name is None:
+        return io.StringIO(content)
+    else:
+        with open(file_name, "w+") as f:
+            f.write(content)
+        return file_name
+
+
+def _sanitize_db_name(db_name):
+    if db_name in _databases.keys():
+        # Convert into E-utility database name
+        return _databases[db_name]
+    elif db_name in _databases.values():
+        # Is already E-utility database name
+        return db_name
+    else:
+        raise ValueError("Database '{db_name}' is not existing")
