@@ -17,7 +17,7 @@ class DsspApp(LocalApp):
     Annotate the secondary structure of a protein structure using the
     DSSP software.
     
-    Internally this creates a `Popen` instance, which handles
+    Internally this creates a :class:`Popen` instance, which handles
     the execution.
     
     DSSP differentiates between 8 different types of secondary

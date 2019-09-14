@@ -208,8 +208,8 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
 def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
                       overwrite=False, mail=None):
     """
-    Almost the same as :func:`fetch()`, but the data for the given UIDs will
-    be stored in a single file.
+    Almost the same as :func:`fetch()`, but the data for the given UIDs
+    will be stored in a single file.
     
     Parameters
     ----------

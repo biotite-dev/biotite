@@ -3,7 +3,8 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["Application", "AppStateError", "AppState", "requires_state"]
+__all__ = ["Application", "AppStateError", "TimeoutError", "AppState",
+           "requires_state"]
 
 import abc
 import time
@@ -24,9 +25,10 @@ class AppState(Flag):
 
 def requires_state(app_state):
     """
-    A decorator for methods of :class:`Application` subclasses that raises an
-    :class:`AppStateError` in case the method is called, when the
-    :class:`Application` is not in the specified :class:`AppState`.
+    A decorator for methods of :class:`Application` subclasses that
+    raises an :class:`AppStateError` in case the method is called, when
+    the :class:`Application` is not in the specified :class:`AppState`
+    `app_state`.
     
     Parameters
     ----------
@@ -64,34 +66,38 @@ class Application(metaclass=abc.ABCMeta):
     specify the respective kind of software and the way of interacting
     with it.
     
-    Every :class:`Application` runs through a different app states (instances
-    of enum :class:`AppState`) from its creation until its termination:
+    Every :class:`Application` runs through a different app states
+    (instances of enum :class:`AppState`) from its creation until its
+    termination:
     Directly after its instantiation the app is in the *CREATED* state.
     In this state further parameters can be set for the application run.
-    After the user calls the `start()` method, the app state is set to
-    *RUNNING* and the :class:`Application` type specific `run()` method is
-    called.
+    After the user calls the :func:`start()` method, the app state is
+    set to *RUNNING* and the :class:`Application` type specific
+    :func:`run()` method is called.
     When the application finishes the AppState changes to *FINISHED*.
-    This is checked via the :class:`Application` type specific `is_finished()`
-    method.
-    The user can now call the `join()` method, concluding the
+    This is checked via the :class:`Application` type specific
+    :func:`is_finished()` method.
+    The user can now call the :func:`join()` method, concluding the
     application in the *JOINED* state and making the results of the
     application accessible by executing the :class:`Application`
-    type specific `evaluate()` method. Furthermore this executes the
-    :class:`Application` type specific `clean_up()` method. `join()` can even
-    be called in the *RUNNING* state: This will constantly check
-    `is_finished()` and will directly go into the *JOINED* state as soon
-    as the application reaches the *FINISHED* state.
-    Calling the `cancel()` method while the application is *RUNNING*
-    or *FINISHED* leaves the application in the *CANCELLED* state.
-    This triggers the `clean_up()` method, too, but there are no
+    type specific :func:`evaluate()` method.
+    Furthermore this executes the :class:`Application` type specific
+    :func:`clean_up()` method.
+    :func:`join()` can even be called in the *RUNNING* state:
+    This will constantly check :func:`is_finished()` and will directly
+    go into the *JOINED* state as soon as the application reaches the
+    *FINISHED* state.
+    Calling the :func:`cancel()` method while the application is
+    *RUNNING* or *FINISHED* leaves the application in the *CANCELLED*
+    state.
+    This triggers the :func:`clean_up()` method, too, but there are no
     accessible results.
     If a method is called in an unsuitable app state, an
     :class:`AppStateError` is called.
     
     The application run behaves like an additional thread: Between the
-    call of `start()` and `join()` other Python code can be executed,
-    while the application runs in the background.
+    call of :func:`start()` and :func:`join()` other Python code can be
+    executed, while the application runs in the background.
     """
     
     def __init__(self):
@@ -120,10 +126,11 @@ class Application(metaclass=abc.ABCMeta):
         Parameters
         ----------
         timeout : float, optional
-            If this parameter is specified, the :class:`Application` only waits
-            for finishing until this value (in seconds) runs out.
-            After this time is exceeded a `TimeoutError` is raised
-            and the application is cancelled.
+            If this parameter is specified, the :class:`Application`
+            only waits for finishing until this value (in seconds) runs
+            out.
+            After this time is exceeded a :class:`TimeoutError` is
+            raised and the application is cancelled.
         
         Raises
         ------
@@ -177,7 +184,7 @@ class Application(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def run(self):
         """
-        Commence the application run. Called in `start()`.
+        Commence the application run. Called in :func:`start()`.
         
         PROTECTED: Override when inheriting.
         """
@@ -200,7 +207,7 @@ class Application(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def wait_interval(self):
         """
-        The time interval of `is_finished()` calls in the joining
+        The time interval of :func:`is_finished()` calls in the joining
         process.
         
         PROTECTED: Override when inheriting.
@@ -208,15 +215,15 @@ class Application(metaclass=abc.ABCMeta):
         Returns
         -------
         interval : float
-            Time (in seconds) between calls of `is_finished()` in
-            `join()`
+            Time (in seconds) between calls of :func:`is_finished()` in
+            :func:`join()`
         """
         pass
     
     @abc.abstractmethod
     def evaluate(self):
         """
-        Evaluate application results. Called in `join()`.
+        Evaluate application results. Called in :func:`join()`.
         
         PROTECTED: Override when inheriting.
         """

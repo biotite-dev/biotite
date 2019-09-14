@@ -18,7 +18,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     The base class for all locally installed applications, that are used
     via the command line.
     
-    Internally this creates a `Popen` instance, which handles
+    Internally this creates a :class:`Popen` instance, which handles
     the execution.
     
     Parameters
