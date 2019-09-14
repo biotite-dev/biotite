@@ -8,5 +8,5 @@ A subpackage for downloading files from the RCSB PDB.
 
 __author__ = "Patrick Kunzmann"
 
-from .fetch import *
-from .search import *
+from .download import *
+from .query import *
