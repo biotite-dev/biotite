@@ -22,10 +22,11 @@ class MMTFFile(File, MutableMapping):
     
     When reading a file, the *MessagePack* unpacker is used to create
     a dictionary of the file content.
-    This dictionary is accessed by indexing the :class:`MMTFFile` instance
-    directly with the dictionary keys. If the value is an encoded
-    array, the value automatically decoded. Decoded arrays are always
-    returned as :class:`ndarray` instances.
+    This dictionary is accessed by indexing the :class:`MMTFFile`
+    instance directly with the dictionary keys.
+    If the dictionary value is an encoded array, the value automatically
+    decoded.
+    Decoded arrays are always returned as :class:`ndarray` instances.
     
     Examples
     --------
@@ -203,7 +204,7 @@ class MMTFFile(File, MutableMapping):
 def _encode_numpy(item):
     """
     Convert NumPy scalar types to native Python types,
-    as Msgpack cannot handle NumPy types (e.g. float32).
+    as *Msgpack* cannot handle NumPy types (e.g. float32).
 
     The function is given to the Msgpack packer as value for the
     `default` parameter.

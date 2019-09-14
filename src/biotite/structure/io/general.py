@@ -17,12 +17,14 @@ from ..atoms import AtomArray, AtomArrayStack
 
 def load_structure(file_path, template=None):
     """
-    Load an atom array or stack from a structure file without the need
-    to manually instantiate a :class:`File` object.
+    Load an :class:`AtomArray` or class`AtomArrayStack` from a structure
+    file without the need to manually instantiate a :class:`File`
+    object.
     
-    Internally this function uses a :class:`File` object, based on the file
-    extension. Trajectory files furthermore require specification of
-    the `template` parameter.
+    Internally this function uses a :class:`File` object, based on the
+    file extension.
+    Trajectory files furthermore require specification of the `template`
+    parameter.
     
     Parameters
     ----------
@@ -50,7 +52,7 @@ def load_structure(file_path, template=None):
         template = load_structure(template)
 
     # We only need the suffix here
-    filename, suffix = os.path.splitext(file_path)
+    _, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
         from .pdb import PDBFile
         file = PDBFile()
@@ -128,11 +130,12 @@ def load_structure(file_path, template=None):
 
 def save_structure(file_path, array):
     """
-    Save an atom array or stack to a structure file without the need
-    to manually instantiate a :class:`File` object.
+    Save an :class:`AtomArray` or class`AtomArrayStack` to a structure
+    file without the need to manually instantiate a :class:`File`
+    object.
     
-    Internally this function uses a :class:`File` object, based on the file
-    extension.
+    Internally this function uses a :class:`File` object, based on the
+    file extension.
     
     Parameters
     ----------
@@ -147,7 +150,7 @@ def save_structure(file_path, array):
         If the file format (i.e. the file extension) is unknown.
     """
     # We only need the suffix here
-    filename, suffix = os.path.splitext(file_path)
+    _, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
         from .pdb import PDBFile
         file = PDBFile()

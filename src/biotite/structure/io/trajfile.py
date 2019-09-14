@@ -20,8 +20,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     frames. The file formats are usually binary and involve sometimes
     heavy compression, so that a large number of frames can be stored
     in relatively small space.
-    Since all :class:`TrajectoryFile` subclasses interface `MDtraj` trajectory
-    file classes, `MDtraj` must be installed to use any of them.
+    Since all :class:`TrajectoryFile` subclasses interface *MDtraj*
+    trajectory file classes, `MDtraj` must be installed to use any of
+    them.
 
     When extracting data from or setting data in the file, only a
     shallow copy as created.
@@ -168,7 +169,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def get_structure(self, template):
         """
-        Convert the trajectory file content into an :class:`AtomArrayStack`.
+        Convert the trajectory file content into an
+        :class:`AtomArrayStack`.
         
         Since trajectory files usually only contain atom coordinate
         information and no topology information, this method requires
@@ -258,7 +260,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     def process_read_values(self, read_values):
         """
         Convert the return value of the `read()` method of the
-        respective *MDTraj* :class:`TrajectoryFile` into coordinates,
+        respective :class:`mdtraj.TrajectoryFile` into coordinates,
         simulation box and simulation time.
         
         PROTECTED: Override when inheriting.
@@ -266,8 +268,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Parameters
         ----------
         read_values : tuple
-            The return value of the respective *MDTraj* :class:`TrajectoryFile`
-            `read()` method.
+            The return value of the respective
+            :class:`mdtraj.TrajectoryFile.read()` method.
         
         Returns
         -------
@@ -285,7 +287,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         Convert the `coord`, `box` and `time` attribute into a
         dictionary that is given as *kwargs* to the respective
-        *MDTraj* :class:`TrajectoryFile` `write()` method.
+        :func:`mdtraj.TrajectoryFile.write()` method.
 
         PROTECTED: Override when inheriting.
 
@@ -302,7 +304,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         -------
         parameters : dict
             This dictionary is given as *kwargs* parameter to the
-            respective *MDTraj* :class:`TrajectoryFile` `write()` method.
+            respective :func:`mdtraj.TrajectoryFile.write()` method.
         """
         pass
 

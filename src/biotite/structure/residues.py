@@ -186,8 +186,8 @@ def apply_residue_wise(array, data, function, axis=None):
 
 def spread_residue_wise(array, input_data):
     """
-    Creates an :class:`ndarray` with residue-wise spread values from an input
-    :class:`ndarray`.
+    Creates an :class:`ndarray` with residue-wise spread values from an
+    input :class:`ndarray`.
     
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,

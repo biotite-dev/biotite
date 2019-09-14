@@ -135,7 +135,8 @@ def _sq_euclidian(reference, subject):
     ndarray, dtype=float, shape=(n,) or shape=(m,n)
         Squared euclidian distance between subject and reference.
         If subject is an :class:`AtomArray` a 1-D array is returned.
-        If subject is an :class:`AtomArrayStack` a 2-D array is returned.
+        If subject is an :class:`AtomArrayStack` a 2-D array is
+        returned.
         In this case the first dimension indexes the AtomArray.
     """
     if type(reference) != AtomArray:
