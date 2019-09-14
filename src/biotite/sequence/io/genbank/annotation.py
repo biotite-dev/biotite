@@ -10,6 +10,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
 import re
+import warnings
 from ....file import InvalidFileError
 from ...annotation import Annotation, Feature, Location
 from .file import GenBankFile
@@ -76,8 +77,9 @@ def get_annotation(gb_file, include_only=None):
             try:
                 locs = _parse_locs(loc_string)
             except:
-                raise InvalidFileError(
-                    f"'{loc_string}' is an invalid location identifier"
+                warnings.warn(
+                    f"'{loc_string}' is an unsupported location identifier, "
+                    f"skipping feature"
                 )
             qual_key = None
             qual_val = None
