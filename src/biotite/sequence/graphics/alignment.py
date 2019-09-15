@@ -743,7 +743,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         is equal to the size of a symbol box.
     color_scheme : str or list of (tuple or str), optional
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom`, `etc.)
+        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
         or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
