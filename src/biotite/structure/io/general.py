@@ -98,7 +98,7 @@ def load_structure(file_path, template=None, **kwargs):
         from .npz import NpzFile
         file = NpzFile()
         file.read(file_path)
-        array = file.get_structure()
+        array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]
