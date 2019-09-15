@@ -21,7 +21,7 @@ class GenBankFile(TextFile):
 
     A GenBank file annotates a reference sequence with features such as
     positions of genes, promoters, etc.
-    Additionally, it provides metadata further describing the file.s
+    Additionally, it provides metadata further describing the file.
 
     A file is divided into separate fields, e.g. the *DEFINITION*
     field contains a description of the file.
@@ -181,7 +181,7 @@ class GenBankFile(TextFile):
     
     def get_fields(self, name):
         """
-        Get all GenBank fields associated with a given field name.
+        Get all *GenBank* fields associated with a given field name.
         
         Parameters
         ----------
@@ -205,8 +205,8 @@ class GenBankFile(TextFile):
     
     def get_indices(self, name):
         """
-        Get the indices to all GenBank fields associated with a given field
-        name.
+        Get the indices to all *GenBank* fields associated with a given
+        field name.
         
         Parameters
         ----------
@@ -229,7 +229,7 @@ class GenBankFile(TextFile):
     
     def set_field(self, name, content, subfield_dict=None):
         """
-        Set a GenBank field with the given content.
+        Set a *GenBank* field with the given content.
 
         If the field already exists in the file, the field is
         overwritten, otherwise a new field is created at the end of
@@ -362,7 +362,7 @@ class GenBankFile(TextFile):
 
     def insert(self, index, name, content, subfields=None):
         """
-        Insert a GenBank field at the given position.
+        Insert a *GenBank* field at the given position.
         
         Parameters
         ----------
@@ -409,7 +409,7 @@ class GenBankFile(TextFile):
     
     def append(self, name, content, subfields=None):
         """
-        Create a new GenBank field at the end of the file.
+        Create a new *GenBank* field at the end of the file.
         
         Parameters
         ----------
@@ -521,13 +521,13 @@ class GenBankFile(TextFile):
 
 class MultiFile(TextFile):
     """
-    This class represents a file in GenBank or GenPept format,
+    This class represents a file in *GenBank* or *GenPept* format,
     that contains multiple entries, for more than one UID.
     
     The information for each UID are appended to each other in such a
     file.
-    Objects of this class can be iterated to obtain a :class:`GenBankFile`
-    or `GenPeptFile` for each entry in the file.
+    Objects of this class can be iterated to obtain a
+    :class:`GenBankFile` for each entry in the file.
     
     Examples
     --------

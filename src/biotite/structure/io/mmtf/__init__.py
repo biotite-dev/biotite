@@ -4,9 +4,9 @@
 
 """
 This subpackage is used for reading and writing an :class:`AtomArray` or
-:class:`AtomArrayStack` using the binary MMTF format. This format features a
-smaller file size and a highly increased I/O operation performance,
-than the text based file formats.
+:class:`AtomArrayStack` using the binary MMTF format. This format
+features a smaller file size and a highly increased I/O operation
+performance, than the text based file formats.
 """
 
 __author__ = "Patrick Kunzmann"

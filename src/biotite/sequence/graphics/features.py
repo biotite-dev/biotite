@@ -67,12 +67,12 @@ def plot_feature_map(axes, annotation, loc_range=None,
         height of the drawn features.
     feature_plotters : list of FeaturePlotter, optional
         Custom plotters for features.
-        The list is iterated from the beginning until a :class:`FeaturePlotter`
-        matches the respective feature
+        The list is iterated from the beginning until a
+        :class:`FeaturePlotter` matches the respective feature
         (`FeaturePlotter.matches()` returns `True`).
         This :class:`FeaturePlotter` is then used to draw the feature.
-        Therefore, the :class:`FeaturePlotter` instances in the list have
-        descending priority.
+        Therefore, the :class:`FeaturePlotter` instances in the list
+        have descending priority.
         The default plotters are appended after this supplied list,
         i.e. the default plotters have a lower prioriy.
     style_param : dict
@@ -214,13 +214,13 @@ def plot_feature_map(axes, annotation, loc_range=None,
 
 class FeaturePlotter(metaclass=abc.ABCMeta):
     """
-    A :class:`FeaturePlotter` is an object, that 'knows' how to draw a certain
-    type of sequence feature onto a *Matplotlib* axes.
+    A :class:`FeaturePlotter` is an object, that 'knows' how to draw a
+    certain type of sequence feature onto a :class:`matplotlib.Axes`.
 
     Whether the :class:`FeaturePlotter` is able to draw a feature, is
-    checked via the `matches()` method.
+    checked via the :func:`matches()` method.
     The visualization of a compatible feature is conducted in the
-    `draw()` method.
+    :func:`draw()` method.
     """
 
     def __init__(self):

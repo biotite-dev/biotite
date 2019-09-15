@@ -21,9 +21,10 @@ class GeneralSequence(Sequence):
     alphabet : Alphabet
         The alphabet of this sequence.
     sequence : iterable object, optional
-        The symbol sequence, the :class:`Sequence` is initialized with. For
-        alphabets containing single letter strings, this parameter
-        may also be a `str` object. By default the sequence is empty.
+        The symbol sequence, the :class:`Sequence` is initialized with.
+        For alphabets containing single letter strings, this parameter
+        may also be a :class:`str` object.
+        By default the sequence is empty.
     """
         
     def __init__(self, alphabet, sequence=()):
@@ -41,9 +42,9 @@ class NucleotideSequence(Sequence):
     Representation of a nucleotide sequence (DNA or RNA).
     
     This class may one of two different alphabets:
-    `unambiguous_alphabet()` contains only the unambiguous DNA
+    :attr:`unambiguous_alphabet()` contains only the unambiguous DNA
     letters 'A', 'C', 'G' and 'T'.
-    `ambiguous_alphabet()` uses an extended alphabet for ambiguous 
+    :attr:`ambiguous_alphabet()` uses an extended alphabet for ambiguous 
     letters.
     
     Parameters

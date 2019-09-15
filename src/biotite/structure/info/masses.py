@@ -40,8 +40,8 @@ def mass(item, is_residue=None):
         If a string is given, it is interpreted as residue name or
         chemical element.
         If an :class:`Atom` is given the mass is taken from its element.
-        If an :class:`AtomArray` or :class:`AtomArrayStack` is given the mass
-        is the sum of the mass of its atoms.
+        If an :class:`AtomArray` or :class:`AtomArrayStack` is given the
+        mass is the sum of the mass of its atoms.
     is_residue : bool, optional
         If set to true and a string is given for `item`, the string
         will be strictly interpreted as residue.

@@ -397,7 +397,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
     code1, code2
         The sequence code of each sequence to be aligned.
     matrix
-        The score matrix obtained from the `SubstitutiuonMatrix` object.
+        The score matrix obtained from the :class:`SubstitutionMatrix`
+        object.
     trace_table
         A matrix containing values indicating the direction for the
         traceback step.
@@ -496,7 +497,8 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     code1, code2
         The sequence code of each sequence to be aligned.
     matrix
-        The score matrix obtained from the `SubstitutiuonMatrix` object.
+        The score matrix obtained from the class:`SubstitutionMatrix`
+        object.
     trace_table
         A matrix containing values indicating the direction for the
         traceback step.

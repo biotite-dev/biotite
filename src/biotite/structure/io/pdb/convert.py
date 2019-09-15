@@ -14,7 +14,8 @@ __all__ = ["get_structure", "set_structure"]
 def get_structure(pdb_file, model=None,
                   insertion_code=[], altloc=[], extra_fields=[]):
     """
-    Create an :class:`AtomArray` or :class:`AtomArrayStack` from a :class:`PDBFile`.
+    Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
+    :class:`PDBFile`.
 
     This function is a thin wrapper around the :class:`PDBFile` method
     :func:`get_structure()` for the sake of consistency with other
@@ -26,10 +27,11 @@ def get_structure(pdb_file, model=None,
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        :class:`AtomArray` from the atoms corresponding to the given model ID.
-        If this parameter is omitted, an :class:`AtomArrayStack` containing all
-        models will be returned, even if the structure contains only one
-        model.
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
     insertion_code : list of tuple, optional
         In case the structure contains insertion codes, those can be
         specified here: Each tuple consists of an integer, specifying
@@ -61,7 +63,8 @@ def get_structure(pdb_file, model=None,
 
 def set_structure(pdb_file, array, hybrid36=False):
     """
-    write an :class:`AtomArray` or :class:`AtomArrayStack` into a :class:`PDBFile`.
+    write an :class:`AtomArray` or :class:`AtomArrayStack` into a
+    :class:`PDBFile`.
 
     This function is a thin wrapper around the :class:`PDBFile` method
     :func:`set_structure()` for the sake of consistency with other

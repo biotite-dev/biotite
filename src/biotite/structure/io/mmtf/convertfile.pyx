@@ -41,7 +41,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        :class:`AtomArray` from the atoms corresponding to the given model ID.
+        :class:`AtomArray` from the atoms corresponding to the given model number.
         If this parameter is omitted, an :class:`AtomArrayStack` containing all
         models will be returned, even if the structure contains only one
         model.

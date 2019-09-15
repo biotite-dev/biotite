@@ -6,9 +6,10 @@
 This subpackage is used for reading and writing sequence objects
 using the popular FASTA format.
 
-This package contains the :class:`FastaFile`, which provides a dictionary
-like interface to FASTA files, where the header lines are keys and
-the strings containing sequence data are the corresponding values.
+This package contains the :class:`FastaFile`, which provides a
+dictionary like interface to FASTA files, where the header lines are
+keys and the strings containing sequence data are the corresponding
+values.
 
 Furthermore, the package contains convenience functions for
 getting/setting directly :class:`Sequence` objects, rather than strings.

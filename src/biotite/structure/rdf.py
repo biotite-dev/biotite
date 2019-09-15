@@ -42,8 +42,8 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     atoms : AtomArray or AtomArrayStack
         The distribution is calculated based on these atoms.
-        When an an :class:`AtomArrayStack` is provided, the RDF histogram is
-        averaged over all models.
+        When an an :class:`AtomArrayStack` is provided, the RDF
+        histogram is averaged over all models.
         Please not that `atoms` must have an associated box,
         unless `box` is set.
     selection : ndarray, dtype=bool, shape=(n,), optional

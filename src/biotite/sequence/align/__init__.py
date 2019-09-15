@@ -9,10 +9,10 @@ The two central classes involved are :class:`SubstitutionMatrix` and
 `Àlignment`:
 
 Every function that performs an alignment requires a
-:class:`SubstitutionMatrix` that provides similarity scores for each symbol
-combination of two alphabets (usually both alphabets are equal).
-The alphabets in the :class:`SubstitutionMatrix` must match or extend the
-alphabets of the sequences to be aligned.
+:class:`SubstitutionMatrix` that provides similarity scores for each
+symbol combination of two alphabets (usually both alphabets are equal).
+The alphabets in the :class:`SubstitutionMatrix` must match or extend
+the alphabets of the sequences to be aligned.
 
 An alignment cannot be directly represented as list of :class:`Sequence`
 objects, since a gap indicates the absence of any symbol.

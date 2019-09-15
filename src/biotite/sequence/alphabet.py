@@ -13,13 +13,14 @@ from .codec import encode_chars, decode_to_chars
 
 class Alphabet(object):
     """
-    This class defines the allowed symbols for a :class:`Sequence` and handles
-    the encoding/decoding between symbols and symbol codes.
+    This class defines the allowed symbols for a :class:`Sequence` and
+    handles the encoding/decoding between symbols and symbol codes.
     
-    An :class:`Alphabet` is created with the list of symbols, that can be used
-    in this context. In most cases a symbol will be simply a letter,
-    hence a string of length 1. But in principal every hashable Python
-    object can serve as symbol.
+    An :class:`Alphabet` is created with the list of symbols, that can
+    be used in this context.
+    In most cases a symbol will be simply a letter, hence a string of
+    length 1. But in principle every hashable Python object can serve
+    as symbol.
     
     The encoding of a symbol into a symbol code is
     done in the following way: Find the first index in the symbol list,
@@ -34,7 +35,8 @@ class Alphabet(object):
     
     If an alphabet *1* contains the same symbols and the same
     symbol-code-mappings like another alphabet *2*, but alphabet *1*
-    introdues also new symbols, then alphabet *1* *extends* alphabet *2*.
+    introdues also new symbols, then alphabet *1* *extends* alphabet
+    *2*.
     Per definition, every alphabet also extends itself.
     
     Objects of this class are immutable.
@@ -212,8 +214,9 @@ class Alphabet(object):
 
 class LetterAlphabet(Alphabet):
     """
-    :class:`LetterAlphabet` is a an :class:`Alphabet` subclass specialized for letter
-    based alphabets, like DNA or protein sequence alphabets.
+    :class:`LetterAlphabet` is a an :class:`Alphabet` subclass
+    specialized for letter based alphabets, like DNA or protein
+    sequence alphabets.
     The alphabet size is limited to a maximum of 128 symbols, the size
     of the ASCII charcater set.
     The encoding and decoding process is a lot faster than for a

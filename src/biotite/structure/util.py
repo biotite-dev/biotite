@@ -25,7 +25,7 @@ def vector_dot(v1,v2):
     Returns
     -------
     product : float or ndarray
-        Scalar product with the dimension of the input arrays reduced by 1
+        Scalar product over the last dimension of the arrays.
     """
     return (v1*v2).sum(axis=-1)
 
@@ -60,7 +60,7 @@ def distance(v1,v2):
     Returns
     -------
     product : float or ndarray
-        vector distance with the dimension of the input arrays reduced by 1
+        Vector distance over the last dimension of the array.
     """
     dif = v1 - v2
     return np.sqrt((dif*dif).sum(axis=-1))

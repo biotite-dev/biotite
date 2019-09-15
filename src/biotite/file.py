@@ -40,7 +40,8 @@ class File(Copyable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def write(self, file):
         """
-        Write the contents of this object into a file (or file-like object).
+        Write the contents of this object into a file
+        (or file-like object).
         
         Parameters
         ----------
@@ -90,7 +91,8 @@ class TextFile(File, metaclass=abc.ABCMeta):
 
     def write(self, file):
         """
-        Write the contents of this object into a file (or file-like object).
+        Write the contents of this object into a file
+        (or file-like object).
         
         Parameters
         ----------

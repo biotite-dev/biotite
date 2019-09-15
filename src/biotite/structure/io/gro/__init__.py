@@ -4,8 +4,8 @@
 
 """
 This subpackage is used for reading and writing an :class:`AtomArray` or
-:class:`AtomArrayStack` using the Gro format used by the gromacs software
-package.
+:class:`AtomArrayStack` using the Gro format used by the gromacs
+software package.
 """
 
 __author__ = "Daniel Bauer"

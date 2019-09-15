@@ -14,10 +14,11 @@ class WebApp(Application, metaclass=abc.ABCMeta):
     The base class for all web based applications.
     
     It allows for getting and setting the URL of the app and raises
-    an :class:`RuleViolationError` when a subclass calls `violate_rule()`
+    an :class:`RuleViolationError` when a subclass calls
+    :func:`violate_rule()`
     (e.g. when the server was contacted too often.)
     
-    Be careful, when calling `get_app_state()`. This may involve a
+    Be careful, when calling func:`get_app_state()`. This may involve a
     server contact and therefore frequent calls may raise a
     :class:`RuleViolationError`.
     

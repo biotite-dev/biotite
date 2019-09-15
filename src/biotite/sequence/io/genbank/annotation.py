@@ -172,7 +172,7 @@ def _set_qual(qual_dict, key, val):
     """
     Set a mapping key to val in the dictionary.
     If the key already exists in the dictionary, append the value (str)
-    to the existing value, separated by a line break
+    to the existing value, separated by a line break.
     """
     if key in qual_dict:
         qual_dict[key] += "\n" + val
