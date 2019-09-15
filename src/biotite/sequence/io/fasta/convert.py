@@ -73,7 +73,8 @@ def get_sequences(fasta_file):
     ------
     ValueError
         If at least on of the sequence strings can be neither converted
-        into a :class:`NucleotideSequence` nor a :class:`ProteinSequence`.
+        into a :class:`NucleotideSequence` nor a
+        :class:`ProteinSequence`.
     """
     seq_dict = {}
     for header, seq_str in fasta_file.items():
@@ -157,7 +158,8 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
 
 def set_alignment(fasta_file, alignment, seq_names):
     """
-    Fill a :class:`FastaFile` with gapped sequence strings from an alignment.
+    Fill a :class:`FastaFile` with gapped sequence strings from an
+    alignment.
     
     Parameters
     ----------

@@ -16,24 +16,25 @@ __all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
 
 class Alignment(object):
     """
-    An :class:`Alignment` object stores information about which symbols of
-    *n* sequences are aligned to each other and it stores the
+    An :class:`Alignment` object stores information about which symbols
+    of *n* sequences are aligned to each other and it stores the
     corresponding alignment score.
     
     Instead of saving a list of aligned symbols, this class saves the
     original *n* sequences, that were aligned, and a so called *trace*,
     which indicate the aligned symbols of these sequences.
-    The trace is a *(m x n)* :class:`ndarray` with alignment length *m* and
-    sequence count *n*.
+    The trace is a *(m x n)* :class:`ndarray` with alignment length
+    *m* and sequence count *n*.
     Each element of the trace is the index in the corresponding
-    sequence. A gap is represented by the value -1.
+    sequence.
+    A gap is represented by the value -1.
     
     Furthermore this class provides multiple utility functions for
     conversion into strings in order to make the alignment human
     readable.
     
-    Unless an :class:`Alignment` object is the result of an multiple sequence
-    alignment, the object will contain only two sequences.
+    Unless an :class:`Alignment` object is the result of an multiple
+    sequence alignment, the object will contain only two sequences.
     
     All attributes of this class are publicly accessible.
     
@@ -252,8 +253,8 @@ def get_codes(alignment):
 
 def get_symbols(alignment):
     """
-    Similar to :func:`get_codes()`, but contains the decoded symbols instead
-    of codes.
+    Similar to :func:`get_codes()`, but contains the decoded symbols
+    instead of codes.
     Gaps are still represented by *None* values.
     
     Parameters

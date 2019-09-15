@@ -16,9 +16,9 @@ from .colorschemes import get_color_scheme
 class SymbolPlotter(metaclass=abc.ABCMeta):
     """
     Subclasses of this abstract base class define how symbols in
-    an alignment are drawn onto an `axes` object.
+    an alignment are drawn onto an :class:`Axes` object.
 
-    Subclasses must override the `plot_symbol()` method.
+    Subclasses must override the :func:`plot_symbol()` method.
     
     Parameters
     ----------
@@ -62,7 +62,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
     Symbols are visualized as character on a colored background box or
     as colored character, if `color_symbols` is set to true.
 
-    Subclasses must override the `get_color()` method.
+    Subclasses must override the :class:`get_color()` method.
     
     Parameters
     ----------
@@ -75,8 +75,8 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
     font_size : float, optional
         Font size of the sequence symbols.
     font_param : dict, optional
-        Additional parameters that is given to the *Matplotlib* `Text`
-        instance of each symbol.
+        Additional parameters that is given to the
+        :class:`matplotlib.Text` instance of each symbol.
     """
 
     def __init__(self, axes, color_symbols=False, 
@@ -163,8 +163,8 @@ class LetterSimilarityPlotter(LetterPlotter):
     font_size : float, optional
         Font size of the sequence symbols.
     font_param : dict, optional
-        Additional parameters that is given to the *Matplotlib* `Text`
-        instance of each symbol.
+        Additional parameters that is given to the
+        :class:`matplotlib.Text` instance of each symbol.
     
     Notes
     -----
@@ -216,7 +216,7 @@ class LetterSimilarityPlotter(LetterPlotter):
         Parameters
         ----------
         color : tuple or str, optional
-            A `matplotlib` compatible color.
+            A *Matplotlib* compatible color.
             If this parameter is given, the box color in an interpolated
             value between white and the given color,
             or, if `color_symbols` is set, between the given color and
@@ -309,8 +309,8 @@ class LetterTypePlotter(LetterPlotter):
         The alphabet of the alignment(s) to be plotted
     color_scheme : str or list of (tuple or str), optional
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
-        or a list of `matplotlib` compatible colors.
+        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
+        or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
     color_symbols : bool, optional
@@ -320,8 +320,8 @@ class LetterTypePlotter(LetterPlotter):
     font_size : float, optional
         Font size of the sequence symbols.
     font_param : dict, optional
-        Additional parameters that is given to the *Matplotlib* `Text`
-        instance of each symbol.
+        Additional parameters that is given to the
+        :class:`matplotlib.Text` instance of each symbol.
     """
 
     def __init__(self, axes, alphabet, color_scheme=None, color_symbols=False,
@@ -352,10 +352,10 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     """
     Plot a pairwise or multiple sequence alignment.
 
-    The output is similar to a string representation of an :class:`Alignment`,
-    but with enhanced styling, symbol coloring and optional sequence
-    labels and sequence position numbering.
-    How each sysmbol of the alignment is drawn is determined by the
+    The output is similar to a string representation of an
+    :class:`Alignment`, but with enhanced styling, symbol coloring and
+    optional sequence labels and sequence position numbering.
+    How each symbol of the alignment is drawn is determined by the
     given :class:`SymbolPlotter` object.
 
     Parameters
@@ -390,7 +390,7 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
         sequences in the alignment.
         Every entry is a function that maps a sequence index (*int*) to
         a sequence position (*int*) for the respective sequence.
-        A `None` entry means, that the default numbering is applied
+        A ``None`` entry means, that the default numbering is applied
         for the sequence.
     labels : list of str, optional
         The sequence labels.
@@ -546,9 +546,9 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
     Plot a pairwise or multiple sequence alignment highlighting
     the similarity per alignment column.
 
-    This function works like :func:`plot_alignment()` with a :class:`SymbolPlotter`,
-    that colors the symbols based on the similarity with the other
-    symbols in the same column.
+    This function works like :func:`plot_alignment()` with a
+    :class:`SymbolPlotter`, that colors the symbols based on the
+    similarity with the other symbols in the same column.
     The color intensity (or colormap value, respectively) of a symbol
     scales with similarity of the respective symbol to the other symbols
     in the same alignment column.
@@ -601,7 +601,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
         The spacing between the alignment lines. 1.0 means that the size
         is equal to the size of a symbol box.
     color : tuple or str, optional
-        A `matplotlib` compatible color.
+        A *Matplotlib* compatible color.
         If this parameter is given, the box color in an interpolated
         value between white and the given color,
         or, if `color_symbols` is set to true, between the given color
@@ -623,8 +623,8 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
     symbol_size : float, optional
         Font size of the sequence symbols.
     symbol_param : dict
-        Additional parameters that is given to the *Matplotlib* `Text`
-        instance of each symbol.
+        Additional parameters that is given to the
+        :class:`matplotlib.Text` instance of each symbol.
     
     See also
     --------
@@ -687,8 +687,9 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
     Plot a pairwise or multiple sequence alignment coloring each symbol
     based on the symbol type.
 
-    This function works like :func:`plot_alignment()` with a :class:`SymbolPlotter`,
-    that colors the symbols based on a color scheme.
+    This function works like :func:`plot_alignment()` with a
+    :class:`SymbolPlotter`, that colors the symbols based on a color
+    scheme.
     The color intensity (or colormap value, respectively) of a symbol
     scales with similarity of the respective symbol to the other symbols
     in the same alignment column.
@@ -742,8 +743,8 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         is equal to the size of a symbol box.
     color_scheme : str or list of (tuple or str), optional
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
-        or a list of `matplotlib` compatible colors.
+        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom`, `etc.)
+        or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
     color_symbols : bool, optional
@@ -753,8 +754,8 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
     symbol_size : float, optional
         Font size of the sequence symbols.
     symbol_param : dict
-        Additional parameters that is given to the *Matplotlib* `Text`
-        instance of each symbol.
+        Additional parameters that is given to the
+        :class:`matplotlib.Text` instance of each symbol.
     
     See also
     --------
@@ -780,7 +781,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
 def _get_last_valid_index(alignment, column_i, seq_i):
     """
     Find the last trace value that belongs to a valid sequence index
-    (no gap -> no -1) up to the specified column
+    (no gap -> no -1) up to the specified column.
     """
     index_found = False
     while not index_found:

@@ -59,7 +59,7 @@ class GFFFile(TextFile):
     not support extracting the sequence information.
     The content after the ``##FASTA`` directive is simply ignored.
     Please provide the sequence via a separate file or read the FASTA
-    data directly via the `lines` attribute:
+    data directly via the :attr:`lines` attribute:
     
     >>> import os.path
     >>> from io import StringIO

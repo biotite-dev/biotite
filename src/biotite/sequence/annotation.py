@@ -31,8 +31,8 @@ class Location():
     last : int
         Inclusive ending base or residue position of the feature.
     strand : Strand
-        The strand direction. Always `Strand.FORWARD` for peptide
-        features.
+        The strand direction.
+        Always :attr:`Strand.FORWARD` for peptide features.
     defect : Defect
         A possible defect of the location.
     """
@@ -245,40 +245,44 @@ class Feature(Copyable):
 
 class Annotation(Copyable):
     """
-    An :class:`Annotation` is a set of features belonging to one sequence.
+    An :class:`Annotation` is a set of features belonging to one
+    sequence.
     
     Its advantage over a simple list is the base/residue position based
     indexing:
     When using slice indices in Annotation objects, a subannotation is
-    created, containing copies of all :class:`Feature` objects whose first and
-    last base/residue are in range of the slice.
+    created, containing copies of all :class:`Feature` objects whose
+    first and last base/residue are in range of the slice.
     If the slice starts after the first base/residue or/and the slice
     ends before the last residue, the position out of range is set to
-    the boundaries of the slice (the :class:`Feature` is truncated). In this
-    case the :class:`Feature` obtains the `MISS_LEFT` and/or `MISS_RIGHT`
-    defect.
-    The third case occurs when a :class:`Feature` starts after the slice ends
-    or a :class:`Feature` ends before the slice starts. In this case the
-    :class:`Feature` will not appear in the subannotation.
+    the boundaries of the slice (the :class:`Feature` is truncated).
+    In this case the :class:`Feature` obtains the
+    :attr:`Location.Defect.MISS_LEFT` and/or
+    :attr:`Location.Defect.MISS_RIGHT` defect.
+    The third case occurs when a :class:`Feature` starts after the slice
+    ends or a :class:`Feature` ends before the slice starts.
+    In this case the :class:`Feature` will not appear in the
+    subannotation.
     
     The start or stop position in the slice indices can be omitted, then
     the subannotation will include all features from the start or up to
     the stop, respectively. Step values are ignored.
     The stop values are still exclusive, i.e. the subannotation will
-    contain a not truncated :class:`Feature` only if its last base/residue is
-    smaller than the stop value of the slice.
+    contain a not truncated :class:`Feature` only if its last
+    base/residue is smaller than the stop value of the slice.
     
     Integers or other index types are not supported. If you want to
-    obtain the :class:`Feature` instances from the :class:`Annotation` you need to 
-    iterate over it. The iteration has no defined order.
-    Alternatively, you can obtain a copy of the internal :class:`Feature` set
-    via `get_features()`.
+    obtain the :class:`Feature` instances from the :class:`Annotation`
+    you need to  iterate over it.
+    The iteration has no defined order.
+    Alternatively, you can obtain a copy of the internal
+    :class:`Feature` set via :func:`get_features()`.
     
     Multiple :class:`Annotation` objects can be concatenated to one
-    :class:`Annotation` object using the '+' operator. Single :class:`Feature`
-    instances can be added this way, too. If a feature is present
-    in both :class:`Annotation` objects, the resulting :class:`Annotation` will
-    contain this feature twice.
+    :class:`Annotation` object using the '+' operator.
+    Single :class:`Feature` instances can be added this way, too.
+    If a feature is present in both :class:`Annotation` objects, the
+    resulting :class:`Annotation` will contain this feature twice.
     
     Parameters
     ----------
@@ -491,14 +495,15 @@ class Annotation(Copyable):
 
 class AnnotatedSequence(Copyable):
     """
-    An :class:`AnnotatedSequence` is a combination of a :class:`Sequence` and an
-    :class:`Annotation`.
+    An :class:`AnnotatedSequence` is a combination of a
+    :class:`Sequence` and an :class:`Annotation`.
     
     Indexing an :class:`AnnotatedSequence` with a slice returns another
-    :class:`AnnotatedSequence` with the corresponding subannotation and a
-    sequence start corrected subsequence, i.e. indexing starts at 1 with
-    the default sequence start 1. The sequence start in the newly
-    created :class:`AnnotatedSequence` is the start of the slice.
+    :class:`AnnotatedSequence` with the corresponding subannotation and
+    a sequence start corrected subsequence, i.e. indexing starts at 1
+    with the default sequence start 1.
+    The sequence start in the newly created :class:`AnnotatedSequence`
+    is the start of the slice.
     Furthermore, integer indices are allowed in which case the
     corresponding symbol of the sequence is returned (also sequence
     start corrected).
@@ -509,18 +514,21 @@ class AnnotatedSequence(Copyable):
     Both index types can also be used to modify the sequence.
     
     Another option is indexing with a :class:`Feature` (preferably from the
-    :class:`Annotation` in the same :class:`AnnotatedSequence`). In this case a
-    sequence, described by the location(s) of the :class:`Feature`, is
-    returned.
-    When using a :class:`Feature` for setting an :class:`AnnotatedSequence` with a
-    sequence, the new sequence is replacing the locations of the
-    :class:`Feature`. It is important to note that the sum of the location's 
-    interval lengths must fit the length of the replacing sequence.
-        
+    :class:`Annotation` in the same :class:`AnnotatedSequence`).
+    In this case a sequence, described by the location(s) of the
+    :class:`Feature`, is returned.
+    When using a :class:`Feature` for setting an
+    :class:`AnnotatedSequence` with a sequence, the new sequence is
+    replacing the locations of the
+    :class:`Feature`.
+    Note the the replacing sequence must have the same length as the
+    sequence of the :class:`Feature` index.
+    
     Parameters
     ----------
     sequence : Sequence
-        The sequence. Usually a `NucelotideSequence` or
+        The sequence.
+        Usually a :class:`NucleotideSequence` or
         :class:`ProteinSequence`.
     annotation : Annotation
         The annotation corresponding to `sequence`.

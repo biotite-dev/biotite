@@ -32,8 +32,8 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
         The logo is created based on this alignment.
     scheme : str or list of (tuple or str)
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, etc.)
-        or a list of `matplotlib` compatible colors.
+        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
+        or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
     **kwargs
