@@ -33,6 +33,24 @@ def test_loading_template_with_trj():
 
 
 @pytest.mark.xfail(raises=ImportError)
+def test_loading_with_extra_args():
+    template = join(data_dir, "1l2y.pdb")
+    trajectory = join(data_dir, "1l2y.xtc")
+
+    # test if arguments are passed to text files as get_structure arg
+    struc = strucio.load_structure(template, extra_fields="b_factor")
+    assert "b_factor" in dir(struc)
+
+    # test if arguments are passed to read for trajectories
+    stack = strucio.load_structure(trajectory, template=struc[0], start=5, stop=6)
+    assert len(stack) == 1
+
+    # loading should fail with wrong arguments
+    with pytest.raises(TypeError):
+        strucio.load_structure(template, start=2)
+    
+
+@pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize(
     "suffix",
     ["pdb", "cif", "gro", "pdbx", "mmtf",
@@ -43,3 +61,17 @@ def test_saving(suffix):
     strucio.save_structure(
         biotite.temp_file("1l2y." + suffix), array
     )
+
+
+@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.parametrize(
+    "suffix",
+    ["pdb", "cif", "gro", "pdbx", "mmtf",
+     "trr", "xtc", "tng", "dcd", "netcdf"]
+)
+def test_saving_with_extra_args(suffix):
+    array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    with pytest.raises(TypeError):
+        strucio.save_structure(
+            biotite.temp_file("1l2y." + suffix), array, answer=42
+        )
