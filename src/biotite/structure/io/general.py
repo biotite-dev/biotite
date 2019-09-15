@@ -15,7 +15,7 @@ import io
 from ..atoms import AtomArray, AtomArrayStack
 
 
-def load_structure(file_path, template=None):
+def load_structure(file_path, template=None, **kwargs):
     """
     Load an atom array or stack from a structure file without the need
     to manually instantiate a :class:`File` object.
@@ -55,7 +55,7 @@ def load_structure(file_path, template=None):
         from .pdb import PDBFile
         file = PDBFile()
         file.read(file_path)
-        array = file.get_structure()
+        array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]
@@ -65,7 +65,7 @@ def load_structure(file_path, template=None):
         from .pdbx import PDBxFile, get_structure
         file = PDBxFile()
         file.read(file_path)
-        array = get_structure(file)
+        array = get_structure(file, **kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]
@@ -75,7 +75,7 @@ def load_structure(file_path, template=None):
         from .gro import GROFile
         file = GROFile()
         file.read(file_path)
-        array = file.get_structure()
+        array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]
@@ -85,7 +85,7 @@ def load_structure(file_path, template=None):
         from .mmtf import MMTFFile, get_structure
         file = MMTFFile()
         file.read(file_path)
-        array = get_structure(file)
+        array = get_structure(file, **kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
             return array[0]
@@ -120,7 +120,7 @@ def load_structure(file_path, template=None):
         if suffix == ".netcdf":
             traj_file_cls = NetCDFFile
         file = traj_file_cls()
-        file.read(file_path)
+        file.read(file_path, **kwargs)
         return file.get_structure(template)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")
