@@ -129,7 +129,7 @@ def load_structure(file_path, template=None, **kwargs):
         raise ValueError(f"Unknown file format '{suffix}'")
 
 
-def save_structure(file_path, array):
+def save_structure(file_path, array, **kwargs):
     """
     Save an atom array or stack to a structure file without the need
     to manually instantiate a :class:`File` object.
@@ -143,7 +143,10 @@ def save_structure(file_path, array):
         The path to structure file.
     array : AtomArray or AtomArrayStack
         The structure to be saved.
-    
+    kwargs
+        Additional parameters will be passed to the respective `set_structure`
+        method.
+
     Raises
     ------
     ValueError
@@ -154,27 +157,27 @@ def save_structure(file_path, array):
     if suffix == ".pdb":
         from .pdb import PDBFile
         file = PDBFile()
-        file.set_structure(array)
+        file.set_structure(array, **kwargs)
         file.write(file_path)
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, set_structure
         file = PDBxFile()
-        set_structure(file, array, data_block="STRUCTURE")
+        set_structure(file, array, data_block="STRUCTURE", **kwargs)
         file.write(file_path)
     elif suffix == ".gro":
         from .gro import GROFile
         file = GROFile()
-        file.set_structure(array)
+        file.set_structure(array, **kwargs)
         file.write(file_path)
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, set_structure
         file = MMTFFile()
-        set_structure(file, array)
+        set_structure(file, array, **kwargs)
         file.write(file_path)
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile()
-        file.set_structure(array)
+        file.set_structure(array, **kwargs)
         file.write(file_path)
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         from .trr import TRRFile
@@ -193,7 +196,7 @@ def save_structure(file_path, array):
         if suffix == ".netcdf":
             traj_file_cls = NetCDFFile
         file = traj_file_cls()
-        file.set_structure(array)
+        file.set_structure(array, **kwargs)
         file.write(file_path)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")
