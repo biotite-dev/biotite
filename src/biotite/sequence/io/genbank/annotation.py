@@ -10,6 +10,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
 import re
+import warnings
 from ....file import InvalidFileError
 from ...annotation import Annotation, Feature, Location
 from .file import GenBankFile
@@ -76,8 +77,9 @@ def get_annotation(gb_file, include_only=None):
             try:
                 locs = _parse_locs(loc_string)
             except:
-                raise InvalidFileError(
-                    f"'{loc_string}' is an invalid location identifier"
+                warnings.warn(
+                    f"'{loc_string}' is an unsupported location identifier, "
+                    f"skipping feature"
                 )
             qual_key = None
             qual_val = None
@@ -170,7 +172,7 @@ def _set_qual(qual_dict, key, val):
     """
     Set a mapping key to val in the dictionary.
     If the key already exists in the dictionary, append the value (str)
-    to the existing value, separated by a line break
+    to the existing value, separated by a line break.
     """
     if key in qual_dict:
         qual_dict[key] += "\n" + val
@@ -212,7 +214,7 @@ def set_annotation(gb_file, annotation):
 
 def _convert_to_loc_string(locs):
     """
-    Create GenBank comptabile location strings from a list of `Location`
+    Create GenBank comptabile location strings from a list of :class:`Location`
     objects.
     """
     if len(locs) == 1:

@@ -14,16 +14,17 @@ import copy
 class GeneralSequence(Sequence):
     """
     This class allows the creation of a sequence with custom
-    `Alphabet` without the need to subclass `Sequence`.
+    :class:`Alphabet` without the need to subclass :class:`Sequence`.
         
     Parameters
     ----------
     alphabet : Alphabet
         The alphabet of this sequence.
     sequence : iterable object, optional
-        The symbol sequence, the `Sequence` is initialized with. For
-        alphabets containing single letter strings, this parameter
-        may also be a `str` object. By default the sequence is empty.
+        The symbol sequence, the :class:`Sequence` is initialized with.
+        For alphabets containing single letter strings, this parameter
+        may also be a :class:`str` object.
+        By default the sequence is empty.
     """
         
     def __init__(self, alphabet, sequence=()):
@@ -41,9 +42,9 @@ class NucleotideSequence(Sequence):
     Representation of a nucleotide sequence (DNA or RNA).
     
     This class may one of two different alphabets:
-    `unambiguous_alphabet()` contains only the unambiguous DNA
+    :attr:`unambiguous_alphabet()` contains only the unambiguous DNA
     letters 'A', 'C', 'G' and 'T'.
-    `ambiguous_alphabet()` uses an extended alphabet for ambiguous 
+    :attr:`ambiguous_alphabet()` uses an extended alphabet for ambiguous 
     letters.
     
     Parameters
@@ -168,17 +169,17 @@ class NucleotideSequence(Sequence):
         -------
         protein : ProteinSequence or list of ProteinSequence
             The translated protein sequence. If `complete` is true,
-            only a single `ProteinSequence` is returned. Otherwise
-            a list of `ProteinSequence` is returned, which contains
+            only a single :class:`ProteinSequence` is returned. Otherwise
+            a list of :class:`ProteinSequence` is returned, which contains
             every ORF.
         pos : list of tuple (int, int)
             Is only returned if `complete` is false. The list contains
             a tuple for each ORF.
             The first element of the tuple is the index of the 
-            `NucleotideSequence`, where the translation starts.
+            :class:`NucleotideSequence`, where the translation starts.
             The second element is the exclusive stop index, it
             represents the first nucleotide in the
-            `NucleotideSequence` after a stop codon.
+            :class:`NucleotideSequence` after a stop codon.
         
         Examples
         --------

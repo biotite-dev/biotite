@@ -50,17 +50,18 @@ class GROFile(TextFile):
     
     def get_structure(self, model=None):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the GRO file.
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
+        GRO file.
         
         Parameters
         ----------
         model : int, optional
             If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model
-            ID.
-            If this parameter is omitted, an `AtomArrayStack` containing
-            all models will be returned, even if the structure contains
-            only one model.
+            :class:`AtomArray` from the atoms corresponding to the
+            given model number.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
         
         Returns
         -------
@@ -206,7 +207,8 @@ class GROFile(TextFile):
             
     def set_structure(self, array):
         """
-        Set the `AtomArray` or `AtomArrayStack` for the file.
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
+        file.
         
         Parameters
         ----------

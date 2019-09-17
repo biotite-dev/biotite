@@ -15,8 +15,8 @@ The trajectory file can be downloaded
 and the template PDB can be downloaded
 :download:`here </examples/download/lysozyme_md.pdb>`.
 
-We begin by loading the template PDB file as `AtomArray`, sanitizing it
-and using it to load the trajectory as `AtomArrayStack`.
+We begin by loading the template PDB file as :class:`AtomArray`, sanitizing it
+and using it to load the trajectory as :class:`AtomArrayStack`.
 """
 
 # Code source: Patrick Kunzmann

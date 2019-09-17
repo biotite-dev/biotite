@@ -18,15 +18,15 @@ class Tree(Copyable):
     """
     __init__(root)
     
-    A `Tree` represents a rooted tree
+    A :class:`Tree` represents a rooted tree
     (e.g. alignment guide tree).
-    The tree itself is represented by `TreeNode` objects.
-    The root node is accessible via the `root` property.
-    The property `leaves` contains a list of the leaf nodes, where the
-    index of the leaf node in this list is equal to the reference index
-    of the leaf node (``leaf.index``).
+    The tree itself is represented by :class:`TreeNode` objects.
+    The root node is accessible via the :attr:`root` property.
+    The property :attr:`leaves` contains a list of the leaf nodes,
+    where the index of the leaf node in this list is equal to the
+    reference index of the leaf node (``leaf.index``).
 
-    The amount of leaves in a tree can be determined via the `len()`
+    The amount of leaves in a tree can be determined via the :func:`len()`
     function.
 
     Objects of this class are immutable.
@@ -35,7 +35,7 @@ class Tree(Copyable):
     ----------
     root: TreeNode
         The root of the tree.
-        The constructor calls the node's `as_root()` method,
+        The constructor calls the node's :func:`as_root()` method,
         in order to make it immutable.
     
     Attributes
@@ -202,8 +202,9 @@ class Tree(Copyable):
         -----
         This function does accept but does not require the Newick string
         to have the terminal semicolon.
-        Keep in mind that the `Tree` class does support any labels on
-        intermediate nodes.
+        
+        Keep in mind that the :class:`Tree` class does not support any
+        labels on intermediate nodes.
         If the string contains such labels, they are discarded.
         """
         newick = newick.strip()
@@ -236,9 +237,9 @@ cdef class TreeNode:
              child1_distance=None, child2_distance=None,
              index=None)
     
-    `TreeNode` objects are part of a rooted tree
+    :class:`TreeNode` objects are part of a rooted tree
     (e.g. alignment guide tree).
-    There are two `TreeNode` subtypes:
+    There are two :class:`TreeNode` subtypes:
         
         - Leaf node - Cannot have child nodes but has an index referring
           to an array-like reference object.
@@ -246,17 +247,17 @@ cdef class TreeNode:
     
     This type is determined by the time of the object's creation.
     
-    Every `TreeNode` has a reference to its parent node.
+    Every :class:`TreeNode` has a reference to its parent node.
     A root node is node without a parent node, that is finalized
     using `as_root()`.
     The call of this function prevents that a the node can be used as
     child.
 
-    `TreeNode` objects are semi-immutable:
+    :class:`TreeNode` objects are semi-immutable:
     The child nodes or the reference index are fixed at the time of
     creation.
     Only the parent can be set once, when the parent node is created. 
-    `TreeNode` objects that are finalized using `as_root()` are
+    :class:`TreeNode` objects that are finalized using `as_root()` are
     completely immutable.
 
     All object properties are read-only.
@@ -374,7 +375,7 @@ cdef class TreeNode:
         """
         copy()
 
-        Create a deep copy of this `TreeNode`.
+        Create a deep copy of this :class:`TreeNode`.
 
         The copy includes this node, its reference index and deep copies
         of its child nodes.
@@ -436,7 +437,7 @@ cdef class TreeNode:
         Convert the node into a root node.
 
         When a root node is used as `child` parameter in the
-        construction of a potential parent node, a `TreeError` is
+        construction of a potential parent node, a :class:`TreeError` is
         raised.
         """
         if self._parent is not None:
@@ -710,9 +711,9 @@ cdef class TreeNode:
         -----
         The provided Newick notation must not have a terminal semicolon.
         If you have a Newick notation that covers an entire tree, you
-        may use the same method in the `Tree` class instead.
-        Keep in mind that the `TreeNode` class does support any labels
-        on intermediate nodes.
+        may use the same method in the :class:`Tree` class instead.
+        Keep in mind that the :class:`TreeNode` class does support any
+        labels on intermediate nodes.
         If the string contains such labels, they are discarded.
         """
         cdef int i
@@ -902,11 +903,12 @@ def as_binary(tree_or_node):
 
     Convert a tree into a binary tree.
 
-    In general a `TreeNode` can have more or less than two children.
+    In general a :class:`TreeNode` can have more or less than two
+    children.
     However guide trees usually expect each intermediate node to have
     exactly two child nodes.
-    This function creates a binary `Tree` (or `TreeNode`) for the given
-    `Tree` (or `TreeNode`):
+    This function creates a binary :class:`Tree` (or :class:`TreeNode`)
+    for the given :class:`Tree` (or :class:`TreeNode`):
     Intermediate nodes that have only a single child are deleted and its
     parent node is directly connected to its child node.
     Intermediate nodes that have more than two childs are divided into
@@ -935,7 +937,7 @@ def as_binary(tree_or_node):
 
 cdef _as_binary(TreeNode node):
     """
-    The actual logic wrapped by `as_binary()`.
+    The actual logic wrapped by :func:`as_binary()`.
     
     Parameters
     ----------

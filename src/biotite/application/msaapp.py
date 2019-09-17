@@ -23,8 +23,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     This is an abstract base class for multiple sequence alignment
     software.
     
-    It handles conversion of `Sequence` objects to FASTA input and
-    FASTA output to an `Alignment` object.
+    It handles conversion of :class:`Sequence` objects to FASTA input
+    and FASTA output to an :class:`Alignment` object.
     Inheriting subclasses only need to incorporate the file path
     of these FASTA files into the program arguments.
 
@@ -42,7 +42,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     The mapping does not work, when the alphabet of the exotic
     sequences is larger than the amino acid alphabet.
     
-    Internally this creates a `Popen` instance, which handles
+    Internally this creates a :class:`Popen` instance, which handles
     the execution.
     
     Parameters
@@ -169,10 +169,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Usually the order of sequences in the output file is
         different from the input file, e.g. the sequences are ordered
         according to the guide tree.
-        When using `align()` this order is rearranged so that its is the
-        same as the input order. This method returns the original order 
-        of the sequences that can be used to restore the MSA software
-        intended order.
+        After running an MSA software, the output sequence order of
+        the alignment rearranged so that it is the same as the input
+        order.
+        This method returns the order of the sequences intended by the
+        MSA software.
         
         Returns
         -------
@@ -361,7 +362,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         """
         Perform a multiple sequence alignment.
         
-        This is a convenience function, that wraps the `MSAApp`
+        This is a convenience function, that wraps the :class:`MSAApp`
         execution.
         
         Parameters
@@ -369,8 +370,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         sequences : iterable object of Sequence
             The sequences to be aligned
         bin_path : str, optional
-            Path of the MSA software binary. By default, the default path
-            will be used.
+            Path of the MSA software binary. By default, the default
+            path will be used.
         matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
         

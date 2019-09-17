@@ -10,11 +10,11 @@ from ...sequence.align.alignment import Alignment
 
 class BlastAlignment(Alignment):
     """
-    A specialized `Alignment` class for alignments using the BLAST
-    application. It stores additional data, like the E-value, the HSP
-    position and a description of the hit sequence.
+    A specialized :class:`Alignment` class for alignments using the
+    BLAST application. It stores additional data, like the E-value,
+    the HSP position and a description of the hit sequence.
     
-    Like its superclass, all attributes of a `BlastAlignment` are
+    Like its superclass, all attributes of a :class:`BlastAlignment` are
     public. The attributes are the same as the constructor parameters.
     
     Parameters

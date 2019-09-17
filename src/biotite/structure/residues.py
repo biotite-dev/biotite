@@ -83,8 +83,8 @@ def apply_residue_wise(array, data, function, axis=None):
     residue IDs of the atom array (stack) and identifies intervals of
     the same ID. Then the data is
     partitioned into the same intervals, and each interval (also an
-    `ndarray`) is put as parameter into `function`. Each return value is
-    stored as element in the resulting `ndarray`, therefore each element
+    :class:`ndarray`) is put as parameter into `function`. Each return value is
+    stored as element in the resulting :class:`ndarray`, therefore each element
     corresponds to one residue. 
     
     Parameters
@@ -186,8 +186,8 @@ def apply_residue_wise(array, data, function, axis=None):
 
 def spread_residue_wise(array, input_data):
     """
-    Creates an `ndarray` with residue-wise spread values from an input
-    `ndarray`.
+    Creates an :class:`ndarray` with residue-wise spread values from an
+    input :class:`ndarray`.
     
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,

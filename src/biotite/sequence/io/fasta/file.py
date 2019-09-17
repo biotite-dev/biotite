@@ -23,11 +23,11 @@ class FastaFile(TextFile, MutableMapping):
     The header along with its sequence forms an entry.
     
     This class is used in a dictionary like manner, implementing the
-    `MutableMapping` interface:
+    :class:`MutableMapping` interface:
     Headers (without the leading ``>``) are used as keys,
     and strings containing the sequences are the corresponding values.
     Entries can be accessed using indexing,
-    `del` deletes the entry at the given index.
+    ``del`` deletes the entry at the given index.
 
     Parameters
     ----------

@@ -104,8 +104,8 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     align_optimal(seq1, seq2, matrix, gap_penalty=-10,
                   terminal_penalty=True, local=False, max_number=1000)
 
-    Perform an optimal alignment of two sequences based on the
-    dynamic programming algorithm. [1]_
+    Perform an optimal alignment of two sequences based on a
+    dynamic programming algorithm.
     
     This algorithm yields an optimal alignment, i.e. the sequences
     are aligned in the way that results in the highest similarity
@@ -113,9 +113,10 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     because both scale linearly with each sequence length.
     
     The aligned sequences do not need to be instances from the same
-    `Sequence` subclass, since they do not need to have the same
-    alphabet. The only requirement is that the substitution matrix'
-    alphabets extend the alphabets of the two sequences.
+    :class:`Sequence` subclass, since they do not need to have the same
+    alphabet. The only requirement is that the
+    :class:`SubstitutionMatrix`' alphabets extend the alphabets of the
+    two sequences.
     
     This function can either perform a global alignment, based on the
     Needleman-Wunsch algorithm [1]_ or a local alignment, based on the
@@ -396,7 +397,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
     code1, code2
         The sequence code of each sequence to be aligned.
     matrix
-        The score matrix obtained from the `SubstitutiuonMatrix` object.
+        The score matrix obtained from the :class:`SubstitutionMatrix`
+        object.
     trace_table
         A matrix containing values indicating the direction for the
         traceback step.
@@ -495,7 +497,8 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     code1, code2
         The sequence code of each sequence to be aligned.
     matrix
-        The score matrix obtained from the `SubstitutiuonMatrix` object.
+        The score matrix obtained from the class:`SubstitutionMatrix`
+        object.
     trace_table
         A matrix containing values indicating the direction for the
         traceback step.

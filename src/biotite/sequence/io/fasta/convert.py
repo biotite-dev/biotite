@@ -15,28 +15,28 @@ __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
 
 def get_sequence(fasta_file, header=None):
     """
-    Get a sequence from a `FastaFile` instance.
+    Get a sequence from a :class:`FastaFile` instance.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     header : str, optional
         The header to get the sequence from. By default, the first
         sequence of the file is returned.
     
     Returns
     -------
-    sequence : `NucleotideSequence` or `ProteinSequence`
-        The first sequence in the `FastaFile`.
-        `NucleotideSequence` if the sequence string fits the
-        corresponding alphabet, `ProteinSequence` otherwise.
+    sequence : :class:`NucleotideSequence` or :class:`ProteinSequence`
+        The first sequence in the :class:`FastaFile`.
+        :class:`NucleotideSequence` if the sequence string fits the
+        corresponding alphabet, :class:`ProteinSequence` otherwise.
     
     Raises
     ------
     ValueError
         If the sequence data can be neither converted into a
-        `NucleotideSequence` nor a `ProteinSequence`.
+        :class:`NucleotideSequence` nor a :class:`ProteinSequence`.
     """
     if header is not None:
         seq_str = fasta_file[header]
@@ -55,25 +55,26 @@ def get_sequence(fasta_file, header=None):
 
 def get_sequences(fasta_file):
     """
-    Get dictionary from a `FastaFile` instance,
+    Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     
     Returns
     -------
     seq_dict : dict
-        A dictionary containg `NucleotideSequence` and/or
-        `ProteinSequence` instances.
+        A dictionary containg :class:`NucleotideSequence` and/or
+        :class:`ProteinSequence` instances.
     
     Raises
     ------
     ValueError
         If at least on of the sequence strings can be neither converted
-        into a `NucleotideSequence` nor a `ProteinSequence`.
+        into a :class:`NucleotideSequence` nor a
+        :class:`ProteinSequence`.
     """
     seq_dict = {}
     for header, seq_str in fasta_file.items():
@@ -83,12 +84,12 @@ def get_sequences(fasta_file):
 
 def set_sequence(fasta_file, sequence, header=None):
     """
-    Set a sequence in a `FastaFile` instance.
+    Set a sequence in a :class:`FastaFile` instance.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     sequence : Sequence
         The sequence to be set.
     header : str, optional
@@ -107,15 +108,15 @@ def set_sequence(fasta_file, sequence, header=None):
 
 def set_sequences(fasta_file, sequence_dict):
     """
-    Set sequences in a `FastaFile` instance from a dictionary.
+    Set sequences in a :class:`FastaFile` instance from a dictionary.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     sequence_dict : dict
         A dictionary containing the sequences to be set.
-        Header are keys, `Sequence` instances are values. 
+        Header are keys, :class:`Sequence` instances are values. 
     
     Raises
     ------
@@ -129,19 +130,19 @@ def set_sequences(fasta_file, sequence_dict):
 
 def get_alignment(fasta_file, additional_gap_chars=("_",)):
     """
-    Get an alignment from a `FastaFile` instance.
+    Get an alignment from a :class:`FastaFile` instance.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     additional_gap_chars : str, optional
         The characters to be treated as gaps.
     
     Returns
     -------
     alignment : Alignment
-        The alignment from the `FastaFile`.
+        The alignment from the :class:`FastaFile`.
     """
     seq_strings = list(fasta_file.values())
     # Replace additional gap symbols with default gap symbol ('-')
@@ -157,12 +158,13 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
 
 def set_alignment(fasta_file, alignment, seq_names):
     """
-    Fill a `FastaFile` with gapped sequence strings from an alignment.
+    Fill a :class:`FastaFile` with gapped sequence strings from an
+    alignment.
     
     Parameters
     ----------
     fasta_file : FastaFile
-        The `FastaFile` to be accessed.
+        The :class:`FastaFile` to be accessed.
     alignment : Alignment
         The alignment to be set. 
     seq_names : iterable object of str

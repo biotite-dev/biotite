@@ -44,52 +44,56 @@ class BondList(Copyable):
     __init__(atom_count, bonds=None)
     
     A bond list stores indices of atoms
-    (usually of an `AtomArray` or `AtomArrayStack`)
+    (usually of an :class:`AtomArray` or :class:`AtomArrayStack`)
     that form chemical bonds together with the type (or order) of the
     bond.
 
-    Internally the bonds are stored as *n x 3* `ndarray`. For each row,
-    the first column specifies the index of the first atom, the second
-    column the index of the second atom involved in the bond.
+    Internally the bonds are stored as *n x 3* :class:`ndarray`.
+    For each row, the first column specifies the index of the first
+    atom, the second column the index of the second atom involved in the
+    bond.
     The third column stores an integer that is interpreted as member
-    of the the `BondType` enum, that specifies the order of the bond.
+    of the the :class:`BondType` enum, that specifies the order of the
+    bond.
 
-    When indexing a `BondList`, the index is not forwarded to the
-    internal `ndarray`. Instead the indexing behavior is consistent with
-    indexing an `AtomArray` or `AtomArrayStack`:
+    When indexing a :class:`BondList`, the index is not forwarded to the
+    internal :class:`ndarray`. Instead the indexing behavior is
+    consistent with indexing an :class:`AtomArray` or
+    :class:`AtomArrayStack`:
     Bonds with at least one atom index that is not covered by the index
     are removed, atom indices that occur after an uncovered atom index
     move up.
-    Effectively, this means that after indexing an `AtomArray` and a
-    `BondList` with the same index, the atom indices in the `BondList`
-    will still point to the same atoms in the `AtomArray` before and
-    after indexing.
-    If a `BondList` is indexed with single integer as index,
-    `get_bonds()` will be called with the index as parameter.
+    Effectively, this means that after indexing an :class:`AtomArray`
+    and a :class:`BondList` with the same index, the atom indices in the
+    :class:`BondList` will still point to the same atoms in the
+    :class:`AtomArray` before and after indexing.
+    If a :class:`BondList` is indexed with single integer as index,
+    :func:`get_bonds()` will be called with the index as parameter.
 
-    The same consistency applies to adding `BondList` instances via the
-    '+' operator: The atom indices of the second `BondList` are
-    increased by the atom count of the first `BondList`.
+    The same consistency applies to adding :class:`BondList` instances
+    via the '+' operator:
+    The atom indices of the second :class:`BondList` are increased by
+    the atom count of the first :class:`BondList`.
     
     Parameters
     ----------
     atom_count : int
         A positive integer, that specifies the amount of atoms the
-        `BondList` refers to
+        :class:`BondList` refers to
         (usually the length of an atom array (stack)).
         Effectively, this value is the exclusive maximum for the indices
-        stored in the `BondList`.
+        stored in the :class:`BondList`.
     bonds : ndarray, shape=(n,2) or shape=(n,3), dtype=int, optional
         This array contains the indices of atoms which are bonded:
         For each row, the first column specifies the first atom,
         the second row the second atom involved in a chemical bond.
         If an *n x 3* array is provided, the additional column
-        specifies a `BondType` instead of `BondType.ANY`.
-        By default, the created `BondList` is empty.
+        specifies a :class:`BondType` instead of :attr:`BondType.ANY`.
+        By default, the created :class:`BondList` is empty.
     
     Notes
     -----
-    When initially providing the bonds as `ndarray`, the input is
+    When initially providing the bonds as :class:`ndarray`, the input is
     sanitized: Redundant bonds are removed, and each bond entry is
     sorted so that the lower one of the two atom indices is in the first
     column.
@@ -97,8 +101,8 @@ class BondList(Copyable):
     Examples
     --------
 
-    Construct a `BondList`, where a central atom (index 1) is connected
-    to three other atoms (index 0, 3 and 4):
+    Construct a :class:`BondList`, where a central atom (index 1) is
+    connected to three other atoms (index 0, 3 and 4):
 
     >>> bond_list = BondList(5, np.array([(1,0),(1,3),(1,4)]))
     >>> print(bond_list)
@@ -166,7 +170,8 @@ class BondList(Copyable):
         """
         offset_indices(offset)
         
-        Increase all atom indices in the `BondList` by the given offset.
+        Increase all atom indices in the :class:`BondList` by the given
+        offset.
         
         Implicitly this increases the atom count.
 
@@ -200,16 +205,16 @@ class BondList(Copyable):
         """
         as_array()
         
-        Obtain a copy of the internal `ndarray`.
+        Obtain a copy of the internal :class:`ndarray`.
 
         Returns
         -------
         array : ndarray, shape=(n,3), dtype=np.uint32
-            Copy of the internal `ndarray`.
+            Copy of the internal :class:`ndarray`.
             For each row, the first column specifies the index of the
             first atom, the second column the index of the second atom
             involved in the bond.
-            The third column stores the `BondType`.
+            The third column stores the :class:`BondType`.
         """
         return self._bonds.copy()
     
@@ -236,7 +241,7 @@ class BondList(Copyable):
         -------
         bond_count : int
             The amount of bonds. This is equal to the length of the
-            internal `ndarray` containing the bonds.
+            internal :class:`ndarray` containing the bonds.
         """
         return len(self._bonds)
     
@@ -257,7 +262,8 @@ class BondList(Copyable):
         bonds : np.ndarray, dtype=np.uint32
             The indices of connected atoms.
         bond_types : np.ndarray, dtype=np.uint8
-            Array of integers, interpreted as `BondType` instances.
+            Array of integers, interpreted as :class:`BondType`
+            instances.
             This array specifies the type (or order) of the bonds to
             the connected atoms.
         
@@ -300,7 +306,7 @@ class BondList(Copyable):
         """
         add_bond(index1, index2, bond_type=BondType.ANY)
         
-        Add a bond to the `BondList`.
+        Add a bond to the :class:`BondList`.
 
         If the bond is already existent, only the bond type is updated.
 
@@ -309,7 +315,7 @@ class BondList(Copyable):
         index1, index2 : int
             The indices of the atoms to create a bond for.
         bond_type : BondType or int, optional
-            The type of the bond. Default is `BondType.ANY`.
+            The type of the bond. Default is :attr:`BondType.ANY`.
         """
         if index1 >= self._atom_count or index2 >= self._atom_count:
             raise ValueError(
@@ -341,9 +347,9 @@ class BondList(Copyable):
         """
         remove_bond(index1, index2)
         
-        Remove a bond from the `BondList`.
+        Remove a bond from the :class:`BondList`.
 
-        If the bond is not existent in the `BondList`, nothing happens.
+        If the bond is not existent in the :class:`BondList`, nothing happens.
 
         Parameters
         ----------
@@ -369,7 +375,7 @@ class BondList(Copyable):
         """
         remove_bonds(bond_list)
         
-        Remove multiple bonds from the `BondList`.
+        Remove multiple bonds from the :class:`BondList`.
 
         All bonds present in `bond_list` are removed from this instance.
         If a bond is not existent in this instance, nothing happens.
@@ -404,21 +410,22 @@ class BondList(Copyable):
         """
         merge(bond_list)
         
-        Merge the this instance with another `BondList` in a new object.
+        Merge the this instance with another :class:`BondList` in a new
+        object.
 
-        The internal `ndarray` instances containg the bonds are simply
-        concatenated and the new atom count is the maximum atom count
-        of the merged bond lists.
+        The internal :class:`ndarray` instances containg the bonds are
+        simply concatenated and the new atom count is the maximum atom
+        count of the merged bond lists.
 
         Parameters
         ----------
         bond_list : BondList
-            The bonds in `bond_list` are removed from this instance.
+            This bond list is merged with this instance.
         
         Returns
         -------
         bond_list : BondList
-            The merged `BondList`.
+            The merged :class:`BondList`.
         
         Notes
         -----
@@ -457,8 +464,9 @@ class BondList(Copyable):
         # Array is not used in constructor to prevent unnecessary
         # maximum and redundant bond calculation
         merged_bond_list._bonds = merged_bonds
-        merged_bond_list._max_bonds_per_atom \
-            = max(self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom)
+        merged_bond_list._max_bonds_per_atom = max(
+            self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom
+        )
         return merged_bond_list
 
     def __getitem__(self, index):

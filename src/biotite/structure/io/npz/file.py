@@ -17,7 +17,8 @@ class NpzFile(File):
     Biotite internal structure storage. 
     
     Internally the this class writes/reads all attribute arrays of an
-    `AtomArray` or `AtomArrayStack` using the `NumPy` `save()`/`load()`
+    :class:`AtomArray` or :class:`AtomArrayStack` using the *NumPy*
+    :func:`save()`/:func:`load()`
     method. This format offers the fastest I/O operations and completely
     preserves the content all atom annotation arrays.
     
@@ -88,7 +89,8 @@ class NpzFile(File):
     
     def get_structure(self):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the file.
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
+        file.
         
         If this method returns an array or stack depends on which type
         of object was used when the file was written.
@@ -96,7 +98,7 @@ class NpzFile(File):
         Returns
         -------
         array : AtomArray or AtomArrayStack
-            The array or stack in the content of this file
+            The array or stack contained in this file.
         """
         if self._data_dict is None:
             raise ValueError("The structure of this file "
@@ -122,7 +124,8 @@ class NpzFile(File):
         
     def set_structure(self, array):
         """
-        Set the `AtomArray` or `AtomArrayStack` for the file.
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
+        file.
         
         Parameters
         ----------

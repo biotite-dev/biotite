@@ -4,10 +4,10 @@
 
 """
 This subpackage provides support for the the modern PDBx/mmCIF file
-format. The `PDBxFile` class provides dictionary-like access to every
-field in PDBx/mmCIF files. Additional utility functions allow
-conversion of these dictionaries to `AtomArray` and `AtomArrayStack`
-objects and vice versa.
+format. The :class:`PDBxFile` class provides dictionary-like access to
+every field in PDBx/mmCIF files.
+Additional utility functions allow conversion of these dictionaries to
+:class:`AtomArray` and :class:`AtomArrayStack` objects and vice versa.
 """
 
 __author__ = "Patrick Kunzmann"

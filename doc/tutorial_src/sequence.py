@@ -76,7 +76,7 @@ print("Code:", sequence.code)
 # From DNA to Protein
 # -------------------
 # 
-# Biotite offers two prominent `Sequence` sublasses:
+# Biotite offers two prominent :class:`Sequence` sublasses:
 # 
 # The :class:`NucleotideSequence` represents DNA.
 # It may use two different alphabets - an unambiguous alphabet
@@ -307,8 +307,8 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # 
 # Most functions in :mod:`biotite.sequence.align` can align any two
 # :class:`Sequence` objects with each other.
-# In fact the `Sequence` objects can be instances from different
-# `Sequence` subclasses and therefore may have different alphabets.
+# In fact the :class:`Sequence` objects can be instances from different
+# :class:`Sequence` subclasses and therefore may have different alphabets.
 # The only condition that must be satisfied, is that the
 # class:`SubstitutionMatrix` alphabets matches the alphabets of the sequences
 # to be aligned.

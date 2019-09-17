@@ -20,8 +20,8 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     orientation : {'left', 'right', 'bottom', 'top'}, optional
         The position of the root node in the plot
     use_distances : bool, optional
-        If true, the `distance` attribute of the `TreeNode` objects
-        are used as distance measure.
+        If true, the `distance` attribute of the :class:`TreeNode`
+        objects are used as distance measure.
         Otherwise the topological distance is used.
     labels : list of str, optional 
         The leaf node labels.
@@ -30,8 +30,8 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     label_size : float, optional
         The font size of the labels
     color : tuple or str, optional
-        A `matplotlib` compatible color, that is used to draw the lines
-        of the dendrogram
+        A *Matplotlib* compatible color, that is used to draw the lines
+        of the dendrogram.
     show_distance : bool, optional
         If true, the distance from the root is shown on the
         corresponding axis.
@@ -75,7 +75,8 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             if use_distances:
                 child_distances = [distance + c.distance for c in children]
             else:
-                # Use topologic distance of children to this node, which is one
+                # Use topologic distance of children to this node,
+                # which is always 1
                 child_distances = [distance + 1 for c in children]
             child_pos = [
                 _plot_node(child, child_distance)

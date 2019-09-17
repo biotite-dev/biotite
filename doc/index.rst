@@ -98,11 +98,11 @@ accessible surface area calculation, structure superimposition and more.
 This subpackage provides interfaces for external software, in case *Biotite*'s
 integrated functionality is not sufficient for your tasks.
 These interfaces range from locally installed software (e.g. MSA software) to
-web apps (e.g. BLAST).
+web services (e.g. BLAST).
 The speciality is that the interfaces are seamless:
 You do not have to write input files and read output files, you only have to
-input `Python` objects and you get `Python` objects.
-It is basically very similar to using normal `Python` functions.
+input *Python* objects and you get *Python* objects.
+It is basically very similar to using normal *Python* functions.
 
 .. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_001.png
    :width: 48 %

@@ -4,8 +4,8 @@
 
 """
 This subpackage is used for reading/writing information
-(especially sequence features) from/to files in the GenBank
-and GenPept format.
+(especially sequence features) from/to files in the *GenBank*
+and *GenPept* format.
 """
 
 __author__ = "Patrick Kunzmann"

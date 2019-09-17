@@ -10,12 +10,12 @@ from ...annotation import Location, Feature, Annotation
 
 def get_annotation(gff_file):
     """
-    Parse a GFF3 file into an `Annotation`.
+    Parse a GFF3 file into an :class:`Annotation`.
 
-    The *type* column as used as the `Features`'s `key`` attribute,
+    The *type* column is used as the :attr:`Feature.key` attribute,
     the locations (``loc``) are taken from the *start*, *end* and
     *strand* columns and  the *attributes* column is parsed into the
-    ``qual`` attribute.
+    :attr:`Feature.qual` attribute.
     Multiple entries with the same ``ID`` attribute are interpreted
     as the same feature.
     Thus, for entries with the same ``ID``, the *type* and *attributes*
@@ -25,7 +25,7 @@ def get_annotation(gff_file):
     Parameters
     ----------
     gff_file : GFFFile
-        The file tro extract the `Annotation` object from.
+        The file tro extract the :class:`Annotation` object from.
     
     Returns
     -------
@@ -63,11 +63,11 @@ def get_annotation(gff_file):
 def set_annotation(gff_file, annotation,
                    seqid=None, source=None, is_stranded=True):
     """
-    Write an `Annotation` object into a GFF3 file.
+    Write an :class:`Annotation` object into a GFF3 file.
 
     Each feature will get one entry for each location it has.
-    `Feature` objects with multiple locations require the ``ID``
-    qualifier in its ``qual`` attribute.
+    :class:`Feature` objects with multiple locations require the ``ID``
+    qualifier in its :attr:`Feature.qual` attribute.
     
     Parameters
     ----------

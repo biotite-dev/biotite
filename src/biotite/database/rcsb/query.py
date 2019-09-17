@@ -51,7 +51,7 @@ class CompositeQuery(Query):
     A composite query is an accumulation of other queries, combined
     either with an 'and' or 'or' operator.
     
-    A combination of `CompositeQuery` instances is not possible.
+    A combination of :class:`CompositeQuery` instances is not possible.
     
     Parameters
     ----------
@@ -396,7 +396,7 @@ def search(query, omit_chain=True):
         If true, the chain information is removed from the IDs,
         e.g. '1L2Y:1' is converted into '1L2Y'.
         Only the ID without the chain information can be used as input
-        to `fetch()`.
+        to :func:`fetch()`.
     
     Warnings
     --------

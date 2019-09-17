@@ -28,7 +28,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     lengths and angles.
 
     The return value of this function are the three box vectors as
-    required for the `box` attribute in atom arrays and stacks.
+    required for the :attr:`box` attribute in atom arrays and stacks.
 
     Parameters
     ----------
@@ -44,8 +44,8 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     box : ndarray, dtype=float, shape=(3,3)
         The three box vectors.
         The vector components are in the last dimension.
-        The value can be directly used as `box` attribute in an atom
-        array.
+        The value can be directly used as :attr:`box` attribute in an
+        atom array.
     
     See also
     --------
@@ -75,7 +75,7 @@ def unitcell_from_vectors(box):
     """
     Get the unit cell lengths and angles from box vectors.
 
-    This is the reverse operation of `vectors_from_unitcell()`.
+    This is the reverse operation of :func:`vectors_from_unitcell()`.
 
     Parameters
     ----------
@@ -136,8 +136,8 @@ def repeat_box(atoms, amount=1):
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms to be repeated.
-        If `atoms` is a `AtomArrayStack`, the atoms are repeated for
-        each model, according to the box of each model.
+        If `atoms` is a :class:`AtomArrayStack`, the atoms are repeated
+        for each model, according to the box of each model.
     amount : int, optional
         The amount of boxes that are created in each direction of the
         central box.
@@ -262,7 +262,7 @@ def repeat_box(atoms, amount=1):
 
 def repeat_box_coord(coord, box, amount=1):
     r"""
-    Similar to `repeat_box()`, repeat the coordinates in a box by
+    Similar to :func:`repeat_box()`, repeat the coordinates in a box by
     duplicating and placing them in adjacent boxes.
 
     Parameters
@@ -336,8 +336,8 @@ def move_inside_box(coord, box):
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------
@@ -381,7 +381,7 @@ def remove_pbc(atoms, selection=None):
     ----------
     atoms : AtomArray or AtomArrayStack
         The potentially segmented structure.
-        The `box` attribute must be set in the structure.
+        The :attr:`box` attribute must be set in the structure.
     selection : str or (iterable object of) ndarray, dtype=bool, shape=(n,), optional
         Specifies which part(s) of structure are sanitized, i.e the
         segmentation is removed.
@@ -416,7 +416,7 @@ def remove_pbc(atoms, selection=None):
     In this case, multiple selections should be given, with a single
     molecule selected in each selection.
 
-    Internally the function uses `remove_pbc_from_coord()`.
+    Internally the function uses :func:`remove_pbc_from_coord()`.
     """
     new_atoms = atoms.copy()
     
@@ -467,7 +467,7 @@ def remove_pbc_from_coord(coord, box):
     All other coordinates are assembled relative to the origin by using
     the displacement coordinates in adjacent array positions.
     Basically, this function performs the reverse action of
-    `move_inside_box()`.
+    :func:`move_inside_box()`.
     
     Parameters
     ----------
@@ -534,8 +534,8 @@ def coord_to_fraction(coord, box):
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------
@@ -573,7 +573,7 @@ def fraction_to_coord(fraction, box):
     """
     Transform fractions of box vectors to coordinates.
 
-    This is the reverse operation of `coord_to_fraction()`.
+    This is the reverse operation of :func:`coord_to_fraction()`.
 
     Parameters
     ----------
@@ -581,8 +581,8 @@ def fraction_to_coord(fraction, box):
         The fractions of the box vectors for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------

@@ -29,12 +29,12 @@ def load_color_scheme(file_name):
     Returns
     -------
     scheme : dict
-        A dictionary representing the color scheme, It contains the following
-        keys, if the input file is proper:
+        A dictionary representing the color scheme, It contains the
+        following keys, if the input file is proper:
         
            - **name** - Name of the scheme.
-           - **alphabet** - `Alphabet` instance describing the type of
-             sequence the scheme can be used for.
+           - **alphabet** - :class:`Alphabet` instance describing the
+             type of sequence the scheme can be used for.
            - **colors** - List of *Matplotlib* compatible colors
     """
     with open(file_name, "r") as file:
@@ -65,16 +65,16 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
     name : str
         The name of the color scheme.
     alphabet : Alphabet
-        The alphbet to obtain the scheme for. The alphabet of the scheme
-        must equal or extend this parameter.
+        The alphabet to obtain the scheme for. The alphabet of the
+        scheme must equal or extend this parameter.
     default : str or tuple, optional
-        A `matplotlib` compatible color that is used for symbols that
+        A *Matplotlib* compatible color that is used for symbols that
         have no defined color in the scheme.
     
     Returns
     -------
     colors : list
-        A list of `matplotlib` compatible colors. The colors in the list
+        A list of *Matplotlib* compatible colors. The colors in the list
         have the same order as the symbols in the given `alphabet`.
         Since the alphabet of the color scheme may extend the given
         `alphabet`, the list of colors can be longer than the

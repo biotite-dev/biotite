@@ -47,8 +47,8 @@ def get_sequence(pdbx_file, data_block=None):
 def get_structure(pdbx_file, model=None, data_block=None,
                   insertion_code=[], altloc=[], extra_fields=[]):
     """
-    Create an `AtomArray` or `AtomArrayStack` from a `atom_site`
-    category.
+    Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
+    ``atom_site`` category in a :class:`PDBxFile`.
     
     Parameters
     ----------
@@ -56,10 +56,11 @@ def get_structure(pdbx_file, model=None, data_block=None,
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        `AtomArray` from the atoms corresponding to the given model ID.
-        If this parameter is omitted, an `AtomArrayStack` containing all
-        models will be returned, even if the structure contains only one
-        model.
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
     data_block : string, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
@@ -219,7 +220,7 @@ def _get_box(pdbx_file, data_block):
 def set_structure(pdbx_file, array, data_block=None):
     """
     Set the `atom_site` category with an
-    `AtomArray` or `AtomArrayStack`.
+    :class:`AtomArray` or :class:`AtomArrayStack`.
     
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories

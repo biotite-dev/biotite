@@ -41,16 +41,17 @@ class FastqFile(TextFile, MutableMapping):
     must be provided explicitly, either as number or format
     (e.g. ``'Illumina-1.8'``).
 
-    Similar to the `FastaFile` class, this class implements the
-    `MutableMapping` interface:
+    Similar to the :class:`FastaFile` class, this class implements the
+    :class:`MutableMapping` interface:
     An identifier string (without the leading ``@``) is used as index
     to get and set the corresponding sequence and quality.
-    `del` removes an entry in the file.
+    ``del`` removes an entry in the file.
     
     Parameters
     ----------
     offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
-        This value that is added to the quality score to obtain the ASCII code.
+        This value that is added to the quality score to obtain the
+        ASCII code.
         Can either directly the value, or a string that indicates
         the score format.
     chars_per_line : int, optional

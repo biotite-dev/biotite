@@ -15,20 +15,22 @@ __all__ = ["SubstitutionMatrix"]
 
 class SubstitutionMatrix(object):
     """
-    A `SubstitutionMatrix` is the foundation for scoring in sequence
-    alignments. A `SubstitutionMatrix` maps each possible pairing
-    of a symbol of a first alphabet with a symbol of a second alphabet
-    to a score (integer).
+    A :class:`SubstitutionMatrix` is the foundation for scoring in
+    sequence alignments.
+    A :class:`SubstitutionMatrix` maps each possible pairing of a symbol
+    of a first alphabet with a symbol of a second alphabet to a score
+    (integer).
     
-    The class uses a 2-D (m x n) `ndarray` (dtype=`np.int32`),
+    The class uses a 2-D (m x n) :class:`ndarray`
+    (dtype=:attr:`numpy.int32`),
     where each element stores the score for a symbol pairing, indexed
-    by the symbol codes of the respective symbols in an m-length
-    alphabet 1 and an n-length alphabet 2.
+    by the symbol codes of the respective symbols in an *m*-length
+    alphabet 1 and an *n*-length alphabet 2.
     
     There are 3 ways to creates instances:
     
-    At first a 2-D `ndarray` containing the scores can be directly
-    provided.
+    At first a 2-D :class:`ndarray` containing the scores can be
+    directly provided.
     
     Secondly a dictionary can be provided, where the keys are pairing
     tuples and values are the corresponding scores.
@@ -72,7 +74,7 @@ class SubstitutionMatrix(object):
     alphabet2 : Alphabet, length=n
         The second alphabet of the substitution matrix.
     score_matrix : ndarray, shape=(m,n) or dict or str
-        Either a symbol code indexed `ndarray` containing the scores,
+        Either a symbol code indexed :class:`ndarray` containing the scores,
         or a dictionary mapping the symbol pairing to scores,
         or a string referencing a matrix in the internal database.
     
@@ -99,6 +101,17 @@ class SubstitutionMatrix(object):
     10
     >>> print(matrix.get_score_by_code(0, 1))
     10
+
+    Creating an identity substitution matrix via the score matrix:
+
+    >>> alph = NucleotideSequence.alphabet
+    >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph)))
+    >>> print(matrix)
+        A   C   G   T
+    A   1   0   0   0
+    C   0   1   0   0
+    G   0   0   1   0
+    T   0   0   0   1
     
     Creating a matrix via database name:
         
@@ -174,7 +187,7 @@ class SubstitutionMatrix(object):
     
     def score_matrix(self):
         """
-        Get the 2-D `ndarray` containing the score values.
+        Get the 2-D :class:`ndarray` containing the score values.
         
         Returns
         -------
@@ -186,7 +199,8 @@ class SubstitutionMatrix(object):
     
     def transpose(self):
         """
-        Get a copy of this instance, where the alphabets are interchanged.
+        Get a copy of this instance, where the alphabets are
+        interchanged.
         
         Returns
         -------
@@ -340,7 +354,7 @@ class SubstitutionMatrix(object):
     @staticmethod
     def std_protein_matrix():
         """
-        Get the default `SubstitutionMatrix` for protein sequence
+        Get the default :class:`SubstitutionMatrix` for protein sequence
         alignments, which is BLOSUM62.
         
         Returns
@@ -353,7 +367,7 @@ class SubstitutionMatrix(object):
     @staticmethod
     def std_nucleotide_matrix():
         """
-        Get the default `SubstitutionMatrix` for DNA sequence
+        Get the default :class:`SubstitutionMatrix` for DNA sequence
         alignments.
         
         Returns

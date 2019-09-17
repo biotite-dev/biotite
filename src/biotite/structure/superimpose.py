@@ -61,13 +61,15 @@ def superimpose(fixed, mobile, atom_mask=None):
     
     Notes
     -----
-    The `transformation` tuple can be used in `superimpose_apply()` in
-    order to transform another `AtomArray` in the same way. This can
-    come inhandy, in case you want to superimpose two structures with
-    different amount of atoms. Often the two structures can be sliced in
-    order to obtain the same size and annotation arrays. After
-    superimposition the transformation can be applied on the original
-    structure using `superimpose_apply()`.
+    The `transformation` tuple can be used in
+    :func:`superimpose_apply()` in order to transform another
+    :class:`AtomArray` in the same way.
+    This can come in handy, in case you want to superimpose two
+    structures with different amount of atoms.
+    Often the two structures need to be filtered in order to obtain the
+    same size and annotation arrays.
+    After superimposition the transformation can be applied on the
+    original structure using :func:`superimpose_apply()`.
     
     References
     ----------
@@ -187,7 +189,7 @@ def superimpose_apply(atoms, transformation):
     atoms : AtomArray
         The structure to apply the transformation on.
     transformation: tuple, size=3
-        The transfomration tuple, obtained by `superimpose()`.
+        The transfomration tuple, obtained by :func:`superimpose()`.
     
     Returns
     -------

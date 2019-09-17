@@ -24,14 +24,15 @@ _radix_multiplier = np.array([_radix**n for n in (2,1,0)], dtype=int)
 
 class CodonTable(object):
     """
-    A `CodonTable` maps a codon (sequence of 3 nucleotides) to an amino
-    acid. It also defines start codons. A `CodonTable`
+    A :class:`CodonTable` maps a codon (sequence of 3 nucleotides) to an
+    amino acid.
+    It also defines start codons. A :class:`CodonTable`
     takes/outputs either the symbols or code of the codon/amino acid.
     
     Furthermore, this class is able to give a list of codons that
     corresponds to a given amino acid.
     
-    The `load()` method allows loading of NCBI codon tables.
+    The :func:`load()` method allows loading of NCBI codon tables.
     
     Objects of this class are immutable.
     
@@ -249,8 +250,8 @@ class CodonTable(object):
     
     def with_start_codons(self, starts):
         """
-        Create an new `CodonTable` with the same codon mappings, but
-        changed start codons.
+        Create an new :class:`CodonTable` with the same codon mappings,
+        but changed start codons.
         
         Parameters
         ----------
@@ -272,7 +273,7 @@ class CodonTable(object):
     
     def with_codon_mappings(self, codon_dict):
         """
-        Create an new `CodonTable` with partially changed codon
+        Create an new :class:`CodonTable` with partially changed codon
         mappings.
         
         Parameters
@@ -416,7 +417,7 @@ class CodonTable(object):
     @staticmethod
     def table_names():
         """
-        The possible codon table names for `load()`.
+        The possible codon table names for :func:`load()`.
         
         Returns
         -------

@@ -65,8 +65,9 @@ class GapSymbol:
 def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                    distances=None, guide_tree=None):
     r"""
-    align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
-                   distances=None, guide_tree=None)
+    align_multiple(sequences, matrix, gap_penalty=-10,
+                   terminal_penalty=True, distances=None,
+                   guide_tree=None)
     
     Perform a multiple sequence alignment using a progressive
     alignment algorithm. [1]_
@@ -496,8 +497,8 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         orginal `sequences` parameter.
     aligned_sequences : list of Sequence, length=m
         A list of the sequences that were aligned.
-        Instead of an `Alignment` object that represents the gaps as
-        ``-1`` in the trace, the gaps are represented as dedicated
+        Instead of an :class:`Alignment` object that represents the gaps
+        as ``-1`` in the trace, the gaps are represented as dedicated
         gap symbols in this case.
         This allows for the pairwise alignemt of gapped sequences.
     """
@@ -567,7 +568,7 @@ def _replace_gaps(CodeType[:] _T,
                   np.ndarray seq_code,
                   int gap_symbol_code):
     """
-    Replace gaps in a sequence in an `Alignemnt` with a dedicated
+    Replace gaps in a sequence in an :class:`Alignment` with a dedicated
     gap symbol.
 
     The replacement is required by the progressive alignment algorithm
