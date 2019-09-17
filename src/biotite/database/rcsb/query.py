@@ -8,7 +8,8 @@ __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "MoleculeTypeQuery", "MethodQuery",
            "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
            "SequenceClusterQuery",
-           "TextSearchQuery", "KeywordQuery",
+           "TextSearchQuery", "KeywordQuery", "TitleQuery",
+           "DecriptionQuery", "MacromoleculeNameQuery",
            "search"]
 
 import requests
@@ -43,7 +44,6 @@ class Query(metaclass=abc.ABCMeta):
     def __str__(self):
         return tostring(self.query, encoding="unicode")
 
-
 class CompositeQuery(Query):
     """
     A representation of an composite XML query.
@@ -71,7 +71,6 @@ class CompositeQuery(Query):
                 conj_type = SubElement(refinement, "conjunctionType")
                 conj_type.text = operator
             refinement.append(q.query)
-
 
 class SimpleQuery(Query, metaclass=abc.ABCMeta):
     """
@@ -112,7 +111,6 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
         else:
             child = SubElement(self.query, self._param_cls + "." + param)
         child.text = content
-
 
 class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
     """
@@ -207,7 +205,6 @@ class MolecularWeightQuery(RangeQuery):
             "MolecularWeightQuery", "mvStructure.structureMolecularWeight",
             min, max
         )
-
 
 class MoleculeTypeQuery(SimpleQuery):
     """
@@ -346,7 +343,7 @@ class SequenceClusterQuery(SimpleQuery):
 
 class TextSearchQuery(SimpleQuery):
     """
-    Query that filters structures, that have the given text in its
+    Query that filters structures, that have the given text in their
     corresponding *mmCIF* coordinate file.
     
     Parameters
@@ -360,7 +357,7 @@ class TextSearchQuery(SimpleQuery):
 
 class KeywordQuery(SimpleQuery):
     """
-    Query that filters structures, that have the given keyword in its
+    Query that filters structures, that have the given keyword in their
     corresponding *mmCIF* field ``_struct_keywords.pdbx_keywords``.
     
     Parameters
@@ -371,6 +368,52 @@ class KeywordQuery(SimpleQuery):
     def __init__(self, keyword):
         super().__init__("TokenKeywordQuery", "struct_keywords.pdbx_keywords")
         self.add_param("value", keyword)
+
+class TitleQuery(SimpleQuery):
+    """
+    Query that filters structures, that have the given text in their
+    tile (*mmCIF* field ``_struct.title``).
+    
+    Parameters
+    ----------
+    keyword: str
+        The text to search.
+    """
+    def __init__(self, text):
+        super().__init__("StructTitleQuery", "struct.title")
+        self.add_param("comparator", "contains")
+        self.add_param("value", text)
+
+class DecriptionQuery(SimpleQuery):
+    """
+    Query that filters structures, that have the given text in their
+    description (*mmCIF* field ``_entity.pdbx_description``).
+    
+    Parameters
+    ----------
+    keyword: str
+        The text to search.
+    """
+    def __init__(self, text):
+        super().__init__("StructDescQuery", "entity.pdbx_description")
+        self.add_param("comparator", "contains")
+        self.add_param("value", text)
+
+class MacromoleculeNameQuery(SimpleQuery):
+    """
+    Query that filters structures, that contain macromolecules with the
+    given name
+    (*mmCIF* fields
+    ``_entity.pdbx_description`` or ``_entity_name_com.name``).
+    
+    Parameters
+    ----------
+    keyword: str
+        The text to search.
+    """
+    def __init__(self, name):
+        super().__init__("MoleculeNameQuery")
+        self.add_param("macromoleculeName", name)
 
 
 

@@ -53,7 +53,10 @@
             "PfamIDQuery",
             "SequenceClusterQuery",
             "TextSearchQuery",
-            "KeywordQuery"
+            "KeywordQuery",
+            "TitleQuery",
+            "DecriptionQuery",
+            "MacromoleculeNameQuery"
         ],
         "Search and fetch" : [
             "search",

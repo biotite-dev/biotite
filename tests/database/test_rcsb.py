@@ -136,6 +136,21 @@ def test_search_invalid():
             {"keyword": "ION CHANNEL INHIBITOR"},
             ["2CK4", "2CK5"]
         ),
+        (
+            rcsb.TitleQuery,
+            {"text": "tc5b"},
+            ["1L2Y"]
+        ),
+        (
+            rcsb.DecriptionQuery,
+            {"text": "tc5b"},
+            ["1L2Y"]
+        ),
+        (
+            rcsb.MacromoleculeNameQuery,
+            {"name": "tc5b"},
+            ["1L2Y"]
+        ),
     ]
 )
 def test_simple_query_types(query_type, params, exp_ids):
