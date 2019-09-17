@@ -9,12 +9,15 @@ __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
            "SequenceClusterQuery",
            "TextSearchQuery", "KeywordQuery", "TitleQuery",
-           "DecriptionQuery", "MacromoleculeNameQuery",
+           "DecriptionQuery", "MacromoleculeNameQuery", "AuthorQuery",
+           "DateQuery",
            "search"]
 
-import requests
-import abc
 from xml.etree.ElementTree import Element, SubElement, tostring
+import numbers
+import datetime
+import abc
+import requests
 from ..error import RequestError
 
 
@@ -126,16 +129,22 @@ class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
     parameter_class : optional
         If specifed, this string is the prefix for all parameters
         (XML tags) of the query.
-    min, max: float
+    min, max: float or int or date
         The value range.
     """
     def __init__(self, query_type, parameter_class, min, max):
         super().__init__(query_type, parameter_class)
         self.add_param("comparator", "between")
         if min is not None:
-            self.add_param("min", f"{min:.5f}")
+            if isinstance(min, numbers.Rational):
+                self.add_param("min", f"{min:.5f}")
+            else:
+                self.add_param("min", str(min))
         if max is not None:
-            self.add_param("max", f"{max:.5f}")
+            if isinstance(max, numbers.Rational):
+                self.add_param("max", f"{max:.5f}")
+            else:
+                self.add_param("max", str(max))
     
     def add_param(self, param, content):
         """
@@ -408,12 +417,69 @@ class MacromoleculeNameQuery(SimpleQuery):
     
     Parameters
     ----------
-    keyword: str
-        The text to search.
+    name: str
+        The name of the macromolecule.
     """
     def __init__(self, name):
         super().__init__("MoleculeNameQuery")
         self.add_param("macromoleculeName", name)
+
+class AuthorQuery(SimpleQuery):
+    """
+    Query that filters structures from a given author.
+    
+    Parameters
+    ----------
+    name: str
+        The text to search.
+    exact : bool, optional
+        If true, the author name must completely match the given query
+        name.
+        If false, the author name merely must contain the given query
+        name.
+    """
+    def __init__(self, name, exact=False):
+        super().__init__("AdvancedAuthorQuery")
+        if exact:
+            self.add_param("exactMatch", "true")
+        else:
+            self.add_param("exactMatch", "false")
+        self.add_param("audit_author.name", name)
+
+class DateQuery(RangeQuery):
+    """
+    Query that filters structures that were deposited, released or
+    revised in a given time interval
+    
+    Parameters
+    ----------
+    min_date, max_date: date or str
+        The time interval, represented by two dates.
+    event : {'deposition', 'release', 'revision'}
+        The event to look for: Either the structure deposition, release
+        or revision.
+    """
+    def __init__(self, min_date, max_date, event="deposition"):
+        if event == "deposition":
+            super().__init__(
+                "DepositDateQuery",
+                "pdbx_database_status.recvd_initial_deposition_date",
+                min_date, max_date
+            )
+        elif event == "release":
+            super().__init__(
+                "ReleaseDateQuery",
+                "pdbx_audit_revision_history.revision_date",
+                min_date, max_date
+            )
+        elif event == "revision":
+            super().__init__(
+                "ReviseDateQuery",
+                "pdbx_audit_revision_history.revision_date",
+                min_date, max_date
+            )
+        else:
+            raise ValueError(f"'{event}' is not a valid event")
 
 
 

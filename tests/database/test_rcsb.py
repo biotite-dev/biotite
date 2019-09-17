@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import datetime
 import itertools
 import numpy as np
 from requests.exceptions import ConnectionError
@@ -150,6 +151,48 @@ def test_search_invalid():
             rcsb.MacromoleculeNameQuery,
             {"name": "tc5b"},
             ["1L2Y"]
+        ),
+        (
+            rcsb.AuthorQuery,
+            {"name": "Neidigh, J.W."},
+            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
+        ),
+        (
+            rcsb.AuthorQuery,
+            {"name": "Neidigh, J.W.", "exact": True},
+            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
+        ),
+        (
+            rcsb.AuthorQuery,
+            {"name": "Neidigh, J.W.", "exact": True},
+            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
+        ),
+        (
+            rcsb.DateQuery,
+            {
+                "min_date": datetime.date(2008, 8, 1 ),
+                "max_date": datetime.date(2008, 8, 30),
+                "event": "deposition"
+            },
+            550
+        ),
+        (
+            rcsb.DateQuery,
+            {
+                "min_date": datetime.date(2008, 8, 1 ),
+                "max_date": datetime.date(2008, 8, 30),
+                "event": "release"
+            },
+            566
+        ),
+        (
+            rcsb.DateQuery,
+            {
+                "min_date": "2008-08-01",
+                "max_date": "2008-09-30",
+                "event": "revision"
+            },
+            2
         ),
     ]
 )

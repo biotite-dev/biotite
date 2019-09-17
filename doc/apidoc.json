@@ -56,7 +56,9 @@
             "KeywordQuery",
             "TitleQuery",
             "DecriptionQuery",
-            "MacromoleculeNameQuery"
+            "MacromoleculeNameQuery",
+            "AuthorQuery",
+            "DateQuery"
         ],
         "Search and fetch" : [
             "search",
