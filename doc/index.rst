@@ -63,7 +63,7 @@ representations, ranging from sequence alignments to feature maps.
 
 .. image:: /examples/gallery/sequence/images/sphx_glr_hcn_hydropathy_001.png
    :width: 48 %
-   :target: examples/gallery/sequence/sw_genome_search.html
+   :target: examples/gallery/sequence/hcn_hydropathy.html
 
 .. image:: /examples/gallery/sequence/images/sphx_glr_avidin_alignment_001.png
    :width: 48 %
