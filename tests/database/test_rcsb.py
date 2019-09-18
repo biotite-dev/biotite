@@ -96,6 +96,31 @@ def test_search_invalid():
             {"min": 50000000},
             ["6CGV", "4F5X"]
         ),
+        #(
+        #    rcsb.ChainCountQuery,
+        #    {"min": 100, "max": 101},
+        #    []
+        #),
+        (
+            rcsb.ChainCountQuery,
+            {"min": 100, "max": 101, "bio_assembly": True},
+            ["6NUT", "5HGE", "3J2W", "1Z8Y"]
+        ),
+        (
+            rcsb.EntityCountQuery,
+            {"min": 85, "max": 100, "entity_type": "protein"},
+            ["6HIX", "5LYB"]
+        ),
+        (
+            rcsb.ModelCountQuery,
+            {"min": 60, "max": 61},
+            ["1BBO", "1GB1", "1O5P", "1XU6", "2LUM", "2NO8"]
+        ),
+        (
+            rcsb.ChainLengthQuery,
+            {"min": 1000, "max": 1000},
+            ["3DEC", "3W5B", "4NAB", "5UM6", "5ZMV", "5ZMW"]
+        ),
         (
             rcsb.MoleculeTypeQuery,
             {"rna": False, "dna": False, "hybrid": True, "protein": False},
@@ -108,6 +133,11 @@ def test_search_invalid():
              "2ZWH", "3HQV", "3HR2", "3PDM", "4IFM"]
         ),
         (
+            rcsb.SoftwareQuery,
+            {"name": "Gromacs"},
+            ["3K2S"]
+        ),
+        (
             rcsb.PubMedIDQuery,
             {"ids": ["6726807", "10490104"]},
             ["2HHB", "3HHB", "4HHB", "9GAA", "9GAC", "9GAF",]
@@ -115,7 +145,7 @@ def test_search_invalid():
         (
             rcsb.UniProtIDQuery,
             {"ids": ["P69905"]},
-            262
+            263
         ),
         (
             rcsb.PfamIDQuery,
@@ -151,6 +181,11 @@ def test_search_invalid():
             rcsb.MacromoleculeNameQuery,
             {"name": "tc5b"},
             ["1L2Y"]
+        ),
+        (
+            rcsb.ExpressionOrganismQuery,
+            {"name": "Bacillus subtilis"},
+            222
         ),
         (
             rcsb.AuthorQuery,

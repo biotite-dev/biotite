@@ -5,16 +5,18 @@
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
-           "MoleculeTypeQuery", "MethodQuery",
+           "ChainCountQuery", "EntityCountQuery", "ModelCountQuery",
+           "ChainLengthQuery",
+           "MoleculeTypeQuery", "MethodQuery", "SoftwareQuery",
            "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
            "SequenceClusterQuery",
            "TextSearchQuery", "KeywordQuery", "TitleQuery",
-           "DecriptionQuery", "MacromoleculeNameQuery", "AuthorQuery",
+           "DecriptionQuery", "MacromoleculeNameQuery",
+           "ExpressionOrganismQuery", "AuthorQuery",
            "DateQuery",
            "search"]
 
 from xml.etree.ElementTree import Element, SubElement, tostring
-import numbers
 import datetime
 import abc
 import requests
@@ -136,17 +138,17 @@ class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
         super().__init__(query_type, parameter_class)
         self.add_param("comparator", "between")
         if min is not None:
-            if isinstance(min, numbers.Rational):
+            if isinstance(min, float):
                 self.add_param("min", f"{min:.5f}")
             else:
                 self.add_param("min", str(min))
         if max is not None:
-            if isinstance(max, numbers.Rational):
+            if isinstance(max, float):
                 self.add_param("max", f"{max:.5f}")
             else:
                 self.add_param("max", str(max))
     
-    def add_param(self, param, content):
+    def add_param(self, param, content, omit_prefix=False):
         """
         Add a parameter (XML tag/text pair) to the query.
         
@@ -156,8 +158,11 @@ class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
             The XML tag name for the parameter.
         content : str
             The text content for the parameter.
+        omit_prefix : bool, optional
+            If true, the parameter prefix, specified with
+            `parameter_class` in the constructor, is omitted.
         """
-        if self._param_cls == "":
+        if self._param_cls == "" or omit_prefix:
             child = SubElement(self.query, param)
         else:
             child = SubElement(self.query, self._param_cls + "." + param)
@@ -213,6 +218,96 @@ class MolecularWeightQuery(RangeQuery):
         super().__init__(
             "MolecularWeightQuery", "mvStructure.structureMolecularWeight",
             min, max
+        )
+
+class ChainCountQuery(SimpleQuery):
+    """
+    Query that filters structures within a given range of number of
+    chains.
+    
+    Parameters
+    ----------
+    min, max: int, optional
+        The minimum and maximum number of chains.
+    bio_assembly: bool, optional
+        If set to true, the number of chains in a
+        `biological assembly <https://pdb101.rcsb.org/learn/guide-to-understanding-pdb-data/biological-assemblies>`_
+        (oligomer) is counted.
+        Otherwise, the number of chains in the asymmetric subunit, that
+        is equal to the amount of chains in the file, is counted.
+    """
+    def __init__(self, min=None, max=None, bio_assembly=False):
+        if bio_assembly:
+            super().__init__("BiolUnitQuery")
+            if min is not None:
+                self.add_param("oligomeric_statemin", str(min))
+            if max is not None:
+                self.add_param("oligomeric_statemax", str(max))
+        else:
+            super().__init__("NumberOfChainsQuery", "struct_asym.numChains")
+            if min is not None:
+                self.add_param("min", str(min))
+            if max is not None:
+                self.add_param("max", str(max))
+
+class EntityCountQuery(RangeQuery):
+    """
+    Query that filters structures, that have given number of entities,
+    i.e. different chemical compounds.
+    
+    Parameters
+    ----------
+    min, max: int, optional
+        The minimum and maximum number of entities.
+    entity_type: {'protein', 'rna', 'dna', 'ligand', 'other'}, optional
+        If set, only entities of the given type are considered.
+    """
+    _entity_type_dict = {
+        "protein": "p",
+        "rna": "r",
+        "dna": "d",
+        "ligand": "n",
+        "other": "?",
+    }
+    
+    def __init__(self, min=None, max=None, entity_type=None):
+        super().__init__(
+            "NumberOfEntitiesQuery", "struct_asym.numEntities", min, max
+        )
+        if entity_type is not None:
+            self.add_param(
+                "entity.type.",
+                EntityCountQuery._entity_type_dict[entity_type.lower()],
+                omit_prefix=True
+            )
+
+class ModelCountQuery(RangeQuery):
+    """
+    Query that filters structures, that have given number of models.
+    
+    Parameters
+    ----------
+    min, max: int, optional
+        The minimum and maximum number of models.
+    """
+    def __init__(self, min=None, max=None):
+        super().__init__(
+            "ModelCountQuery", "mvStructure.modelCount", min, max
+        )
+
+class ChainLengthQuery(RangeQuery):
+    """
+    Query that filters structures with chains in the given chain length
+    range.
+    
+    Parameters
+    ----------
+    min, max: int, optional
+        The minimum and maximum number of chains.
+    """
+    def __init__(self, min=None, max=None):
+        super().__init__(
+            "SequenceLengthQuery", "v_sequence.chainLength", min, max
         )
 
 class MoleculeTypeQuery(SimpleQuery):
@@ -292,6 +387,20 @@ class MethodQuery(SimpleQuery):
             self.add_param("hasExperimentalData.value", "Y")
         elif has_data == False:
             self.add_param("hasExperimentalData.value", "N")
+
+class SoftwareQuery(SimpleQuery):
+    """
+    Query that filters structures, that were elucidated with the help
+    of the given software.
+    
+    Parameters
+    ----------
+    name: str
+        Name of the software.
+    """
+    def __init__(self, name):
+        super().__init__("SoftwareQuery", "VSoftware.name")
+        self.add_param("value", name)
 
 class PubMedIDQuery(SimpleQuery):
     """
@@ -423,6 +532,28 @@ class MacromoleculeNameQuery(SimpleQuery):
     def __init__(self, name):
         super().__init__("MoleculeNameQuery")
         self.add_param("macromoleculeName", name)
+
+class ExpressionOrganismQuery(SimpleQuery):
+    """
+    Query that filters structures, of which the protein was expressed
+    in the specified host organism
+    (*mmCIF* field ``_entity_src_gen.pdbx_host_org_scientific_name``).
+
+    The unabbreviated scientific name is required,
+    e.g. ``Escherichia coli``.
+    Capitalization is not required.
+    
+    Parameters
+    ----------
+    name: str
+        The scientific name of the host organism.
+    """
+    def __init__(self, name):
+        super().__init__(
+            "ExpressionOrganismQuery",
+            "entity_src_gen.pdbx_host_org_scientific_name"
+        )
+        self.add_param("value", name)
 
 class AuthorQuery(SimpleQuery):
     """
