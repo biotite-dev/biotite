@@ -120,6 +120,11 @@ This subpackage is all about searching and downloading data from biological
 databases, including the arguably most important ones: the *RCSB PDB* and the
 *NCBI Entrez* database.
 
+.. image:: /examples/gallery/structure/images/sphx_glr_pdb_statistics_001.png
+   :width: 48 %
+   :target: examples/gallery/structure/pdb_statistics.html
+
+
 
 .. toctree::
    :maxdepth: 1
