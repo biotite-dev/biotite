@@ -13,12 +13,16 @@ The visualisation was coducted with PyMOL.
 .. image:: /static/assets/figures/ku_superimposition.png
 """
 
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import numpy as np
+
 
 # The output file names
 # Modify these values for actual file output
