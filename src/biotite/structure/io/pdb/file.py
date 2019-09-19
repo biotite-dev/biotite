@@ -8,7 +8,7 @@ __all__ = ["PDBFile"]
 import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...box import vectors_from_unitcell, unitcell_from_vectors
-from ....file import TextFile
+from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
 from ...filter import filter_inscode_and_altloc
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
@@ -155,16 +155,8 @@ class PDBFile(TextFile):
             model_start_i = np.array([0])
         
         if model is None:
-            # Very simple check for length equality check:
-            # If all models have the same amount of atoms
-            # the amount of atom lines is a multiple
-            # of the amount of models
-            if len(atom_line_i) % len(model_start_i):
-                raise BadStructureError("The models in the file have unequal "
-                                        "amount of atoms, give an explicit "
-                                        "model instead")
             depth = len(model_start_i)
-            length = len(atom_line_i) // len(model_start_i)
+            length = self._get_model_length(model_start_i, atom_line_i)
             coord_i = atom_line_i
         
         else:
@@ -263,16 +255,8 @@ class PDBFile(TextFile):
             model_start_i = np.array([0])
         
         if model is None:
-            # Very simple check for length equality check:
-            # If all models have the same amount of atoms
-            # the amount of atom lines is a multiple
-            # of the amount of models
-            if len(atom_line_i) % len(model_start_i):
-                raise BadStructureError("The models in the file have unequal "
-                                        "amount of atoms, give an explicit "
-                                        "model instead")
             depth = len(model_start_i)
-            length = len(atom_line_i) // len(model_start_i)
+            length = self._get_model_length(model_start_i, atom_line_i)
             array = AtomArrayStack(depth, length)
             # Line indices for annotation determination
             # Annotation is determined from model 1,
@@ -555,3 +539,26 @@ class PDBFile(TextFile):
                               "{:>7.2f}".format(np.rad2deg(unitcell[4])) +
                               "{:>7.2f}".format(np.rad2deg(unitcell[5])) +
                               " P 1           1")
+
+    def _get_model_length(self, model_start_i, atom_line_i):
+        """
+        Determine length of models and check that all models
+        have equal length.
+        """
+        n_models = len(model_start_i)
+        length = None
+        for model_i in range(len(model_start_i)):
+            model_start = model_start_i[model_i]
+            model_stop = model_start_i[model_i+1] if model_i+1 < n_models \
+                            else len(self.lines)
+            model_length = np.count_nonzero(
+                (atom_line_i >= model_start) & (atom_line_i < model_stop)
+            )
+            if length is None:
+                length = model_length
+            if model_length != length:
+                raise InvalidFileError(
+                    f"Model {model_i+1} has {model_length} atoms, "
+                    f"but model 1 has {length} atoms, must be equal"
+                )
+        return length
