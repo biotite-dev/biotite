@@ -9,8 +9,6 @@ The visualisation was coducted with PyMOL.
 
 * *Orange*: Ku dimer originally bound to DNA
 * *Green*:  Free Ku dimer
-
-.. image:: /static/assets/figures/ku_superimposition.png
 """
 
 # Code source: Patrick Kunzmann
@@ -58,3 +56,4 @@ cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_superimposed, data_block="ku")
 cif_file.write(ku_file)
 # Visualization with PyMOL...
+# biotite_static_image = ku_superimposition.png
