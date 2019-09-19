@@ -159,13 +159,28 @@ The line length of these ``*.rst`` files is also limited to
 Contributing examples
 ^^^^^^^^^^^^^^^^^^^^^
 
-Do you have an application of *Biotite* and you want to share it with the world?
+Do you have an application of *Biotite* and you want to share it with the
+world?
 Then the example gallery is the way to go.
-For gallery generation the package ``sphinx-gallery`` is used.
+For gallery generation the package *sphinx-gallery* is used.
 Please refer to its
 `documentation <http://sphinx-gallery.readthedocs.io/en/latest/>`_
 for further information on script formatting.
 The example scripts are placed in ``doc/examples/scripts``.
+
+Normally, *sphinx-gallery* only creates plots for *Matplotlib* and
+*Mayavi* outputs. However, the *Biotite* documentation implements
+a custom image scraper, that allows using static images, e.g. created by
+*PyMOL*, to be included.
+You have to do two things to achieve that:
+
+   - Put the image in the same directory as the example script
+   - In the respective code block of the example script, add the following
+     comment line:
+     ``# biotite_static_image = <some_image.png>``
+
+An example of this can be seen in the ``structure/ku_superimposition.py``
+example.
 
 Updating the tutorial
 ^^^^^^^^^^^^^^^^^^^^^
