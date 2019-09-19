@@ -29,6 +29,7 @@ import biotite
 sys.path.insert(0, doc_path)
 import apidoc
 import tutorial
+import scraper
 
 
 #Reset matplotlib params
@@ -114,7 +115,8 @@ sphinx_gallery_conf = {
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
         doc_path, "static/assets/general/biotite_icon_thumb.png"
-    )
+    ),
+    "image_scrapers": ("matplotlib", scraper.static_scraper),
 }
 
 
