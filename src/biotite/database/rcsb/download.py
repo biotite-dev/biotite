@@ -29,7 +29,10 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
         to be downloaded .
     format : str
         The format of the files to be downloaded.
-        'pdb', 'pdbx', 'cif' or 'mmtf' are allowed.
+        ``'pdb'``, ``'pdbx'``, ``'cif'``, ``'mmcif'`` or ``'mmtf'``
+        are allowed.
+        However, ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
+        the same format.
     target_path : str, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
@@ -99,7 +102,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
                 else:
                     with open(file, "w+") as f:
                         f.write(content)
-            elif format == "cif" or format == "pdbx":
+            elif format in ["cif", "mmcif", "pdbx"]:
                 r = requests.get(_standard_url + id + ".cif")
                 content = r.text
                 _assert_valid_file(content, id)
