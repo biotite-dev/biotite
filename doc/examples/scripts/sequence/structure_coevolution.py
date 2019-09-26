@@ -1,4 +1,4 @@
-from os.path import isfile
+import numpy as np
 import matplotlib.pyplot as plt
 import biotite
 import biotite.structure as struc
@@ -44,11 +44,11 @@ query =   entrez.SimpleQuery("luxA", "Gene Name") \
         & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
 uids = entrez.search(query, db_name="protein")
 file_name = entrez.fetch_single_file(
-    uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
+    uids, "test.fasta", db_name="protein", ret_type="fasta"
 )
 fasta_file = fasta.FastaFile()
 fasta_file.read(file_name)
-hit_seqs = [s[:40] for s in fasta.get_sequences().values()]
+hit_seqs = [s[:40] for s in fasta.get_sequences(fasta_file).values()]
 hit_ids = ["TEST"] * len(hit_seqs)
 hit_starts = [1] * len(hit_seqs)
 ###
@@ -63,6 +63,10 @@ for header, seq_str in fasta_file.items():
 
 # Perform MSA
 alignment = clustalo.ClustalOmegaApp.align(hit_seqs)
+###
+#alignment = alignment[alignment.trace[:,0] != -1]
+#alignment = alignment[:1]
+###
 
 
 # Plot MSA
@@ -72,7 +76,7 @@ for start in hit_starts:
         return x + start
     number_functions.append(some_func)
 fig = plt.figure(figsize=(8.0, 8.0))
-ax = fig.add_subplot(111)
+ax = fig.gca()
 graphics.plot_alignment_type_based(
     ax, alignment, symbols_per_line=len(alignment), labels=hit_ids,
     symbol_size=8, number_size=8, label_size=8,
@@ -82,32 +86,56 @@ graphics.plot_alignment_type_based(
 fig.tight_layout()
 
 # Calculate MI
-#def mutual_information(alignment, ref_index):
-#    ref_seq = alignment.sequences[ref_index]
-#    alph_len = len(ref_seq.alphabet)
-#    ref_trace = alignment.trace[:,ref_index]
-#    codes = align.get_codes(alignment).T
-#    codes = codes[ref_trace != -1]
-#    
-#    counts = np.zeros((len(codes), alph_len))
-#    lengths = np.zeros(len(codes))
-#    for i, column in enumerate(codes):
-#        counts[i] = np.bincount(column[column != -1], minlength=alph_len)
-#        lengths[i] = len(column[column != -1])
-#    
-#    marginal_probs = counts / lengths[:, np.newaxis]
-#    combined_probs = np.zeros((len(ref_seq), len(ref_seq)))
-#    
-#    mi = np.zeros((len(ref_seq), len(ref_seq)))
-#    for i, col_i in enumerate(codes):
-#        if ref_trace[i] == -1:
-#            continue
-#        for j, col_j in enumerate(codes):
-#            if ref_trace[j] == -1:
-#                continue
-#            for k in codes.shape[-1:]
+def mutual_information(alignment):
+    codes = align.get_codes(alignment).T
+    alph = alignment.sequences[0].alphabet
+    
+    mi = np.zeros((len(alignment), len(alignment)))
+    # Iterate over all columns to choose first column
+    for i in range(codes.shape[0]):
+        # Iterate over all columns to choose second column
+        for j in range(codes.shape[0]):
+            nrows = 0
+            marginal_counts_i = np.zeros(len(alph), dtype=int)
+            marginal_counts_j = np.zeros(len(alph), dtype=int)
+            combined_counts = np.zeros((len(alph), len(alph)), dtype=int)
+            # Iterate over all symbols in both columns
+            for k in range(codes.shape[1]):
+                if codes[i,k] != -1 and codes[j,k] != -1:
+                    marginal_counts_i[codes[i,k]] += 1
+                    marginal_counts_j[codes[j,k]] += 1
+                    combined_counts[codes[i,k], codes[j,k]] += 1
+                    nrows += 1
+            marginal_probs_i = marginal_counts_i / nrows
+            marginal_probs_j = marginal_counts_j / nrows
+            combined_probs = combined_counts / nrows
+            
+            mi_before_sum = (
+                combined_probs * np.log2(
+                    combined_probs / (
+                        marginal_probs_i[:, np.newaxis] * 
+                        marginal_probs_j[np.newaxis, :]
+                    )
+                )
+            ).flatten()
+            mi[i,j] = np.sum(mi_before_sum[~np.isnan(mi_before_sum)])
+    return mi
 
+alignment = alignment[alignment.trace[:,0] != -1]
+mi = mutual_information(alignment)
 
-mi = mutual_information(alignment, 0)
+fig = plt.figure(figsize=(8.0, 8.0))
+ax = fig.gca()
+#cmap = ListedColormap(["white", biotite.colors["dimgreen"]])
+cmap="Greens"
+#ax.matshow(adjacency_matrix, cmap=cmap, origin="lower")
+im = ax.pcolormesh(mi, cmap=cmap)
+ax.set_aspect("equal")
+ax.set_xlabel("Residue position")
+ax.set_xlabel("Residue position")
+ax.set_title("Mutual information")
+fig.colorbar(im)
+fig.tight_layout()
+
 
 plt.show()
