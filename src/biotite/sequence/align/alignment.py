@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 
 import numpy as np
+import numbers
 import copy
 import textwrap
 from ..alphabet import LetterAlphabet
@@ -137,17 +138,22 @@ class Alignment(object):
     
     def __getitem__(self, index):
         if isinstance(index, tuple):
-            new_trace = self.trace[index]
-            if isinstance(index[1], (list, tuple, np.ndarray)):
-                new_sequences = [self.sequences[i] for i in index[1]]
-            else:
-                new_sequences = self.sequences[index[1]]
-            return Alignment(new_sequences, new_trace, self.score)
-        elif isinstance(index, slice):
-            return Alignment(self.sequences[:], self.trace[index], self.score)
+            if len(index) > 2:
+                raise IndexError("Only 1D or 2D indices are allowed")
+            if isinstance(index[0], numbers.Integral) or \
+               isinstance(index[0], numbers.Integral):
+                    raise IndexError(
+                        "Integers are invalid indices for alignments, "
+                        "a single sequence or alignment column cannot be "
+                        "selected"
+                    )
+            return Alignment(
+                Alignment._index_sequences(self.sequences, index[1]),
+                self.trace[index],
+                self.score
+            )
         else:
-            raise IndexError(f"Invalid alignment index type "
-                             f"'{type(index).__name__}'")
+            return Alignment(self.sequences, self.trace[index], self.score)
     
     def __iter__(self):
         raise TypeError("'Alignment' object is not iterable")
@@ -165,6 +171,20 @@ class Alignment(object):
         if self.score != item.score:
             return False
         return True
+    
+    @staticmethod
+    def _index_sequences(sequences, index):
+        if isinstance(index, (list, tuple)) or \
+            (isinstance(index, np.ndarray) and index.dtype != bool):
+                return [sequences[i] for i in index]
+        elif isinstance(index, np.ndarray) and index.dtype == bool:
+            return [seq for seq, mask in zip(sequences, index) if mask]
+        if isinstance(index, slice):
+            return sequences[index]
+        else:
+            raise IndexError(
+                f"Invalid alignment index type '{type(index).__name__}'"
+            )
     
     @staticmethod
     def trace_from_strings(seq_str_list):
