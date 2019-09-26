@@ -350,7 +350,7 @@ def get_sequence_identity(alignment, mode="not_terminal"):
         if len(np.unique(column)) == 1:
             matches += 1
     
-    #Calculate iddentity
+    #Calculate identity
     if mode == "shortest":
         shortest_length = min([len(seq) for seq in alignment.sequences])
         return matches / shortest_length
