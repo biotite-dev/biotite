@@ -1,9 +1,9 @@
-"""
+r"""
 Mutual information as measure for coevolution of residues
 =========================================================
 
-Mutual information is a broadly used measure for the coevolution of two
-residues of a sequence (citation need) originated in the information
+Mutual information (MI) is a broadly used measure for the coevolution of
+two residues of a sequence (citation needed) originated in information
 theory.
 Basically, the mutual information is a statement about how much
 knowledge one already has about a distribution be knowing another
@@ -11,10 +11,18 @@ distribution:
 
 .. math:: I(X;Y)
    = \sum_{x \in X} \sum_{y \in Y}
-   P_{X,Y}(x,y) \times \log_2 \frac{P_{X,Y}(x,y)}{P_{X}(x) P_{Y}(y)}
+   P_{X,Y}(x,y) \cdot \log_2 \frac{P_{X,Y}(x,y)}{P_{X}(x) P_{Y}(y)}
 
-In the context of a protein sequence
-In sum this means, that 
+In the context of a protein the amino acid sequence is aligned to
+homologous sequences. The required distribution is the distribution of
+amino acid in a alignment column.
+When mutations in one column are often associated with certain
+mutations in another alignment column, the MI between these two
+positions is high.
+This indicates that these two sequence positions might have evolved
+together (coevolution).
+
+To demonstrate this...
 """
 
 # Code source: Patrick Kunzmann
@@ -37,13 +45,9 @@ import biotite.database.rcsb as rcsb
 import biotite.database.entrez as entrez
 
 
-
-IDENTITY_THESHOLD = 0.4
-
 # Get structure and sequence
 pdbx_file = pdbx.PDBxFile()
-pdbx_file.read(rcsb.fetch("1GUU", "mmcif", "."))
-#file.read(rcsb.fetch("1GUU", "mmcif"))
+pdbx_file.read(rcsb.fetch("1GUU", "mmcif"))
 cmyb_seq = pdbx.get_sequence(pdbx_file)[0]
 # 'use_author_fields' is set to false,
 # to ensure that values in the 'res_id' annotation point to the sequence
@@ -58,8 +62,10 @@ alignments = app.get_alignments()
 hit_seqs = [cmyb_seq]
 hit_ids = ["Query"]
 hit_starts = [1]
+IDENTITY_THESHOLD = 0.4
 for ali in alignments:
     identity = align.get_sequence_identity(ali)
+    # Do not include the exact same sequence -> identity < 1.0
     if identity > IDENTITY_THESHOLD and identity < 1.0:
         hit_seqs.append(ali.sequences[1])
         hit_ids.append(ali.hit_id)
@@ -84,8 +90,8 @@ graphics.plot_alignment_type_based(
 )
 fig.tight_layout()
 
-
-
+########################################################################
+# Based on the alignment the mutual information can be calculated...
 
 # Calculate MI
 def mutual_information(alignment):
@@ -103,6 +109,7 @@ def mutual_information(alignment):
             combined_counts = np.zeros((len(alph), len(alph)), dtype=int)
             # Iterate over all symbols in both columns
             for k in range(codes.shape[1]):
+                # Skip rows where either column has a gap
                 if codes[i,k] != -1 and codes[j,k] != -1:
                     marginal_counts_i[codes[i,k]] += 1
                     marginal_counts_j[codes[j,k]] += 1
@@ -125,9 +132,12 @@ def mutual_information(alignment):
             mi[i,j] = np.sum(mi_before_sum[~np.isnan(mi_before_sum)])
     return mi
 
+# We are only intrested in alignment columns
+# that have no gap in the C-MYB sequence
 alignment = alignment[alignment.trace[:,0] != -1]
 mi = mutual_information(alignment)
 
+# Create the color map for the plot
 color = colors.to_rgb(biotite.colors["dimorange"])
 cmap_val = np.stack(
     [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
@@ -146,7 +156,10 @@ ax.set_ylabel("Residue position")
 fig.tight_layout()
 # sphinx_gallery_thumbnail_number = 2
 
-
+########################################################################
+# Now we can look whether there is some correlation of the pairwise
+# distances of two residues and their MI...
+#
 
 # Remove elements in MI matrix for structurally unresolved residues
 res_ids, _ = struc.get_residues(cmyb_struc)
@@ -161,8 +174,10 @@ mi_flat = mi.flatten()
 mi_flat = mi_flat[dist_flat != 0]
 dist_flat = dist_flat[dist_flat != 0]
 
+# Bin the distances based on the MI of the data point
+# to calculate mean and standard deviation
 BIN_WIDTH = 0.1
-bin_edges = np.arange(0, np.max(mi_flat) + BIN_WIDTH,BIN_WIDTH)
+bin_edges = np.arange(0, np.max(mi_flat) + BIN_WIDTH, BIN_WIDTH)
 bin_indices = np.digitize(mi_flat, bin_edges)
 mean = np.zeros(len(bin_edges)-1)
 std = np.zeros(len(bin_edges)-1)
