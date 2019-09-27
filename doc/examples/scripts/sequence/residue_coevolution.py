@@ -1,3 +1,25 @@
+"""
+Mutual information as measure for coevolution of residues
+=========================================================
+
+Mutual information is a broadly used measure for the coevolution of two
+residues of a sequence (citation need) originated in the information
+theory.
+Basically, the mutual information is a statement about how much
+knowledge one already has about a distribution be knowing another
+distribution:
+
+.. math:: I(X;Y)
+   = \sum_{x \in X} \sum_{y \in Y}
+   P_{X,Y}(x,y) \times \log_2 \frac{P_{X,Y}(x,y)}{P_{X}(x) P_{Y}(y)}
+
+In the context of a protein sequence
+In sum this means, that 
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,10 +36,6 @@ import biotite.application.clustalo as clustalo
 import biotite.database.rcsb as rcsb
 import biotite.database.entrez as entrez
 
-###
-import matplotlib
-matplotlib.rcdefaults()
-###
 
 
 IDENTITY_THESHOLD = 0.4
@@ -46,30 +64,6 @@ for ali in alignments:
         hit_seqs.append(ali.sequences[1])
         hit_ids.append(ali.hit_id)
         hit_starts.append(ali.hit_interval[0])
-"""
-###
-# Search for protein products of LexA gene in UniProtKB/Swiss-Prot database
-query =   entrez.SimpleQuery("luxA", "Gene Name") \
-        & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
-uids = entrez.search(query, db_name="protein")
-file_name = entrez.fetch_single_file(
-    uids, "test.fasta", db_name="protein", ret_type="fasta"
-)
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
-hit_seqs = [s[:100] for s in fasta.get_sequences(fasta_file).values()]
-hit_ids = ["TEST"] * len(hit_seqs)
-hit_starts = [1] * len(hit_seqs)
-
-ids = []
-sequences = []
-for header, seq_str in fasta_file.items():
-    # Extract the UniProt Entry name from header
-    identifier = header.split("|")[-1].split()[0]
-    ids.append(identifier)
-    sequences.append(seq.ProteinSequence(seq_str))
-"""
-###
 
 # Perform MSA
 alignment = clustalo.ClustalOmegaApp.align(hit_seqs)
@@ -150,19 +144,17 @@ ax.set_aspect("equal")
 ax.set_xlabel("Residue position")
 ax.set_ylabel("Residue position")
 fig.tight_layout()
+# sphinx_gallery_thumbnail_number = 2
 
 
 
 # Remove elements in MI matrix for structurally unresolved residues
 res_ids, _ = struc.get_residues(cmyb_struc)
 mask = np.array([True if i+1 in res_ids else False for i in range(len(mi))])
-mi = mi[mask, mask]
+mi = mi[np.ix_(mask, mask)]
 # Calculate pairwise residue distances for later comparison with MI
 ca = cmyb_struc[cmyb_struc.atom_name == "CA"]
 dist = struc.distance(ca.coord[:, np.newaxis], ca.coord[np.newaxis, :])
-###
-#mi = mi[:len(ca), :len(ca)]
-###
 dist_flat = dist.flatten()
 mi_flat = mi.flatten()
 # Remove data points for distances of residues to themselves
