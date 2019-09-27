@@ -1,5 +1,7 @@
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
@@ -12,6 +14,11 @@ import biotite.application.clustalo as clustalo
 import biotite.database.rcsb as rcsb
 import biotite.database.entrez as entrez
 
+###
+import matplotlib
+matplotlib.rcdefaults()
+###
+
 
 IDENTITY_THESHOLD = 0.4
 
@@ -20,9 +27,11 @@ pdbx_file = pdbx.PDBxFile()
 pdbx_file.read(rcsb.fetch("1GUU", "mmcif", "."))
 #file.read(rcsb.fetch("1GUU", "mmcif"))
 cmyb_seq = pdbx.get_sequence(pdbx_file)[0]
-cmyb_struc = pdbx.get_structure(pdbx_file, model=1)
+# 'use_author_fields' is set to false,
+# to ensure that values in the 'res_id' annotation point to the sequence
+cmyb_struc = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+cmyb_struc = cmyb_struc[struc.filter_amino_acids(cmyb_struc)]
 
-"""
 # Find homologous proteins in SwissProt via BLAST
 app = blast.BlastWebApp("blastp", cmyb_seq, database="swissprot")
 app.start()
@@ -48,10 +57,9 @@ file_name = entrez.fetch_single_file(
 )
 fasta_file = fasta.FastaFile()
 fasta_file.read(file_name)
-hit_seqs = [s[:40] for s in fasta.get_sequences(fasta_file).values()]
+hit_seqs = [s[:100] for s in fasta.get_sequences(fasta_file).values()]
 hit_ids = ["TEST"] * len(hit_seqs)
 hit_starts = [1] * len(hit_seqs)
-###
 
 ids = []
 sequences = []
@@ -60,14 +68,11 @@ for header, seq_str in fasta_file.items():
     identifier = header.split("|")[-1].split()[0]
     ids.append(identifier)
     sequences.append(seq.ProteinSequence(seq_str))
+"""
+###
 
 # Perform MSA
 alignment = clustalo.ClustalOmegaApp.align(hit_seqs)
-###
-#alignment = alignment[alignment.trace[:,0] != -1]
-#alignment = alignment[:1]
-###
-
 
 # Plot MSA
 number_functions = []
@@ -84,6 +89,9 @@ graphics.plot_alignment_type_based(
     color_scheme="flower"
 )
 fig.tight_layout()
+
+
+
 
 # Calculate MI
 def mutual_information(alignment):
@@ -110,32 +118,85 @@ def mutual_information(alignment):
             marginal_probs_j = marginal_counts_j / nrows
             combined_probs = combined_counts / nrows
             
-            mi_before_sum = (
-                combined_probs * np.log2(
-                    combined_probs / (
-                        marginal_probs_i[:, np.newaxis] * 
-                        marginal_probs_j[np.newaxis, :]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                mi_before_sum = (
+                    combined_probs * np.log2(
+                        combined_probs / (
+                            marginal_probs_i[:, np.newaxis] * 
+                            marginal_probs_j[np.newaxis, :]
+                        )
                     )
-                )
-            ).flatten()
+                ).flatten()
             mi[i,j] = np.sum(mi_before_sum[~np.isnan(mi_before_sum)])
     return mi
 
 alignment = alignment[alignment.trace[:,0] != -1]
 mi = mutual_information(alignment)
 
-fig = plt.figure(figsize=(8.0, 8.0))
+color = colors.to_rgb(biotite.colors["dimorange"])
+cmap_val = np.stack(
+    [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
+        for i in range(len(color))]
+).transpose()
+cmap = colors.ListedColormap(cmap_val)
+
+fig = plt.figure(figsize=(8.0, 7.0))
 ax = fig.gca()
-#cmap = ListedColormap(["white", biotite.colors["dimgreen"]])
-cmap="Greens"
-#ax.matshow(adjacency_matrix, cmap=cmap, origin="lower")
 im = ax.pcolormesh(mi, cmap=cmap)
+cbar = fig.colorbar(im)
+cbar.set_label("Mutual information (bit)")
 ax.set_aspect("equal")
 ax.set_xlabel("Residue position")
-ax.set_xlabel("Residue position")
-ax.set_title("Mutual information")
-fig.colorbar(im)
+ax.set_ylabel("Residue position")
 fig.tight_layout()
 
+
+
+# Remove elements in MI matrix for structurally unresolved residues
+res_ids, _ = struc.get_residues(cmyb_struc)
+mask = np.array([True if i+1 in res_ids else False for i in range(len(mi))])
+mi = mi[mask, mask]
+# Calculate pairwise residue distances for later comparison with MI
+ca = cmyb_struc[cmyb_struc.atom_name == "CA"]
+dist = struc.distance(ca.coord[:, np.newaxis], ca.coord[np.newaxis, :])
+###
+#mi = mi[:len(ca), :len(ca)]
+###
+dist_flat = dist.flatten()
+mi_flat = mi.flatten()
+# Remove data points for distances of residues to themselves
+mi_flat = mi_flat[dist_flat != 0]
+dist_flat = dist_flat[dist_flat != 0]
+
+BIN_WIDTH = 0.1
+bin_edges = np.arange(0, np.max(mi_flat) + BIN_WIDTH,BIN_WIDTH)
+bin_indices = np.digitize(mi_flat, bin_edges)
+mean = np.zeros(len(bin_edges)-1)
+std = np.zeros(len(bin_edges)-1)
+for bin_i in range(len(bin_edges) - 1):
+    dist_in_bin = dist_flat[bin_indices == bin_i+1]
+    if len(dist_in_bin) != 0:
+        mean[bin_i] = np.mean(dist_in_bin)
+        std[bin_i] = np.std(dist_in_bin)
+
+fig = plt.figure(figsize=(8.0, 4.0))
+ax = fig.gca()
+ax.bar(
+    bin_edges[:-1], height=mean, width=BIN_WIDTH,
+    color=biotite.colors["lightorange"], align="edge"
+)
+ax.errorbar(
+    bin_edges[:-1]+BIN_WIDTH/2, mean, yerr=std,
+    ecolor="black", linestyle="None"
+)
+ax.scatter(
+    mi_flat, dist_flat,
+    s=4, color=biotite.colors["dimorange"], edgecolors="None", zorder=10
+)
+ax.set_xlabel("Mutual information (bit)")
+ax.set_ylabel("Cα distance")
+ax.set_xlim(bin_edges[0], bin_edges[-1])
+fig.tight_layout()
 
 plt.show()
