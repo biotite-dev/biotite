@@ -94,10 +94,30 @@ fig.tight_layout()
 # Based on the alignment the mutual information can be calculated...
 
 # Calculate MI
-def mutual_information(alignment):
+def mutual_information(alignment, n_shuffle=1000):
     codes = align.get_codes(alignment).T
     alph = alignment.sequences[0].alphabet
     
+    mi = _mutual_information(codes, alph)
+    np.random.seed(0)
+    random_mi = [None] * n_shuffle
+    for i in range(n_shuffle):
+        shuffled_codes = _shuffle(codes)
+        random_mi[i] = _mutual_information(shuffled_codes, alph)
+    random_mi = np.stack(random_mi)
+    mean = np.mean(random_mi, axis=0)
+    std = np.std(random_mi, axis=0)
+    z_score = (mi - mean) / std
+    return z_score
+
+def _shuffle(codes):
+    shuffled_codes = codes.copy()
+    # Shuffle each alignment column
+    for i in range(len(shuffled_codes)):
+        np.random.shuffle(shuffled_codes[i])
+    return shuffled_codes
+
+def _mutual_information(codes, alph):
     mi = np.zeros((len(alignment), len(alignment)))
     # Iterate over all columns to choose first column
     for i in range(codes.shape[0]):
@@ -149,7 +169,7 @@ fig = plt.figure(figsize=(8.0, 7.0))
 ax = fig.gca()
 im = ax.pcolormesh(mi, cmap=cmap)
 cbar = fig.colorbar(im)
-cbar.set_label("Mutual information (bit)")
+cbar.set_label("Z-score of mutual information")
 ax.set_aspect("equal")
 ax.set_xlabel("Residue position")
 ax.set_ylabel("Residue position")
@@ -171,13 +191,18 @@ dist = struc.distance(ca.coord[:, np.newaxis], ca.coord[np.newaxis, :])
 dist_flat = dist.flatten()
 mi_flat = mi.flatten()
 # Remove data points for distances of residues to themselves
-mi_flat = mi_flat[dist_flat != 0]
-dist_flat = dist_flat[dist_flat != 0]
+# and for NaN values (std is 0 due to complete conservation)
+mask = (dist_flat != 0) & ~np.isnan(mi_flat)
+mi_flat = mi_flat[mask]
+dist_flat = dist_flat[mask]
 
 # Bin the distances based on the MI of the data point
 # to calculate mean and standard deviation
-BIN_WIDTH = 0.1
-bin_edges = np.arange(0, np.max(mi_flat) + BIN_WIDTH, BIN_WIDTH)
+BIN_WIDTH = 1.0
+bin_edges = np.arange(
+    int(np.floor(np.min(mi_flat))), int(np.ceil(np.max(mi_flat))), BIN_WIDTH
+)
+print(bin_edges)
 bin_indices = np.digitize(mi_flat, bin_edges)
 mean = np.zeros(len(bin_edges)-1)
 std = np.zeros(len(bin_edges)-1)
@@ -201,7 +226,7 @@ ax.scatter(
     mi_flat, dist_flat,
     s=4, color=biotite.colors["dimorange"], edgecolors="None", zorder=10
 )
-ax.set_xlabel("Mutual information (bit)")
+ax.set_xlabel("Z-score of mutual information")
 ax.set_ylabel("Cα distance")
 ax.set_xlim(bin_edges[0], bin_edges[-1])
 fig.tight_layout()
