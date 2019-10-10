@@ -60,13 +60,12 @@ def rmsd(reference, subject):
     Calculate the RMSD of all models to the first model:
 
     >>> superimposed, _ = superimpose(atom_array, atom_array_stack)
-    >>> print(rmsd(atom_array, superimposed))
-    [2.912e-07 1.928e+00 2.103e+00 2.209e+00 1.806e+00 2.172e+00 2.704e+00
-     1.360e+00 2.337e+00 1.818e+00 1.879e+00 2.471e+00 1.939e+00 2.035e+00
-     2.167e+00 1.789e+00 1.653e+00 2.348e+00 2.247e+00 2.529e+00 1.583e+00
-     2.115e+00 2.131e+00 2.050e+00 2.512e+00 2.666e+00 2.206e+00 2.397e+00
-     2.328e+00 1.868e+00 2.316e+00 1.984e+00 2.124e+00 1.761e+00 2.642e+00
-     1.721e+00 2.571e+00 2.579e+00]
+    >>> rms = rmsd(atom_array, superimposed)
+    >>> print(np.around(rms, decimals=3))
+    [0.000 1.928 2.103 2.209 1.806 2.172 2.704 1.360 2.337 1.818 1.879 2.471
+     1.939 2.035 2.167 1.789 1.653 2.348 2.247 2.529 1.583 2.115 2.131 2.050
+     2.512 2.666 2.206 2.397 2.328 1.868 2.316 1.984 2.124 1.761 2.642 1.721
+     2.571 2.579]
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
