@@ -47,12 +47,32 @@ def rmsd(reference, subject):
     See Also
     --------
     rmsf
+
+    Notes
+    -----
+    This function does not superimpose the subject to its reference.
+    In most cases :func:`superimpose()` should be called prior to this
+    function.
+
+    Examples
+    --------
+
+    Calculate the RMSD of all models to the first model:
+
+    >>> superimposed, _ = superimpose(atom_array, atom_array_stack)
+    >>> print(rmsd(atom_array, superimposed))
+    [2.912e-07 1.928e+00 2.103e+00 2.209e+00 1.806e+00 2.172e+00 2.704e+00
+     1.360e+00 2.337e+00 1.818e+00 1.879e+00 2.471e+00 1.939e+00 2.035e+00
+     2.167e+00 1.789e+00 1.653e+00 2.348e+00 2.247e+00 2.529e+00 1.583e+00
+     2.115e+00 2.131e+00 2.050e+00 2.512e+00 2.666e+00 2.206e+00 2.397e+00
+     2.328e+00 1.868e+00 2.316e+00 1.984e+00 2.124e+00 1.761e+00 2.642e+00
+     1.721e+00 2.571e+00 2.579e+00]
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
 
 def rmsf(reference, subject):
-    """
+    r"""
     Calculate the RMSF between two structures.
     
     Calculate the root-mean-square-fluctuation (RMSF)
@@ -83,6 +103,25 @@ def rmsf(reference, subject):
     See Also
     --------
     rmsd
+
+    Notes
+    -----
+    This function does not superimpose the subject to its reference.
+    In most cases :func:`superimpose()` should be called prior to this
+    function.
+
+    Examples
+    --------
+
+    Calculate the :math:`C_\alpha` RMSF of all models to the average
+    model:
+
+    >>> ca = atom_array_stack[:, atom_array_stack.atom_name == "CA"]
+    >>> ca_average = average(ca)
+    >>> ca, _ = superimpose(ca_average, ca)
+    >>> print(rmsf(ca_average, ca))
+    [1.372 0.360 0.265 0.261 0.288 0.204 0.196 0.306 0.353 0.238 0.266 0.317
+     0.358 0.448 0.586 0.369 0.332 0.396 0.410 0.968]
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-2))
 
@@ -120,18 +159,18 @@ def average(atoms):
     This method is rather useful to provide a reference structure for
     calculation of e.g. the RMSD or RMSF. 
     """
-    coord = atoms.coord
-    if coord.ndim != 3:
+    coords = coord(atoms)
+    if coords.ndim != 3:
         raise TypeError(
             "Expected an AtomArrayStack or an ndarray with shape (m,n,3)"
         )
-    mean_coord = np.mean(atoms.coord, axis=0)
+    mean_coords = np.mean(coords, axis=0)
     if isinstance(atoms, AtomArrayStack):
         mean_array = atoms[0].copy()
-        mean_array.coord = mean_coord
+        mean_array.coord = mean_coords
         return mean_array
     else:
-        return mean_coord
+        return mean_coords
 
 
 def _sq_euclidian(reference, subject):
