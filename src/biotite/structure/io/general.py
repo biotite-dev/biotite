@@ -33,8 +33,10 @@ def load_structure(file_path, template=None, **kwargs):
     template : AtomArray or AtomArrayStack or file-like object or str, optional
         Only required when reading a trajectory file.
     kwargs
-        Additional parameters will be passed to either the `get_structure` or
-        `read` of the file object. This does not affect templates.
+        Additional parameters will be passed to either the
+        :func:`get_structure()` or :func:`read()` method of the file
+        object.
+        This does not affect files given via the `template` parameter.
     
     Returns
     -------
