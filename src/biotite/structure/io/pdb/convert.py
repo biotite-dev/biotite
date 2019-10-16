@@ -30,27 +30,25 @@ def get_structure(pdb_file, model=None,
         :class:`AtomArray` from the atoms corresponding to the given
         model number.
         If this parameter is omitted, an :class:`AtomArrayStack`
-        containing all models will be returned, even if the structure
-        contains only one model.
+        containing all models will be returned, even if the
+        structure contains only one model.
     insertion_code : list of tuple, optional
         In case the structure contains insertion codes, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the insertion code.
+        specified here: Each tuple consists of an integer,
+        specifying the residue ID, and a letter, specifying the 
+        insertion code.
         By default no insertions are used.
     altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the *altloc* ID.
-        By default the location with the *altloc* ID "A" is used.
+        In case the structure contains *altloc* entries, those can
+        be specified here: Each tuple consists of an integer,
+        specifying the residue ID, and a letter, specifying the
+        *altloc* ID. By default the location with the *altloc* ID
+        "A" is used.
     extra_fields : list of str, optional
-        The strings in the list are entry names, that are
-        additionally added as annotation arrays.
-        The annotation category name will be the same as the PDBx
-        subcategroy name. The array type is always `str`.
-        There are 4 special field identifiers:
+        The strings in the list are optional annotation categories
+        that should be stored in the output array or stack.
+        There are 4 optional annotation identifiers:
         'atom_id', 'b_factor', 'occupancy' and 'charge'.
-        These will convert the respective subcategory into an
-        annotation array with reasonable type.
         
     Returns
     -------
