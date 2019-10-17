@@ -216,7 +216,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     
     def equal_annotation_categories(self, item):
         """
-        Check, if this object shares equal annotation array catgeories
+        Check, if this object shares equal annotation array categories
         with the given :class:`AtomArray` or :class:`AtomArrayStack`.
         
         Parameters
@@ -229,7 +229,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         equality : bool
             True, if the annotation array names are equal.
         """
-        return self._annot.keys() == item._annot.keys()
+        return sorted(self._annot.keys()) == sorted(item._annot.keys())
     
     def __getattr__(self, attr):
         """
@@ -1050,8 +1050,9 @@ def array(atoms):
     
     Parameters
     ----------
-    atoms : iterable(Atom)
+    atoms : iterable object of Atom
         The atoms to be combined in an array.
+        All atoms must share the same annotation categories.
     
     Returns
     -------
@@ -1067,16 +1068,19 @@ def array(atoms):
     >>> atom2 = Atom([2,3,4], chain_id="A")
     >>> atom3 = Atom([3,4,5], chain_id="B")
     >>> atom_array = array([atom1, atom2, atom3])
-    >>> print(atom_array.array_length())
-    3
+    >>> print(atom_array)
+        A       0                      1.000    2.000    3.000
+        A       0                      2.000    3.000    4.000
+        B       0                      3.000    4.000    5.000
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting
     names = sorted(atoms[0]._annot.keys())
-    for atom in atoms:
+    for i, atom in enumerate(atoms):
         if sorted(atom._annot.keys()) != names:
             raise ValueError(
-                "The atoms do not share the same annotation categories"
+                f"The atom at index {i} does not share the same "
+                f"annotation categories as the atom at index 0"
             )
     # Add all atoms to AtomArray
     array = AtomArray(len(atoms))
@@ -1091,12 +1095,12 @@ def stack(arrays):
     """
     Create an :class:`AtomArrayStack` from a list of :class:`AtomArray`.
     
-    All atom arrays must have equal annotation arrays.
-    
     Parameters
     ----------
     arrays : iterable object of AtomArray
         The atom arrays to be combined in a stack.
+        All atom arrays must have an equal number of atoms and equal
+        annotation arrays.
     
     Returns
     -------
@@ -1132,18 +1136,24 @@ def stack(arrays):
       [6. 7. 8.]]]
     """
     array_count = 0
-    for array in arrays:
+    ref_array = None
+    for i, array in enumerate(arrays):
+        if ref_array is None:
+            ref_array = array
         array_count += 1
         # Check if all arrays share equal annotations
-        if not array.equal_annotations(arrays[0]):
-            raise ValueError("The atom arrays have unequal annotations")
-    array_stack = AtomArrayStack(array_count, arrays[0].array_length())
-    for name, annotation in arrays[0]._annot.items():
+        if not array.equal_annotations(ref_array):
+            raise ValueError(
+                f"The annotations of the atom array at index {i} are not "
+                f"equal to the annotations of the atom array at index 0"
+            )
+    array_stack = AtomArrayStack(array_count, ref_array.array_length())
+    for name, annotation in ref_array._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays] 
     array_stack._coord = np.stack(coord_list, axis=0)
     # Take bond list from first array
-    array_stack._bonds = arrays[0]._bonds
+    array_stack._bonds = ref_array._bonds
     # When all atom arrays provide a box, copy the boxes
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
