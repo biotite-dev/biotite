@@ -17,6 +17,7 @@ dependencies:
   - requests >=2.12
   - numpy >=1.13
   - scipy >=0.14
+  - networkx >=2.0
   - msgpack-python >=0.5.6
   - cython >=0.28
   - mdtraj >=1.9
