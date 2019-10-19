@@ -134,6 +134,7 @@ node_labels = {i: name for i, name in enumerate(genes)}
 nx.draw_networkx(
     graph, pos, ax=ax, labels=node_labels, node_color="white", font_size=8,
     # Draw a white background behind the labeled nodes
+    # for better readability
     node_size=[300 if isinstance(node, int) else 0 for node in graph]
 )
 fig.tight_layout()
