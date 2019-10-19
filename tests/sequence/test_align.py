@@ -56,7 +56,8 @@ def test_conversion_to_symbols():
 
 def test_identity():
     """
-    Test correct calculation of sequence identity.
+    Test correct calculation of `get_sequence_identity()` via a known
+    test case.
     """
     seq_str1 = "--HAKLPRDD--WL--"
     seq_str2 = "FRHA--QRTDADWLHH"
@@ -70,6 +71,42 @@ def test_identity():
     values = [6/16, 6/12, 6/10]
     for mode, value in zip(modes, values):
         assert align.get_sequence_identity(alignment, mode=mode) == value
+
+@pytest.mark.parametrize("mode", ["all", "not_terminal", "shortest"])
+def test_pairwise_identity(sequences, mode):
+    """
+    Test correct calculation of `get_sequence_identity()` via
+    `get_sequence_identity()`.
+    """
+    sequences = sequences
+    msa, _, _, _ = align.align_multiple(
+        sequences,
+        matrix=align.SubstitutionMatrix.std_protein_matrix()
+    )
+    
+    ref_identity_matrix = np.zeros((len(sequences), len(sequences)))
+    for i in range(len(sequences)):
+        for j in range(len(sequences)):
+            ref_identity_matrix[i,j] = align.get_sequence_identity(
+                msa[:, [i,j]], mode=mode
+            )
+    
+    test_identity_matrix = align.get_pairwise_sequence_identity(msa, mode=mode)
+    
+    print(msa)
+    print(test_identity_matrix)
+    print(ref_identity_matrix)
+    print(np.where(test_identity_matrix == ref_identity_matrix))
+    # Identity of two equal sequences should be 1, if only the length of
+    # the sequence is counted
+    if mode == "shortest":
+        assert (np.diag(test_identity_matrix) == 1).all()
+    # Identity must be between 0 and 1
+    assert (test_identity_matrix <= 1) & (test_identity_matrix >= 0).all()
+    # Identity matrix is symmetric
+    assert (test_identity_matrix == test_identity_matrix.T).all()
+    # Pairwise identity must be equal in the two functions
+    assert (test_identity_matrix == ref_identity_matrix).all()
 
 def test_align_ungapped():
     """
