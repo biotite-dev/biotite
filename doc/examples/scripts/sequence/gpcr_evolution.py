@@ -2,13 +2,23 @@
 Homology of G-protein coupled receptors
 =======================================
 
-using the graph drawing capabilities of the *NetworkX* package.
+This example plots an unrooted phylogenetic tree depicting the evolution
+of different G-protein coupled receptors (GPCRs).
+
+The Uniprot/NCBI Entrez IDs and gene names of the GPCRs are obtained
+from `<https://www.uniprot.org/docs/7tmrlist.txt>`_.
+The corresponding sequences are downloaded and aligned.
+Based on the pairwise sequence identity in the multiple sequence
+alignment a tree is created via the *neighbor-joining* method.
+Finally the unrooted tree is plotted using the graph drawing
+capabilities of the *NetworkX* package.
 """
 
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
 import numpy as np
+from matplotlib.text import Text
 import matplotlib.pyplot as plt
 import networkx as nx
 import requests
@@ -22,7 +32,7 @@ import biotite.database.entrez as entrez
 import biotite.application.clustalo as clustalo
 
 
-# We are investigating the bovine GPCRs
+# The bovine GPCRs are investigated
 SPECIES = "Bovine"
 
 
@@ -37,7 +47,7 @@ for line in lines:
     # Filter title and empty lines
     # -> these have no square brackets indicating a gene name
     if gene_start != -1 and gene_end != -1:
-         # We only want genes from the chosen organism
+         # Only the genes from the chosen organism are selected
          if SPECIES in line:
             # Uniprot/NCBI ID in second column, surrounded by brackets
             ncbi_id = line.split()[1].replace("(","").replace(")","")
@@ -45,52 +55,85 @@ for line in lines:
             gene = line[gene_start : gene_end+1] \
                    .replace("[","").replace("]","")
             # Sometimes alternative gene names are separated via a
-            # semicolon -> We only want the first gene name
+            # semicolon -> Choose the first gene name
             gene = gene.split(";")[0].strip()
             genes.append(gene)
             ids.append(ncbi_id)
 
 fasta_file = fasta.FastaFile()
+# Download sequences a file-like object and read the sequences from it
 fasta_file.read(entrez.fetch_single_file(
     ids, file_name=None, db_name="protein", ret_type="fasta"
 ))
 sequences = [seq.ProteinSequence(seq_str) for seq_str in fasta_file.values()]
+# Create multiple sequence alignment with Clustal Omega
 alignment = clustalo.ClustalOmegaApp.align(sequences)
 
 
-
-distances = 1 - align.get_pairwise_sequence_identity(alignment, mode="all")
+# The distance measure required for the tree calculation is the
+# percentage of non-identical amino acids in the respective two
+# sequences
+distances = 1 - align.get_pairwise_sequence_identity(
+    alignment, mode="shortest"
+)
+# Create tree via neighbor joining
 tree = phylo.neighbor_joining(distances)
 
+# Convert the Biotite 'Tree' object into a NetworkX 'Graph' object
+# via a recursive function
+# Since NetworkX has no dedicated class for nodes, but accepts any
+# immutable Python object, the reference index of the node is used for
+# this
 def convert_node(graph, tree_node):
+    """
+    Add a tree node to a graph.
+
+    Parameters
+    ----------
+    graph : Graph
+        The graph where the node should be added.
+    tree_node : Node
+        The node to be added.
+    
+    Returns
+    -------
+    node_id : int or tuple
+        The identifier of the added node in the graph.
+        If the node is a leaf node, this is the reference index,
+        otherwise this is a tuple, containing the identifier of the
+        child nodes.
+    distance : float
+        The distance of the given node to its parent node.
+    """
     if tree_node.is_leaf():
         return tree_node.index, tree_node.distance
     else:
-        child_names = []
+        child_ids = []
         child_distances = []
         for child_node in tree_node.children:
-            name, dist = convert_node(graph, child_node)
-            child_names.append(name)
+            id, dist = convert_node(graph, child_node)
+            child_ids.append(id)
             child_distances.append(dist)
-        this_name = tuple(child_names)
-        for name, dist in zip(child_names, child_distances):
-            graph.add_edge(this_name, name, distance=dist)
-        return this_name, tree_node.distance
+        this_id = tuple(child_ids)
+        for id, dist in zip(child_ids, child_distances):
+            # Add connection to children as edge in the graph
+            # Distance is added as attribute
+            graph.add_edge(this_id, id, distance=dist)
+        return this_id, tree_node.distance
 
 graph = nx.Graph()
 convert_node(graph, tree.root)
 
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.gca()
-# Calculate position of nodes
-pos = nx.kamada_kawai_layout(graph)
-node_labels = {i: name for i, name in enumerate(genes)}
-edge_labels = {
-    edge: int(attr["distance"] * 100) for edge, attr in graph.edges.items()
-}
 ax.axis("off")
+# Calculate position of nodes in the plot
+pos = nx.kamada_kawai_layout(graph)
+# Assign the gene names to the nodes that represent a reference index
+node_labels = {i: name for i, name in enumerate(genes)}
 nx.draw_networkx(
     graph, pos, ax=ax, labels=node_labels, node_color="white", font_size=8,
+    # Draw a white background behind the labeled nodes
     node_size=[300 if isinstance(node, int) else 0 for node in graph]
 )
 fig.tight_layout()
