@@ -583,6 +583,7 @@ cdef class TreeNode:
     def get_leaves(self):
         """
         get_leaves()
+        
         Get a list of leaf nodes that are direct or indirect child nodes
         of this node.
 
