@@ -2,9 +2,9 @@ r"""
 Mutual information as measure for coevolution of residues
 =========================================================
 
-Mutual information (MI) is a broadly used measure for the coevolution of
-two residues of a sequence (citation needed) originated in information
-theory.
+Mutual information (MI) is a broadly used measure for the coevolution
+between two residues of a sequence (citation needed) originated in
+information theory.
 Basically, the mutual information is a statement about how much
 knowledge one already has about a distribution be knowing another
 distribution:
