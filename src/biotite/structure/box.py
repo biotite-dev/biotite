@@ -20,6 +20,7 @@ import numpy.linalg as linalg
 from .util import vector_dot
 from .residues import get_residue_starts
 from .atoms import AtomArray, AtomArrayStack
+from .error import BadStructureError
 
 
 def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
@@ -418,6 +419,10 @@ def remove_pbc(atoms, selection=None):
 
     Internally the function uses :func:`remove_pbc_from_coord()`.
     """
+    if atoms.box is None:
+        raise BadStructureError(
+            "The 'box' attribute must be set in the structure"
+        )
     new_atoms = atoms.copy()
     
     if selection is None:
