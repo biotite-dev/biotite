@@ -9,20 +9,29 @@ Basically, the mutual information is a statement about how much
 knowledge one already has about a distribution be knowing another
 distribution:
 
-.. math:: I(X;Y)
+.. math:: MI(X;Y)
    = \sum_{x \in X} \sum_{y \in Y}
    P_{X,Y}(x,y) \cdot \log_2 \frac{P_{X,Y}(x,y)}{P_{X}(x) P_{Y}(y)}
 
 In the context of a protein the amino acid sequence is aligned to
-homologous sequences. The required distribution is the distribution of
-amino acid in a alignment column.
+homologous sequences. The distribution is the distribution of
+amino acids in a alignment column.
 When mutations in one column are often associated with certain
 mutations in another alignment column, the MI between these two
 positions is high.
 This indicates that these two sequence positions might have evolved
 together (coevolution).
 
-To demonstrate this...
+For more significant results the MI of the given alignment is compared
+to variants of this alignment, where each alignment column is randomly
+shuffled. The results are aggregated into a Z score:
+
+.. math:: Z_{MI} = \frac{ MI - \mu(MI_{\textrm{shuffle}}) }
+                        {   \sigma(MI_{\textrm{shuffle}}) }
+
+This example demonstrates this method on the example of hen-egg white
+lysozyme (PDB: 1AKI).
+At first, homologous sequences
 """
 
 # Code source: Patrick Kunzmann
@@ -48,18 +57,18 @@ import biotite.database.entrez as entrez
 # Get structure and sequence
 pdbx_file = pdbx.PDBxFile()
 pdbx_file.read(rcsb.fetch("1GUU", "mmcif"))
-cmyb_seq = pdbx.get_sequence(pdbx_file)[0]
+sequence = pdbx.get_sequence(pdbx_file)[0]
 # 'use_author_fields' is set to false,
 # to ensure that values in the 'res_id' annotation point to the sequence
-cmyb_struc = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
-cmyb_struc = cmyb_struc[struc.filter_amino_acids(cmyb_struc)]
+structure = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+structure = structure[struc.filter_amino_acids(structure)]
 
 # Find homologous proteins in SwissProt via BLAST
-app = blast.BlastWebApp("blastp", cmyb_seq, database="swissprot")
+app = blast.BlastWebApp("blastp", sequence, database="swissprot")
 app.start()
 app.join()
 alignments = app.get_alignments()
-hit_seqs = [cmyb_seq]
+hit_seqs = [sequence]
 hit_ids = ["Query"]
 hit_starts = [1]
 IDENTITY_THESHOLD = 0.4
@@ -93,8 +102,8 @@ fig.tight_layout()
 ########################################################################
 # Based on the alignment the mutual information can be calculated...
 
-# Calculate MI
-def mutual_information(alignment, n_shuffle=1000):
+# Calculate MI Z score
+def mutual_information_zscore(alignment, n_shuffle=100):
     codes = align.get_codes(alignment).T
     alph = alignment.sequences[0].alphabet
     
@@ -155,7 +164,7 @@ def _mutual_information(codes, alph):
 # We are only intrested in alignment columns
 # that have no gap in the C-MYB sequence
 alignment = alignment[alignment.trace[:,0] != -1]
-mi = mutual_information(alignment)
+mi = mutual_information_zscore(alignment)
 
 # Create the color map for the plot
 color = colors.to_rgb(biotite.colors["dimorange"])
@@ -182,11 +191,11 @@ fig.tight_layout()
 #
 
 # Remove elements in MI matrix for structurally unresolved residues
-res_ids, _ = struc.get_residues(cmyb_struc)
+res_ids, _ = struc.get_residues(structure)
 mask = np.array([True if i+1 in res_ids else False for i in range(len(mi))])
 mi = mi[np.ix_(mask, mask)]
 # Calculate pairwise residue distances for later comparison with MI
-ca = cmyb_struc[cmyb_struc.atom_name == "CA"]
+ca = structure[structure.atom_name == "CA"]
 dist = struc.distance(ca.coord[:, np.newaxis], ca.coord[np.newaxis, :])
 dist_flat = dist.flatten()
 mi_flat = mi.flatten()
