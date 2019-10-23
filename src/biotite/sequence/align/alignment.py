@@ -81,8 +81,10 @@ class Alignment(object):
     [[ 1 -1]
      [ 2  0]
      [ 3  1]]
-    >>> print(ali[1:4,0].trace)
-    [1 2 3]
+    >>> print(ali[1:4, 0:1].trace)
+    [[1]
+     [2]
+     [3]]
     """
     
     
