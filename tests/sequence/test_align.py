@@ -93,16 +93,12 @@ def test_pairwise_identity(sequences, mode):
     
     test_identity_matrix = align.get_pairwise_sequence_identity(msa, mode=mode)
     
-    print(msa)
-    print(test_identity_matrix)
-    print(ref_identity_matrix)
-    print(np.where(test_identity_matrix == ref_identity_matrix))
     # Identity of two equal sequences should be 1, if only the length of
     # the sequence is counted
     if mode == "shortest":
         assert (np.diag(test_identity_matrix) == 1).all()
     # Identity must be between 0 and 1
-    assert (test_identity_matrix <= 1) & (test_identity_matrix >= 0).all()
+    assert ((test_identity_matrix <= 1) & (test_identity_matrix >= 0)).all()
     # Identity matrix is symmetric
     assert (test_identity_matrix == test_identity_matrix.T).all()
     # Pairwise identity must be equal in the two functions
