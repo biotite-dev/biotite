@@ -59,6 +59,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     def __init__(self, sequences, bin_path, matrix=None):
         super().__init__(bin_path)
         
+        if len(sequences) < 2:
+            raise ValueError("At least two sequences are required")
         # Check if all sequences share the same alphabet
         alphabet = sequences[0].get_alphabet()
         for seq in sequences:
@@ -322,7 +324,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             raise TypeError(
                 f"The software cannot align sequences of type "
                 f"{type(sequences[0]).__name__}: "
-                f"Cannot be converted into protein sequences"
+                f"Alphabet is too large to be converted into amino "
+                f"acid alphabet"
             )
         mapped_sequences = []
         for seq in sequences:

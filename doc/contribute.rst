@@ -295,13 +295,14 @@ The following packages are required for the complete build process:
    
    - *numpy*
    - *scipy*
+   - *networkx*
    - *matplotlib*
    - *requests*
    - *msgpack*
    - *mdtraj*
-   - *Cython*
+   - *cython*
    - *pytest*
-   - *Sphinx*
+   - *sphinx*
    - *numpydoc*
    - *sphinx-gallery*
 

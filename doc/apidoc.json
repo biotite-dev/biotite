@@ -113,6 +113,7 @@
             "get_codes",
             "get_symbols",
             "get_sequence_identity",
+            "get_pairwise_sequence_identity",
             "score"
         ]
     },
