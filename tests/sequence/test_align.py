@@ -75,8 +75,8 @@ def test_identity():
 @pytest.mark.parametrize("mode", ["all", "not_terminal", "shortest"])
 def test_pairwise_identity(sequences, mode):
     """
-    Test correct calculation of `get_sequence_identity()` via
-    `get_sequence_identity()`.
+    Test correct calculation of `get_pairwise_sequence_identity()` via
+    pairwise calls of `get_sequence_identity()`.
     """
     sequences = sequences
     msa, _, _, _ = align.align_multiple(
