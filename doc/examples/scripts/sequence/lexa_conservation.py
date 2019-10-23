@@ -145,5 +145,6 @@ ax.set_ylabel("Bits")
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
 fig.tight_layout()
+# sphinx_gallery_thumbnail_number = 2
 
 plt.show()

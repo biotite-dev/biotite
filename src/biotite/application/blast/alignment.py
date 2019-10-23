@@ -67,3 +67,16 @@ class BlastAlignment(Alignment):
         if self.hit_definition != item.hit_definition:
             return False
         return super().__eq__(item)
+    
+    def __getitem__(self, index):
+        super_alignment = super().__getitem__(index)
+        return BlastAlignment(
+            super_alignment.sequences,
+            super_alignment.trace,
+            super_alignment.score,
+            self.e_value,
+            self.query_interval,
+            self.hit_interval,
+            self.hit_id,
+            self.hit_definition
+        )

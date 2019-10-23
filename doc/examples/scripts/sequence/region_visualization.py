@@ -38,7 +38,7 @@ for feature in annotation:
                     min_loc = loc.first
                 if max_loc < loc.last:
                     max_loc = loc.last
-# Extend the location range by 1000 (arbitrary) in each dirction
+# Extend the location range by 1000 (arbitrary) in each direction
 min_loc -= 10000
 max_loc += 10000
 # Visualize the region as feature map
