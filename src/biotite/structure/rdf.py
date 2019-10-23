@@ -12,8 +12,9 @@ __all__ = ["rdf"]
 from numbers import Integral
 import numpy as np
 from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
-from .geometry import distance
 from .box import box_volume
+from .geometry import displacement
+from .util import vector_dot
 from .celllist import CellList
 
 
@@ -184,9 +185,12 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     # Calculate distance histogram
     edges = _calculate_edges(interval, bins)
+    # Make histogram of quared distances to save computation time
+    # of sqrt calculation
+    sq_edges = edges**2
     threshold_dist = edges[-1]
     cell_size = threshold_dist
-    distances = []
+    disp = []
     for i in range(atoms.stack_depth()):
         # Use cell list to efficiently preselect atoms that are in range
         # of the desired bin range
@@ -200,16 +204,18 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         # for each center
         for j in range(center.shape[1]):
             dist_box = box[i] if periodic else None
-            distances.append(distance(
+            # Calculate squared distances
+            disp.append(displacement(
                 center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
             ))
     # Make one array from multiple arrays with different length
-    distances = np.concatenate(distances)
-    hist, bin_edges = np.histogram(distances, bins=edges)
+    disp = np.concatenate(disp)
+    sq_distances = vector_dot(disp, disp)
+    hist, _ = np.histogram(sq_distances, bins=sq_edges)
 
     # Normalize with average particle density (N/V) in each bin
-    bin_volume =   (4 / 3 * np.pi * np.power(bin_edges[1: ], 3)) \
-                 - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
+    bin_volume =   (4 / 3 * np.pi * np.power(edges[1: ], 3)) \
+                 - (4 / 3 * np.pi * np.power(edges[:-1], 3))
     n_frames = len(atoms)
     volume = box_volume(box).mean()
     density = atoms.array_length() / volume
@@ -218,7 +224,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     # Normalize with number of centers
     g_r /= center.shape[1]
 
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
+    bin_centers = (edges[:-1] + edges[1:]) * 0.5
 
     return bin_centers, g_r
 
