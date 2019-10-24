@@ -203,10 +203,10 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     BIQT-ITE
     TITANITE
     >>> print(distances)
-    [[-0.000  1.034  0.382  0.560]
-     [ 1.034 -0.000  0.923  1.132]
-     [ 0.382  0.923 -0.000  0.632]
-     [ 0.560  1.132  0.632 -0.000]]
+    [[0.000 1.034 0.382 0.560]
+     [1.034 0.000 0.923 1.132]
+     [0.382 0.923 0.000 0.632]
+     [0.560 1.132 0.632 0.000]]
     >>>
     >>> print(tree.to_newick(
     ...     labels=["seq1", "seq2", "seq3", "seq4"], include_distance=False
