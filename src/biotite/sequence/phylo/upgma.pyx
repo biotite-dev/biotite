@@ -69,11 +69,14 @@ def upgma(np.ndarray distances):
     cdef float32 dist, dist_min
     cdef float mean
     cdef float height
-    
 
     if distances.shape[0] != distances.shape[1] \
         or not np.allclose(distances.T, distances):
             raise ValueError("Distance matrix must be symmetric")
+    if np.isnan(distances).any():
+        raise ValueError("Distance matrix contains NaN values")
+    if (distances >= MAX_FLOAT).any():
+        raise ValueError("Distance matrix contains infinity")
     if (distances < 0).any():
         raise ValueError("Distances must be positive")
 
@@ -110,7 +113,7 @@ def upgma(np.ndarray distances):
         j_min = -1
         for i in range(distances_v.shape[0]):
             if is_clustered_v[i]:
-                    continue
+                continue
             for j in range(i):
                 if is_clustered_v[j]:
                     continue

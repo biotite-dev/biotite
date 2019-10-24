@@ -87,6 +87,10 @@ def neighbor_joining(np.ndarray distances):
     if distances.shape[0] != distances.shape[1] \
         or not np.allclose(distances.T, distances):
             raise ValueError("Distance matrix must be symmetric")
+    if np.isnan(distances).any():
+        raise ValueError("Distance matrix contains NaN values")
+    if (distances >= MAX_FLOAT).any():
+        raise ValueError("Distance matrix contains infinity")
     if distances.shape[0] < 4:
         raise ValueError("At least 4 nodes are required")
     if (distances < 0).any():
