@@ -9,6 +9,7 @@ cimport cython
 cimport numpy as np
 from libc.math cimport log
 
+import numpy as np
 from .matrix import SubstitutionMatrix
 from .alignment import Alignment
 from .pairwise import align_optimal
@@ -16,7 +17,6 @@ from ..sequence import Sequence
 from ..alphabet import Alphabet
 from ..phylo.upgma import upgma
 from ..phylo.tree import Tree, TreeNode, as_binary
-import numpy as np
 
 
 ctypedef np.int32_t int32
@@ -101,7 +101,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
         than 0.
         By default the pairwise distances are calculated from
         similarities obtained from optimal global pairwise alignments
-        (`align_optimal()`).
+        (:func:`align_optimal()`).
         The similarities are converted into distances using the method
         proposed by Feng & Doolittle [2]_.
     guide_tree : Tree
@@ -161,6 +161,11 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
 
     :math:`L_{a,b}` - Number of columns in the alignment of *a* and *b*.
 
+    In rare cases of extremely unrelated sequences, :math:`S_{a,b}`
+    can be lower than :math:`S_{a,b}^{rand}`.
+    In this case the logaritmus cannot be calculated and a
+    :class:`ValueError` is raised.
+
     References
     ----------
     
@@ -198,10 +203,10 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     BIQT-ITE
     TITANITE
     >>> print(distances)
-    [[-0.000  1.034  0.382  0.560]
-     [ 1.034 -0.000  0.923  1.132]
-     [ 0.382  0.923 -0.000  0.632]
-     [ 0.560  1.132  0.632 -0.000]]
+    [[0.000 1.034 0.382 0.560]
+     [1.034 0.000 0.923 1.132]
+     [0.382 0.923 0.000 0.632]
+     [0.560 1.132 0.632 0.000]]
     >>>
     >>> print(tree.to_newick(
     ...     labels=["seq1", "seq2", "seq3", "seq4"], include_distance=False
@@ -219,7 +224,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                 f"The substitution matrix and sequence {i} have "
                 f"incompatible alphabets"
             )
-    
+
     # Create guide tree
     # Template parameter workaround
     _T = sequences[0].code
@@ -370,8 +375,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
     # Calculate distance
     # i and j are indicating the alignment between the sequences i and j
     for i in range(scores_v.shape[0]):
-        #for j in range(i):
-        for j in range(i+1):
+        for j in range(i):
             score_max =  (scores_v[i,i] + scores_v[j,j]) / 2.0
             score_rand = 0
             for code1 in range(alphabet_size):
@@ -386,9 +390,19 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
             )
             score_rand += gap_open_count * gap_open
             score_rand += gap_ext_count * gap_ext
-            distances_v[i,j] = -log(
-                (scores_v[i,j] - score_rand) / (score_max - score_rand)
-            )
+            if scores_v[i,j] < score_rand:
+                # Randomized alignment is better than actual alignment
+                # -> the logaritmus argument would become negative
+                # resulting in an NaN distance
+                raise ValueError(
+                    f"The randomized alignment of sequences {j} and {i} "
+                    f"scores better than the real pairwise alignment, "
+                    f"cannot calculate proper pairwise distance"
+                )
+            else:
+                distances_v[i,j] = -log(
+                    (scores_v[i,j] - score_rand) / (score_max - score_rand)
+                )
             # Pairwise distance matrix is symmetric
             distances_v[j,i] = distances_v[i,j]
     return distances
