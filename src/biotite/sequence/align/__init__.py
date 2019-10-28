@@ -32,3 +32,5 @@ from .alignment import *
 from .pairwise import *
 from .multiple import *
 from .matrix import *
+from .words import *
+from .matches import *
