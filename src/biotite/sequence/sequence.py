@@ -179,7 +179,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     @symbols.setter
     def symbols(self, value):
         alph = self.get_alphabet()
-        dtype = Sequence._dtype(len(alph))
+        dtype = Sequence.dtype(len(alph))
         self._seq_code = alph.encode_multiple(value, dtype)
     
     @property
@@ -188,7 +188,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     @code.setter
     def code(self, value):
-        dtype = Sequence._dtype(len(self.get_alphabet()))
+        dtype = Sequence.dtype(len(self.get_alphabet()))
         self._seq_code = value.astype(dtype, copy=False)
     
     
@@ -324,7 +324,23 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             raise ValueError("The sequences alphabets are not compatible")
 
     @staticmethod
-    def _dtype(alphabet_size):
+    def dtype(alphabet_size):
+        """
+        Get the sequence code dtype required for the given size of the
+        alphabet.
+
+        Parameters
+        ----------
+        alpahabet_size : int
+            The size of the alphabet.
+        
+        Returns
+        -------
+        dtype
+            The  :class:`dtype`, that is large enough to store symbol
+            codes, that are encoded by an :class:`Alphabet` of the given
+            size.
+        """
         if alphabet_size <= _size_uint8:
             return np.uint8
         elif alphabet_size <= _size_uint16:
