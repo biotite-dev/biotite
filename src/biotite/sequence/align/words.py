@@ -135,7 +135,7 @@ class LetterWordAlphabet(WordAlphabet):
 class WordSequence(Sequence):
 
     def __init__(self, base_sequence, word_length):
-        base_alphabet = base_sequence.alphabet
+        base_alphabet = base_sequence.get_alphabet()
         if isinstance(base_alphabet, LetterAlphabet):
             self._alphabet = LetterWordAlphabet(base_alphabet, word_length)
         else:
