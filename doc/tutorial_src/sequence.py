@@ -288,6 +288,9 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # Sequence alignments
 # -------------------
 # 
+# Pairwise alignments
+# ^^^^^^^^^^^^^^^^^^^
+# 
 # .. currentmodule:: biotite.sequence.align 
 #
 # When comparing two (or more) sequences, usually an alignment needs
@@ -416,12 +419,142 @@ print(align.get_codes(alignment))
 # already been directly calculated via :func:`align_optimal()`.
 # The answer is, that you might load an alignment from an external
 # alignment program as FASTA file using :func:`get_alignment()`.
-# 
-# .. currentmodule:: biotite.sequence.align
 #
-# If you want to perform a multiple sequence alignment, have a look at
-# the :func:`align_multiple()` function or the interfaces to external
-# MSA software in the :mod:`biotite.application` subpackage.
+#
+# Word based alignments
+# ^^^^^^^^^^^^^^^^^^^^^
+#
+# .. currentmodule:: biotite.sequence.align
+# 
+# While the former alignment method returns the optimal alignment of two
+# sequences, it is not recommended to use this method to align a short
+# query sequence (e.g a gene) to an extremely long sequence
+# (e.g. the human genome):
+# The computation time and memory space requirements scale
+# linearly with the length of both sequences, so even if your RAM does
+# not overflow, you might need to wait a very long time for your
+# alignment results.
+#
+# But there is another method: You could look for local *word* matches
+# of the long reference sequence and the short query sequence and
+# perform a local alignment at the position of the match.
+# Although this approach might not give the optimal result in some
+# cases, it works well enough, so that popular programs like *BLAST* are
+# based on it.
+#
+# *Biotite* provides a modular system to build a *BLAST*-like alignment
+# method yourself. Three steps are necessary:
+#
+#    #. Conversion of both sequences into *words*
+#    #. Finding *word* matches
+#    #. Local alignments at the match position
+#
+# In the following example the short protein sequence ``BIQTITE``
+# is aligned to a longer sequence containing the homologous
+# ``IQLITE`` in its middle.
+# While both sequences are relatively short and could be easily aligned
+# with the :func:`align_optimal()` function, the following approach
+# scales well for real world applications, where the reference sequence
+# could be a large genome, or where there are thousands of shorter reference
+# sequences.
+#
+# In the first step the query and the reference sequences need to be
+# converted into *words* (also called *k-tuples*).
+# The *words* are all overlapping subsequences with a given word length.
+# Here, the first decision needs to be made:
+# Which *word* length is desired?
+# Short *words* improve the accuracy, long *words* decrease the
+# computation time of the later steps.
+# Most importantly, the same *word* length must be chosen for the
+# reference and query sequence.
+# In this case a *word* length of 3 is chosen.
+# The simplest way to get the *words* from a sequence, is the
+# :class:`WordSequence` class
+
+query = seq.ProteinSequence("BIQTITE")                                                          
+reference = seq.ProteinSequence(
+    # This toy sequence is adapted from the first sequence of the
+    # Wikipedia 'Iolite' article
+    "CQRDIERITEQRIQLITEISAMAGNESIVMIRQNALVMINIFMCYCLQSILICATE"
+    #            ^^^^^^
+    # Here is the 'homologous' mineral
+)
+# Convert both sequences into words
+query_words = align.WordSequence(query, word_length=3)
+reference_words = align.WordSequence(reference, word_length=3)
+print("The length-3 words in 'BIQTITE':")
+print(query_words.symbols)
+
+########################################################################
+# In the second step word matches of the query and reference sequence
+# are searched.
+# A match is the position in the query and reference sequence, where
+# the words are identical.
+
+matches = align.find_matches(reference_words, query_words)
+print("Match positions:")
+print(matches)
+print()
+print("The reference sequence around the match positions:")
+print("Word       Sequence")
+for ref_match, query_match in matches:
+    print(
+        reference_words[ref_match]
+        + "   ->   ..." + str(reference[ref_match-5 : ref_match+5]) + "..."
+    )
+
+
+########################################################################
+# :func:`find_matches()` returns a *(n,2)-shaped* :class:`ndarray`,
+# where the first value of each element refers to the match in the
+# reference sequence and the second value refers to the match in the
+# query sequence.
+# In both cases the match is in the *word* ``ITE`` of ``BIQTITE``.
+# It matches to the ``ITE`` in the desired ``IOLITE``, but also to the
+# non-homologous ``CQRDIERITE`` part of the reference sequence.
+#
+# In the last step a local alignment is performed at both match
+# positions.
+# Only the alignment with the highest score is accepted to filter out
+# unspecific matches.
+
+pass
+
+########################################################################
+# Finally the expected alignment of ``BIQTITE`` to ``IOLITE`` is
+# obtained and the unspecific match is discarded.
+# 
+# In a real application simply accepting the highest-scoring alignment
+# might be insufficient, because a reference sequence might contain
+# multiple regions, that are homologous to the query, or none at all.
+# A better approach would be a score threshold or, even better, a
+# statistical measure, like the *BLAST* *E-value*.
+# 
+# Multiple sequence alignments
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# If you want to perform a multiple sequence alignment (MSA), have a
+# look at the :func:`align_multiple()` function:
+
+seq1 = seq.ProteinSequence("BIQTITE")
+seq2 = seq.ProteinSequence("TITANITE")
+seq3 = seq.ProteinSequence("BISMITE")
+seq4 = seq.ProteinSequence("IQLITE")
+alignment, order, guide_tree, distance_matrix = align.align_multiple(
+    [seq1, seq2, seq3, seq4],
+    matrix=align.SubstitutionMatrix.std_protein_matrix(),
+    gap_penalty=-5,
+    terminal_penalty=False
+)
+print(alignment)
+
+########################################################################
+# This function is only recommended for strongly related sequences or
+# exotic sequence types.
+# When high accuracy or computation time matters, other MSA programs
+# deliver better results.
+# External MSA software can accessed via the :mod:`biotite.application`
+# subpackage.
 #
 # Sequence features
 # -----------------
