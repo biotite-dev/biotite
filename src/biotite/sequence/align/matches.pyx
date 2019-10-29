@@ -11,6 +11,7 @@ from libc.stdlib cimport realloc, calloc, free
 
 import numpy as np
 from ..alphabet import AlphabetError
+from ..sequence import Sequence
 
 
 ctypedef np.int32_t int32
@@ -28,6 +29,14 @@ ctypedef fused CodeType:
 
 
 def find_matches(references, query):
+    if isinstance(references, Sequence):
+        # If a single reference sequence is given,
+        # it is put into a list with a single element
+        references = [references]
+        single_value = True
+    else:
+        single_value = False
+    
     alphabet = query.get_alphabet()
     cdef uint64 alph_length = len(alphabet)
     for i, reference in enumerate(references):
@@ -49,25 +58,23 @@ def find_matches(references, query):
     mapping = <uint64**> <uint64> (return_val[0])
     mapping_lengths = return_val[1]
 
-    #print()
-    #for code in range(alph_length):
-    #    m = [mapping[code][i] for i in range(mapping_lengths[code])]
-    #    if len(m) != 0:
-    #        print(code, m)
-
     matches = [
         _find_matches(reference.code, <uint64> mapping, mapping_lengths)
         for reference in references
     ]
 
     _delete_word_to_pos_mapping(mapping, alph_length)
-    return matches
+    
+    if single_value:
+        return matches[0]
+    else:
+        return matches
 
 
 # This is a Python function (instead of cdef)
 # to be able to infer CodeType at run time
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _find_matches(CodeType[:] reference,
                   # 'query_mapping' is actually a pointer value
                   uint64 query_mapping,
@@ -80,7 +87,7 @@ def _find_matches(CodeType[:] reference,
     cdef int positions_ptr_length
     cdef CodeType code
     cdef int INIT_SIZE = 1
-    cdef uint64[:,:] matches = np.zeros((INIT_SIZE, 2), dtype=np.uint64)
+    cdef int64[:,:] matches = np.zeros((INIT_SIZE, 2), dtype=np.int64)
 
     match_i = 0
     for ref_pos in range(reference.shape[0]):
@@ -108,8 +115,8 @@ cdef np.ndarray increase_array_size(np.ndarray array):
 
 # This is a Python function (instead of cdef)
 # to be able to infer CodeType at run time
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _create_word_to_pos_mapping(CodeType[:] sequence not None,
                                 uint64 alph_length):
     cdef int64 pos
