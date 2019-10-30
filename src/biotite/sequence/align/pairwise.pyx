@@ -420,9 +420,14 @@ def _fill_align_table(CodeType1[:] code1 not None,
     cdef uint8 trace
     cdef int32 score
     
+    # For local alignments terminal gaps on the right side are ignored
+    # anyway, as the alignment should stop before
+    if local:
+        term_penalty = True
     # Used in case terminal gaps are not penalized
     i_max = score_table.shape[0] -1
     j_max = score_table.shape[1] -1
+
     # Starts at 1 since the first row and column are already filled
     for i in range(1, score_table.shape[0]):
         for j in range(1, score_table.shape[1]):
@@ -528,9 +533,14 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity
     
+    # For local alignments terminal gaps on the right side are ignored
+    # anyway, as the alignment should stop before
+    if local:
+        term_penalty = True
     # Used in case terminal gaps are not penalized
     i_max = trace_table.shape[0] -1
     j_max = trace_table.shape[1] -1
+    
     # Starts at 1 since the first row and column are already filled
     for i in range(1, trace_table.shape[0]):
         for j in range(1, trace_table.shape[1]):
