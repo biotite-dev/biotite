@@ -452,11 +452,11 @@ print(align.get_codes(alignment))
 # In the following example the short protein sequence ``BIQTITE``
 # is aligned to a longer sequence containing the homologous
 # ``IQLITE`` in its middle.
-# While both sequences are relatively short and could be easily aligned
-# with the :func:`align_optimal()` function, the following approach
-# scales well for real world applications, where the reference sequence
-# could be a large genome, or where there are thousands of shorter reference
-# sequences.
+# While both sequences are relatively short and they could be easily
+# aligned with the :func:`align_optimal()` function, the following
+# approach scales well for real world applications, where the reference
+# sequence could be a large genome, or where there are thousands of
+# shorter reference sequences.
 #
 # In the first step the query and the reference sequences need to be
 # converted into *words* (also called *k-tuples*).
@@ -469,14 +469,14 @@ print(align.get_codes(alignment))
 # reference and query sequence.
 # In this case a *word* length of 3 is chosen.
 # The simplest way to get the *words* from a sequence, is the
-# :class:`WordSequence` class
+# :class:`WordSequence` class.
 
 query = seq.ProteinSequence("BIQTITE")                                                          
 reference = seq.ProteinSequence(
-    # This toy sequence is adapted from the first sequence of the
-    # Wikipedia 'Iolite' article
-    "CQRDIERITEQRIQLITEISAMAGNESIVMIRQNALVMINIFMCYCLQSILICATE"
-    #            ^^^^^^
+    # This toy sequence is adapted from the first sentence of the
+    # Wikipedia 'Niobite' article
+    "CQLVMBITEALSQCALLEDNIQBITEANDCQLVMBATEISAMINERALGRQVPTHATISANQREQFNIQBIVM"
+    #                   ^^^^^^^
     # Here is the 'homologous' mineral
 )
 # Convert both sequences into words
@@ -510,8 +510,8 @@ for ref_match, query_match in matches:
 # reference sequence and the second value refers to the match in the
 # query sequence.
 # In both cases the match is in the *word* ``ITE`` of ``BIQTITE``.
-# It matches to the ``ITE`` in the desired ``IOLITE``, but also to the
-# non-homologous ``CQRDIERITE`` part of the reference sequence.
+# It matches to the ``ITE`` in the desired ``NIQBITE``, but also to the
+# non-homologous ``CQLVMBITE`` part of the reference sequence.
 #
 # In the last step a local alignment is performed at both match
 # positions.
@@ -521,7 +521,7 @@ for ref_match, query_match in matches:
 pass
 
 ########################################################################
-# Finally the expected alignment of ``BIQTITE`` to ``IOLITE`` is
+# Finally the expected alignment of ``BIQTITE`` to ``NIQBITE`` is
 # obtained and the unspecific match is discarded.
 # 
 # In a real application simply accepting the highest-scoring alignment
