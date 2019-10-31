@@ -10,6 +10,7 @@ import glob
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
+import numpy
 from src.biotite import __version__
 
 long_description = """
@@ -39,7 +40,6 @@ os.chdir(dirname(abspath(__file__)))
 if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
     try:
         from Cython.Build import cythonize
-        import numpy
         cythonize(
             "src/**/*.pyx",
             include_path=[numpy.get_include()],
