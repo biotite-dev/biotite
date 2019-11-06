@@ -59,14 +59,14 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def shape(self):
         """
-        Tuple of array dimensions
+        Tuple of array dimensions.
 
-        This property contains the current shape of the object
+        This property contains the current shape of the object.
 
         Returns
         -------
         shape : tuple of int
-            Shape of the object
+            Shape of the object.
         """
         return 
         
@@ -588,6 +588,10 @@ class AtomArray(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the atom array.
+        The single value in the tuple is
+        the length of the atom array.
     
     Examples
     --------
@@ -636,15 +640,17 @@ class AtomArray(_AtomArrayBase):
     @property
     def shape(self):
         """
-        Tuple of array dimensions
+        Tuple of array dimensions.
 
-        This property contains the current shape of the AtomArray.
+        This property contains the current shape of the
+        :class:`AtomArray`.
 
         Returns
         -------
         shape : tuple of int
-            For an AtomArray, this corresponds to a tuple holding
-            `array_length`.
+            Shape of the array.
+            The single value in the tuple is
+            the :func:`array_length()`.
 
         See Also
         --------
@@ -753,7 +759,7 @@ class AtomArray(_AtomArrayBase):
     
     def __eq__(self, item):
         """
-        Check if the array equals another :class:`AtomArray`
+        Check if the array equals another :class:`AtomArray`.
         
         Parameters
         ----------
@@ -835,6 +841,10 @@ class AtomArrayStack(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(m,3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the stack.
+        The numbers correspond to the stack depth
+        and array length, respectively.
     
     See also
     --------
@@ -921,15 +931,17 @@ class AtomArrayStack(_AtomArrayBase):
     @property
     def shape(self):
         """
-        Tuple of array dimensions
+        Tuple of array dimensions.
 
-        This property contains the current shape of the AtomArrayStack.
+        This property contains the current shape of the
+        :class:`AtomArrayStack`.
 
         Returns
         -------
         shape : tuple of int
-            Shape of the stack. The numbers correspond to the
-            `stack_depth` and `array_length`, respectively.
+            Shape of the stack.
+            The numbers correspond to the :func:`stack_depth()`
+            and :func:`array_length()`, respectively.
         """
         return self.stack_depth(), self.array_length()
 
