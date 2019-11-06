@@ -50,6 +50,9 @@ def array_box():
 def stack_box(stack, array_box):
     return np.array([array_box] * stack.stack_depth())
 
+def test_shape(array, stack):
+    assert array.shape == (5,)
+    assert stack.shape == (3, 5)
 
 def test_access(array):
     chain_id = ["A","A","B","B","B"]

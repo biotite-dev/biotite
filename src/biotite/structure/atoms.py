@@ -54,6 +54,21 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             Length of the array(s).
         """
         return self._array_length
+
+    @property
+    @abc.abstractmethod
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the object.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the object.
+        """
+        return 
         
     def add_annotation(self, category, dtype):
         """
@@ -573,6 +588,10 @@ class AtomArray(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the atom array.
+        The single value in the tuple is
+        the length of the atom array.
     
     Examples
     --------
@@ -618,6 +637,27 @@ class AtomArray(_AtomArrayBase):
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
     
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the
+        :class:`AtomArray`.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the array.
+            The single value in the tuple is
+            the :func:`array_length()`.
+
+        See Also
+        --------
+        array_length
+        """
+        return self.array_length(),
+
     def get_atom(self, index):
         """
         Obtain the atom instance of the array at the specified index.
@@ -719,7 +759,7 @@ class AtomArray(_AtomArrayBase):
     
     def __eq__(self, item):
         """
-        Check if the array equals another :class:`AtomArray`
+        Check if the array equals another :class:`AtomArray`.
         
         Parameters
         ----------
@@ -801,6 +841,10 @@ class AtomArrayStack(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(m,3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the stack.
+        The numbers correspond to the stack depth
+        and array length, respectively.
     
     See also
     --------
@@ -883,6 +927,23 @@ class AtomArrayStack(_AtomArrayBase):
             Length of the array(s).
         """
         return len(self)
+
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the
+        :class:`AtomArrayStack`.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the stack.
+            The numbers correspond to the :func:`stack_depth()`
+            and :func:`array_length()`, respectively.
+        """
+        return self.stack_depth(), self.array_length()
 
     def __iter__(self):
         """
