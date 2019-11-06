@@ -643,7 +643,7 @@ class AtomArray(_AtomArrayBase):
         Returns
         -------
         shape : tuple of int
-            For an AtomArray, this corresponds to a tuple holoding
+            For an AtomArray, this corresponds to a tuple holding
             `array_length`.
 
         See Also
