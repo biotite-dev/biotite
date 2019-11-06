@@ -54,6 +54,21 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             Length of the array(s).
         """
         return self._array_length
+
+    @property
+    @abc.abstractmethod
+    def shape(self):
+        """
+        Tuple of array dimensions
+
+        This property contains the current shape of the object
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the object
+        """
+        return 
         
     def add_annotation(self, category, dtype):
         """
@@ -618,6 +633,25 @@ class AtomArray(_AtomArrayBase):
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
     
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions
+
+        This property contains the current shape of the AtomArray.
+
+        Returns
+        -------
+        shape : tuple of int
+            For an AtomArray, this corresponds to a tuple holoding
+            `array_length`.
+
+        See Also
+        --------
+        array_length
+        """
+        return self.array_length(),
+
     def get_atom(self, index):
         """
         Obtain the atom instance of the array at the specified index.
@@ -883,6 +917,21 @@ class AtomArrayStack(_AtomArrayBase):
             Length of the array(s).
         """
         return len(self)
+
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions
+
+        This property contains the current shape of the AtomArrayStack.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the stack. The numbers correspond to the
+            `stack_depth` and `array_length`, respectively.
+        """
+        return self.stack_depth(), self.array_length()
 
     def __iter__(self):
         """
