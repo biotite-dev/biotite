@@ -121,7 +121,9 @@
     "biotite.sequence.phylo" : {
         "Data structures" : [
             "Tree",
-            "TreeNode"
+            "TreeNode",
+            "TreeError",
+            "as_binary"
         ],
         "Clustering algorithms" : [
             "upgma",
