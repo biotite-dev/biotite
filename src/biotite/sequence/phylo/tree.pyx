@@ -1002,7 +1002,7 @@ cdef _as_binary(TreeNode node):
         # -> Create a new node having two childs:
         #    - One of the childs of the original node
         #    - The original node with one child less (distance = 0)
-        # Repeat until all children as put into binary nodes
+        # Repeat until all children are put into binary nodes
         #
         #   |--          |--
         #   |          --|  |--
