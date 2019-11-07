@@ -2,7 +2,7 @@ r"""
 Domains of bacterial sigma factors
 ==================================
 
-This script displays the 4 domains of the *E. coli*
+This script displays the 4 fundamental domains of the *E. coli*
 :math:`\sigma^{70}`-like :math:`\sigma` factors.
 """
 
