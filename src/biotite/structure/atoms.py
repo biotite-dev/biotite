@@ -451,6 +451,12 @@ class Atom(object):
     
     def __init__(self, coord, **kwargs):
         self._annot = {}
+        self._annot["chain_id"] = ""
+        self._annot["res_id"] = 0
+        self._annot["res_name"] = ""
+        self._annot["hetero"] = False
+        self._annot["atom_name"] = ""
+        self._annot["element"] = ""
         if "kwargs" in kwargs:
             # kwargs are given directly as dictionary
             kwargs = kwargs["kwargs"]
