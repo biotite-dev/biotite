@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.gro"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["GROFile"]
 

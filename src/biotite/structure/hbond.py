@@ -6,6 +6,7 @@
 This module provides functions for hydrogen bonding calculation.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["hbond", "hbond_frequency"]
 

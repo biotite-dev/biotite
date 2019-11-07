@@ -9,6 +9,7 @@ features a smaller file size and a highly increased I/O operation
 performance, than the text based file formats.
 """
 
+__name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

@@ -7,6 +7,7 @@ This module allows efficient search of atoms in a defined radius around
 a location.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CellList"]
 

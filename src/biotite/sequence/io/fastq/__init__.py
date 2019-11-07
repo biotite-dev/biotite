@@ -12,6 +12,7 @@ strings being the keys and the sequences and quality scores being the
 values.
 """
 
+__name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

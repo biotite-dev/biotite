@@ -7,6 +7,7 @@ This module provides functions for calculation of characteristic values when
 comparing multiple structures with each other.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["rmsd", "rmsf", "average"]
 

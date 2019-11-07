@@ -10,6 +10,7 @@ modules.
 """
 
 __version__ = "0.17.0"
+__name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

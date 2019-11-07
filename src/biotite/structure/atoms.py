@@ -7,6 +7,7 @@ This module contains the main types of the ``structure`` subpackage:
 :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`. 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
 

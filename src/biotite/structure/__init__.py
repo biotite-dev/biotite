@@ -94,6 +94,7 @@ manipulation and visualization.
 The universal length unit in this package is Å. 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 
 from .atoms import *

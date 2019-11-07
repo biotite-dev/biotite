@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_database_name", "fetch", "fetch_single_file"]
 

@@ -7,6 +7,7 @@ This module provides functions for calculation of mechanical or
 mass-related properties of a molecular structure.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["mass_center", "gyration_radius"]
 

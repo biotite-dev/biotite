@@ -7,6 +7,7 @@ Some convenience functions for consistency with other ``structure.io``
 subpackages.
 """
 
+__name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 

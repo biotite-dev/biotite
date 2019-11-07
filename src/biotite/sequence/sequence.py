@@ -6,6 +6,7 @@
 The module contains the :class:`Sequence` superclass and :class:`GeneralSequence`.
 """
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Sequence"]
 

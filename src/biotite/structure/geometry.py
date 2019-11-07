@@ -7,6 +7,7 @@ This module provides functions for geometric measurements between atoms
 in a structure, mainly lenghts and angles.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["displacement", "index_displacement", "distance", "index_distance",
            "angle", "index_angle", "dihedral", "index_dihedral",

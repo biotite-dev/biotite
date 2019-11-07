@@ -6,6 +6,7 @@
 A subpackage for multiple sequence alignments using MUSCLE.
 """
 
+__name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
 
 from .app import *

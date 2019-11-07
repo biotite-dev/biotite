@@ -14,6 +14,7 @@ via tools from the
 repository.
 """
 
+__name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 
 from .masses import *

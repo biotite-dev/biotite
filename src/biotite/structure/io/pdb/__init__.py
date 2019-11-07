@@ -13,6 +13,7 @@ other software).
 In all other cases, usage of the ``pdbx`` subpackage is encouraged.
 """
 
+__name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
 
 from .file import *
