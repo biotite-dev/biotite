@@ -10,7 +10,6 @@ __name__ = "biotite.structure"
 __author__ = "Daniel Bauer"
 __all__ = ["density"]
 
-from numbers import Integral
 import numpy as np
 from .atoms import coord
 
