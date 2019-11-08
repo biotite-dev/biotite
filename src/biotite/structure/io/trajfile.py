@@ -24,8 +24,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     trajectory file classes, `MDtraj` must be installed to use any of
     them.
 
-    When extracting data from or setting data in the file, only a
-    shallow copy as created.
+    Notes
+    -----
+    When extracting data from the file, only a reference to the
+    data arrays stored in this file are created.
+    The same is true, when setting data in the file.
+    Therefore, it is strongly recommended to make a copy of the
+    respective array, if the array is modified.
     """
     
     def __init__(self):
@@ -53,8 +58,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             A file-like-object cannot be used.
         start : int, optional
             The frame index, where file parsing is started. If no value
-            is given, parsing starts at the first frame. The index
-            starts at 0.
+            is given, parsing starts at the first frame.
+            The index starts at 0.
         stop : int, optional
             The exclusive frame index, where file parsing ends.
             If no value is given, parsing stops after the last frame.
