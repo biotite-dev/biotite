@@ -69,7 +69,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             from the file.
         atom_i : ndarray, dtype=int, optional
             If this parameter is set, only the atoms at the given
-            indices are read from the file.
+            indices are read from each frame.
         chunk_size : int, optional
             If this parameter is set, the trajectory is read in chunks:
             Only the number of frames specified by this parameter are
