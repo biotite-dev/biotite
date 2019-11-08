@@ -106,7 +106,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                         f, start, None, atom_i, chunk_size, discard=True
                     )
             
-            # The next upcoming frames are saved
+            # The upcoming frames are saved
             # Calculate the amount of frames to be read
             if stop is None:
                 n_frames = None
