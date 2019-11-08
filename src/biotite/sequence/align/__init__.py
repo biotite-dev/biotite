@@ -26,6 +26,7 @@ The aligning functions are usually C-accelerated, reducing the
 computation time substantially.
 """
 
+__name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 from .alignment import *

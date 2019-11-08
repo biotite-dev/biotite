@@ -21,6 +21,7 @@ Besides the mentioned structure formats, Gromacs trajectory files can be
 loaded, if `mdtraj` is installed.
 """
 
+__name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 
 from .trajfile import *

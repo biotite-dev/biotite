@@ -67,7 +67,7 @@ pygments_style = "sphinx"
 todo_include_todos = False
 
 # Prevents numpydoc from creating an autosummary which does not work
-# due to Biotite's import system
+# properly due to Biotite's import system
 numpydoc_show_class_members = False
 
 autodoc_member_order = "bysource"

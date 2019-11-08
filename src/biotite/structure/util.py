@@ -6,6 +6,7 @@
 Utility functions for in internal use in `Bio.Structure` package
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["vector_dot", "norm_vector", "distance"]
 

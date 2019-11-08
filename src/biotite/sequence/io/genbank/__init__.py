@@ -8,6 +8,7 @@ This subpackage is used for reading/writing information
 and *GenPept* format.
 """
 
+__name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

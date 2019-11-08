@@ -6,6 +6,7 @@
 This module provides functions for structure superimposition.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["superimpose", "superimpose_apply"]
 

@@ -6,6 +6,7 @@
 This module provides functions to calculate the radial distribution function.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["rdf"]
 

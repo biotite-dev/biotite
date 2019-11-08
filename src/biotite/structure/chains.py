@@ -7,6 +7,7 @@ This module provides utility for handling data on chain level, rather than
 atom level.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_chain_starts", "get_chains", "get_chain_count", "chain_iter"]
 

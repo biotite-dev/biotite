@@ -7,6 +7,7 @@ This module provides different transformations#
 that can be applied on structures.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["translate", "rotate", "rotate_centered"]
 

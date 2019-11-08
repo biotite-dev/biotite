@@ -7,6 +7,7 @@ Functions related to working with the simulation box or unit cell
 of a structure 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
            "repeat_box", "repeat_box_coord", "move_inside_box",

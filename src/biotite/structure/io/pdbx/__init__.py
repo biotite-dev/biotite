@@ -10,6 +10,7 @@ Additional utility functions allow conversion of these dictionaries to
 :class:`AtomArray` and :class:`AtomArrayStack` objects and vice versa.
 """
 
+__name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
 from .convert import *

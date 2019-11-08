@@ -19,6 +19,7 @@ interface to this format, and high-level functions for extracting
    information.
 """
 
+__name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

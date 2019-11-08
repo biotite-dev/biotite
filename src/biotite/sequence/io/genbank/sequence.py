@@ -6,6 +6,7 @@
 Functions for converting a sequence from/to a GenBank file.
 """
 
+__name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_sequence", "get_annotated_sequence",
            "set_sequence", "set_annotated_sequence"]

@@ -7,6 +7,7 @@ This module provides utility functions for creating filters on atom
 arrays and atom array stacks.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
            "filter_backbone", "filter_intersection",
