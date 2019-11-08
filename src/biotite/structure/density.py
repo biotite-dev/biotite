@@ -18,7 +18,8 @@ from .util import vector_dot
 from .celllist import CellList
 
 
-def density(atoms, selection=None, delta=1.0, bins=None, density=False):
+def density(atoms, selection=None, delta=1.0, bins=None,
+            density=False, weights=None):
     r"""
     Compute the density of an atoms selection.
 
@@ -51,6 +52,10 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False):
         returns the probability density function of each bin.
 
         See `numpy.histogramdd()` for further details.
+    weights: ndarray, shape=(N) or shape=(N,M), optional
+        An array of values to weight the contribution of N atoms in M models.
+        If the shape is (N), the weights will be interpreted as "per atom". A
+        shape of (N,M) allows to additionally weight atoms on a per model basis.
     
     Returns
     -------
@@ -61,14 +66,15 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False):
     edges : list of ndarray, dtype=float
         A list containing the 3 arrays describing the bin edges.
     """
-    
+    is_stack = isinstance(atoms, AtomArrayStack)
+
     # Define the grid for coordinate binning based on coordinates of supplied
     # atoms. This makes the binning independent of a supplied box vector and 
     # fluctuating box dimensions are not a problem. However, this means that
     # the user has to make sure the region of interest is in the center of the
     # box, i.e. by centering the to investiaged protein in the box.
     if bins is None:
-        if isinstance(atoms, AtomArrayStack):
+        if is_stack:
             axis = (0, 1)
         else:
             axis = 0
@@ -78,16 +84,21 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False):
             np.arange(grid_min[1], grid_max[1]+delta, delta),
             np.arange(grid_min[2], grid_max[2]+delta, delta),
         ])
-    
-    
+
     if selection is None:
         selected = atoms
     else:
         selected = atoms[...,selection]
-    
+
     # reshape the coords into Nx3
     coords = selected.coord.reshape((np.prod(selected.shape), 3))
+
+    # We need a weight value per coordinate, but input might be per atom.
+    if weights is not None:
+        if is_stack and len(weights.shape) < 2:
+            weights = np.repeat(weights, len(selected))
+        weights = weights.reshape(coords.shape[0])
     
     # calculate the histogram
-    hist = np.histogramdd(coords, bins=bins, density=density)
+    hist = np.histogramdd(coords, bins=bins, density=density, weights=weights)
     return hist
