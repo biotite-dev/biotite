@@ -55,19 +55,20 @@ def test_array_conversion(format):
 
 @pytest.mark.xfail(raises=ImportError)
 @pytest.mark.parametrize(
-    "format, start, stop, chunk_size",
+    "format, start, stop, step, chunk_size",
     itertools.product(
         ["trr", "xtc", "tng", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
+        [None, 2],
         [None, 3]
     )
 )
-def test_mmtf_consistency(format, start, stop, chunk_size):
+def test_mmtf_consistency(format, start, stop, step, chunk_size):
     # MMTF is used as reference for consistency check
     # due to higher performance
     ref_traj = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
-    ref_traj = ref_traj[slice(start, stop)]
+    ref_traj = ref_traj[slice(start, stop, step)]
     
     # Template is first model of the reference
     template = ref_traj[0]
@@ -84,12 +85,24 @@ def test_mmtf_consistency(format, start, stop, chunk_size):
     traj_file = traj_file_cls()
     traj_file.read(
         join(data_dir, f"1l2y.{format}"),
-        start, stop, chunk_size=chunk_size
+        start, stop, step, chunk_size=chunk_size
     )
     test_traj = traj_file.get_structure(template)
+    test_traj_time = traj_file.get_time()
     
+    if format not in ["dcd", "netcdf"]:
+        # The time starts at 1.0 and increases by 1.0 each step
+        # -> can be tested against 'range()' function
+        # Shift to ensure time starts at 0
+        test_traj_time -= 1
+        start = start if start is not None else 0
+        stop = stop if stop is not None else 38     # 38 models in 1l2y
+        step = step if step is not None else 1
+        assert test_traj_time.astype(int).tolist() \
+            == list(range(start, stop, step))
+
     # 1l2y has no box
-    # assert np.array_equal(test_traj.box, ref_traj.box)
+    # no assert np.array_equal(test_traj.box, ref_traj.box)
     assert test_traj.bonds == ref_traj.bonds
     assert test_traj.equal_annotation_categories(ref_traj)
     assert test_traj.coord == pytest.approx(ref_traj.coord, abs=1e-2)

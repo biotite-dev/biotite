@@ -67,41 +67,60 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         step : int, optional
             If this value is set, the method reads only every n-th frame
             from the file.
-        atom_i : ndarray, dtype=int
-            The atom indices to be read from the file.
+        atom_i : ndarray, dtype=int, optional
+            If this parameter is set, only the atoms at the given
+            indices are read from the file.
         chunk_size : int, optional
-            If this parameter is set, only the number of frames
-            specified by this parameter are read at once.
+            If this parameter is set, the trajectory is read in chunks:
+            Only the number of frames specified by this parameter are
+            read at once.
             The resulting chunks of frames are automatically
             concatenated, after all chunks are collected.
             Use this parameter, if a :class:`MemoryError` is raised
             when a trajectory file is read.
-            Although lower values decrease the memory consumption of
+            Although lower values can decrease the memory consumption of
             reading trajectories, they also increase the computation
             time.
         """
-        if chunk_size is not None and chunk_size < 1:
-            raise ValueError("Chunk size must be greater than 0")
-        
+        if chunk_size is not None:
+            if chunk_size < 1:
+                raise ValueError("Chunk size must be greater than 0")
+            # Chunk size must be a multiple of step size to ensure that
+            # the step distance at the chunk border is the same as
+            # within a chunk
+            # -> round chunk size up to a multiple of step size
+            if step is not None and chunk_size % step != 0:
+                chunk_size = ((chunk_size // step) + 1) * step
+
         traj_type = self.traj_type()
         with traj_type(file_name, "r") as f:
             
             if start is None:
                 start = 0
+            # Discard atoms before start
             if start != 0:
-                # Discard atoms before start
                 if chunk_size is None or chunk_size > start:
                     f.read(n_frames=start, stride=None, atom_indices=atom_i)
                 else:
                     TrajectoryFile._read_chunk_wise(
-                        f, start, step, atom_i, chunk_size, discard=True
+                        f, start, None, atom_i, chunk_size, discard=True
                     )
             
-            # The next interval is saved
+            # The next upcoming frames are saved
+            # Calculate the amount of frames to be read
             if stop is None:
                 n_frames = None
             else:
                 n_frames = stop-start
+            if step is not None and n_frames is not None:
+                # Divide number of frames by 'step' in order to convert
+                # 'step' into 'stride'
+                # Since the 0th frame is always included,
+                # the number of frames is decremented before division
+                # and incremented afterwards again
+                n_frames = ((n_frames - 1) // step) + 1
+            
+            # Read frames
             if chunk_size is None:
                 result = f.read(n_frames, stride=step, atom_indices=atom_i)
             else:
@@ -367,7 +386,10 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                          discard=False):
         """
         Similar to :func:`read()`, just for chunk-wise reading of the
-        trajectory
+        trajectory.
+
+        `n_frames` is already the actual number of frames in the outout
+        arrays, i.e. the original number was divided by `step`.
         """
         chunks = []
         remaining_frames = n_frames
