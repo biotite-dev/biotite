@@ -6,6 +6,7 @@
 This module provides functions to calculate atomistic densities.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Daniel Bauer"
 __all__ = ["density"]
 
