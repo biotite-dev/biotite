@@ -399,7 +399,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             if remaining_frames is not None:
                 n = min(remaining_frames, chunk_size)
             else:
-                n = None
+                n = chunk_size
             try:
                 chunk = file.read(n_frames=n, stride=step, atom_indices=atom_i)
             except ValueError as e:
