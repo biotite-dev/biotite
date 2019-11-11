@@ -66,21 +66,23 @@ def test_density_normalized(array):
     assert np.abs(density[0,2] - 2.0/6.0) < 0.0001
 
 def test_density_weights(array, stack):
-    atomic_weights = np.array([1, 1, 1, 1, 1, 0.5])
+    # assign weights to coordinates
+    atomic_weights = np.arange(0.1, 0.7, 0.1)
 
     # weights should be applied correctly
     density, (x, y, z) = struc.density(array, weights=atomic_weights)
-    assert density.sum() == 5.5
-    assert density[0,2] == 2
-    assert density[1,0] == 2.5
-    assert density[1,1] == 1
+    assert density.sum() == atomic_weights.sum()
+    assert density[0, 2] == atomic_weights[0] + atomic_weights[1]
+    assert density[1, 0] == atomic_weights[3:].sum()
+    assert density[1,1] == atomic_weights[2]
 
-    # weights should be repeated along stack dimensions
+    # weights should be repeated along stack dimensions and lead to the same
+    # result independent of shape
     density, (x, y, z) = struc.density(stack, weights=atomic_weights)
     density2, (x, y, z) = struc.density(stack,
                             weights=np.array([atomic_weights, atomic_weights]))
-    assert density.sum() == density2.sum() == 11
-    assert density[0,2] == density2[0,2] == 4
-    assert density[1,0] == density2[1,0] == 5
-    assert density[1,1] == density2[1,1] == 2
-
+    assert density.sum() == density2.sum()
+    assert density[0,2] == density2[0,2]
+    assert density[1,0] == density2[1,0]
+    assert density[1,1] == density2[1,1]
+    

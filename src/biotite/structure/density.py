@@ -104,7 +104,7 @@ def density(atoms, selection=None, delta=1.0, bins=None,
     # We need a weight value per coordinate, but input might be per atom
     if weights is not None:
         if is_stack and len(weights.shape) < 2:
-            weights = np.repeat(weights, len(selected_coords))
+            weights = np.tile(weights, len(selected_coords))
         weights = weights.reshape(coords.shape[0])
     
     # Calculate the histogram
