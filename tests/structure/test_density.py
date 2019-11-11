@@ -75,18 +75,12 @@ def test_density_weights(array, stack):
     assert density[1,0] == 2.5
     assert density[1,1] == 1
 
-    # weights should be repeated along stack dimension
+    # weights should be repeated along stack dimensions
     density, (x, y, z) = struc.density(stack, weights=atomic_weights)
-    assert density.sum() == 11
-    assert density[0,2] == 4
-    assert density[1,0] == 5
-    assert density[1,1] == 2
-
-    # weights should not be repeated along stack dimension for NxM
-    stack_weights = np.array([atomic_weights, atomic_weights])
-    density, (x, y, z) = struc.density(stack, weights=stack_weights)
-    assert density.sum() == 11
-    assert density[0,2] == 4
-    assert density[1,0] == 5
-    assert density[1,1] == 2
+    density2, (x, y, z) = struc.density(stack,
+                            weights=np.array([atomic_weights, atomic_weights]))
+    assert density.sum() == density2.sum() == 11
+    assert density[0,2] == density2[0,2] == 4
+    assert density[1,0] == density2[1,0] == 5
+    assert density[1,1] == density2[1,1] == 2
 
