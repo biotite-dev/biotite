@@ -29,6 +29,8 @@ def density(atoms, selection=None, delta=1.0, bins=None,
     ----------
     atoms : AtomArray or AtomArrayStack or ndarray, shape=(n,3) or shape=(m,n,3)
         The density is calculated based on these atoms.
+        Alternatively, the coordinates can be directly provided as
+        `ndarray`.
     selection : ndarray, dtype=bool, shape=(n,), optional
         Boolean mask for `atoms` to calculate the density only on a set
         of atoms.
@@ -48,17 +50,19 @@ def density(atoms, selection=None, delta=1.0, bins=None,
         If False, the number of samples in each bin is returned.
         Otherwise, returns the probability density function of each bin.
         See :func:`numpy.histogramdd()` for further details.
-    weights: ndarray, shape=(N) or shape=(N,M), optional
-        An array of values to weight the contribution of N atoms in 
-        models.
-        If the shape is (N), the weights will be interpreted as
-        *per atom*. A shape of (N,M) allows to additionally weight atoms
-        on a per model basis.
+    weights: ndarray, shape=(n,) or shape=(m,n), optional
+        An array of values to weight the contribution of *n* atoms in 
+        *m* models.
+        If the shape is *(n,)*, the weights will be interpreted as
+        *per atom*.
+        A shape of *(m,n)* allows to additionally weight atoms on a
+        *per model* basis.
     
     Returns
     -------
     H : ndarray, dtype=float
         The threedimensional histogram of the selected atoms.
+        The histogram takes the atoms in all models into account.
         The length of the histogram depends on `atoms` coordinates and
         `delta`, or the supplied `bins` input parameter.
     edges : list of ndarray, dtype=float
