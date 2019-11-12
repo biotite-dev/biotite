@@ -660,6 +660,10 @@ def search(query, omit_chain=True):
     r = requests.post(_search_url, data=str(query), headers=headers)
     if r.text.startswith("Problem creating Query from XML"):
         raise RequestError(r.text)
+    if "<html>" in r.text:
+        # Response should contain plain PDB IDs,
+        # a HTML tag indicates an error
+        raise RequestError(r.text)
     ids = r.text.split()
     if omit_chain:
         for i, id in enumerate(ids):
