@@ -102,6 +102,7 @@ from .bonds import *
 from .box import *
 from .celllist import *
 from .compare import *
+from .density import *
 from .error import *
 from .filter import *
 from .geometry import *
