@@ -2,15 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from setuptools import setup, find_packages, Extension
-from setuptools.command.test import test as TestCommand
 import sys
 import shlex
 import glob
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
+from setuptools import setup, find_packages, Extension
+from setuptools.command.test import test as TestCommand
 import numpy
+from Cython.Build import cythonize
 from src.biotite import __version__
 
 long_description = """
@@ -36,17 +37,13 @@ original_wd = os.getcwd()
 os.chdir(dirname(abspath(__file__)))
 
 
-# Compile Cython into C if any Cython files exist
-if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
-    try:
-        from Cython.Build import cythonize
-        cythonize(
-            "src/**/*.pyx",
-            include_path=[numpy.get_include()],
-            language_level=3
-        )
-    except ValueError:
-        pass
+# Compile Cython into C
+cythonize(
+    "src/**/*.pyx",
+    include_path=[numpy.get_include()],
+    language_level=3
+)
+
 
 def get_extensions():
     ext_sources = []
