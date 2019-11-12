@@ -84,7 +84,7 @@ def index_source(app, modname):
 
 def _analyze_cython_code(code_lines):
     """
-    Find the position of classes and functions in *Cython files*.
+    Find the position of classes and functions in *Cython* files.
 
     This analyzer works in a very simple way:
     It looks for the `def` and `class` keywords at zero-indentation
