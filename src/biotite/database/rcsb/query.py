@@ -663,7 +663,7 @@ def search(query, omit_chain=True):
     if "<html>" in r.text:
         # Response should contain plain PDB IDs,
         # a HTML tag indicates an error
-        raise RequestError(r.text)
+        raise RequestError(r.text.replace("\n", " "))
     ids = r.text.split()
     if omit_chain:
         for i, id in enumerate(ids):
