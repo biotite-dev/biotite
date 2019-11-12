@@ -1,4 +1,4 @@
-body {
+body, div.sphinxsidebar input{
     font-family: "Fira Sans", "Helvetica", "Sans-Serif";
 }
 div.body > .section {
