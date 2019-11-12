@@ -126,3 +126,4 @@ sphinx_gallery_conf = {
 def setup(app):
     app.connect("autodoc-skip-member", apidoc.skip_non_methods)
     app.connect("viewcode-follow-imported", viewcode.find_actual_module)
+    app.connect("viewcode-find-source", viewcode.index_source)
