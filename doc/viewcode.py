@@ -55,4 +55,5 @@ _index_attributes("biotite", dirname(biotite.__file__), attribute_index)
 
 
 def find_actual_module(app, modname, attribute):
-    return attribute_index[(modname, attribute)]
+    top_attribute = attribute.split(".")[0]
+    return attribute_index[(modname, top_attribute)]
