@@ -114,7 +114,6 @@ def get_annotation(gb_file, include_only=None):
                     # -> split at whitespaces,
                     # as keys do not contain whitespaces
                     for subpart in part.split():
-                        print(subpart)
                         if not "=" in subpart:
                             # Qualifier without value, e.g. '/pseudo'
                             # -> store immediately
