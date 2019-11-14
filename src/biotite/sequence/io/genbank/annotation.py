@@ -46,7 +46,10 @@ def get_annotation(gb_file, include_only=None):
         raise InvalidFileError("File has multiple 'FEATURES' fields")
     lines, _ = fields[0]
     
-    # Parse all lines to create an index of features
+
+    ### Parse all lines to create an index of features,
+    # i.e. pairs of the feature key
+    # and the text belonging to the respective feature 
     feature_list = []
     feature_key = None
     feature_value = ""
@@ -63,18 +66,30 @@ def get_annotation(gb_file, include_only=None):
     # Store last feature key and value (loop already exited)
     feature_list.append((feature_key, feature_value))
     
-    # Process only relevant features and put them into Annotation
+
+    ### Process only relevant features and put them into an Annotation
     annotation = Annotation()
     # Regex to separate qualifiers from each other
     regex = re.compile(r"""(".*?"|/.*?=)""")
     for key, val in feature_list:
         if include_only is None or key in include_only:
             qual_dict = {}
-            qualifiers = [s.strip() for s in regex.split(val)]
-            # Remove empty quals
-            qualifiers = [s for s in qualifiers if s]
-            # First string is location identifier
-            loc_string = qualifiers.pop(0).strip()
+            
+            # Split feature definition into parts
+            # e.g.
+            #
+            # 1..12
+            # /gene="abcA"
+            # /product="AbcA"
+            #
+            # becomes
+            #
+            # ['1..12', '/gene=', '"abcA"', '/product=', '"AbcA"']
+            qualifier_parts = [s.strip() for s in regex.split(val)]
+            # Remove empty qualifier parts
+            qualifier_parts = [s for s in qualifier_parts if s]
+            # First part is location identifier
+            loc_string = qualifier_parts.pop(0).strip()
             try:
                 locs = _parse_locs(loc_string)
             except:
@@ -82,32 +97,50 @@ def get_annotation(gb_file, include_only=None):
                     f"'{loc_string}' is an unsupported location identifier, "
                     f"skipping feature"
                 )
+                continue
+
+            # The other parts are pairwise qualifier keys and values
             qual_key = None
             qual_val = None
-            for qual in qualifiers:
-                if qual[0] == "/":
-                    # Store previous qualifier pair
-                    if qual_key is not None:
-                        # In case of e.g. '/pseudo'
-                        # 'qual_val' is 'None'
-                        _set_qual(qual_dict, qual_key, qual_val)
-                        qual_key = None
-                        qual_val = None
-                    # Qualifier key
-                    # -> remove "/" and "="
-                    # "=" is not existing in e.g. '/pseudo'
-                    qual_key = qual[1:].replace("=", "")
+            for part in qualifier_parts:
+                if qual_key is None:
+                    # This is a qualifier key
+                    # When the feature contains qualifiers without
+                    # value, e.g. '/pseudo'
+                    # The part may contain multiple keys, e.g.
+                    #
+                    # '/pseudo /gene='
+                    #
+                    # -> split at whitespaces,
+                    # as keys do not contain whitespaces
+                    for subpart in part.split():
+                        if not "=" in subpart:
+                            # Qualifier without value, e.g. '/pseudo'
+                            # -> store immediately
+                            # Remove "/" -> subpart[1:]
+                            qual_key = subpart[1:]
+                            _set_qual(qual_dict, qual_key, None)
+                            qual_key = None
+                        else:
+                            # Regular qualifier
+                            # -> store key in variable and wait for
+                            # next qualifier part to set the value
+                            # Remove '/' and '=' -> subpart[1:-1]
+                            qual_key = subpart[1:-1]
                 else:
-                    # Qualifier value
+                    # This is a qualifier value
                     # -> remove potential quotes
-                    if qual[0] == '"':
-                        qual_val = qual[1:-1]
+                    if part[0] == '"':
+                        qual_val = part[1:-1]
                     else:
-                        qual_val = qual
-            # Store final qualifier pair
-            if qual_key is not None:
-                _set_qual(qual_dict, qual_key, qual_val)
+                        qual_val = part
+                    # Store qualifier pair
+                    _set_qual(qual_dict, qual_key, qual_val)
+                    qual_key = None
+                    qual_val = None
+            
             annotation.add_feature(Feature(key, locs, qual_dict))
+    
     return annotation
 
 
