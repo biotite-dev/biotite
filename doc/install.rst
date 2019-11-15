@@ -21,7 +21,7 @@ to *Python* 3.
 If you are a Linux user, you should be able to install these packages simply
 via *pip* (Tip: Use ``--only-binary :all:`` to ensure precompiled versions are
 installed).
-In case you are using Windows, I recommend installing *numpy* and
+In case you are using Windows, it is recommended to install *numpy* and
 *matplotlib* via `Conda <https://conda.io/docs/>`_, or alternatively
 `Anaconda <https://www.anaconda.com/download/>`_ which already contains the
 aforementioned packages.
@@ -35,31 +35,30 @@ Some functions require some extra packages:
 Install via Conda
 ------------------
 
-If you want to install *Biotite* into a *Conda* environment, you can do
-that directly via *Conda*:
+For *Conda* users, for example *Windows* users who use the *Anaconda* Python
+distribution, the simplest way for installing *Biotite* is
 
 .. code-block:: console
 
    $ conda install -c conda-forge biotite
 
-This is the preferred way to install *Biotite* for *Windows* users that
-use the *Anaconda* Python distribution.
-
 
 Install from PyPI
 -----------------
 
-By default, *Biotite* uses *wheels* for its package distribution. Simply type
+By default, *Biotite* uses *wheels* for its package distribution.
+Simply type
 
 .. code-block:: console
 
    $ pip install biotite
 
 If *pip* finds an appropriate *wheel* for your system configuration on *PyPI*,
-it will download and install it. Congratulations, you just installed 
-*Biotite*! If no fitting *wheel* is found, *pip* will fall back to the source
-distribution. If you want to prevent *pip* to do that,
-use the following command:
+it will download and install it.
+Congratulations, you just installed *Biotite*!
+If no fitting *wheel* is found, *pip* will fall back to the source
+distribution.
+If you want to prevent *pip* from doing that, use the following command:
 
 .. code-block:: console
 
@@ -79,9 +78,10 @@ Note that installing from source distribution requires a C-compiler
 Install from source
 -------------------
 
-If you want to install your own *Biotite* build, navigate to the top-level
-directory of your local *Biotite* clone (the one ``setup.py`` is in) and type
-the following:
+If you want to install *Biotite* from the
+`project repository <https://github.com/biotite-dev/biotite>`_, navigate to the
+top-level directory of your local *Biotite* repository clone (the one
+``setup.py`` is in) and type the following:
 
 .. code-block:: console
 
@@ -89,8 +89,13 @@ the following:
 
 Note that this requires a C-compiler (typically GCC) and the packages
 `cython` and `wheel` to be installed.
-Having the *Biotite* package always pointing to your development directory is
-also possible. Type the following in the top-level directory:
+If you want, you can use
+`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_, containing all runtime and build dependencies for
+*Biotite*.
+
+Having the *Biotite* package always pointing to your directory containing the
+repository is also possible.
+Type the following in the top-level directory:
 
 .. code-block:: console
 
@@ -104,7 +109,7 @@ probably you won't need that, but just in case), simply type:
    $ python setup.py bdist_wheel
    $ python setup.py sdist
 
-You can find the wheel and the source distribution in the ``dist`` directory
-(they should be the only files there, you can't miss them).
+You can find the created wheel and the source distribution in the ``dist``
+directory.
 
 
