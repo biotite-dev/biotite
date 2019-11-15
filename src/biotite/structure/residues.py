@@ -23,7 +23,8 @@ def get_residue_starts(array):
     
     A new residue starts, either when the residue ID or chain ID
     changes from one to the next atom.
-    If the residue ID is *-1*, a residue name change, instead of a
+    If the residue ID of two adjacent residues is *-1*,
+    a residue name change, instead of a
     residue ID change, is interpreted as new residue.
 
     This method is internally used by all other residue-related
@@ -45,26 +46,31 @@ def get_residue_starts(array):
 
     # Maximum length is length of atom array
     starts = np.zeros(array.array_length(), dtype=int)
-    starts[0] = 0
-    i = 1
+
     # Variables for current values
     curr_chain_id = chain_ids[0]
     curr_res_id = res_ids[0]
     curr_res_name = res_names[0]
 
+    # Index for 'starts' begins at second element, since
+    # The first start is already identified
+    # (always at position 0 of the atom array)
+    i = 1
+
     for j in range(array.array_length()):
-        if res_ids[j] != -1:
-            if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
+        if res_ids[j] == -1 and curr_res_id == -1:
+            # Residue ID of two adjacent residues is -1
+            # -> Hetero residue
+            # -> Cannot rely on residue ID for residue distinction
+            # -> Fall back to residue names
+            if curr_res_name != res_names[j] or curr_chain_id != chain_ids[j]:
                 starts[i] = j
                 i += 1
                 curr_chain_id = chain_ids[j]
                 curr_res_id   = res_ids[j]
                 curr_res_name = res_names[j]
         else:
-            # Residue ID = -1 -> Hetero residue
-            # -> Cannot rely on residue ID for residue distinction
-            # -> Fall back to residue names
-            if curr_res_name != res_names[j] or curr_chain_id != chain_ids[j]:
+            if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
                 starts[i] = j
                 i += 1
                 curr_chain_id = chain_ids[j]
