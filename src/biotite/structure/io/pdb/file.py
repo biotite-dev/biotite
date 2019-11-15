@@ -455,11 +455,21 @@ class PDBFile(TextFile):
             pdb_atom_id = [encode_hybrid36(i, 5).rjust(5) for i in atom_id]
             pdb_res_id = [encode_hybrid36(i, 4).rjust(4) for i in array.res_id]
         else:
-            # Atom IDs are supported up to 99999
-            # Residue IDs are supported up to 9999
-            pdb_atom_id = ((atom_id - 1) % 99999) + 1
+            # Atom IDs are supported up to 99999,
+            # but negative IDs are also possible
+            pdb_atom_id = np.where(
+                atom_id > 0,
+                ((atom_id - 1) % 99999) + 1,
+                atom_id
+            )
             pdb_atom_id = ["{:>5d}".format(i) for i in pdb_atom_id]
-            pdb_res_id = ((array.res_id - 1) % 9999) + 1
+            # Residue IDs are supported up to 9999,
+            # but negative IDs are also possible
+            pdb_res_id = np.where(
+                array.res_id > 0,
+                ((array.res_id - 1) % 9999) + 1,
+                array.res_id
+            )
             pdb_res_id = ["{:>4d}".format(i) for i in pdb_res_id]
 
         if isinstance(array, AtomArray):
