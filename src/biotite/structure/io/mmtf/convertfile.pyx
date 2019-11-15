@@ -86,6 +86,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     """
     cdef int i, j, m
     
+
     # Obtain (and potentially decode) required arrays/values from file
     cdef int atom_count = file["numAtoms"]
     cdef int model_count = file["numModels"]
@@ -118,6 +119,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     except KeyError:
         inscode = None
     
+
     # Create arrays from 'groupList' list of dictionaries
     cdef list group_list = file["groupList"]
     cdef list non_hetero_list = ["L-PEPTIDE LINKING", "PEPTIDE LINKING",
@@ -146,6 +148,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         elements[i, :atoms_per_res[i]] = residue["elementList"]
         charges[i, :atoms_per_res[i]] = residue["formalChargeList"]
     
+
     # Create the atom array (stack)
     cdef int depth, length
     cdef int start_i, stop_i
@@ -201,7 +204,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 0, length, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-        
+    
+
     else:
         length = _get_model_length(model, res_type_i, chains_per_model,
                                    res_per_chain, atoms_per_res)
@@ -248,7 +252,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 start_i, stop_i, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-        
+    
+    # Get box
     if "unitCell" in file:
         a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
         alpha = np.deg2rad(alpha)
@@ -264,6 +269,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         else:
             # AtomArray
             array.box = box
+    
     
     # Filter inscode and altloc and return
     # Format arrays for filter function
