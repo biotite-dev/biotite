@@ -14,7 +14,7 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
+from ...filter import filter_altloc
 from ...residues import get_residue_starts
 from ...box import vectors_from_unitcell
 
@@ -28,7 +28,7 @@ ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
     
-def get_structure(file, model=None, insertion_code=[], altloc=[],
+def get_structure(file, model=None, altloc=[],
                   extra_fields=[], include_bonds=False):
     """
     get_structure(file, model=None, insertion_code=[], altloc=[],
@@ -46,21 +46,24 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         If this parameter is omitted, an :class:`AtomArrayStack` containing all
         models will be returned, even if the structure contains only one
         model.
-    insertion_code : list of tuple, optional
-        In case the structure contains insertion codes, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the insertion code.
-        By default no insertions are used.
     altloc : list of tuple, optional
         In case the structure contains *altloc* entries, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the *altloc* ID.
+        specified here:
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues the atoms with the given *altloc*
+        ID are filtered.
         By default the location with the *altloc* ID "A" is used.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
-        There are 4 optional annotation identifiers:
-        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        These are valid values:
+        ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'``
+        and ``'charge'``.
     include_bonds : bool
         If set to true, an :class:`BondList` will be created for the resulting
         :class:`AtomArray` containing the bond information from the file.

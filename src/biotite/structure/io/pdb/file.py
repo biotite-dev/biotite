@@ -11,7 +11,7 @@ from ...atoms import AtomArray, AtomArrayStack
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
+from ...filter import filter_altloc
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 import copy
 from warnings import warn
@@ -86,17 +86,17 @@ class PDBFile(TextFile):
         Notes
         -----
         Note that :func:`get_coord()` may output more coordinates than
-        the coordinates of the atom array (stack) from the corresponding
-        :func:`get_structure()` call have.
+        the atom array (stack) from the corresponding
+        :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
-        insertion codes and altlocs, while `get_coord()` does not.
+        *altlocs*, while `get_coord()` does not.
         
         Examples
         --------
         Read an :class:`AtomArrayStack` from multiple PDB files, where
         each PDB file contains the same atoms but different positions.
         This is an efficient approach when a trajectory is spread into
-        multiple PDB files, as done e.g. by the Rosetta modeling
+        multiple PDB files, as done e.g. by the *Rosetta* modeling
         software. 
 
         For the purpose of this example, the PDB files are created from
@@ -201,8 +201,7 @@ class PDBFile(TextFile):
             return coord
 
 
-    def get_structure(self, model=None, insertion_code=[], altloc=[],
-                      extra_fields=[]):
+    def get_structure(self, model=None, altloc=[], extra_fields=[]):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
         
@@ -218,23 +217,24 @@ class PDBFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        insertion_code : list of tuple, optional
-            In case the structure contains insertion codes, those can be
-            specified here: Each tuple consists of an integer,
-            specifying the residue ID, and a letter, specifying the 
-            insertion code.
-            By default no insertions are used.
         altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can
-            be specified here: Each tuple consists of an integer,
-            specifying the residue ID, and a letter, specifying the
-            *altloc* ID. By default the location with the *altloc* ID
-            "A" is used.
+            In case the structure contains *altloc* entries, those can be
+            specified here:
+            Each tuple consists of the following elements:
+
+                - A chain ID, specifying the residue
+                - A residue ID, specifying the residue
+                - The desired *altoc* ID for the specified residue
+
+            For each of the given residues the atoms with the given *altloc*
+            ID are filtered.
+            By default the location with the *altloc* ID "A" is used.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
-            There are 4 optional annotation identifiers:
-            'atom_id', 'b_factor', 'occupancy' and 'charge'.
+            These are valid values:
+            ``'insertion'``, ``'atom_id'``, ``'b_factor'``,
+            ``'occupancy'`` and ``'charge'``.
         
         Returns
         -------

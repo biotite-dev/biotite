@@ -187,7 +187,7 @@ def filter_altloc(array, altloc=[], altloc_array=None):
 
         For each of the given residues only those atoms of `atoms` are
         filtered where the *altloc* ID matches the respective *altloc*
-        ID in `altlocs`
+        ID in `altlocs`.
         By default the location with the *altloc* ID "A" is used.
     
     Returns
