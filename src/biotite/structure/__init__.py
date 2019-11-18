@@ -60,6 +60,7 @@ functions:
 =========  ===========  =================   ============================
 Category   Type         Examples            Description
 =========  ===========  =================   ============================
+insertion  string (U1)  'X','Y',..          PDB insertion code (iCode)
 atom_id    int          1,2,3, ...          Atom serial number
 b_factor   float        0.9, 12.3, ...      Temperature factor
 occupancy  float        .1, .3, .9, ...     Occupancy
