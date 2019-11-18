@@ -11,7 +11,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
            "filter_backbone", "filter_intersection",
-           "filter_inscode_and_altloc"]
+           "filter_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
