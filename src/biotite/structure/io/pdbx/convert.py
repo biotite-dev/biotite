@@ -311,9 +311,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_seq_id"] = np.array(
         ["." if e == -1 else str(e) for e in array.res_id]
     )
-    atom_site_dict["pdbx_PDB_ins_code"] = np.array(
-        ["." if e == "" else e for e in array.insertion]
-    )
+    atom_site_dict["pdbx_PDB_ins_code"] = array.insertion
     atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
     atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]
