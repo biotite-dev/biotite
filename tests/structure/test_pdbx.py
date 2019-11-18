@@ -43,6 +43,37 @@ def test_parsing(category, key, exp_value):
 
 
 @pytest.mark.parametrize(
+    "string, use_array",
+    itertools.product(
+        ["", " ", "\n", "\t"],
+        [False, True]
+    )
+)
+def test_empty_values(string, use_array):
+    """
+    Test whether empty strings for field values are properly replaced
+    by ``'.'``. 
+    """
+    LENGTH = 10
+    ref_value = np.full(LENGTH, string, dtype="U1") if use_array else "" 
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.set_category(
+        category="test_category",
+        block="test",
+        category_dict={
+            "test_field": ref_value
+        }
+    )
+    
+    test_value = pdbx_file["test_category"]["test_field"]
+    
+    if use_array:
+        assert test_value.tolist() == ["."] * LENGTH
+    else:
+        assert test_value == "."
+
+
+@pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
         glob.glob(join(data_dir, "*.cif")),
@@ -85,7 +116,7 @@ def test_extra_fields():
     stack1 = pdbx.get_structure(
         pdbx_file,
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
 
@@ -95,7 +126,7 @@ def test_extra_fields():
     stack2 = pdbx.get_structure(
         pdbx_file,
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
     

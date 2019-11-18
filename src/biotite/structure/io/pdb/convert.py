@@ -49,8 +49,7 @@ def get_structure(pdb_file, model=None, altloc=[], extra_fields=[]):
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
         These are valid values:
-        ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'``
-        and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         
     Returns
     -------

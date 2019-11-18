@@ -62,8 +62,7 @@ def get_structure(file, model=None, altloc=[],
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
         These are valid values:
-        ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'``
-        and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
     include_bonds : bool
         If set to true, an :class:`BondList` will be created for the resulting
         :class:`AtomArray` containing the bond information from the file.
@@ -150,7 +149,6 @@ def get_structure(file, model=None, altloc=[],
     cdef int depth, length
     cdef int start_i, stop_i
     cdef bint extra_charge
-    cdef bint extra_insertion
     cdef np.ndarray altloc_array
     cdef np.ndarray inscode_array
     
@@ -180,7 +178,6 @@ def get_structure(file, model=None, altloc=[],
         else:
             altloc_array = None
         
-        extra_insertion = False
         extra_charge = False
         if "insertion" in extra_fields:
             extra_insertion = True
@@ -195,9 +192,9 @@ def get_structure(file, model=None, altloc=[],
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[:length])
         
-        _fill_annotations(1, array, extra_insertion, extra_charge,
+        _fill_annotations(1, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
-                          res_type_i, res_ids, atoms_per_res, inscode,
+                          res_type_i, res_ids, inscode, atoms_per_res,
                           res_names, hetero_res, atom_names, elements, charges)
         
         if include_bonds:
@@ -230,11 +227,7 @@ def get_structure(file, model=None, altloc=[],
         else:
             altloc_array = None
         
-        extra_insertion = False
         extra_charge = False
-        if "insertion" in extra_fields:
-            extra_insertion = True
-            array.add_annotation("insertion", "U1")
         if "charge" in extra_fields:
             extra_charge = True
             array.add_annotation("charge", int)
@@ -245,9 +238,9 @@ def get_structure(file, model=None, altloc=[],
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[start_i : stop_i])
         
-        _fill_annotations(model, array, extra_insertion, extra_charge,
+        _fill_annotations(model, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
-                          res_type_i, res_ids, atoms_per_res, inscode,
+                          res_type_i, res_ids, inscode, atoms_per_res,
                           res_names, hetero_res, atom_names, elements, charges)
         
         if include_bonds:
@@ -299,25 +292,27 @@ def _get_model_length(int model, int32[:] res_type_i,
 
     
 def _fill_annotations(int model, array,
-                      bint extra_insertion, bint extra_charge,
-                      np.ndarray chain_names, int32[:] chains_per_model,
+                      bint extra_charge,
+                      np.ndarray chain_names,
+                      int32[:] chains_per_model,
                       int32[:] res_per_chain,
-                      int32[:] res_type_i, int32[:] res_ids,
-                      np.ndarray atoms_per_res, np.ndarray res_inscodes,
-                      np.ndarray res_names, np.ndarray hetero_res,
-                      np.ndarray atom_names, np.ndarray elements,
+                      int32[:] res_type_i,
+                      int32[:] res_ids,
+                      np.ndarray res_inscodes,
+                      np.ndarray atoms_per_res,
+                      np.ndarray res_names,
+                      np.ndarray hetero_res,
+                      np.ndarray atom_names,
+                      np.ndarray elements,
                       np.ndarray charges):
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray chain_id  = array.chain_id
     cdef np.ndarray res_id    = array.res_id
+    cdef np.ndarray insertion = array.insertion
     cdef np.ndarray res_name  = array.res_name
     cdef np.ndarray hetero    = array.hetero
     cdef np.ndarray atom_name = array.atom_name
     cdef np.ndarray element   = array.element
-    cdef np.ndarray insertion
-    cdef np.ndarray charge
-    if extra_insertion:
-        insertion = array.insertion
     if extra_charge:
         charge = array.charge
     
@@ -343,12 +338,11 @@ def _fill_annotations(int model, array,
             for k in range(atoms_per_res[type_i]):
                 chain_id[atom_i] = chain_id_for_chain
                 res_id[atom_i]    = res_id_for_res
+                insertion[atom_i] = inscode_for_res
                 hetero[atom_i]    = hetero_for_res
                 res_name[atom_i]  = res_name_for_res
                 atom_name[atom_i] = atom_names[type_i][k]
                 element[atom_i]   = elements[type_i][k].upper()
-                if extra_insertion:
-                    insertion[atom_i] = inscode_for_res
                 if extra_charge:
                     charge[atom_i] = charges[type_i][k]
                 atom_i += 1

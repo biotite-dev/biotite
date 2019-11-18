@@ -70,9 +70,11 @@ def test_pdbx_consistency(path, single_model):
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     a1 = pdb_file.get_structure(model=model)
+
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     if a2.box is not None:
         assert np.allclose(a1.box, a2.box)
     assert a1.bonds == a2.bonds
@@ -89,7 +91,7 @@ def test_extra_fields(hybrid36):
     pdb_file.read(path)
     stack1 = pdb_file.get_structure(
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
 
@@ -98,7 +100,7 @@ def test_extra_fields(hybrid36):
     
     stack2 = pdb_file.get_structure(
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
     

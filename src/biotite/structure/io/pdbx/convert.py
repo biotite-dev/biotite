@@ -84,8 +84,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
         subcategory name.
         The array type is always `str`.
         An exception are the special field identifiers:
-        ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'``
-        and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         These will convert the fitting subcategory into an
         annotation array with reasonable type.
     use_author_fields : bool, optional
@@ -188,6 +187,12 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         )
     )
     array.set_annotation(
+        "insertion", np.array(
+            ["" if e in [".","?"] else e
+             for e in model_dict["pdbx_PDB_ins_code"].astype("U1")]
+        )
+    )
+    array.set_annotation(
         "res_name", model_dict[f"{prefix}_comp_id"].astype("U3")
     )
     array.set_annotation(
@@ -199,11 +204,7 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     array.set_annotation("element", model_dict["type_symbol"].astype("U2"))
     
     for field in extra_fields:
-        if field == "insertion":
-            array.set_annotation(
-                "insertion", model_dict["pdbx_PDB_ins_code"].astype("U1")
-            )
-        elif field == "atom_id":
+        if field == "atom_id":
             array.set_annotation(
                 "atom_id", model_dict["id"].astype(int)
             )
@@ -307,8 +308,12 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
-    atom_site_dict["label_seq_id"] = np.array(["." if e == -1 else str(e)
-                                               for e in array.res_id])
+    atom_site_dict["label_seq_id"] = np.array(
+        ["." if e == -1 else str(e) for e in array.res_id]
+    )
+    atom_site_dict["pdbx_PDB_ins_code"] = np.array(
+        ["." if e == "" else e for e in array.insertion]
+    )
     atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
     atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]

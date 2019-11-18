@@ -37,6 +37,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._box = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
+        self.add_annotation("insertion", dtype="U1")
         self.add_annotation("res_name", dtype="U3")
         self.add_annotation("hetero", dtype=bool)
         self.add_annotation("atom_name", dtype="U6")

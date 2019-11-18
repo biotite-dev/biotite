@@ -104,7 +104,7 @@ def test_extra_fields():
     stack1 = mmtf.get_structure(
         mmtf_file,
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
 
@@ -114,16 +114,14 @@ def test_extra_fields():
     stack2 = mmtf.get_structure(
         mmtf_file,
         extra_fields=[
-            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+            "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
     
-    assert stack1.insertion.tolist() == stack2.insertion.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
-    assert stack1 == stack2
 
 
 def test_numpy_objects():
