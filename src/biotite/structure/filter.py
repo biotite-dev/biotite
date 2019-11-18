@@ -154,7 +154,7 @@ def filter_intersection(array, intersect):
     return filter
 
 
-def filter_altloc(array, altloc=[], altloc_array=None):
+def filter_altloc(atoms, altlocs, selected_altlocs):
     """
     Filter all atoms having the desired altloc.
     
@@ -173,12 +173,11 @@ def filter_altloc(array, altloc=[], altloc_array=None):
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The unfiltered atom array to be filtered.
-    altlocs : array-like, shape=(n,), optional
+    altlocs : array-like, shape=(n,)
         An array containing the alternative location codes for each
         atom in the unfiltered atom array.
-        Can contain '.', '?', ' ' or a letter at each position.
-        If not specified, this filter will apply to all atoms.
-    selected_altlocs : iterable object of tuple (str, int, str),
+        Can contain '.', '?', ' ', '' or a letter at each position.
+    selected_altlocs : iterable object of tuple (str, int, str)
         Each tuple consists of the following elements:
 
             - A chain ID, specifying the residue
@@ -195,20 +194,20 @@ def filter_altloc(array, altloc=[], altloc_array=None):
     filter : ndarray, dtype=bool
         The combined inscode and altloc filters.
     """
-    else:
-        # Default: Filter all atoms
-        # with altloc code ".", "?", "A" or " "
-        altloc_filter = np.in1d(altlocs, [".","?","A"," "])
-        for loc in selected_altlocs:
-            chain, residue, altoc = loc
-            residue_filter = (
-                (atoms.chain_id == chain) &
-                (atoms.res_id == residue)
-            )
-            # Reset (set to False) filter for specified residue
-            altloc_filter &= ~residue_filter
-            # Choose only atoms of residue with altloc code
-            altloc_filter |= residue_filter & (altlocs == altloc)
+    # Default: Filter all atoms
+    # with altloc code ".", "?", "A", " " or empty string
+    altloc_filter = np.in1d(altlocs, [".","?","A"," ",""])
+    
+    for loc in selected_altlocs:
+        chain, residue, altoc = loc
+        residue_filter = (
+            (atoms.chain_id == chain) &
+            (atoms.res_id == residue)
+        )
+        # Reset (set to False) filter for specified residue
+        altloc_filter &= ~residue_filter
+        # Choose only atoms of residue with altloc code
+        altloc_filter |= residue_filter & (altlocs == altloc)
     
     return altloc_filter
 

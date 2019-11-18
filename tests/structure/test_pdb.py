@@ -87,14 +87,25 @@ def test_extra_fields(hybrid36):
     path = join(data_dir, "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
-    stack1 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    stack1 = pdb_file.get_structure(
+        extra_fields=[
+            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    pdb_file = pdb.PDBFile()
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
-    stack2 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    
+    stack2 = pdb_file.get_structure(
+        extra_fields=[
+            "insertion", "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
+    assert stack1.insertion.tolist() == stack2.insertion.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
-    assert stack1.b_factor.tolist() == stack2.b_factor.tolist()
-    assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
+    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
 

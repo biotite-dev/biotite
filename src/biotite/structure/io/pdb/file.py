@@ -288,10 +288,11 @@ class PDBFile(TextFile):
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
         
-        # Create inscode and altloc arrays for the final filtering
+        # Create altloc array for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
-        inscode_array = np.zeros(array.array_length(), dtype="U1")
         # Add optional annotation arrays
+        if "insertion" in extra_fields:
+            array.add_annotation("insertion", dtype="U1")
         if "atom_id" in extra_fields:
             array.add_annotation("atom_id", dtype=int)
         if "occupancy" in extra_fields:
@@ -306,7 +307,6 @@ class PDBFile(TextFile):
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
             altloc_array[i] = line[16]
-            inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
             array.res_id[i] = decode_hybrid36(line[22:26])
             array.res_name[i] = line[17:20].strip()
@@ -333,6 +333,8 @@ class PDBFile(TextFile):
         if extra_fields:
             for i, line_i in enumerate(annot_i):
                 line = self.lines[line_i]
+                if "insertion" in extra_fields:
+                    array.insertion[i] = line[26]
                 if "atom_id" in extra_fields:
                     array.atom_id[i] = decode_hybrid36(line[6:11])
                 if "occupancy" in extra_fields:
@@ -389,9 +391,7 @@ class PDBFile(TextFile):
                 break
 
         # Apply final filter and return
-        return array[..., filter_inscode_and_altloc(
-            array, insertion_code, altloc, inscode_array, altloc_array
-        )]
+        return array[..., filter_altloc(array, altloc_array, altloc)]
 
 
 
@@ -402,7 +402,11 @@ class PDBFile(TextFile):
         file.
         
         This makes also use of the optional annotation arrays
-        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'``
+        and ``'charge'``.
+        If the atom array (stack) contains the annotation ``'atom_id'``,
+        these values will be used for atom numbering instead of
+        continuous numbering.
         
         Parameters
         ----------
@@ -418,6 +422,10 @@ class PDBFile(TextFile):
         # if an optional category exists
         annot_categories = array.get_annotation_categories()
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
+        if "insertion" in annot_categories:
+            insertion = array.insertion
+        else:
+            insertion = [""] * array.array_length()
         if "atom_id" in annot_categories:
             atom_id = array.atom_id
         else:
@@ -484,7 +492,8 @@ class PDBFile(TextFile):
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
                                   pdb_res_id[i] +
-                                  (" " * 4) +
+                                  "{:1}".format(insertion[i]) +
+                                  (" " * 3) +
                                   "{:>8.3f}".format(array.coord[i,0]) +
                                   "{:>8.3f}".format(array.coord[i,1]) +
                                   "{:>8.3f}".format(array.coord[i,2]) +
@@ -513,7 +522,8 @@ class PDBFile(TextFile):
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
                                  pdb_res_id[i] +
-                                 (" " * 28) +
+                                 "{:1}".format(insertion[i]) +
+                                 (" " * 27) +
                                  "{:>6.2f}".format(occupancy[i]) +
                                  "{:>6.3f}".format(b_factor[i]) +
                                  (" " * 10) +

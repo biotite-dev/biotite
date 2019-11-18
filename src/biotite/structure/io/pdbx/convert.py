@@ -144,7 +144,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
         stack.coord[:,:,2] = atom_site_dict["Cartn_z"].reshape((model_count,
                                                                 model_length))
         
-        stack = _filter_altloc(array, model_dict, altloc)
+        stack = _filter_altloc(stack, model_dict, altloc)
         
         box = _get_box(pdbx_file, data_block)
         if box is not None:
@@ -203,7 +203,7 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
             array.set_annotation(
                 "insertion", model_dict["pdbx_PDB_ins_code"].astype("U1")
             )
-        if field == "atom_id":
+        elif field == "atom_id":
             array.set_annotation(
                 "atom_id", model_dict["id"].astype(int)
             )
@@ -266,9 +266,11 @@ def set_structure(pdbx_file, array, data_block=None):
     
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
-    'atom_id', 'b_factor', 'occupancy' and 'charge'.
-    If the array contains the annotation 'atom_id', these values will be
-    used for atom numbering instead of continuous numbering.
+    ``'insertion'``, ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+    ``'charge'``.
+    If the atom array (stack) contains the annotation ``'atom_id'``,
+    these values will be used for atom numbering instead of continuous
+    numbering.
     
     Parameters
     ----------
@@ -311,9 +313,14 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
     atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]
     atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
-    #Optional categories
-    if "atom_id" in annot_categories:
+    
+    # Optional categories
+    if "insertion" in annot_categories:
         # Take values from 'atom_id' category
+        atom_site_dict["pdbx_PDB_ins_code"] = array.insertion.astype("U1")
+    else:
+        atom_site_dict["id"] = None
+    if "atom_id" in annot_categories:
         atom_site_dict["id"] = array.atom_id.astype("U6")
     else:
         atom_site_dict["id"] = None
@@ -329,6 +336,7 @@ def set_structure(pdbx_file, array, data_block=None):
         atom_site_dict["pdbx_formal_charge"] = np.array(
             [f"{c:+d}" if c != 0 else "?" for c in array.charge]
         )
+    
     # In case of a single model handle each coordinate
     # simply like a flattened array
     if (  type(array) == AtomArray or
