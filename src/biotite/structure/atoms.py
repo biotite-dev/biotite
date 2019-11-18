@@ -470,6 +470,7 @@ class Atom(object):
         self._annot = {}
         self._annot["chain_id"] = ""
         self._annot["res_id"] = 0
+        self._annot["insertion"] = ""
         self._annot["res_name"] = ""
         self._annot["hetero"] = False
         self._annot["atom_name"] = ""
@@ -505,10 +506,12 @@ class Atom(object):
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
-        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
-               .format(hetero, self.chain_id, self.res_id, self.res_name,
-                       self.atom_name, self.element,
-                       self.coord[0], self.coord[1], self.coord[2])
+        return f"{hetero:3} {self.chain_id:3} " \
+               f"{self.res_id:5d}{self.insertion:1} {self.res_name:3} " \
+               f"{self.atom_name:6} {self.element:2}     " \
+               f"{self.coord[0]:8.3f} " \
+               f"{self.coord[1]:8.3f} " \
+               f"{self.coord[2]:8.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
