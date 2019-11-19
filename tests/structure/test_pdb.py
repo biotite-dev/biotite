@@ -32,9 +32,22 @@ def test_array_conversion(path, single_model, hybrid36):
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     array1 = pdb.get_structure(pdb_file, model=model)
-    pdb_file = pdb.PDBFile()
-    pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+    
+    if hybrid36 and (array1.res_id < 1).any():
+        with pytest.raises(
+            ValueError,
+            match="Only positive integers can be converted "
+                  "into hybrid-36 notation"
+        ):
+            pdb_file = pdb.PDBFile()
+            pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+        return
+    else:
+        pdb_file = pdb.PDBFile()
+        pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+    
     array2 = pdb.get_structure(pdb_file, model=model)
+    
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds

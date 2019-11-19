@@ -70,6 +70,7 @@ def set_structure(file, array):
     cdef int i=0, j=0
     cdef array_length = array.array_length()
     
+
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray arr_chain_id  = array.chain_id
     cdef np.ndarray arr_res_id    = array.res_id
@@ -81,12 +82,14 @@ def set_structure(file, array):
     if "charge" in array.get_annotation_categories():
         arr_charge = array.charge
 
+
     # Residue start indices
     # Since the stop of i is the start of i+1,
     # The exclusive end of the atom array is appended
     # to enable convenient usage in the following loops
     cdef np.ndarray starts = np.append(get_residue_starts(array),
                                        [array_length])
+
 
     ### Preparing the group list ###
     # List of residues used for setting the file's 'groupList'
@@ -173,6 +176,7 @@ def set_structure(file, array):
         # Put new or already known residue to sequence of residue types
         res_types[i] = residue_i
     
+
     ### Convert annotation arrays into MMTF arrays ###
     # Pessimistic assumption on length of arrays
     # -> At maximum as large as atom array
@@ -219,9 +223,10 @@ def set_structure(file, array):
         res_ids = np.tile(res_ids, model_count)
         res_types = np.tile(res_types, model_count)
 
+
     ### Remove arrays from file ###
-    # Arrays are removed when they are optional
-    # and when setting the structure information invalidates its content
+    # Arrays are removed if they are optional
+    # and if setting the structure information invalidates its content
     _delete_record(file, "bondAtomList")
     _delete_record(file, "bondOrderList")
     _delete_record(file, "bFactorList")
@@ -231,7 +236,8 @@ def set_structure(file, array):
     _delete_record(file, "secStructList")
     _delete_record(file, "insCodeList")
 
-    ### Put arrays into file ###
+
+    ### Put prepared arrays into file ###
     cdef np.ndarray coord
     if isinstance(array, AtomArrayStack):
         coord = array.coord.reshape(
@@ -269,6 +275,7 @@ def set_structure(file, array):
                        np.tile(array.occupancy.astype(np.float32), model_count),
                        codec=9, param=100)
 
+
     ### Add inter-residue bonds ###
     if include_bonds:
         all_inter_bonds = inter_bonds
@@ -286,6 +293,7 @@ def set_structure(file, array):
     else:
         file["numBonds"] = 0
     
+
     ### Add unit cell ###
     if array.box is not None:
         if isinstance(array, AtomArray):
@@ -299,6 +307,7 @@ def set_structure(file, array):
             len_a, len_b, len_c,
             np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
         ]
+    
     
     ### Add additional information ###
     # Only set additional information, if not already set

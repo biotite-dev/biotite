@@ -48,6 +48,7 @@ def test_array_conversion(path, single_model):
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
     temp_file_name = biotite.temp_file("mmtf")
@@ -56,6 +57,7 @@ def test_array_conversion(path, single_model):
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(temp_file_name)
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
