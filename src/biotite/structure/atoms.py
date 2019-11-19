@@ -37,6 +37,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._box = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
+        self.add_annotation("ins_code", dtype="U1")
         self.add_annotation("res_name", dtype="U3")
         self.add_annotation("hetero", dtype=bool)
         self.add_annotation("atom_name", dtype="U6")
@@ -469,6 +470,7 @@ class Atom(object):
         self._annot = {}
         self._annot["chain_id"] = ""
         self._annot["res_id"] = 0
+        self._annot["ins_code"] = ""
         self._annot["res_name"] = ""
         self._annot["hetero"] = False
         self._annot["atom_name"] = ""
@@ -504,10 +506,12 @@ class Atom(object):
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
-        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
-               .format(hetero, self.chain_id, self.res_id, self.res_name,
-                       self.atom_name, self.element,
-                       self.coord[0], self.coord[1], self.coord[2])
+        return f"{hetero:3} {self.chain_id:3} " \
+               f"{self.res_id:5d}{self.ins_code:1} {self.res_name:3} " \
+               f"{self.atom_name:6} {self.element:2}     " \
+               f"{self.coord[0]:8.3f} " \
+               f"{self.coord[1]:8.3f} " \
+               f"{self.coord[2]:8.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
@@ -1137,9 +1141,9 @@ def array(atoms):
     >>> atom3 = Atom([3,4,5], chain_id="B")
     >>> atom_array = array([atom1, atom2, atom3])
     >>> print(atom_array)
-        A       0                      1.000    2.000    3.000
-        A       0                      2.000    3.000    4.000
-        B       0                      3.000    4.000    5.000
+        A       0                       1.000    2.000    3.000
+        A       0                       2.000    3.000    4.000
+        B       0                       3.000    4.000    5.000
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting

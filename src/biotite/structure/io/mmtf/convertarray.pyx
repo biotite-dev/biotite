@@ -14,7 +14,6 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
 from ...box import unitcell_from_vectors
 from ...info.misc import link_type
@@ -74,6 +73,7 @@ def set_structure(file, array):
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray arr_chain_id  = array.chain_id
     cdef np.ndarray arr_res_id    = array.res_id
+    cdef np.ndarray arr_ins_code  = array.ins_code
     cdef np.ndarray arr_res_name  = array.res_name
     cdef np.ndarray arr_hetero    = array.hetero
     cdef np.ndarray arr_atom_name = array.atom_name
@@ -211,6 +211,8 @@ def set_structure(file, array):
     res_per_chain = res_per_chain[:j]
     # Residue IDs from residue starts
     cdef np.ndarray res_ids = arr_res_id[starts[:-1]].astype(np.int32)
+    cdef np.ndarray res_inscodes
+    res_inscodes = arr_ins_code[starts[:-1]]
 
     ### Adapt arrays for multiple models
     cdef int model_count = 1
@@ -221,6 +223,7 @@ def set_structure(file, array):
         chain_names = np.tile(chain_names, model_count)
         res_per_chain = np.tile(res_per_chain, model_count)
         res_ids = np.tile(res_ids, model_count)
+        res_inscodes = np.tile(res_inscodes, model_count)
         res_types = np.tile(res_types, model_count)
 
 
@@ -257,9 +260,11 @@ def set_structure(file, array):
     file["groupsPerChain"] = res_per_chain.tolist()
     file["numGroups"] = len(res_ids)
     file.set_array("groupIdList", res_ids, codec=8)
+    file.set_array("insCodeList", res_inscodes, codec=6)
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
+    
     # Optional annotation arrays
     categories = array.get_annotation_categories()
     if "atom_id" in categories:

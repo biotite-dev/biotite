@@ -101,11 +101,23 @@ def test_extra_fields():
     path = join(data_dir, "1l2y.mmtf")
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
-    stack1 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
-                                                         "occupancy","charge"])
+    stack1 = mmtf.get_structure(
+        mmtf_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    mmtf_file == mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, stack1)
-    stack2 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
-                                                         "occupancy","charge"])
+    
+    stack2 = mmtf.get_structure(
+        mmtf_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())

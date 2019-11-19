@@ -39,6 +39,7 @@ Category   Type         Examples           Description
 =========  ===========  =================  =============================
 chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
+ins_code   string (U1)  '', 'A','B',..     PDB insertion code (iCode)
 res_name   string (U3)  'GLY','ALA', ...   Residue name
 hetero     bool         True, False        True for non AA/NUC residues
 atom_name  string (U6)  'CA','N', ...      Atom name
@@ -46,8 +47,8 @@ element    string (U2)  'C','O','SE', ...  Chemical Element
 =========  ===========  =================  =============================
 
 For all :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`
-objects these annotations must be set, otherwise some functions will not
-work or errors will occur.
+objects these annotations should be set, otherwise some functions will
+not work or errors will occur.
 Additionally to these annotations, an arbitrary amount of annotation
 categories can be added via :func:`add_annotation()` or
 :func:`set_annotation()`.
