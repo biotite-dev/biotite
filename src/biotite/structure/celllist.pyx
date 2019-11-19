@@ -327,24 +327,24 @@ cdef class CellList:
         >>> print(indices)
         [102 104 112]
         >>> print(atom_array[indices])
-            A       6 TRP CE3    C         0.779    0.524    2.812
-            A       6 TRP CZ3    C         1.439    0.433    4.053
-            A       6 TRP HE3    H        -0.299    0.571    2.773
+            A       6  TRP CE3    C         0.779    0.524    2.812
+            A       6  TRP CZ3    C         1.439    0.433    4.053
+            A       6  TRP HE3    H        -0.299    0.571    2.773
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(atom_array[indices])
-            A       6 TRP CD2    C         1.508    0.564    1.606
-            A       6 TRP CE3    C         0.779    0.524    2.812
-            A       6 TRP CZ3    C         1.439    0.433    4.053
-            A       6 TRP HE3    H        -0.299    0.571    2.773
-            A       6 TRP HZ3    H         0.862    0.400    4.966
-            A       3 TYR CZ     C        -0.639    3.053    5.043
-            A       3 TYR HH     H         1.187    3.395    5.567
-            A      19 PRO HD2    H         0.470    3.937    1.260
-            A       6 TRP CE2    C         2.928    0.515    1.710
-            A       6 TRP CH2    C         2.842    0.407    4.120
-            A      18 PRO HA     H         2.719    3.181    1.316
-            A      18 PRO HB3    H         2.781    3.223    3.618
-            A      18 PRO CB     C         3.035    4.190    3.187
+            A       6  TRP CD2    C         1.508    0.564    1.606
+            A       6  TRP CE3    C         0.779    0.524    2.812
+            A       6  TRP CZ3    C         1.439    0.433    4.053
+            A       6  TRP HE3    H        -0.299    0.571    2.773
+            A       6  TRP HZ3    H         0.862    0.400    4.966
+            A       3  TYR CZ     C        -0.639    3.053    5.043
+            A       3  TYR HH     H         1.187    3.395    5.567
+            A      19  PRO HD2    H         0.470    3.937    1.260
+            A       6  TRP CE2    C         2.928    0.515    1.710
+            A       6  TRP CH2    C         2.842    0.407    4.120
+            A      18  PRO HA     H         2.719    3.181    1.316
+            A      18  PRO HB3    H         2.781    3.223    3.618
+            A      18  PRO CB     C         3.035    4.190    3.187
         
         Get adjacent atoms for mutliple positions:
 

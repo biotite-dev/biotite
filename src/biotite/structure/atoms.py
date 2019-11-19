@@ -1141,9 +1141,9 @@ def array(atoms):
     >>> atom3 = Atom([3,4,5], chain_id="B")
     >>> atom_array = array([atom1, atom2, atom3])
     >>> print(atom_array)
-        A       0                      1.000    2.000    3.000
-        A       0                      2.000    3.000    4.000
-        B       0                      3.000    4.000    5.000
+        A       0                       1.000    2.000    3.000
+        A       0                       2.000    3.000    4.000
+        B       0                       3.000    4.000    5.000
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting

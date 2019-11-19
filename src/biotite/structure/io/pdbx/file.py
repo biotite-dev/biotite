@@ -66,11 +66,11 @@ class PDBxFile(TextFile, MutableMapping):
     Get the structure from the file:
     
     >>> arr = get_structure(file)
-    >>> print(type(arr))
-    <class 'biotite.structure.atoms.AtomArrayStack'>
+    >>> print(type(arr).__name__)
+    AtomArrayStack
     >>> arr = get_structure(file, model=1)
-    >>> print(type(arr))
-    <class 'biotite.structure.atoms.AtomArray'>
+    >>> print(type(arr).__name__)
+    AtomArray
     
     Modify atom array and write it back into the file:
     
