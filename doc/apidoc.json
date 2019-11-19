@@ -214,7 +214,7 @@
             "filter_solvent",
             "filter_monoatomic_ions",
             "filter_intersection",
-            "filter_inscode_and_altloc"
+            "filter_altloc"
         ],
         "Checks" : [
             "check_bond_continuity",
