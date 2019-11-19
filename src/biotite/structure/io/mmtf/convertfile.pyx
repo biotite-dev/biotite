@@ -31,8 +31,8 @@ ctypedef np.float32_t float32
 def get_structure(file, model=None, altloc=[],
                   extra_fields=[], include_bonds=False):
     """
-    get_structure(file, model=None, insertion_code=[], altloc=[],
-                  extra_fields=[], include_bonds=False)
+    get_structure(file, model=None, altloc=[], extra_fields=[],
+                  include_bonds=False)
     
     Get an :class:`AtomArray` or :class:`AtomArrayStack` from the MMTF file.
     
@@ -179,9 +179,9 @@ def get_structure(file, model=None, altloc=[],
             altloc_array = None
         
         extra_charge = False
-        if "insertion" in extra_fields:
-            extra_insertion = True
-            array.add_annotation("insertion", "U1")
+        if "ins_code" in extra_fields:
+            extra_inscode = True
+            array.add_annotation("ins_code", "U1")
         if "charge" in extra_fields:
             extra_charge = True
             array.add_annotation("charge", int)
@@ -308,7 +308,7 @@ def _fill_annotations(int model, array,
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray chain_id  = array.chain_id
     cdef np.ndarray res_id    = array.res_id
-    cdef np.ndarray insertion = array.insertion
+    cdef np.ndarray ins_code  = array.ins_code
     cdef np.ndarray res_name  = array.res_name
     cdef np.ndarray hetero    = array.hetero
     cdef np.ndarray atom_name = array.atom_name
@@ -336,9 +336,9 @@ def _fill_annotations(int model, array,
             res_name_for_res = res_names[type_i]
             hetero_for_res = hetero_res[type_i]
             for k in range(atoms_per_res[type_i]):
-                chain_id[atom_i] = chain_id_for_chain
+                chain_id[atom_i]  = chain_id_for_chain
                 res_id[atom_i]    = res_id_for_res
-                insertion[atom_i] = inscode_for_res
+                ins_code[atom_i]  = inscode_for_res
                 hetero[atom_i]    = hetero_for_res
                 res_name[atom_i]  = res_name_for_res
                 atom_name[atom_i] = atom_names[type_i][k]

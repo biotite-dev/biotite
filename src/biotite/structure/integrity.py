@@ -88,8 +88,8 @@ def check_duplicate_atoms(array):
     structure have the same annotations (coordinates may be different).
     
     Duplicate atoms may appear, when a structure has occupancy for an
-    atom at two or more positions or when the *insertion code* or
-    *altloc* are improperly read.
+    atom at two or more positions or when the *altloc* positions are
+    improperly read.
     
     Parameters
     ----------

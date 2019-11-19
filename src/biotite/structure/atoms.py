@@ -37,7 +37,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._box = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
-        self.add_annotation("insertion", dtype="U1")
+        self.add_annotation("ins_code", dtype="U1")
         self.add_annotation("res_name", dtype="U3")
         self.add_annotation("hetero", dtype=bool)
         self.add_annotation("atom_name", dtype="U6")
@@ -470,7 +470,7 @@ class Atom(object):
         self._annot = {}
         self._annot["chain_id"] = ""
         self._annot["res_id"] = 0
-        self._annot["insertion"] = ""
+        self._annot["ins_code"] = ""
         self._annot["res_name"] = ""
         self._annot["hetero"] = False
         self._annot["atom_name"] = ""
@@ -507,7 +507,7 @@ class Atom(object):
     def __str__(self):
         hetero = "HET" if self.hetero else ""
         return f"{hetero:3} {self.chain_id:3} " \
-               f"{self.res_id:5d}{self.insertion:1} {self.res_name:3} " \
+               f"{self.res_id:5d}{self.ins_code:1} {self.res_name:3} " \
                f"{self.atom_name:6} {self.element:2}     " \
                f"{self.coord[0]:8.3f} " \
                f"{self.coord[1]:8.3f} " \

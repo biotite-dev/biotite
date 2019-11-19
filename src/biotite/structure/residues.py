@@ -41,7 +41,7 @@ def get_residue_starts(array):
     """
     chain_ids = array.chain_id
     res_ids = array.res_id
-    insertions = array.insertion
+    ins_codes = array.ins_code
     res_names = array.res_name
 
     # Maximum length is length of atom array
@@ -50,7 +50,7 @@ def get_residue_starts(array):
     # Variables for current values
     curr_chain_id = chain_ids[0]
     curr_res_id = res_ids[0]
-    curr_insertion = insertions[0]
+    curr_ins_code = ins_codes[0]
     curr_res_name = res_names[0]
 
     # Index for 'starts' begins at second element, since
@@ -62,12 +62,12 @@ def get_residue_starts(array):
         if curr_chain_id != chain_ids[j] \
             or curr_res_name != res_names[j] \
             or curr_res_id != res_ids[j] \
-            or curr_insertion != insertions[j]:
+            or curr_ins_code != ins_codes[j]:
                 starts[i] = j
                 i += 1
                 curr_chain_id  = chain_ids[j]
                 curr_res_id    = res_ids[j]
-                curr_insertion = insertions[j]
+                curr_ins_code = ins_codes[j]
                 curr_res_name  = res_names[j]
     
     # Trim to correct size

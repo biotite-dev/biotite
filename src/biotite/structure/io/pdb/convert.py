@@ -32,7 +32,6 @@ def get_structure(pdb_file, model=None, altloc=[], extra_fields=[]):
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the
         structure contains only one model.
-        By default no insertions are used.
     altloc : list of tuple, optional
         In case the structure contains *altloc* entries, those can be
         specified here:

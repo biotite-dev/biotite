@@ -73,7 +73,7 @@ def set_structure(file, array):
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray arr_chain_id  = array.chain_id
     cdef np.ndarray arr_res_id    = array.res_id
-    cdef np.ndarray arr_insertion = array.insertion
+    cdef np.ndarray arr_ins_code  = array.ins_code
     cdef np.ndarray arr_res_name  = array.res_name
     cdef np.ndarray arr_hetero    = array.hetero
     cdef np.ndarray arr_atom_name = array.atom_name
@@ -212,7 +212,7 @@ def set_structure(file, array):
     # Residue IDs from residue starts
     cdef np.ndarray res_ids = arr_res_id[starts[:-1]].astype(np.int32)
     cdef np.ndarray res_inscodes
-    res_inscodes = arr_insertion[starts[:-1]]
+    res_inscodes = arr_ins_code[starts[:-1]]
 
     ### Adapt arrays for multiple models
     cdef int model_count = 1

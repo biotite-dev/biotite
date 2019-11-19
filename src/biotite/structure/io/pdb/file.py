@@ -146,10 +146,9 @@ class PDBFile(TextFile):
                                   if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
-        # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self.lines)) if
                                 self.lines[i].startswith(("ATOM", "HETATM"))],
-                               dtype=int)
+                                dtype=int)
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
@@ -233,8 +232,8 @@ class PDBFile(TextFile):
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
             These are valid values:
-            ``'insertion'``, ``'atom_id'``, ``'b_factor'``,
-            ``'occupancy'`` and ``'charge'``.
+            ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+            ``'charge'``.
         
         Returns
         -------
@@ -246,7 +245,6 @@ class PDBFile(TextFile):
                                   if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
-        # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self.lines)) if
                                 self.lines[i].startswith(("ATOM", "HETATM"))],
                                dtype=int)
@@ -290,6 +288,7 @@ class PDBFile(TextFile):
         
         # Create altloc array for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
+        
         # Add optional annotation arrays
         if "atom_id" in extra_fields:
             array.add_annotation("atom_id", dtype=int)
@@ -307,7 +306,7 @@ class PDBFile(TextFile):
             altloc_array[i] = line[16]
             array.chain_id[i] = line[21].upper().strip()
             array.res_id[i] = decode_hybrid36(line[22:26])
-            array.insertion[i] = line[26].strip()
+            array.ins_code[i] = line[26].strip()
             array.res_name[i] = line[17:20].strip()
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
@@ -483,7 +482,7 @@ class PDBFile(TextFile):
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
                                   pdb_res_id[i] +
-                                  "{:1}".format(array.insertion[i]) +
+                                  "{:1}".format(array.ins_code[i]) +
                                   (" " * 3) +
                                   "{:>8.3f}".format(array.coord[i,0]) +
                                   "{:>8.3f}".format(array.coord[i,1]) +
@@ -513,7 +512,7 @@ class PDBFile(TextFile):
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
                                  pdb_res_id[i] +
-                                 "{:1}".format(array.insertion[i]) +
+                                 "{:1}".format(array.ins_code[i]) +
                                  (" " * 27) +
                                  "{:>6.2f}".format(occupancy[i]) +
                                  "{:>6.3f}".format(b_factor[i]) +

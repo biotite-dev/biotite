@@ -104,7 +104,7 @@ def test_extra_fields(hybrid36):
         ]
     )
     
-    assert stack1.insertion.tolist() == stack2.insertion.tolist()
+    assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())

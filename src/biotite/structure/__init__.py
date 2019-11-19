@@ -39,7 +39,7 @@ Category   Type         Examples           Description
 =========  ===========  =================  =============================
 chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
-insertion  string (U1)  '', 'A','B',..     PDB insertion code (iCode)
+ins_code   string (U1)  '', 'A','B',..     PDB insertion code (iCode)
 res_name   string (U3)  'GLY','ALA', ...   Residue name
 hetero     bool         True, False        True for non AA/NUC residues
 atom_name  string (U6)  'CA','N', ...      Atom name
