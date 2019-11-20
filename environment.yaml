@@ -25,7 +25,7 @@ dependencies:
   - pytest >=3.2
   - pytest-cov >=2.5
   - sphinx >=1.7
-  - sphinx-gallery >=0.3
+  - sphinx-gallery =0.5.0
   - numpydoc >=0.8
   - dssp
   - clustalo
