@@ -617,16 +617,20 @@ def _to_bool_mask(object index, int length):
         if index.dtype == np.bool:
             # Index is already boolean mask -> simply return as uint8
             return index.astype(np.uint8, copy=False)
-        elif index.dtype == np.int64:
+        elif np.issubdtype(index.dtype, np.integer):
             # Index is an index array
             # -> construct a boolean mask from it
-            index_array = index
+            index_array = index.astype(np.int64, copy=False)
             bool_mask = np.zeros(length, dtype=np.uint8)
             # Flip mask to true for every index in index array
             for i in range(index_array.shape[0]):
                 j = index_array[i]
                 bool_mask[j] = True
             return np.asarray(bool_mask)
+        else:
+            raise TypeError(
+                f"Arrays of type '{str(index.dtype)}' are not supported")
+
     else:
         # Any other index type -> construct an intermediate index array
         array = np.arange(length, dtype=np.int64)
