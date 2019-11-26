@@ -112,6 +112,8 @@ class FastqFile(TextFile, MutableMapping):
         self.lines = [line.strip() for line in self.lines]
         # Filter out empty lines
         self.lines = [line for line in self.lines if len(line) != 0]
+        if len(self.lines) == 0:
+            raise InvalidFileError("File is empty")
         self._find_entries()
     
     def get_sequence(self, identifier):
