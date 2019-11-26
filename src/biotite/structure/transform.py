@@ -92,10 +92,6 @@ def rotate(atoms, angles):
     positions = np.dot(positions, rot_x)
     positions = np.dot(positions, rot_y)
     positions = np.dot(positions, rot_z)
-    #if positions.box is not None:
-    #    positions.box = np.dot(positions.box, rot_x)
-    #    positions.box = np.dot(positions.box, rot_y)
-    #    positions.box = np.dot(positions.box, rot_z)
     
     return _put_back(atoms, positions)
 
