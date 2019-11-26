@@ -13,8 +13,9 @@ __all__ = ["translate", "rotate", "rotate_centered"]
 
 import numpy as np
 from .geometry import centroid
-from .atoms import AtomArray, AtomArrayStack, BadStructureError, coord
-from .atoms.util import norm_vector, vector_dot
+from .error import BadStructureError
+from .atoms import Atom, AtomArray, AtomArrayStack, coord
+from .util import norm_vector, vector_dot
 
 
 def translate(atoms, vector):
@@ -23,21 +24,24 @@ def translate(atoms, vector):
     
     Parameters
     ----------
-    atoms : Atom or AtomArray or AtomArrayStack
+    atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms whose coordinates are altered.
-    vector: array-like, length=3
+        The coordinates can be directly provided as :class:`ndarray`.
+    vector: array-like, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The translation vector :math:`(x, y, z)`.
     
     Returns
     -------
-    transformed : Atom or AtomArray or AtomArrayStack
+    transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms, translated by the given vector.
     """
-    if len(vector) != 3:
-        raise ValueError("Translation vector must be container of length 3")
-    transformed = atoms.copy()
-    transformed.coord += np.array(vector)
-    return transformed
+    positions = coord(atoms).copy()
+    vector = np.asarray(vector)
+    
+    if vector.shape[-1] != 3:
+        raise ValueError("Translation vector must contain 3 coordinates")
+    positions += vector
+    return _put_back(atoms, positions)
 
 
 def rotate(atoms, angles):
@@ -49,14 +53,15 @@ def rotate(atoms, angles):
     
     Parameters
     ----------
-    atoms : Atom or AtomArray or AtomArrayStack
+    atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms whose coordinates are altered.
+        The coordinates can be directly provided as :class:`ndarray`.
     angles: array-like, length=3
         The rotation angles in radians around x, y and z.
     
     Returns
     -------
-    transformed : Atom or AtomArray or AtomArrayStack
+    transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms, rotated by the given angles.
         
     See Also
@@ -64,6 +69,7 @@ def rotate(atoms, angles):
     rotate_centered
     """
     from numpy import sin, cos
+
     # Check if "angles" contains 3 angles for all dimensions
     if len(angles) != 3:
         raise ValueError("Translation vector must be container of length 3")
@@ -79,17 +85,19 @@ def rotate(atoms, angles):
     rot_z = np.array([[ cos(angles[2]),  -sin(angles[2]), 0               ],
                       [ sin(angles[2]),  cos(angles[2]),  0               ],
                       [ 0,               0,               1               ]])
+    
     # Copy AtomArray(Stack) and apply rotations
     # Note that the coordinates are treated as row vector
-    transformed = atoms.copy()
-    transformed.coord = np.dot(transformed.coord, rot_x)
-    transformed.coord = np.dot(transformed.coord, rot_y)
-    transformed.coord = np.dot(transformed.coord, rot_z)
-    if transformed.box is not None:
-        transformed.box = np.dot(transformed.box, rot_x)
-        transformed.box = np.dot(transformed.box, rot_y)
-        transformed.box = np.dot(transformed.box, rot_z)
-    return transformed
+    positions = coord(atoms).copy()
+    positions = np.dot(positions, rot_x)
+    positions = np.dot(positions, rot_y)
+    positions = np.dot(positions, rot_z)
+    #if positions.box is not None:
+    #    positions.box = np.dot(positions.box, rot_x)
+    #    positions.box = np.dot(positions.box, rot_y)
+    #    positions.box = np.dot(positions.box, rot_z)
+    
+    return _put_back(atoms, positions)
 
 
 def rotate_centered(atoms, angles):
@@ -101,27 +109,34 @@ def rotate_centered(atoms, angles):
     
     Parameters
     ----------
-    atoms : AtomArray or AtomArrayStack
+    atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms whose coordinates are altered.
+        The coordinates can be directly provided as :class:`ndarray`.
     angles: array-like, length=3
         the rotation angles in radians around axes x, y and z.
     
     Returns
     -------
-    transformed : AtomArray or AtomArrayStack
+    transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms, rotated by the given angles.
         
     See Also
     --------
     rotate
     """
-    # Rotation around centroid requires translation of centroid to origin
-    transformed = atoms.copy()
-    centro = centroid(transformed)
-    transformed.coord -= centro
-    transformed = rotate(transformed, angles)
-    transformed.coord += centro
-    return transformed
+    if len(coord(atoms).shape) == 1:
+        # Single value -> centered rotation does not change coordinates
+        return atoms.copy()
+    
+    # Rotation around centroid requires moving centroid to origin
+    center = coord(centroid(atoms))
+    # 'centroid()' removes the second last dimesion
+    # -> add dimension again to ensure correct translation
+    center = center[..., np.newaxis, :]
+    translated = translate(atoms, -center)
+    rotated = rotate(translated, angles)
+    translated_back = translate(rotated, center)
+    return translated_back
 
 
 def rotate_about_axis(atoms, axis, angle, support=None):
@@ -156,13 +171,7 @@ def rotate_about_axis(atoms, axis, angle, support=None):
         # Transform coordinates back to original support vector position
         rot_coord += np.asarray(support)
     
-    if isinstance(atoms, (AtomArray, AtomArrayStack)):
-        rot_atoms = atoms.copy()
-        rot_atoms.coord = rot_coord
-        return rot_atoms
-    else:
-        return rot_coord
-
+    return _put_back(atoms, rot_coord)
 
 
 def align_vectors(atoms, source_direction, target_direction,
@@ -207,9 +216,13 @@ def align_vectors(atoms, source_direction, target_direction,
         # Transform coordinates to position of the target vector
         moved_coord += target_position
     
-    if isinstance(atoms, (AtomArray, AtomArrayStack)):
-        moved_atoms = atoms.copy()
-        moved_atoms.coord = moved_coord
+    return _put_back(atoms, moved_coord)
+
+
+def _put_back(input_atoms, transformed):
+    if isinstance(input_atoms, (Atom, AtomArray, AtomArrayStack)):
+        moved_atoms = input_atoms.copy()
+        moved_atoms.coord = transformed
         return moved_atoms
     else:
-        return moved_coord
+        return transformed
