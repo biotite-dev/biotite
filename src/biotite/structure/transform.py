@@ -13,6 +13,8 @@ __all__ = ["translate", "rotate", "rotate_centered"]
 
 import numpy as np
 from .geometry import centroid
+from .atoms import AtomArray, AtomArrayStack, BadStructureError, coord
+from .atoms.util import norm_vector, vector_dot
 
 
 def translate(atoms, vector):
@@ -36,6 +38,7 @@ def translate(atoms, vector):
     transformed = atoms.copy()
     transformed.coord += np.array(vector)
     return transformed
+
 
 def rotate(atoms, angles):
     """
@@ -88,6 +91,7 @@ def rotate(atoms, angles):
         transformed.box = np.dot(transformed.box, rot_z)
     return transformed
 
+
 def rotate_centered(atoms, angles):
     """
     Rotates a list of atoms by given angles.
@@ -118,3 +122,94 @@ def rotate_centered(atoms, angles):
     transformed = rotate(transformed, angles)
     transformed.coord += centro
     return transformed
+
+
+def rotate_about_axis(atoms, axis, angle, support=None):
+    rot_coord = coord(atoms).copy()
+    if support is not None:
+        # Transform coordinates
+        # so that the axis support vector is at (0,0,0)
+        rot_coord -= np.asarray(support)
+    
+    # Normalize axis
+    axis = np.asarray(axis, dtype=np.float32).copy()
+    norm_vector(axis)
+    # Save some interim values, that are used repeatedly in the
+    # rotation matrix, for clarity and to save computation time
+    sin_a = np.sin(angle)
+    cos_a = np.cos(angle)
+    icos_a = 1 - cos_a
+    x = axis[...,0]
+    y = axis[...,1]
+    z = axis[...,2]
+    # Rotation matrix is taken from
+    # https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    rot_matrix = np.array([
+        [cos_a + icos_a*x**2,   icos_a*x*y - z*sin_a,  icos_a*x*z + y*sin_a],
+        [icos_a*x*y + z*sin_a,  cos_a + icos_a*y**2,   icos_a*y*z - x*sin_a],
+        [icos_a*x*z - y*sin_a,  icos_a*y*z + x*sin_a,  cos_a + icos_a*z**2 ]
+    ])
+    # Apply rotation
+    rot_coord = np.dot(rot_matrix, rot_coord.T).T
+
+    if support is not None:
+        # Transform coordinates back to original support vector position
+        rot_coord += np.asarray(support)
+    
+    if isinstance(atoms, (AtomArray, AtomArrayStack)):
+        rot_atoms = atoms.copy()
+        rot_atoms.coord = rot_coord
+        return rot_atoms
+    else:
+        return rot_coord
+
+
+
+def align_vectors(atoms, source_direction, target_direction,
+                  source_position=None, target_position=None):
+    source_direction = np.asarray(source_direction, dtype=np.float32)
+    target_direction = np.asarray(target_direction, dtype=np.float32)
+    if source_position is not None: 
+        source_position = np.asarray(source_position, dtype=np.float32)
+    if target_position is not None: 
+        target_position = np.asarray(target_position, dtype=np.float32)
+
+    moved_coord = coord(atoms).copy()
+    if source_position is not None:
+        # Transform coordinates
+        # so that the position of the source vector is at (0,0,0)
+        moved_coord -= source_position
+    
+    # Normalize direction vectors
+    source_direction = source_direction.copy()
+    norm_vector(source_direction)
+    target_direction = target_direction.copy()
+    norm_vector(target_direction)
+    # Formula is taken from
+    # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/476311#476311
+    v = np.cross(source_direction, target_direction)
+    v_c = np.array([
+        [ 0,         -v[..., 2],  v[..., 1]],
+        [ v[..., 2],  0,         -v[..., 0]],
+        [-v[..., 1],  v[..., 0],  0        ]
+    ], dtype=float)
+    cos_a = vector_dot(source_direction, target_direction)
+    if np.all(cos_a == -1):
+        raise ValueError(
+            "Direction vectors are point into opposite directions, "
+            "cannot calculate rotation matrix"
+        )
+    rot_matrix = np.identity(3) + v_c + np.matmul(v_c, v_c) / (1+cos_a)
+    # Apply rotation
+    moved_coord = np.dot(rot_matrix, moved_coord.T).T
+    
+    if target_position is not None:
+        # Transform coordinates to position of the target vector
+        moved_coord += target_position
+    
+    if isinstance(atoms, (AtomArray, AtomArrayStack)):
+        moved_atoms = atoms.copy()
+        moved_atoms.coord = moved_coord
+        return moved_atoms
+    else:
+        return moved_coord
