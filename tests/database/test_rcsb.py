@@ -9,17 +9,17 @@ from requests.exceptions import ConnectionError
 import pytest
 import biotite
 import biotite.database.rcsb as rcsb
-import biotite.structure.io as strucio
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.mmtf as mmtf
+import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
 
 
 @pytest.mark.xfail(raises=ConnectionError)
 @pytest.mark.parametrize(
     "format, as_file_like",
-    itertools.product(["pdb", "cif", "mmtf"], [False, True])
+    itertools.product(["pdb", "cif", "mmtf", "fasta"], [False, True])
 )
 def test_fetch(format, as_file_like):
     path = None if as_file_like else biotite.temp_dir()
@@ -36,12 +36,18 @@ def test_fetch(format, as_file_like):
         file = mmtf.MMTFFile()
         file.read(file_path_or_obj)
         mmtf.get_structure(file)
+    elif format == "fasta":
+        file = fasta.FastaFile()
+        file.read(file_path_or_obj)
+        # Test if the file contains any sequences
+        assert len(fasta.get_sequences(file)) > 0
 
 
 @pytest.mark.xfail(raises=ConnectionError)
-def test_fetch_invalid():
+@pytest.mark.parametrize("format", ["pdb", "cif", "mmtf", "fasta"])
+def test_fetch_invalid(format):
     with pytest.raises(RequestError):
-        file = rcsb.fetch("xxxx", "cif", biotite.temp_dir(), overwrite=True)
+        file = rcsb.fetch("xxxx", format, biotite.temp_dir(), overwrite=True)
 
 
 @pytest.mark.xfail(raises=ConnectionError)
