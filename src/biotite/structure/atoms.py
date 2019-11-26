@@ -432,7 +432,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             clone._bonds = self._bonds.copy()
     
 
-class Atom(object):
+class Atom(Copyable):
     """
     A representation of a single atom.
     
@@ -534,6 +534,9 @@ class Atom(object):
     
     def __ne__(self, item):
         return not self == item
+    
+    def __copy_create__(self):
+        return Atom(self.coord, **self._annot)
 
     
 class AtomArray(_AtomArrayBase):
