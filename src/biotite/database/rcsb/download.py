@@ -16,10 +16,13 @@ from ..error import RequestError
 
 _standard_url = "https://files.rcsb.org/download/"
 _mmtf_url = "https://mmtf.rcsb.org/v1.0/full/"
+_fasta_url = "https://www.rcsb.org/pdb/download/downloadFastaFiles.do"
+
 
 def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     """
-    Download structure files from the RCSB PDB in various formats.
+    Download structure files (or sequence files) from the RCSB PDB in
+    various formats.
     
     This function requires an internet connection.
     
@@ -28,11 +31,9 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     pdb_ids : str or iterable object of str
         A single PDB ID or a list of PDB IDs of the structure(s)
         to be downloaded .
-    format : str
+    format : {'pdb', 'pdbx', 'cif', 'mmcif', 'mmtf', 'fasta'}
         The format of the files to be downloaded.
-        ``'pdb'``, ``'pdbx'``, ``'cif'``, ``'mmcif'`` or ``'mmtf'``
-        are allowed.
-        However, ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
+        ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
         the same format.
     target_path : str, optional
         The target directory of the downloaded files.
@@ -68,6 +69,9 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     --------
     
     >>> import os.path
+    >>> file = fetch("1l2y", "cif", path_to_directory)
+    >>> print(os.path.basename(file))
+    1l2y.cif
     >>> files = fetch(["1l2y", "3o5r"], "cif", path_to_directory)
     >>> print([os.path.basename(file) for file in files])
     ['1l2y.cif', '3o5r.cif']
@@ -121,6 +125,21 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
                 else:
                     with open(file, "wb+") as f:
                         f.write(content)
+            elif format == "fasta":
+                r = requests.get(
+                    _fasta_url,
+                    params={
+                        "structureIdList": id,
+                        "compressionType": "uncompressed"
+                    }
+                )
+                content = r.text
+                _assert_valid_file(content, id)
+                if file is None:
+                    file = io.StringIO(content)
+                else:
+                    with open(file, "w+") as f:
+                        f.write(content)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
         files.append(file)
@@ -138,5 +157,8 @@ def _assert_valid_file(response_text, pdb_id):
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.
     """
-    if "404 Not Found" in response_text:
-        raise RequestError("PDB ID {:} is invalid".format(pdb_id))
+    # Structure file and FASTA file retrieval
+    # have different error messages
+    if "404 Not Found" in response_text or \
+       "<title>RCSB Protein Data Bank Error Page</title>" in response_text:
+            raise RequestError("PDB ID {:} is invalid".format(pdb_id))
