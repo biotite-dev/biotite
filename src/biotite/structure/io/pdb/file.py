@@ -290,14 +290,13 @@ class PDBFile(TextFile):
         altloc_array = np.zeros(array.array_length(), dtype="U1")
         
         # Add optional annotation arrays
-        if "atom_id" in extra_fields:
-            array.add_annotation("atom_id", dtype=int)
-        if "occupancy" in extra_fields:
-            array.add_annotation("occupancy", dtype=float)
-        if "b_factor" in extra_fields:
-            array.add_annotation("b_factor", dtype=float)
-        if "charge" in extra_fields:
-            array.add_annotation("charge", dtype=int)
+        for field in extra_fields:
+            if field in ["atom_id", "charge"]:
+                array.add_annotation(field, dtype=int)
+            elif field in ["occupancy", "b_factor"]:
+                array.add_annotation(field, dtype=float)
+            else:
+                raise ValueError(f"Unknown extra field: {field}")
         
         # Fill in annotation
         # i is index in array, line_i is line index

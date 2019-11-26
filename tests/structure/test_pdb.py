@@ -95,6 +95,9 @@ def test_extra_fields(hybrid36):
         ]
     )
 
+    with pytest.raises(ValueError):
+        pdb_file.get_structure(extra_fields=["unsupported_field"])
+
     pdb_file = pdb.PDBFile()
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
     
