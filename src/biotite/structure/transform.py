@@ -48,8 +48,8 @@ def rotate(atoms, angles):
     """
     Rotates a list of atoms by given angles.
     
-    The rotations are centered at the origin and are performed sequentially
-    in the order x,y,z.
+    The rotations are centered at the origin and are performed
+    sequentially in the order x,y,z.
     
     Parameters
     ----------
