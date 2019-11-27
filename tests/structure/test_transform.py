@@ -172,9 +172,40 @@ def test_rotate_measure(axis, random_seed):
     assert test_angle == pytest.approx(ref_angle)
 
 
+@pytest.mark.parametrize("as_list", [False, True])
+@pytest.mark.parametrize("use_support", [False, True])
+@pytest.mark.parametrize("random_seed", np.arange(5))
+def test_rotate_about_axis(input_atoms, as_list, use_support, random_seed):
+    """
+    Rotate and rotate back and check if the coordinates are still
+    the same.
+    """
+    np.random.seed(random_seed)
+    axis = np.random.rand(3)
+    angle = np.random.rand()
+    neg_angle = -angle
+    support = np.random.rand(3) if use_support else None
+    if as_list:
+        axis = axis.tolist()
+        support = support.tolist() if support is not None else None
+
+    rotated = struc.rotate_about_axis(input_atoms, axis, angle, support)
+    restored = struc.rotate_about_axis(rotated, axis, neg_angle, support)
+
+    assert type(restored) == type(input_atoms)
+    assert struc.coord(restored).shape == struc.coord(input_atoms).shape
+    assert np.allclose(
+        struc.coord(restored), struc.coord(input_atoms), atol=1e-5
+    )
+
+
 @pytest.mark.parametrize("axis", [0, 1, 2]) # x, y, z
 @pytest.mark.parametrize("random_seed", np.arange(5))
 def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
+    """
+    Compare the outcome of :func:`rotate_about_axis()` with
+    :func:`rotate()`.
+    """
     np.random.seed(random_seed)
     angle = np.random.rand() * 2 * np.pi
     
@@ -191,4 +222,24 @@ def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
     assert struc.coord(test_rotated).shape == struc.coord(ref_rotated).shape
     assert np.allclose(
         struc.coord(test_rotated), struc.coord(ref_rotated), atol=1e-5
+    )
+
+
+@pytest.mark.parametrize("random_seed", np.arange(5))
+@pytest.mark.parametrize("use_support", [False, True])
+def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
+    """
+    Rotate by 360 degrees around an arbitrary axis and expect that the
+    coordinates have not changed.
+    """
+    np.random.seed(random_seed)
+    axis = np.random.rand(3)
+    support  = np.random.rand(3) if use_support else None
+    
+    rotated = struc.rotate_about_axis(input_atoms, axis, 2*np.pi, support)
+
+    assert type(rotated) == type(input_atoms)
+    assert struc.coord(rotated).shape == struc.coord(input_atoms).shape
+    assert np.allclose(
+        struc.coord(rotated), struc.coord(input_atoms), atol=1e-5
     )
