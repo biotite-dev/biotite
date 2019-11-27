@@ -14,7 +14,7 @@ from .util import data_dir
 @pytest.fixture(
     params=itertools.product(
         [1, 2, 3],    # ndim
-        [False, True]    # as_coord
+        [False, True] # as_coord
     )
 )
 def input_atoms(request):
@@ -127,7 +127,8 @@ def test_rotate_360(input_atoms, x, y, z, centered):
 @pytest.mark.parametrize("ndim", [1, 2, 3])
 def test_rotate_known(ndim):
     """
-    bla
+    Rotate a vector at the Y-axis about the X-axis by 90 degrees and
+    expect a rotated vector at the Z-axis.
     """
     shape = (1,) * (ndim-1) + (3,)
     vector = np.zeros(shape)
@@ -141,3 +142,31 @@ def test_rotate_known(ndim):
     
     assert test_rotated.shape == exp_rotated.shape
     assert np.allclose(test_rotated, exp_rotated, atol=1e-5)
+
+
+@pytest.mark.parametrize("axis", [0, 1, 2]) # x, y, z
+@pytest.mark.parametrize("random_seed", np.arange(5))
+def test_rotate_measure(axis, random_seed):
+    """
+    Rotate and measure resulting angle that should be equal to the input
+    angle.
+    """
+    np.random.seed(random_seed)
+    # Maximum rotation is only 180 degrees,
+    # as with higher angles the measured angle would decrease again
+    ref_angle = np.random.rand() * np.pi
+    angles = np.zeros(3)
+    angles[axis] = ref_angle
+
+    # The measured angle is only equal to the input angle,
+    # if the input coordinates have no component on the rotation axis 
+    input_coord = np.ones(3)
+    input_coord[axis] = 0
+
+    rotated = struc.rotate(input_coord, angles)
+    test_angle = struc.angle(rotated, 0, input_coord)
+    
+    # Vector length should be unchanged
+    assert np.linalg.norm(rotated) \
+        == pytest.approx(np.linalg.norm(input_coord))
+    assert test_angle == pytest.approx(ref_angle)
