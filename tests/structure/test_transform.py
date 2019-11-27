@@ -64,20 +64,22 @@ def test_translate(input_atoms, ndim, as_list, random_seed):
     assert type(restored) == type(input_atoms)
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     assert np.allclose(
-        struc.coord(restored), struc.coord(input_atoms), atol=1e-6
+        struc.coord(restored), struc.coord(input_atoms), atol=1e-5
     )
 
 
 @pytest.mark.parametrize("as_list", [False, True])
+@pytest.mark.parametrize("axis", [0, 1, 2]) # x, y, z
 @pytest.mark.parametrize("random_seed", np.arange(5))
 @pytest.mark.parametrize("centered", [False, True])
-def test_rotate(input_atoms, as_list, random_seed, centered):
+def test_rotate(input_atoms, as_list, axis, random_seed, centered):
     """
     Rotate and rotate back and check if the coordinates are still
     the same.
     """
     np.random.seed(random_seed)
-    angles = np.random.rand(3) * 2*np.pi
+    angles = np.zeros(3)
+    angles[axis] = np.random.rand() * 2*np.pi
     neg_angles = -angles
     if as_list:
         angles = angles.tolist()
@@ -89,12 +91,13 @@ def test_rotate(input_atoms, as_list, random_seed, centered):
 
     assert type(restored) == type(input_atoms)
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
+    print(np.max(np.abs(struc.coord(restored) - struc.coord(input_atoms))))
     assert np.allclose(
-        struc.coord(restored), struc.coord(input_atoms), atol=1e-6
+        struc.coord(restored), struc.coord(input_atoms), atol=1e-5
     )
     if centered and struc.coord(input_atoms).ndim > 1:
         assert np.allclose(
-            struc.centroid(restored), struc.centroid(input_atoms), atol=1e-6
+            struc.centroid(restored), struc.centroid(input_atoms), atol=1e-5
         )
 
 
@@ -113,9 +116,28 @@ def test_rotate_360(input_atoms, x, y, z, centered):
     assert type(rotated) == type(input_atoms)
     assert struc.coord(rotated).shape == struc.coord(input_atoms).shape
     assert np.allclose(
-        struc.coord(rotated), struc.coord(input_atoms), atol=1e-6
+        struc.coord(rotated), struc.coord(input_atoms), atol=1e-5
     )
     if centered and struc.coord(input_atoms).ndim > 1:
         assert np.allclose(
-            struc.centroid(rotated), struc.centroid(input_atoms), atol=1e-6
+            struc.centroid(rotated), struc.centroid(input_atoms), atol=1e-5
         )
+
+
+@pytest.mark.parametrize("ndim", [1, 2, 3])
+def test_rotate_known(ndim):
+    """
+    bla
+    """
+    shape = (1,) * (ndim-1) + (3,)
+    vector = np.zeros(shape)
+    vector[...] = [0, 1, 0]
+
+    exp_rotated = np.zeros(shape)
+    exp_rotated[...] = [0, 0, 1]
+
+    # Rotation by 90 degrees
+    test_rotated = struc.rotate(vector, [0.5 * np.pi, 0, 0])
+    
+    assert test_rotated.shape == exp_rotated.shape
+    assert np.allclose(test_rotated, exp_rotated, atol=1e-5)
