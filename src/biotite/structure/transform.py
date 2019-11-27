@@ -234,6 +234,11 @@ def align_vectors(atoms, source_direction, target_direction,
 
 
 def _put_back(input_atoms, transformed):
+    """
+    Put the altered coordinates back into the :class:`Atom`,
+    :class:`AtomArray` or :class:`AtomArrayStack`, if the input was one
+    of these types.
+    """
     if isinstance(input_atoms, (Atom, AtomArray, AtomArrayStack)):
         moved_atoms = input_atoms.copy()
         moved_atoms.coord = transformed
