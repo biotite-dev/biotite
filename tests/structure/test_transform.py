@@ -170,3 +170,25 @@ def test_rotate_measure(axis, random_seed):
     assert np.linalg.norm(rotated) \
         == pytest.approx(np.linalg.norm(input_coord))
     assert test_angle == pytest.approx(ref_angle)
+
+
+@pytest.mark.parametrize("axis", [0, 1, 2]) # x, y, z
+@pytest.mark.parametrize("random_seed", np.arange(5))
+def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
+    np.random.seed(random_seed)
+    angle = np.random.rand() * 2 * np.pi
+    
+    angles = np.zeros(3)
+    angles[axis] = angle
+    ref_rotated = struc.rotate(input_atoms, angles)
+
+    rot_axis = np.zeros(3)
+    # Length of axis should be irrelevant
+    rot_axis[axis] = np.random.rand()
+    test_rotated = struc.rotate_about_axis(input_atoms, rot_axis, angle,)
+
+    assert type(test_rotated) == type(ref_rotated)
+    assert struc.coord(test_rotated).shape == struc.coord(ref_rotated).shape
+    assert np.allclose(
+        struc.coord(test_rotated), struc.coord(ref_rotated), atol=1e-5
+    )
