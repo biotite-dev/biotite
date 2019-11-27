@@ -197,11 +197,11 @@ def align_vectors(atoms, source_direction, target_direction,
     if target_position is not None: 
         target_position = np.asarray(target_position, dtype=np.float32)
 
-    moved_coord = coord(atoms).copy()
+    positions = coord(atoms).copy()
     if source_position is not None:
         # Transform coordinates
         # so that the position of the source vector is at (0,0,0)
-        moved_coord -= source_position
+        positions -= source_position
     
     # Normalize direction vectors
     source_direction = source_direction.copy()
@@ -223,14 +223,23 @@ def align_vectors(atoms, source_direction, target_direction,
             "cannot calculate rotation matrix"
         )
     rot_matrix = np.identity(3) + v_c + np.matmul(v_c, v_c) / (1+cos_a)
+    
+    # For proper rotation reshape into a maximum of 2 dimensions
+    orig_ndim = positions.ndim
+    if orig_ndim > 2:
+        orig_shape = positions.shape
+        positions = positions.reshape(-1, 3)
     # Apply rotation
-    moved_coord = np.dot(rot_matrix, moved_coord.T).T
+    positions = np.dot(rot_matrix, positions.T).T
+    # Reshape back into original shape
+    if orig_ndim > 2:
+        positions = positions.reshape(*orig_shape)
     
     if target_position is not None:
         # Transform coordinates to position of the target vector
-        moved_coord += target_position
+        positions += target_position
     
-    return _put_back(atoms, moved_coord)
+    return _put_back(atoms, positions)
 
 
 def _put_back(input_atoms, transformed):
