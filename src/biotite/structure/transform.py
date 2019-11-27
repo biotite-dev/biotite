@@ -9,7 +9,8 @@ that can be applied on structures.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["translate", "rotate", "rotate_centered"]
+__all__ = ["translate", "rotate", "rotate_centered", "rotate_about_axis",
+           "align_vectors"]
 
 import numpy as np
 from .geometry import centroid
@@ -144,11 +145,11 @@ def rotate_centered(atoms, angles):
 
 
 def rotate_about_axis(atoms, axis, angle, support=None):
-    rot_coord = coord(atoms).copy()
+    positions = coord(atoms).copy()
     if support is not None:
         # Transform coordinates
         # so that the axis support vector is at (0,0,0)
-        rot_coord -= np.asarray(support)
+        positions -= np.asarray(support)
     
     # Normalize axis
     axis = np.asarray(axis, dtype=np.float32).copy()
@@ -168,14 +169,23 @@ def rotate_about_axis(atoms, axis, angle, support=None):
         [icos_a*x*y + z*sin_a,  cos_a + icos_a*y**2,   icos_a*y*z - x*sin_a],
         [icos_a*x*z - y*sin_a,  icos_a*y*z + x*sin_a,  cos_a + icos_a*z**2 ]
     ])
+
+    # For proper rotation reshape into a maximum of 2 dimensions
+    orig_ndim = positions.ndim
+    if orig_ndim > 2:
+        orig_shape = positions.shape
+        positions = positions.reshape(-1, 3)
     # Apply rotation
-    rot_coord = np.dot(rot_matrix, rot_coord.T).T
+    positions = np.dot(rot_matrix, positions.T).T
+    # Reshape back into original shape
+    if orig_ndim > 2:
+        positions = positions.reshape(*orig_shape)
 
     if support is not None:
         # Transform coordinates back to original support vector position
-        rot_coord += np.asarray(support)
+        positions += np.asarray(support)
     
-    return _put_back(atoms, rot_coord)
+    return _put_back(atoms, positions)
 
 
 def align_vectors(atoms, source_direction, target_direction,
