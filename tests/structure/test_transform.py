@@ -243,3 +243,46 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
     assert np.allclose(
         struc.coord(rotated), struc.coord(input_atoms), atol=1e-5
     )
+
+
+@pytest.mark.parametrize("as_list", [False, True])
+@pytest.mark.parametrize("use_support", [False, True])
+@pytest.mark.parametrize("random_seed", np.arange(5))
+def test_align_vectors(input_atoms, as_list, use_support, random_seed):
+    """
+    Align, swap alignment vectors and align again.
+    Expect that the original coordinates have been restored.
+    """
+    np.random.seed(random_seed)
+    source_direction = np.random.rand(3)
+    target_direction = np.random.rand(3)
+    if use_support:
+        source_position  = np.random.rand(3)
+        target_position  = np.random.rand(3)
+    else:
+        source_position = None
+        target_position = None
+    
+    if as_list:
+        source_direction = source_direction.tolist()
+        target_direction = target_direction.tolist()
+        if use_support:
+            source_position = source_position.tolist()
+            target_position = target_position.tolist()
+    
+    transformed = struc.align_vectors(
+        input_atoms,
+        source_direction, target_direction,
+        source_position, target_position
+    )
+    restored = struc.align_vectors(
+        transformed,
+        target_direction, source_direction, 
+        target_position, source_position
+    )
+
+    assert type(restored) == type(input_atoms)
+    assert struc.coord(restored).shape == struc.coord(input_atoms).shape
+    assert np.allclose(
+        struc.coord(restored), struc.coord(input_atoms), atol=1e-5
+    )
