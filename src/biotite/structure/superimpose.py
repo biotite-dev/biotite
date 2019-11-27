@@ -106,7 +106,7 @@ def superimpose(fixed, mobile, atom_mask=None):
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
     1.955
 
-    Superimpose only all atoms:
+    Superimpose all atoms:
 
     >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
