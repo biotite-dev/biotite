@@ -99,5 +99,5 @@ def test_doctest(package_name, context_package_names):
     try:
         assert results.failed == 0
     except AssertionError:
-        print(f"Failing doctest in module {mod}")
+        print(f"Failing doctest in module {package}")
         raise
