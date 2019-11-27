@@ -86,12 +86,20 @@ def rotate(atoms, angles):
                       [ sin(angles[2]),  cos(angles[2]),  0               ],
                       [ 0,               0,               1               ]])
     
-    # Copy AtomArray(Stack) and apply rotations
-    # Note that the coordinates are treated as row vector
+    # Get coordinates
     positions = coord(atoms).copy()
-    positions = np.dot(positions, rot_x)
-    positions = np.dot(positions, rot_y)
-    positions = np.dot(positions, rot_z)
+    # For proper rotation reshape into a maximum of 2 dimensions
+    orig_ndim = positions.ndim
+    if orig_ndim > 2:
+        orig_shape = positions.shape
+        positions = positions.reshape(-1, 3)
+    # Apply rotations
+    positions = np.matmul(rot_x, positions.T).T
+    positions = np.dot(rot_y, positions.T).T
+    positions = np.dot(rot_z, positions.T).T
+    # Reshape back into original shape
+    if orig_ndim > 2:
+        positions = positions.reshape(*orig_shape)
     
     return _put_back(atoms, positions)
 
