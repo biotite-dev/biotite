@@ -104,9 +104,10 @@
             "SubstitutionMatrix"
         ],
         "Aligners" : [
+            "align_ungapped",
             "align_optimal",
-            "align_multiple",
-            "align_ungapped"
+            "align_seeded",
+            "align_multiple"
         ],
         "Alignments" : [
             "Alignment",
