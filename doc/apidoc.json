@@ -121,7 +121,9 @@
     "biotite.sequence.phylo" : {
         "Data structures" : [
             "Tree",
-            "TreeNode"
+            "TreeNode",
+            "TreeError",
+            "as_binary"
         ],
         "Clustering algorithms" : [
             "upgma",
@@ -199,10 +201,12 @@
             "gyration_radius",
             "rdf"
         ],
-        "Manipulation" : [
+        "Transformations" : [
             "translate",
             "rotate",
             "rotate_centered",
+            "rotate_about_axis",
+            "align_vectors",
             "superimpose",
             "superimpose_apply"
         ],
@@ -212,7 +216,7 @@
             "filter_solvent",
             "filter_monoatomic_ions",
             "filter_intersection",
-            "filter_inscode_and_altloc"
+            "filter_altloc"
         ],
         "Checks" : [
             "check_bond_continuity",

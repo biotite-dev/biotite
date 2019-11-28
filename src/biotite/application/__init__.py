@@ -29,6 +29,7 @@ used to run other code, similar to the *Python* :class:`Thread` or
 :class:`Process` classes.
 """
 
+__name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 
 from .application import *

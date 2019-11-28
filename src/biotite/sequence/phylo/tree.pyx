@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.phylo"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Tree", "TreeNode", "as_binary", "TreeError"]
 
@@ -19,15 +20,24 @@ class Tree(Copyable):
     __init__(root)
     
     A :class:`Tree` represents a rooted tree
-    (e.g. alignment guide tree).
-    The tree itself is represented by :class:`TreeNode` objects.
-    The root node is accessible via the :attr:`root` property.
+    (e.g. alignment guide tree or phylogenetic tree).
+
+    The tree itself wraps a *root* :class:`TreeNode` object,
+    accessible via the :attr:`root` property.
+
+    A :class:`Tree` is not a container itself:
+    Objects, e.g species names or sequences, that are represented by the
+    nodes, cannot be stored directly in a :class:`Tree` or its nodes.
+    Instead, each leaf :class:`TreeNode` has a reference index:
+    These indices refer to a separate list or array, containing the
+    actual reference objects.
+
     The property :attr:`leaves` contains a list of the leaf nodes,
     where the index of the leaf node in this list is equal to the
     reference index of the leaf node (``leaf.index``).
 
-    The amount of leaves in a tree can be determined via the :func:`len()`
-    function.
+    The amount of leaves in a tree can be determined via the
+    :func:`len()` function.
 
     Objects of this class are immutable.
 
@@ -51,7 +61,8 @@ class Tree(Copyable):
 
     Examples
     --------
-    
+
+    >>> objects = ["An object", "Another object", "Yet another one"]
     >>> leaf1 = TreeNode(index=0)
     >>> leaf2 = TreeNode(index=1)
     >>> leaf3 = TreeNode(index=2)
@@ -60,6 +71,8 @@ class Tree(Copyable):
     >>> tree  = Tree(root)
     >>> print(tree)
     ((0:5.0,1:7.0):3.0,2:10.0):0.0;
+    >>> print([objects[node.index] for node in tree.leaves])
+    ['An object', 'Another object', 'Yet another one']
     """
     
     def __init__(self, TreeNode root not None):
@@ -245,7 +258,8 @@ cdef class TreeNode:
           to an array-like reference object.
         - Intermediate node - Has child nodes but no reference index
     
-    This type is determined by the time of the object's creation.
+    This subtype is determined based on whether child nodes were given
+    to the constructor.
     
     Every :class:`TreeNode` has a reference to its parent node.
     A root node is node without a parent node, that is finalized
@@ -295,10 +309,14 @@ cdef class TreeNode:
 
     Examples
     --------
+    Creating leaf nodes:
     
     >>> leaf1 = TreeNode(index=0)
     >>> leaf2 = TreeNode(index=1)
     >>> leaf3 = TreeNode(index=2)
+
+    Creating intermediate nodes as parent of those leaf nodes:
+
     >>> inter = TreeNode([leaf1, leaf2], [5.0, 7.0])
     >>> root  = TreeNode([inter, leaf3], [3.0, 10.0])
     >>> print(root)
@@ -985,7 +1003,7 @@ cdef _as_binary(TreeNode node):
         # -> Create a new node having two childs:
         #    - One of the childs of the original node
         #    - The original node with one child less (distance = 0)
-        # Repeat until all children as put into binary nodes
+        # Repeat until all children are put into binary nodes
         #
         #   |--          |--
         #   |          --|  |--

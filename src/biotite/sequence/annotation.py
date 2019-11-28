@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
@@ -72,7 +73,7 @@ class Location():
     class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
-        This is not relevant for residue peptide features.
+        This is not relevant for protein sequence features.
         """
         FORWARD = auto()
         REVERSE = auto()

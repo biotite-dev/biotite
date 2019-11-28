@@ -48,6 +48,7 @@ def test_array_conversion(path, single_model):
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
     temp_file_name = biotite.temp_file("mmtf")
@@ -56,6 +57,7 @@ def test_array_conversion(path, single_model):
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(temp_file_name)
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
@@ -99,11 +101,23 @@ def test_extra_fields():
     path = join(data_dir, "1l2y.mmtf")
     mmtf_file = mmtf.MMTFFile()
     mmtf_file.read(path)
-    stack1 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
-                                                         "occupancy","charge"])
+    stack1 = mmtf.get_structure(
+        mmtf_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    mmtf_file == mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, stack1)
-    stack2 = mmtf.get_structure(mmtf_file, extra_fields=["atom_id","b_factor",
-                                                         "occupancy","charge"])
+    
+    stack2 = mmtf.get_structure(
+        mmtf_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())

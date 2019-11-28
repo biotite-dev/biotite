@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["mass"]
 
@@ -70,27 +71,27 @@ def mass(item, is_residue=None):
     2170.438
     >>> first_residue = list(residue_iter(atom_array))[0]
     >>> print(first_residue)
-        A       1 ASN N      N        -8.901    4.127   -0.555
-        A       1 ASN CA     C        -8.608    3.135   -1.618
-        A       1 ASN C      C        -7.117    2.964   -1.897
-        A       1 ASN O      O        -6.634    1.849   -1.758
-        A       1 ASN CB     C        -9.437    3.396   -2.889
-        A       1 ASN CG     C       -10.915    3.130   -2.611
-        A       1 ASN OD1    O       -11.269    2.700   -1.524
-        A       1 ASN ND2    N       -11.806    3.406   -3.543
-        A       1 ASN H1     H        -8.330    3.957    0.261
-        A       1 ASN H2     H        -8.740    5.068   -0.889
-        A       1 ASN H3     H        -9.877    4.041   -0.293
-        A       1 ASN HA     H        -8.930    2.162   -1.239
-        A       1 ASN HB2    H        -9.310    4.417   -3.193
-        A       1 ASN HB3    H        -9.108    2.719   -3.679
-        A       1 ASN HD21   H       -11.572    3.791   -4.444
-        A       1 ASN HD22   H       -12.757    3.183   -3.294
+        A       1  ASN N      N        -8.901    4.127   -0.555
+        A       1  ASN CA     C        -8.608    3.135   -1.618
+        A       1  ASN C      C        -7.117    2.964   -1.897
+        A       1  ASN O      O        -6.634    1.849   -1.758
+        A       1  ASN CB     C        -9.437    3.396   -2.889
+        A       1  ASN CG     C       -10.915    3.130   -2.611
+        A       1  ASN OD1    O       -11.269    2.700   -1.524
+        A       1  ASN ND2    N       -11.806    3.406   -3.543
+        A       1  ASN H1     H        -8.330    3.957    0.261
+        A       1  ASN H2     H        -8.740    5.068   -0.889
+        A       1  ASN H3     H        -9.877    4.041   -0.293
+        A       1  ASN HA     H        -8.930    2.162   -1.239
+        A       1  ASN HB2    H        -9.310    4.417   -3.193
+        A       1  ASN HB3    H        -9.108    2.719   -3.679
+        A       1  ASN HD21   H       -11.572    3.791   -4.444
+        A       1  ASN HD22   H       -12.757    3.183   -3.294
     >>> print(mass("ASN"))
     132.118
     >>> first_atom = first_residue[0]
     >>> print(first_atom)
-        A       1 ASN N      N        -8.901    4.127   -0.555
+        A       1  ASN N      N        -8.901    4.127   -0.555
     >>> print(mass(first_atom))
     14.007
     >>> print(mass("N"))

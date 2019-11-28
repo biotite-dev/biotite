@@ -7,6 +7,7 @@ This module contains a convenience function for loading structures from
 general structure files.
 """
 
+__name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 

@@ -32,9 +32,22 @@ def test_array_conversion(path, single_model, hybrid36):
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     array1 = pdb.get_structure(pdb_file, model=model)
-    pdb_file = pdb.PDBFile()
-    pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+    
+    if hybrid36 and (array1.res_id < 1).any():
+        with pytest.raises(
+            ValueError,
+            match="Only positive integers can be converted "
+                  "into hybrid-36 notation"
+        ):
+            pdb_file = pdb.PDBFile()
+            pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+        return
+    else:
+        pdb_file = pdb.PDBFile()
+        pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+    
     array2 = pdb.get_structure(pdb_file, model=model)
+    
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -57,9 +70,11 @@ def test_pdbx_consistency(path, single_model):
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     a1 = pdb_file.get_structure(model=model)
+
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     if a2.box is not None:
         assert np.allclose(a1.box, a2.box)
     assert a1.bonds == a2.bonds
@@ -74,14 +89,28 @@ def test_extra_fields(hybrid36):
     path = join(data_dir, "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
-    stack1 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    stack1 = pdb_file.get_structure(
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    with pytest.raises(ValueError):
+        pdb_file.get_structure(extra_fields=["unsupported_field"])
+
+    pdb_file = pdb.PDBFile()
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
-    stack2 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    
+    stack2 = pdb_file.get_structure(
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
+    assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
-    assert stack1.b_factor.tolist() == stack2.b_factor.tolist()
-    assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
+    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
 

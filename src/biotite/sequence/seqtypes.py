@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
@@ -41,7 +42,7 @@ class NucleotideSequence(Sequence):
     """
     Representation of a nucleotide sequence (DNA or RNA).
     
-    This class may one of two different alphabets:
+    This class may have one of two different alphabets:
     :attr:`unambiguous_alphabet()` contains only the unambiguous DNA
     letters 'A', 'C', 'G' and 'T'.
     :attr:`ambiguous_alphabet()` uses an extended alphabet for ambiguous 

@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.database.rcsb"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
            "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
@@ -659,6 +660,10 @@ def search(query, omit_chain=True):
     r = requests.post(_search_url, data=str(query), headers=headers)
     if r.text.startswith("Problem creating Query from XML"):
         raise RequestError(r.text)
+    if "<html>" in r.text:
+        # Response should contain plain PDB IDs,
+        # a HTML tag indicates an error
+        raise RequestError(r.text.replace("\n", " "))
     ids = r.text.split()
     if omit_chain:
         for i, id in enumerate(ids):

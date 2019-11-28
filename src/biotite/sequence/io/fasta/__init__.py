@@ -15,6 +15,7 @@ Furthermore, the package contains convenience functions for
 getting/setting directly :class:`Sequence` objects, rather than strings.
 """
 
+__name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

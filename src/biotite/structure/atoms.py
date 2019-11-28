@@ -7,6 +7,7 @@ This module contains the main types of the ``structure`` subpackage:
 :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`. 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
 
@@ -36,6 +37,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._box = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
+        self.add_annotation("ins_code", dtype="U1")
         self.add_annotation("res_name", dtype="U3")
         self.add_annotation("hetero", dtype=bool)
         self.add_annotation("atom_name", dtype="U6")
@@ -54,6 +56,21 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             Length of the array(s).
         """
         return self._array_length
+
+    @property
+    @abc.abstractmethod
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the object.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the object.
+        """
+        return 
         
     def add_annotation(self, category, dtype):
         """
@@ -415,7 +432,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             clone._bonds = self._bonds.copy()
     
 
-class Atom(object):
+class Atom(Copyable):
     """
     A representation of a single atom.
     
@@ -435,7 +452,10 @@ class Atom(object):
     {annot} : scalar
         Annotations for this atom.
     coord : ndarray, dtype=float
-        ndarray containing the x, y and z coordinate of the atom. 
+        ndarray containing the x, y and z coordinate of the atom.
+    shape : tuple of int
+        Shape of the object.
+        In case of an :class:`Atom`, the tuple is empty.
     
     Examples
     --------
@@ -451,6 +471,13 @@ class Atom(object):
     
     def __init__(self, coord, **kwargs):
         self._annot = {}
+        self._annot["chain_id"] = ""
+        self._annot["res_id"] = 0
+        self._annot["ins_code"] = ""
+        self._annot["res_name"] = ""
+        self._annot["hetero"] = False
+        self._annot["atom_name"] = ""
+        self._annot["element"] = ""
         if "kwargs" in kwargs:
             # kwargs are given directly as dictionary
             kwargs = kwargs["kwargs"]
@@ -461,6 +488,10 @@ class Atom(object):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
+    
+    @property
+    def shape(self):
+        return ()
         
     def __getattr__(self, attr):
         if attr in self._annot:
@@ -482,10 +513,12 @@ class Atom(object):
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
-        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
-               .format(hetero, self.chain_id, self.res_id, self.res_name,
-                       self.atom_name, self.element,
-                       self.coord[0], self.coord[1], self.coord[2])
+        return f"{hetero:3} {self.chain_id:3} " \
+               f"{self.res_id:5d}{self.ins_code:1} {self.res_name:3} " \
+               f"{self.atom_name:6} {self.element:2}     " \
+               f"{self.coord[0]:8.3f} " \
+               f"{self.coord[1]:8.3f} " \
+               f"{self.coord[2]:8.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
@@ -501,6 +534,9 @@ class Atom(object):
     
     def __ne__(self, item):
         return not self == item
+    
+    def __copy_create__(self):
+        return Atom(self.coord, **self._annot)
 
     
 class AtomArray(_AtomArrayBase):
@@ -573,6 +609,10 @@ class AtomArray(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the atom array.
+        The single value in the tuple is
+        the length of the atom array.
     
     Examples
     --------
@@ -618,6 +658,27 @@ class AtomArray(_AtomArrayBase):
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
     
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the
+        :class:`AtomArray`.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the array.
+            The single value in the tuple is
+            the :func:`array_length()`.
+
+        See Also
+        --------
+        array_length
+        """
+        return self.array_length(),
+
     def get_atom(self, index):
         """
         Obtain the atom instance of the array at the specified index.
@@ -719,7 +780,7 @@ class AtomArray(_AtomArrayBase):
     
     def __eq__(self, item):
         """
-        Check if the array equals another :class:`AtomArray`
+        Check if the array equals another :class:`AtomArray`.
         
         Parameters
         ----------
@@ -801,6 +862,10 @@ class AtomArrayStack(_AtomArrayBase):
     box: ndarray, dtype=float, shape=(m,3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
+    shape : tuple of int
+        Shape of the stack.
+        The numbers correspond to the stack depth
+        and array length, respectively.
     
     See also
     --------
@@ -883,6 +948,23 @@ class AtomArrayStack(_AtomArrayBase):
             Length of the array(s).
         """
         return len(self)
+
+    @property
+    def shape(self):
+        """
+        Tuple of array dimensions.
+
+        This property contains the current shape of the
+        :class:`AtomArrayStack`.
+
+        Returns
+        -------
+        shape : tuple of int
+            Shape of the stack.
+            The numbers correspond to the :func:`stack_depth()`
+            and :func:`array_length()`, respectively.
+        """
+        return self.stack_depth(), self.array_length()
 
     def __iter__(self):
         """
@@ -1069,9 +1151,9 @@ def array(atoms):
     >>> atom3 = Atom([3,4,5], chain_id="B")
     >>> atom_array = array([atom1, atom2, atom3])
     >>> print(atom_array)
-        A       0                      1.000    2.000    3.000
-        A       0                      2.000    3.000    4.000
-        B       0                      3.000    4.000    5.000
+        A       0                       1.000    2.000    3.000
+        A       0                       2.000    3.000    4.000
+        B       0                       3.000    4.000    5.000
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting

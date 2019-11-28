@@ -22,6 +22,7 @@ Similarily, the appearance of sequence features in the function
 objects.
 """
 
+__name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 
 from .alignment import *

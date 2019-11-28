@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 __all__ = ["colors", "set_font_size_in_coord"]
 

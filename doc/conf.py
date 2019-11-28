@@ -28,6 +28,7 @@ import biotite
 # in order to import modules for API doc generation etc.
 sys.path.insert(0, doc_path)
 import apidoc
+import viewcode
 import tutorial
 import scraper
 
@@ -67,7 +68,7 @@ pygments_style = "sphinx"
 todo_include_todos = False
 
 # Prevents numpydoc from creating an autosummary which does not work
-# due to Biotite's import system
+# properly due to Biotite's import system
 numpydoc_show_class_members = False
 
 autodoc_member_order = "bysource"
@@ -123,4 +124,6 @@ sphinx_gallery_conf = {
 #### App setup ####
 
 def setup(app):
-    app.connect('autodoc-skip-member', apidoc.skip_non_methods)
+    app.connect("autodoc-skip-member", apidoc.skip_non_methods)
+    app.connect("viewcode-follow-imported", viewcode.find_actual_module)
+    app.connect("viewcode-find-source", viewcode.index_source)

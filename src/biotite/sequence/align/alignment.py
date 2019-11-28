@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 import numpy as np
@@ -227,11 +228,11 @@ class Alignment(object):
 
 def get_codes(alignment):
     """
-    Get the sequence codes for the alignment.
+    Get the sequence codes of the sequences in the alignment.
 
     The codes are built from the trace:
-    Instead of the indices of the aligned symbols, the return value
-    contains the corresponding symbol codes for each index.
+    Instead of the indices of the aligned symbols (trace), the return
+    value contains the corresponding symbol codes for each index.
     Gaps are still represented by *-1*.
     
     Parameters

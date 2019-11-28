@@ -11,6 +11,7 @@ Biotite internal usage due to fast I/O operations and preservation
 of all atom annotation arrays.
 """
 
+__name__ = "biotite.structure.io.npz"
 __author__ = "Patrick Kunzmann"
 
 from .file import *

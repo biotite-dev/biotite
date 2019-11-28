@@ -18,8 +18,9 @@ Python packages that are developed independently.
 
 .. only:: html
 
-    .. figure:: https://gecos.biotite-python.org/_downloads/3ebefd489b8ac7424d85cd4967cb06b1/gecos_icon.svg
+    .. figure:: https://gecos.biotite-python.org/_static/assets/general/gecos_icon.svg
         :target: https://gecos.biotite-python.org/
+        :alt: Gecos logo
 
         `Gecos - Generated color schemes <https://gecos.biotite-python.org/>`_
 

@@ -7,12 +7,12 @@ Some convenience functions for consistency with other ``structure.io``
 subpackages.
 """
 
+__name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
 
-def get_structure(pdb_file, model=None,
-                  insertion_code=[], altloc=[], extra_fields=[]):
+def get_structure(pdb_file, model=None, altloc=[], extra_fields=[]):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
     :class:`PDBFile`.
@@ -32,23 +32,23 @@ def get_structure(pdb_file, model=None,
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the
         structure contains only one model.
-    insertion_code : list of tuple, optional
-        In case the structure contains insertion codes, those can be
-        specified here: Each tuple consists of an integer,
-        specifying the residue ID, and a letter, specifying the 
-        insertion code.
-        By default no insertions are used.
     altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can
-        be specified here: Each tuple consists of an integer,
-        specifying the residue ID, and a letter, specifying the
-        *altloc* ID. By default the location with the *altloc* ID
-        "A" is used.
+        In case the structure contains *altloc* entries, those can be
+        specified here:
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues the atoms with the given *altloc*
+        ID are filtered.
+        By default the location with the *altloc* ID "A" is used.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
-        There are 4 optional annotation identifiers:
-        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        These are valid values:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         
     Returns
     -------
@@ -56,7 +56,7 @@ def get_structure(pdb_file, model=None,
         The return type depends on the `model` parameter.
     
     """
-    return pdb_file.get_structure(model, insertion_code, altloc, extra_fields)
+    return pdb_file.get_structure(model, altloc, extra_fields)
 
 
 def set_structure(pdb_file, array, hybrid36=False):

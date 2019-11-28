@@ -61,6 +61,7 @@ An :class:`AnnotatedSequence` combines an :class:`Annotation` and a
 :class:`Sequence`.
 """
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 
 from .alphabet import *

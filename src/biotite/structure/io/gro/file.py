@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.gro"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["GROFile"]
 
@@ -253,12 +254,25 @@ class GROFile(TextFile):
                         box[2,0], box[2,1],
                     )
                     return " ".join([f"{e:>9.5f}" for e in box_elements])
-
-        atom_id = np.arange(1, array.array_length() + 1)
-        # Atom IDs are supported up to 99999
-        # Residue IDs are supported up to 99999
-        gro_atom_id = ((atom_id - 1) % 99999) + 1
-        gro_res_id = ((array.res_id - 1) % 99999) + 1
+        
+        if "atom_id" in array.get_annotation_categories():
+            atom_id = array.atom_id
+        else:
+            atom_id = np.arange(1, array.array_length() + 1)
+        # Atom IDs are supported up to 99999,
+        # but negative IDs are also possible
+        gro_atom_id = np.where(
+            atom_id > 0,
+            ((atom_id - 1) % 99999) + 1,
+            atom_id
+        )
+        # Residue IDs are supported up to 9999,
+        # but negative IDs are also possible
+        gro_res_id = np.where(
+            array.res_id > 0,
+            ((array.res_id - 1) % 99999) + 1,
+            array.res_id
+        )
 
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)

@@ -2,7 +2,7 @@ r"""
 Domains of bacterial sigma factors
 ==================================
 
-This script displays the 4 domains of the *E. coli*
+This script displays the 4 fundamental domains of the *E. coli*
 :math:`\sigma^{70}`-like :math:`\sigma` factors.
 """
 
@@ -102,9 +102,9 @@ for i, (gene_name, domain_pos_for_gene, length) \
 ax.set_xlim(0, max(seq_lengths))
 ax.set_xlabel("Sequence position")
 # Inverted y-axis
-ax.set_ylim(len(genes), -1)
 ax.set_yticks(np.arange(len(genes)))
 ax.set_yticklabels(list(genes.keys()))
+ax.set_ylim(len(genes), -1)
 ax.set_title(r"Domains of E. coli $\sigma$ factors")
 fig.tight_layout()
 

@@ -23,6 +23,7 @@ temporary directory by using :func:`biotite.temp_dir()` or
 :func:`biotite.temp_file()` as path name.
 """
 
+__name__ = "biotite.database"
 __author__ = "Patrick Kunzmann"
 
 from .error import *

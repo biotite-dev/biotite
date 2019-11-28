@@ -38,11 +38,11 @@ def test_loading_with_extra_args():
     trajectory = join(data_dir, "1l2y.xtc")
 
     # test if arguments are passed to text files as get_structure arg
-    struc = strucio.load_structure(template, extra_fields="b_factor")
-    assert "b_factor" in dir(struc)
+    structure = strucio.load_structure(template, extra_fields=["b_factor"])
+    assert "b_factor" in structure.get_annotation_categories()
 
     # test if arguments are passed to read for trajectories
-    stack = strucio.load_structure(trajectory, template=struc[0], start=5, stop=6)
+    stack = strucio.load_structure(trajectory, template=structure[0], start=5, stop=6)
     assert len(stack) == 1
 
     # loading should fail with wrong arguments

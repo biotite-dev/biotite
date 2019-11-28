@@ -24,9 +24,9 @@ def test_superimposition_array(path):
     fitted, transformation = struc.superimpose(
         fixed, mobile, (mobile.atom_name == "CA")
     )
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=1e-4)
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
     fitted = struc.superimpose_apply(mobile, transformation)
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=1e-4)
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
 
 @pytest.mark.parametrize("ca_only", (True, False))
 def test_superimposition_stack(ca_only):

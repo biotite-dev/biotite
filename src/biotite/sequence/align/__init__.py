@@ -6,7 +6,7 @@
 This subpackage provides functionality for sequence alignemnts.
 
 The two central classes involved are :class:`SubstitutionMatrix` and
-`Àlignment`:
+:class:`Alignment`:
 
 Every function that performs an alignment requires a
 :class:`SubstitutionMatrix` that provides similarity scores for each
@@ -26,6 +26,7 @@ The aligning functions are usually C-accelerated, reducing the
 computation time substantially.
 """
 
+__name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 from .alignment import *

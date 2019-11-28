@@ -2,9 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
-from ....file import TextFile
+from ....file import TextFile, InvalidFileError
 import textwrap
 from collections import OrderedDict
 from collections.abc import MutableMapping
@@ -73,6 +74,8 @@ class FastaFile(TextFile, MutableMapping):
         # Filter out empty and comment lines
         self.lines = [line for line in self.lines
                       if len(line.strip()) != 0 and line[0] != ";"]
+        if len(self.lines) == 0:
+            raise InvalidFileError("File is empty or contains only comments")
         self._find_entries()
         
     def __setitem__(self, header, seq_str):
@@ -121,10 +124,16 @@ class FastaFile(TextFile, MutableMapping):
         return identifer in self._entries
     
     def _find_entries(self):
+        if len(self.lines) > 0 and self.lines[0][0] != ">":
+            raise InvalidFileError(
+                f"File starts with '{self.lines[0][0]}' instead of '>'"
+            )
+        
         header_i = []
         for i, line in enumerate(self.lines):
             if line[0] == ">":
                 header_i.append(i)
+        
         self._entries = OrderedDict()
         for j in range(len(header_i)):
             # Remove leading '>' from header

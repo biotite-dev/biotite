@@ -7,6 +7,7 @@ Use this module to calculate the Solvent Accessible Surface Area (SASA) of
 a protein or single atoms.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["sasa"]
 
