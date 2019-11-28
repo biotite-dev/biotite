@@ -42,6 +42,7 @@ Let's begin by constructing some atoms:
 """
 
 import biotite.structure as struc
+
 atom1 = struc.Atom([0,0,0], chain_id="A", res_id=1, res_name="GLY",
                    hetero=False, atom_name="N", element="N")
 atom2 = struc.Atom([0,1,1], chain_id="A", res_id=1, res_name="GLY",
@@ -149,6 +150,7 @@ print(stack)
 import biotite
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
+
 pdb_file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
 file = pdb.PDBFile()
 file.read(pdb_file_path)
@@ -188,6 +190,7 @@ file.write(biotite.temp_file("pdb"))
 # use the :class:`PDBxFile` class.
 
 import biotite.structure.io.pdbx as pdbx
+
 cif_file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
 file = pdbx.PDBxFile()
 file.read(cif_file_path)
@@ -249,6 +252,7 @@ pdbx.set_structure(file, tc5b)
 
 import numpy as np
 import biotite.structure.io.mmtf as mmtf
+
 mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 file = mmtf.MMTFFile()
 file.read(mmtf_file_path)
@@ -322,6 +326,7 @@ print(file["groupIdList"])
 # provided file name.
 
 import biotite.structure.io as strucio
+
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
 strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
@@ -359,6 +364,7 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 import biotite.structure as struc
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 print(type(stack).__name__)
@@ -452,6 +458,7 @@ print(backbone.atom_name)
 # atom array. 
 
 import biotite.structure as struc
+
 array = struc.array([
 struc.Atom([0,0,0], atom_name="N"),
 struc.Atom([0,0,0], atom_name="CA"),
@@ -523,6 +530,7 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 mmtf_file = mmtf.MMTFFile()
 mmtf_file.read(file_path)
@@ -553,6 +561,7 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 
 import numpy as np
 import biotite.structure as struc
+
 # The function uses angles in radians
 box = struc.vectors_from_unitcell(10, 20, 30, np.pi/2, np.pi/2, np.pi/2)
 print("Box:")
@@ -575,6 +584,7 @@ print(cell)
 
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+
 array = struc.AtomArray(length=100)
 print(array.box)
 array.box = box
@@ -602,6 +612,7 @@ array = struc.remove_pbc(array)
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 mmtf_file = mmtf.MMTFFile()
 mmtf_file.read(file_path)
@@ -656,6 +667,7 @@ print(structure[structure.res_id == 1])
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 # Filter only CA atoms
@@ -712,6 +724,7 @@ print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 array = strucio.load_structure(file_path)[0]
 phi, psi, omega = struc.dihedral_backbone(array)
 plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),

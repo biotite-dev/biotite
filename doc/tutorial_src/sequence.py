@@ -5,11 +5,12 @@ From A to T - The Sequence subpackage
 .. currentmodule:: biotite.sequence
 
 :mod:`biotite.sequence` is a *Biotite* subpackage concerning maybe the
-most popular data type in computational molecular biology: sequences.
+most popular type of data in bioinformatics: sequences.
 The instantiation can be quite simple as
 """
 
 import biotite.sequence as seq
+
 dna = seq.NucleotideSequence("AACTGCTA")
 print(dna)
 
@@ -89,6 +90,7 @@ print("Code:", sequence.code)
 # the ``'U'`` with ``'T'``.
 
 import biotite.sequence as seq
+
 # Create a nucleotide sequence using a string
 # The constructor can take any iterable object (e.g. a list of symbols)
 seq1 = seq.NucleotideSequence("ACCGTATCAAG")
@@ -208,6 +210,7 @@ import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
+
 file_path = entrez.fetch(
     "NC_001416", biotite.temp_dir(), suffix="fa",
     db_name="nuccore", ret_type="fasta"
@@ -279,6 +282,7 @@ file.write(biotite.temp_file("fa"))
 # specific symbol:
 
 import biotite.sequence as seq
+
 main_seq = seq.NucleotideSequence("ACCGTATCAAGTATTG")
 sub_seq = seq.NucleotideSequence("TAT")
 print("Occurences of 'TAT':", seq.find_subsequence(main_seq, sub_seq))
@@ -330,6 +334,7 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import numpy as np
+
 alph = seq.ProteinSequence.alphabet
 # Load the standard protein substitution matrix, which is BLOSUM62
 matrix = align.SubstitutionMatrix.std_protein_matrix()
@@ -444,6 +449,7 @@ print(align.get_codes(alignment))
 # :class:`GenBankFile` object.
 
 import biotite.sequence.io.genbank as gb
+
 file_path = entrez.fetch(
     "AJ311647", biotite.temp_dir(), suffix="gb",
     db_name="nuccore", ret_type="gb"
@@ -695,6 +701,7 @@ print(
 # in the creation of a new node.
 
 import biotite.sequence.phylo as phylo
+
 # The reference objects
 fruits = ["Apple", "Pear", "Orange", "Lemon", "Banana"]
 # Create nodes

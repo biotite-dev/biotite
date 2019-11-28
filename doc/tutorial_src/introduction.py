@@ -63,6 +63,7 @@ keep, somewhere else.
 
 from os.path import relpath
 import biotite
+
 # Create temporary directory
 dir_path = biotite.temp_dir()
 print(relpath(dir_path))
