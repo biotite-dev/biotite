@@ -33,8 +33,6 @@ ctypedef fused CodeType2:
     uint32
     uint64
 
-cdef inline int32 int_max(int32 a, int32 b): return a if a >= b else b
-
 
 def align_ungapped(seq1, seq2, matrix, score_only=False):
     """
