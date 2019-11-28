@@ -144,3 +144,9 @@ class WordSequence(Sequence):
     
     def get_alphabet(self):
         return self._alphabet
+    
+    def __copy_create__(self):
+        clone = object.__new__(WordSequence)
+        clone._alphabet = self._alphabet
+        clone.sequence = ()
+        return clone
