@@ -48,7 +48,7 @@ def translate(atoms, vector):
 
 def rotate(atoms, angles):
     """
-    Rotate the given atoms or coordinates about the *x*, *y* and *z
+    Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
     
     The rotations are centered at the origin and are performed
@@ -120,7 +120,7 @@ def rotate(atoms, angles):
 
 def rotate_centered(atoms, angles):
     """
-    Rotate the given atoms or coordinates about the *x*, *y* and *z
+    Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
     
     The rotations are centered at the centroid of the corresponding
