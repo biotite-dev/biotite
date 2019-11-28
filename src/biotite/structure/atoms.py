@@ -432,7 +432,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             clone._bonds = self._bonds.copy()
     
 
-class Atom(object):
+class Atom(Copyable):
     """
     A representation of a single atom.
     
@@ -452,7 +452,10 @@ class Atom(object):
     {annot} : scalar
         Annotations for this atom.
     coord : ndarray, dtype=float
-        ndarray containing the x, y and z coordinate of the atom. 
+        ndarray containing the x, y and z coordinate of the atom.
+    shape : tuple of int
+        Shape of the object.
+        In case of an :class:`Atom`, the tuple is empty.
     
     Examples
     --------
@@ -485,6 +488,10 @@ class Atom(object):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
+    
+    @property
+    def shape(self):
+        return ()
         
     def __getattr__(self, attr):
         if attr in self._annot:
@@ -527,6 +534,9 @@ class Atom(object):
     
     def __ne__(self, item):
         return not self == item
+    
+    def __copy_create__(self):
+        return Atom(self.coord, **self._annot)
 
     
 class AtomArray(_AtomArrayBase):

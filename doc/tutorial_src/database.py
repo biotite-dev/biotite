@@ -26,6 +26,7 @@ We will download on a protein structure of the miniprotein *TC5b*
 from os.path import relpath
 import biotite
 import biotite.database.rcsb as rcsb
+
 file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
 print(relpath(file_path))
 
@@ -93,6 +94,7 @@ composite = rcsb.CompositeQuery("and", [query1, query2])
 from os.path import relpath
 import biotite
 import biotite.database.entrez as entrez
+
 # Fetch a single UID ...
 file_path = entrez.fetch(
     "NC_001416", biotite.temp_dir(), suffix="fa",

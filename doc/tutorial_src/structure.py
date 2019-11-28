@@ -42,6 +42,7 @@ Let's begin by constructing some atoms:
 """
 
 import biotite.structure as struc
+
 atom1 = struc.Atom([0,0,0], chain_id="A", res_id=1, res_name="GLY",
                    hetero=False, atom_name="N", element="N")
 atom2 = struc.Atom([0,1,1], chain_id="A", res_id=1, res_name="GLY",
@@ -149,6 +150,7 @@ print(stack)
 import biotite
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
+
 pdb_file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
 file = pdb.PDBFile()
 file.read(pdb_file_path)
@@ -188,6 +190,7 @@ file.write(biotite.temp_file("pdb"))
 # use the :class:`PDBxFile` class.
 
 import biotite.structure.io.pdbx as pdbx
+
 cif_file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
 file = pdbx.PDBxFile()
 file.read(cif_file_path)
@@ -249,6 +252,7 @@ pdbx.set_structure(file, tc5b)
 
 import numpy as np
 import biotite.structure.io.mmtf as mmtf
+
 mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 file = mmtf.MMTFFile()
 file.read(mmtf_file_path)
@@ -322,6 +326,7 @@ print(file["groupIdList"])
 # provided file name.
 
 import biotite.structure.io as strucio
+
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
 strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
@@ -332,7 +337,8 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 # 
 # If the package *MDtraj* is installed *Biotite* provides a read/write
 # interface for different trajectory file formats.
-# More information can be found in the API reference.
+# More information can be found in the
+# :doc:`API reference </apidoc/biotite.structure.io>`.
 # 
 # Array indexing and filtering
 # ----------------------------
@@ -358,6 +364,7 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 import biotite.structure as struc
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 print(type(stack).__name__)
@@ -428,7 +435,7 @@ print(backbone.atom_name)
 # .. warning:: Creating a subarray or substack by indexing does not
 #    necessarily copy the coordinates and annotation arrays.
 #    If possible, only *array views* are created.
-#    Look into the `NumPy` documentation for furher details.
+#    Look into the `NumPy` documentation for further details.
 #    If you want to ensure, that you are working with a copy,
 #    use the :func:`copy()` method after indexing.
 #
@@ -437,7 +444,7 @@ print(backbone.atom_name)
 # 
 # Up to now we only looked into atom arrays whose atoms are merely
 # described by its coordinates and annotations.
-# But there is more: Chemcial bonds can be described, too, using a
+# But there is more: Chemical bonds can be described, too, using a
 # :class:`BondList`!
 # 
 # Consider the following case: Your atom array contains four atoms:
@@ -451,6 +458,7 @@ print(backbone.atom_name)
 # atom array. 
 
 import biotite.structure as struc
+
 array = struc.array([
 struc.Atom([0,0,0], atom_name="N"),
 struc.Atom([0,0,0], atom_name="CA"),
@@ -500,7 +508,7 @@ print("Bonds (atoms names):")
 print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 
 ########################################################################
-# As you see, the the bonds involing the *C* (only a single one) is
+# As you see, the the bonds involving the *C* (only a single one) is
 # removed and the remaining indices are shifted.
 # 
 # We do not have to index the atom array and the bond list
@@ -522,6 +530,7 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 mmtf_file = mmtf.MMTFFile()
 mmtf_file.read(file_path)
@@ -552,6 +561,7 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 
 import numpy as np
 import biotite.structure as struc
+
 # The function uses angles in radians
 box = struc.vectors_from_unitcell(10, 20, 30, np.pi/2, np.pi/2, np.pi/2)
 print("Box:")
@@ -574,6 +584,7 @@ print(cell)
 
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+
 array = struc.AtomArray(length=100)
 print(array.box)
 array.box = box
@@ -592,6 +603,44 @@ print(array.box)
 array = struc.remove_pbc(array)
 
 ########################################################################
+# Structure manipulation
+# ----------------------
+#
+# The most basic way to manipulate a structure is to edit the
+# annotation arrays or coordinates directly.
+
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
+import biotite.structure.io.mmtf as mmtf
+
+file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+mmtf_file = mmtf.MMTFFile()
+mmtf_file.read(file_path)
+structure = mmtf.get_structure(mmtf_file, model=1)
+print("Before:")
+print(structure[structure.res_id == 1])
+print()
+structure.coord += 100
+print("After:")
+print(structure[structure.res_id == 1])
+
+########################################################################
+# *Biotite* provides also some transformation functions, for example
+# :func:`rotate()` for rotations about the *x*-, *y*- or *z*-axis.
+
+structure = mmtf.get_structure(mmtf_file, model=1)
+print("Before:")
+print(structure[structure.res_id == 1])
+print()
+# Rotation about z-axis by 90 degrees
+structure = struc.rotate(structure, [0, 0, np.deg2rad(90)])
+print("After:")
+print(structure[structure.res_id == 1])
+
+########################################################################
+# For a complete list of transformation functions have a look in the
+# :doc:`API reference </apidoc/biotite.structure>`.
+# 
 # Structure analysis
 # ------------------
 # 
@@ -604,9 +653,10 @@ array = struc.remove_pbc(array)
 # The following section will introduce you to some of these functions,
 # which should be applied to that good old structure of *TC5b*.
 # 
-# The examples shown in this section do not represent the full spectrum
-# of analysis tools in this package.
-# Have a look into the API reference for more information.
+# The examples shown in this section are only a small glimpse into the
+# *structure* analysis toolset.
+# Have a look into the :doc:`API reference </apidoc/biotite.structure>`
+# for more information.
 # 
 # Geometry measures
 # ^^^^^^^^^^^^^^^^^
@@ -617,6 +667,7 @@ array = struc.remove_pbc(array)
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 # Filter only CA atoms
@@ -673,6 +724,7 @@ print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 array = strucio.load_structure(file_path)[0]
 phi, psi, omega = struc.dihedral_backbone(array)
 plt.plot(phi * 360/(2*np.pi), psi * 360/(2*np.pi),
