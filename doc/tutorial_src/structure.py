@@ -332,7 +332,8 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 # 
 # If the package *MDtraj* is installed *Biotite* provides a read/write
 # interface for different trajectory file formats.
-# More information can be found in the API reference.
+# More information can be found in the
+# :doc:`API reference </apidoc/biotite.structure.io>`.
 # 
 # Array indexing and filtering
 # ----------------------------
@@ -428,7 +429,7 @@ print(backbone.atom_name)
 # .. warning:: Creating a subarray or substack by indexing does not
 #    necessarily copy the coordinates and annotation arrays.
 #    If possible, only *array views* are created.
-#    Look into the `NumPy` documentation for furher details.
+#    Look into the `NumPy` documentation for further details.
 #    If you want to ensure, that you are working with a copy,
 #    use the :func:`copy()` method after indexing.
 #
@@ -437,7 +438,7 @@ print(backbone.atom_name)
 # 
 # Up to now we only looked into atom arrays whose atoms are merely
 # described by its coordinates and annotations.
-# But there is more: Chemcial bonds can be described, too, using a
+# But there is more: Chemical bonds can be described, too, using a
 # :class:`BondList`!
 # 
 # Consider the following case: Your atom array contains four atoms:
@@ -500,7 +501,7 @@ print("Bonds (atoms names):")
 print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 
 ########################################################################
-# As you see, the the bonds involing the *C* (only a single one) is
+# As you see, the the bonds involving the *C* (only a single one) is
 # removed and the remaining indices are shifted.
 # 
 # We do not have to index the atom array and the bond list
@@ -592,6 +593,43 @@ print(array.box)
 array = struc.remove_pbc(array)
 
 ########################################################################
+# Structure manipulation
+# ----------------------
+#
+# The most basic way to manipulate a structure is to edit the
+# annotation arrays or coordinates directly.
+
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
+import biotite.structure.io.mmtf as mmtf
+file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+mmtf_file = mmtf.MMTFFile()
+mmtf_file.read(file_path)
+structure = mmtf.get_structure(mmtf_file, model=1)
+print("Before:")
+print(structure[structure.res_id == 1])
+print()
+structure.coord += 100
+print("After:")
+print(structure[structure.res_id == 1])
+
+########################################################################
+# *Biotite* provides also some transformation functions, for example
+# :func:`rotate()` for rotations about the *x*-, *y*- or *z*-axis.
+
+structure = mmtf.get_structure(mmtf_file, model=1)
+print("Before:")
+print(structure[structure.res_id == 1])
+print()
+# Rotation about z-axis by 90 degrees
+structure = struc.rotate(structure, [0, 0, np.deg2rad(90)])
+print("After:")
+print(structure[structure.res_id == 1])
+
+########################################################################
+# For a complete list of transformation functions have a look in the
+# :doc:`API reference </apidoc/biotite.structure>`.
+# 
 # Structure analysis
 # ------------------
 # 
@@ -604,9 +642,10 @@ array = struc.remove_pbc(array)
 # The following section will introduce you to some of these functions,
 # which should be applied to that good old structure of *TC5b*.
 # 
-# The examples shown in this section do not represent the full spectrum
-# of analysis tools in this package.
-# Have a look into the API reference for more information.
+# The examples shown in this section are only a small glimpse into the
+# *structure* analysis toolset.
+# Have a look into the :doc:`API reference </apidoc/biotite.structure>`
+# for more information.
 # 
 # Geometry measures
 # ^^^^^^^^^^^^^^^^^
