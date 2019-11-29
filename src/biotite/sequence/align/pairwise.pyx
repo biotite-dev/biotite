@@ -154,8 +154,13 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     Returns
     -------
     alignments : list, type=Alignment
-        A list of alignments. Each alignment in the list has
-        the same maximum similarity score.
+        A list of alignments.
+        Each alignment in the list has the same maximum similarity
+        score.
+    
+    See also
+    --------
+    align_banded
     
     References
     ----------
@@ -207,9 +212,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         raise ValueError(
             "Maximum number of returned alignments must be at least 1"
         )
+    
+
     # This implementation uses transposed tables in comparison
-    # to the common implementation
-    # Therefore the first sequence is one the left
+    # to the common visualization
+    # This means the first sequence is one the left
     # and the second sequence is at the top
     
     # The table saving the directions a field came from

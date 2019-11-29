@@ -106,7 +106,7 @@
         "Aligners" : [
             "align_ungapped",
             "align_optimal",
-            "align_seeded",
+            "align_banded",
             "align_multiple"
         ],
         "Alignments" : [

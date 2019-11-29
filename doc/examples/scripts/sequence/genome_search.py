@@ -22,7 +22,6 @@ import numpy as np
 import pyximport
 pyximport.install(
     build_in_temp=False,
-    setup_args={"include_path": [np.get_include()]},
     language_level=3
 )
 ###

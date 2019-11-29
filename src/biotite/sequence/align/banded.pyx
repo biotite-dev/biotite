@@ -4,7 +4,7 @@
 
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
-__all__ = ["align_seeded"]
+__all__ = ["align_banded"]
 
 cimport cython
 cimport numpy as np
@@ -34,31 +34,14 @@ ctypedef fused CodeType2:
     uint64
 
 
-def align_seeded(seq1, seq2, matrix, gap_penalty=-10, max_gaps=1000):
-    """
-    align_seeded(seq1, seq2, matrix, gap_penalty=-10, max_gaps=1000)
 
-    Perform an optimal alignment of two sequences based on a
-    dynamic programming algorithm.
-    
-    This algorithm yields an optimal alignment, i.e. the sequences
-    are aligned in the way that results in the highest similarity
-    score. This operation can be very time and space consuming,
-    because both scale linearly with each sequence length.
-    
-    The aligned sequences do not need to be instances from the same
-    :class:`Sequence` subclass, since they do not need to have the same
-    alphabet. The only requirement is that the
-    :class:`SubstitutionMatrix`' alphabets extend the alphabets of the
-    two sequences.
-    
-    This function can either perform a global alignment, based on the
-    Needleman-Wunsch algorithm [1]_ or a local alignment, based on the
-    Smith–Waterman algorithm [2]_.
-    
-    Furthermore this function supports affine gap penalties using the
-    Gotoh algorithm [3]_, however, this requires approximately 4 times
-    the RAM space and execution time.
+def align_banded(seq1, seq2, matrix, gap_penalty=-10, terminal_penalty=True,
+                 local=False, max_number=1000, band_width=500, position=None):
+    """
+    align_banded(seq1, seq2, matrix, gap_penalty=-10, terminal_penalty=True,
+                 local=False, max_number=1000, band_width=500, position=None)
+
+    TEXT
     
     Parameters
     ----------
@@ -85,42 +68,64 @@ def align_seeded(seq1, seq2, matrix, gap_penalty=-10, max_gaps=1000):
         When the number of branches exceeds this value in the traceback
         step, no further branches are created.
         (Default: 1000)
+    band_width : int
+        A positive integer specifying the width of the alignment band.
+        Decreasing the value, increases the performance, but also
+        increases the porobability, that the resulting alignments are
+        not the optimal solution.
+    position : tuple of (int, int)
+        An optional match position of both sequences.
+        The first integer corresponds to the position in `seq1`, the
+        second one to the position in `seq1`.
+        If this value is given, this position is the *seed* of the
+        alignment:
+        The corresponding positions in both sequences are aligned with
+        each other.
+        Then the alignment is expanded in both directions of the
+        sequences, if possible.
+        By default, the alignment starts at the beginning of both
+        sequences. 
     
     Returns
     -------
     alignments : list, type=Alignment
-        A list of alignments. Each alignment in the list has
-        the same maximum similarity score.
+        A list of alignments.
+        Each alignment in the list has the same maximum similarity
+        score.
+    
+    See also
+    --------
+    align_optimal
+
+    Notes
+    -----
+    The band with is equal to the maximum difference between the
+    number of gaps in the sequences.
+    This means for any poistion in the alignment, the alogrithm
+    will not consider inserting a gap into a seqeunce, if this
+    sequence has already `band_width` more gaps than the other
+    sequence, even if inserting another gap would yield a more optimal
+    alignment.
+    The limited band width is the central difference between the banded
+    alignment heuristic [1]_ and the optimal alignment algorithms
+    [2]_[3]_.
     
     References
     ----------
     
-    .. [1] SB Needleman, CD Wunsch,
+    .. [1] WR Pearson, DJ Lipman,
+       "Improved tools for biological sequence comparison."
+       Proc Natl Acad Sci USA, 85, 2444–2448 (1988).
+    .. [2] SB Needleman, CD Wunsch,
        "A general method applicable to the search for similarities
        in the amino acid sequence of two proteins."
        J Mol Biol, 48, 443-453 (1970).
-    .. [2] TF Smith, MS Waterman,
+    .. [3] TF Smith, MS Waterman,
        "Identification of common molecular subsequences."
        J Mol Biol, 147, 195-197 (1981).
-    .. [3] O Gotoh,
+    .. [4] O Gotoh,
        "An improved algorithm for matching biological sequences."
        J Mol Biol, 162, 705-708 (1982).
-    
-    Examples
-    --------
-    
-    >>> seq1 = NucleotideSequence("ATACGCTTGCT")
-    >>> seq2 = NucleotideSequence("AGGCGCAGCT")
-    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
-    >>> ali = align_optimal(seq1, seq2, matrix, gap_penalty=-6)
-    >>> for a in ali:
-    ...     print(a, "\\n")
-    ATACGCTTGCT
-    AGGCGCA-GCT 
-    <BLANKLINE>
-    ATACGCTTGCT
-    AGGCGC-AGCT 
-    <BLANKLINE>
     """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
@@ -142,9 +147,11 @@ def align_seeded(seq1, seq2, matrix, gap_penalty=-10, max_gaps=1000):
         raise ValueError(
             "Maximum number of returned alignments must be at least 1"
         )
+    
+
     # This implementation uses transposed tables in comparison
-    # to the common implementation
-    # Therefore the first sequence is one the left
+    # to the common visualization
+    # This means, the first sequence is one the left
     # and the second sequence is at the top
     
     # The table saving the directions a field came from
