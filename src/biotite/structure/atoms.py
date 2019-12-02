@@ -392,7 +392,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if isinstance(self, AtomArrayStack):
             concat = AtomArrayStack(self.stack_depth(),
                                     self._array_length + array._array_length)
+        
         concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
+        
         # Transfer only annotations,
         # which are existent in both operands
         arr_categories = list(array._annot.keys())
@@ -401,6 +403,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        
         # Concatenate bonds lists,
         # if at least one of them contains bond information
         if self._bonds is not None or array._bonds is not None:
@@ -411,6 +414,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if bonds2 is None:
                 bonds2 = BondList(array._array_length)
             concat._bonds = bonds1 + bonds2
+        
         # Copy box
         if self._box is not None:
             concat._box = np.copy(self._box)
