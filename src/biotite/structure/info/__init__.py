@@ -17,7 +17,8 @@ repository.
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 
-from .masses import *
+from .atoms import *
 from .bonds import *
+from .masses import *
 from .misc import *
 from .radii import *
