@@ -140,14 +140,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The new value of the annotation category. The size of the
             array must be the same as the array length.
         """
-        if not isinstance(array, np.ndarray):
-            raise TypeError("Annotation must be an 'ndarray'")
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = array
+        self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -332,7 +330,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
                 self._box = value.astype(np.float32, copy=False)
             elif value is None:
-                # Remove bond list
+                # Remove box
                 self._box = None
             else:
                 raise TypeError("Box must be ndarray of floats or None")
