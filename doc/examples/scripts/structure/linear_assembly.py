@@ -1,6 +1,8 @@
 r"""
 Ab initio assembly of a linear peptide
 ======================================
+
+
 """
 
 # Code source: Patrick Kunzmann
@@ -23,8 +25,6 @@ C_O_LENGTH         = 1.43
 C_O_DOUBLE_LENGTH  = 1.23
 N_H_LENGTH         = 1.01
 O_H_LENGTH         = 0.97
-
-C_O_H_ANGLE = 109
 
 
 
@@ -164,7 +164,7 @@ def assemble_peptide(sequence):
         atom_c.coord, atom_o.coord, -120, C_O_LENGTH
     )
     coord_hxt = calculate_atom_coord_by_z_rotation(
-        coord_oxt, atom_c.coord, np.deg2rad(C_O_H_ANGLE), O_H_LENGTH
+        coord_oxt, atom_c.coord, -120, O_H_LENGTH
     )
     atom_oxt = struc.Atom(
         coord_oxt,
@@ -186,4 +186,4 @@ def assemble_peptide(sequence):
 #sequence = seq.ProteinSequence("TIT")
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-strucio.save_structure("linear.cif", atom_array)
+strucio.save_structure("linear.pdb", atom_array)
