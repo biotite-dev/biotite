@@ -179,7 +179,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def _set_element(self, index, atom):
         try:
-            if isinstance(index, numbers.Integral):
+            if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
