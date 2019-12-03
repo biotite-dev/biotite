@@ -15,10 +15,17 @@ import biotite.structure.io as strucio
 import biotite.structure.info as info
 
 
-N_CA_LENGTH = 1.46
-CA_C_LENGTH = 1.54
-C_N_LENGTH  = 1.34
-C_O_DOUBLE_LENGTH  = 1.16
+
+N_CA_LENGTH        = 1.46
+CA_C_LENGTH        = 1.54
+C_N_LENGTH         = 1.34
+C_O_LENGTH         = 1.43
+C_O_DOUBLE_LENGTH  = 1.23
+N_H_LENGTH         = 1.01
+O_H_LENGTH         = 0.97
+
+C_O_H_ANGLE = 109
+
 
 
 def calculate_atom_coord_by_z_rotation(coord1, coord2, angle, bond_length):
@@ -38,6 +45,7 @@ def calculate_atom_coord_by_z_rotation(coord1, coord2, angle, bond_length):
     new_coord = coord1 + bond_vector * bond_length / norm(bond_vector)
 
     return new_coord
+
 
 
 def assemble_peptide(sequence):
@@ -71,8 +79,15 @@ def assemble_peptide(sequence):
         atom_o = struc.Atom(
             coord_o, atom_name="O", element="O"
         )
+        
+        coord_h = calculate_atom_coord_by_z_rotation(
+            atom_n.coord, atom_ca.coord, -120, N_H_LENGTH
+        )
+        atom_h = struc.Atom(
+            coord_h, atom_name="H", element="H"
+        )
 
-        backbone = struc.array([atom_n, atom_ca, atom_c, atom_o])
+        backbone = struc.array([atom_n, atom_ca, atom_c, atom_o, atom_h])
         backbone.res_id[:] = res_id
         backbone.res_name[:] = res_name
         
@@ -119,7 +134,8 @@ def assemble_peptide(sequence):
         )]
         
 
-        # Assemble backbone with side chain and set annotation arrays
+        # Assemble backbone with side chain (including HA)
+        # and set annotation arrays
         residue = backbone + side_chain
         residue.chain_id[:] = "A"
         residue.res_id[:] = res_id
@@ -127,11 +143,47 @@ def assemble_peptide(sequence):
         peptide += residue
     
 
+    # Add N-terminal hydrogen
+    atom_n = peptide[(peptide.res_id == 1) & (peptide.atom_name == "N")][0]
+    atom_h = peptide[(peptide.res_id == 1) & (peptide.atom_name == "H")][0]
+    coord_h2 = calculate_atom_coord_by_z_rotation(
+        atom_n.coord, atom_h.coord, -120, N_H_LENGTH
+    )
+    atom_h2 = struc.Atom(
+        coord_h2,
+        chain_id="A", res_id=1, res_name=atom_h.res_name, atom_name="H2",
+        element="H"
+    )
+    peptide = struc.array([atom_h2]) + peptide
+
+    # Add C-terminal hydroxyl group
+    last = len(sequence)
+    atom_c = peptide[(peptide.res_id == last) & (peptide.atom_name == "C")][0]
+    atom_o = peptide[(peptide.res_id == last) & (peptide.atom_name == "O")][0]
+    coord_oxt = calculate_atom_coord_by_z_rotation(
+        atom_c.coord, atom_o.coord, -120, C_O_LENGTH
+    )
+    coord_hxt = calculate_atom_coord_by_z_rotation(
+        coord_oxt, atom_c.coord, np.deg2rad(C_O_H_ANGLE), O_H_LENGTH
+    )
+    atom_oxt = struc.Atom(
+        coord_oxt,
+        chain_id="A", res_id=last, res_name=atom_c.res_name, atom_name="OXT",
+        element="O"
+    )
+    atom_hxt = struc.Atom(
+        coord_hxt,
+        chain_id="A", res_id=last, res_name=atom_c.res_name, atom_name="HXT",
+        element="H"
+    )
+    peptide = peptide + struc.array([atom_oxt, atom_hxt])
+
+
     return peptide
+
 
 
 #sequence = seq.ProteinSequence("TIT")
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-
-strucio.save_structure("bb.pdb", atom_array)
+strucio.save_structure("linear.cif", atom_array)
