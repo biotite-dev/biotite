@@ -8,6 +8,7 @@ Ab initio assembly of a linear peptide
 
 import itertools
 import numpy as np
+from numpy.linalg import norm
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -17,104 +18,120 @@ import biotite.structure.info as info
 N_CA_LENGTH = 1.46
 CA_C_LENGTH = 1.54
 C_N_LENGTH  = 1.34
+C_O_DOUBLE_LENGTH  = 1.16
+
+
+def calculate_atom_coord_by_z_rotation(coord1, coord2, angle, bond_length):
+    rot_axis = [0, 0, 1]
+
+    # Calculate the coordinates of a new atoms by rotating the previous
+    # bond by the given angle (usually 120 degrees) 
+    new_coord = struc.rotate_about_axis(
+            atoms = coord2,
+            axis = rot_axis,
+            angle = np.deg2rad(angle),
+            support = coord1
+        )
+    
+    # Scale bond to correct bond length
+    bond_vector = new_coord - coord1
+    new_coord = coord1 + bond_vector * bond_length / norm(bond_vector)
+
+    return new_coord
 
 
 def assemble_peptide(sequence):
-    backbone = struc.AtomArray(length=3*len(sequence))
-    res_id = 0
-    for i, bond_length, angle, atom_name in zip(
-        range(backbone.array_length()),
-        itertools.cycle([C_N_LENGTH, N_CA_LENGTH, CA_C_LENGTH]),
-        itertools.cycle([120, -120]),
-        itertools.cycle(["N", "CA", "C"])
-    ):
-        if atom_name == "N":
-           res_id += 1 
-        
-        backbone.res_id[i] = res_id
-        backbone.atom_name[i] = atom_name
-        backbone.element[i] = atom_name[0]
-        backbone.res_name[i] = "GLY"
-
-        if i == 0:
-            backbone.coord[i] = [0,0,0]
-        elif i == 1:
-            backbone.coord[i] = [bond_length,0,0]
-        else:
-            rot_axis = [0, 0, 1]
-            backbone.coord[i] = struc.rotate_about_axis(
-                atoms = backbone.coord[i-2],
-                axis = rot_axis,
-                angle = np.deg2rad(angle),
-                support = backbone.coord[i-1]
-            )
-            # Scale vector to correct bond length
-            bond_vector = backbone.coord[i] - backbone.coord[i-1]
-            backbone.coord[i] = backbone.coord[i-1] \
-                + bond_vector * bond_length / np.linalg.norm(bond_vector)
-
-
-    backbone_extra = struc.AtomArray(length=0)
-    for i, (residue, angle) in enumerate(zip(
-        struc.residue_iter(backbone),
-        itertools.cycle([120, -120]),
-    )):
-        rot_axis = [0, 0, 1]
-        coord = struc.rotate_about_axis(
-            atoms = residue.coord[-2],
-            axis = rot_axis,
-            angle = np.deg2rad(angle),
-            support = residue.coord[-1]
-        )
-        backbone_extra += residue + struc.array([
-            struc.Atom(
-                coord, atom_name="O", element="O", res_id=i+1, res_name = "GLY"
-            )
-        ])
-    backbone = backbone_extra
-    print(backbone)
-
-
-    full_atom_structure = struc.AtomArray(length=0)
     res_names = [seq.ProteinSequence.convert_letter_1to3(r) for r in sequence]
-    for i, res_name in enumerate(res_names):
-        residue = info.residue(res_name)
+    peptide = struc.AtomArray(length=0)
+    rot_axis = [0, 0, 1]
+    
+
+    for res_id, res_name, connect_angle in zip(np.arange(1, len(res_names)+1),
+                                               res_names,
+                                               itertools.cycle([120, -120])):
+        # Create backbone
+        atom_n = struc.Atom(
+            [0.0, 0.0, 0.0], atom_name="N", element="N"
+        )
         
-        backbone_for_res = backbone[backbone.res_id == i+1].copy()
+        atom_ca = struc.Atom(
+            [0.0, N_CA_LENGTH, 0.0], atom_name="CA", element="C"
+        )
+        
+        coord_c = calculate_atom_coord_by_z_rotation(
+            atom_ca.coord, atom_n.coord, 120, CA_C_LENGTH
+        )
+        atom_c = struc.Atom(
+            coord_c, atom_name="C", element="C"
+        )
+        
+        coord_o = calculate_atom_coord_by_z_rotation(
+            atom_c.coord, atom_ca.coord, 120, C_O_DOUBLE_LENGTH
+        )
+        atom_o = struc.Atom(
+            coord_o, atom_name="O", element="O"
+        )
+
+        backbone = struc.array([atom_n, atom_ca, atom_c, atom_o])
+        backbone.res_id[:] = res_id
+        backbone.res_name[:] = res_name
+        
+        
+        # Connect backbone to existing residues in the chain
+        if res_id > 1:
+            prev_res = peptide[peptide.res_id == res_id-1]
+            prev_coord_ca = prev_res[prev_res.atom_name == "CA"][0].coord
+            prev_coord_c  = prev_res[prev_res.atom_name == "C" ][0].coord
+            
+            curr_coord_n  = calculate_atom_coord_by_z_rotation(
+                prev_coord_c, prev_coord_ca, connect_angle, C_N_LENGTH
+            )
+            backbone.coord -= atom_n.coord
+            backbone.coord += curr_coord_n
+            
+            # Adjacent residues should show in opposing directions
+            # -> rotate residues with even residue ID by 180 degrees
+            if res_id % 2 == 0:
+                coord_n = backbone[backbone.atom_name == "N"][0].coord
+                coord_c = backbone[backbone.atom_name == "C"][0].coord
+                backbone = struc.rotate_about_axis(
+                    atoms = backbone,
+                    axis = coord_c - coord_n,
+                    angle = np.deg2rad(180),
+                    support = coord_n
+                )
+
+
+        # Get residue from dataset
+        residue = info.residue(res_name)
+        # Superimpose backbone of residue
+        # with backbone created previously 
+        _, transformation = struc.superimpose(
+            backbone[struc.filter_backbone(backbone)],
+            residue[struc.filter_backbone(residue)]
+        )
+        residue = struc.superimpose_apply(residue, transformation)
+        # Remove backbone atoms from residue because they are already
+        # existing in the backbone created prevoisly
         side_chain = residue[~np.isin(
             residue.atom_name,
             ["N", "CA", "C", "O", "OXT", "H", "H2", "H3", "HXT"]
         )]
         
-        if i != 0:
-            # Remove N-terminal hydrogens from N-terminus
-            residue = residue[
-                (residue.atom_name != "H") &
-                (residue.atom_name != "H2")
-            ]
-        if i != len(res_names)-1:
-            # Remove C-terminal hydroxyl group
-            residue = residue[
-                (residue.atom_name != "OXT") &
-                (residue.atom_name != "HXT")
-            ]
-        _, transformation = struc.superimpose(
-            backbone_for_res[struc.filter_backbone(backbone_for_res)],
-            residue[struc.filter_backbone(residue)]
-        )
-        
-        full_residue = backbone_for_res \
-            + struc.superimpose_apply(side_chain, transformation)
-        full_residue.chain_id[:] = "A"
-        full_residue.res_id[:] = i+1
-        full_residue.res_name[:] = res_name
-        full_atom_structure += full_residue
+
+        # Assemble backbone with side chain and set annotation arrays
+        residue = backbone + side_chain
+        residue.chain_id[:] = "A"
+        residue.res_id[:] = res_id
+        residue.res_name[:] = res_name
+        peptide += residue
     
-    return full_atom_structure
+
+    return peptide
 
 
+#sequence = seq.ProteinSequence("TIT")
 sequence = seq.ProteinSequence("TITANITE")
-#sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
 
-strucio.save_structure("bb.mmtf", atom_array)
+strucio.save_structure("bb.pdb", atom_array)
