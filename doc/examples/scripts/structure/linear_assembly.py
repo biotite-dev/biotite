@@ -1,8 +1,20 @@
 r"""
-Ab initio assembly of a linear peptide
-======================================
+Assembly of a straight peptide from sequence
+==========================================
 
+This script presents a function that takes an amino acid sequence and
+builds a straight peptide structure (like a :math:`\beta`-strand) from
+it, including intramolecular bond information.
 
+The function starts by building a straight peptide backbone based on
+bond geometry.
+Then for each amino acid, the respective atoms and coordinates are
+obtained from the reference PDB component dataset via
+:func:`biotite.structure.info.residue()` and the atoms are appended to
+the backbone in the right orientation.
+
+For simplicity reasons, the scripts uses always a angle angle of
+:math:`120^\circ` for all backbone bond angles.
 """
 
 # Code source: Patrick Kunzmann
@@ -19,13 +31,13 @@ import biotite.structure.info as info
 
 
 
-N_CA_LENGTH        = 1.46
-CA_C_LENGTH        = 1.54
-C_N_LENGTH         = 1.34
-C_O_LENGTH         = 1.43
-C_O_DOUBLE_LENGTH  = 1.23
-N_H_LENGTH         = 1.01
-O_H_LENGTH         = 0.97
+N_CA_LENGTH       = 1.46
+CA_C_LENGTH       = 1.54
+C_N_LENGTH        = 1.34
+C_O_LENGTH        = 1.43
+C_O_DOUBLE_LENGTH = 1.23
+N_H_LENGTH        = 1.01
+O_H_LENGTH        = 0.97
 
 
 
@@ -51,7 +63,7 @@ def calculate_atom_coord_by_z_rotation(coord1, coord2, angle, bond_length):
 
 def assemble_peptide(sequence):
     res_names = [seq.ProteinSequence.convert_letter_1to3(r) for r in sequence]
-    peptide = struc.AtomArray(length=0)]
+    peptide = struc.AtomArray(length=0)
     
 
     for res_id, res_name, connect_angle in zip(np.arange(1, len(res_names)+1),
@@ -224,6 +236,7 @@ def assemble_peptide(sequence):
 
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
+#strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
+strucio.save_structure("test.mmtf", atom_array)
 # Visualization with PyMOL...
 # biotite_static_image = linear_assembly.png
