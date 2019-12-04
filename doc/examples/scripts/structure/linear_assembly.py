@@ -11,6 +11,7 @@ Ab initio assembly of a linear peptide
 import itertools
 import numpy as np
 from numpy.linalg import norm
+import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -50,8 +51,7 @@ def calculate_atom_coord_by_z_rotation(coord1, coord2, angle, bond_length):
 
 def assemble_peptide(sequence):
     res_names = [seq.ProteinSequence.convert_letter_1to3(r) for r in sequence]
-    peptide = struc.AtomArray(length=0)
-    rot_axis = [0, 0, 1]
+    peptide = struc.AtomArray(length=0)]
     
 
     for res_id, res_name, connect_angle in zip(np.arange(1, len(res_names)+1),
@@ -90,31 +90,14 @@ def assemble_peptide(sequence):
         backbone = struc.array([atom_n, atom_ca, atom_c, atom_o, atom_h])
         backbone.res_id[:] = res_id
         backbone.res_name[:] = res_name
-        
-        
-        # Connect backbone to existing residues in the chain
-        if res_id > 1:
-            prev_res = peptide[peptide.res_id == res_id-1]
-            prev_coord_ca = prev_res[prev_res.atom_name == "CA"][0].coord
-            prev_coord_c  = prev_res[prev_res.atom_name == "C" ][0].coord
-            
-            curr_coord_n  = calculate_atom_coord_by_z_rotation(
-                prev_coord_c, prev_coord_ca, connect_angle, C_N_LENGTH
-            )
-            backbone.coord -= atom_n.coord
-            backbone.coord += curr_coord_n
-            
-            # Adjacent residues should show in opposing directions
-            # -> rotate residues with even residue ID by 180 degrees
-            if res_id % 2 == 0:
-                coord_n = backbone[backbone.atom_name == "N"][0].coord
-                coord_c = backbone[backbone.atom_name == "C"][0].coord
-                backbone = struc.rotate_about_axis(
-                    atoms = backbone,
-                    axis = coord_c - coord_n,
-                    angle = np.deg2rad(180),
-                    support = coord_n
-                )
+
+        # Add bonds between backbone atoms
+        bonds = struc.BondList(backbone.array_length())
+        bonds.add_bond(0, 1, struc.BondType.SINGLE) # N-CA
+        bonds.add_bond(1, 2, struc.BondType.SINGLE) # CA-C
+        bonds.add_bond(2, 3, struc.BondType.DOUBLE) # C-O
+        bonds.add_bond(0, 4, struc.BondType.SINGLE) # N-H
+        backbone.bonds = bonds
 
 
         # Get residue from dataset
@@ -137,10 +120,59 @@ def assemble_peptide(sequence):
         # Assemble backbone with side chain (including HA)
         # and set annotation arrays
         residue = backbone + side_chain
+        residue.bonds.add_bond(
+            np.where(residue.atom_name == "CA")[0][0],
+            np.where(residue.atom_name == "CB")[0][0],
+            struc.BondType.SINGLE
+        )
         residue.chain_id[:] = "A"
         residue.res_id[:] = res_id
         residue.res_name[:] = res_name
         peptide += residue
+
+        # Connect current residue to existing residues in the chain
+        if res_id > 1:
+            index_prev_ca = np.where(
+                (peptide.res_id == res_id-1) &
+                (peptide.atom_name == "CA")
+            )[0][0]
+            index_prev_c = np.where(
+                (peptide.res_id == res_id-1) &
+                (peptide.atom_name == "C")
+            )[0][0]
+            index_curr_n = np.where(
+                (peptide.res_id == res_id) &
+                (peptide.atom_name == "N")
+            )[0][0]
+            index_curr_c = np.where(
+                (peptide.res_id == res_id) &
+                (peptide.atom_name == "C")
+            )[0][0]
+            curr_residue_mask = peptide.res_id == res_id
+
+            # Adjust geometry
+            curr_coord_n  = calculate_atom_coord_by_z_rotation(
+                peptide.coord[index_prev_c],  peptide.coord[index_prev_ca],
+                connect_angle, C_N_LENGTH
+            )
+            peptide.coord[curr_residue_mask] -=  peptide.coord[index_curr_n]
+            peptide.coord[curr_residue_mask] += curr_coord_n
+            # Adjacent residues should show in opposing directions
+            # -> rotate residues with even residue ID by 180 degrees
+            if res_id % 2 == 0:
+                coord_n = peptide.coord[index_curr_n]
+                coord_c = peptide.coord[index_curr_c]
+                peptide.coord[curr_residue_mask] = struc.rotate_about_axis(
+                    atoms = peptide.coord[curr_residue_mask],
+                    axis = coord_c - coord_n,
+                    angle = np.deg2rad(180),
+                    support = coord_n
+                )
+
+            # Add bond between previous C and current N
+            peptide.bonds.add_bond(
+                index_prev_c, index_curr_n, struc.BondType.SINGLE
+            )
     
 
     # Add N-terminal hydrogen
@@ -155,35 +187,43 @@ def assemble_peptide(sequence):
         element="H"
     )
     peptide = struc.array([atom_h2]) + peptide
+    peptide.bonds.add_bond(0, 1, struc.BondType.SINGLE) # H2-N
 
     # Add C-terminal hydroxyl group
-    last = len(sequence)
-    atom_c = peptide[(peptide.res_id == last) & (peptide.atom_name == "C")][0]
-    atom_o = peptide[(peptide.res_id == last) & (peptide.atom_name == "O")][0]
+    last_id = len(sequence)
+    index_c = np.where(
+        (peptide.res_id == last_id) & (peptide.atom_name == "C")
+    )[0][0]
+    index_o = np.where(
+        (peptide.res_id == last_id) & (peptide.atom_name == "O")
+    )[0][0]
     coord_oxt = calculate_atom_coord_by_z_rotation(
-        atom_c.coord, atom_o.coord, -120, C_O_LENGTH
+        peptide.coord[index_c], peptide.coord[index_o], -120, C_O_LENGTH
     )
     coord_hxt = calculate_atom_coord_by_z_rotation(
-        coord_oxt, atom_c.coord, -120, O_H_LENGTH
+        coord_oxt, peptide.coord[index_c], -120, O_H_LENGTH
     )
     atom_oxt = struc.Atom(
         coord_oxt,
-        chain_id="A", res_id=last, res_name=atom_c.res_name, atom_name="OXT",
-        element="O"
+        chain_id="A", res_id=last_id, res_name=peptide[index_c].res_name,
+        atom_name="OXT", element="O"
     )
     atom_hxt = struc.Atom(
         coord_hxt,
-        chain_id="A", res_id=last, res_name=atom_c.res_name, atom_name="HXT",
-        element="H"
+        chain_id="A", res_id=last_id, res_name=peptide[index_c].res_name,
+        atom_name="HXT", element="H"
     )
     peptide = peptide + struc.array([atom_oxt, atom_hxt])
+    peptide.bonds.add_bond(index_c, -2, struc.BondType.SINGLE) # C-OXT
+    peptide.bonds.add_bond(-2,      -1, struc.BondType.SINGLE) # OXT-HXT
 
 
     return peptide
 
 
 
-#sequence = seq.ProteinSequence("TIT")
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-strucio.save_structure("linear.pdb", atom_array)
+strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
+# Visualization with PyMOL...
+# biotite_static_image = linear_assembly.png
