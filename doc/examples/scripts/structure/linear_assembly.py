@@ -1,6 +1,6 @@
 r"""
 Assembly of a straight peptide from sequence
-==========================================
+============================================
 
 This script presents a function that takes an amino acid sequence and
 builds a straight peptide structure (like a :math:`\beta`-strand) from
@@ -8,8 +8,8 @@ it, including intramolecular bond information.
 
 The function starts by building a straight peptide backbone based on
 bond geometry.
-Then for each amino acid, the respective atoms and coordinates are
-obtained from the reference PDB component dataset via
+Then for each amino acid, the respective side chain atoms and their
+geometry are obtained from the reference PDB component dataset via
 :func:`biotite.structure.info.residue()` and the atoms are appended to
 the backbone in the right orientation.
 
