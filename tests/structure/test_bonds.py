@@ -9,10 +9,18 @@ from os.path import join
 from .util import data_dir
 import pytest
 
-@pytest.fixture
-def bond_list():
+
+@pytest.fixture(
+    params=[False, True] # as_negative
+)
+def bond_list(request):
+    as_negative = request.param
     bond_array = np.array([(0,1),(2,1),(3,1),(3,4),(3,1),(1,2),(4,0),(6,4)])
-    return struc.BondList(7, bond_array)
+    if as_negative:
+        return struc.BondList(7, -7 + bond_array)
+    else:
+        return struc.BondList(7, bond_array)
+
 
 def test_creation(bond_list):
     # Test includes redundancy removal and max bonds calculation
@@ -31,6 +39,8 @@ def test_modification(bond_list):
     bond_list.add_bond(3, 1)
     # Also already in list -> update
     bond_list.add_bond(1, 3, 1)
+    # The same but with negative atom index
+    bond_list.add_bond(-6, -4, 1)
     # Not in list
     bond_list.add_bond(4, 1)
     # In list -> remove
