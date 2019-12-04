@@ -236,7 +236,6 @@ def assemble_peptide(sequence):
 
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-#strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
-strucio.save_structure("test.mmtf", atom_array)
+strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
 # Visualization with PyMOL...
 # biotite_static_image = linear_assembly.png
