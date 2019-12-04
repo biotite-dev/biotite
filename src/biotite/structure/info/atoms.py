@@ -59,7 +59,9 @@ def residue(res_name):
     Examples
     --------
 
-    >>> print(residue("ALA"))
+    >>> alanine = residue("ALA")
+    >>> # Atoms and geometry
+    >>> print(alanine)
                 0  ALA N      N         2.281   26.213   12.804
                 0  ALA CA     C         1.169   26.942   13.411
                 0  ALA C      C         1.539   28.344   13.874
@@ -73,6 +75,20 @@ def residue(res_name):
                 0  ALA HB2    H         0.308   25.110   14.270
                 0  ALA HB3    H         1.384   25.876   15.321
                 0  ALA HXT    H         0.753   30.069   14.286
+    >>> # Bonds
+    >>> print(alanine.atom_name[alanine.bonds.as_array()[:,:2]])
+    [['N' 'CA']
+     ['N' 'H']
+     ['N' 'H2']
+     ['CA' 'C']
+     ['CA' 'CB']
+     ['CA' 'HA']
+     ['C' 'O']
+     ['C' 'OXT']
+     ['CB' 'HB1']
+     ['CB' 'HB2']
+     ['CB' 'HB3']
+     ['OXT' 'HXT']]
     """
     _init_dataset()
     array_dict = _residues[res_name]
