@@ -140,14 +140,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The new value of the annotation category. The size of the
             array must be the same as the array length.
         """
-        if not isinstance(array, np.ndarray):
-            raise TypeError("Annotation must be an 'ndarray'")
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = array
+        self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -181,7 +179,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def _set_element(self, index, atom):
         try:
-            if isinstance(index, numbers.Integral):
+            if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
@@ -332,7 +330,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
                 self._box = value.astype(np.float32, copy=False)
             elif value is None:
-                # Remove bond list
+                # Remove box
                 self._box = None
             else:
                 raise TypeError("Box must be ndarray of floats or None")
@@ -394,7 +392,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if isinstance(self, AtomArrayStack):
             concat = AtomArrayStack(self.stack_depth(),
                                     self._array_length + array._array_length)
+        
         concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
+        
         # Transfer only annotations,
         # which are existent in both operands
         arr_categories = list(array._annot.keys())
@@ -403,6 +403,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        
         # Concatenate bonds lists,
         # if at least one of them contains bond information
         if self._bonds is not None or array._bonds is not None:
@@ -413,6 +414,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if bonds2 is None:
                 bonds2 = BondList(array._array_length)
             concat._bonds = bonds1 + bonds2
+        
         # Copy box
         if self._box is not None:
             concat._box = np.copy(self._box)

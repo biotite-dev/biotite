@@ -152,12 +152,11 @@ class PDBxFile(TextFile, MutableMapping):
         blocks : list
             List of data block names.
         """
-        blocks = []
+        blocks = set()
         for category_tuple in self._categories.keys():
-            block = category_tuple[0]
-            if block not in blocks:
-                blocks.append(block)
-        return blocks
+            block, _ = category_tuple
+            blocks.add(block)
+        return sorted(blocks)
     
     
     def get_category(self, category, block=None):
