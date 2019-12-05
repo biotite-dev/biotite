@@ -13,7 +13,7 @@ geometry are obtained from the reference PDB component dataset via
 :func:`biotite.structure.info.residue()` and the atoms are appended to
 the backbone in the right orientation.
 
-For simplicity reasons, the scripts uses always a angle angle of
+For simplicity reasons, the scripts always uses an angle of
 :math:`120^\circ` for all backbone bond angles.
 """
 
@@ -137,6 +137,11 @@ def assemble_peptide(sequence):
             np.where(residue.atom_name == "CB")[0][0],
             struc.BondType.SINGLE
         )
+        residue.bonds.add_bond(
+            np.where(residue.atom_name == "CA")[0][0],
+            np.where(residue.atom_name == "HA")[0][0],
+            struc.BondType.SINGLE
+        )
         residue.chain_id[:] = "A"
         residue.res_id[:] = res_id
         residue.res_name[:] = res_name
@@ -210,10 +215,10 @@ def assemble_peptide(sequence):
         (peptide.res_id == last_id) & (peptide.atom_name == "O")
     )[0][0]
     coord_oxt = calculate_atom_coord_by_z_rotation(
-        peptide.coord[index_c], peptide.coord[index_o], -120, C_O_LENGTH
+        peptide.coord[index_c], peptide.coord[index_o], connect_angle, C_O_LENGTH
     )
     coord_hxt = calculate_atom_coord_by_z_rotation(
-        coord_oxt, peptide.coord[index_c], -120, O_H_LENGTH
+        coord_oxt, peptide.coord[index_c], connect_angle, O_H_LENGTH
     )
     atom_oxt = struc.Atom(
         coord_oxt,
