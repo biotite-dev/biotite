@@ -37,6 +37,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self._box = None
         self.add_annotation("chain_id", dtype="U3")
         self.add_annotation("res_id", dtype=int)
+        self.add_annotation("ins_code", dtype="U1")
         self.add_annotation("res_name", dtype="U3")
         self.add_annotation("hetero", dtype=bool)
         self.add_annotation("atom_name", dtype="U6")
@@ -139,14 +140,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The new value of the annotation category. The size of the
             array must be the same as the array length.
         """
-        if not isinstance(array, np.ndarray):
-            raise TypeError("Annotation must be an 'ndarray'")
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = array
+        self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -180,7 +179,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def _set_element(self, index, atom):
         try:
-            if isinstance(index, numbers.Integral):
+            if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
@@ -331,7 +330,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
                 self._box = value.astype(np.float32, copy=False)
             elif value is None:
-                # Remove bond list
+                # Remove box
                 self._box = None
             else:
                 raise TypeError("Box must be ndarray of floats or None")
@@ -393,7 +392,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if isinstance(self, AtomArrayStack):
             concat = AtomArrayStack(self.stack_depth(),
                                     self._array_length + array._array_length)
+        
         concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
+        
         # Transfer only annotations,
         # which are existent in both operands
         arr_categories = list(array._annot.keys())
@@ -402,6 +403,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        
         # Concatenate bonds lists,
         # if at least one of them contains bond information
         if self._bonds is not None or array._bonds is not None:
@@ -412,6 +414,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if bonds2 is None:
                 bonds2 = BondList(array._array_length)
             concat._bonds = bonds1 + bonds2
+        
         # Copy box
         if self._box is not None:
             concat._box = np.copy(self._box)
@@ -431,7 +434,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             clone._bonds = self._bonds.copy()
     
 
-class Atom(object):
+class Atom(Copyable):
     """
     A representation of a single atom.
     
@@ -451,7 +454,10 @@ class Atom(object):
     {annot} : scalar
         Annotations for this atom.
     coord : ndarray, dtype=float
-        ndarray containing the x, y and z coordinate of the atom. 
+        ndarray containing the x, y and z coordinate of the atom.
+    shape : tuple of int
+        Shape of the object.
+        In case of an :class:`Atom`, the tuple is empty.
     
     Examples
     --------
@@ -467,6 +473,13 @@ class Atom(object):
     
     def __init__(self, coord, **kwargs):
         self._annot = {}
+        self._annot["chain_id"] = ""
+        self._annot["res_id"] = 0
+        self._annot["ins_code"] = ""
+        self._annot["res_name"] = ""
+        self._annot["hetero"] = False
+        self._annot["atom_name"] = ""
+        self._annot["element"] = ""
         if "kwargs" in kwargs:
             # kwargs are given directly as dictionary
             kwargs = kwargs["kwargs"]
@@ -477,6 +490,10 @@ class Atom(object):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
+    
+    @property
+    def shape(self):
+        return ()
         
     def __getattr__(self, attr):
         if attr in self._annot:
@@ -498,10 +515,12 @@ class Atom(object):
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
-        return "{:3} {:3} {:5d} {:3} {:6} {:2}     {:8.3f} {:8.3f} {:8.3f}" \
-               .format(hetero, self.chain_id, self.res_id, self.res_name,
-                       self.atom_name, self.element,
-                       self.coord[0], self.coord[1], self.coord[2])
+        return f"{hetero:3} {self.chain_id:3} " \
+               f"{self.res_id:5d}{self.ins_code:1} {self.res_name:3} " \
+               f"{self.atom_name:6} {self.element:2}     " \
+               f"{self.coord[0]:8.3f} " \
+               f"{self.coord[1]:8.3f} " \
+               f"{self.coord[2]:8.3f}"
     
     def __eq__(self, item):
         if not isinstance(item, Atom):
@@ -517,6 +536,9 @@ class Atom(object):
     
     def __ne__(self, item):
         return not self == item
+    
+    def __copy_create__(self):
+        return Atom(self.coord, **self._annot)
 
     
 class AtomArray(_AtomArrayBase):
@@ -1131,9 +1153,9 @@ def array(atoms):
     >>> atom3 = Atom([3,4,5], chain_id="B")
     >>> atom_array = array([atom1, atom2, atom3])
     >>> print(atom_array)
-        A       0                      1.000    2.000    3.000
-        A       0                      2.000    3.000    4.000
-        B       0                      3.000    4.000    5.000
+        A       0                       1.000    2.000    3.000
+        A       0                       2.000    3.000    4.000
+        B       0                       3.000    4.000    5.000
     """
     # Check if all atoms have the same annotation names
     # Equality check requires sorting

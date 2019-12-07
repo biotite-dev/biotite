@@ -11,6 +11,7 @@ import glob
 from os.path import join
 from .util import data_dir
 import pytest
+from pytest import approx
 
 
 @pytest.mark.parametrize(
@@ -40,6 +41,38 @@ def test_parsing(category, key, exp_value):
     else:
         assert value == exp_value
 
+
+@pytest.mark.parametrize(
+    "string, use_array",
+    itertools.product(
+        ["", " ", "\n", "\t"],
+        [False, True]
+    )
+)
+def test_empty_values(string, use_array):
+    """
+    Test whether empty strings for field values are properly replaced
+    by ``'.'``. 
+    """
+    LENGTH = 10
+    ref_value = np.full(LENGTH, string, dtype="U1") if use_array else "" 
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.set_category(
+        category="test_category",
+        block="test",
+        category_dict={
+            "test_field": ref_value
+        }
+    )
+    
+    test_value = pdbx_file["test_category"]["test_field"]
+    
+    if use_array:
+        assert test_value.tolist() == ["."] * LENGTH
+    else:
+        assert test_value == "."
+
+
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
@@ -63,6 +96,7 @@ def test_conversion(path, single_model):
                array2.get_annotation(category).tolist()
     assert array1.coord.tolist() == array2.coord.tolist()
 
+
 def test_extra_fields():
     path = join(data_dir, "1l2y.cif")
     pdbx_file = pdbx.PDBxFile()
@@ -74,6 +108,35 @@ def test_extra_fields():
     stack2 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
                                 "occupancy","charge"])
     assert stack1 == stack2
+
+
+    path = join(data_dir, "1l2y.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+    stack1 = pdbx.get_structure(
+        pdbx_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    pdbx_file = pdbx.PDBxFile()
+    pdbx.set_structure(pdbx_file, stack1, data_block="test")
+    
+    stack2 = pdbx.get_structure(
+        pdbx_file,
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
+    assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
+    assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
+    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
+    assert stack1.charge.tolist() == stack2.charge.tolist()
+    assert stack1 == stack2
+
 
 def test_unequal_lengths():
     valid_category_dict = {

@@ -11,7 +11,7 @@ from ...atoms import AtomArray, AtomArrayStack
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
+from ...filter import filter_altloc
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 import copy
 from warnings import warn
@@ -86,17 +86,17 @@ class PDBFile(TextFile):
         Notes
         -----
         Note that :func:`get_coord()` may output more coordinates than
-        the coordinates of the atom array (stack) from the corresponding
-        :func:`get_structure()` call have.
+        the atom array (stack) from the corresponding
+        :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
-        insertion codes and altlocs, while `get_coord()` does not.
+        *altlocs*, while `get_coord()` does not.
         
         Examples
         --------
         Read an :class:`AtomArrayStack` from multiple PDB files, where
         each PDB file contains the same atoms but different positions.
         This is an efficient approach when a trajectory is spread into
-        multiple PDB files, as done e.g. by the Rosetta modeling
+        multiple PDB files, as done e.g. by the *Rosetta* modeling
         software. 
 
         For the purpose of this example, the PDB files are created from
@@ -146,10 +146,9 @@ class PDBFile(TextFile):
                                   if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
-        # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self.lines)) if
                                 self.lines[i].startswith(("ATOM", "HETATM"))],
-                               dtype=int)
+                                dtype=int)
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
@@ -201,8 +200,7 @@ class PDBFile(TextFile):
             return coord
 
 
-    def get_structure(self, model=None, insertion_code=[], altloc=[],
-                      extra_fields=[]):
+    def get_structure(self, model=None, altloc=[], extra_fields=[]):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
         
@@ -218,23 +216,24 @@ class PDBFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        insertion_code : list of tuple, optional
-            In case the structure contains insertion codes, those can be
-            specified here: Each tuple consists of an integer,
-            specifying the residue ID, and a letter, specifying the 
-            insertion code.
-            By default no insertions are used.
         altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can
-            be specified here: Each tuple consists of an integer,
-            specifying the residue ID, and a letter, specifying the
-            *altloc* ID. By default the location with the *altloc* ID
-            "A" is used.
+            In case the structure contains *altloc* entries, those can be
+            specified here:
+            Each tuple consists of the following elements:
+
+                - A chain ID, specifying the residue
+                - A residue ID, specifying the residue
+                - The desired *altoc* ID for the specified residue
+
+            For each of the given residues the atoms with the given *altloc*
+            ID are filtered.
+            By default the location with the *altloc* ID "A" is used.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
-            There are 4 optional annotation identifiers:
-            'atom_id', 'b_factor', 'occupancy' and 'charge'.
+            These are valid values:
+            ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+            ``'charge'``.
         
         Returns
         -------
@@ -246,7 +245,6 @@ class PDBFile(TextFile):
                                   if self.lines[i].startswith(("MODEL"))],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
-        # Filter out lines of altlocs and insertion codes
         atom_line_i = np.array([i for i in range(len(self.lines)) if
                                 self.lines[i].startswith(("ATOM", "HETATM"))],
                                dtype=int)
@@ -288,27 +286,26 @@ class PDBFile(TextFile):
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
         
-        # Create inscode and altloc arrays for the final filtering
+        # Create altloc array for the final filtering
         altloc_array = np.zeros(array.array_length(), dtype="U1")
-        inscode_array = np.zeros(array.array_length(), dtype="U1")
+        
         # Add optional annotation arrays
-        if "atom_id" in extra_fields:
-            array.add_annotation("atom_id", dtype=int)
-        if "occupancy" in extra_fields:
-            array.add_annotation("occupancy", dtype=float)
-        if "b_factor" in extra_fields:
-            array.add_annotation("b_factor", dtype=float)
-        if "charge" in extra_fields:
-            array.add_annotation("charge", dtype=int)
+        for field in extra_fields:
+            if field in ["atom_id", "charge"]:
+                array.add_annotation(field, dtype=int)
+            elif field in ["occupancy", "b_factor"]:
+                array.add_annotation(field, dtype=float)
+            else:
+                raise ValueError(f"Unknown extra field: {field}")
         
         # Fill in annotation
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
             altloc_array[i] = line[16]
-            inscode_array[i] = line[26]
             array.chain_id[i] = line[21].upper().strip()
             array.res_id[i] = decode_hybrid36(line[22:26])
+            array.ins_code[i] = line[26].strip()
             array.res_name[i] = line[17:20].strip()
             array.hetero[i] = (False if line[0:4] == "ATOM" else True)
             array.atom_name[i] = line[12:16].strip()
@@ -389,9 +386,7 @@ class PDBFile(TextFile):
                 break
 
         # Apply final filter and return
-        return array[..., filter_inscode_and_altloc(
-            array, insertion_code, altloc, inscode_array, altloc_array
-        )]
+        return array[..., filter_altloc(array, altloc_array, altloc)]
 
 
 
@@ -402,7 +397,10 @@ class PDBFile(TextFile):
         file.
         
         This makes also use of the optional annotation arrays
-        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        If the atom array (stack) contains the annotation ``'atom_id'``,
+        these values will be used for atom numbering instead of
+        continuous numbering.
         
         Parameters
         ----------
@@ -414,10 +412,9 @@ class PDBFile(TextFile):
             Defines wether the file should be written in hybrid-36
             format.
         """
-        # Save list of annotation categories for checks,
-        # if an optional category exists
         annot_categories = array.get_annotation_categories()
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
+        # Check for optional annotation categories
         if "atom_id" in annot_categories:
             atom_id = array.atom_id
         else:
@@ -455,11 +452,21 @@ class PDBFile(TextFile):
             pdb_atom_id = [encode_hybrid36(i, 5).rjust(5) for i in atom_id]
             pdb_res_id = [encode_hybrid36(i, 4).rjust(4) for i in array.res_id]
         else:
-            # Atom IDs are supported up to 99999
-            # Residue IDs are supported up to 9999
-            pdb_atom_id = ((atom_id - 1) % 99999) + 1
+            # Atom IDs are supported up to 99999,
+            # but negative IDs are also possible
+            pdb_atom_id = np.where(
+                atom_id > 0,
+                ((atom_id - 1) % 99999) + 1,
+                atom_id
+            )
             pdb_atom_id = ["{:>5d}".format(i) for i in pdb_atom_id]
-            pdb_res_id = ((array.res_id - 1) % 9999) + 1
+            # Residue IDs are supported up to 9999,
+            # but negative IDs are also possible
+            pdb_res_id = np.where(
+                array.res_id > 0,
+                ((array.res_id - 1) % 9999) + 1,
+                array.res_id
+            )
             pdb_res_id = ["{:>4d}".format(i) for i in pdb_res_id]
 
         if isinstance(array, AtomArray):
@@ -474,7 +481,8 @@ class PDBFile(TextFile):
                                   " " +
                                   "{:1}".format(array.chain_id[i]) +
                                   pdb_res_id[i] +
-                                  (" " * 4) +
+                                  "{:1}".format(array.ins_code[i]) +
+                                  (" " * 3) +
                                   "{:>8.3f}".format(array.coord[i,0]) +
                                   "{:>8.3f}".format(array.coord[i,1]) +
                                   "{:>8.3f}".format(array.coord[i,2]) +
@@ -503,7 +511,8 @@ class PDBFile(TextFile):
                                  " " +
                                  "{:1}".format(array.chain_id[i]) +
                                  pdb_res_id[i] +
-                                 (" " * 28) +
+                                 "{:1}".format(array.ins_code[i]) +
+                                 (" " * 27) +
                                  "{:>6.2f}".format(occupancy[i]) +
                                  "{:>6.3f}".format(b_factor[i]) +
                                  (" " * 10) +

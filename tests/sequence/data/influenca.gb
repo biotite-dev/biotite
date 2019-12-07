@@ -1,0 +1,112 @@
+LOCUS       MG856195                2233 bp    cRNA    linear   VRL 04-MAR-2018
+DEFINITION  Influenza A virus (A/Mexico/IBT25/2009(H1N1)) segment 3 polymerase
+            PA (PA) and PA-X protein (PA-X) genes, complete cds.
+ACCESSION   MG856195
+VERSION     MG856195.1
+KEYWORDS    .
+SOURCE      Influenza A virus
+  ORGANISM  Influenza A virus
+            Viruses; ssRNA viruses; ssRNA negative-strand viruses;
+            Orthomyxoviridae; Influenzavirus A.
+REFERENCE   1  (bases 1 to 2233)
+  AUTHORS   Isa,P., Lopez,S., Escalera-Zamudio,M., Guemes,A.G. and Arias,C.F.
+  TITLE     Genetic analysis of Influenza A viruses isolated in Mexico
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 2233)
+  AUTHORS   Isa,P., Lopez,S., Escalera-Zamudio,M., Guemes,A.G. and Arias,C.F.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (26-JAN-2018) Departamento de genetica del desarrollo y
+            fysiologia molecular, Instituto de Biotecnologia, Av. Univerisdad
+            2001, Cuernavaca, Morelos 62210, Mexico
+COMMENT     ##Assembly-Data-START##
+            Assembly Method       :: SAMtools v. 0.1.18
+            Coverage              :: 100
+            Sequencing Technology :: Illumina
+            ##Assembly-Data-END##
+FEATURES             Location/Qualifiers
+     source          1..2233
+                     /organism="Influenza A virus"
+                     /mol_type="viral cRNA"
+                     /strain="A/Mexico/IBT25/2009"
+                     /serotype="H1N1"
+                     /isolation_source="nasopharyngeal swab"
+                     /host="Homo sapiens; male"
+                     /db_xref="taxon:11320"
+                     /segment="3"
+                     /country="Mexico: Mexico City"
+                     /collection_date="07-May-2009"
+                     /note="passage details: No pass"
+     gene            25..2175
+                     /gene="PA"
+     CDS             25..2175
+                     /gene="PA"
+                     /codon_start=1
+                     /product="polymerase PA"
+                     /protein_id="AVI15058.1"
+                     /translation="MEDFVRQCFNPMIVELAEKAMKEYGEDPKIETNKFAAICTHLEV
+                     CFMYSDFHFIDERGESIIVESGDPNALLKHRFEIIEGRDRIMAWTVVNSICNTTGVEK
+                     PKFLPDLYDYKENRFIEIGVTRREVHIYYLEKANKIKSEKTHIHIFSFTGEEMATKAD
+                     YTLDEESRARIKTRLFTIRQEMASRSLWDSFRQSERGEETIEEKFEITGTMRKLADQS
+                     LPPNFSSLENFRAYVDGFEPNGCIEGKLSQMSKEVNAKIEPFLRTTPHPLRLPDGPLC
+                     HQRSKFLLMDALKLSIEDPSHEGEGIPLYDAIKCMKTFFGWKEPNIVKPHEKGINPNY
+                     LMAWKQVLAELQDIENEEKIPRTKNMKRTSQLKWALGENMAPEKVDFDDCKDVGDLKQ
+                     YDSDEPEPRSLASWVQNEFNKACELTDSSWIELDEIGEDVAPIEHIASMRRNYFTAEV
+                     SHCRATEYIMKGVYINTALLNASCAAMDDFQLIPMISKCRTKEGRRKTNLYGFIIKGR
+                     SHLRNDTDVVNFVSMEFSLTDPRLEPHKWEKYCVLEIGDMLLRTAIGQVSRPMFLYVR
+                     TNGTSKIKMKWGMELRRCLLQSLQQIESMIEAESSVKEKDMTKEFFENKSETWPIGES
+                     PRGVEEGSIGKVCRTLLAKSVFNSLYASPQLEGFSAESRKLLLIVQALRDNLEPGTFD
+                     LGGLYEAIEECLINDPWVLLNASWFNSFLTHALK"
+     gene            25..724
+                     /gene="PA-X"
+     CDS             join(25..594,596..724)
+                     /gene="PA-X"
+                     /ribosomal_slippage
+                     /codon_start=1
+                     /product="PA-X protein"
+                     /protein_id="AVI15059.1"
+                     /translation="MEDFVRQCFNPMIVELAEKAMKEYGEDPKIETNKFAAICTHLEV
+                     CFMYSDFHFIDERGESIIVESGDPNALLKHRFEIIEGRDRIMAWTVVNSICNTTGVEK
+                     PKFLPDLYDYKENRFIEIGVTRREVHIYYLEKANKIKSEKTHIHIFSFTGEEMATKAD
+                     YTLDEESRARIKTRLFTIRQEMASRSLWDSFVSPKEAKRQLKKNLRLQELCASLPTKV
+                     SHRTSPALKTLEPM"
+ORIGIN      
+        1 agcaaaagca ggtactgatc caaaatggaa gactttgtgc gacaatgctt caatccaatg
+       61 atcgtcgagc ttgcggaaaa ggcaatgaaa gaatatgggg aagatccgaa aatcgaaact
+      121 aacaagtttg ctgcaatatg cacacatttg gaagtttgtt tcatgtattc ggatttccat
+      181 ttcatcgacg aacggggtga atcaataatt gtagaatctg gtgacccgaa tgcactattg
+      241 aagcaccgat ttgagataat tgaaggaaga gaccgaatca tggcctggac agtggtgaac
+      301 agtatatgta acacaacagg ggtagagaag cctaaatttc ttcctgattt gtatgattac
+      361 aaagagaacc ggttcattga aattggagta acacggaggg aagtccacat atattaccta
+      421 gagaaagcca acaaaataaa atctgagaag acacacattc acatcttttc attcactgga
+      481 gaggagatgg ccaccaaagc ggactacacc cttgacgaag agagcagggc aagaatcaaa
+      541 actaggcttt tcactataag acaagaaatg gccagtagga gtctatggga ttcctttcgt
+      601 cagtccgaaa gaggcgaaga gacaattgaa gaaaaatttg agattacagg aactatgcgc
+      661 aagcttgccg accaaagtct cccaccgaac ttctccagcc ttgaaaactt tagagcctat
+      721 gtagatggat tcgagccgaa cggctgcatt gagggcaagc tttcccaaat gtcaaaagaa
+      781 gtgaacgcca aaattgaacc attcttgagg acgacaccac accccctcag attgcctgat
+      841 gggcctcttt gccatcagcg gtcaaagttc ctgctgatgg atgctctgaa attaagtatt
+      901 gaagacccga gtcacgaggg ggagggaata ccactatatg atgcaatcaa atgcatgaag
+      961 acattctttg gctggaaaga gcctaacata gtcaaaccac atgagaaagg cataaatccc
+     1021 aattacctca tggcttggaa gcaggtgcta gcagagctac aggacattga aaatgaagag
+     1081 aagatcccaa ggacaaagaa catgaagaga acaagccaat tgaagtgggc actcggtgaa
+     1141 aatatggcac cagaaaaagt agactttgat gactgcaaag atgttggaga ccttaaacag
+     1201 tatgacagtg atgagccaga gcccagatct ctagcaagct gggtccaaaa tgaattcaat
+     1261 aaggcatgtg aattgactga ttcaagctgg atagaacttg atgaaatagg agaagatgtt
+     1321 gccccgattg aacatatcgc aagcatgagg aggaactatt ttacagcaga agtgtcccac
+     1381 tgcagggcta ctgaatacat aatgaaggga gtgtacataa atacggcctt gctcaatgca
+     1441 tcctgtgcag ccatggatga ctttcagctg atcccaatga taagcaaatg taggaccaaa
+     1501 gaaggaagac ggaaaacaaa cctgtatggg ttcattataa aaggaaggtc tcatttgaga
+     1561 aatgatactg atgtggtgaa ctttgtaagt atggagttct cactcactga cccgagactg
+     1621 gagccacaca aatgggaaaa atactgtgtt cttgaaatag gagacatgct cttgaggact
+     1681 gcgataggcc aagtgtcgag gcccatgttc ctatatgtga gaaccaatgg aacctccaag
+     1741 atcaagatga aatggggcat ggaactgagg cgctgccttc ttcagtctct tcagcagatt
+     1801 gagagcatga ttgaggccga gtcttctgtc aaagagaaag acatgaccaa ggaattcttt
+     1861 gaaaacaaat cggaaacatg gccaatcgga gagtcaccca ggggagtgga ggaaggctct
+     1921 attgggaaag tgtgcaggac cttactggca aaatctgtat tcaacagtct atatgcgtct
+     1981 ccacaacttg aggggttttc ggctgaatcg agaaaattgc ttctcattgt tcaggcactt
+     2041 agggacaacc tggaacctgg aaccttcgat cttggggggc tatatgaagc aatcgaggag
+     2101 tgcctgatta atgatccctg ggttttgctt aatgcatctt ggttcaactc cttcctcaca
+     2161 catgcactga agtagttgtg gcaatgctac tatttgctat ccatactgtc caaaaaagta
+     2221 ccttgtttct act
+//
+

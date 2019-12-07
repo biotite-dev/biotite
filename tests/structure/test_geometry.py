@@ -159,6 +159,8 @@ def test_index_distance_periodic_orthogonal(shift):
 
 @pytest.mark.filterwarnings("ignore")
 @pytest.mark.xfail(raises=ImportError)
+# index_distance() creates a large ndarray
+@pytest.mark.xfail(raises=(MemoryError, ImportError))
 @pytest.mark.parametrize(
     "shift, angles", itertools.product(
     [

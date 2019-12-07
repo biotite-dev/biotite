@@ -14,7 +14,6 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
 from ...residues import get_residue_starts
 from ...box import unitcell_from_vectors
 from ...info.misc import link_type
@@ -70,9 +69,11 @@ def set_structure(file, array):
     cdef int i=0, j=0
     cdef array_length = array.array_length()
     
+
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray arr_chain_id  = array.chain_id
     cdef np.ndarray arr_res_id    = array.res_id
+    cdef np.ndarray arr_ins_code  = array.ins_code
     cdef np.ndarray arr_res_name  = array.res_name
     cdef np.ndarray arr_hetero    = array.hetero
     cdef np.ndarray arr_atom_name = array.atom_name
@@ -81,12 +82,14 @@ def set_structure(file, array):
     if "charge" in array.get_annotation_categories():
         arr_charge = array.charge
 
+
     # Residue start indices
     # Since the stop of i is the start of i+1,
     # The exclusive end of the atom array is appended
     # to enable convenient usage in the following loops
     cdef np.ndarray starts = np.append(get_residue_starts(array),
                                        [array_length])
+
 
     ### Preparing the group list ###
     # List of residues used for setting the file's 'groupList'
@@ -173,6 +176,7 @@ def set_structure(file, array):
         # Put new or already known residue to sequence of residue types
         res_types[i] = residue_i
     
+
     ### Convert annotation arrays into MMTF arrays ###
     # Pessimistic assumption on length of arrays
     # -> At maximum as large as atom array
@@ -207,6 +211,8 @@ def set_structure(file, array):
     res_per_chain = res_per_chain[:j]
     # Residue IDs from residue starts
     cdef np.ndarray res_ids = arr_res_id[starts[:-1]].astype(np.int32)
+    cdef np.ndarray res_inscodes
+    res_inscodes = arr_ins_code[starts[:-1]]
 
     ### Adapt arrays for multiple models
     cdef int model_count = 1
@@ -217,11 +223,13 @@ def set_structure(file, array):
         chain_names = np.tile(chain_names, model_count)
         res_per_chain = np.tile(res_per_chain, model_count)
         res_ids = np.tile(res_ids, model_count)
+        res_inscodes = np.tile(res_inscodes, model_count)
         res_types = np.tile(res_types, model_count)
 
+
     ### Remove arrays from file ###
-    # Arrays are removed when they are optional
-    # and when setting the structure information invalidates its content
+    # Arrays are removed if they are optional
+    # and if setting the structure information invalidates its content
     _delete_record(file, "bondAtomList")
     _delete_record(file, "bondOrderList")
     _delete_record(file, "bFactorList")
@@ -231,7 +239,8 @@ def set_structure(file, array):
     _delete_record(file, "secStructList")
     _delete_record(file, "insCodeList")
 
-    ### Put arrays into file ###
+
+    ### Put prepared arrays into file ###
     cdef np.ndarray coord
     if isinstance(array, AtomArrayStack):
         coord = array.coord.reshape(
@@ -251,9 +260,11 @@ def set_structure(file, array):
     file["groupsPerChain"] = res_per_chain.tolist()
     file["numGroups"] = len(res_ids)
     file.set_array("groupIdList", res_ids, codec=8)
+    file.set_array("insCodeList", res_inscodes, codec=6)
     file.set_array("groupTypeList", res_types, codec=4)
     file["groupList"] = residues
     file["numAtoms"] = model_count * array_length
+    
     # Optional annotation arrays
     categories = array.get_annotation_categories()
     if "atom_id" in categories:
@@ -268,6 +279,7 @@ def set_structure(file, array):
         file.set_array("occupancyList",
                        np.tile(array.occupancy.astype(np.float32), model_count),
                        codec=9, param=100)
+
 
     ### Add inter-residue bonds ###
     if include_bonds:
@@ -286,6 +298,7 @@ def set_structure(file, array):
     else:
         file["numBonds"] = 0
     
+
     ### Add unit cell ###
     if array.box is not None:
         if isinstance(array, AtomArray):
@@ -299,6 +312,7 @@ def set_structure(file, array):
             len_a, len_b, len_c,
             np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
         ]
+    
     
     ### Add additional information ###
     # Only set additional information, if not already set

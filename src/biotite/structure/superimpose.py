@@ -96,7 +96,7 @@ def superimpose(fixed, mobile, atom_mask=None):
     >>> array2 = translate(array2, [1,2,3])
     >>> array2 = rotate(array2, [1,2,3])
     >>> print("{:.3f}".format(rmsd(array1, array2)))
-    10.849
+    11.260
     
     Superimpose only CA atoms:
     
@@ -106,7 +106,7 @@ def superimpose(fixed, mobile, atom_mask=None):
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
     1.955
 
-    Superimpose only all atoms:
+    Superimpose all atoms:
 
     >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
@@ -141,7 +141,7 @@ def superimpose(fixed, mobile, atom_mask=None):
         rotation = _superimpose(fix_centered, mob_centered)
         superimposed = mobile.copy()
         superimposed.coord -= mob_centroid[..., np.newaxis, :]
-        superimposed.coord = np.dot(superimposed.coord, rotation)
+        superimposed.coord = np.dot(rotation, superimposed.coord.T).T
         superimposed.coord += fix_centroid
         return superimposed, (-mob_centroid, rotation, fix_centroid)
     
@@ -152,7 +152,7 @@ def superimpose(fixed, mobile, atom_mask=None):
         transformations = [None] * len(superimposed.coord)
         for i in range(len(superimposed.coord)):
             rotation = _superimpose(fix_centered, mob_centered[i])
-            superimposed.coord[i] = np.dot(superimposed.coord[i], rotation)
+            superimposed.coord[i] = np.dot(rotation, superimposed.coord[i].T).T
             transformations[i] = (-mob_centroid[i], rotation, fix_centroid)
         superimposed.coord += fix_centroid
         return superimposed, transformations
@@ -170,7 +170,7 @@ def _superimpose(fix_centered, mob_centered):
     y = mob_centered
     x = fix_centered
     # Calculate covariance matrix
-    cov = np.dot(y.T, x)
+    cov = np.dot(x.T, y)
     v, s, w = np.linalg.svd(cov)
     # Remove possibility of reflected atom coordinates
     if np.linalg.det(v) * np.linalg.det(w) < 0:
@@ -202,8 +202,9 @@ def superimpose_apply(atoms, transformation):
     --------
     superimpose
     """
+    trans1, rot, trans2 = transformation
     transformed = atoms.copy()
-    transformed.coord += transformation[0]
-    transformed.coord = np.dot(transformed.coord, transformation[1])
-    transformed.coord += transformation[2]
+    transformed.coord += trans1
+    transformed.coord = np.dot(rot, transformed.coord.T).T
+    transformed.coord += trans2
     return transformed

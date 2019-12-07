@@ -99,21 +99,21 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
     >>> print(atom_array_stack[2, triplets[:,0]])
-        A       1 ASN N      N        -6.589    7.754   -0.571
-        A       5 GLN N      N        -5.009   -0.575   -1.365
-        A       6 TRP N      N        -2.154   -0.497   -1.588
-        A       7 LEU N      N        -1.520   -1.904    0.893
-        A       8 LYS N      N        -2.716   -4.413    0.176
-        A       8 LYS NZ     N        -6.352   -4.311   -4.482
-        A       9 ASP N      N        -0.694   -5.301   -1.644
-        A      11 GLY N      N         2.142   -4.244    1.916
-        A      10 GLY N      N         1.135   -6.232    0.250
-        A      14 SER OG     O         4.689   -5.759   -2.390
-        A      13 SER N      N         6.424   -5.220    3.257
-        A      14 SER N      N         6.424   -5.506    0.464
-        A      15 GLY N      N         8.320   -3.632   -0.318
-        A      16 ARG N      N         8.043   -1.206   -1.866
-        A       6 TRP NE1    N         3.420    0.332   -0.121
+        A       1  ASN N      N        -6.589    7.754   -0.571
+        A       5  GLN N      N        -5.009   -0.575   -1.365
+        A       6  TRP N      N        -2.154   -0.497   -1.588
+        A       7  LEU N      N        -1.520   -1.904    0.893
+        A       8  LYS N      N        -2.716   -4.413    0.176
+        A       8  LYS NZ     N        -6.352   -4.311   -4.482
+        A       9  ASP N      N        -0.694   -5.301   -1.644
+        A      11  GLY N      N         2.142   -4.244    1.916
+        A      10  GLY N      N         1.135   -6.232    0.250
+        A      14  SER OG     O         4.689   -5.759   -2.390
+        A      13  SER N      N         6.424   -5.220    3.257
+        A      14  SER N      N         6.424   -5.506    0.464
+        A      15  GLY N      N         8.320   -3.632   -0.318
+        A      16  ARG N      N         8.043   -1.206   -1.866
+        A       6  TRP NE1    N         3.420    0.332   -0.121
 
     See Also
     --------

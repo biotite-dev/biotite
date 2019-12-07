@@ -5,11 +5,12 @@
 """
 A subpackage for reading and writing structure related data.
 
-Macromolecular structure files (PDB, PDBx/mmCIF, MMTF) can be used to
-load an :class:`AtomArray` or :class:`AtomArrayStack`.
-Since the data model for the :class:`AtomArray` and :class:`AtomArrayStack` class does
-not support dublicate atoms, only one *altloc* or *insertion code* can
-be chosen for each residue. Hence, the amount of atoms may be lower
+Macromolecular structure files (PDB, PDBx/mmCIF, MMTF, etc.) can be used
+to load an :class:`AtomArray` or :class:`AtomArrayStack`.
+
+Since the data model for the :class:`AtomArray` and :class:`AtomArrayStack`
+class does not support dublicate atoms, only one *altloc* can
+be chosen for each atom. Hence, the amount of atoms may be lower
 in the atom array (stack) than in respective structure file.
 
 The recommended format for reading structure files is MMTF.

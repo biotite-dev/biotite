@@ -56,6 +56,7 @@ thread.
 """
 
 from biotite.application import Application
+
 # Create a dummy Application subclass
 class MyApplication(Application):
     def __init__(self, param): super().__init__()
@@ -92,6 +93,7 @@ results = app.get_some_data()
 
 import biotite.application.blast as blast
 import biotite.sequence as seq
+
 tc5b_seq = seq.ProteinSequence("NLYIQWLKDGGPSSGRPPPS")
 app = blast.BlastWebApp("blastp", tc5b_seq)
 app.start()
@@ -129,6 +131,7 @@ print("Hit name: ", best_ali.hit_definition)
 
 import biotite.application.blast as blast
 import biotite.sequence as seq
+
 bl21_seq = seq.NucleotideSequence(
     "CGGAAGCGCTCGGTCTCCTGGCCTTATCAGCCACTGCGCGACGATATGCTCGTCCGTTTCGAAGA"
 )
@@ -172,6 +175,7 @@ print("Hit name: ", best_ali.hit_definition)
 
 import biotite.application.muscle as muscle
 import biotite.sequence as seq
+
 seq1 = seq.ProteinSequence("BIQTITE")
 seq2 = seq.ProteinSequence("TITANITE")
 seq3 = seq.ProteinSequence("BISMITE")
@@ -190,6 +194,7 @@ print(alignment)
 
 import matplotlib.pyplot as plt
 import biotite.sequence.graphics as graphics
+
 tree = app.get_guide_tree()
 fig, ax = plt.subplots()
 graphics.plot_dendrogram(
@@ -211,6 +216,7 @@ alignment = muscle.MuscleApp.align([seq1, seq2, seq3, seq4])
 # :class:`ClustalOmegaApp` or :class:`MafftApp` and you are done.
 
 import biotite.application.clustalo as clustalo
+
 alignment = clustalo.ClustalOmegaApp.align([seq1, seq2, seq3, seq4])
 print(alignment)
 
@@ -230,6 +236,7 @@ print(alignment)
 import numpy as np
 import biotite.application.mafft as mafft
 import biotite.sequence.align as align
+
 alphabet = seq.Alphabet(("foo", "bar", 42))
 sequences = [seq.GeneralSequence(alphabet, sequence) for sequence in [
     ["foo", "bar", 42, "foo", "foo", 42, 42],
@@ -270,6 +277,7 @@ import biotite
 import biotite.database.rcsb as rcsb
 import biotite.application.dssp as dssp
 import biotite.structure.io as strucio
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 array = stack[0]

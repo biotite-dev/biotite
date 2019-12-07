@@ -11,6 +11,7 @@ import pytest
 def atom_list():
     chain_id = ["A","A","B","B","B"]
     res_id = [1,1,1,1,2]
+    ins_code = [""] * 5
     res_name = ["ALA","ALA","PRO","PRO","MSE"]
     hetero = [False, False, False, False, True]
     atom_name = ["N", "CA", "O", "CA", "SE"]
@@ -20,6 +21,7 @@ def atom_list():
         atom_list.append(struc.Atom([i,i,i],
                          chain_id = chain_id[i],
                          res_id = res_id[i],
+                         ins_code = ins_code[i],
                          res_name = res_name[i],
                          hetero = hetero[i],
                          atom_name = atom_name[i],

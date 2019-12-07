@@ -20,12 +20,12 @@ dependencies:
   - networkx >=2.0
   - msgpack-python >=0.5.6
   - cython >=0.28
-  - mdtraj >=1.9
+  - mdtraj >=1.9.3
   - matplotlib >=2.0
   - pytest >=3.2
   - pytest-cov >=2.5
   - sphinx >=1.7
-  - sphinx-gallery >=0.3
+  - sphinx-gallery =0.5.0
   - numpydoc >=0.8
   - dssp
   - clustalo

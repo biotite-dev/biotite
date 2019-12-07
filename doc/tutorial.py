@@ -87,6 +87,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
                     "src_dir": ".",
                     "execute_script": True,
                     "show_memory": False,
+                    "capture_repr": (),
                     "image_scrapers": (scrapers.matplotlib_scraper,),
                 }
             )
