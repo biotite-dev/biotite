@@ -298,7 +298,7 @@ class BondList(Copyable):
         for i in range(all_bonds_v.shape[0]):
             # If a bond is found for the desired atom index
             # at the first or second position of the bond,
-            # then append the the index of the respective other position
+            # then append the index of the respective other position
             if all_bonds_v[i,0] == index:
                 bonds_v[j] = all_bonds_v[i,1]
                 bond_types_v[j] = all_bonds_v[i,2]
