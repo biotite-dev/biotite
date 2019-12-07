@@ -22,7 +22,7 @@ print(dna)
 # 
 # In general the sequence implementation in *Biotite* allows for
 # *sequences of anything*.
-# This means any (immutable an hashable) *Python* object can be used as
+# This means any immutable and hashable *Python* object can be used as
 # a symbol in a sequence, as long as the object is part of the
 # :class:`Alphabet` of the particular :class:`Sequence`.
 # An :class:`Alphabet` object simply represents a list of objects that

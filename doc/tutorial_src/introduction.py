@@ -20,7 +20,7 @@ The package contains by default sequence types for nucleotides and
 proteins, but the alphabet-based implementation allows simple
 integration of own sequence types, even if they do not rely on letters.
 Beside the standard I/O operations, the package includes general purpose
-functions for sequence manipulations and global/local alignments.
+functions for sequence manipulations and alignments.
 The :mod:`biotite.structure` subpackage enables handling of 3D
 structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their

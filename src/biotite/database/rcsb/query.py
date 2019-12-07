@@ -104,6 +104,8 @@ class SimpleQuery(Query, metaclass=abc.ABCMeta):
     def add_param(self, param, content):
         """
         Add a parameter (XML tag/text pair) to the query.
+
+        PROTECTED: Do not call from outside.
         
         Parameters
         ----------
@@ -152,6 +154,8 @@ class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
     def add_param(self, param, content, omit_prefix=False):
         """
         Add a parameter (XML tag/text pair) to the query.
+
+        PROTECTED: Do not call from outside.
         
         Parameters
         ----------
@@ -196,9 +200,9 @@ class BFactorQuery(RangeQuery):
     Parameters
     ----------
     min: float, optional
-        The minimum resolution value.
+        The minimum B-factor value.
     max: float, optional
-        The maximum resolution value.
+        The maximum B-factor value.
     """
     def __init__(self, min=None, max=None):
         super().__init__("AverageBFactorQuery", "refine.B_iso_mean", min, max)
