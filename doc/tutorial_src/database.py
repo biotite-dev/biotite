@@ -16,8 +16,8 @@ Fetching structure files from the RCSB PDB
 Downloading structure files from the *RCSB PDB* is quite easy:
 Simply specify the PDB ID, the file format and the target directory
 for the :func:`fetch()` function and you are done.
-The function even returns the path to the downloaded file, so you
-can just load it via the other *Biotite* subpackages
+The function returns the path to the downloaded file, so you
+can simply load the file via the other *Biotite* subpackages
 (more on this later).
 We will download on a protein structure of the miniprotein *TC5b*
 (PDB: 1L2Y) into a temporary directory.
@@ -40,7 +40,7 @@ print([relpath(file_path) for file_path in file_paths])
 
 ########################################################################
 # By default :func:`fetch()` checks whether the file to be fetched
-# already exists in the directory, and downloads it, if it does not
+# already exists in the directory and downloads it, if it does not
 # exist yet.
 # If you want to download files irrespectively, set :obj:`overwrite` to
 # true.
@@ -51,14 +51,14 @@ file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
 ########################################################################
 # In many cases you are not interested in a specific structure, but you
 # want a set of structures that fits your desired criteria.
-# For this purpose the *RCSB* SEARCH service can be interfaced.
+# For this purpose the *RCSB SEARCH* service can be interfaced.
 # 
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
 # The :func:`search()` method takes the :class:`Query` and returns a
 # list of PDB IDs, which itself can be used as input for :func:`fetch()`.
 
-query = rcsb.ResolutionQuery(0.0, 0.6)
+query = rcsb.ResolutionQuery(min=0.0, max=0.6)
 pdb_ids = rcsb.search(query)
 print(pdb_ids)
 files = rcsb.fetch(pdb_ids, "mmtf", biotite.temp_dir())
@@ -84,10 +84,10 @@ composite = rcsb.CompositeQuery("and", [query1, query2])
 # Another important source of biological information is the
 # *NCBI Entrez* database, which is commonly known as *the NCBI*.
 # It provides a myriad of information, ranging from sequences and
-# sequence features to scientific papers. Fetching files from
-# NCBI Entrez works analogous to the RCSB interface. This time
-# we have to provide the UIDs (Accession or GI) instead of PDB IDs
-# to the :func:`fetch()` function.
+# sequence features to scientific articles.
+# Fetching files from NCBI Entrez works analogous to the RCSB interface.
+# This time we have to provide the UIDs (Accession or GI) instead of
+# PDB IDs to the :func:`fetch()` function.
 # Furthermore, we need to specifiy the database to retrieve the data
 # from and the retrieval type.
 
@@ -112,7 +112,7 @@ print([relpath(file_path) for file_path in file_paths])
 # A list of valid database, retrieval type and mode combinations can
 # be found
 # `here <https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`_.
-# Furthermore :func:`get_database_name()` can be helpful to get the
+# Furthermore, :func:`get_database_name()` can be helpful to get the
 # required database name by the more commonly known names.
 
 print(entrez.get_database_name("Nucleotide"))

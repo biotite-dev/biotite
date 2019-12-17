@@ -23,7 +23,7 @@ print(dna)
 # 
 # In general the sequence implementation in *Biotite* allows for
 # *sequences of anything*.
-# This means any (immutable an hashable) *Python* object can be used as
+# This means any immutable and hashable *Python* object can be used as
 # a symbol in a sequence, as long as the object is part of the
 # :class:`Alphabet` of the particular :class:`Sequence`.
 # An :class:`Alphabet` object simply represents a list of objects that
@@ -127,25 +127,27 @@ print("-".join([seq.ProteinSequence.convert_letter_1to3(symbol)
 # :func:`NucleotideSequence.translate()` method.
 # By default, the method searches for open reading frames (ORFs) in the
 # 3 frames of the sequence.
-# A 6 frame ORF search requires an
+# A 6-frame ORF search requires an
 # additional call of :func:`NucleotideSequence.translate()` with the
 # reverse complement of the sequence.
-# If you want to conduct a complete translation of the sequence,
+# If you want to conduct a complete 1-frame translation of the sequence,
 # irrespective of any start and stop codons, set the parameter
 # :obj:`complete` to true.
 
 dna = seq.NucleotideSequence("CATATGATGTATGCAATAGGGTGAATG")
 proteins, pos = dna.translate()
 for i in range(len(proteins)):
-    print("Protein sequence {:} from base {:d} to base {:d}"
-            .format(str(proteins[i]), pos[i][0]+1, pos[i][1]))
+    print(
+        f"Protein sequence {str(proteins[i])} "
+        f"from base {pos[i][0]+1} to base {pos[i][1]}"
+    )
 protein = dna.translate(complete=True)
 print("Complete translation:", str(protein))
 
 ########################################################################
 # The upper example uses the default :class:`CodonTable` instance.
 # This can be changed with the :obj:`codon_table` parameter.
-# A :class:`CodonTable` maps codons to amino acid and defines start
+# A :class:`CodonTable` maps codons to amino acids and defines start
 # codons (both in symbol and code form).
 # A :class:`CodonTable` is mainly used in the
 # :func:`NucleotideSequence.translate()` method,
@@ -312,17 +314,18 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # Most functions in :mod:`biotite.sequence.align` can align any two
 # :class:`Sequence` objects with each other.
 # In fact the :class:`Sequence` objects can be instances from different
-# :class:`Sequence` subclasses and therefore may have different alphabets.
+# :class:`Sequence` subclasses and therefore may have different
+# alphabets.
 # The only condition that must be satisfied, is that the
-# class:`SubstitutionMatrix` alphabets matches the alphabets of the sequences
-# to be aligned.
+# :class:`SubstitutionMatrix` alphabets matches the alphabets of the
+# sequences to be aligned.
 # 
 # But wait, what's a :class:`SubstitutionMatrix`?
 # This class maps a similarity score to two symbols, one from the first
 # sequence the other from the second sequence.
 # A :class:`SubstitutionMatrix` object contains two alphabets with
-# length *n* or *m*, respectively, and an *(n,m)*-shaped :class:`ndarray`
-# storing the similarity scores.
+# length *n* or *m*, respectively, and an *(n,m)*-shaped
+# :class:`ndarray` storing the similarity scores.
 # You can choose one of many predefined matrices from an internal
 # database or you can create a custom matrix on your own.
 # 
@@ -344,7 +347,8 @@ print(matrix)
 matrix = align.SubstitutionMatrix(alph, alph, "BLOSUM50")
 # Load a matrix dictionary representation,
 # modify it, and create the SubstitutionMatrix
-# (Dictionary could be loaded from matrix string in NCBI format, too)
+# (The dictionary could be alternatively loaded from a string containing
+# the matrix in NCBI format)
 matrix_dict = align.SubstitutionMatrix.dict_from_db("BLOSUM62")
 matrix_dict[("P","Y")] = 100
 matrix = align.SubstitutionMatrix(alph, alph, matrix_dict)
@@ -417,10 +421,10 @@ print(align.get_codes(alignment))
 #
 # .. currentmodule:: biotite.sequence.io.fasta
 #
-# You may ask, why should you recalculate the score, when the score has
+# You wonder, why you should recalculate the score, when the score has
 # already been directly calculated via :func:`align_optimal()`.
-# The answer is, that you might load an alignment from an external
-# alignment program as FASTA file using :func:`get_alignment()`.
+# The answer is that you might load an alignment from a FASTA file
+# using :func:`get_alignment()`, where the score is not provided.
 # 
 # .. currentmodule:: biotite.sequence.align
 #
@@ -438,7 +442,7 @@ print(align.get_codes(alignment))
 # One popular source to obtain information about sequence features are
 # GenBank (for DNA and RNA) and GenPept (for peptides) files.
 # As example for sequence features we will work with the GenBank file
-# for the DNA sequence of the avidin gene (Accession: ``AJ311647``),
+# for the avidin gene (Accession: ``AJ311647``),
 # that we can download from the NCBI Entrez database.
 # After downloading we can load the file using the :class:`GenBankFile`
 # class from :mod:`biotite.sequence.io.genbank`.
@@ -465,16 +469,14 @@ print("Definition:", gb.get_definition(file))
 # 
 # Now that we have loaded the file, we want to have a look at the
 # sequence features.
-# Therefore, we grab the annotation from the file.
+# Therefore, we grab the :class:`Annotation` from the file.
 # An annotation is the collection of features corresponding to one
 # sequence (the sequence itself is not included, though).
-# In case of *Biotite* we can get an :class:`Annotation` object from the
-# :class:`GenBankFile`.
 # This :class:`Annotation` can be iterated in order to obtain single
 # :class:`Feature` objects.
 # Each :class:`Feature` contains 3 pieces of information: Its feature
-# key (e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one
-# or multiple locations on the corresponding sequence.
+# key (e.g. ``regulatory`` or ``CDS``), a dictionary of qualifiers and
+# one or multiple locations on the corresponding sequence.
 # A :class:`Location` in turn, contains its starting and its ending
 # base/residue position, the strand it is on (only for DNA) and possible
 # *location defects* (defects will be discussed later).
@@ -490,15 +492,15 @@ for feature in annotation:
 ########################################################################
 # The ``'>'`` characters in the string representations of a location
 # indicate that the location is on the forward strand.
-# Most of the features have only one location, except the *mRNA* and
-# *CDS* feature, which have 4 locations joined.
+# Most of the features have only one location, except the ``mRNA`` and
+# ``CDS`` feature, which have 4 locations joined.
 # When we look at the rest of the features, this makes sense: The gene
 # has 4 exons.
 # Therefore, the mRNA (and consequently the CDS) is composed of
 # these exons.
 #
-# The two *regulatory* features are the TATA box and the poly-A signal as the
-# feature qualifiers make clear:
+# The two ``regulatory`` features are the TATA box and the
+# poly-A signal, as the feature qualifiers make clear:
 
 for feature in annotation:
     if feature.key == "regulatory":
@@ -507,7 +509,8 @@ for feature in annotation:
 
 ########################################################################
 # Similarily to :class:`Alignment` objects, we can visualize an
-# Annotation in a *feature map*.
+# Annotation using the :mod:`biotite.sequence.graphics` subpackage, in
+# a so called *feature map*.
 # In order to avoid overlaping features, we draw only the *CDS* feature.
 
 # Get the range of the entire annotation via the *source* feature
@@ -530,8 +533,8 @@ fig.tight_layout()
 
 ########################################################################
 # :class:`Annotation` objects can be indexed with slices, that represent
-# the start and the stop base/residue of the annotation from which the
-# subannotation is created.
+# the start and the exclusive stop base/residue of the annotation from
+# which the subannotation is created.
 # All features, that are not in this range, are not included in the
 # subannotation.
 # In order to demonstrate this indexing method, we create a
@@ -555,7 +558,7 @@ for feature in sub_annot:
 ########################################################################
 # The regulatory sequences have disappeared in the subannotation.
 # Another interesting thing happened:
-# The location of the *source* feature narrowed and
+# The location of the ``source``` feature narrowed and
 # is in range of the slice now. This happened, because the feature was
 # *truncated*:
 # The bases that were not in range of the slice were removed.
@@ -577,23 +580,23 @@ for feature in sub_annot:
 # This means that multiple defects can be combined to one value.
 # ``NONE`` means that the location has no defect, which is true for most
 # of the features.
-# The *source* feature has a defect - a combination of ``MISS_LEFT``
+# The ``source`` feature has a defect - a combination of ``MISS_LEFT``
 # and ``MISS_RIGHT``. ``MISS_LEFT`` is applied, if a feature was
 # truncated before the first base, and ``MISS_RIGHT`` is applied, if
 # a feature was truncated after the last base.
-# Since *source* was truncated from both sides, the combination is
+# Since ``source``` was truncated from both sides, the combination is
 # applied.
-# *gene* has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
+# ``gene`` has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
 # These defects already appear in the GenBank file, since
 # the gene is defined as the unit that is transcribed into one
 # (pre-)mRNA.
 # As the transcription starts somewhere before the start of the coding
-# region, and the exact location is not known, ``BEYOND_LEFT`` is
+# region and the exact start location is not known, ``BEYOND_LEFT`` is
 # applied.
-# In an analogous way, the transription does stop somewhere after the
-# coding region (at the terminator signal),
-# hence ``BEYOND_RIGHT`` is applied.
-# These two defects are also reflected in the *mRNA* feature.
+# In an analogous way, the transcription does stop somewhere after the
+# coding region (at the terminator signal).
+# Hence, ``BEYOND_RIGHT`` is applied.
+# These two defects are also reflected in the ``mRNA`` feature.
 # 
 # Annotated sequences
 # ^^^^^^^^^^^^^^^^^^^
@@ -632,7 +635,7 @@ print(poly_a.sequence)
 ########################################################################
 # Here we get the poly-A signal Sequence ``'AATAAA'``.
 # As you might have noticed, the sequence start has shifted to the start
-# of the slice index (the first base of the *regulatory* feature).
+# of the slice index (the first base of the ``regulatory`` feature).
 # 
 # .. warning:: Since :class:`AnnotatedSequence` objects use base position
 #    indices and :class:`Sequence` objects use array position indices,
@@ -642,7 +645,8 @@ print(poly_a.sequence)
 # There is also a convenient way to obtain the sequence corresponding to
 # a feature, even if the feature contains multiple locations or a
 # location is on the reverse strand:
-# Simply use a :class:`Feature` object as index.
+# Simply use a :class:`Feature` object (in this case the CDS feature)
+# as index.
 
 for feature in annot_seq.annotation:
     if feature.key == "CDS":

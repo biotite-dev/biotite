@@ -111,7 +111,7 @@ print("Hit name: ", best_ali.hit_definition)
 
 ########################################################################
 # This was too simple for BLAST:
-# It just found the query sequence in the PDB.
+# As best hit it just found the query sequence itself in the PDB.
 # However, it gives a good impression about how this
 # :class:`Application` works.
 # Besides some optional parameters, the :class:`BlastWebApp` requires
@@ -132,10 +132,10 @@ print("Hit name: ", best_ali.hit_definition)
 import biotite.application.blast as blast
 import biotite.sequence as seq
 
-bl21_seq = seq.NucleotideSequence(
+distorted_bl21_excerpt = seq.NucleotideSequence(
     "CGGAAGCGCTCGGTCTCCTGGCCTTATCAGCCACTGCGCGACGATATGCTCGTCCGTTTCGAAGA"
 )
-app = blast.BlastWebApp("blastn", bl21_seq, obey_rules=False)
+app = blast.BlastWebApp("blastn", distorted_bl21_excerpt, obey_rules=False)
 app.set_max_expect_value(0.1)
 app.start()
 app.join()
@@ -189,7 +189,7 @@ print(alignment)
 ########################################################################
 # In most MSA software even more information than the mere alignment can
 # be extracted.
-# For instance the guide tree that was used for the alignment can be
+# For instance the guide tree, that was used for the alignment, can be
 # obtained from the MUSCLE output.
 
 import matplotlib.pyplot as plt
@@ -268,10 +268,6 @@ print(alignment.trace)
 # installed).
 # Let us demonstrate this on the example of the good old miniprotein
 # *TC5b*.
-#
-# Similar to the MSA examples, :class:`DsspApp` has the convenience
-# function :func:`DsspApp.annotate_sse()`, which handles the
-# :class:`DsspApp` execution internally.
 
 import biotite
 import biotite.database.rcsb as rcsb
@@ -286,3 +282,7 @@ app.start()
 app.join()
 sse = app.get_sse()
 print(sse)
+
+########################################################################
+# Similar to the MSA examples, :class:`DsspApp` has the convenience
+# method :func:`DsspApp.annotate_sse()` as shortcut.
