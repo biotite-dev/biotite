@@ -184,7 +184,9 @@
         ],
         "Bonds" : [
             "BondList",
-            "BondType"
+            "BondType",
+            "connect_via_residue_names",
+            "connect_via_distances"
         ],
         "Geometry" : [
             "displacement",
