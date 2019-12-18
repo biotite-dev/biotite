@@ -903,7 +903,7 @@ def _connect_inter_residue(atoms, residue_starts):
     cdef np.ndarray chain_ids = atoms.chain_id
     cdef int curr_start_i, next_start_i, after_next_start_i
     cdef str curr_connect_atom_name, next_connect_atom_name
-    cdef int curr_connect_index, next_connect_index
+    cdef np.ndarray curr_connect_indices, next_connect_indices
     
     # Iterate over all starts excluding:
     #   - the last residue and
@@ -939,23 +939,23 @@ def _connect_inter_residue(atoms, residue_starts):
         # Index in atom array for atom name in current residue
         # Addition of 'curr_start_i' is necessary, as only a slice of
         # 'atom_names' is taken, beginning at 'curr_start_i'
-        # Reason for [0][0]:
-        #   -> First and only tuple element of 'where()'
-        #   -> First and (hopefully) only one hit for atom name
-        #      in this residue
-        curr_connect_index = curr_start_i + np.where(
+        curr_connect_indices = curr_start_i + np.where(
             atom_names[curr_start_i : next_start_i]
             == curr_connect_atom_name
-        )[0][0]
+        )[0]
         # Index in atom array for atom name in next residue 
-        next_connect_index = next_start_i + np.where(
+        next_connect_indices = next_start_i + np.where(
             atom_names[next_start_i : after_next_start_i]
             == next_connect_atom_name
-        )[0][0]
+        )[0]
+        if len(curr_connect_indices) == 0 or len(next_connect_indices) == 0:
+            # The connector atoms are not found in the adjacent residues
+            # -> skip this bond
+            continue
 
         bonds.append((
-            curr_connect_index,
-            next_connect_index,
+            curr_connect_indices[0],
+            next_connect_indices[0],
             BondType.SINGLE
         ))
         
