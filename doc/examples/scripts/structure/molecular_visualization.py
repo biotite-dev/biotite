@@ -4,7 +4,7 @@ Molecular visualization
 
 .. currentmodule:: biotite.structure.graphics
 
-*Biotite* provides simple molecular visualization via
+*Biotite* provides simple interactive molecular visualization via
 :func:`plot_atoms()`.
 Although it does not produce publication-suitable images,
 this function can be a convenient tool for a quick visual analysis of a
