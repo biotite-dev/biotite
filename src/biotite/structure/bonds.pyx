@@ -782,8 +782,8 @@ def connect_via_residue_names(atoms):
                 # -> skip this bond
                 continue
             bonds.append((
-                atom_indices1[0],
-                atom_indices2[0],
+                curr_start_i + atom_indices1[0],
+                curr_start_i + atom_indices2[0],
                 bond_order
             ))
              
