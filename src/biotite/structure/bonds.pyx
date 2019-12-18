@@ -226,6 +226,30 @@ class BondList(Copyable):
         """
         return self._bonds.copy()
     
+    def as_set(self):
+        """
+        as_set()
+        
+        Obtain a set represetion of the :class:`BondList`.
+
+        Returns
+        -------
+        bond_set : set of tuple(int, int, int)
+            A set of tuples.
+            Each tuple represents one bond:
+            The first integer represents the first atom,
+            the second integer represents the second atom,
+            the third integer represents the :class:`BondType`.
+        """
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        cdef int i
+        cdef set bond_set = set()
+        for i in range(all_bonds_v.shape[0]):
+            bond_set.add(
+                (all_bonds_v[i,0], all_bonds_v[i,1], all_bonds_v[i,2])
+            )
+        return bond_set
+    
     def get_atom_count(self):
         """
         get_atom_count()
@@ -490,7 +514,7 @@ class BondList(Copyable):
         return merged_bond_list
 
     def __getitem__(self, index):
-        cdef copy = self.copy()
+        copy = self.copy()
         cdef uint32[:,:] all_bonds_v = copy._bonds
         # Boolean mask representation of the index
         cdef np.ndarray mask
@@ -550,7 +574,7 @@ class BondList(Copyable):
         if not isinstance(item, BondList):
             return False
         return (self._atom_count == item._atom_count and
-                set(self._bonds), set(item._bonds))
+                self.as_set() == item.as_set())
 
     def _get_max_bonds_per_atom(self):
         cdef int i
