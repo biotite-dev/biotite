@@ -742,8 +742,8 @@ def connect_via_distances(atoms, dict distance_range=None):
     A bond is created for two atoms within the same residue, if the
     distance between them is within the expected bond distance range.
     Bonds between two adjacent residues are created for the atoms
-    expected to connect these residues, e.g. ``'C'`` and ``'N'`` for
-    peptides.
+    expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
+    peptides and ``"O3'"`` and ``'P'`` for nucleotides.
     
     Parameters
     ----------
@@ -797,8 +797,8 @@ def connect_via_residue_names(atoms):
     dataset.
 
     Bonds between two adjacent residues are created for the atoms
-    expected to connect these residues, e.g. ``'C'`` and ``'N'`` for
-    peptides.
+    expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
+    peptides and ``"O3'"`` and ``'P'`` for nucleotides.
     
     Parameters
     ----------
