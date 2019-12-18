@@ -733,6 +733,47 @@ def _to_bool_mask(object index, uint32 length):
 
 
 def connect_via_distances(atoms, dict distance_range=None):
+    """
+    connect_via_distances(atoms, dict distance_range=None)
+
+    Create a :class:`BondList` for a given atom array, based on
+    pairwise atom distances.
+
+    A bond is created for two atoms within the same residue, if the
+    distance between them is within the expected bond distance range.
+    Bonds between two adjacent residues are created for the atoms
+    expected to connect these residues, e.g. ``'C'`` and ``'N'`` for
+    peptides.
+    
+    Parameters
+    ----------
+    atoms : AtomArray
+        The structure to create the :class:`BondList` for.
+    distance_range : dict of tuple(str, str) -> tuple(float, float), optional
+        Custom minimum and maximum bond distances.
+        The dictionary keys are tuples of chemical elements,
+        representing the atoms to be potentially bonded.
+        The order does not matter.
+        The dictionary values are the minimum and maximum bond distance,
+        respectively, for the given combination of elements.
+    
+    Returns
+    -------
+    BondList
+        The created bond list.
+    
+    See also
+    --------
+    connect_via_residue_names
+
+    Notes
+    -----
+    This method might miss bonds, if the bond distance is unexpectedly
+    high or low, or it might create false bonds, if two atoms within a
+    residue are accidentally in the right distance.
+    A more accurate method for determining bonds is
+    :func:`connect_via_residue_names()`.
+    """
     from .residues import get_residue_starts
     
     bond_list = BondList(atoms.array_length())
@@ -748,6 +789,42 @@ def connect_via_distances(atoms, dict distance_range=None):
 
 
 def connect_via_residue_names(atoms):
+    """
+    connect_via_residue_names(atoms)
+
+    Create a :class:`BondList` for a given atom array (stack), based on
+    the deposited bonds for each residue in the RCSB ``components.cif``
+    dataset.
+
+    Bonds between two adjacent residues are created for the atoms
+    expected to connect these residues, e.g. ``'C'`` and ``'N'`` for
+    peptides.
+    
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The structure to create the :class:`BondList` for.
+    
+    Returns
+    -------
+    BondList
+        The created bond list.
+        No bonds are added for residues that are not found in
+        ``components.cif``.
+    
+    See also
+    --------
+    connect_via_distances
+
+    Notes
+    -----
+    If obtaining the bonds from an *MMTF* file is not possible, this is
+    the recommended way to obtain :class:`BondList` for a structure.
+    However, this method can only find bonds for residues in the RCSB
+    ``components.cif`` dataset.
+    Although this includes most molecules one encounters, this will fail
+    for exotic molecules, e.g. specialized inhibitors.
+    """
     from .residues import get_residue_starts
     from .info.bonds import bond_dataset
 
@@ -771,7 +848,10 @@ def connect_via_residue_names(atoms):
         curr_start_i = residue_starts[i]
         next_start_i = residue_starts[i+1]
 
-        bond_dict_for_res = bond_dict[res_names[curr_start_i]]
+        bond_dict_for_res = bond_dict.get(res_names[curr_start_i])
+        if bond_dict_for_res is None:
+            # Residue is not in dataset -> skip this residue
+            continue
         atom_names_in_res = atom_names[curr_start_i : next_start_i]
         for (atom_name1, atom_name2), bond_order in bond_dict_for_res.items():
             atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
@@ -796,6 +876,23 @@ _PEPTIDE_LINKS = ["PEPTIDE LINKING", "L-PEPTIDE LINKING", "D-PEPTIDE LINKING"]
 _NUCLEIC_LINKS = ["RNA LINKING", "DNA LINKING"]
 
 def _connect_inter_residue(atoms, residue_starts):
+    """
+    Create a :class:`BondList` containing the bonds between two adjacent
+    amino acid or nucleotide residues.
+    
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The structure to create the :class:`BondList` for.
+    residue_starts : ndarray, dtype=int
+        Return value of
+        ``get_residue_starts(atoms, add_exclusive_stop=True)``.
+    
+    Returns
+    -------
+    BondList
+        A bond list containing all inter residue bonds.
+    """
     from .info.misc import link_type
     
     cdef list bonds = []
@@ -824,6 +921,7 @@ def _connect_inter_residue(atoms, residue_starts):
         if res_ids[next_start_i] != res_ids[curr_start_i] + 1:
             continue
         
+        # Get link type for this residue from RCSB components.cif
         curr_link = link_type(res_names[curr_start_i])
         next_link = link_type(res_names[curr_start_i+1])
         
