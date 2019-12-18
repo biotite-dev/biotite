@@ -9,7 +9,8 @@ a location.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["BondList", "BondType"]
+__all__ = ["BondList", "BondType",
+           "connect_via_distances", "connect_via_residue_names"]
 
 cimport cython
 cimport numpy as np
@@ -126,7 +127,7 @@ class BondList(Copyable):
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
         self._atom_count = atom_count
         
-        if bonds is not None:
+        if bonds is not None and len(bonds) > 0:
             if (bonds[:,:2] >= atom_count).any():
                 raise ValueError(
                     f"Index {np.max(bonds[:,:2])} in bonds is too large "
@@ -549,7 +550,7 @@ class BondList(Copyable):
         if not isinstance(item, BondList):
             return False
         return (self._atom_count == item._atom_count and
-                np.array_equal(self._bonds, item._bonds))
+                set(self._bonds), set(item._bonds))
 
     def _get_max_bonds_per_atom(self):
         cdef int i
@@ -593,7 +594,7 @@ class BondList(Copyable):
                 i2 = all_bonds_v[j,1]
                 # Since the bonds have the atom indices sorted
                 # the reverse check is omitted
-                if     _in_array(<uint32*>ptrs_v[i1], i2, array_len_v[i1]):
+                if _in_array(<uint32*>ptrs_v[i1], i2, array_len_v[i1]):
                         redundancy_filter_v[j] = False
                 else:
                     # Append bond in respective C-array
@@ -704,3 +705,136 @@ def _to_bool_mask(object index, uint32 length):
             raise TypeError("A single integer is not a valid index "
                             "for this method")
         return _to_bool_mask(array, length)
+
+
+
+def connect_via_distances(atoms, dict distance_range=None):
+    from .residues import get_residue_starts
+    
+    bond_list = BondList(atoms.array_length())
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    
+    inter_bonds = _connect_inter_residue(atoms, residue_starts)
+    # As all bonds should be of type ANY, convert also inter-residue
+    # bonds to ANY by creating a new BondList and omitting the BonType
+    # column
+    inter_bonds = BondList(atoms.array_length(), inter_bonds.as_array()[:, :2])
+    
+    return bond_list.merge(inter_bonds)
+
+
+def connect_via_residue_names(atoms):
+    from .residues import get_residue_starts
+    from .info.bonds import bond_dataset
+
+    cdef list bonds = []
+    cdef int i
+    cdef int curr_start_i, next_start_i
+    cdef np.ndarray atom_names = atoms.atom_name
+    cdef np.ndarray atom_names_in_res
+    cdef np.ndarray res_names = atoms.res_name
+    cdef str atom_name1, atom_name2
+    cdef np.ndarray atom_indices1, atom_indices2
+    cdef int atom_index1, atom_index2
+    cdef int bond_order
+    # Obtain dictionary containing bonds for all residues in RCSB
+    cdef dict bond_dict = bond_dataset()
+    cdef dict bond_dict_for_res
+
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    # Omit exclsive stop in 'residue_starts'
+    for i in range(len(residue_starts)-1):
+        curr_start_i = residue_starts[i]
+        next_start_i = residue_starts[i+1]
+
+        bond_dict_for_res = bond_dict[res_names[curr_start_i]]
+        atom_names_in_res = atom_names[curr_start_i : next_start_i]
+        for (atom_name1, atom_name2), bond_order in bond_dict_for_res.items():
+            atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
+            atom_indices2 = np.where(atom_names_in_res == atom_name2)[0]
+            if len(atom_indices1) == 0 or len(atom_indices2) == 0:
+                # The pair of atoms in this bond from the dataset is not
+                # in the residue of the atom array
+                # -> skip this bond
+                continue
+            bonds.append((
+                atom_indices1[0],
+                atom_indices2[0],
+                bond_order
+            ))
+             
+    bond_list = BondList(atoms.array_length(), np.array(bonds))
+    
+    return bond_list.merge(_connect_inter_residue(atoms, residue_starts))
+
+
+_PEPTIDE_LINKS = ["PEPTIDE LINKING", "L-PEPTIDE LINKING", "D-PEPTIDE LINKING"]
+_NUCLEIC_LINKS = ["RNA LINKING", "DNA LINKING"]
+
+def _connect_inter_residue(atoms, residue_starts):
+    from .info.misc import link_type
+    
+    cdef list bonds = []
+    cdef int i
+    cdef np.ndarray atom_names = atoms.atom_name
+    cdef np.ndarray res_names = atoms.res_name
+    cdef np.ndarray res_ids = atoms.res_id
+    cdef np.ndarray chain_ids = atoms.chain_id
+    cdef int curr_start_i, next_start_i, after_next_start_i
+    cdef str curr_connect_atom_name, next_connect_atom_name
+    cdef int curr_connect_index, next_connect_index
+    
+    # Iterate over all starts excluding:
+    #   - the last residue and
+    #   - exclusive end index of 'atoms'
+    for i in range(len(residue_starts)-2):
+        curr_start_i = residue_starts[i]
+        next_start_i = residue_starts[i+1]
+        after_next_start_i = residue_starts[i+2]
+
+        # Check if the current and next residue is in the same chain
+        if chain_ids[next_start_i] != chain_ids[curr_start_i]:
+            continue
+        # Check if the current and next residue
+        # have consecutive residue IDs
+        if res_ids[next_start_i] != res_ids[curr_start_i] + 1:
+            continue
+        
+        curr_link = link_type(res_names[curr_start_i])
+        next_link = link_type(res_names[curr_start_i+1])
+        
+        if curr_link in _PEPTIDE_LINKS and next_link in _PEPTIDE_LINKS:
+            curr_connect_atom_name = "C"
+            next_connect_atom_name = "N"
+        elif curr_link in _NUCLEIC_LINKS and next_link in _NUCLEIC_LINKS:
+            curr_connect_atom_name = "O3'"
+            next_connect_atom_name = "P"
+        else:
+            # Create no bond if the connection types of consecutive
+            # residues are not compatible
+            continue
+        
+        # Index in atom array for atom name in current residue
+        # Addition of 'curr_start_i' is necessary, as only a slice of
+        # 'atom_names' is taken, beginning at 'curr_start_i'
+        # Reason for [0][0]:
+        #   -> First and only tuple element of 'where()'
+        #   -> First and (hopefully) only one hit for atom name
+        #      in this residue
+        curr_connect_index = curr_start_i + np.where(
+            atom_names[curr_start_i : next_start_i]
+            == curr_connect_atom_name
+        )[0][0]
+        # Index in atom array for atom name in next residue 
+        next_connect_index = next_start_i + np.where(
+            atom_names[next_start_i : after_next_start_i]
+            == next_connect_atom_name
+        )[0][0]
+
+        bonds.append((
+            curr_connect_index,
+            next_connect_index,
+            BondType.SINGLE
+        ))
+        
+    return BondList(atoms.array_length(), np.array(bonds, dtype=np.uint32))
