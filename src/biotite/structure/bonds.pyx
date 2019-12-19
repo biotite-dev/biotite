@@ -732,6 +732,53 @@ def _to_bool_mask(object index, uint32 length):
 
 
 
+_DISTANCE_RANGE = {
+    # Taken from Allen et al.
+    #               min   - 2*std     max   + 2*std
+    ("B",  "C" ) : (1.556 - 2*0.015,  1.556 + 2*0.015),
+    ("BR", "C" ) : (1.875 - 2*0.029,  1.966 + 2*0.029),
+    ("BR", "O" ) : (1.581 - 2*0.007,  1.581 + 2*0.007),
+    ("C",  "C" ) : (1.174 - 2*0.011,  1.588 + 2*0.025),
+    ("C",  "CL") : (1.713 - 2*0.011,  1.849 + 2*0.011),
+    ("C",  "F" ) : (1.320 - 2*0.009,  1.428 + 2*0.009),
+    ("C",  "H" ) : (1.059 - 2*0.030,  1.099 + 2*0.007),
+    ("C",  "I" ) : (2.095 - 2*0.015,  2.162 + 2*0.015),
+    ("C",  "N" ) : (1.325 - 2*0.009,  1.552 + 2*0.023),
+    ("C",  "O" ) : (1.187 - 2*0.011,  1.477 + 2*0.008),
+    ("C",  "P" ) : (1.791 - 2*0.006,  1.855 + 2*0.019),
+    ("C",  "S" ) : (1.630 - 2*0.014,  1.863 + 2*0.015),
+    ("C",  "SE") : (1.893 - 2*0.013,  1.970 + 2*0.032),
+    ("C",  "SI") : (1.837 - 2*0.012,  1.888 + 2*0.023),
+    ("CL", "O" ) : (1.414 - 2*0.026,  1.414 + 2*0.026),
+    ("CL", "P" ) : (1.997 - 2*0.035,  2.008 + 2*0.035),
+    ("CL", "S" ) : (2.072 - 2*0.023,  2.072 + 2*0.023),
+    ("CL", "SI") : (2.072 - 2*0.009,  2.072 + 2*0.009),
+    ("F",  "N" ) : (1.406 - 2*0.016,  1.406 + 2*0.016),
+    ("F",  "P" ) : (1.495 - 2*0.016,  1.579 + 2*0.025),
+    ("F",  "S" ) : (1.640 - 2*0.011,  1.640 + 2*0.011),
+    ("F",  "SI") : (1.588 - 2*0.014,  1.694 + 2*0.013),
+    ("H",  "N" ) : (1.009 - 2*0.022,  1.033 + 2*0.022),
+    ("H",  "O" ) : (0.967 - 2*0.010,  1.015 + 2*0.017),
+    ("I",  "O" ) : (2.144 - 2*0.028,  2.144 + 2*0.028),
+    ("N",  "N" ) : (1.124 - 2*0.015,  1.454 + 2*0.021),
+    ("N",  "O" ) : (1.210 - 2*0.011,  1.463 + 2*0.012),
+    ("N",  "P" ) : (1.571 - 2*0.013,  1.697 + 2*0.015),
+    ("N",  "S" ) : (1.541 - 2*0.022,  1.710 + 2*0.019),
+    ("N",  "SI") : (1.711 - 2*0.019,  1.748 + 2*0.022),
+    ("O",  "P" ) : (1.449 - 2*0.007,  1.689 + 2*0.024),
+    ("O",  "S" ) : (1.423 - 2*0.008,  1.580 + 2*0.015),
+    ("O",  "SI") : (1.622 - 2*0.014,  1.680 + 2*0.008),
+    ("P",  "P" ) : (2.214 - 2*0.022,  2.214 + 2*0.022),
+    ("P",  "S" ) : (1.913 - 2*0.014,  1.954 + 2*0.005),
+    ("P",  "SE") : (2.093 - 2*0.019,  2.093 + 2*0.019),
+    ("P",  "SI") : (2.264 - 2*0.019,  2.264 + 2*0.019),
+    ("S",  "S" ) : (1.897 - 2*0.012,  2.070 + 2*0.022),
+    ("S",  "SE") : (2.193 - 2*0.015,  2.193 + 2*0.015),
+    ("S",  "SI") : (2.145 - 2*0.020,  2.145 + 2*0.020),
+    ("SE", "SE") : (2.340 - 2*0.024,  2.340 + 2*0.024),
+    ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
+}
+
 def connect_via_distances(atoms, dict distance_range=None):
     """
     connect_via_distances(atoms, dict distance_range=None)
@@ -751,11 +798,15 @@ def connect_via_distances(atoms, dict distance_range=None):
         The structure to create the :class:`BondList` for.
     distance_range : dict of tuple(str, str) -> tuple(float, float), optional
         Custom minimum and maximum bond distances.
-        The dictionary keys are tuples of chemical elements,
-        representing the atoms to be potentially bonded.
-        The order does not matter.
+        The dictionary keys are tuples of chemical elements
+        (upper case) representing the atoms to be potentially bonded.
+        The order of elements within each tuple does not matter.
         The dictionary values are the minimum and maximum bond distance,
         respectively, for the given combination of elements.
+        This parameter updates the default dictionary.
+        Hence, the default bond distances for missing element pairs are
+        still taken from the default dictionary.
+        The default bond distances are taken from [1]_.
     
     Returns
     -------
@@ -773,6 +824,14 @@ def connect_via_distances(atoms, dict distance_range=None):
     residue are accidentally in the right distance.
     A more accurate method for determining bonds is
     :func:`connect_via_residue_names()`.
+
+    References
+    ----------
+    
+    .. [1] FH Allen, O Kennard and DG Watson,
+       "Tables of bond lengths determined by X-ray and neutron
+       diffraction. Part I. Bond lengths in organic compounds."
+       J Chem Soc Perkin Trans (1987).
     """
     from .residues import get_residue_starts
     
