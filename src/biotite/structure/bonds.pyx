@@ -834,9 +834,43 @@ def connect_via_distances(atoms, dict distance_range=None):
        J Chem Soc Perkin Trans (1987).
     """
     from .residues import get_residue_starts
-    
-    bond_list = BondList(atoms.array_length())
+
+    cdef list bonds = []
+    cdef int i
+    cdef int curr_start_i, next_start_i
+    cdef np.ndarray atom_names = atoms.atom_name
+    cdef np.ndarray atom_names_in_res
+    cdef np.ndarray res_names = atoms.res_name
+    cdef str atom_name1, atom_name2
+    cdef np.ndarray atom_indices1, atom_indices2
+    cdef int atom_index1, atom_index2
+    cdef int bond_order
+    # Obtain dictionary containing bonds for all residues in RCSB
+    cdef dict bond_dict = bond_dataset()
+    cdef dict bond_dict_for_res
+
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    # Omit exclsive stop in 'residue_starts'
+    for i in range(len(residue_starts)-1):
+        curr_start_i = residue_starts[i]
+        next_start_i = residue_starts[i+1]
+        
+        atom_names_in_res = atom_names[curr_start_i : next_start_i]
+        for (atom_name1, atom_name2), bond_order in bond_dict_for_res.items():
+            atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
+            atom_indices2 = np.where(atom_names_in_res == atom_name2)[0]
+            if len(atom_indices1) == 0 or len(atom_indices2) == 0:
+                # The pair of atoms in this bond from the dataset is not
+                # in the residue of the atom array
+                # -> skip this bond
+                continue
+            bonds.append((
+                curr_start_i + atom_indices1[0],
+                curr_start_i + atom_indices2[0],
+                bond_order
+            ))
+             
+    bond_list = BondList(atoms.array_length(), np.array(bonds))
     
     inter_bonds = _connect_inter_residue(atoms, residue_starts)
     # As all bonds should be of type ANY, convert also inter-residue
