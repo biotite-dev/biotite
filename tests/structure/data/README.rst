@@ -8,5 +8,5 @@ Test structures
 1L2Y: Very small and very simple multi-model structure
 1O1Z: Structure contains negative residue IDs
 3O5R: Structure contains altlocs
-5H73: Structure contains reside with "'" in atom name
+5H73: Structure contains residue with "'" in atom name
 5UGO: Structure contains nucleotide

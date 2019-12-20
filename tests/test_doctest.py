@@ -31,6 +31,8 @@ import biotite.structure.io as strucio
                                                  "biotite.sequence.io.fasta"],
                  marks=pytest.mark.filterwarnings("ignore:")                 ),
     pytest.param("biotite.structure",           ["biotite.structure.io"]     ),
+    pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
+                 marks=pytest.mark.xfail(raises=ImportError)                 ),
     pytest.param("biotite.structure.io",        ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.pdb",    ["biotite.structure",
                                                  "biotite"]                  ),

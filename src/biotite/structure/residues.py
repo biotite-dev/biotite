@@ -16,7 +16,7 @@ import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
 
-def get_residue_starts(array):
+def get_residue_starts(array, add_exclusive_stop=False):
     """
     Get the indices in an atom array, which indicates the beginning of
     a residue.
@@ -28,6 +28,10 @@ def get_residue_starts(array):
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to get the residue starts from.
+    add_exclusive_stop : bool, optional
+        If true, the exclusive stop of the input atom array, i.e.
+        ``array.array_length()``, is added to the returned array of
+        start indices as last element.
         
     Returns
     -------
@@ -38,6 +42,16 @@ def get_residue_starts(array):
     -----
     This method is internally used by all other residue-related
     functions.
+
+    Examples
+    --------
+
+    >>> print(get_residue_starts(atom_array))
+    [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
+     278 292]
+    >>> print(get_residue_starts(atom_array, add_exclusive_stop=True))
+    [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
+     278 292 304]
     """
     chain_ids = array.chain_id
     res_ids = array.res_id
@@ -71,7 +85,12 @@ def get_residue_starts(array):
                 curr_res_name  = res_names[j]
     
     # Trim to correct size
-    return starts[:i]
+    starts = starts[:i]
+
+    if add_exclusive_stop:
+        starts = np.append(starts, [array.array_length()])
+
+    return starts
 
 
 def apply_residue_wise(array, data, function, axis=None):
