@@ -17,6 +17,7 @@ cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
 import numbers
+import itertools
 from enum import IntEnum
 import numpy as np
 from ..copyable import Copyable
@@ -732,7 +733,7 @@ def _to_bool_mask(object index, uint32 length):
 
 
 
-_DISTANCE_RANGE = {
+_DEFAULT_DISTANCE_RANGE = {
     # Taken from Allen et al.
     #               min   - 2*std     max   + 2*std
     ("B",  "C" ) : (1.556 - 2*0.015,  1.556 + 2*0.015),
@@ -781,7 +782,7 @@ _DISTANCE_RANGE = {
 
 def connect_via_distances(atoms, dict distance_range=None):
     """
-    connect_via_distances(atoms, dict distance_range=None)
+    connect_via_distances(atoms, distance_range=None)
 
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
@@ -798,8 +799,8 @@ def connect_via_distances(atoms, dict distance_range=None):
         The structure to create the :class:`BondList` for.
     distance_range : dict of tuple(str, str) -> tuple(float, float), optional
         Custom minimum and maximum bond distances.
-        The dictionary keys are tuples of chemical elements
-        (upper case) representing the atoms to be potentially bonded.
+        The dictionary keys are tuples of chemical elements representing
+        the atoms to be potentially bonded.
         The order of elements within each tuple does not matter.
         The dictionary values are the minimum and maximum bond distance,
         respectively, for the given combination of elements.
@@ -834,20 +835,39 @@ def connect_via_distances(atoms, dict distance_range=None):
        J Chem Soc Perkin Trans (1987).
     """
     from .residues import get_residue_starts
+    from .geometry import distance
+    from .atoms import AtomArray
 
     cdef list bonds = []
     cdef int i
     cdef int curr_start_i, next_start_i
-    cdef np.ndarray atom_names = atoms.atom_name
-    cdef np.ndarray atom_names_in_res
-    cdef np.ndarray res_names = atoms.res_name
-    cdef str atom_name1, atom_name2
-    cdef np.ndarray atom_indices1, atom_indices2
+    cdef np.ndarray coord = atoms.coord
+    cdef np.ndarray coord_in_res
+    cdef np.ndarray distances
+    cdef float dist
+    cdef np.ndarray elements = atoms.element
+    cdef np.ndarray elements_in_res
+    cdef int index_in_res1, index_in_res2
     cdef int atom_index1, atom_index2
-    cdef int bond_order
-    # Obtain dictionary containing bonds for all residues in RCSB
-    cdef dict bond_dict = bond_dataset()
-    cdef dict bond_dict_for_res
+    cdef dict dist_ranges
+    cdef tuple dist_range
+    cdef float min_dist, max_dist
+
+    if not isinstance(atoms, AtomArray):
+        raise TypeError(f"Expected 'AtomArray', not '{type(atoms).__name__}'")
+
+    # Prepare distance dictionary...
+    dist_ranges = {}
+    if distance_range is None:
+        distance_range = {}
+    # Merge default and custom entries
+    for key, val in itertools.chain(
+        _DEFAULT_DISTANCE_RANGE.items(), distance_range.items()
+    ):
+        element1, element2 = key
+        # Add entries for both element orders
+        dist_ranges[(element1.upper(), element2.upper())] = val
+        dist_ranges[(element2.upper(), element1.upper())] = val
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     # Omit exclsive stop in 'residue_starts'
@@ -855,21 +875,33 @@ def connect_via_distances(atoms, dict distance_range=None):
         curr_start_i = residue_starts[i]
         next_start_i = residue_starts[i+1]
         
-        atom_names_in_res = atom_names[curr_start_i : next_start_i]
-        for (atom_name1, atom_name2), bond_order in bond_dict_for_res.items():
-            atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
-            atom_indices2 = np.where(atom_names_in_res == atom_name2)[0]
-            if len(atom_indices1) == 0 or len(atom_indices2) == 0:
-                # The pair of atoms in this bond from the dataset is not
-                # in the residue of the atom array
-                # -> skip this bond
-                continue
-            bonds.append((
-                curr_start_i + atom_indices1[0],
-                curr_start_i + atom_indices2[0],
-                bond_order
-            ))
-             
+        elements_in_res = elements[curr_start_i : next_start_i]
+        coord_in_res = coord[curr_start_i : next_start_i]
+        # Matrix containing all pairwise atom distances in the residue
+        distances = distance(
+            coord_in_res[:, np.newaxis, :],
+            coord_in_res[np.newaxis, :, :]
+        )
+        for atom_index1 in range(len(elements_in_res)):
+            for atom_index2 in range(atom_index1):
+                dist_range = dist_ranges.get((
+                    elements_in_res[atom_index1],
+                    elements_in_res[atom_index2]
+                ))
+                if dist_range is None:
+                    # No bond distance entry for this element
+                    # combination -> skip
+                    continue
+                else:
+                    min_dist, max_dist = dist_range
+                dist = distances[atom_index1, atom_index2]
+                if dist >= min_dist and dist <= max_dist:
+                    bonds.append((
+                        curr_start_i + atom_index1,
+                        curr_start_i + atom_index2,
+                        BondType.ANY
+                    ))
+
     bond_list = BondList(atoms.array_length(), np.array(bonds))
     
     inter_bonds = _connect_inter_residue(atoms, residue_starts)

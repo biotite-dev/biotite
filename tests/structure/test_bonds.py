@@ -163,20 +163,23 @@ def test_connect_via_residue_names(single_model):
     assert test_bonds == ref_bonds
 
 
-@pytest.mark.parametrize("single_model", [False, True])
-def test_connect_via_distances(single_model):
+def test_connect_via_distances():
     """
     Test whether the created bond list is equal to the bonds deposited
     in the MMTF file.
     """
     file = mmtf.MMTFFile()
     file.read(join(data_dir, "1l2y.mmtf"))
-    if single_model:
-        atoms = mmtf.get_structure(file, include_bonds=True, model=1)
-    else:
-        atoms = mmtf.get_structure(file, include_bonds=True)
+    atoms = mmtf.get_structure(file, include_bonds=True, model=1)
+    # Remove termini to solve the issue that the reference bonds do not
+    # contain proper bonds for the protonated/deprotonated termini
+    atoms = atoms[(atoms.res_id > 1) & (atoms.res_id < 20)]
     
     ref_bonds = atoms.bonds
+    # Convert all bonds to BondType.ANY
+    ref_bonds = struc.BondList(
+        ref_bonds.get_atom_count(), ref_bonds.as_array()[:, :2]
+    )
 
     test_bonds = struc.connect_via_distances(atoms)
 
