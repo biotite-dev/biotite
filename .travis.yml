@@ -21,6 +21,14 @@ matrix:
       - COMPLETE=false
       - BIN=true
       - SRC=false
+  - os: linux
+    dist: trusty
+    sudo: false
+    env:
+      - PY_VERSION='3.8'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.6'
@@ -30,6 +38,12 @@ matrix:
   - os: osx
     env:
       - PY_VERSION='3.7'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.8'
       - COMPLETE=false
       - BIN=true
       - SRC=false
