@@ -9,6 +9,7 @@ This script displays the 4 fundamental domains of the *E. coli*
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import re
 from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
@@ -64,9 +65,13 @@ for i, gb_file in enumerate(multi_file):
            and "Sigma-70 factor domain" in feature.qual["note"]:
                 # Extract the domain number
                 # and decrement for 0-based indexing
-                # e.g. 'Sigma-70 factor domain-2.'
+                #
+                # e.g. 'Sigma-70 factor domain-2.' => 1
                 #                              ^
-                domain_index = int(feature.qual["note"][23]) - 1
+                domain_index = int(re.findall(
+                    "(?<=Sigma-70 factor domain-)\d+",
+                    feature.qual["note"]
+                )[0]) -1
                 # Expect a single contiguous location of the domain
                 assert len(feature.locs) == 1
                 loc = list(feature.locs)[0]
