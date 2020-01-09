@@ -205,7 +205,7 @@ def distance(atoms1, atoms2, box=None):
     ----------
     atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the distances between.
-        The dimensions may ary.
+        The dimensions may vary.
         Alternatively an ndarray containing the coordinates can be
         provided.
         Usual *NumPy* broadcasting rules apply.
