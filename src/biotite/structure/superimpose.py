@@ -110,35 +110,36 @@ def superimpose(fixed, mobile, atom_mask=None):
 
     >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
-    1.928
-        
+    1.928 
     """
-    mob_centroid = centroid(mobile)
-    fix_centroid = centroid(fixed)
-    if atom_mask is not None:
-        # Implicitly this creates array copies
-        mob_centered = mobile.coord[..., atom_mask, :]
-        fix_centered = fixed.coord[..., atom_mask, :]
-    else:
-        mob_centered = np.copy(mobile.coord)
-        fix_centered = np.copy(fixed.coord)
 
-    if mob_centered.shape[-2] != fix_centered.shape[-2]:
+    if fixed.array_length() != mobile.array_length():
         raise BadStructureError(
-            f"The mobile array ({mob_centered.shape[-2]} atoms) "
-            f"and the fixed array ({fix_centered.shape[-2]} atoms), "
+            f"The mobile array ({mobile.array_length()} atoms) "
+            f"and the fixed array ({fixed.array_length()} atoms), "
             f"have an unequal amount of atoms"
         )
+
+    if atom_mask is not None:
+        # Implicitly this creates array copies
+        mob_filtered = mobile.coord[..., atom_mask, :]
+        fix_filtered = fixed.coord[..., atom_mask, :]
+    else:
+        mob_filtered = np.copy(mobile.coord)
+        fix_filtered = np.copy(fixed.coord)
     
-    mob_centered -= mob_centroid[..., np.newaxis, :]
-    fix_centered -= fix_centroid
+    # Center coordinates at (0,0,0)
+    mob_centroid = centroid(mob_filtered)
+    fix_centroid = centroid(fix_filtered)
+    mob_filtered -= mob_centroid[..., np.newaxis, :]
+    fix_filtered -= fix_centroid
     
     if not isinstance(fixed, AtomArray):
         raise ValueError("Reference must be AtomArray")
    
     if isinstance(mobile, AtomArray):
         # Simply superimpose without loop
-        rotation = _superimpose(fix_centered, mob_centered)
+        rotation = _superimpose(fix_filtered, mob_filtered)
         superimposed = mobile.copy()
         superimposed.coord -= mob_centroid[..., np.newaxis, :]
         superimposed.coord = np.dot(rotation, superimposed.coord.T).T
@@ -151,7 +152,7 @@ def superimpose(fixed, mobile, atom_mask=None):
         # Perform Kabsch algorithm for every model
         transformations = [None] * len(superimposed.coord)
         for i in range(len(superimposed.coord)):
-            rotation = _superimpose(fix_centered, mob_centered[i])
+            rotation = _superimpose(fix_filtered, mob_filtered[i])
             superimposed.coord[i] = np.dot(rotation, superimposed.coord[i].T).T
             transformations[i] = (-mob_centroid[i], rotation, fix_centroid)
         superimposed.coord += fix_centroid
@@ -190,7 +191,7 @@ def superimpose_apply(atoms, transformation):
     atoms : AtomArray
         The structure to apply the transformation on.
     transformation: tuple, size=3
-        The transfomration tuple, obtained by :func:`superimpose()`.
+        The transformation tuple, obtained by :func:`superimpose()`.
     
     Returns
     -------
