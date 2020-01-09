@@ -87,9 +87,9 @@ def superimpose(fixed, mobile, atom_mask=None):
     Examples
     --------
     
-    Superimpose two models of 20 residue peptide, randomly
-    rotate/translate one of them and superimpose it onto the other
-    model:
+    At first two models of a structure are taken and one of them is
+    randomly rotated/translated.
+    Consequently the RMSD is quite large:
     
     >>> array1 = atom_array_stack[0]
     >>> array2 = atom_array_stack[1]
@@ -98,19 +98,20 @@ def superimpose(fixed, mobile, atom_mask=None):
     >>> print("{:.3f}".format(rmsd(array1, array2)))
     11.260
     
-    Superimpose only CA atoms:
+    RMSD decreases after superimposition of only CA atoms:
     
     >>> array2_fit, transformation = superimpose(
     ...     array1, array2, atom_mask=(array2.atom_name == "CA")
     ... )
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
-    1.955
+    1.961
 
-    Superimpose all atoms:
+    RMSD is even lower when all atoms are considered in the
+    superimposition:
 
     >>> array2_fit, transformation = superimpose(array1, array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
-    1.928 
+    1.928
     """
 
     if fixed.array_length() != mobile.array_length():
