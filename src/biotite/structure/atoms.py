@@ -1244,6 +1244,35 @@ def stack(arrays):
     return array_stack
 
 
+def from_template(template, coord, box=None):
+    """[summary]
+    
+    Parameters
+    ----------
+    template : [type]
+        [description]
+    coord : [type]
+        [description]
+    box : [type], optional
+        [description], by default None
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    new_stack = struc.AtomArrayStack(0, template.array_length())
+    for category in template.get_annotation_categories():
+        annot = template.get_annotation(category)
+        new_stack.set_annotation(category, annot)
+    if template.bonds is not None:
+        new_stack.bonds = template.bonds.copy()
+    if box is not None:
+        new_stack.box = box.copy()
+    new_stack.coord = coord
+    return new_stack
+
+
 def coord(item):
     """
     Get the atom coordinates of the given array.
