@@ -89,9 +89,9 @@ top-level directory of your local *Biotite* repository clone (the one
 
 Note that this requires a C-compiler (typically GCC) and the packages
 `cython` and `wheel` to be installed.
-If you want, you can use
-`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_, containing all runtime and build dependencies for
-*Biotite*.
+For convenience
+`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_,
+contains all runtime and build dependencies for *Biotite*.
 
 Having the *Biotite* package always pointing to your directory containing the
 repository is also possible.
