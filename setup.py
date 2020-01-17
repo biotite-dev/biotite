@@ -38,11 +38,16 @@ os.chdir(dirname(abspath(__file__)))
 
 
 # Compile Cython into C
-cythonize(
-    "src/**/*.pyx",
-    include_path=[numpy.get_include()],
-    language_level=3
-)
+try:
+    cythonize(
+        "src/**/*.pyx",
+        include_path=[numpy.get_include()],
+        language_level=3
+    )
+except ValueError:
+    # This is a source distribution and the directory already contains
+    # only C files
+    pass
 
 
 def get_extensions():
