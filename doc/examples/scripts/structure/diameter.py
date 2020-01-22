@@ -1,6 +1,6 @@
 """
 Calculation of protein diameter
-========================================
+===============================
 
 This script calculates the diameter of a protein
 defined as the maximum pairwise atom distance.
