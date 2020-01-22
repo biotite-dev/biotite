@@ -8,6 +8,10 @@ environment:
       PY_VERSION: "3.7"
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.7"
+    - PYTHON: "C:\\Miniconda36"
+      PY_VERSION: "3.8"
+    - PYTHON: "C:\\Miniconda36-x64"
+      PY_VERSION: "3.8"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
