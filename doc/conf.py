@@ -110,6 +110,7 @@ sphinx_gallery_conf = {
     "gallery_dirs"              : "examples/gallery",
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
+    "ignore_pattern"            : ".*ignore\.py",
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time
