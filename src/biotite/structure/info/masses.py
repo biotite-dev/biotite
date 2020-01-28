@@ -53,7 +53,7 @@ def mass(item, is_residue=None):
     Returns
     -------
     mass : float or None
-        The mass of the given object. None if the mass is unknown.
+        The mass of the given object in *u*. None if the mass is unknown.
     
     References
     ----------
