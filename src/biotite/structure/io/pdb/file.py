@@ -117,23 +117,18 @@ class PDBFile(TextFile):
         where each model represents a different model.
 
         Construct a new :class:`AtomArrayStack` with annotations taken
-        from one of the created files used as template.
+        from one of the created files used as template and coordinates
+        from all of the PDB files.
 
         >>> template_file = PDBFile()
         >>> template_file.read(file_names[0])
-        >>> template_array = template_file.get_structure(model=1)
-        >>> new_stack = AtomArrayStack(len(file_names), template_array.array_length())
-        >>> for category in template_array.get_annotation_categories():
-        ...     annot = template_array.get_annotation(category)
-        ...     new_stack.set_annotation(category, annot)
-
-        Fill coordinates of new :class:`AtomArrayStack` with coordinates
-        of the PDB files.
-
+        >>> template = template_file.get_structure()
+        >>> coord = []
         >>> for i, file_name in enumerate(file_names):
         ...     pdb_file = PDBFile()
         ...     pdb_file.read(file_name)
-        ...     new_stack.coord[i] = pdb_file.get_coord(model=1)
+        ...     coord.append(pdb_file.get_coord(model=1))
+        >>> new_stack = from_template(template, np.array(coord))
 
         The newly created :class:`AtomArrayStack` should now be equal to
         the :class:`AtomArrayStack` the PDB files were created from.

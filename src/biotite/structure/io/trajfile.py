@@ -8,7 +8,7 @@ __all__ = ["TrajectoryFile"]
 
 import abc
 import numpy as np
-from ..atoms import AtomArray, AtomArrayStack, stack
+from ..atoms import AtomArray, AtomArrayStack, stack, from_template
 from ...file import File
 
 
@@ -246,18 +246,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             but the coordinates and the simulation boxes from the
             trajectory file.
         """
-        if template.array_length() != self.get_coord().shape[-2]:
-            raise ValueError(
-                f"Template has {template.array_length()} atoms and trajectory "
-                f"has {self.get_coord().shape[-2]} atoms, must be equal"
-            )
-        if isinstance(template, AtomArray):
-            array_stack = stack([template])
-        else:
-            array_stack = template.copy()
-        array_stack.coord = self.get_coord()
-        array_stack.box = self.get_box()
-        return array_stack
+        return from_template(template, self.get_coord(), self.get_box())
     
     def set_structure(self, structure, time=None):
         """
