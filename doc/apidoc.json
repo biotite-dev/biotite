@@ -167,7 +167,8 @@
             "AtomArray",
             "AtomArrayStack",
             "array",
-            "stack"
+            "stack",
+            "from_template"
         ],
         "Boxes and unit cells" : [
             "vectors_from_unitcell",

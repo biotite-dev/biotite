@@ -9,7 +9,8 @@ This module contains the main types of the ``structure`` subpackage:
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
+__all__ = ["Atom", "AtomArray", "AtomArrayStack",
+           "array", "stack", "from_template", "coord"]
 
 import numbers
 import abc
@@ -1080,7 +1081,7 @@ class AtomArrayStack(_AtomArrayBase):
     
     def __len__(self):
         """
-        The depth of the stack.
+        The depth of the stack, i.e. the amount of models.
         
         Returns
         -------
@@ -1242,6 +1243,52 @@ def stack(arrays):
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
     return array_stack
+
+
+def from_template(template, coord, box=None):
+    """
+    Create an :class:`AtomArrayStack` using template atoms and given
+    coordinates.
+    
+    Parameters
+    ----------
+    template : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The annotation arrays and bonds of the returned stack are taken
+        from this template.
+    coord : ndarray, dtype=float, shape=(l,n,3)
+        The coordinates for each model of the returned stack.
+    box : ndarray, optional, dtype=float, shape=(l,3,3)
+        The box for each model of the returned stack.
+    
+    Returns
+    -------
+    array_stack : AtomArrayStack
+        A stack containing the annotation arrays and bonds from
+        `template` but the coordinates from `coord` and the boxes from
+        `boxes`.
+    """
+    if template.array_length() != coord.shape[-2]:
+        raise ValueError(
+            f"Template has {template.array_length()} atoms, but "
+            f"{self.get_coord().shape[-2]} coordinates are given"
+        )
+
+    # Create empty stack with no models
+    new_stack = AtomArrayStack(0, template.array_length())
+    
+    for category in template.get_annotation_categories():
+        annot = template.get_annotation(category)
+        new_stack.set_annotation(category, annot)
+    if template.bonds is not None:
+        new_stack.bonds = template.bonds.copy()
+    if box is not None:
+        new_stack.box = box.copy()
+    
+    # After setting the coordinates the number of models is the number
+    # of models in the new coordinates
+    new_stack.coord = coord
+    
+    return new_stack
 
 
 def coord(item):
