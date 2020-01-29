@@ -12,14 +12,14 @@ amount. One molecular difference between these two types are
 polymorphisms in THCA synthase gene [1]_.
 
 This script takes THCA synthase gene sequences from different
-*cannabis sativa* strains, translatethem into protein sequences and
+*cannabis sativa* strains, translates them into protein sequences and
 creates a consensus sequence for each of the two strain types.
 Eventually, an alignment is plotted depicting the polymorphic positions
 between the two consensus sequences.
 
 .. [1] M Kojoma, H Seki, S Yoshida and T Muranaka,
        "DNA polymorphisms in the tetrahydrocannabinolic acid (THCA) synthase
-       gene in "drug-type" and "fiber-type" Cannabis sativa L."
+       gene in 'drug-type' and 'fiber-type' Cannabis sativa L."
        Forensic Sci Int, 159, 132-140 (2006).
 """
 
