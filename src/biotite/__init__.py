@@ -4,7 +4,7 @@
 
 """
 This is the top-level package of *Biotite*.
-Although it does not provide useful functionality for most user,
+Although it does not provide useful functionality for most users-+,
 it does provide utilities and base classes used by a lot of *Biotite*'s
 modules.
 """

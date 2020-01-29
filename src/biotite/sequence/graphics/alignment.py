@@ -609,7 +609,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
         and black.
         The interpolation percentage is given by the average normalized
         similarity.
-    cmap : Colormap, optional
+    cmap : Colormap or str, optional
         The boxes (or symbols, if `color_symbols` is set) are
         colored based on the normalized similarity value on the
         given *Matplotlib* Colormap.
