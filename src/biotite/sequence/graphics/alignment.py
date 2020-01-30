@@ -5,6 +5,7 @@
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
+           "LetterTypePlotter",
            "plot_alignment", "plot_alignment_similarity_based",
            "plot_alignment_type_based"]
 
