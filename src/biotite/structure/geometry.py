@@ -7,6 +7,7 @@ This module provides functions for geometric measurements between atoms
 in a structure, mainly lenghts and angles.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["displacement", "index_displacement", "distance", "index_distance",
            "angle", "index_angle", "dihedral", "index_dihedral",
@@ -16,6 +17,7 @@ import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
 from .filter import filter_backbone
+from .chains import chain_iter
 from .box import (coord_to_fraction, fraction_to_coord,
                   move_inside_box, is_orthogonal)
 from .error import BadStructureError
@@ -73,6 +75,24 @@ def displacement(atoms1, atoms2, box=None):
         # Check for each model if the box vectors are orthogonal
         orthogonality = is_orthogonal(box)
         disp = np.zeros(fractions.shape, dtype=np.float64)
+        if fractions.ndim == 1:
+            # Single atom
+            # Transform into two dimensions
+            # to match signature of '_displacement_xxx()'
+            fractions = fractions[np.newaxis, :]
+            disp = disp[np.newaxis, :]
+            if orthogonality:
+                _displacement_orthogonal_box(
+                    fractions, box, disp
+                )
+            else:
+                _displacement_triclinic_box(
+                    fractions.astype(np.float64, copy=False),
+                    box.astype(np.float64, copy=False),
+                    disp
+                )
+            # Transform back
+            disp = disp[0]
         if fractions.ndim == 2:
             # Single model
             if orthogonality:
@@ -128,8 +148,8 @@ def index_displacement(*args, **kwargs):
     displacement should be calculated.
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
-    In contrast to the `distance()` function, this function is able
-    to take periodic boundary conditions into account.
+    In contrast to the :func:`distance()` function, this function is
+    able to take periodic boundary conditions into account.
 
     Parameters
     ----------
@@ -137,7 +157,7 @@ def index_displacement(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The pairwise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,2)
         Pairs of indices that point to `atoms`.
         The displacement is measured from ``indices[x,0]`` to 
@@ -185,7 +205,7 @@ def distance(atoms1, atoms2, box=None):
     ----------
     atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the distances between.
-        The dimensions may ary.
+        The dimensions may vary.
         Alternatively an ndarray containing the coordinates can be
         provided.
         Usual *NumPy* broadcasting rules apply.
@@ -221,8 +241,8 @@ def index_distance(*args, **kwargs):
     distances should be calculated.
     If an atom array stack is provided, the distances are calculated for
     each frame/model.
-    In contrast to the `distance()` function, this function is able
-    to take periodic boundary conditions into account.
+    In contrast to the :func:`distance()` function, this function is
+    able to take periodic boundary conditions into account.
 
     Parameters
     ----------
@@ -230,7 +250,7 @@ def index_distance(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The pairwise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,2)
         Pairs of indices that point to `atoms`.
     periodic : bool, optional
@@ -319,7 +339,7 @@ def index_angle(*args, **kwargs):
         The atoms the `indices` parameter refers to.
         The triplewise distances are calculated for these pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,3)
         Triples of indices that point to `atoms`.
     periodic : bool, optional
@@ -420,7 +440,7 @@ def index_dihedral(*args, **kwargs):
         The quadruplewise dihedral angles are calculated for these
         pairs.
         Alternatively, the atom coordinates can be directly provided as
-        `ndarray`.
+        :class:`ndarray`.
     indices : ndarray, shape=(k,4)
         Quadruples of indices that point to `atoms`.
     periodic : bool, optional
@@ -459,7 +479,7 @@ def index_dihedral(*args, **kwargs):
     return _call_non_index_function(dihedral, 4, *args, **kwargs)
 
 
-def dihedral_backbone(atom_array, chain_id):
+def dihedral_backbone(atom_array):
     """
     Measure the characteristic backbone dihedral angles of a structure.
     
@@ -468,9 +488,10 @@ def dihedral_backbone(atom_array, chain_id):
     atom_array: AtomArray or AtomArrayStack
         The protein structure. A complete backbone, without gaps,
         is required here.
-    chain_id: string
-        The ID of the polypeptide chain. The dihedral angles are
-        calculated for ``atom_array[atom_array.chain_id == chain_id]``
+        Chain transitions are allowed, the angles at the transition are
+        `NaN`.
+        The order of the backbone atoms for each residue must be
+        (N, CA, C).
     
     Returns
     -------
@@ -478,9 +499,9 @@ def dihedral_backbone(atom_array, chain_id):
         An array containing the 3 backbone dihedral angles for every
         CA. 'phi' is not defined at the N-terminus, 'psi' and 'omega'
         are not defined at the C-terminus. In these places the arrays
-        have `NaN` values. If an `AtomArrayStack` is given, the output
-        angles are 2-dimensional, the first dimension corresponds to
-        the model number.
+        have *NaN* values. If an :class:`AtomArrayStack` is given, the
+        output angles are 2-dimensional, the first dimension corresponds
+        to the model number.
     
     Raises
     ------
@@ -495,47 +516,63 @@ def dihedral_backbone(atom_array, chain_id):
     Examples
     --------
     
-    >>> phi, psi, omega = dihedral_backbone(atom_array, "A")
-    >>> print(np.stack([phi * 360/(2*np.pi), psi * 360/(2*np.pi)]).T)
-    [[          nan  -56.14491122]
-     [ -43.98001079  -51.30875902]
-     [ -66.46585868  -30.89801505]
-     [ -65.21943089  -45.94467406]
-     [ -64.74659263  -30.346291  ]
-     [ -73.13553596  -43.42456851]
-     [ -64.88203916  -43.25451315]
-     [ -59.50867772  -25.69819463]
-     [ -77.98930479   -8.82307681]
-     [ 110.78405639    8.07924448]
-     [  55.24420794 -124.37141223]
-     [ -57.98304696  -28.76563093]
-     [ -81.83404402   19.12508041]
-     [-124.05653736   13.40120726]
-     [  67.93147348   25.21773833]
-     [-143.95159184  131.29701851]
-     [ -70.10004605  160.06790798]
-     [ -69.48368612  145.66883187]
-     [ -77.26416822  124.22289316]
-     [ -78.10009149           nan]]
+    >>> phi, psi, omega = dihedral_backbone(atom_array)
+    >>> print(np.stack([np.rad2deg(phi), np.rad2deg(psi)]).T)
+    [[     nan  -56.145]
+     [ -43.980  -51.309]
+     [ -66.466  -30.898]
+     [ -65.219  -45.945]
+     [ -64.747  -30.346]
+     [ -73.136  -43.425]
+     [ -64.882  -43.255]
+     [ -59.509  -25.698]
+     [ -77.989   -8.823]
+     [ 110.784    8.079]
+     [  55.244 -124.371]
+     [ -57.983  -28.766]
+     [ -81.834   19.125]
+     [-124.057   13.401]
+     [  67.931   25.218]
+     [-143.952  131.297]
+     [ -70.100  160.068]
+     [ -69.484  145.669]
+     [ -77.264  124.223]
+     [ -78.100      nan]]
     """
-    # Filter all backbone atoms
-    bb_coord = atom_array[...,
-                            filter_backbone(atom_array) &
-                            (atom_array.chain_id == chain_id)].coord
-    if bb_coord.shape[-1] % 3 != 0:
-        raise BadStructureError(
-            "AtomArray has insufficient amount of backbone atoms "
-            "(possibly missing terminus)"
-        )
+    bb_filter = filter_backbone(atom_array)
+    backbone = atom_array[..., bb_filter]
     
+    if backbone.array_length() % 3 != 0 \
+        or (backbone.atom_name[0::3] != "N" ).any() \
+        or (backbone.atom_name[1::3] != "CA").any() \
+        or (backbone.atom_name[2::3] != "C" ).any():
+            raise BadStructureError(
+                "The backbone is invalid, must be repeats of (N, CA, C), "
+                "maybe a backbone atom is missing"
+            )
+    phis = []
+    psis = []
+    omegas = []
+    for chain_bb in chain_iter(backbone):
+        phi, psi, omega = _dihedral_backbone(chain_bb)
+        phis.append(phi)
+        psis.append(psi)
+        omegas.append(omega)
+    return np.concatenate(phis, axis=-1), np.concatenate(psis, axis=-1), \
+        np.concatenate(omegas, axis=-1)
+
+
+
+def _dihedral_backbone(chain_bb):
+    bb_coord = chain_bb.coord
     # Coordinates for dihedral angle calculation
     # Dim 0: Model index (only for atom array stacks)
     # Dim 1: Angle index
     # Dim 2: X, Y, Z coordinates
     # Dim 3: Atoms involved in dihedral angle
-    if isinstance(atom_array, AtomArray):
+    if isinstance(chain_bb, AtomArray):
         angle_coord_shape = (len(bb_coord)//3, 3, 4)
-    elif isinstance(atom_array, AtomArrayStack):
+    elif isinstance(chain_bb, AtomArrayStack):
         angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1]//3, 3, 4)
     phi_coord   = np.full(angle_coord_shape, np.nan)
     psi_coord   = np.full(angle_coord_shape, np.nan)
@@ -580,8 +617,8 @@ def centroid(atoms):
     Returns
     -------
     centroid : float or ndarray
-        The centroid of the structure(s). `ndarray` is returned when
-        an `AtomArrayStack` is given (centroid for each model).
+        The centroid of the structure(s). :class:`ndarray` is returned when
+        an :class:`AtomArrayStack` is given (centroid for each model).
     """
     return np.mean(coord(atoms), axis=-2)
 
@@ -602,7 +639,13 @@ def _call_non_index_function(function, expected_amount,
         coord_list.append(coord(atoms)[..., indices[:,i], :])
     if periodic:
         if box is None:
-            box = atoms.box
+            if isinstance(atoms, (AtomArray, AtomArrayStack)):
+                box = atoms.box
+            else:
+                raise ValueError(
+                    "If `atoms` are coordinates, "
+                    "the box must be set explicitly"
+                )
     else:
         box = None
     return function(*coord_list, box)

@@ -2,9 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.sequence as seq
-import numpy as np
 import pytest
+import numpy as np
+import biotite.sequence as seq
 
 
 def test_encoding():

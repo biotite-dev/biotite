@@ -7,6 +7,7 @@ This module provides utility for handling data on residue level, rather than
 atom level.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
            "get_residues", "get_residue_count", "residue_iter"]
@@ -15,62 +16,81 @@ import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 
 
-def get_residue_starts(array):
+def get_residue_starts(array, add_exclusive_stop=False):
     """
     Get the indices in an atom array, which indicates the beginning of
     a residue.
     
-    A new residue starts, either when the residue ID or chain ID
-    changes from one to the next atom.
-    If the residue ID is *-1*, a residue name change, instead of a
-    residue ID change, is interpreted as new residue.
-
-    This method is internally used by all other residue-related
-    functions.
+    A new residue starts, either when the chain ID, residue ID,
+    insertion code or residue name changes from one to the next atom.
     
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to get the residue starts from.
+    add_exclusive_stop : bool, optional
+        If true, the exclusive stop of the input atom array, i.e.
+        ``array.array_length()``, is added to the returned array of
+        start indices as last element.
         
     Returns
     -------
-    starts : ndarray
+    starts : ndarray, dtype=int
         The start indices of residues in `array`.
+    
+    Notes
+    -----
+    This method is internally used by all other residue-related
+    functions.
+
+    Examples
+    --------
+
+    >>> print(get_residue_starts(atom_array))
+    [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
+     278 292]
+    >>> print(get_residue_starts(atom_array, add_exclusive_stop=True))
+    [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
+     278 292 304]
     """
     chain_ids = array.chain_id
     res_ids = array.res_id
+    ins_codes = array.ins_code
     res_names = array.res_name
 
     # Maximum length is length of atom array
     starts = np.zeros(array.array_length(), dtype=int)
-    starts[0] = 0
-    i = 1
+
     # Variables for current values
     curr_chain_id = chain_ids[0]
     curr_res_id = res_ids[0]
+    curr_ins_code = ins_codes[0]
     curr_res_name = res_names[0]
 
+    # Index for 'starts' begins at second element, since
+    # The first start is already identified
+    # (always at position 0 of the atom array)
+    i = 1
+
     for j in range(array.array_length()):
-        if res_ids[j] != -1:
-            if curr_res_id != res_ids[j] or curr_chain_id != chain_ids[j]:
+        if curr_chain_id != chain_ids[j] \
+            or curr_res_name != res_names[j] \
+            or curr_res_id != res_ids[j] \
+            or curr_ins_code != ins_codes[j]:
                 starts[i] = j
                 i += 1
-                curr_chain_id = chain_ids[j]
-                curr_res_id   = res_ids[j]
-                curr_res_name = res_names[j]
-        else:
-            # Residue ID = -1 -> Hetero residue
-            # -> Cannot rely on residue ID for residue distinction
-            # -> Fall back to residue names
-            if curr_res_name != res_names[j] or curr_chain_id != chain_ids[j]:
-                starts[i] = j
-                i += 1
-                curr_chain_id = chain_ids[j]
-                curr_res_id   = res_ids[j]
-                curr_res_name = res_names[j]
+                curr_chain_id  = chain_ids[j]
+                curr_res_id    = res_ids[j]
+                curr_ins_code = ins_codes[j]
+                curr_res_name  = res_names[j]
+    
     # Trim to correct size
-    return starts[:i]
+    starts = starts[:i]
+
+    if add_exclusive_stop:
+        starts = np.append(starts, [array.array_length()])
+
+    return starts
 
 
 def apply_residue_wise(array, data, function, axis=None):
@@ -83,8 +103,8 @@ def apply_residue_wise(array, data, function, axis=None):
     residue IDs of the atom array (stack) and identifies intervals of
     the same ID. Then the data is
     partitioned into the same intervals, and each interval (also an
-    `ndarray`) is put as parameter into `function`. Each return value is
-    stored as element in the resulting `ndarray`, therefore each element
+    :class:`ndarray`) is put as parameter into `function`. Each return value is
+    stored as element in the resulting :class:`ndarray`, therefore each element
     corresponds to one residue. 
     
     Parameters
@@ -121,10 +141,9 @@ def apply_residue_wise(array, data, function, axis=None):
     >>> print(len(sasa_per_residue))
     20
     >>> print(sasa_per_residue)
-    [157.97867    117.136475    94.98269    115.485115   113.58283
-      23.470863    93.0127     144.17316     61.561058    38.885334
-       0.79210365 114.05285    108.56837     27.887915    83.58345
-     113.01639    114.31787     74.28113     47.810623   172.03488   ]
+    [157.979 117.136  94.983 115.485 113.583  23.471  93.013 144.173  61.561
+      38.885   0.792 114.053 108.568  27.888  83.583 113.016 114.318  74.281
+      47.811 172.035]
 
     Calculate the centroids of each residue for the same peptide.
         
@@ -135,26 +154,26 @@ def apply_residue_wise(array, data, function, axis=None):
     >>> print(len(centroids))
     20
     >>> print(centroids)
-    [[-9.581938    3.3778126  -2.0728126 ]
-     [-4.6695266   5.815737   -1.8598946 ]
-     [-2.4608097   3.0596666   3.0760477 ]
-     [-7.2108426  -0.39636838  1.0131578 ]
-     [-4.6978235  -1.0804706  -4.284117  ]
-     [ 1.1721249   0.20641668  1.038375  ]
-     [-2.1600525  -2.2449472   3.5405266 ]
-     [-3.6823182  -5.5397725  -2.8952727 ]
-     [ 0.71108335 -5.4094167  -2.5495    ]
-     [ 2.0024288  -6.321715    1.6952857 ]
-     [ 2.7985713  -3.1399999   2.3274286 ]
-     [ 5.9007144  -2.4889286   4.844571  ]
-     [ 6.7537274  -6.7123637   3.0941818 ]
-     [ 5.6992726  -5.100636   -1.2091817 ]
-     [ 9.295427   -2.9695716  -1.8352858 ]
-     [ 5.517959   -1.5212501  -3.472667  ]
-     [ 7.218929    3.6732144  -0.6843571 ]
-     [ 4.006643    4.3640003   2.673857  ]
-     [ 0.34114286  5.575286   -0.25428572]
-     [ 1.194      10.416249    1.1301666 ]]
+    [[-9.582  3.378 -2.073]
+     [-4.670  5.816 -1.860]
+     [-2.461  3.060  3.076]
+     [-7.211 -0.396  1.013]
+     [-4.698 -1.080 -4.284]
+     [ 1.172  0.206  1.038]
+     [-2.160 -2.245  3.541]
+     [-3.682 -5.540 -2.895]
+     [ 0.711 -5.409 -2.549]
+     [ 2.002 -6.322  1.695]
+     [ 2.799 -3.140  2.327]
+     [ 5.901 -2.489  4.845]
+     [ 6.754 -6.712  3.094]
+     [ 5.699 -5.101 -1.209]
+     [ 9.295 -2.970 -1.835]
+     [ 5.518 -1.521 -3.473]
+     [ 7.219  3.673 -0.684]
+     [ 4.007  4.364  2.674]
+     [ 0.341  5.575 -0.254]
+     [ 1.194 10.416  1.130]]
     """
     # The exclusive stop is appended to the residue starts
     starts = np.append(get_residue_starts(array), [array.array_length()])
@@ -187,8 +206,8 @@ def apply_residue_wise(array, data, function, axis=None):
 
 def spread_residue_wise(array, input_data):
     """
-    Creates an `ndarray` with residue-wise spread values from an input
-    `ndarray`.
+    Creates an :class:`ndarray` with residue-wise spread values from an
+    input :class:`ndarray`.
     
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,
@@ -272,37 +291,37 @@ def get_residues(array):
     --------
     Get the residue names of a 20 residue peptide.
     
-        >>> print(atom_array.res_name)
-        ['ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN'
-         'ASN' 'ASN' 'ASN' 'ASN' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
-         'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'TYR'
-         'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR'
-         'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'ILE' 'ILE' 'ILE' 'ILE'
-         'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE'
-         'ILE' 'ILE' 'ILE' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN'
-         'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'TRP' 'TRP' 'TRP' 'TRP'
-         'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP'
-         'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'LEU' 'LEU' 'LEU' 'LEU'
-         'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
-         'LEU' 'LEU' 'LEU' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
-         'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
-         'LYS' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP'
-         'ASP' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY'
-         'GLY' 'GLY' 'GLY' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
-         'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
-         'SER' 'SER' 'SER' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'ARG' 'ARG'
-         'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG'
-         'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
-         'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
-         'SER' 'SER' 'SER' 'SER']
-        >>> ids, names = get_residues(atom_array)
-        >>> print(names)
-        ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
-         'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
+    >>> print(atom_array.res_name)
+    ['ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN'
+     'ASN' 'ASN' 'ASN' 'ASN' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
+     'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'TYR'
+     'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR'
+     'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'TYR' 'ILE' 'ILE' 'ILE' 'ILE'
+     'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE' 'ILE'
+     'ILE' 'ILE' 'ILE' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN'
+     'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'GLN' 'TRP' 'TRP' 'TRP' 'TRP'
+     'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP'
+     'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'TRP' 'LEU' 'LEU' 'LEU' 'LEU'
+     'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
+     'LEU' 'LEU' 'LEU' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
+     'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS' 'LYS'
+     'LYS' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP' 'ASP'
+     'ASP' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY'
+     'GLY' 'GLY' 'GLY' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+     'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+     'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+     'SER' 'SER' 'SER' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'GLY' 'ARG' 'ARG'
+     'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG'
+     'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'ARG' 'PRO' 'PRO'
+     'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+     'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+     'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO' 'PRO'
+     'PRO' 'PRO' 'PRO' 'PRO' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER' 'SER'
+     'SER' 'SER' 'SER' 'SER']
+    >>> ids, names = get_residues(atom_array)
+    >>> print(names)
+    ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
+     'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
     """
     starts = get_residue_starts(array)
     return array.res_id[starts], array.res_name[starts]
@@ -352,60 +371,60 @@ def residue_iter(array):
     ...     print(res)
     ...     print()
     New residue
-        A       1 ASN N      N        -8.901    4.127   -0.555
-        A       1 ASN CA     C        -8.608    3.135   -1.618
-        A       1 ASN C      C        -7.117    2.964   -1.897
-        A       1 ASN O      O        -6.634    1.849   -1.758
-        A       1 ASN CB     C        -9.437    3.396   -2.889
-        A       1 ASN CG     C       -10.915    3.130   -2.611
-        A       1 ASN OD1    O       -11.269    2.700   -1.524
-        A       1 ASN ND2    N       -11.806    3.406   -3.543
-        A       1 ASN H1     H        -8.330    3.957    0.261
-        A       1 ASN H2     H        -8.740    5.068   -0.889
-        A       1 ASN H3     H        -9.877    4.041   -0.293
-        A       1 ASN HA     H        -8.930    2.162   -1.239
-        A       1 ASN HB2    H        -9.310    4.417   -3.193
-        A       1 ASN HB3    H        -9.108    2.719   -3.679
-        A       1 ASN HD21   H       -11.572    3.791   -4.444
-        A       1 ASN HD22   H       -12.757    3.183   -3.294
+        A       1  ASN N      N        -8.901    4.127   -0.555
+        A       1  ASN CA     C        -8.608    3.135   -1.618
+        A       1  ASN C      C        -7.117    2.964   -1.897
+        A       1  ASN O      O        -6.634    1.849   -1.758
+        A       1  ASN CB     C        -9.437    3.396   -2.889
+        A       1  ASN CG     C       -10.915    3.130   -2.611
+        A       1  ASN OD1    O       -11.269    2.700   -1.524
+        A       1  ASN ND2    N       -11.806    3.406   -3.543
+        A       1  ASN H1     H        -8.330    3.957    0.261
+        A       1  ASN H2     H        -8.740    5.068   -0.889
+        A       1  ASN H3     H        -9.877    4.041   -0.293
+        A       1  ASN HA     H        -8.930    2.162   -1.239
+        A       1  ASN HB2    H        -9.310    4.417   -3.193
+        A       1  ASN HB3    H        -9.108    2.719   -3.679
+        A       1  ASN HD21   H       -11.572    3.791   -4.444
+        A       1  ASN HD22   H       -12.757    3.183   -3.294
     <BLANKLINE>
     New residue
-        A       2 LEU N      N        -6.379    4.031   -2.228
-        A       2 LEU CA     C        -4.923    4.002   -2.452
-        A       2 LEU C      C        -4.136    3.187   -1.404
-        A       2 LEU O      O        -3.391    2.274   -1.760
-        A       2 LEU CB     C        -4.411    5.450   -2.619
-        A       2 LEU CG     C        -4.795    6.450   -1.495
-        A       2 LEU CD1    C        -3.612    6.803   -0.599
-        A       2 LEU CD2    C        -5.351    7.748   -2.084
-        A       2 LEU H      H        -6.821    4.923   -2.394
-        A       2 LEU HA     H        -4.750    3.494   -3.403
-        A       2 LEU HB2    H        -3.340    5.414   -2.672
-        A       2 LEU HB3    H        -4.813    5.817   -3.564
-        A       2 LEU HG     H        -5.568    6.022   -0.858
-        A       2 LEU HD11   H        -3.207    5.905   -0.146
-        A       2 LEU HD12   H        -2.841    7.304   -1.183
-        A       2 LEU HD13   H        -3.929    7.477    0.197
-        A       2 LEU HD21   H        -4.607    8.209   -2.736
-        A       2 LEU HD22   H        -6.255    7.544   -2.657
-        A       2 LEU HD23   H        -5.592    8.445   -1.281
+        A       2  LEU N      N        -6.379    4.031   -2.228
+        A       2  LEU CA     C        -4.923    4.002   -2.452
+        A       2  LEU C      C        -4.136    3.187   -1.404
+        A       2  LEU O      O        -3.391    2.274   -1.760
+        A       2  LEU CB     C        -4.411    5.450   -2.619
+        A       2  LEU CG     C        -4.795    6.450   -1.495
+        A       2  LEU CD1    C        -3.612    6.803   -0.599
+        A       2  LEU CD2    C        -5.351    7.748   -2.084
+        A       2  LEU H      H        -6.821    4.923   -2.394
+        A       2  LEU HA     H        -4.750    3.494   -3.403
+        A       2  LEU HB2    H        -3.340    5.414   -2.672
+        A       2  LEU HB3    H        -4.813    5.817   -3.564
+        A       2  LEU HG     H        -5.568    6.022   -0.858
+        A       2  LEU HD11   H        -3.207    5.905   -0.146
+        A       2  LEU HD12   H        -2.841    7.304   -1.183
+        A       2  LEU HD13   H        -3.929    7.477    0.197
+        A       2  LEU HD21   H        -4.607    8.209   -2.736
+        A       2  LEU HD22   H        -6.255    7.544   -2.657
+        A       2  LEU HD23   H        -5.592    8.445   -1.281
     <BLANKLINE>
     New residue
-        A       3 TYR N      N        -4.354    3.455   -0.111
-        A       3 TYR CA     C        -3.690    2.738    0.981
-        A       3 TYR C      C        -4.102    1.256    1.074
-        A       3 TYR O      O        -3.291    0.409    1.442
-        A       3 TYR CB     C        -3.964    3.472    2.302
-        A       3 TYR CG     C        -2.824    3.339    3.290
-        A       3 TYR CD1    C        -2.746    2.217    4.138
-        A       3 TYR CD2    C        -1.820    4.326    3.332
-        A       3 TYR CE1    C        -1.657    2.076    5.018
-        A       3 TYR CE2    C        -0.725    4.185    4.205
-        A       3 TYR CZ     C        -0.639    3.053    5.043
-        A       3 TYR OH     O         0.433    2.881    5.861
-        A       3 TYR H      H        -4.934    4.245    0.120
-        A       3 TYR HA     H        -2.615    2.768    0.796
-        A       3 TYR HB2    H        -4.117    4.513    2.091
+        A       3  TYR N      N        -4.354    3.455   -0.111
+        A       3  TYR CA     C        -3.690    2.738    0.981
+        A       3  TYR C      C        -4.102    1.256    1.074
+        A       3  TYR O      O        -3.291    0.409    1.442
+        A       3  TYR CB     C        -3.964    3.472    2.302
+        A       3  TYR CG     C        -2.824    3.339    3.290
+        A       3  TYR CD1    C        -2.746    2.217    4.138
+        A       3  TYR CD2    C        -1.820    4.326    3.332
+        A       3  TYR CE1    C        -1.657    2.076    5.018
+        A       3  TYR CE2    C        -0.725    4.185    4.205
+        A       3  TYR CZ     C        -0.639    3.053    5.043
+        A       3  TYR OH     O         0.433    2.881    5.861
+        A       3  TYR H      H        -4.934    4.245    0.120
+        A       3  TYR HA     H        -2.615    2.768    0.796
+        A       3  TYR HB2    H        -4.117    4.513    2.091
     <BLANKLINE>
     """
     # The exclusive stop is appended to the residue starts

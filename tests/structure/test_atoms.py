@@ -11,6 +11,7 @@ import pytest
 def atom_list():
     chain_id = ["A","A","B","B","B"]
     res_id = [1,1,1,1,2]
+    ins_code = [""] * 5
     res_name = ["ALA","ALA","PRO","PRO","MSE"]
     hetero = [False, False, False, False, True]
     atom_name = ["N", "CA", "O", "CA", "SE"]
@@ -20,6 +21,7 @@ def atom_list():
         atom_list.append(struc.Atom([i,i,i],
                          chain_id = chain_id[i],
                          res_id = res_id[i],
+                         ins_code = ins_code[i],
                          res_name = res_name[i],
                          hetero = hetero[i],
                          atom_name = atom_name[i],
@@ -38,6 +40,22 @@ def array(atom_list):
 def stack(array):
     return struc.stack([array, array.copy(), array.copy()])
 
+@pytest.fixture
+def array_box():
+    return np.array([
+        [1,0,0],
+        [0,2,0],
+        [0,0,3]
+    ])
+
+@pytest.fixture
+def stack_box(stack, array_box):
+    return np.array([array_box] * stack.stack_depth())
+
+def test_shape(array, stack):
+    assert array.shape == (5,)
+    assert stack.shape == (3, 5)
+
 def test_access(array):
     chain_id = ["A","A","B","B","B"]
     assert array.coord.shape == (5,3)
@@ -47,6 +65,7 @@ def test_access(array):
     assert array.test1.tolist() == [0,0,0,0,0]
     with pytest.raises(IndexError):
         array.set_annotation("test2", np.array([0,1,2,3]))
+
 
 def test_modification(atom, array, stack):
     new_atom = atom
@@ -58,12 +77,14 @@ def test_modification(atom, array, stack):
     del stack[1]
     assert stack.stack_depth() == 2
 
+
 def test_array_indexing(atom, array):
     filtered_array = array[array.chain_id == "B"]
     assert filtered_array.res_name.tolist() == ["PRO","PRO","MSE"] 
     assert atom == filtered_array[0]
     filtered_array = array[[0,2,4]]
     assert filtered_array.element.tolist() == ["N","O","SE"]
+
 
 def test_stack_indexing(stack):
     with pytest.raises(IndexError):
@@ -88,6 +109,7 @@ def test_concatenation(array, stack):
     assert concat_array.chain_id.tolist() == ["B","B","B","A","A"]
     assert concat_stack.coord.shape == (3,5,3)
 
+
 def test_comparison(array):
     mod_array = array.copy()
     assert mod_array == array
@@ -96,6 +118,7 @@ def test_comparison(array):
     mod_array = array.copy()
     mod_array.res_name[0] = "UNK"
     mod_array != array
+
 
 def test_bonds(array):
     assert array.bonds is None
@@ -122,3 +145,22 @@ def test_bonds(array):
                                                       [5, 7, 0],
                                                       [7, 8, 0],
                                                       [7, 9, 0]]
+
+
+def test_box(array, stack, array_box, stack_box):
+    # Test attribute access
+    with pytest.raises(ValueError):
+        array.box = stack_box
+    with pytest.raises(ValueError):
+        stack.box = array_box
+    with pytest.raises(ValueError):
+        array.box = np.array([42])
+    with pytest.raises(ValueError):
+        stack.box = np.array([42])
+    array.box = array_box
+    stack.box = stack_box
+    # Test indexing
+    assert (stack[0].box == array_box).all()
+    assert (stack[:2].box == np.array([array_box] * 2)).all()
+    assert (stack[:2, 3].box == np.array([array_box] * 2)).all()
+    assert (stack[[True, False, True]].box == np.array([array_box] * 2)).all()

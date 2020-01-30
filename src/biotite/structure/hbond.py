@@ -6,6 +6,7 @@
 This module provides functions for hydrogen bonding calculation.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["hbond", "hbond_frequency"]
 
@@ -17,7 +18,8 @@ from .celllist import CellList
 
 def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           cutoff_dist=2.5, cutoff_angle=120,
-          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S')):
+          donor_elements=('O', 'N', 'S'), acceptor_elements=('O', 'N', 'S'),
+          periodic=False):
     r"""
     Find hydrogen bonds in a structure using the Baker-Hubbard
     algorithm. [1]_
@@ -42,18 +44,20 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         The type of `selection2` is chosen accordingly
         ('both' or the opposite).
         (Default: 'both')
-    cutoff_dist: float
+    cutoff_dist : float, optional
         The maximal distance between the hydrogen and acceptor to be
         considered a hydrogen bond. (Default: 2.5)
-    cutoff_angle: float
+    cutoff_angle : float, optional
         The angle cutoff in degree between Donor-H..Acceptor to be
         considered a hydrogen bond (default: 120).
     donor_elements, acceptor_elements: tuple of str
         Elements to be considered as possible donors or acceptors
-        (default: O, N, S).
-    vectorized: bool
-        Enable/Disable vectorization across models. Vectorization is
-        faster, but requires more memory (default: True).
+        (Default: O, N, S).
+    periodic : bool, optional
+        If true, hydrogen bonds can also be detected in periodic
+        boundary conditions.
+        The `box` attribute of `atoms` is required in this case.
+        (Default: False).
         
     Returns
     -------
@@ -67,7 +71,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     mask : ndarry, dtype=bool, shape=(m,n)
         *m x n* matrix that shows if an interaction with index *n* in
         `triplets` is present in the model *m* of the input `atoms`.
-        Only returned if `atoms` is an `AtomArrayStack`.
+        Only returned if `atoms` is an :class:`AtomArrayStack`.
     
     Notes
     -----
@@ -95,21 +99,21 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
     >>> print(atom_array_stack[2, triplets[:,0]])
-        A       1 ASN N      N        -6.589    7.754   -0.571
-        A       5 GLN N      N        -5.009   -0.575   -1.365
-        A       6 TRP N      N        -2.154   -0.497   -1.588
-        A       7 LEU N      N        -1.520   -1.904    0.893
-        A       8 LYS N      N        -2.716   -4.413    0.176
-        A       8 LYS NZ     N        -6.352   -4.311   -4.482
-        A       9 ASP N      N        -0.694   -5.301   -1.644
-        A      11 GLY N      N         2.142   -4.244    1.916
-        A      10 GLY N      N         1.135   -6.232    0.250
-        A      14 SER OG     O         4.689   -5.759   -2.390
-        A      13 SER N      N         6.424   -5.220    3.257
-        A      14 SER N      N         6.424   -5.506    0.464
-        A      15 GLY N      N         8.320   -3.632   -0.318
-        A      16 ARG N      N         8.043   -1.206   -1.866
-        A       6 TRP NE1    N         3.420    0.332   -0.121
+        A       1  ASN N      N        -6.589    7.754   -0.571
+        A       5  GLN N      N        -5.009   -0.575   -1.365
+        A       6  TRP N      N        -2.154   -0.497   -1.588
+        A       7  LEU N      N        -1.520   -1.904    0.893
+        A       8  LYS N      N        -2.716   -4.413    0.176
+        A       8  LYS NZ     N        -6.352   -4.311   -4.482
+        A       9  ASP N      N        -0.694   -5.301   -1.644
+        A      11  GLY N      N         2.142   -4.244    1.916
+        A      10  GLY N      N         1.135   -6.232    0.250
+        A      14  SER OG     O         4.689   -5.759   -2.390
+        A      13  SER N      N         6.424   -5.220    3.257
+        A      14  SER N      N         6.424   -5.506    0.464
+        A      15  GLY N      N         8.320   -3.632   -0.318
+        A      16  ARG N      N         8.043   -1.206   -1.866
+        A       6  TRP NE1    N         3.420    0.332   -0.121
 
     See Also
     --------
@@ -129,6 +133,11 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
         single_model = True
     else:
         single_model = False
+    
+    if periodic:
+        box = atoms.box
+    else:
+        box = None
     
     # Mask for donor/acceptor elements
     donor_element_mask = np.isin(atoms.element, donor_elements)
@@ -154,7 +163,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             exclusive_selection1, exclusive_selection2, overlap_selection
         ]
         selection_combinations = [
-            #(0,0),   is not excluded, would be same selection
+            #(0,0),   is not included, would be same selection
             #         as donor and acceptor simultaneously
             (0,1),
             (0,2),
@@ -178,7 +187,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
                         atoms, donor_mask, acceptor_mask,
                         donor_element_mask, acceptor_element_mask,
                         cutoff_dist, cutoff_angle,
-                        donor_elements, acceptor_elements
+                        donor_elements, acceptor_elements,
+                        box
                     )
                     all_comb_triplets.append(triplets)
                     all_comb_mask.append(mask)
@@ -191,7 +201,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection1, selection2,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements
+            donor_elements, acceptor_elements,
+            box
         )
     
     elif selection1_type == 'acceptor':
@@ -199,7 +210,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection2, selection1,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements
+            donor_elements, acceptor_elements,
+            box
         )
     
     else:
@@ -217,13 +229,14 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
 
 def _hbond(atoms, donor_mask, acceptor_mask,
            donor_element_mask, acceptor_element_mask,
-           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements):
+           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
+           box):
     
     # Filter donor/acceptor elements
     donor_mask    &= donor_element_mask
     acceptor_mask &= acceptor_element_mask
     
-    def _get_bonded_hydrogens(array, donor_mask, cutoff=1.5):
+    def _get_bonded_hydrogens(array, donor_mask, box, cutoff=1.5):
         """
         Helper function to find indices of associated hydrogens in atoms
         for all donors in atoms[donor_mask].
@@ -242,7 +255,7 @@ def _hbond(atoms, donor_mask, acceptor_mask,
         for donor_i in donor_indices:
             candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
             distances = distance(
-                coord[donor_i], coord[candidate_mask]
+                coord[donor_i], coord[candidate_mask], box=box
             )
             donor_h_indices = np.where(candidate_mask)[0][distances <= cutoff]
             for i in donor_h_indices:
@@ -253,8 +266,9 @@ def _hbond(atoms, donor_mask, acceptor_mask,
             
 
     # TODO use BondList if available
+    first_model_box = box[0] if box is not None else None
     donor_h_mask, associated_donor_indices \
-        = _get_bonded_hydrogens(atoms[0], donor_mask)
+        = _get_bonded_hydrogens(atoms[0], donor_mask, first_model_box)
     donor_h_i = np.where(donor_h_mask)[0]
     acceptor_i = np.where(acceptor_mask)[0]
     if len(donor_h_i) == 0 or len(acceptor_i) == 0:
@@ -273,10 +287,15 @@ def _hbond(atoms, donor_mask, acceptor_mask,
         (len(acceptor_i), len(donor_h_i)),
         dtype=bool
     )
+    periodic = False if box is None else True
     for model_i in range(atoms.stack_depth()):
         donor_h_coord = coord[model_i, donor_h_mask]
         acceptor_coord = coord[model_i, acceptor_mask]
-        cell_list = CellList(donor_h_coord, cell_size=cutoff_dist)
+        box_for_model = box[model_i] if box is not None else None
+        cell_list = CellList(
+            donor_h_coord, cell_size=cutoff_dist,
+            periodic=periodic, box=box_for_model
+        )
         possible_bonds |= cell_list.get_atoms_in_cells(
             acceptor_coord, as_mask=True
         )
@@ -292,17 +311,18 @@ def _hbond(atoms, donor_mask, acceptor_mask,
     triplets = triplets[donor_i != acceptor_i]
 
      # Filter triplets that meet distance and angle condition
-    def _is_hbond(donor, donor_h, acceptor, cutoff_dist=2.5, cutoff_angle=120):
+    def _is_hbond(donor, donor_h, acceptor, box,
+                  cutoff_dist=2.5, cutoff_angle=120):
         cutoff_angle_rad = np.deg2rad(cutoff_angle)
-        theta = angle(donor, donor_h, acceptor)
-        dist = distance(donor_h, acceptor)
+        theta = angle(donor, donor_h, acceptor, box=box)
+        dist = distance(donor_h, acceptor, box=box)
         return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
     
     hbond_mask = _is_hbond(
         coord[:, triplets[:,0]],  # donors
         coord[:, triplets[:,1]],  # donor hydrogens
         coord[:, triplets[:,2]],  # acceptors
-        cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle
+        box, cutoff_dist=cutoff_dist, cutoff_angle=cutoff_angle
     )
 
     # Reduce output to contain only triplets counted at least once
@@ -343,13 +363,9 @@ def hbond_frequency(mask):
     >>> triplets, mask = hbond(atom_array_stack)
     >>> freq = hbond_frequency(mask)
     >>> print(freq)
-    [0.26315789 0.28947368 0.10526316 0.10526316 0.23684211 0.23684211
-     0.02631579 0.05263158 0.39473684 1.         1.         1.
-     0.02631579 0.42105263 0.02631579 0.02631579 0.31578947 0.81578947
-     0.02631579 0.92105263 0.02631579 0.34210526 0.02631579 0.10526316
-     0.02631579 0.13157895 0.05263158 0.02631579 0.15789474 0.02631579
-     0.86842105 0.21052632 0.02631579 0.92105263 0.31578947 0.07894737
-     0.23684211 0.10526316 0.42105263 0.07894737 0.02631579 1.
-     0.05263158 0.13157895 0.02631579 0.18421053]
+    [0.263 0.289 0.105 0.105 0.237 0.237 0.026 0.053 0.395 1.000 1.000 1.000
+     0.026 0.421 0.026 0.026 0.316 0.816 0.026 0.921 0.026 0.342 0.026 0.105
+     0.026 0.132 0.053 0.026 0.158 0.026 0.868 0.211 0.026 0.921 0.316 0.079
+     0.237 0.105 0.421 0.079 0.026 1.000 0.053 0.132 0.026 0.184]
     """
     return mask.sum(axis=0)/len(mask)

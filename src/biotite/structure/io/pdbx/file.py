@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PDBxFile"]
 
@@ -48,7 +49,7 @@ class PDBxFile(TextFile, MutableMapping):
     
     Examples
     --------
-    Read the file and get author names
+    Read the file and get author names:
 
     >>> import os.path
     >>> file = PDBxFile()
@@ -65,11 +66,11 @@ class PDBxFile(TextFile, MutableMapping):
     Get the structure from the file:
     
     >>> arr = get_structure(file)
-    >>> print(type(arr))
-    <class 'biotite.structure.atoms.AtomArrayStack'>
+    >>> print(type(arr).__name__)
+    AtomArrayStack
     >>> arr = get_structure(file, model=1)
-    >>> print(type(arr))
-    <class 'biotite.structure.atoms.AtomArray'>
+    >>> print(type(arr).__name__)
+    AtomArray
     
     Modify atom array and write it back into the file:
     
@@ -151,12 +152,11 @@ class PDBxFile(TextFile, MutableMapping):
         blocks : list
             List of data block names.
         """
-        blocks = []
+        blocks = set()
         for category_tuple in self._categories.keys():
-            block = category_tuple[0]
-            if block not in blocks:
-                blocks.append(block)
-        return blocks
+            block, _ = category_tuple
+            blocks.add(block)
+        return sorted(blocks)
     
     
     def get_category(self, category, block=None):
@@ -257,22 +257,24 @@ class PDBxFile(TextFile, MutableMapping):
             The name of the category. The leading underscore is omitted.
         category_dict : dict
             The category content. The dictionary must have strings
-            (subcategories) as keys and strings or `ndarrays` as
-            values.
+            (subcategories) as keys and strings or :class:`ndarray`
+            objects as values.
         block : string, optional
             The name of the data block. Default is the first
             (and most times only) data block of the file. If the
             block is not contained in the file yet, a new block is
-            appended at the end of the file..
+            appended at the end of the file.
         """
         if block is None:
             block = self.get_block_names()[0]
         
+        
+        # Determine whether the category is a looped category
         sample_category_value = list(category_dict.values())[0]
-        if (isinstance(sample_category_value, (np.ndarray, list))):
+        if isinstance(sample_category_value, (np.ndarray, list)):
             is_looped = True
+             # Check whether all arrays have the same length
             arr_len = len(list(category_dict.values())[0])
-            # Check whether all arrays have the same length
             for subcat, array in category_dict.items():
                 if len(array) != arr_len:
                     raise ValueError(
@@ -282,6 +284,26 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             is_looped = False
         
+
+        # Sanitize dictionary
+        # -> convert to string
+        # -> replace empty values with '.'
+        category_dict = copy.deepcopy(category_dict)
+        if is_looped:
+            for subcat, value in category_dict.items():
+                array = np.asarray(value)
+                # Cast array if its data type is not a Unicode string
+                if array.dtype.kind != "U":
+                    array = array.astype(str)
+                array = np.char.strip(array)
+                array[array == ""] = "."
+                category_dict[subcat] = array
+        else:
+            for subcat, value in category_dict.items():
+                value = str(value)
+                value = value if value != "" else "."
+                category_dict[subcat] = str(value)
+
         
         # Value arrays (looped categories) can be modified (e.g. quoted)
         # Hence make a copy to avoid unwaned side effects

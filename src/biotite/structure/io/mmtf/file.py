@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MMTFFile"]
 
@@ -22,10 +23,11 @@ class MMTFFile(File, MutableMapping):
     
     When reading a file, the *MessagePack* unpacker is used to create
     a dictionary of the file content.
-    This dictionary is accessed by indexing the `MMTFFile` instance
-    directly with the dictionary keys. If the value is an encoded
-    array, the value automatically decoded. Decoded arrays are always
-    returned as `ndarray` instances.
+    This dictionary is accessed by indexing the :class:`MMTFFile`
+    instance directly with the dictionary keys.
+    If the dictionary value is an encoded array, the value automatically
+    decoded.
+    Decoded arrays are always returned as :class:`ndarray` instances.
     
     Examples
     --------
@@ -80,7 +82,9 @@ class MMTFFile(File, MutableMapping):
         """
         def _write(file):
             nonlocal self
-            packed_bytes = msgpack.packb(self._content, use_bin_type=True)
+            packed_bytes = msgpack.packb(
+                self._content, use_bin_type=True, default=_encode_numpy
+            )
             file.write(packed_bytes)
 
         if isinstance(file, str):
@@ -196,3 +200,17 @@ class MMTFFile(File, MutableMapping):
     
     def __contains__(self, item):
         return item in self._content
+
+
+def _encode_numpy(item):
+    """
+    Convert NumPy scalar types to native Python types,
+    as *Msgpack* cannot handle NumPy types (e.g. float32).
+
+    The function is given to the Msgpack packer as value for the
+    `default` parameter.
+    """
+    if isinstance(item, np.generic):
+        return item.item()
+    else:
+        raise TypeError(f"can not serialize '{type(item).__name__}' object")

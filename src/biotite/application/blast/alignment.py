@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BlastAlignment"]
 
@@ -10,11 +11,11 @@ from ...sequence.align.alignment import Alignment
 
 class BlastAlignment(Alignment):
     """
-    A specialized `Alignment` class for alignments using the BLAST
-    application. It stores additional data, like the E-value, the HSP
-    position and a description of the hit sequence.
+    A specialized :class:`Alignment` class for alignments using the
+    BLAST application. It stores additional data, like the E-value,
+    the HSP position and a description of the hit sequence.
     
-    Like its superclass, all attributes of a `BlastAlignment` are
+    Like its superclass, all attributes of a :class:`BlastAlignment` are
     public. The attributes are the same as the constructor parameters.
     
     Parameters
@@ -52,3 +53,31 @@ class BlastAlignment(Alignment):
         self.hit_interval = hit_interval
         self.hit_id = hit_id
         self.hit_definition = hit_definition
+    
+    def __eq__(self, item):
+        if not isinstance(item, BlastAlignment):
+            return False
+        if self.e_value != item.e_value:
+            return False
+        if self.query_interval != item.query_interval:
+            return False
+        if self.hit_interval != item.hit_interval:
+            return False
+        if self.hit_id != item.hit_id:
+            return False
+        if self.hit_definition != item.hit_definition:
+            return False
+        return super().__eq__(item)
+    
+    def __getitem__(self, index):
+        super_alignment = super().__getitem__(index)
+        return BlastAlignment(
+            super_alignment.sequences,
+            super_alignment.trace,
+            super_alignment.score,
+            self.e_value,
+            self.query_interval,
+            self.hit_interval,
+            self.hit_id,
+            self.hit_definition
+        )

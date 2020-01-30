@@ -1,0 +1,47 @@
+body, div.sphinxsidebar input{
+    font-family: "Fira Sans", "Helvetica", "Sans-Serif";
+}
+div.body > .section {
+    text-align: justify;
+}
+p.caption {
+    font-size: 0.8em;
+}
+h1, h2, h3, h4, h5, h6, p.sidebar-title {
+    text-align: start !important;
+    font-family: "Crete Round", "Sans-Serif" !important;
+}
+div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
+    font-weight: 300;
+}
+a {
+    border: none !important;    
+}
+a.toc-backref {
+    color: #3E4349;
+    text-decoration-line: none
+}
+div.body p, div.body dd, div.body li {
+    list-style-type: square;
+}
+hr.docutils {
+    border: none;
+    border-bottom: 1px solid #656768;
+    margin-top: 2em;
+}
+.toctree-wrapper ul, ol {
+    margin: 0px 0 10px 0px;
+    margin-bottom: 2em;
+}
+div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
+    list-style-type: none;
+}
+.toctree-wrapper li.toctree-l2 {
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+.toctree-wrapper li.toctree-l1 {
+    margin-bottom: 1em;
+    font-weight: bold;
+}

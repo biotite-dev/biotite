@@ -7,10 +7,11 @@ This module provides utility functions for creating filters on atom
 arrays and atom array stacks.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
            "filter_backbone", "filter_intersection",
-           "filter_inscode_and_altloc"]
+           "filter_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
@@ -59,7 +60,7 @@ def filter_solvent(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
-    return ( np.in1d(array.res_name, _solvent_list) & (array.hetero == True) )
+    return np.in1d(array.res_name, _solvent_list)
 
 
 def filter_amino_acids(array):
@@ -153,79 +154,61 @@ def filter_intersection(array, intersect):
     return filter
 
 
-def filter_inscode_and_altloc(array,  inscode=[], altloc=[],
-                              inscode_array=None, altloc_array=None):
+def filter_altloc(atoms, altlocs, selected_altlocs):
     """
-    Filter all atoms having the desired altloc or inscode.
+    Filter all atoms having the desired altloc.
     
     Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
     in case a residue is found in multiple alternative locations
-    (altloc) or different residues are inserted at a specific location
-    (inscode). This function is used to filter the desired altlocs and
-    inscodes, atoms at this position with other altlocs or inscodes are
-    removed.    
+    (*altloc*).
+    This function is used to filter the atoms with the desired *altloc*
+    at this position with other *altlocs* are removed.    
     
-    The function will be merely used by the end user, since this kind
+    The function will be rarely used by the end user, since this kind
     of filtering is automatically performed, when the structure is
-    loaded from a file. In the final atom array (stack) duplicate atoms
-    are not allowed.
+    loaded from a file.
+    In the final atom array (stack) duplicate atoms are not allowed.
     
     Parameters
     ----------
-    array : AtomArray or AtomArrayStack
-        The array to be filtered.
-    inscode : iterable object of tuple, optional
-        Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the insertion code.
-        By default no insertions are used.
-    altloc : iterable object of tuple, optional
-        Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the *altloc* ID.
-        By default the location with the *altloc* ID "A" is used.
-    inscode_array : array-like, optional
-        An array containing the insertion codes for each atom
-        (same length as `array`).
-        Can contain '.', '?', ' ' or a letter at each position.
-        If not specified, this filter will apply to all atoms.
-    altloc_array : array-like, optional
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The unfiltered atom array to be filtered.
+    altlocs : array-like, shape=(n,)
         An array containing the alternative location codes for each
-        atom (same length as `array`).
-        Can contain '.', '?', ' ' or a letter at each position.
-        If not specified, this filter will apply to all atoms.
+        atom in the unfiltered atom array.
+        Can contain '.', '?', ' ', '' or a letter at each position.
+    selected_altlocs : iterable object of tuple (str, int, str)
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues only those atoms of `atoms` are
+        filtered where the *altloc* ID matches the respective *altloc*
+        ID in `altlocs`.
+        By default the location with the *altloc* ID "A" is used.
     
     Returns
     -------
     filter : ndarray, dtype=bool
         The combined inscode and altloc filters.
     """
-    if inscode_array is None:
-        # In case no insertion code column is existent
-        inscode_filter = np.full(array.array_length(), True)
-    else:
-        # Default: Filter all atoms
-        # with insertion code ".", "?" or " "
-        inscode_filter = np.in1d(inscode_array, [".","?"," "])
-        # Now correct filter for every given insertion code
-        for code in inscode:
-            residue = code[0]
-            insertion = code[1]
-            residue_filter = (array.res_id == residue)
-            # Reset (to False) filter for given res_id
-            inscode_filter &= ~residue_filter
-            # Choose atoms of res_id with insertion code
-            inscode_filter |= residue_filter & (inscode_array == insertion)
-    # Same with altlocs
-    if altloc_array is None:
-        altloc_filter = np.full(array.array_length(), True)
-    else:
-        altloc_filter = np.in1d(altloc_array, [".","?","A"," "])
-        for loc in altloc:
-            residue = loc[0]
-            altloc = loc[1]
-            residue_filter = (array.res_id == residue)
-            altloc_filter &= ~residue_filter
-            altloc_filter |= residue_filter & (altloc_array == altloc)
-    # return combined filters
-    return inscode_filter & altloc_filter
+    # Default: Filter all atoms
+    # with altloc code ".", "?", "A", " " or empty string
+    altloc_filter = np.in1d(altlocs, [".","?","A"," ",""])
+    
+    for loc in selected_altlocs:
+        chain, residue, altoc = loc
+        residue_filter = (
+            (atoms.chain_id == chain) &
+            (atoms.res_id == residue)
+        )
+        # Reset (set to False) filter for specified residue
+        altloc_filter &= ~residue_filter
+        # Choose only atoms of residue with altloc code
+        altloc_filter |= residue_filter & (altlocs == altloc)
+    
+    return altloc_filter
 
 

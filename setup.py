@@ -2,14 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from setuptools import setup, find_packages, Extension
-from setuptools.command.test import test as TestCommand
 import sys
 import shlex
 import glob
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
+from setuptools import setup, find_packages, Extension
+from setuptools.command.test import test as TestCommand
+import numpy
+from Cython.Build import cythonize
 from src.biotite import __version__
 
 long_description = """
@@ -35,18 +37,18 @@ original_wd = os.getcwd()
 os.chdir(dirname(abspath(__file__)))
 
 
-# Compile Cython into C if any Cython files exist
-if len(glob.glob("src/**/*.pyx", recursive=True)) > 0:
-    try:
-        from Cython.Build import cythonize
-        import numpy
-        cythonize(
-            "src/**/*.pyx",
-            include_path=[numpy.get_include()],
-            language_level=3
-        )
-    except ValueError:
-        pass
+# Compile Cython into C
+try:
+    cythonize(
+        "src/**/*.pyx",
+        include_path=[numpy.get_include()],
+        language_level=3
+    )
+except ValueError:
+    # This is a source distribution and the directory already contains
+    # only C files
+    pass
+
 
 def get_extensions():
     ext_sources = []
@@ -81,7 +83,7 @@ class PyTestCommand(TestCommand):
 setup(
     name="biotite",
     version = __version__,
-    description = ("A comprehensive framework for "
+    description = ("A comprehensive library for "
                    "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
@@ -110,8 +112,6 @@ setup(
     
     # Including additional data
     package_data = {
-        # Type annotations
-        "biotite"                   : ["py.typed", "**/*.pyi"],
         # Substitution matrices
         "biotite.sequence.align"    : ["matrix_data/*.mat"],
         # Color schmemes

@@ -56,6 +56,7 @@ thread.
 """
 
 from biotite.application import Application
+
 # Create a dummy Application subclass
 class MyApplication(Application):
     def __init__(self, param): super().__init__()
@@ -92,6 +93,7 @@ results = app.get_some_data()
 
 import biotite.application.blast as blast
 import biotite.sequence as seq
+
 tc5b_seq = seq.ProteinSequence("NLYIQWLKDGGPSSGRPPPS")
 app = blast.BlastWebApp("blastp", tc5b_seq)
 app.start()
@@ -109,7 +111,7 @@ print("Hit name: ", best_ali.hit_definition)
 
 ########################################################################
 # This was too simple for BLAST:
-# It just found the query sequence in the PDB.
+# As best hit it just found the query sequence itself in the PDB.
 # However, it gives a good impression about how this
 # :class:`Application` works.
 # Besides some optional parameters, the :class:`BlastWebApp` requires
@@ -129,10 +131,11 @@ print("Hit name: ", best_ali.hit_definition)
 
 import biotite.application.blast as blast
 import biotite.sequence as seq
-bl21_seq = seq.NucleotideSequence(
+
+distorted_bl21_excerpt = seq.NucleotideSequence(
     "CGGAAGCGCTCGGTCTCCTGGCCTTATCAGCCACTGCGCGACGATATGCTCGTCCGTTTCGAAGA"
 )
-app = blast.BlastWebApp("blastn", bl21_seq, obey_rules=False)
+app = blast.BlastWebApp("blastn", distorted_bl21_excerpt, obey_rules=False)
 app.set_max_expect_value(0.1)
 app.start()
 app.join()
@@ -152,8 +155,8 @@ print("Hit name: ", best_ali.hit_definition)
 # :class:`BlastWebApp` constructor, if we omitted this parameter and
 # we started the last two code snippets in quick succession, a
 # :class:`RuleViolationError` would be raised.
-# This is because normally the :class:`BlastWebApp` respects NCBI's code of
-# conduct and prevents you from submitting two queries within one
+# This is because normally the :class:`BlastWebApp` respects NCBI's code
+# of conduct and prevents you from submitting two queries within one
 # minute. If you want to be rude to the NCBI server, create the
 # instance with :obj:`obey_rules` set to false.
 # 
@@ -172,6 +175,7 @@ print("Hit name: ", best_ali.hit_definition)
 
 import biotite.application.muscle as muscle
 import biotite.sequence as seq
+
 seq1 = seq.ProteinSequence("BIQTITE")
 seq2 = seq.ProteinSequence("TITANITE")
 seq3 = seq.ProteinSequence("BISMITE")
@@ -183,8 +187,26 @@ alignment = app.get_alignment()
 print(alignment)
 
 ########################################################################
+# In most MSA software even more information than the mere alignment can
+# be extracted.
+# For instance the guide tree, that was used for the alignment, can be
+# obtained from the MUSCLE output.
+
+import matplotlib.pyplot as plt
+import biotite.sequence.graphics as graphics
+
+tree = app.get_guide_tree()
+fig, ax = plt.subplots()
+graphics.plot_dendrogram(
+    ax, tree, labels=[str(sequence) for sequence in [seq1, seq2, seq3, seq4]]
+)
+ax.set_xlabel("Distance")
+fig.tight_layout()
+
+########################################################################
 # For the lazy people there is also a convenience method,
 # that handles the :class:`Application` execution internally.
+# However, this shortcut returns only the :class:`Alignment`.
 
 alignment = muscle.MuscleApp.align([seq1, seq2, seq3, seq4])
 
@@ -194,15 +216,46 @@ alignment = muscle.MuscleApp.align([seq1, seq2, seq3, seq4])
 # :class:`ClustalOmegaApp` or :class:`MafftApp` and you are done.
 
 import biotite.application.clustalo as clustalo
+
 alignment = clustalo.ClustalOmegaApp.align([seq1, seq2, seq3, seq4])
 print(alignment)
 
 ########################################################################
 # As shown in the output, the alignment with Clustal-Omega slightly
 # differs from the one performed with MUSCLE.
-# In contrast to MUSCLE, Clustal-Omega and MAFFT also support alignments
-# of :class:`NucleotideSequence` instances.
-# 
+#
+# If the MSA software supports protein sequence alignment AND
+# custom substitution matrices, e.g. MUSCLE and MAFFT, almost any type
+# of sequence can be aligned:
+# Internally the sequences and the matrix are converted into protein
+# sequences/matrix.
+# Then the masquerading sequences are aligned via the software and
+# finally the sequences are mapped back into the original sequence type.
+# Let's show this on the example of a nonsense alphabet.
+
+import numpy as np
+import biotite.application.mafft as mafft
+import biotite.sequence.align as align
+
+alphabet = seq.Alphabet(("foo", "bar", 42))
+sequences = [seq.GeneralSequence(alphabet, sequence) for sequence in [
+    ["foo", "bar", 42, "foo", "foo", 42, 42],
+    ["foo", 42, "foo", "bar", "foo", 42, 42],
+]]
+matrix = align.SubstitutionMatrix(
+    alphabet, alphabet, np.array([
+        [ 100, -100, -100],
+        [-100,  100, -100],
+        [-100, -100,  100]
+    ])
+)
+alignment = mafft.MafftApp.align(sequences, matrix=matrix)
+# As the alphabet do not has characters as symbols
+# the alignment cannot be directly printed
+# However, we can print the trace
+print(alignment.trace)
+
+########################################################################
 # Secondary structure annotation
 # ------------------------------
 # 
@@ -215,15 +268,12 @@ print(alignment)
 # installed).
 # Let us demonstrate this on the example of the good old miniprotein
 # *TC5b*.
-#
-# Similar to the MSA examples, :class:`DsspApp` has the convenience
-# function :func:`DsspApp.annotate_sse()`, which handles the
-# :class:`DsspApp` execution internally.
 
 import biotite
 import biotite.database.rcsb as rcsb
 import biotite.application.dssp as dssp
 import biotite.structure.io as strucio
+
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
 stack = strucio.load_structure(file_path)
 array = stack[0]
@@ -232,3 +282,7 @@ app.start()
 app.join()
 sse = app.get_sse()
 print(sse)
+
+########################################################################
+# Similar to the MSA examples, :class:`DsspApp` has the convenience
+# method :func:`DsspApp.annotate_sse()` as shortcut.

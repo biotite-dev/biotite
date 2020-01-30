@@ -28,7 +28,9 @@ import biotite
 # in order to import modules for API doc generation etc.
 sys.path.insert(0, doc_path)
 import apidoc
+import viewcode
 import tutorial
+import scraper
 
 
 #Reset matplotlib params
@@ -56,7 +58,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017-2018, the Biotite contributors"
+copyright = "2017-2019, the Biotite contributors"
 version = biotite.__version__
 
 exclude_patterns = ["build"]
@@ -66,7 +68,7 @@ pygments_style = "sphinx"
 todo_include_todos = False
 
 # Prevents numpydoc from creating an autosummary which does not work
-# due to Biotite's import system
+# properly due to Biotite's import system
 numpydoc_show_class_members = False
 
 autodoc_member_order = "bysource"
@@ -76,6 +78,11 @@ autodoc_member_order = "bysource"
 
 html_theme = "alabaster"
 html_static_path = ["static"]
+html_css_files = [
+    "biotite.css",
+    "https://fonts.googleapis.com/css?" \
+        "family=Crete+Round|Fira+Sans|&display=swap",
+]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"
 html_sidebars = {"**": ["about.html",
@@ -83,15 +90,16 @@ html_sidebars = {"**": ["about.html",
                         "searchbox.html",
                         "buttons.html"]}
 html_theme_options = {
-    "description"   : "A comprehensive framework for " \
+    "description"   : "A comprehensive library for " \
                       "computational molecular biology",
     "logo"          : "assets/general/biotite_logo_s.png",
     "logo_name"     : "false",
     "github_user"   : "biotite-dev",
     "github_repo"   : "biotite",
     "github_banner" : "true",
-    "github_button" : "false",
-    "page_width"    : "85%",
+    "github_button" : "true",
+    "github_type"   : "star",
+    "page_width"    : "1200px",
     "fixed_sidebar" : "true",
     
     "sidebar_link_underscore" : "#FFFFFF"
@@ -102,17 +110,21 @@ sphinx_gallery_conf = {
     "gallery_dirs"              : "examples/gallery",
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
+    "ignore_pattern"            : ".*ignore\.py",
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
         doc_path, "static/assets/general/biotite_icon_thumb.png"
-    )
+    ),
+    "image_scrapers": ("matplotlib", scraper.static_image_scraper),
 }
 
 
 #### App setup ####
 
 def setup(app):
-    app.connect('autodoc-skip-member', apidoc.skip_non_methods)
+    app.connect("autodoc-skip-member", apidoc.skip_non_methods)
+    app.connect("viewcode-follow-imported", viewcode.find_actual_module)
+    app.connect("viewcode-find-source", viewcode.index_source)

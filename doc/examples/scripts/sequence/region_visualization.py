@@ -22,8 +22,8 @@ file_name = entrez.fetch("CP001509", biotite.temp_dir(), suffix="gb",
                          db_name="nuccore", ret_type="gb")
 gb_file = gb.GenBankFile()
 gb_file.read(file_name)
-seq_length = int(gb_file.get_locus()["length"])
-annotation = gb_file.get_annotation(include_only=["gene"])
+_, seq_length, _, _, _, _ = gb.get_locus(gb_file)
+annotation = gb.get_annotation(gb_file, include_only=["gene"])
 # Find the minimum and maximum locations of lac genes
 min_loc = seq_length
 max_loc = 1
@@ -38,7 +38,7 @@ for feature in annotation:
                     min_loc = loc.first
                 if max_loc < loc.last:
                     max_loc = loc.last
-# Extend the location range by 1000 (arbitrary) in each dirction
+# Extend the location range by 1000 (arbitrary) in each direction
 min_loc -= 10000
 max_loc += 10000
 # Visualize the region as feature map

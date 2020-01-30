@@ -125,16 +125,16 @@ fig.tight_layout()
 # We want to visualize the secondary structure of one monomer of the
 # homodimeric transketolase (PDB: 1QGD).
 # The simplest way to do that, is to fetch the corresponding GenBank
-# file, extract an `Annotation` object from the file and draw the
+# file, extract an :class:`Annotation` object from the file and draw the
 # annotation.
 
 # Fetch GenBank files of the TK's first chain and extract annotatation
 file_name = entrez.fetch("1QGD_A", biotite.temp_dir(), "gb", "protein", "gb")
 gb_file = gb.GenBankFile()
 gb_file.read(file_name)
-annotation = gb_file.get_annotation(include_only=["SecStr"])
+annotation = gb.get_annotation(gb_file, include_only=["SecStr"])
 # Length of the sequence
-length = int(gb_file.get_locus()["length"])
+_, length, _, _, _, _ = gb.get_locus(gb_file)
 
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)
@@ -148,7 +148,7 @@ graphics.plot_feature_map(
 fig.tight_layout()
 
 ########################################################################
-# Another (more complicated) approach is the creation of an `Annotation`
+# Another (more complicated) approach is the creation of an :class:`Annotation`
 # containing the secondary structure from a structure file.
 # All file formats distributed by the *RCSB PDB* contain this
 # information, but it is most easily extracted from the
@@ -236,7 +236,8 @@ def visualize_secondary_structure(sse, first_id):
     fig = plt.figure(figsize=(8.0, 3.0))
     ax = fig.add_subplot(111)
     graphics.plot_feature_map(
-        ax, annotation, symbols_per_line=150, loc_range=(1,length+1),
+        ax, annotation, symbols_per_line=150,
+        loc_range=(first_id, first_id+len(sse)),
         show_numbers=True, show_line_position=True,
         feature_plotters=[HelixPlotter(), SheetPlotter()]
     )

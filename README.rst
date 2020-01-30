@@ -10,8 +10,44 @@
 Biotite project
 ===============
 
+Overview
+--------
+
 The *Biotite* package bundles popular tasks in computational biology into an
-unifying framework, which is easy to use on the one hand side, but is also
-computationally efficient due to intensive usage of *NumPy* and
-*Cython*.  This package focuses on working with sequence and structure data and
-supports various file formats and analysis and manipulation functions.
+unifying library, which is easy to use and computationally efficient.
+The package features
+
+- Sequence and structure data analysis and editing functionality
+- Support for common sequence and structure file formats
+- Visualization capabilities
+- Access to common biological databases (*RCSB PDB*, *NCBI Entrez*)
+- Interfaces to external software (MSA software, *BLAST*, *DSSP*)
+
+*Biotite*'s complete documentation is hosted at www.biotite-python.org
+
+
+Installation
+------------
+
+*Biotite* requires the following packages:
+
+   - **numpy**
+   - **requests**
+   - **msgpack**
+
+Some functions require some extra packages:
+
+   - **mdtraj** - Required for trajetory file I/O operations.
+   - **matplotlib** - Required for plotting purposes.
+
+*Biotite* can be installed via *Conda*...
+
+.. code-block:: console
+
+   $ conda install -c conda-forge biotite
+
+... or *pip*
+
+.. code-block:: console
+
+   $ pip install biotite

@@ -42,11 +42,29 @@
             "Query",
             "CompositeQuery",
             "SimpleQuery",
+            "RangeQuery",
+            "ResolutionQuery",
             "BFactorQuery",
-            "CompositeQuery",
-            "MethodQuery",
             "MolecularWeightQuery",
-            "ResolutionQuery"
+            "ChainCountQuery",
+            "EntityCountQuery",
+            "ModelCountQuery",
+            "ChainLengthQuery",
+            "MoleculeTypeQuery",
+            "MethodQuery",
+            "SoftwareQuery",
+            "PubMedIDQuery",
+            "UniProtIDQuery",
+            "PfamIDQuery",
+            "SequenceClusterQuery",
+            "TextSearchQuery",
+            "KeywordQuery",
+            "TitleQuery",
+            "DecriptionQuery",
+            "MacromoleculeNameQuery",
+            "ExpressionOrganismQuery",
+            "AuthorQuery",
+            "DateQuery"
         ],
         "Search and fetch" : [
             "search",
@@ -95,17 +113,21 @@
             "get_codes",
             "get_symbols",
             "get_sequence_identity",
+            "get_pairwise_sequence_identity",
             "score"
         ]
     },
 
     "biotite.sequence.phylo" : {
-        "Data structure" : [
+        "Data structures" : [
             "Tree",
-            "TreeNode"
+            "TreeNode",
+            "TreeError",
+            "as_binary"
         ],
         "Clustering algorithms" : [
-            "upgma"
+            "upgma",
+            "neighbor_joining"
         ]
     },
 
@@ -145,7 +167,8 @@
             "AtomArray",
             "AtomArrayStack",
             "array",
-            "stack"
+            "stack",
+            "from_template"
         ],
         "Boxes and unit cells" : [
             "vectors_from_unitcell",
@@ -154,13 +177,17 @@
             "repeat_box",
             "repeat_box_coord",
             "move_inside_box",
+            "remove_pbc",
+            "remove_pbc_from_coord",
             "coord_to_fraction",
             "fraction_to_coord",
             "is_orthogonal"
         ],
         "Bonds" : [
             "BondList",
-            "BondType"
+            "BondType",
+            "connect_via_residue_names",
+            "connect_via_distances"
         ],
         "Geometry" : [
             "displacement",
@@ -177,10 +204,12 @@
             "gyration_radius",
             "rdf"
         ],
-        "Manipulation" : [
+        "Transformations" : [
             "translate",
             "rotate",
             "rotate_centered",
+            "rotate_about_axis",
+            "align_vectors",
             "superimpose",
             "superimpose_apply"
         ],
@@ -190,7 +219,7 @@
             "filter_solvent",
             "filter_monoatomic_ions",
             "filter_intersection",
-            "filter_inscode_and_altloc"
+            "filter_altloc"
         ],
         "Checks" : [
             "check_bond_continuity",
@@ -204,6 +233,12 @@
             "spread_residue_wise",
             "get_residue_count",
             "residue_iter"
+        ],
+        "Chain level utility" : [
+            "get_chain_starts",
+            "get_chains",
+            "get_chain_count",
+            "chain_iter"
         ],
         "Structure comparison" : [
             "average",

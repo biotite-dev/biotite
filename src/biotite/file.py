@@ -2,8 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["File", "TextFile"]
+__all__ = ["File", "TextFile", "InvalidFileError"]
 
 import abc
 from .copyable import Copyable
@@ -33,20 +34,21 @@ class File(Copyable, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be read.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         pass
     
     @abc.abstractmethod
     def write(self, file):
         """
-        Write the contents of this object into a file (or file-like object).
+        Write the contents of this object into a file
+        (or file-like object).
         
         Parameters
         ----------
         file_name : file-like object or str
             The file to be written to.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         pass
         
@@ -76,7 +78,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         ----------
         file_name : file-like object or str
             The file to be read.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         def _read(file):
             nonlocal self
@@ -90,13 +92,14 @@ class TextFile(File, metaclass=abc.ABCMeta):
 
     def write(self, file):
         """
-        Write the contents of this object into a file (or file-like object).
+        Write the contents of this object into a file
+        (or file-like object).
         
         Parameters
         ----------
         file_name : file-like object or str
             The file to be written to.
-            Alternatively a file path cen be supplied.
+            Alternatively a file path can be supplied.
         """
         def _write(file):
             nonlocal self

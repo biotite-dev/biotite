@@ -2,19 +2,21 @@ r"""
 Basic analysis of MD simulation
 ===============================
 
-In this example, we will analyze a trajectory of a Gromacs MD
-simulation: The trajectory contains simulation data of the miniprotein
-TC5b (PDB: 1L2Y) over 1 ns. Water and ions have already been removed
-from the trajectory file. As template we use a PDB file, that represents
-the state at the start of the simulation (including water and ions).
+In this example, we will analyze a trajectory of a *Gromacs* MD
+simulation:
+The trajectory contains simulation data of lysozyme over the course of
+1 ns.
+The data is the result of the famous *Gromacs*
+'`Lysozyme in Water <http://www.mdtutorials.com/gmx/lysozyme/index.html>`_'
+tutorial.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/1l2y_md.xtc>`
+:download:`here </examples/download/lysozyme_md.xtc>`
 and the template PDB can be downloaded
-:download:`here </static/assets/download/1l2y_md_start.pdb>`.
+:download:`here </examples/download/lysozyme_md.pdb>`.
 
-We begin by loading the template PDB file as `AtomArray`, sanitizing it
-and using it to load the trajectory as `AtomArrayStack`.
+We begin by loading the template PDB file as :class:`AtomArray`, sanitizing it
+and using it to load the trajectory as :class:`AtomArrayStack`.
 """
 
 # Code source: Patrick Kunzmann
@@ -23,52 +25,74 @@ and using it to load the trajectory as `AtomArrayStack`.
 import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
+import biotite.structure.io.xtc as xtc
 import numpy as np
 import matplotlib.pyplot as plt
-import re
 
 # Put here the path of the downloaded files
-templ_file_path = "../../../static/assets/download/1l2y_md_start.pdb"
-traj_file_path  = "../../../static/assets/download/1l2y_md.xtc"
+templ_file_path = "../../download/lysozyme_md.pdb"
+traj_file_path  = "../../download/lysozyme_md.xtc"
 
-template = strucio.load_structure(templ_file_path)
-# In contrast to the trajectory, the template still has water and ions,
-# that need to be removed
-template = template[(template.res_name != "CL") & (template.res_name != "SOL")]
 # Gromacs does not set the element symbol in its PDB files,
 # but Biotite guesses the element names from the atom names,
 # emitting a warning
-trajectory = strucio.load_structure(traj_file_path, template=template)
+template = strucio.load_structure(templ_file_path)
+# The structure still has water and ions, that are not needed for our
+# calculations, we are only interested in the protein itself
+# These are removed for the sake of computational speed using a boolean
+# mask
+protein_mask = struc.filter_amino_acids(template)
+template = template[protein_mask]
+# We could have loaded the trajectory also with
+# 'strucio.load_structure()', but in this case we only want to load
+# those coordinates that belong to the already selected atoms of the
+# template structure.
+# Hence, we use the 'XTCFile' class directly to load the trajectory
+# This gives us the additional option that allows us to select the
+# coordinates belonging to the amino acids.
+xtc_file = xtc.XTCFile()
+xtc_file.read(traj_file_path, atom_i=np.where(protein_mask)[0])
+trajectory = xtc_file.get_structure(template)
+# Get simulation time for plotting purposes
+time = xtc_file.get_time()
 
 ########################################################################
-# At first we want to see if the simulation converged.
-# For this purpose we take the RMSD of a frame compared to the starting
-# structure as measure. In order to calculate the RMSD we must
-# superimpose all models onto a reference, in this case we choose the
-# starting structure. 
+# Since the MD simulation used periodic boundaries, the protein might be
+# segmented over the box boundary.
+# For further analysis we need to reassemble the protein chain into a
+# whole molecule, without periodic boundaries.
+# in *Gromacs* we could have used ``gmx trjconv`` for this, but this
+# problem can be handled in *Biotite*, too.
 
-trajectory, transform = struc.superimpose(template, trajectory)
-rmsd = struc.rmsd(template, trajectory)
-# Simulation was 1000 ps long
-time = np.linspace(0, 1000, len(trajectory))
+trajectory = struc.remove_pbc(trajectory)
+
+########################################################################
+# Now our trajectory is ready for some analysis!
+# At first we want to see if the simulation converged.
+# For this purpose we take the RMSD of a frame compared to the initial
+# model as measure. In order to calculate the RMSD we must
+# superimpose all models onto a reference, in this case we also choose
+# the initial structure. 
+
+trajectory, transform = struc.superimpose(trajectory[0], trajectory)
+rmsd = struc.rmsd(trajectory[0], trajectory)
 
 figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, rmsd, color=biotite.colors["dimorange"])
-ax.set_xlim(0,1000)
+ax.set_xlim(time[0], time[-1])
+ax.set_ylim(0, 2)
 ax.set_xlabel("Time (ps)")
-ax.set_ylabel("RMSD (Angstrom)")
+ax.set_ylabel("RMSD (Å)")
 figure.tight_layout()
 
 
 ########################################################################
-# As we can see the simulation seems to converge already in the
-# beginning of the simulation. After a few ps the RMSD stays in a range
-# of approx. 2 - 3 Angstrom. However it seems like there are two kinds
-# of quasi-dicrete states as the two plateaus suggest. For further
-# investigation we would require more simulation time. 
+# As we can see the simulation seems to converge already early in the
+# simulation.
+# After a about 200 ps the RMSD stays in a range of approx. 2 - 3 Å.
 # 
-# In order to better evaluate the unfolding of our miniprotein in the
+# In order to futher evaluate the unfolding of our enzyme in the
 # course of simulation, we calculate and plot the radius of gyration
 # (a measure for the protein radius).
 
@@ -77,23 +101,26 @@ radius = struc.gyration_radius(trajectory)
 figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
 ax.plot(time, radius, color=biotite.colors["dimorange"])
-ax.set_xlim(0,1000)
+ax.set_xlim(time[0], time[-1])
+ax.set_ylim(14.0, 14.5)
 ax.set_xlabel("Time (ps)")
-ax.set_ylabel("Radius of gyration (Angstrom)")
+ax.set_ylabel("Radius of gyration (Å)")
 figure.tight_layout()
 
 ########################################################################
 # From this perspective, the protein seems really stable.
-# The radius does merely fluctuate in a range of approx. 0.5 Angstrom
+# The radius does merely fluctuate in a range of approximately 0.3 Å
 # during the entire simulation.
 # 
 # Let's have a look at single amino acids:
 # Which residues fluctuate most?
 # For answering this question we calculate the RMSF
-# (Root mean square fluctuation). It is similar to the RMSD, but instead
-# of averaging over the atoms and looking at each time step, we
-# average over the time and look at each residue. Usually the average
-# model is taken as reference (compared to the starting model for RMSD).
+# (Root mean square fluctuation).
+# It is similar to the RMSD, but instead of averaging over the atoms
+# and looking at each time step, we average over the time and look at
+# each residue.
+# Usually the average model is taken as reference
+# (compared to the starting model for RMSD).
 # 
 # Since side chain atoms fluctuate quite a lot, they are not suitable
 # for evaluation of the residue flexibility. Therefore, we consider only
@@ -105,12 +132,12 @@ rmsf = struc.rmsf(struc.average(ca_trajectory), ca_trajectory)
 
 figure = plt.figure(figsize=(6,3))
 ax = figure.add_subplot(111)
-ax.plot(np.arange(1, 21), rmsf, color=biotite.colors["dimorange"])
-ax.set_xlim(1, 20)
+res_count = struc.get_residue_count(trajectory)
+ax.plot(np.arange(1, res_count+1), rmsf, color=biotite.colors["dimorange"])
+ax.set_xlim(1, res_count)
+ax.set_ylim(0, 1.5)
 ax.set_xlabel("Residue")
-ax.set_ylabel("RMSF (Angstrom)")
-ax.set_xticks(np.arange(1, 21))
-ax.set_xticklabels(np.arange(1, 21))
+ax.set_ylabel("RMSF (Å)")
 figure.tight_layout()
 
 

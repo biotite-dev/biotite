@@ -9,44 +9,50 @@ In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
 about polypetide chain id, residue id, residue name, hetero atom
 information, atom name and optionally more. The coordinates are a
-`NumPy` float `ndarray` of length 3, containing the x, y and z
+`NumPy` float :class:`ndarray` of length 3, containing the x, y and z
 coordinates.
 
-An `Atom` contains data for a single atom, it stores the annotations as
-scalar values and the coordinates as length 3 `ndarray`.
-An `AtomArray` stores data for an entire structure model containing *n*
-atoms. Therefore the annotations are represented as `ndarray` objects of
-length *n*, so called annotation arrays. The coordinates are a (n x 3)
-`ndarray`.
-`AtomArrayStack` stores data for *m* models. Each `AtomArray` in
-the `AtomArrayStack` has the same annotation arrays, since each atom
-must be represented in all models in the stack. Each model may differ in
-atom coordinates. Therefore the annotation arrays are represented as
-`ndarray`s of length *n*, while the coordinates are a (m x n x 3)
-`ndarray` .
-All types must not be subclassed.
+An :class:`Atom` contains data for a single atom, it stores the
+annotations as scalar values and the coordinates as length 3
+:class:`ndarray`.
+
+An :class:`AtomArray` stores data for an entire structure model
+containing *n* atoms.
+Therefore the annotations are represented as :class:`ndarray` objects of
+length *n*, the so called annotation arrays.
+The coordinates are a *(n x 3)* :class:`ndarray`.
+
+An :class:`AtomArrayStack` stores data for *m* models, where each model
+contains the same atoms at different positions.
+Hence, the annotation arrays are represented as :class:`ndarray` objects
+of length *n* like the :class:`AtomArray`, while the coordinates are a
+*(m x n x 3)* :class:`ndarray`.
+
+Like an :class:`AtomArray` can be iterated to obtain :class:`Atom`
+objects, an :class:`AtomArrayStack` yields :class:`AtomArray` objects.
+All three types must not be subclassed.
 
 The following annotation categories are mandatory:
 
-=========  ===========  =================  =============================
+=========  ===========  =================  =======================================
 Category   Type         Examples           Description
-=========  ===========  =================  =============================
+=========  ===========  =================  =======================================
 chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
+ins_code   string (U1)  '', 'A','B',..     PDB insertion code (iCode)
 res_name   string (U3)  'GLY','ALA', ...   Residue name
-hetero     bool         True, False        True for non AA/NUC residues
+hetero     bool         True, False        False for ``ATOM``, true for ``HETATM``
 atom_name  string (U6)  'CA','N', ...      Atom name
 element    string (U2)  'C','O','SE', ...  Chemical Element
-=========  ===========  =================  =============================
+=========  ===========  =================  =======================================
 
-For all `Atom`, `AtomArray` and `AtomArrayStack` objects these
-annotations must be set, otherwise some functions will not work or
-errors will occur.
+For all :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`
+objects these annotations are initially set with default values.
 Additionally to these annotations, an arbitrary amount of annotation
-categories can be added (use `add_annotation()` or `add_annotation()`
-for this).
-The annotation arrays can be accessed either via the function
-`get_annotation()` or directly (e.g. ``array.res_id``).
+categories can be added via :func:`add_annotation()` or
+:func:`set_annotation()`.
+The annotation arrays can be accessed either via the method
+:func:`get_annotation()` or directly (e.g. ``array.res_id``).
 
 The following annotation categories are optionally used by some
 functions:
@@ -60,26 +66,35 @@ occupancy  float        .1, .3, .9, ...     Occupancy
 charge     int          -2,-1,0,1,2, ...    Electric charge of the atom
 =========  ===========  =================   ============================
 
-For each type, the attributes can be accessed directly. Both `AtomArray`
-and `AtomArrayStack` support `NumPy` style indexing, the index is
-propagated to each attribute. If a single integer is used as index,
+For each type, the attributes can be accessed directly.
+Both :class:`AtomArray` and :class:`AtomArrayStack` support
+*NumPy* style indexing.
+The index is propagated to each attribute.
+If a single integer is used as index,
 an object with one dimension less is returned
-(`AtomArrayStack` -> `AtomArray`, `AtomArray` -> `Atom`).
-Do not expect a deep copy, when slicing an `AtomArray` or
-`AtomArrayStack`. The attributes of the sliced object may still point
-to the original `ndarray`.
+(:class:`AtomArrayStack` -> :class:`AtomArray`,
+:class:`AtomArray` -> :class:`Atom`).
+If a slice, index array or a boolean mask is given, a substructure is
+returned
+(:class:`AtomArrayStack` -> :class:`AtomArrayStack`,
+:class:`AtomArray` -> :class:`AtomArray`)
+As in *NumPy*, these are not necessarily deep copies of the originals:
+The attributes of the sliced object may still point to the original
+:class:`ndarray`.
+Use the :func:`copy()` method if a deep copy is required.
 
-An optional attribute for `AtomArray` and `AtomArrayStack` instances
-are associated `BondList` objects, that specify the indices of atoms
-that form a chemical bonds.
+An optional attribute for :class:`AtomArray` and :class:`AtomArrayStack`
+instances are associated :class:`BondList` objects, that specify the
+indices of atoms that form a chemical bonds.
 
-Based on the implementation in `NumPy` arrays, this package furthermore
-contains functions for structure analysis, manipulation and
-visualization.
+Based on the implementation in *NumPy* arrays, this package furthermore
+contains a comprehensive set of functions for structure analysis,
+manipulation and visualization.
 
 The universal length unit in this package is Å. 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 
 from .atoms import *
@@ -87,6 +102,7 @@ from .bonds import *
 from .box import *
 from .celllist import *
 from .compare import *
+from .density import *
 from .error import *
 from .filter import *
 from .geometry import *
@@ -95,6 +111,7 @@ from .integrity import *
 from .mechanics import *
 from .rdf import *
 from .residues import *
+from .chains import *
 from .sasa import *
 from .sse import *
 from .superimpose import *

@@ -5,11 +5,12 @@ From A to T - The Sequence subpackage
 .. currentmodule:: biotite.sequence
 
 :mod:`biotite.sequence` is a *Biotite* subpackage concerning maybe the
-most popular data type in computational molecular biology: sequences.
+most popular type of data in bioinformatics: sequences.
 The instantiation can be quite simple as
 """
 
 import biotite.sequence as seq
+
 dna = seq.NucleotideSequence("AACTGCTA")
 print(dna)
 
@@ -22,7 +23,7 @@ print(dna)
 # 
 # In general the sequence implementation in *Biotite* allows for
 # *sequences of anything*.
-# This means any (immutable an hashable) *Python* object can be used as
+# This means any immutable and hashable *Python* object can be used as
 # a symbol in a sequence, as long as the object is part of the
 # :class:`Alphabet` of the particular :class:`Sequence`.
 # An :class:`Alphabet` object simply represents a list of objects that
@@ -68,7 +69,7 @@ class NonsenseSequence(seq.Sequence):
         return NonsenseSequence.alphabet
 
 sequence = NonsenseSequence(["foo", b"bar", 42, "foo", "foo", 42])
-print("Alphabet:", sequence.get_alphabet())
+print("Alphabet:", sequence.alphabet)
 print("Symbols:", sequence.symbols)
 print("Code:", sequence.code)
 
@@ -76,7 +77,7 @@ print("Code:", sequence.code)
 # From DNA to Protein
 # -------------------
 # 
-# Biotite offers two prominent `Sequence` sublasses:
+# Biotite offers two prominent :class:`Sequence` sublasses:
 # 
 # The :class:`NucleotideSequence` represents DNA.
 # It may use two different alphabets - an unambiguous alphabet
@@ -89,6 +90,7 @@ print("Code:", sequence.code)
 # the ``'U'`` with ``'T'``.
 
 import biotite.sequence as seq
+
 # Create a nucleotide sequence using a string
 # The constructor can take any iterable object (e.g. a list of symbols)
 seq1 = seq.NucleotideSequence("ACCGTATCAAG")
@@ -125,25 +127,27 @@ print("-".join([seq.ProteinSequence.convert_letter_1to3(symbol)
 # :func:`NucleotideSequence.translate()` method.
 # By default, the method searches for open reading frames (ORFs) in the
 # 3 frames of the sequence.
-# A 6 frame ORF search requires an
+# A 6-frame ORF search requires an
 # additional call of :func:`NucleotideSequence.translate()` with the
 # reverse complement of the sequence.
-# If you want to conduct a complete translation of the sequence,
+# If you want to conduct a complete 1-frame translation of the sequence,
 # irrespective of any start and stop codons, set the parameter
 # :obj:`complete` to true.
 
 dna = seq.NucleotideSequence("CATATGATGTATGCAATAGGGTGAATG")
 proteins, pos = dna.translate()
 for i in range(len(proteins)):
-    print("Protein sequence {:} from base {:d} to base {:d}"
-            .format(str(proteins[i]), pos[i][0]+1, pos[i][1]))
+    print(
+        f"Protein sequence {str(proteins[i])} "
+        f"from base {pos[i][0]+1} to base {pos[i][1]}"
+    )
 protein = dna.translate(complete=True)
 print("Complete translation:", str(protein))
 
 ########################################################################
 # The upper example uses the default :class:`CodonTable` instance.
 # This can be changed with the :obj:`codon_table` parameter.
-# A :class:`CodonTable` maps codons to amino acid and defines start
+# A :class:`CodonTable` maps codons to amino acids and defines start
 # codons (both in symbol and code form).
 # A :class:`CodonTable` is mainly used in the
 # :func:`NucleotideSequence.translate()` method,
@@ -208,6 +212,7 @@ import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
+
 file_path = entrez.fetch(
     "NC_001416", biotite.temp_dir(), suffix="fa",
     db_name="nuccore", ret_type="fasta"
@@ -270,9 +275,7 @@ file.write(biotite.temp_file("fa"))
 # :mod:`biotite.sequence.io.fastq` subpackage.
 #
 # Alternatively, a sequence can also be loaded from GenBank or GenPept
-# files,
-# using the :class:`GenBankFile` and :class:`GenPeptFile` class
-# (more on this later).
+# files, using the :class:`GenBankFile` class (more on this later).
 # 
 # Sequence search
 # ---------------
@@ -281,6 +284,7 @@ file.write(biotite.temp_file("fa"))
 # specific symbol:
 
 import biotite.sequence as seq
+
 main_seq = seq.NucleotideSequence("ACCGTATCAAGTATTG")
 sub_seq = seq.NucleotideSequence("TAT")
 print("Occurences of 'TAT':", seq.find_subsequence(main_seq, sub_seq))
@@ -309,18 +313,19 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # 
 # Most functions in :mod:`biotite.sequence.align` can align any two
 # :class:`Sequence` objects with each other.
-# In fact the `Sequence` objects can be instances from different
-# `Sequence` subclasses and therefore may have different alphabets.
+# In fact the :class:`Sequence` objects can be instances from different
+# :class:`Sequence` subclasses and therefore may have different
+# alphabets.
 # The only condition that must be satisfied, is that the
-# class:`SubstitutionMatrix` alphabets matches the alphabets of the sequences
-# to be aligned.
+# :class:`SubstitutionMatrix` alphabets matches the alphabets of the
+# sequences to be aligned.
 # 
 # But wait, what's a :class:`SubstitutionMatrix`?
 # This class maps a similarity score to two symbols, one from the first
 # sequence the other from the second sequence.
 # A :class:`SubstitutionMatrix` object contains two alphabets with
-# length *n* or *m*, respectively, and an *(n,m)*-shaped :class:`ndarray`
-# storing the similarity scores.
+# length *n* or *m*, respectively, and an *(n,m)*-shaped
+# :class:`ndarray` storing the similarity scores.
 # You can choose one of many predefined matrices from an internal
 # database or you can create a custom matrix on your own.
 # 
@@ -332,6 +337,7 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import numpy as np
+
 alph = seq.ProteinSequence.alphabet
 # Load the standard protein substitution matrix, which is BLOSUM62
 matrix = align.SubstitutionMatrix.std_protein_matrix()
@@ -341,7 +347,8 @@ print(matrix)
 matrix = align.SubstitutionMatrix(alph, alph, "BLOSUM50")
 # Load a matrix dictionary representation,
 # modify it, and create the SubstitutionMatrix
-# (Dictionary could be loaded from matrix string in NCBI format, too)
+# (The dictionary could be alternatively loaded from a string containing
+# the matrix in NCBI format)
 matrix_dict = align.SubstitutionMatrix.dict_from_db("BLOSUM62")
 matrix_dict[("P","Y")] = 100
 matrix = align.SubstitutionMatrix(alph, alph, matrix_dict)
@@ -414,10 +421,10 @@ print(align.get_codes(alignment))
 #
 # .. currentmodule:: biotite.sequence.io.fasta
 #
-# You may ask, why should you recalculate the score, when the score has
+# You wonder, why you should recalculate the score, when the score has
 # already been directly calculated via :func:`align_optimal()`.
-# The answer is, that you might load an alignment from an external
-# alignment program as FASTA file using :func:`get_alignment()`.
+# The answer is that you might load an alignment from a FASTA file
+# using :func:`get_alignment()`, where the score is not provided.
 # 
 # .. currentmodule:: biotite.sequence.align
 #
@@ -435,20 +442,26 @@ print(align.get_codes(alignment))
 # One popular source to obtain information about sequence features are
 # GenBank (for DNA and RNA) and GenPept (for peptides) files.
 # As example for sequence features we will work with the GenBank file
-# for the DNA sequence of the avidin gene (Accession: ``AJ311647```),
+# for the avidin gene (Accession: ``AJ311647``),
 # that we can download from the NCBI Entrez database.
 # After downloading we can load the file using the :class:`GenBankFile`
 # class from :mod:`biotite.sequence.io.genbank`.
+# Similar to the other file classes we have encountered, a
+# :class:`GenBankFile` provides a low-level interface.
+# In contrast, the :mod:`biotite.sequence.io.genbank` module contains
+# high-level functions to directly obtain useful objects from a
+# :class:`GenBankFile` object.
 
 import biotite.sequence.io.genbank as gb
+
 file_path = entrez.fetch(
     "AJ311647", biotite.temp_dir(), suffix="gb",
     db_name="nuccore", ret_type="gb"
 )
 file = gb.GenBankFile()
 file.read(file_path)
-print("Accession:", file.get_accession())
-print("Definition:", file.get_definition())
+print("Accession:", gb.get_accession(file))
+print("Definition:", gb.get_definition(file))
 
 ########################################################################
 # 
@@ -456,40 +469,38 @@ print("Definition:", file.get_definition())
 # 
 # Now that we have loaded the file, we want to have a look at the
 # sequence features.
-# Therefore, we grab the annotation from the file.
+# Therefore, we grab the :class:`Annotation` from the file.
 # An annotation is the collection of features corresponding to one
 # sequence (the sequence itself is not included, though).
-# In case of *Biotite* we can get an :class:`Annotation` object from the
-# :class:`GenBankFile`.
 # This :class:`Annotation` can be iterated in order to obtain single
 # :class:`Feature` objects.
 # Each :class:`Feature` contains 3 pieces of information: Its feature
-# key (e.g. *regulatory* or *CDS*), a dictionary of qualifiers and one
-# or multiple locations on the corresponding sequence.
+# key (e.g. ``regulatory`` or ``CDS``), a dictionary of qualifiers and
+# one or multiple locations on the corresponding sequence.
 # A :class:`Location` in turn, contains its starting and its ending
 # base/residue position, the strand it is on (only for DNA) and possible
 # *location defects* (defects will be discussed later).
 # In the next example we will print the keys of the features and their
 # locations:
 
-annotation = file.get_annotation()
+annotation = gb.get_annotation(file)
 for feature in annotation:
     # Convert the feature locations in better readable format
-    locs = [str(loc) for loc in feature.locs]
+    locs = [str(loc) for loc in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {locs}")
 
 ########################################################################
 # The ``'>'`` characters in the string representations of a location
 # indicate that the location is on the forward strand.
-# Most of the features have only one location, except the *mRNA* and
-# *CDS* feature, which have 4 locations joined.
+# Most of the features have only one location, except the ``mRNA`` and
+# ``CDS`` feature, which have 4 locations joined.
 # When we look at the rest of the features, this makes sense: The gene
 # has 4 exons.
 # Therefore, the mRNA (and consequently the CDS) is composed of
 # these exons.
 #
-# The two *regulatory* features are the TATA box and the poly-A signal as the
-# feature qualifiers make clear:
+# The two ``regulatory`` features are the TATA box and the
+# poly-A signal, as the feature qualifiers make clear:
 
 for feature in annotation:
     if feature.key == "regulatory":
@@ -498,7 +509,8 @@ for feature in annotation:
 
 ########################################################################
 # Similarily to :class:`Alignment` objects, we can visualize an
-# Annotation in a *feature map*.
+# Annotation using the :mod:`biotite.sequence.graphics` subpackage, in
+# a so called *feature map*.
 # In order to avoid overlaping features, we draw only the *CDS* feature.
 
 # Get the range of the entire annotation via the *source* feature
@@ -521,8 +533,8 @@ fig.tight_layout()
 
 ########################################################################
 # :class:`Annotation` objects can be indexed with slices, that represent
-# the start and the stop base/residue of the annotation from which the
-# subannotation is created.
+# the start and the exclusive stop base/residue of the annotation from
+# which the subannotation is created.
 # All features, that are not in this range, are not included in the
 # subannotation.
 # In order to demonstrate this indexing method, we create a
@@ -540,13 +552,13 @@ loc = list(gene_feature.locs)[0]
 sub_annot = annotation[loc.first : loc.last +1]
 # Print the remaining features and their locations
 for feature in sub_annot:
-    locs = [str(loc) for loc in feature.locs]
+    locs = [str(loc) for loc in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {locs}")
 
 ########################################################################
 # The regulatory sequences have disappeared in the subannotation.
 # Another interesting thing happened:
-# The location of the *source* feature narrowed and
+# The location of the ``source``` feature narrowed and
 # is in range of the slice now. This happened, because the feature was
 # *truncated*:
 # The bases that were not in range of the slice were removed.
@@ -559,7 +571,8 @@ for feature in sub_annot:
 # Let's have a closer look at the location defects of our subannotation:
 
 for feature in sub_annot:
-    defects = [str(location.defect) for location in feature.locs]
+    defects = [str(location.defect) for location
+               in sorted(feature.locs, key=lambda l: l.first)]
     print(f"{feature.key:12}   {defects}")
 
 ########################################################################
@@ -567,24 +580,27 @@ for feature in sub_annot:
 # This means that multiple defects can be combined to one value.
 # ``NONE`` means that the location has no defect, which is true for most
 # of the features.
-# The *source* feature has a defect has a combination of ``MISS_LEFT``
+# The ``source`` feature has a defect - a combination of ``MISS_LEFT``
 # and ``MISS_RIGHT``. ``MISS_LEFT`` is applied, if a feature was
 # truncated before the first base, and ``MISS_RIGHT`` is applied, if
 # a feature was truncated after the last base.
-# Since *source* was truncated from both sides, the combinated is
+# Since ``source``` was truncated from both sides, the combination is
 # applied.
-# *gene* has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
+# ``gene`` has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
 # These defects already appear in the GenBank file, since
 # the gene is defined as the unit that is transcribed into one
 # (pre-)mRNA.
 # As the transcription starts somewhere before the start of the coding
-# region, and the exact location is not known, ``BEYOND_LEFT`` is
+# region and the exact start location is not known, ``BEYOND_LEFT`` is
 # applied.
-# In an analogous way, the transription does stop somewhere after the
-# coding region (at the terminator signal),
-# hence ``BEYOND_RIGHT`` is applied.
-# These two defects are also reflected in the *mRNA* feature.
+# In an analogous way, the transcription does stop somewhere after the
+# coding region (at the terminator signal).
+# Hence, ``BEYOND_RIGHT`` is applied.
+# These two defects are also reflected in the ``mRNA`` feature.
 # 
+# Annotated sequences
+# ^^^^^^^^^^^^^^^^^^^
+#
 # Now, that you have understood what annotations are, we proceed to the
 # next topic: annotated sequences.
 # An :class:`AnnotatedSequence` is like an annotation, but the sequence
@@ -593,7 +609,7 @@ for feature in sub_annot:
 # sequence corresponding to the feature table, we can directly obtain the
 # :class:`AnnotatedSequence`.
 
-annot_seq = file.get_annotated_sequence()
+annot_seq = gb.get_annotated_sequence(file)
 print("Same annotation as before?", (annotation == annot_seq.annotation))
 print(annot_seq.sequence[:60], "...")
 
@@ -610,7 +626,7 @@ for feature in annot_seq.annotation:
     if feature.key == "regulatory" \
         and feature.qual["regulatory_class"] == "polyA_signal_sequence":
             polya_feature = feature
-loc = list(feature.locs)[0]
+loc = list(polya_feature.locs)[0]
 # Get annotated sequence containing only the poly-A signal region
 poly_a = annot_seq[loc.first : loc.last +1]
 print("Sequence start after indexing:", poly_a.sequence_start)
@@ -619,7 +635,7 @@ print(poly_a.sequence)
 ########################################################################
 # Here we get the poly-A signal Sequence ``'AATAAA'``.
 # As you might have noticed, the sequence start has shifted to the start
-# of the slice index (the first base of the *regulatory* feature).
+# of the slice index (the first base of the ``regulatory`` feature).
 # 
 # .. warning:: Since :class:`AnnotatedSequence` objects use base position
 #    indices and :class:`Sequence` objects use array position indices,
@@ -629,30 +645,39 @@ print(poly_a.sequence)
 # There is also a convenient way to obtain the sequence corresponding to
 # a feature, even if the feature contains multiple locations or a
 # location is on the reverse strand:
-# Simply use a `Feature` object as index.
+# Simply use a :class:`Feature` object (in this case the CDS feature)
+# as index.
 
 for feature in annot_seq.annotation:
     if feature.key == "CDS":
         cds_feature = feature
-dna_seq = annot_seq[cds_feature]
-print(dna_seq[:60], "...")
+cds_seq = annot_seq[cds_feature]
+print(cds_seq[:60], "...")
 
 ########################################################################
 # Awesome.
 # Now we can translate the sequence and compare it with the translation
 # given by the CDS feature.
 # But before we can do that, we have to prepare the data:
-# The DNA sequence uses currently an ambiguous alphabet due to the nasty
+# The DNA sequence uses an ambiguous alphabet due to the nasty
 # ``'M'`` at position 28 of the original sequence, we have to remove the
-# stop symbol after translation and we need to remove the space
+# stop symbol after translation and we need to remove the whitespace
 # characters in the translation given by the CDS feature.
 
-# This step make the alphabet unambiguous
-dna_seq = seq.NucleotideSequence(dna_seq)
-prot_seq = dna_seq.translate(complete=True)
-print("Are the translated sequences equal?",
-        (str(prot_seq.remove_stops()) == \
-        cds_feature.qual["translation"].replace(" ", "")))
+# To make alphabet unambiguous we create a new NucleotideSequence
+# containing only the CDS portion, which is unambiguous
+# Thus, the resulting NucleotideSequence has an unambiguous alphabet
+cds_seq = seq.NucleotideSequence(cds_seq)
+# Now we can translate the unambiguous sequence.
+prot_seq = cds_seq.translate(complete=True)
+print(prot_seq[:60], "...")
+print(
+    "Are the translated sequences equal?",
+    # Remove stops of our translation
+    (str(prot_seq.remove_stops()) == 
+    # Remove whitespace characters from translation given by CDS feature
+    cds_feature.qual["translation"].replace(" ", ""))
+)
 
 ########################################################################
 # Phylogenetic and guide trees
@@ -665,12 +690,12 @@ print("Are the translated sequences equal?",
 #
 # In *Biotite* such a tree is represented by the :class:`Tree` class in
 # the :mod:`biotite.sequence.phylo` package.
-# A tree is rooted and binary, that means each tree node has two childs,
+# A tree is rooted, that means each tree node has at least one child,
 # or none in case of leaf nodes.
 # Each node in a tree is represented by a :class:`TreeNode`.
-# When a :class:`TreeNode` is created, you have to provide either two
-# child nodes and their distances to this node (leaf node) or a
-# reference index (intermediate node).
+# When a :class:`TreeNode` is created, you have to provide either child
+# nodes and their distances to this node (intermediate node) or a
+# reference index (leaf node).
 # This reference index is dependent on the context and can refer to
 # anything: sequences, organisms, etc.
 #
@@ -680,6 +705,7 @@ print("Are the translated sequences equal?",
 # in the creation of a new node.
 
 import biotite.sequence.phylo as phylo
+
 # The reference objects
 fruits = ["Apple", "Pear", "Orange", "Lemon", "Banana"]
 # Create nodes
@@ -689,11 +715,11 @@ orange = phylo.TreeNode(index=fruits.index("Orange"))
 lemon  = phylo.TreeNode(index=fruits.index("Lemon"))
 banana = phylo.TreeNode(index=fruits.index("Banana"))
 intermediate1 = phylo.TreeNode(
-    child1=apple, child2=pear, child1_distance=2.0, child2_distance=2.0
+    children=(apple, pear), distances=(2.0, 2.0)
 )
-intermediate2 = phylo.TreeNode(orange, lemon, 1.0, 1.0)
-intermediate3 = phylo.TreeNode(intermediate2, banana, 2.0, 3.0)
-root = phylo.TreeNode(intermediate1, intermediate3, 2.0, 1.0)
+intermediate2 = phylo.TreeNode((orange, lemon), (1.0, 1.0))
+intermediate3 = phylo.TreeNode((intermediate2, banana), (2.0, 3.0))
+root = phylo.TreeNode((intermediate1, intermediate3), (2.0, 1.0))
 # Create tree from root node
 tree = phylo.Tree(root=root)
 # Trees can be converted into Newick notation

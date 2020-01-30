@@ -7,6 +7,7 @@ This module allows efficient search of atoms in a defined radius around
 a location.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CellList"]
 
@@ -16,6 +17,7 @@ from libc.stdlib cimport realloc, malloc, free
 
 import numpy as np
 from .atoms import coord as to_coord
+from .atoms import AtomArrayStack
 from .box import repeat_box_coord, move_inside_box
 
 ctypedef np.uint64_t ptr
@@ -25,24 +27,25 @@ ctypedef np.uint8_t uint8
 
 cdef class CellList:
     """
-    __init__(atom_array, cell_size, periodic=False, box=None)
+    __init__(atom_array, cell_size, periodic=False, box=None, selection=None)
     
     This class enables the efficient search of atoms in vicinity of a
     defined location.
     
     This class stores the indices of an atom array in virtual "cells",
-    each corresponding to a specific coordinate interval. If the atoms
-    in vicinity of a specific location are searched, only the atoms in
-    the relevant cells are checked. Effectively this decreases the
-    operation time for finding atoms with a maximum distance to given
-    coordinates from *O(n)* to *O(1)*, after the `CellList` has been
-    created. Therefore a `CellList` saves calculation time in those
+    each corresponding to a specific coordinate interval.
+    If the atoms in vicinity of a specific location are searched, only
+    the atoms in the relevant cells are checked.
+    Effectively this decreases the operation time for finding atoms
+    with a maximum distance to given coordinates from *O(n)* to *O(1)*,
+    after the :class:`CellList` has been created.
+    Therefore a :class:`CellList` saves calculation time in those
     cases, where vicinity is checked for multiple locations.
     
     Parameters
     ----------
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
-        The `AtomArray` to create the `CellList` for.
+        The :class:`AtomArray` to create the :class:`CellList` for.
         Alternatively the atom coordiantes are accepted directly.
         In this case `box` must be set, if `periodic` is true.
     cell_size : float
@@ -54,8 +57,13 @@ cdef class CellList:
         The periodicity is based on the `box` attribute of `atom_array`.
         (Default: False)
     box : ndarray, dtype=float, shape=(3,3), optional
-        If provided, this parameter will be used instead of the
-        `box` attribute of `atom_array`.
+        If provided, the periodicity is based on this parameter instead
+        of the :attr:`box` attribute of `atom_array`.
+        Only has an effect, if `periodic` is ``True``.
+    selection : ndarray, dtype=bool, shape=(n,), optional
+        If provided, only the atoms masked by this array are stored in
+        the cell list. However, the indices stored in the cell list
+        will still refer to the original unfiltered `atom_array`.
             
     Examples
     --------
@@ -91,17 +99,19 @@ cdef class CellList:
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def __cinit__(self, atom_array not None,
-                  float cell_size, bint periodic=False, box=None):
+    def __cinit__(self, atom_array not None, float cell_size,
+                  bint periodic=False, box=None, np.ndarray selection=None):
         cdef float32 x, y, z
         cdef int i, j, k
         cdef int atom_array_i
         cdef int* cell_ptr = NULL
         cdef int length
 
+        if isinstance(atom_array, AtomArrayStack):
+            raise TypeError("Expected 'AtomArray' but got 'AtomArrayStack'")
+        coord = to_coord(atom_array)
         # the length of the array before appending periodic copies
         # if 'periodic' is true
-        coord = to_coord(atom_array)
         self._orig_length = coord.shape[0]
         self._box = None
         if coord.ndim != 2:
@@ -156,8 +166,22 @@ cdef class CellList:
         self._cells = np.zeros(cell_count, dtype=np.uint64)
         # Stores the length of the C-arrays
         self._cell_length = np.zeros(cell_count, dtype=np.int32)
+        # Prepare mask from selection
+        cdef bint has_mask = selection is not None
+        cdef uint8[:] mask
+        if has_mask:
+            mask = np.frombuffer(selection, dtype=np.uint8)
+            if mask.shape[0] != self._coord.shape[0]:
+                raise IndexError(
+                    f"Atom array has length {self._coord.shape[0]}, "
+                    f"but selection has length {mask.shape[0]}"
+                )
         # Fill cells
         for atom_array_i in range(self._coord.shape[0]):
+            if has_mask and not mask[atom_array_i]:
+                # Atom is not masked
+                # -> do not put this atom into cell list
+                continue
             x = self._coord[atom_array_i, 0]
             y = self._coord[atom_array_i, 1]
             z = self._coord[atom_array_i, 2]
@@ -202,7 +226,7 @@ cdef class CellList:
         ----------
         threshold_distance : float
             The threshold distance. All atom pairs that have a distance
-            lower than this value are indicated by `True` values in
+            lower than this value are indicated by ``True`` values in
             the resulting matrix.
         
         Returns
@@ -216,6 +240,12 @@ cdef class CellList:
         equal to the threshold distance. However, this is purely
         optinal: The resulting adjacency matrix is the same for every
         cell size.
+
+        Although the adjacency matrix should be symmetric in most cases,
+        it may occur that ``m[i,j] != m[j,i]``, when ``distance(i,j)``
+        is very close to the `threshold_distance` due to numerical
+        errors.
+        The matrix can be symmetrized with ``numpy.maximum(a, a.T)``.
 
         Examples
         --------
@@ -252,10 +282,10 @@ cdef class CellList:
             searched.
             If a single position is given, the indices of atoms in its
             radius are returned.
-            Multiple positions (2-D `ndarray`) have a vectorized
+            Multiple positions (2-D :class:`ndarray`) have a vectorized
             behavior:
-            Each row in the resulting `ndarray` contains the indices for
-            the corresponding position.
+            Each row in the resulting :class:`ndarray` contains the
+            indices for the corresponding position.
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
@@ -264,7 +294,7 @@ cdef class CellList:
             i.e. all atoms in `radius` distance to `coord` are returned.
             Either a single radius can be given as scalar, or individual
             radii for each position in `coord` can be provided as
-            `ndarray`.
+            :class:`ndarray`.
         as_mask : bool, optional
             If true, the result is returned as boolean mask, instead
             of an index array
@@ -297,24 +327,24 @@ cdef class CellList:
         >>> print(indices)
         [102 104 112]
         >>> print(atom_array[indices])
-            A       6 TRP CE3    C         0.779    0.524    2.812
-            A       6 TRP CZ3    C         1.439    0.433    4.053
-            A       6 TRP HE3    H        -0.299    0.571    2.773
+            A       6  TRP CE3    C         0.779    0.524    2.812
+            A       6  TRP CZ3    C         1.439    0.433    4.053
+            A       6  TRP HE3    H        -0.299    0.571    2.773
         >>> indices = cell_list.get_atoms(pos, radius=3.0)
         >>> print(atom_array[indices])
-            A       6 TRP CD2    C         1.508    0.564    1.606
-            A       6 TRP CE3    C         0.779    0.524    2.812
-            A       6 TRP CZ3    C         1.439    0.433    4.053
-            A       6 TRP HE3    H        -0.299    0.571    2.773
-            A       6 TRP HZ3    H         0.862    0.400    4.966
-            A       3 TYR CZ     C        -0.639    3.053    5.043
-            A       3 TYR HH     H         1.187    3.395    5.567
-            A      19 PRO HD2    H         0.470    3.937    1.260
-            A       6 TRP CE2    C         2.928    0.515    1.710
-            A       6 TRP CH2    C         2.842    0.407    4.120
-            A      18 PRO HA     H         2.719    3.181    1.316
-            A      18 PRO HB3    H         2.781    3.223    3.618
-            A      18 PRO CB     C         3.035    4.190    3.187
+            A       6  TRP CD2    C         1.508    0.564    1.606
+            A       6  TRP CE3    C         0.779    0.524    2.812
+            A       6  TRP CZ3    C         1.439    0.433    4.053
+            A       6  TRP HE3    H        -0.299    0.571    2.773
+            A       6  TRP HZ3    H         0.862    0.400    4.966
+            A       3  TYR CZ     C        -0.639    3.053    5.043
+            A       3  TYR HH     H         1.187    3.395    5.567
+            A      19  PRO HD2    H         0.470    3.937    1.260
+            A       6  TRP CE2    C         2.928    0.515    1.710
+            A       6  TRP CH2    C         2.842    0.407    4.120
+            A      18  PRO HA     H         2.719    3.181    1.316
+            A      18  PRO HB3    H         2.781    3.223    3.618
+            A      18  PRO CB     C         3.035    4.190    3.187
         
         Get adjacent atoms for mutliple positions:
 
@@ -433,10 +463,10 @@ cdef class CellList:
             searched.
             If a single position is given, the indices of atoms in its
             cell radius are returned.
-            Multiple positions (2-D `ndarray`) have a vectorized
+            Multiple positions (2-D :class:`ndarray`) have a vectorized
             behavior:
-            Each row in the resulting `ndarray` contains the indices for
-            the corresponding position.
+            Each row in the resulting :class:`ndarray` contains the
+            indices for the corresponding position.
             Since the positions may have different amounts of adjacent
             atoms, trailing `-1` values are used to indicate nonexisting
             indices.
@@ -448,7 +478,7 @@ cdef class CellList:
             cells are returned.
             Either a single radius can be given as scalar, or individual
             radii for each position in `coord` can be provided as
-            `ndarray`.
+            :class:`ndarray`.
             By default atoms are searched in the cell of `coord`
             and directly adjacent cells (cell_radius = 1).
         
@@ -503,7 +533,8 @@ cdef class CellList:
         cell_radii : ndarray, dtype=int32, shape=(n)
             The radius for each position.
         is_multi_radius : bool
-            True indicates, that all values in `cell_radii` are the same.
+            True indicates, that all values in `cell_radii` are the
+            same.
         
         Returns
         -------

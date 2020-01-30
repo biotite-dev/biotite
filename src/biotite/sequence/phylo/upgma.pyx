@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.phylo"
 __author__ = "Patrick Kunzmann"
 __all__ = ["upgma"]
 
@@ -19,12 +20,19 @@ ctypedef np.uint32_t uint32
 cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def upgma(np.ndarray distances):
     """
     upgma(distances)
     
     Perform hierarchical clustering using the
     *unweighted pair group method with arithmetic mean* (UPGMA).
+    
+    This algorithm produces leaf nodes with the same distance to the
+    root node.
+    In the context of evolution this means a constant evolution rate
+    (molecular clock).
 
     Parameters
     ----------
@@ -35,7 +43,7 @@ def upgma(np.ndarray distances):
     -------
     tree : Tree
         A rooted binary tree. The `index` attribute in the leaf
-        `TreeNode` objects refer to the indices of `distances`.
+        :class:`TreeNode` objects refer to the indices of `distances`.
 
     Raises
     ------
@@ -53,7 +61,6 @@ def upgma(np.ndarray distances):
     ...     [7, 6, 2, 0, 3],
     ...     [9, 8, 4, 3, 0],
     ... ])
-    >>>
     >>> tree = upgma(distances)
     >>> print(tree.to_newick(include_distance=False))
     ((4,(3,2)),(1,0));
@@ -63,11 +70,14 @@ def upgma(np.ndarray distances):
     cdef float32 dist, dist_min
     cdef float mean
     cdef float height
-    
 
     if distances.shape[0] != distances.shape[1] \
-        or not np.array_equal(distances.T, distances):
+        or not np.allclose(distances.T, distances):
             raise ValueError("Distance matrix must be symmetric")
+    if np.isnan(distances).any():
+        raise ValueError("Distance matrix contains NaN values")
+    if (distances >= MAX_FLOAT).any():
+        raise ValueError("Distance matrix contains infinity")
     if (distances < 0).any():
         raise ValueError("Distances must be positive")
 
@@ -76,8 +86,8 @@ def upgma(np.ndarray distances):
     cdef np.ndarray nodes = np.array(
         [TreeNode(index=i) for i in range(distances.shape[0])]
     )
-    # Indicates whether an index has already been clustered
-    # and the repsective rows and columns can be ignored
+    # Indicates whether an index in the distance matrix has already been
+    # clustered and the repsective rows and columns can be ignored
     cdef uint8[:] is_clustered_v = np.full(
         distances.shape[0], False, dtype=np.uint8
     )
@@ -86,7 +96,7 @@ def upgma(np.ndarray distances):
     cdef uint32[:] cluster_size_v = np.ones(
         distances.shape[0], dtype=np.uint32
     )
-    # Distance of each node from terminal nodes,
+    # Distance of each node from leaf nodes,
     # used for calculation of distance to child nodes
     cdef float32[:] node_heights = np.zeros(
         distances.shape[0], dtype=np.float32
@@ -95,7 +105,6 @@ def upgma(np.ndarray distances):
 
     # Cluster indices
     cdef float32[:,:] distances_v = distances.astype(np.float32, copy=True)
-    
     # Exit loop via 'break'
     while True:
 
@@ -105,7 +114,7 @@ def upgma(np.ndarray distances):
         j_min = -1
         for i in range(distances_v.shape[0]):
             if is_clustered_v[i]:
-                    continue
+                continue
             for j in range(i):
                 if is_clustered_v[j]:
                     continue
@@ -116,7 +125,7 @@ def upgma(np.ndarray distances):
                     j_min = j
         
         if i_min == -1 or j_min == -1:
-            # No distance found -> all terminal nodes are clustered
+            # No distance found -> all leaf nodes are clustered
             # -> exit loop
             break
         
@@ -126,8 +135,8 @@ def upgma(np.ndarray distances):
         # (is_clustered_v -> True)
         height = dist_min/2
         nodes[i_min] = TreeNode(
-            nodes[i_min], nodes[j_min],
-            height-node_heights[i_min], height-node_heights[j_min]
+            (nodes[i_min], nodes[j_min]),
+            (height-node_heights[i_min], height-node_heights[j_min])
         )
         node_heights[i_min] = height
         # Mark position j_min as clustered
@@ -152,4 +161,4 @@ def upgma(np.ndarray distances):
     # As each higher level node is always created on position i_min
     # and i is always higher than j in minimum distance calculation,
     # the root node must be at the last index
-    return Tree(nodes[-1])
+    return Tree(nodes[len(nodes)-1])

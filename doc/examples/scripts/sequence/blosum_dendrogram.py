@@ -40,7 +40,8 @@ print(matrix)
 # Now a function must be defined, that converts the similarity depicted
 # by a substitution matrix into a distance required by the UPGMA method.
 # In this case, the distance is defined as the difference between the
-# similarity of the two symbols and their average maximum similarity.
+# similarity of the two symbols and the average maximum similarity of
+# the symbols to themselves.
 #
 # Finally the obtained (phylogenetic) tree is plotted as dendrogram.
 def get_distance(similarities, i, j):

@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
@@ -16,10 +17,10 @@ from ..copyable import Copyable
 
 class Location():
     """
-    A `Location` defines at which base(s)/residue(s) a feature is
+    A :class:`Location` defines at which base(s)/residue(s) a feature is
     located.
     
-    A feature can have multiple `Location` instances if multiple
+    A feature can have multiple :class:`Location` instances if multiple
     locations are joined.
 
     Objects of this class are immutable.
@@ -31,8 +32,8 @@ class Location():
     last : int
         Inclusive ending base or residue position of the feature.
     strand : Strand
-        The strand direction. Always `Strand.FORWARD` for peptide
-        features.
+        The strand direction.
+        Always :attr:`Strand.FORWARD` for peptide features.
     defect : Defect
         A possible defect of the location.
     """
@@ -46,18 +47,18 @@ class Location():
         
            - **NONE** - No location defect
            - **MISS_LEFT** - A part of the feature has been truncated
-             before the first base/residue of the `Location`
-             (probably by indexing an `Annotation` object)
+             before the first base/residue of the :class:`Location`
+             (probably by indexing an :class:`Annotation` object)
            - **MISS_RIGHT** - A part of the feature has been truncated
-             after the last base/residue of the `Location`
-             (probably by indexing an `Annotation` object)
+             after the last base/residue of the :class:`Location`
+             (probably by indexing an :class:`Annotation` object)
            - **BEYOND_LEFT** - The feature starts at an unknown position
-             before the first base/residue of the `Location`
+             before the first base/residue of the :class:`Location`
            - **BEYOND_RIGHT** - The feature ends at an unknown position
-             after the last base/residue of the `Location`
+             after the last base/residue of the :class:`Location`
            - **UNK_LOC** - The exact position is unknown, but it is at a
              single base/residue between the first and last residue of
-             the `Location`, inclusive
+             the :class:`Location`, inclusive
            - **BETWEEN** - The position is between to consecutive
              bases/residues.
         """
@@ -72,7 +73,7 @@ class Location():
     class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
-        This is not relevant for residue peptide features.
+        This is not relevant for protein sequence features.
         """
         FORWARD = auto()
         REVERSE = auto()
@@ -145,8 +146,11 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict, optional
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
 
     Attributes
     ----------
@@ -158,16 +162,19 @@ class Feature(Copyable):
         contain one location, but multiple ones are also possible for
         example in eukaryotic CDS (due to splicing).
     qual : dict
-        Maps GenBank feature qualifiers to their corresponding values.
-        The keys and values are always strings.
+        Maps feature qualifiers to their corresponding values.
+        The keys are always strings. A value is either a string or
+        ``None`` if the qualifier key do not has a value.
+        If key has multiple values, the values are separated by a 
+        line break.
     """
     
-    def __init__(self, key, locs, qual={}):
+    def __init__(self, key, locs, qual=None):
         self._key = key
         if len(locs) == 0:
             raise ValueError("A feature must have at least one location")
         self._locs = frozenset(locs)
-        self._qual = copy.deepcopy(qual)
+        self._qual = copy.deepcopy(qual) if qual is not None else {}
     
     def get_location_range(self):
         """
@@ -241,46 +248,50 @@ class Feature(Copyable):
 
 class Annotation(Copyable):
     """
-    An `Annotation` is a set of features belonging to one sequence.
+    An :class:`Annotation` is a set of features belonging to one
+    sequence.
     
     Its advantage over a simple list is the base/residue position based
     indexing:
     When using slice indices in Annotation objects, a subannotation is
-    created, containing copies of all `Feature` objects whose first and
-    last base/residue are in range of the slice.
+    created, containing copies of all :class:`Feature` objects whose
+    first and last base/residue are in range of the slice.
     If the slice starts after the first base/residue or/and the slice
     ends before the last residue, the position out of range is set to
-    the boundaries of the slice (the `Feature` is truncated). In this
-    case the `Feature` obtains the `MISS_LEFT` and/or `MISS_RIGHT`
-    defect.
-    The third case occurs when a `Feature` starts after the slice ends
-    or a `Feature` ends before the slice starts. In this case the
-    `Feature` will not appear in the subannotation.
+    the boundaries of the slice (the :class:`Feature` is truncated).
+    In this case the :class:`Feature` obtains the
+    :attr:`Location.Defect.MISS_LEFT` and/or
+    :attr:`Location.Defect.MISS_RIGHT` defect.
+    The third case occurs when a :class:`Feature` starts after the slice
+    ends or a :class:`Feature` ends before the slice starts.
+    In this case the :class:`Feature` will not appear in the
+    subannotation.
     
     The start or stop position in the slice indices can be omitted, then
     the subannotation will include all features from the start or up to
     the stop, respectively. Step values are ignored.
     The stop values are still exclusive, i.e. the subannotation will
-    contain a not truncated `Feature` only if its last base/residue is
-    smaller than the stop value of the slice.
+    contain a not truncated :class:`Feature` only if its last
+    base/residue is smaller than the stop value of the slice.
     
     Integers or other index types are not supported. If you want to
-    obtain the `Feature` instances from the `Annotation` you need to 
-    iterate over it. The iteration has no defined order.
-    Alternatively, you can obtain a copy of the internal `Feature` set
-    via `get_features()`.
+    obtain the :class:`Feature` instances from the :class:`Annotation`
+    you need to  iterate over it.
+    The iteration has no defined order.
+    Alternatively, you can obtain a copy of the internal
+    :class:`Feature` set via :func:`get_features()`.
     
-    Multiple `Annotation` objects can be concatenated to one
-    `Annotation` object using the '+' operator. Single `Feature`
-    instances can be added this way, too. If a feature is present
-    in both `Annotation` objects, the resulting `Annotation` will
-    contain this feature twice.
+    Multiple :class:`Annotation` objects can be concatenated to one
+    :class:`Annotation` object using the '+' operator.
+    Single :class:`Feature` instances can be added this way, too.
+    If a feature is present in both :class:`Annotation` objects, the
+    resulting :class:`Annotation` will contain this feature twice.
     
     Parameters
     ----------
     features : iterable object of Feature, optional
-        The features to create the `Annotation` from. if not
-        provided, an empty `Annotation` is created.
+        The features to create the :class:`Annotation` from. if not
+        provided, an empty :class:`Annotation` is created.
     
     Examples
     --------
@@ -487,37 +498,41 @@ class Annotation(Copyable):
 
 class AnnotatedSequence(Copyable):
     """
-    An `AnnotatedSequence` is a combination of a `Sequence` and an
-    `Annotation`.
+    An :class:`AnnotatedSequence` is a combination of a
+    :class:`Sequence` and an :class:`Annotation`.
     
-    Indexing an `AnnotatedSequence` with a slice returns another
-    `AnnotatedSequence` with the corresponding subannotation and a
-    sequence start corrected subsequence, i.e. indexing starts at 1 with
-    the default sequence start 1. The sequence start in the newly
-    created `AnnotatedSequence` is the start of the slice.
+    Indexing an :class:`AnnotatedSequence` with a slice returns another
+    :class:`AnnotatedSequence` with the corresponding subannotation and
+    a sequence start corrected subsequence, i.e. indexing starts at 1
+    with the default sequence start 1.
+    The sequence start in the newly created :class:`AnnotatedSequence`
+    is the start of the slice.
     Furthermore, integer indices are allowed in which case the
     corresponding symbol of the sequence is returned (also sequence
     start corrected).
     In both cases the index must be in range of the sequence, e.g. if
     sequence start is 1, index 0 is not allowed.
     Negative indices do not mean indexing from the end of the sequence,
-    in contrast to the behavior in `Sequence` objects.
+    in contrast to the behavior in :class:`Sequence` objects.
     Both index types can also be used to modify the sequence.
     
-    Another option is indexing with a `Feature` (preferably from the
-    `Annotation` in the same `AnnotatedSequence`). In this case a
-    sequence, described by the location(s) of the `Feature`, is
-    returned.
-    When using a `Feature` for setting an `AnnotatedSequence` with a
-    sequence, the new sequence is replacing the locations of the
-    `Feature`. It is important to note that the sum of the location's 
-    interval lengths must fit the length of the replacing sequence.
-        
+    Another option is indexing with a :class:`Feature` (preferably from the
+    :class:`Annotation` in the same :class:`AnnotatedSequence`).
+    In this case a sequence, described by the location(s) of the
+    :class:`Feature`, is returned.
+    When using a :class:`Feature` for setting an
+    :class:`AnnotatedSequence` with a sequence, the new sequence is
+    replacing the locations of the
+    :class:`Feature`.
+    Note the the replacing sequence must have the same length as the
+    sequence of the :class:`Feature` index.
+    
     Parameters
     ----------
     sequence : Sequence
-        The sequence. Usually a `NucelotideSequence` or
-        `ProteinSequence`.
+        The sequence.
+        Usually a :class:`NucleotideSequence` or
+        :class:`ProteinSequence`.
     annotation : Annotation
         The annotation corresponding to `sequence`.
     sequence_start : int, optional
@@ -676,9 +691,36 @@ class AnnotatedSequence(Copyable):
     def __getitem__(self, index):
         if isinstance(index, Feature):
             # Concatenate subsequences for each location of the feature
+            locs = index.locs
+            if len(locs) == 0:
+                raise ValueError("Feature does not contain any locations")
             # Start by creating an empty sequence
             sub_seq = self._sequence.copy(new_seq_code=np.array([]))
-            for loc in index.locs:
+            # Locations need to be sorted, as otherwise the locations
+            # chunks would be merged in the wrong order
+            # The order depends on whether the locs are on the forward
+            # or reverse strand
+            strand = None
+            for loc in locs:
+                if loc.strand == strand:
+                    pass
+                elif strand is None:
+                    strand = loc.strand
+                else: # loc.strand != strand
+                    raise ValueError(
+                        "All locations of the feature must have the same "
+                        "strand direction"
+                    )
+            if strand == Location.Strand.FORWARD:
+                sorted_locs = sorted(
+                    locs, key=lambda loc: loc.first
+                )
+            else:
+                sorted_locs = sorted(
+                    locs, key=lambda loc: loc.last, reverse=True
+                )
+            # Merge the sequences corresponding to the ordered locations
+            for loc in sorted(locs, key=lambda loc: loc.first):
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart +1
@@ -687,6 +729,7 @@ class AnnotatedSequence(Copyable):
                     add_seq = add_seq.reverse().complement()
                 sub_seq += add_seq
             return sub_seq
+        
         elif isinstance(index, slice):
             # Sequence start correction
             if index.start is None:
@@ -710,8 +753,10 @@ class AnnotatedSequence(Copyable):
             return AnnotatedSequence(self._annotation[index],
                                      self._sequence[seq_start:seq_stop],
                                      rel_seq_start)
+        
         elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
+        
         else:
             raise TypeError(
                 f"'{type(index).__name__}' instances are invalid indices"

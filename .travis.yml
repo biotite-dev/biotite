@@ -17,7 +17,15 @@ matrix:
     dist: trusty
     sudo: false
     env:
-      - PY_VERSION='3.7'
+      - PY_VERSION='3.7.3'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: linux
+    dist: trusty
+    sudo: false
+    env:
+      - PY_VERSION='3.8'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -33,6 +41,12 @@ matrix:
       - COMPLETE=false
       - BIN=true
       - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.8'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh;  fi
@@ -44,7 +58,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-  - if [ $COMPLETE == true ];  then conda env create -q -f environment.yaml; fi
+  - if [ $COMPLETE == true ];  then conda env create -q -f environment.yml; fi
   - if [ $COMPLETE == true ];  then conda install -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda install -n biotite-dev cython numpy requests msgpack-python pytest; fi
@@ -52,7 +66,7 @@ install:
 
 script:
   - if [ $COMPLETE == true ];  then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
-  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/"; fi
+  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/ --ignore=tests/test_doctest.py"; fi
 
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi

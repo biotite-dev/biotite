@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 __all__ = ["WebApp", "RuleViolationError"]
 
@@ -14,19 +15,20 @@ class WebApp(Application, metaclass=abc.ABCMeta):
     The base class for all web based applications.
     
     It allows for getting and setting the URL of the app and raises
-    an `RuleViolationError` when a subclass calls `violate_rule()`
+    an :class:`RuleViolationError` when a subclass calls
+    :func:`violate_rule()`
     (e.g. when the server was contacted too often.)
     
-    Be careful, when calling `get_app_state()`. This may involve a
+    Be careful, when calling func:`get_app_state()`. This may involve a
     server contact and therefore frequent calls may raise a
-    `RuleViolationError`.
+    :class:`RuleViolationError`.
     
     Parameters
     ----------
     app_url : str
         URL of the web app.
     obey_rules : bool, optional
-        If true, the application raises an `RuleViolationError`, if
+        If true, the application raises an :class:`RuleViolationError`, if
         the server rules are violated. (Default: True)
     """
     
@@ -38,14 +40,14 @@ class WebApp(Application, metaclass=abc.ABCMeta):
     def violate_rule(self, msg=None):
         """
         Indicate that a server rule was violated, i.e. this raises a
-        `RuleViolationError` unless `obey_rules` is false.
+        :class:`RuleViolationError` unless `obey_rules` is false.
         
         PROTECTED: Do not call from outside.
         
         Parameters
         ----------
         msg : str, optional
-            A custom message for the `RuleViolationError`.
+            A custom message for the :class:`RuleViolationError`.
         """
         if self._obey_rules:
             if msg is None:

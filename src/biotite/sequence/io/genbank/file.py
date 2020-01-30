@@ -2,599 +2,533 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
+__all__ = ["GenBankFile", "MultiFile"]
 
-from ....file import TextFile, InvalidFileError
-from ...annotation import Location, Feature, Annotation, AnnotatedSequence
-from ...seqtypes import NucleotideSequence, ProteinSequence 
-import textwrap
+#import textwrap
 import copy
-import re
+#import re
 import io
-
-__all__ = ["GenBankFile", "GenPeptFile", "MultiFile"]
+from ....file import TextFile, InvalidFileError
+from collections import OrderedDict
+#from ...annotation import Location, Feature, Annotation, AnnotatedSequence
+#from ...seqtypes import NucleotideSequence, ProteinSequence 
 
 
 class GenBankFile(TextFile):
     """
-    This class represents a file in GenBank format.
+    This class represents a file in GenBank format (including GenPept).
+
+    A GenBank file annotates a reference sequence with features such as
+    positions of genes, promoters, etc.
+    Additionally, it provides metadata further describing the file.
+
+    A file is divided into separate fields, e.g. the *DEFINITION*
+    field contains a description of the file.
+    The field name starts at the beginning of a line,
+    followed by the content.
+    A field may contain subfields, whose name is indented.
+    For example, the *SOURCE* field contains the *ORGANISM* subfield.
+    Some fields may occur multiple times, e.g. the *REFERENCE* field.
+    A sample GenBank file can be viewed at
+    `<https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>`_.
     
-    A GenBank file provides 3 kinds of information:
-    At first it contains some general information about the file, like
-    IDs, database relations and source organism.
-    Secondly it contains sequence annotations, i.e. the positions of
-    a reference sequence, that fulfill certain roles, like promoters or
-    coding sequences.
-    At last the file contains optionally the reference sequence.
+    This class provides a low-level interface for parsing, editing and
+    writing GenBank files.
+    It works like a list of field entries, where a field consists of the
+    field name, the field content and the subfields.
+    The field content is separated into the lines belonging to the
+    content.
+    While the content of metadata fields starts at the standard
+    GenBank indentation of 12, the content of the *FEATURES*
+    (contains the annotation) and *ORIGIN* (contains the sequence)
+    fields starts without indentation.
+    The subfields are represented by a dictionary, with subfield names
+    being keys and the corresponding lines being values.
+    The *FEATURES* and *ORIGIN* fields have no subfields.
     
-    As of now, GenBank files can only be parsed, writing GenBank files
-    is not supported at this point.
+    Every entry can be obtained, set and deleted via the index operator.
+
+    Notes
+    -----
+    This class does not support location identifiers with references
+    to other Entrez database entries, e.g.
+    ``join(1..100,J00194.1:100..202)``.
     
     Examples
     --------
+    Create a GenBank file from scratch:
+
+    >>> file = GenBankFile()
+    >>> file.append(
+    ...     "SOMEFIELD", ["One line", "A second line"],
+    ...     subfields={"SUBFIELD1": ["Single Line"], "SUBFIELD2": ["Two", "lines"]}
+    ... )
+    >>> print(file)
+    SOMEFIELD   One line
+                A second line
+      SUBFIELD1 Single Line
+      SUBFIELD2 Two
+                lines
+    //
+    >>> name, content, subfields = file[0]
+    >>> print(name)
+    SOMEFIELD
+    >>> print(content)
+    ['One line', 'A second line']
+    >>> print(subfields)
+    OrderedDict([('SUBFIELD1', ['Single Line']), ('SUBFIELD2', ['Two', 'lines'])])
     
+    Adding an additional field:
+    
+    >>> file.insert(0, "OTHERFIELD", ["Another line"])
+    >>> print(len(file))
+    2
+    >>> print(file)
+    OTHERFIELD  Another line
+    SOMEFIELD   One line
+                A second line
+      SUBFIELD1 Single Line
+      SUBFIELD2 Two
+                lines
+    //
+
+    Overwriting and deleting an existing field:
+
+    >>> file[1] = "NEWFIELD", ["Yet another line"]
+    >>> print(file)
+    OTHERFIELD  Another line
+    NEWFIELD    Yet another line
+    //
+    >>> file[1] = "NEWFIELD", ["Yet another line"], {"NEWSUB": ["Subfield line"]}
+    >>> print(file)
+    OTHERFIELD  Another line
+    NEWFIELD    Yet another line
+      NEWSUB    Subfield line
+    //
+    >>> del file[1]
+    >>> print(file)
+    OTHERFIELD  Another line
+    //
+
+    Parsing fields from a real GenBank file:
+
     >>> import os.path
     >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-    >>> print(file.get_definition())
-    Escherichia coli BL21(DE3), complete genome.
-    >>> features = [f for f in file.get_annotation(include_only=["CDS"])
-    ...             if "gene" in f.qual and "lac" in f.qual["gene"]]
-    >>> for f in sorted(features):
-    ...     if "gene" in f.qual and "lac" in f.qual["gene"]:
-    ...         for loc in f.locs:
-    ...             print(f.qual["gene"], loc.strand, loc.first, loc.last)
-    lacA Strand.REVERSE 330784 331395
-    lacY Strand.REVERSE 331461 332714
-    lacZ Strand.REVERSE 332766 335840
-    lacI Strand.REVERSE 335963 337045
-    lacI Strand.FORWARD 748736 749818
+    >>> file.read(os.path.join(path_to_sequences, "gg_avidin.gb"))
+    >>> print(file)
+    LOCUS       AJ311647                1224 bp    DNA     linear   VRT 14-NOV-2006
+    DEFINITION  Gallus gallus AVD gene for avidin, exons 1-4.
+    ACCESSION   AJ311647
+    VERSION     AJ311647.1  GI:13397825
+    KEYWORDS    AVD gene; avidin.
+    SOURCE      Gallus gallus (chicken)
+      ORGANISM  Gallus gallus
+                Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+                Archelosauria; Archosauria; Dinosauria; Saurischia; Theropoda;
+                Coelurosauria; Aves; Neognathae; Galloanserae; Galliformes;
+                Phasianidae; Phasianinae; Gallus.
+    REFERENCE   1
+      AUTHORS   Wallen,M.J., Laukkanen,M.O. and Kulomaa,M.S.
+      TITLE     Cloning and sequencing of the chicken egg-white avidin-encoding
+                gene and its relationship with the avidin-related genes Avr1-Avr5
+      JOURNAL   Gene 161 (2), 205-209 (1995)
+       PUBMED   7665080
+    REFERENCE   2
+      AUTHORS   Ahlroth,M.K., Kola,E.H., Ewald,D., Masabanda,J., Sazanov,A.,
+                Fries,R. and Kulomaa,M.S.
+      TITLE     Characterization and chromosomal localization of the chicken avidin
+                gene family
+      JOURNAL   Anim. Genet. 31 (6), 367-375 (2000)
+       PUBMED   11167523
+    REFERENCE   3  (bases 1 to 1224)
+      AUTHORS   Ahlroth,M.K.
+      TITLE     Direct Submission
+      JOURNAL   Submitted (09-MAR-2001) Ahlroth M.K., Department of Biological and
+                Environmental Science, University of Jyvaskyla, PO Box 35,
+                FIN-40351 Jyvaskyla, FINLAND
+    FEATURES             Location/Qualifiers
+         source          1..1224
+                         /organism="Gallus gallus"
+                         /mol_type="genomic DNA"
+    ...
+    >>> name, content, _ = file[3]
+    >>> print(name)
+    VERSION
+    >>> print(content)
+    ['AJ311647.1  GI:13397825']
+    >>> name, content, subfields = file[5]
+    >>> print(name)
+    SOURCE
+    >>> print(content)
+    ['Gallus gallus (chicken)']
+    >>> print(dict(subfields))
+    {'ORGANISM': ['Gallus gallus', 'Eukaryota; Metazoa; Chordata; ...', ...]}
     """
-    
+
     def __init__(self):
         super().__init__()
+        # Add '//' as general terminator of a GenBank file
+        self.lines = ["//"]
         # Field start and stop indices in list of lines
         # and names of categories
-        self._fields = []
+        self._field_pos = []
+        self._find_field_indices()
     
     def read(self, file):
         super().read(file)
         self._find_field_indices()
     
-    def write(self, file):
+    def get_fields(self, name):
         """
-        Not implemented yet.
-        """
-        raise NotImplementedError()
-    
-    def get_locus(self):
-        """
-        Parse the *LOCUS* field of the file.
-        
-        Returns
-        ----------
-        locus_dict : dict
-            A dictionary storing the locus *name*, *length*, *type*,
-            *division* and *date*.
-        
-        Examples
-        --------
-        
-        >>> import os.path
-        >>> file = GenBankFile()
-        >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-        >>> for key, val in file.get_locus().items():
-        ...     print(key, ":", val)
-        name : CP001509
-        length : 4558953
-        type : DNA circular
-        division : BCT
-        date : 16-FEB-2017
-        """
-        locus_dict = {}
-        starts, stops = self._get_field_indices("LOCUS")
-        locus_info = self.lines[starts[0]].split()
-        locus_dict["name"] = locus_info[1]
-        locus_dict["length"] = locus_info[2]
-        locus_dict["type"] = locus_info[4]
-        if locus_info[5] in ["circular", "linear"]:
-            locus_dict["type"] += " " + locus_info[5]
-        locus_dict["division"] = locus_info[-2]
-        locus_dict["date"] = locus_info[-1]
-        return locus_dict
-    
-    def get_definition(self):
-        """
-        Parse the *DEFINITION* field of the file.
-        
-        Returns
-        ----------
-        definition : str
-            Content of the *DEFINITION* field.
-        """
-        starts, stops = self._get_field_indices("DEFINITION")
-        return self.lines[starts[0]][12:].strip()
-    
-    def get_accession(self):
-        """
-        Parse the *ACCESSION* field of the file.
-        
-        Returns
-        ----------
-        accession : str
-            Content of the *ACCESSION* field.
-        """
-        starts, stops = self._get_field_indices("ACCESSION")
-        return self.lines[starts[0]][12:].strip()
-    
-    def get_version(self):
-        """
-        Parse the *VERSION* field of the file.
-        
-        Returns
-        ----------
-        version : str
-            Content of the *VERSION* field. Does not include GI.
-        """
-        starts, stops = self._get_field_indices("VERSION")
-        return self.lines[starts[0]][12:].split()[0]
-    
-    def get_gi(self):
-        """
-        Get the GI of the file.
-        
-        Returns
-        ----------
-        gi : str
-            The GI of the file.
-        """
-        starts, stops = self._get_field_indices("VERSION")
-        version_info = self.lines[starts[0]][12:].split()
-        if len(version_info) < 2 or "GI" not in version_info[1]:
-            raise InvalidFileError("File does not contain GI")
-        # Truncate GI
-        return version_info[1][3:]
-    
-    def get_db_link(self):
-        """
-        Parse the *DBLINK* field of the file.
-        
-        Returns
-        ----------
-        link_dict : dict
-            A dictionary storing the database links, with the database
-            name as key, and the corresponding ID as value.
-        
-        Examples
-        --------
-        
-        >>> import os.path
-        >>> file = GenBankFile()
-        >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-        >>> for key, val in file.get_db_link().items():
-        ...     print(key, ":", val)
-        BioProject : PRJNA20713
-        BioSample : SAMN02603478
-        """
-        starts, stops = self._get_field_indices("DBLINK")
-        link_dict = {}
-        for i in range(starts[0], stops[0]):
-            line = self.lines[i]
-            content = line[12:].split(":")
-            link_dict[content[0].strip()] = content[1].strip()
-        return link_dict
-    
-    def get_source(self):
-        """
-        Parse the *SOURCE* field of the file.
-        
-        Returns
-        ----------
-        source : str
-            Organism name corresponding to this file.
-        """
-        starts, stops = self._get_field_indices("SOURCE")
-        return self.lines[starts[0]][12:].strip()
-    
-    def get_references(self):
-        """
-        Parse the *REFERENCE* fields of the file.
-        
-        Returns
-        ----------
-        ref_list : list
-            A list, where each element is a dictionary storing
-            the reference information for one reference.
-        """
-        references = []
-        starts, stops = self._get_field_indices("REFERENCE")
-        for i in range(len(starts)):
-            start = starts[i]
-            stop = stops[i]
-            ref_dict_raw = self._get_minor_fields(start, stop)
-            ref_dict = {}
-            for key, val in ref_dict_raw.items():
-                if key == "REFERENCE":
-                    loc_info = val[val.index("(")+1 : val.index(")")].split()
-                    first_base = int(loc_info[loc_info.index("to") -1])
-                    last_base  = int(loc_info[loc_info.index("to") +1])
-                    ref_dict["location"] = (first_base, last_base)
-                elif key == "AUTHORS":
-                    ref_dict["authors"] = val
-                elif key == "TITLE":
-                    ref_dict["title"] = val
-                elif key == "JOURNAL":
-                    ref_dict["journal"] = val
-                elif key == "PUBMED":
-                    ref_dict["pubmed"] = val
-                elif key == "REMARK":
-                    ref_dict["remark"] = val
-            references.append(ref_dict)
-        return references
-    
-    def get_comment(self):
-        """
-        Parse the *COMMENT* field of the file.
-        
-        Returns
-        ----------
-        comment : str
-            Content of the *COMMENT* field.
-        """
-        starts, stops = self._get_field_indices("COMMENT")
-        comment = ""
-        for line in self.lines[starts[0] : stops[0]]:
-            comment += line[12:].strip() + " "
-        return comment.strip()
-    
-    def get_annotation(self, include_only=None, ignore=None):
-        """
-        Get the sequence annotation from the *ANNOTATION* field.
+        Get all *GenBank* fields associated with a given field name.
         
         Parameters
         ----------
-        include_only : iterable object of string, optional
-            List of names of feature keys, which should be included
-            in the annotation.
-            By default all features are included.
-        ignore: iterable object of string, optional
-            List of names of feature keys, which should not be included
-            in the annotation.
-            By default all features are included.
+        name : str
+            The field name.
         
         Returns
-        ----------
-        annotation : Annotation
-            Sequence annotation from the file.
+        -------
+        fields : list of (list of str, OrderedDict of str -> str)
+            A list containing the fields.
+            For most field names, the list will only contain one
+            element, but fields like *REFERENCE* are an exception.
+            Each field is represented by a tuple.
+            Each tuple contains as first element the content lines and
+            as second element the subfields as dictionary.
+            If the field has no subfields, the dictionary is empty.
         """
-        starts, stops = self._get_field_indices("FEATURES")
-        # Remove the first line,
-        # because it contains the "FEATURES" string itself.
-        start = starts[0] +1
-        stop = stops[0]
-        
-        feature_list = []
-        feature_key = None
-        feature_value = ""
-        for i in range(start, stop):
-            line = self.lines[i]
-            # Check if line contains feature key
-            if line[5] != " ":
-                if feature_key is not None:
-                    # Store old feature key and value
-                    feature_list.append((feature_key, feature_value))
-                # Track new key
-                feature_key = line[5:20].strip()
-                feature_value = ""
-            feature_value += line[21:] + " "
-        # Store last feature key and value (loop already exited)
-        feature_list.append((feature_key, feature_value))
-        
-        # Process only relevant features and put them into Annotation
-        annotation = Annotation()
-        regex = re.compile(r"""(".*?"|/.*?=)""")
-        for key, val in feature_list:
-            if (include_only is None or key     in include_only) and \
-               (ignore       is None or key not in ignore):
-                    qual_dict = {}
-                    qualifiers = [s.strip() for s in regex.split(val)]
-                    # Remove empty quals
-                    qualifiers = [s for s in qualifiers if s]
-                    # First string is location identifier
-                    loc_string = qualifiers.pop(0).strip()
-                    try:
-                        locs = _parse_locs(loc_string)
-                    except:
-                        raise InvalidFileError(
-                            f"'{loc_string}' is an invalid location identifier"
-                        )
-                    qual_key = None
-                    qual_val = None
-                    for qual in qualifiers:
-                        if qual[0] == "/":
-                            # Store previous qualifier pair
-                            if qual_key is not None:
-                                # In case of e.g. '/pseudo'
-                                # 'qual_val' is 'None'
-                                _set_qual(qual_dict, qual_key, qual_val)
-                                qual_key = None
-                                qual_val = None
-                            # Qualifier key
-                            # -> remove "/" and "="
-                            qual_key = qual[1:-1]
-                        else:
-                            # Qualifier value
-                            # -> remove potential quotes
-                            if qual[0] == '"':
-                                qual_val = qual[1:-1]
-                            else:
-                                qual_val = qual
-                    # Store final qualifier pair
-                    if qual_key is not None:
-                        _set_qual(qual_dict, qual_key, qual_val)
-                    annotation.add_feature(Feature(key, locs, qual_dict))
-        return annotation
+        indices = self.get_indices(name)
+        # Omit the field name
+        return [self[i][1:] for i in indices]
     
-    def get_sequence(self):
+    def get_indices(self, name):
         """
-        Get the sequence from the *ORIGIN* field.
-        
-        Returns
-        ----------
-        sequence : NucleotideSequence
-            The reference sequence in the file.
-        """
-        seq_str = self._get_seq_string()
-        if len(seq_str) == 0:
-            raise InvalidFileError("The file does not contain "
-                                   "sequence information")
-        return NucleotideSequence(seq_str)
-    
-    def get_annotated_sequence(self, include_only=None, ignore=None):
-        """
-        Get an annotated sequence by combining the *ANNOTATION* and
-        *ORIGIN* fields.
+        Get the indices to all *GenBank* fields associated with a given
+        field name.
         
         Parameters
         ----------
-        include_only : iterable object of string, optional
-            List of names of feature keys, which should be included
-            in the annotation.
-            By default all features are included.
-        ignore: iterable object of string, optional
-            List of names of feature keys, which should not be included
-            in the annotation.
-            By default all features are included.
+        name : str
+            The field name.
         
         Returns
-        ----------
-        annot_seq : AnnotatedSequence
-            The annotated sequence.
+        -------
+        fields : list of int
+            A list of indices.
+            For most field names, the list will only contain one
+            element, but fields like *REFERENCE* are an exception.
         """
-        sequence = self.get_sequence()
-        annotation = self.get_annotation(include_only, ignore)
-        return AnnotatedSequence(annotation, sequence)
+        name = name.upper()
+        indices = []
+        for i, (_, _, fname) in enumerate(self._field_pos):
+            if fname == name:
+                indices.append(i)
+        return indices
     
-    def _get_seq_string(self):
-        starts, stops = self._get_field_indices("ORIGIN")
-        seq_str = "".join(self.lines[starts[0]+1 : stops[0]])
-        # Remove numbers, emtpy spaces and the '//' at end of file
-        regex = re.compile("[0-9]| |/")
-        seq_str = regex.sub("", seq_str)
-        return seq_str
+    def set_field(self, name, content, subfield_dict=None):
+        """
+        Set a *GenBank* field with the given content.
 
+        If the field already exists in the file, the field is
+        overwritten, otherwise a new field is created at the end of
+        the file.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        
+        Raises
+        ------
+        InvalidFileError
+            If the field occurs multiple times in the file.
+            In this case it is ambiguous which field to overwrite.
+        """
+        name = name.upper()
+        indices = self.get_indices(name)
+        if len(indices) > 1:
+            raise InvalidFileError(f"File contains multiple '{name}' fields")
+        elif len(indices) == 1:
+            # Replace existing entry
+            index = indices[0]
+            self[index] = name, content, subfield_dict
+        else:
+            # Add new entry as no entry exists yet
+            self.append(name, content, subfield_dict)
+
+    def __getitem__(self, index):
+        index = self._translate_idx(index)
+        start, stop, name = self._field_pos[index]
+        
+        if name in ["FEATURES", "ORIGIN"]:
+            # For those two fields return the complete lines,
+            # beginning with the line after the field name
+            content = self._get_field_content(start+1, stop, indent=0)
+            subfield_dict = OrderedDict()
+        
+        else:
+            # For all metadata fields use the
+            # standard GenBank indentation (=12)
+            # Find subfields
+            subfield_dict = OrderedDict()
+            subfield_start = None
+            first_subfield_start = None
+            for i in range(start+1, stop):
+                line = self.lines[i]
+                # Check if line contains a new subfield
+                # (Header beginning from first column)
+                if len(line) != 0 and line[:12].strip() != "":
+                    if first_subfield_start is None:
+                        first_subfield_start = i
+                    # Store previous subfield
+                    if subfield_start is not None:
+                        subfield_dict[header] = self._get_field_content(
+                            subfield_start, i, indent=12
+                        )
+                    header = line[:12].strip()
+                    subfield_start = i
+            # Store last subfield
+            if subfield_start is not None:
+                subfield_dict[header] = self._get_field_content(
+                    subfield_start, stop, indent=12
+                )
+            # Only include lines in field content,
+            # that are not part of a subfield
+            if first_subfield_start is not None:
+                stop = first_subfield_start
+            content = self._get_field_content(
+                start, stop, indent=12
+            )
+        
+        return name, content, subfield_dict
+    
+    def __setitem__(self, index, item):
+        index = self._translate_idx(index)
+        if not isinstance(item, tuple):
+            raise TypeError(
+                "Expected a tuple of name, content and optionally subfields"
+            )
+        if len(item) == 2:
+            name, content = item
+            subfields = None
+        elif len(item) == 3:
+            name, content, subfields = item
+        else:
+            raise TypeError(
+                "Expected a tuple of name, content and optionally subfields"
+            )
+        inserted_lines = self._to_lines(name, content, subfields)
+        
+        # Stop of field to be replaced is start of new field
+        start, old_stop, _ = self._field_pos[index]
+        # If not the last element is set,
+        # the following lines need to be added, too
+        if old_stop is not len(self.lines):
+            follow_lines = self.lines[old_stop:]
+        else:
+            follow_lines = []
+        self.lines = self.lines[:start] + inserted_lines + follow_lines
+        # Shift the start/stop indices of the following fields
+        # by the amount of created fields
+        shift = len(inserted_lines) - (old_stop - start)
+        for i in range(index+1, len(self._field_pos)):
+            old_start, old_stop, fname = self._field_pos[i]
+            self._field_pos[i] = old_start+shift, old_stop+shift, fname
+        # Add new entry
+        self._field_pos[index] = start, start+len(inserted_lines), name.upper()
+    
+    def __delitem__(self, index):
+        index = self._translate_idx(index)
+        start, stop, _ = self._field_pos[index]
+        # Shift the start/stop indices of the following fields
+        # by the amount of deleted fields
+        shift = stop - start
+        for i in range(index, len(self._field_pos)):
+            old_start, old_stop, name = self._field_pos[i]
+            self._field_pos[i] = old_start-shift, old_stop-shift, name
+        del self.lines[start : stop]
+        del self._field_pos[index]
+    
+    def __len__(self):
+        return len(self._field_pos)
+
+    def insert(self, index, name, content, subfields=None):
+        """
+        Insert a *GenBank* field at the given position.
+        
+        Parameters
+        ----------
+        index : int
+            The new field is inserted before the current field at this
+            index.
+            If the index is after the last field, the new field
+            is appended to the end of the file.
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        """
+        index = self._translate_idx(index, length_exclusive=False)
+        inserted_lines = self._to_lines(name, content, subfields)
+        
+        # Stop of previous field is start of new field
+        if index == 0:
+            start = 0
+        else:
+            _, start, _ = self._field_pos[index-1]
+        # If the new lines are not inserted at the end,
+        # the following lines need to be added, too
+        if start is not len(self.lines):
+            follow_lines = self.lines[start:]
+        else:
+            follow_lines = []
+        self.lines = self.lines[:start] + inserted_lines + follow_lines
+        # Shift the start/stop indices of the following fields
+        # by the amount of created fields
+        shift = len(inserted_lines)
+        for i in range(index, len(self._field_pos)):
+            old_start, old_stop, fname = self._field_pos[i]
+            self._field_pos[i] = old_start+shift, old_stop+shift, fname
+        # Add new entry
+        self._field_pos.insert(
+            index,
+            (start, start+len(inserted_lines), name.upper())
+        )
+    
+    def append(self, name, content, subfields=None):
+        """
+        Create a new *GenBank* field at the end of the file.
+        
+        Parameters
+        ----------
+        name : str
+            The field name.
+        content : list of str
+            The content lines.
+        subfield_dict : dict of str -> str, optional
+            The subfields of the field.
+            The dictionary maps subfield names to the content lines of
+            the respective subfield.
+        """
+        self.insert(len(self), name, content, subfields)
+
+    
     def _find_field_indices(self):
         """
         Identify the start and exclusive stop indices of lines
         corresponding to a field name for all fields in the file.
         """
-        start = -1
-        stop = -1
+        start = None
         name = ""
-        self._fields = []
+        self._field_pos = []
         for i, line in enumerate(self.lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
-            if len(line) != 0 and line[0] != " " and line[:2] != "//":
-                stop = i
-                if start != -1:
-                    # Store previous field
-                    self._fields.append((start, stop, name))
-                start = i
-                name = line[0:12].strip()
-        # Store last field
-        stop = i
-        self._fields.append((start, stop, name))
+            if len(line) != 0 and line[0] != " ":
+                if line[:2] != "//":
+                    stop = i
+                    if start is not None:
+                        # Store previous field
+                        self._field_pos.append((start, stop, name))
+                    start = i
+                    name = line[0:12].strip()
+                else:
+                    # '//' means end of file
+                    # -> Store last field
+                    if start is not None:
+                        stop = i
+                        self._field_pos.append((start, stop, name))
+
+    def _get_field_content(self, start, stop, indent):
+        if indent == 0:
+            return self.lines[start : stop]
+        else:
+            return [line[12:] for line in self.lines[start : stop]]
     
-    def _get_field_indices(self, name):
+    def _to_lines(self, name, content, subfields):
         """
-        Get the start and exclusive stop indices of lines corresponding
-        to the given field name.
+        Convert the field name, field content und subfield dictionary
+        into text lines
         """
-        starts = []
-        stops = []
-        for field in self._fields:
-            if field[2] == name:
-                starts.append(field[0])
-                stops.append(field[1])
-        if len(starts) == 0:
-            raise InvalidFileError(f"File does not contain '{name}' category")
-        return starts, stops
-    
-    def _get_minor_fields(self, field_start, field_stop):
-        header = ""
-        content = ""
-        minor_field_dict = {}
-        for i in range(field_start, field_stop):
-            line = self.lines[i]
-            # Check if line contains a new minor field
-            # (Header beginning from first column)
-            if len(line) != 0 and line[:12].strip() != "":
-                # Store previous minor field
-                if content != "":
-                    minor_field_dict[header] = content
-                header = line[:12].strip()
-                content = line[12:].strip()
-            else:
-                content += " " + line[12:].strip()
-        # Store last minor field
-        minor_field_dict[header] = content
-        return minor_field_dict
-
-def _parse_locs(loc_str):
-    locs = []
-    if loc_str.startswith(("join", "order")):
-        str_list = loc_str[loc_str.index("(")+1:loc_str.rindex(")")].split(",")
-        for s in str_list:
-            locs.extend(_parse_locs(s))
-    elif loc_str.startswith("complement"):
-        compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
-        compl_locs = [
-            Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect) 
-            for loc in _parse_locs(compl_str)
-        ]
-        locs.extend(compl_locs)
-    else:
-        locs = [_parse_single_loc(loc_str)]
-    return locs
-
-
-def _parse_single_loc(loc_str):
-    if ".." in loc_str:
-        split_char = ".."
-        defect = Location.Defect.NONE
-    elif "." in loc_str:
-        split_char = "."
-        defect = Location.Defect.UNK_LOC
-    elif "^" in loc_str:
-        split_char = "^"
-        loc_str_split = loc_str.split("..")
-        defect = Location.Defect.BETWEEN
-    else:
-        # Parse single location
-        defect = Location.Defect.NONE
-        if loc_str[0] == "<":
-            loc_str = loc_str[1:]
-            defect |= Location.Defect.BEYOND_LEFT
-        elif loc_str[0] == ">":
-            loc_str = loc_str[1:]
-            defect |= Location.Defect.BEYOND_RIGHT
-        first_and_last = int(loc_str)
-        return Location(first_and_last, first_and_last, defect=defect)
-    # Parse location range
-    loc_str_split = loc_str.split(split_char)
-    first_str = loc_str_split[0]
-    last_str = loc_str_split[1]
-    # Parse Defects
-    if first_str[0] == "<":
-        first = int(first_str[1:])
-        defect |= Location.Defect.BEYOND_LEFT
-    else:
-        first = int(first_str)
-    if last_str[0] == ">":
-        last = int(last_str[1:])
-        defect |= Location.Defect.BEYOND_RIGHT
-    else:
-        last = int(last_str)
-    return Location(first, last, defect=defect)
-
-
-def _set_qual(qual_dict, key, val):
-    """
-    Set a mapping key to val in the dictionary.
-    If the key already exists in the dictionary, append the value (str)
-    to the existing value, separated by a line break
-    """
-    if key in qual_dict:
-        qual_dict[key] += "\n" + val
-    else:
-        qual_dict[key] = val
-
-
-class GenPeptFile(GenBankFile):
-    """
-    This class represents a file in GenBank related GenPept format.
-    
-    See also
-    --------
-    GenBankFile
-    """
-    
-    def get_locus(self):
-        """
-        Parse the *LOCUS* field of the file.
+        if subfields is None:
+            subfields = {}
         
-        Returns
-        ----------
-        locus_dict : dict
-            A dictionary storing the locus *name*, *length*,
-            *division* and *date*.
+        name = name.strip().upper()
+        if len(name) == 0:
+            raise ValueError(f"Must give a non emtpy name")
+        subfields = OrderedDict({
+            subfield_name.upper().strip() : subfield_lines
+            for subfield_name, subfield_lines in subfields.items()
+        })
         
-        Examples
-        --------
+        # Create lines for new field
+        if name == "FEATURES":
+            # Header line plus all actual feature lines
+            lines = copy.copy(content)
+            lines.insert(
+                0, "FEATURES" + " "*13 + "Location/Qualifiers"
+            )
+        elif name == "ORIGIN":
+            # Header line plus all actual sequence lines
+            lines = copy.copy(content)
+            lines.insert(0, "ORIGIN")
+        else:
+            name_column = []
+            content_column = []
+            # Create a line for the field name and empty lines
+            # for each additional line required by the content 
+            name_column += [name] + [""] * (len(content)-1)
+            content_column += content
+            for subfield_name, subfield_lines in subfields.items():
+                name_column += ["  " + subfield_name] \
+                               + [""] * (len(subfield_lines)-1)
+                content_column += subfield_lines
+            lines = [f"{n_col:12}{c_col}" for n_col, c_col
+                              in zip(name_column, content_column)]
         
-        >>> import os.path
-        >>> file = GenPeptFile()
-        >>> file.read(os.path.join(path_to_sequences, "bt_lysozyme.gp"))
-        >>> for key, val in file.get_locus().items():
-        ...     print(key, ":", val)
-        name : AAC37312
-        length : 147
-        division : MAM
-        date : 27-APR-1993
-        """
-        locus_dict = {}
-        starts, stops = self._get_field_indices("LOCUS")
-        locus_info = self.lines[starts[0]].split()
-        locus_dict["name"] = locus_info[1]
-        locus_dict["length"] = locus_info[2]
-        locus_dict["division"] = locus_info[-2]
-        locus_dict["date"] = locus_info[-1]
-        return locus_dict
+        return lines
+
     
-    def get_db_source(self):
+    def _translate_idx(self, index, length_exclusive=True):
         """
-        Parse the *DBSOURCE* field of the file.
-        
-        Returns
-        ----------
-        accession : str
-            Content of the *DBSOURCE* field.
+        Check index boundaries and convert negative index to positive
+        index.
         """
-        starts, stops = self._get_field_indices("DBSOURCE")
-        return self.lines[starts[0]][12:].strip()
-    
-    def get_sequence(self):
-        """
-        Get the sequence from the *ORIGIN* field.
-        
-        Returns
-        ----------
-        sequence : ProteinSequence
-            The reference sequence in the file.
-        """
-        seq_str = self._get_seq_string()
-        if len(seq_str) == 0:
-            raise InvalidFileError("The file does not contain "
-                                   "sequence information")
-        return ProteinSequence(seq_str)
+        if index < 0:
+            new_index = len(self) + index
+        else:
+            new_index = index
+        if length_exclusive:
+            if new_index >= len(self):
+                raise IndexError(f"Index {index} is out of range")
+        else:
+            if new_index > len(self):
+                raise IndexError(f"Index {index} is out of range")
+        return new_index
 
 
 class MultiFile(TextFile):
     """
-    This class represents a file in GenBank or GenPept format,
+    This class represents a file in *GenBank* or *GenPept* format,
     that contains multiple entries, for more than one UID.
     
     The information for each UID are appended to each other in such a
     file.
-    Objects of this class can be iterated to obtain a `GenBankFile`
-    or `GenPeptFile` for each entry in the file.
-
-    Parameters
-    ----------
-    file_type : {'gb', 'gp'}
-        Determines whether the objects should be used for GenBank or
-        GenPept files.
+    Objects of this class can be iterated to obtain a
+    :class:`GenBankFile` for each entry in the file.
     
     Examples
     --------
@@ -605,23 +539,17 @@ class MultiFile(TextFile):
     ...     os.path.join(path_to_directory, "multifile.gp"),
     ...     "protein", "gp"
     ... )
-    >>> multi_file = MultiFile(file_type="gp")
+    >>> multi_file = MultiFile()
     >>> multi_file.read(file_name)
     >>> for gp_file in multi_file:
-    ...     print(gp_file.get_accession())
+    ...     print(get_accession(gp_file))
     1L2Y_A
     3O5R_A
     5UGO_A
     """
 
-    def __init__(self, file_type):
+    def __init__(self):
         super().__init__()
-        if file_type == "gb":
-            self._file_class = GenBankFile
-        elif file_type == "gp":
-            self._file_class = GenPeptFile
-        else:
-            raise ValueError(f"'{file_type}' is an invalid file type")
 
     def __iter__(self):
         start_i = 0
@@ -630,7 +558,7 @@ class MultiFile(TextFile):
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
                 file_content = "\n".join(self.lines[start_i : i+1])
-                file = self._file_class()
+                file = GenBankFile()
                 file.read(io.StringIO(file_content))
                 # Reset file start index
                 start_i = i

@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BlastWebApp"]
 
@@ -43,8 +44,8 @@ class BlastWebApp(WebApp):
         This can be changed to a private server or another cloud
         provider.
     obey_rules : bool, optional
-        If true, the application raises an `RuleViolationError`, if
-        the server is contacted too often, based on the NCBI BLAST
+        If true, the application raises an :class:`RuleViolationError`,
+        if the server is contacted too often, based on the NCBI BLAST
         usage rules. (Default: True)
     mail : str, optional
         If a mail address is provided, it will be appended in the

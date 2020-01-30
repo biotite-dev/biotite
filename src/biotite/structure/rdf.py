@@ -6,14 +6,16 @@
 This module provides functions to calculate the radial distribution function.
 """
 
+__name__ = "biotite.structure"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["rdf"]
 
 from numbers import Integral
 import numpy as np
 from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
-from .geometry import distance
 from .box import box_volume
+from .geometry import displacement
+from .util import vector_dot
 from .celllist import CellList
 
 
@@ -29,21 +31,21 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     center : Atom or AtomArray or AtomArrayStack or ndarray, dtype=float
         Coordinates or atoms(s) to use as origin(s) for RDF calculation.
 
-        - If a single `Atom` or an `ndarray` with shape *(3,)* is given,
+        - If a single :class:`Atom` or an :class:`ndarray` with shape *(3,)* is given,
           the RDF is only calculated for this position.
-        - If an `AtomArray` or an `ndarray` with shape *(n,3)* is given,
+        - If an :class:`AtomArray` or an :class:`ndarray` with shape *(n,3)* is given,
           the calculated RDF histogram is an average over *n*
           postions.
-        - If an `AtomArrayStack` or an `ndarray` with shape *(m,n,3)* is
+        - If an :class:`AtomArrayStack` or an :class:`ndarray` with shape *(m,n,3)* is
           given, different centers are used for each model *m*.
           The calculated RDF histogram is an average over *m*
           models and *n* positions.
-          This requires `atoms` to be an `AtomArrayStack`.
+          This requires `atoms` to be an :class:`AtomArrayStack`.
 
     atoms : AtomArray or AtomArrayStack
         The distribution is calculated based on these atoms.
-        When an an `AtomArrayStack` is provided, the RDF histogram is
-        averaged over all models.
+        When an an :class:`AtomArrayStack` is provided, the RDF
+        histogram is averaged over all models.
         Please not that `atoms` must have an associated box,
         unless `box` is set.
     selection : ndarray, dtype=bool, shape=(n,), optional
@@ -66,8 +68,8 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     box : ndarray, shape=(3,3) or shape=(m,3,3), optional
         If this parameter is set, the given box is used instead of the
         `box` attribute of `atoms`.
-        Must have shape *(3,3)* if atoms is an `AtomArray` or
-        *(m,3,3)* if atoms is an `AtomArrayStack`, respectively.
+        Must have shape *(3,3)* if atoms is an :class:`AtomArray` or
+        *(m,3,3)* if atoms is an :class:`AtomArrayStack`, respectively.
     periodic : bool, optional
         Defines if periodic boundary conditions are taken into account.
 
@@ -87,7 +89,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     Examples
     --------
     Calculate the oxygen-oxygen radial distribution function of water.
-    The range of the histogram starts at 0.2 Angstroem, in order to
+    The range of the histogram starts at 0.2 Å, in order to
     ignore the counts for the density for each oxygen to itself.
 
     >>> from os.path import join
@@ -95,59 +97,59 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     >>> oxygens = waterbox[:, waterbox.atom_name == 'OW']
     >>> bins, g_r = rdf(oxygens, oxygens, bins=49, interval=(0.2, 10), periodic=True)
 
-    Print the RDF depending on the radius. Bins are in Angstroem.
+    Print the RDF depending on the radius. Bins are in Å.
 
     >>> for x, y in zip(bins, g_r):
     ...     print(f"{x:.2f} {y:.2f}")
     0.30 0.00
     0.50 0.00
-    0.70 0.00
-    0.90 0.00
-    1.10 0.00
-    1.30 0.00
-    1.50 0.00
-    1.70 0.00
-    1.90 0.00
-    2.10 0.00
-    2.30 0.00
-    2.50 0.10
-    2.70 2.07
-    2.90 2.31
-    3.10 1.35
-    3.30 1.03
+    0.70 0.04
+    0.90 0.02
+    1.10 0.03
+    1.30 0.06
+    1.50 0.03
+    1.70 0.04
+    1.90 0.04
+    2.10 0.04
+    2.30 0.04
+    2.50 0.16
+    2.70 1.99
+    2.90 2.22
+    3.10 1.34
+    3.30 1.04
     3.50 0.97
     3.70 0.94
-    3.90 0.96
-    4.10 0.96
-    4.30 0.97
-    4.50 0.96
+    3.90 0.97
+    4.10 0.94
+    4.30 0.98
+    4.50 0.97
     4.70 0.96
     4.90 0.99
-    5.10 0.97
-    5.30 1.03
-    5.50 1.01
+    5.10 0.99
+    5.30 1.02
+    5.50 1.02
     5.70 0.99
-    5.90 0.97
-    6.10 0.97
-    6.30 1.00
-    6.50 1.04
-    6.70 1.03
-    6.90 0.99
-    7.10 1.02
-    7.30 1.02
-    7.50 0.99
+    5.90 0.98
+    6.10 0.98
+    6.30 0.99
+    6.50 1.02
+    6.70 1.02
+    6.90 1.00
+    7.10 1.01
+    7.30 1.01
+    7.50 1.00
     7.70 1.01
-    7.90 0.98
+    7.90 0.99
     8.10 0.99
     8.30 0.99
-    8.50 1.00
+    8.50 0.99
     8.70 0.99
     8.90 1.00
     9.10 1.01
     9.30 1.01
     9.50 1.00
-    9.70 1.01
-    9.90 1.00
+    9.70 1.00
+    9.90 0.99
 
     Find the radius for the first solvation shell.
     In this simple case, the density peak is identified by finding
@@ -184,9 +186,12 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
 
     # Calculate distance histogram
     edges = _calculate_edges(interval, bins)
+    # Make histogram of quared distances to save computation time
+    # of sqrt calculation
+    sq_edges = edges**2
     threshold_dist = edges[-1]
     cell_size = threshold_dist
-    distances = []
+    disp = []
     for i in range(atoms.stack_depth()):
         # Use cell list to efficiently preselect atoms that are in range
         # of the desired bin range
@@ -200,16 +205,18 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         # for each center
         for j in range(center.shape[1]):
             dist_box = box[i] if periodic else None
-            distances.append(distance(
+            # Calculate squared distances
+            disp.append(displacement(
                 center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
             ))
     # Make one array from multiple arrays with different length
-    distances = np.concatenate(distances)
-    hist, bin_edges = np.histogram(distances, bins=edges)
+    disp = np.concatenate(disp)
+    sq_distances = vector_dot(disp, disp)
+    hist, _ = np.histogram(sq_distances, bins=sq_edges)
 
     # Normalize with average particle density (N/V) in each bin
-    bin_volume =   (4 / 3 * np.pi * np.power(bin_edges[1: ], 3)) \
-                 - (4 / 3 * np.pi * np.power(bin_edges[:-1], 3))
+    bin_volume =   (4 / 3 * np.pi * np.power(edges[1: ], 3)) \
+                 - (4 / 3 * np.pi * np.power(edges[:-1], 3))
     n_frames = len(atoms)
     volume = box_volume(box).mean()
     density = atoms.array_length() / volume
@@ -218,7 +225,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     # Normalize with number of centers
     g_r /= center.shape[1]
 
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
+    bin_centers = (edges[:-1] + edges[1:]) * 0.5
 
     return bin_centers, g_r
 

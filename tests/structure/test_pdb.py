@@ -11,28 +11,43 @@ import numpy as np
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
+import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io as io
 from .util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, single_model, hybrid36",
     itertools.product(
         glob.glob(join(data_dir, "*.pdb")),
+        [False, True],
         [False, True]
     )
 )
-def test_array_conversion(path, single_model):
+def test_array_conversion(path, single_model, hybrid36):
     model = 1 if single_model else None
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     array1 = pdb.get_structure(pdb_file, model=model)
-    pdb_file = pdb.PDBFile()
-    pdb.set_structure(pdb_file, array1)
+    
+    if hybrid36 and (array1.res_id < 1).any():
+        with pytest.raises(
+            ValueError,
+            match="Only positive integers can be converted "
+                  "into hybrid-36 notation"
+        ):
+            pdb_file = pdb.PDBFile()
+            pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+        return
+    else:
+        pdb_file = pdb.PDBFile()
+        pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
+    
     array2 = pdb.get_structure(pdb_file, model=model)
+    
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -55,9 +70,11 @@ def test_pdbx_consistency(path, single_model):
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     a1 = pdb_file.get_structure(model=model)
+
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     if a2.box is not None:
         assert np.allclose(a1.box, a2.box)
     assert a1.bonds == a2.bonds
@@ -66,18 +83,34 @@ def test_pdbx_consistency(path, single_model):
                a2.get_annotation(category).tolist()
     assert a1.coord.tolist() == a2.coord.tolist()
 
-def test_extra_fields():
+
+@pytest.mark.parametrize("hybrid36", [False, True])
+def test_extra_fields(hybrid36):
     path = join(data_dir, "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
-    stack1 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
-    pdb_file.set_structure(stack1)
-    stack2 = pdb_file.get_structure(extra_fields=["atom_id","b_factor",
-                                                  "occupancy","charge"])
+    stack1 = pdb_file.get_structure(
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+
+    with pytest.raises(ValueError):
+        pdb_file.get_structure(extra_fields=["unsupported_field"])
+
+    pdb_file = pdb.PDBFile()
+    pdb_file.set_structure(stack1, hybrid36=hybrid36)
+    
+    stack2 = pdb_file.get_structure(
+        extra_fields=[
+            "atom_id", "b_factor", "occupancy", "charge"
+        ]
+    )
+    
+    assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
-    assert stack1.b_factor.tolist() == stack2.b_factor.tolist()
-    assert stack1.occupancy.tolist() == stack2.occupancy.tolist()
+    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
 
@@ -143,12 +176,14 @@ def test_box_parsing():
            == approx(a.box.flatten().tolist(), abs=1e-2)
 
 
-def test_atoms_overflow():
+def test_id_overflow():
     # Create an atom array >= 100k atoms
     length = 100000
     a = struc.AtomArray(length)
+    a.coord = np.zeros(a.coord.shape)
     a.chain_id = np.full(length, "A")
-    a.res_id = np.full(length, 1)
+    # Create residue IDs over 10000
+    a.res_id = np.arange(1, length+1)
     a.res_name = np.full(length, "GLY")
     a.hetero = np.full(length, False)
     a.atom_name = np.full(length, "CA")
@@ -170,3 +205,58 @@ def test_atoms_overflow():
         last_line = output.readlines()[-1]
         atom_id = int(last_line.split()[1])
         assert(atom_id == 1)
+    
+    # Write stack as hybrid-36 pdb file: no warning should be thrown
+    with pytest.warns(None) as record:
+        tmp_file_name = biotite.temp_file(".pdb")
+        tmp_pdb_file = pdb.PDBFile()
+        tmp_pdb_file.set_structure(a, hybrid36=True)
+        tmp_pdb_file.write(tmp_file_name)
+    assert len(record) == 0
+
+    # Manually check if the output is written as correct hybrid-36
+    with open(tmp_file_name) as output:
+        last_line = output.readlines()[-1]
+        atom_id = last_line.split()[1]
+        assert(atom_id == "A0000")
+        res_id = last_line.split()[4][1:]
+        assert(res_id == "BXG0")
+
+
+@pytest.mark.parametrize("model", [None, 1, 10])
+def test_get_coord(model):
+    # Choose a structure without inscodes and altlocs
+    # to avoid atom filtering in reference atom array (stack)
+    path = join(data_dir, "1l2y.pdb")
+    pdb_file = pdb.PDBFile()
+    pdb_file.read(path)
+    ref_coord = pdb_file.get_structure(model=model).coord
+    test_coord = pdb_file.get_coord(model=model)
+    assert test_coord.shape == ref_coord.shape
+    assert (test_coord == ref_coord).all()
+
+
+np.random.seed(0)
+N = 200
+LENGTHS = [3, 4, 5]
+@pytest.mark.parametrize(
+    "number, length",
+    zip(
+        list(itertools.chain(*[
+            np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
+            for length in LENGTHS
+        ])),
+        list(itertools.chain(*[
+            [length] * N for length in LENGTHS
+        ]))
+    )
+)
+def test_hybrid36_codec(number, length):
+    string = hybrid36.encode_hybrid36(number, length)
+    test_number = hybrid36.decode_hybrid36(string)
+    assert test_number == number
+
+
+def test_max_hybrid36_number():
+    assert hybrid36.max_hybrid36_number(4) == 2436111
+    assert hybrid36.max_hybrid36_number(5) == 87440031

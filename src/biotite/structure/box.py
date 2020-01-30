@@ -7,16 +7,21 @@ Functions related to working with the simulation box or unit cell
 of a structure 
 """
 
+__name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
            "repeat_box", "repeat_box_coord", "move_inside_box",
+           "remove_pbc", "remove_pbc_from_coord",
            "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
 
+from collections.abc import Iterable
 from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
 from .util import vector_dot
+from .residues import get_residue_starts
 from .atoms import AtomArray, AtomArrayStack
+from .error import BadStructureError
 
 
 def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
@@ -25,7 +30,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     lengths and angles.
 
     The return value of this function are the three box vectors as
-    required for the `box` attribute in atom arrays and stacks.
+    required for the :attr:`box` attribute in atom arrays and stacks.
 
     Parameters
     ----------
@@ -39,9 +44,10 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     Returns
     -------
     box : ndarray, dtype=float, shape=(3,3)
-    The three box vectors.
-    The vector components are in the last dimension.
-    The value can be directly used as `box` attribute in an atom array.
+        The three box vectors.
+        The vector components are in the last dimension.
+        The value can be directly used as :attr:`box` attribute in an
+        atom array.
     
     See also
     --------
@@ -57,11 +63,11 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
         [a_x,   0,   0],
         [b_x, b_y,   0],
         [c_x, c_y, c_z]
-    ], dtype=float)
+    ], dtype=np.float32)
     
     # Fix numerical errors, as values, that are actually 0,
     # might not be calculated as such
-    tol = 1e-6 * (len_a + len_b + len_c)
+    tol = 1e-4 * (len_a + len_b + len_c)
     box[np.abs(box) < tol] = 0
     
     return box
@@ -71,7 +77,7 @@ def unitcell_from_vectors(box):
     """
     Get the unit cell lengths and angles from box vectors.
 
-    This is the reverse operation of `vectors_from_unitcell()`.
+    This is the reverse operation of :func:`vectors_from_unitcell()`.
 
     Parameters
     ----------
@@ -80,13 +86,9 @@ def unitcell_from_vectors(box):
     
     Returns
     -------
-    len_a : float
-    len_b : float
-    len_c : float
+    len_a, len_b, len_c : float
         The lengths of the three box/unit cell vectors *a*, *b* and *c*.
-    alpha : float
-    beta  : float
-    gamma : float
+    alpha, beta, gamma : float
         The angles between the box vectors in radians.
 
     See also
@@ -136,8 +138,8 @@ def repeat_box(atoms, amount=1):
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms to be repeated.
-        If `atoms` is a `AtomArrayStack`, the atoms are repeated for
-        each model, according to the box of each model.
+        If `atoms` is a :class:`AtomArrayStack`, the atoms are repeated
+        for each model, according to the box of each model.
     amount : int, optional
         The amount of boxes that are created in each direction of the
         central box.
@@ -262,7 +264,7 @@ def repeat_box(atoms, amount=1):
 
 def repeat_box_coord(coord, box, amount=1):
     r"""
-    Similar to `repeat_box()`, repeat the coordinates in a box by
+    Similar to :func:`repeat_box()`, repeat the coordinates in a box by
     duplicating and placing them in adjacent boxes.
 
     Parameters
@@ -336,8 +338,8 @@ def move_inside_box(coord, box):
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------
@@ -362,12 +364,170 @@ def move_inside_box(coord, box):
     [[1 2 3]
      [1 2 4]
      [6 8 6]]
-
-
     """
     fractions = coord_to_fraction(coord, box)
     fractions_rem = fractions % 1
     return fraction_to_coord(fractions_rem, box)
+
+
+def remove_pbc(atoms, selection=None):
+    """
+    Remove segmentation caused by periodic boundary conditions from a
+    given structure.
+
+    In this process the first atom (of the selection) is taken as origin
+    and is moved inside the box.
+    All other coordinates are assembled relative to the origin.
+    
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The potentially segmented structure.
+        The :attr:`box` attribute must be set in the structure.
+    selection : str or (iterable object of) ndarray, dtype=bool, shape=(n,), optional
+        Specifies which part(s) of structure are sanitized, i.e the
+        segmentation is removed.
+        If a string is given, the value is interpreted as the chain ID
+        to be selected.
+        If a boolean mask is given, the corresponding atoms are
+        selected. 
+        If multiple boolean masks are given, each selection
+        is treated as separate assembly process, independent of all
+        other selections.
+        Consequently, giving multiple boolean masks has the same result
+        as calling the functions multiple times with each mask
+        separately.
+        An atom must not be selected more than one time.
+
+    
+    Returns
+    -------
+    sanitized_atoms : AtomArray or AtomArrayStack
+        The input structure with removed periodic boundary conditions.
+    
+    See also
+    --------
+    remove_pbc_from_coord
+
+    Notes
+    -----
+    It is not recommended to select regions of the
+    structure with distances from one atom to the next atom that are
+    larger than half of the box size
+    (e.g. the solvent, chain transitions).
+    In this case, multiple selections should be given, with a single
+    molecule selected in each selection.
+
+    Internally the function uses :func:`remove_pbc_from_coord()`.
+    """
+    if atoms.box is None:
+        raise BadStructureError(
+            "The 'box' attribute must be set in the structure"
+        )
+    new_atoms = atoms.copy()
+    
+    if selection is None:
+        new_atoms.coord = remove_pbc_from_coord(
+            atoms.coord, atoms.box
+        )
+
+    elif isinstance(selection, str):
+        # Chain ID
+        selection = (atoms.chain_id == selection)
+        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+            atoms.coord[..., selection, :], atoms.box
+        )
+    
+    elif isinstance(selection, np.ndarray) and selection.ndim == 1:
+        # Single boolean mask
+        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+            atoms.coord[..., selection, :], atoms.box
+        )
+    
+    elif isinstance(selection, Iterable):
+        # Iterable of boolean masks
+        selections = np.stack(list(selection))
+        # Test whether an atom was selected multiple times
+        sel_count = np.count_nonzero(selections, axis=0)
+        if (sel_count > 1).any():
+            first_pos = np.where((sel_count > 1))[0][0]
+            raise ValueError(
+                f"Atom at index {first_pos} was selected "
+                f"{sel_count[first_pos]} times"
+            )
+        for selection in selections:
+            new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
+                atoms.coord[..., selection, :], atoms.box
+            )
+
+    return new_atoms
+
+
+def remove_pbc_from_coord(coord, box):
+    """
+    Remove segmentation caused by periodic boundary conditions from
+    given coordinates.
+
+    In this process the first coordinate is taken as origin and
+    is moved inside the box.
+    All other coordinates are assembled relative to the origin by using
+    the displacement coordinates in adjacent array positions.
+    Basically, this function performs the reverse action of
+    :func:`move_inside_box()`.
+    
+    Parameters
+    ----------
+    coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
+        The coordinates of the potentially segmented structure. 
+    box : ndarray, dtype=float, shape=(m,3,3) or shape=(3,3)
+        The simulation box or unit cell that is used as periodic
+        boundary.
+        The amount of dimensions must fit the `coord` parameter.
+
+    Returns
+    -------
+    sanitized_coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
+        The reassembled coordinates.
+    
+    See also
+    --------
+    remove_pbc_from_coord
+    move_inside_box
+
+    Notes
+    -----
+    This function solves a common problem from MD simulation output:
+    When atoms move over the periodic boundary, they reappear on the
+    other side of the box, segmenting the structure.
+    This function reassembles the given coordinates, removing the
+    segmentation.
+    """
+
+    # Import in function to avoid circular import
+    from .geometry import index_displacement
+    # Get the PBC-sanitized displacements of all coordinates
+    # to the respective next coordinate
+    index_pairs = np.stack(
+        [
+            np.arange(0, coord.shape[-2] - 1), 
+            np.arange(1, coord.shape[-2]    )
+        ],
+        axis=1
+    )
+    neighbour_disp = index_displacement(
+        coord, index_pairs, box=box, periodic=True
+    )
+    # Get the PBC-sanitized displacements of all but the first
+    # coordinates to (0,0,0)
+    absolute_disp = np.cumsum(neighbour_disp, axis=-2)
+    # The first coordinate should be inside the box
+    base_coord = move_inside_box(coord[..., 0:1, :], box)
+    # The new coordinates are obtained by adding the displacements
+    # to the new origin
+    sanitized_coord = np.zeros(coord.shape, coord.dtype)
+    sanitized_coord[..., 0:1, :] = base_coord
+    sanitized_coord[..., 1:, :] = base_coord + absolute_disp
+    return sanitized_coord
 
 
 def coord_to_fraction(coord, box):
@@ -380,8 +540,8 @@ def coord_to_fraction(coord, box):
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------
@@ -407,10 +567,10 @@ def coord_to_fraction(coord, box):
      [-5.  2.  1.]]
     >>> fractions = coord_to_fraction(coord, box)
     >>> print(fractions)
-    [[ 0.2  0.   0.2]
-     [ 2.   0.   0. ]
-     [ 0.  -2.   2. ]
-     [-1.   0.2  0.2]]
+    [[ 0.2  0.0  0.2]
+     [ 2.0  0.0  0.0]
+     [ 0.0 -2.0  2.0]
+     [-1.0  0.2  0.2]]
     """
     return np.matmul(coord, linalg.inv(box))
 
@@ -419,7 +579,7 @@ def fraction_to_coord(fraction, box):
     """
     Transform fractions of box vectors to coordinates.
 
-    This is the reverse operation of `coord_to_fraction()`.
+    This is the reverse operation of :func:`coord_to_fraction()`.
 
     Parameters
     ----------
@@ -427,8 +587,8 @@ def fraction_to_coord(fraction, box):
         The fractions of the box vectors for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
-        When `coord` is given for multiple models, `box` must be given
-        for multiple models as well.
+        When `coord` is given for multiple models, :attr:`box` must be
+        given for multiple models as well.
     
     Returns
     -------

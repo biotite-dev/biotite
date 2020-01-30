@@ -2,38 +2,42 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 import numpy as np
+import numbers
 import copy
 import textwrap
 from ..alphabet import LetterAlphabet
 
 
-__all__ = ["Alignment", "get_codes", "get_symbols", "get_sequence_identity",
+__all__ = ["Alignment", "get_codes", "get_symbols",
+           "get_sequence_identity", "get_pairwise_sequence_identity",
            "score"]
 
 
 class Alignment(object):
     """
-    An `Alignment` object stores information about which symbols of
-    *n* sequences are aligned to each other and it stores the
+    An :class:`Alignment` object stores information about which symbols
+    of *n* sequences are aligned to each other and it stores the
     corresponding alignment score.
     
     Instead of saving a list of aligned symbols, this class saves the
     original *n* sequences, that were aligned, and a so called *trace*,
     which indicate the aligned symbols of these sequences.
-    The trace is a *(m x n)* `ndarray` with alignment length *m* and
-    sequence count *n*.
+    The trace is a *(m x n)* :class:`ndarray` with alignment length
+    *m* and sequence count *n*.
     Each element of the trace is the index in the corresponding
-    sequence. A gap is represented by the value -1.
+    sequence.
+    A gap is represented by the value -1.
     
     Furthermore this class provides multiple utility functions for
     conversion into strings in order to make the alignment human
     readable.
     
-    Unless an `Alignment` object is the result of an multiple sequence
-    alignment, the object will contain only two sequences.
+    Unless an :class:`Alignment` object is the result of an multiple
+    sequence alignment, the object will contain only two sequences.
     
     All attributes of this class are publicly accessible.
     
@@ -78,8 +82,10 @@ class Alignment(object):
     [[ 1 -1]
      [ 2  0]
      [ 3  1]]
-    >>> print(ali[1:4,0].trace)
-    [1 2 3]
+    >>> print(ali[1:4, 0:1].trace)
+    [[1]
+     [2]
+     [3]]
     """
     
     
@@ -136,23 +142,53 @@ class Alignment(object):
     
     def __getitem__(self, index):
         if isinstance(index, tuple):
-            new_trace = self.trace[index]
-            if isinstance(index[1], (list, tuple, np.ndarray)):
-                new_sequences = [self.sequences[i] for i in index[1]]
-            else:
-                new_sequences = self.sequences[index[1]]
-            return Alignment(new_sequences, new_trace, self.score)
-        elif isinstance(index, slice):
-            return Alignment(self.sequences[:], self.trace[index], self.score)
+            if len(index) > 2:
+                raise IndexError("Only 1D or 2D indices are allowed")
+            if isinstance(index[0], numbers.Integral) or \
+               isinstance(index[0], numbers.Integral):
+                    raise IndexError(
+                        "Integers are invalid indices for alignments, "
+                        "a single sequence or alignment column cannot be "
+                        "selected"
+                    )
+            return Alignment(
+                Alignment._index_sequences(self.sequences, index[1]),
+                self.trace[index],
+                self.score
+            )
         else:
-            raise IndexError(f"Invalid alignment index type "
-                             f"'{type(index).__name__}'")
+            return Alignment(self.sequences, self.trace[index], self.score)
     
     def __iter__(self):
         raise TypeError("'Alignment' object is not iterable")
     
     def __len__(self):
         return len(self.trace)
+    
+    def __eq__(self, item):
+        if not isinstance(item, Alignment):
+            return False
+        if self.sequences != item.sequences:
+            return False
+        if (self.trace != item.trace).any():
+            return False
+        if self.score != item.score:
+            return False
+        return True
+    
+    @staticmethod
+    def _index_sequences(sequences, index):
+        if isinstance(index, (list, tuple)) or \
+            (isinstance(index, np.ndarray) and index.dtype != bool):
+                return [sequences[i] for i in index]
+        elif isinstance(index, np.ndarray) and index.dtype == bool:
+            return [seq for seq, mask in zip(sequences, index) if mask]
+        if isinstance(index, slice):
+            return sequences[index]
+        else:
+            raise IndexError(
+                f"Invalid alignment index type '{type(index).__name__}'"
+            )
     
     @staticmethod
     def trace_from_strings(seq_str_list):
@@ -163,13 +199,18 @@ class Alignment(object):
         ----------
         seq_str_list : list of str
             The strings, where each each one represents a sequence
-            in an alignment.
+            (with gaps) in an alignment.
+            A ``-`` is interpreted as gap.
         
         Returns
         -------
         trace : ndarray, dtype=int, shape=(n,2)
             The created trace.
         """
+        if len(seq_str_list) < 2:
+            raise ValueError(
+                "An alignment must contain at least two sequences"
+            )
         seq_i = np.zeros(len(seq_str_list))
         trace = np.full(( len(seq_str_list[0]), len(seq_str_list) ),
                         -1, dtype=int)
@@ -187,11 +228,11 @@ class Alignment(object):
 
 def get_codes(alignment):
     """
-    Get the sequence codes for the alignment.
+    Get the sequence codes of the sequences in the alignment.
 
     The codes are built from the trace:
-    Instead of the indices of the aligned symbols, the return value
-    contains the corresponding symbol codes for each index.
+    Instead of the indices of the aligned symbols (trace), the return
+    value contains the corresponding symbol codes for each index.
     Gaps are still represented by *-1*.
     
     Parameters
@@ -236,8 +277,8 @@ def get_codes(alignment):
 
 def get_symbols(alignment):
     """
-    Similar to `get_codes()`, but contains the decoded symbols instead
-    of codes.
+    Similar to :func:`get_codes()`, but contains the decoded symbols
+    instead of codes.
     Gaps are still represented by *None* values.
     
     Parameters
@@ -284,10 +325,13 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     mode : {'all', 'not_terminal', 'shortest'}, optional
         The calculation mode for alignment length.
 
-            - **all** - Count all alignment columns.
-            - **not_terminal** - Count all alignment columns of
-              non-terminal gaps.
-            - **shortest** - Use the shortest sequence.
+            - **all** - The number of matches divided by the number of
+              all alignment columns.
+            - **not_terminal** - The number of matches divided by the
+              number of alignment columns that are not terminal gaps in
+              any of the sequences.
+            - **shortest** - The number of matches divided by the
+              length of the shortest sequence.
 
         Default is *not_terminal*.
     
@@ -295,50 +339,124 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     -------
     identity : float
         The sequence identity, ranging between 0 and 1.
+    
+    See also
+    --------
+    get_pairwise_sequence_identity
     """
-    if mode not in ["all", "not_terminal", "shortest"]:
-        raise ValueError(f"'{mode}' is an invalid calculation mode")
-    trace = alignment.trace
     codes = get_codes(alignment)
-    
-    if mode in ["not_terminal", "shortest"]:
-        # Ignore terminal gaps
-        # -> get start and exclusive stop column of the trace
-        # excluding terminal gaps
-        start_index = -1
-        for i in range(len(trace)):
-            # Check if all sequences have no gap at the given position
-            if (trace[i] != -1).all():
-                start_index = i
-                break
-        # Reverse iteration
-        stop_index = -1
-        for i in range(len(trace)-1, -1, -1):
-            # Check if all sequences have no gap at the given position
-            if (trace[i] != -1).all():
-                stop_index = i+1
-                break
-        if start_index == -1 or stop_index == -1:
-            raise ValueError("Alignment entirely consists of terminal gaps")
-    else:
-        # 'all' -> count all columns, entire trace
-        start_index = 0
-        stop_index = len(trace)
-    
+
     # Count matches
     matches = 0
-    for i in range(start_index, stop_index):
+    for i in range(codes.shape[1]):
         column = codes[:,i]
         # One unique value -> all symbols match
-        if len(np.unique(column)) == 1:
+        unique_symbols = np.unique(column)
+        if len(unique_symbols) == 1 and unique_symbols[0] != -1:
             matches += 1
     
-    #Calculate iddentity
-    if mode == "shortest":
-        shortest_length = min([len(seq) for seq in alignment.sequences])
-        return matches / shortest_length
+    # Calculate length
+    if mode == "all":
+        length = len(alignment)
+    elif mode == "not_terminal":
+        starts = np.zeros(len(codes))
+        stops  = np.zeros(len(codes))
+        for i, row in enumerate(codes):
+           starts[i], stops[i] = _identify_terminal_gaps(row)
+        # Find latest start and earliest stop of all sequences
+        start = np.max(starts)
+        stop = np.min(stops)
+        if stop <= start:
+            raise ValueError(
+                "Cannot calculate non-terminal identity, "
+                "at least two sequences have no overlap"
+            )
+        length = stop - start
+    elif mode == "shortest":
+        length = min([len(seq) for seq in alignment.sequences])
     else:
-        return matches / (stop_index - start_index)
+        raise ValueError(f"'{mode}' is an invalid calculation mode")
+
+    return matches / length
+
+
+def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
+    """
+    Calculate the pairwise sequence identity for an alignment.
+
+    The identity is equal to the matches divided by a measure for the
+    length of the alignment that depends on the `mode` parameter.
+    
+    Parameters
+    ----------
+    alignment : Alignment, length=n
+        The alignment to calculate the pairwise sequence identity for.
+    mode : {'all', 'not_terminal', 'shortest'}, optional
+        The calculation mode for alignment length.
+
+            - **all** - The number of matches divided by the number of
+              all alignment columns.
+            - **not_terminal** - The number of matches divided by the
+              number of alignment columns that are not terminal gaps in
+              any of the two considered sequences.
+            - **shortest** - The number of matches divided by the
+              length of the shortest one of the two sequences.
+
+        Default is *not_terminal*.
+    
+    Returns
+    -------
+    identity : ndarray, dtype=float, shape=(n,n)
+        The pairwise sequence identity, ranging between 0 and 1.
+    
+    See also
+    --------
+    get_sequence_identity
+    """
+    codes = get_codes(alignment)
+    n_seq = len(codes)
+
+    # Count matches
+    # Calculate at which positions the sequences are identical
+    # and are not gaps
+    equality_matrix = (codes[:, np.newaxis, :] == codes[np.newaxis, :, :]) \
+                    & (codes[:, np.newaxis, :] != -1) \
+                    & (codes[np.newaxis, :, :] != -1) \
+    # Sum these positions up
+    matches = np.count_nonzero(equality_matrix, axis=-1)
+
+    # Calculate length
+    if mode == "all":
+        length = len(alignment)
+    elif mode == "not_terminal":
+        starts = np.zeros(n_seq)
+        stops  = np.zeros(n_seq)
+        for i, row in enumerate(codes):
+           starts[i], stops[i] = _identify_terminal_gaps(row)
+        length = np.zeros((n_seq, n_seq))
+        for i in range(n_seq):
+            for j in range(n_seq):
+                # Find latest start and earliest stop of all sequences
+                start = np.max(starts[[i,j]])
+                stop = np.min(stops[[i,j]])
+                if stop <= start:
+                    raise ValueError(
+                        "Cannot calculate non-terminal identity, "
+                        "as the two sequences have no overlap"
+                    )
+                length[i,j] = stop - start
+    elif mode == "shortest":
+        length = np.zeros((n_seq, n_seq))
+        for i in range(n_seq):
+            for j in range(n_seq):
+                length[i,j] = min([
+                    len(alignment.sequences[i]),
+                    len(alignment.sequences[j])
+                ])
+    else:
+        raise ValueError(f"'{mode}' is an invalid calculation mode")
+    
+    return matches / length
 
 
 def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
@@ -419,6 +537,23 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
 
 
 def _identify_terminal_gaps(seq_code):
+    """
+    Find the start and stop position of the alignment excluding terminal
+    gaps.
+
+    Parameters
+    ----------
+    seq_code : ndarray, dtype=int
+        The gapped sequence code, where ``-1`` indicates a gap.
+
+    Returns
+    -------
+    start_index, stop_index : int
+        The start and exclusive stop index.
+        When these indices are used in a slice index on `seq_code`
+        the resulting gapped sequence code, does not contain terminal
+        gaps.
+    """
     # Find a start and stop index excluding terminal gaps
     start_index = -1
     for i in range(len(seq_code)):

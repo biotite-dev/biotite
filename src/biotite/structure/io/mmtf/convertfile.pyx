@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure"]
 
@@ -13,7 +14,7 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
 from ...error import BadStructureError
-from ...filter import filter_inscode_and_altloc
+from ...filter import filter_altloc
 from ...residues import get_residue_starts
 from ...box import vectors_from_unitcell
 
@@ -27,13 +28,13 @@ ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
     
-def get_structure(file, model=None, insertion_code=[], altloc=[],
+def get_structure(file, model=None, altloc=[],
                   extra_fields=[], include_bonds=False):
     """
-    get_structure(file, model=None, insertion_code=[], altloc=[],
-                  extra_fields=[], include_bonds=False)
+    get_structure(file, model=None, altloc=[], extra_fields=[],
+                  include_bonds=False)
     
-    Get an `AtomArray` or `AtomArrayStack` from the MMTF file.
+    Get an :class:`AtomArray` or :class:`AtomArrayStack` from the MMTF file.
     
     Parameters
     ----------
@@ -41,28 +42,30 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        `AtomArray` from the atoms corresponding to the given model ID.
-        If this parameter is omitted, an `AtomArrayStack` containing all
+        :class:`AtomArray` from the atoms corresponding to the given model number.
+        If this parameter is omitted, an :class:`AtomArrayStack` containing all
         models will be returned, even if the structure contains only one
         model.
-    insertion_code : list of tuple, optional
-        In case the structure contains insertion codes, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the insertion code.
-        By default no insertions are used.
     altloc : list of tuple, optional
         In case the structure contains *altloc* entries, those can be
-        specified here: Each tuple consists of an integer, specifying
-        the residue ID, and a letter, specifying the *altloc* ID.
+        specified here:
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues the atoms with the given *altloc*
+        ID are filtered.
         By default the location with the *altloc* ID "A" is used.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
-        There are 4 optional annotation identifiers:
-        'atom_id', 'b_factor', 'occupancy' and 'charge'.
+        These are valid values:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
     include_bonds : bool
-        If set to true, an `BondList` will be created for the resulting
-        `AtomArray` containing the bond information from the file.
+        If set to true, an :class:`BondList` will be created for the resulting
+        :class:`AtomArray` containing the bond information from the file.
         (Default: False)
     
     Returns
@@ -85,6 +88,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
     """
     cdef int i, j, m
     
+
     # Obtain (and potentially decode) required arrays/values from file
     cdef int atom_count = file["numAtoms"]
     cdef int model_count = file["numModels"]
@@ -108,15 +112,10 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         atom_ids = file["atomIdList"]
     cdef np.ndarray altloc_all
     cdef np.ndarray inscode
-    try:
-        altloc_all = file["altLocList"]
-    except KeyError:
-        altloc_all = None
-    try:
-        inscode = file["insCodeList"]
-    except KeyError:
-        inscode = None
+    altloc_all = file.get("altLocList")
+    inscode = file.get("insCodeList")
     
+
     # Create arrays from 'groupList' list of dictionaries
     cdef list group_list = file["groupList"]
     cdef list non_hetero_list = ["L-PEPTIDE LINKING", "PEPTIDE LINKING",
@@ -145,12 +144,15 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         elements[i, :atoms_per_res[i]] = residue["elementList"]
         charges[i, :atoms_per_res[i]] = residue["formalChargeList"]
     
+
     # Create the atom array (stack)
     cdef int depth, length
     cdef int start_i, stop_i
     cdef bint extra_charge
     cdef np.ndarray altloc_array
     cdef np.ndarray inscode_array
+    
+    
     if model == None:
         length = _get_model_length(1, res_type_i, chains_per_model,
                                    res_per_chain, atoms_per_res)
@@ -161,6 +163,7 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
             raise BadStructureError("The models in the file have unequal "
                                     "amount of atoms, give an explicit "
                                     "model instead")
+        
         array = AtomArrayStack(depth, length)
         array.coord = np.stack(
             [x_coord,
@@ -168,17 +171,17 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
              z_coord],
              axis=1
         ).reshape(depth, length, 3)
-        # Create inscode and altloc arrays for the final filtering
+        
+        # Create altloc array for the final filtering
         if altloc_all is not None:
             altloc_array = altloc_all[:length]
         else:
             altloc_array = None
-        if inscode is not None:
-            inscode_array = np.zeros(length, dtype="U1")
-        else:
-            inscode_array = None
         
         extra_charge = False
+        if "ins_code" in extra_fields:
+            extra_inscode = True
+            array.add_annotation("ins_code", "U1")
         if "charge" in extra_fields:
             extra_charge = True
             array.add_annotation("charge", int)
@@ -189,10 +192,10 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[:length])
         
-        _fill_annotations(1, array, inscode, inscode_array, extra_charge,
+        _fill_annotations(1, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
-                          res_type_i, res_ids, atoms_per_res, res_names,
-                          hetero_res, atom_names, elements, charges)
+                          res_type_i, res_ids, inscode, atoms_per_res,
+                          res_names, hetero_res, atom_names, elements, charges)
         
         if include_bonds:
             array.bonds = _create_bond_list(
@@ -200,7 +203,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 0, length, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-        
+    
+
     else:
         length = _get_model_length(model, res_type_i, chains_per_model,
                                    res_per_chain, atoms_per_res)
@@ -211,19 +215,17 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
             start_i += _get_model_length(m, res_type_i, chains_per_model,
                                          res_per_chain, atoms_per_res)
         stop_i = start_i + length
+        
         array = AtomArray(length)
         array.coord[:,0] = x_coord[start_i : stop_i]
         array.coord[:,1] = y_coord[start_i : stop_i]
         array.coord[:,2] = z_coord[start_i : stop_i]
-        # Create inscode and altloc arrays for the final filtering
+        
+        # Create altloc array for the final filtering
         if altloc_all is not None:
             altloc_array = np.array(altloc_all[start_i : stop_i], dtype="U1")
         else:
             altloc_array = None
-        if inscode is not None:
-            inscode_array = np.zeros(array.array_length(), dtype="U1")
-        else:
-            inscode_array = None
         
         extra_charge = False
         if "charge" in extra_fields:
@@ -236,10 +238,10 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[start_i : stop_i])
         
-        _fill_annotations(model, array, inscode, inscode_array, extra_charge,
+        _fill_annotations(model, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
-                          res_type_i, res_ids, atoms_per_res, res_names,
-                          hetero_res, atom_names, elements, charges)
+                          res_type_i, res_ids, inscode, atoms_per_res,
+                          res_names, hetero_res, atom_names, elements, charges)
         
         if include_bonds:
             array.bonds = _create_bond_list(
@@ -247,7 +249,8 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
                 start_i, stop_i, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-        
+    
+    # Get box
     if "unitCell" in file:
         a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
         alpha = np.deg2rad(alpha)
@@ -264,15 +267,12 @@ def get_structure(file, model=None, insertion_code=[], altloc=[],
             # AtomArray
             array.box = box
     
-    # Filter inscode and altloc and return
-    # Format arrays for filter function
-    if altloc_array is not None:
-        altloc_array[altloc_array == ""] = " "
-    if inscode_array is not None:
-        inscode_array[inscode_array == ""] = " "
-    return array[..., filter_inscode_and_altloc(
-        array, insertion_code, altloc, inscode_array, altloc_array
-    )]
+    
+    # Filter altlocs and return
+    if altloc_array is None:
+        return array
+    else:
+        return array[..., filter_altloc(array, altloc_array, altloc)]
 
 
 def _get_model_length(int model, int32[:] res_type_i,
@@ -292,22 +292,27 @@ def _get_model_length(int model, int32[:] res_type_i,
 
     
 def _fill_annotations(int model, array,
-                      np.ndarray res_inscodes, np.ndarray atom_inscodes,
-                      bint extra_charge, np.ndarray chain_names,
-                      int32[:] chains_per_model, int32[:] res_per_chain,
-                      int32[:] res_type_i, int32[:] res_ids,
+                      bint extra_charge,
+                      np.ndarray chain_names,
+                      int32[:] chains_per_model,
+                      int32[:] res_per_chain,
+                      int32[:] res_type_i,
+                      int32[:] res_ids,
+                      np.ndarray res_inscodes,
                       np.ndarray atoms_per_res,
-                      np.ndarray res_names, np.ndarray hetero_res,
-                      np.ndarray atom_names, np.ndarray elements,
+                      np.ndarray res_names,
+                      np.ndarray hetero_res,
+                      np.ndarray atom_names,
+                      np.ndarray elements,
                       np.ndarray charges):
     # Get annotation arrays from atom array (stack)
     cdef np.ndarray chain_id  = array.chain_id
     cdef np.ndarray res_id    = array.res_id
+    cdef np.ndarray ins_code  = array.ins_code
     cdef np.ndarray res_name  = array.res_name
     cdef np.ndarray hetero    = array.hetero
     cdef np.ndarray atom_name = array.atom_name
     cdef np.ndarray element   = array.element
-    cdef np.ndarray charge
     if extra_charge:
         charge = array.charge
     
@@ -331,16 +336,15 @@ def _fill_annotations(int model, array,
             res_name_for_res = res_names[type_i]
             hetero_for_res = hetero_res[type_i]
             for k in range(atoms_per_res[type_i]):
-                chain_id[atom_i] = chain_id_for_chain
+                chain_id[atom_i]  = chain_id_for_chain
                 res_id[atom_i]    = res_id_for_res
+                ins_code[atom_i]  = inscode_for_res
                 hetero[atom_i]    = hetero_for_res
                 res_name[atom_i]  = res_name_for_res
                 atom_name[atom_i] = atom_names[type_i][k]
                 element[atom_i]   = elements[type_i][k].upper()
                 if extra_charge:
                     charge[atom_i] = charges[type_i][k]
-                if res_inscodes is not None:
-                    atom_inscodes[atom_i] = inscode_for_res
                 atom_i += 1
             res_i += 1
         chain_i += 1

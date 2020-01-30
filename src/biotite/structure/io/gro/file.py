@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.structure.io.gro"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["GROFile"]
 
@@ -50,17 +51,18 @@ class GROFile(TextFile):
     
     def get_structure(self, model=None):
         """
-        Get an `AtomArray` or `AtomArrayStack` from the GRO file.
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
+        GRO file.
         
         Parameters
         ----------
         model : int, optional
             If this parameter is given, the function will return an
-            `AtomArray` from the atoms corresponding to the given model
-            ID.
-            If this parameter is omitted, an `AtomArrayStack` containing
-            all models will be returned, even if the structure contains
-            only one model.
+            :class:`AtomArray` from the atoms corresponding to the
+            given model number.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
         
         Returns
         -------
@@ -196,16 +198,18 @@ class GROFile(TextFile):
                 box = set_box_dimen(box_param)
                 # Create a box in the stack if not already existing
                 # and the box is not a dummy
-                if array.box is None and box is not None:
-                    array.box = np.zeros((array.stack_depth(), 3, 3))
-                array.box[m] = box
-
+                if box is not None:
+                    if array.box is None: 
+                        array.box = np.zeros((array.stack_depth(), 3, 3))
+                    array.box[m] = box
+                    
         return array
 
             
     def set_structure(self, array):
         """
-        Set the `AtomArray` or `AtomArrayStack` for the file.
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
+        file.
         
         Parameters
         ----------
@@ -214,8 +218,6 @@ class GROFile(TextFile):
             is given, each array in the stack is saved as separate
             model.
         """
-        atom_id = np.arange(1, array.array_length()+1)
-
         def get_box_dimen(array):
             """
             GRO files have the box dimensions as last line for each
@@ -252,6 +254,25 @@ class GROFile(TextFile):
                         box[2,0], box[2,1],
                     )
                     return " ".join([f"{e:>9.5f}" for e in box_elements])
+        
+        if "atom_id" in array.get_annotation_categories():
+            atom_id = array.atom_id
+        else:
+            atom_id = np.arange(1, array.array_length() + 1)
+        # Atom IDs are supported up to 99999,
+        # but negative IDs are also possible
+        gro_atom_id = np.where(
+            atom_id > 0,
+            ((atom_id - 1) % 99999) + 1,
+            atom_id
+        )
+        # Residue IDs are supported up to 9999,
+        # but negative IDs are also possible
+        gro_res_id = np.where(
+            array.res_id > 0,
+            ((array.res_id - 1) % 99999) + 1,
+            array.res_id
+        )
 
         if isinstance(array, AtomArray):
             self.lines = [None] * (array.array_length() + 3)
@@ -265,8 +286,8 @@ class GROFile(TextFile):
             for i in range(array.array_length()):
                 # gro format is in nm -> multiply coords by 10
                 self.lines[i+2] = fmt.format(
-                    array.res_id[i], array.res_name[i], array.atom_name[i],
-                    atom_id[i], array.coord[i,0]/10, array.coord[i,1]/10,
+                    gro_res_id[i], array.res_name[i], array.atom_name[i],
+                    gro_atom_id[i], array.coord[i,0]/10, array.coord[i,1]/10,
                     array.coord[i,2]/10
                 )
             # Write box lines
@@ -280,8 +301,8 @@ class GROFile(TextFile):
             templines = [None] * array.array_length()
             fmt = '{:>5d}{:5s}{:>5s}{:5d}'
             for i in range(array.array_length()):
-                templines[i] = fmt.format(array.res_id[i], array.res_name[i],
-                                           array.atom_name[i], atom_id[i])
+                templines[i] = fmt.format(gro_res_id[i], array.res_name[i],
+                                           array.atom_name[i], gro_atom_id[i])
 
             for i in range(array.stack_depth()):
                 self.lines.append(
@@ -302,4 +323,6 @@ class GROFile(TextFile):
                 self.lines.append(get_box_dimen(array[i]))
         else:
             raise TypeError("An atom array or stack must be provided")
+        # Add terminal newline, since PyMOL requires it
+        self.lines.append("")
 

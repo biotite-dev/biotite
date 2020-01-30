@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
@@ -17,7 +18,7 @@ class DsspApp(LocalApp):
     Annotate the secondary structure of a protein structure using the
     DSSP software.
     
-    Internally this creates a `Popen` instance, which handles
+    Internally this creates a :class:`Popen` instance, which handles
     the execution.
     
     DSSP differentiates between 8 different types of secondary
@@ -38,6 +39,16 @@ class DsspApp(LocalApp):
         The atom array to be annotated.
     bin_path : str, optional
         Path of the DDSP binary.
+    
+    Examples
+    --------
+
+    >>> app = DsspApp(atom_array)
+    >>> app.start()
+    >>> app.join()
+    >>> print(app.get_sse())
+    ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'C' 'C'
+     'C' 'C']
     """
     
     def __init__(self, atom_array, bin_path="mkdssp"):
@@ -50,7 +61,9 @@ class DsspApp(LocalApp):
         in_file = PDBFile()
         in_file.set_structure(self._array)
         in_file.write(self._in_file_name)
-        self.set_options(["-i", self._in_file_name, "-o", self._out_file_name])
+        self.set_arguments(
+            ["-i", self._in_file_name, "-o", self._out_file_name]
+        )
         super().run()
     
     def evaluate(self):
@@ -91,7 +104,7 @@ class DsspApp(LocalApp):
         """
         Perform a secondary structure assignment to an atom array.
         
-        This is a convenience function, that wraps the `DsspApp`
+        This is a convenience function, that wraps the :class:`DsspApp`
         execution.
         
         Parameters

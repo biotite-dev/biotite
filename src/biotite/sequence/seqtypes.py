@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
@@ -14,16 +15,17 @@ import copy
 class GeneralSequence(Sequence):
     """
     This class allows the creation of a sequence with custom
-    `Alphabet` without the need to subclass `Sequence`.
+    :class:`Alphabet` without the need to subclass :class:`Sequence`.
         
     Parameters
     ----------
     alphabet : Alphabet
         The alphabet of this sequence.
     sequence : iterable object, optional
-        The symbol sequence, the `Sequence` is initialized with. For
-        alphabets containing single letter strings, this parameter
-        may also be a `str` object. By default the sequence is empty.
+        The symbol sequence, the :class:`Sequence` is initialized with.
+        For alphabets containing single letter strings, this parameter
+        may also be a :class:`str` object.
+        By default the sequence is empty.
     """
         
     def __init__(self, alphabet, sequence=()):
@@ -40,10 +42,10 @@ class NucleotideSequence(Sequence):
     """
     Representation of a nucleotide sequence (DNA or RNA).
     
-    This class may one of two different alphabets:
-    `unambiguous_alphabet()` contains only the unambiguous DNA
+    This class may have one of two different alphabets:
+    :attr:`unambiguous_alphabet()` contains only the unambiguous DNA
     letters 'A', 'C', 'G' and 'T'.
-    `ambiguous_alphabet()` uses an extended alphabet for ambiguous 
+    :attr:`ambiguous_alphabet()` uses an extended alphabet for ambiguous 
     letters.
     
     Parameters
@@ -61,7 +63,7 @@ class NucleotideSequence(Sequence):
     
     alphabet     = LetterAlphabet(["A","C","G","T"])
     alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
-                                   "M","K","H","B","V","D","N","X"])
+                                   "M","K","H","B","V","D","N"])
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -77,7 +79,6 @@ class NucleotideSequence(Sequence):
                          "H" : "D",
                          "D" : "H",
                          "B" : "V",
-                         "X" : "X",
                          "N" : "N"}
     _compl_dict = {}
     for _key, _value in compl_symbol_dict.items():
@@ -169,17 +170,17 @@ class NucleotideSequence(Sequence):
         -------
         protein : ProteinSequence or list of ProteinSequence
             The translated protein sequence. If `complete` is true,
-            only a single `ProteinSequence` is returned. Otherwise
-            a list of `ProteinSequence` is returned, which contains
+            only a single :class:`ProteinSequence` is returned. Otherwise
+            a list of :class:`ProteinSequence` is returned, which contains
             every ORF.
         pos : list of tuple (int, int)
             Is only returned if `complete` is false. The list contains
             a tuple for each ORF.
             The first element of the tuple is the index of the 
-            RNASequence`, where the translation starts.
-            The second element is the exclusive stop index, therefore
-            it represents the first nucleotide in the RNASequence after
-            a stop codon.
+            :class:`NucleotideSequence`, where the translation starts.
+            The second element is the exclusive stop index, it
+            represents the first nucleotide in the
+            :class:`NucleotideSequence` after a stop codon.
         
         Examples
         --------
@@ -203,61 +204,60 @@ class NucleotideSequence(Sequence):
             from .codon import CodonTable
             codon_table = CodonTable.default_table()
         stop_code = ProteinSequence.alphabet.encode("*")
-        met_code =  ProteinSequence.alphabet.encode("M")
+        met_code  = ProteinSequence.alphabet.encode("M")
         
         if complete:
             if len(self) % 3 != 0:
                 raise ValueError("Sequence length needs to be a multiple of 3 "
                                  "for complete translation")
-            # Pessimistic array allocation
-            aa_code = np.zeros(len(self) // 3)
-            aa_i = 0
-            seq_code = self.code
-            for i in range(0, len(seq_code), 3):
-                codon = tuple(seq_code[i : i+3])
-                aa_code[aa_i] = codon_table[codon]
-                aa_i += 1
-            # Trim to correct size
-            aa_code = aa_code[:aa_i]
+            # Reshape code into (n,3), with n being the amount of codons
+            codons = self.code.reshape(-1, 3)
             protein_seq = ProteinSequence()
-            protein_seq.code = aa_code
+            protein_seq.code = codon_table.map_codon_codes(codons)
             return protein_seq
         
         else:
-            start_codons = np.array(codon_table.start_codons(True))
-            seq_code = self.code
             protein_seqs = []
             pos = []
-            for i in range(len(seq_code) - 3 + 1):
-                sub_seq = seq_code[i : i + 3]
-                # sub_seq equals all nucleotides
-                # in any of the start codons
-                if (sub_seq == start_codons).all(axis=1).any(axis=0):
-                    #Translation start
-                    j = i
-                    # Pessimistic array allocation
-                    aa_code = np.zeros(len(self) // 3)
-                    # Index for protein sequence
-                    aa_i = 0
-                    stop_found = False
+            code = self.code
+            # Create all three frames
+            for shift in range(3):
+                # The frame length is always a multiple of 3
+                # If there is a trailing partial codon, remove it
+                frame_length = ((len(code) - shift) // 3) * 3
+                frame = code[shift : shift+frame_length]
+                # Reshape frame into (n,3), with n being the amount of codons
+                frame_codons = frame.reshape(-1, 3)
+                # At first, translate frame completely
+                protein_code = codon_table.map_codon_codes(frame_codons)
+                # Iterate over all start codons in this frame
+                starts = np.where(codon_table.is_start_codon(frame_codons))[0]
+                for start_i in starts:
+                    # Protein sequence beginning from start codon
+                    code_from_start = protein_code[start_i:]
+                    # Get all stop codon positions
+                    # relative to 'code_from_start'
+                    stops = np.where(code_from_start == stop_code)[0]
+                    # Find first stop codon after start codon
+                    # Include stop -> stops[0] + 1
+                    stop_i = stops[0] + 1 if len(stops) > 0 \
+                             else len(code_from_start)
+                    code_from_start_to_stop = code_from_start[:stop_i]
+                    prot_seq = ProteinSequence()
                     if met_start:
-                        aa_code[aa_i] = met_code
-                        aa_i += 1
-                        j += 3
-                    while j < len(seq_code) - 3 + 1 and not stop_found:
-                        codon = tuple(seq_code[j : j+3])
-                        code = codon_table[codon]
-                        aa_code[aa_i] = code
-                        aa_i += 1
-                        j += 3
-                        if code == stop_code:
-                            stop_found = True
-                    # Trim to correct size
-                    aa_code = aa_code[:aa_i]
-                    protein_seq = ProteinSequence()
-                    protein_seq.code = aa_code
-                    protein_seqs.append(protein_seq)
-                    pos.append((i,j))
+                        # Copy as the slice is edited
+                        prot_seq.code = code_from_start_to_stop.copy()
+                        prot_seq.code[0] = met_code
+                    else:
+                        prot_seq.code = code_from_start_to_stop
+                    protein_seqs.append(prot_seq)
+                    # Codon indices are transformed
+                    # to nucleotide sequence indices
+                    pos.append((shift + start_i*3, shift + (start_i+stop_i)*3))
+            # Sort by start position
+            order = np.argsort([start for start, stop in pos])
+            pos = [pos[i] for i in order]
+            protein_seqs = [protein_seqs[i] for i in order]
             return protein_seqs, pos
     
     @staticmethod

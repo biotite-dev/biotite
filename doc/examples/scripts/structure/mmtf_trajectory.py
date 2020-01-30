@@ -6,17 +6,18 @@ This example demonstrates how the MMTF format can be used as an
 alterntive to classical trajecotry formats (TRR, XTC, etc.).
 
 For this purpose a trajectory file obtained from a MD simulation
-(Gromacs) of the miniprotein TC5b (PDB: 1L2Y) was loaded
-(1001 frames, 304 atoms), and the coordinates are saved as the default
-``xCoordList``, ``yCoordList`` and ``zCoordList`` in an MMTF file.
+(Gromacs) of lysozyme (PDB: 1AKI) was loaded
+(101 frames, 50949 atoms), and the coordinates are saved as
+``xCoordList``, ``yCoordList`` and ``zCoordList`` with standard encoding
+in an MMTF file.
 
 The trajectory file can be downloaded
-:download:`here </static/assets/download/1l2y_md.xtc>`.
+:download:`here </examples/download/lysozyme_md.xtc>`.
 
 Using the MMTF format for macromolecular trajectories takes advantage
 of the precise and open specification of the format and the wide support
 by a multitude of software.
-This comes at cost of a slightly higher file size compared to the XTC
+This comes at cost of a higher file size compared to the XTC
 format, the limited size of each field (max. 2\ :sup:`32`\ -1 bytes)
 and the violation of the format itself
 (most mandatory fields are omitted).
@@ -34,8 +35,8 @@ import matplotlib.pyplot as plt
 import os.path
 
 # Put here the path of the downloaded trajectory file
-xtc_file_path = "../../../static/assets/download/1l2y_md.xtc"
-mmtf_file_path = biotite.temp_file("1l2y_md.mmtf")
+xtc_file_path = "../../download/lysozyme_md.xtc"
+mmtf_file_path = biotite.temp_file("lysozyme_md.mmtf")
 
 xtc_file = xtc.XTCFile()
 xtc_file.read(xtc_file_path)
@@ -54,11 +55,13 @@ mmtf_size = os.path.getsize(mmtf_file_path)
 
 figure = plt.figure()
 ax = figure.add_subplot(111)
-ax.bar([1,2], [xtc_size/1000, mmtf_size/1000], width=0.3,
+ax.bar([1,2], [xtc_size/1e+6, mmtf_size/1e+6], width=0.3,
        color=[biotite.colors["green"], biotite.colors["orange"]], linewidth=0)
 ax.set_xticks([1,2])
 ax.set_xticklabels(["XTC", "MMTF"])
-ax.set_xlim(0.5,2.5)
-ax.set_ylim(0,3000)
-ax.set_ylabel("File size (kB)")
+ax.set_xlim(0.5, 2.5)
+ax.set_ylim(0, 40)
+ax.yaxis.grid(True)
+ax.set_ylabel("File size (MB)")
+figure.tight_layout()
 plt.show()
