@@ -5,96 +5,14 @@
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
-           "LetterTypePlotter", "plot_alignment",
-           "plot_alignment_similarity_based", "plot_alignment_type_based",
-           "plot_alignment_shapes"]
+           "plot_alignment", "plot_alignment_similarity_based",
+           "plot_alignment_type_based"]
 
 import abc
 import numpy as np
 from ...visualize import set_font_size_in_coord, colors
 from ..seqtypes import ProteinSequence
 from .colorschemes import get_color_scheme
-
-
-_hexagon_coord = np.array([
-    (0.500, 0.000),
-    (0.937, 0.250),
-    (0.937, 0.750),
-    (0.500, 1.000),
-    (0.063, 0.750),
-    (0.063, 0.250)
-])
-
-_spiked_coord = np.array([
-    (0.000, 0.000),
-    (0.500, 0.150),
-    (1.000, 0.000),
-    (0.850, 0.500),
-    (1.000, 1.000),
-    (0.500, 0.850),
-    (0.000, 1.000),
-    (0.150, 0.500),
-])
-
-_spiked_coord = np.array([
-    (0.000, 0.000),
-    (0.500, 0.150),
-    (1.000, 0.000),
-    (0.850, 0.500),
-    (1.000, 1.000),
-    (0.500, 0.850),
-    (0.000, 1.000),
-    (0.150, 0.500),
-])
-
-_cross_coord = np.array([
-    (0.220, 0.000),
-    (0.780, 0.000),
-    (0.780, 0.220),
-    (1.000, 0.220),
-    (1.000, 0.780),
-    (0.780, 0.780),
-    (0.780, 1.000),
-    (0.220, 1.000),
-    (0.220, 0.780),
-    (0.000, 0.780),
-    (0.000, 0.220),
-    (0.220, 0.220),
-])
-
-_star_coord = np.array([
-    (0.500, 0.000),
-    (0.648, 0.150),
-    (0.852, 0.150),
-    (0.852, 0.352),
-    (1.000, 0.500),
-    (0.852, 0.648),
-    (0.852, 0.852),
-    (0.648, 0.852),
-    (0.500, 1.000),
-    (0.352, 0.852),
-    (0.148, 0.852),
-    (0.148, 0.648),
-    (0.000, 0.500),
-    (0.148, 0.352),
-    (0.148, 0.148),
-    (0.352, 0.148),
-])
-
-_hourglass_coord = np.array([
-    (0.000, 0.000),
-    (1.000, 0.000),
-    (1.000, 0.220),
-    (0.740, 0.420),
-    (0.740, 0.580),
-    (1.000, 0.780),
-    (1.000, 1.000),
-    (0.000, 1.000),
-    (0.000, 0.780),
-    (0.260, 0.580),
-    (0.260, 0.420),
-    (0.000, 0.220),
-])
 
 
 class SymbolPlotter(metaclass=abc.ABCMeta):
@@ -426,128 +344,6 @@ class LetterTypePlotter(SymbolPlotter):
             return (1, 1, 1)
         code = alignment.sequences[seq_i].code[index]
         return self._colors[code]
-
-
-class ShapePlotter(SymbolPlotter):
-    def __init__(self, axes, color_scheme=None,
-                 font_size=None, font_param=None):
-        super().__init__(axes)
-        
-        self._draw_funcs = {
-            "A" : ShapePlotter._draw_cricle,
-            "T" : ShapePlotter._draw_cricle,
-            "S" : ShapePlotter._draw_cricle,
-            "N" : ShapePlotter._draw_cricle,
-            "D" : ShapePlotter._draw_rectangle,
-            "E" : ShapePlotter._draw_rectangle,
-            "Q" : ShapePlotter._draw_rectangle,
-            "K" : ShapePlotter._draw_rectangle,
-            "R" : ShapePlotter._draw_rectangle,
-            "I" : ShapePlotter._draw_hexagon,
-            "L" : ShapePlotter._draw_hexagon,
-            "V" : ShapePlotter._draw_hexagon,
-            "M" : ShapePlotter._draw_hexagon,
-            "F" : ShapePlotter._draw_spiked,
-            "W" : ShapePlotter._draw_spiked,
-            "Y" : ShapePlotter._draw_spiked,
-            "H" : ShapePlotter._draw_spiked,
-            "G" : ShapePlotter._draw_cross,
-            "P" : ShapePlotter._draw_star,
-            "C" : ShapePlotter._draw_hourglass
-        }
-
-        if color_scheme is None:
-            self._colors = get_color_scheme("martin", ProteinSequence.alphabet)
-        elif isinstance(color_scheme, str):
-            self._colors = get_color_scheme(
-                color_scheme, ProteinSequence.alphabet
-            )
-        else:
-            self._colors = color_scheme
-        self._font_size = font_size
-        self._font_param = font_param if font_param is not None else {}
-    
-    def plot_symbol(self, bbox, alignment, column_i, seq_i):
-        from matplotlib.patches import Polygon
-        from matplotlib.transforms import Bbox
-        
-        trace = alignment.trace
-        if trace[column_i,seq_i] != -1:
-            symbol = alignment.sequences[seq_i][trace[column_i,seq_i]]
-            text_color = "black"
-        else:
-            symbol = ""
-            text_color = "white"
-        color = self._get_color(alignment, column_i, seq_i)
-        
-        draw_func = self._draw_funcs.get(symbol)
-        if draw_func is not None:
-            # Shrink Bbox slightly to get a small margin between shapes
-            f = 0.04
-            shape_bbox = Bbox(
-                ((bbox.x0     + f*bbox.width,
-                  bbox.y0     + f*bbox.height),
-                 (bbox.x1     - f*bbox.width,
-                  bbox.y1     - f*bbox.height)),
-            )
-            draw_func(self, shape_bbox, color)
-        text = self.axes.text(
-            bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2,
-            symbol, color=text_color, ha="center", va="center",
-            size=self._font_size, **self._font_param)
-        text.set_clip_on(True)
-    
-    def _get_color(self, alignment, column_i, seq_i):
-        index = alignment.trace[column_i, seq_i]
-        if index == -1:
-            # Gaps are white
-            return (1, 1, 1)
-        code = alignment.sequences[seq_i].code[index]
-        return self._colors[code]
-
-    def _draw_cricle(self, bbox, color):
-        from matplotlib.patches import Circle
-
-        circle = Circle(
-            (bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2), bbox.width/2,
-            facecolor=color, edgecolor="None", fill=True
-        )
-        self.axes.add_patch(circle)
-    
-    def _draw_rectangle(self, bbox, color):
-        from matplotlib.patches import Rectangle
-
-        rectangle = Rectangle(
-            bbox.p0, bbox.width, bbox.height,
-            facecolor=color, edgecolor="None"
-        )
-        self.axes.add_patch(rectangle)
-
-    def _draw_hexagon(self, bbox, color):
-        self._draw_polygon(bbox, color, _hexagon_coord)
-    
-    def _draw_spiked(self, bbox, color):
-        self._draw_polygon(bbox, color, _spiked_coord)
-    
-    def _draw_cross(self, bbox, color):
-        self._draw_polygon(bbox, color, _cross_coord)
-    
-    def _draw_star(self, bbox, color):
-        self._draw_polygon(bbox, color, _star_coord)
-    
-    def _draw_hourglass(self, bbox, color):
-        self._draw_polygon(bbox, color, _hourglass_coord)
-
-    def _draw_polygon(self, bbox, color, coord):
-        from matplotlib.patches import Polygon
-
-        # Transfom unit coordinates to fit Bbox
-        coord = coord.copy()
-        coord *= bbox.width
-        coord += bbox.p0
-        polygon = Polygon(coord, facecolor=color, edgecolor="None")
-        self.axes.add_patch(polygon)
-    
 
 
 
@@ -983,34 +779,6 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         show_line_position=show_line_position,
         spacing=spacing
     )
-
-
-def plot_alignment_shapes(axes, alignment, symbols_per_line=50,
-                              show_numbers=False, number_size=None,
-                              number_functions=None,
-                              labels=None, label_size=None,
-                              show_line_position=False,
-                              spacing=1,
-                              color_scheme=None, color_symbols=False,
-                              symbol_size=None, symbol_param=None):
-    alphabet = alignment.sequences[0].get_alphabet()
-    symbol_plotter = ShapePlotter(
-        axes, color_scheme=color_scheme, font_size=None, font_param=None
-    )
-    plot_alignment(
-        axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
-        symbols_per_line=symbols_per_line,
-        show_numbers=show_numbers, number_size=number_size,
-        number_functions=number_functions,
-        labels=labels, label_size=label_size,
-        show_line_position=show_line_position,
-        spacing=spacing
-    )
-    
-    twin = axes.get_shared_x_axes().get_siblings(axes)[0]
-    for ax in (axes, twin):
-        ax.set_yticklabels(ax.get_yticklabels(), fontdict={"color":"white"})
-    axes.get_figure().patch.set_facecolor("#181818")
 
 
 def _get_last_valid_index(alignment, column_i, seq_i):
