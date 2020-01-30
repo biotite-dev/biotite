@@ -296,7 +296,7 @@ class LetterSimilarityPlotter(LetterPlotter):
         return ListedColormap(cmap_val)
 
 
-class LetterTypePlotter(SymbolPlotter):
+class LetterTypePlotter(LetterPlotter):
     """
     This `SymbolPloter` colors each symbol based on the general
     color of that symbol defined by a color scheme.
