@@ -1,6 +1,6 @@
 """
-Sequence analysis of THCA synthase variants
-===========================================
+Hightlighting dissimilarities in THCA synthase variants
+=======================================================
 
 """
 
