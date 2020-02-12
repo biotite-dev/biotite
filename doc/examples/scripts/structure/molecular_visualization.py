@@ -33,7 +33,6 @@ n3 = caffeine[caffeine.atom_name == "N3"][0]
 n7 = caffeine[caffeine.atom_name == "N7"][0]
 # Normal vector of ring plane
 normal = np.cross(n1.coord - n3.coord, n1.coord - n7.coord)
-print(normal)
 # Align ring plane normal to x-y plane
 caffeine = struc.align_vectors(caffeine, normal, np.array([0,0,1]))
 
