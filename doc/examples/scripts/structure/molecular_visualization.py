@@ -1,6 +1,6 @@
 """
-Molecular visualization
-=======================
+Molecular visualization of caffeine
+===================================
 
 .. currentmodule:: biotite.structure.graphics
 
@@ -9,40 +9,51 @@ Molecular visualization
 Although it does not produce publication-suitable images,
 this function can be a convenient tool for a quick visual analysis of a
 structure.
+
+This example displays the small molecule caffeine.
 """
 
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.graphics as graphics
-import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
 import numpy as np
 import matplotlib.pyplot as plt
 
-file_name = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-# Load only one model
-# The bonds are also loaded form the file,
-# so that 'plot_atoms()' knows which lines it should draw
-atom_array = strucio.load_structure(file_name, model=1, include_bonds=True)
 
-# The structure should be colored by element
-colors = np.zeros((atom_array.array_length(), 3))
-colors[atom_array.element == "H"] = (1.0, 1.0, 1.0) # white
-colors[atom_array.element == "C"] = (0.0, 1.0, 0.0) # green
-colors[atom_array.element == "N"] = (0.0, 0.0, 1.0) # blue
-colors[atom_array.element == "O"] = (1.0, 0.0, 0.0) # red
-colors[atom_array.element == "S"] = (1.0, 1.0, 0.0) # yellow
+# Get an atom array for caffeine
+# Caffeine has the PDB reside name 'CFF'
+caffeine = info.residue("CFF")
+
+# For cosmetic purposes align central rings to x-y plane
+n1 = caffeine[caffeine.atom_name == "N1"][0]
+n3 = caffeine[caffeine.atom_name == "N3"][0]
+n7 = caffeine[caffeine.atom_name == "N7"][0]
+# Normal vector of ring plane
+normal = np.cross(n1.coord - n3.coord, n1.coord - n7.coord)
+print(normal)
+# Align ring plane normal to x-y plane
+caffeine = struc.align_vectors(caffeine, normal, np.array([0,0,1]))
+
+# Caffeine should be colored by element
+colors = np.zeros((caffeine.array_length(), 3))
+colors[caffeine.element == "H"] = (0.8, 0.8, 0.8) # gray
+colors[caffeine.element == "C"] = (0.0, 0.8, 0.0) # green
+colors[caffeine.element == "N"] = (0.0, 0.0, 0.8) # blue
+colors[caffeine.element == "O"] = (0.8, 0.0, 0.0) # red
 
 # Create a quadratic figure to ensure a correct aspect ratio
 # in the visualized molecule
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="3d")
-graphics.plot_atoms(ax, atom_array, colors, line_width=2)
-fig.set_facecolor("black")
-ax.set_facecolor("black")
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_zlabel("z")
+graphics.plot_atoms(
+    ax, caffeine, colors, line_width=5, background_color="white"
+)
 # Restrain the axes to quadratic extents
 # to ensure a correct aspect ratio
 plt.subplots_adjust(left=-0.3, right=1.3, bottom=-0.3, top=1.3)
