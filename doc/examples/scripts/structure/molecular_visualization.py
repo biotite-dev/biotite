@@ -47,9 +47,6 @@ colors[caffeine.element == "O"] = (0.8, 0.0, 0.0) # red
 # in the visualized molecule
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="3d")
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_zlabel("z")
 graphics.plot_atoms(
     ax, caffeine, colors, line_width=5, background_color="white"
 )
