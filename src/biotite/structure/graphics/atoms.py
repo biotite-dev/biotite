@@ -12,7 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 
-def plot_atoms(axes, atoms, colors, line_width=1.0):
+def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
     """
     Plot an :class:`AtomArray` as lines between bonded atoms.
     
@@ -34,6 +34,9 @@ def plot_atoms(axes, atoms, colors, line_width=1.0):
         The values for each color channel are in the range 0 to 1.
     line_width : float, optional
         The width of the lines to be drawn.
+    background_color : string or iterable object
+        A matplotlib compatible color (color name or RGB values).
+        If set, the background is colored with the given value.
     
     Notes
     -----
@@ -63,12 +66,20 @@ def plot_atoms(axes, atoms, colors, line_width=1.0):
         ))
         line_colors.append(colors[index2])
 
-
     lines = Line3DCollection(
         line_coord, color=line_colors, linewidths=line_width
     )
     axes.add_collection(lines)
+    
+    # Set viewing angle
+    axes.azim = -90
+    axes.elev = 90
+    # Remove frame
     axes.axis("off")
+    # Set background color
+    if background_color is not None:
+        axes.set_facecolor(background_color)
+        axes.get_figure().set_facecolor(background_color)
     _set_equal_aspect(axes, atoms.coord)
 
 
