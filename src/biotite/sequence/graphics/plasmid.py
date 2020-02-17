@@ -16,7 +16,7 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                      tick_length= 0.2, tick_step=200, ring_width=0.2,
                      feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
                      label=None, face_properties=None, label_properties=None,
-                     feature_formatters=None):
+                     feature_formatter=None):
     from matplotlib.transforms import Bbox
     
     ### Setup parameters ###
@@ -28,19 +28,8 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
          face_properties = {}
     if label_properties is None:
          label_properties = {}
-    default_formatters = [
-        TerminatorFormatter(),
-        PromoterFormatter(),
-        CodingFormatter(),
-        OriFormatter(),
-        SourceFormatter(),
-        MiscFeatureFormatter()
-    ]
-    if feature_formatters is None:
-        feature_formatters = default_formatters
-    else:
-        feature_formatters = copy.copy(feature_formatters) \
-                             .append(default_formatters)
+    if feature_formatter is None:
+        feature_formatter = _default_feature_formatter
     
     
     ### Setup matplotlib ###
@@ -137,20 +126,16 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
             )
             _draw_location(
                 axes, feature, loc, bbox, head_angle_width,
-                face_properties, label_properties, feature_formatters
+                face_properties, label_properties, feature_formatter
             )
             
 
 def _draw_location(axes, feature, loc, bbox, head_width,
-                   face_properties, label_properties, feature_formatters):
+                   face_properties, label_properties, feature_formatter):
     from matplotlib.patches import Rectangle, Polygon
     
     # Determine how to draw the feature
-    for formatter in feature_formatters:
-        if formatter.matches(feature):
-            directional, face_color, text_color, text \
-                = formatter.format(feature)
-            break
+    directional, face_color, text_color, text = feature_formatter(feature)
 
     center_x = (bbox.x0 + bbox.x1) / 2
     center_y = (bbox.y0 + bbox.y1) / 2
@@ -251,137 +236,49 @@ def _merge_over_periodic_boundary(feature, loc_range):
         return feature
 
 
-class FeatureFormatter(metaclass=abc.ABCMeta):
+def _default_feature_formatter(f):
     """
-    A `FeatureFormatter` is an object, that 'knows' how to format a
-    certain type of sequence feature for a plasmid map.
+    Returns
+    -------
+    directional : bool
+        True, if the direction of the feature should be indicated by
+        an arrow.
+    face_color: tuple or str, optional
+        A matplotlib compatible color for the feature indicator.
+    text_color: tuple or str, optional
+        A matplotlib compatible color for the feature text.
+    text: str or None
+        The text to be displayed for this feature.
+        None, if no text should be displayed.
     """
-
-    @abc.abstractmethod
-    def matches(self, feature):
-        pass
+    # Source
+    if f.key == "source":
+        return False, colors["darkorange"], "white", f.qual.get("organism")
     
-    @abc.abstractmethod
-    def format(self, feature):
-        """
-        Returns
-        -------
-        directional : bool
-        face_color
-        text_color
-        text
-        """
-        pass
-
-
-class MiscFeatureFormatter(FeatureFormatter):
-    """
-    A formatter that matches any feature.
-    """
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = colors["dimorange"]
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        return True
+    # Origin of Replication
+    elif f.key == "rep_origin":
+        return False, colors["dimorange"], "black", \
+               f.qual.get("standard_name", "ori")
+    
+    # Coding sequences
+    elif f.key in ["gene", "CDS", "rRNA"]:
+        return True, colors["darkgreen"], "black", f.qual.get("gene")
+    
+    elif f.key == "regulatory":
+        # Promoters
+        if f.qual.get("regulatory_class") in [
+            "promoter",
+            "TATA_box",
+            "minus_35_signal",
+            "minus_10_signal"
+        ]:
+            return True, colors["green"], "black", f.qual.get("gene")
         
-    def format(self, feature):
-        text = feature.qual.get("gene")
-        return True, self._color, "black", text
-
-
-class SourceFormatter(FeatureFormatter):
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = colors["darkorange"]
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        return feature.key == "source"
-        
-    def format(self, feature):
-        text = feature.qual.get("organism")
-        return False, self._color, "white", text
-
-
-class OriFormatter(FeatureFormatter):
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = colors["dimorange"]
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        return feature.key == "rep_origin"
-        
-    def format(self, feature):
-        if "standard_name" in feature.qual:
-            text = feature.qual["standard_name"]
-        else:
-            text = "ori"
-        return False, self._color, "black", text
-
-
-class CodingFormatter(FeatureFormatter):
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = colors["darkgreen"]
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        return feature.key in ["gene", "CDS", "rRNA"]
-        
-    def format(self, feature):
-        text = feature.qual.get("gene")
-        return True, self._color, "black", text
-
-
-class PromoterFormatter(FeatureFormatter):
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = colors["green"]
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        if feature.key == "regulatory":
-            if "regulatory_class" in feature.qual:
-                if feature.qual["regulatory_class"] in [
-                    "promoter", "TATA_box", "minus_35_signal",
-                    "minus_10_signal"
-                ]:
-                    return True
-        return False
-        
-    def format(self, feature):
-        text = feature.qual.get("gene")
-        return True, self._color, "black", text
-
-
-class TerminatorFormatter(FeatureFormatter):
-
-    def __init__(self, color=None):
-        if color is None:
-            self._color = "black"
-        else:
-            self._color = color
-
-    def matches(self, feature):
-        if feature.key == "regulatory":
-            if "regulatory_class" in feature.qual:
-                if feature.qual["regulatory_class"] in ["terminator"]:
-                    return True
-        return False
-        
-    def format(self, feature):
-        text = feature.qual.get("gene")
-        return True, self._color, "white", text
+        # Terminators
+        elif f.qual.get("regulatory_class") in [
+            "terminator"
+        ]:
+            return True, "black", "white", f.qual.get("gene")
+    
+    # Misc
+    return True, colors["lightorange"], "black", f.qual.get("gene")

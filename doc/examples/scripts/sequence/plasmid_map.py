@@ -17,18 +17,18 @@ import biotite.sequence.graphics as graphics
 import biotite.database.entrez as entrez
 
 file_name = entrez.fetch(
-    "L37382", target_path=biotite.temp_dir(),
+    "J01749", target_path=biotite.temp_dir(),
     suffix="gb", db_name="nuccore", ret_type="gb"
 )
 file = gb.GenBankFile()
 file.read(file_name)
 annot_seq = gb.get_annotated_sequence(file)
 
-fig = plt.figure(figsize=(8.0, 0.8))
+fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="polar")
 graphics.plot_plasmid_map(
     ax, annot_seq.annotation, loc_range=(1, len(annot_seq.sequence)+1),
-    label="L37382"
+    label="pBR322"
 )
 fig.tight_layout()
 plt.show()
