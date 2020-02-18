@@ -244,63 +244,79 @@ def _merge_over_periodic_boundary(feature, loc_range):
         return feature
 
 
-def _draw_curved_text(axes, angle, radius, string, label_properties):
-    xlim = axes.get_xlim()
-    ylim = axes.get_ylim()
+def _draw_curved_text(axes, angle, radius, string, text_properties):
     
-    renderer = axes.get_figure().canvas.get_renderer()
-    ax_px_radius = axes.get_window_extent(renderer).width / 2
-    circle_px_radius = ax_px_radius * radius / ylim[1]
+    from matplotlib.artist import Artist
     
-    value_range = xlim[1] - xlim[0]
-    units_per_px = value_range / (circle_px_radius * 2*np.pi)
+    class CurvedText(Artist):
 
-    rad_angle = 360 - np.rad2deg(angle)
-    # Avoid to draw the text upside down, when drawn on the bottom half
-    # of the map
-    if rad_angle > 90 and rad_angle < 270:
-        turn_around = True
-    else:
-        turn_around = False
+        def __init__(self, axes, angle, radius, string, text_properties):
+            super().__init__()
+            self._axes = axes
+            self._angle = angle
+            self._radius = radius
+
+            self._texts = []
+            for word in _split_into_words(string):
+                text = axes.text(
+                    # Set position later
+                    0, 0,
+                    word,
+                    ha="center", va="center",
+                    **text_properties
+                )
+                self._texts.append(text)
+        
+        def draw(self, renderer, *args, **kwargs):
+            xlim = self._axes.get_xlim()
+            ylim = self._axes.get_ylim()
+            
+            ax_px_radius = self._axes.get_window_extent(renderer).width / 2
+            circle_px_radius = ax_px_radius * self._radius / ylim[1]
+            
+            value_range = xlim[1] - xlim[0]
+            units_per_px = value_range / (circle_px_radius * 2*np.pi)
+
+            rad_angle = 360 - np.rad2deg(self._angle)
+            # Avoid to draw the text upside down, when drawn on the
+            # bottom half of the map
+            if rad_angle > 90 and rad_angle < 270:
+                turn_around = True
+            else:
+                turn_around = False
+            
+            unit_widths = []
+            total_unit_width = 0
+            for text in self._texts:
+                word_px_width = text.get_window_extent(renderer).width
+                word_unit_width = word_px_width * units_per_px
+                unit_widths.append(word_unit_width)
+                total_unit_width += word_unit_width
+            
+            # Now that the width is known,
+            # the appropriate position and rotation can be set
+            if turn_around:
+                # curr_angle is the left-aligned position of the
+                # upcoming word
+                curr_angle = self._angle + total_unit_width / 2
+            else:
+                curr_angle = self._angle - total_unit_width / 2
+            for text, width in zip(self._texts, unit_widths):
+                if turn_around:
+                    # The text itself is centered
+                    # -> The position itself must be corrected with
+                    # half of the word width
+                    angle_corrected = curr_angle - width / 2
+                    text_rot = 360 - np.rad2deg(angle_corrected) + 180
+                    curr_angle -= width
+                else:
+                    angle_corrected = curr_angle + width / 2
+                    text_rot = 360 - np.rad2deg(angle_corrected)
+                    curr_angle += width
+                text.set_position((angle_corrected, self._radius))
+                text.set_rotation(text_rot)
     
-    texts = []
-    unit_widths = []
-    total_unit_width = 0
-    for word in _split_into_words(string):
-        text = axes.text(
-            # Set position later
-            0, 0,
-            word,
-            ha="center", va="center",
-            **label_properties
-        )
-        texts.append(text)
-        word_px_width = text.get_window_extent(renderer).width
-        word_unit_width = word_px_width * units_per_px
-        unit_widths.append(word_unit_width)
-        total_unit_width += word_unit_width
-    
-    # Now that the width is known,
-    # the appropriate position and rotation can be set
-    if turn_around:
-        # curr_angle is the left-aligned position of the upcoming word
-        curr_angle = angle + total_unit_width / 2
-    else:
-        curr_angle = angle - total_unit_width / 2
-    for text, width in zip(texts, unit_widths):
-        if turn_around:
-            # The text itself is centered
-            # -> The position itself must be corrected with
-            # half of the word width
-            angle_corrected = curr_angle - width / 2
-            text_rot = 360 - np.rad2deg(angle_corrected) + 180
-            curr_angle -= width
-        else:
-            angle_corrected = curr_angle + width / 2
-            text_rot = 360 - np.rad2deg(angle_corrected)
-            curr_angle += width
-        text.set_position((angle_corrected, radius))
-        text.set_rotation(text_rot)
+    axes.add_artist(CurvedText(axes, angle, radius, string, text_properties))
 
 
 separators = re.compile("\s|_|-")
@@ -308,13 +324,13 @@ def _split_into_words(string):
     match_indices = sorted(
         [match.start() for match in separators.finditer(string)]
     )
-    match_indices.append(len(string))
     current_index = 0
     words = []
     for i in match_indices:
         words.append(string[current_index : i])
         words.append(string[i : i+1])
         current_index = i+1
+    words.append(string[current_index:])
     return words
 
 
@@ -343,8 +359,10 @@ def _default_feature_formatter(f):
                f.qual.get("standard_name", "ori")
     
     # Coding sequences
-    elif f.key in ["gene", "CDS", "rRNA"]:
+    elif f.key == "gene":
         return True, colors["darkgreen"], "black", f.qual.get("gene")
+    elif f.key in ["CDS", "rRNA"]:
+        return True, colors["darkgreen"], "black", f.qual.get("product")
     
     elif f.key == "regulatory":
         # Promoters
@@ -354,13 +372,15 @@ def _default_feature_formatter(f):
             "minus_35_signal",
             "minus_10_signal"
         ]:
-            return True, colors["green"], "black", f.qual.get("gene")
+            return True, colors["green"], "black", f.qual.get("note")
         
         # Terminators
-        elif f.qual.get("regulatory_class") in [
-            "terminator"
-        ]:
-            return True, "black", "white", f.qual.get("gene")
+        elif f.qual.get("regulatory_class") in "terminator":
+            return True, "black", "white", f.qual.get("note")
+        
+        # RBS
+        elif f.qual.get("regulatory_class") == "ribosome_binding_site":
+            return True, colors["lightorange"], "white", None
     
     # Misc
-    return True, colors["lightorange"], "black", f.qual.get("gene")
+    return True, colors["gray"], "black", f.qual.get("gene")
