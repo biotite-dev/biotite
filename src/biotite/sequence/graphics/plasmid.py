@@ -15,7 +15,8 @@ from ..annotation import Annotation, Feature, Location
 def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                      tick_length= 0.2, tick_step=200, ring_width=0.2,
                      feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
-                     label=None, face_properties=None, label_properties=None,
+                     curved_feature_labels=True, label=None,
+                     face_properties=None, label_properties=None,
                      feature_formatter=None):
     from matplotlib.transforms import Bbox
     
@@ -33,6 +34,7 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
     
     
     ### Setup matplotlib ###
+    # The x-coordinate is given as angle (rad)
     axes.set_xlim(0, 2*np.pi)
     axes.set_ylim(0, radius)
     axes.yaxis.set_visible(False)
@@ -125,13 +127,13 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
                 start_angle, row_bottom, stop_angle, row_top
             )
             _draw_location(
-                axes, feature, loc, bbox, head_angle_width,
-                face_properties, label_properties, feature_formatter
+                axes, feature, loc, bbox, head_angle_width, face_properties,
+                label_properties, feature_formatter, curved_feature_labels
             )
             
 
-def _draw_location(axes, feature, loc, bbox, head_width,
-                   face_properties, label_properties, feature_formatter):
+def _draw_location(axes, feature, loc, bbox, head_width, face_properties,
+                   label_properties, feature_formatter, curved_feature_labels):
     from matplotlib.patches import Rectangle, Polygon
     
     # Determine how to draw the feature
@@ -169,6 +171,7 @@ def _draw_location(axes, feature, loc, bbox, head_width,
             (bbox.x0 + head_width, bbox.y1),
             (bbox.x0,              center_y)
         ]
+    
     # Draw arrow as composition of a rectangle and a triangle
     # FancyArrow does not properly work for polar plots
     if draw_rect:
@@ -183,17 +186,21 @@ def _draw_location(axes, feature, loc, bbox, head_width,
             triangle_coord,
             color=face_color, linewidth=1, **face_properties
         ))
+    
     # Draw feature label
-    text_rot = 360 - np.rad2deg(center_x)
-    # Do not draw text upside down
-    if text_rot > 90 and text_rot < 270:
-        text_rot += 180
     if text is not None:
-        axes.text(
-            center_x, center_y, text,
-            ha="center", va="center", rotation=text_rot, color=text_color,
-            **label_properties
-        )
+        if curved_feature_labels:
+            _draw_curved_text(axes, center_x, center_y, text, label_properties)
+        else:
+            text_rot = 360 - np.rad2deg(center_x)
+            # Do not draw text upside down
+            if text_rot > 90 and text_rot < 270:
+                text_rot += 180
+            axes.text(
+                center_x, center_y, text,
+                ha="center", va="center", rotation=text_rot, color=text_color,
+                **label_properties
+            )
 
 
 def _loc_to_rad(loc, loc_range):
@@ -234,6 +241,66 @@ def _merge_over_periodic_boundary(feature, loc_range):
             return Feature(feature.key, new_locs, feature.qual)
     else:
         return feature
+
+
+def _draw_curved_text(axes, angle, radius, string, label_properties):
+    xlim = axes.get_xlim()
+    ylim = axes.get_ylim()
+    
+    renderer = axes.get_figure().canvas.get_renderer()
+    ax_px_radius = axes.get_window_extent(renderer).width / 2
+    circle_px_radius = ax_px_radius * radius / ylim[1]
+    
+    value_range = xlim[1] - xlim[0]
+    units_per_px = value_range / (circle_px_radius * 2*np.pi)
+
+    rad_angle = 360 - np.rad2deg(angle)
+    # Avoid to draw the text upside down, when drawn on the bottom half
+    # of the map
+    if rad_angle > 90 and rad_angle < 270:
+        turn_around = True
+    else:
+        turn_around = False
+    
+    texts = []
+    unit_widths = []
+    total_unit_width = 0
+    for word in string.split():
+        text = axes.text(
+            # Set position later
+            0, 0,
+            word,
+            ha="center", va="center",
+            **label_properties
+        )
+        texts.append(text)
+        word_px_width = text.get_window_extent(renderer).width
+        word_unit_width = word_px_width * 1.2 * units_per_px
+        unit_widths.append(word_unit_width)
+        total_unit_width += word_unit_width
+    
+    # Now that the width is known,
+    # the appropriate position and rotation can be set
+    if turn_around:
+        # curr_angle is the left-aligned position of the upcoming word
+        curr_angle = angle + total_unit_width / 2
+    else:
+        curr_angle = angle - total_unit_width / 2
+    for text, width in zip(texts, unit_widths):
+        if turn_around:
+            # The text itself is centered
+            # -> The position itself must be corrected with
+            # half of the word width
+            angle_corrected = curr_angle - width / 2
+            text_rot = 360 - np.rad2deg(angle_corrected) + 180
+            curr_angle -= width
+        else:
+            angle_corrected = curr_angle + width / 2
+            text_rot = 360 - np.rad2deg(angle_corrected)
+            curr_angle += width
+        text.set_position((angle_corrected, radius))
+        text.set_rotation(text_rot)
+        
 
 
 def _default_feature_formatter(f):
