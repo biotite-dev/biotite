@@ -8,6 +8,7 @@ __all__ = ["plot_plasmid_map"]
 import copy
 import abc
 import numpy as np
+import re
 from ...visualize import colors
 from ..annotation import Annotation, Feature, Location
 
@@ -265,7 +266,7 @@ def _draw_curved_text(axes, angle, radius, string, label_properties):
     texts = []
     unit_widths = []
     total_unit_width = 0
-    for word in string.split():
+    for word in _split_into_words(string):
         text = axes.text(
             # Set position later
             0, 0,
@@ -275,7 +276,7 @@ def _draw_curved_text(axes, angle, radius, string, label_properties):
         )
         texts.append(text)
         word_px_width = text.get_window_extent(renderer).width
-        word_unit_width = word_px_width * 1.2 * units_per_px
+        word_unit_width = word_px_width * units_per_px
         unit_widths.append(word_unit_width)
         total_unit_width += word_unit_width
     
@@ -300,7 +301,21 @@ def _draw_curved_text(axes, angle, radius, string, label_properties):
             curr_angle += width
         text.set_position((angle_corrected, radius))
         text.set_rotation(text_rot)
-        
+
+
+separators = re.compile("\s|_|-")
+def _split_into_words(string):
+    match_indices = sorted(
+        [match.start() for match in separators.finditer(string)]
+    )
+    match_indices.append(len(string))
+    current_index = 0
+    words = []
+    for i in match_indices:
+        words.append(string[current_index : i])
+        words.append(string[i : i+1])
+        current_index = i+1
+    return words
 
 
 def _default_feature_formatter(f):
