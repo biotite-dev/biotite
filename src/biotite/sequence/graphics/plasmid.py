@@ -288,6 +288,8 @@ def _draw_curved_text(axes, angle, radius, string, text_properties):
             unit_widths = []
             total_unit_width = 0
             for text in self._texts:
+                # Reset rotation for correct window extent calculation
+                text.set_rotation(0)
                 word_px_width = text.get_window_extent(renderer).width
                 word_unit_width = word_px_width * units_per_px
                 unit_widths.append(word_unit_width)
@@ -319,6 +321,7 @@ def _draw_curved_text(axes, angle, radius, string, text_properties):
     axes.add_artist(CurvedText(axes, angle, radius, string, text_properties))
 
 
+# ' ', '-' and '_' are word delimiters
 separators = re.compile("\s|_|-")
 def _split_into_words(string):
     match_indices = sorted(
@@ -327,10 +330,14 @@ def _split_into_words(string):
     current_index = 0
     words = []
     for i in match_indices:
+        # Add word up to delimiter
         words.append(string[current_index : i])
+        # Add delimiter
         words.append(string[i : i+1])
         current_index = i+1
-    words.append(string[current_index:])
+    # If there is a word after the last delimiter, add it too
+    if current_index < len(string):
+        words.append(string[current_index:])
     return words
 
 
@@ -362,7 +369,10 @@ def _default_feature_formatter(f):
     elif f.key == "gene":
         return True, colors["darkgreen"], "black", f.qual.get("gene")
     elif f.key in ["CDS", "rRNA"]:
-        return True, colors["darkgreen"], "black", f.qual.get("product")
+        text = f.qual.get("product")
+        if text is None:
+            text = f.qual.get("gene")
+        return True, colors["darkgreen"], "black", text
     
     elif f.key == "regulatory":
         # Promoters
