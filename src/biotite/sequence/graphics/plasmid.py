@@ -54,16 +54,22 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
 
     
     ### Draw plasmid ring with ticks and central label ###
+    # Plasmid ring
+    # Use 'barh()' instead of a Rectangle patch to ensure that the axes
+    # is properly initialized
+    # Otherwise the feature rectangles are not curved, but straight
     axes.barh(
         radius-ring_width-tick_length, 2*np.pi, ring_width,
         align="edge", color="black"
     )
+    # Ticks (ticks itself, not the tick labels)
     for tick in ticks:
         angle = _loc_to_rad(tick, loc_range)
         axes.plot(
             (angle, angle), (radius-tick_length, radius),
             color="black", linewidth=1, linestyle="-"
         )
+    # Central plasmid label
     if label is not None:
         axes.text(
             0, 0, label, ha="center", va="center",
