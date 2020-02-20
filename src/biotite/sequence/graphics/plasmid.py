@@ -172,7 +172,9 @@ def _draw_location(axes, feature, loc, bbox, head_width, face_properties,
             (bbox.x1,              center_y)
         ]
     else:
-        rect_coord = (bbox.p0+head_width, bbox.width-head_width, bbox.height)
+        rect_coord = (
+            (bbox.x0+head_width, bbox.y0), bbox.width-head_width, bbox.height
+        )
         triangle_coord = [
             (bbox.x0 + head_width, bbox.y0),
             (bbox.x0 + head_width, bbox.y1),
