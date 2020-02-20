@@ -132,74 +132,11 @@ def plot_plasmid_map(axes, annotation, loc_range=None, radius=15,
             bbox = Bbox.from_extents(
                 start_angle, row_bottom, stop_angle, row_top
             )
-            _draw_location(
-                axes, feature, loc, bbox, head_angle_width, face_properties,
+            axes.add_artist(Feature_Indicator(
+                axes, 0, feature, loc, bbox, head_angle_width, face_properties,
                 label_properties, feature_formatter
-            )
-            
+            ))
 
-def _draw_location(axes, feature, loc, bbox, head_width, face_properties,
-                   label_properties, feature_formatter):
-    from matplotlib.patches import Rectangle, Polygon
-    
-    # Determine how to draw the feature
-    directional, face_color, label_color, label = feature_formatter(feature)
-
-    center_x = (bbox.x0 + bbox.x1) / 2
-    center_y = (bbox.y0 + bbox.y1) / 2
-    # Check if the feature location is too small for
-    # arrow tail AND head to be drawn
-    if not directional:
-        draw_rect = True
-        draw_head = False
-        head_width = 0
-    elif head_width > bbox.width:
-        draw_rect = False
-        draw_head = True
-        # Limit size of arrow head to range of location
-        head_width = bbox.width
-    else:
-        draw_rect = True
-        draw_head = True
-    if loc.strand == Location.Strand.FORWARD:
-        # (x0, y0), width, height
-        rect_coord = (bbox.p0, bbox.width-head_width, bbox.height)
-        # (x0, y0), (x1, y1), (x2, y2)
-        triangle_coord = [
-            (bbox.x1 - head_width, bbox.y0),
-            (bbox.x1 - head_width, bbox.y1),
-            (bbox.x1,              center_y)
-        ]
-    else:
-        rect_coord = (
-            (bbox.x0+head_width, bbox.y0), bbox.width-head_width, bbox.height
-        )
-        triangle_coord = [
-            (bbox.x0 + head_width, bbox.y0),
-            (bbox.x0 + head_width, bbox.y1),
-            (bbox.x0,              center_y)
-        ]
-    
-    # Draw arrow as composition of a rectangle and a triangle
-    # FancyArrow does not properly work for polar plots
-    if draw_rect:
-        # Line width is set to 1 to avoid strange artifact
-        # in the transition from rectangle to polygon
-        axes.add_patch(Rectangle(
-            *rect_coord,
-            color=face_color, linewidth=1, **face_properties
-        ))
-    if draw_head:
-        axes.add_patch(Polygon(
-            triangle_coord,
-            color=face_color, linewidth=1, **face_properties
-        ))
-    
-    # Draw feature label
-    if label is not None:
-        axes.add_artist(
-            CurvedText(axes, center_x, center_y, label, label_properties)
-        )
 
 def _loc_to_rad(loc, loc_range):
     start = loc_range[0]
@@ -239,10 +176,6 @@ def _merge_over_periodic_boundary(feature, loc_range):
             return Feature(feature.key, new_locs, feature.qual)
     else:
         return feature
-
-
-def _draw_curved_text(axes, angle, radius, string, text_properties):
-    axes.add_artist(CurvedText(axes, angle, radius, string, text_properties))
 
 
 # ' ', '-' and '_' are word delimiters
@@ -325,36 +258,124 @@ try:
     # Only create these classes when matplotlib is installed
     from matplotlib.artist import Artist
     from matplotlib.transforms import Bbox
+    from matplotlib.patches import Rectangle, Polygon
 
 
-    class _PlasmidMap(Artist):
+    class PlasmidMap(Artist):
         pass
 
 
-    class _Feature_Indicator(Artist):
-        pass
+    class Feature_Indicator(Artist):
+        def __init__(self, axes, zorder, feature, loc, bbox, head_width,
+                     arrow_properties, label_properties, feature_formatter):
+            super().__init__()
+            self._axes = axes
+            self.zorder = zorder
+            self._direction = loc.strand
+            self._bbox = bbox
+            self._head_width = head_width
+            
+            # Determine how to draw the feature
+            directional, face_color, label_color, label \
+                = feature_formatter(feature)
+            
+            # Draw arrow as composition of a rectangle and a triangle,
+            # as FancyArrow does not properly work for polar plots
+
+            self._arrow_tail = axes.add_patch(Rectangle(
+                # Set positions in 'draw()' method
+                (0, 0), 0, 0,
+                # Line width is set to 1 to avoid strange artifact in
+                # the transition from rectangle (tail) to polygon (head)
+                color=face_color, linewidth=1, zorder = self.zorder + 1,
+                **arrow_properties
+            ))
+            
+            if directional:
+                # Only draw any arrow head when feature has a direction,
+                # otherwise simply draw the tail (rectangle)
+                self._arrow_head = axes.add_patch(Polygon(
+                    # Set positions in 'draw()' method
+                    [(0, 0), (0, 0), (0, 0)],
+                    color=face_color, linewidth=1, zorder = self.zorder + 1,
+                    **arrow_properties
+                ))
+            else:
+                self._arrow_head = None
+
+            if label is not None:
+                self._label = axes.add_artist(CurvedText(
+                    # Set positions in 'draw()' method
+                    axes, self.zorder + 1, 0, 0, label, label_properties
+                ))
+            else:
+                self._label = None
+
+
+        def draw(self, renderer, *args, **kwargs):
+            bbox = self._bbox
+            center_x = (bbox.x0 + bbox.x1) / 2
+            center_y = (bbox.y0 + bbox.y1) / 2
+            
+            # Check if the feature location is too small for
+            # arrow tail AND head to be drawn
+            if self._arrow_head is None:
+                head_width = 0
+            elif self._head_width > bbox.width:
+                # Limit size of arrow head to range of location
+                head_width = bbox.width
+            else:
+                head_width = self._head_width
+
+            if self._direction == Location.Strand.FORWARD:
+                rect_pos = (bbox.x0, bbox.y0)
+                # (x0, y0), (x1, y1), (x2, y2)
+                triangle_coord = [
+                    (bbox.x1 - head_width, bbox.y0), # base 1
+                    (bbox.x1 - head_width, bbox.y1), # base 2
+                    (bbox.x1,              center_y) # tip
+                ]
+            else:
+                rect_pos = (bbox.x0+head_width, bbox.y0)
+                triangle_coord = [
+                    (bbox.x0 + head_width, bbox.y0), # base 1
+                    (bbox.x0 + head_width, bbox.y1), # base 2
+                    (bbox.x0,              center_y) # tip
+                ]
+            
+            # Update coordinates of sub-artists
+            self._arrow_tail.set_xy(rect_pos)
+            self._arrow_tail.set_width(bbox.width-head_width)
+            self._arrow_tail.set_height(bbox.height)
+            if self._arrow_head is not None:
+                self._arrow_head.set_xy(triangle_coord)
+            if self._label is not None:
+                self._label.set_position(center_x, center_y)
 
 
     class CurvedText(Artist):
 
-        def __init__(self, axes, angle, radius, string, text_properties):
+        def __init__(self, axes, zorder, angle, radius, string,
+                     text_properties):
             super().__init__()
             self._axes = axes
+            self.zorder = zorder
             self._angle = angle
             self._radius = radius
 
             self._texts = []
             for word in _split_into_words(string):
                 text = axes.text(
-                    # Set position later
+                    # Set position in 'draw()' method
                     0, 0,
                     word,
                     ha="center", va="center",
-                    **text_properties
+                    zorder=self.zorder + 1,
+                    **text_properties,
                 )
                 self._texts.append(text)
         
-        def set_position(angle, radius):
+        def set_position(self, angle, radius):
             self._angle = angle
             self._radius = radius
         
