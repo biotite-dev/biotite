@@ -356,11 +356,11 @@ def _default_feature_formatter(f):
         an arrow.
     face_color: tuple or str, optional
         A matplotlib compatible color for the feature indicator.
-    text_color: tuple or str, optional
-        A matplotlib compatible color for the feature text.
-    text: str or None
-        The text to be displayed for this feature.
-        None, if no text should be displayed.
+    label_color: tuple or str, optional
+        A matplotlib compatible color for the feature label.
+    label: str or None
+        The label to be displayed for this feature.
+        None, if no label should be displayed.
     """
     # Source
     if f.key == "source":
@@ -375,10 +375,10 @@ def _default_feature_formatter(f):
     elif f.key == "gene":
         return True, colors["darkgreen"], "black", f.qual.get("gene")
     elif f.key in ["CDS", "rRNA"]:
-        text = f.qual.get("product")
-        if text is None:
-            text = f.qual.get("gene")
-        return True, colors["darkgreen"], "black", text
+        label = f.qual.get("product")
+        if label is None:
+            label = f.qual.get("gene")
+        return True, colors["darkgreen"], "black", label
     
     elif f.key == "regulatory":
         # Promoters
@@ -399,4 +399,4 @@ def _default_feature_formatter(f):
             return True, colors["lightorange"], "white", None
     
     # Misc
-    return True, colors["gray"], "black", f.qual.get("gene")
+    return True, "gray", "black", f.qual.get("gene")
