@@ -37,7 +37,7 @@ annotation = seq.Annotation([
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="polar")
 graphics.plot_plasmid_map(
-    ax, annotation, loc_range=(1, 700),
+    ax, annotation, plasmid_size=700,
     label="My plasmid"
 )
 

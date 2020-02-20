@@ -50,7 +50,7 @@ def feature_formatter(feature):
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="polar")
 graphics.plot_plasmid_map(
-    ax, annotation, loc_range=(1, seq_length+1),
+    ax, annotation, plasmid_size=seq_length,
     label=plasmid_name, feature_formatter=feature_formatter
 )
 fig.tight_layout()
