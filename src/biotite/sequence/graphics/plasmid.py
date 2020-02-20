@@ -239,6 +239,11 @@ try:
 
         def set_bbox(self, bbox):
             self._bbox = bbox
+        
+
+        def get_total_angle(self, renderer):
+            bbox = self._bbox
+            center_y = (bbox.y0 + bbox.y1) / 2
 
 
         def draw(self, renderer, *args, **kwargs):
@@ -311,15 +316,23 @@ try:
             self._angle = angle
             self._radius = radius
         
+        def get_total_width(self, renderer):
+            angle_widths = []
+            total_angle_width = 0
+            for text in self._texts:
+                # Reset rotation for correct window extent calculation
+                original_rot = text.get_rotation()
+                text.set_rotation(0)
+                word_px_width = text.get_window_extent(renderer).width
+                word_angle_width = word_px_width * angles_per_px
+                angle_widths.append(word_angle_width)
+                total_angle_width += word_angle_width
+                # Restore rotation
+                text.set_rotation(original_rot)
+        
         def draw(self, renderer, *args, **kwargs):
-            xlim = self._axes.get_xlim()
-            ylim = self._axes.get_ylim()
-            
             ax_px_radius = self._axes.get_window_extent(renderer).width / 2
-            circle_px_radius = ax_px_radius * self._radius / ylim[1]
-            
-            value_range = xlim[1] - xlim[0]
-            units_per_px = value_range / (circle_px_radius * 2*np.pi)
+            circle_px_radius = ax_px_radius * self._radius * 2*np.pi
 
             rad_angle = 360 - np.rad2deg(self._angle)
             # Avoid to draw the text upside down, when drawn on the
@@ -329,25 +342,25 @@ try:
             else:
                 turn_around = False
             
-            unit_widths = []
-            total_unit_width = 0
+            angle_widths = []
+            total_angle_width = 0
             for text in self._texts:
                 # Reset rotation for correct window extent calculation
                 text.set_rotation(0)
                 word_px_width = text.get_window_extent(renderer).width
-                word_unit_width = word_px_width * units_per_px
-                unit_widths.append(word_unit_width)
-                total_unit_width += word_unit_width
+                word_angle_width = word_px_width / circle_px_radius
+                angle_widths.append(word_angle_width)
+                total_angle_width += word_angle_width
             
             # Now that the width is known,
             # the appropriate position and rotation can be set
             if turn_around:
                 # curr_angle is the left-aligned position of the
                 # upcoming word
-                curr_angle = self._angle + total_unit_width / 2
+                curr_angle = self._angle + total_angle_width / 2
             else:
-                curr_angle = self._angle - total_unit_width / 2
-            for text, width in zip(self._texts, unit_widths):
+                curr_angle = self._angle - total_angle_width / 2
+            for text, width in zip(self._texts, angle_widths):
                 if turn_around:
                     # The text itself is centered
                     # -> The position itself must be corrected with
