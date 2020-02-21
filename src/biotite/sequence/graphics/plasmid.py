@@ -332,7 +332,9 @@ try:
         
         def draw(self, renderer, *args, **kwargs):
             ax_px_radius = self._axes.get_window_extent(renderer).width / 2
-            circle_px_radius = ax_px_radius * self._radius * 2*np.pi
+            ax_unit_radius = self._axes.get_ylim()[1]
+            circle_px_circumference = ax_px_radius * 2*np.pi \
+                                      * (self._radius / ax_unit_radius)
 
             rad_angle = 360 - np.rad2deg(self._angle)
             # Avoid to draw the text upside down, when drawn on the
@@ -348,7 +350,13 @@ try:
                 # Reset rotation for correct window extent calculation
                 text.set_rotation(0)
                 word_px_width = text.get_window_extent(renderer).width
-                word_angle_width = word_px_width / circle_px_radius
+                # In some Matplotlib versions the window extent of
+                # whitespace characters is 'nan'
+                # In this case assign a fixed width
+                if np.isnan(word_px_width):
+                    word_px_width = 5
+                word_angle_width \
+                    = 2*np.pi * word_px_width / circle_px_circumference
                 angle_widths.append(word_angle_width)
                 total_angle_width += word_angle_width
             
