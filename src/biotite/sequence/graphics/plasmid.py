@@ -44,13 +44,15 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
     axes.set_theta_direction("clockwise")
     axes.spines["polar"].set_visible(False)
     axes.grid(False)
-    # Setup ticks: Angle is replaced by sequence location
-    ticks = [1] \
-        + [(i+1) * tick_step for i in range(0, plasmid_size // tick_step)]
+    # Setup ticks
+    ticks = [1]
+    tick_labels = [str(1)]
+    for tick in range(tick_step, plasmid_size, tick_step):
+        ticks.append(tick)
+        tick_labels.append(str(tick))
+    # Sequence location is replaced by angle
     axes.xaxis.set_ticks([_loc_to_rad(tick, plasmid_size) for tick in ticks])
-    axes.xaxis.set_ticklabels(ticks)
-
-
+    axes.xaxis.set_ticklabels(tick_labels)
     ### Draw plasmid ring with ticks and central label ###
     
     # Plasmid ring
