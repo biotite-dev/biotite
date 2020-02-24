@@ -15,6 +15,7 @@ import glob
 import shutil
 import types
 import warnings
+from sphinx_gallery.sorting import FileNameSortKey
 import matplotlib
 
 doc_path = dirname(realpath(__file__))
@@ -119,6 +120,7 @@ html_theme_options = {
 sphinx_gallery_conf = {
     "examples_dirs"             : "examples/scripts",
     "gallery_dirs"              : "examples/gallery",
+    "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : ".*ignore\.py",
