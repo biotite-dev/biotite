@@ -70,8 +70,7 @@ fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="polar")
 graphics.plot_plasmid_map(
     ax, annotation, plasmid_size=seq_length,
-    label=plasmid_name, feature_formatter=feature_formatter,
-    tick_step=500
+    label=plasmid_name, feature_formatter=feature_formatter
 )
 fig.tight_layout()
 plt.show()
