@@ -18,7 +18,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
                      tick_length= 0.2, tick_step=200, ring_width=0.2,
                      feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
                      label=None, face_properties=None, label_properties=None,
-                     feature_formatter=None):
+                     feature_formatter=None, omit_oversized_labels=True):
     ### Setup parameters ###
     if plasmid_size is None:
         # 'stop' of 'get_location_range()' is exclusive -> -1
@@ -93,7 +93,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
     axes.add_artist(PlasmidMap(
         axes, 0, features, plasmid_size, radius_eff, feature_width, spacing,
         arrow_head_width, label, face_properties, label_properties,
-        feature_formatter
+        feature_formatter, omit_oversized_labels
     ))
 
 
@@ -107,7 +107,8 @@ try:
     class PlasmidMap(Artist):
         def __init__(self, axes, zorder, features, plasmid_size, radius,
                      feature_width, spacing, arrow_head_width, label,
-                     face_properties, label_properties, feature_formatter):
+                     face_properties, label_properties, feature_formatter,
+                     omit_oversized_labels):
             super().__init__()
             self._axes = axes
             self.zorder = zorder
@@ -127,7 +128,7 @@ try:
                     indicator = axes.add_artist(Feature_Indicator(
                         axes, self.zorder + 1, feature, loc, bbox,
                         arrow_head_width, face_properties, label_properties,
-                        feature_formatter
+                        feature_formatter, omit_oversized_labels
                     ))
                     indicators_for_feature.append(indicator)
                 self._all_indicators.append(indicators_for_feature)
@@ -192,13 +193,15 @@ try:
 
     class Feature_Indicator(Artist):
         def __init__(self, axes, zorder, feature, loc, bbox, head_width,
-                     arrow_properties, label_properties, feature_formatter):
+                     arrow_properties, label_properties, feature_formatter,
+                     omit_oversized_labels):
             super().__init__()
             self._axes = axes
             self.zorder = zorder
             self._direction = loc.strand
             self._bbox = bbox
             self._head_width = head_width
+            self._omit_oversized_labels = omit_oversized_labels
             
             # Determine how to draw the feature
             directional, face_color, label_color, label \
@@ -239,11 +242,10 @@ try:
 
         def set_bbox(self, bbox):
             self._bbox = bbox
-        
-
-        def get_total_angle(self, renderer):
-            bbox = self._bbox
+            center_x = (bbox.x0 + bbox.x1) / 2
             center_y = (bbox.y0 + bbox.y1) / 2
+            if self._label is not None:
+                self._label.set_position(center_x, center_y)
 
 
         def draw(self, renderer, *args, **kwargs):
@@ -251,9 +253,9 @@ try:
             center_x = (bbox.x0 + bbox.x1) / 2
             center_y = (bbox.y0 + bbox.y1) / 2
 
-            # Same width for all arrows
-            # irrespective of the radius of the polar plot
-            # Calculate actual angle width from given absolute width
+            # Constant absolute width for all arrows
+            # irrespective of the radius in the polar plot
+            # Calculate actual angle from given absolute width
             head_width = self._head_width / center_y
             
             # Check if the head should be drawn
@@ -286,12 +288,19 @@ try:
             self._arrow_tail.set_height(bbox.height)
             if self._arrow_head is not None:
                 self._arrow_head.set_xy(triangle_coord)
+            
             if self._label is not None:
-                self._label.set_position(center_x, center_y)
+                # Do not draw the labels if it is larger than the
+                # indicator
+                if self._omit_oversized_labels \
+                   and self._label.get_total_angle(renderer) > bbox.width:
+                        self._label.set_visible(False)
+                else:
+                    self._label.set_visible(True)
+
 
 
     class CurvedText(Artist):
-
         def __init__(self, axes, zorder, angle, radius, string,
                      text_properties):
             super().__init__()
@@ -312,25 +321,23 @@ try:
                 )
                 self._texts.append(text)
         
+
+        def set_visible(self, visible):
+            super().set_visible(visible)
+            for text in self._texts:
+                text.set_visible(visible)
+
+
         def set_position(self, angle, radius):
             self._angle = angle
             self._radius = radius
         
-        def get_total_width(self, renderer):
-            angle_widths = []
-            total_angle_width = 0
-            for text in self._texts:
-                # Reset rotation for correct window extent calculation
-                original_rot = text.get_rotation()
-                text.set_rotation(0)
-                word_px_width = text.get_window_extent(renderer).width
-                word_angle_width = word_px_width * angles_per_px
-                angle_widths.append(word_angle_width)
-                total_angle_width += word_angle_width
-                # Restore rotation
-                text.set_rotation(original_rot)
+
+        def get_total_angle(self, renderer):
+            return np.sum(self.get_word_angles(renderer))
         
-        def draw(self, renderer, *args, **kwargs):
+
+        def get_word_angles(self, renderer):
             ax_px_radius = self._axes.get_window_extent(renderer).width / 2
             ax_unit_radius = self._axes.get_ylim()[1]
             circle_px_circumference = ax_px_radius * 2*np.pi \
@@ -344,42 +351,61 @@ try:
             else:
                 turn_around = False
             
-            angle_widths = []
-            total_angle_width = 0
+            angles = []
             for text in self._texts:
-                # Reset rotation for correct window extent calculation
+                orig_rot = text.get_rotation()
+                orig_visible = text.get_visible()
+                # Reset rotation and visibility
+                # for correct window extent calculation
                 text.set_rotation(0)
+                text.set_visible(True)
                 word_px_width = text.get_window_extent(renderer).width
                 # In some Matplotlib versions the window extent of
                 # whitespace characters is 'nan'
-                # In this case assign a fixed width
+                # In this case, assign a fixed width
                 if np.isnan(word_px_width):
-                    word_px_width = 5
-                word_angle_width \
+                    word_px_width = 5.0
+                word_angle \
                     = 2*np.pi * word_px_width / circle_px_circumference
-                angle_widths.append(word_angle_width)
-                total_angle_width += word_angle_width
+                angles.append(word_angle)
+                # Restore
+                text.set_rotation(orig_rot)
+                text.set_visible(orig_visible)
+            return angles
+        
+
+        def draw(self, renderer, *args, **kwargs):
+            angles = self.get_word_angles(renderer)
+            total_angle = np.sum(angles)
+
+            rad_angle = 360 - np.rad2deg(self._angle)
+            # Avoid to draw the text upside down, when drawn on the
+            # bottom half of the map
+            if rad_angle > 90 and rad_angle < 270:
+                turn_around = True
+            else:
+                turn_around = False
             
-            # Now that the width is known,
+            # Now that the angle for each word is known,
             # the appropriate position and rotation can be set
             if turn_around:
                 # curr_angle is the left-aligned position of the
                 # upcoming word
-                curr_angle = self._angle + total_angle_width / 2
+                curr_angle = self._angle + total_angle / 2
             else:
-                curr_angle = self._angle - total_angle_width / 2
-            for text, width in zip(self._texts, angle_widths):
+                curr_angle = self._angle - total_angle / 2
+            for text, angle in zip(self._texts, angles):
                 if turn_around:
                     # The text itself is centered
                     # -> The position itself must be corrected with
-                    # half of the word width
-                    angle_corrected = curr_angle - width / 2
+                    # half of the word angle
+                    angle_corrected = curr_angle - angle / 2
                     text_rot = 360 - np.rad2deg(angle_corrected) + 180
-                    curr_angle -= width
+                    curr_angle -= angle
                 else:
-                    angle_corrected = curr_angle + width / 2
+                    angle_corrected = curr_angle + angle / 2
                     text_rot = 360 - np.rad2deg(angle_corrected)
-                    curr_angle += width
+                    curr_angle += angle
                 text.set_position((angle_corrected, self._radius))
                 text.set_rotation(text_rot)
 
