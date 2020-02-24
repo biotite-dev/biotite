@@ -561,5 +561,9 @@ def _default_feature_formatter(f):
     elif f.key == "primer_bind":
         return True, "royalblue", "black", f.qual.get("note")
     
+    # Binding proteins
+    elif f.key == "protein_bind":
+        return False, colors["lightgreen"], "black", f.qual.get("note")
+    
     # Misc
     return True, "dimgray", "white", f.qual.get("note")
