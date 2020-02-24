@@ -158,18 +158,39 @@ try:
             ):
                 row_bottom = None
                 first, last = feature.get_location_range()
+
                 for row_i, curr_range in enumerate(ranges_in_row):
                     is_occupied = False
                     if curr_range is not None:
                         # Check if row is occupied
                         for curr_first, curr_last in curr_range:
-                            if first <= curr_last and last >= curr_first:
-                                is_occupied = True
+                            # If the location extends over periodic
+                            # boundary the 'first' location is negative
+                            if first > 0:
+                                # 'Normal feature'
+                                if first <= curr_last and last >= curr_first:
+                                    is_occupied = True
+                            else: # first < 1
+                                # Location is over periodic boundary
+                                if first + self._plasmid_size <= curr_last \
+                                   or last >= curr_first:
+                                        is_occupied = True
                     if not is_occupied:
                         # Row is not occupied by another feature
                         # in the location range of the new feature
                         # -> Use this row
-                        ranges_in_row[row_i].append((first, last))
+                        if first > 0:
+                            # 'Normal feature'
+                            ranges_in_row[row_i].append((first, last))
+                        else:
+                            # Location is over periodic boundary
+                            # Split into 'end' and 'start' part
+                            ranges_in_row[row_i].append((
+                                first + self._plasmid_size, self._plasmid_size
+                            ))
+                            ranges_in_row[row_i].append((
+                                1, last
+                            ))
                         row_bottom = row_bottoms[row_i]
                         break
                 if row_bottom is None:
@@ -234,6 +255,7 @@ try:
                 self._arrow_head = None
 
             if label is not None:
+                label_properties["color"] = label_color
                 self._label = axes.add_artist(CurvedText(
                     # Set positions in 'draw()' method
                     axes, self.zorder + 1, 0, 0, label, label_properties
@@ -455,7 +477,8 @@ def _merge_over_periodic_boundary(feature, plasmid_size):
             new_locs.remove(last_loc)
             new_locs.add(Location(
                 # the fist base is now at negative location
-                first  = 1 - (plasmid_size - last_loc.first),
+                # by shifting by one plasmid 'period'
+                first  = last_loc.first - plasmid_size,
                 last   = first_loc.last,
                 strand = first_loc.strand,
                 defect = first_loc.defect | last_loc.defect
@@ -502,21 +525,19 @@ def _default_feature_formatter(f):
     """
     # Source
     if f.key == "source":
-        return False, colors["darkorange"], "white", f.qual.get("organism")
+        return False, "black", "white", f.qual.get("organism")
     
     # Origin of Replication
     elif f.key == "rep_origin":
-        return False, colors["dimorange"], "black", \
+        return False, "indigo", "white", \
                f.qual.get("standard_name", "ori")
     
     # Coding sequences
-    elif f.key == "gene":
-        return True, colors["darkgreen"], "black", f.qual.get("gene")
-    elif f.key in ["CDS", "rRNA"]:
+    elif f.key in ["gene", "CDS", "rRNA"]:
         label = f.qual.get("product")
         if label is None:
             label = f.qual.get("gene")
-        return True, colors["darkgreen"], "black", label
+        return True, colors["orange"], "black", label
     
     elif f.key == "regulatory":
         # Promoters
@@ -526,15 +547,19 @@ def _default_feature_formatter(f):
             "minus_35_signal",
             "minus_10_signal"
         ]:
-            return True, colors["green"], "black", f.qual.get("note")
+            return True, colors["dimgreen"], "black", f.qual.get("note")
         
         # Terminators
         elif f.qual.get("regulatory_class") in "terminator":
-            return True, "black", "white", f.qual.get("note")
+            return False, "firebrick", "white", f.qual.get("note")
         
         # RBS
         elif f.qual.get("regulatory_class") == "ribosome_binding_site":
-            return True, colors["lightorange"], "white", None
+            return False, colors["brightorange"], "white", None
+    
+    # Primers
+    elif f.key == "primer_bind":
+        return True, "royalblue", "black", f.qual.get("note")
     
     # Misc
-    return True, "gray", "black", f.qual.get("gene")
+    return True, "dimgray", "white", f.qual.get("note")
