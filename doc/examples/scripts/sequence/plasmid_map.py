@@ -36,7 +36,8 @@ response = requests.get(PLASMID_URL)
 file = gb.GenBankFile()
 file.read(io.StringIO(response.text))
 annotation = gb.get_annotation(file, include_only=[
-    "promoter", "terminator", "protein_bind", "RBS", "CDS", "rep_origin", "primer_bind"
+    "promoter", "terminator", "protein_bind",
+    "RBS", "CDS", "rep_origin", "primer_bind"
 ])
 _, seq_length, _, _, _, _ = gb.get_locus(file)
 # AddGene stores the plasmid name in the 'KEYWORDS' field
