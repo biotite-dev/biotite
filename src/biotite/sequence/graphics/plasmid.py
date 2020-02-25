@@ -612,7 +612,11 @@ def _default_feature_formatter(f):
     """
     # Source
     if f.key == "source":
-        return False, "black", "white", f.qual.get("organism")
+        if f.qual.get("organism") is not None:
+            label = f"Source: {f.qual.get('organism')}"
+        else:
+            label = None
+        return False, "black", "white", label
     
     # Origin of Replication
     elif f.key == "rep_origin":
