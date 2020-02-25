@@ -6,6 +6,9 @@ This script plots the sequencing quality scores from an FASTQ file along
 with the sequence (base calls).
 """
 
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 from io import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
