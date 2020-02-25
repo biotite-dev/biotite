@@ -2,7 +2,9 @@
 Visualization of a custom plasmid
 =================================
 
-This script shows how :class:`Feature` objects are plotted in a
+.. currentmodule:: biotite.sequence
+
+This script shows how :class:`Feature` objects are displayed in a
 plasmid map by using a custom 'toy' :class:`Annotation`. 
 """
 
