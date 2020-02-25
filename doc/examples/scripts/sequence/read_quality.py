@@ -13,6 +13,7 @@ import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
 
+
 # Sample FASTQ file from https://en.wikipedia.org/wiki/FASTQ_format
 fastq_content = StringIO("""
 @SEQ_ID
@@ -21,6 +22,7 @@ GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
 !''*((((***+))%%%++)(%%%%).1***-+*''))**55CCF>>>>>>CCCCCCC65
 """)
 
+
 fastq_file = fastq.FastqFile(offset="Sanger")
 fastq_file.read(fastq_content)
 sequence = fastq_file.get_sequence("SEQ_ID")
@@ -28,8 +30,8 @@ scores = fastq_file.get_quality("SEQ_ID")
 
 figure, ax = plt.subplots(figsize=(8.0, 2.0))
 ax.bar(
-    x=np.arange(len(sequence)), height=scores,
-    width=0.9, color=biotite.colors["orange"]
+    x=np.arange(len(sequence)), height=scores, color=biotite.colors["orange"],
+    width=1.0, linewidth=1, edgecolor="white"
 )
 # -1 to put space between Y-axis and sequence
 ax.set_xlim(-1, len(sequence))
