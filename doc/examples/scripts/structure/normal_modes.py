@@ -1,13 +1,33 @@
-"""
+r"""
 Visualization of normal modes from an elastic network model
 ===========================================================
 
-The elastic network model is a fast method to estimate movements in a
-protein structure, without the need to run time-consuming MD
+The *elastic network model* (ENM) is a fast method to estimate movements
+in a protein structure, without the need to run time-consuming MD
 simulations.
+A protein is modelled as *mass-and-spring* model, with the masses being
+the :math:`C_\alpha` atoms and the springs being the non-covalent bonds
+between adjacent residues.
+Via *normal mode analysis* distinct movements/oscillations can be
+extracted from the model.
 
-The eigenvectors file can be downloaded
-:download:`here </examples/download/lysozyme_md.xtc>`.
+An *anisotropic network model* (ANM), is an ENM that includes
+directional information.
+Hence, the normal mode analysis yields eigenvectors, where each atom is
+represented by three vector components (*x*, *y*, *z*).
+Thus these vectors can be used for 3D representation.
+
+In the case of this example a normal mode analysis on an ANM was already
+conducted.
+This script merely takes the structure and obtained eigenvectors
+to add a smooth oscillation of the chosen normal mode to the structure.
+The newly created structure has multiple models, where each model
+depicts a different time in the oscillation period.
+Then the multi-model structure can be used to create a video of the
+oscillation using a molecular visualization program.
+
+The file containing the eigenvectors can be downloaded via this
+:download:`link </examples/download/glycosylase_anm_vectors.csv>`.
 """
 
 # Code source: Patrick Kunzmann
@@ -53,7 +73,7 @@ ca = protein_chain[protein_chain.atom_name == "CA"]
 
 
 # Load eigenvectors for CA atoms
-# The first axis indicates the normal mode,
+# The first axis indicates the mode,
 # the second axis indicates the vector component
 vectors = np.loadtxt(VECTOR_FILE, delimiter=",").transpose()
 # Discard the last 6 modes, as these are movements of the entire system:
@@ -91,4 +111,4 @@ oscillating_structure = struc.from_template(protein_chain, oscillation)
 # Save as PDB for rendering a video with PyMOL
 #strucio.save_structure("glycosylase_oscillation.pdb", oscillating_structure)
 
-# biotite_static_image = glycosylase_oscillation.png
+# biotite_static_image = glycosylase_oscillation.gif

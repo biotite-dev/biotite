@@ -19,18 +19,22 @@ cmd.set_color("biotite_lightgreen",    [111/255, 222/255,  76/255])
 cmd.color("biotite_lightgreen", "chain A")
 
 # Set view
-#cmd.set_view((
-#    -0.044524662,    0.767611504,    0.639355302,
-#     0.998693943,    0.018437184,    0.047413416,
-#     0.024606399,    0.640637815,   -0.767439663,
-#     0.000000000,    0.000000000, -115.614288330,
-#    56.031833649,   23.317802429,    3.761308193,
-#    73.517341614,  157.711288452,  -20.000000000 
-#))
+cmd.set_view((
+     0.605540633,    0.363677770,   -0.707855821,
+    -0.416691631,    0.902691007,    0.107316799,
+     0.678002179,    0.229972601,    0.698157668,
+     0.000000000,    0.000000000, -115.912551880,
+    32.098876953,   31.005725861,   78.377349854,
+    89.280677795,  142.544403076,  -20.000000000
+))
 
 # Prepare output video frames
 cmd.mset()
 cmd.set("ray_shadows", 0)
 if not isdir(OUTPUT_DIR):
     os.mkdir(OUTPUT_DIR)
-cmd.mpng(join(OUTPUT_DIR, "img_"), mode=2, width=1000, height=1000)
+cmd.mpng(join(OUTPUT_DIR, "img_"), mode=2, width=600, height=600)
+
+
+# Render animated GIF
+# convert -delay 3 -loop 0 -dispose 2 glycosylase_oscillation/*.png glycosylase_oscillation.gif
