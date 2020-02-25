@@ -45,9 +45,10 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
     For publication-ready molecular images the usage of a dedicated
     molecular visualization tool is recommended.
     """
+    if not isinstance(axes, Axes3D):
+        raise ValueError("The given axes mut be an 'Axes3D'")
     if atoms.bonds is None:
         raise ValueError("The atom array must have an associated bond list")
-    
 
     line_coord = []
     line_colors = []
