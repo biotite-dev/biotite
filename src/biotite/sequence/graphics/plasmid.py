@@ -14,11 +14,98 @@ from ...visualize import colors
 from ..annotation import Annotation, Feature, Location
 
 
-def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
-                     tick_length= 0.2, tick_step=200, ring_width=0.2,
-                     feature_width=1.0, spacing=0.2, arrow_head_width=0.5,
-                     label=None, face_properties=None, label_properties=None,
-                     feature_formatter=None, omit_oversized_labels=True):
+def plot_plasmid_map(axes, annotation, plasmid_size, tick_length=0.02,
+                     tick_step=200, ring_width=0.01, feature_width=0.06,
+                     spacing=0.01, arrow_head_length=0.04, label=None,
+                     face_properties=None, label_properties=None,
+                     omit_oversized_labels=True, feature_formatter=None):
+    """
+    Plot a plasmid map using the sequence features in the given
+    :class:`Annotation`.
+
+    Each feature location is depicted either by a curved arrow,
+    indicating on which strand the feature resides, or an arc.
+    The ticks indicate the sequence position.
+
+    **EXPERIMENTAL**: The API and the resulting plots will probably
+    change in future versions.
+
+    Parameters
+    ----------
+    axes : PolarAxes
+        A *Matplotlib* axes, that is used as plotting area.
+        A polar projection is required.
+    annotation : Annotation
+        The annotation to be visualized.
+    plasmid_size : int
+        The size of the plasmid, i.e. the length of its sequence.
+    tick_length : float, optional
+        The length of the axis ticks as percentage of the plot radius.
+    tick_step : int, optional
+        The interval between the displayed sequence positions.
+        For example ``tick_step=200`` means that ticks will be displayed
+        at ``1``, ``200``, ``400``, ``600``, etc.
+    ring_width : float, optional
+        The width of the outer ring as percentage of the plot radius.
+    feature_width : float, optional
+        The width of each feature arrow/arc as percentage of the
+        plot radius.
+    spacing : float, optional
+        The spacing between the rows of feature arrows/arcs as
+        percentage of the plot radius.
+    arrow_head_length : float, optional
+        The length of the arrow heads as percentage of the radius
+        at which the respective arrow is plotted.
+    label : str, optional
+        The central label of the plot. Ususally the plasmid name.
+    face_properties : dict, optional
+        A dictionary of properties given to the patches that make up the
+        feature arrows/arcs.
+        Internally the arrow tail is a *Matplotlib* :class:`Rectangle`,
+        and the arrow head is a :class:`Polygon`.
+        For example this parameter could be used to add edge lines to
+        the arrows/arcs.
+    label_properties : dict, optional
+        A dictionary of properties given to the feature labels.
+        Internally each feature label is one or multiple *Matplotlib*
+        :class:`Text` instances.
+        For example this parameter could be used to set the font weight
+        or size.
+    omit_oversized_labels : bool, optional
+        If true, a feature label will not be displayed, if the label is
+        larger than its containing arc/arrow.
+        This ensures, that labels from different features will not
+        overlap each other.
+        If false, the feature labels will always be displayed.
+    feature_formatter : function, optional
+        A function that determines *how* each feature is displayed.
+        The given function must take a :class:`Feature` and must return
+        the following tuple:
+
+        - *directional* : bool
+           
+            True, if the direction of the feature should be indicated by
+            an arrow.
+            Otherwise, the feature is plotted is arc.
+        
+        - *face_color* : tuple or str, optional
+            
+            A *Matplotlib* compatible color for the feature arrow/arc.
+        
+        - *label_color* : tuple or str, optional
+            
+            A *Matplotlib* compatible color for the feature label.
+        
+        - *label* : str or None
+            
+            The label to be displayed for this feature.
+            None, if no label should be displayed.
+    """
+    from matplotlib.projections.polar import PolarAxes
+    
+    if not isinstance(axes, PolarAxes):
+        raise TypeError("The given axes must be a 'PolarAxes'")
+
     ### Setup parameters ###
     if plasmid_size is None:
         # 'stop' of 'get_location_range()' is exclusive -> -1
@@ -35,7 +122,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
     # The x-coordinate is given as angle (rad)
     # Full circle -> 2*pi
     axes.set_xlim(0, 2*np.pi)
-    axes.set_ylim(0, radius)
+    axes.set_ylim(0, 1)
     axes.yaxis.set_visible(False)
     axes.xaxis.set_tick_params(
         bottom=False, labelbottom=True
@@ -60,7 +147,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
     # is properly initialized
     # Otherwise the feature rectangles are not curved, but straight
     axes.barh(
-        radius-ring_width-tick_length, 2*np.pi, ring_width,
+        1-ring_width-tick_length, 2*np.pi, ring_width,
         align="edge", color="black"
     )
     
@@ -68,7 +155,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
     for tick in ticks:
         angle = _loc_to_rad(tick, plasmid_size)
         axes.plot(
-            (angle, angle), (radius-tick_length, radius),
+            (angle, angle), (1-tick_length, 1),
             color="black", linewidth=1, linestyle="-"
         )
     
@@ -81,7 +168,7 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
 
 
     ### Draw plasmid interior ###
-    radius_eff = radius - ring_width - tick_length
+    inner_radius = 1 - ring_width - tick_length
     features = sorted(
         [
             _merge_over_periodic_boundary(feature, plasmid_size)
@@ -93,9 +180,9 @@ def plot_plasmid_map(axes, annotation, plasmid_size=None, radius=15,
         reverse = True
     )
     axes.add_artist(PlasmidMap(
-        axes, 0, features, plasmid_size, radius_eff, feature_width, spacing,
-        arrow_head_width, label, face_properties, label_properties,
-        feature_formatter, omit_oversized_labels
+        axes, 0, features, plasmid_size, inner_radius, feature_width, spacing,
+        arrow_head_length, label, face_properties, label_properties,
+        omit_oversized_labels, feature_formatter
     ))
 
 
@@ -108,9 +195,9 @@ try:
 
     class PlasmidMap(Artist):
         def __init__(self, axes, zorder, features, plasmid_size, radius,
-                     feature_width, spacing, arrow_head_width, label,
-                     face_properties, label_properties, feature_formatter,
-                     omit_oversized_labels):
+                     feature_width, spacing, arrow_head_length, label,
+                     face_properties, label_properties, omit_oversized_labels,
+                     feature_formatter):
             super().__init__()
             self._axes = axes
             self.zorder = zorder
@@ -125,12 +212,12 @@ try:
                 indicators_for_feature = []
                 for loc in feature.locs:
                      # Set proper positions in 'draw()' method
-                    bbox = None
+                    bbox = Bbox.from_extents(0, 0, 0, 0)
                     # Draw features as curved arrows (feature indicator)
                     indicator = axes.add_artist(Feature_Indicator(
                         axes, self.zorder + 1, feature, loc, bbox,
-                        arrow_head_width, face_properties, label_properties,
-                        feature_formatter, omit_oversized_labels
+                        arrow_head_length, face_properties, label_properties,
+                        omit_oversized_labels, feature_formatter
                     ))
                     indicators_for_feature.append(indicator)
                 self._all_indicators.append(indicators_for_feature)
@@ -215,15 +302,15 @@ try:
 
 
     class Feature_Indicator(Artist):
-        def __init__(self, axes, zorder, feature, loc, bbox, head_width,
-                     arrow_properties, label_properties, feature_formatter,
-                     omit_oversized_labels):
+        def __init__(self, axes, zorder, feature, loc, bbox, head_length,
+                     arrow_properties, label_properties, omit_oversized_labels,
+                     feature_formatter):
             super().__init__()
             self._axes = axes
             self.zorder = zorder
             self._direction = loc.strand
             self._bbox = bbox
-            self._head_width = head_width
+            self._head_length = head_length
             self._omit_oversized_labels = omit_oversized_labels
             
             # Determine how to draw the feature
@@ -280,35 +367,35 @@ try:
             # Constant absolute width for all arrows
             # irrespective of the radius in the polar plot
             # Calculate actual angle from given absolute width
-            head_width = self._head_width / center_y
+            head_length = self._head_length / center_y
             
             # Check if the head should be drawn
             if self._arrow_head is None:
-                head_width = 0
+                head_length = 0
             # Check if the feature location is too small for
-            elif head_width > bbox.width:
+            elif head_length > bbox.width:
                 # Limit size of arrow head to range of location
-                head_width = bbox.width
+                head_length = bbox.width
 
             if self._direction == Location.Strand.FORWARD:
                 rect_pos = (bbox.x0, bbox.y0)
                 # (x0, y0), (x1, y1), (x2, y2)
                 triangle_coord = [
-                    (bbox.x1 - head_width, bbox.y0), # base 1
-                    (bbox.x1 - head_width, bbox.y1), # base 2
+                    (bbox.x1 - head_length, bbox.y0), # base 1
+                    (bbox.x1 - head_length, bbox.y1), # base 2
                     (bbox.x1,              center_y) # tip
                 ]
             else:
-                rect_pos = (bbox.x0+head_width, bbox.y0)
+                rect_pos = (bbox.x0+head_length, bbox.y0)
                 triangle_coord = [
-                    (bbox.x0 + head_width, bbox.y0), # base 1
-                    (bbox.x0 + head_width, bbox.y1), # base 2
+                    (bbox.x0 + head_length, bbox.y0), # base 1
+                    (bbox.x0 + head_length, bbox.y1), # base 2
                     (bbox.x0,              center_y) # tip
                 ]
             
             # Update coordinates of sub-artists
             self._arrow_tail.set_xy(rect_pos)
-            self._arrow_tail.set_width(bbox.width-head_width)
+            self._arrow_tail.set_width(bbox.width-head_length)
             self._arrow_tail.set_height(bbox.height)
             if self._arrow_head is not None:
                 self._arrow_head.set_xy(triangle_coord)
