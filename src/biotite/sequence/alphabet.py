@@ -63,7 +63,7 @@ class Alphabet(object):
     ...    alph.encode("foo")
     ... except Exception as e:
     ...    print(e)
-    'foo' is not in the alphabet
+    Symbol 'foo' is not in the alphabet
     
     Create an Alphabet of arbitrary objects:
     
