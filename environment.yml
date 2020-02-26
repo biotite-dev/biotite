@@ -19,7 +19,7 @@ dependencies:
   - scipy >=0.14
   - networkx >=2.0
   - msgpack-python >=0.5.6
-  - cython >=0.28
+  - cython >=0.29
   - mdtraj >=1.9.3
   - matplotlib >=2.0
   - pytest >=3.2
