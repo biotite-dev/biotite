@@ -12,8 +12,8 @@ import pytest
 
 
 def test_annotation_creation():
-    feature1 = Feature("CDS", [], qual={"gene" : "test1"})
-    feature2 = Feature("CDS", [], qual={"gene" : "test2"})
+    feature1 = Feature("CDS", [seq.Location(1,2)], qual={"gene" : "test1"})
+    feature2 = Feature("CDS", [seq.Location(3,4)], qual={"gene" : "test2"})
     feature_list = [feature1, feature2]
     annotation = Annotation(feature_list)
     for feature in annotation:
@@ -23,13 +23,13 @@ def test_annotation_creation():
         ]
 
 def test_annotation_concatenation():
-    feature1 = Feature("CDS", [], qual={"gene" : "test1"})
-    feature2 = Feature("CDS", [], qual={"gene" : "test2"})
+    feature1 = Feature("CDS", [seq.Location(1,1)], qual={"gene" : "test1"})
+    feature2 = Feature("CDS", [seq.Location(2,2)], qual={"gene" : "test2"})
     annot1 = Annotation([feature1, feature2])
-    feature3 = Feature("CDS", [], qual={"gene" : "test3"})
-    feature4 = Feature("CDS", [], qual={"gene" : "test4"})
+    feature3 = Feature("CDS", [seq.Location(3,3)], qual={"gene" : "test3"})
+    feature4 = Feature("CDS", [seq.Location(4,4)], qual={"gene" : "test4"})
     annot2 = Annotation([feature3, feature4])
-    feature5 = Feature("CDS", [], qual={"gene" : "test5"})
+    feature5 = Feature("CDS", [seq.Location(5,5)], qual={"gene" : "test5"})
     concat = annot1 + annot2 + feature5
     assert set([f.qual["gene"] for f in concat]) \
         == set(["test1", "test2", "test3", "test4", "test5"])

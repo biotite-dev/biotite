@@ -82,7 +82,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         def _read(file):
             nonlocal self
-            self.lines = file.read().split("\n")
+            self.lines = file.read().splitlines()
         
         if isinstance(file, str):
             with open(file, "r") as f:

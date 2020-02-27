@@ -24,7 +24,8 @@ def plot_feature_map(axes, annotation, loc_range=None,
     Plot a sequence annotation, by showing the range of each feature
     on one or multiple position depicting line(s).
 
-    This function uses :class:`FeaturePlotter` objects to draw the features.
+    This function uses :class:`FeaturePlotter` objects to draw the
+    features.
     This function internally uses a list of plotters, where the
     first plotter in the list, that supports a feature, is used to draw
     that feature.
@@ -40,7 +41,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
     axes : Axes
         A *Matplotlib* axes, that is used as plotting area.
     annotation : Annotation
-        The annotation to be visualized
+        The annotation to be visualized.
     loc_range : tuple (int, int), optional
         The start and exclusive stop location that is visualized.
         By default, the location range starts from the first
@@ -59,7 +60,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
     number_size : float, optional
         The font size of the position numbers
     line_width : float, optional
-        The size of the continious line as fraction of the height of
+        The size of the continuous line as fraction of the height of
         the drawn features.
     show_line_position : bool, optional
         If true the position within a line is plotted.
@@ -75,7 +76,7 @@ def plot_feature_map(axes, annotation, loc_range=None,
         Therefore, the :class:`FeaturePlotter` instances in the list
         have descending priority.
         The default plotters are appended after this supplied list,
-        i.e. the default plotters have a lower prioriy.
+        i.e. the default plotters have a lower priority.
     style_param : dict
         Additional style parameters that are given to the
         :class:`FeaturePlotter` objects.
@@ -88,11 +89,9 @@ def plot_feature_map(axes, annotation, loc_range=None,
     """
     from matplotlib.transforms import Bbox
     from matplotlib.patches import Rectangle
-    
+
     if loc_range is None:
         loc_range = annotation.get_location_range()
-    else:
-        loc_range = loc_range
     loc_range_length = loc_range[1] - loc_range[0]
     if multi_line:
         symbols_per_line = symbols_per_line

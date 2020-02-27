@@ -204,7 +204,7 @@ print(table)
 # Actually you can cast the  :class:`FastaFile` object into a
 # :class:`dict`.
 # Let's demonstrate this on the genome of the *lambda* phage
-# (Accession: ``NC_001416```).
+# (Accession: ``NC_001416``).
 # After downloading the FASTA file from the NCBI Entrez database,
 # we can load the contents in the following way:
 
