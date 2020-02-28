@@ -49,24 +49,32 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
         raise ValueError("The given axes mut be an 'Axes3D'")
     if atoms.bonds is None:
         raise ValueError("The atom array must have an associated bond list")
-
+    
+    # Calculating connections between atoms
     line_coord = []
     line_colors = []
     for index1, index2 in atoms.bonds.as_array()[:,:2]:
+        # Every connection consist of two lines:
+        # One from the first atom to the center
+        # and from from the second atom to the center
         line_start = atoms.coord[index1]
         line_end = atoms.coord[index2]
         line_center = (line_start + line_end) / 2
         
+        # Add line from first atom
         line_coord.append((
-        line_start, line_center
+            line_start, line_center
         ))
         line_colors.append(colors[index1])
         
+        # Add line from second atom
         line_coord.append((
-        line_end, line_center
+            line_end, line_center
         ))
         line_colors.append(colors[index2])
 
+    # Plot computed line coordinates and colors
+    # Use 'Line3DCollection' for higher efficiency
     lines = Line3DCollection(
         line_coord, color=line_colors, linewidths=line_width
     )

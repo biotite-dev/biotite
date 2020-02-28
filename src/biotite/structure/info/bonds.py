@@ -32,7 +32,7 @@ def _init_dataset():
     _info_dir = dirname(realpath(__file__))
     with open(join(_info_dir, "intra_bonds.msgpack"), "rb") as file:
         _intra_bonds_raw = msgpack.unpack(
-            file, use_list=False, raw=False
+            file, use_list=False, raw=False, strict_map_key=False
         )
         _intra_bonds = {}
         for group, group_bonds_raw in _intra_bonds_raw.items():
