@@ -28,7 +28,7 @@ def _init_dataset():
         # Database is already initialized
         return
 
-    # Residuue data is taken from
+    # Residue data is taken from
     # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
     # (2019/01/27)
     _info_dir = dirname(realpath(__file__))
