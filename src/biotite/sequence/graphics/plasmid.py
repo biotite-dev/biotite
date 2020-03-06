@@ -576,7 +576,7 @@ def _merge_over_periodic_boundary(feature, plasmid_size):
 
 
 # ' ', '-' and '_' are word delimiters
-separators = re.compile("\s|_|-")
+separators = re.compile(r"\s|_|-")
 def _split_into_words(string):
     match_indices = sorted(
         [match.start() for match in separators.finditer(string)]
