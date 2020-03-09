@@ -591,8 +591,8 @@ class BondList(Copyable):
 
         cdef uint32[:,:] all_bonds_v = self._bonds
         for i in range(all_bonds_v.shape[0]):
-            match_index1 = all_bonds_v[0,0]
-            match_index2 = all_bonds_v[0,1]
+            match_index1 = all_bonds_v[i,0]
+            match_index2 = all_bonds_v[i,1]
             if atom_index1 == match_index1 and atom_index2 == match_index2:
                 return True
         
