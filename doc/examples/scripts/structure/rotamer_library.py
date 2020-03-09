@@ -22,10 +22,10 @@ import biotite.structure.info as info
 # 'CA' is not in backbone,
 # as we want to include the rotation between 'CA' and 'CB'
 BACKBONE = ["N", "C", "O", "OXT"]
-LIB_SIZE = 1
+LIB_SIZE = 50
 
 
-residue = info.residue("ALA")
+residue = info.residue("LYS")
 bond_list = residue.bonds
 
 
@@ -71,12 +71,12 @@ for atom1, atom2, _, _ in rotatable_bonds:
 vdw_radii = np.zeros(residue.array_length())
 for i, element in enumerate(residue.element):
     vdw_radii[i] = info.vdw_radius_single(element)
-# Pairwise VdW radii sum
-vdw_radii_sum = vdw_radii[:, np.newaxis] + vdw_radii[np.newaxis, :]
+# The Minimum required distance between two atoms is mean of their
+# VdW radii
+vdw_radii_mean = (vdw_radii[:, np.newaxis] + vdw_radii[np.newaxis, :]) / 2
 
 
 # Rotate randomly about bonds
-print(residue)
 np.random.seed(0)
 rotamer_coord = np.zeros((LIB_SIZE, residue.array_length(), 3))
 for i in range(LIB_SIZE):
@@ -90,7 +90,7 @@ for i in range(LIB_SIZE):
             # The bond axis
             axis = coord[atom2] - coord[atom1]
             # Position of one of the involved atoms
-            support = coord[i, atom1]
+            support = coord[atom1]
             # Rotate
             coord[conn_atoms1] = struc.rotate_about_axis(
                 coord[conn_atoms1], axis, angle, support
@@ -104,15 +104,12 @@ for i in range(LIB_SIZE):
             distances = struc.distance(
                 coord[:, np.newaxis], coord[np.newaxis, :]
             )
-            clashed = distances < vdw_radii_sum
+            clashed = distances < vdw_radii_mean
             for clash_atom1, clash_atom2 in zip(*np.where(clashed)):
                 if clash_atom1 == clash_atom2:
+                    # Ignore distance of an atom to itself
                     continue
                 if (clash_atom1, clash_atom2) not in bond_list:
-                    print(clash_atom1, clash_atom2)
-                    print(distances[clash_atom1, clash_atom2])
-                    print(vdw_radii_sum[clash_atom1, clash_atom2])
-                    exit()
                     # Nonbonded atoms clash
                     # -> structure is not accepted
                     accepted = False
