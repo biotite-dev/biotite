@@ -1111,13 +1111,70 @@ def _connect_inter_residue(atoms, residue_starts):
 
 
 
-def find_connected(bond_list, uint32 root):
+def find_connected(bond_list, uint32 root, bint as_mask=False):
+    """
+    Get indices to all atoms that are directly or inderectly connected
+    to the atom indicated by the given index.
+
+    An atom is *connected* to the `root` atom, if that atom is reachable
+    by traversing an arbitrary number of bonds, starting from the
+    `root`.
+    Effectively, this means that all atoms are *connected* to `root`,
+    that are in the same molecule as `root`.
+    Per definition `root` is also *connected* to itself
+    
+    Parameters
+    ----------
+    bond_list : BondList
+        The reference bond list.
+    root : int
+        The index of the root atom.
+    as_mask : bool, optional
+        If true, the connected atom indices are returned as boolean
+        mask.
+        By default, the connected atom indices are returned as integer
+        array.
+    
+    Returns
+    -------
+    connected : ndarray, dtype=int or ndarray, dtype=bool
+        Either a boolean mask or an integer array, representing the
+        connected atoms.
+        In case of a boolean mask: ``connected[i] == True``, if the atom
+        with index ``i`` is connected.
+    
+    Examples
+    --------
+    Consider a system with 4 atoms, where only the last atom is not
+    bonded with the other ones (``0-1-2 3``):
+
+    >>> bonds = BondList(4)
+    >>> bonds.add_bond(0, 1)
+    >>> bonds.add_bond(1, 2)
+    >>> print(find_connected(bonds, 0))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 1))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 2))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 3))
+    [3]
+    """
+    if root >= bond_list.get_atom_count():
+        raise ValueError(
+            f"Root atom index {root} is out of bounds for bond list "
+            f"representing {bond_list.get_atom_count()} atoms"
+        )
+    
     cdef uint8[:] all_connected_mask = np.zeros(
         bond_list.get_atom_count(), dtype=np.uint8
     )
     # Find connections in a recursive way
     _find_connected(bond_list, root, all_connected_mask)
-    return np.where(np.asarray(all_connected_mask))[0]
+    if as_mask:
+        return all_connected_mask
+    else:
+        return np.where(np.asarray(all_connected_mask))[0]
 
 
 cdef _find_connected(bond_list,
