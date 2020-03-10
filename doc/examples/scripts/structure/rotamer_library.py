@@ -61,7 +61,7 @@ for atom1, atom2, bond_type in bond_list.as_array():
        residue.atom_name[atom2] in BACKBONE:
             continue
 
-    # If all consitions pass, add this bond to the rotatable bonds
+    # If all conditions pass, add this bond to the rotatable bonds
     rotatable_bonds.append((atom1, atom2, conn_atoms1, conn_atoms2))
 
 
@@ -140,13 +140,13 @@ size = np.array(
     [coord[:, :, 0].max() - coord[:, :, 0].min(),
      coord[:, :, 1].max() - coord[:, :, 1].min(),
      coord[:, :, 2].max() - coord[:, :, 2].min()]
-).max()
+).max() * 0.5
 
 fig = plt.figure(figsize=(8.0, 8.0))
 fig.suptitle("Rotamers of tyrosine", fontsize=20, weight="bold")
 for i, rotamer in enumerate(rotamers):
     ax = fig.add_subplot(3, 3, i+1, projection="3d")
-    graphics.plot_atoms(ax, rotamer, colors, line_width=2, size=size)
+    graphics.plot_atoms(ax, rotamer, colors, line_width=3, size=size)
 
 fig.tight_layout()
 plt.show()
