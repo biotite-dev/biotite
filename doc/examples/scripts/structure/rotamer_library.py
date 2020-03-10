@@ -4,7 +4,7 @@ Creation of an amino acid rotamer library
 
 This script creates rotamers for an amino acid, by randomly rotating
 about all rotatable bonds.
-In this case the rotamers are created for lysine.
+In this case the rotamers are created for tyrosine.
 
 Generally, this script could be used to sample possible conformations of
 an arbitrary small molecule.
@@ -24,7 +24,7 @@ import biotite.structure.graphics as graphics
 # 'CA' is not in backbone,
 # as we want to include the rotation between 'CA' and 'CB'
 BACKBONE = ["N", "C", "O", "OXT"]
-LIBRARY_SIZE = 1
+LIBRARY_SIZE = 9
 
 
 # Get the structure (including bonds) from the standard RCSB compound
@@ -66,7 +66,7 @@ for atom1, atom2, bond_type in bond_list.as_array():
 
 
 ### Output rotatable bond ###
-print("Rotatable bonds in lysine:")
+print("Rotatable bonds in tyrosine:")
 for atom1, atom2, _, _ in rotatable_bonds:
     print(residue.atom_name[atom1] + " <-> " + residue.atom_name[atom2])
 
@@ -77,7 +77,7 @@ for i, element in enumerate(residue.element):
     vdw_radii[i] = info.vdw_radius_single(element)
 # The Minimum required distance between two atoms is mean of their
 # VdW radii
-vdw_radii_mean = (vdw_radii[:, np.newaxis] + vdw_radii[np.newaxis, :]) / 2
+vdw_radii_mean = (vdw_radii[struc.filter_backbone(residue), np.newaxis] + vdw_radii[np.newaxis, :]) / 2
 
 
 ### Rotate randomly about bonds ###
@@ -106,7 +106,7 @@ for i in range(LIBRARY_SIZE):
             # each other
             accepted = True
             distances = struc.distance(
-                coord[:, np.newaxis], coord[np.newaxis, :]
+                coord[struc.filter_backbone(residue), np.newaxis], coord[np.newaxis, :]
             )
             clashed = distances < vdw_radii_mean
             for clash_atom1, clash_atom2 in zip(*np.where(clashed)):
@@ -114,17 +114,10 @@ for i in range(LIBRARY_SIZE):
                     # Ignore distance of an atom to itself
                     continue
                 if (clash_atom1, clash_atom2) not in bond_list:
-                    print(residue)
-                    print()
-                    print(residue[clash_atom1])
-                    print(residue[clash_atom2])
-                    print(distances[clash_atom1, clash_atom2])
-                    print(vdw_radii_mean[clash_atom1, clash_atom2])
-                    exit()
                     # Nonbonded atoms clash
                     # -> structure is not accepted
                     accepted = False
-        rotamer_coord[i] = coord
+    rotamer_coord[i] = coord
 rotamers = struc.from_template(residue, rotamer_coord)
 
 
@@ -141,12 +134,19 @@ colors[residue.element == "C"] = (0.0, 0.8, 0.0) # green
 colors[residue.element == "N"] = (0.0, 0.0, 0.8) # blue
 colors[residue.element == "O"] = (0.8, 0.0, 0.0) # red
 
-#fig, axs = plt.subplots(3, 4, figsize=(8.0, 12.0), projection="3d")
+# For consistency, each subplot has the same box size
+coord = rotamers.coord
+size = np.array(
+    [coord[:, :, 0].max() - coord[:, :, 0].min(),
+     coord[:, :, 1].max() - coord[:, :, 1].min(),
+     coord[:, :, 2].max() - coord[:, :, 2].min()]
+).max()
+
 fig = plt.figure(figsize=(8.0, 8.0))
-fig.suptitle("Rotamers of lysine", fontsize=20, weight="bold")
+fig.suptitle("Rotamers of tyrosine", fontsize=20, weight="bold")
 for i, rotamer in enumerate(rotamers):
     ax = fig.add_subplot(3, 3, i+1, projection="3d")
-    graphics.plot_atoms(ax, rotamer, colors, line_width=2)
+    graphics.plot_atoms(ax, rotamer, colors, line_width=2, size=size)
 
 fig.tight_layout()
 plt.show()
