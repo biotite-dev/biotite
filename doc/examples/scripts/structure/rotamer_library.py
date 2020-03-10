@@ -77,7 +77,7 @@ for i, element in enumerate(residue.element):
     vdw_radii[i] = info.vdw_radius_single(element)
 # The Minimum required distance between two atoms is mean of their
 # VdW radii
-vdw_radii_mean = (vdw_radii[struc.filter_backbone(residue), np.newaxis] + vdw_radii[np.newaxis, :]) / 2
+vdw_radii_mean = (vdw_radii[:, np.newaxis] + vdw_radii[np.newaxis, :]) / 2
 
 
 ### Rotate randomly about bonds ###
@@ -106,7 +106,7 @@ for i in range(LIBRARY_SIZE):
             # each other
             accepted = True
             distances = struc.distance(
-                coord[struc.filter_backbone(residue), np.newaxis], coord[np.newaxis, :]
+                coord[:, np.newaxis], coord[np.newaxis, :]
             )
             clashed = distances < vdw_radii_mean
             for clash_atom1, clash_atom2 in zip(*np.where(clashed)):
