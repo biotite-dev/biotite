@@ -1121,7 +1121,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     `root`.
     Effectively, this means that all atoms are *connected* to `root`,
     that are in the same molecule as `root`.
-    Per definition `root` is also *connected* to itself
+    Per definition `root` is also *connected* to itself.
     
     Parameters
     ----------
