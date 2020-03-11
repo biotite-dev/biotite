@@ -56,6 +56,14 @@ def test_modification(bond_list):
                                              [1, 4, 0]]
 
 
+def test_contains(bond_list):
+    for atom1, atom2, _ in bond_list.as_array():
+        assert (atom1, atom2) in bond_list
+        assert (atom2, atom1) in bond_list
+    # Negative test
+    assert (0, 5) not in bond_list
+
+
 def test_access(bond_list):
     # Bigger challenge with different bond types
     bond_list.add_bond(1, 3, 1)
@@ -184,3 +192,9 @@ def test_connect_via_distances():
     test_bonds = struc.connect_via_distances(atoms)
 
     assert test_bonds == ref_bonds
+
+
+def test_find_connected(bond_list):
+    for index in (0,1,2,3,4,6):
+        assert struc.find_connected(bond_list, index).tolist() == [0,1,2,3,4,6]
+    assert struc.find_connected(bond_list, 5).tolist() == [5]

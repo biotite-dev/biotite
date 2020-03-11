@@ -187,7 +187,8 @@
             "BondList",
             "BondType",
             "connect_via_residue_names",
-            "connect_via_distances"
+            "connect_via_distances",
+            "find_connected"
         ],
         "Geometry" : [
             "displacement",

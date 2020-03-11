@@ -62,19 +62,19 @@ def residue(res_name):
     >>> alanine = residue("ALA")
     >>> # Atoms and geometry
     >>> print(alanine)
-                0  ALA N      N         2.281   26.213   12.804
-                0  ALA CA     C         1.169   26.942   13.411
-                0  ALA C      C         1.539   28.344   13.874
-                0  ALA O      O         2.709   28.647   14.114
-                0  ALA CB     C         0.601   26.143   14.574
-                0  ALA OXT    O         0.523   29.194   13.997
-                0  ALA H      H         2.033   25.273   12.493
-                0  ALA H2     H         3.080   26.184   13.436
-                0  ALA HA     H         0.399   27.067   12.613
-                0  ALA HB1    H        -0.247   26.699   15.037
-                0  ALA HB2    H         0.308   25.110   14.270
-                0  ALA HB3    H         1.384   25.876   15.321
-                0  ALA HXT    H         0.753   30.069   14.286
+                0  ALA N      N        -0.966    0.493    1.500
+                0  ALA CA     C         0.257    0.418    0.692
+                0  ALA C      C        -0.094    0.017   -0.716
+                0  ALA O      O        -1.056   -0.682   -0.923
+                0  ALA CB     C         1.204   -0.620    1.296
+                0  ALA OXT    O         0.661    0.439   -1.742
+                0  ALA H      H        -1.383   -0.425    1.482
+                0  ALA H2     H        -0.676    0.661    2.452
+                0  ALA HA     H         0.746    1.392    0.682
+                0  ALA HB1    H         1.459   -0.330    2.316
+                0  ALA HB2    H         0.715   -1.594    1.307
+                0  ALA HB3    H         2.113   -0.676    0.697
+                0  ALA HXT    H         0.435    0.182   -2.647
     >>> # Bonds
     >>> print(alanine.atom_name[alanine.bonds.as_array()[:,:2]])
     [['N' 'CA']
