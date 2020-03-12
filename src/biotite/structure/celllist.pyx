@@ -432,7 +432,6 @@ cdef class CellList:
         all_indices = self._get_atoms_in_cells(
             coord, cell_radii, is_multi_radius
         )
-        print(np.asarray(all_indices))
         # These have to be narrowed down in the next step
         # using the Euclidian distance
         
