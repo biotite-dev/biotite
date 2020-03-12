@@ -74,6 +74,9 @@ cdef class CellList:
     
     # The atom coordinates
     cdef float32[:,:] _coord
+    # A boolean mask that covers the selected atoms
+    cdef uint8[:] _selection
+    cdef bint _has_selection
     # The cells to store the coordinates in; an ndarray of pointers
     cdef ptr[:,:,:] _cells
     # The amount elements in each C-array in '_cells'
@@ -91,6 +94,8 @@ cdef class CellList:
     # Indicates whether the cell list takes periodicity into account
     cdef bint _periodic
     cdef np.ndarray _box
+    # The length of the array before appending periodic copies
+    # if 'periodic' is true
     cdef int _orig_length
     cdef float32[:] _orig_min_coord
     cdef float32[:] _orig_max_coord
@@ -147,7 +152,7 @@ cdef class CellList:
         if cell_size <= 0:
             raise ValueError("Cell size must be greater than 0")
         self._periodic = periodic
-        self._coord = coord.astype(np.float32)
+        self._coord = coord.astype(np.float32, copy=False)
         self._cellsize = cell_size
         # calculate how many cells are required for each dimension
         min_coord = np.min(coord, axis=0).astype(np.float32)
@@ -166,41 +171,43 @@ cdef class CellList:
         self._cells = np.zeros(cell_count, dtype=np.uint64)
         # Stores the length of the C-arrays
         self._cell_length = np.zeros(cell_count, dtype=np.int32)
-        # Prepare mask from selection
-        cdef bint has_mask = selection is not None
-        cdef uint8[:] mask
-        if has_mask:
-            mask = np.frombuffer(selection, dtype=np.uint8)
-            if mask.shape[0] != self._coord.shape[0]:
+        
+        # Prepare selection
+        if selection is not None:
+            self._has_selection = True
+            self._selection = np.frombuffer(selection, dtype=np.uint8)
+            if self._selection.shape[0] != self._orig_length:
                 raise IndexError(
-                    f"Atom array has length {self._coord.shape[0]}, "
-                    f"but selection has length {mask.shape[0]}"
+                    f"Atom array has length {self._orig_length}, "
+                    f"but selection has length {self._selection.shape[0]}"
                 )
+        else:
+            self._has_selection = False
+        
         # Fill cells
         for atom_array_i in range(self._coord.shape[0]):
-            if has_mask and not mask[atom_array_i]:
-                # Atom is not masked
-                # -> do not put this atom into cell list
-                continue
-            x = self._coord[atom_array_i, 0]
-            y = self._coord[atom_array_i, 1]
-            z = self._coord[atom_array_i, 2]
-            # Get cell indices for coordinates
-            self._get_cell_index(x, y, z, &i, &j, &k)
-            # Increment cell length and reallocate
-            length = self._cell_length[i,j,k] + 1
-            cell_ptr = <int*>self._cells[i,j,k]
-            cell_ptr = <int*>realloc(cell_ptr, length * sizeof(int))
-            if not cell_ptr:
-                raise MemoryError()
-            # Potentially increase max cell length
-            if length > self._max_cell_length:
-                self._max_cell_length = length
-            # Store atom array index in respective cell
-            cell_ptr[length-1] = atom_array_i
-            # Store new cell pointer and length
-            self._cell_length[i,j,k] = length
-            self._cells[i,j,k] = <ptr> cell_ptr
+            # Only put selected atoms into cell list
+            if not self._has_selection \
+               or self._selection[atom_array_i % self._orig_length]:
+                    x = self._coord[atom_array_i, 0]
+                    y = self._coord[atom_array_i, 1]
+                    z = self._coord[atom_array_i, 2]
+                    # Get cell indices for coordinates
+                    self._get_cell_index(x, y, z, &i, &j, &k)
+                    # Increment cell length and reallocate
+                    length = self._cell_length[i,j,k] + 1
+                    cell_ptr = <int*>self._cells[i,j,k]
+                    cell_ptr = <int*>realloc(cell_ptr, length * sizeof(int))
+                    if not cell_ptr:
+                        raise MemoryError()
+                    # Potentially increase max cell length
+                    if length > self._max_cell_length:
+                        self._max_cell_length = length
+                    # Store atom array index in respective cell
+                    cell_ptr[length-1] = atom_array_i
+                    # Store new cell pointer and length
+                    self._cell_length[i,j,k] = length
+                    self._cells[i,j,k] = <ptr> cell_ptr
             
     
     def __dealloc__(self):
@@ -233,6 +240,10 @@ cdef class CellList:
         -------
         matrix : ndarray, dtype=bool
             An *n x n* adjacency matrix.
+            If a `selection` was given to the constructor of the
+            :class:`CellList`, the rows and columns corresponding to
+            atoms, that are not masked by the selection, have all
+            elements set to ``False``.
         
         Notes
         -----
@@ -257,13 +268,25 @@ cdef class CellList:
         """
         if threshold_distance < 0:
             raise ValueError("Threshold must be a positive value")
-        cdef int i=0, j=0
-        cdef int index
-        cdef int[:,:] adjacent_indices
-        adjacent_indices = self.get_atoms(
-            np.asarray(self._coord[:self._orig_length]), threshold_distance
-        )
-        return self._as_mask(adjacent_indices)
+        cdef int i=0
+        
+        # Get atom position for all original positions
+        # (no periodic copies)
+        coord = np.asarray(self._coord[:self._orig_length])
+
+        if self._has_selection:
+            selection = np.asarray(self._selection, dtype=bool)
+            # Create matrix with all elements set to False
+            matrix = np.zeros(
+                (self._orig_length, self._orig_length), dtype=bool
+            )
+            # Set only those rows that belong to masked atoms
+            matrix[selection, :] = self.get_atoms(
+                coord[selection], threshold_distance, as_mask=True
+            )
+            return matrix
+        else:
+            return self.get_atoms(coord, threshold_distance, as_mask=True)
         
     
     @cython.initializedcheck(False)
@@ -297,7 +320,7 @@ cdef class CellList:
             :class:`ndarray`.
         as_mask : bool, optional
             If true, the result is returned as boolean mask, instead
-            of an index array
+            of an index array.
         
         Returns
         -------
@@ -316,6 +339,14 @@ cdef class CellList:
         See Also
         --------
         get_atoms_in_cells
+
+        Notes
+        -----
+        In case of a :class:`CellList` with `periodic` set to `True`:
+        If more than one periodic copy of an atom is within the
+        threshold radius, the returned `indices` array contains the
+        corresponding index multiple times.
+        Please use ``numpy.unique()``, if this is undesireable.
 
         Examples
         --------
@@ -401,6 +432,7 @@ cdef class CellList:
         all_indices = self._get_atoms_in_cells(
             coord, cell_radii, is_multi_radius
         )
+        print(np.asarray(all_indices))
         # These have to be narrowed down in the next step
         # using the Euclidian distance
         
@@ -499,6 +531,14 @@ cdef class CellList:
         See Also
         --------
         get_atoms
+
+        Notes
+        -----
+        In case of a :class:`CellList` with `periodic` set to `True`:
+        If more than one periodic copy of an atom is within the
+        threshold radius, the returned `indices` array contains the
+        corresponding index multiple times.
+        Please use ``numpy.unique()``, if this is undesireable.
         """
         # This function is a thin wrapper around the private method
         # with the same name, with addition of handling periodicty
