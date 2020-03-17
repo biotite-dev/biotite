@@ -10,7 +10,8 @@ a location.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BondList", "BondType",
-           "connect_via_distances", "connect_via_residue_names"]
+           "connect_via_distances", "connect_via_residue_names",
+           "find_connected"]
 
 cimport cython
 cimport numpy as np
@@ -576,6 +577,27 @@ class BondList(Copyable):
             return False
         return (self._atom_count == item._atom_count and
                 self.as_set() == item.as_set())
+    
+    def __contains__(self, item):
+        if not isinstance(item, tuple) and len(tuple) != 2:
+            raise TypeError("Expected a tuple of atom indices")
+        
+        cdef int i=0
+
+        cdef uint32 match_index1, match_index2
+        # Sort indices for faster search in loop
+        cdef uint32 atom_index1 = min(item)
+        cdef uint32 atom_index2 = max(item)
+
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        for i in range(all_bonds_v.shape[0]):
+            match_index1 = all_bonds_v[i,0]
+            match_index2 = all_bonds_v[i,1]
+            if atom_index1 == match_index1 and atom_index2 == match_index2:
+                return True
+        
+        return False
+        
 
     def _get_max_bonds_per_atom(self):
         cdef int i
@@ -913,6 +935,7 @@ def connect_via_distances(atoms, dict distance_range=None):
     return bond_list.merge(inter_bonds)
 
 
+
 def connect_via_residue_names(atoms):
     """
     connect_via_residue_names(atoms)
@@ -1085,3 +1108,90 @@ def _connect_inter_residue(atoms, residue_starts):
         ))
         
     return BondList(atoms.array_length(), np.array(bonds, dtype=np.uint32))
+
+
+
+def find_connected(bond_list, uint32 root, bint as_mask=False):
+    """
+    Get indices to all atoms that are directly or inderectly connected
+    to the atom indicated by the given index.
+
+    An atom is *connected* to the `root` atom, if that atom is reachable
+    by traversing an arbitrary number of bonds, starting from the
+    `root`.
+    Effectively, this means that all atoms are *connected* to `root`,
+    that are in the same molecule as `root`.
+    Per definition `root` is also *connected* to itself.
+    
+    Parameters
+    ----------
+    bond_list : BondList
+        The reference bond list.
+    root : int
+        The index of the root atom.
+    as_mask : bool, optional
+        If true, the connected atom indices are returned as boolean
+        mask.
+        By default, the connected atom indices are returned as integer
+        array.
+    
+    Returns
+    -------
+    connected : ndarray, dtype=int or ndarray, dtype=bool
+        Either a boolean mask or an integer array, representing the
+        connected atoms.
+        In case of a boolean mask: ``connected[i] == True``, if the atom
+        with index ``i`` is connected.
+    
+    Examples
+    --------
+    Consider a system with 4 atoms, where only the last atom is not
+    bonded with the other ones (``0-1-2 3``):
+
+    >>> bonds = BondList(4)
+    >>> bonds.add_bond(0, 1)
+    >>> bonds.add_bond(1, 2)
+    >>> print(find_connected(bonds, 0))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 1))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 2))
+    [0, 1, 2]
+    >>> print(find_connected(bonds, 3))
+    [3]
+    """
+    if root >= bond_list.get_atom_count():
+        raise ValueError(
+            f"Root atom index {root} is out of bounds for bond list "
+            f"representing {bond_list.get_atom_count()} atoms"
+        )
+    
+    cdef uint8[:] all_connected_mask = np.zeros(
+        bond_list.get_atom_count(), dtype=np.uint8
+    )
+    # Find connections in a recursive way
+    _find_connected(bond_list, root, all_connected_mask)
+    if as_mask:
+        return all_connected_mask
+    else:
+        return np.where(np.asarray(all_connected_mask))[0]
+
+
+cdef _find_connected(bond_list,
+                     uint32 root,
+                     uint8[:] all_connected_mask):
+    if all_connected_mask[root]:
+        # Connections for this atom habe already been calculated
+        # -> exit condition
+        return
+    all_connected_mask[root] = True
+    
+    bonds, _ = bond_list.get_bonds(root)
+    cdef uint32[:] connected = bonds
+    cdef int32 i
+    cdef uint32 atom_index
+    for i in range(connected.shape[0]):
+        atom_index = connected[i]
+        _find_connected(bond_list, atom_index, all_connected_mask)
+
+    

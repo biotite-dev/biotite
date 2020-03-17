@@ -46,32 +46,39 @@ def test_get_atoms(cell_size):
 
 
 @pytest.mark.parametrize(
-    "cell_size, threshold, periodic",
+    "cell_size, threshold, periodic, use_selection",
     itertools.product(
         [0.5, 1, 2, 5, 10],
         [2, 5, 10],
-        [False, True]
+        [False, True],
+        [False, True],
     )
 )
-def test_adjacency_matrix(cell_size, threshold, periodic):
+def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     """
     Compare the construction of an adjacency matrix using a cell list
     and using a computationally expensive but simpler distance matrix.
     """
     array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    
     if periodic:
         # Create an orthorhombic box
         # with the outer coordinates as bounds
         array.box = np.diag(
             np.max(array.coord, axis=-2) - np.min(array.coord, axis=-2)
         )
-    cell_list = struc.CellList(array, cell_size=cell_size, periodic=periodic)
-    matrix = cell_list.create_adjacency_matrix(threshold)
+
+    if use_selection:
+        np.random.seed(0)
+        selection = np.random.choice((False, True), array.array_length())
+    else:
+        selection = None
+
+    cell_list = struc.CellList(
+        array, cell_size=cell_size, periodic=periodic, selection=selection
+    )
+    test_matrix = cell_list.create_adjacency_matrix(threshold)
     
-    # Create distance matrix
-    # Convert to float64 to avoid errorenous warning
-    # https://github.com/ContinuumIO/anaconda-issues/issues/9129
-    array.coord = array.coord.astype(np.float64)
     length = array.array_length()
     distance = struc.index_distance(
         array,
@@ -86,11 +93,15 @@ def test_adjacency_matrix(cell_size, threshold, periodic):
     )
     distance = np.reshape(distance, (length, length))
     # Create adjacency matrix from distance matrix
-    expected_matrix = (distance <= threshold)
+    exp_matrix = (distance <= threshold)
+    if use_selection:
+        # Set rows and columns to False for filtered out atoms
+        exp_matrix[~selection, :] = False
+        exp_matrix[:, ~selection] = False
     
     # Both ways to create an adjacency matrix
     # should give the same result
-    assert np.array_equal(matrix, expected_matrix)
+    assert np.array_equal(test_matrix, exp_matrix)
 
 
 def test_outside_location():

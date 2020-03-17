@@ -12,7 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 
-def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
+def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
+               center=None, size=None):
     """
     Plot an :class:`AtomArray` as lines between bonded atoms.
     
@@ -37,6 +38,14 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
     background_color : string or iterable object
         A matplotlib compatible color (color name or RGB values).
         If set, the background is colored with the given value.
+    center : tuple of (float, float, float), optional
+        The coordinates of the structure that are in the center of the
+        plot.
+        By default the complete molecule is centered.
+    size : float
+        The size of each dimension in the plot.
+        The limits of the :class:`Axes3D` are set to
+        ``(center - size/2), (center + size/2)``.
     
     Notes
     -----
@@ -89,23 +98,28 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None):
     if background_color is not None:
         axes.set_facecolor(background_color)
         axes.get_figure().set_facecolor(background_color)
-    _set_equal_aspect(axes, atoms.coord)
+    _set_box(axes, atoms.coord, center, size)
 
 
-def _set_equal_aspect(axes, coord):
+def _set_box(axes, coord, center, size):
     """
-    Fix to ensure equal aspect ratio in a 3D plot under the condition,
-    that the :class:`Axes` is quadratic on the display.
+    This ensures an approximately equal aspect ratio in a 3D plot under
+    the condition, that the :class:`Axes` is quadratic on the display.
     """
-    max_range = np.array(
-        [coord[:, 0].max() - coord[:, 0].min(),
-         coord[:, 1].max() - coord[:, 1].min(),
-         coord[:, 2].max() - coord[:, 2].min()]
-    ).max() / 2
+    if center is None:
+        center = (
+            (coord[:, 0].max() + coord[:, 0].min()) / 2,
+            (coord[:, 1].max() + coord[:, 1].min()) / 2,
+            (coord[:, 2].max() + coord[:, 2].min()) / 2,
+        )
 
-    center_x = (coord[:, 0].max() + coord[:, 0].min()) / 2
-    center_y = (coord[:, 1].max() + coord[:, 1].min()) / 2
-    center_z = (coord[:, 2].max() + coord[:, 2].min()) / 2
-    axes.set_xlim(center_x - max_range, center_x + max_range)
-    axes.set_ylim(center_y - max_range, center_y + max_range)
-    axes.set_zlim(center_z - max_range, center_z + max_range)
+    if size is None:
+        size = np.array([
+            coord[:, 0].max() - coord[:, 0].min(),
+            coord[:, 1].max() - coord[:, 1].min(),
+            coord[:, 2].max() - coord[:, 2].min()
+        ]).max()
+
+    axes.set_xlim(center[0] - size/2, center[0] + size/2)
+    axes.set_ylim(center[1] - size/2, center[1] + size/2)
+    axes.set_zlim(center[2] - size/2, center[2] + size/2)

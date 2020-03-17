@@ -1057,7 +1057,8 @@ class AtomArrayStack(_AtomArrayBase):
             )
         if isinstance(index, numbers.Integral):
             self.coord[index] = array.coord
-            self.box[index] = array.box
+            if self.box is not None:
+                self.box[index] = array.box
         else:
             raise TypeError(
                 f"Index must be integer, not '{type(index).__name__}'"

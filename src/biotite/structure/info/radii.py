@@ -34,16 +34,28 @@ _PROTOR_RADII = {
 
 _SINGLE_RADII = {
     "H":  1.20,
+    "HE": 1.40,
+    
     "C":  1.70,
     "N":  1.55,
     "O":  1.52,
     "F":  1.47,
+    "NE": 1.54,
+    
     "SI": 2.10,
     "P":  1.80,
     "S":  1.80,
     "CL": 1.75,
+    "AR": 1.88,
+    
+    "AS": 1.85,
+    "SE": 1.90,
     "BR": 1.85,
-    "I":  1.98
+    "KR": 2.02,
+    
+    "TE": 2.06,
+    "I":  1.98,
+    "XE": 2.16,
 }
 
 # A dictionary that caches radii for each residue
