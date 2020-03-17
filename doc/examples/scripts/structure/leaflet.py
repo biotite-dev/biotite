@@ -3,8 +3,8 @@ import networkx as nx
 import biotite.structure as struc
 import biotite.structure.io as strucio
 
-
-PDB_FILE_PATH = "/home/kunzmann/Documents/coding/biotite/doc/examples/download/dppc_n256.pdb"
+# http://www.charmm-gui.org/archive/pure_bilayer/dppc.tar.gz
+PDB_FILE_PATH = "/home/kunzmann/Documents/coding/biotite/doc/examples/download/dppc_n128.pdb"
 
 
 def find_leaflets(structure, membrane_res_name, head_atom_name,
@@ -38,7 +38,7 @@ def find_leaflets(structure, membrane_res_name, head_atom_name,
                 (structure.res_name == membrane_res_name)
             ] = True
         leaflets.append(leaflet_mask)
-    return leaflets
+    return np.array(leaflets)
 
 
 structure = strucio.load_structure(PDB_FILE_PATH)
@@ -57,7 +57,3 @@ for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
 
 strucio.save_structure("leaflets.pdb", structure)
 strucio.save_structure("leaflet_heads.pdb", structure[structure.atom_name == "P"])
-
-###
-assert (~(leaflets[0] & leaflets[1])).all()
-###
