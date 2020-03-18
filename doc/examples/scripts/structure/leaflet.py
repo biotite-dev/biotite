@@ -26,7 +26,7 @@ import biotite.structure.io as strucio
 
 # The bilayer structure file can be downloaded from
 # http://www.charmm-gui.org/archive/pure_bilayer/dppc.tar.gz
-PDB_FILE_PATH = "/home/kunzmann/Documents/coding/biotite/doc/examples/download/dppc_n128.pdb"
+PDB_FILE_PATH = "../../download/dppc_n128.pdb"
 
 
 def find_leaflets(structure, head_atom_mask,
@@ -96,5 +96,5 @@ for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
     structure.chain_id[leaflet_mask] = chain_id
 
 # Save marked lipids to structure file for visulaization with PyMOL
-strucio.save_structure("leaflets.pdb", structure)
+#strucio.save_structure("leaflets.pdb", structure)
 # biotite_static_image = leaflet.png
