@@ -19,6 +19,7 @@ Each leaflet is a connected subgraph.
        J Comput Chem, 32, 2319–2327 (2011).
 """
 
+import warnings
 import numpy as np
 import networkx as nx
 import biotite.structure as struc
@@ -50,6 +51,13 @@ def find_leaflets(structure, head_atom_mask,
     periodic : bool, optional,
         If true, periodic boundary conditions are considered.
         This requires that `structure` has an associated `box`.
+    
+    Returns
+    -------
+    leaflets : ndarray, dtype=bool, shape=(m,n)
+        Multiple boolean masks, one for each identified leaflet.
+        Each masks indicates which atoms of the input `structure`
+        are in the leaflet.
     """
     
     cell_list = struc.CellList(
@@ -65,22 +73,24 @@ def find_leaflets(structure, head_atom_mask,
                      # for atoms not in 'head_atom_mask'
                      if len(c) > 1]
     
-    # 'leaflets' contains indices to head atoms 
+    # 'leaflets' contains indices to head atoms
     # Broadcast each head atom index to all atoms in its corresponding
     # residue
-    leaflets = []
-    for head_leaflet in head_leaflets:
-        leaflet_mask = np.zeros(structure.array_length(), dtype=bool)
-        for index in head_leaflet:
-            leaflet_mask[
-                (structure.chain_id == structure.chain_id[index]) &
-                (structure.res_id == structure.res_id[index])
-            ] = True
-        leaflets.append(leaflet_mask)
-    return np.array(leaflets)
+    leaflet_masks = np.empty(
+        (len(head_leaflets), structure.array_length()),
+        dtype=bool
+    )
+    for i, head_leaflet in enumerate(head_leaflets):
+        leaflet_masks[i] = struc.get_residue_masks(structure, head_leaflet) \
+                                .any(axis=0)
+    return leaflet_masks
 
 
-structure = strucio.load_structure(PDB_FILE_PATH)
+# Suppress warning that elements were guessed,
+# as this PDB file omits the 'chemical element' column
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    structure = strucio.load_structure(PDB_FILE_PATH)
 # We cannot go over periodic boundaries in this case,
 # because the input PDB does not define a box -> periodic=False
 # However, as we have a planer lipid bilayer,
