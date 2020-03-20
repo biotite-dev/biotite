@@ -24,6 +24,17 @@ def test_spread_residue_wise(array):
     output_data = struc.spread_residue_wise(array, input_data)
     assert output_data.tolist() == array.res_id.tolist()
 
+
+def test_get_residue_masks(array):
+    SAMPLE_SIZE = 100
+    np.random.seed(0)
+    indices = np.random.randint(0, array.array_length(), SAMPLE_SIZE)
+    masks = struc.get_residue_masks(array, indices)
+    for index, mask in zip(indices, masks):
+        ref_mask = array.res_id == array.res_id[index]
+        assert mask.tolist() == ref_mask.tolist()
+
+
 def test_get_residues(array):
     ids, names = struc.get_residues(array)
     assert ids.tolist() == list(range(1, 21))

@@ -232,6 +232,7 @@
             "get_residues",
             "apply_residue_wise",
             "spread_residue_wise",
+            "get_residue_masks",
             "get_residue_count",
             "residue_iter"
         ],

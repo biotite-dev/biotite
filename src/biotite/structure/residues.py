@@ -10,7 +10,8 @@ atom level.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
-           "get_residues", "get_residue_count", "residue_iter"]
+           "get_residue_masks", "get_residues", "get_residue_count",
+           "residue_iter"]
 
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
@@ -175,8 +176,7 @@ def apply_residue_wise(array, data, function, axis=None):
      [ 0.341  5.575 -0.254]
      [ 1.194 10.416  1.130]]
     """
-    # The exclusive stop is appended to the residue starts
-    starts = np.append(get_residue_starts(array), [array.array_length()])
+    starts = get_residue_starts(array, add_exclusive_stop=True)
     # The result array
     processed_data = None
     for i in range(len(starts)-1):
@@ -266,6 +266,107 @@ def spread_residue_wise(array, input_data):
         output_data[starts[i]:starts[i+1]] = input_data[i]
     output_data[starts[-1]:] = input_data[-1]
     return output_data
+
+
+def get_residue_masks(array, indices):
+    """
+    Get boolean masks indicating the residues to which the given atoms
+    belong.
+
+    Parameters
+    ----------
+    array : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The `res_id` annotation array is taken from `array` in order to
+        determine the residues.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices indicate the atoms to get the corresponding
+        residues for.
+        Negative indices are not allowed.
+    
+    Returns
+    -------
+    residues_masks : ndarray, dtype=bool, shape=(k,n)
+        Multiple boolean masks, one for each given index in `indices`.
+        Each array masks the atoms that belong to the same residue as
+        the atom at the given index.
+    
+    Examples
+    --------
+
+    >>> indices = [5, 42]
+    >>> residue_masks = get_residue_masks(atom_array, indices)
+    >>> print(atom_array[indices[0]])
+        A       1  ASN CG     C       -10.915    3.130   -2.611
+    >>> print(atom_array[residue_masks[0]])
+        A       1  ASN N      N        -8.901    4.127   -0.555
+        A       1  ASN CA     C        -8.608    3.135   -1.618
+        A       1  ASN C      C        -7.117    2.964   -1.897
+        A       1  ASN O      O        -6.634    1.849   -1.758
+        A       1  ASN CB     C        -9.437    3.396   -2.889
+        A       1  ASN CG     C       -10.915    3.130   -2.611
+        A       1  ASN OD1    O       -11.269    2.700   -1.524
+        A       1  ASN ND2    N       -11.806    3.406   -3.543
+        A       1  ASN H1     H        -8.330    3.957    0.261
+        A       1  ASN H2     H        -8.740    5.068   -0.889
+        A       1  ASN H3     H        -9.877    4.041   -0.293
+        A       1  ASN HA     H        -8.930    2.162   -1.239
+        A       1  ASN HB2    H        -9.310    4.417   -3.193
+        A       1  ASN HB3    H        -9.108    2.719   -3.679
+        A       1  ASN HD21   H       -11.572    3.791   -4.444
+        A       1  ASN HD22   H       -12.757    3.183   -3.294
+    >>> print(atom_array[indices[1]])
+        A       3  TYR CD2    C        -1.820    4.326    3.332
+    >>> print(atom_array[residue_masks[1]])
+        A       3  TYR N      N        -4.354    3.455   -0.111
+        A       3  TYR CA     C        -3.690    2.738    0.981
+        A       3  TYR C      C        -4.102    1.256    1.074
+        A       3  TYR O      O        -3.291    0.409    1.442
+        A       3  TYR CB     C        -3.964    3.472    2.302
+        A       3  TYR CG     C        -2.824    3.339    3.290
+        A       3  TYR CD1    C        -2.746    2.217    4.138
+        A       3  TYR CD2    C        -1.820    4.326    3.332
+        A       3  TYR CE1    C        -1.657    2.076    5.018
+        A       3  TYR CE2    C        -0.725    4.185    4.205
+        A       3  TYR CZ     C        -0.639    3.053    5.043
+        A       3  TYR OH     O         0.433    2.881    5.861
+        A       3  TYR H      H        -4.934    4.245    0.120
+        A       3  TYR HA     H        -2.615    2.768    0.796
+        A       3  TYR HB2    H        -4.117    4.513    2.091
+        A       3  TYR HB3    H        -4.886    3.096    2.750
+        A       3  TYR HD1    H        -3.513    1.456    4.101
+        A       3  TYR HD2    H        -1.877    5.200    2.695
+        A       3  TYR HE1    H        -1.576    1.221    5.669
+        A       3  TYR HE2    H         0.033    4.952    4.233
+        A       3  TYR HH     H         1.187    3.395    5.567
+    """
+    if not isinstance(indices, np.ndarray):
+        indices = np.array(indices)
+    
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    masks = np.zeros((len(indices), array.array_length()), dtype=bool)
+    order = np.argsort(indices)
+
+    if (indices < 0).any():
+        raise ValueError("This function does not support negative indices")
+    if (indices >= array.array_length()).any():
+        index = np.min(np.where(indices >= array.array_length())[0])
+        raise ValueError(
+            f"Index {index} is out of range for "
+            f"an atom array with length {array.array_length()}"
+        ) 
+    
+    starts_i = 0
+    start = starts[starts_i]
+    stop = starts[starts_i+1]
+    for i in range(len(indices)):
+        index = indices[order[i]]
+        while stop <= index:
+           starts_i += 1
+           start = starts[starts_i]
+           stop = starts[starts_i+1]
+        masks[order[i], start:stop] = True
+    
+    return masks
 
 
 def get_residues(array):
