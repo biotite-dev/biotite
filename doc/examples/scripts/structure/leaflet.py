@@ -19,6 +19,9 @@ Each leaflet is a connected subgraph.
        J Comput Chem, 32, 2319–2327 (2011).
 """
 
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 import warnings
 import numpy as np
 import networkx as nx
