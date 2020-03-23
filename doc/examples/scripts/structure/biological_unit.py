@@ -77,16 +77,24 @@ struct_oper_list = pdbx_file["pdbx_struct_oper_list"]
 biological_unit_coord = []
 # For each symmetric capsid component, build the asymmetric subunit
 for i, transformation_type_i in enumerate(struct_oper_list["type"]):
-    if transformation_type_i == "point symmetry operation":
+    if transformation_type_i == "build point asymmetric unit":
         coord_sym = transform(coord, struct_oper_list, i)
         for j, transformation_type_j in enumerate(struct_oper_list["type"]):
-            if transformation_type_j == "build point asymmetric unit":
+            if transformation_type_j == "point symmetry operation":
                 coord_asym = transform(coord_sym, struct_oper_list, j)
                 biological_unit_coord.append(coord_asym)
+
+#for i, transformation_type_i in enumerate(struct_oper_list["type"]):
+#    if transformation_type_i == "point symmetry operation":
+#        coord_sym = transform(coord, struct_oper_list, i)
+#        for j, transformation_type_j in enumerate(struct_oper_list["type"]):
+#            if transformation_type_j == "build point asymmetric unit":
+#                coord_asym = transform(coord_sym, struct_oper_list, j)
+#                biological_unit_coord.append(coord_asym)
 
 
 biological_unit_coord = np.concatenate(biological_unit_coord, axis=0)
 biological_unit = repeat(structure, biological_unit_coord)
 
-
-strucio.save_structure("unit.pdb", biological_unit)
+biological_unit = biological_unit[biological_unit.atom_name == "CA"]
+strucio.save_structure("biological_unit.pdb", biological_unit)
