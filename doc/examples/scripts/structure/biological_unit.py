@@ -57,16 +57,8 @@ def repeat(template, coord):
     return repeated
 
 
-
-
-#pdbx_file = pdbx.PDBxFile()
-#pdbx_file.read(rcsb.fetch("4uft", "mmcif"))
-###
-import biotite
-file_name = rcsb.fetch("1m4x", "mmcif", ".")
 pdbx_file = pdbx.PDBxFile()
-pdbx_file.read(file_name)
-###
+pdbx_file.read(rcsb.fetch("1M4X", "mmcif"))
 
 structure = pdbx.get_structure(pdbx_file, model=1)
 coord = structure.coord
@@ -84,17 +76,11 @@ for i, transformation_type_i in enumerate(struct_oper_list["type"]):
                 coord_asym = transform(coord_sym, struct_oper_list, j)
                 biological_unit_coord.append(coord_asym)
 
-#for i, transformation_type_i in enumerate(struct_oper_list["type"]):
-#    if transformation_type_i == "point symmetry operation":
-#        coord_sym = transform(coord, struct_oper_list, i)
-#        for j, transformation_type_j in enumerate(struct_oper_list["type"]):
-#            if transformation_type_j == "build point asymmetric unit":
-#                coord_asym = transform(coord_sym, struct_oper_list, j)
-#                biological_unit_coord.append(coord_asym)
-
 
 biological_unit_coord = np.concatenate(biological_unit_coord, axis=0)
 biological_unit = repeat(structure, biological_unit_coord)
 
-biological_unit = biological_unit[biological_unit.atom_name == "CA"]
-strucio.save_structure("biological_unit.pdb", biological_unit)
+# For brevity, save only CA atoms to file for visualization with PyMOL
+#biological_unit = biological_unit[biological_unit.atom_name == "CA"]
+#strucio.save_structure("biological_unit.pdb", biological_unit)
+# biotite_static_image = biological_unit.png
