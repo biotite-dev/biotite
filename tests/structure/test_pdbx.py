@@ -162,11 +162,11 @@ def test_get_assembly_list():
     pdbx_file.read(path)
 
     assembly_list = pdbx.get_assembly_list(pdbx_file)
-    assert assembly_list == [
-        "complete icosahedral assembly"
-        "icosahedral asymmetric unit"
-        "icosahedral pentamer"
-        "icosahedral 23 hexamer"
-        "icosahedral asymmetric unit, std point frame"
-        "crystal asymmetric unit, crystal frame"
-    ]
+    assert assembly_list == {
+        "1": "complete icosahedral assembly",
+        "2": "icosahedral asymmetric unit",
+        "3": "icosahedral pentamer",
+        "4": "icosahedral 23 hexamer",
+        "5": "icosahedral asymmetric unit, std point frame",
+        "6": "crystal asymmetric unit, crystal frame"
+    }

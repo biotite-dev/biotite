@@ -9,6 +9,7 @@ __all__ = ["get_sequence", "get_structure", "set_structure",
 
 import numpy as np
 from ...error import BadStructureError
+from ....file import InvalidFileError
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...filter import filter_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
@@ -47,8 +48,8 @@ def get_sequence(pdbx_file, data_block=None):
 
 
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
-                  extra_fields=[], use_author_fields=True):
+def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
+                  extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a :class:`PDBxFile`.
@@ -117,6 +118,9 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
     304
     
     """
+    altloc = [] if altloc is None else altloc
+    extra_fields = [] if extra_fields is None else extra_fields
+    
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
     
@@ -426,9 +430,74 @@ def _determine_entity_id(chain_id):
 
 
 
-def get_assembly_list(pdbx_file, block=None):
-    pdbx_file.get_category("pdbx_struct_assembly_gen", block, expect_looped=True)
+def get_assembly_list(pdbx_file, data_block=None):
+    assembly_category = pdbx_file.get_category(
+        "pdbx_struct_assembly", data_block, expect_looped=True
+    )
+    if assembly_category is None:
+        raise InvalidFileError("File has no 'pdbx_struct_assembly' category")
+    return {id: details for id, details in
+            zip(assembly_category["id"], assembly_category["details"])}
 
 
-def get_assembly(pdbx_file, block=None):
+def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
+                 altloc=None, extra_fields=None, use_author_fields=True):
+    assembly_gen_category = pdbx_file.get_category(
+        "pdbx_struct_assembly_gen", data_block, expect_looped=True
+    )
+    if assembly_gen_category is None:
+        raise InvalidFileError(
+            "File has no 'pdbx_struct_assembly_gen' category"
+        )
+
+    struct_oper_category = pdbx_file.get_category(
+        "pdbx_struct_oper_list", data_block, expect_looped=True
+    )
+    if struct_oper_category is None:
+        raise InvalidFileError("File has no 'pdbx_struct_oper_list' category")
+
+    if assembly_id is None:
+        assembly_id = pdbx_struct_assembly_gen["assembly_id"][0]
+    elif assembly_id not in pdbx_struct_assembly_gen["assembly_id"]:
+        raise KeyError(f"File has no Assembly ID '{assembly_id}'")
+
+    transformations = _get_transformations(struct_oper_category)
+
+    # Find the operation expression for given assembly ID
+    # We already asserted that the ID is actually present
+    for id, expr in zip(
+        assembly_gen_category["assembly_id"],
+        assembly_gen_category["oper_expression"]
+    ):
+        if id == assembly_id:
+            operation_expr = expr
+            break
+    operations = _parse_operation_expression(expression)
+    chains = _pdbx_struct_assembly_gen["asym_id_list"].split(",")
+
+    # Apply operations on structure
+    structure = get_structure(
+        pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
+    )
+
+
+def _get_transformations(struct_oper):
+    transformation_dict = {}
+    for index, id in enumerate(struct_oper["id"]):
+        rotation_matrix = np.array([
+            [float(struct_oper[f"matrix[{i}][{j}]"][index]) for j in (1,2,3)]
+            for i in (1,2,3)
+        ])
+        translation_vector = np.array([
+            float(struct_oper[f"vector[{i}]"][index]) for i in (1,2,3)
+        ])
+        transformation_dict[id] = (rotation_matrix, translation_vector)
+        # Rotate
+        #coord = np.matmul(rotation_matrix, coord.T).T
+        # Translate
+        #coord += translation_vector
+        #return coord
+
+
+def _parse_operation_expression(expression):
     pass
