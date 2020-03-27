@@ -156,4 +156,17 @@ def test_unequal_lengths():
         )
             
         
-    
+def test_get_assembly_list():
+    path = join(data_dir, "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+
+    assembly_list = pdbx.get_assembly_list(pdbx_file)
+    assert assembly_list == [
+        "complete icosahedral assembly"
+        "icosahedral asymmetric unit"
+        "icosahedral pentamer"
+        "icosahedral 23 hexamer"
+        "icosahedral asymmetric unit, std point frame"
+        "crystal asymmetric unit, crystal frame"
+    ]

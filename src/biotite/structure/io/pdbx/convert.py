@@ -4,7 +4,8 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_structure", "set_structure"]
+__all__ = ["get_sequence", "get_structure", "set_structure",
+           "get_assembly_list", "get_assembly"]
 
 import numpy as np
 from ...error import BadStructureError
@@ -43,6 +44,7 @@ def get_sequence(pdbx_file, data_block=None):
     else:
         sequences.append(ProteinSequence(seq_string))
     return sequences
+
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
@@ -260,6 +262,7 @@ def _get_box(pdbx_file, data_block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
+
 def set_structure(pdbx_file, array, data_block=None):
     """
     Set the `atom_site` category with an
@@ -406,7 +409,6 @@ def set_structure(pdbx_file, array, data_block=None):
         pdbx_file.set_category("cell", cell_dict, data_block)
 
 
-
 def _determine_entity_id(chain_id):
     entity_id = np.zeros(len(chain_id), dtype=int)
     # Dictionary that translates chain_id to entity_id
@@ -421,3 +423,12 @@ def _determine_entity_id(chain_id):
             entity_id[i] = id_translation[chain_id[i]]
             id += 1
     return entity_id.astype(str)
+
+
+
+def get_assembly_list(pdbx_file, block=None):
+    pdbx_file.get_category("pdbx_struct_assembly_gen", block, expect_looped=True)
+
+
+def get_assembly(pdbx_file, block=None):
+    pass
