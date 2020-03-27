@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_sequence", "get_structure", "set_structure",
            "get_assembly_list", "get_assembly"]
 
+import itertools
 import numpy as np
 from ...error import BadStructureError
 from ....file import InvalidFileError
@@ -457,28 +458,45 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         raise InvalidFileError("File has no 'pdbx_struct_oper_list' category")
 
     if assembly_id is None:
-        assembly_id = pdbx_struct_assembly_gen["assembly_id"][0]
-    elif assembly_id not in pdbx_struct_assembly_gen["assembly_id"]:
+        assembly_id = assembly_gen_category["assembly_id"][0]
+    elif assembly_id not in assembly_gen_category["assembly_id"]:
         raise KeyError(f"File has no Assembly ID '{assembly_id}'")
 
     transformations = _get_transformations(struct_oper_category)
 
     # Find the operation expression for given assembly ID
     # We already asserted that the ID is actually present
-    for id, expr in zip(
+    for id, op_expr, chain_expr in zip(
         assembly_gen_category["assembly_id"],
-        assembly_gen_category["oper_expression"]
+        assembly_gen_category["oper_expression"],
+        assembly_gen_category["asym_id_list"]
     ):
         if id == assembly_id:
-            operation_expr = expr
+            operations = _parse_operation_expression(op_expr)
+            chains = chain_expr.split(",")
             break
-    operations = _parse_operation_expression(expression)
-    chains = _pdbx_struct_assembly_gen["asym_id_list"].split(",")
+    
 
     # Apply operations on structure
+    model = 1 if model is None else model
     structure = get_structure(
         pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
     )
+    assembly_coord = np.zeros((len(operations), structure.array_length(), 3))
+    # Execute for each copy in the assembly
+    for i, operation in enumerate(operations):
+        coord = structure.coord
+        # Execute for each transformation step
+        # in the operation expression
+        for op_step in operation:
+            rotation_matrix, translation_vector = transformations[op_step]
+            # Rotate
+            coord = np.matmul(rotation_matrix, coord.T).T
+            # Translate
+            coord += translation_vector
+    
+    return repeat(structure, assembly_coord)
+            
 
 
 def _get_transformations(struct_oper):
@@ -492,12 +510,32 @@ def _get_transformations(struct_oper):
             float(struct_oper[f"vector[{i}]"][index]) for i in (1,2,3)
         ])
         transformation_dict[id] = (rotation_matrix, translation_vector)
-        # Rotate
-        #coord = np.matmul(rotation_matrix, coord.T).T
-        # Translate
-        #coord += translation_vector
-        #return coord
+    return transformation_dict
 
 
 def _parse_operation_expression(expression):
-    pass
+    expressions_per_step = expression.replace(")","").split("(")
+    expressions_per_step = [e for e in expressions_per_step if len(e) > 0]
+    # Important: Operations are applied from right to left
+    expressions_per_step.reverse()
+
+    operations = []
+    for expr in expressions_per_step:
+        if "-" in expr:
+            # Range of operation IDs, they must be integers
+            first, last = expr.split("-")
+            operations.append(
+                [str(id) for id in range(int(first), int(last)+1)]
+            )
+            pass
+        elif "," in expr:
+            # List of operation IDs
+            # TODO
+            pass
+        else:
+            # Single operation ID
+            # TODO
+            pass
+
+    # Cartesian product of operations
+    return list(itertools.product(*operations))

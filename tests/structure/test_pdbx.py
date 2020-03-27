@@ -170,3 +170,11 @@ def test_get_assembly_list():
         "5": "icosahedral asymmetric unit, std point frame",
         "6": "crystal asymmetric unit, crystal frame"
     }
+
+
+def test_get_assembly():
+    path = join(data_dir, "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+
+    pdbx.get_assembly(pdbx_file)
