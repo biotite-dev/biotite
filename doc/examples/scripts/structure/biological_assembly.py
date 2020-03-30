@@ -72,5 +72,5 @@ print("Number of protein chains:", struc.get_chain_count(biological_unit))
 
 # For brevity, save only CA atoms to file for visualization with PyMOL
 #biological_unit = biological_unit[biological_unit.atom_name == "CA"]
-#strucio.save_structure("biological_unit.pdb", biological_unit)
-# biotite_static_image = biological_unit.png
+#strucio.save_structure("biological_assembly.pdb", biological_unit)
+# biotite_static_image = biological_assembly.png
