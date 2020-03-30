@@ -8,7 +8,7 @@ Utility functions for in internal use in `Bio.Structure` package
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["vector_dot", "norm_vector", "distance"]
+__all__ = ["vector_dot", "norm_vector", "distance", "matrix_rotate"]
 
 import numpy as np
 
@@ -50,7 +50,7 @@ def norm_vector(v):
 
 def distance(v1,v2):
     """
-    Calculate the distance between two position vectors
+    Calculate the distance between two position vectors.
     
     Parameters
     ----------
@@ -65,3 +65,32 @@ def distance(v1,v2):
     """
     dif = v1 - v2
     return np.sqrt((dif*dif).sum(axis=-1))
+
+
+def matrix_rotate(v, matrix):
+    """
+    Perform a rotation using a rotation matrix.
+
+    Parameters
+    ----------
+    v : ndarray
+        The coordinates to rotate.
+    matrix : ndarray
+        The rotation matrix.
+    
+    Returns
+    -------
+    rotated : ndarray
+        The rotated coordinates.
+    """
+    # For proper rotation reshape into a maximum of 2 dimensions
+    orig_ndim = v.ndim
+    if orig_ndim > 2:
+        orig_shape = v.shape
+        v = v.reshape(-1, 3)
+    # Apply rotation
+    v = np.dot(matrix, v.T).T
+    # Reshape back into original shape
+    if orig_ndim > 2:
+        v = v.reshape(*orig_shape)
+    return v
