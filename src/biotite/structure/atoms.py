@@ -1313,7 +1313,8 @@ def repeat(atoms, coord):
                 f"Expected 3 dimensions for the coordinate array, "
                 f"but got {coord.ndim}"
             )
-        repeated = AtomArray(atoms,stack_depth, new_length)
+        repeated = AtomArray(new_length)
+        repeated.coord = coord.reshape((new_length, 3))
 
     elif isinstance(atoms, AtomArrayStack):
         if coord.ndim != 4:
@@ -1321,7 +1322,8 @@ def repeat(atoms, coord):
                 f"Expected 4 dimensions for the coordinate array, "
                 f"but got {coord.ndim}"
             )
-        repeated = AtomArrayStack(new_length)
+        repeated = AtomArrayStack(atoms.stack_depth, new_length)
+        repeated.coord = coord.reshape((atoms.stack_depth, new_length, 3))
     
     else:
         raise TypeError(
@@ -1339,7 +1341,6 @@ def repeat(atoms, coord):
         repeated.bonds = bonds
     if atoms.box is not None:
         repeated.box = atoms.box.copy()
-    repeated.coord = coord
     
     return repeated
 
