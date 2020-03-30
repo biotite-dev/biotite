@@ -11,9 +11,10 @@ import itertools
 import numpy as np
 from ...error import BadStructureError
 from ....file import InvalidFileError
-from ...atoms import Atom, AtomArray, AtomArrayStack
+from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
 from ...filter import filter_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
+from ...util import matrix_rotate
 from ....sequence.seqtypes import ProteinSequence
 from collections import OrderedDict
 
@@ -491,9 +492,10 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         for op_step in operation:
             rotation_matrix, translation_vector = transformations[op_step]
             # Rotate
-            coord = np.matmul(rotation_matrix, coord.T).T
+            coord = matrix_rotate(coord, rotation_matrix)
             # Translate
             coord += translation_vector
+        assembly_coord[i] = coord
     
     return repeat(structure, assembly_coord)
             
