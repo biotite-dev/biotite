@@ -10,7 +10,7 @@ This module contains the main types of the ``structure`` subpackage:
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Atom", "AtomArray", "AtomArrayStack",
-           "array", "stack", "from_template", "coord"]
+           "array", "stack", "repeat", "from_template", "coord"]
 
 import numbers
 import abc
@@ -1244,6 +1244,104 @@ def stack(arrays):
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
     return array_stack
+
+
+def repeat(atoms, coord):
+    """
+    Repeat atoms (:class:`AtomArray` or :class:`AtomArrayStack`)
+    multiple times in the same model with different coordinates.
+
+    Parameters
+    ----------
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The atoms to be repeated.
+    coord : ndarray, dtype=float, shape=(k,n,3) or shape=(k,m,n,3)
+        The coordinates to be used fr the repeated atoms.
+        The length of first dimension determines the number of repeats.
+        If `atoms` is an :class:`AtomArray` 3 dimensions, otherwise
+        4 dimensions are required.
+    
+    Returns
+    -------
+    repeated: AtomArray, shape=(n*k,) or AtomArrayStack, shape=(m,n*k)
+        The repeated atoms.
+        Whether an :class:`AtomArray` or an :class:`AtomArrayStack` is
+        returned depends on the input `atoms`.
+    
+    Examples
+    --------
+
+    >>> atoms = array([
+    ...     Atom([1,2,3], res_id=1, atom_name="N"),
+    ...     Atom([4,5,6], res_id=1, atom_name="CA"),
+    ...     Atom([7,8,9], res_id=1, atom_name="C")
+    ... ])
+    >>> print(atoms)
+                1      N                1.000    2.000    3.000
+                1      CA               4.000    5.000    6.000
+                1      C                7.000    8.000    9.000
+    >>> repeat_coord = np.array([
+    ...     [[0,0,0], [1,1,1], [2,2,2]],
+    ...     [[3,3,3], [4,4,4], [5,5,5]]
+    ... ])
+    >>> repeated = repeat(atoms, repeat_coord)
+    >>> repeated.res_id[3:] = 2
+    >>> print(repeated)
+                1      N                1.000    1.000    1.000
+                1      CA               2.000    2.000    2.000
+                1      C                3.000    3.000    3.000
+                2      N                1.000    1.000    1.000
+                2      CA               2.000    2.000    2.000
+                2      C                3.000    3.000    3.000
+    """
+    if isinstance(atoms, AtomArray) and coord.ndim != 3:
+        raise ValueError(
+            f"Expected 3 dimensions for the coordinate array, got {coord.ndim}"
+        )
+    elif isinstance(atoms, AtomArrayStack) and coord.ndim != 4:
+        raise ValueError(
+            f"Expected 4 dimensions for the coordinate array, got {coord.ndim}"
+        )
+    
+    repetitions = len(coord)
+    orig_length = atoms.array_length()
+    new_length = orig_length * repetitions
+
+    if isinstance(atoms, AtomArray):
+        if coord.ndim != 3:
+            raise ValueError(
+                f"Expected 3 dimensions for the coordinate array, "
+                f"but got {coord.ndim}"
+            )
+        repeated = AtomArray(atoms,stack_depth, new_length)
+
+    elif isinstance(atoms, AtomArrayStack):
+        if coord.ndim != 4:
+            raise ValueError(
+                f"Expected 4 dimensions for the coordinate array, "
+                f"but got {coord.ndim}"
+            )
+        repeated = AtomArrayStack(new_length)
+    
+    else:
+        raise TypeError(
+            f"Expected 'AtomArray' or 'AtomArrayStack', "
+            f"but got {type(atoms).__name__}"
+        )
+    
+    for category in atoms.get_annotation_categories():
+        annot = np.tile(atoms.get_annotation(category), repetitions)
+        repeated.set_annotation(category, annot)
+    if atoms.bonds is not None:
+        bonds = atoms.bonds
+        for _ in range(repetitions-1):
+            bonds += atoms.bonds
+        repeated.bonds = bonds
+    if atoms.box is not None:
+        repeated.box = atoms.box.copy()
+    repeated.coord = coord
+    
+    return repeated
 
 
 def from_template(template, coord, box=None):

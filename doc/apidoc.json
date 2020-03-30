@@ -168,6 +168,7 @@
             "AtomArrayStack",
             "array",
             "stack",
+            "repeat",
             "from_template"
         ],
         "Boxes and unit cells" : [
