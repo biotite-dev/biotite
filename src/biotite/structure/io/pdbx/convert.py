@@ -5,7 +5,7 @@
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_sequence", "get_structure", "set_structure",
-           "get_assembly_list", "get_assembly"]
+           "list_assemblies", "get_assembly"]
 
 import itertools
 import numpy as np
@@ -432,7 +432,7 @@ def _determine_entity_id(chain_id):
 
 
 
-def get_assembly_list(pdbx_file, data_block=None):
+def list_assemblies(pdbx_file, data_block=None):
     assembly_category = pdbx_file.get_category(
         "pdbx_struct_assembly", data_block, expect_looped=True
     )

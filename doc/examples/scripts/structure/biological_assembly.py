@@ -30,7 +30,7 @@ In this example, we will create the complete biological assembly of the
 capsid from *Paramecium bursaria Chlorella virus type 1*
 - a homo-5040-mer!
 
-At first we well check, which assemblies are available to us.
+At first we will check, which assemblies are available to us.
 """
 
 # Code source: Patrick Kunzmann
@@ -46,27 +46,27 @@ import biotite.database.rcsb as rcsb
 pdbx_file = pdbx.PDBxFile()
 pdbx_file.read(rcsb.fetch("1M4X", "mmcif"))
 
-assemblies = pdbx.get_assembly_list(pdbx_file)
+assemblies = pdbx.list_assemblies(pdbx_file)
 print("ID    name")
 print()
 for assembly_id, name in assemblies.items():
     print(f"{assembly_id:2}    {name}")
 
 ########################################################################
-# `'complete icosahedral assembly'` sounds good.
-# In fact, often the first assembly is the complete assembly.
-# Hence, the :func:`get_assembly()` function, that we will use the get
-# the chosen assembly as :class:`AtomArray`, builds the first assembly
+# ``'complete icosahedral assembly'`` sounds good.
+# In fact, often the first assembly is the complete one.
+# Hence, the :func:`get_assembly()` function builds the first assembly
 # by default.
-# Since we know the assembly ID we want (``'1'``), we will provide it
-# anyway.
+# Since we know the ID we want (``'1'``), we will provide it to this
+# function anyway.
+# It returns the chosen assembly as :class:`AtomArray`.
 # Note that the assembly ID is a string, not an integer.
 
 biological_unit = pdbx.get_assembly(pdbx_file, assembly_id="1", model=1)
 print("Number of protein chains:", struc.get_chain_count(biological_unit))
 
 ########################################################################
-# Now we could do some analysis on the assembly.
+# Now we could do some analysis on the biological unit.
 # But for this example we will simply save the entire assembly as *PDB*
 # file for later visualization.
 
