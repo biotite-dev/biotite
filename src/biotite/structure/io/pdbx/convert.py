@@ -67,7 +67,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
-    data_block : string, optional
+    data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
     altloc : list of tuple, optional
@@ -288,7 +288,7 @@ def set_structure(pdbx_file, array, data_block=None):
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
-    data_block : string, optional
+    data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
     
@@ -433,6 +433,29 @@ def _determine_entity_id(chain_id):
 
 
 def list_assemblies(pdbx_file, data_block=None):
+    """
+    List the biological assemblies that are available for the structure
+    in the given file.
+
+    This function receives the data from the ``pdbx_struct_assembly``
+    category in the file.
+    Consequently, this category must be present in the file.
+
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    data_block : str, optional
+        The name of the data block.
+        Defaults to the first (and most times only) data block of the
+        file.
+    
+    Returns
+    -------
+    assemblies : dict of str -> str
+        A dictionary that maps an assembly ID to a description of the
+        corresponding assembly.
+    """
     assembly_category = pdbx_file.get_category(
         "pdbx_struct_assembly", data_block, expect_looped=True
     )
@@ -444,6 +467,70 @@ def list_assemblies(pdbx_file, data_block=None):
 
 def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
                  altloc=None, extra_fields=None, use_author_fields=True):
+    """
+    Build the given biological assembly.
+
+    This function receives the data from the
+    ``pdbx_struct_assembly_gen``, ``pdbx_struct_oper_list`` and
+    ``atom_site`` categories in the file.
+    Consequently, these categories must be present in the file.
+
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    assembly_id : str
+        The assembly to build
+    model : int, optional
+        If this parameter is given, the function will return an
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
+    data_block : str, optional
+        The name of the data block.
+        Defaults to the first (and most times only) data block of the
+        file.
+    altloc : list of tuple, optional
+        In case the structure contains *altloc* entries, those can be
+        specified here:
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues the atoms with the given *altloc*
+        ID are filtered.
+        By default the location with the *altloc* ID "A" is used.
+    extra_fields : list of str, optional
+        The strings in the list are entry names, that are
+        additionally added as annotation arrays.
+        The annotation category name will be the same as the PDBx
+        subcategory name.
+        The array type is always `str`.
+        An exception are the special field identifiers:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        These will convert the fitting subcategory into an
+        annotation array with reasonable type.
+    use_author_fields : bool, optional
+        Some fields can be read from two alternative sources,
+        for example both, ``label_seq_id`` and ``auth_seq_id`` describe
+        the ID of the residue.
+        While, the ``label_xxx`` fields can be used as official pointers
+        to other categories in the :class:`PDBxFile`, the ``auth_xxx``
+        fields are set by the author(s) of the structure and are
+        consistent with the corresponding values in PDB files.
+        If `use_author_fields` is true, the annotation arrays will be
+        read from the ``auth_xxx`` fields (if applicable),
+        otherwise from the the ``label_xxx`` fields.
+    
+    Returns
+    -------
+    assembly : AtomArray or AtomArrayStack
+        The assembly. The return type depends on the `model` parameter.
+    """
     assembly_gen_category = pdbx_file.get_category(
         "pdbx_struct_assembly_gen", data_block, expect_looped=True
     )
