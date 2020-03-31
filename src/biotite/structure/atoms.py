@@ -1322,8 +1322,8 @@ def repeat(atoms, coord):
                 f"Expected 4 dimensions for the coordinate array, "
                 f"but got {coord.ndim}"
             )
-        repeated = AtomArrayStack(atoms.stack_depth, new_length)
-        repeated.coord = coord.reshape((atoms.stack_depth, new_length, 3))
+        repeated = AtomArrayStack(atoms.stack_depth(), new_length)
+        repeated.coord = coord.reshape((atoms.stack_depth(), new_length, 3))
     
     else:
         raise TypeError(

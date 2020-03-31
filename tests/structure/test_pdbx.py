@@ -176,12 +176,15 @@ def test_list_assemblies():
     }
 
 
-def test_get_assembly():
+@pytest.mark.parametrize("single_model", [False, True])
+def test_get_assembly(single_model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
     ``_pdbx_struct_assembly.oligomeric_count`` field indicates.
     """
+    model = 1 if single_model else None
+
     path = join(data_dir, "1f2n.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
@@ -194,8 +197,12 @@ def test_get_assembly():
         assembly_category["id"],
         assembly_category["oligomeric_count"]
     ):    
-        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=1)
-        protein_assembly = assembly[struc.filter_amino_acids(assembly)]
+        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+        protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
 
+        if single_model:
+            assert isinstance(assembly, struc.AtomArray)
+        else:
+            assert isinstance(assembly, struc.AtomArrayStack)
         assert test_oligomer_count == int(ref_oligomer_count)

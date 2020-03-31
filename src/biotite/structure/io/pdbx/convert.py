@@ -566,11 +566,21 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     
 
     # Apply operations on structure
-    model = 1 if model is None else model
     structure = get_structure(
         pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
     )
-    assembly_coord = np.zeros((len(operations), structure.array_length(), 3))
+    if model is None:
+        # Coordinates for AtomArrayStack
+        assembly_coord = np.zeros(
+            (len(operations), structure.stack_depth(),
+             structure.array_length(), 3)
+        )
+    else:
+        # Coordinates for AtomArray
+        assembly_coord = np.zeros(
+            (len(operations), structure.array_length(), 3)
+        )
+    
     # Execute for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
