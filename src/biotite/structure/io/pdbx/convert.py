@@ -497,8 +497,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
             coord += translation_vector
         assembly_coord[i] = coord
     
-    return repeat(structure, assembly_coord)
-            
+    return repeat(structure, assembly_coord)     
 
 
 def _get_transformations(struct_oper):
@@ -516,6 +515,9 @@ def _get_transformations(struct_oper):
 
 
 def _parse_operation_expression(expression):
+    # Split groups by parentheses:
+    # use the opening parenthesis as delimiter
+    # and just remove the closing parenthesis 
     expressions_per_step = expression.replace(")","").split("(")
     expressions_per_step = [e for e in expressions_per_step if len(e) > 0]
     # Important: Operations are applied from right to left
@@ -529,15 +531,12 @@ def _parse_operation_expression(expression):
             operations.append(
                 [str(id) for id in range(int(first), int(last)+1)]
             )
-            pass
         elif "," in expr:
             # List of operation IDs
-            # TODO
-            pass
+            operations.append(expr.split(","))
         else:
             # Single operation ID
-            # TODO
-            pass
+            operations.append([expr])
 
     # Cartesian product of operations
     return list(itertools.product(*operations))

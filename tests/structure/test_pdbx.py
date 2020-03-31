@@ -156,7 +156,11 @@ def test_unequal_lengths():
         )
             
         
-def test_get_assembly_list():
+def test_list_assemblies():
+    """
+    Test the :func:`list_assemblies()` function based on a known
+    example.
+    """
     path = join(data_dir, "1f2n.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
@@ -173,8 +177,25 @@ def test_get_assembly_list():
 
 
 def test_get_assembly():
+    """
+    Test whether the :func:`get_assembly()` function produces the same
+    number of peptide chains as the
+    ``_pdbx_struct_assembly.oligomeric_count`` field indicates.
+    """
     path = join(data_dir, "1f2n.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
 
-    pdbx.get_assembly(pdbx_file)
+    assembly_category = pdbx_file.get_category(
+        "pdbx_struct_assembly", expect_looped=True
+    )
+    # Test each available assembly
+    for id, ref_oligomer_count in zip(
+        assembly_category["id"],
+        assembly_category["oligomeric_count"]
+    ):    
+        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=1)
+        protein_assembly = assembly[struc.filter_amino_acids(assembly)]
+        test_oligomer_count = struc.get_chain_count(protein_assembly)
+
+        assert test_oligomer_count == int(ref_oligomer_count)
