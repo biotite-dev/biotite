@@ -98,9 +98,9 @@ def test_dihedral_backbone_result(file_name):
         _, ref_ome = mdtraj.compute_omega(traj)
         ref_phi, ref_psi, ref_ome = ref_phi[0], ref_psi[0], ref_ome[0]
 
-        assert test_phi[1: ] == pytest.approx(ref_phi, abs=1e-5, rel=1e-3)
-        assert test_psi[:-1] == pytest.approx(ref_psi, abs=1e-5, rel=1e-3)
-        assert test_ome[:-1] == pytest.approx(ref_ome, abs=1e-5, rel=1e-3)
+        assert test_phi[1: ] == pytest.approx(ref_phi, abs=1e-5, rel=5e-3)
+        assert test_psi[:-1] == pytest.approx(ref_psi, abs=1e-5, rel=5e-3)
+        assert test_ome[:-1] == pytest.approx(ref_ome, abs=1e-5, rel=5e-3)
 
 
 
