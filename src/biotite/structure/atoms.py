@@ -1284,15 +1284,13 @@ def repeat(atoms, coord):
     ...     [[0,0,0], [1,1,1], [2,2,2]],
     ...     [[3,3,3], [4,4,4], [5,5,5]]
     ... ])
-    >>> repeated = repeat(atoms, repeat_coord)
-    >>> repeated.res_id[3:] = 2
-    >>> print(repeated)
-                1      N                1.000    1.000    1.000
-                1      CA               2.000    2.000    2.000
-                1      C                3.000    3.000    3.000
-                2      N                1.000    1.000    1.000
-                2      CA               2.000    2.000    2.000
-                2      C                3.000    3.000    3.000
+    >>> print(repeat(atoms, repeat_coord))
+                1      N                0.000    0.000    0.000
+                1      CA               1.000    1.000    1.000
+                1      C                2.000    2.000    2.000
+                1      N                3.000    3.000    3.000
+                1      CA               4.000    4.000    4.000
+                1      C                5.000    5.000    5.000
     """
     if isinstance(atoms, AtomArray) and coord.ndim != 3:
         raise ValueError(

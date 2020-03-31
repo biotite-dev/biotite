@@ -101,7 +101,7 @@ def rotate(atoms, angles):
                       [ 0,               0,               1               ]])
     
     positions = coord(atoms).copy()
-    positions = matrix_rotate(positions, rot_x @ rot_y @ rot_z)
+    positions = matrix_rotate(positions, rot_z @ rot_y @ rot_x)
     
     return _put_back(atoms, positions)
 
