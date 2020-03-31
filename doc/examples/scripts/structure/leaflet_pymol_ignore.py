@@ -1,7 +1,7 @@
 from pymol import cmd
 
 
-# Load structure and remove water
+# Load structure and remove hydrogen
 cmd.load("leaflets.pdb")
 cmd.remove("elem H")
 

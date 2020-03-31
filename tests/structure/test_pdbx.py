@@ -156,4 +156,53 @@ def test_unequal_lengths():
         )
             
         
-    
+def test_list_assemblies():
+    """
+    Test the :func:`list_assemblies()` function based on a known
+    example.
+    """
+    path = join(data_dir, "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+
+    assembly_list = pdbx.list_assemblies(pdbx_file)
+    assert assembly_list == {
+        "1": "complete icosahedral assembly",
+        "2": "icosahedral asymmetric unit",
+        "3": "icosahedral pentamer",
+        "4": "icosahedral 23 hexamer",
+        "5": "icosahedral asymmetric unit, std point frame",
+        "6": "crystal asymmetric unit, crystal frame"
+    }
+
+
+@pytest.mark.parametrize("single_model", [False, True])
+def test_get_assembly(single_model):
+    """
+    Test whether the :func:`get_assembly()` function produces the same
+    number of peptide chains as the
+    ``_pdbx_struct_assembly.oligomeric_count`` field indicates.
+    """
+    model = 1 if single_model else None
+
+    path = join(data_dir, "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile()
+    pdbx_file.read(path)
+
+    assembly_category = pdbx_file.get_category(
+        "pdbx_struct_assembly", expect_looped=True
+    )
+    # Test each available assembly
+    for id, ref_oligomer_count in zip(
+        assembly_category["id"],
+        assembly_category["oligomeric_count"]
+    ):    
+        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+        protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
+        test_oligomer_count = struc.get_chain_count(protein_assembly)
+
+        if single_model:
+            assert isinstance(assembly, struc.AtomArray)
+        else:
+            assert isinstance(assembly, struc.AtomArrayStack)
+        assert test_oligomer_count == int(ref_oligomer_count)

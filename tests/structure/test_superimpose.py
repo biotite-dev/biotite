@@ -31,11 +31,11 @@ def test_superimposition_array(path):
         fixed, mobile
     )
     
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
     
     fitted = struc.superimpose_apply(mobile, transformation)
     
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
 
 
 @pytest.mark.parametrize("ca_only", (True, False))

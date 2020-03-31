@@ -16,7 +16,7 @@ import numpy as np
 from .geometry import centroid
 from .error import BadStructureError
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .util import norm_vector, vector_dot
+from .util import norm_vector, vector_dot, matrix_rotate
 
 
 def translate(atoms, vector):
@@ -100,20 +100,8 @@ def rotate(atoms, angles):
                       [ sin(angles[2]),  cos(angles[2]),  0               ],
                       [ 0,               0,               1               ]])
     
-    # Get coordinates
     positions = coord(atoms).copy()
-    # For proper rotation reshape into a maximum of 2 dimensions
-    orig_ndim = positions.ndim
-    if orig_ndim > 2:
-        orig_shape = positions.shape
-        positions = positions.reshape(-1, 3)
-    # Apply rotations
-    positions = np.matmul(rot_x, positions.T).T
-    positions = np.dot(rot_y, positions.T).T
-    positions = np.dot(rot_z, positions.T).T
-    # Reshape back into original shape
-    if orig_ndim > 2:
-        positions = positions.reshape(*orig_shape)
+    positions = matrix_rotate(positions, rot_z @ rot_y @ rot_x)
     
     return _put_back(atoms, positions)
 
@@ -377,23 +365,14 @@ def align_vectors(atoms, origin_direction, target_direction,
             "Direction vectors are point into opposite directions, "
             "cannot calculate rotation matrix"
         )
-    rot_matrix = np.identity(3) + v_c + np.matmul(v_c, v_c) / (1+cos_a)
+    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1+cos_a)
     
-    # For proper rotation reshape into a maximum of 2 dimensions
-    orig_ndim = positions.ndim
-    if orig_ndim > 2:
-        orig_shape = positions.shape
-        positions = positions.reshape(-1, 3)
-    # Apply rotation
-    positions = np.dot(rot_matrix, positions.T).T
-    # Reshape back into original shape
-    if orig_ndim > 2:
-        positions = positions.reshape(*orig_shape)
+    positions = matrix_rotate(positions, rot_matrix)
     
     if target_position is not None:
         # Transform coordinates to position of the target vector
         positions += target_position
-    
+
     return _put_back(atoms, positions)
 
 
