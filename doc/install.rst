@@ -89,9 +89,9 @@ top-level directory of your local *Biotite* repository clone (the one
 
 Note that this requires a C-compiler (typically GCC) and the packages
 `cython` and `wheel` to be installed.
-If you want, you can use
-`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_, containing all runtime and build dependencies for
-*Biotite*.
+For convenience
+`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_,
+contains all runtime and build dependencies for *Biotite*.
 
 Having the *Biotite* package always pointing to your directory containing the
 repository is also possible.
@@ -113,3 +113,39 @@ You can find the created wheel and the source distribution in the ``dist``
 directory.
 
 
+Common issues and solutions
+---------------------------
+
+Compiler error when building Biotite
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is a known problem with *GCC* compiler errors in some *Linux*
+distributions (e.g. *Arch Linux*) when building *Biotite* from source.
+Among other error lines the central error is the following:
+
+.. code-block::
+
+   unable to initialize decompress status for section .debug_info
+
+While the exact reason for this error is still unknown, this can be fixed by
+using a *GCC* installed via *Conda*:
+
+.. code-block:: console
+
+   $ conda install -c conda-forge c-compiler
+
+ValueError when importing Biotite
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When importing one of *Biotite*'s subpackages the following error might
+occur:
+
+.. code-block::
+
+   ValueError: numpy.ufunc size changed, may indicate binary incompatibility.
+
+The reason for this error is, that *Biotite* was built against a *NumPy*
+version other than the one installed.
+This happens for example when *NumPy* is updated, but *Biotite* is already
+installed.
+Simply reinstall *Biotite* to solve this issue.

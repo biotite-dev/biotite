@@ -1,0 +1,33 @@
+# Conda environment, that includes all packages that are necessary for
+# the complete Biotite development process.
+
+name: biotite-dev
+
+channels:
+  - anaconda
+  - conda-forge
+  - salilab
+  - bioconda
+
+dependencies:
+  - python =3.6
+  - setuptools >=30.0
+  - pip >=10.0
+  - wheel >=0.30
+  - requests >=2.12
+  - numpy >=1.13
+  - scipy >=0.14
+  - networkx >=2.0
+  - msgpack-python >=0.5.6
+  - cython >=0.29
+  - mdtraj >=1.9.3
+  - matplotlib >=2.0
+  - pytest >=3.2
+  - pytest-cov >=2.5
+  - sphinx >=1.7
+  - sphinx-gallery =0.5.0
+  - numpydoc >=0.8
+  - dssp
+  - clustalo
+  - mafft
+  - muscle

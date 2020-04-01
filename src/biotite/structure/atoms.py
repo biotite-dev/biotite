@@ -9,7 +9,8 @@ This module contains the main types of the ``structure`` subpackage:
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Atom", "AtomArray", "AtomArrayStack", "array", "stack", "coord"]
+__all__ = ["Atom", "AtomArray", "AtomArrayStack",
+           "array", "stack", "repeat", "from_template", "coord"]
 
 import numbers
 import abc
@@ -140,14 +141,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The new value of the annotation category. The size of the
             array must be the same as the array length.
         """
-        if not isinstance(array, np.ndarray):
-            raise TypeError("Annotation must be an 'ndarray'")
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = array
+        self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -181,7 +180,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
     def _set_element(self, index, atom):
         try:
-            if isinstance(index, numbers.Integral):
+            if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
                     self._annot[name][index] = atom._annot[name]
                 self._coord[..., index, :] = atom.coord
@@ -332,7 +331,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
                 self._box = value.astype(np.float32, copy=False)
             elif value is None:
-                # Remove bond list
+                # Remove box
                 self._box = None
             else:
                 raise TypeError("Box must be ndarray of floats or None")
@@ -394,7 +393,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if isinstance(self, AtomArrayStack):
             concat = AtomArrayStack(self.stack_depth(),
                                     self._array_length + array._array_length)
+        
         concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
+        
         # Transfer only annotations,
         # which are existent in both operands
         arr_categories = list(array._annot.keys())
@@ -403,6 +404,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 annot = self._annot[category]
                 arr_annot = array._annot[category]
                 concat._annot[category] = np.concatenate((annot,arr_annot))
+        
         # Concatenate bonds lists,
         # if at least one of them contains bond information
         if self._bonds is not None or array._bonds is not None:
@@ -413,6 +415,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if bonds2 is None:
                 bonds2 = BondList(array._array_length)
             concat._bonds = bonds1 + bonds2
+        
         # Copy box
         if self._box is not None:
             concat._box = np.copy(self._box)
@@ -1054,7 +1057,8 @@ class AtomArrayStack(_AtomArrayBase):
             )
         if isinstance(index, numbers.Integral):
             self.coord[index] = array.coord
-            self.box[index] = array.box
+            if self.box is not None:
+                self.box[index] = array.box
         else:
             raise TypeError(
                 f"Index must be integer, not '{type(index).__name__}'"
@@ -1078,7 +1082,7 @@ class AtomArrayStack(_AtomArrayBase):
     
     def __len__(self):
         """
-        The depth of the stack.
+        The depth of the stack, i.e. the amount of models.
         
         Returns
         -------
@@ -1240,6 +1244,149 @@ def stack(arrays):
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
     return array_stack
+
+
+def repeat(atoms, coord):
+    """
+    Repeat atoms (:class:`AtomArray` or :class:`AtomArrayStack`)
+    multiple times in the same model with different coordinates.
+
+    Parameters
+    ----------
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The atoms to be repeated.
+    coord : ndarray, dtype=float, shape=(k,n,3) or shape=(k,m,n,3)
+        The coordinates to be used fr the repeated atoms.
+        The length of first dimension determines the number of repeats.
+        If `atoms` is an :class:`AtomArray` 3 dimensions, otherwise
+        4 dimensions are required.
+    
+    Returns
+    -------
+    repeated: AtomArray, shape=(n*k,) or AtomArrayStack, shape=(m,n*k)
+        The repeated atoms.
+        Whether an :class:`AtomArray` or an :class:`AtomArrayStack` is
+        returned depends on the input `atoms`.
+    
+    Examples
+    --------
+
+    >>> atoms = array([
+    ...     Atom([1,2,3], res_id=1, atom_name="N"),
+    ...     Atom([4,5,6], res_id=1, atom_name="CA"),
+    ...     Atom([7,8,9], res_id=1, atom_name="C")
+    ... ])
+    >>> print(atoms)
+                1      N                1.000    2.000    3.000
+                1      CA               4.000    5.000    6.000
+                1      C                7.000    8.000    9.000
+    >>> repeat_coord = np.array([
+    ...     [[0,0,0], [1,1,1], [2,2,2]],
+    ...     [[3,3,3], [4,4,4], [5,5,5]]
+    ... ])
+    >>> print(repeat(atoms, repeat_coord))
+                1      N                0.000    0.000    0.000
+                1      CA               1.000    1.000    1.000
+                1      C                2.000    2.000    2.000
+                1      N                3.000    3.000    3.000
+                1      CA               4.000    4.000    4.000
+                1      C                5.000    5.000    5.000
+    """
+    if isinstance(atoms, AtomArray) and coord.ndim != 3:
+        raise ValueError(
+            f"Expected 3 dimensions for the coordinate array, got {coord.ndim}"
+        )
+    elif isinstance(atoms, AtomArrayStack) and coord.ndim != 4:
+        raise ValueError(
+            f"Expected 4 dimensions for the coordinate array, got {coord.ndim}"
+        )
+    
+    repetitions = len(coord)
+    orig_length = atoms.array_length()
+    new_length = orig_length * repetitions
+
+    if isinstance(atoms, AtomArray):
+        if coord.ndim != 3:
+            raise ValueError(
+                f"Expected 3 dimensions for the coordinate array, "
+                f"but got {coord.ndim}"
+            )
+        repeated = AtomArray(new_length)
+        repeated.coord = coord.reshape((new_length, 3))
+
+    elif isinstance(atoms, AtomArrayStack):
+        if coord.ndim != 4:
+            raise ValueError(
+                f"Expected 4 dimensions for the coordinate array, "
+                f"but got {coord.ndim}"
+            )
+        repeated = AtomArrayStack(atoms.stack_depth(), new_length)
+        repeated.coord = coord.reshape((atoms.stack_depth(), new_length, 3))
+    
+    else:
+        raise TypeError(
+            f"Expected 'AtomArray' or 'AtomArrayStack', "
+            f"but got {type(atoms).__name__}"
+        )
+    
+    for category in atoms.get_annotation_categories():
+        annot = np.tile(atoms.get_annotation(category), repetitions)
+        repeated.set_annotation(category, annot)
+    if atoms.bonds is not None:
+        bonds = atoms.bonds
+        for _ in range(repetitions-1):
+            bonds += atoms.bonds
+        repeated.bonds = bonds
+    if atoms.box is not None:
+        repeated.box = atoms.box.copy()
+    
+    return repeated
+
+
+def from_template(template, coord, box=None):
+    """
+    Create an :class:`AtomArrayStack` using template atoms and given
+    coordinates.
+    
+    Parameters
+    ----------
+    template : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The annotation arrays and bonds of the returned stack are taken
+        from this template.
+    coord : ndarray, dtype=float, shape=(l,n,3)
+        The coordinates for each model of the returned stack.
+    box : ndarray, optional, dtype=float, shape=(l,3,3)
+        The box for each model of the returned stack.
+    
+    Returns
+    -------
+    array_stack : AtomArrayStack
+        A stack containing the annotation arrays and bonds from
+        `template` but the coordinates from `coord` and the boxes from
+        `boxes`.
+    """
+    if template.array_length() != coord.shape[-2]:
+        raise ValueError(
+            f"Template has {template.array_length()} atoms, but "
+            f"{self.get_coord().shape[-2]} coordinates are given"
+        )
+
+    # Create empty stack with no models
+    new_stack = AtomArrayStack(0, template.array_length())
+    
+    for category in template.get_annotation_categories():
+        annot = template.get_annotation(category)
+        new_stack.set_annotation(category, annot)
+    if template.bonds is not None:
+        new_stack.bonds = template.bonds.copy()
+    if box is not None:
+        new_stack.box = box.copy()
+    
+    # After setting the coordinates the number of models is the number
+    # of models in the new coordinates
+    new_stack.coord = coord
+    
+    return new_stack
 
 
 def coord(item):

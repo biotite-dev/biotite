@@ -190,6 +190,8 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     @code.setter
     def code(self, value):
         dtype = Sequence.dtype(len(self.get_alphabet()))
+        if not isinstance(value, np.ndarray):
+            raise TypeError("Sequence code must be an integer ndarray")
         self._seq_code = value.astype(dtype, copy=False)
     
     

@@ -63,7 +63,7 @@ class Alphabet(object):
     ...    alph.encode("foo")
     ... except Exception as e:
     ...    print(e)
-    'foo' is not in the alphabet
+    Symbol 'foo' is not in the alphabet
     
     Create an Alphabet of arbitrary objects:
     
@@ -138,7 +138,9 @@ class Alphabet(object):
         try:
             return self._symbol_dict[symbol]
         except KeyError:
-            raise AlphabetError(f"'{symbol}' is not in the alphabet")
+            raise AlphabetError(
+                f"Symbol {repr(symbol)} is not in the alphabet"
+            )
     
     def decode(self, code):
         """
@@ -248,7 +250,7 @@ class LetterAlphabet(Alphabet):
                 symbol = symbol.encode("ASCII")
             if symbol not in LetterAlphabet.PRINATBLES:
                 raise ValueError(
-                    f"Symbol '{symbol}' is not printable or whitespace"
+                    f"Symbol {repr(symbol)} is not printable or whitespace"
                 )
             self._symbols.append(symbol)
         # Direct 'astype' conversion is not allowed by numpy
@@ -275,7 +277,9 @@ class LetterAlphabet(Alphabet):
             raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
         indices = np.where(self._symbols == ord(symbol))[0]
         if len(indices) == 0:
-            raise AlphabetError(f"'{symbol}' is not in the alphabet")
+            raise AlphabetError(
+                f"Symbol {repr(symbol)} is not in the alphabet"
+            )
         return indices[0]
     
     def decode(self, code, as_bytes=False):

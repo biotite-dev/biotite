@@ -82,7 +82,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         def _read(file):
             nonlocal self
-            self.lines = file.read().split("\n")
+            self.lines = file.read().splitlines()
         
         if isinstance(file, str):
             with open(file, "r") as f:
@@ -103,7 +103,8 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         def _write(file):
             nonlocal self
-            file.write("\n".join(self.lines))
+            # Include 'newline' at the end of file
+            file.write("\n".join(self.lines) + "\n")
 
         if isinstance(file, str):
             with open(file, "w") as f:

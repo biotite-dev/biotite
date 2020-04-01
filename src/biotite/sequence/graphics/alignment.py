@@ -5,12 +5,14 @@
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
-           "LetterTypePlotter", "plot_alignment",
-           "plot_alignment_similarity_based", "plot_alignment_type_based"]
+           "LetterTypePlotter",
+           "plot_alignment", "plot_alignment_similarity_based",
+           "plot_alignment_type_based"]
 
 import abc
 import numpy as np
 from ...visualize import set_font_size_in_coord, colors
+from ..seqtypes import ProteinSequence
 from .colorschemes import get_color_scheme
 
 
@@ -345,6 +347,7 @@ class LetterTypePlotter(LetterPlotter):
         return self._colors[code]
 
 
+
 def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
                    show_numbers=False, number_size=None, number_functions=None,
                    labels=None, label_size=None,
@@ -609,7 +612,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
         and black.
         The interpolation percentage is given by the average normalized
         similarity.
-    cmap : Colormap, optional
+    cmap : Colormap or str, optional
         The boxes (or symbols, if `color_symbols` is set) are
         colored based on the normalized similarity value on the
         given *Matplotlib* Colormap.
@@ -800,4 +803,3 @@ def _get_last_valid_index(alignment, column_i, seq_i):
                 index_found = True
         column_i -= 1
     return index
-

@@ -168,7 +168,9 @@
             "AtomArray",
             "AtomArrayStack",
             "array",
-            "stack"
+            "stack",
+            "repeat",
+            "from_template"
         ],
         "Boxes and unit cells" : [
             "vectors_from_unitcell",
@@ -185,7 +187,10 @@
         ],
         "Bonds" : [
             "BondList",
-            "BondType"
+            "BondType",
+            "connect_via_residue_names",
+            "connect_via_distances",
+            "find_connected"
         ],
         "Geometry" : [
             "displacement",
@@ -229,6 +234,7 @@
             "get_residues",
             "apply_residue_wise",
             "spread_residue_wise",
+            "get_residue_masks",
             "get_residue_count",
             "residue_iter"
         ],

@@ -2,7 +2,7 @@
 Structural alignment of lysozyme variants using 'Protein Blocks'
 ================================================================
 
-In this example we perform a structural alignment of mutiple lysozyme
+In this example we perform a structural alignment of multiple lysozyme
 variants from different organisms.
 A feasible approach to perfrom such a multiple structure alignment is the
 usage of a structural alphabet:

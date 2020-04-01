@@ -2,45 +2,60 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
-import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-import biotite.structure as struc
-import numpy as np
 import glob
 from os.path import join
-from .util import data_dir
+import numpy as np
 import pytest
+import biotite.structure as struc
+import biotite.structure.io as strucio
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
+from .util import data_dir
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.cif")))
+@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
 def test_superimposition_array(path):
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
-    fixed = pdbx.get_structure(pdbx_file, model=1)
+    """
+    Take a structure and rotate and translate a copy of it, so that they
+    are not superimposed anymore.
+    Then superimpose these structure onto each other and expect an
+    almost perfect match.
+    """
+    fixed = strucio.load_structure(path, model=1)
+    
     mobile = fixed.copy()
     mobile = struc.rotate(mobile, (1,2,3))
     mobile = struc.translate(mobile, (1,2,3))
+    
     fitted, transformation = struc.superimpose(
-        fixed, mobile, (mobile.atom_name == "CA")
+        fixed, mobile
     )
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
+    
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
+    
     fitted = struc.superimpose_apply(mobile, transformation)
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=5e-4)
+    
+    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
+
 
 @pytest.mark.parametrize("ca_only", (True, False))
 def test_superimposition_stack(ca_only):
-    path = join(data_dir, "1l2y.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
-    stack = pdbx.get_structure(pdbx_file)
+    """
+    Take a structure with multiple models where each model is not
+    (optimally) superimposed onto each other.
+    Then superimpose and expect an improved RMSD.
+    """
+    path = join(data_dir, "1l2y.mmtf")
+    stack = strucio.load_structure(path)
     fixed = stack[0]
     mobile = stack[1:]
     if ca_only:
         mask = (mobile.atom_name == "CA")
     else:
         mask = None
+    
     fitted, transformation = struc.superimpose(fixed, mobile, mask)
+    
     if ca_only:
         # The superimpositions are better for most cases than the
         # superimpositions in the structure file
@@ -51,3 +66,39 @@ def test_superimposition_stack(ca_only):
         # The superimpositions are better than the superimpositions
         # in the structure file
         assert (struc.rmsd(fixed, fitted) < struc.rmsd(fixed, mobile)).all()
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_masked_superimposition(seed):
+    """
+    Take two models of the same structure and superimpose based on a
+    single, randomly chosen atom.
+    Since two atoms can be superimposed perfectly, the distance between
+    the atom in both models should be 0.
+    """
+
+    path = join(data_dir, "1l2y.mmtf")
+    fixed = strucio.load_structure(path, model=1)
+    mobile = strucio.load_structure(path, model=2)
+
+    # Create random mask for a single atom
+    np.random.seed(seed)
+    mask = np.full(fixed.array_length(), False)
+    mask[np.random.randint(fixed.array_length())] = True
+    
+    # The distance between the atom in both models should not be
+    # already 0 prior to superimposition
+    assert struc.distance(fixed[mask], mobile[mask])[0] \
+        != pytest.approx(0, abs=5e-4)
+
+    fitted, transformation = struc.superimpose(
+        fixed, mobile, mask
+    )
+    
+    assert struc.distance(fixed[mask], fitted[mask])[0] \
+        == pytest.approx(0, abs=5e-4)
+    
+    fitted = struc.superimpose_apply(mobile, transformation)
+    
+    struc.distance(fixed[mask], fitted[mask])[0] \
+        == pytest.approx(0, abs=5e-4)

@@ -236,7 +236,8 @@ def visualize_secondary_structure(sse, first_id):
     fig = plt.figure(figsize=(8.0, 3.0))
     ax = fig.add_subplot(111)
     graphics.plot_feature_map(
-        ax, annotation, symbols_per_line=150, loc_range=(1,length+1),
+        ax, annotation, symbols_per_line=150,
+        loc_range=(first_id, first_id+len(sse)),
         show_numbers=True, show_line_position=True,
         feature_plotters=[HelixPlotter(), SheetPlotter()]
     )

@@ -22,7 +22,7 @@ def encode_chars(const unsigned char[:] alphabet not None,
     """
     Encode an array of symbols into an array of symbol codes.
 
-    Only works for letters.
+    Only works for ASCII characters.
     """
     cdef int i
     # The last symbol code of the alphabet + 1 is always illegal
@@ -53,7 +53,9 @@ def encode_chars(const unsigned char[:] alphabet not None,
             illegal_symbol = chr(symbols[i])
             # Local import to avoid circular imports
             from .alphabet import AlphabetError
-            raise AlphabetError(f"'{illegal_symbol}' is not in the alphabet")
+            raise AlphabetError(
+                f"Symbol {repr(illegal_symbol)} is not in the alphabet"
+            )
         code_view[i] = symbol_code
 
     return code
@@ -66,7 +68,7 @@ def decode_to_chars(const unsigned char[:] alphabet not None,
     """
     Encode an array of symbol codes into an array of symbols.
 
-    Only works for letters.
+    Only works for ASCII characters.
     """
     cdef int i
     cdef int alphabet_length = alphabet.shape[0]

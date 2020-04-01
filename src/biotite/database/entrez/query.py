@@ -92,6 +92,9 @@ class SimpleQuery(Query):
     A simple query for the NCBI Entrez search service without
     combination via 'AND', 'OR' or 'NOT'. A query consists of a search
     term and an optional field.
+
+    A list of available search fields with description can be found
+    `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
     
     Parameters
     ----------
@@ -185,6 +188,11 @@ def search(query, db_name, number=20):
     In these cases the request should be retried.
     When the issue occurs repeatedly, the error is probably in your
     input.
+
+    Notes
+    -----
+    A list of available search fields with description can be found
+    `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
     
     Examples
     --------

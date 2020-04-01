@@ -14,7 +14,7 @@ __all__ = ["get_chain_starts", "get_chains", "get_chain_count", "chain_iter"]
 import numpy as np
 
 
-def get_chain_starts(array):
+def get_chain_starts(array, add_exclusive_stop=False):
     """
     Get the indices in an atom array, which indicates the beginning of
     a new chain.
@@ -28,6 +28,10 @@ def get_chain_starts(array):
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to get the chain starts from.
+    add_exclusive_stop : bool, optional
+        If true, the exclusive stop of the input atom array, i.e.
+        ``array.array_length()``, is added to the returned array of
+        start indices as last element.
         
     Returns
     -------
@@ -41,6 +45,8 @@ def get_chain_starts(array):
     chain_ids = array.chain_id
     chain_changes = np.where((chain_ids[:-1] != chain_ids[1:]))[0] + 1
     chain_starts = np.append([0], chain_changes)
+    if add_exclusive_stop:
+        chain_starts = np.append(chain_starts, [array.array_length()])
     return chain_starts
 
 

@@ -4,13 +4,17 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_structure", "set_structure"]
+__all__ = ["get_sequence", "get_structure", "set_structure",
+           "list_assemblies", "get_assembly"]
 
+import itertools
 import numpy as np
 from ...error import BadStructureError
-from ...atoms import Atom, AtomArray, AtomArrayStack
+from ....file import InvalidFileError
+from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
 from ...filter import filter_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
+from ...util import matrix_rotate
 from ....sequence.seqtypes import ProteinSequence
 from collections import OrderedDict
 
@@ -45,8 +49,9 @@ def get_sequence(pdbx_file, data_block=None):
     return sequences
 
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
-                  extra_fields=[], use_author_fields=True):
+
+def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
+                  extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a :class:`PDBxFile`.
@@ -62,7 +67,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
-    data_block : string, optional
+    data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
     altloc : list of tuple, optional
@@ -115,6 +120,9 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=[],
     304
     
     """
+    altloc = [] if altloc is None else altloc
+    extra_fields = [] if extra_fields is None else extra_fields
+    
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
     
@@ -260,6 +268,7 @@ def _get_box(pdbx_file, data_block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
+
 def set_structure(pdbx_file, array, data_block=None):
     """
     Set the `atom_site` category with an
@@ -279,7 +288,7 @@ def set_structure(pdbx_file, array, data_block=None):
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
-    data_block : string, optional
+    data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
     
@@ -406,7 +415,6 @@ def set_structure(pdbx_file, array, data_block=None):
         pdbx_file.set_category("cell", cell_dict, data_block)
 
 
-
 def _determine_entity_id(chain_id):
     entity_id = np.zeros(len(chain_id), dtype=int)
     # Dictionary that translates chain_id to entity_id
@@ -421,3 +429,211 @@ def _determine_entity_id(chain_id):
             entity_id[i] = id_translation[chain_id[i]]
             id += 1
     return entity_id.astype(str)
+
+
+
+def list_assemblies(pdbx_file, data_block=None):
+    """
+    List the biological assemblies that are available for the structure
+    in the given file.
+
+    This function receives the data from the ``pdbx_struct_assembly``
+    category in the file.
+    Consequently, this category must be present in the file.
+
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    data_block : str, optional
+        The name of the data block.
+        Defaults to the first (and most times only) data block of the
+        file.
+    
+    Returns
+    -------
+    assemblies : dict of str -> str
+        A dictionary that maps an assembly ID to a description of the
+        corresponding assembly.
+    """
+    assembly_category = pdbx_file.get_category(
+        "pdbx_struct_assembly", data_block, expect_looped=True
+    )
+    if assembly_category is None:
+        raise InvalidFileError("File has no 'pdbx_struct_assembly' category")
+    return {id: details for id, details in
+            zip(assembly_category["id"], assembly_category["details"])}
+
+
+def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
+                 altloc=None, extra_fields=None, use_author_fields=True):
+    """
+    Build the given biological assembly.
+
+    This function receives the data from the
+    ``pdbx_struct_assembly_gen``, ``pdbx_struct_oper_list`` and
+    ``atom_site`` categories in the file.
+    Consequently, these categories must be present in the file.
+
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    assembly_id : str
+        The assembly to build
+    model : int, optional
+        If this parameter is given, the function will return an
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
+    data_block : str, optional
+        The name of the data block.
+        Defaults to the first (and most times only) data block of the
+        file.
+    altloc : list of tuple, optional
+        In case the structure contains *altloc* entries, those can be
+        specified here:
+        Each tuple consists of the following elements:
+
+            - A chain ID, specifying the residue
+            - A residue ID, specifying the residue
+            - The desired *altoc* ID for the specified residue
+
+        For each of the given residues the atoms with the given *altloc*
+        ID are filtered.
+        By default the location with the *altloc* ID "A" is used.
+    extra_fields : list of str, optional
+        The strings in the list are entry names, that are
+        additionally added as annotation arrays.
+        The annotation category name will be the same as the PDBx
+        subcategory name.
+        The array type is always `str`.
+        An exception are the special field identifiers:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        These will convert the fitting subcategory into an
+        annotation array with reasonable type.
+    use_author_fields : bool, optional
+        Some fields can be read from two alternative sources,
+        for example both, ``label_seq_id`` and ``auth_seq_id`` describe
+        the ID of the residue.
+        While, the ``label_xxx`` fields can be used as official pointers
+        to other categories in the :class:`PDBxFile`, the ``auth_xxx``
+        fields are set by the author(s) of the structure and are
+        consistent with the corresponding values in PDB files.
+        If `use_author_fields` is true, the annotation arrays will be
+        read from the ``auth_xxx`` fields (if applicable),
+        otherwise from the the ``label_xxx`` fields.
+    
+    Returns
+    -------
+    assembly : AtomArray or AtomArrayStack
+        The assembly. The return type depends on the `model` parameter.
+    """
+    assembly_gen_category = pdbx_file.get_category(
+        "pdbx_struct_assembly_gen", data_block, expect_looped=True
+    )
+    if assembly_gen_category is None:
+        raise InvalidFileError(
+            "File has no 'pdbx_struct_assembly_gen' category"
+        )
+
+    struct_oper_category = pdbx_file.get_category(
+        "pdbx_struct_oper_list", data_block, expect_looped=True
+    )
+    if struct_oper_category is None:
+        raise InvalidFileError("File has no 'pdbx_struct_oper_list' category")
+
+    if assembly_id is None:
+        assembly_id = assembly_gen_category["assembly_id"][0]
+    elif assembly_id not in assembly_gen_category["assembly_id"]:
+        raise KeyError(f"File has no Assembly ID '{assembly_id}'")
+
+    transformations = _get_transformations(struct_oper_category)
+
+    # Find the operation expression for given assembly ID
+    # We already asserted that the ID is actually present
+    for id, op_expr, chain_expr in zip(
+        assembly_gen_category["assembly_id"],
+        assembly_gen_category["oper_expression"],
+        assembly_gen_category["asym_id_list"]
+    ):
+        if id == assembly_id:
+            operations = _parse_operation_expression(op_expr)
+            chains = chain_expr.split(",")
+            break
+    
+
+    # Apply operations on structure
+    structure = get_structure(
+        pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
+    )
+    if model is None:
+        # Coordinates for AtomArrayStack
+        assembly_coord = np.zeros(
+            (len(operations), structure.stack_depth(),
+             structure.array_length(), 3)
+        )
+    else:
+        # Coordinates for AtomArray
+        assembly_coord = np.zeros(
+            (len(operations), structure.array_length(), 3)
+        )
+    
+    # Execute for each copy in the assembly
+    for i, operation in enumerate(operations):
+        coord = structure.coord
+        # Execute for each transformation step
+        # in the operation expression
+        for op_step in operation:
+            rotation_matrix, translation_vector = transformations[op_step]
+            # Rotate
+            coord = matrix_rotate(coord, rotation_matrix)
+            # Translate
+            coord += translation_vector
+        assembly_coord[i] = coord
+    
+    return repeat(structure, assembly_coord)     
+
+
+def _get_transformations(struct_oper):
+    transformation_dict = {}
+    for index, id in enumerate(struct_oper["id"]):
+        rotation_matrix = np.array([
+            [float(struct_oper[f"matrix[{i}][{j}]"][index]) for j in (1,2,3)]
+            for i in (1,2,3)
+        ])
+        translation_vector = np.array([
+            float(struct_oper[f"vector[{i}]"][index]) for i in (1,2,3)
+        ])
+        transformation_dict[id] = (rotation_matrix, translation_vector)
+    return transformation_dict
+
+
+def _parse_operation_expression(expression):
+    # Split groups by parentheses:
+    # use the opening parenthesis as delimiter
+    # and just remove the closing parenthesis 
+    expressions_per_step = expression.replace(")","").split("(")
+    expressions_per_step = [e for e in expressions_per_step if len(e) > 0]
+    # Important: Operations are applied from right to left
+    expressions_per_step.reverse()
+
+    operations = []
+    for expr in expressions_per_step:
+        if "-" in expr:
+            # Range of operation IDs, they must be integers
+            first, last = expr.split("-")
+            operations.append(
+                [str(id) for id in range(int(first), int(last)+1)]
+            )
+        elif "," in expr:
+            # List of operation IDs
+            operations.append(expr.split(","))
+        else:
+            # Single operation ID
+            operations.append([expr])
+
+    # Cartesian product of operations
+    return list(itertools.product(*operations))

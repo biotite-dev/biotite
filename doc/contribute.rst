@@ -313,11 +313,12 @@ Furthermore, the following software must be installed:
    - *Clustal Omega*
    - *DSSP*
 
-If you use the *conda* package manager, there is a shortcut:
-Cou can download a *conda* environment from
-`here <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yaml>`_,
-that contains all of these requirements. How to create and activate the
-environment from the ``environment.yaml`` file, is explained in the
+If you use the *Conda* package manager, there is a shortcut:
+Cou can download a *Conda* environment from
+`here <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_,
+that contains all of these requirements.
+How to create and activate the environment from the ``environment.yml`` file,
+is explained in the
 `conda documentation <http://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file>`_.
 
 

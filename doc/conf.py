@@ -14,6 +14,8 @@ import sys
 import glob
 import shutil
 import types
+import warnings
+from sphinx_gallery.sorting import FileNameSortKey
 import matplotlib
 
 doc_path = dirname(realpath(__file__))
@@ -44,6 +46,16 @@ tutorial.create_tutorial("tutorial_src", "tutorial")
 
 
 #### General ####
+
+import warnings
+
+# Removed standard matplotlib warning when generating gallery
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message="Matplotlib is currently using agg, which is a non-GUI backend, "
+            "so cannot show the figure."
+)
 
 extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
@@ -108,8 +120,10 @@ html_theme_options = {
 sphinx_gallery_conf = {
     "examples_dirs"             : "examples/scripts",
     "gallery_dirs"              : "examples/gallery",
+    "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
+    "ignore_pattern"            : ".*ignore\.py",
     "backreferences_dir"        : False,
     "download_section_examples" : False,
     # Never report run time

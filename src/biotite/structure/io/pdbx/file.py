@@ -152,15 +152,14 @@ class PDBxFile(TextFile, MutableMapping):
         blocks : list
             List of data block names.
         """
-        blocks = []
+        blocks = set()
         for category_tuple in self._categories.keys():
-            block = category_tuple[0]
-            if block not in blocks:
-                blocks.append(block)
-        return blocks
+            block, _ = category_tuple
+            blocks.add(block)
+        return sorted(blocks)
     
     
-    def get_category(self, category, block=None):
+    def get_category(self, category, block=None, expect_looped=False):
         """
         Get the dictionary for a given category.
         
@@ -171,14 +170,17 @@ class PDBxFile(TextFile, MutableMapping):
         block : string, optional
             The name of the data block. Default is the first
             (and most times only) data block of the file.
-        
-        This function optionally uses C-extensions.
+        expect_looped : bool, optional
+            If set to true, the returned dictionary will always contain
+            arrays (only if the category exists):
+            If the category is *non-looped*, each array will contain
+            only one element.
             
         Returns
         -------
-        category_dict : dict or None
+        category_dict : dict of (str or ndarray, dtype=str) or None
             A entry keyed dictionary. The corresponding values are
-            strings or `ndarrays` of strings for *non-looped* and
+            strings or array of strings for *non-looped* and
             *looped* categories, respectively.
             Returns None, if the data block does not contain the given
             category.
@@ -241,6 +243,11 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             category_dict = _process_singlevalued(lines)
         
+        if expect_looped:
+            if not is_loop:
+                for key, val in category_dict:
+                    category_dict[key] = np.array([val], dtype=object)
+
         return category_dict
             
     

@@ -171,6 +171,8 @@ class Feature(Copyable):
     
     def __init__(self, key, locs, qual=None):
         self._key = key
+        if len(locs) == 0:
+            raise ValueError("A feature must have at least one location")
         self._locs = frozenset(locs)
         self._qual = copy.deepcopy(qual) if qual is not None else {}
     
@@ -212,7 +214,7 @@ class Feature(Copyable):
         elif first > it_first:
             return False
         else: # First is equal
-            return last < it_last
+            return last > it_last
     
     def __gt__(self, item):
         if not isinstance(item, Feature):
@@ -226,7 +228,7 @@ class Feature(Copyable):
         elif first < it_first:
             return False
         else: # First is equal
-            return last > it_last
+            return last < it_last
     
     @property
     def key(self):
@@ -293,24 +295,24 @@ class Annotation(Copyable):
     
     Examples
     --------
-    Creating an annotation from a feature list
+    Creating an annotation from a feature list:
     
     >>> feature1 = Feature("CDS", [Location(-10, 30 )], qual={"gene" : "test1"})
     >>> feature2 = Feature("CDS", [Location(20,  50 )], qual={"gene" : "test2"})
-    >>> annotation1 = Annotation([feature1, feature2])
-    >>> for f in sorted(list(annotation1)):
+    >>> annotation = Annotation([feature1, feature2])
+    >>> for f in sorted(list(annotation)):
     ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
     test1 -10-30 >
     test2 20-50 >
     
-    Merging two annotations and a feature
+    Merging two annotations and a feature:
     
     >>> feature3 = Feature("CDS", [Location(100, 130 )], qual={"gene" : "test3"})
     >>> feature4 = Feature("CDS", [Location(150, 250 )], qual={"gene" : "test4"})
     >>> annotation2 = Annotation([feature3, feature4])
     >>> feature5 = Feature("CDS", [Location(-50, 200 )], qual={"gene" : "test5"})
-    >>> annotation3 = annotation1 + annotation2 + feature5
-    >>> for f in sorted(list(annotation3)):
+    >>> annotation = annotation + annotation2 + feature5
+    >>> for f in sorted(list(annotation)):
     ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
     test5 -50-200 >
     test1 -10-30 >
@@ -318,14 +320,16 @@ class Annotation(Copyable):
     test3 100-130 >
     test4 150-250 >
     
-    Location based indexing, note the defects
+    Location based indexing, note the defects:
     
-    >>> annotation4 = annotation3[40:150]
-    >>> for f in sorted(list(annotation4)):
-    ...     print(f.qual["gene"], "".join([str(loc) for loc in f.locs]))
-    test2 40-50 >
-    test5 40-149 >
-    test3 100-130 >
+    >>> annotation = annotation[40:150]
+    >>> for f in sorted(list(annotation)):
+    ...     gene = f.qual["gene"]
+    ...     loc_str = "".join([f"{loc}    {loc.defect}" for loc in f.locs])
+    ...     print(gene, loc_str)
+    test5 40-149 >    Defect.MISS_RIGHT|MISS_LEFT
+    test2 40-50 >    Defect.MISS_LEFT
+    test3 100-130 >    Defect.NONE
     """
     
     def __init__(self, features=None):
