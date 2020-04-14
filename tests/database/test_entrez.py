@@ -13,7 +13,7 @@ from biotite.database import RequestError
 from ..util import cannot_connect_to
 
 
-NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 
 
 @pytest.mark.skipif(
