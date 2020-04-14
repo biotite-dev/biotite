@@ -10,7 +10,7 @@ matrix:
     sudo: false
     env:
       - PY_VERSION='3.6'
-      - COMPLETE=true
+      - COMPLETE=false
       - BIN=true
       - SRC=true
   - os: linux
@@ -26,7 +26,7 @@ matrix:
     sudo: false
     env:
       - PY_VERSION='3.8'
-      - COMPLETE=false
+      - COMPLETE=true
       - BIN=true
       - SRC=false
   - os: osx
