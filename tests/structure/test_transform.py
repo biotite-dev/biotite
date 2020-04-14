@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.npz as npz
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.fixture(
@@ -21,7 +21,7 @@ def input_atoms(request):
     ndim, as_coord = request.param
 
     file = npz.NpzFile()
-    file.read(join(data_dir, "1l2y.npz"))
+    file.read(join(data_dir("structure"), "1l2y.npz"))
     atoms = file.get_structure()
     
     if ndim == 2:

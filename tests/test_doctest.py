@@ -4,7 +4,6 @@
 
 __author__ = "Patrick Kunzmann"
 
-from shutil import which
 import pkgutil
 import doctest
 import os.path
@@ -13,6 +12,7 @@ from importlib import import_module
 import pytest
 import biotite
 import biotite.structure.io as strucio
+from .util import is_not_installed, cannot_import
 
 
 @pytest.mark.parametrize("package_name, context_package_names", [
@@ -21,7 +21,9 @@ import biotite.structure.io as strucio
     pytest.param("biotite.sequence.align",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.phylo",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.graphics",   ["biotite.sequence"],
-                 marks=pytest.mark.xfail(raises=ImportError)                 ),
+                 marks=pytest.mark.skipif(
+                    cannot_import("matplotlib"),
+                    reason="Matplotlib is not installed"),                   ),
     pytest.param("biotite.sequence.io",         ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fasta",   ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fastq",   ["biotite.sequence"]         ),
@@ -32,7 +34,9 @@ import biotite.structure.io as strucio
                  marks=pytest.mark.filterwarnings("ignore:")                 ),
     pytest.param("biotite.structure",           ["biotite.structure.io"]     ),
     pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
-                 marks=pytest.mark.xfail(raises=ImportError)                 ),
+                 marks=pytest.mark.skipif(
+                    cannot_import("matplotlib"),
+                    reason="Matplotlib is not installed"),                   ),
     pytest.param("biotite.structure.io",        ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.pdb",    ["biotite.structure",
                                                  "biotite"]                  ),
@@ -44,20 +48,20 @@ import biotite.structure.io as strucio
     pytest.param("biotite.database.rcsb",       []                           ),
     pytest.param("biotite.application",      ["biotite.application.clustalo",
                                               "biotite.sequence"],            
-                 marks=pytest.mark.skipif(which("clustalo") is None,
+                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.blast",   [],                          ),
     pytest.param("biotite.application.muscle",  ["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("muscle") is None,
+                 marks=pytest.mark.skipif(is_not_installed("muscle"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.clustalo",["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("clustalo") is None,
+                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.mafft",   ["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("mafft") is None,
+                 marks=pytest.mark.skipif(is_not_installed("mafft"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.dssp",    ["biotite.structure"],
-                 marks=pytest.mark.skipif(which("mkdssp") is None,
+                 marks=pytest.mark.skipif(is_not_installed("mkdssp"),
                                           reason="Software is not installed")),
 ])
 def test_doctest(package_name, context_package_names):

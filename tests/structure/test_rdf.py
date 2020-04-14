@@ -1,16 +1,20 @@
+import itertools
+from os.path import join
+import numpy as np
+import pytest
 from biotite.structure.io import load_structure
 from biotite.structure.rdf import rdf
 from biotite.structure.box import vectors_from_unitcell
-from .util import data_dir
-from os.path import join
-import pytest
-import numpy as np
-import itertools
-
-TEST_FILE = join(data_dir, "waterbox.gro")
+from ..util import data_dir, cannot_import
 
 
-@pytest.mark.xfail(raises=ImportError)
+TEST_FILE = join(data_dir("structure"), "waterbox.gro")
+
+
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 def test_rdf():
     """ General test to reproduce oxygen RDF for a box of water"""
     test_file = TEST_FILE
@@ -108,7 +112,10 @@ def test_rdf_multiple_center():
     assert np.allclose(g_r, mean, rtol=0.0001)
 
 
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 def test_rdf_periodic():
     """ Test if the periodic argument gives the correct results"""
     test_file = TEST_FILE

@@ -12,7 +12,7 @@ import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
 def test_distance():
@@ -44,7 +44,7 @@ def test_dihedral():
 
 @pytest.mark.parametrize("multiple_chains", [False, True])
 def test_dihedral_backbone_general(multiple_chains):
-    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     n_models = stack.stack_depth()
     n_res = stack.res_id[-1]
     if multiple_chains:
@@ -74,8 +74,13 @@ def _assert_plausible_omega(omega):
     assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.6)
 
 
-@pytest.mark.xfail(raises=ImportError)
-@pytest.mark.parametrize("file_name", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
+@pytest.mark.parametrize(
+    "file_name", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_dihedral_backbone_result(file_name):
     import mdtraj
     
@@ -109,7 +114,7 @@ def test_index_distance_non_periodic():
     Without PBC the result should be equal to the normal distance
     calculation.
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     ref_dist = struc.distance(
         array.coord[np.newaxis, :, :],
         array.coord[:, np.newaxis, :]
@@ -137,7 +142,7 @@ def test_index_distance_periodic_orthogonal(shift):
     The PBC aware computation, should give the same results,
     irrespective of which atoms are centered in the box 
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     array.box = np.diag(
@@ -158,9 +163,12 @@ def test_index_distance_periodic_orthogonal(shift):
 
 
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 # index_distance() creates a large ndarray
-@pytest.mark.xfail(raises=(MemoryError, ImportError))
+@pytest.mark.xfail(raises=(MemoryError))
 @pytest.mark.parametrize(
     "shift, angles", itertools.product(
     [
@@ -180,7 +188,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
     The PBC aware computation, should give the same results,
     irrespective of which atoms are centered in the box 
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     boundaries = np.max(array.coord, axis=0) - np.min(array.coord, axis=0) + 1
@@ -199,7 +207,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
 
     # Compare with MDTraj
     import mdtraj
-    traj = mdtraj.load(join(data_dir, "3o5r.pdb"))
+    traj = mdtraj.load(join(data_dir("structure"), "3o5r.pdb"))
     # Angstrom to Nanometers
     traj.unitcell_vectors = array.box[np.newaxis, :, :] / 10
     # Nanometers to Angstrom
@@ -219,7 +227,7 @@ def test_index_functions():
     The `index_xxx()` functions should give the same result as the
     corresponding `xxx` functions.
     """
-    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     array = stack[0]
     # Test for atom array, stack and raw coordinates
     samples = (array, stack, struc.coord(array), struc.coord(stack))

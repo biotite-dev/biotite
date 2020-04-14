@@ -16,13 +16,18 @@ import biotite.structure.io.tng as tng
 import biotite.structure.io.dcd as dcd
 import biotite.structure.io.netcdf as netcdf
 import biotite.structure.io.pdbx as pdbx
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize("format", ["trr", "xtc", "tng", "dcd", "netcdf"])
 def test_array_conversion(format):
-    template = strucio.load_structure(join(data_dir, "1l2y.mmtf"))[0]
+    template = strucio.load_structure(
+        join(data_dir("structure"), "1l2y.mmtf")
+    )[0]
     # Add fake box
     template.box = np.diag([1,2,3])
     if format == "trr":
@@ -36,7 +41,7 @@ def test_array_conversion(format):
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
     traj_file = traj_file_cls()
-    traj_file.read(join(data_dir, f"1l2y.{format}"))
+    traj_file.read(join(data_dir("structure"), f"1l2y.{format}"))
     ref_array = traj_file.get_structure(template)
 
     traj_file = traj_file_cls()
@@ -53,7 +58,10 @@ def test_array_conversion(format):
     assert ref_array.coord == pytest.approx(array.coord, abs=1e-2)
 
 
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize(
     "format, start, stop, step, chunk_size",
     itertools.product(
@@ -74,7 +82,7 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
     
     # MMTF is used as reference for consistency check
     # due to higher performance
-    ref_traj = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    ref_traj = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     ref_traj = ref_traj[slice(start, stop, step)]
     
     # Template is first model of the reference
@@ -91,7 +99,7 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
         traj_file_cls = netcdf.NetCDFFile
     traj_file = traj_file_cls()
     traj_file.read(
-        join(data_dir, f"1l2y.{format}"),
+        join(data_dir("structure"), f"1l2y.{format}"),
         start, stop, step, chunk_size=chunk_size
     )
     test_traj = traj_file.get_structure(template)

@@ -9,7 +9,7 @@ import biotite.sequence.io.gff as gff
 import biotite.sequence.io.genbank as gb
 import numpy as np
 import pytest
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,7 @@ def test_conversion_lowlevel(path):
     a GenBank file and write a file, without data changing.
     """
     file = gff.GFFFile()
-    file.read(join(data_dir, path))
+    file.read(join(data_dir("sequence"), path))
     ref_entries = [entry for entry in file]
 
     file = gff.GFFFile()
@@ -50,7 +50,7 @@ def test_conversion_highlevel(path):
     `Feature` object.
     """
     file = gff.GFFFile()
-    file.read(join(data_dir, path))
+    file.read(join(data_dir("sequence"), path))
     ref_annot = gff.get_annotation(file)
     ref_phases = []
     for _, _, type, _, _, _, _, phase, _ in file:
@@ -83,11 +83,11 @@ def test_genbank_consistency(path):
     GFF3 file and a GenBank file.
     """
     file = gb.GenBankFile()
-    file.read(join(data_dir, path))
+    file.read(join(data_dir("sequence"), path))
     ref_annot = gb.get_annotation(file)
 
     file = gff.GFFFile()
-    file.read(join(data_dir, path[:-3] + ".gff3"))
+    file.read(join(data_dir("sequence"), path[:-3] + ".gff3"))
     test_annot = gff.get_annotation(file)
     
     # Remove qualifiers, since they will be different
@@ -137,7 +137,7 @@ def test_entry_indexing():
     """
     file = gff.GFFFile()
     with pytest.warns(UserWarning):
-        file.read(join(data_dir, "indexing_test.gff3"))
+        file.read(join(data_dir("sequence"), "indexing_test.gff3"))
     assert file._directives == [
         ("directive 1", 1),
         ("directive 2", 2),
@@ -154,7 +154,7 @@ def test_percent_encoding():
     artificial test file.
     """
     file = gff.GFFFile()
-    file.read(join(data_dir, "percent_test.gff3"))
+    file.read(join(data_dir("sequence"), "percent_test.gff3"))
     seqid, source, type, start, end, score, strand, phase, attrib \
         = file[0]
     assert seqid == "123,456"

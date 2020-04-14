@@ -13,13 +13,13 @@ import biotite.structure.io as io
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
-        glob.glob(join(data_dir, "*.gro")),
+        glob.glob(join(data_dir("structure"), "*.gro")),
         [False, True]
     )
 )
@@ -40,8 +40,9 @@ def test_array_conversion(path, single_model):
     assert array1.coord.tolist() == array2.coord.tolist()
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir,
-                                                "[!(waterbox)]*.gro")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "[!(waterbox)]*.gro"))
+)
 def test_pdb_consistency(path):
     pdb_path = splitext(path)[0] + ".pdb"
     pdb_file = pdb.PDBFile()
@@ -65,7 +66,7 @@ def test_pdb_consistency(path):
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
+        glob.glob(join(data_dir("structure"), "*.pdb")),
         [False, True]
     )
 )

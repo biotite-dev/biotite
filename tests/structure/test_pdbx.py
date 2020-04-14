@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 import glob
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 from pytest import approx
 
@@ -33,7 +33,7 @@ from pytest import approx
 )
 def test_parsing(category, key, exp_value):
     pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(join(data_dir, "1l2y.cif"))
+    pdbx_file.read(join(data_dir("structure"), "1l2y.cif"))
     cat_dict = pdbx_file[category]
     value = cat_dict[key]
     if isinstance(value, np.ndarray):
@@ -76,7 +76,7 @@ def test_empty_values(string, use_array):
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
-        glob.glob(join(data_dir, "*.cif")),
+        glob.glob(join(data_dir("structure"), "*.cif")),
         [False, True]
     )
 )
@@ -98,7 +98,7 @@ def test_conversion(path, single_model):
 
 
 def test_extra_fields():
-    path = join(data_dir, "1l2y.cif")
+    path = join(data_dir("structure"), "1l2y.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
     stack1 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
@@ -110,7 +110,7 @@ def test_extra_fields():
     assert stack1 == stack2
 
 
-    path = join(data_dir, "1l2y.cif")
+    path = join(data_dir("structure"), "1l2y.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
     stack1 = pdbx.get_structure(
@@ -161,7 +161,7 @@ def test_list_assemblies():
     Test the :func:`list_assemblies()` function based on a known
     example.
     """
-    path = join(data_dir, "1f2n.cif")
+    path = join(data_dir("structure"), "1f2n.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
 
@@ -185,7 +185,7 @@ def test_get_assembly(single_model):
     """
     model = 1 if single_model else None
 
-    path = join(data_dir, "1f2n.cif")
+    path = join(data_dir("structure"), "1f2n.cif")
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.read(path)
 

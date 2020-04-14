@@ -6,14 +6,14 @@ import biotite.structure as struc
 import biotite.structure.io.npz as npz
 import numpy as np
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 
 @pytest.fixture
 def sample_array():
     file = npz.NpzFile()
-    file.read(join(data_dir, "1l2y.npz"))
+    file.read(join(data_dir("structure"), "1l2y.npz"))
     return file.get_structure()[0]
 
 @pytest.fixture

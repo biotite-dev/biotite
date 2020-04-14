@@ -14,13 +14,13 @@ import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io as io
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.mark.parametrize(
     "path, single_model, hybrid36",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
+        glob.glob(join(data_dir("structure"), "*.pdb")),
         [False, True],
         [False, True]
     )
@@ -60,7 +60,7 @@ def test_array_conversion(path, single_model, hybrid36):
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
+        glob.glob(join(data_dir("structure"), "*.pdb")),
         [False, True]
     )
 )
@@ -86,7 +86,7 @@ def test_pdbx_consistency(path, single_model):
 
 @pytest.mark.parametrize("hybrid36", [False, True])
 def test_extra_fields(hybrid36):
-    path = join(data_dir, "1l2y.pdb")
+    path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     stack1 = pdb_file.get_structure(
@@ -118,7 +118,7 @@ def test_extra_fields(hybrid36):
 @pytest.mark.filterwarnings("ignore")
 def test_guess_elements():
     # read valid pdb file
-    path = join(data_dir, "1l2y.pdb")
+    path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     stack = pdb_file.get_structure()
@@ -144,7 +144,7 @@ def test_guess_elements():
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
+        glob.glob(join(data_dir("structure"), "*.pdb")),
         [False, True]
     )
 )
@@ -162,7 +162,7 @@ def test_box_shape(path, single_model):
 
 
 def test_box_parsing():
-    path = join(data_dir, "1igy.pdb")
+    path = join(data_dir("structure"), "1igy.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     a = pdb_file.get_structure()
@@ -227,7 +227,7 @@ def test_id_overflow():
 def test_get_coord(model):
     # Choose a structure without inscodes and altlocs
     # to avoid atom filtering in reference atom array (stack)
-    path = join(data_dir, "1l2y.pdb")
+    path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile()
     pdb_file.read(path)
     ref_coord = pdb_file.get_structure(model=model).coord

@@ -12,7 +12,7 @@ import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
 import biotite.application.muscle as muscle
 import biotite
-from .util import data_dir
+from ..util import data_dir, is_not_installed
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def sequences():
     10 Cas9 sequences.
     """
     fasta_file = fasta.FastaFile()
-    fasta_file.read(join(data_dir, "cas9.fasta"))
+    fasta_file.read(join(data_dir("sequence"), "cas9.fasta"))
     return [seq.ProteinSequence(sequence) for sequence in fasta_file.values()]
 
 def test_alignment_str():
@@ -162,7 +162,7 @@ def test_align_optimal_simple(local, term, gap_penalty,
         assert score == ali.score
 
 @pytest.mark.skipif(
-    shutil.which("muscle") is None,
+    is_not_installed("muscle"),
     reason="MUSCLE is not installed"
 )
 # Ignore warning about MUSCLE writing no second guide tree
@@ -263,7 +263,7 @@ def test_scoring(sequences, gap_penalty, term, seq_indices):
         raise
 
 @pytest.mark.skipif(
-    shutil.which("muscle") is None,
+    is_not_installed("muscle"),
     reason="MUSCLE is not installed"
 )
 @pytest.mark.parametrize("gap_penalty", [-10, (-10,-1)])

@@ -11,6 +11,7 @@ from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
 import pytest
 import shutil
+from ..util import is_not_installed
 
 
 @pytest.fixture
@@ -23,9 +24,9 @@ def sequences():
 ]]
 
 
-@pytest.mark.skipif(shutil.which("muscle")   is None or
-                    shutil.which("mafft")    is None or
-                    shutil.which("clustalo") is None,
+@pytest.mark.skipif(is_not_installed("muscle") or
+                    is_not_installed("mafft") or
+                    is_not_installed("clustalo"),
                     reason="At least one MSA application is not installed")
 @pytest.mark.parametrize("app_cls, exp_ali, exp_order",
     [(MuscleApp,
