@@ -137,7 +137,7 @@ def test_search_invalid():
         (
             rcsb.EntityCountQuery,
             {"min": 85, "max": 100, "entity_type": "protein"},
-            ["6HIX", "5LYB"]
+            ["6HIX", "5LYB", "6XYW"]
         ),
         (
             rcsb.ModelCountQuery,
