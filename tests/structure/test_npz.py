@@ -11,10 +11,12 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.npz as npz
 import biotite.structure.io.pdbx as pdbx
-from .util import data_dir
+from ..util import data_dir
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.npz")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.npz"))
+)
 def test_array_conversion(path):
     npz_file = npz.NpzFile()
     npz_file.read(path)
@@ -25,7 +27,9 @@ def test_array_conversion(path):
     assert array1 == array2
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.npz")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.npz"))
+)
 def test_pdbx_consistency(path):
     cif_path = splitext(path)[0] + ".cif"
     array1 = strucio.load_structure(path)

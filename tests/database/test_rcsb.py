@@ -14,9 +14,16 @@ import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.mmtf as mmtf
 import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
+from ..util import cannot_connect_to
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+RCSB_URL = "https://www.rcsb.org/"
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 @pytest.mark.parametrize(
     "format, as_file_like",
     itertools.product(["pdb", "cif", "mmtf", "fasta"], [False, True])
@@ -43,14 +50,20 @@ def test_fetch(format, as_file_like):
         assert len(fasta.get_sequences(file)) > 0
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 @pytest.mark.parametrize("format", ["pdb", "cif", "mmtf", "fasta"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
         file = rcsb.fetch("xxxx", format, biotite.temp_dir(), overwrite=True)
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 def test_search():
     query1 = rcsb.ResolutionQuery(0.0, 0.8)
     query2 = rcsb.MolecularWeightQuery(0, 1000)
@@ -64,13 +77,19 @@ def test_search():
     assert ids_comp == sorted(ids_comp2)
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 def test_search_empty():
     ids = rcsb.search(rcsb.MolecularWeightQuery(0, 1))
     assert len(ids) == 0
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 def test_search_invalid():
     class InvalidQuery(rcsb.SimpleQuery):
         def __init__(self):
@@ -80,7 +99,10 @@ def test_search_invalid():
         ids = rcsb.search(InvalidQuery())
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 @pytest.mark.parametrize(
     # IMPORTANT NOTE: Since the PDB continuously adds new structures,
     # the expected IDs might need to be updated,

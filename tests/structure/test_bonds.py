@@ -8,7 +8,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.fixture(
@@ -133,7 +133,7 @@ def test_indexing(bond_list):
 
 
 def test_atom_array_consistency():
-    array = strucio.load_structure(join(data_dir, "1l2y.mmtf"))[0]
+    array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
     ca = array[array.atom_name == "CA"]
     # Just for testing, does not refelct real bonds
     bond_list = struc.BondList(ca.array_length(), 
@@ -158,7 +158,7 @@ def test_connect_via_residue_names(single_model):
     """
     # Structure with peptide, nucleotide, small molecules and water
     file = mmtf.MMTFFile()
-    file.read(join(data_dir, "5ugo.mmtf"))
+    file.read(join(data_dir("structure"), "5ugo.mmtf"))
     if single_model:
         atoms = mmtf.get_structure(file, include_bonds=True, model=1)
     else:
@@ -177,7 +177,7 @@ def test_connect_via_distances():
     in the MMTF file.
     """
     file = mmtf.MMTFFile()
-    file.read(join(data_dir, "1l2y.mmtf"))
+    file.read(join(data_dir("structure"), "1l2y.mmtf"))
     atoms = mmtf.get_structure(file, include_bonds=True, model=1)
     # Remove termini to solve the issue that the reference bonds do not
     # contain proper bonds for the protonated/deprotonated termini

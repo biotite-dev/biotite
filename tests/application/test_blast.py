@@ -8,7 +8,11 @@ import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
 import os.path
-from ..sequence.util import data_dir
+from ..util import data_dir, cannot_connect_to
+
+
+BLAST_URL = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
+
 
 # Start of E. coli lacZ ORF (UID: AJ308295)
 dna_seq = seq.NucleotideSequence("ATGACCATGATTACGCCAAGCTTTCCGGGGAATTCA")
@@ -17,7 +21,10 @@ dna_seq = seq.NucleotideSequence("ATGACCATGATTACGCCAAGCTTTCCGGGGAATTCA")
 prot_seq = seq.ProteinSequence("MTMITPSFPGNS")
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_blastn():
     app = blast.BlastWebApp("blastn", dna_seq, obey_rules=False)
     app.set_max_expect_value(100)
@@ -28,7 +35,10 @@ def test_blastn():
     assert dna_seq == alignments[0].sequences[0]
     assert dna_seq == alignments[0].sequences[1]
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_blastx():
     app = blast.BlastWebApp("blastx", dna_seq, obey_rules=False)
     app.set_max_expect_value(100)
@@ -39,7 +49,10 @@ def test_blastx():
     assert prot_seq == alignments[0].sequences[0]
     assert prot_seq == alignments[0].sequences[1]
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_tblastx():
     app = blast.BlastWebApp("tblastx", dna_seq, obey_rules=False)
     app.set_max_expect_value(100)
@@ -53,7 +66,10 @@ def test_tblastx():
     assert rev_prot_seq == alignments[0].sequences[0]
     assert rev_prot_seq == alignments[0].sequences[1]
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_blastp():
     app = blast.BlastWebApp("blastp", prot_seq, obey_rules=False)
     app.set_max_expect_value(100)
@@ -64,7 +80,10 @@ def test_blastp():
     assert prot_seq == alignments[0].sequences[0]
     assert prot_seq == alignments[0].sequences[1]
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_tblastn():
     app = blast.BlastWebApp("tblastn", prot_seq, obey_rules=False)
     app.set_max_expect_value(200)
@@ -76,7 +95,7 @@ def test_tblastn():
     assert prot_seq == alignments[0].sequences[1]
 
 def test_file_input():
-    path = os.path.join(data_dir, "prot.fasta")
+    path = os.path.join(data_dir("sequence"), "prot.fasta")
     app = blast.BlastWebApp("blastp", path, obey_rules=False)
 
 def test_invalid_query():
@@ -85,7 +104,10 @@ def test_invalid_query():
     with pytest.raises(ValueError):
         app = blast.BlastWebApp("blastp", "ABCDEFGHIJKLMNOP", obey_rules=False)
         
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_no_hit():
     app = blast.BlastWebApp("blastn", "ACTGTACGAAACTCGGCGTA", obey_rules=False)
     app.set_word_size(20)
@@ -95,7 +117,10 @@ def test_no_hit():
     # BLAST should find original sequence as best hit
     assert len(alignments) == 0
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
 def test_invalid_input():
     app = blast.BlastWebApp("blastn", dna_seq, obey_rules=False)
     # Set some invalid parameters

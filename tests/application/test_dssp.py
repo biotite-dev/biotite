@@ -4,7 +4,6 @@
 
 from os.path import join
 import glob
-import shutil
 from subprocess import SubprocessError
 import numpy as np
 import pytest
@@ -12,12 +11,13 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
 from biotite.application.dssp import DsspApp
-from ..structure.util import data_dir
+from ..util import data_dir, is_not_installed
 
 
-@pytest.mark.skipif(shutil.which("mkdssp") is None,
-                    reason="DSSP is not installed")
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_dssp(path):
     sec_struct_codes = {0 : "I",
                         1 : "S",
@@ -55,10 +55,9 @@ def test_dssp(path):
     assert np.count_nonzero(sse_from_app == sse) / len(sse) > 0.9
 
 
-@pytest.mark.skipif(shutil.which("mkdssp") is None,
-                    reason="DSSP is not installed")
+@pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
 def test_invalid_structure():
-    array = strucio.load_structure(join(data_dir, "5ugo.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "5ugo.mmtf"))
     # Get DNA chain -> Invalid for DSSP
     chain = array[array.chain_id == "T"]
     with pytest.raises(SubprocessError):

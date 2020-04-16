@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from .util import data_dir
+from ..util import data_dir
 
 
 # Result should be independent of cell size
@@ -59,7 +59,7 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     Compare the construction of an adjacency matrix using a cell list
     and using a computationally expensive but simpler distance matrix.
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     
     if periodic:
         # Create an orthorhombic box
@@ -108,7 +108,7 @@ def test_outside_location():
     """
     Test result for location outside any cell.
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     array = array[struc.filter_amino_acids(array)]
     cell_list = struc.CellList(array, cell_size=5)
     outside_coord = np.min(array.coord, axis=0) - 100
@@ -122,7 +122,7 @@ def test_selection():
     This is tested by comparing the selection done prior to cell list
     creation with the selection done in the cell list construction.
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     selection = np.array([False, True] * (array.array_length() // 2))
     
     # Selection prior to cell list creation

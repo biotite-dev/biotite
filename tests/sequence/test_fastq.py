@@ -8,12 +8,12 @@ import biotite.sequence.io.fastq as fastq
 import numpy as np
 import os
 import os.path
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_access(chars_per_line):
-    path = os.path.join(data_dir, "random.fastq")
+    path = os.path.join(data_dir("sequence"), "random.fastq")
     file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
     file.read(path)
     assert len(file) == 20
@@ -34,7 +34,7 @@ def test_access(chars_per_line):
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_conversion(chars_per_line):
-    path = os.path.join(data_dir, "random.fastq")
+    path = os.path.join(data_dir("sequence"), "random.fastq")
     file1 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
     file1.read(path)
     ref_content = dict(file1.items())

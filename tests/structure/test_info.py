@@ -10,7 +10,7 @@ import biotite.structure as struc
 import biotite.structure.info as strucinfo
 from biotite.structure.io import load_structure, save_structure
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir
 
 
 def test_mass():
@@ -18,7 +18,7 @@ def test_mass():
     Test whether the mass of a residue is the same as the sum of the
     masses of its contained atoms.
     """
-    array = load_structure(join(data_dir, "1l2y.mmtf"))[0]
+    array = load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
     _, res_names = struc.get_residues(array)
     water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O") 
     # Mass of water must be subtracted
@@ -35,7 +35,9 @@ def test_mass():
     assert np.allclose((mass_diff % strucinfo.mass("H")), 0, atol=5e-3)
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_bonds(path):
     """
     Test whether the bond data is consistent with the content of MMTF
@@ -68,7 +70,7 @@ def test_protOr_radii():
     glycosylation.
     This means, that none of the resulting radii should be the None.
     """
-    array = load_structure(join(data_dir, "1gya.mmtf"))
+    array = load_structure(join(data_dir("structure"), "1gya.mmtf"))
     array = array[..., array.element != "H"]
     array = array[..., struc.filter_amino_acids(array)]
     for res_name, atom_name in zip(array.res_name, array.atom_name):

@@ -9,13 +9,13 @@ import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import numpy as np
 import pytest
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir, "*.gb")) + \
-    glob.glob(join(data_dir, "[!multifile]*.gp"))
+    glob.glob(join(data_dir("sequence"), "*.gb")) + \
+    glob.glob(join(data_dir("sequence"), "[!multifile]*.gp"))
 )
 def test_contiguous_field_pos(path):
     """
@@ -57,8 +57,8 @@ def test_file_access():
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir, "*.gb")) + \
-    glob.glob(join(data_dir, "[!multifile]*.gp"))
+    glob.glob(join(data_dir("sequence"), "*.gb")) + \
+    glob.glob(join(data_dir("sequence"), "[!multifile]*.gp"))
 )
 def test_conversion_lowlevel(path):
     """
@@ -83,8 +83,8 @@ def test_conversion_lowlevel(path):
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir, "*.gb")) + \
-    glob.glob(join(data_dir, "[!multifile]*.gp"))
+    glob.glob(join(data_dir("sequence"), "*.gb")) + \
+    glob.glob(join(data_dir("sequence"), "[!multifile]*.gp"))
 )
 def test_conversion_highlevel(path):
     """
@@ -120,7 +120,7 @@ def test_genbank_utility_gb():
     content of a known GenBank file. 
     """
     gb_file = gb.GenBankFile()
-    gb_file.read(join(data_dir, "ec_bl21.gb"))
+    gb_file.read(join(data_dir("sequence"), "ec_bl21.gb"))
     assert gb.get_locus(gb_file) \
         == ("CP001509", 4558953, "DNA", True, "BCT", "16-FEB-2017")
     assert gb.get_definition(gb_file) \
@@ -151,7 +151,7 @@ def test_genbank_utility_gp():
     content of a known GenPept file. 
     """
     gp_file = gb.GenBankFile()
-    gp_file.read(join(data_dir, "bt_lysozyme.gp"))
+    gp_file.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
     #[print(e) for e in gp_file._field_pos]
     assert gb.get_locus(gp_file) \
         == ("AAC37312", 147, "", False, "MAM", "27-APR-1993")
@@ -179,6 +179,6 @@ def test_genbank_utility_gp():
 
 def test_multi_file():
     multi_file = gb.MultiFile()
-    multi_file.read(join(data_dir, "multifile.gp"))
+    multi_file.read(join(data_dir("sequence"), "multifile.gp"))
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]

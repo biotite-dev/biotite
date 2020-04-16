@@ -2,11 +2,11 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 def test_gyration_radius():
-    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     radii = struc.gyration_radius(stack)
     # Compare with results from MDTraj
     exp_radii = \

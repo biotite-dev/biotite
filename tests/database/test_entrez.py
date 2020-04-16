@@ -10,9 +10,16 @@ import biotite
 import biotite.database.entrez as entrez
 import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
+from ..util import cannot_connect_to
 
 
-@pytest.mark.xfail(raises=ConnectionError)
+NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(NCBI_URL),
+    reason="NCBI Entrez is not available"
+)
 @pytest.mark.parametrize(
     "common_name, as_file_like",
     itertools.product([False, True], [False, True])
@@ -26,7 +33,10 @@ def test_fetch(common_name, as_file_like):
     fasta_file.read(file)
     prot_seq = fasta.get_sequence(fasta_file)
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(NCBI_URL),
+    reason="NCBI Entrez is not available"
+)
 @pytest.mark.parametrize("as_file_like", [False, True])
 def test_fetch_single_file(as_file_like):
     file_name = None if as_file_like else biotite.temp_file("fa")
@@ -38,7 +48,10 @@ def test_fetch_single_file(as_file_like):
     prot_seqs = fasta.get_sequences(fasta_file)
     assert len(prot_seqs) == 2
 
-@pytest.mark.xfail(raises=ConnectionError)
+@pytest.mark.skipif(
+    cannot_connect_to(NCBI_URL),
+    reason="NCBI Entrez is not available"
+)
 def test_fetch_invalid():
     with pytest.raises(RequestError):
         file = entrez.fetch("xxxx", biotite.temp_dir(), "fa", "protein",

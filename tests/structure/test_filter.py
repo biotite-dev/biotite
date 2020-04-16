@@ -6,12 +6,12 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 @pytest.fixture
 def sample_array():
-    return strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    return strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
 
 def test_solvent_filter(sample_array):
     assert len(sample_array[struc.filter_solvent(sample_array)]) == 287

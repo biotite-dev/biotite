@@ -8,15 +8,18 @@ import numpy as np
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
 # Ignore warning about dummy unit cell vector
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize("pdb_id", ["1l2y", "1gya"])
 def test_single(pdb_id):
-    file_name = join(data_dir, pdb_id+".pdb")
+    file_name = join(data_dir("structure"), pdb_id+".pdb")
     
     # Single atom SASA, compare with MDTraj
     file = pdb.PDBFile()
@@ -53,7 +56,7 @@ def test_coarse_grained(pdb_id):
     # Multi atom SASA (ProtOr), compare with single atom SASA
     # on residue level
     file = mmtf.MMTFFile()
-    file.read(join(data_dir, pdb_id+".mmtf"))
+    file.read(join(data_dir("structure"), pdb_id+".mmtf"))
     array = mmtf.get_structure(file, model=1)
     array = array[struc.filter_amino_acids(array)]
     sasa = struc.apply_residue_wise(

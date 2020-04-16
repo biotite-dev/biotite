@@ -7,12 +7,12 @@ import biotite.sequence.io.fasta as fasta
 import numpy as np
 import os
 import os.path
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
    
 def test_access():
-    path = os.path.join(data_dir, "nuc.fasta")
+    path = os.path.join(data_dir("sequence"), "nuc.fasta")
     file = fasta.FastaFile()
     file.read(path)
     assert file["dna sequence"] == "ACGCTACGT"
@@ -33,7 +33,7 @@ def test_access():
     }
 
 def test_sequence_conversion():
-    path = os.path.join(data_dir, "nuc.fasta")
+    path = os.path.join(data_dir("sequence"), "nuc.fasta")
     file = fasta.FastaFile()
     file.read(path)
     assert seq.NucleotideSequence("ACGCTACGT") == fasta.get_sequence(file)
@@ -48,19 +48,19 @@ def test_sequence_conversion():
     fasta.set_sequence(file3, seq.NucleotideSequence("AACCTTGG"))
     assert file3["sequence"] == "AACCTTGG"
     
-    path = os.path.join(data_dir, "prot.fasta")
+    path = os.path.join(data_dir("sequence"), "prot.fasta")
     file4 = fasta.FastaFile()
     file4.read(path)
     assert seq.ProteinSequence("YAHGFRTGS") == fasta.get_sequence(file4)
     
-    path = os.path.join(data_dir, "invalid.fasta")
+    path = os.path.join(data_dir("sequence"), "invalid.fasta")
     file5 = fasta.FastaFile()
     file5.read(path)
     with pytest.raises(ValueError):
         seq.NucleotideSequence(fasta.get_sequence(file5))
 
 def test_alignment_conversion():
-    path = os.path.join(data_dir, "alignment.fasta")
+    path = os.path.join(data_dir("sequence"), "alignment.fasta")
     file = fasta.FastaFile()
     file.read(path)
     alignment = fasta.get_alignment(file)

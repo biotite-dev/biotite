@@ -6,13 +6,13 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 
 @pytest.fixture
 def array():
-    return strucio.load_structure(join(data_dir, "1l2y.mmtf"))[0]
+    return strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
 
 def test_apply_residue_wise(array):
     data = struc.apply_residue_wise(array, np.ones(len(array)), np.sum)

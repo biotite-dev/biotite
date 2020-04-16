@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import biotite
 import biotite.sequence.phylo as phylo
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.fixture
@@ -16,14 +16,14 @@ def distances():
     # "Dendrogram of the BLOSUM62 matrix"
     # with the small modification M[i,j] += i+j
     # to reduce ambiguity in the tree construction.
-    return np.loadtxt(join(data_dir, "distances.txt"), dtype=int)
+    return np.loadtxt(join(data_dir("sequence"), "distances.txt"), dtype=int)
 
 
 @pytest.fixture
 def upgma_newick():
     # Newick notation of the tree created from 'distances.txt',
     # created via DendroUPGMA
-    with open(join(data_dir, "newick_upgma.txt"), "r") as file:
+    with open(join(data_dir("sequence"), "newick_upgma.txt"), "r") as file:
         newick = file.read().strip()
     return newick
 
