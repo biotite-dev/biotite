@@ -111,7 +111,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         Parse the lines of the text file and return a :class:`TextFile`
         object of the corresponding subclass.
 
-        PROTECTED: Overwrite when inheriting.
+        PROTECTED: Overwrite when inheriting. Do not call from outside.
         """
         pass
 

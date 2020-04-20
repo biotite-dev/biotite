@@ -87,8 +87,9 @@ class PDBxFile(TextFile, MutableMapping):
         self._categories = {}
     
     
-    def read(self, file):
-        super().read(file)
+    @staticmethod
+    def parse(lines):
+        file = PDBxFile()
         # Remove emptyline at then end of file, if present
         if self.lines[-1] == "":
             del self.lines[-1]

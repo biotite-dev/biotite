@@ -41,7 +41,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._box = None
         self._model_count = None
     
-    def read(self, file_name, start=None, stop=None, step=None,
+    @classmethod
+    def read(cls, file_name, start=None, stop=None, step=None,
              atom_i=None, chunk_size=None):
         """
         Read a trajectory file.
