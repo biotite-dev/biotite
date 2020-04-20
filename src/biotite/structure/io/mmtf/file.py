@@ -48,27 +48,21 @@ class MMTFFile(File, MutableMapping):
         self._content["mmtfVersion"] = "1.0.0"
         self._content["mmtfProducer"] = "UNKNOWN"
     
+    @classmethod
     def read(self, file):
-        """
-        Parse a MMTF file.
-        
-        Parameters
-        ----------
-        file : file-like object or str
-            The file to be read.
-            Alternatively, a file path can be supplied.
-        """
-        def _read(file):
-            nonlocal self
-            self._content = msgpack.unpackb(
+        mmtf_file = MMTFFile()
+        # File name
+        elif isinstance(args[0], str):
+            with open(file, "rb") as f:
+                mmtf_file._content = msgpack.unpackb(
+                    f.read(), use_list=True, raw=False
+                )
+        # File object
+        else:
+            mmtf_file._content = msgpack.unpackb(
                 file.read(), use_list=True, raw=False
             )
-        
-        if isinstance(file, str):
-            with open(file, "rb") as f:
-                _read(f)
-        else:
-            _read(file)
+        return mmtf_file
     
     def write(self, file):
         """
