@@ -23,7 +23,12 @@ class File(Copyable, metaclass=abc.ABCMeta):
     """
     
     def __init__(self):
-        self.read = _deprecated_read
+        self.read = self._deprecated_read
+    
+
+    #def __getattribute__(self, name):
+    #    if name == "read":
+    #        return File._deprecated_read
     
     @classmethod
     @abc.abstractmethod
@@ -46,14 +51,15 @@ class File(Copyable, metaclass=abc.ABCMeta):
         pass
         
             
-    def _deprecated_read(self, file):
+    def _deprecated_read(self, file, *args, **kwargs):
         warnings.warn(
             "Instance method 'read()' is deprecated, "
             "use static method instead",
-            warnings.DeprecationWarning
+            DeprecationWarning
         )
         cls = type(self)
-        return cls.read(file)
+        new_file = cls.read(file, *args, **kwargs)
+        self.__dict__.update(new_file.__dict__)
     
     @abc.abstractmethod
     def write(self, file):
@@ -72,9 +78,10 @@ class File(Copyable, metaclass=abc.ABCMeta):
 
 class TextFile(File, metaclass=abc.ABCMeta):
     """
-    Base class for all text file classes. When reading a file, the text
-    content is saved as list of strings. When writing a file, the list
-    is written into the file.
+    Base class for all line based text file classes.
+    When reading a file, the text content is saved as list of strings,
+    one for each line.
+    When writing a file, the list is written into the file.
     
     Attributes
     ----------
@@ -84,18 +91,29 @@ class TextFile(File, metaclass=abc.ABCMeta):
     """
     
     def __init__(self):
-        self.lines = []
+        pass
 
     @classmethod
-    def read(self, file):
+    def read(cls, file):
         # File name
-        elif isinstance(args[0], str):
+        if isinstance(file, str):
             with open(file, "r") as f:
-                lines = file.read().splitlines()
+                lines = f.read().splitlines()
         # File object
         else:
             lines = file.read().splitlines()
         return cls.parse(lines)
+    
+    @staticmethod
+    @abc.abstractmethod
+    def parse(lines):
+        """
+        Parse the lines of the text file and return a :class:`TextFile`
+        object of the corresponding subclass.
+
+        PROTECTED: Overwrite when inheriting.
+        """
+        pass
 
     def write(self, file):
         """
@@ -108,16 +126,16 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The file to be written to.
             Alternatively a file path can be supplied.
         """
-        def _write(file):
-            nonlocal self
-            # Include 'newline' at the end of file
-            file.write("\n".join(self.lines) + "\n")
-
         if isinstance(file, str):
             with open(file, "w") as f:
-                _write(f)
+                f.write("\n".join(self.lines) + "\n")
         else:
-            _write(file)
+           file.write("\n".join(self.lines) + "\n")
+    
+    @property
+    @abc.abstractmethod
+    def lines():
+        pass
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)

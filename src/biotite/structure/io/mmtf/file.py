@@ -44,6 +44,7 @@ class MMTFFile(File, MutableMapping):
     """
     
     def __init__(self):
+        super().__init__()
         self._content = {}
         self._content["mmtfVersion"] = "1.0.0"
         self._content["mmtfProducer"] = "UNKNOWN"
@@ -52,7 +53,7 @@ class MMTFFile(File, MutableMapping):
     def read(self, file):
         mmtf_file = MMTFFile()
         # File name
-        elif isinstance(args[0], str):
+        if isinstance(file, str):
             with open(file, "rb") as f:
                 mmtf_file._content = msgpack.unpackb(
                     f.read(), use_list=True, raw=False
@@ -74,18 +75,14 @@ class MMTFFile(File, MutableMapping):
             The file to be written to.
             Alternatively, a file path can be supplied.
         """
-        def _write(file):
-            nonlocal self
-            packed_bytes = msgpack.packb(
-                self._content, use_bin_type=True, default=_encode_numpy
-            )
-            file.write(packed_bytes)
-
+        packed_bytes = msgpack.packb(
+            self._content, use_bin_type=True, default=_encode_numpy
+        )
         if isinstance(file, str):
             with open(file, "wb") as f:
-                _write(f)
+                f.write(packed_bytes)
         else:
-            _write(file)
+            file.write(packed_bytes)
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
