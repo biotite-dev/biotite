@@ -72,9 +72,9 @@ class FastaFile(TextFile, MutableMapping):
     def read(self, file):
         super().read(file)
         # Filter out empty and comment lines
-        self.lines = [line for line in self.lines
+        self._lines = [line for line in self._lines
                       if len(line.strip()) != 0 and line[0] != ";"]
-        if len(self.lines) == 0:
+        if len(self._lines) == 0:
             raise InvalidFileError("File is empty or contains only comments")
         self._find_entries()
         
@@ -91,9 +91,9 @@ class FastaFile(TextFile, MutableMapping):
         if header in self:
             del self[header]
         # Append header line
-        self.lines += [">" + header.replace("\n","").strip()]
+        self._lines += [">" + header.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
-        self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
+        self._lines += textwrap.wrap(seq_str, width=self._chars_per_line)
         self._find_entries()
     
     def __getitem__(self, header):
@@ -104,13 +104,13 @@ class FastaFile(TextFile, MutableMapping):
         start, stop = self._entries[header]
         # Concatenate sequence string from following lines
         seq_string = "".join(
-            [line.strip() for line in self.lines[start+1 : stop]]
+            [line.strip() for line in self._lines[start+1 : stop]]
         )
         return seq_string
     
     def __delitem__(self, header):
         start, stop = self._entries[header]
-        del self.lines[start:stop]
+        del self._lines[start:stop]
         del self._entries[header]
         self._find_entries()
     
@@ -124,20 +124,20 @@ class FastaFile(TextFile, MutableMapping):
         return identifer in self._entries
     
     def _find_entries(self):
-        if len(self.lines) > 0 and self.lines[0][0] != ">":
+        if len(self._lines) > 0 and self._lines[0][0] != ">":
             raise InvalidFileError(
-                f"File starts with '{self.lines[0][0]}' instead of '>'"
+                f"File starts with '{self._lines[0][0]}' instead of '>'"
             )
         
         header_i = []
-        for i, line in enumerate(self.lines):
+        for i, line in enumerate(self._lines):
             if line[0] == ">":
                 header_i.append(i)
         
         self._entries = OrderedDict()
         for j in range(len(header_i)):
             # Remove leading '>' from header
-            header = self.lines[header_i[j]].strip()[1:]
+            header = self._lines[header_i[j]].strip()[1:]
             start = header_i[j]
             if j < len(header_i) -1:
                 # Header in mid or start of file
@@ -145,6 +145,6 @@ class FastaFile(TextFile, MutableMapping):
                 stop = header_i[j+1]
             else:
                 # Last header -> entry stops at end of file
-                stop = len(self.lines)
+                stop = len(self._lines)
             self._entries[header] = (start, stop)
     

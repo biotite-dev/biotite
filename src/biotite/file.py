@@ -128,9 +128,9 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         if isinstance(file, str):
             with open(file, "w") as f:
-                f.write("\n".join(self.lines) + "\n")
+                f.write("\n".join(self._lines) + "\n")
         else:
-           file.write("\n".join(self.lines) + "\n")
+           file.write("\n".join(self._lines) + "\n")
     
     @property
     @abc.abstractmethod
@@ -139,10 +139,10 @@ class TextFile(File, metaclass=abc.ABCMeta):
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
-        clone.lines = copy.copy(self.lines)
+        clone.lines = copy.copy(self._lines)
     
     def __str__(self):
-        return("\n".join(self.lines))
+        return("\n".join(self._lines))
 
 
 class InvalidFileError(Exception):
