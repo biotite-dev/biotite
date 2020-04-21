@@ -91,10 +91,11 @@ class TextFile(File, metaclass=abc.ABCMeta):
     """
     
     def __init__(self):
-        pass
+        super().__init__()
+        self.lines = []
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file, *args, **kwargs):
         # File name
         if isinstance(file, str):
             with open(file, "r") as f:
@@ -102,18 +103,9 @@ class TextFile(File, metaclass=abc.ABCMeta):
         # File object
         else:
             lines = file.read().splitlines()
-        return cls.parse(lines)
-    
-    @staticmethod
-    @abc.abstractmethod
-    def parse(lines):
-        """
-        Parse the lines of the text file and return a :class:`TextFile`
-        object of the corresponding subclass.
-
-        PROTECTED: Overwrite when inheriting. Do not call from outside.
-        """
-        pass
+        file_object = cls(*args, **kwargs)
+        file_object.lines = lines
+        return file_object
 
     def write(self, file):
         """
@@ -131,11 +123,6 @@ class TextFile(File, metaclass=abc.ABCMeta):
                 f.write("\n".join(self.lines) + "\n")
         else:
            file.write("\n".join(self.lines) + "\n")
-    
-    @property
-    @abc.abstractmethod
-    def lines():
-        pass
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)

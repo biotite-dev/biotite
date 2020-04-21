@@ -136,9 +136,11 @@ class GFFFile(TextFile):
         self._index_entries()
         self.append_directive("gff-version", "3")
     
-    def read(self, file):
-        super().read(file)
-        self._index_entries()
+    @classmethod
+    def read(cls, file):
+        file = super().read(file)
+        file._index_entries()
+        return file
     
     def insert(self, index, seqid, source, type, start, end,
                score, strand, phase, attributes):

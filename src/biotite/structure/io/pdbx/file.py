@@ -87,12 +87,12 @@ class PDBxFile(TextFile, MutableMapping):
         self._categories = {}
     
     
-    @staticmethod
-    def parse(lines):
-        file = PDBxFile()
+    @classmethod
+    def read(cls, file):
+        file = super().read(file)
         # Remove emptyline at then end of file, if present
-        if self.lines[-1] == "":
-            del self.lines[-1]
+        if file.lines[-1] == "":
+            del file.lines[-1]
         
         current_data_block = ""
         current_category = None
@@ -100,7 +100,7 @@ class PDBxFile(TextFile, MutableMapping):
         stop = -1
         is_loop = False
         has_multiline_values = False
-        for i, line in enumerate(self.lines):
+        for i, line in enumerate(file.lines):
             # Ignore empty and comment lines
             if not _is_empty(line):
                 data_block_name = _data_block_name(line)
@@ -120,13 +120,13 @@ class PDBxFile(TextFile, MutableMapping):
                     # Start of a new category
                     # Add an entry into the dictionary with the old category
                     stop = i
-                    self._add_category(data_block, current_category, start,
+                    file._add_category(data_block, current_category, start,
                                        stop, is_loop, has_multiline_values)
                     # Track the new category
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is in the
                         # next line
-                        category_in_line = _get_category_name(self.lines[i+1])
+                        category_in_line = _get_category_name(file.lines[i+1])
                     is_loop = is_loop_in_line
                     current_category = category_in_line
                     start = i
@@ -139,9 +139,10 @@ class PDBxFile(TextFile, MutableMapping):
         # Since at the end of the file the end of the category
         # is not determined by the start of a new one,
         # this needs to be handled separately
-        stop = len(self.lines)
-        self._add_category(data_block, current_category, start,
+        stop = len(file.lines)
+        file._add_category(data_block, current_category, start,
                            stop, is_loop, has_multiline_values)
+        return file
     
     
     def get_block_names(self):

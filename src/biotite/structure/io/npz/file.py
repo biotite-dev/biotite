@@ -40,6 +40,7 @@ class NpzFile(File):
     """
     
     def __init__(self):
+        super().__init__()
         self._data_dict = None
     
     def __copy_fill__(self, clone):

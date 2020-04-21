@@ -84,6 +84,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             reading trajectories, they also increase the computation
             time.
         """
+        file = cls()
+
         if chunk_size is not None:
             if chunk_size < 1:
                 raise ValueError("Chunk size must be greater than 0")
@@ -94,7 +96,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             if step is not None and chunk_size % step != 0:
                 chunk_size = ((chunk_size // step) + 1) * step
 
-        traj_type = self.traj_type()
+        traj_type = file.traj_type()
         with traj_type(file_name, "r") as f:
             
             if start is None:
@@ -131,10 +133,12 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 )
         
         # nm to Angstrom
-        coord, box, time = self.process_read_values(result)
-        self.set_coord(coord)
-        self.set_box(box)
-        self.set_time(time)
+        coord, box, time = file.process_read_values(result)
+        file.set_coord(coord)
+        file.set_box(box)
+        file.set_time(time)
+
+        return file
     
     def write(self, file_name):
         """

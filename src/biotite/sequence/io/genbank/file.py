@@ -176,9 +176,11 @@ class GenBankFile(TextFile):
         self._field_pos = []
         self._find_field_indices()
     
-    def read(self, file):
-        super().read(file)
-        self._find_field_indices()
+    @classmethod
+    def read(cls, file):
+        file = super().read(file)
+        file._find_field_indices()
+        return file
     
     def get_fields(self, name):
         """
@@ -547,9 +549,6 @@ class MultiFile(TextFile):
     3O5R_A
     5UGO_A
     """
-
-    def __init__(self):
-        super().__init__()
 
     def __iter__(self):
         start_i = 0

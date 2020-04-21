@@ -69,14 +69,16 @@ class FastaFile(TextFile, MutableMapping):
         self._chars_per_line = chars_per_line
         self._entries = OrderedDict()
     
-    def read(self, file):
-        super().read(file)
+    @classmethod
+    def read(cls, file, chars_per_line=80):
+        file = super().read(file, chars_per_line)
         # Filter out empty and comment lines
-        self.lines = [line for line in self.lines
+        file.lines = [line for line in file.lines
                       if len(line.strip()) != 0 and line[0] != ";"]
-        if len(self.lines) == 0:
+        if len(file.lines) == 0:
             raise InvalidFileError("File is empty or contains only comments")
-        self._find_entries()
+        file._find_entries()
+        return file
         
     def __setitem__(self, header, seq_str):
         if not isinstance(header, str):

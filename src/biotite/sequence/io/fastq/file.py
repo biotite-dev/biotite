@@ -106,15 +106,17 @@ class FastqFile(TextFile, MutableMapping):
                 f"indicating the format, not {type(offset).__name__}"
             )
     
-    def read(self, file):
-        super().read(file)
+    @classmethod
+    def read(cls, file, offset, chars_per_line=None):
+        file = super().read(file, offset, chars_per_line)
         # Remove leading and trailing whitespace in all lines
-        self.lines = [line.strip() for line in self.lines]
+        file.lines = [line.strip() for line in file.lines]
         # Filter out empty lines
-        self.lines = [line for line in self.lines if len(line) != 0]
-        if len(self.lines) == 0:
+        file.lines = [line for line in file.lines if len(line) != 0]
+        if len(file.lines) == 0:
             raise InvalidFileError("File is empty")
-        self._find_entries()
+        file._find_entries()
+        return file
     
     def get_sequence(self, identifier):
         """
