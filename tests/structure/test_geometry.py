@@ -167,8 +167,6 @@ def test_index_distance_periodic_orthogonal(shift):
     cannot_import("mdtraj"),
     reason="MDTraj is not installed"
 )
-# index_distance() creates a large ndarray
-@pytest.mark.xfail(raises=(MemoryError))
 @pytest.mark.parametrize(
     "shift, angles", itertools.product(
     [
@@ -203,7 +201,11 @@ def test_index_distance_periodic_triclinic(shift, angles):
         np.repeat(np.arange(length), length),
           np.tile(np.arange(length), length)
     ], axis=1)
-    ref_dist = struc.index_distance(array, dist_indices, periodic=True)
+    # index_distance() creates a large ndarray
+    try:
+        ref_dist = struc.index_distance(array, dist_indices, periodic=True)
+    except MemoryError:
+        pytest.skip("Not enough memory")
 
     # Compare with MDTraj
     import mdtraj
@@ -218,8 +220,12 @@ def test_index_distance_periodic_triclinic(shift, angles):
     # Compare with shifted variant
     array.coord += shift
     array.coord = struc.move_inside_box(array.coord, array.box)
-    dist = struc.index_distance(array, dist_indices, periodic=True)
-    assert np.allclose(dist, ref_dist, atol=1e-5)
+    # index_distance() creates a large ndarray
+    try:
+        test_dist = struc.index_distance(array, dist_indices, periodic=True)
+    except MemoryError:
+        pytest.skip("Not enough memory")
+    assert np.allclose(test_dist, ref_dist, atol=1e-5)
 
 
 def test_index_functions():

@@ -14,12 +14,15 @@ def data_dir(subdir):
 
 ### Functions for conditional test skips ###
 
+tested_urls = {}
 def cannot_connect_to(url):
-    try:
-        urllib.request.urlopen(url)
-        return False
-    except urllib.error.URLError:
-        return True
+    if url not in tested_urls:
+        try:
+            urllib.request.urlopen(url)
+            tested_urls[url] = False
+        except urllib.error.URLError:
+            tested_urls[url] = True
+    return tested_urls[url]
 
 def cannot_import(module):
     return importlib.util.find_spec(module) is None
