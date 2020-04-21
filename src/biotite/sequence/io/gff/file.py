@@ -179,7 +179,7 @@ class GFFFile(TextFile):
                 seqid, source, type, start, end,
                 score, strand, phase, attributes
             )
-            self._lines.insert(line_index, line)
+            self.lines.insert(line_index, line)
             self._index_entries()
     
     def append(self, seqid, source, type, start, end,
@@ -216,9 +216,9 @@ class GFFFile(TextFile):
         line = GFFFile._create_line(
             seqid, source, type, start, end, score, strand, phase, attributes
         )
-        self._lines.append(line)
+        self.lines.append(line)
         # Fast update of entry index by adding last line
-        self._entries.append(len(self._lines) - 1)
+        self._entries.append(len(self.lines) - 1)
     
     def append_directive(self, directive, *args):
         """
@@ -253,8 +253,8 @@ class GFFFile(TextFile):
                 "Adding FASTA information is not supported"
             )
         directive_line = "##" + directive + " " + " ".join(args)
-        self._directives.append((directive_line[2:], len(self._lines)))
-        self._lines.append(directive_line)
+        self._directives.append((directive_line[2:], len(self.lines)))
+        self.lines.append(directive_line)
     
     def directives(self):
         """
@@ -277,7 +277,7 @@ class GFFFile(TextFile):
             seqid, source, type, start, end, score, strand, phase, attrib
         )
         line_index = self._entries[index]
-        self._lines[line_index] = line
+        self.lines[line_index] = line
 
     
     def __getitem__(self, index):
@@ -290,7 +290,7 @@ class GFFFile(TextFile):
         
         line_index = self._entries[index]
         # Columns are tab separated
-        s = self._lines[line_index].split("\t")
+        s = self.lines[line_index].split("\t")
         if len(s) != 9:
             raise InvalidFileError(f"Expected 9 columns, but got {len(s)}")
         seqid, source, type, start, end, score, strand, phase, attrib = s
@@ -314,7 +314,7 @@ class GFFFile(TextFile):
     
     def __delitem__(self, index):
         line_index = self._entries[index]
-        del self._lines[line_index]
+        del self.lines[line_index]
         self._index_entries()
     
     def __len__(self):
@@ -329,10 +329,10 @@ class GFFFile(TextFile):
         """
         self._directives = []
         # Worst case allocation -> all lines contain actual entries
-        self._entries = [None] * len(self._lines)
+        self._entries = [None] * len(self.lines)
         self._has_fasta = False
         entry_counter = 0
-        for line_i, line in enumerate(self._lines):
+        for line_i, line in enumerate(self.lines):
             if len(line) == 0 or line[0] == " ":
                 # Empty line -> do nothing
                 pass

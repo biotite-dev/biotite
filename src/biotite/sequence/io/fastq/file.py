@@ -109,10 +109,10 @@ class FastqFile(TextFile, MutableMapping):
     def read(self, file):
         super().read(file)
         # Remove leading and trailing whitespace in all lines
-        self._lines = [line.strip() for line in self._lines]
+        self.lines = [line.strip() for line in self.lines]
         # Filter out empty lines
-        self._lines = [line for line in self._lines if len(line) != 0]
-        if len(self._lines) == 0:
+        self.lines = [line for line in self.lines if len(line) != 0]
+        if len(self.lines) == 0:
             raise InvalidFileError("File is empty")
         self._find_entries()
     
@@ -138,7 +138,7 @@ class FastqFile(TextFile, MutableMapping):
             = self._entries[identifier]
         # Concatenate sequence string from the sequence lines
         sequence = NucleotideSequence("".join(
-            self._lines[seq_start : seq_stop]
+            self.lines[seq_start : seq_stop]
         ))
         return sequence
     
@@ -165,7 +165,7 @@ class FastqFile(TextFile, MutableMapping):
         # Concatenate sequence string from the score lines
         scores = np.frombuffer(
             bytearray(
-                "".join(self._lines[score_start : score_stop]), encoding="ascii"
+                "".join(self.lines[score_start : score_stop]), encoding="ascii"
             ),
             dtype=np.int8
         )
@@ -190,16 +190,16 @@ class FastqFile(TextFile, MutableMapping):
         if identifier in self:
             del self[identifier]
         # Append identifier line
-        self._lines += ["@" + identifier.replace("\n","").strip()]
+        self.lines += ["@" + identifier.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
         if self._chars_per_line is None:
-            self._lines.append(str(sequence))
+            self.lines.append(str(sequence))
         else:
-            self._lines += textwrap.wrap(
+            self.lines += textwrap.wrap(
                 str(sequence), width=self._chars_per_line
             )
         # Append sequence-score separator
-        self._lines += ["+"]
+        self.lines += ["+"]
         # Append scores
         if not isinstance(scores, np.ndarray):
             scores = np.array(scores)
@@ -208,9 +208,9 @@ class FastqFile(TextFile, MutableMapping):
                             .tobytes() \
                             .decode("ascii")
         if self._chars_per_line is None:
-            self._lines.append(score_chars)
+            self.lines.append(score_chars)
         else:
-            self._lines += textwrap.wrap(
+            self.lines += textwrap.wrap(
                 score_chars, width=self._chars_per_line
             )
         self._find_entries()
@@ -221,7 +221,7 @@ class FastqFile(TextFile, MutableMapping):
     def __delitem__(self, identifier):
         seq_start, seq_stop, score_start, score_stop \
             = self._entries[identifier]
-        del self._lines[seq_start-1 : score_stop]
+        del self.lines[seq_start-1 : score_stop]
         del self._entries[identifier]
         self._find_entries()
     
@@ -248,7 +248,7 @@ class FastqFile(TextFile, MutableMapping):
         score_start_i = None
         score_stop_i = None
         identifier = None
-        for i, line in enumerate(self._lines):
+        for i, line in enumerate(self.lines):
             if not in_scores and not in_sequence and line[0] == "@":
                 # Identifier line
                 identifier = line[1:]

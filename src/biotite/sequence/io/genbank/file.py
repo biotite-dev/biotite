@@ -170,7 +170,7 @@ class GenBankFile(TextFile):
     def __init__(self):
         super().__init__()
         # Add '//' as general terminator of a GenBank file
-        self._lines = ["//"]
+        self.lines = ["//"]
         # Field start and stop indices in list of lines
         # and names of categories
         self._field_pos = []
@@ -283,7 +283,7 @@ class GenBankFile(TextFile):
             subfield_start = None
             first_subfield_start = None
             for i in range(start+1, stop):
-                line = self._lines[i]
+                line = self.lines[i]
                 # Check if line contains a new subfield
                 # (Header beginning from first column)
                 if len(line) != 0 and line[:12].strip() != "":
@@ -332,11 +332,11 @@ class GenBankFile(TextFile):
         start, old_stop, _ = self._field_pos[index]
         # If not the last element is set,
         # the following lines need to be added, too
-        if old_stop is not len(self._lines):
-            follow_lines = self._lines[old_stop:]
+        if old_stop is not len(self.lines):
+            follow_lines = self.lines[old_stop:]
         else:
             follow_lines = []
-        self._lines = self._lines[:start] + inserted_lines + follow_lines
+        self.lines = self.lines[:start] + inserted_lines + follow_lines
         # Shift the start/stop indices of the following fields
         # by the amount of created fields
         shift = len(inserted_lines) - (old_stop - start)
@@ -355,7 +355,7 @@ class GenBankFile(TextFile):
         for i in range(index, len(self._field_pos)):
             old_start, old_stop, name = self._field_pos[i]
             self._field_pos[i] = old_start-shift, old_stop-shift, name
-        del self._lines[start : stop]
+        del self.lines[start : stop]
         del self._field_pos[index]
     
     def __len__(self):
@@ -391,11 +391,11 @@ class GenBankFile(TextFile):
             _, start, _ = self._field_pos[index-1]
         # If the new lines are not inserted at the end,
         # the following lines need to be added, too
-        if start is not len(self._lines):
-            follow_lines = self._lines[start:]
+        if start is not len(self.lines):
+            follow_lines = self.lines[start:]
         else:
             follow_lines = []
-        self._lines = self._lines[:start] + inserted_lines + follow_lines
+        self.lines = self.lines[:start] + inserted_lines + follow_lines
         # Shift the start/stop indices of the following fields
         # by the amount of created fields
         shift = len(inserted_lines)
@@ -434,7 +434,7 @@ class GenBankFile(TextFile):
         start = None
         name = ""
         self._field_pos = []
-        for i, line in enumerate(self._lines):
+        for i, line in enumerate(self.lines):
             # Check if line contains a new major field
             # (Header beginning from first column)
             if len(line) != 0 and line[0] != " ":
@@ -454,9 +454,9 @@ class GenBankFile(TextFile):
 
     def _get_field_content(self, start, stop, indent):
         if indent == 0:
-            return self._lines[start : stop]
+            return self.lines[start : stop]
         else:
-            return [line[12:] for line in self._lines[start : stop]]
+            return [line[12:] for line in self.lines[start : stop]]
     
     def _to_lines(self, name, content, subfields):
         """
@@ -553,11 +553,11 @@ class MultiFile(TextFile):
 
     def __iter__(self):
         start_i = 0
-        for i in range(len(self._lines)):
-            line = self._lines[i]
+        for i in range(len(self.lines)):
+            line = self.lines[i]
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
-                file_content = "\n".join(self._lines[start_i : i+1])
+                file_content = "\n".join(self.lines[start_i : i+1])
                 file = GenBankFile()
                 file.read(io.StringIO(file_content))
                 # Reset file start index

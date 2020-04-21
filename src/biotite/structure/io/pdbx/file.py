@@ -91,8 +91,8 @@ class PDBxFile(TextFile, MutableMapping):
     def parse(lines):
         file = PDBxFile()
         # Remove emptyline at then end of file, if present
-        if self._lines[-1] == "":
-            del self._lines[-1]
+        if self.lines[-1] == "":
+            del self.lines[-1]
         
         current_data_block = ""
         current_category = None
@@ -100,7 +100,7 @@ class PDBxFile(TextFile, MutableMapping):
         stop = -1
         is_loop = False
         has_multiline_values = False
-        for i, line in enumerate(self._lines):
+        for i, line in enumerate(self.lines):
             # Ignore empty and comment lines
             if not _is_empty(line):
                 data_block_name = _data_block_name(line)
@@ -126,7 +126,7 @@ class PDBxFile(TextFile, MutableMapping):
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is in the
                         # next line
-                        category_in_line = _get_category_name(self._lines[i+1])
+                        category_in_line = _get_category_name(self.lines[i+1])
                     is_loop = is_loop_in_line
                     current_category = category_in_line
                     start = i
@@ -139,7 +139,7 @@ class PDBxFile(TextFile, MutableMapping):
         # Since at the end of the file the end of the category
         # is not determined by the start of a new one,
         # this needs to be handled separately
-        stop = len(self._lines)
+        stop = len(self.lines)
         self._add_category(data_block, current_category, start,
                            stop, is_loop, has_multiline_values)
     
@@ -198,7 +198,7 @@ class PDBxFile(TextFile, MutableMapping):
         
         if is_multilined:
             # Convert multiline values into singleline values
-            prelines = [line.strip() for line in self._lines[start:stop]
+            prelines = [line.strip() for line in self.lines[start:stop]
                          if not _is_empty(line) and not _is_loop_start(line)]
             lines = (len(prelines)) * [None]
             # lines index
@@ -228,7 +228,7 @@ class PDBxFile(TextFile, MutableMapping):
             lines = [line for line in lines if line is not None]
             
         else:
-            lines = [line.strip() for line in self._lines[start:stop]
+            lines = [line.strip() for line in self.lines[start:stop]
                      if not _is_empty(line) and not _is_loop_start(line)]
         
         if is_loop:
@@ -377,9 +377,9 @@ class PDBxFile(TextFile, MutableMapping):
             # Difference between number of lines of the old and new category
             len_diff = len(newlines) - (old_category_stop-old_category_start)
             # Remove old category content
-            del self._lines[old_category_start : old_category_stop]
+            del self.lines[old_category_start : old_category_stop]
             # Insert new lines at category start
-            self._lines[category_start:category_start] = newlines
+            self.lines[category_start:category_start] = newlines
             # Update category info
             category_info["start"] = category_start
             category_info["stop"] = category_start + len(newlines)
@@ -398,7 +398,7 @@ class PDBxFile(TextFile, MutableMapping):
             category_start = last_stop
             category_stop = category_start + len(newlines)
             len_diff = len(newlines)
-            self._lines[category_start:category_start] = newlines
+            self.lines[category_start:category_start] = newlines
             self._add_category(block, category, category_start, category_stop,
                                is_looped, is_multilined=False)
         else:
@@ -415,7 +415,7 @@ class PDBxFile(TextFile, MutableMapping):
             category_start = last_stop + 2
             category_stop = last_stop + len(newlines)
             len_diff = len(newlines)-2
-            self._lines[last_stop:last_stop] = newlines
+            self.lines[last_stop:last_stop] = newlines
             self._add_category(block, category, category_start, category_stop,
                                is_looped, is_multilined=False)
         # Update start and stop of all categories appearing after the
@@ -447,7 +447,7 @@ class PDBxFile(TextFile, MutableMapping):
         # Insertion point of new lines
         category_start = category_info["start"]
         category_stop = category_info["stop"]
-        del self._lines[category_start : category_stop]
+        del self.lines[category_start : category_stop]
         # Update start and stop of all categories appearing after the
         # deleted category
         len_diff = category_stop - category_start
