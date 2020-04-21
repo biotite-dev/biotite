@@ -64,15 +64,13 @@ class GFFFile(TextFile):
     
     >>> import os.path
     >>> from io import StringIO
-    >>> gff_file = GFFFile()
-    >>> gff_file.read(os.path.join(path_to_sequences, "indexing_test.gff3"))
+    >>> gff_file = GFFFile.read(os.path.join(path_to_sequences, "indexing_test.gff3"))
     >>> fasta_start_index = None
     >>> for directive, line_index in gff_file.directives():
     ...     if directive == "FASTA":
     ...         fasta_start_index = line_index + 1
     >>> fasta_data = StringIO("\\n".join(gff_file.lines[fasta_start_index:]))
-    >>> fasta_file = FastaFile()
-    >>> fasta_file.read(fasta_data)
+    >>> fasta_file = FastaFile.read(fasta_data)
     >>> for seq_string in fasta_file.values():
     ...     print(seq_string[:60] + "...")
     TACGTAGCTAGCTGATCGATGTTGTGTGTATCGATCTAGCTAGCTAGCTGACTACACAAT...
@@ -82,8 +80,7 @@ class GFFFile(TextFile):
     Reading and editing of an existing GFF3 file:
 
     >>> import os.path
-    >>> gff_file = GFFFile()
-    >>> gff_file.read(os.path.join(path_to_sequences, "gg_avidin.gff3"))
+    >>> gff_file = GFFFile.read(os.path.join(path_to_sequences, "gg_avidin.gff3"))
     >>> # Get content of first entry
     >>> seqid, source, type, start, end, score, strand, phase, attrib = gff_file[0]
     >>> print(seqid)

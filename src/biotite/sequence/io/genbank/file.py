@@ -115,8 +115,7 @@ class GenBankFile(TextFile):
     Parsing fields from a real GenBank file:
 
     >>> import os.path
-    >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "gg_avidin.gb"))
+    >>> file = GenBankFile.read(os.path.join(path_to_sequences, "gg_avidin.gb"))
     >>> print(file)
     LOCUS       AJ311647                1224 bp    DNA     linear   VRT 14-NOV-2006
     DEFINITION  Gallus gallus AVD gene for avidin, exons 1-4.
@@ -555,8 +554,7 @@ class MultiFile(TextFile):
     ...     os.path.join(path_to_directory, "multifile.gp"),
     ...     "protein", "gp"
     ... )
-    >>> multi_file = MultiFile()
-    >>> multi_file.read(file_name)
+    >>> multi_file = MultiFile.read(file_name)
     >>> for gp_file in multi_file:
     ...     print(get_accession(gp_file))
     1L2Y_A

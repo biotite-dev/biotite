@@ -54,8 +54,7 @@ class PDBFile(TextFile):
     structure into a new file:
     
     >>> import os.path
-    >>> file = PDBFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.pdb"))
+    >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = PDBFile()
@@ -120,13 +119,11 @@ class PDBFile(TextFile):
         from one of the created files used as template and coordinates
         from all of the PDB files.
 
-        >>> template_file = PDBFile()
-        >>> template_file.read(file_names[0])
+        >>> template_file = PDBFile.read(file_names[0])
         >>> template = template_file.get_structure()
         >>> coord = []
         >>> for i, file_name in enumerate(file_names):
-        ...     pdb_file = PDBFile()
-        ...     pdb_file.read(file_name)
+        ...     pdb_file = PDBFile.read(file_name)
         ...     coord.append(pdb_file.get_coord(model=1))
         >>> new_stack = from_template(template, np.array(coord))
 

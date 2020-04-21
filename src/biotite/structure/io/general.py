@@ -61,8 +61,7 @@ def load_structure(file_path, template=None, **kwargs):
     _, suffix = os.path.splitext(file_path)
     if suffix == ".pdb":
         from .pdb import PDBFile
-        file = PDBFile()
-        file.read(file_path)
+        file = PDBFile.read(file_path)
         array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
@@ -71,8 +70,7 @@ def load_structure(file_path, template=None, **kwargs):
             return array
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, get_structure
-        file = PDBxFile()
-        file.read(file_path)
+        file = PDBxFile.read(file_path)
         array = get_structure(file, **kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
@@ -81,8 +79,7 @@ def load_structure(file_path, template=None, **kwargs):
             return array
     elif suffix == ".gro":
         from .gro import GROFile
-        file = GROFile()
-        file.read(file_path)
+        file = GROFile.read(file_path)
         array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
@@ -91,8 +88,7 @@ def load_structure(file_path, template=None, **kwargs):
             return array
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, get_structure
-        file = MMTFFile()
-        file.read(file_path)
+        file = MMTFFile.read(file_path)
         array = get_structure(file, **kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
@@ -101,8 +97,7 @@ def load_structure(file_path, template=None, **kwargs):
             return array
     elif suffix == ".npz":
         from .npz import NpzFile
-        file = NpzFile()
-        file.read(file_path)
+        file = NpzFile.read(file_path)
         array = file.get_structure(**kwargs)
         if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
             # Stack containing only one model -> return as atom array
@@ -127,8 +122,7 @@ def load_structure(file_path, template=None, **kwargs):
             traj_file_cls = DCDFile
         if suffix == ".netcdf":
             traj_file_cls = NetCDFFile
-        file = traj_file_cls()
-        file.read(file_path, **kwargs)
+        file = traj_file_cls.read(file_path, **kwargs)
         return file.get_structure(template)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")

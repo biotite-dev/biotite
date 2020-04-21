@@ -52,8 +52,7 @@ class PDBxFile(TextFile, MutableMapping):
     Read the file and get author names:
 
     >>> import os.path
-    >>> file = PDBxFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> author_dict = file.get_category("citation_author", block="1L2Y")
     >>> print(author_dict["name"])
     ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']

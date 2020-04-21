@@ -113,8 +113,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
     --------
 
     >>> import os.path
-    >>> file = PDBxFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> arr = get_structure(file, model=1)
     >>> print(len(arr))
     304

@@ -29,8 +29,7 @@ class NpzFile(File):
     structure into a new file:
     
     >>> import os.path
-    >>> file = NpzFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.npz"))
+    >>> file = NpzFile.read(os.path.join(path_to_structures, "1l2y.npz"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = NpzFile()
