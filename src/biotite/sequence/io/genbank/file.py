@@ -178,6 +178,20 @@ class GenBankFile(TextFile):
     
     @classmethod
     def read(cls, file):
+        """
+        Read a GenBank file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : GenBankFile
+            The parsed file.
+        """
         file = super().read(file)
         file._find_field_indices()
         return file

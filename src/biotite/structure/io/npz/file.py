@@ -52,13 +52,18 @@ class NpzFile(File):
     @classmethod
     def read(cls, file):
         """
-        Parse a NPZ file.
+        Read a NPZ file.
         
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
-            Alternatively, a file path can be supplied.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : NPZFile
+            The parsed file.
         """
         npz_file = NpzFile()
         # File name

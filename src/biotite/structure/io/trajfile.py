@@ -83,6 +83,11 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             Although lower values can decrease the memory consumption of
             reading trajectories, they also increase the computation
             time.
+        
+        Returns
+        -------
+        file_object : TrajectoryFile
+            The parsed trajectory file.
         """
         file = cls()
 

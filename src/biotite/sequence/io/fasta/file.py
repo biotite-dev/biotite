@@ -71,6 +71,25 @@ class FastaFile(TextFile, MutableMapping):
     
     @classmethod
     def read(cls, file, chars_per_line=80):
+        """
+        Read a FASTA file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            Default is 80.
+        
+        Returns
+        -------
+        file_object : FastaFile
+            The parsed file.
+        """
         file = super().read(file, chars_per_line)
         # Filter out empty and comment lines
         file.lines = [line for line in file.lines

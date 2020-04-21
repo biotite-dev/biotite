@@ -51,6 +51,20 @@ class MMTFFile(File, MutableMapping):
     
     @classmethod
     def read(self, file):
+        """
+        Read a MMTF file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : MMTFFile
+            The parsed file.
+        """
         mmtf_file = MMTFFile()
         # File name
         if isinstance(file, str):

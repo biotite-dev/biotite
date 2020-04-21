@@ -108,6 +108,31 @@ class FastqFile(TextFile, MutableMapping):
     
     @classmethod
     def read(cls, file, offset, chars_per_line=None):
+        """
+        Read a FASTQ file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+            This value that is added to the quality score to obtain the
+            ASCII code.
+            Can either be directly the value, or a string that indicates
+            the score format.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            By default each sequence (and score string)
+            is put into one line.
+        
+        Returns
+        -------
+        file_object : FastqFile
+            The parsed file.
+        """
         file = super().read(file, offset, chars_per_line)
         # Remove leading and trailing whitespace in all lines
         file.lines = [line.strip() for line in file.lines]

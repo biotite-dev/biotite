@@ -138,6 +138,20 @@ class GFFFile(TextFile):
     
     @classmethod
     def read(cls, file):
+        """
+        Read a GFF3 file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : GFFFile
+            The parsed file.
+        """
         file = super().read(file)
         file._index_entries()
         return file

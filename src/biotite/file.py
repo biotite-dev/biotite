@@ -14,21 +14,21 @@ import copy
 
 class File(Copyable, metaclass=abc.ABCMeta):
     """
-    Base class for all file classes. Every file class is
-    instantiated without arguments. In order to fill the instance
-    with content, either a file is read using the `read()` method,
-    or the instance is directly modified with class specific setter
-    methods. In order to write the instance content into a file the
-    `write()` method is used.
+    Base class for all file classes.
+    The constructor creates an empty file, that can be filled with data
+    using the class specific setter methods.
+    Conversely, the class method :func:`read()` reads a file from disk
+    (or a file-like object from other sources).
+    In order to write the instance content into a file the
+    :func:`write()` method is used.
     """
     
     def __init__(self):
+        # Support for deprecated instance method 'read()':
+        # When creating an instance, the 'read()' class method is
+        # replaced by the instance method, so that subsequent
+        # 'read()' calls are delegated to the instance method
         self.read = self._deprecated_read
-    
-
-    #def __getattribute__(self, name):
-    #    if name == "read":
-    #        return File._deprecated_read
     
     @classmethod
     @abc.abstractmethod
@@ -46,15 +46,22 @@ class File(Copyable, metaclass=abc.ABCMeta):
         -------
         file_object : File
             An instance from the respective :class:`File` subclass
-            representing the read file.
+            representing the parsed file.
         """
         pass
         
             
     def _deprecated_read(self, file, *args, **kwargs):
+        """
+        Support for deprecated instance method :func:`read()`.
+
+        Internally this calls the :func:`read()` class method and
+        replaces the data in `self` with the data from the newly created
+        :class:`File` object
+        """
         warnings.warn(
             "Instance method 'read()' is deprecated, "
-            "use static method instead",
+            "use class method instead",
             DeprecationWarning
         )
         cls = type(self)
@@ -64,8 +71,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def write(self, file):
         """
-        Write the contents of this object into a file
-        (or file-like object).
+        Write the contents of this :class:`File` object into a file.
         
         Parameters
         ----------
@@ -78,10 +84,10 @@ class File(Copyable, metaclass=abc.ABCMeta):
 
 class TextFile(File, metaclass=abc.ABCMeta):
     """
-    Base class for all line based text file classes.
+    Base class for all line based text files.
     When reading a file, the text content is saved as list of strings,
     one for each line.
-    When writing a file, the list is written into the file.
+    When writing a file, this list is written into the file.
     
     Attributes
     ----------
@@ -134,6 +140,8 @@ class TextFile(File, metaclass=abc.ABCMeta):
 
 class InvalidFileError(Exception):
     """
-    Indicates that the file is not suitable for the requested action.
+    Indicates that the file is not suitable for the requested action,
+    either because the file does not contain the required data or
+    because the file is malformed.
     """
     pass

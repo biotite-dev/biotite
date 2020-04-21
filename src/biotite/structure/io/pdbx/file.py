@@ -89,6 +89,20 @@ class PDBxFile(TextFile, MutableMapping):
     
     @classmethod
     def read(cls, file):
+        """
+        Read a PDBx/mmCIF file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : PDBxFile
+            The parsed file.
+        """
         file = super().read(file)
         # Remove emptyline at then end of file, if present
         if file.lines[-1] == "":
