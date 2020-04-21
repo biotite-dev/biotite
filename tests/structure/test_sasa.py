@@ -22,8 +22,7 @@ def test_single(pdb_id):
     file_name = join(data_dir("structure"), pdb_id+".pdb")
     
     # Single atom SASA, compare with MDTraj
-    file = pdb.PDBFile()
-    file.read(file_name)
+    file = pdb.PDBFile.read(file_name)
     array = file.get_structure(model=1)
     sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
     
@@ -55,8 +54,7 @@ def test_single(pdb_id):
 def test_coarse_grained(pdb_id):
     # Multi atom SASA (ProtOr), compare with single atom SASA
     # on residue level
-    file = mmtf.MMTFFile()
-    file.read(join(data_dir("structure"), pdb_id+".mmtf"))
+    file = mmtf.MMTFFile.read(join(data_dir("structure"), pdb_id+".mmtf"))
     array = mmtf.get_structure(file, model=1)
     array = array[struc.filter_amino_acids(array)]
     sasa = struc.apply_residue_wise(

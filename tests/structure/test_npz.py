@@ -18,8 +18,7 @@ from ..util import data_dir
     "path", glob.glob(join(data_dir("structure"), "*.npz"))
 )
 def test_array_conversion(path):
-    npz_file = npz.NpzFile()
-    npz_file.read(path)
+    npz_file = npz.NpzFile.read(path)
     array1 = npz_file.get_structure()
     npz_file = npz.NpzFile()
     npz_file.set_structure(array1)

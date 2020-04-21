@@ -32,20 +32,16 @@ def test_fetch(format, as_file_like):
     path = None if as_file_like else biotite.temp_dir()
     file_path_or_obj = rcsb.fetch("1l2y", format, path, overwrite=True)
     if format == "pdb":
-        file = pdb.PDBFile()
-        file.read(file_path_or_obj)
+        file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
     elif format == "pdbx":
-        file = pdbx.PDBxFile()
-        file.read(file_path_or_obj)
+        file = pdbx.PDBxFile.read(file_path_or_obj)
         pdbx.get_structure(file)
     elif format == "mmtf":
-        file = mmtf.MMTFFile()
-        file.read(file_path_or_obj)
+        file = mmtf.MMTFFile.read(file_path_or_obj)
         mmtf.get_structure(file)
     elif format == "fasta":
-        file = fasta.FastaFile()
-        file.read(file_path_or_obj)
+        file = fasta.FastaFile.read(file_path_or_obj)
         # Test if the file contains any sequences
         assert len(fasta.get_sequences(file)) > 0
 

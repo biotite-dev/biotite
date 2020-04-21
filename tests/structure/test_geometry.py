@@ -84,8 +84,7 @@ def _assert_plausible_omega(omega):
 def test_dihedral_backbone_result(file_name):
     import mdtraj
     
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(file_name)
+    mmtf_file = mmtf.MMTFFile.read(file_name)
     array = mmtf.get_structure(mmtf_file, model=1)
     array = array[struc.filter_amino_acids(array)]
     for chain in struc.chain_iter(array):

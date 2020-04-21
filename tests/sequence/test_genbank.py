@@ -21,8 +21,7 @@ def test_contiguous_field_pos(path):
     """
     Check whether the internal index of a GenBankFile is contiguous
     """
-    gb_file = gb.GenBankFile()
-    gb_file.read(path)
+    gb_file = gb.GenBankFile.read(path)
     assert gb_file._field_pos[0][0] == 0
     for i in range(1, len(gb_file._field_pos)):
         start, _, _ = gb_file._field_pos[i]
@@ -65,8 +64,7 @@ def test_conversion_lowlevel(path):
     Test whether the low-level GenBank interface can properly read
     a GenBank file and write a file, without data changing.
     """
-    gb_file = gb.GenBankFile()
-    gb_file.read(path)
+    gb_file = gb.GenBankFile.read(path)
     ref_parsed_fields = [field for field in gb_file]
 
     gb_file = gb.GenBankFile()
@@ -75,8 +73,7 @@ def test_conversion_lowlevel(path):
     temp_file_name = biotite.temp_file("gb")
     gb_file.write(temp_file_name)
 
-    gb_file = gb.GenBankFile()
-    gb_file.read(temp_file_name)
+    gb_file = gb.GenBankFile.read(temp_file_name)
     test_parsed_fields = [field for field in gb_file]
     assert test_parsed_fields == ref_parsed_fields
 
@@ -93,8 +90,7 @@ def test_conversion_highlevel(path):
     these properties to a file, without data changing.
     """
     suffix = path[-2:]
-    gb_file = gb.GenBankFile()
-    gb_file.read(path)
+    gb_file = gb.GenBankFile.read(path)
     ref_locus = gb.get_locus(gb_file)
     ref_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
 
@@ -104,8 +100,7 @@ def test_conversion_highlevel(path):
     temp_file_name = biotite.temp_file("gb")
     gb_file.write(temp_file_name)
 
-    gb_file = gb.GenBankFile()
-    gb_file.read(temp_file_name)
+    gb_file = gb.GenBankFile.read(temp_file_name)
     test_locus = gb.get_locus(gb_file)
     test_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
     assert test_locus == ref_locus
@@ -119,8 +114,7 @@ def test_genbank_utility_gb():
     Check whether the high-level utility functions return the expected
     content of a known GenBank file. 
     """
-    gb_file = gb.GenBankFile()
-    gb_file.read(join(data_dir("sequence"), "ec_bl21.gb"))
+    gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "ec_bl21.gb"))
     assert gb.get_locus(gb_file) \
         == ("CP001509", 4558953, "DNA", True, "BCT", "16-FEB-2017")
     assert gb.get_definition(gb_file) \
@@ -150,8 +144,7 @@ def test_genbank_utility_gp():
     Check whether the high-level utility functions return the expected
     content of a known GenPept file. 
     """
-    gp_file = gb.GenBankFile()
-    gp_file.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
+    gp_file = gb.GenBankFile.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
     #[print(e) for e in gp_file._field_pos]
     assert gb.get_locus(gp_file) \
         == ("AAC37312", 147, "", False, "MAM", "27-APR-1993")
@@ -178,7 +171,6 @@ def test_genbank_utility_gp():
 
 
 def test_multi_file():
-    multi_file = gb.MultiFile()
-    multi_file.read(join(data_dir("sequence"), "multifile.gp"))
+    multi_file = gb.MultiFile.read(join(data_dir("sequence"), "multifile.gp"))
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]

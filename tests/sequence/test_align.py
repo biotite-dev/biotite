@@ -20,8 +20,7 @@ def sequences():
     """
     10 Cas9 sequences.
     """
-    fasta_file = fasta.FastaFile()
-    fasta_file.read(join(data_dir("sequence"), "cas9.fasta"))
+    fasta_file = fasta.FastaFile.read(join(data_dir("sequence"), "cas9.fasta"))
     return [seq.ProteinSequence(sequence) for sequence in fasta_file.values()]
 
 def test_alignment_str():

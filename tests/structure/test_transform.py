@@ -20,8 +20,7 @@ from ..util import data_dir
 def input_atoms(request):
     ndim, as_coord = request.param
 
-    file = npz.NpzFile()
-    file.read(join(data_dir("structure"), "1l2y.npz"))
+    file = npz.NpzFile.read(join(data_dir("structure"), "1l2y.npz"))
     atoms = file.get_structure()
     
     if ndim == 2:

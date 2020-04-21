@@ -32,8 +32,7 @@ from pytest import approx
     ]
 )
 def test_parsing(category, key, exp_value):
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(join(data_dir("structure"), "1l2y.cif"))
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
     cat_dict = pdbx_file[category]
     value = cat_dict[key]
     if isinstance(value, np.ndarray):
@@ -82,8 +81,7 @@ def test_empty_values(string, use_array):
 )
 def test_conversion(path, single_model):
     model = 1 if single_model else None
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    pdbx_file = pdbx.PDBxFile.read(path)
     array1 = pdbx.get_structure(pdbx_file, model=model)
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
@@ -99,8 +97,7 @@ def test_conversion(path, single_model):
 
 def test_extra_fields():
     path = join(data_dir("structure"), "1l2y.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    pdbx_file = pdbx.PDBxFile.read(path)
     stack1 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
                                 "occupancy","charge"])
     pdbx_file = pdbx.PDBxFile()
@@ -111,8 +108,7 @@ def test_extra_fields():
 
 
     path = join(data_dir("structure"), "1l2y.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    pdbx_file = pdbx.PDBxFile.read(path)
     stack1 = pdbx.get_structure(
         pdbx_file,
         extra_fields=[
@@ -162,8 +158,7 @@ def test_list_assemblies():
     example.
     """
     path = join(data_dir("structure"), "1f2n.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    pdbx_file = pdbx.PDBxFile.read(path)
 
     assembly_list = pdbx.list_assemblies(pdbx_file)
     assert assembly_list == {
@@ -186,8 +181,7 @@ def test_get_assembly(single_model):
     model = 1 if single_model else None
 
     path = join(data_dir("structure"), "1f2n.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    pdbx_file = pdbx.PDBxFile.read(path)
 
     assembly_category = pdbx_file.get_category(
         "pdbx_struct_assembly", expect_looped=True

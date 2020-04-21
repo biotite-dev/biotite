@@ -12,8 +12,7 @@ import pytest
 
 @pytest.fixture
 def sample_array():
-    file = npz.NpzFile()
-    file.read(join(data_dir("structure"), "1l2y.npz"))
+    file = npz.NpzFile.read(join(data_dir("structure"), "1l2y.npz"))
     return file.get_structure()[0]
 
 @pytest.fixture

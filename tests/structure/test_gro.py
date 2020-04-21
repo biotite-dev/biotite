@@ -25,8 +25,7 @@ from ..util import data_dir
 )
 def test_array_conversion(path, single_model):
     model = 1 if single_model else None
-    gro_file = gro.GROFile()
-    gro_file.read(path)
+    gro_file = gro.GROFile.read(path)
     array1 = gro_file.get_structure(model=model)
     gro_file = gro.GROFile()
     gro_file.set_structure(array1)
@@ -45,11 +44,9 @@ def test_array_conversion(path, single_model):
 )
 def test_pdb_consistency(path):
     pdb_path = splitext(path)[0] + ".pdb"
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_path)
+    pdb_file = pdb.PDBFile.read(pdb_path)
     a1 = pdb_file.get_structure(model=1)
-    gro_file = gro.GROFile()
-    gro_file.read(path)
+    gro_file = gro.GROFile.read(path)
     a2 = gro_file.get_structure(model=1)
 
     assert a1.array_length() == a2.array_length()
@@ -75,8 +72,7 @@ def test_pdb_to_gro(path, single_model):
     model = 1 if single_model else None
     
     # Read in data
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     a1 = pdb_file.get_structure(model=model)
 
     # Save stack as gro
@@ -86,8 +82,7 @@ def test_pdb_to_gro(path, single_model):
     gro_file.write(tmp_file_name)
 
     # Reload stack from gro
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    gro_file = gro.GROFile.read(tmp_file_name)
     a2 = gro_file.get_structure(model=model)
 
     assert a1.array_length() == a2.array_length()
@@ -113,8 +108,7 @@ def test_gro_id_overflow():
     io.save_structure(tmp_file_name, atoms)
 
     # Read .gro file
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    gro_file = gro.GROFile.read(tmp_file_name)
     s = gro_file.get_structure()
 
     assert s.array_length() == num_atoms
@@ -136,8 +130,7 @@ def test_gro_no_box():
     io.save_structure(tmp_file_name, atoms)
     
     # Read in file
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    gro_file = gro.GROFile.read(tmp_file_name)
     s = gro_file.get_structure()
 
     # Assert no box with 0 dimension

@@ -29,8 +29,7 @@ def test_fetch(common_name, as_file_like):
     db_name = "Protein" if common_name else "protein"
     file = entrez.fetch("1L2Y_A", path, "fa", db_name,
                         "fasta", overwrite=True)
-    fasta_file = fasta.FastaFile()
-    fasta_file.read(file)
+    fasta_file = fasta.FastaFile.read(file)
     prot_seq = fasta.get_sequence(fasta_file)
 
 @pytest.mark.skipif(
@@ -43,8 +42,7 @@ def test_fetch_single_file(as_file_like):
     file = entrez.fetch_single_file(
         ["1L2Y_A", "3O5R_A"], file_name, "protein", "fasta"
     )
-    fasta_file = fasta.FastaFile()
-    fasta_file.read(file)
+    fasta_file = fasta.FastaFile.read(file)
     prot_seqs = fasta.get_sequences(fasta_file)
     assert len(prot_seqs) == 2
 

@@ -28,8 +28,7 @@ def test_dssp(path):
                         6 : "T",
                         7 : "C"}
 
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     array = mmtf.get_structure(mmtf_file, model=1)
     array = array[array.hetero == False]
     first_chain_id = array.chain_id[0]

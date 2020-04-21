@@ -569,8 +569,7 @@ class MultiFile(TextFile):
             if line.strip() == "//":
                 # Create file with lines corresponding to that file
                 file_content = "\n".join(self.lines[start_i : i+1])
-                file = GenBankFile()
-                file.read(io.StringIO(file_content))
+                file = GenBankFile.read(io.StringIO(file_content))
                 # Reset file start index
                 start_i = i
                 yield file

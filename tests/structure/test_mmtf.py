@@ -19,8 +19,7 @@ from ..util import data_dir
     "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
 )
 def test_codecs(path):
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     for key in mmtf_file:
         if mmtf_file.get_codec(key) is not None:
             codec = mmtf_file.get_codec(key)
@@ -47,8 +46,7 @@ def test_codecs(path):
 )
 def test_array_conversion(path, single_model):
     model = 1 if single_model else None
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
     mmtf_file = mmtf.MMTFFile()
@@ -56,8 +54,7 @@ def test_array_conversion(path, single_model):
     temp_file_name = biotite.temp_file("mmtf")
     mmtf_file.write(temp_file_name)
 
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(temp_file_name)
+    mmtf_file = mmtf.MMTFFile.read(temp_file_name)
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
     for category in a1.get_annotation_categories():
@@ -80,11 +77,9 @@ def test_array_conversion(path, single_model):
 def test_pdbx_consistency(path, single_model):
     model = None if single_model else 1
     cif_path = splitext(path)[0] + ".cif"
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model)
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
     # Sometimes mmCIF files can have 'cell' entry
     # but corresponding MMTF file has not 'unitCell' entry
@@ -101,8 +96,7 @@ def test_pdbx_consistency(path, single_model):
 
 def test_extra_fields():
     path = join(data_dir("structure"), "1l2y.mmtf")
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     stack1 = mmtf.get_structure(
         mmtf_file,
         extra_fields=[
