@@ -101,8 +101,7 @@ organisms = ["H. sapiens", "G. gallus", "C. viginianus", "B. mori"]
 # Create a PB sequence from each structure
 pb_seqs = []
 for file_name in lyso_files:
-    file = mmtf.MMTFFile()
-    file.read(file_name)
+    file = mmtf.MMTFFile.read(file_name)
     # Take only the first model into account
     array = mmtf.get_structure(file, model=1)
     # Remove everything but the first protein chain

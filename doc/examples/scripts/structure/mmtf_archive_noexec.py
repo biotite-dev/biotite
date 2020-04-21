@@ -69,8 +69,7 @@ with tarfile.open(mmtf_dir+".tar", mode="w") as file:
 # the .tar file is directly accessed
 with tarfile.open(mmtf_dir+".tar", mode="r") as file:
     for member in file.getnames():
-        mmtf_file = mmtf.MMTFFile()
-        mmtf_file.read(file.extractfile(member))
+        mmtf_file = mmtf.MMTFFile.read(file.extractfile(member))
         ###
         # Do some fancy stuff with the data...
         ###

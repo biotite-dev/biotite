@@ -25,8 +25,7 @@ import matplotlib.pyplot as plt
 # Download Porcine circovirus genome
 file_name = entrez.fetch("KP282147", biotite.temp_dir(),
                          "fa", "nuccore", "fasta")
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(file_name)
 genome = fasta.get_sequence(fasta_file)
 # Perform translation for forward strand
 proteins, positions = genome.translate()

@@ -43,8 +43,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
 
-pdbx_file = pdbx.PDBxFile()
-pdbx_file.read(rcsb.fetch("1M4X", "mmcif"))
+pdbx_file = pdbx.PDBxFile.read(rcsb.fetch("1M4X", "mmcif"))
 
 assemblies = pdbx.list_assemblies(pdbx_file)
 print("ID    name")

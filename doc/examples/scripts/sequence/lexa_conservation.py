@@ -38,8 +38,7 @@ file_name = entrez.fetch_single_file(uids, biotite.temp_file("gp"),
                               db_name="protein", ret_type="gp")
 # The file contains multiple concatenated GenPept files
 # -> Usage of MultiFile
-multi_file = gb.MultiFile()
-multi_file.read(file_name)
+multi_file = gb.MultiFile.read(file_name)
 # Separate MultiFile into single GenBankFile instances
 files = [f for f in multi_file]
 print("Definitions:")

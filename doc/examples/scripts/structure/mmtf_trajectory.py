@@ -38,8 +38,7 @@ import os.path
 xtc_file_path = "../../download/lysozyme_md.xtc"
 mmtf_file_path = biotite.temp_file("lysozyme_md.mmtf")
 
-xtc_file = xtc.XTCFile()
-xtc_file.read(xtc_file_path)
+xtc_file = xtc.XTCFile.read(xtc_file_path)
 coord = xtc_file.get_coord()
 coord_x = coord[:,:,0].flatten()
 coord_y = coord[:,:,1].flatten()

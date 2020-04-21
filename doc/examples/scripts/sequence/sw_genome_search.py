@@ -29,8 +29,7 @@ import matplotlib.pyplot as plt
 
 # Download E. coli BL21 genome
 file_name = entrez.fetch("CP001509", biotite.temp_dir(), "gb", "nuccore", "gb")
-gb_file = gb.GenBankFile()
-gb_file.read(file_name)
+gb_file = gb.GenBankFile.read(file_name)
 annot_seq = gb.get_annotated_sequence(gb_file, include_only=["gene"])
 # Find leuL gene
 for feature in annot_seq.annotation:
@@ -42,8 +41,7 @@ leul_seq = annot_seq[leul_feature]
 # Download Salmonella enterica genome without annotations
 file_name = entrez.fetch("CP019649", biotite.temp_dir(),
                          "fa", "nuccore", "fasta")
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(file_name)
 se_genome = fasta.get_sequence(fasta_file)
 # Find leuL in genome by local alignment
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()

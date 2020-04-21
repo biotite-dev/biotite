@@ -34,8 +34,7 @@ file_name = entrez.fetch_single_file(
 )
 
 sequences = []
-file = fasta.FastaFile()
-file.read(file_name)
+file = fasta.FastaFile.read(file_name)
 for header, seq_str in file.items():
     sequences.append(seq.ProteinSequence(seq_str))
 

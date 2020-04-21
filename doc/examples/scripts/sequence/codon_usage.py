@@ -45,8 +45,9 @@ import biotite.database.entrez as entrez
 
 
 # Get the E. coli K-12 genome as annotated sequence
-gb_file = gb.GenBankFile()
-gb_file.read(entrez.fetch("U00096", biotite.temp_dir(), "gb", "nuccore", "gb"))
+gb_file = gb.GenBankFile.read(
+    entrez.fetch("U00096", biotite.temp_dir(), "gb", "nuccore", "gb")
+)
 # We are only interested in CDS features
 k12_genome = gb.get_annotated_sequence(gb_file, include_only=["CDS"])
 
@@ -146,8 +147,7 @@ for amino_acid_code in range(20):
     opt_codons[amino_acid_code] = best_codon_code
 
 # Fetch the streptavidin protein sequence from Streptomyces avidinii
-fasta_file = fasta.FastaFile()
-fasta_file.read(
+fasta_file = fasta.FastaFile.read(
     entrez.fetch("P22629", biotite.temp_dir(), "fasta", "protein", "fasta")
 )
 strep_prot_seq = fasta.get_sequence(fasta_file)

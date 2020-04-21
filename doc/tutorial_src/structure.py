@@ -158,8 +158,7 @@ import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 
 pdb_file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
-file = pdb.PDBFile()
-file.read(pdb_file_path)
+file = pdb.PDBFile.read(pdb_file_path)
 tc5b = file.get_structure()
 print(type(tc5b).__name__)
 print(tc5b.stack_depth())
@@ -199,8 +198,7 @@ file.write(biotite.temp_file("pdb"))
 import biotite.structure.io.pdbx as pdbx
 
 cif_file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
-file = pdbx.PDBxFile()
-file.read(cif_file_path)
+file = pdbx.PDBxFile.read(cif_file_path)
 
 ########################################################################
 # Now we can access the data like a dictionary of dictionaries.
@@ -262,8 +260,7 @@ import numpy as np
 import biotite.structure.io.mmtf as mmtf
 
 mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-file = mmtf.MMTFFile()
-file.read(mmtf_file_path)
+file = mmtf.MMTFFile.read(mmtf_file_path)
 stack = mmtf.get_structure(file)
 array = mmtf.get_structure(file, model=1)
 # Do some fancy stuff
@@ -376,19 +373,17 @@ with open(xtc_file_path, "bw") as file:
     )
     file.write(response.content)
 
-traj_file = xtc.XTCFile()
-traj_file.read(xtc_file_path)
+traj_file = xtc.XTCFile.read(xtc_file_path)
 coord = traj_file.get_coord()
 print(coord.shape)
 
 ########################################################################
-# If only an excerpt of frames is desired, the behavior of
+# If only an excerpt of frames is desired, the behavior of the
 # :func:`read()` function can be customized with the `start`, `stop` and
 # `step` parameters.
 
-traj_file = xtc.XTCFile()
 # Read only every second frame
-traj_file.read(xtc_file_path, step=2)
+traj_file = xtc.XTCFile.read(xtc_file_path, step=2)
 coord = traj_file.get_coord()
 print(coord.shape)
 
@@ -402,12 +397,10 @@ import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
 
 mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-file = mmtf.MMTFFile()
-file.read(mmtf_file_path)
+file = mmtf.MMTFFile.read(mmtf_file_path)
 template = mmtf.get_structure(file, model=1)
 
-traj_file = xtc.XTCFile()
-traj_file.read(xtc_file_path)
+traj_file = xtc.XTCFile.read(xtc_file_path)
 trajectory = traj_file.get_structure(template)
 
 ########################################################################
@@ -612,8 +605,7 @@ import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
 
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(file_path)
+mmtf_file = mmtf.MMTFFile.read(file_path)
 # Essential: set the 'include_bonds' parameter to true
 stack = mmtf.get_structure(mmtf_file, include_bonds=True)
 tyrosine = stack[:, (stack.res_id == 3)]
@@ -694,8 +686,7 @@ import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
 
 file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(file_path)
+mmtf_file = mmtf.MMTFFile.read(file_path)
 structure = mmtf.get_structure(mmtf_file, model=1)
 print("Before:")
 print(structure[structure.res_id == 1])

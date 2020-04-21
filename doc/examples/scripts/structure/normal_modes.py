@@ -58,8 +58,7 @@ MAX_AMPLITUDE = 5
 
 
 # Load structure
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(rcsb.fetch(PDB_ID, "mmtf"))
+mmtf_file = mmtf.MMTFFile.read(rcsb.fetch(PDB_ID, "mmtf"))
 structure = mmtf.get_structure(mmtf_file, model=1)
 
 

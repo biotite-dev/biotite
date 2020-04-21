@@ -46,8 +46,7 @@ uids = entrez.search(query, db_name="nuccore")
 
 # Download and read file containing the Genbank records for the THCA
 # synthase genes 
-multi_file = gb.MultiFile()
-multi_file.read(entrez.fetch_single_file(
+multi_file = gb.MultiFile.read(entrez.fetch_single_file(
     uids, file_name=None, db_name="nuccore", ret_type="gb"
 ))
 

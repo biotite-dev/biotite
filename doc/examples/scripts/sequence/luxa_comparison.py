@@ -29,8 +29,7 @@ uids = entrez.search(query, db_name="protein")
 file_name = entrez.fetch_single_file(
     uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
 )
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(file_name)
 
 ids = []
 sequences = []
