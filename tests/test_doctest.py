@@ -7,10 +7,10 @@ __author__ = "Patrick Kunzmann"
 import pkgutil
 import doctest
 import os.path
-import numpy as np
+import tempfile
 from importlib import import_module
+import numpy as np
 import pytest
-import biotite
 import biotite.structure.io as strucio
 from .util import is_not_installed, cannot_import, cannot_connect_to
 
@@ -94,7 +94,7 @@ def test_doctest(package_name, context_package_names):
         )
     
     # Add fixed names for certain paths
-    globs["path_to_directory"]  = biotite.temp_dir()
+    globs["path_to_directory"]  = tempfile.gettempdir()
     globs["path_to_structures"] = "./tests/structure/data/"
     globs["path_to_sequences"]  = "./tests/sequence/data/"
     # Add frequently used modules

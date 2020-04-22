@@ -4,10 +4,10 @@
 
 import datetime
 import itertools
+import tempfile
 import numpy as np
 from requests.exceptions import ConnectionError
 import pytest
-import biotite
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
@@ -29,7 +29,7 @@ RCSB_URL = "https://www.rcsb.org/"
     itertools.product(["pdb", "cif", "mmtf", "fasta"], [False, True])
 )
 def test_fetch(format, as_file_like):
-    path = None if as_file_like else biotite.temp_dir()
+    path = None if as_file_like else tempfile.gettempdir()
     file_path_or_obj = rcsb.fetch("1l2y", format, path, overwrite=True)
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
@@ -53,7 +53,9 @@ def test_fetch(format, as_file_like):
 @pytest.mark.parametrize("format", ["pdb", "cif", "mmtf", "fasta"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
-        file = rcsb.fetch("xxxx", format, biotite.temp_dir(), overwrite=True)
+        file = rcsb.fetch(
+            "xxxx", format, tempfile.gettempdir(), overwrite=True
+        )
 
 
 @pytest.mark.skipif(
