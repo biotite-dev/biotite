@@ -66,8 +66,7 @@ file_name = entrez.fetch(
     uids[0], biotite.temp_dir(), "gp", db_name="protein", ret_type="gp"
 )
 
-gp_file = gb.GenBankFile()
-gp_file.read(file_name)
+gp_file = gb.GenBankFile.read(file_name)
 hcn1 = seq.ProteinSequence(gb.get_sequence(gp_file, format="gp"))
 print(hcn1)
 
@@ -101,8 +100,7 @@ file_name = entrez.fetch_single_file(
     uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
 )
 
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(file_name)
 
 for header in fasta_file:
     print(header)

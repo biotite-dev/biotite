@@ -20,8 +20,7 @@ import matplotlib.pyplot as plt
 # Download E. coli BL21 genome
 file_name = entrez.fetch("CP001509", biotite.temp_dir(), suffix="gb",
                          db_name="nuccore", ret_type="gb")
-gb_file = gb.GenBankFile()
-gb_file.read(file_name)
+gb_file = gb.GenBankFile.read(file_name)
 _, seq_length, _, _, _, _ = gb.get_locus(gb_file)
 annotation = gb.get_annotation(gb_file, include_only=["gene"])
 # Find the minimum and maximum locations of lac genes

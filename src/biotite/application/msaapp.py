@@ -138,8 +138,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     
     def evaluate(self):
         super().evaluate()
-        out_file = FastaFile()
-        out_file.read(self._out_file_name)
+        out_file = FastaFile.read(self._out_file_name)
         seq_dict = OrderedDict(out_file)
         # Get alignment
         out_seq_str = [None] * len(seq_dict)

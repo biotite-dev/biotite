@@ -69,14 +69,35 @@ class FastaFile(TextFile, MutableMapping):
         self._chars_per_line = chars_per_line
         self._entries = OrderedDict()
     
-    def read(self, file):
-        super().read(file)
+    @classmethod
+    def read(cls, file, chars_per_line=80):
+        """
+        Read a FASTA file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            Default is 80.
+        
+        Returns
+        -------
+        file_object : FastaFile
+            The parsed file.
+        """
+        file = super().read(file, chars_per_line)
         # Filter out empty and comment lines
-        self.lines = [line for line in self.lines
+        file.lines = [line for line in file.lines
                       if len(line.strip()) != 0 and line[0] != ";"]
-        if len(self.lines) == 0:
+        if len(file.lines) == 0:
             raise InvalidFileError("File is empty or contains only comments")
-        self._find_entries()
+        file._find_entries()
+        return file
         
     def __setitem__(self, header, seq_str):
         if not isinstance(header, str):

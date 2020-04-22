@@ -52,8 +52,7 @@ domain_pos = np.full((len(genes), 4, 2), -1, dtype=int)
 # Array that will hold the total sequence length of each sigma factor
 seq_lengths = np.zeros(len(genes), dtype=int)
 # Read the merged file containing multiple GenBank entries
-multi_file = gb.MultiFile()
-multi_file.read(file_name)
+multi_file = gb.MultiFile.read(file_name)
 # Iterate over each GenBank entry
 for i, gb_file in enumerate(multi_file):
     _, length, _, _, _, _ = gb.get_locus(gb_file)

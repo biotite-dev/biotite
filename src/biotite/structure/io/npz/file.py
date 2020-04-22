@@ -29,8 +29,7 @@ class NpzFile(File):
     structure into a new file:
     
     >>> import os.path
-    >>> file = NpzFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.npz"))
+    >>> file = NpzFile.read(os.path.join(path_to_structures, "1l2y.npz"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = NpzFile()
@@ -40,6 +39,7 @@ class NpzFile(File):
     """
     
     def __init__(self):
+        super().__init__()
         self._data_dict = None
     
     def __copy_fill__(self, clone):
@@ -48,25 +48,31 @@ class NpzFile(File):
             for key, value in self._data_dict.items():
                 clone._data_dict[key] = np.copy(value)
     
-    def read(self, file):
+    @classmethod
+    def read(cls, file):
         """
-        Parse a NPZ file.
+        Read a NPZ file.
         
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
-            Alternatively, a file path can be supplied.
-        """
-        def _read(file):
-            nonlocal self
-            self._data_dict = dict(np.load(file, allow_pickle=False))
+            Alternatively a file path can be supplied.
         
+        Returns
+        -------
+        file_object : NPZFile
+            The parsed file.
+        """
+        npz_file = NpzFile()
+        # File name
         if isinstance(file, str):
             with open(file, "rb") as f:
-                _read(f)
+                npz_file._data_dict = dict(np.load(f, allow_pickle=False))
+        # File object
         else:
-            _read(file)
+            npz_file._data_dict = dict(np.load(file, allow_pickle=False))
+        return npz_file
                 
     def write(self, file):
         """
@@ -78,15 +84,11 @@ class NpzFile(File):
             The file to be read.
             Alternatively, a file path can be supplied.
         """
-        def _write(file):
-            nonlocal self
-            np.savez(file, **self._data_dict)
-
         if isinstance(file, str):
             with open(file, "wb") as f:
-                _write(f)
+                np.savez(f, **self._data_dict)
         else:
-            _write(file)
+            np.savez(file, **self._data_dict)
     
     def get_structure(self):
         """

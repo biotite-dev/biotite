@@ -44,8 +44,7 @@ def test_bonds(path):
     files.
     """
     bond_data = strucinfo.bond_dataset()
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     for group in mmtf_file["groupList"]:
         group_name = group["groupName"]
         atom_names = group["atomNameList"]

@@ -27,8 +27,7 @@ from ..util import data_dir
 )
 def test_array_conversion(path, single_model, hybrid36):
     model = 1 if single_model else None
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     array1 = pdb.get_structure(pdb_file, model=model)
@@ -67,12 +66,10 @@ def test_array_conversion(path, single_model, hybrid36):
 def test_pdbx_consistency(path, single_model):
     model = 1 if single_model else None
     cif_path = splitext(path)[0] + ".cif"
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     a1 = pdb_file.get_structure(model=model)
 
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
     
     if a2.box is not None:
@@ -87,8 +84,7 @@ def test_pdbx_consistency(path, single_model):
 @pytest.mark.parametrize("hybrid36", [False, True])
 def test_extra_fields(hybrid36):
     path = join(data_dir("structure"), "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     stack1 = pdb_file.get_structure(
         extra_fields=[
             "atom_id", "b_factor", "occupancy", "charge"
@@ -119,8 +115,7 @@ def test_extra_fields(hybrid36):
 def test_guess_elements():
     # read valid pdb file
     path = join(data_dir("structure"), "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     stack = pdb_file.get_structure()
 
     # remove all elements
@@ -134,8 +129,7 @@ def test_guess_elements():
     tmp_pdb_file.write(tmp_file_name)
 
     # read new stack from file with guessed elements
-    guessed_pdb_file = pdb.PDBFile()
-    guessed_pdb_file.read(tmp_file_name)
+    guessed_pdb_file = pdb.PDBFile.read(tmp_file_name)
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
@@ -150,8 +144,7 @@ def test_guess_elements():
 )
 def test_box_shape(path, single_model):
     model = 1 if single_model else None
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure(model=model)
 
     if isinstance(a, struc.AtomArray):
@@ -163,8 +156,7 @@ def test_box_shape(path, single_model):
 
 def test_box_parsing():
     path = join(data_dir("structure"), "1igy.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure()
     expected_box = np.array([[
         [66.65,   0.00, 0.00],
@@ -228,8 +220,7 @@ def test_get_coord(model):
     # Choose a structure without inscodes and altlocs
     # to avoid atom filtering in reference atom array (stack)
     path = join(data_dir("structure"), "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    pdb_file = pdb.PDBFile.read(path)
     ref_coord = pdb_file.get_structure(model=model).coord
     test_coord = pdb_file.get_coord(model=model)
     assert test_coord.shape == ref_coord.shape

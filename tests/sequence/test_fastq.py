@@ -14,8 +14,9 @@ import pytest
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_access(chars_per_line):
     path = os.path.join(data_dir("sequence"), "random.fastq")
-    file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file.read(path)
+    file = fastq.FastqFile.read(
+        path, offset=33, chars_per_line=chars_per_line
+    )
     assert len(file) == 20
     assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)]
     del(file["Read:05"])
@@ -35,8 +36,9 @@ def test_access(chars_per_line):
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_conversion(chars_per_line):
     path = os.path.join(data_dir("sequence"), "random.fastq")
-    file1 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file1.read(path)
+    file1 = fastq.FastqFile.read(
+        path, offset=33, chars_per_line=chars_per_line
+    )
     ref_content = dict(file1.items())
 
     file2 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
@@ -44,8 +46,9 @@ def test_conversion(chars_per_line):
         file2[identifier] = sequence, scores
     file2.write(biotite.temp_file("fastq"))
 
-    file3 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file3.read(path)
+    file3 = fastq.FastqFile.read(
+        path, offset=33, chars_per_line=chars_per_line
+    )
     content = dict(file3.items())
     
     for identifier in ref_content:

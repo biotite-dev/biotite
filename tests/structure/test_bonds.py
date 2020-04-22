@@ -157,8 +157,7 @@ def test_connect_via_residue_names(single_model):
     in the MMTF file.
     """
     # Structure with peptide, nucleotide, small molecules and water
-    file = mmtf.MMTFFile()
-    file.read(join(data_dir("structure"), "5ugo.mmtf"))
+    file = mmtf.MMTFFile.read(join(data_dir("structure"), "5ugo.mmtf"))
     if single_model:
         atoms = mmtf.get_structure(file, include_bonds=True, model=1)
     else:
@@ -176,8 +175,7 @@ def test_connect_via_distances():
     Test whether the created bond list is equal to the bonds deposited
     in the MMTF file.
     """
-    file = mmtf.MMTFFile()
-    file.read(join(data_dir("structure"), "1l2y.mmtf"))
+    file = mmtf.MMTFFile.read(join(data_dir("structure"), "1l2y.mmtf"))
     atoms = mmtf.get_structure(file, include_bonds=True, model=1)
     # Remove termini to solve the issue that the reference bonds do not
     # contain proper bonds for the protonated/deprotonated termini

@@ -41,7 +41,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._box = None
         self._model_count = None
     
-    def read(self, file_name, start=None, stop=None, step=None,
+    @classmethod
+    def read(cls, file_name, start=None, stop=None, step=None,
              atom_i=None, chunk_size=None):
         """
         Read a trajectory file.
@@ -82,7 +83,14 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             Although lower values can decrease the memory consumption of
             reading trajectories, they also increase the computation
             time.
+        
+        Returns
+        -------
+        file_object : TrajectoryFile
+            The parsed trajectory file.
         """
+        file = cls()
+
         if chunk_size is not None:
             if chunk_size < 1:
                 raise ValueError("Chunk size must be greater than 0")
@@ -93,7 +101,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             if step is not None and chunk_size % step != 0:
                 chunk_size = ((chunk_size // step) + 1) * step
 
-        traj_type = self.traj_type()
+        traj_type = file.traj_type()
         with traj_type(file_name, "r") as f:
             
             if start is None:
@@ -130,10 +138,12 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 )
         
         # nm to Angstrom
-        coord, box, time = self.process_read_values(result)
-        self.set_coord(coord)
-        self.set_box(box)
-        self.set_time(time)
+        coord, box, time = file.process_read_values(result)
+        file.set_coord(coord)
+        file.set_box(box)
+        file.set_time(time)
+
+        return file
     
     def write(self, file_name):
         """

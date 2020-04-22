@@ -286,8 +286,7 @@ query = (
     entrez.SimpleQuery("Precursor")
 )
 uids = entrez.search(query, "protein")
-fasta_file = fasta.FastaFile()
-fasta_file.read(
+fasta_file = fasta.FastaFile.read(
     entrez.fetch_single_file(uids, biotite.temp_file("fa"), "protein", "fasta")
 )
 sequence_dict = fasta.get_sequences(fasta_file)

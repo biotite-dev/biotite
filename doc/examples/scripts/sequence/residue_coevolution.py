@@ -58,8 +58,7 @@ import biotite.database.entrez as entrez
 
 
 # Get structure and sequence
-pdbx_file = pdbx.PDBxFile()
-pdbx_file.read(rcsb.fetch("1GUU", "mmcif"))
+pdbx_file = pdbx.PDBxFile.read(rcsb.fetch("1GUU", "mmcif"))
 sequence = pdbx.get_sequence(pdbx_file)[0]
 # 'use_author_fields' is set to false,
 # to ensure that values in the 'res_id' annotation point to the sequence

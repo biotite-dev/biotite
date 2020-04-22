@@ -217,8 +217,7 @@ file_path = entrez.fetch(
     "NC_001416", biotite.temp_dir(), suffix="fa",
     db_name="nuccore", ret_type="fasta"
 )
-file = fasta.FastaFile()
-file.read(file_path)
+file = fasta.FastaFile.read(file_path)
 for header, string in file.items():
     print("Header:", header)
     print(len(string))
@@ -458,8 +457,7 @@ file_path = entrez.fetch(
     "AJ311647", biotite.temp_dir(), suffix="gb",
     db_name="nuccore", ret_type="gb"
 )
-file = gb.GenBankFile()
-file.read(file_path)
+file = gb.GenBankFile.read(file_path)
 print("Accession:", gb.get_accession(file))
 print("Definition:", gb.get_definition(file))
 

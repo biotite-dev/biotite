@@ -130,8 +130,7 @@ fig.tight_layout()
 
 # Fetch GenBank files of the TK's first chain and extract annotatation
 file_name = entrez.fetch("1QGD_A", biotite.temp_dir(), "gb", "protein", "gb")
-gb_file = gb.GenBankFile()
-gb_file.read(file_name)
+gb_file = gb.GenBankFile.read(file_name)
 annotation = gb.get_annotation(gb_file, include_only=["SecStr"])
 # Length of the sequence
 _, length, _, _, _, _ = gb.get_locus(gb_file)
@@ -180,8 +179,7 @@ dssp_to_abc = {"I" : "c",
 
 # Fetch and load structure
 file_name = rcsb.fetch("1QGD", "mmtf", biotite.temp_dir())
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(file_name)
+mmtf_file = mmtf.MMTFFile.read(file_name)
 array = mmtf.get_structure(mmtf_file, model=1)
 # Transketolase homodimer
 tk_dimer = array[struc.filter_amino_acids(array)]

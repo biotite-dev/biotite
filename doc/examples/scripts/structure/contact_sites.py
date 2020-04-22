@@ -25,8 +25,7 @@ THRESHOLD_DISTANCE = 4.0
 
 
 # Fetch and load structure
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(rcsb.fetch("2or1", "mmtf"))
+mmtf_file = mmtf.MMTFFile.read(rcsb.fetch("2or1", "mmtf"))
 structure = mmtf.get_structure(mmtf_file, model=1)
 
 

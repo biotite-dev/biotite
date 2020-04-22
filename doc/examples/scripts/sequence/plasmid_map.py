@@ -33,8 +33,7 @@ PLASMID_URL = "https://media.addgene.org/snapgene-media/" \
 
 
 response = requests.get(PLASMID_URL)
-file = gb.GenBankFile()
-file.read(io.StringIO(response.text))
+file = gb.GenBankFile.read(io.StringIO(response.text))
 annotation = gb.get_annotation(file, include_only=[
     "promoter", "terminator", "protein_bind",
     "RBS", "CDS", "rep_origin", "primer_bind"

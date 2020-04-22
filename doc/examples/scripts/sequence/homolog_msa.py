@@ -21,8 +21,7 @@ import matplotlib.pyplot as plt
 
 # Download sequence of Streptococcus pyogenes Cas9
 file_name = entrez.fetch("Q99ZW2", biotite.temp_dir(), "fa", "protein", "fasta")
-file = fasta.FastaFile()
-file.read(file_name)
+file = fasta.FastaFile.read(file_name)
 ref_seq = fasta.get_sequence(file)
 # Find homologous proteins using NCBI Blast
 # Search only the UniProt/SwissProt database
@@ -39,8 +38,7 @@ for ali in alignments:
 hit_seqs = []
 for hit in hits:
     file_name = entrez.fetch(hit, biotite.temp_dir(), "fa", "protein", "fasta")
-    file = fasta.FastaFile()
-    file.read(file_name)
+    file = fasta.FastaFile.read(file_name)
     hit_seqs.append(fasta.get_sequence(file))
 
 # Perform a multiple sequence alignment using MUSCLE

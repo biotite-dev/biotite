@@ -77,8 +77,7 @@ def get_structure(file, model=None, altloc=[],
     --------
 
     >>> import os.path
-    >>> file = MMTFFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.mmtf"))
+    >>> file = MMTFFile.read(os.path.join(path_to_structures, "1l2y.mmtf"))
     >>> array = get_structure(file, model=1)
     >>> print(array.array_length())
     304

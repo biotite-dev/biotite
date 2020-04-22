@@ -39,8 +39,7 @@ class GROFile(TextFile):
     structure into a new file:
     
     >>> import os.path
-    >>> file = GROFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.gro"))
+    >>> file = GROFile.read(os.path.join(path_to_structures, "1l2y.gro"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = GROFile()

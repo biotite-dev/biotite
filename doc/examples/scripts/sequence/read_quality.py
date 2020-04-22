@@ -26,8 +26,7 @@ GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
 """)
 
 
-fastq_file = fastq.FastqFile(offset="Sanger")
-fastq_file.read(fastq_content)
+fastq_file = fastq.FastqFile.read(fastq_content, offset="Sanger")
 sequence = fastq_file.get_sequence("SEQ_ID")
 scores = fastq_file.get_quality("SEQ_ID")
 

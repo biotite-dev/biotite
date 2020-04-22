@@ -40,8 +40,9 @@ def test_array_conversion(format):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    traj_file = traj_file_cls()
-    traj_file.read(join(data_dir("structure"), f"1l2y.{format}"))
+    traj_file = traj_file_cls.read(
+        join(data_dir("structure"), f"1l2y.{format}")
+    )
     ref_array = traj_file.get_structure(template)
 
     traj_file = traj_file_cls()
@@ -49,8 +50,7 @@ def test_array_conversion(format):
     file_name = biotite.temp_file(format)
     traj_file.write(file_name)
 
-    traj_file = traj_file_cls()
-    traj_file.read(file_name)
+    traj_file = traj_file_cls.read(file_name)
     array = traj_file.get_structure(template)
     assert ref_array.bonds == array.bonds
     assert ref_array.equal_annotation_categories(array)
@@ -97,8 +97,7 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    traj_file = traj_file_cls()
-    traj_file.read(
+    traj_file = traj_file_cls.read(
         join(data_dir("structure"), f"1l2y.{format}"),
         start, stop, step, chunk_size=chunk_size
     )

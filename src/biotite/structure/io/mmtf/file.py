@@ -33,8 +33,7 @@ class MMTFFile(File, MutableMapping):
     --------
     
     >>> import os.path
-    >>> mmtf_file = MMTFFile()
-    >>> mmtf_file.read(os.path.join(path_to_structures, "1l2y.mmtf"))
+    >>> mmtf_file = MMTFFile.read(os.path.join(path_to_structures, "1l2y.mmtf"))
     >>> print(mmtf_file["title"])
     NMR Structure of Trp-Cage Miniprotein Construct TC5b
     >>> print(mmtf_file["chainNameList"])
@@ -44,31 +43,40 @@ class MMTFFile(File, MutableMapping):
     """
     
     def __init__(self):
+        super().__init__()
         self._content = {}
         self._content["mmtfVersion"] = "1.0.0"
         self._content["mmtfProducer"] = "UNKNOWN"
     
+    @classmethod
     def read(self, file):
         """
-        Parse a MMTF file.
+        Read a MMTF file.
         
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
-            Alternatively, a file path can be supplied.
-        """
-        def _read(file):
-            nonlocal self
-            self._content = msgpack.unpackb(
-                file.read(), use_list=True, raw=False
-            )
+            Alternatively a file path can be supplied.
         
+        Returns
+        -------
+        file_object : MMTFFile
+            The parsed file.
+        """
+        mmtf_file = MMTFFile()
+        # File name
         if isinstance(file, str):
             with open(file, "rb") as f:
-                _read(f)
+                mmtf_file._content = msgpack.unpackb(
+                    f.read(), use_list=True, raw=False
+                )
+        # File object
         else:
-            _read(file)
+            mmtf_file._content = msgpack.unpackb(
+                file.read(), use_list=True, raw=False
+            )
+        return mmtf_file
     
     def write(self, file):
         """
@@ -80,18 +88,14 @@ class MMTFFile(File, MutableMapping):
             The file to be written to.
             Alternatively, a file path can be supplied.
         """
-        def _write(file):
-            nonlocal self
-            packed_bytes = msgpack.packb(
-                self._content, use_bin_type=True, default=_encode_numpy
-            )
-            file.write(packed_bytes)
-
+        packed_bytes = msgpack.packb(
+            self._content, use_bin_type=True, default=_encode_numpy
+        )
         if isinstance(file, str):
             with open(file, "wb") as f:
-                _write(f)
+                f.write(packed_bytes)
         else:
-            _write(file)
+            file.write(packed_bytes)
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
