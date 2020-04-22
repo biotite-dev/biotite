@@ -8,7 +8,7 @@ __all__ = ["MuscleApp"]
 
 import numbers
 import warnings
-from ...temp import temp_file
+from tempfile import NamedTemporaryFile
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
@@ -56,15 +56,15 @@ class MuscleApp(MSAApp):
         self._terminal_penalty = None
         self._tree1 = None
         self._tree2 = None
-        self._out_tree1_file_name = temp_file("tree")
-        self._out_tree2_file_name = temp_file("tree")
+        self._out_tree1_file = NamedTemporaryFile("r", suffix=".tree")
+        self._out_tree2_file = NamedTemporaryFile("r", suffix=".tree")
     
     def run(self):
         args = [
             "-in",    self.get_input_file_path(),
             "-out",   self.get_output_file_path(),
-            "-tree1", self._out_tree1_file_name,
-            "-tree2", self._out_tree2_file_name,
+            "-tree1", self._out_tree1_file.name,
+            "-tree2", self._out_tree2_file.name,
         ]
         if self.get_seqtype() == "protein":
             args += ["-seqtype", "protein"]
@@ -85,20 +85,27 @@ class MuscleApp(MSAApp):
     
     def evaluate(self):
         super().evaluate()
-        try:
-            with open(self._out_tree1_file_name, "r") as file:
-                self._tree1 = Tree.from_newick(file.read().replace("\n", ""))
-        except FileNotFoundError:
+
+        newick = self._out_tree1_file.read().replace("\n", "")
+        if len(newick) > 0:
+            self._tree1 = Tree.from_newick(newick)
+        else:
             warnings.warn(
                 "MUSCLE did not write a tree file from the first iteration"
             )
-        try:
-            with open(self._out_tree2_file_name, "r") as file:
-                self._tree2 = Tree.from_newick(file.read().replace("\n", ""))
-        except FileNotFoundError:
+        
+        newick = self._out_tree2_file.read().replace("\n", "")
+        if len(newick) > 0:
+            self._tree2 = Tree.from_newick(newick)
+        else:
             warnings.warn(
                 "MUSCLE did not write a tree file from the second iteration"
             )
+    
+    def clean_up(self):
+        super().clean_up()
+        self._out_tree1_file.close()
+        self._out_tree2_file.close()
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):

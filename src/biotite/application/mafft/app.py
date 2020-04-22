@@ -7,7 +7,6 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
 import re
-from ...temp import temp_file
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence

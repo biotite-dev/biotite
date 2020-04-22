@@ -6,9 +6,9 @@ __name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
+from tempfile import NamedTemporaryFile
 from ..localapp import LocalApp
 from ..application import AppState, requires_state
-from ...temp import temp_file
 from ...structure.io.pdb import PDBFile
 import numpy as np
 
@@ -54,22 +54,22 @@ class DsspApp(LocalApp):
     def __init__(self, atom_array, bin_path="mkdssp"):
         super().__init__(bin_path)
         self._array = atom_array
-        self._in_file_name  = temp_file("pdb")
-        self._out_file_name = temp_file("pdb")
+        self._in_file  = NamedTemporaryFile("w", suffix=".pdb")
+        self._out_file = NamedTemporaryFile("r", suffix=".dssp")
 
     def run(self):
         in_file = PDBFile()
         in_file.set_structure(self._array)
-        in_file.write(self._in_file_name)
+        in_file.write(self._in_file)
+        self._in_file.flush()
         self.set_arguments(
-            ["-i", self._in_file_name, "-o", self._out_file_name]
+            ["-i", self._in_file.name, "-o", self._out_file.name]
         )
         super().run()
     
     def evaluate(self):
         super().evaluate()
-        with open(self._out_file_name, "r") as f:
-            lines = f.read().split("\n")
+        lines = self._out_file.read().split("\n")
         # Index where SSE records start
         sse_start = None
         for i, line in enumerate(lines):
@@ -85,6 +85,11 @@ class DsspApp(LocalApp):
         # Remove "!" for missing residues
         self._sse = self._sse[self._sse != "!"]
         self._sse[self._sse == " "] = "C"
+    
+    def clean_up(self):
+        super().clean_up()
+        self._in_file.close()
+        self._out_file.close()
     
     @requires_state(AppState.JOINED)
     def get_sse(self):
