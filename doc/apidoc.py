@@ -77,10 +77,6 @@ def _create_package_doc(pck, src_path, doc_path):
                  # ...but classes are also callable
                  and attr not in class_list 
                 ]
-    ###
-    for e in func_list:
-        print(e)
-    ###
     # Create *.rst files
     _create_package_page(doc_path, pck, class_list, func_list, sub_pck)
     for class_name in class_list:
