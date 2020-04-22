@@ -5,7 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["create_api_doc", "skip_non_methods"]
 
-from os.path import dirname, join, isdir
+from os.path import join, isdir
 from os import listdir, makedirs
 from importlib import import_module
 import types
