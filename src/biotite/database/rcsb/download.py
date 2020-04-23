@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["fetch"]
 
 import requests
-import os.path
+from os.path import isdir, isfile, join, getsize
 import os
 import glob
 import io
@@ -42,7 +42,8 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
-        exist yet in the specified target directory. (Default: False)
+        exist yet in the specified target directory or if the file is
+        empty. (Default: False)
     verbose: bool, optional
         If true, the function will output the download progress.
         (Default: False)
@@ -94,54 +95,57 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
                   end="\r")
         # Fetch file from database
         if target_path is not None:
-            file = os.path.join(target_path, id + "." + format)
+            file = join(target_path, id + "." + format)
         else:
             file = None
-        if file is None or not os.path.isfile(file) or overwrite:
-            if format == "pdb":
-                r = requests.get(_standard_url + id + ".pdb")
-                content = r.text
-                _assert_valid_file(content, id)
-                if file is None:
-                    file = io.StringIO(content)
+        if file is None \
+           or not .isfile(file) \
+           or getsize(file) == 0 \
+           or overwrite:
+                if format == "pdb":
+                    r = requests.get(_standard_url + id + ".pdb")
+                    content = r.text
+                    _assert_valid_file(content, id)
+                    if file is None:
+                        file = io.StringIO(content)
+                    else:
+                        with open(file, "w+") as f:
+                            f.write(content)
+                elif format in ["cif", "mmcif", "pdbx"]:
+                    r = requests.get(_standard_url + id + ".cif")
+                    content = r.text
+                    _assert_valid_file(content, id)
+                    if file is None:
+                        file = io.StringIO(content)
+                    else:
+                        with open(file, "w+") as f:
+                            f.write(content)
+                elif format == "mmtf":
+                    r = requests.get(_mmtf_url + id)
+                    content = r.content
+                    _assert_valid_file(r.text, id)
+                    if file is None:
+                        file = io.BytesIO(content)
+                    else:
+                        with open(file, "wb+") as f:
+                            f.write(content)
+                elif format == "fasta":
+                    r = requests.get(
+                        _fasta_url,
+                        params={
+                            "structureIdList": id,
+                            "compressionType": "uncompressed"
+                        }
+                    )
+                    content = r.text
+                    _assert_valid_file(content, id)
+                    if file is None:
+                        file = io.StringIO(content)
+                    else:
+                        with open(file, "w+") as f:
+                            f.write(content)
                 else:
-                    with open(file, "w+") as f:
-                        f.write(content)
-            elif format in ["cif", "mmcif", "pdbx"]:
-                r = requests.get(_standard_url + id + ".cif")
-                content = r.text
-                _assert_valid_file(content, id)
-                if file is None:
-                    file = io.StringIO(content)
-                else:
-                    with open(file, "w+") as f:
-                        f.write(content)
-            elif format == "mmtf":
-                r = requests.get(_mmtf_url + id)
-                content = r.content
-                _assert_valid_file(r.text, id)
-                if file is None:
-                    file = io.BytesIO(content)
-                else:
-                    with open(file, "wb+") as f:
-                        f.write(content)
-            elif format == "fasta":
-                r = requests.get(
-                    _fasta_url,
-                    params={
-                        "structureIdList": id,
-                        "compressionType": "uncompressed"
-                    }
-                )
-                content = r.text
-                _assert_valid_file(content, id)
-                if file is None:
-                    file = io.StringIO(content)
-                else:
-                    with open(file, "w+") as f:
-                        f.write(content)
-            else:
-                raise ValueError(f"Format '{format}' is not supported")
+                    raise ValueError(f"Format '{format}' is not supported")
         files.append(file)
     if verbose:
         print("\nDone")
