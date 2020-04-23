@@ -37,7 +37,6 @@ PB with the least deviation to this set of angles is chosen.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics

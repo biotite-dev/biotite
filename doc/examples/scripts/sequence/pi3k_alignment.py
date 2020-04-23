@@ -18,7 +18,6 @@ At first we fetch the respective sequences. and align them using
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
-import biotite
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -29,12 +28,10 @@ import biotite.application.clustalo as clustalo
 uids  = ["5JHB_A", "5LUQ_A",   "5FLC_B", "5YZ0_A", "5NP0_A", "4FUL_A"]
 names = ["PI3K",   "DNA-PKcs", "mTOR",   "ATR",    "ATM",    "hSMG-1"]
 
-file_name = entrez.fetch_single_file(
-    uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
-)
-
 sequences = []
-file = fasta.FastaFile.read(file_name)
+file = fasta.FastaFile.read(entrez.fetch_single_file(
+    uids, None, db_name="protein", ret_type="fasta"
+))
 for header, seq_str in file.items():
     sequences.append(seq.ProteinSequence(seq_str))
 

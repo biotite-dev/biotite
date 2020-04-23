@@ -12,7 +12,6 @@ Hence, we can also calculate the frequency of each bond.
 # Code source: Daniel Bauer
 # License: BSD 3 clause
 
-import biotite
 import matplotlib.pyplot as plt
 import biotite.structure as struc
 import biotite.structure.io as strucio

@@ -17,7 +17,6 @@ As example the miniprotein TC5b (PDB: 1L2Y) was chosen.
 # License: BSD 3 clause
 
 import numpy as np
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb

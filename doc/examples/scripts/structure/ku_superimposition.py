@@ -14,7 +14,8 @@ The visualisation was coducted with PyMOL.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
+
+from tempfile import NamedTemporaryFile
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
@@ -24,8 +25,8 @@ import numpy as np
 
 # The output file names
 # Modify these values for actual file output
-ku_dna_file = biotite.temp_file("ku_dna.cif")
-ku_file = biotite.temp_file("ku.cif")
+ku_dna_file = NamedTemporaryFile("w", suffix=".cif")
+ku_file     = NamedTemporaryFile("w", suffix=".cif")
 
 # Download and parse structure files
 file = rcsb.fetch("1JEY", "mmtf", biotite.temp_dir())

@@ -19,7 +19,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 from matplotlib.transforms import Bbox
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
@@ -287,7 +286,7 @@ query = (
 )
 uids = entrez.search(query, "protein")
 fasta_file = fasta.FastaFile.read(
-    entrez.fetch_single_file(uids, biotite.temp_file("fa"), "protein", "fasta")
+    entrez.fetch_single_file(uids, None, "protein", "fasta")
 )
 sequence_dict = fasta.get_sequences(fasta_file)
 headers = list(sequence_dict.keys())

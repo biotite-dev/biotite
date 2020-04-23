@@ -11,6 +11,7 @@ The values in the adjacency matrix ``m`` are
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -19,7 +20,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-file_name = rcsb.fetch("1aki", "mmtf", biotite.temp_dir())
+
+file_name = rcsb.fetch("1aki", "mmtf", gettempdir())
 array = strucio.load_structure(file_name)
 # We only consider CA atoms
 ca = array[array.atom_name == "CA"]

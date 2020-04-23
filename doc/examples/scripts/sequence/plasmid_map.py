@@ -21,7 +21,6 @@ import io
 import requests
 import matplotlib.pyplot as plt
 import numpy as np
-import biotite
 import biotite.sequence.io.genbank as gb
 import biotite.sequence.graphics as graphics
 import biotite.database.entrez as entrez

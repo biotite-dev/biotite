@@ -17,10 +17,10 @@ of :math:`2.05 \pm 0.05` Å and the dihedral angle of
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio

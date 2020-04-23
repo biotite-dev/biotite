@@ -17,7 +17,6 @@ sequences.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.io.genbank as gb
@@ -27,9 +26,10 @@ import biotite.database.entrez as entrez
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Download E. coli BL21 genome
-file_name = entrez.fetch("CP001509", biotite.temp_dir(), "gb", "nuccore", "gb")
-gb_file = gb.GenBankFile.read(file_name)
+# Download and read E. coli BL21 genome
+gb_file = gb.GenBankFile.read(
+    entrez.fetch("CP001509", None, "gb", "nuccore", "gb")
+)
 annot_seq = gb.get_annotated_sequence(gb_file, include_only=["gene"])
 # Find leuL gene
 for feature in annot_seq.annotation:
@@ -38,10 +38,11 @@ for feature in annot_seq.annotation:
 # Get leuL sequence
 leul_seq = annot_seq[leul_feature]
 
-# Download Salmonella enterica genome without annotations
-file_name = entrez.fetch("CP019649", biotite.temp_dir(),
-                         "fa", "nuccore", "fasta")
-fasta_file = fasta.FastaFile.read(file_name)
+# Download and read Salmonella enterica genome without annotations
+file_name = 
+fasta_file = fasta.FastaFile.read(
+    entrez.fetch("CP019649", None, "fa", "nuccore", "fasta")
+)
 se_genome = fasta.get_sequence(fasta_file)
 # Find leuL in genome by local alignment
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()

@@ -11,7 +11,6 @@ as the plot clearly indicates.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb

@@ -15,7 +15,6 @@ residues in a recent cryo-EM structure (PDB: 5W1R).
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
