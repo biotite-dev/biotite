@@ -40,14 +40,21 @@ def test_fetch(common_name, as_file_like):
 )
 @pytest.mark.parametrize("as_file_like", [False, True])
 def test_fetch_single_file(as_file_like):
-    file_name = None if as_file_like \
-                else tempfile.NamedTemporaryFile("r", suffix=".fa").name
-    file = entrez.fetch_single_file(
+    if as_file_like:
+        file_name = None
+    else:
+        file = tempfile.NamedTemporaryFile("r", suffix=".fa")
+        file_name = file.name
+    
+    downloaded_file_name = entrez.fetch_single_file(
         ["1L2Y_A", "3O5R_A"], file_name, "protein", "fasta"
     )
-    fasta_file = fasta.FastaFile.read(file)
+    fasta_file = fasta.FastaFile.read(downloaded_file_name)
     prot_seqs = fasta.get_sequences(fasta_file)
     assert len(prot_seqs) == 2
+
+    if not as_file_like:
+        file.close()
 
 @pytest.mark.skipif(
     cannot_connect_to(NCBI_URL),

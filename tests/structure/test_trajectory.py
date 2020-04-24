@@ -51,6 +51,7 @@ def test_array_conversion(format):
     traj_file.write(temp.name)
 
     traj_file = traj_file_cls.read(temp.name)
+    temp.close()
     array = traj_file.get_structure(template)
     assert ref_array.bonds == array.bonds
     assert ref_array.equal_annotation_categories(array)

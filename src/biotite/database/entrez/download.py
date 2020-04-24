@@ -256,9 +256,12 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     --------
     fetch
     """
-    if file_name is not None and os.path.isfile(file_name) and not overwrite:
-        # Do no redownload the already existing file
-        return file_name
+    if file_name is not None \
+       and os.path.isfile(file_name) \
+       and getsize(file_name) > 0 \
+       and not overwrite:
+            # Do no redownload the already existing file
+            return file_name
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","

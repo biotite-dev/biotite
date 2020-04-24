@@ -52,6 +52,7 @@ def test_conversion(chars_per_line):
         temp, offset=33, chars_per_line=chars_per_line
     )
     content = dict(fasta_file.items())
+    temp.close()
     
     for identifier in ref_content:
         ref_sequence, ref_scores = ref_content[identifier]

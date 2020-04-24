@@ -32,6 +32,7 @@ def test_conversion_lowlevel(path):
 
     temp.seek(0)
     gff_file = gff.GFFFile.read(temp)
+    temp.close()
     test_entries = [field for field in gff_file]
     assert test_entries == ref_entries
 
@@ -57,11 +58,12 @@ def test_conversion_highlevel(path):
 
     gff_file = gff.GFFFile()
     gff.set_annotation(gff_file, ref_annot)
-    temp = TemporaryFile("w+", suffix=".gff")
+    temp = TemporaryFile("w+")
     gff_file.write(temp)
 
     temp.seek(0)
     gff_file = gff.GFFFile.read(temp)
+    temp.close()
     test_annot = gff.get_annotation(gff_file)
     test_phases = []
     for _, _, type, _, _, _, _, phase, _ in gff_file:

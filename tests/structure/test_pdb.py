@@ -131,6 +131,7 @@ def test_guess_elements():
     # Read new stack from file with guessed elements
     temp.seek(0)
     guessed_pdb_file = pdb.PDBFile.read(temp)
+    temp.close()
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
@@ -199,6 +200,8 @@ def test_id_overflow():
     last_line = temp.readlines()[-1]
     atom_id = int(last_line.split()[1])
     assert(atom_id == 1)
+
+    temp.close()
     
     # Write stack as hybrid-36 pdb file: no warning should be thrown
     with pytest.warns(None) as record:
@@ -206,7 +209,6 @@ def test_id_overflow():
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a, hybrid36=True)
         tmp_pdb_file.write(temp)
-    print(record)
     assert len(record) == 0
 
     # Manually check if the output is written as correct hybrid-36
@@ -216,6 +218,8 @@ def test_id_overflow():
     assert(atom_id == "A0000")
     res_id = last_line.split()[4][1:]
     assert(res_id == "BXG0")
+
+    temp.close()
 
 
 @pytest.mark.parametrize("model", [None, 1, 10])

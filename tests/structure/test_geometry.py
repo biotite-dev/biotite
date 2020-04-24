@@ -97,6 +97,7 @@ def test_dihedral_backbone_result(file_name):
         temp = NamedTemporaryFile("w+", suffix=".pdb")
         strucio.save_structure(temp.name, chain)
         traj = mdtraj.load(temp.name)
+        temp.close()
         _, ref_phi = mdtraj.compute_phi(traj)
         _, ref_psi = mdtraj.compute_psi(traj)
         _, ref_ome = mdtraj.compute_omega(traj)

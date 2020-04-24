@@ -56,6 +56,7 @@ def test_array_conversion(path, single_model):
 
     temp.seek(0)
     mmtf_file = mmtf.MMTFFile.read(temp)
+    temp.close()
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
     for category in a1.get_annotation_categories():
@@ -134,3 +135,4 @@ def test_numpy_objects():
     mmtf_file["A dictionary"] = {"a": np.bool(True), "b": np.bool(False)}
     temp = TemporaryFile("w+b")
     mmtf_file.write(temp)
+    temp.close()

@@ -40,6 +40,7 @@ def test_hbond_structure(pdb_id):
     # Compare with MDTraj
     import mdtraj
     traj = mdtraj.load(temp.name)
+    temp.close()
     triplets_ref = mdtraj.baker_hubbard(
         traj, freq=0, periodic=False
     )

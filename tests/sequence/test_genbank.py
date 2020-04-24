@@ -72,9 +72,10 @@ def test_conversion_lowlevel(path):
         gb_file.append(name, content, subfields)
     temp = TemporaryFile("w+")
     gb_file.write(temp)
+    
     temp.seek(0)
-
     gb_file = gb.GenBankFile.read(temp)
+    temp.close()
     test_parsed_fields = [field for field in gb_file]
     assert test_parsed_fields == ref_parsed_fields
 
@@ -98,11 +99,12 @@ def test_conversion_highlevel(path):
     gb_file = gb.GenBankFile()
     gb.set_locus(gb_file, *ref_locus)
     gb.set_annotated_sequence(gb_file, ref_annot_seq)
-    temp = TemporaryFile("w+", suffix=".gb")
+    temp = TemporaryFile("w+")
     gb_file.write(temp)
+    
     temp.seek(0)
-
     gb_file = gb.GenBankFile.read(temp)
+    temp.close()
     test_locus = gb.get_locus(gb_file)
     test_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
     assert test_locus == ref_locus

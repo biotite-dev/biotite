@@ -83,6 +83,7 @@ def test_pdb_to_gro(path, single_model):
     # Reload stack from gro
     temp.seek(0)
     gro_file = gro.GROFile.read(temp)
+    temp.close()
     a2 = gro_file.get_structure(model=model)
 
     assert a1.array_length() == a2.array_length()
@@ -112,6 +113,7 @@ def test_gro_id_overflow():
     # Read .gro file
     temp.seek(0)
     gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     assert s.array_length() == num_atoms
@@ -137,6 +139,7 @@ def test_gro_no_box():
     # Read in file
     temp.seek(0)
     gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     # Assert no box with 0 dimension

@@ -76,6 +76,7 @@ def test_saving(suffix):
     array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
     strucio.save_structure(temp.name, array)
+    temp.close()
 
 
 @pytest.mark.skipif(
@@ -94,3 +95,4 @@ def test_saving_with_extra_args(suffix):
         strucio.save_structure(
             temp.name, array, answer=42
         )
+    temp.close()
