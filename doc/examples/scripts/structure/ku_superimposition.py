@@ -17,22 +17,25 @@ The visualisation was coducted with PyMOL.
 
 from tempfile import NamedTemporaryFile
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import numpy as np
 
 
-# The output file names
-# Modify these values for actual file output
 ku_dna_file = NamedTemporaryFile("w", suffix=".cif")
 ku_file     = NamedTemporaryFile("w", suffix=".cif")
+# The output file names
+# Modify these values for actual file output
+ku_dna_file_name = ku_dna_file.name
+ku_file_name = ku_file.name
 
 # Download and parse structure files
-file = rcsb.fetch("1JEY", "mmtf", biotite.temp_dir())
-ku_dna = strucio.load_structure(file)
-file = rcsb.fetch("1JEQ", "mmtf", biotite.temp_dir())
-ku = strucio.load_structure(file)
+ku_dna = pdbx.get_structure(
+    pdbx.PDBxFile.read(rcsb.fetch("1JEY", "mmtf")), model=1
+)
+ku = pdbx.get_structure(
+    pdbx.PDBxFile.read(rcsb.fetch("1JEQ", "mmtf")), model=1
+)
 # Remove DNA and water
 ku_dna = ku_dna[(ku_dna.chain_id == "A") | (ku_dna.chain_id == "B")]
 ku_dna = ku_dna[~struc.filter_solvent(ku_dna)]
@@ -47,7 +50,7 @@ ku_superimposed, transformation = struc.superimpose(
     ku_dna_common, ku_common, (ku_common.atom_name == "CA")
 )
 # We do not want the cropped structures
-# -> apply superimposition on structures before intersection filtering
+# -> apply superimposition on original structures
 ku_superimposed = struc.superimpose_apply(ku, transformation)
 # Write PDBx files as input for PyMOL
 cif_file = pdbx.PDBxFile()

@@ -13,6 +13,7 @@ sheets in feature maps.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -129,7 +130,7 @@ fig.tight_layout()
 # annotation.
 
 # Fetch GenBank files of the TK's first chain and extract annotatation
-file_name = entrez.fetch("1QGD_A", biotite.temp_dir(), "gb", "protein", "gb")
+file_name = entrez.fetch("1QGD_A", gettempdir(), "gb", "protein", "gb")
 gb_file = gb.GenBankFile.read(file_name)
 annotation = gb.get_annotation(gb_file, include_only=["SecStr"])
 # Length of the sequence
@@ -147,8 +148,9 @@ graphics.plot_feature_map(
 fig.tight_layout()
 
 ########################################################################
-# Another (more complicated) approach is the creation of an :class:`Annotation`
-# containing the secondary structure from a structure file.
+# Another (more complicated) approach is the creation of an
+# :class:`Annotation`  containing the secondary structure from a
+# structure file.
 # All file formats distributed by the *RCSB PDB* contain this
 # information, but it is most easily extracted from the
 # ``'secStructList'`` field in MMTF files.
@@ -178,7 +180,7 @@ dssp_to_abc = {"I" : "c",
 
 
 # Fetch and load structure
-file_name = rcsb.fetch("1QGD", "mmtf", biotite.temp_dir())
+file_name = rcsb.fetch("1QGD", "mmtf", gettempdir())
 mmtf_file = mmtf.MMTFFile.read(file_name)
 array = mmtf.get_structure(mmtf_file, model=1)
 # Transketolase homodimer

@@ -16,6 +16,7 @@ As example the miniprotein TC5b (PDB: 1L2Y) was chosen.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -50,7 +51,7 @@ def analyze_chirality(array):
     return enantiomers
 
 # Fetch and parse structure file
-file = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file = rcsb.fetch("1l2y", "mmtf", gettempdir())
 stack = strucio.load_structure(file)
 # Get first model
 array = stack[0]

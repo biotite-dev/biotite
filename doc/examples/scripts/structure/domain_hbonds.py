@@ -12,12 +12,14 @@ Hence, we can also calculate the frequency of each bond.
 # Code source: Daniel Bauer
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import matplotlib.pyplot as plt
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
-file_name = rcsb.fetch("2KB1", "mmtf", biotite.temp_dir())
+
+file_name = rcsb.fetch("2KB1", "mmtf", gettempdir())
 stack = strucio.load_structure(file_name)
 # Four identical chains, consider only chain A
 chain_a = stack[:, stack.chain_id == "A"]
