@@ -17,7 +17,6 @@ from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
 from ..sequence.align.matrix import SubstitutionMatrix
-from ..temp import temp_file
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):

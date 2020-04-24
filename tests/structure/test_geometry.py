@@ -2,13 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import NamedTemporaryFile
 import itertools
 import glob
 from os.path import join
 import numpy as np
 import numpy.random as random
 import pytest
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
@@ -94,9 +94,9 @@ def test_dihedral_backbone_result(file_name):
             return
         test_phi, test_psi, test_ome = struc.dihedral_backbone(chain)
 
-        temp_file_name = biotite.temp_file("pdb")
-        strucio.save_structure(temp_file_name, chain)
-        traj = mdtraj.load(temp_file_name)
+        temp = NamedTemporaryFile("w+", suffix=".pdb")
+        strucio.save_structure(temp.name, chain)
+        traj = mdtraj.load(temp.name)
         _, ref_phi = mdtraj.compute_phi(traj)
         _, ref_psi = mdtraj.compute_psi(traj)
         _, ref_ome = mdtraj.compute_omega(traj)

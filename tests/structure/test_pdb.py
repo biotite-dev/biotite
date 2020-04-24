@@ -2,13 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import itertools
 import glob
 from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
-import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
@@ -113,23 +113,24 @@ def test_extra_fields(hybrid36):
 
 @pytest.mark.filterwarnings("ignore")
 def test_guess_elements():
-    # read valid pdb file
+    # Read valid pdb file
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
     stack = pdb_file.get_structure()
 
-    # remove all elements
+    # Remove all elements
     removed_stack = stack.copy()
     removed_stack.element[:] = ''
 
-    # save stack without elements to tmp file
-    tmp_file_name = biotite.temp_file(".pdb")
+    # Save stack without elements to tmp file
+    temp = TemporaryFile("w+")
     tmp_pdb_file = pdb.PDBFile()
     tmp_pdb_file.set_structure(removed_stack)
-    tmp_pdb_file.write(tmp_file_name)
+    tmp_pdb_file.write(temp)
 
-    # read new stack from file with guessed elements
-    guessed_pdb_file = pdb.PDBFile.read(tmp_file_name)
+    # Read new stack from file with guessed elements
+    temp.seek(0)
+    guessed_pdb_file = pdb.PDBFile.read(temp)
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
@@ -183,36 +184,38 @@ def test_id_overflow():
     
     # Write stack to pdb file and make sure a warning is thrown
     with pytest.warns(UserWarning):
-        tmp_file_name = biotite.temp_file(".pdb")
-        tmp_pdb_file = pdb.PDBFile()
-        tmp_pdb_file.set_structure(a)
-        tmp_pdb_file.write(tmp_file_name)
+        temp = TemporaryFile("w+")
+        pdb_file = pdb.PDBFile()
+        pdb_file.set_structure(a)
+        pdb_file.write(temp)
 
     # Assert file can be read properly
-    a2 = io.load_structure(tmp_file_name)
+    temp.seek(0)
+    a2 = pdb.get_structure(pdb.PDBFile.read(temp))
     assert(a2.array_length() == a.array_length())
     
     # Manually check if the written atom id is correct
-    with open(tmp_file_name) as output:
-        last_line = output.readlines()[-1]
-        atom_id = int(last_line.split()[1])
-        assert(atom_id == 1)
+    temp.seek(0)
+    last_line = temp.readlines()[-1]
+    atom_id = int(last_line.split()[1])
+    assert(atom_id == 1)
     
     # Write stack as hybrid-36 pdb file: no warning should be thrown
     with pytest.warns(None) as record:
-        tmp_file_name = biotite.temp_file(".pdb")
+        temp = TemporaryFile("w+")
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a, hybrid36=True)
-        tmp_pdb_file.write(tmp_file_name)
+        tmp_pdb_file.write(temp)
+    print(record)
     assert len(record) == 0
 
     # Manually check if the output is written as correct hybrid-36
-    with open(tmp_file_name) as output:
-        last_line = output.readlines()[-1]
-        atom_id = last_line.split()[1]
-        assert(atom_id == "A0000")
-        res_id = last_line.split()[4][1:]
-        assert(res_id == "BXG0")
+    temp.seek(0)
+    last_line = temp.readlines()[-1]
+    atom_id = last_line.split()[1]
+    assert(atom_id == "A0000")
+    res_id = last_line.split()[4][1:]
+    assert(res_id == "BXG0")
 
 
 @pytest.mark.parametrize("model", [None, 1, 10])
