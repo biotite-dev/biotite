@@ -30,12 +30,8 @@ ku_dna_file_name = ku_dna_file.name
 ku_file_name = ku_file.name
 
 # Download and parse structure files
-ku_dna = pdbx.get_structure(
-    pdbx.PDBxFile.read(rcsb.fetch("1JEY", "mmtf")), model=1
-)
-ku = pdbx.get_structure(
-    pdbx.PDBxFile.read(rcsb.fetch("1JEQ", "mmtf")), model=1
-)
+ku_dna = pdbx.get_structure(pdbx.PDBxFile.read(rcsb.fetch("1JEY", "cif")))[0]
+ku     = pdbx.get_structure(pdbx.PDBxFile.read(rcsb.fetch("1JEQ", "cif")))[0]
 # Remove DNA and water
 ku_dna = ku_dna[(ku_dna.chain_id == "A") | (ku_dna.chain_id == "B")]
 ku_dna = ku_dna[~struc.filter_solvent(ku_dna)]

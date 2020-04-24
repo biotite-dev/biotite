@@ -99,7 +99,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
         else:
             file = None
         if file is None \
-           or not .isfile(file) \
+           or not isfile(file) \
            or getsize(file) == 0 \
            or overwrite:
                 if format == "pdb":

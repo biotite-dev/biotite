@@ -17,6 +17,7 @@ sequences.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.io.genbank as gb
@@ -39,7 +40,6 @@ for feature in annot_seq.annotation:
 leul_seq = annot_seq[leul_feature]
 
 # Download and read Salmonella enterica genome without annotations
-file_name = 
 fasta_file = fasta.FastaFile.read(
     entrez.fetch("CP019649", None, "fa", "nuccore", "fasta")
 )

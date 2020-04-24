@@ -14,6 +14,7 @@ Hence, we can also calculate the frequency of each bond.
 
 from tempfile import gettempdir
 import matplotlib.pyplot as plt
+import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb

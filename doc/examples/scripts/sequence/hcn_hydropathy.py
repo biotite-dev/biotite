@@ -19,6 +19,7 @@ the corresponding GenPept file is downloaded.
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+import biotite
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align

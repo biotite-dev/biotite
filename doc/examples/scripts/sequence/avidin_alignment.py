@@ -19,14 +19,13 @@ import biotite.sequence.graphics as graphics
 
 # Download and parse protein sequences of avidin and streptavidin
 fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
-    ["CAC34569", "ACL82594"], file.name, "protein", "fasta"
+    ["CAC34569", "ACL82594"], None, "protein", "fasta"
 ))
 for name, sequence in fasta_file.items():
     if "CAC34569" in name:
         avidin_seq = seq.ProteinSequence(sequence)
     elif "ACL82594" in name:
         streptavidin_seq = seq.ProteinSequence(sequence)
-file.close()
 
 # Get BLOSUM62 matrix
 matrix = align.SubstitutionMatrix.std_protein_matrix()

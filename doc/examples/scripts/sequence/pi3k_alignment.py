@@ -18,6 +18,7 @@ At first we fetch the respective sequences. and align them using
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
+import biotite
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align

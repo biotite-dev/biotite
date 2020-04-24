@@ -27,6 +27,7 @@ and the violation of the format itself
 # License: BSD 3 clause
 
 from tempfile import NamedTemporaryFile
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.xtc as xtc
 import biotite.structure.io.mmtf as mmtf

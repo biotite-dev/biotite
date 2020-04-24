@@ -182,7 +182,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         else:
             file = None
         if file is None \
-           or not .isfile(file) \
+           or not isfile(file) \
            or getsize(file) == 0 \
            or overwrite:
                 r = requests.get(
