@@ -138,9 +138,9 @@ print(stack)
 # Loading structures from file
 # ----------------------------
 # 
-# Usually structures are not built from scratch in *Biotite*,
-# but they are read from a file.
-# Probably the most popular strcuture file format is the *PDB* format.
+# Usually structures are not built from scratch, but they are read from
+# a file.
+# Probably the most popular structure file format is the *PDB* format.
 # For our purpose, we will work on a protein structure as small as
 # possible, namely the miniprotein *TC5b* (PDB: ``1L2Y``).
 # The structure of this 20-residue protein (304 atoms) has been
@@ -153,13 +153,13 @@ print(stack)
 # At first we load the structure from a PDB file via the class
 # :class:`PDBFile` in the subpackage :mod:`biotite.structure.io.pdb`.
 
-import biotite
+from tempfile import gettempdir, NamedTemporaryFile
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 
-pdb_file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
-file = pdb.PDBFile.read(pdb_file_path)
-tc5b = file.get_structure()
+pdb_file_path = rcsb.fetch("1l2y", "pdb", gettempdir())
+pdb_file = pdb.PDBFile.read(pdb_file_path)
+tc5b = pdb_file.get_structure()
 print(type(tc5b).__name__)
 print(tc5b.stack_depth())
 print(tc5b.array_length())
@@ -172,11 +172,12 @@ print(tc5b.shape)
 # Alternatively, the module level function :func:`get_structure()`
 # can be used.
 # The following example
-# shows how to write an array or stack back into a PDB file:
+# shows how to write an atom array or stack back into a PDB file:
 
-file = pdb.PDBFile()
-file.set_structure(tc5b)
-file.write(biotite.temp_file("pdb"))
+pdb_file = pdb.PDBFile()
+pdb_file.set_structure(tc5b)
+temp_file = NamedTemporaryFile("w", suffix=".pdb")
+pdb_file.write(temp_file.name)
 
 ########################################################################
 # Other information (authors, secondary structure, etc.) cannot be
@@ -197,13 +198,13 @@ file.write(biotite.temp_file("pdb"))
 
 import biotite.structure.io.pdbx as pdbx
 
-cif_file_path = rcsb.fetch("1l2y", "cif", biotite.temp_dir())
-file = pdbx.PDBxFile.read(cif_file_path)
+cif_file_path = rcsb.fetch("1l2y", "cif", gettempdir())
+cif_file = pdbx.PDBxFile.read(cif_file_path)
 
 ########################################################################
 # Now we can access the data like a dictionary of dictionaries.
 
-print(file["1L2Y", "audit_author"]["name"])
+print(cif_file["1L2Y", "audit_author"]["name"])
 
 ########################################################################
 # The first index contains the data block and the category name.
@@ -219,8 +220,10 @@ print(file["1L2Y", "audit_author"]["name"])
 # :class:`ndarray`.
 # Setting/adding a category in the file is done in a similar way:
 
-file["audit_author"] = {"name" : ["Doe, Jane", "Doe, John"],
-                        "pdbx_ordinal" : ["1","2"]}
+cif_file["audit_author"] = {
+    "name" : ["Doe, Jane", "Doe, John"],
+    "pdbx_ordinal" : ["1","2"]
+}
 
 ########################################################################
 # In most applications only the structure itself
@@ -229,9 +232,9 @@ file["audit_author"] = {"name" : ["Doe, Jane", "Doe, John"],
 # functions that are used to convert the
 # ``atom_site`` category into an atom array (stack) and vice versa.
 
-tc5b = pdbx.get_structure(file)
+tc5b = pdbx.get_structure(cif_file)
 # Do some fancy stuff
-pdbx.set_structure(file, tc5b)
+pdbx.set_structure(cif_file, tc5b)
 
 ########################################################################
 # :func:`get_structure()` creates automatically an
@@ -244,8 +247,8 @@ pdbx.set_structure(file, tc5b)
 #
 # If you want to parse a large batch of structure files or you have to
 # load very large structure files, the usage of PDB or mmCIF files might
-# be too slow for your requirements. In this case you probably might
-# want to use MMTF files.
+# be too slow for your requirements.
+# In this case you probably might want to use MMTF files.
 # MMTF files describe structures just like PDB and mmCIF files,
 # but they are binary!
 # This circumstance increases the downloading and parsing speed by
@@ -259,12 +262,12 @@ pdbx.set_structure(file, tc5b)
 import numpy as np
 import biotite.structure.io.mmtf as mmtf
 
-mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-file = mmtf.MMTFFile.read(mmtf_file_path)
-stack = mmtf.get_structure(file)
-array = mmtf.get_structure(file, model=1)
+mmtf_file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
+mmtf_file = mmtf.MMTFFile.read(mmtf_file_path)
+stack = mmtf.get_structure(mmtf_file)
+array = mmtf.get_structure(mmtf_file, model=1)
 # Do some fancy stuff
-mmtf.set_structure(file, array)
+mmtf.set_structure(mmtf_file, array)
 
 ########################################################################
 # A more low level access to MMTF files is also possible:
@@ -284,9 +287,9 @@ mmtf.set_structure(file, array)
 # you are not interested in.
 
 # Field is not encoded
-print(file["title"])
+print(mmtf_file["title"])
 # Field is encoded and is automatically decoded
-print(file["groupIdList"])
+print(mmtf_file["groupIdList"])
 
 ########################################################################
 # Setting fields of an MMTF file works in an analogous way for values,
@@ -298,14 +301,14 @@ print(file["groupIdList"])
 # your array.
 # Hence, you need to use the :func:`MMTFFile.set_array()` function.
 
-file["title"] = "Some other title"
-print(file["title"])
+mmtf_file["title"] = "Some other title"
+print(mmtf_file["title"])
 # Determine appropriate codec from the codec used originally
-file.set_array(
+mmtf_file.set_array(
     "groupIdList",
     np.arange(20,40),
-    codec=file.get_codec("groupIdList"))
-print(file["groupIdList"])
+    codec=mmtf_file.get_codec("groupIdList"))
+print(mmtf_file["groupIdList"])
 
 ########################################################################
 # .. currentmodule:: biotite.structure.io.npz
@@ -347,7 +350,8 @@ import biotite.structure.io as strucio
 
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
-strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
+temp_file = NamedTemporaryFile("w", suffix=".cif")
+strucio.save_structure(temp_file.name, stack_from_pdb)
 
 ########################################################################
 # Reading trajectory files
@@ -360,20 +364,19 @@ strucio.save_structure(biotite.temp_file("cif"), stack_from_pdb)
 # These can be extracted as :class:`ndarray` with the
 # :func:`get_coord()` method.
 
+from tempfile import NamedTemporaryFile
 import requests
-import biotite
 import biotite.structure.io.xtc as xtc
 
 # Download 1L2Y as XTC file for demonstration purposes
-xtc_file_path = biotite.temp_file("xtc")
-with open(xtc_file_path, "bw") as file:
-    response = requests.get(
-        "https://raw.githubusercontent.com/biotite-dev/biotite/master/"
-        "tests/structure/data/1l2y.xtc"
-    )
-    file.write(response.content)
+temp_xtc_file = NamedTemporaryFile("wb", suffix=".xtc")
+response = requests.get(
+    "https://raw.githubusercontent.com/biotite-dev/biotite/master/"
+    "tests/structure/data/1l2y.xtc"
+)
+temp_xtc_file.write(response.content)
 
-traj_file = xtc.XTCFile.read(xtc_file_path)
+traj_file = xtc.XTCFile.read(temp_xtc_file.name)
 coord = traj_file.get_coord()
 print(coord.shape)
 
@@ -383,7 +386,7 @@ print(coord.shape)
 # `step` parameters.
 
 # Read only every second frame
-traj_file = xtc.XTCFile.read(xtc_file_path, step=2)
+traj_file = xtc.XTCFile.read(temp_xtc_file.name, step=2)
 coord = traj_file.get_coord()
 print(coord.shape)
 
@@ -396,11 +399,11 @@ print(coord.shape)
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
 
-mmtf_file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
-file = mmtf.MMTFFile.read(mmtf_file_path)
-template = mmtf.get_structure(file, model=1)
+mmtf_file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
+mmtf_file = mmtf.MMTFFile.read(mmtf_file_path)
+template = mmtf.get_structure(mmtf_file, model=1)
 
-traj_file = xtc.XTCFile.read(xtc_file_path)
+traj_file = xtc.XTCFile.read(temp_xtc_file.name)
 trajectory = traj_file.get_structure(template)
 
 ########################################################################
@@ -425,11 +428,12 @@ trajectory = traj_file.get_structure(template)
 # analogous way.
 # Let's demonstrate indexing with the help of the structure of *TC5b*.
 
+from tempfile import gettempdir
 import biotite.structure as struc
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
 
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
 stack = strucio.load_structure(file_path)
 print(type(stack).__name__)
 print(stack.shape)
@@ -526,6 +530,7 @@ print(backbone.atom_name)
 # Addtionally, it is required to specifiy the number of atoms in the
 # atom array. 
 
+from tempfile import gettempdir
 import biotite.structure as struc
 
 array = struc.array([
@@ -604,7 +609,7 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.mmtf as mmtf
 
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
 mmtf_file = mmtf.MMTFFile.read(file_path)
 # Essential: set the 'include_bonds' parameter to true
 stack = mmtf.get_structure(mmtf_file, include_bonds=True)
@@ -631,6 +636,7 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # Let's create an orthorhombic box from the vector lengths and the
 # angles between the vectors.
 
+from tempfile import gettempdir
 import numpy as np
 import biotite.structure as struc
 
@@ -661,7 +667,7 @@ array = struc.AtomArray(length=100)
 print(array.box)
 array.box = struc.vectors_from_unitcell(10, 20, 30, np.pi/2, np.pi/2, np.pi/2)
 print(array.box)
-file_path = rcsb.fetch("3o5r", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("3o5r", "mmtf", gettempdir())
 array = strucio.load_structure(file_path)
 print(array.box)
 
@@ -681,11 +687,12 @@ array = struc.remove_pbc(array)
 # The most basic way to manipulate a structure is to edit the
 # annotation arrays or coordinates directly.
 
+from tempfile import gettempdir
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
 
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
 mmtf_file = mmtf.MMTFFile.read(file_path)
 structure = mmtf.get_structure(mmtf_file, model=1)
 print("Before:")
@@ -735,11 +742,12 @@ print(structure[structure.res_id == 1])
 # Let's start with measuring some simple geometric characteristics,
 # for example atom distances of CA atoms.
 
+from tempfile import gettempdir
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
 stack = strucio.load_structure(file_path)
 # Filter only CA atoms
 stack = stack[:, stack.atom_name == "CA"]

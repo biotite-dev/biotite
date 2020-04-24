@@ -58,8 +58,8 @@ print(dna)
 #    - Sequence codes can be directly used as substitution matrix
 #      indices in alignments
 # 
-# Effectively, this means a potential :class:`Sequence` subclass could look
-# like following:
+# Effectively, this means a potential :class:`Sequence` subclass could
+# look like following:
 
 class NonsenseSequence(seq.Sequence):
     
@@ -206,19 +206,19 @@ print(table)
 # Let's demonstrate this on the genome of the *lambda* phage
 # (Accession: ``NC_001416``).
 # After downloading the FASTA file from the NCBI Entrez database,
-# we can load the contents in the following way:
+# we can load its contents in the following way:
 
-import biotite
+from tempfile import gettempdir, NamedTemporaryFile
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
 
 file_path = entrez.fetch(
-    "NC_001416", biotite.temp_dir(), suffix="fa",
+    "NC_001416", gettempdir(), suffix="fa",
     db_name="nuccore", ret_type="fasta"
 )
-file = fasta.FastaFile.read(file_path)
-for header, string in file.items():
+fasta_file = fasta.FastaFile.read(file_path)
+for header, string in fasta_file.items():
     print("Header:", header)
     print(len(string))
     print("Sequence:", string[:50], "...")
@@ -233,7 +233,7 @@ for header, string in file.items():
 # But we want to spare ourselves some unnecessary work, there is already
 # a convenience function for that:
 
-dna_seq = fasta.get_sequence(file)
+dna_seq = fasta.get_sequence(fasta_file)
 print(type(dna_seq).__name__)
 print(dna_seq[:50])
 
@@ -253,17 +253,18 @@ print(dna_seq[:50])
 # convenience function.
 
 # Create new empty FASTA file
-file = fasta.FastaFile()
+fasta_file = fasta.FastaFile()
 # PROTIP: Let your cat walk over the keyboard
 dna_seq1 = seq.NucleotideSequence("ATCGGATCTATCGATGCTAGCTACAGCTAT")
 dna_seq2 = seq.NucleotideSequence("ACGATCTACTAGCTGATGTCGTGCATGTACG")
 # Append entries to file...
 # ... via set_sequence()
-fasta.set_sequence(file, dna_seq1, header="gibberish")
+fasta.set_sequence(fasta_file, dna_seq1, header="gibberish")
 # .. or dictionary style
-file["more gibberish"] = str(dna_seq2)
-print(file)
-file.write(biotite.temp_file("fa"))
+fasta_file["more gibberish"] = str(dna_seq2)
+print(fasta_file)
+temp_file = NamedTemporaryFile("w", suffix=".fasta")
+fasta_file.write(temp_file.name)
 
 ########################################################################
 # As you see, our file contains our new ``'gibberish'`` and
@@ -454,7 +455,7 @@ print(align.get_codes(alignment))
 import biotite.sequence.io.genbank as gb
 
 file_path = entrez.fetch(
-    "AJ311647", biotite.temp_dir(), suffix="gb",
+    "AJ311647", gettempdir(), suffix="gb",
     db_name="nuccore", ret_type="gb"
 )
 file = gb.GenBankFile.read(file_path)

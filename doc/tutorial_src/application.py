@@ -269,12 +269,12 @@ print(alignment.trace)
 # Let us demonstrate this on the example of the good old miniprotein
 # *TC5b*.
 
-import biotite
+from tempfile import gettempdir
 import biotite.database.rcsb as rcsb
 import biotite.application.dssp as dssp
 import biotite.structure.io as strucio
 
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir())
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
 stack = strucio.load_structure(file_path)
 array = stack[0]
 app = dssp.DsspApp(array)

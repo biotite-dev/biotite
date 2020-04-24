@@ -11,11 +11,11 @@ On the one hand side, working with *Biotite* should be computationally
 efficient, with the help of the powerful packages *NumPy* and *Cython*.
 On the other hand it aims for simple usability and extensibility, so
 that beginners are not overwhelmed and advanced users can easily build
-upon the exisiting system to implement their own algorithms.
+upon the existing system to implement their own algorithms.
 
 *Biotite* provides 4 subpackages:
-The :mod:`biotite.sequence` subpackage contains functionality for working
-with sequence information of any kind.
+The :mod:`biotite.sequence` subpackage contains functionality for
+working with sequence information of any kind.
 The package contains by default sequence types for nucleotides and
 proteins, but the alphabet-based implementation allows simple
 integration of own sequence types, even if they do not rely on letters.
@@ -30,11 +30,11 @@ The subpackage includes read/write functionality for different formats,
 structure filters, coordinate transformations, angle and bond
 measurements, structure
 superimposition and some more advanced analysis capabilities.
-The :mod:`biotite.database` subpackage is all about downloading data from
-biological databases, including the probably most important ones: the
-*RCSB PDB* and the *NCBI Entrez* database.
-The :mod:`biotite.application` subpackage provides interfaces for external
-software.
+The :mod:`biotite.database` subpackage is all about downloading data
+from biological databases, including the probably most important ones:
+the *RCSB PDB* and the *NCBI Entrez* database.
+The :mod:`biotite.application` subpackage provides interfaces for
+external software.
 The interfaces range from locally installed software (e.g. MSA software)
 to web applications (e.g. BLAST).
 The speciality is that the interfaces are seamless:
@@ -49,26 +49,5 @@ Preliminary note
 ----------------
 
 The files used in this tutorial will be stored in a temporary directory.
-The top level package :mod:`biotite` provides functionality to create
-a temporary directory,
-called ``.biotitetemp``, in your current working directory.
-You can either obtain the path to this directory via
-:func:`temp_dir` or directly create an unambiguous file name in this
-directory using :func:`temp_file`.
-
-In the end of the session the temporary directory and all its contents
-will be automatically deleted, so make sure to put the files, you want
-keep, somewhere else.
+So make sure to put the files, you want keep, somewhere else.
 """
-
-from os.path import relpath
-import biotite
-
-# Create temporary directory
-dir_path = biotite.temp_dir()
-print(relpath(dir_path))
-# Get a path to a temporary FASTA file
-# This would also create the temporary directory,
-# if it was not created, yet 
-file_path = biotite.temp_file("fasta")
-print(relpath(file_path))
