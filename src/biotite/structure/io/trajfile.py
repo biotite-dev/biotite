@@ -67,8 +67,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             If no value is given, parsing stops after the last frame.
             The index starts at 0.
         step : int, optional
-            If this value is set, the method reads only every n-th frame
-            from the file.
+            If this value is set, the function reads only every n-th
+            frame from the file.
         atom_i : ndarray, dtype=int, optional
             If this parameter is set, only the atoms at the given
             indices are read from each frame.
@@ -101,7 +101,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             if step is not None and chunk_size % step != 0:
                 chunk_size = ((chunk_size // step) + 1) * step
 
-        traj_type = file.traj_type()
+        traj_type = cls.traj_type()
         with traj_type(file_name, "r") as f:
             
             if start is None:
@@ -138,12 +138,98 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 )
         
         # nm to Angstrom
-        coord, box, time = file.process_read_values(result)
+        coord, box, time = cls.process_read_values(result)
         file.set_coord(coord)
         file.set_box(box)
         file.set_time(time)
 
         return file
+    
+    @classmethod
+    def read_iter(cls, file_name, start=None, stop=None, step=None,
+                  atom_i=None):
+        """
+        Create an iterator over each frame of the given trajectory file
+        in the selected range.
+        
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be read.
+            A file-like-object cannot be used.
+        start : int, optional
+            The frame index, where file parsing is started. If no value
+            is given, parsing starts at the first frame.
+            The index starts at 0.
+        stop : int, optional
+            The exclusive frame index, where file parsing ends.
+            If no value is given, parsing stops at the end of file.
+            The index starts at 0.
+        step : int, optional
+            If this value is set, the function reads only every n-th
+            frame from the file.
+        atom_i : ndarray, dtype=int, optional
+            If this parameter is set, only the atoms at the given
+            indices are read from each frame.
+        
+        Yields
+        ------
+        coord : ndarray, dtype=float32, shape=(n,3)
+            The atom coordinates in the current frame.
+        box : ndarray, dtype=float32, shape=(3,3)
+            The box vectors of the current frame.
+        time : float
+            the simlation time of the current frame in *ps*.
+        
+        Notes
+        -----
+        The `step` parameter does currently not work for *DCD* files.
+        """
+        traj_type = cls.traj_type()
+        with traj_type(file_name, "r") as f:
+            
+            if start is None:
+                start = 0
+            # Discard atoms before start
+            if start != 0:
+                f.read(n_frames=start, stride=None, atom_indices=atom_i)
+            
+            # The upcoming frames are read
+            # Calculate the amount of frames to be read
+            if stop is None:
+                n_frames = None
+            else:
+                n_frames = stop-start
+            if step is not None and n_frames is not None:
+                # Divide number of frames by 'step' in order to convert
+                # 'step' into 'stride'
+                # Since the 0th frame is always included,
+                # the number of frames is decremented before division
+                # and incremented afterwards again
+                n_frames = ((n_frames - 1) // step) + 1
+            
+            # Read frames
+            frame_i = 0
+            while True:
+                if n_frames is not None and frame_i >= n_frames:
+                    # Stop frame reached -> stop interation
+                    break
+                # Read one frame per 'yield'
+                result = f.read(1, stride=step, atom_indices=atom_i)
+                if len(result[0]) == 0:
+                    # Empty array was read
+                    # -> no frames left -> stop interation
+                    break
+                coord, box, time = cls.process_read_values(result)
+                # Only one frame
+                # -> only one element in first dimension
+                # -> remove first dimension
+                coord = coord[0]
+                box = box[0] if box is not None else None
+                time = float(time[0]) if time is not None else None
+                yield coord, box, time
+                frame_i += 1
+
     
     def write(self, file_name):
         """
@@ -173,7 +259,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     
     def get_time(self):
         """
-        Get the simlation time in ps values for each frame.
+        Get the simlation time in *ps* values for each frame.
         
         Returns
         -------
@@ -296,8 +382,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         raise NotImplementedError("Copying is not implemented "
                                   "for trajectory files")
     
+    @classmethod
     @abc.abstractmethod
-    def traj_type(self):
+    def traj_type(cls):
         """
         The `MDtraj` files class to be used.
         
@@ -310,8 +397,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
     
+    @classmethod
     @abc.abstractmethod
-    def process_read_values(self, read_values):
+    def process_read_values(cls, read_values):
         """
         Convert the return value of the `read()` method of the
         respective :class:`mdtraj.TrajectoryFile` into coordinates,
@@ -336,8 +424,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
     
+    @classmethod
     @abc.abstractmethod
-    def prepare_write_values(self, coord, box, time):
+    def prepare_write_values(cls, coord, box, time):
         """
         Convert the `coord`, `box` and `time` attribute into a
         dictionary that is given as *kwargs* to the respective

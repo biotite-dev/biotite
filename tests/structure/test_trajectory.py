@@ -121,3 +121,75 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
     assert test_traj.bonds == ref_traj.bonds
     assert test_traj.equal_annotation_categories(ref_traj)
     assert test_traj.coord == pytest.approx(ref_traj.coord, abs=1e-2)
+
+
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
+@pytest.mark.parametrize(
+    "format, start, stop, step",
+    itertools.product(
+        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        [None, 2],
+        [None, 17],
+        [None, 2]
+    )
+)
+def test_read_iter(format, start, stop, step):
+    """
+    Compare aggregated yields of :func:`read_iter()` with the values
+    from a corresponding :class:`TrajectoryFile` object.
+    """
+    if format == "netcdf" and step is not None:
+        # Currently, there is an inconsistency in in MDTraj's
+        # NetCDFTrajectoryFile class:
+        # In this class the number of frames in the output arrays
+        # is dependent on the 'stride' parameter
+        return
+    
+    if format == "trr":
+        traj_file_cls = trr.TRRFile
+    if format == "xtc":
+        traj_file_cls = xtc.XTCFile
+    if format == "tng":
+        traj_file_cls = tng.TNGFile
+    if format == "dcd":
+        traj_file_cls = dcd.DCDFile
+    if format == "netcdf":
+        traj_file_cls = netcdf.NetCDFFile
+    
+    traj_file = traj_file_cls.read(
+        join(data_dir("structure"), f"1l2y.{format}"),
+        start, stop, step
+    )
+    ref_coord = traj_file.get_coord()
+    ref_box = traj_file.get_box()
+    ref_time = traj_file.get_time()
+
+    test_coord = []
+    test_box = []
+    test_time = []
+    for coord, box, time in traj_file.read_iter(
+        join(data_dir("structure"), f"1l2y.{format}"),
+        start, stop, step
+    ):
+        test_coord.append(coord)
+        test_box.append(box)
+        test_time.append(time)
+    # Convert list to NumPy array
+    test_coord = np.stack(test_coord)
+    test_box = np.stack(test_box)
+    test_time = np.stack(test_time)
+
+    assert test_coord.tolist() == ref_coord.tolist()
+    
+    if ref_box is None:
+        assert (test_box == None).all()
+    else:
+        assert test_box.tolist() == ref_box.tolist()
+    
+    if ref_time is None:
+        assert (test_time == None).all()
+    else:
+        assert test_time.tolist() == ref_time.tolist()
