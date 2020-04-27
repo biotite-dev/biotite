@@ -176,8 +176,9 @@ print(tc5b.shape)
 
 pdb_file = pdb.PDBFile()
 pdb_file.set_structure(tc5b)
-temp_file = NamedTemporaryFile("w", suffix=".pdb")
+temp_file = NamedTemporaryFile(suffix=".pdb")
 pdb_file.write(temp_file.name)
+temp_file.close()
 
 ########################################################################
 # Other information (authors, secondary structure, etc.) cannot be
@@ -350,8 +351,9 @@ import biotite.structure.io as strucio
 
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
-temp_file = NamedTemporaryFile("w", suffix=".cif")
+temp_file = NamedTemporaryFile(suffix=".cif")
 strucio.save_structure(temp_file.name, stack_from_pdb)
+temp_file.close()
 
 ########################################################################
 # Reading trajectory files
@@ -405,6 +407,8 @@ template = mmtf.get_structure(mmtf_file, model=1)
 
 traj_file = xtc.XTCFile.read(temp_xtc_file.name)
 trajectory = traj_file.get_structure(template)
+
+temp_xtc_file.close()
 
 ########################################################################
 # Array indexing and filtering

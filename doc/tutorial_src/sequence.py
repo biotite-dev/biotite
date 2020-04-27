@@ -263,8 +263,9 @@ fasta.set_sequence(fasta_file, dna_seq1, header="gibberish")
 # .. or dictionary style
 fasta_file["more gibberish"] = str(dna_seq2)
 print(fasta_file)
-temp_file = NamedTemporaryFile("w", suffix=".fasta")
+temp_file = NamedTemporaryFile(suffix=".fasta")
 fasta_file.write(temp_file.name)
+temp_file.close()
 
 ########################################################################
 # As you see, our file contains our new ``'gibberish'`` and

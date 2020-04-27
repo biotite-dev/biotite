@@ -129,11 +129,12 @@ print(entrez.get_database_name("Nucleotide"))
 # single file. This is achieved with the :func:`fetch_single_file()`
 # function.
 
-temp_file = NamedTemporaryFile("w", suffix=".fasta")
+temp_file = NamedTemporaryFile(suffix=".fasta")
 file_path = entrez.fetch_single_file(
     ["1L2Y_A","1AKI_A"], temp_file.name, db_name="protein", ret_type="fasta"
 )
 print(file_path)
+temp_file.close()
 
 ########################################################################
 # Similar to the *RCSB PDB*, you can also search in the *NCBI Entrez*

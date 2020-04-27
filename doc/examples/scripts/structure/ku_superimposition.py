@@ -22,8 +22,8 @@ import biotite.database.rcsb as rcsb
 import numpy as np
 
 
-ku_dna_file = NamedTemporaryFile("w", suffix=".cif")
-ku_file     = NamedTemporaryFile("w", suffix=".cif")
+ku_dna_file = NamedTemporaryFile(suffix=".cif")
+ku_file     = NamedTemporaryFile(suffix=".cif")
 # The output file names
 # Modify these values for actual file output
 ku_dna_file_name = ku_dna_file.name
@@ -51,9 +51,12 @@ ku_superimposed = struc.superimpose_apply(ku, transformation)
 # Write PDBx files as input for PyMOL
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_dna, data_block="ku_dna")
-cif_file.write(ku_dna_file)
+cif_file.write(ku_dna_file_name)
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_superimposed, data_block="ku")
-cif_file.write(ku_file)
+cif_file.write(ku_file_name)
 # Visualization with PyMOL...
 # biotite_static_image = ku_superimposition.png
+
+ku_dna_file.close()
+ku_file.close()
