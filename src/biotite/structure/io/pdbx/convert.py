@@ -551,23 +551,42 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
 
     transformations = _get_transformations(struct_oper_category)
 
+
+    ### Get transformations to apply and the affected asym IDs
     # Find the operation expression for given assembly ID
     # We already asserted that the ID is actually present
-    for id, op_expr, chain_expr in zip(
+    for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"],
         assembly_gen_category["oper_expression"],
         assembly_gen_category["asym_id_list"]
     ):
         if id == assembly_id:
             operations = _parse_operation_expression(op_expr)
-            chains = chain_expr.split(",")
+            asym_ids = asym_id_expr.split(",")
             break
     
-
-    # Apply operations on structure
+    
+    ### Get structure containing the affected asym IDs
+    # Include 'label_asym_id' as annotation array
+    # for correct asym ID filtering
+    extra_fields = [] if extra_fields is None else extra_fields
+    if "label_asym_id" in extra_fields:
+        extra_fields_and_asym = extra_fields
+    else:
+        extra_fields_and_asym = extra_fields + ["label_asym_id"]
     structure = get_structure(
-        pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
+        pdbx_file, model, data_block,
+        altloc, extra_fields_and_asym, use_author_fields
     )
+    # Filter asym IDs
+    structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
+    # Remove 'label_asym_id', if it was not included in the original
+    # user-supplied 'extra_fields'
+    if "label_asym_id" not in extra_fields:
+        structure.del_annotation("label_asym_id")
+
+
+    ### Prepare coordinates
     if model is None:
         # Coordinates for AtomArrayStack
         assembly_coord = np.zeros(
@@ -580,7 +599,8 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
             (len(operations), structure.array_length(), 3)
         )
     
-    # Execute for each copy in the assembly
+
+    ### Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
         # Execute for each transformation step
