@@ -10,7 +10,6 @@ publication purposes.
 # License: BSD 3 clause
 
 import matplotlib.pyplot as plt
-import biotite
 from biotite.sequence import Annotation, Feature, Location
 import biotite.sequence.graphics as graphics
 

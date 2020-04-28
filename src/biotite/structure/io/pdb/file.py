@@ -102,11 +102,12 @@ class PDBFile(TextFile):
         an existing :class:`AtomArrayStack`.
         
         >>> import os.path
+        >>> from tempfile import gettempdir
         >>> file_names = []
         >>> for i in range(atom_array_stack.stack_depth()):
         ...     pdb_file = PDBFile()
         ...     pdb_file.set_structure(atom_array_stack[i])
-        ...     file_name = os.path.join(temp_dir(), f"model_{i+1}.pdb")
+        ...     file_name = os.path.join(gettempdir(), f"model_{i+1}.pdb")
         ...     pdb_file.write(file_name)
         ...     file_names.append(file_name)
         >>> print(file_names)

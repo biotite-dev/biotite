@@ -8,9 +8,8 @@ sequence alignment of the hit sequences afterwards, using MUSCLE.
 """
 
 # Code source: Patrick Kunzmann
-# License: BSD 3 clause
-
-import biotite
+# License: BSD 3 cl
+from tempfile import gettempdir
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.graphics as graphics
@@ -20,9 +19,9 @@ import biotite.database.entrez as entrez
 import matplotlib.pyplot as plt
 
 # Download sequence of Streptococcus pyogenes Cas9
-file_name = entrez.fetch("Q99ZW2", biotite.temp_dir(), "fa", "protein", "fasta")
-file = fasta.FastaFile.read(file_name)
-ref_seq = fasta.get_sequence(file)
+file_name = entrez.fetch("Q99ZW2", gettempdir(), "fa", "protein", "fasta")
+fasta_file = fasta.FastaFile.read(file_name)
+ref_seq = fasta.get_sequence(fasta_file)
 # Find homologous proteins using NCBI Blast
 # Search only the UniProt/SwissProt database
 blast_app = blast.BlastWebApp("blastp", ref_seq, "swissprot", obey_rules=False)
@@ -37,9 +36,9 @@ for ali in alignments:
 # Get the sequences from hit IDs
 hit_seqs = []
 for hit in hits:
-    file_name = entrez.fetch(hit, biotite.temp_dir(), "fa", "protein", "fasta")
-    file = fasta.FastaFile.read(file_name)
-    hit_seqs.append(fasta.get_sequence(file))
+    file_name = entrez.fetch(hit, gettempdir(), "fa", "protein", "fasta")
+    fasta_file = fasta.FastaFile.read(file_name)
+    hit_seqs.append(fasta.get_sequence(fasta_file))
 
 # Perform a multiple sequence alignment using MUSCLE
 app = muscle.MuscleApp(hit_seqs)

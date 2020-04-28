@@ -11,7 +11,6 @@ import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
 import biotite.application.muscle as muscle
-import biotite
 from ..util import data_dir, is_not_installed
 
 

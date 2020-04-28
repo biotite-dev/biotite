@@ -11,7 +11,7 @@ as the plot clearly indicates.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
+from tempfile import gettempdir
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
@@ -21,7 +21,7 @@ from matplotlib import colors
 import scipy.stats as sts
 
 # Download and parse file
-file = rcsb.fetch("3vkh", "cif", biotite.temp_dir())
+file = rcsb.fetch("3vkh", "cif", gettempdir())
 atom_array = strucio.load_structure(file)
 # Calculate backbone dihedral angles
 # from one of the two identical chains in the asymmetric unit

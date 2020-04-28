@@ -13,7 +13,6 @@ plasmid map by using a custom 'toy' :class:`Annotation`.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import biotite.sequence.graphics as graphics

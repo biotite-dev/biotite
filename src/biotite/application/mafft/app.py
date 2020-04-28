@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
 import re
-from ...temp import temp_file
+import os
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
@@ -88,6 +88,9 @@ class MafftApp(MSAApp):
             # -> remove the '<n>_' prefix
             newick = re.sub(_prefix_pattern, "", raw_newick)
             self._tree = Tree.from_newick(newick)
+    
+    def clean_up(self):
+        os.remove(self._out_tree_file_name)
 
     @requires_state(AppState.JOINED)
     def get_guide_tree(self):

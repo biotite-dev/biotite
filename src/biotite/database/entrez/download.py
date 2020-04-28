@@ -6,7 +6,7 @@ __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_database_name", "fetch", "fetch_single_file"]
 
-import os.path
+from os.path import isdir, isfile, join, getsize
 import os
 import glob
 import io
@@ -120,7 +120,8 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
-        exist yet in the specified target directory. (Default: False)
+        exist yet in the specified target directory or if the file is
+        empty. (Default: False)
     verbose: bool, optional
         If true, the function will output the download progress.
         (Default: False)
@@ -168,7 +169,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     else:
         single_element = False
     # Create the target folder, if not existing
-    if target_path is not None and not os.path.isdir(target_path):
+    if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
     for i, id in enumerate(uids):
@@ -177,25 +178,28 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
             print(f"Fetching file {i+1:d} / {len(uids):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
-            file = os.path.join(target_path, id + "." + suffix)
+            file = join(target_path, id + "." + suffix)
         else:
             file = None
-        if file is None or not os.path.isfile(file) or overwrite:
-            r = requests.get(
-                (_base_url + _fetch_url).format(
-                    _sanitize_db_name(db_name), id, ret_type, ret_mode,
-                    "BiotiteClient", mail
+        if file is None \
+           or not isfile(file) \
+           or getsize(file) == 0 \
+           or overwrite:
+                r = requests.get(
+                    (_base_url + _fetch_url).format(
+                        _sanitize_db_name(db_name), id, ret_type, ret_mode,
+                        "BiotiteClient", mail
+                    )
                 )
-            )
-            content = r.text
-            check_for_errors(content)
-            if content.startswith(" Error"):
-                raise RequestError(content[8:])
-            if file is None:
-                file = io.StringIO(content)
-            else:
-                with open(file, "w+") as f:
-                    f.write(content)
+                content = r.text
+                check_for_errors(content)
+                if content.startswith(" Error"):
+                    raise RequestError(content[8:])
+                if file is None:
+                    file = io.StringIO(content)
+                else:
+                    with open(file, "w+") as f:
+                        f.write(content)
         files.append(file)
     if verbose:
         print("\nDone")
@@ -252,9 +256,12 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     --------
     fetch
     """
-    if file_name is not None and os.path.isfile(file_name) and not overwrite:
-        # Do no redownload the already existing file
-        return file_name
+    if file_name is not None \
+       and os.path.isfile(file_name) \
+       and getsize(file_name) > 0 \
+       and not overwrite:
+            # Do no redownload the already existing file
+            return file_name
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","

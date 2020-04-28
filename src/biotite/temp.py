@@ -10,6 +10,7 @@ import shutil
 import atexit
 import os
 import tempfile
+import warnings
 
 
 _temp_dir = ""
@@ -36,6 +37,9 @@ def temp_file(suffix=""):
     Get a file path to a temporary file.
     
     All temporary files will be deleted after script execution.
+
+    DEPRECATED: Please use the :mod:`tempfile` module from the
+    standard library.
     
     Parameters
     ----------
@@ -49,6 +53,10 @@ def temp_file(suffix=""):
         a file name in the temporary directory.
     """
     global _temp_dir
+    warnings.warn(
+        "Please use the :mod:`tempfile` module from the standard library",
+        DeprecationWarning
+    )
     _create_temp_dir()
     if suffix != "" and not suffix.startswith("."):
         suffix = "." + suffix
@@ -60,6 +68,9 @@ def temp_dir():
     Get the temporary directory path.
     
     The temporary directory will be deleted after script execution.
+
+    DEPRECATED: Please use the :mod:`tempfile` module from the
+    standard library.
     
     Returns
     -------
@@ -67,5 +78,9 @@ def temp_dir():
         Path of the temporary directory.
     """
     global _temp_dir
+    warnings.warn(
+        "Please use the :mod:`tempfile` module from the standard library",
+        DeprecationWarning
+    )
     _create_temp_dir()
     return _temp_dir

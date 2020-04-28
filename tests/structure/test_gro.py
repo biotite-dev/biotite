@@ -2,14 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import glob
 import itertools
 from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
-import biotite
-import biotite.structure.io as io
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
@@ -76,13 +75,15 @@ def test_pdb_to_gro(path, single_model):
     a1 = pdb_file.get_structure(model=model)
 
     # Save stack as gro
-    tmp_file_name = biotite.temp_file("gro")
+    temp = TemporaryFile("w+")
     gro_file = gro.GROFile()
     gro_file.set_structure(a1)
-    gro_file.write(tmp_file_name)
+    gro_file.write(temp)
 
     # Reload stack from gro
-    gro_file = gro.GROFile.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     a2 = gro_file.get_structure(model=model)
 
     assert a1.array_length() == a2.array_length()
@@ -104,11 +105,15 @@ def test_gro_id_overflow():
     atoms.box = np.array([[1,0,0], [0,1,0], [0,0,1]])
 
     # Write .gro file
-    tmp_file_name = biotite.temp_file(".gro")
-    io.save_structure(tmp_file_name, atoms)
+    temp = TemporaryFile("w+")
+    gro_file = gro.GROFile()
+    gro_file.set_structure(atoms)
+    gro_file.write(temp)
 
     # Read .gro file
-    gro_file = gro.GROFile.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     assert s.array_length() == num_atoms
@@ -118,7 +123,7 @@ def test_gro_no_box():
     """
     .gro file format requires valid box parameters at the end of each
     model. However, if we read such a file in, the resulting object should not
-    have an assigned box.
+    need to have an assigned box.
     """
 
     # Create an AtomArray
@@ -126,11 +131,15 @@ def test_gro_no_box():
     atoms = array([atom])
 
     # Write .gro file
-    tmp_file_name = biotite.temp_file(".gro")
-    io.save_structure(tmp_file_name, atoms)
+    temp = TemporaryFile("w+")
+    gro_file = gro.GROFile()
+    gro_file.set_structure(atoms)
+    gro_file.write(temp)
     
     # Read in file
-    gro_file = gro.GROFile.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     # Assert no box with 0 dimension

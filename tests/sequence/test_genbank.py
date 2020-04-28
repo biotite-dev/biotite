@@ -2,9 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import glob
 from os.path import join
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import numpy as np
@@ -70,10 +70,12 @@ def test_conversion_lowlevel(path):
     gb_file = gb.GenBankFile()
     for name, content, subfields in ref_parsed_fields:
         gb_file.append(name, content, subfields)
-    temp_file_name = biotite.temp_file("gb")
-    gb_file.write(temp_file_name)
-
-    gb_file = gb.GenBankFile.read(temp_file_name)
+    temp = TemporaryFile("w+")
+    gb_file.write(temp)
+    
+    temp.seek(0)
+    gb_file = gb.GenBankFile.read(temp)
+    temp.close()
     test_parsed_fields = [field for field in gb_file]
     assert test_parsed_fields == ref_parsed_fields
 
@@ -97,10 +99,12 @@ def test_conversion_highlevel(path):
     gb_file = gb.GenBankFile()
     gb.set_locus(gb_file, *ref_locus)
     gb.set_annotated_sequence(gb_file, ref_annot_seq)
-    temp_file_name = biotite.temp_file("gb")
-    gb_file.write(temp_file_name)
-
-    gb_file = gb.GenBankFile.read(temp_file_name)
+    temp = TemporaryFile("w+")
+    gb_file.write(temp)
+    
+    temp.seek(0)
+    gb_file = gb.GenBankFile.read(temp)
+    temp.close()
     test_locus = gb.get_locus(gb_file)
     test_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
     assert test_locus == ref_locus

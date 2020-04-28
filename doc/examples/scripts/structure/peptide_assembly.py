@@ -20,10 +20,10 @@ For simplicity reasons, the scripts always uses an angle of
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import NamedTemporaryFile
 import itertools
 import numpy as np
 from numpy.linalg import norm
-import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -241,6 +241,9 @@ def assemble_peptide(sequence):
 
 sequence = seq.ProteinSequence("TITANITE")
 atom_array = assemble_peptide(sequence)
-strucio.save_structure(biotite.temp_file("mmtf"), atom_array)
+out_file = NamedTemporaryFile(suffix=".mmtf", delete=False)
+strucio.save_structure(out_file.name, atom_array)
 # Visualization with PyMOL...
 # biotite_static_image = peptide_assembly.png
+
+out_file.close()

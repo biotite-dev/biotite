@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite
+from tempfile import NamedTemporaryFile
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import numpy as np
@@ -74,9 +74,9 @@ def test_loading_with_extra_args():
 )
 def test_saving(suffix):
     array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
-    strucio.save_structure(
-        biotite.temp_file("1l2y." + suffix), array
-    )
+    temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
+    strucio.save_structure(temp.name, array)
+    temp.close()
 
 
 @pytest.mark.skipif(
@@ -90,7 +90,9 @@ def test_saving(suffix):
 )
 def test_saving_with_extra_args(suffix):
     array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
     with pytest.raises(TypeError):
         strucio.save_structure(
-            biotite.temp_file("1l2y." + suffix), array, answer=42
+            temp.name, array, answer=42
         )
+    temp.close()
