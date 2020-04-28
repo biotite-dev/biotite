@@ -41,6 +41,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._box = None
         self._model_count = None
     
+
     @classmethod
     def read(cls, file_name, start=None, stop=None, step=None,
              atom_i=None, chunk_size=None):
@@ -145,6 +146,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         return file
     
+
     @classmethod
     def read_iter(cls, file_name, start=None, stop=None, step=None,
                   atom_i=None):
@@ -180,6 +182,10 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             The box vectors of the current frame.
         time : float
             the simlation time of the current frame in *ps*.
+        
+        See also
+        --------
+        read_iter_structure
         
         Notes
         -----
@@ -229,6 +235,78 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 time = float(time[0]) if time is not None else None
                 yield coord, box, time
                 frame_i += 1
+    
+
+    @classmethod
+    def read_iter_structure(cls, file_name, template, start=None, stop=None,
+                            step=None, atom_i=None):
+        """
+        Create an iterator over each frame of the given trajectory file
+        in the selected range.
+
+        In contrast to :func:`read_iter()`, this function creates an
+        iterator over the structure as :class:`AtomArray`.
+        Since trajectory files usually only contain atom coordinate
+        information and no topology information, this method requires
+        a template atom array or stack. This template can be acquired
+        for example from a PDB file, which is associated with the
+        trajectory file. 
+        
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be read.
+            A file-like-object cannot be used.
+        template : AtomArray or AtomArrayStack
+            The template array or stack, where the atom annotation data
+            is taken from.
+        start : int, optional
+            The frame index, where file parsing is started. If no value
+            is given, parsing starts at the first frame.
+            The index starts at 0.
+        stop : int, optional
+            The exclusive frame index, where file parsing ends.
+            If no value is given, parsing stops at the end of file.
+            The index starts at 0.
+        step : int, optional
+            If this value is set, the function reads only every n-th
+            frame from the file.
+        atom_i : ndarray, dtype=int, optional
+            If this parameter is set, only the atoms at the given
+            indices are read from each frame.
+        
+        Yields
+        ------
+        structure : AtomArray
+            The structure of the current frame.
+        
+        See also
+        --------
+        read_iter
+        
+        Notes
+        -----
+        This iterator creates a new copy of the given template for every
+        frame.
+        If a higher efficiency is required, please use the
+        :func:`read_iter()` function.
+
+        The `step` parameter does currently not work for *DCD* files.
+        """
+        if isinstance(template, AtomArrayStack):
+            template = template[0]
+        elif not isinstance(template, AtomArray):
+            raise TypeError(
+                f"An 'AtomArray' or 'AtomArrayStack' is expected as template, "
+                f"not '{type(template).__name__}'"
+            )
+        for coord, box, _ in cls.read_iter(
+            file_name, start, stop, step, atom_i
+        ):
+            frame = template.copy()
+            frame.coord = coord
+            frame.box = box
+            yield frame
 
     
     def write(self, file_name):
@@ -246,6 +324,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         with traj_type(file_name, 'w') as f:
             f.write(**param)
     
+
     def get_coord(self):
         """
         Extract only the atom coordinates from the trajectory file.
@@ -257,6 +336,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._coord
     
+
     def get_time(self):
         """
         Get the simlation time in *ps* values for each frame.
@@ -269,6 +349,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._time
     
+
     def get_box(self):
         """
         Get the box vectors for each frame.
@@ -281,6 +362,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._box
     
+
     def set_coord(self, coord):
         """
         Set the atom coordinates in the trajectory file.
@@ -293,6 +375,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(coord)
         self._coord = coord
     
+
     def set_time(self, time):
         """
         Set the simulation time of each frame in the trajectory file.
@@ -305,6 +388,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(time)
         self._time = time
     
+
     def set_box(self, box):
         """
         Set the periodic box vectors of each frame in the trajectory
@@ -318,6 +402,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(box)
         self._box = box
     
+
     def get_structure(self, template):
         """
         Convert the trajectory file content into an
@@ -344,6 +429,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return from_template(template, self.get_coord(), self.get_box())
     
+
     def set_structure(self, structure, time=None):
         """
         Write an atom array (stack) into the trajectory file object.
@@ -382,6 +468,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         raise NotImplementedError("Copying is not implemented "
                                   "for trajectory files")
     
+
     @classmethod
     @abc.abstractmethod
     def traj_type(cls):
@@ -397,6 +484,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
     
+
     @classmethod
     @abc.abstractmethod
     def process_read_values(cls, read_values):
@@ -424,6 +512,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
     
+
     @classmethod
     @abc.abstractmethod
     def prepare_write_values(cls, coord, box, time):
@@ -451,6 +540,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
 
+
     def _check_model_count(self, array):
         """
         Check if the amount of models in the given array is equal to
@@ -470,6 +560,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                     f"but the file contains {self._model_count} models"
                 )
     
+
     @staticmethod
     def _read_chunk_wise(file, n_frames, step, atom_i, chunk_size,
                          discard=False):

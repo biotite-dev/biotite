@@ -158,11 +158,9 @@ def test_read_iter(format, start, stop, step):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
+    file_name = join(data_dir("structure"), f"1l2y.{format}")
     
-    traj_file = traj_file_cls.read(
-        join(data_dir("structure"), f"1l2y.{format}"),
-        start, stop, step
-    )
+    traj_file = traj_file_cls.read(file_name, start, stop, step)
     ref_coord = traj_file.get_coord()
     ref_box = traj_file.get_box()
     ref_time = traj_file.get_time()
@@ -170,10 +168,7 @@ def test_read_iter(format, start, stop, step):
     test_coord = []
     test_box = []
     test_time = []
-    for coord, box, time in traj_file.read_iter(
-        join(data_dir("structure"), f"1l2y.{format}"),
-        start, stop, step
-    ):
+    for coord, box, time in traj_file.read_iter(file_name, start, stop, step):
         test_coord.append(coord)
         test_box.append(box)
         test_time.append(time)
@@ -193,3 +188,55 @@ def test_read_iter(format, start, stop, step):
         assert (test_time == None).all()
     else:
         assert test_time.tolist() == ref_time.tolist()
+
+
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
+@pytest.mark.parametrize(
+    "format, start, stop, step",
+    itertools.product(
+        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        [None, 2],
+        [None, 17],
+        [None, 2]
+    )
+)
+def test_read_iter_structure(format, start, stop, step):
+    """
+    Compare aggregated yields of :func:`read_iter_structure()` with the
+    return value of :func:`get_structure()` from a corresponding
+    :class:`TrajectoryFile` object.
+    """
+    if format == "netcdf" and step is not None:
+        # Currently, there is an inconsistency in in MDTraj's
+        # NetCDFTrajectoryFile class:
+        # In this class the number of frames in the output arrays
+        # is dependent on the 'stride' parameter
+        return
+    
+    template = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    
+    if format == "trr":
+        traj_file_cls = trr.TRRFile
+    if format == "xtc":
+        traj_file_cls = xtc.XTCFile
+    if format == "tng":
+        traj_file_cls = tng.TNGFile
+    if format == "dcd":
+        traj_file_cls = dcd.DCDFile
+    if format == "netcdf":
+        traj_file_cls = netcdf.NetCDFFile
+    file_name = join(data_dir("structure"), f"1l2y.{format}")
+    
+    traj_file = traj_file_cls.read(file_name, start, stop, step)
+    ref_traj = traj_file.get_structure(template)
+    
+    test_traj = struc.stack(
+        [frame for frame in traj_file_cls.read_iter_structure(
+            file_name, template, start, stop, step
+        )]
+    )
+    
+    assert test_traj == ref_traj
