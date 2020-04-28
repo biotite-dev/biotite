@@ -4,15 +4,13 @@
 
 __author__ = "Patrick Kunzmann"
 
+# Setup Cython for import of uncompiled *.pyx files
 import pyximport
 import numpy as np
 pyximport.install(setup_args={'include_dirs': np.get_include()})
 
 from os.path import realpath, dirname, join, basename
-from os import listdir, makedirs
 import sys
-import glob
-import shutil
 import types
 import warnings
 from sphinx_gallery.sorting import FileNameSortKey
@@ -70,7 +68,7 @@ source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017-2019, the Biotite contributors"
+copyright = "2017-2020, the Biotite contributors"
 version = biotite.__version__
 
 exclude_patterns = ["build"]

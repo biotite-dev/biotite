@@ -22,7 +22,6 @@ from matplotlib.text import Text
 import matplotlib.pyplot as plt
 import networkx as nx
 import requests
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
 import biotite.sequence.align as align

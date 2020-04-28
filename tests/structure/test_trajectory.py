@@ -2,12 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import NamedTemporaryFile
 import itertools
 import glob
 from os.path import join, basename
 import numpy as np
 import pytest
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.xtc as xtc
@@ -47,10 +47,11 @@ def test_array_conversion(format):
 
     traj_file = traj_file_cls()
     traj_file.set_structure(ref_array)
-    file_name = biotite.temp_file(format)
-    traj_file.write(file_name)
+    temp = NamedTemporaryFile("w+b")
+    traj_file.write(temp.name)
 
-    traj_file = traj_file_cls.read(file_name)
+    traj_file = traj_file_cls.read(temp.name)
+    temp.close()
     array = traj_file.get_structure(template)
     assert ref_array.bonds == array.bonds
     assert ref_array.equal_annotation_categories(array)

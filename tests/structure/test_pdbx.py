@@ -4,7 +4,6 @@
 
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite
 import itertools
 import numpy as np
 import glob

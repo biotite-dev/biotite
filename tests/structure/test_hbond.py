@@ -2,10 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import NamedTemporaryFile
 from os.path import join
 import numpy as np
 import pytest
-import biotite
 import biotite.structure as struc
 from biotite.structure.io import load_structure, save_structure
 from ..util import data_dir, cannot_import
@@ -34,12 +34,13 @@ def test_hbond_structure(pdb_id):
     
     # Save to new pdb file for consistent treatment of inscode/altloc
     # im MDTraj
-    file_name = biotite.temp_file("pdb")
-    save_structure(file_name, array)
+    temp = NamedTemporaryFile("w+", suffix=".pdb")
+    save_structure(temp.name, array)
     
     # Compare with MDTraj
     import mdtraj
-    traj = mdtraj.load(file_name)
+    traj = mdtraj.load(temp.name)
+    temp.close()
     triplets_ref = mdtraj.baker_hubbard(
         traj, freq=0, periodic=False
     )

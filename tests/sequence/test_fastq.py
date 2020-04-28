@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite
+from tempfile import TemporaryFile
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
 import numpy as np
@@ -36,23 +36,26 @@ def test_access(chars_per_line):
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_conversion(chars_per_line):
     path = os.path.join(data_dir("sequence"), "random.fastq")
-    file1 = fastq.FastqFile.read(
+    fasta_file = fastq.FastqFile.read(
         path, offset=33, chars_per_line=chars_per_line
     )
-    ref_content = dict(file1.items())
+    ref_content = dict(fasta_file.items())
 
-    file2 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
+    fasta_file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
     for identifier, (sequence, scores) in ref_content.items():
-        file2[identifier] = sequence, scores
-    file2.write(biotite.temp_file("fastq"))
+        fasta_file[identifier] = sequence, scores
+    temp = TemporaryFile("w+")
+    fasta_file.write(temp)
 
-    file3 = fastq.FastqFile.read(
-        path, offset=33, chars_per_line=chars_per_line
+    temp.seek(0)
+    fasta_file = fastq.FastqFile.read(
+        temp, offset=33, chars_per_line=chars_per_line
     )
-    content = dict(file3.items())
+    content = dict(fasta_file.items())
+    temp.close()
     
     for identifier in ref_content:
         ref_sequence, ref_scores = ref_content[identifier]
-        sequence, scores = content[identifier]
-        assert ref_sequence == sequence
-        assert np.array_equal(ref_scores, scores)
+        test_sequence, test_scores = content[identifier]
+        assert test_sequence == ref_sequence
+        assert np.array_equal(test_scores, ref_scores)

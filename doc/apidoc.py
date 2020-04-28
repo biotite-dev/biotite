@@ -5,7 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["create_api_doc", "skip_non_methods"]
 
-from os.path import dirname, join, isdir
+from os.path import join, isdir
 from os import listdir, makedirs
 from importlib import import_module
 import types
@@ -64,14 +64,19 @@ def _create_package_doc(pck, src_path, doc_path):
     module = import_module(pck)
     attr_list = dir(module)
     # Classify attribute names into classes and functions
-    func_list = [attr for attr in attr_list
-                    if attr[0] != "_"
-                    and type(getattr(module, attr))
-                    in [types.FunctionType, types.BuiltinFunctionType]
-                ]
     class_list = [attr for attr in attr_list
-                    if attr[0] != "_"
-                    and isinstance(getattr(module, attr), type)]
+                  # Do not document private classes
+                  if attr[0] != "_"
+                  # Check if object is a class
+                  and isinstance(getattr(module, attr), type)]
+    func_list = [attr for attr in attr_list
+                 # Do not document private classes
+                 if attr[0] != "_"
+                 # All functions are callable...
+                 and callable(getattr(module, attr))
+                 # ...but classes are also callable
+                 and attr not in class_list 
+                ]
     # Create *.rst files
     _create_package_page(doc_path, pck, class_list, func_list, sub_pck)
     for class_name in class_list:
@@ -212,8 +217,6 @@ def _is_package(path):
 
 
 
-# Skip all class members, that are not methods,
-# since other attributes are already documented in the class docstring
 def skip_non_methods(app, what, name, obj, skip, options):
     """
     Skip all class members, that are not methods, enum values or inner

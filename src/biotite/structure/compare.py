@@ -17,14 +17,14 @@ from .util import vector_dot
 
 
 def rmsd(reference, subject):
-    """
+    r"""
     Calculate the RMSD between two structures.
     
-    Calculate the root-mean-square-deviation (RMSD)
-    of a structure compared to a reference structure.
-    The RMSD is defined as:
+    The *root-mean-square-deviation* (RMSD) indicates the overall
+    deviation of each model of a structure to a reference structure.
+    It is defined as:
     
-    .. math:: RMSD = \\sqrt{ \\frac{1}{n} \\sum\\limits_{i=1}^n (x_i - x_{ref,i})^2}
+    .. math:: RMSD = \sqrt{ \frac{1}{n} \sum\limits_{i=1}^n (x_i - x_{ref,i})^2}
     
     Parameters
     ----------
@@ -39,11 +39,11 @@ def rmsd(reference, subject):
     
     Returns
     -------
-    rmsd : float or ndarray, dtype=float, shape=(n,)
+    rmsd : float or ndarray, dtype=float, shape=(m,)
         RMSD between subject and reference.
         If subject is an :class:`AtomArray` a float is returned.
         If subject is an :class:`AtomArrayStack` an :class:`ndarray`
-        containing the RMSD for each :class:`AtomArray` is returned.
+        containing the RMSD for each model is returned.
     
     See Also
     --------
@@ -74,12 +74,14 @@ def rmsd(reference, subject):
 def rmsf(reference, subject):
     r"""
     Calculate the RMSF between two structures.
-    
-    Calculate the root-mean-square-fluctuation (RMSF)
-    of a structure compared to a reference structure.
+
+    The *root-mean-square-fluctuation* (RMSF) indicates the positional
+    deviation of a structure to a reference structure, averaged over all
+    models.
+    Usually the reference structure, is the average over all models.
     The RMSF is defined as:
     
-    .. math:: RMSF(i) = \\sqrt{ \\frac{1}{T} \\sum\\limits_{t=1}^T (x_i(t) - x_{ref,i}(t))^2}
+    .. math:: RMSF(i) = \sqrt{ \frac{1}{T} \sum\limits_{t=1}^T (x_i(t) - x_{ref,i}(t))^2}
     
     Parameters
     ----------
@@ -98,7 +100,8 @@ def rmsf(reference, subject):
     -------
     rmsf : ndarray, dtype=float, shape=(n,)
         RMSF between subject and reference structure.
-        The index corresponds to the atoms.
+        Each element gives the RMSF for the atom at the respective
+        index.
     
     See Also
     --------

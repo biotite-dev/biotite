@@ -6,7 +6,6 @@ from os.path import join
 import itertools
 import numpy as np
 import pytest
-import biotite
 import biotite.structure as struc
 from biotite.structure.io import load_structure
 from ..util import data_dir, cannot_import

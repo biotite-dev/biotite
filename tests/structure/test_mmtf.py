@@ -2,13 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import glob
 import itertools
 from os.path import join, splitext
 import numpy as np
 import pytest
 from pytest import approx
-import biotite
 import biotite.structure as struc
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
@@ -51,10 +51,12 @@ def test_array_conversion(path, single_model):
     
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
-    temp_file_name = biotite.temp_file("mmtf")
-    mmtf_file.write(temp_file_name)
+    temp = TemporaryFile("w+b")
+    mmtf_file.write(temp)
 
-    mmtf_file = mmtf.MMTFFile.read(temp_file_name)
+    temp.seek(0)
+    mmtf_file = mmtf.MMTFFile.read(temp)
+    temp.close()
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
     for category in a1.get_annotation_categories():
@@ -124,9 +126,13 @@ def test_numpy_objects():
     """
     Test whether the Msgpack encoder is able to handle NumPy values
     (e.g. np.float32) properly.
+
+    Only check if no error occurs.
     """
     mmtf_file = mmtf.MMTFFile()
     mmtf_file["A float"] = np.float32(42.0)
     mmtf_file["A list"] = [np.int64(1), np.int64(2), np.int64(3)]
     mmtf_file["A dictionary"] = {"a": np.bool(True), "b": np.bool(False)}
-    mmtf_file.write(biotite.temp_file("mmtf"))
+    temp = TemporaryFile("w+b")
+    mmtf_file.write(temp)
+    temp.close()

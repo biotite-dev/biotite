@@ -6,7 +6,7 @@ Data to work with - The Database subpackage
 
 Biological databases are the backbone of computational biology.
 The :mod:`biotite.database` subpackage provides interfaces for popular
-online databases like the RCSB PDB or the NCBI Entrez database.
+online databases like the *RCSB PDB* or the *NCBI Entrez* database.
 
 Fetching structure files from the RCSB PDB
 ------------------------------------------
@@ -23,20 +23,19 @@ We will download on a protein structure of the miniprotein *TC5b*
 (PDB: 1L2Y) into a temporary directory.
 """
 
-from os.path import relpath
-import biotite
+from tempfile import gettempdir
 import biotite.database.rcsb as rcsb
 
-file_path = rcsb.fetch("1l2y", "pdb", biotite.temp_dir())
-print(relpath(file_path))
+file_path = rcsb.fetch("1l2y", "pdb", gettempdir())
+print(file_path)
 
 ########################################################################
 # In case you want to download multiple files, you are able to specify a
 # list of PDB IDs, which in return gives you a list of file paths.
 
 # Download files in the more modern mmCIF format
-file_paths = rcsb.fetch(["1l2y", "1aki"], "cif", biotite.temp_dir())
-print([relpath(file_path) for file_path in file_paths])
+file_paths = rcsb.fetch(["1l2y", "1aki"], "cif", gettempdir())
+print([file_path for file_path in file_paths])
 
 ########################################################################
 # By default :func:`fetch()` checks whether the file to be fetched
@@ -46,7 +45,16 @@ print([relpath(file_path) for file_path in file_paths])
 # true.
 
 # Download file in the fast and small binary MMTF format
-file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
+file_path = rcsb.fetch("1l2y", "mmtf", gettempdir(), overwrite=True)
+
+########################################################################
+# If you omit the file path or set it to ``None``, the downloaded data
+# will be returned directly as a file-like object, without creating a
+# file on your disk at all.
+
+file = rcsb.fetch("1l2y", "pdb")
+lines = file.readlines()
+print("\n".join(lines[:10] + ["..."]))
 
 ########################################################################
 # In many cases you are not interested in a specific structure, but you
@@ -61,7 +69,7 @@ file_path = rcsb.fetch("1l2y", "mmtf", biotite.temp_dir(), overwrite=True)
 query = rcsb.ResolutionQuery(min=0.0, max=0.6)
 pdb_ids = rcsb.search(query)
 print(pdb_ids)
-files = rcsb.fetch(pdb_ids, "mmtf", biotite.temp_dir())
+files = rcsb.fetch(pdb_ids, "mmtf", gettempdir())
 
 ########################################################################
 # Not all query types of the SEARCH service are supported yet. But it is
@@ -91,22 +99,21 @@ composite = rcsb.CompositeQuery("and", [query1, query2])
 # Furthermore, we need to specifiy the database to retrieve the data
 # from and the retrieval type.
 
-from os.path import relpath
-import biotite
+from tempfile import gettempdir, NamedTemporaryFile
 import biotite.database.entrez as entrez
 
 # Fetch a single UID ...
 file_path = entrez.fetch(
-    "NC_001416", biotite.temp_dir(), suffix="fa",
+    "NC_001416", gettempdir(), suffix="fa",
     db_name="nuccore", ret_type="fasta"
 )
-print(relpath(file_path))
+print(file_path)
 # ... or multiple UIDs 
 file_paths = entrez.fetch(
-    ["1L2Y_A","1AKI_A"], biotite.temp_dir(), suffix="fa",
+    ["1L2Y_A","1AKI_A"], gettempdir(), suffix="fa",
     db_name="protein", ret_type="fasta"
 )
-print([relpath(file_path) for file_path in file_paths])
+print([file_path for file_path in file_paths])
 
 ########################################################################
 # A list of valid database, retrieval type and mode combinations can
@@ -122,11 +129,12 @@ print(entrez.get_database_name("Nucleotide"))
 # single file. This is achieved with the :func:`fetch_single_file()`
 # function.
 
+temp_file = NamedTemporaryFile(suffix=".fasta")
 file_path = entrez.fetch_single_file(
-    ["1L2Y_A","1AKI_A"], biotite.temp_file("fa"),
-    db_name="protein", ret_type="fasta"
+    ["1L2Y_A","1AKI_A"], temp_file.name, db_name="protein", ret_type="fasta"
 )
-print(relpath(file_path))
+print(file_path)
+temp_file.close()
 
 ########################################################################
 # Similar to the *RCSB PDB*, you can also search in the *NCBI Entrez*
@@ -158,7 +166,7 @@ print(composite_query)
 
 ########################################################################
 # Finally, the query is given to the :func:`search()` function to obtain
-# the GIs, that can be used as input to :func:`fetch()`.
+# the GIs, that can be used as input for :func:`fetch()`.
 
 # Return a maximum number of 10 entries
 gis = entrez.search(composite_query, "protein", number=10)

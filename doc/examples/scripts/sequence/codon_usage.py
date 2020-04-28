@@ -37,7 +37,6 @@ is described as 3 integers instead of 3 letters.
 
 import itertools
 import numpy as np
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import biotite.sequence.io.fasta as fasta
@@ -46,7 +45,7 @@ import biotite.database.entrez as entrez
 
 # Get the E. coli K-12 genome as annotated sequence
 gb_file = gb.GenBankFile.read(
-    entrez.fetch("U00096", biotite.temp_dir(), "gb", "nuccore", "gb")
+    entrez.fetch("U00096", None, "gb", "nuccore", "gb")
 )
 # We are only interested in CDS features
 k12_genome = gb.get_annotated_sequence(gb_file, include_only=["CDS"])
@@ -148,7 +147,7 @@ for amino_acid_code in range(20):
 
 # Fetch the streptavidin protein sequence from Streptomyces avidinii
 fasta_file = fasta.FastaFile.read(
-    entrez.fetch("P22629", biotite.temp_dir(), "fasta", "protein", "fasta")
+    entrez.fetch("P22629", None, "fasta", "protein", "fasta")
 )
 strep_prot_seq = fasta.get_sequence(fasta_file)
 # Create a DNA sequence from the protein sequence
