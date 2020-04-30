@@ -15,11 +15,13 @@ class TNGFile(TrajectoryFile):
     This file class represents a TNG trajectory file.
     """
     
-    def traj_type(self):
+    @classmethod
+    def traj_type(cls):
         import mdtraj.formats as traj
         return traj.TNGTrajectoryFile
     
-    def process_read_values(self, read_values):
+    @classmethod
+    def process_read_values(cls, read_values):
         # nm to Angstrom
         coord = read_values[0] * 10
         box = read_values[2]
@@ -28,7 +30,8 @@ class TNGFile(TrajectoryFile):
         time = read_values[1]
         return coord, box, time
     
-    def prepare_write_values(self, coord, box, time):
+    @classmethod
+    def prepare_write_values(cls, coord, box, time):
         # Angstrom to nm
         xyz = np.divide(coord, 10, dtype=np.float32) \
               if coord is not None else None

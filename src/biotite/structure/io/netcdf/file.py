@@ -16,11 +16,13 @@ class NetCDFFile(TrajectoryFile):
     This file class represents a NetCDF trajectory file.
     """
     
-    def traj_type(self):
+    @classmethod
+    def traj_type(cls):
         import mdtraj.formats as traj
         return traj.NetCDFTrajectoryFile
     
-    def process_read_values(self, read_values):
+    @classmethod
+    def process_read_values(cls, read_values):
         # .dcd files use Angstrom
         coord = read_values[0]
         time = read_values[1]
@@ -37,7 +39,8 @@ class NetCDFFile(TrajectoryFile):
             )
         return coord, box, None
     
-    def prepare_write_values(self, coord, box, time):
+    @classmethod
+    def prepare_write_values(cls, coord, box, time):
         coord = coord.astype(np.float32, copy=False) \
               if coord is not None else None
         time = time.astype(np.float32, copy=False) \

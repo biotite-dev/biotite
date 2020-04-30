@@ -176,6 +176,8 @@ def test_get_assembly(single_model):
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
     ``_pdbx_struct_assembly.oligomeric_count`` field indicates.
+    Furthermore, check if the number of atoms in the entire assembly
+    is a multiple of the numbers of atoms in a monomer.
     """
     model = 1 if single_model else None
 
@@ -190,6 +192,7 @@ def test_get_assembly(single_model):
         assembly_category["id"],
         assembly_category["oligomeric_count"]
     ):    
+        print("Assembly ID:", id)
         assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
         protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
@@ -199,3 +202,8 @@ def test_get_assembly(single_model):
         else:
             assert isinstance(assembly, struc.AtomArrayStack)
         assert test_oligomer_count == int(ref_oligomer_count)
+
+        # The atom count of the entire assembly should be a multiple
+        # a monomer,
+        monomer_atom_count = pdbx.get_structure(pdbx_file).array_length()
+        assert assembly.array_length() % monomer_atom_count == 0
