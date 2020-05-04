@@ -26,3 +26,14 @@ def test_intersection_filter(sample_array):
     assert len(sample_array[:200][
                struc.filter_intersection(sample_array[:200],sample_array[100:])
            ]) == 100
+
+def test_nucleotide_filter():
+    nuc_sample_array = strucio.load_structure(join(data_dir("structure")
+            , "5ugo.pdb"))
+            
+    print(len(nuc_sample_array))
+    print(len(struc.filter_nucleotides(nuc_sample_array)))
+
+    
+    assert len(nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)
+            ]) == 651
