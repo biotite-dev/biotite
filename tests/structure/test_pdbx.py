@@ -4,6 +4,7 @@
 
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
+import biotite.sequence as seq
 import itertools
 import numpy as np
 import glob
@@ -207,3 +208,31 @@ def test_get_assembly(single_model):
         # a monomer,
         monomer_atom_count = pdbx.get_structure(pdbx_file).array_length()
         assert assembly.array_length() % monomer_atom_count == 0
+
+    def test_get_sequence():
+        file = pdb.PDBxFile()
+        file.read("data/5ugo.cif")
+        sequences = pdbx.get_sequence(file)
+        file.read("data/4gxy.cif")
+        sequences.append(pdbx.get_sequence(file))
+        assert ((sequences[0] == "CCGACGGCGCATCAGC")
+                & (type(sequences[0]) is seq.NucleotideSequence)
+                & (sequences[1] == "GCTGATGCGCC")
+                & (type(sequences[1]) is seq.NucleotideSequence)
+                & (sequences[2] == "GTCGG")
+                & (type(sequences[2]) is seq.NucleotideSequence)
+                & (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRK"
+                    + "AASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSS"
+                    + "SINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKR"
+                    + "IPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSE"
+                    + "STKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDI"
+                    + "RLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPL"
+                    + "PVDSEKDIFDYIQWKYREPKDRSE"
+                    )
+                & (type(sequences[3]) is seq.ProteinSequence)
+                & (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGG"
+                    + "GAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTC"
+                    + "GGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGG"
+                    + "AGTCAGGAAACCTGCCTGCCGTC")
+                & (type(sequences[4]) is seq.NucleotideSequence)
+                )
