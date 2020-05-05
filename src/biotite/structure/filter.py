@@ -212,6 +212,7 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
         altloc_filter &= ~residue_filter
         # Choose only atoms of residue with altloc code
         altloc_filter |= residue_filter & (altlocs == altloc)
+        
     return altloc_filter
 
 
