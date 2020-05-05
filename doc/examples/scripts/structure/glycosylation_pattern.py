@@ -18,6 +18,62 @@ import biotite.structure.io.mmtf as mmtf
 import biotite.database.rcsb as rcsb
 
 
+# Adapted from "Mol*" Software
+# The dictionary maps common saccharide names to their reside names
+SACCHARIDE_NAMES = {
+    "Glc": ["GLC", "BGC", "Z8T", "TRE", "MLR"],
+    "Man": ["MAN", "BMA"],
+    "Gal": ["GLA", "GAL", "GZL", "GXL", "GIV"],
+    "Gul": ["4GL", "GL0", "GUP", "Z8H"],
+    "Alt": ["Z6H", "3MK", "SHD"],
+    "All": ["AFD", "ALL", "WOO", "Z2D"],
+    "Tal": ["ZEE", "A5C"],
+    "Ido": ["ZCD", "Z0F", "4N2"],
+    "GlcNAc": ["NDG", "NAG", "NGZ"],
+    "ManNAc": ["BM3", "BM7"],
+    "GalNAc": ["A2G", "NGA", "YYQ"],
+    "GulNAc": ["LXB"],
+    "AllNAc": ["NAA"],
+    "IdoNAc": ["LXZ"],
+    "GlcN": ["PA1", "GCS"],
+    "ManN": ["95Z"],
+    "GalN": ["X6X", "1GN"],
+    "GlcA": ["GCU", "BDP"],
+    "ManA": ["MAV", "BEM"],
+    "GalA": ["ADA", "GTR", "GTK"],
+    "GulA": ["LGU"],
+    "TalA": ["X1X", "X0X"],
+    "IdoA": ["IDR"],
+    "Qui": ["G6D", "YYK"],
+    "Rha": ["RAM", "RM4", "XXR"],
+    "6dGul": ["66O"],
+    "Fuc": ["FUC", "FUL", "FCA", "FCB"],
+    "QuiNAc": ["Z9W"],
+    "FucNAc": ["49T"],
+    "Oli": ["DDA", "RAE", "Z5J"],
+    "Tyv": ["TYV"],
+    "Abe": ["ABE"],
+    "Par": ["PZU"],
+    "Dig": ["Z3U"],
+    "Ara": ["64K", "ARA", "ARB", "AHR", "FUB", "BXY", "BXX"],
+    "Lyx": ["LDY", "Z4W"],
+    "Xyl": ["XYS", "XYP", "XYZ", "HSY", "LXC"],
+    "Rib": ["YYM", "RIP", "RIB", "BDR", "0MK", "Z6J", "32O"],
+    "Kdn": ["KDM", "KDN"],
+    "Neu5Ac": ["SIA", "SLB"],
+    "Neu5Gc": ["NGC", "NGE"],
+    "LDManHep": ["GMH"],
+    "Kdo": ["KDO"],
+    "DDManHep": ["289"],
+    "MurNAc": ["MUB", "AMU"],
+    "Mur": ["1S4", "MUR"],
+    "Api": ["XXM"],
+    "Fru": ["BDF", "Z9N", "FRU", "LFR"],
+    "Tag": ["T6T"],
+    "Sor": ["SOE"],
+    "Psi": ["PSV", "SF6", "SF9"],
+}
+
 SACCHARIDES = {
     "GLA": ("o", "gold",            "Gal"),    # alpha
     "GAL": ("o", "gold",            "Gal"),    # beta
@@ -134,8 +190,8 @@ def plot_graph(ax, structure):
             )
         ax.axis("on")
         plt.tick_params(
-            axis='both',
-            which='both',
+            axis="both",
+            which="both",
             bottom=True,
             top=False,
             left=True,
