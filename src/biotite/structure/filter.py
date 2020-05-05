@@ -212,7 +212,7 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
         altloc_filter &= ~residue_filter
         # Choose only atoms of residue with altloc code
         altloc_filter |= residue_filter & (altlocs == altloc)
-    return ( altloc_filter )
+    return altloc_filter
 
 
 def filter_nucleotides(array):
@@ -230,5 +230,7 @@ def filter_nucleotides(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to a nucleotide.
     """
-    return ( np.in1d(array.res_name, _ext_nucleotide_list) & (array.res_id != -1) )
+    return (np.in1d(array.res_name, _ext_nucleotide_list) 
+            & (array.res_id != -1)
+            )
 
