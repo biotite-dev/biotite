@@ -569,6 +569,9 @@ class BondList(Copyable):
             copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
             return copy
     
+    def __iter__(self):
+        raise TypeError("'BondList' object is not iterable")
+    
     def __str__(self):
         return str(self.as_array())
     
