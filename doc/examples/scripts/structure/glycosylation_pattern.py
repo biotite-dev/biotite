@@ -18,7 +18,7 @@ import biotite.structure.io.mmtf as mmtf
 import biotite.database.rcsb as rcsb
 
 
-GLYCAN_COMPOUNDS = {
+SACCHARIDES = {
     "GLA": ("o", "gold",            "Gal"),    # alpha
     "GAL": ("o", "gold",            "Gal"),    # beta
     "NGA": ("s", "gold",            "GalNAc"),
@@ -33,6 +33,7 @@ GLYCAN_COMPOUNDS = {
     "95Z": ("P", "forestgreen",     "ManN"),
     "XYS": ("*", "darkorange",      "Xyl"),    # alpha
     "XYP": ("*", "darkorange",      "Xyl"),    # beta
+    "XYZ": ("*", "darkorange",      "Xyl"),    # beta (furanose)
     "SI3": ("D", "mediumvioletred", "Neu5Ac"),
     "NGC": ("D", "turquoise",       "Neu5Gc"),
     "KDN": ("D", "forestgreen",     "Kdn"),
@@ -153,18 +154,8 @@ mmtf_file = mmtf.MMTFFile.read(file_name)
 structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
 structure = structure[structure.chain_id == "A"]
 
-###
-glyco = structure[structure.hetero]
-for name in np.unique(glyco.res_name):
-    print(name, info.full_name(name))
-print()
-print(info.full_name("XYL"))
-###
 
 fig, ax = plt.subplots(figsize=(8.0, 1.5))
-###
-#structure = structure[structure.hetero]
-###
 plot_graph(ax, structure)
 fig.tight_layout()
 
