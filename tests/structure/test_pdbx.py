@@ -215,24 +215,25 @@ def test_get_assembly(single_model):
         sequences = pdbx.get_sequence(file)
         file.read("data/4gxy.cif")
         sequences.append(pdbx.get_sequence(file))
-        assert ((sequences[0] == "CCGACGGCGCATCAGC")
-                & (type(sequences[0]) is seq.NucleotideSequence)
-                & (sequences[1] == "GCTGATGCGCC")
-                & (type(sequences[1]) is seq.NucleotideSequence)
-                & (sequences[2] == "GTCGG")
-                & (type(sequences[2]) is seq.NucleotideSequence)
-                & (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRK"
-                    + "AASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSS"
-                    + "SINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKR"
-                    + "IPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSE"
-                    + "STKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDI"
-                    + "RLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPL"
-                    + "PVDSEKDIFDYIQWKYREPKDRSE"
-                    )
-                & (type(sequences[3]) is seq.ProteinSequence)
-                & (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGG"
-                    + "GAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTC"
-                    + "GGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGG"
-                    + "AGTCAGGAAACCTGCCTGCCGTC")
-                & (type(sequences[4]) is seq.NucleotideSequence)
-                )
+        assert (sequences[0] == "CCGACGGCGCATCAGC")
+        assert (type(sequences[0]) is seq.NucleotideSequence)
+        assert (sequences[1] == "GCTGATGCGCC")
+        assert (type(sequences[1]) is seq.NucleotideSequence)
+        assert (sequences[2] == "GTCGG")
+        assert (type(sequences[2]) is seq.NucleotideSequence)
+        assert (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
+                    "VIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSSSINFL"
+                    "TRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKRIPREEML"
+                    "QMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSESTKQPKLLH"
+                    "QVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDIRLIPKDQYYCG"
+                    "VLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPLPVDSEKDIFDYIQ"
+                    "WKYREPKDRSE"
+        )
+        assert (type(sequences[3]) is seq.ProteinSequence)
+        assert (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
+                    "GCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTCGGGAT"
+                    "GTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGGAGTCAGG"
+                    "AAACCTGCCTGCCGTC"
+        )
+        assert (type(sequences[4]) is seq.NucleotideSequence)
+        

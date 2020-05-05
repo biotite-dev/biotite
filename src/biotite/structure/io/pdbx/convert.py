@@ -15,8 +15,7 @@ from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
 from ...filter import filter_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...util import matrix_rotate
-from ....sequence.seqtypes import ProteinSequence
-from ....sequence.seqtypes import NucleotideSequence
+from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
 from collections import OrderedDict
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
