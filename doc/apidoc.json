@@ -216,6 +216,7 @@
             "superimpose_apply"
         ],
         "Filters" : [
+            "filter_nucleotides",
             "filter_amino_acids",
             "filter_backbone",
             "filter_solvent",

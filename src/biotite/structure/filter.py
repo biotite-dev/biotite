@@ -11,7 +11,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
            "filter_backbone", "filter_intersection",
-           "filter_altloc"]
+           "filter_altloc", "filter_nucleotides"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
@@ -20,6 +20,10 @@ from .atoms import Atom, AtomArray, AtomArrayStack
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC", "UNK"]
+
+_ext_nucleotide_list = ["DT", "T", "DA", "A", "DG", "G", "DC", "C", "DU", "U",
+                        "H2U", "I", "JMH", "5MC", "4OC", "U8U", "4SU", "PSU",
+                        "4AC"]
 
 _solvent_list = ["HOH","SOL"]
 
@@ -208,7 +212,27 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
         altloc_filter &= ~residue_filter
         # Choose only atoms of residue with altloc code
         altloc_filter |= residue_filter & (altlocs == altloc)
-    
+        
     return altloc_filter
 
+
+def filter_nucleotides(array):
+    """
+    Filter all atoms of one array that belong to nucleotides.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a nucleotide.
+    """
+    return (
+        np.in1d(array.res_name, _ext_nucleotide_list) 
+        & (array.res_id != -1)
+    )
 
