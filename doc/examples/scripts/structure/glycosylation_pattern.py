@@ -18,6 +18,36 @@ import biotite.structure.io.mmtf as mmtf
 import biotite.database.rcsb as rcsb
 
 
+GLYCAN_COMPOUNDS = {
+    "GLA": ("o", "gold",            "Gal"),    # alpha
+    "GAL": ("o", "gold",            "Gal"),    # beta
+    "NGA": ("s", "gold",            "GalNAc"),
+    "X6X": ("P", "gold",            "GalN"),
+    "AGC": ("o", "royalblue",       "Glc"),    # alpha
+    "BGC": ("o", "royalblue",       "Glc"),    # beta
+    "NAG": ("s", "royalblue",       "GlcNAc"),
+    "GCS": ("P", "royalblue",       "GlcN"),
+    "MAN": ("o", "forestgreen",     "Man"),    # alpha
+    "BMA": ("o", "forestgreen",     "Man"),    # beta
+    "BM3": ("s", "forestgreen",     "ManNAc"),
+    "95Z": ("P", "forestgreen",     "ManN"),
+    "XYS": ("*", "darkorange",      "Xyl"),    # alpha
+    "XYP": ("*", "darkorange",      "Xyl"),    # beta
+    "SI3": ("D", "mediumvioletred", "Neu5Ac"),
+    "NGC": ("D", "turquoise",       "Neu5Gc"),
+    "KDN": ("D", "forestgreen",     "Kdn"),
+    "FUC": ("^", "crimson",         "Fuc"),    # alpha
+    "FUL": ("^", "crimson",         "Fuc"),    # beta
+    "GCU": (6,   "royalblue",       "GlcA"),   # alpha
+    "BDP": (6,   "royalblue",       "GlcA"),   # beta
+    "IDR": (7,   "chocolate",       "IdoA"),
+    "ADA": (8,   "gold",            "GalA"),   # alpha
+    "GTR": (8,   "gold",            "GalA"),   # beta
+    "MAV": (9,   "forestgreen",     "ManA"),   # alpha
+    "BEM": (9,   "forestgreen",     "ManA"),   # beta
+}
+
+
 def plot_graph(ax, structure):
     if struc.get_chain_count(structure) != 1:
         raise struc.BadStructureError(
@@ -55,33 +85,52 @@ def plot_graph(ax, structure):
     
     # Get connected subgraphs containing a glycosylation
     # -> any subgraph with more than one node
-    glycosyl_graphs = [graph.subgraph(nodes).copy()
-                       for nodes in nx.connected_components(graph)
-                       if len(nodes) > 1]
+    glycan_graphs = [graph.subgraph(nodes).copy()
+                     for nodes in nx.connected_components(graph)
+                     if len(nodes) > 1]
     
-    for glycosyl_graph in glycosyl_graphs:
-        node_colors = ["blue" if res_id in amino_acid_res_ids else "red"
-                    for res_id in glycosyl_graph.nodes()]
+    for glycan_graph in glycan_graphs:
+        # Convert into a directed graph for correct plot layout
+        glycan_graph = nx.DiGraph(
+            [(min(res_id_1, res_id_2), max(res_id_1, res_id_2))
+             for res_id_1, res_id_2 in glycan_graph.edges()]
+        )
+        
         root = [
-            res_id for res_id in glycosyl_graph.nodes()
+            res_id for res_id in glycan_graph.nodes()
             if res_id in amino_acid_res_ids
         ][0]
-        pos = graphviz_layout(glycosyl_graph, prog="dot")
+
+        pos = graphviz_layout(glycan_graph, prog="dot")
         
         nodes = list(pos.keys())
         pos_array = np.array(list(pos.values()))
         pos_array -= pos_array[0]
-        pos_array[:,1] *= -1
-        pos_array[:,1] /= pos_array[1,1] - pos_array[0,1]
-        WIDTH = 10
-        pos_array[:,0] *= WIDTH / np.min(pos_array[:,0])
+        pos_array[:,1] /= pos_array[nodes.index(list(glycan_graph.neighbors(root))[0]), 1] - pos_array[nodes.index(root), 1]
+        WIDTH = 5
+        non_zero = pos_array[(pos_array[:,0] != 0), 0]
+        if len(non_zero) != 0:
+            pos_array[:,0] *= WIDTH / np.min(non_zero)
         pos_array[:,0] += root
         pos = {node: tuple(coord) for node, coord in zip(nodes, pos_array)}
         
-        nx.draw(
-            glycosyl_graph, pos, ax=ax,
-            node_size=10, linewidths=0.5, node_color=node_colors
+        NODE_SIZE = 30
+        LINE_WIDTH = 0.5
+        nx.draw_networkx_edges(
+            glycan_graph, pos, ax=ax,
+            arrows=False, node_size=0, width=LINE_WIDTH
         )
+        for res_name, (shape, color, name) in GLYCAN_COMPOUNDS.items():
+            included_res_ids = np.unique(
+                structure.res_id[structure.res_name == res_name]
+            )
+            node_list = [res_id for res_id in glycan_graph.nodes()
+                         if res_id in included_res_ids]
+            nx.draw_networkx_nodes(
+                glycan_graph, pos, ax=ax, nodelist=node_list,
+                node_size=NODE_SIZE, node_shape=shape, node_color=color,
+                edgecolors="black", linewidths=LINE_WIDTH
+            )
         ax.axis("on")
         plt.tick_params(
             axis='both',
@@ -103,6 +152,14 @@ file_name = rcsb.fetch("3HDL", "mmtf", ".")
 mmtf_file = mmtf.MMTFFile.read(file_name)
 structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
 structure = structure[structure.chain_id == "A"]
+
+###
+glyco = structure[structure.hetero]
+for name in np.unique(glyco.res_name):
+    print(name, info.full_name(name))
+print()
+print(info.full_name("XYL"))
+###
 
 fig, ax = plt.subplots(figsize=(8.0, 1.5))
 ###
