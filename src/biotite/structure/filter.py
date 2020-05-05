@@ -231,7 +231,8 @@ def filter_nucleotides(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to a nucleotide.
     """
-    return (np.in1d(array.res_name, _ext_nucleotide_list) 
-            & (array.res_id != -1)
-            )
+    return (
+        np.in1d(array.res_name, _ext_nucleotide_list) 
+        & (array.res_id != -1)
+    )
 
