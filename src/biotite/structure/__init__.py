@@ -116,4 +116,5 @@ from .sasa import *
 from .sse import *
 from .superimpose import *
 from .transform import *
+from .basepairs import *
 # util is used internally
