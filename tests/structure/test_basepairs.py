@@ -15,6 +15,6 @@ def test_get_proximate_basepair_candidates():
         join(data_dir("structure"), "5ugo.cif")
     )
     
-    print(struc.get_proximate_basepair_candidates(nuc_sample_array))
+    print(len(struc.get_proximate_basepair_candidates(nuc_sample_array)))
 
-    assert false
+    assert False
