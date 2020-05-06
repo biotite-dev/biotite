@@ -6,23 +6,7 @@ from .hbond import hbond
 from itertools import chain
 
 def get_proximate_basepair_candidates(array):
-    #array = array[filter_nucleotides(array)]
-    triplets = hbond(array)
-    return triplets
 
-    """
-    basepair_candidates = []
-    for x in triplets.shape[0]:
-        donor_id = [array[int(x), 0].res_id, array[int(x), 0].chain_id]
-        acceptor_id = [array[int(x), 2].res_id, array[int(x), 2].chain_id]         
-        if(chain(donor_id, acceptor_id) not in basepair_candidates
-            & chain(acceptor_id, donor_id) not in basepair_candidates
-        ):
-            basepair_candidates.append(donor_id + acceptor_id)
-
-
-    
-    
     array = array[filter_nucleotides(array) 
                     & _filter_atom_type(array, ["C1'", "C1*"])]
     
@@ -40,4 +24,3 @@ def get_proximate_basepair_candidates(array):
                 basepair_candidates.append(atom_id + partner_id)
     
     return basepair_candidates
-    """
