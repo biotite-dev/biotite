@@ -19,7 +19,11 @@ from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
 from collections import OrderedDict
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
-_nucleotideseq_type_list = ["polydeoxyribonucleotide", "polyribonucleotide"]
+_nucleotideseq_type_list = ["polydeoxyribonucleotide", "polyribonucleotide",
+                        "polydeoxyribonucleotide/polyribonucleotide hybrid"
+                        ]
+_other_type_list = ["cyclic-pseudo-peptide", "other", "peptide nucleic acid",
+                        "polysaccharide(D)", "polysaccharide(L)"]
 
 def get_sequence(pdbx_file, data_block=None):
     """
@@ -47,7 +51,9 @@ def get_sequence(pdbx_file, data_block=None):
     sequences = []
     if isinstance(seq_string, np.ndarray):
         for string, stype in zip(seq_string, seq_type):
-            sequences.append(_convert_string_to_sequence(string, stype)) 
+            sequence = _convert_string_to_sequence(string, stype)
+            if(issubclass(sequence, Sequence)):
+                sequences.append(sequence) 
     else:
         sequences.append(_convert_string_to_sequence(seq_string, seq_type))
     return sequences
@@ -670,3 +676,8 @@ def _parse_operation_expression(expression):
         elif stype in _nucleotideseq_type_list:
             string.replace("U", "T")
             return NucleotideSequence(string)
+        elif stype in _other_type_list:
+            return None
+        else:
+            raise InvalidFileError("mmCIF - _entity_poly.type - unsupported"
+                                        "type: " + stype)
