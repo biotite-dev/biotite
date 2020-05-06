@@ -7,14 +7,11 @@ import biotite.structure.io as strucio
 from ..util import data_dir
 import biotite
 
-import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-
-def test_get_proximate_basepair_candidates():
+def test___get_proximate_basepair_candidates__():
     nuc_sample_array = strucio.load_structure(
         join(data_dir("structure"), "5ugo.cif")
     )
     
-    print(len(struc.get_proximate_basepair_candidates(nuc_sample_array)))
+    print(len(struc.__get_proximate_basepair_candidates__(nuc_sample_array)))
 
     assert False
