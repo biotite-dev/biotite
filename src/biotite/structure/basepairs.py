@@ -6,7 +6,7 @@ from .hbond import hbond
 from .util import distance
 from itertools import chain
 
-def get_proximate_basepair_candidates(array):
+def get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
 #TODO: Make Cutoffs Argument
     array = array[filter_nucleotides(array) 
                     & _filter_atom_type(array, ["C1'", "C1*"])]
@@ -15,13 +15,13 @@ def get_proximate_basepair_candidates(array):
     basepair_candidates = []
     
     for atom in array:
-        candidates = cell_list.get_atoms(atom.coord, 15)
+        candidates = cell_list.get_atoms(atom.coord, max_cutoff)
         atom_id = [atom.res_id, atom.chain_id]
         
         for candidate in candidates:
             partner_id = [array[int(candidate)].res_id,
                         array[int(candidate)].chain_id]
-            if ( (distance(array[int(candidate)].coord, atom.coord) > 9) & 
+            if ( (distance(array[int(candidate)].coord, atom.coord) > min_cutoff) & 
                     ((partner_id + atom_id) not in basepair_candidates)):
                 basepair_candidates.append(atom_id + partner_id)
     
