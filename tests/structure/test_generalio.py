@@ -5,6 +5,7 @@
 from tempfile import NamedTemporaryFile
 import biotite.structure as struc
 import biotite.structure.io as strucio
+from biotite.structure.io.general import _guess_element
 import numpy as np
 import glob
 import itertools
@@ -96,3 +97,22 @@ def test_saving_with_extra_args(suffix):
             temp.name, array, answer=42
         )
     temp.close()
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [("CA", "C"),
+     ("C", "C"),
+     ("CB", "C"),
+     ("OD1", "O"),
+     ("HD21", "H"),
+     ("1H", "H"),
+     ("CL", "C"),
+     ("HE", "H"),
+     ("SD", "S"),
+     ("NA", "N"),
+     ("NX", "N"),
+     ("QWERT", "")],
+)
+def test_guess_element(name, expected):
+    result = _guess_element(name)
+    assert result == expected
