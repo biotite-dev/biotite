@@ -29,6 +29,11 @@ def get_sequence(pdbx_file, data_block=None):
     """
     Get the protein and nucleotide sequences from the
     `entity_poly.pdbx_seq_one_letter_code_can` entry.
+
+    Supported polymer types (`_entity_poly.type`) are: polypeptide(D),
+    polypeptide(L), polydeoxyribonucleotide, polyribonucleotide,
+    polydeoxyribonucleotide/polyribonucleotide hybrid
+
     Uracil is converted to Thymine.
     
     Parameters
