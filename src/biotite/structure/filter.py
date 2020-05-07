@@ -254,4 +254,3 @@ def _filter_residues(array, res_ids, chain_id = None):
         & chain_mask
         & (array.res_id != -1)
         )
-    pass

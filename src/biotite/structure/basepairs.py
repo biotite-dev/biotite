@@ -12,12 +12,27 @@ __all__ = []
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .filter import filter_nucleotides, _filter_atom_type
+from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
 from .util import distance
 
+def get_basepairs(array):
+    basepair_candidates = _get_proximate_basepair_candidates(array)
+
+    basepairs = []
+
+    for basepair_c in basepair_candidates:
+        basepair1 = _filter_residues(array, basepair_c[0], basepair_c[1])
+        basepair2 = _filter_residues(array, basepair_c[2], basepair_c[3])
+        if check_dssr_criteria(basepair1, basepair2):
+            basepairs.append(basepair_c)
+    
+    return basepairs
+
 def check_dssr_criteria(basepair1, basepair2):
     pass
+
+
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
