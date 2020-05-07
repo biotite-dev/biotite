@@ -169,6 +169,8 @@ def plot_glycans(ax, structure):
     # Create a graph that depicts which residues are connected
     # Use residue IDs as nodes
     graph = nx.Graph()
+    # Add all residue IDs as initially disconnected nodes
+    graph.add_nodes_from(np.unique(structure.res_id))
     # Convert BondList to array and omit bond order
     bonds = structure.bonds.as_array()[:, :2]
     connected = structure.res_id[bonds.flatten()].reshape(bonds.shape)
@@ -266,29 +268,35 @@ def plot_glycans(ax, structure):
             )
     
 
-    ax.legend(handles=legend_elements.values(), bbox_to_anchor=(1, 1))
+    ax.legend(handles=legend_elements.values(), loc="upper right")
     # Show the bottom x-axis with glycosylated residue positions
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
     ax.spines["bottom"].set_visible(True)
-    ax.tick_params(axis="x", bottom=False, labelbottom=True)
+    ax.tick_params(axis="x", bottom=True, labelbottom=True)
     ax.set_xticks(glycosylated_residue_ids)
     ax.set_xticklabels(
         [symbol + str(res_id) for symbol, res_id
-         in zip(glycosylated_residue_symbols, glycosylated_residue_ids)]
+         in zip(glycosylated_residue_symbols, glycosylated_residue_ids)],
+         rotation=45
     )
     _, ymax = ax.get_ylim()
     ax.set_ylim(0, ymax)
 
 
-file_name = rcsb.fetch("4CUO", "mmtf", ".")
-mmtf_file = mmtf.MMTFFile.read(file_name)
+PDB_ID = "4CUO"
+CHAIN_ID = "A"
+
+
+mmtf_file = mmtf.MMTFFile.read(rcsb.fetch(PDB_ID, "mmtf"))
 structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
 structure = structure[structure.chain_id == "A"]
 
-fig, ax = plt.subplots(figsize=(8.0, 1.5))
+fig, ax = plt.subplots(figsize=(8.0, 2.5))
 plot_glycans(ax, structure)
+ax.set_ylim(0, 7)
+ax.set_title(f"{mmtf_file['title']}, chain {CHAIN_ID}")
 fig.tight_layout()
 
 plt.show()
