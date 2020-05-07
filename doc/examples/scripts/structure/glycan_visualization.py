@@ -1,7 +1,18 @@
 r"""
-Visualization of glycosylation patterns
-=======================================
+Visualization of glycosylated amino acids
+=========================================
 
+In this example we will visualize the glycosylation of amino acid
+residues in an arbitrary protein.
+
+At first we need a *catalogue* of residue names that belong to
+saccharides.
+To create such a list can be quiet tedious, as each saccharide can be
+splitted into its pyranose or furanose from or into its :math:`\alpha`
+or :math:`\beta` anomer.
+And sometimes a residue comprises multiple connected monosaccharides.
+Luckily, this work has already been done, for example by the *Mol\**
+software team.
 """
 
 # Code source: Patrick Kunzmann
@@ -17,11 +28,6 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
 import biotite.database.rcsb as rcsb
-
-
-NODE_SIZE = 50
-HORIZONTAL_NODE_DISTANCE = 3
-LINE_WIDTH = 0.5
 
 
 # Adapted from "Mol*" Software
@@ -83,9 +89,21 @@ SACCHARIDE_NAMES = {
     for res_name in res_names
 }
 
+########################################################################
+# We want to give each saccharide symbol a unique color-shape
+# combination in our plot.
+# We will use the symbol nomenclature defined
+# `here <http://csdb.glycoscience.ru/database/index.html?help=eog>`_:
+#
+# .. image http://csdb.glycoscience.ru/help/snfg.gif
+#
+# *Matplotlib* supports most of these symbols as plot markers out of the
+# box.
+# However, some of the symbols, especially the half-filled ones, are not
+# directly supported.
+# We could create custom vertices to include these shapes, but for the
+# sake of brevity we will simply use other shapes
 
-# Colors and shapes were adapted from the 'Carbohydrate Structure Database'
-# http://csdb.glycoscience.ru/database/index.html?help=eog
 SACCHARIDE_REPRESENTATION = {
     "Glc": ("o", "royalblue"),
     "Man": ("o", "forestgreen"),
@@ -153,150 +171,203 @@ SACCHARIDE_REPRESENTATION = {
     None: ("h", "black")
 }
 
-
-def plot_glycans(ax, structure):
-    if struc.get_chain_count(structure) != 1:
-        raise struc.BadStructureError(
-            "A structure with a single chain is required"
-        )
-    
-    # These are required later
-    amino_acid_res_ids = np.unique(structure.res_id[~structure.hetero])
-    ids_to_names = {res_id : res_name for res_id, res_name
-                    in zip(structure.res_id, structure.res_name)}
-    
-
-    # Create a graph that depicts which residues are connected
-    # Use residue IDs as nodes
-    graph = nx.Graph()
-    # Add all residue IDs as initially disconnected nodes
-    graph.add_nodes_from(np.unique(structure.res_id))
-    # Convert BondList to array and omit bond order
-    bonds = structure.bonds.as_array()[:, :2]
-    connected = structure.res_id[bonds.flatten()].reshape(bonds.shape)
-    # Omit bonds with the same residue
-    connected = connected[connected[:,0] != connected[:,1]]
-    graph.add_edges_from(connected)
-    
-    # Remove edges between amino acids
-    for res_id in amino_acid_res_ids:
-        # Put into list, as the number of
-        # neighbors is reduced during iteration
-        for connected_res_id in list(graph.neighbors(res_id)):
-            if connected_res_id in amino_acid_res_ids:
-                graph.remove_edge(res_id, connected_res_id)
-    
-    # Get connected subgraphs containing glycans
-    # -> any subgraph with more than one node
-    glycan_graphs = [graph.subgraph(nodes).copy()
-                     for nodes in nx.connected_components(graph)
-                     if len(nodes) > 1]
-    
-
-    # Plot each glycan graph individually
-    # Save the ID and symbol of each glycosylated amino acid
-    # for ticks on x-axis
-    glycosylated_residue_ids = []
-    glycosylated_residue_symbols = []
-    # Use node markers for the legend,
-    # use dictionary to avoid redundant entries
-    legend_elements = {}
-    for glycan_graph in glycan_graphs:
-        # Convert into a directed graph for correct plot layout
-        glycan_graph = nx.DiGraph(
-            [(min(res_id_1, res_id_2), max(res_id_1, res_id_2))
-             for res_id_1, res_id_2 in glycan_graph.edges()]
-        )
-        
-        # The 'root' is the glycosylated amino acid
-        root = [
-            res_id for res_id in glycan_graph.nodes()
-            if res_id in amino_acid_res_ids
-        ]
-        # No attachment to amino acid -> Ignore glycan
-        if len(root) == 0:
-            continue
-        else:
-            root = root[0]
-        glycosylated_residue_ids.append(root)
-        glycosylated_residue_symbols.append(
-            seq.ProteinSequence.convert_letter_3to1(ids_to_names[root])
-        )
-
-        pos = graphviz_layout(glycan_graph, prog="dot")
-        
-        nodes = list(pos.keys())
-        # Convert dictionary to array
-        pos_array = np.array(list(pos.values()))
-        # Position the root at coordinate origin
-        pos_array -= pos_array[nodes.index(root)]
-        # Set vertical distances between nodes to 1
-        root_neighbor = nodes.index(list(glycan_graph.neighbors(root))[0])
-        pos_array[:,1] /= (
-            pos_array[root_neighbor, 1] - pos_array[nodes.index(root), 1]
-        )
-        # Set horizontal distances between nearest nodes to 1
-        non_zero_dist = np.abs(pos_array[(pos_array[:,0] != 0), 0])
-        if len(non_zero_dist) != 0:
-            pos_array[:,0] *= HORIZONTAL_NODE_DISTANCE / np.min(non_zero_dist)
-        # Move graph to residue ID position on x-axis
-        pos_array[:,0] += root
-        # Convert array back to dictionary
-        pos = {node: tuple(coord) for node, coord in zip(nodes, pos_array)}
-        
-        nx.draw_networkx_edges(
-            glycan_graph, pos, ax=ax,
-            arrows=False, node_size=0, width=LINE_WIDTH
-        )
-        
-        for res_id in glycan_graph.nodes():
-            # Only plot glycans, not amino acids
-            if res_id in amino_acid_res_ids:
-                continue
-            res_name = ids_to_names[res_id]
-            common_name = SACCHARIDE_NAMES.get(res_name)
-            shape, color = SACCHARIDE_REPRESENTATION[common_name]
-            nx.draw_networkx_nodes(
-                glycan_graph, pos, ax=ax, nodelist=[res_id],
-                node_size=NODE_SIZE, node_shape=shape, node_color=color,
-                edgecolors="black", linewidths=LINE_WIDTH
-            )
-            legend_elements[common_name] = Line2D(
-                [0], [0], label=common_name, linestyle="None",
-                marker=shape, markerfacecolor=color,
-                markeredgecolor="black", markeredgewidth=LINE_WIDTH
-            )
-    
-
-    ax.legend(handles=legend_elements.values(), loc="upper right")
-    # Show the bottom x-axis with glycosylated residue positions
-    ax.spines["left"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.spines["bottom"].set_visible(True)
-    ax.tick_params(axis="x", bottom=True, labelbottom=True)
-    ax.set_xticks(glycosylated_residue_ids)
-    ax.set_xticklabels(
-        [symbol + str(res_id) for symbol, res_id
-         in zip(glycosylated_residue_symbols, glycosylated_residue_ids)],
-         rotation=45
-    )
-    _, ymax = ax.get_ylim()
-    ax.set_ylim(0, ymax)
-
+#########################################################################
+# Now that the raw data is prepared, we can load a protein structure for
+# which we will display the glycosylation.
+# Here we choose the glycosylated peroxidase *4CUO*, as it contains a
+# lot of glycans.
+#
+# The resulting plot makes only sense for a single protein chain.
+# In this case the peroxidase structure has only one chain, but since
+# this script should also work for any other structure, we filter out
+# one chain.
 
 PDB_ID = "4CUO"
 CHAIN_ID = "A"
 
-
 mmtf_file = mmtf.MMTFFile.read(rcsb.fetch(PDB_ID, "mmtf"))
 structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
-structure = structure[structure.chain_id == "A"]
+structure = structure[structure.chain_id == CHAIN_ID]
+
+# We will need these later:
+# An array containing all residue IDs belonging to amino acids
+amino_acid_res_ids = np.unique(structure.res_id[~structure.hetero])
+# A dictionary mapping residue IDs to its residue names
+ids_to_names = {res_id : res_name for res_id, res_name
+                in zip(structure.res_id, structure.res_name)}
+
+########################################################################
+# To determine which residues (including the saccharides) are connected
+# with each other, we will use a graph representation:
+# The nodes are residues, identified by their residue ID, and the edges
+# indicate which residues are connected via covalent bonds.
+
+# Create a graph that depicts which residues are connected
+# Use residue IDs as nodes
+graph = nx.Graph()
+# Add all residue IDs as initially disconnected nodes
+graph.add_nodes_from(np.unique(structure.res_id))
+# Convert BondList to array and omit bond order
+bonds = structure.bonds.as_array()[:, :2]
+# Convert indices of connected atoms into their respective residue IDs
+connected = structure.res_id[bonds.flatten()].reshape(bonds.shape)
+# Omit bonds within the same residue
+connected = connected[connected[:,0] != connected[:,1]]
+# Add the residue connections to the graph
+graph.add_edges_from(connected)
+
+fig, ax = plt.subplots(figsize=(8.0, 8.0))
+nx.draw(
+    graph, ax=ax, node_size=10,
+    node_color=["royalblue" if res_id in amino_acid_res_ids else "crimson"
+                for res_id in graph.nodes()]
+)
+
+########################################################################
+# So far, so good. We can already see glycans (red) on the long peptide
+# chain (blue).
+# The surrounding single nodes belong to water, ions etc.
+# In the final plot only the glycans should be highlighted. 
+# For this purpose the edges between amino acids will be removed.
+# The remaining connected subgraphs are either single nodes,
+# representing a now disconnected amino acid (or water, ions etc.) or
+# glycans attached to its amino acid residue.
+# We are only interested in the latter ones, so the subgraphs containing
+# a single node are ignored.
+
+# Remove edges between amino acids
+for res_id in amino_acid_res_ids:
+    # Put into list, as the number of
+    # neighbors is reduced during iteration
+    for connected_res_id in list(graph.neighbors(res_id)):
+        if connected_res_id in amino_acid_res_ids:
+            graph.remove_edge(res_id, connected_res_id)
+
+# Get connected subgraphs containing glycans
+# -> any subgraph with more than one node
+glycan_graphs = [graph.subgraph(nodes).copy()
+                 for nodes in nx.connected_components(graph)
+                 if len(nodes) > 1]
+
+for g in glycan_graphs:
+    print([ids_to_names[res_id] for res_id in sorted(g.nodes())])
+
+########################################################################
+# Now we can start plotting each of the glycans:
+# At first an initial tree layout is created using the *Graphviz*
+# software.
+# Then the graph is repositioned to its corresponding residue ID
+# position on the x-axis.
+# Eventually, the glycan graphs are drawn using the saccharide
+# symbols.
 
 fig, ax = plt.subplots(figsize=(8.0, 2.5))
-plot_glycans(ax, structure)
+
+# Some constants for the plot layout
+NODE_SIZE = 50
+HORIZONTAL_NODE_DISTANCE = 3
+LINE_WIDTH = 0.5
+
+# Plot each glycan graph individually
+# Save the ID and symbol of each glycosylated amino acid
+# for ticks on x-axis
+glycosylated_residue_ids = []
+glycosylated_residue_symbols = []
+# Use node markers for the legend,
+# use dictionary to avoid redundant entries
+legend_elements = {}
+for glycan_graph in glycan_graphs:
+    # Convert into a directed graph for correct plot layout
+    # The root of the plotted graph should the amino acid
+    glycan_graph = nx.DiGraph(
+        [(min(res_id_1, res_id_2), max(res_id_1, res_id_2))
+            for res_id_1, res_id_2 in glycan_graph.edges()]
+    )
+    
+    # The 'root' is the amino acid
+    root = [
+        res_id for res_id in glycan_graph.nodes()
+        if res_id in amino_acid_res_ids
+    ]
+    # Saccharide is not attached to amino acid -> Ignore glycan
+    if len(root) == 0:
+        continue
+    else:
+        root = root[0]
+    glycosylated_residue_ids.append(root)
+    glycosylated_residue_symbols.append(
+        seq.ProteinSequence.convert_letter_3to1(ids_to_names[root])
+    )
+
+    # Position the nodes for the plot:
+    # Create an initial tree layout and transform it afterwards,
+    # so that each glycan graph is at the correct position and the
+    # node distances are equal
+    pos = graphviz_layout(glycan_graph, prog="dot")
+    nodes = list(pos.keys())
+    # Convert dictionary to array
+    pos_array = np.array(list(pos.values()))
+    # Position the root at coordinate origin
+    pos_array -= pos_array[nodes.index(root)]
+    # Set vertical distances between nodes to 1
+    root_neighbor = nodes.index(list(glycan_graph.neighbors(root))[0])
+    pos_array[:,1] /= (
+        pos_array[root_neighbor, 1] - pos_array[nodes.index(root), 1]
+    )
+    # Set horizontal distances between nearest nodes to 1
+    non_zero_dist = np.abs(pos_array[(pos_array[:,0] != 0), 0])
+    if len(non_zero_dist) != 0:
+        pos_array[:,0] *= HORIZONTAL_NODE_DISTANCE / np.min(non_zero_dist)
+    # Move graph to residue ID position on x-axis
+    pos_array[:,0] += root
+    # Convert array back to dictionary
+    pos = {node: tuple(coord) for node, coord in zip(nodes, pos_array)}
+    
+    nx.draw_networkx_edges(
+        glycan_graph, pos, ax=ax,
+        arrows=False, node_size=0, width=LINE_WIDTH
+    )
+    
+    # Draw each node individually
+    for res_id in glycan_graph.nodes():
+        # Only plot glycans, not amino acids
+        if res_id in amino_acid_res_ids:
+            continue
+        res_name = ids_to_names[res_id]
+        
+        # Now the data sets from above come into play
+        common_name = SACCHARIDE_NAMES.get(res_name)
+        shape, color = SACCHARIDE_REPRESENTATION[common_name]
+        nx.draw_networkx_nodes(
+            glycan_graph, pos, ax=ax, nodelist=[res_id],
+            node_size=NODE_SIZE, node_shape=shape, node_color=color,
+            edgecolors="black", linewidths=LINE_WIDTH
+        )
+        legend_elements[common_name] = Line2D(
+            [0], [0], label=common_name, linestyle="None",
+            marker=shape, markerfacecolor=color,
+            markeredgecolor="black", markeredgewidth=LINE_WIDTH
+        )
+
+
+ax.legend(handles=legend_elements.values(), loc="upper right")
+
+# Show the bottom x-axis with glycosylated residue positions
+ax.spines["left"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["bottom"].set_visible(True)
+ax.tick_params(axis="x", bottom=True, labelbottom=True)
+ax.set_xticks(glycosylated_residue_ids)
+ax.set_xticklabels(
+    [symbol + str(res_id) for symbol, res_id
+        in zip(glycosylated_residue_symbols, glycosylated_residue_ids)],
+        rotation=45
+)
+
 ax.set_ylim(0, 7)
 ax.set_title(f"{mmtf_file['title']}, chain {CHAIN_ID}")
 fig.tight_layout()
 
+# sphinx_gallery_thumbnail_number = 3
 plt.show()
