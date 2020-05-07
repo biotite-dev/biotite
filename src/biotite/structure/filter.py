@@ -242,3 +242,16 @@ def _filter_atom_type(array, atom_names):
         np.in1d(array.atom_name, atom_names) 
         & (array.res_id != -1)
     )
+
+def _filter_residues(array, res_ids, chain_id = None):
+    if chain_id == None:
+        chain_mask =  np.ones(array.array_length(), dtype=bool)
+    else:
+        chain_mask = np.in1d(array.chain_id, chain_id)
+
+    return (
+        np.in1d(array.res_id, res_ids) 
+        & chain_mask
+        & (array.res_id != -1)
+        )
+    pass

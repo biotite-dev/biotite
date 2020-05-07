@@ -16,6 +16,9 @@ from .filter import filter_nucleotides, _filter_atom_type
 from .celllist import CellList
 from .util import distance
 
+def check_dssr_criteria(basepair1, basepair2):
+    pass
+
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
     #gets proximate basepairs, where the C1-Sugar-Atoms are within
