@@ -37,24 +37,3 @@ def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
                 basepair_candidates.append(candidate + partner)
     
     return basepair_candidates
-
-
-        
-"""
-    for atom in array:
-        candidates = cell_list.get_atoms(atom.coord, max_cutoff)
-        atom_id = [atom.res_id, atom.chain_id]
-        
-        for candidate in candidates:
-            partner_id = [array[candidate].res_id,
-                        array[candidate].chain_id]
-            if ( (distance(
-                        array[int(candidate].coord, atom.coord) > min_cutoff
-                        ) 
-                 & ((partner_id + atom_id) not in basepair_candidates)
-            ):
-                
-                basepair_candidates.append(atom_id + partner_id)
-   
-    return basepair_candidates
-"""
