@@ -30,6 +30,7 @@ def get_basepairs(array):
     return basepairs
 
 def check_dssr_criteria(basepair1, basepair2):
+
     pass
 
 
