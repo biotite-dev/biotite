@@ -679,10 +679,10 @@ def _parse_operation_expression(expression):
         if stype in _proteinseq_type_list:
             return ProteinSequence(string)
         elif stype in _nucleotideseq_type_list:
-            string.replace("U", "T")
+            string = string.replace("U", "T")
             return NucleotideSequence(string)
         elif stype in _other_type_list:
             return None
         else:
-            raise InvalidFileError("mmCIF - _entity_poly.type - unsupported"
-                                        "type: " + stype)
+            raise InvalidFileError("mmCIF _entity_poly.type unsupported"
+                                        " type: " + stype)
