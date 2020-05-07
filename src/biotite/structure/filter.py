@@ -237,6 +237,7 @@ def filter_nucleotides(array):
     )
 
 def _filter_atom_type(array, atom_names):
+    #Filter all atoms having the desired `atom_name`.
     return (
         np.in1d(array.atom_name, atom_names) 
         & (array.res_id != -1)

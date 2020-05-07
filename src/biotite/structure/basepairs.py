@@ -11,16 +11,16 @@ __author__ = "Tom Müller"
 __all__ = []
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord, stack
+from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .filter import filter_nucleotides, _filter_atom_type
 from .celllist import CellList
-from .hbond import hbond
 from .util import distance
-from itertools import chain
 
-def __get_proximate_basepair_candidates__(array, max_cutoff = 15, min_cutoff = 9):
+def _get_proximate_basepair_candidates (array, max_cutoff = 15,
+                                             min_cutoff = 9):
+    
     #gets proximate basepairs, where the C1-Sugar-Atoms are within
-    #min_cutoff <= x <= max_cutoff
+    # `min_cutoff <= x <= max_cutoff`
     
     array = array[filter_nucleotides(array) 
                     & _filter_atom_type(array, ["C1'", "C1*"])]
@@ -35,8 +35,12 @@ def __get_proximate_basepair_candidates__(array, max_cutoff = 15, min_cutoff = 9
         for candidate in candidates:
             partner_id = [array[int(candidate)].res_id,
                         array[int(candidate)].chain_id]
-            if ( (distance(array[int(candidate)].coord, atom.coord) > min_cutoff) & 
-                    ((partner_id + atom_id) not in basepair_candidates)):
+            if ( (distance(
+                        array[int(candidate)].coord, atom.coord) > min_cutoff
+                        ) 
+                 & ((partner_id + atom_id) not in basepair_candidates)
+            ):
+                
                 basepair_candidates.append(atom_id + partner_id)
     
     return basepair_candidates
