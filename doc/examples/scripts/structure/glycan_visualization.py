@@ -90,19 +90,19 @@ SACCHARIDE_NAMES = {
 }
 
 ########################################################################
-# We want to give each saccharide symbol a unique color-shape
+# We want to give each saccharide symbol an unique color-shape
 # combination in our plot.
 # We will use the symbol nomenclature defined
 # `here <http://csdb.glycoscience.ru/database/index.html?help=eog>`_:
 #
-# .. image http://csdb.glycoscience.ru/help/snfg.gif
+# .. image:: http://csdb.glycoscience.ru/help/snfg.gif
 #
 # *Matplotlib* supports most of these symbols as plot markers out of the
 # box.
 # However, some of the symbols, especially the half-filled ones, are not
 # directly supported.
 # We could create custom vertices to include these shapes, but for the
-# sake of brevity we will simply use other shapes
+# sake of brevity we will simply use other shapes in these cases.
 
 SACCHARIDE_REPRESENTATION = {
     "Glc": ("o", "royalblue"),
@@ -180,7 +180,7 @@ SACCHARIDE_REPRESENTATION = {
 # The resulting plot makes only sense for a single protein chain.
 # In this case the peroxidase structure has only one chain, but since
 # this script should also work for any other structure, we filter out
-# one chain.
+# a single one.
 
 PDB_ID = "4CUO"
 CHAIN_ID = "A"
@@ -192,15 +192,16 @@ structure = structure[structure.chain_id == CHAIN_ID]
 # We will need these later:
 # An array containing all residue IDs belonging to amino acids
 amino_acid_res_ids = np.unique(structure.res_id[~structure.hetero])
-# A dictionary mapping residue IDs to its residue names
+# A dictionary mapping residue IDs to their residue names
 ids_to_names = {res_id : res_name for res_id, res_name
                 in zip(structure.res_id, structure.res_name)}
 
 ########################################################################
 # To determine which residues (including the saccharides) are connected
 # with each other, we will use a graph representation:
-# The nodes are residues, identified by their residue ID, and the edges
-# indicate which residues are connected via covalent bonds.
+# The nodes are residues, identified by their respective residue IDs,
+# and the edges indicate which residues are connected via covalent
+# bonds.
 
 # Create a graph that depicts which residues are connected
 # Use residue IDs as nodes
@@ -229,9 +230,9 @@ nx.draw(
 # The surrounding single nodes belong to water, ions etc.
 # In the final plot only the glycans should be highlighted. 
 # For this purpose the edges between amino acids will be removed.
-# The remaining connected subgraphs are either single nodes,
-# representing a now disconnected amino acid (or water, ions etc.) or
-# glycans attached to its amino acid residue.
+# The remaining subgraphs are either single nodes,
+# representing now disconnected amino acids (or water, ions etc.), or
+# glycans attached to their respective amino acid residue.
 # We are only interested in the latter ones, so the subgraphs containing
 # a single node are ignored.
 
@@ -270,7 +271,7 @@ LINE_WIDTH = 0.5
 
 # Plot each glycan graph individually
 # Save the ID and symbol of each glycosylated amino acid
-# for ticks on x-axis
+# for x-axis labels
 glycosylated_residue_ids = []
 glycosylated_residue_symbols = []
 # Use node markers for the legend,
@@ -278,10 +279,12 @@ glycosylated_residue_symbols = []
 legend_elements = {}
 for glycan_graph in glycan_graphs:
     # Convert into a directed graph for correct plot layout
-    # The root of the plotted graph should the amino acid
+    # The root of the plotted graph should the amino acid, which has
+    # almost always a residue ID that is lower than the saccharides
+    # attached to it
     glycan_graph = nx.DiGraph(
         [(min(res_id_1, res_id_2), max(res_id_1, res_id_2))
-            for res_id_1, res_id_2 in glycan_graph.edges()]
+         for res_id_1, res_id_2 in glycan_graph.edges()]
     )
     
     # The 'root' is the amino acid
@@ -289,8 +292,8 @@ for glycan_graph in glycan_graphs:
         res_id for res_id in glycan_graph.nodes()
         if res_id in amino_acid_res_ids
     ]
-    # Saccharide is not attached to amino acid -> Ignore glycan
     if len(root) == 0:
+        # Glycan is not attached to an amino acid -> Ignore glycan
         continue
     else:
         root = root[0]
@@ -298,6 +301,9 @@ for glycan_graph in glycan_graphs:
     glycosylated_residue_symbols.append(
         seq.ProteinSequence.convert_letter_3to1(ids_to_names[root])
     )
+
+    # The saccharide directly attached to the amino acid
+    root_neighbor = list(glycan_graph.neighbors(root))[0]
 
     # Position the nodes for the plot:
     # Create an initial tree layout and transform it afterwards,
@@ -310,11 +316,11 @@ for glycan_graph in glycan_graphs:
     # Position the root at coordinate origin
     pos_array -= pos_array[nodes.index(root)]
     # Set vertical distances between nodes to 1
-    root_neighbor = nodes.index(list(glycan_graph.neighbors(root))[0])
     pos_array[:,1] /= (
-        pos_array[root_neighbor, 1] - pos_array[nodes.index(root), 1]
+        pos_array[nodes.index(root_neighbor), 1] -
+        pos_array[nodes.index(root), 1]
     )
-    # Set horizontal distances between nearest nodes to 1
+    # Set minimum horizontal distances between nodes to 1
     non_zero_dist = np.abs(pos_array[(pos_array[:,0] != 0), 0])
     if len(non_zero_dist) != 0:
         pos_array[:,0] *= HORIZONTAL_NODE_DISTANCE / np.min(non_zero_dist)
@@ -335,7 +341,7 @@ for glycan_graph in glycan_graphs:
             continue
         res_name = ids_to_names[res_id]
         
-        # Now the data sets from above come into play
+        # Now the above data sets come into play
         common_name = SACCHARIDE_NAMES.get(res_name)
         shape, color = SACCHARIDE_REPRESENTATION[common_name]
         nx.draw_networkx_nodes(
@@ -365,9 +371,10 @@ ax.set_xticklabels(
         rotation=45
 )
 
+ax.set_xlim(1, np.max(amino_acid_res_ids))
 ax.set_ylim(0, 7)
 ax.set_title(f"{mmtf_file['title']}, chain {CHAIN_ID}")
 fig.tight_layout()
 
-# sphinx_gallery_thumbnail_number = 3
+# sphinx_gallery_thumbnail_number = 2
 plt.show()
