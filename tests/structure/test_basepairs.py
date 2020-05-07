@@ -5,7 +5,10 @@ from os.path import join
 from ..util import data_dir
 from biotite.structure.basepairs import _get_proximate_basepair_candidates
 
-def test__get_proximate_basepair_candidates():
+
+#TODO: Remove tests for private functions
+
+def test_get_proximate_basepair_candidates():
     nuc_sample_array = strucio.load_structure(
         join(data_dir("structure"), "5ugo.cif")
     )
