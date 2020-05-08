@@ -45,7 +45,12 @@ def check_dssr_criteria(base1, base2):
     if((base1_std == None) | (base2_std == None)):
         return False
 
-    fitted, transformation = superimpose(base1_std, base1)
+    _, transformation1 = superimpose(base1, base1_std)
+    _, transformation2 = superimpose(base2, base2_std)
+
+    
+
+
     
 
 
