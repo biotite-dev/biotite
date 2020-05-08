@@ -16,7 +16,8 @@ from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
 from .util import distance, get_std_adenine, get_std_cytosine, \
-                     get_std_guanine, get_std_thymine, get_std_uracil
+                    get_std_guanine, get_std_thymine, get_std_uracil \
+                    norm_vector
 
 _std_adenine = get_std_adenine()
 _std_cytosine = get_std_cytosine()
@@ -41,23 +42,40 @@ def get_basepairs(array):
 def _check_dssr_criteria(basepair):
     std_bases = [None] * 2
 
-    for i in range(2):
-        basepair[i], std_bases[i] = _match_base(basepair[i])
-
-    if(None in std_bases):
-        return False
-
-    transformations = []
     vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)] * 2
 
-    for base, std_base, vector in zip(basepair, std_bases, vector):
-        trans1, rot, trans2 = superimpose(base, std_base)[1]
+    for i in range(2):
+        basepair[i], std_bases[i] = _match_base(basepair[i])
 
-        vector += trans1
-        vector = np.dot(rot, transformed.coord.T).T
-        vector += trans2
+        if(std_bases[i] == None):
+            return False
+
+        trans1, rot, trans2 = superimpose(basepair[i], std_bases[i])[1]
+
+        vectors[i] += trans1
+        vectors[i]  = np.dot(rot, transformed.coord.T).T
+        vectors[i] += trans2
+
+        norm_vector(vectors[i][3,:])
     
+    #Distance between orgins <= 15 A
+    if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
+        return False
+    #Vertical seperation <= 2.5 A
+    elif not (abs(vectors[0][0,2] - vectors[1][0,2]) <= 2.5):
+        return False
+    #Angle between normal vectors <=65°
+    elif not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
+                <= ( (65*np.pi)/180 )
+            )
+        return False
+    
+    return True
+
+
+
+
 
 
 def _match_base(base):
