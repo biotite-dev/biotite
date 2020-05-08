@@ -33,29 +33,30 @@ def get_basepairs(array):
     for basepair_c in basepair_candidates:
         base1 = _filter_residues(array, basepair_c[0], basepair_c[1])
         base2 = _filter_residues(array, basepair_c[2], basepair_c[3])
-        if check_dssr_criteria(base1, base2):
+        if _check_dssr_criteria([base1, base2]):
             basepairs.append(basepair_c)
     
     return basepairs
 
-def check_dssr_criteria(base1, base2):
-    base1, base1_std = _match_base(base1)
-    base2, base2_std = _match_base(base2)
+def _check_dssr_criteria(basepair):
+    std_bases = [None] * 2
 
-    if((base1_std == None) | (base2_std == None)):
+    for i in range(2):
+        basepair[i], std_bases[i] = _match_base(basepair[i])
+
+    if(None in std_bases):
         return False
 
-    _, transformation1 = superimpose(base1, base1_std)
-    _, transformation2 = superimpose(base2, base2_std)
+    transformations = []
+    vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
+                             [0, 0, 1]], np.float)] * 2
 
-    vectors1 = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]], np.float)
-    vectors2 = vectors1.copy()
+    for base, std_base, vector in zip(basepair, std_bases, vector):
+        trans1, rot, trans2 = superimpose(base, std_base)[1]
 
-    trans1, rot, trans2 = transformation1
-
-    vectors1 += trans1
-    vectors1 = np.dot(rot, transformed.coord.T).T
-    vectors1 += trans2
+        vector += trans1
+        vector = np.dot(rot, transformed.coord.T).T
+        vector += trans2
     
 
 
