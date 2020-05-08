@@ -48,9 +48,14 @@ def check_dssr_criteria(base1, base2):
     _, transformation1 = superimpose(base1, base1_std)
     _, transformation2 = superimpose(base2, base2_std)
 
-    
+    vectors1 = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]], np.float)
+    vectors2 = vectors1.copy()
 
+    trans1, rot, trans2 = transformation1
 
+    vectors1 += trans1
+    vectors1 = np.dot(rot, transformed.coord.T).T
+    vectors1 += trans2
     
 
 
