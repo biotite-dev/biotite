@@ -65,7 +65,7 @@ def _check_dssr_criteria(basepair):
     #Vertical seperation <= 2.5 A
     elif not (abs(vectors[0][0,2] - vectors[1][0,2]) <= 2.5):
         return False
-    #Angle between normal vectors <=65°
+    #Angle between normal vectors <= 65°
     elif not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
                 <= ( (65*np.pi)/180 )
             )
@@ -73,15 +73,8 @@ def _check_dssr_criteria(basepair):
     
     return True
 
-
-
-
-
-
 def _match_base(base):
     pass
-    
-
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
