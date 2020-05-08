@@ -12,6 +12,7 @@ __all__ = []
 
 import numpy as np
 from .atoms import *
+from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
 from .util import distance, get_std_adenine, get_std_cytosine, \
@@ -23,7 +24,6 @@ _std_guanine = get_std_guanine()
 _std_thymine = get_std_thymine()
 _std_uracil = get_std_uracil()
 
-
 def get_basepairs(array):
 
     basepair_candidates = _get_proximate_basepair_candidates(array)
@@ -31,18 +31,28 @@ def get_basepairs(array):
     basepairs = []
 
     for basepair_c in basepair_candidates:
-        basepair1 = _filter_residues(array, basepair_c[0], basepair_c[1])
-        basepair2 = _filter_residues(
-            array, basepair_c[2], basepair_c[3])
-        if check_dssr_criteria(basepair1, basepair2):
+        base1 = _filter_residues(array, basepair_c[0], basepair_c[1])
+        base2 = _filter_residues(array, basepair_c[2], basepair_c[3])
+        if check_dssr_criteria(base1, base2):
             basepairs.append(basepair_c)
     
     return basepairs
 
-def check_dssr_criteria(basepair1, basepair2):
-    transformation_tuple = _get_reference_frame_transformation(basepair1)
+def check_dssr_criteria(base1, base2):
+    base1, base1_std = _match_base(base1)
+    base2, base2_std = _match_base(base2)
 
+    if((base1_std == None) | (base2_std == None)):
+        return False
+
+    fitted, transformation = superimpose(base1_std, base1)
+    
+
+
+def _match_base(base):
     pass
+    
+
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
