@@ -119,11 +119,11 @@ def get_std_adenine():
                                     axis=-2
                             )
     
-    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_donors = np.zeros(11, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_acceptors = np.zeros(11, dtype=bool)
     hbond_a = [1, 3, 6, 7, 9]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -131,8 +131,7 @@ def get_std_adenine():
                         atom9, atom10, atom11]
                 )
 
-    return adenine, [pyrimidine_center, imidazole_center],
-                        [hbond_donors, hbond_acceptors]
+    return adenine, [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
 
 def get_std_cytosine():
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1′", res_name="C")
@@ -150,11 +149,11 @@ def get_std_cytosine():
                                     axis=-2
                             )
     
-    hbond_donors = numpy.zeros(9, dtype=bool)
+    hbond_donors = np.zeros(9, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(9, dtype=bool)
+    hbond_acceptors = np.zeros(9, dtype=bool)
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -187,11 +186,11 @@ def get_std_guanine():
                                     axis=-2
                                 )
 
-    hbond_donors = numpy.zeros(12, dtype=bool)
+    hbond_donors = np.zeros(12, dtype=bool)
     hbond_d = [1, 7, 9]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(12, dtype=bool)
+    hbond_acceptors = np.zeros(12, dtype=bool)
     hbond_a = [1, 3, 6, 7, 9, 10]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -199,8 +198,7 @@ def get_std_guanine():
                         atom9, atom10, atom11, atom12]
                 )
 
-    return guanine, [pyrimidine_center, imidazole_center],
-                        [hbond_donors, hbond_acceptors]
+    return guanine, [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
 
 def get_std_thymine():
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1′", res_name="T")
@@ -219,11 +217,11 @@ def get_std_thymine():
                                     axis=-2
                             )
 
-    hbond_donors = numpy.zeros(10, dtype=bool)
+    hbond_donors = np.zeros(10, dtype=bool)
     hbond_d = [1, 4]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(10, dtype=bool)
+    hbond_acceptors = np.zeros(10, dtype=bool)
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -249,11 +247,11 @@ def get_std_uracil():
                                     axis=-2
                             )
 
-    hbond_donors = numpy.zeros(9, dtype=bool)
+    hbond_donors = np.zeros(9, dtype=bool)
     hbond_d = [1, 4]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(9, dtype=bool)
+    hbond_acceptors = np.zeros(9, dtype=bool)
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 

@@ -16,7 +16,7 @@ from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
 from .util import distance, get_std_adenine, get_std_cytosine, \
-                    get_std_guanine, get_std_thymine, get_std_uracil \
+                    get_std_guanine, get_std_thymine, get_std_uracil, \
                     norm_vector
 
 _std_adenine, _std_adenine_ring_centers, _std_adenine_hpos = get_std_adenine()
@@ -32,8 +32,8 @@ def get_basepairs(array):
     basepairs = []
 
     for basepair_c in basepair_candidates:
-        base1 = _filter_residues(array, basepair_c[0], basepair_c[1])
-        base2 = _filter_residues(array, basepair_c[2], basepair_c[3])
+        base1 = array[_filter_residues(array, basepair_c[0], basepair_c[1])]
+        base2 = array[_filter_residues(array, basepair_c[2], basepair_c[3])]
         if _check_dssr_criteria([base1, base2]):
             basepairs.append(basepair_c)
     
@@ -51,8 +51,7 @@ def _check_dssr_criteria(basepair):
 
     for i in range(2):
         #TODO Consider Python Pointers
-        basepair[i], std_bases[i], std_centers[i],
-             std_hpos[i], std_bases_masks[i] = _match_base(basepair[i])
+        basepair[i], std_bases[i], std_centers[i], std_hpos[i], std_bases_masks[i] = _match_base(basepair[i])
 
         if(std_bases[i] == None):
             return False
@@ -64,7 +63,7 @@ def _check_dssr_criteria(basepair):
         trans1, rot, trans2 = transformation
 
         vectors[i] += trans1
-        vectors[i]  = np.dot(rot, transformed.coord.T).T
+        vectors[i]  = np.dot(rot, vectors[i].T).T
         vectors[i] += trans2
 
         #Normalize z-Vector (orthonormal to xy Plane)
@@ -83,8 +82,8 @@ def _check_dssr_criteria(basepair):
     #Angle between normal vectors <= 65°
     
     elif not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
-                <= ( (65*np.pi)/180 ):
-            )
+                <= ( (65*np.pi)/180 )
+            ):
         return False
     
     #Absence of Stacking
@@ -149,32 +148,33 @@ def _check_base_stacking(vectors):
             if not ( ( np.arccos(np.dot((-1*i)*vectors[i][3,:], norm_dist_vector)) )
                 <= ( (40*np.pi)/180 )
             ):
-            return False
+                return False
 
     return True
 
 def _match_base(base):
-    if(base[0].res_name == "A" | base[0].res_name == "dA"):
+    
+    if(base[0].res_name == "A" or base[0].res_name == "DA"):
         std_base = _std_adenine
         std_centers = _std_adenine_ring_centers
         std_hpos = _std_adenine_hpos
 
-    elif(base[0].res_name == "T" | base[0].res_name == "dT"):
+    elif(base[0].res_name == "T" or base[0].res_name == "DT"):
         std_base = _std_thymine
         std_centers = _std_thymine_ring_centers
         std_hpos = _std_thymine_hpos
 
-    elif(base[0].res_name == "C" | base[0].res_name == "dC"):
+    elif(base[0].res_name == "C" or base[0].res_name == "DC"):
         std_base = _std_cytosine
         std_centers = _std_cytosine_ring_centers
         std_hpos = _std_cytosine_hpos
 
-    elif(base[0].res_name == "G" | base[0].res_name == "dG"):
+    elif(base[0].res_name == "G" or base[0].res_name == "DG"):
         std_base = _std_guanine
         std_centers = _std_guanine_ring_centers
         std_hpos = _std_guanine_hpos
 
-    elif(base[0].res_name == "U" | base[0].res_name == "dU"):
+    elif(base[0].res_name == "U" or base[0].res_name == "DU"):
         std_base = _std_uracil
         std_centers = _std_uracil_ring_centers
         std_hpos = _std_uracil_hpos 
