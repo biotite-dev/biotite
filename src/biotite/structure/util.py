@@ -150,11 +150,11 @@ def get_std_cytosine():
                                     axis=-2
                             )
     
-    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_donors = numpy.zeros(9, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_acceptors = numpy.zeros(9, dtype=bool)
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -187,11 +187,11 @@ def get_std_guanine():
                                     axis=-2
                                 )
 
-    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_donors = numpy.zeros(12, dtype=bool)
     hbond_d = [1, 7, 9]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
-    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_acceptors = numpy.zeros(12, dtype=bool)
     hbond_a = [1, 3, 6, 7, 9, 10]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
@@ -219,11 +219,19 @@ def get_std_thymine():
                                     axis=-2
                             )
 
+    hbond_donors = numpy.zeros(10, dtype=bool)
+    hbond_d = [1, 4]
+    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
+    
+    hbond_acceptors = numpy.zeros(10, dtype=bool)
+    hbond_a = [1. 3, 4, 6]
+    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
+
     thymine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9, atom10]
                 )
 
-    return thymine, [pyrimidine_center]
+    return thymine, [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 def get_std_uracil():
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1′", res_name="U")
