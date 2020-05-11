@@ -187,11 +187,20 @@ def get_std_guanine():
                                     axis=-2
                                 )
 
+    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_d = [1, 7, 9]
+    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
+    
+    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_a = [1, 3, 6, 7, 9, 10]
+    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
+
     guanine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9, atom10, atom11, atom12]
                 )
 
-    return guanine, [pyrimidine_center, imidazole_center]
+    return guanine, [pyrimidine_center, imidazole_center],
+                        [hbond_donors, hbond_acceptors]
 
 def get_std_thymine():
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1′", res_name="T")
