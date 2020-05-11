@@ -672,6 +672,7 @@ def _parse_operation_expression(expression):
     # Cartesian product of operations
     return list(itertools.product(*operations))
 
+
     def _convert_string_to_sequence(string, stype):
         # Convert strings to ProteinSequence-Object if stype is
         # contained in _proteinseq_type_list or to NucleotideSequence-
