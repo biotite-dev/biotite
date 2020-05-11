@@ -131,7 +131,9 @@ class TextFile(File, metaclass=abc.ABCMeta):
             with open(file, "w") as f:
                 f.write("\n".join(self.lines) + "\n")
         else:
-           file.write("\n".join(self.lines) + "\n")
+            if not isinstance(file, io.TextIOBase):
+                raise TypeError("A file opened in 'text' mode is required")
+            file.write("\n".join(self.lines) + "\n")
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)

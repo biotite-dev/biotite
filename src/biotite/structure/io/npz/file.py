@@ -90,6 +90,8 @@ class NpzFile(File):
             with open(file, "wb") as f:
                 np.savez(f, **self._data_dict)
         else:
+            if not isinstance(file, io.BufferedIOBase):
+                raise TypeError("A file opened in 'binary' mode is required")
             np.savez(file, **self._data_dict)
     
     def get_structure(self):
