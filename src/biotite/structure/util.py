@@ -224,7 +224,7 @@ def get_std_thymine():
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
     hbond_acceptors = numpy.zeros(10, dtype=bool)
-    hbond_a = [1. 3, 4, 6]
+    hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
     thymine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
@@ -248,12 +248,20 @@ def get_std_uracil():
                                     atom6.coord, atom8.coord, atom9.coord],
                                     axis=-2
                             )
+
+    hbond_donors = numpy.zeros(9, dtype=bool)
+    hbond_d = [1, 4]
+    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
     
+    hbond_acceptors = numpy.zeros(9, dtype=bool)
+    hbond_a = [1, 3, 4, 6]
+    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
+
     uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9]
                 )
 
-    return uracil
+    return uracil, [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 
 

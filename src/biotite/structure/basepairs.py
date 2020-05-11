@@ -19,11 +19,11 @@ from .util import distance, get_std_adenine, get_std_cytosine, \
                     get_std_guanine, get_std_thymine, get_std_uracil \
                     norm_vector
 
-_std_adenine, _std_adenine_ring_centers = get_std_adenine()
-_std_cytosine, _std_cytosine_ring_centers = get_std_cytosine()
-_std_guanine, _std_guanine_ring_centers = get_std_guanine()  
-_std_thymine, _std_thymine_ring_centers = get_std_thymine()
-_std_uracil, _std_uracil_ring_centers = get_std_uracil()
+_std_adenine, _std_adenine_ring_centers, _std_adenine_hpos = get_std_adenine()
+_std_cytosine, _std_cytosine_ring_centers, _std_cytosine_hpos = get_std_cytosine()
+_std_guanine, _std_guanine_ring_centers, _std_guanine_hpos = get_std_guanine()  
+_std_thymine, _std_thymine_ring_centers, _std_thymine_hpos = get_std_thymine()
+_std_uracil, _std_uracil_ring_centers, _std_uracil_hpos = get_std_uracil()
 
 def get_basepairs(array):
 
