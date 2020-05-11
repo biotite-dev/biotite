@@ -117,12 +117,21 @@ def get_std_adenine():
                                     atom5.coord, atom11.coord], 
                                     axis=-2
                             )
+    
+    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_d = [1, 6]
+    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
+    
+    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_a = [1, 3, 6, 7, 9]
+    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
     adenine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9, atom10, atom11]
                 )
 
-    return adenine, [pyrimidine_center, imidazole_center]
+    return adenine, [pyrimidine_center, imidazole_center],
+                        [hbond_donors, hbond_acceptors]
 
 def get_std_cytosine():
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1′", res_name="C")
@@ -217,7 +226,7 @@ def get_std_uracil():
     uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9]
                 )
-                 
+
     return uracil
 
 

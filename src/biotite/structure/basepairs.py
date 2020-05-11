@@ -87,6 +87,8 @@ def _check_dssr_criteria(basepair):
     elif _check_base_stacking(vectors):
         return False
     
+    #Check if Hydrogen-Bonds are present (possible)
+    
     return True
 
 def _check_base_stacking(vectors):
