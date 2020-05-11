@@ -43,20 +43,25 @@ def _check_dssr_criteria(basepair):
     #TODO: Increase efficiency by using more np Arrays
     std_bases = [None] * 2
     std_centers = [None] * 2
+    std_hpos = [None] * 2
+    std_bases_masks = [None] * 2
 
     vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)] * 2
 
     for i in range(2):
         #TODO Consider Python Pointers
-        basepair[i], std_bases[i], std_centers[i] = _match_base(basepair[i])
+        basepair[i], std_bases[i], std_centers[i],
+             std_hpos[i], std_bases_masks[i] = _match_base(basepair[i])
 
         if(std_bases[i] == None):
             return False
 
         vectors[i] = np.vstack((vectors[i], std_centers[i]))
 
-        trans1, rot, trans2 = superimpose(basepair[i], std_bases[i])[1]
+        transformation = superimpose(basepair[i], std_bases[i][std_bases_masks[i]])[1]
+        std_bases[i] = superimpose_apply(std_bases[i], transformation)
+        trans1, rot, trans2 = transformation
 
         vectors[i] += trans1
         vectors[i]  = np.dot(rot, transformed.coord.T).T
@@ -87,10 +92,27 @@ def _check_dssr_criteria(basepair):
     elif _check_base_stacking(vectors):
         return False
     
-    #Check if Hydrogen-Bonds are present (possible)
-    
+    #Presence of Hydrogen Bonds (Plausability)
+
+    elif not _check_hbonds(std_bases, std_hpos):
+        return False
+
+    #If no condition was a dealbreaker: Accept Basepair
+
     return True
 
+def _check_hbonds(std_bases, std_hpos):
+    #Accept if Donor-Acceptor Relationship <= 3.5 A exists
+    for donor, dmask in zip(std_bases, std_hpos):
+        for acceptor, amask in zip(reversed(std_bases), reversed(std_hpos)):
+            
+            for datom in donor[dmask[0]]:
+                for aatom in acceptor[amask[1]]:
+                    if(distance(aatom.coord, datom.coord) <= 3.5):
+                        return True
+    
+    return False
+    
 def _check_base_stacking(vectors):
     #checks for the presence of base stacking corresponding to Gabb 1996
     #   DOI: 10.1016/0263-7855(95)00086-0
