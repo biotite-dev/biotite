@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["File", "TextFile", "InvalidFileError"]
 
 import abc
+import io
 import warnings
 from .copyable import Copyable
 import copy
@@ -108,6 +109,8 @@ class TextFile(File, metaclass=abc.ABCMeta):
                 lines = f.read().splitlines()
         # File object
         else:
+            if not isinstance(file, io.TextIOBase):
+                raise TypeError("A file opened in 'text' mode is required")
             lines = file.read().splitlines()
         file_object = cls(*args, **kwargs)
         file_object.lines = lines

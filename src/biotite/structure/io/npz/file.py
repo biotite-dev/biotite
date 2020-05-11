@@ -71,6 +71,8 @@ class NpzFile(File):
                 npz_file._data_dict = dict(np.load(f, allow_pickle=False))
         # File object
         else:
+            if not isinstance(file, io.BufferedIOBase):
+                raise TypeError("A file opened in 'binary' mode is required")
             npz_file._data_dict = dict(np.load(file, allow_pickle=False))
         return npz_file
                 
