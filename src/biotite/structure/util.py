@@ -208,7 +208,16 @@ def get_std_uracil():
     atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4", res_name="U")
     atom8 = Atom([1.089, 4.311, 0.000], atom_name="C5", res_name="U")
     atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6", res_name="U")
-    uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]) 
+    
+    pyrimidine_center = np.mean([atom2.coord, atom3.coord, atom5.coord,
+                                    atom6.coord, atom8.coord, atom9.coord],
+                                    axis=-2
+                            )
+    
+    uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
+                        atom9]
+                )
+                 
     return uracil
 
 
