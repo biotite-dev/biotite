@@ -66,40 +66,68 @@ def _check_dssr_criteria(basepair):
         norm_vector(vectors[i][3,:])
     
     #Distance between orgins <= 15 A
+
     if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
         return False
+
     #Vertical seperation <= 2.5 A
+
     elif not (abs(vectors[0][0,2] - vectors[1][0,2]) <= 2.5):
         return False
+    
     #Angle between normal vectors <= 65°
+    
     elif not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
-                <= ( (65*np.pi)/180 )
+                <= ( (65*np.pi)/180 ):
             )
         return False
+    
     #Absence of Stacking
-    elif _check_base_stacking(vectors[0][4:], vectors[0][4:]):
+    
+    elif _check_base_stacking(vectors):
         return False
+    
     return True
 
-def _check_base_stacking(base1_ring_centers, base2_ring_centers):
+def _check_base_stacking(vectors):
     #checks for the presence of base stacking corresponding to Gabb 1996
     #   DOI: 10.1016/0263-7855(95)00086-0
 
-    #Distance between ring centers <= 4.5 A
-
-    for center1 in base1_ring_centers:
-        for center2 in base2_ring_centers:
-            if not (distance(center1, center2) <= 4.5):
-                return False
-
-    
-
     #Check for Base-Base Stacking
 
+    #Distance between ring centers <= 4.5 A
 
+    wrongdistance = True
+    norm_dist_vectors = []
 
+    for center1 in vectors[0][4:][:]:
+        for center2 in vectors[1][4:][:]:
+            if (distance(center1, center2) <= 4.5):
+                wrongdistance = False
+                norm_dist_vectors.append(center2 - center1)
+                norm_vector(norm_dist_vectors[-1])            
+    
+    if(wrongdistance):
+        return False
+    
+    #Check angle between normal vectors <= 23°
 
-    pass
+    if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
+                <= ( (23*np.pi)/180 )
+            ):
+            return False
+    
+    #Determine if angle between normalized_distance vector and one 
+    #   normal vector <= 40°
+     
+    for i in range(2):
+        for norm_dist_vector in norm_dist_vectors:
+            if not ( ( np.arccos(np.dot((-1*i)*vectors[i][3,:], norm_dist_vector)) )
+                <= ( (40*np.pi)/180 )
+            ):
+            return False
+
+    return True
 
 def _match_base(base):
     pass
