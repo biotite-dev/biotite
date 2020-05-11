@@ -96,6 +96,7 @@ def matrix_rotate(v, matrix):
         v = v.reshape(*orig_shape)
     return v
 
+#TODO: Are Tautomeric Forms relevant for basepairs???
 def get_std_adenine():
     atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1′", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
@@ -148,12 +149,20 @@ def get_std_cytosine():
                                     atom6.coord, atom8.coord, atom9.coord],
                                     axis=-2
                             )
+    
+    hbond_donors = numpy.zeros(11, dtype=bool)
+    hbond_d = [1, 6]
+    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
+    
+    hbond_acceptors = numpy.zeros(11, dtype=bool)
+    hbond_a = [1, 3, 4, 6]
+    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
     cytosine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9]
                     )
 
-    return cytosine, [pyrimidine_center]
+    return cytosine, [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 def get_std_guanine():
     atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1′", res_name="G")
