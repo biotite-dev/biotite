@@ -108,6 +108,7 @@ def get_std_adenine():
     atom9 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
     atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
     atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
+
     pyrimidine_center = np.mean([atom5.coord, atom6.coord, atom8.coord,
                                     atom9.coord, atom10.coord, atom11.coord],
                                     axis=-2
@@ -116,9 +117,9 @@ def get_std_adenine():
                                     atom5.coord, atom11.coord], 
                                     axis=-2
                             )
-    
+
     adenine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10, atom11]) 
-    return adenine
+    return adenine, [pyrimidine_center, imidazole_center]
 
 def get_std_cytosine():
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1′", res_name="C")
@@ -130,8 +131,14 @@ def get_std_cytosine():
     atom7 = Atom([1.875, 2.027, 0.000], atom_name="N4", res_name="C")
     atom8 = Atom([1.056, 4.275, 0.000], atom_name="C5", res_name="C")
     atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6", res_name="C")
+
+    pyrimidine_center = np.mean([atom2.coord, atom3.coord, atom5.coord,
+                                    atom6.coord, atom8.coord, atom9.coord],
+                                    axis=-2
+                            )
+
     cytosine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]) 
-    return cytosine
+    return cytosine, [pyrimidine_center]
 
 def get_std_guanine():
     atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1′", res_name="G")
