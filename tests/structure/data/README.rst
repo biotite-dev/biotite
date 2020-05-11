@@ -10,4 +10,5 @@ Test structures
 1O1Z: Structure contains negative residue IDs
 3O5R: Structure contains altlocs
 5H73: Structure contains residue with "'" in atom name
-5UGO: Structure contains nucleotide
+5UGO: Structure contains deoxynucleotide
+4GXY: Structure contains ribonucleotide

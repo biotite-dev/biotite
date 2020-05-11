@@ -15,14 +15,26 @@ from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
 from ...filter import filter_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...util import matrix_rotate
-from ....sequence.seqtypes import ProteinSequence
+from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
 from collections import OrderedDict
 
+_proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
+_nucleotideseq_type_list = ["polydeoxyribonucleotide", "polyribonucleotide",
+                        "polydeoxyribonucleotide/polyribonucleotide hybrid"
+                        ]
+_other_type_list = ["cyclic-pseudo-peptide", "other", "peptide nucleic acid",
+                        "polysaccharide(D)", "polysaccharide(L)"]
 
 def get_sequence(pdbx_file, data_block=None):
     """
-    Get the protein sequences from the
-    `entity_poly.pdbx_seq_one_letter_code_can` entry. 
+    Get the protein and nucleotide sequences from the
+    `entity_poly.pdbx_seq_one_letter_code_can` entry.
+
+    Supported polymer types (`_entity_poly.type`) are: polypeptide(D),
+    polypeptide(L), polydeoxyribonucleotide, polyribonucleotide,
+    polydeoxyribonucleotide/polyribonucleotide hybrid
+
+    Uracil is converted to Thymine.
     
     Parameters
     ----------
@@ -34,18 +46,21 @@ def get_sequence(pdbx_file, data_block=None):
         
     Returns
     -------
-    sequences : list of ProteinSequence
-        The protein sequences for each entity (equivalent to chain in
-        most cases).
+    sequences : list of Sequence
+        The protein and nucleotide sequences for each entity
+        (equivalent to chains in most cases).
     """
     poly_dict = pdbx_file.get_category("entity_poly", data_block)
     seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
+    seq_type = poly_dict["type"]
     sequences = []
     if isinstance(seq_string, np.ndarray):
-        for string in seq_string:
-            sequences.append(ProteinSequence(string))
+        for string, stype in zip(seq_string, seq_type):
+            sequence = _convert_string_to_sequence(string, stype)
+            if(issubclass(sequence, Sequence)):
+                sequences.append(sequence) 
     else:
-        sequences.append(ProteinSequence(seq_string))
+        sequences.append(_convert_string_to_sequence(seq_string, seq_type))
     return sequences
 
 
@@ -656,3 +671,18 @@ def _parse_operation_expression(expression):
 
     # Cartesian product of operations
     return list(itertools.product(*operations))
+
+    def _convert_string_to_sequence(string, stype):
+        # Convert strings to ProteinSequence-Object if stype is
+        # contained in _proteinseq_type_list or to NucleotideSequence-
+        # Object if stype is contained in _nucleotideseq_type_list
+        if stype in _proteinseq_type_list:
+            return ProteinSequence(string)
+        elif stype in _nucleotideseq_type_list:
+            string = string.replace("U", "T")
+            return NucleotideSequence(string)
+        elif stype in _other_type_list:
+            return None
+        else:
+            raise InvalidFileError("mmCIF _entity_poly.type unsupported"
+                                        " type: " + stype)
