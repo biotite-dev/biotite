@@ -112,7 +112,7 @@ def _check_hbonds(std_bases, std_hpos):
                         return True
     
     return False
-    
+
 def _check_base_stacking(vectors):
     #checks for the presence of base stacking corresponding to Gabb 1996
     #   DOI: 10.1016/0263-7855(95)00086-0
@@ -154,7 +154,35 @@ def _check_base_stacking(vectors):
     return True
 
 def _match_base(base):
-    pass
+    if(base[0].res_name == "A" | base[0].res_name == "dA"):
+        std_base = _std_adenine
+        std_centers = _std_adenine_ring_centers
+        std_hpos = _std_adenine_hpos
+
+    elif(base[0].res_name == "T" | base[0].res_name == "dT"):
+        std_base = _std_thymine
+        std_centers = _std_thymine_ring_centers
+        std_hpos = _std_thymine_hpos
+
+    elif(base[0].res_name == "C" | base[0].res_name == "dC"):
+        std_base = _std_cytosine
+        std_centers = _std_cytosine_ring_centers
+        std_hpos = _std_cytosine_hpos
+
+    elif(base[0].res_name == "G" | base[0].res_name == "dG"):
+        std_base = _std_guanine
+        std_centers = _std_guanine_ring_centers
+        std_hpos = _std_guanine_hpos
+
+    elif(base[0].res_name == "U" | base[0].res_name == "dU"):
+        std_base = _std_uracil
+        std_centers = _std_uracil_ring_centers
+        std_hpos = _std_uracil_hpos 
+                
+    base = base[np.in1d(base.atom_name, std_base.atom_name)]
+    std_base_mask = np.in1d(std_base.atom_name, base.atom_name)
+
+    return base, std_base, std_centers, std_hpos, std_base_mask
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
