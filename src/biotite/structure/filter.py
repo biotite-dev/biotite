@@ -207,7 +207,7 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
 
             - A chain ID, specifying the residue
             - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
+            - The desired *altloc* ID for the specified residue
 
         For each of the given residues only those atoms of `atoms` are
         filtered where the *altloc* ID matches the respective *altloc*
@@ -224,7 +224,7 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
     altloc_filter = np.in1d(altlocs, [".","?","A"," ",""])
     
     for loc in selected_altlocs:
-        chain, residue, altoc = loc
+        chain, residue, altloc = loc
         residue_filter = (
             (atoms.chain_id == chain) &
             (atoms.res_id == residue)
