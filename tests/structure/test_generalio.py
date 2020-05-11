@@ -111,7 +111,11 @@ def test_saving_with_extra_args(suffix):
      ("SD", "S"),
      ("NA", "N"),
      ("NX", "N"),
-     ("QWERT", "")],
+     ("BE", "BE"),
+     ("BEA", "BE"),
+     ("K", "K"),
+     ("KA", "K"),
+     ("QWERT", "")]
 )
 def test_guess_element(name, expected):
     result = _guess_element(name)
