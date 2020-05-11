@@ -40,8 +40,9 @@ def get_basepairs(array):
     return basepairs
 
 def _check_dssr_criteria(basepair):
+    #TODO: Increase efficiency by using more np Arrays
     std_bases = [None] * 2
-    std
+    std_centers = [None] * 2
 
     vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)] * 2
@@ -52,6 +53,8 @@ def _check_dssr_criteria(basepair):
 
         if(std_bases[i] == None):
             return False
+
+        vectors[i] = np.vstack((vectors[i], std_centers[i]))
 
         trans1, rot, trans2 = superimpose(basepair[i], std_bases[i])[1]
 
@@ -73,15 +76,26 @@ def _check_dssr_criteria(basepair):
                 <= ( (65*np.pi)/180 )
             )
         return False
-    elif _check_base_stacking():
+    #Absence of Stacking
+    elif _check_base_stacking(vectors[0][4:], vectors[0][4:]):
         return False
     return True
 
-def _check_base_stacking(ring_center):
+def _check_base_stacking(base1_ring_centers, base2_ring_centers):
     #checks for the presence of base stacking corresponding to Gabb 1996
     #   DOI: 10.1016/0263-7855(95)00086-0
 
+    #Distance between ring centers <= 4.5 A
+
+    for center1 in base1_ring_centers:
+        for center2 in base2_ring_centers:
+            if not (distance(center1, center2) <= 4.5):
+                return False
+
+    
+
     #Check for Base-Base Stacking
+
 
 
 
