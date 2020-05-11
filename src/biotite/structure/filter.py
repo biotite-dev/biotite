@@ -67,6 +67,27 @@ def filter_solvent(array):
     return np.in1d(array.res_name, _solvent_list)
 
 
+def filter_nucleotides(array):
+    """
+    Filter all atoms of one array that belong to nucleotides.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a nucleotide.
+    """
+    return (
+        np.in1d(array.res_name, _ext_nucleotide_list) 
+        & (array.res_id != -1)
+    )
+
+
 def filter_amino_acids(array):
     """
     Filter all atoms of one array that belong to amino acid residues.
@@ -214,25 +235,3 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
         altloc_filter |= residue_filter & (altlocs == altloc)
         
     return altloc_filter
-
-
-def filter_nucleotides(array):
-    """
-    Filter all atoms of one array that belong to nucleotides.
-    
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be filtered.
-    
-    Returns
-    -------
-    filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where the atom
-        belongs to a nucleotide.
-    """
-    return (
-        np.in1d(array.res_name, _ext_nucleotide_list) 
-        & (array.res_id != -1)
-    )
-
