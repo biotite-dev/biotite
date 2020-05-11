@@ -108,6 +108,15 @@ def get_std_adenine():
     atom9 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
     atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
     atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
+    pyrimidine_center = np.mean([atom5.coord, atom6.coord, atom8.coord,
+                                    atom9.coord, atom10.coord, atom11.coord],
+                                    axis=-2
+                            )
+    imidazole_center = np.mean([atom2.coord, atom3.coord, atom4.coord,
+                                    atom5.coord, atom11.coord], 
+                                    axis=-2
+                            )
+    
     adenine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10, atom11]) 
     return adenine
 

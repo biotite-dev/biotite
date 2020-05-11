@@ -19,11 +19,11 @@ from .util import distance, get_std_adenine, get_std_cytosine, \
                     get_std_guanine, get_std_thymine, get_std_uracil \
                     norm_vector
 
-_std_adenine = get_std_adenine()
-_std_cytosine = get_std_cytosine()
-_std_guanine = get_std_guanine()  
-_std_thymine = get_std_thymine()
-_std_uracil = get_std_uracil()
+_std_adenine, _std_adenine_ring_centers = get_std_adenine()
+_std_cytosine, _std_cytosine_ring_centers = get_std_cytosine()
+_std_guanine, _std_guanine_ring_centers = get_std_guanine()  
+_std_thymine, _std_thymine_ring_centers = get_std_thymine()
+_std_uracil, _std_uracil_ring_centers = get_std_uracil()
 
 def get_basepairs(array):
 
@@ -41,12 +41,14 @@ def get_basepairs(array):
 
 def _check_dssr_criteria(basepair):
     std_bases = [None] * 2
+    std
 
     vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)] * 2
 
     for i in range(2):
-        basepair[i], std_bases[i] = _match_base(basepair[i])
+        #TODO Consider Python Pointers
+        basepair[i], std_bases[i], std_centers[i] = _match_base(basepair[i])
 
         if(std_bases[i] == None):
             return False
@@ -57,6 +59,7 @@ def _check_dssr_criteria(basepair):
         vectors[i]  = np.dot(rot, transformed.coord.T).T
         vectors[i] += trans2
 
+        #Normalize z-Vector (orthonormal to xy Plane)
         norm_vector(vectors[i][3,:])
     
     #Distance between orgins <= 15 A
@@ -70,8 +73,19 @@ def _check_dssr_criteria(basepair):
                 <= ( (65*np.pi)/180 )
             )
         return False
-    
+    elif _check_base_stacking():
+        return False
     return True
+
+def _check_base_stacking(ring_center):
+    #checks for the presence of base stacking corresponding to Gabb 1996
+    #   DOI: 10.1016/0263-7855(95)00086-0
+
+    #Check for Base-Base Stacking
+
+
+
+    pass
 
 def _match_base(base):
     pass
