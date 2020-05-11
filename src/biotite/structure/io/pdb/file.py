@@ -10,6 +10,7 @@ import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
+from ..general import _guess_element as guess_element
 from ...error import BadStructureError
 from ...filter import filter_altloc
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
@@ -306,11 +307,6 @@ class PDBFile(TextFile):
 
         # Replace empty strings for elements with guessed types
         # This is used e.g. for PDB files created by Gromacs
-        def guess_element(atom_name):
-            if atom_name.startswith(("H", "1H", "2H", "3H")):
-                return 'H'
-            return atom_name[0]
-
         if "" in array.element:
             rep_num = 0
             for idx in range(len(array.element)):
