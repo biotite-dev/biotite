@@ -11,3 +11,4 @@ Test structures
 3O5R: Structure contains altlocs
 5H73: Structure contains residue with "'" in atom name
 5UGO: Structure contains nucleotide
+1UQC: Structure contains complimentary DNA-sequence
