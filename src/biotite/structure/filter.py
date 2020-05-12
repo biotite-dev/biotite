@@ -226,7 +226,7 @@ def filter_first_altloc(atoms, altloc_ids):
     # Filter all atoms without altloc code
     altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
     
-    # And filter all atoms for each residue the first altloc ID
+    # And filter all atoms for each residue with the first altloc ID
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
         letter_altloc_ids = [l for l in altloc_ids[start:stop] if l.isalpha()]
@@ -241,4 +241,31 @@ def filter_first_altloc(atoms, altloc_ids):
 
 
 def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
-    raise NotImplementedError()
+    # Filter all atoms without altloc code
+    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
+    
+    # And filter all atoms for each residue with the highest sum of
+    # occupancies
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
+        occupancies_in_res = occupancies[start:stop]
+        altloc_ids_in_res = altloc_ids[start:stop]
+        
+        letter_altloc_ids = [l for l in altloc_ids_in_res if l.isalpha()]
+        
+        if len(letter_altloc_ids) > 0:
+            highest = -1.0
+            highest_id = None
+            for id in set(letter_altloc_ids):
+                occupancy_sum = np.sum(
+                    occupancies_in_res[altloc_ids_in_res == id]
+                )
+                if occupancy_sum > highest:
+                    highest = occupancy_sum
+                    highest_id = id
+            altloc_filter[start:stop] |= (altloc_ids[start:stop] == highest_id)
+        else:
+            # No altloc ID in this residue -> Nothing to do
+            pass
+    
+    return altloc_filter

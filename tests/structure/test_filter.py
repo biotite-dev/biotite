@@ -12,8 +12,7 @@ import pytest
 @pytest.fixture
 def sample_protein():
     return strucio.load_structure(
-        join(data_dir("structure"), "3o5r.mmtf"),
-        extra_fields = ["atom_id"]
+        join(data_dir("structure"), "3o5r.mmtf")
     )
 
 @pytest.fixture
@@ -23,9 +22,10 @@ def sample_nucleotide():
     )
 
 @pytest.fixture
-def sample_all_atloc_structure():
+def all_atloc_structure():
     return strucio.load_structure(
         join(data_dir("structure"), "1o1z.mmtf"),
+        extra_fields = ["occupancy"],
         altloc="all"
     )
 
@@ -49,24 +49,36 @@ def test_nucleotide_filter(sample_nucleotide):
         sample_nucleotide[struc.filter_nucleotides(sample_nucleotide)]
     ) == 651
 
-def test_filter_first_altloc(sample_all_atloc_structure):
+
+@pytest.mark.parametrize("filter_func", ["first", "occupancy"])
+def test_filter_altloc(all_atloc_structure, filter_func):
     """
     For a correctly altloc filtered structure no atom should be missing
     and no atom should be present twice.
     """
     ref_atom_set = set()
     for atom_tuple in zip(
-        sample_all_atloc_structure.chain_id,
-        sample_all_atloc_structure.res_id,
-        sample_all_atloc_structure.ins_code,
-        sample_all_atloc_structure.atom_name
+        all_atloc_structure.chain_id,
+        all_atloc_structure.res_id,
+        all_atloc_structure.ins_code,
+        all_atloc_structure.atom_name
     ):
         ref_atom_set.add(atom_tuple)
     
-    filtered_structure = sample_all_atloc_structure[struc.filter_first_altloc(
-        sample_all_atloc_structure,
-        sample_all_atloc_structure.altloc_id
-    )]
+    if filter_func == "first":
+        filtered_structure = all_atloc_structure[struc.filter_first_altloc(
+            all_atloc_structure,
+            all_atloc_structure.altloc_id
+        )]
+    elif filter_func == "occupancy":
+        filtered_structure = all_atloc_structure[
+            struc.filter_highest_occupancy_altloc(
+                all_atloc_structure,
+                all_atloc_structure.altloc_id,
+                all_atloc_structure.occupancy
+            )
+        ]
+
     test_atom_set = set()
     for atom_tuple in zip(
         filtered_structure.chain_id,
@@ -84,3 +96,32 @@ def test_filter_first_altloc(sample_all_atloc_structure):
     
     # No atom should be missing
     assert test_atom_set == ref_atom_set
+
+
+def test_filter_highest_occupancy_altloc(all_atloc_structure):
+    """
+    When filtering altlocs with the highest occupancy, the average
+    occupancy should be higher than the the average occupancy when the
+    first altloc ID is always filtered.
+    """
+    # Set the occupancy of SECOND altloc ID very high
+    all_atloc_structure.occupancy[all_atloc_structure.altloc_id == "B"] = 1.0
+    
+    # filter_first_altloc
+    filtered_structure = all_atloc_structure[struc.filter_first_altloc(
+        all_atloc_structure,
+        all_atloc_structure.altloc_id
+    )]
+    ref_occupancy_sum = np.average(filtered_structure.occupancy)
+
+    # filter_highest_occupancy_altloc
+    filtered_structure = all_atloc_structure[
+        struc.filter_highest_occupancy_altloc(
+            all_atloc_structure,
+            all_atloc_structure.altloc_id,
+            all_atloc_structure.occupancy
+        )
+    ]
+    test_occupancy_sum = np.average(filtered_structure.occupancy)
+    
+    assert test_occupancy_sum > ref_occupancy_sum
