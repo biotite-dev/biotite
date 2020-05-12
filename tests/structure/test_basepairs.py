@@ -20,6 +20,6 @@ def test_get_basepairs():
     nuc_sample_array = strucio.load_structure(
         join(data_dir("structure"), "1uqc.cif")
     )
-    
+
     assert ( len(get_basepairs(nuc_sample_array))
                 == 6 )

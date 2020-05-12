@@ -65,35 +65,46 @@ def _check_dssr_criteria(basepair):
         vectors[i] += trans1
         vectors[i]  = np.dot(rot, vectors[i].T).T
         vectors[i] += trans2
-
+        
         #Normalize z-Vector (orthonormal to xy Plane)
         norm_vector(vectors[i][3,:])
+
+        
+    
+    #Make sure normal vectors point in same direction
+
+    if np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) > np.arccos(np.dot((-1*vectors[0][3,:]), vectors[1][3,:])):
+        for i in range(1, 4):
+            vectors[0][i,:] = -1*vectors[0][i,:]
     
     #Distance between orgins <= 15 A
-
+    
     if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
         return False
 
     #Vertical seperation <= 2.5 A
 
-    elif not (abs(vectors[0][0,2] - vectors[1][0,2]) <= 2.5):
+    t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:], (-1)*vectors[0][3,:]) ).T, (vectors[1][0,:] - vectors[0][0,:]) )[2]
+    intersection = vectors[1][0,:] - (t * vectors[0][3,:])
+
+    if not (distance(vectors[1][0,:], intersection) <= 2.5):
         return False
     
     #Angle between normal vectors <= 65°
     
-    elif not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
+    if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
                 <= ( (65*np.pi)/180 )
             ):
         return False
-    
+
     #Absence of Stacking
     
-    elif _check_base_stacking(vectors):
+    if _check_base_stacking(vectors):
         return False
     
     #Presence of Hydrogen Bonds (Plausability)
 
-    elif not _check_hbonds(std_bases, std_hpos):
+    if not _check_hbonds(std_bases, std_hpos):
         return False
 
     #If no condition was a dealbreaker: Accept Basepair
@@ -102,13 +113,13 @@ def _check_dssr_criteria(basepair):
 
 def _check_hbonds(std_bases, std_hpos):
     #Accept if Donor-Acceptor Relationship <= 3.5 A exists
-    for donor, dmask in zip(std_bases, std_hpos):
-        for acceptor, amask in zip(reversed(std_bases), reversed(std_hpos)):
-            
-            for datom in donor[dmask[0]]:
-                for aatom in acceptor[amask[1]]:
-                    if(distance(aatom.coord, datom.coord) <= 3.5):
-                        return True
+    for donor, dmask, acceptor, amask in zip(std_bases, std_hpos, reversed(std_bases), reversed(std_hpos)):
+       
+        for datom in donor[dmask[0]]:
+            for aatom in acceptor[amask[1]]:
+
+                if(distance(aatom.coord, datom.coord) <= 3.5):
+                    return True
     
     return False
 
@@ -125,12 +136,13 @@ def _check_base_stacking(vectors):
 
     for center1 in vectors[0][4:][:]:
         for center2 in vectors[1][4:][:]:
+            
             if (distance(center1, center2) <= 4.5):
                 wrongdistance = False
                 norm_dist_vectors.append(center2 - center1)
-                norm_vector(norm_dist_vectors[-1])            
+                norm_vector(norm_dist_vectors[-1]) 
     
-    if(wrongdistance):
+    if(wrongdistance == True):
         return False
     
     #Check angle between normal vectors <= 23°
@@ -138,19 +150,22 @@ def _check_base_stacking(vectors):
     if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
                 <= ( (23*np.pi)/180 )
             ):
+            
             return False
     
     #Determine if angle between normalized_distance vector and one 
     #   normal vector <= 40°
-     
-    for i in range(2):
+    
+    for vector in vectors:
         for norm_dist_vector in norm_dist_vectors:
-            if not ( ( np.arccos(np.dot((-1*i)*vectors[i][3,:], norm_dist_vector)) )
+            
+            if ( np.arccos(np.dot(vector[3,:], norm_dist_vector))
                 <= ( (40*np.pi)/180 )
             ):
-                return False
-
-    return True
+            
+                return True
+    
+    return False
 
 def _match_base(base):
     
