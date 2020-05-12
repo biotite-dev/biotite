@@ -12,7 +12,7 @@ import numpy as np
 from ...error import BadStructureError
 from ....file import InvalidFileError
 from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
-from ...filter import filter_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...util import matrix_rotate
 from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
@@ -65,7 +65,7 @@ def get_sequence(pdbx_file, data_block=None):
 
 
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
+def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                   extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
@@ -250,15 +250,28 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
             array.set_annotation(field, model_dict[field].astype(str))
 
 
-def _filter_altloc(array, model_dict, selected):
-    altlocs = model_dict.get("label_alt_id")
-    if altlocs is None:
+def _filter_altloc(array, model_dict, altloc):
+    altloc_ids = model_dict.get("label_alt_id")
+    occupancy =  model_dict.get("occupancy")
+    
+    # Filter altloc IDs and return
+    if altloc_ids is None:
+        return array
+    elif altloc == "occupancy" and occupancy is not None:
+        return array[
+            ...,
+            filter_highest_occupancy_altloc(
+                array, altloc_ids, occupancy.astype(float)
+            )
+        ]
+    # 'first' is also fallback if file has no occupancy information
+    elif altloc == "first":
+        return array[..., filter_first_altloc(array, altloc_ids)]
+    elif altloc == "all":
+        array.set_annotation("altloc_id", altloc_ids)
         return array
     else:
-        return array[..., filter_altloc(
-            array, altlocs, selected
-        )]
-
+        raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 def _get_model_dict(atom_site_dict, model):
     model_dict = {}
@@ -480,7 +493,7 @@ def list_assemblies(pdbx_file, data_block=None):
 
 
 def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
-                 altloc=None, extra_fields=None, use_author_fields=True):
+                 altloc="first", extra_fields=None, use_author_fields=True):
     """
     Build the given biological assembly.
 

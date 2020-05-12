@@ -9,12 +9,13 @@ arrays and atom array stacks.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
-           "filter_backbone", "filter_intersection",
-           "filter_altloc", "filter_nucleotides"]
+__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
+           "filter_amino_acids", "filter_backbone", "filter_intersection",
+           "filter_first_altloc", "filter_highest_occupancy_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
+from .residues import get_residue_starts
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
@@ -179,7 +180,7 @@ def filter_intersection(array, intersect):
     return filter
 
 
-def filter_altloc(atoms, altlocs, selected_altlocs):
+def filter_first_altloc(atoms, altloc_ids):
     """
     Filter all atoms having the desired altloc.
     
@@ -202,12 +203,15 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
         An array containing the alternative location codes for each
         atom in the unfiltered atom array.
         Can contain '.', '?', ' ', '' or a letter at each position.
-    selected_altlocs : iterable object of tuple (str, int, str)
+    selected_altlocs : iterable object of tuple (str, int, str) or (str, int, str, str)
         Each tuple consists of the following elements:
 
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altloc* ID for the specified residue
+            - A chain ID, specifying the residue.
+            - A residue ID, specifying the residue.
+            - *(optional)* An insertion code, specifying the residue.
+              If it is omitted, the residue without the insertion code
+              is selected.
+            - The desired *altloc* ID for the specified residue.
 
         For each of the given residues only those atoms of `atoms` are
         filtered where the *altloc* ID matches the respective *altloc*
@@ -219,19 +223,22 @@ def filter_altloc(atoms, altlocs, selected_altlocs):
     filter : ndarray, dtype=bool
         The combined inscode and altloc filters.
     """
-    # Default: Filter all atoms
-    # with altloc code ".", "?", "A", " " or empty string
-    altloc_filter = np.in1d(altlocs, [".","?","A"," ",""])
+    # Filter all atoms without altloc code
+    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
     
-    for loc in selected_altlocs:
-        chain, residue, altloc = loc
-        residue_filter = (
-            (atoms.chain_id == chain) &
-            (atoms.res_id == residue)
-        )
-        # Reset (set to False) filter for specified residue
-        altloc_filter &= ~residue_filter
-        # Choose only atoms of residue with altloc code
-        altloc_filter |= residue_filter & (altlocs == altloc)
-        
+    # And filter all atoms for each residue the first altloc ID
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
+        letter_altloc_ids = [l for l in altloc_ids[start:stop] if l.isalpha()]
+        if len(letter_altloc_ids) > 0:
+            first_id = letter_altloc_ids[0]
+            altloc_filter[start:stop] |= (altloc_ids[start:stop] == first_id)
+        else:
+            # No altloc ID in this residue -> Nothing to do
+            pass
+    
     return altloc_filter
+
+
+def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
+    raise NotImplementedError()

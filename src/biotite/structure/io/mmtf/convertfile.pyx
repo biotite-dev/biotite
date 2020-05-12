@@ -14,7 +14,7 @@ from .file import MMTFFile
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
 from ...error import BadStructureError
-from ...filter import filter_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_starts
 from ...box import vectors_from_unitcell
 
@@ -28,7 +28,7 @@ ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
 
     
-def get_structure(file, model=None, altloc=[],
+def get_structure(file, model=None, altloc="first",
                   extra_fields=[], include_bonds=False):
     """
     get_structure(file, model=None, altloc=[], extra_fields=[],
@@ -100,18 +100,16 @@ def get_structure(file, model=None, altloc=[],
     cdef np.ndarray x_coord = file["xCoordList"]
     cdef np.ndarray y_coord = file["yCoordList"]
     cdef np.ndarray z_coord = file["zCoordList"]
+    cdef np.ndarray occupancy = file.get("occupancyList")
     cdef np.ndarray b_factor
     if "b_factor" in extra_fields:
         b_factor = file["bFactorList"]
-    cdef np.ndarray occupancy
-    if "occupancy" in extra_fields:
-        occupancy = file["occupancyList"]
     cdef np.ndarray atom_ids
     if "atom_id" in extra_fields:
         atom_ids = file["atomIdList"]
-    cdef np.ndarray altloc_all
+    cdef np.ndarray all_altloc_ids
     cdef np.ndarray inscode
-    altloc_all = file.get("altLocList")
+    all_altloc_ids = file.get("altLocList")
     inscode = file.get("insCodeList")
     
 
@@ -148,7 +146,7 @@ def get_structure(file, model=None, altloc=[],
     cdef int depth, length
     cdef int start_i, stop_i
     cdef bint extra_charge
-    cdef np.ndarray altloc_array
+    cdef np.ndarray altloc_ids
     cdef np.ndarray inscode_array
     
     
@@ -172,10 +170,10 @@ def get_structure(file, model=None, altloc=[],
         ).reshape(depth, length, 3)
         
         # Create altloc array for the final filtering
-        if altloc_all is not None:
-            altloc_array = altloc_all[:length]
+        if all_altloc_ids is not None:
+            altloc_ids = all_altloc_ids[:length]
         else:
-            altloc_array = None
+            altloc_ids = None
         
         extra_charge = False
         if "ins_code" in extra_fields:
@@ -221,10 +219,10 @@ def get_structure(file, model=None, altloc=[],
         array.coord[:,2] = z_coord[start_i : stop_i]
         
         # Create altloc array for the final filtering
-        if altloc_all is not None:
-            altloc_array = np.array(altloc_all[start_i : stop_i], dtype="U1")
+        if all_altloc_ids is not None:
+            altloc_ids = np.array(all_altloc_ids[start_i : stop_i], dtype="U1")
         else:
-            altloc_array = None
+            altloc_ids = None
         
         extra_charge = False
         if "charge" in extra_fields:
@@ -267,11 +265,22 @@ def get_structure(file, model=None, altloc=[],
             array.box = box
     
     
-    # Filter altlocs and return
-    if altloc_array is None:
+    # Filter altloc IDs and return
+    if altloc_ids is None:
+        return array
+    elif altloc == "occupancy" and occupancy is not None:
+        return array[
+            ...,
+            filter_highest_occupancy_altloc(array, altloc_ids, occupancy)
+        ]
+    # 'first' is also fallback if file has no occupancy information
+    elif altloc == "first":
+        return array[..., filter_first_altloc(array, altloc_ids)]
+    elif altloc == "all":
+        array.set_annotation("altloc_id", altloc_ids)
         return array
     else:
-        return array[..., filter_altloc(array, altloc_array, altloc)]
+        raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
 def _get_model_length(int model, int32[:] res_type_i,

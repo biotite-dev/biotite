@@ -12,7 +12,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
 
-def get_structure(pdb_file, model=None, altloc=[], extra_fields=[]):
+def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
     :class:`PDBFile`.
