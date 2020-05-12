@@ -54,44 +54,30 @@ def get_residue_starts(array, add_exclusive_stop=False):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
-    chain_ids = array.chain_id
-    res_ids = array.res_id
-    ins_codes = array.ins_code
-    res_names = array.res_name
+    # These mask are 'true' at indices where the value changes
+    chain_id_changes = (array.chain_id[1:] != array.chain_id[:-1])
+    res_id_changes   = (array.res_id[1:]   != array.res_id[:-1]  )
+    ins_code_changes = (array.ins_code[1:] != array.ins_code[:-1])
+    res_name_changes = (array.res_name[1:] != array.res_name[:-1])
 
-    # Maximum length is length of atom array
-    starts = np.zeros(array.array_length(), dtype=int)
-
-    # Variables for current values
-    curr_chain_id = chain_ids[0]
-    curr_res_id = res_ids[0]
-    curr_ins_code = ins_codes[0]
-    curr_res_name = res_names[0]
-
-    # Index for 'starts' begins at second element, since
-    # The first start is already identified
-    # (always at position 0 of the atom array)
-    i = 1
-
-    for j in range(array.array_length()):
-        if curr_chain_id != chain_ids[j] \
-            or curr_res_name != res_names[j] \
-            or curr_res_id != res_ids[j] \
-            or curr_ins_code != ins_codes[j]:
-                starts[i] = j
-                i += 1
-                curr_chain_id  = chain_ids[j]
-                curr_res_id    = res_ids[j]
-                curr_ins_code = ins_codes[j]
-                curr_res_name  = res_names[j]
+    # If any of these annotation arrays change, a new residue starts
+    residue_change_mask = (
+        chain_id_changes | 
+        res_id_changes |
+        ins_code_changes | 
+        res_name_changes
+    )
     
-    # Trim to correct size
-    starts = starts[:i]
-
+    # Convert mask to indices
+    # Add 1, to shift the indices from the end of a residue
+    # to the start of a new residue
+    residue_starts = np.where(residue_change_mask)[0] +1
+    
+    # The first residue is not included yet -> Insert '[0]'
     if add_exclusive_stop:
-        starts = np.append(starts, [array.array_length()])
-
-    return starts
+        return np.concatenate(([0], residue_starts, [array.array_length()]))
+    else:
+        return np.concatenate(([0], residue_starts))
 
 
 def apply_residue_wise(array, data, function, axis=None):
