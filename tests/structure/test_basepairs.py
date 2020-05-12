@@ -22,4 +22,4 @@ def test_get_basepairs():
     )
 
     assert ( len(get_basepairs(nuc_sample_array))
-                == 6 )
+                == 4 )

@@ -15,6 +15,7 @@ from .atoms import *
 from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
+from .hbond import hbond
 from .util import distance, get_std_adenine, get_std_cytosine, \
                     get_std_guanine, get_std_thymine, get_std_uracil, \
                     norm_vector
@@ -24,6 +25,12 @@ _std_cytosine, _std_cytosine_ring_centers, _std_cytosine_hpos = get_std_cytosine
 _std_guanine, _std_guanine_ring_centers, _std_guanine_hpos = get_std_guanine()  
 _std_thymine, _std_thymine_ring_centers, _std_thymine_hpos = get_std_thymine()
 _std_uracil, _std_uracil_ring_centers, _std_uracil_hpos = get_std_uracil()
+
+_adenine_like = ["A", "DA"]
+_thymine_like = ["T", "DT"]
+_cytosine_like = ["C", "DC"]
+_guanine_like = ["G", "DG"]
+_uracil_like = ["U", "DU"]
 
 def get_basepairs(array):
 
@@ -41,6 +48,9 @@ def get_basepairs(array):
 
 def _check_dssr_criteria(basepair):
     #TODO: Increase efficiency by using more np Arrays
+    
+    
+    """
     std_bases = [None] * 2
     std_centers = [None] * 2
     std_hpos = [None] * 2
@@ -48,9 +58,23 @@ def _check_dssr_criteria(basepair):
 
     vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)] * 2
+    """
+    p_bases = [None] * 2
+    std_hpos = [None] * 2
+    vectors = [None] * 2
+    hydrogens = np.ones(2, dtype=bool)
 
     for i in range(2):
-        #TODO Consider Python Pointers
+        
+        base_tuple = _match_base(basepair[i])
+
+        if(base_tuple == None):
+            return False
+        
+        else:
+            
+            p_bases[i], std_hpos[i], hydrogens[i], vectors[i] = base_tuple
+        """
         basepair[i], std_bases[i], std_centers[i], std_hpos[i], std_bases_masks[i] = _match_base(basepair[i])
 
         if(std_bases[i] == None):
@@ -68,6 +92,7 @@ def _check_dssr_criteria(basepair):
         
         #Normalize z-Vector (orthonormal to xy Plane)
         norm_vector(vectors[i][3,:])
+        """
 
         
     
@@ -78,15 +103,16 @@ def _check_dssr_criteria(basepair):
             vectors[0][i,:] = -1*vectors[0][i,:]
     
     #Distance between orgins <= 15 A
-    
+   
     if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
         return False
-
+    
     #Vertical seperation <= 2.5 A
 
     t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:], (-1)*vectors[0][3,:]) ).T, (vectors[1][0,:] - vectors[0][0,:]) )[2]
     intersection = vectors[1][0,:] - (t * vectors[0][3,:])
 
+    
     if not (distance(vectors[1][0,:], intersection) <= 2.5):
         return False
     
@@ -102,9 +128,16 @@ def _check_dssr_criteria(basepair):
     if _check_base_stacking(vectors):
         return False
     
-    #Presence of Hydrogen Bonds (Plausability)
-
-    if not _check_hbonds(std_bases, std_hpos):
+    #Presence of Hydrogen Bonds (Plausability if no Hydrogens)
+    ba = (p_bases[0] + p_bases[1])
+    if (np.all(hydrogens)):
+        
+        if(len(hbond(ba, np.ones_like(ba, dtype=bool), 
+                np.ones_like(ba, dtype=bool))) == 0):
+                return False
+               
+    elif not _check_hbonds(p_bases, std_hpos):
+        
         return False
 
     #If no condition was a dealbreaker: Accept Basepair
@@ -168,53 +201,112 @@ def _check_base_stacking(vectors):
     return False
 
 def _match_base(base):
-    
-    if(base[0].res_name == "A" or base[0].res_name == "DA"):
+    #Matches the basepair to a standard base and returns???
+    #Hydrogen Yes/No
+    #Vectors
+
+    vector = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
+                             [0, 0, 1]], np.float)
+
+    if(base[0].res_name in _adenine_like):
         std_base = _std_adenine
         std_centers = _std_adenine_ring_centers
         std_hpos = _std_adenine_hpos
 
-    elif(base[0].res_name == "T" or base[0].res_name == "DT"):
+    elif(base[0].res_name in _thymine_like):
         std_base = _std_thymine
         std_centers = _std_thymine_ring_centers
         std_hpos = _std_thymine_hpos
 
-    elif(base[0].res_name == "C" or base[0].res_name == "DC"):
+    elif(base[0].res_name in _cytosine_like):
         std_base = _std_cytosine
         std_centers = _std_cytosine_ring_centers
         std_hpos = _std_cytosine_hpos
 
-    elif(base[0].res_name == "G" or base[0].res_name == "DG"):
+    elif(base[0].res_name in _guanine_like):
         std_base = _std_guanine
         std_centers = _std_guanine_ring_centers
         std_hpos = _std_guanine_hpos
 
-    elif(base[0].res_name == "U" or base[0].res_name == "DU"):
+    elif(base[0].res_name in _uracil_like):
         std_base = _std_uracil
         std_centers = _std_uracil_ring_centers
         std_hpos = _std_uracil_hpos 
-                
-    base = base[np.in1d(base.atom_name, std_base.atom_name)]
-    std_base_mask = np.in1d(std_base.atom_name, base.atom_name)
+    
+    else:
+        #TODO: Throw Error
+        return None
+    
+    vector = np.vstack((vector, std_centers))
+    
+    fitted, transformation = superimpose(
+                        base[np.in1d(base.atom_name, std_base.atom_name)],
+                        std_base[np.in1d(std_base.atom_name, base.atom_name)]
+                                        )
 
-    return base, std_base, std_centers, std_hpos, std_base_mask
+    length_difference = len(fitted) - len(std_base)
+
+    trans1, rot, trans2 = transformation
+
+    vector += trans1
+    vector  = np.dot(rot, vector.T).T
+    vector += trans2
+    
+    for i in range(1, 4):
+        norm_vector(vector[i,:])
+    
+    if(length_difference > 0 and len(fitted) >= 2):
+        #TODO: Throw Warning
+        ret_base = superimpose_apply(std_base, transformation)
+        contains_hydrogens = False
+    
+    elif (length_difference > 0):
+        #TODO: Throw Error
+        return None
+        
+    else:
+
+        mask = np.ones(len(base), dtype=bool)
+
+        for i in range(len(base)):
+            if( ("'" in base[i].atom_name) or ("*" in base[i].atom_name) or
+                (   
+                    (base[i].atom_name not in std_base.atom_name) and
+                    (base[i].element != "H") 
+                )
+            ):
+                mask[i] = False
+
+        if ("H" in base.element[mask]):
+            contains_hydrogens = True
+            ret_base = base[mask]
+            #TODO: Generate Hydrogen Donor/Acceptor Mask
+        
+        else:
+            if(len(base[mask]) == len(std_base)):
+                ret_base = base[mask]
+            else:
+                #TODO: Throw Warning
+                ret_base = superimpose_apply(std_base, transformation)
+
+    return ret_base, std_hpos, contains_hydrogens, vector
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
     #gets proximate basepairs, where the C1-Sugar-Atoms are within
     # `min_cutoff <= x <= max_cutoff`
     
-    array = array[filter_nucleotides(array) 
+    c1sugars = array[filter_nucleotides(array) 
                     & _filter_atom_type(array, ["C1'", "C1*"])]
-    adjacency_matrix = CellList(array, 6.0).create_adjacency_matrix(max_cutoff)
+    adjacency_matrix = CellList(c1sugars, 6.0).create_adjacency_matrix(max_cutoff)
     
     basepair_candidates = []
     
     for ix,iy in np.ndindex(adjacency_matrix.shape):
         if (adjacency_matrix[ix][iy]):
-            candidate = [array[ix].res_id, array[ix].chain_id]
-            partner = [array[iy].res_id, array[iy].chain_id]
-            if ((distance(array[ix].coord, array[iy].coord) > min_cutoff) 
+            candidate = [c1sugars[ix].res_id, c1sugars[ix].chain_id]
+            partner = [c1sugars[iy].res_id, c1sugars[iy].chain_id]
+            if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
                  & ((partner + candidate) not in basepair_candidates)):
                 
                 basepair_candidates.append(candidate + partner)
