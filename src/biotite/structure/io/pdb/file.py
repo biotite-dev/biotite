@@ -88,7 +88,7 @@ class PDBFile(TextFile):
         the atom array (stack) from the corresponding
         :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
-        *altlocs*, while `get_coord()` does not.
+        *altloc* IDs, while `get_coord()` does not.
         
         Examples
         --------
@@ -209,18 +209,16 @@ class PDBFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can be
-            specified here:
-            Each tuple consists of the following elements:
-
-                - A chain ID, specifying the residue
-                - A residue ID, specifying the residue
-                - The desired *altoc* ID for the specified residue
-
-            For each of the given residues the atoms with the given *altloc*
-            ID are filtered.
-            By default the location with the *altloc* ID "A" is used.
+        altloc : {'first', 'occupancy', 'all'}
+            This parameter defines how *altloc* IDs are handled:
+                - ``'first'`` - Use atoms that have the first *altloc* ID
+                appearing in a residue.
+                - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                with the highest occupancy for a residue.
+                - ``'all'`` - Use all atoms.
+                Note that this leads to duplicate atoms.
+                When this option is chosen, the ``altloc_id`` annotation
+                array is added to the returned structure.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.

@@ -28,12 +28,12 @@ _other_type_list = ["cyclic-pseudo-peptide", "other", "peptide nucleic acid",
 def get_sequence(pdbx_file, data_block=None):
     """
     Get the protein and nucleotide sequences from the
-    `entity_poly.pdbx_seq_one_letter_code_can` entry.
+    ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
 
-    Supported polymer types (`_entity_poly.type`) are: polypeptide(D),
-    polypeptide(L), polydeoxyribonucleotide, polyribonucleotide,
-    polydeoxyribonucleotide/polyribonucleotide hybrid
-
+    Supported polymer types (``_entity_poly.type``) are:
+    ``'polypeptide(D)'``, ``'polypeptide(L)'``,
+    ``'polydeoxyribonucleotide'``, ``'polyribonucleotide'`` and
+    ``'polydeoxyribonucleotide/polyribonucleotide hybrid'``.
     Uracil is converted to Thymine.
     
     Parameters
@@ -85,18 +85,16 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -519,18 +517,16 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         The name of the data block.
         Defaults to the first (and most times only) data block of the
         file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
