@@ -9,7 +9,7 @@ __all__ = ["NpzFile"]
 import numpy as np
 from ...atoms import Atom, AtomArray, AtomArrayStack
 from ...bonds import BondList
-from ....file import File
+from ....file import File, is_binary
 
 
 class NpzFile(File):
@@ -71,7 +71,7 @@ class NpzFile(File):
                 npz_file._data_dict = dict(np.load(f, allow_pickle=False))
         # File object
         else:
-            if not isinstance(file, io.BufferedIOBase):
+            if not is_binary(file):
                 raise TypeError("A file opened in 'binary' mode is required")
             npz_file._data_dict = dict(np.load(file, allow_pickle=False))
         return npz_file
@@ -90,7 +90,7 @@ class NpzFile(File):
             with open(file, "wb") as f:
                 np.savez(f, **self._data_dict)
         else:
-            if not isinstance(file, io.BufferedIOBase):
+            if not is_binary(file):
                 raise TypeError("A file opened in 'binary' mode is required")
             np.savez(file, **self._data_dict)
     
