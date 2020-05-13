@@ -16,6 +16,7 @@ from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides, _filter_atom_type, _filter_residues
 from .celllist import CellList
 from .hbond import hbond
+from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, get_std_adenine, get_std_cytosine, \
                     get_std_guanine, get_std_thymine, get_std_uracil, \
                     norm_vector
@@ -36,6 +37,8 @@ _thymine_like = ["T", "DT"]
 _cytosine_like = ["C", "DC"]
 _guanine_like = ["G", "DG"]
 _uracil_like = ["U", "DU"]
+
+#TODO: Add Doc
 
 def get_basepairs(array):
 
@@ -243,7 +246,8 @@ def _match_base(base):
         std_hpos = _std_uracil_hpos 
     
     else:
-        #TODO: Throw Warning
+        raise UnexpectedStructureWarning("Base Type not supported. Unable to "
+                                            "check for basepair")
         return None
 
     #Check if the structure uses PDBv3 or PDBv2 atom nomenclature
@@ -290,7 +294,8 @@ def _match_base(base):
     #   approximate the base.
 
     if(length_difference > 0 and len(fitted) >= 3):
-        #TODO: Throw Warning
+        raise IncompleteStructureWarning("Base is not complete. Attempting "
+                                            "to emulate with std_base.")
         ret_base = superimpose_apply(std_base, transformation)
         ret_hpos = std_hpos
         contains_hydrogens = False
@@ -299,7 +304,8 @@ def _match_base(base):
     #   std_base throw warning
 
     elif (length_difference > 0):
-        #TODO: Throw Warning
+        raise IncompleteStructureWarning("Base is smaller than 3 atoms. "
+                                            "Unable to check for basepair.")
         return None
 
     #if the base is complete use the base for further calculations    

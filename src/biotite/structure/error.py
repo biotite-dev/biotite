@@ -16,3 +16,15 @@ class BadStructureError(Exception):
     Indicates that a structure is not suitable for a certain operation.
     """
     pass
+
+class IncompleteStructureWarning(Warning):
+    """
+    Indicates that a structure is not complete
+    """
+    pass
+
+class UnexpectedStructureWarning(Warning):
+    """
+    Indicates that a structure was not exspected
+    """
+    pass
