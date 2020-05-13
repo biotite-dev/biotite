@@ -96,9 +96,8 @@ def matrix_rotate(v, matrix):
         v = v.reshape(*orig_shape)
     return v
 
-#TODO: Are Tautomeric Forms relevant for basepairs???
 def get_std_adenine():
-    atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1′", res_name="A")
+    atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
     atom3 = Atom([0.024, 4.897, 0.000], atom_name="C8", res_name="A")
     atom4 = Atom([0.877, 3.902, 0.000], atom_name="N7", res_name="A")
@@ -130,11 +129,14 @@ def get_std_adenine():
     adenine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
                         atom9, atom10, atom11]
                 )
+    
+    v3 = adenine.copy()
+    v3.atom_name[[0]] = ["C1'"]
 
-    return adenine, [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
+    return [adenine, v3], [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
 
 def get_std_cytosine():
-    atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1′", res_name="C")
+    atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
     atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1", res_name="C")
     atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2", res_name="C")
     atom4 = Atom([-2.628, 2.709, 0.000], atom_name="O2", res_name="C")
@@ -161,10 +163,13 @@ def get_std_cytosine():
                         atom9]
                     )
 
-    return cytosine, [pyrimidine_center], [hbond_donors, hbond_acceptors]
+    v3 = cytosine.copy()
+    v3.atom_name[[0]] = ["C1'"]
+
+    return [cytosine, v3], [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 def get_std_guanine():
-    atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1′", res_name="G")
+    atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1*", res_name="G")
     atom2 = Atom([-1.289, 4.551, 0.000], atom_name="N9", res_name="G")
     atom3 = Atom([0.023, 4.962, 0.000], atom_name="C8", res_name="G")
     atom4 = Atom([0.870, 3.969, 0.000], atom_name="N7", res_name="G")
@@ -198,10 +203,13 @@ def get_std_guanine():
                         atom9, atom10, atom11, atom12]
                 )
 
-    return guanine, [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
+    v3 = guanine.copy()
+    v3.atom_name[[0]] = ["C1'"]
+
+    return [guanine, v3], [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
 
 def get_std_thymine():
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1′", res_name="T")
+    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
     atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="T")
     atom3 = Atom([-1.462, 3.135, 0.000], atom_name="C2", res_name="T")
     atom4 = Atom([-2.562, 2.608, 0.000], atom_name="O2", res_name="T")
@@ -229,10 +237,13 @@ def get_std_thymine():
                         atom9, atom10]
                 )
 
-    return thymine, [pyrimidine_center], [hbond_donors, hbond_acceptors]
+    v3 = thymine.copy()
+    v3.atom_name[[0, 8]] = ["C1'", "C7"]
+
+    return [thymine, v3], [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 def get_std_uracil():
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1′", res_name="U")
+    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
     atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="U")
     atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2", res_name="U")
     atom4 = Atom([-2.563, 2.608, 0.000], atom_name="O2", res_name="U")
@@ -259,7 +270,10 @@ def get_std_uracil():
                         atom9]
                 )
 
-    return uracil, [pyrimidine_center], [hbond_donors, hbond_acceptors]
+    v3 = uracil.copy()
+    v3.atom_name[[0]] = ["C1'"]
+
+    return [uracil, v3], [pyrimidine_center], [hbond_donors, hbond_acceptors]
 
 
 

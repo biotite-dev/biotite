@@ -220,24 +220,33 @@ def _match_base(base):
     else:
         #TODO: Throw Warning
         return None
+
+    #Check if the structure uses PDBv3 or PDBv2 atom nomenclature
     
-    # Add the Ring Centers onto the array of vectors to be transformed
+    if( np.sum(np.in1d(std_base[1].atom_name, base.atom_name))
+            > np.sum(np.in1d(std_base[0].atom_name, base.atom_name))
+    ):
+        std_base = std_base[1]
+    else:
+        std_base = std_base[0]
+
+    #Add the Ring Centers onto the array of vectors to be transformed
 
     vector = np.vstack((vector, std_centers))
     
-    # Match the selected std_base to the base
+    #Match the selected std_base to the base
 
     fitted, transformation = superimpose(
                         base[np.in1d(base.atom_name, std_base.atom_name)],
                         std_base[np.in1d(std_base.atom_name, base.atom_name)]
                                         )
 
-    # Get the completeness of the base
-    # A length difference of zero means the base contains all atoms of
-    #       the std_base
-
-    length_difference = len(fitted) - len(std_base)
-
+    #Investigate the completeness of the base:
+    #       A length difference of zero means the base contains all
+    #       atoms of the std_base
+          
+    length_difference = len(std_base) - len(fitted) 
+    
     #Transform the vectors
 
     trans1, rot, trans2 = transformation
@@ -252,7 +261,7 @@ def _match_base(base):
         norm_vector(vector[i,:])
     
     #If the base is incomplete but contains 3 or more atoms of the 
-    #   std_base transform the complete std_base and use it to
+    #   std_base, transform the complete std_base and use it to
     #   approximate the base.
 
     if(length_difference > 0 and len(fitted) >= 3):
@@ -308,12 +317,12 @@ def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
     c1sugars = array[filter_nucleotides(array) 
                     & _filter_atom_type(array, ["C1'", "C1*"])]
-    adjacency_matrix = CellList(c1sugars, 6.0).create_adjacency_matrix(max_cutoff)
+    adj_matrix = CellList(c1sugars, 6.0).create_adjacency_matrix(max_cutoff)
     
     basepair_candidates = []
     
-    for ix,iy in np.ndindex(adjacency_matrix.shape):
-        if (adjacency_matrix[ix][iy]):
+    for ix,iy in np.ndindex(adj_matrix.shape):
+        if (adj_matrix[ix][iy]):
             candidate = [c1sugars[ix].res_id, c1sugars[ix].chain_id]
             partner = [c1sugars[iy].res_id, c1sugars[iy].chain_id]
             if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
