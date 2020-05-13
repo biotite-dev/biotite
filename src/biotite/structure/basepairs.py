@@ -52,11 +52,14 @@ def get_basepairs(array):
     return basepairs
 
 def _check_dssr_criteria(basepair):
+    #Returns True if the basepair meets the dssr critera, False if not
 
     p_bases = [None] * 2
     std_hpos = [None] * 2
     vectors = [None] * 2
-    hydrogens = np.ones(2, dtype=bool)
+    hydrogens = np.zeros(2, dtype=bool)
+
+    #Generate data for each base neccesary for analysis
 
     for i in range(2):
         
@@ -70,46 +73,62 @@ def _check_dssr_criteria(basepair):
 
     #Make sure normal vectors point in same direction
 
-    if np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) > np.arccos(np.dot((-1*vectors[0][3,:]), vectors[1][3,:])):
+    if( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) 
+            > np.arccos(np.dot((-1*vectors[0][3,:]), vectors[1][3,:]))
+    ):
         for i in range(1, 4):
             vectors[0][i,:] = -1*vectors[0][i,:]
     
-    #Distance between orgins <= 15 A
+    #(i) Distance between orgins <= 15 A
    
     if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
         return False
     
-    #Vertical seperation <= 2.5 A
+    #(ii) Vertical seperation <= 2.5 A
+        
+        #Find the intercept between the plane of base zero and a
+        #line consisting of the origin of base one and normal vector
+        #of base zero
 
-    t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:], (-1)*vectors[0][3,:]) ).T, (vectors[1][0,:] - vectors[0][0,:]) )[2]
-    intersection = vectors[1][0,:] - (t * vectors[0][3,:])
+    t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:],
+                                   (-1)*vectors[0][3,:]) 
+                                ).T,
+                         (vectors[1][0,:] - vectors[0][0,:])
+                    )[2]
+    intercept = vectors[1][0,:] - (t * vectors[0][3,:])
 
-    
-    if not (distance(vectors[1][0,:], intersection) <= 2.5):
+        #Vertical seperation is the distance of the origin of base one
+        #and the intercept descibed above
+
+    if not (distance(vectors[1][0,:], intercept) <= 2.5):
         return False
     
-    #Angle between normal vectors <= 65°
+    #(iii) Angle between normal vectors <= 65°
     
     if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
                 <= ( (65*np.pi)/180 )
             ):
         return False
 
-    #Absence of Stacking
+    #(iv) Absence of Stacking
     
     if _check_base_stacking(vectors):
         return False
     
-    #Presence of Hydrogen Bonds (Plausability if no Hydrogens)
-    ba = (p_bases[0] + p_bases[1])
+    #(v) Presence of Hydrogen Bonds
+    
     if (np.all(hydrogens)):
-        
-        if(len(hbond(ba, np.ones_like(ba, dtype=bool), 
-                np.ones_like(ba, dtype=bool))) == 0):
+        #if the structure contains hydrogens, check for bonds
+        if(len(hbond(p_bases[0] + p_bases[1],
+                     np.ones_like(p_bases[0] + p_bases[1], dtype=bool), 
+                     np.ones_like(p_bases[0] + p_bases[1], dtype=bool)
+                    )
+                ) == 0):
                 return False
                
     elif not _check_hbonds(p_bases, std_hpos):
-        
+        #if the structure does not contain hydrogens, check for
+        #plausability of Hydrogen Bonds
         return False
 
     #If no condition was a dealbreaker: Accept Basepair
@@ -117,8 +136,12 @@ def _check_dssr_criteria(basepair):
     return True
 
 def _check_hbonds(std_bases, std_hpos):
-    #Accept if Donor-Acceptor Relationship <= 3.5 A exists
-    for donor, dmask, acceptor, amask in zip(std_bases, std_hpos, reversed(std_bases), reversed(std_hpos)):
+    #Accept if het_Donor-het_Acceptor Relationship <= 3.5 A exists
+    #Definition from https://proteopedia.org/wiki/index.php/Hydrogen_bonds
+
+    for donor, dmask, acceptor, amask in zip(
+                std_bases, std_hpos, reversed(std_bases), reversed(std_hpos)
+                                            ):
        
         for datom in donor[dmask[0]]:
             for aatom in acceptor[amask[1]]:
@@ -129,12 +152,13 @@ def _check_hbonds(std_bases, std_hpos):
     return False
 
 def _check_base_stacking(vectors):
-    #checks for the presence of base stacking corresponding to Gabb 1996
+    #checks for the presence of base stacking corresponding to the
+    #criteria of (Gabb, 1996)
     #   DOI: 10.1016/0263-7855(95)00086-0
 
     #Check for Base-Base Stacking
 
-    #Distance between ring centers <= 4.5 A
+    #(i) distance between ring centers <= 4.5 A
 
     wrongdistance = True
     norm_dist_vectors = []
@@ -150,7 +174,7 @@ def _check_base_stacking(vectors):
     if(wrongdistance == True):
         return False
     
-    #Check angle between normal vectors <= 23°
+    #(ii) angle between normal vectors <= 23°
 
     if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
                 <= ( (23*np.pi)/180 )
@@ -158,7 +182,7 @@ def _check_base_stacking(vectors):
             
             return False
     
-    #Determine if angle between normalized_distance vector and one 
+    #(iii) angle between normalised distance vector and one 
     #   normal vector <= 40°
     
     for vector in vectors:
@@ -222,7 +246,7 @@ def _match_base(base):
         return None
 
     #Check if the structure uses PDBv3 or PDBv2 atom nomenclature
-    
+
     if( np.sum(np.in1d(std_base[1].atom_name, base.atom_name))
             > np.sum(np.in1d(std_base[0].atom_name, base.atom_name))
     ):
@@ -230,7 +254,7 @@ def _match_base(base):
     else:
         std_base = std_base[0]
 
-    #Add the Ring Centers onto the array of vectors to be transformed
+    #Add the ring centers to the array of vectors to be transformed
 
     vector = np.vstack((vector, std_centers))
     
