@@ -210,6 +210,7 @@ def _match_base(base):
     #               nucleotides coordinates   
 
     ret_hpos = [None] * 2
+    contains_hydrogens = False
 
     vector = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)
