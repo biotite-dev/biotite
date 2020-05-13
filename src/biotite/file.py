@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["File", "TextFile", "InvalidFileError"]
 
 import abc
+import io
 import warnings
 from .copyable import Copyable
 import copy
@@ -108,6 +109,8 @@ class TextFile(File, metaclass=abc.ABCMeta):
                 lines = f.read().splitlines()
         # File object
         else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
             lines = file.read().splitlines()
         file_object = cls(*args, **kwargs)
         file_object.lines = lines
@@ -128,7 +131,9 @@ class TextFile(File, metaclass=abc.ABCMeta):
             with open(file, "w") as f:
                 f.write("\n".join(self.lines) + "\n")
         else:
-           file.write("\n".join(self.lines) + "\n")
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            file.write("\n".join(self.lines) + "\n")
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
@@ -145,3 +150,23 @@ class InvalidFileError(Exception):
     because the file is malformed.
     """
     pass
+
+
+def is_binary(file):
+    if isinstance(file, io.BufferedIOBase):
+        return True
+    # for file wrappers, e.g. 'TemporaryFile'
+    elif hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase):
+        return True
+    else:
+        return False
+
+
+def is_text(file):
+    if isinstance(file, io.TextIOBase):
+        return True
+    # for file wrappers, e.g. 'TemporaryFile'
+    elif hasattr(file, "file") and isinstance(file.file, io.TextIOBase):
+        return True
+    else:
+        return False
