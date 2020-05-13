@@ -173,12 +173,24 @@ def _check_base_stacking(vectors):
     return False
 
 def _match_base(base):
-    #Matches the basepair to a standard base and returns???
-    #Hydrogen Yes/No
-    #Vectors
+    #Matches a nucleotide to a standard base
+    #Returns: 
+    #ret_base : The base or if the base atoms are incomplete a
+    #               superimposed standard base
+    #ret_hpos : A list of size 2 containing boolean masks. 
+    #               Pos 0 contains the het_atoms that act as H-Donors
+    #               Pos 1 contains the het_atoms that act as H-Acceptors
+    #contains_hydrogens : A boolean; if True the base contains H-Atoms
+    #vectors : A set of std_vectors (Origin, Orthonormal-Base-Vectors, 
+    #               Ring-Centers) transformed onto the
+    #               nucleotides coordinates   
+
+    ret_hpos = [None] * 2
 
     vector = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)
+
+    #Check Base Type
 
     if(base[0].res_name in _adenine_like):
         std_base = _std_adenine
@@ -206,17 +218,27 @@ def _match_base(base):
         std_hpos = _std_uracil_hpos 
     
     else:
-        #TODO: Throw Error
+        #TODO: Throw Warning
         return None
     
+    # Add the Ring Centers onto the array of vectors to be transformed
+
     vector = np.vstack((vector, std_centers))
     
+    # Match the selected std_base to the base
+
     fitted, transformation = superimpose(
                         base[np.in1d(base.atom_name, std_base.atom_name)],
                         std_base[np.in1d(std_base.atom_name, base.atom_name)]
                                         )
 
+    # Get the completeness of the base
+    # A length difference of zero means the base contains all atoms of
+    #       the std_base
+
     length_difference = len(fitted) - len(std_base)
+
+    #Transform the vectors
 
     trans1, rot, trans2 = transformation
 
@@ -224,21 +246,35 @@ def _match_base(base):
     vector  = np.dot(rot, vector.T).T
     vector += trans2
     
+    #Normalise the transformed orthogonal base vectors
+
     for i in range(1, 4):
         norm_vector(vector[i,:])
     
-    if(length_difference > 0 and len(fitted) >= 2):
+    #If the base is incomplete but contains 3 or more atoms of the 
+    #   std_base transform the complete std_base and use it to
+    #   approximate the base.
+
+    if(length_difference > 0 and len(fitted) >= 3):
         #TODO: Throw Warning
         ret_base = superimpose_apply(std_base, transformation)
+        ret_hpos = std_hpos
         contains_hydrogens = False
     
+    #If the base is incomplete and conatains less than 3 atoms of the 
+    #   std_base throw warning
+
     elif (length_difference > 0):
-        #TODO: Throw Error
+        #TODO: Throw Warning
         return None
-        
+
+    #if the base is complete use the base for further calculations    
     else:
 
         mask = np.ones(len(base), dtype=bool)
+        
+        # Generate a boolean mask containing only the base atoms,
+        #   disregarding the sugar atoms and the phosphate backbone
 
         for i in range(len(base)):
             if( ("'" in base[i].atom_name) or ("*" in base[i].atom_name) or
@@ -248,20 +284,22 @@ def _match_base(base):
                 )
             ):
                 mask[i] = False
+        
+        #Generate a boolaean mask for the hydrogen donors and acceptors
 
+        for i in range(2):
+            ret_hpos[i] = _filter_atom_type(base[mask], 
+                                std_base[std_hpos[i]].atom_name)
+
+        #Check if the base contains Hydrogens
         if ("H" in base.element[mask]):
             contains_hydrogens = True
             ret_base = base[mask]
-            #TODO: Generate Hydrogen Donor/Acceptor Mask
-        
+                    
         else:
-            if(len(base[mask]) == len(std_base)):
-                ret_base = base[mask]
-            else:
-                #TODO: Throw Warning
-                ret_base = superimpose_apply(std_base, transformation)
-
-    return ret_base, std_hpos, contains_hydrogens, vector
+            ret_base = base[mask]
+        
+    return ret_base, ret_hpos, contains_hydrogens, vector
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     
