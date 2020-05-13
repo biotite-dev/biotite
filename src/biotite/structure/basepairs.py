@@ -20,11 +20,16 @@ from .util import distance, get_std_adenine, get_std_cytosine, \
                     get_std_guanine, get_std_thymine, get_std_uracil, \
                     norm_vector
 
-_std_adenine, _std_adenine_ring_centers, _std_adenine_hpos = get_std_adenine()
-_std_cytosine, _std_cytosine_ring_centers, _std_cytosine_hpos = get_std_cytosine()
-_std_guanine, _std_guanine_ring_centers, _std_guanine_hpos = get_std_guanine()  
-_std_thymine, _std_thymine_ring_centers, _std_thymine_hpos = get_std_thymine()
-_std_uracil, _std_uracil_ring_centers, _std_uracil_hpos = get_std_uracil()
+_std_adenine, _std_adenine_ring_centers, \
+        _std_adenine_hpos = get_std_adenine()
+_std_cytosine, _std_cytosine_ring_centers, \
+        _std_cytosine_hpos = get_std_cytosine()
+_std_guanine, _std_guanine_ring_centers, \
+        _std_guanine_hpos = get_std_guanine()  
+_std_thymine, _std_thymine_ring_centers, \
+        _std_thymine_hpos = get_std_thymine()
+_std_uracil, _std_uracil_ring_centers, \
+        _std_uracil_hpos = get_std_uracil()
 
 _adenine_like = ["A", "DA"]
 _thymine_like = ["T", "DT"]
@@ -47,18 +52,7 @@ def get_basepairs(array):
     return basepairs
 
 def _check_dssr_criteria(basepair):
-    #TODO: Increase efficiency by using more np Arrays
-    
-    
-    """
-    std_bases = [None] * 2
-    std_centers = [None] * 2
-    std_hpos = [None] * 2
-    std_bases_masks = [None] * 2
 
-    vectors = [np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
-                             [0, 0, 1]], np.float)] * 2
-    """
     p_bases = [None] * 2
     std_hpos = [None] * 2
     vectors = [None] * 2
@@ -72,30 +66,8 @@ def _check_dssr_criteria(basepair):
             return False
         
         else:
-            
             p_bases[i], std_hpos[i], hydrogens[i], vectors[i] = base_tuple
-        """
-        basepair[i], std_bases[i], std_centers[i], std_hpos[i], std_bases_masks[i] = _match_base(basepair[i])
 
-        if(std_bases[i] == None):
-            return False
-
-        vectors[i] = np.vstack((vectors[i], std_centers[i]))
-
-        transformation = superimpose(basepair[i], std_bases[i][std_bases_masks[i]])[1]
-        std_bases[i] = superimpose_apply(std_bases[i], transformation)
-        trans1, rot, trans2 = transformation
-
-        vectors[i] += trans1
-        vectors[i]  = np.dot(rot, vectors[i].T).T
-        vectors[i] += trans2
-        
-        #Normalize z-Vector (orthonormal to xy Plane)
-        norm_vector(vectors[i][3,:])
-        """
-
-        
-    
     #Make sure normal vectors point in same direction
 
     if np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) > np.arccos(np.dot((-1*vectors[0][3,:]), vectors[1][3,:])):
