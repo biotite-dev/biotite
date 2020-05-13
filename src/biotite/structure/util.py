@@ -96,6 +96,27 @@ def matrix_rotate(v, matrix):
         v = v.reshape(*orig_shape)
     return v
 
+
+"""
+The following functions describe the bases adenine, cytosine, thymine,
+guanine and uracil in standard coordinates as described by (Wilma, 2001)
+TODO: DOI
+
+They Return:
+
+The bases as list:
+    0: AtomArray with nomenclature of PDB File Format V2
+    1: AtomArray with nomenclature of PDB File Format V3
+
+The center-coordinates of the aromatic rings as list:
+    0: Pyrimidine Ring
+    1: Imidazole Ring (if present)
+
+The hydrogen bond donors and acceptors as list
+    0: Heteroatoms that are bound to a hydrogen that can act as a donor
+    1: Heteroatoms that can act as an acceptor
+"""
+
 def get_std_adenine():
     atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
@@ -133,7 +154,8 @@ def get_std_adenine():
     v3 = adenine.copy()
     v3.atom_name[[0]] = ["C1'"]
 
-    return [adenine, v3], [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
+    return [adenine, v3], [pyrimidine_center, imidazole_center], \
+                 [hbond_donors, hbond_acceptors]
 
 def get_std_cytosine():
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
@@ -206,7 +228,8 @@ def get_std_guanine():
     v3 = guanine.copy()
     v3.atom_name[[0]] = ["C1'"]
 
-    return [guanine, v3], [pyrimidine_center, imidazole_center], [hbond_donors, hbond_acceptors]
+    return [guanine, v3], [pyrimidine_center, imidazole_center], \
+                     [hbond_donors, hbond_acceptors]
 
 def get_std_thymine():
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
