@@ -19,10 +19,12 @@ def test_get_proximate_basepair_candidates():
 
 def test_get_basepairs():
     nuc_sample_array = strucio.load_structure(
-        join(data_dir("structure"), "1uqc.cif")
+        join(data_dir("structure"), "1qxb.cif")
     )
+    #nuc_sample_array = nuc_sample_array[np.isin(nuc_sample_array.element, ["H"], invert=True)]
+    #print(nuc_sample_array)
     basepairs = [[2, 'A', 11, 'B'], [3, 'A', 10, 'B'], [4, 'A', 9, 'B'],
                  [5, 'A', 8, 'B']
                 ]
-    
+    print(get_basepairs(nuc_sample_array))
     assert ( get_basepairs(nuc_sample_array) == basepairs )
