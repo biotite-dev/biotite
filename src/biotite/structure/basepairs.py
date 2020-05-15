@@ -93,12 +93,21 @@ def _get_std_cytosine():
     atom7 = Atom([1.875, 2.027, 0.000], atom_name="N4", res_name="C")
     atom8 = Atom([1.056, 4.275, 0.000], atom_name="C5", res_name="C")
     atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6", res_name="C")
+    cytosine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+                    )
+    cytosine_pdbv3 = cytosine.copy()
+    cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
-    pyrimidine_center = np.mean([atom2.coord, atom3.coord, atom5.coord,
-                                    atom6.coord, atom8.coord, atom9.coord],
-                                    axis=-2
+    # Calculate the coordinates of the aromatic ring center.
+    pyrimidine_center = np.mean(
+        [atom2.coord, atom3.coord, atom5.coord,
+         atom6.coord, atom8.coord, atom9.coord], axis=-2
                             )
     
+    # Create boolean masks for the AtomArray containing the bases 
+    # heteroatoms which (or the usually attached hydrogens) can act as
+    # Hydrogen Bond Donors or Acceptors
     hbond_donors = np.zeros(9, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
@@ -107,14 +116,8 @@ def _get_std_cytosine():
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
-    cytosine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-                        atom9]
-                    )
-
-    v3 = cytosine.copy()
-    v3.atom_name[[0]] = ["C1'"]
-
-    return [cytosine, v3], [pyrimidine_center], [hbond_donors, hbond_acceptors]
+    return [cytosine, cytosine_pdbv3], [pyrimidine_center], \
+           [hbond_donors, hbond_acceptors]
 
 def _get_std_guanine():
     atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1*", res_name="G")
