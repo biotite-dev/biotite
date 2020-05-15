@@ -282,6 +282,7 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
     
     return basepairs
 
+
 def _check_dssr_criteria(basepair, min_atoms_per_base):
     transformed_bases = [None] * 2
     hbond_masks = [None] * 2
@@ -366,6 +367,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
 
     return True
 
+
 def _check_hbonds(bases, hbond_masks):
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
@@ -374,6 +376,7 @@ def _check_hbonds(bases, hbond_masks):
                 if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
                     return True
     return False
+
 
 def _check_base_stacking(transformed_vectors):
     # Check for the presence of base stacking corresponding to the
@@ -409,6 +412,7 @@ def _check_base_stacking(transformed_vectors):
                 return True
     
     return False
+
 
 def _match_base(base, min_atoms_per_base):
     # Matches a nucleotide to a standard base
@@ -505,66 +509,66 @@ def _match_base(base, min_atoms_per_base):
         #
         # Generate a boolean mask containing only the base atoms, 
         # disregarding the sugar atoms and the phosphate backbone.
-        base_atom_booleanmask = np.ones(len(base), dtype=bool)
+        base_atom_mask = np.ones(len(base), dtype=bool)
         for i in range(len(base)):
             if((base[i].atom_name not in std_base.atom_name) and
                (base[i].element != "H")):
-                base_atom_booleanmask[i] = False
+                base_atom_mask[i] = False
         
         # Create boolean masks for the AtomArray containing the bases` 
         # heteroatoms, which (or the usually attached hydrogens) can act 
         # as Hydrogen Bond Donors or Acceptors respectively, using the
         # std_base as a template.
         for i in range(2):
-            return_hbond_masks[i] = _filter_atom_type(base[base_atom_booleanmask], 
+            return_hbond_masks[i] = _filter_atom_type(base[base_atom_mask], 
                                 std_base[std_hbond_masks[i]].atom_name)
 
         # Check if the base contains Hydrogens.
-        if ("H" in base.element[base_atom_booleanmask]):
+        if ("H" in base.element[base_atom_mask]):
             contains_hydrogens = True
-            return_base = base[base_atom_booleanmask]          
+            return_base = base[base_atom_mask]          
         else:
-            return_base = base[base_atom_booleanmask]
+            return_base = base[base_atom_mask]
         
     return return_base, return_hbond_masks, contains_hydrogens, vectors
 
-def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
-    #TODO: Docstring
-    #gets proximate basepairs, where the C1-Sugar-Atoms are within
+
+def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
+                                       min_cutoff = 9):
+    # gets proximate basepairs, where the C1-Sugar-Atoms are within
     # `min_cutoff<=x<=max_cutoff`
-    
-    c1sugars = array[filter_nucleotides(array) 
-                    & _filter_atom_type(array, ["C1'", "C1*"])]
-    adj_matrix = CellList(c1sugars, max_cutoff).create_adjacency_matrix(max_cutoff)
+    c1sugars = atom_array[filter_nucleotides(atom_array) 
+                     & _filter_atom_type(atom_array, ["C1'", "C1*"])]
+    adjacency_matrix = CellList(
+        c1sugars, max_cutoff
+                            ).create_adjacency_matrix(max_cutoff)
     
     basepair_candidates = []
-    
-    for ix, iy in np.ndindex(adj_matrix.shape):
-        if (adj_matrix[ix][iy]):
+    for ix, iy in np.ndindex(adjacency_matrix.shape):
+        if (adjacency_matrix[ix][iy]):
             candidate = [c1sugars[ix].res_id, c1sugars[ix].chain_id]
             partner = [c1sugars[iy].res_id, c1sugars[iy].chain_id]
             if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
                  & ((partner + candidate) not in basepair_candidates)):
-                
                 basepair_candidates.append(candidate + partner)
     
     return basepair_candidates
 
-def _filter_atom_type(array, atom_names):
+
+def _filter_atom_type(atom_array, atom_names):
     # Filter all atoms having the desired `atom_name`.
     return (
-        np.in1d(array.atom_name, atom_names) 
-        & (array.res_id != -1)
-    )
+        np.isin(atom_array.atom_name, atom_names)
+        & (atom_array.res_id != -1)
+        )
 
-def _filter_residues(array, res_ids, chain_id = None):
+
+def _filter_residues(atom_array, res_ids, chain_id = None):
     # Filter all atoms having the desired 'residue_id' and 'chain_id'
     if chain_id is None:
-        chain_mask =  np.ones(array.array_length(), dtype=bool)
+        chain_mask =  np.ones(atom_array.array_length(), dtype=bool)
     else:
-        chain_mask = np.isin(array.chain_id, chain_id)
+        chain_mask = np.isin(atom_array.chain_id, chain_id)
 
-    return (
-        np.isin(array.res_id, res_ids) 
-        & chain_mask
-        )
+    return np.isin(atom_array.res_id, res_ids) & chain_mask
+        
