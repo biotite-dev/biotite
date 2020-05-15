@@ -276,88 +276,93 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
             atom_array, basepair_candidate[2], basepair_candidate[3]
                                         )
                         ]
-                        
+
         if _check_dssr_criteria([base1, base2], min_atoms_per_base):
             basepairs.append(basepair_candidate)
     
     return basepairs
 
-def _check_dssr_criteria(basepair, min_atoms):
-    #Returns True if the basepair meets the dssr critera, False if not
+def _check_dssr_criteria(basepair, min_atoms_per_base):
+    transformed_bases = [None] * 2
+    hbond_masks = [None] * 2
+    # A list containing one NumPy array for each base with transformed
+    # vectors from the standard base reference frame to the structures
+    # coordinates. The layout is as follows:
+    #
+    # [Origin coordinates]
+    # [Orthonormal base vectors] * 3 in the order x, y, z
+    # [Aromatic Ring Center coordinates]
+    transformed_std_vectors = [None] * 2
+    contains_hydrogens = np.zeros(2, dtype=bool)
 
-    p_bases = [None] * 2
-    std_hpos = [None] * 2
-    vectors = [None] * 2
-    hydrogens = np.zeros(2, dtype=bool)
-
-    #Generate data for each base neccesary for analysis
-
+    # Generate the data necessary for analysis for each base.
     for i in range(2):
+        base_tuple = _match_base(basepair[i], min_atoms_per_base)
         
-        base_tuple = _match_base(basepair[i], min_atoms)
-
         if(base_tuple is None):
             return False
         
-        p_bases[i], std_hpos[i], hydrogens[i], vectors[i] = base_tuple
+        transformed_bases[i], hbond_masks[i], contains_hydrogens[i], \
+            transformed_std_vectors[i] = base_tuple
 
-    #(i) Distance between orgins <= 15 A
-   
-    if not (distance(vectors[0][0,:], vectors[1][0,:]) <= 15):
+    # Criterion 1: Distance between orgins <= 15 Å
+    if not (distance(transformed_std_vectors[0][0,:],
+            transformed_std_vectors[1][0,:]) <= 15):
         return False
     
-    #(ii) Vertical seperation <= 2.5 A
-        
-        #Find the intercept between the plane of base zero and a
-        #line consisting of the origin of base one and normal vector
-        #of base zero
-    
-    t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:],
-                                   (-1)*vectors[0][3,:]) 
-                                ).T,
-                         (vectors[1][0,:] - vectors[0][0,:])
+    # Criterion 2: Vertical seperation <= 2.5 Å
+    #    
+    # Find the intercept between the xy-plane of `transformed_bases[0]`
+    # and a line consisting of the origin of `transformed_base[1]` and
+    # normal vector (`transformed_std_vectors[0][0,:]` -> z-vector) of
+    # `transformed_bases[0]`.
+    t = np.linalg.solve(
+        np.vstack((transformed_std_vectors[0][1,:],
+                   transformed_std_vectors[0][2,:],
+                   (-1)*transformed_std_vectors[0][3,:]) 
+                ).T,
+        (transformed_std_vectors[1][0,:] - transformed_std_vectors[0][0,:])
                     )[0]
-    intercept = vectors[1][0,:] + (t * vectors[0][3,:])
-
-        #Vertical seperation is the distance of the origin of base one
-        #and the intercept descibed above
-    #print(vectors[0][1:4,:])
-    #print(vectors[1][1:4,:])
-    #print(distance(vectors[1][0,:], intercept))
-    print(str(basepair[0][0].res_id) + str(basepair[0][0].chain_id) + " und " + str(basepair[1][0].res_id) + str(basepair[1][0].chain_id)) 
-    if not (distance(vectors[1][0,:], intercept) <= 2.5):
+    intercept = (transformed_std_vectors[1][0,:]
+                + (t * transformed_std_vectors[0][3,:]))
+    # The vertical seperation is the distance of the origin of
+    # `transformed_bases[1]` and the intercept described above.
+    if not (distance(transformed_std_vectors[1][0,:], intercept) <= 2.5):
         return False
       
-    #(iii) Angle between normal vectors <= 65°
-    
-    print(np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:]))*(180/np.pi))
-    if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
-                >= ( (115*np.pi)/180)
-            ):
+    # Criterion 3: Angle between normal vectors <= 65°
+    if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
+                              transformed_std_vectors[1][3,:])
+                    ) >=
+            ((115*np.pi)/180)
+        ):
         return False
     
-    #(iv) Absence of Stacking
-    
-    if _check_base_stacking(vectors):
+    # Criterion 4: Absence of stacking
+    if _check_base_stacking(transformed_std_vectors):
         return False
     
-    #(v) Presence of Hydrogen Bonds
-    
-    if (np.all(hydrogens)):
-        #if the structure contains hydrogens, check for bonds
-        if(len(hbond(p_bases[0] + p_bases[1],
-                     np.ones_like(p_bases[0] + p_bases[1], dtype=bool), 
-                     np.ones_like(p_bases[0] + p_bases[1], dtype=bool)
+    # Criterion 5: Presence of at least on hydrogen bond
+    # Check if both bases came with hydrogens.
+    if (np.all(contains_hydrogens)):
+        # For Structures that contain hydrogens, check for their 
+        # presence directly.
+        if(len(hbond(transformed_bases[0] + transformed_bases[1],
+                     np.ones_like(
+                         transformed_bases[0] + transformed_bases[1],
+                         dtype=bool
+                                ), 
+                     np.ones_like(
+                         transformed_bases[0] + transformed_bases[1],
+                         dtype=bool
+                                )
                     )
-                ) == 0):
-                return False
-               
-    elif not _check_hbonds(p_bases, std_hpos):
-        #if the structure does not contain hydrogens, check for
-        #plausability of Hydrogen Bonds
+            ) == 0):
+            return False           
+    elif not _check_hbonds(transformed_bases, hbond_masks):
+        # if the structure does not contain hydrogens, check for
+        # plausibility of hydrogen bonds between heteroatoms
         return False
-
-    #If no condition was a dealbreaker: Accept Basepair
 
     return True
 
