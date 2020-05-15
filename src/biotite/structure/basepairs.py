@@ -245,23 +245,22 @@ def _get_std_uracil():
 
 
 _std_adenine, _std_adenine_ring_centers, \
-        _std_adenine_hpos = _get_std_adenine()
+        _std_adenine_hbond_masks = _get_std_adenine()
 _std_cytosine, _std_cytosine_ring_centers, \
-        _std_cytosine_hpos = _get_std_cytosine()
+        _std_cytosine_hbond_masks = _get_std_cytosine()
 _std_guanine, _std_guanine_ring_centers, \
-        _std_guanine_hpos = _get_std_guanine()  
+        _std_guanine_hbond_masks = _get_std_guanine()  
 _std_thymine, _std_thymine_ring_centers, \
-        _std_thymine_hpos = _get_std_thymine()
+        _std_thymine_hbond_masks = _get_std_thymine()
 _std_uracil, _std_uracil_ring_centers, \
-        _std_uracil_hpos = _get_std_uracil()
+        _std_uracil_hbond_masks = _get_std_uracil()
 
-_adenine_like = ["A", "DA"]
-_thymine_like = ["T", "DT"]
-_cytosine_like = ["C", "DC"]
-_guanine_like = ["G", "DG"]
-_uracil_like = ["U", "DU"]
+_adenine_containing_nucleotides = ["A", "DA"]
+_thymine_containing_nucleotides = ["T", "DT"]
+_cytosine_containing_nucleotides = ["C", "DC"]
+_guanine_containing_nucleotides = ["G", "DG"]
+_uracil_containing_nucleotides = ["U", "DU"]
 
-#TODO: Add Doc
 
 def get_basepairs(array, min_atoms = 3):
 
@@ -438,30 +437,30 @@ def _match_base(base, min_atoms):
 
     #Check Base Type
 
-    if(base[0].res_name in _adenine_like):
+    if(base[0].res_name in _adenine_containing_nucleotides):
         std_base = _std_adenine
         std_centers = _std_adenine_ring_centers
-        std_hpos = _std_adenine_hpos
+        std_hpos = _std_adenine_hbond_masks
 
-    elif(base[0].res_name in _thymine_like):
+    elif(base[0].res_name in _thymine_containing_nucleotides):
         std_base = _std_thymine
         std_centers = _std_thymine_ring_centers
-        std_hpos = _std_thymine_hpos
+        std_hpos = _std_thymine_hbond_masks
 
-    elif(base[0].res_name in _cytosine_like):
+    elif(base[0].res_name in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_centers = _std_cytosine_ring_centers
-        std_hpos = _std_cytosine_hpos
+        std_hpos = _std_cytosine_hbond_masks
 
-    elif(base[0].res_name in _guanine_like):
+    elif(base[0].res_name in _guanine_containing_nucleotides):
         std_base = _std_guanine
         std_centers = _std_guanine_ring_centers
-        std_hpos = _std_guanine_hpos
+        std_hpos = _std_guanine_hbond_masks
 
-    elif(base[0].res_name in _uracil_like):
+    elif(base[0].res_name in _uracil_containing_nucleotides):
         std_base = _std_uracil
         std_centers = _std_uracil_ring_centers
-        std_hpos = _std_uracil_hpos 
+        std_hpos = _std_uracil_hbond_masks 
     
     else:
         raise UnexpectedStructureWarning("Base Type not supported. Unable to "
