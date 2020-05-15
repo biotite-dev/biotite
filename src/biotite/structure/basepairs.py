@@ -410,156 +410,123 @@ def _check_base_stacking(transformed_vectors):
     
     return False
 
-def _match_base(base, min_atoms):
-    #Matches a nucleotide to a standard base
-    #Returns: 
-    #ret_base : The base or if the base atoms are incomplete a
+def _match_base(base, min_atoms_per_base):
+    # Matches a nucleotide to a standard base
+    # Returns: 
+    # ret_base : The base or if the base atoms are incomplete a
     #               superimposed standard base
-    #ret_hpos : A list of size 2 containing boolean masks. 
+    # ret_hpos : A list of size 2 containing boolean masks. 
     #               Pos 0 contains the het_atoms that act as H-Donors
     #               Pos 1 contains the het_atoms that act as H-Acceptors
-    #contains_hydrogens : A boolean; if True the base contains H-Atoms
-    #vectors : A set of std_vectors (Origin, Orthonormal-Base-Vectors, 
+    # contains_hydrogens : A boolean; if True the base contains H-Atoms
+    # vectors : A set of std_vectors (Origin, Orthonormal-Base-Vectors, 
     #               Ring-Centers) transformed onto the
     #               nucleotides coordinates   
 
-    ret_hpos = [None] * 2
+    return_hbond_masks = [None] * 2
     contains_hydrogens = False
 
-    vector = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
+    vectors = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
                              [0, 0, 1]], np.float)
 
-    #Check Base Type
-
+    # Check base type and match standard base.
     if(base[0].res_name in _adenine_containing_nucleotides):
         std_base = _std_adenine
-        std_centers = _std_adenine_ring_centers
-        std_hpos = _std_adenine_hbond_masks
-
+        std_ring_centers = _std_adenine_ring_centers
+        std_hbond_masks = _std_adenine_hbond_masks
     elif(base[0].res_name in _thymine_containing_nucleotides):
         std_base = _std_thymine
-        std_centers = _std_thymine_ring_centers
-        std_hpos = _std_thymine_hbond_masks
-
+        std_ring_centers = _std_thymine_ring_centers
+        std_hbond_masks = _std_thymine_hbond_masks
     elif(base[0].res_name in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
-        std_centers = _std_cytosine_ring_centers
-        std_hpos = _std_cytosine_hbond_masks
-
+        std_ring_centers = _std_cytosine_ring_centers
+        std_hbond_masks = _std_cytosine_hbond_masks
     elif(base[0].res_name in _guanine_containing_nucleotides):
         std_base = _std_guanine
-        std_centers = _std_guanine_ring_centers
-        std_hpos = _std_guanine_hbond_masks
-
+        std_ring_centers = _std_guanine_ring_centers
+        std_hbond_masks = _std_guanine_hbond_masks
     elif(base[0].res_name in _uracil_containing_nucleotides):
         std_base = _std_uracil
-        std_centers = _std_uracil_ring_centers
-        std_hpos = _std_uracil_hbond_masks 
-    
+        std_ring_centers = _std_uracil_ring_centers
+        std_hbond_masks = _std_uracil_hbond_masks 
     else:
         raise UnexpectedStructureWarning("Base Type not supported. Unable to "
-                                            "check for basepair")
+                                         "check for basepair")
         return None
 
-    #Check if the structure uses PDBv3 or PDBv2 atom nomenclature
-
-    if( np.sum(np.in1d(std_base[1].atom_name, base.atom_name))
-            > np.sum(np.in1d(std_base[0].atom_name, base.atom_name))
-    ):
+    # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
+    if (np.sum(np.in1d(std_base[1].atom_name, base.atom_name))
+        > np.sum(np.in1d(std_base[0].atom_name, base.atom_name))):
         std_base = std_base[1]
     else:
         std_base = std_base[0]
 
-    #Add the ring centers to the array of vectors to be transformed
-
-    vector = np.vstack((vector, std_centers))
+    # Add the ring centers to the array of vectors to be transformed.
+    vectors = np.vstack((vectors, std_ring_centers))
     
-    #Match the selected std_base to the base
-
+    # Match the selected std_base to the base.
     fitted, transformation = superimpose(
                         base[np.in1d(base.atom_name, std_base.atom_name)],
                         std_base[np.in1d(std_base.atom_name, base.atom_name)]
                                         )
-
-    #Investigate the completeness of the base:
-    #       A length difference of zero means the base contains all
-    #       atoms of the std_base
-          
-    length_difference = len(std_base) - len(fitted) 
-    
-    #Transform the vectors
-
+    # Transform the vectors
     trans1, rot, trans2 = transformation
-
-   
-    #print(std_base.coord)
-    
-    
-    vector += trans1
-    vector  = np.dot(rot, vector.T).T
-    vector += trans2
-    
-    
-    #Normalise the transformed orthogonal base vectors
-    
-    
+    vectors += trans1
+    vectors  = np.dot(rot, vectors.T).T
+    vectors += trans2   
+    # Normalize the transformed orthogonal base vectors   
     for i in range(1, 4):
-        vector[i,:] = vector[i,:]-vector[0,:]
-        norm_vector(vector[i,:])
-    
-    #print(np.dot(vector[1,:], vector[2,:]))
+        vectors[i,:] = vectors[i,:]-vectors[0,:]
+        norm_vector(vectors[i,:])
 
-    #If the base is incomplete but contains 3 or more atoms of the 
-    #   std_base, transform the complete std_base and use it to
-    #   approximate the base.
-    
-    if(length_difference > 0 and len(fitted) >= min_atoms):
+    # Investigate the completeness of the base:
+    # 
+    # A length difference of zero means the base contains all atoms of
+    # the std_base          
+    length_difference = len(std_base) - len(fitted) 
+    if(length_difference > 0 and len(fitted) >= min_atoms_per_base):
+        # If the base is incomplete but contains 3 or more atoms of the 
+        # std_base, transform the complete std_base and use it to
+        # approximate the base.
         raise IncompleteStructureWarning("Base is not complete. Attempting "
                                             "to emulate with std_base.")
-        ret_base = superimpose_apply(std_base, transformation)
-        ret_hpos = std_hpos
+        return_base = superimpose_apply(std_base, transformation)
+        return_hbond_masks = std_hbond_masks
         contains_hydrogens = False
-    
-    #If the base is incomplete and contains less than 3 atoms of the 
-    #   std_base throw warning
-
     elif (length_difference > 0):
+        # If the base is incomplete and contains less than 3 atoms of 
+        # the std_base throw warning
         raise IncompleteStructureWarning("Base is smaller than 3 atoms. "
                                             "Unable to check for basepair.")
         return None
-
-    #if the base is complete use the base for further calculations    
     else:
-
-        mask = np.ones(len(base), dtype=bool)
-        
-        # Generate a boolean mask containing only the base atoms,
-        #   disregarding the sugar atoms and the phosphate backbone
-
+        # If the base is complete use the base for further calculations.
+        #
+        # Generate a boolean mask containing only the base atoms, 
+        # disregarding the sugar atoms and the phosphate backbone.
+        base_atom_booleanmask = np.ones(len(base), dtype=bool)
         for i in range(len(base)):
-            if( ("'" in base[i].atom_name) or ("*" in base[i].atom_name) or
-                (   
-                    (base[i].atom_name not in std_base.atom_name) and
-                    (base[i].element != "H") 
-                )
-            ):
-                mask[i] = False
+            if((base[i].atom_name not in std_base.atom_name) and
+               (base[i].element != "H")):
+                base_atom_booleanmask[i] = False
         
-        #Generate a boolaean mask for the hydrogen donors and acceptors
-
+        # Create boolean masks for the AtomArray containing the bases` 
+        # heteroatoms, which (or the usually attached hydrogens) can act 
+        # as Hydrogen Bond Donors or Acceptors respectively, using the
+        # std_base as a template.
         for i in range(2):
-            ret_hpos[i] = _filter_atom_type(base[mask], 
-                                std_base[std_hpos[i]].atom_name)
+            return_hbond_masks[i] = _filter_atom_type(base[base_atom_booleanmask], 
+                                std_base[std_hbond_masks[i]].atom_name)
 
-        #Check if the base contains Hydrogens
-        if ("H" in base.element[mask]):
+        # Check if the base contains Hydrogens.
+        if ("H" in base.element[base_atom_booleanmask]):
             contains_hydrogens = True
-            ret_base = base[mask]
-                    
+            return_base = base[base_atom_booleanmask]          
         else:
-            ret_base = base[mask]
+            return_base = base[base_atom_booleanmask]
         
-    return ret_base, ret_hpos, contains_hydrogens, vector
+    return return_base, return_hbond_masks, contains_hydrogens, vectors
 
 def _get_proximate_basepair_candidates(array, max_cutoff = 15, min_cutoff = 9):
     #TODO: Docstring
