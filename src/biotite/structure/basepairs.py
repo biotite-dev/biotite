@@ -39,6 +39,7 @@ The hydrogen bond donors and acceptors as list
     1: Heteroatoms that can act as an acceptor
 """
 
+
 def _get_std_adenine():
     atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
@@ -52,13 +53,14 @@ def _get_std_adenine():
     atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
     atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
 
-    pyrimidine_center = np.mean([atom5.coord, atom6.coord, atom8.coord,
-                                    atom9.coord, atom10.coord, atom11.coord],
-                                    axis=-2
+    pyrimidine_center = np.mean(
+        [atom5.coord, atom6.coord, atom8.coord, 
+         atom9.coord, atom10.coord, atom11.coord], axis=-2
                             )
-    imidazole_center = np.mean([atom2.coord, atom3.coord, atom4.coord,
-                                    atom5.coord, atom11.coord], 
-                                    axis=-2
+
+    imidazole_center = np.mean(
+        [atom2.coord, atom3.coord, atom4.coord,
+         atom5.coord, atom11.coord], axis=-2
                             )
     
     hbond_donors = np.zeros(11, dtype=bool)
@@ -69,15 +71,16 @@ def _get_std_adenine():
     hbond_a = [1, 3, 6, 7, 9]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
 
-    adenine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-                        atom9, atom10, atom11]
+    adenine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
+         atom9, atom10, atom11]
                 )
     
-    v3 = adenine.copy()
-    v3.atom_name[[0]] = ["C1'"]
+    adenine_pdbv3 = adenine.copy()
+    adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
-    return [adenine, v3], [pyrimidine_center, imidazole_center], \
-                 [hbond_donors, hbond_acceptors]
+    return [adenine, adenine_pdbv3], [pyrimidine_center, imidazole_center], \
+           [hbond_donors, hbond_acceptors]
 
 def _get_std_cytosine():
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
@@ -286,25 +289,28 @@ def _check_dssr_criteria(basepair, min_atoms):
         #Find the intercept between the plane of base zero and a
         #line consisting of the origin of base one and normal vector
         #of base zero
-    """
+    
     t = np.linalg.solve(np.vstack( (vectors[0][1,:], vectors[0][2,:],
                                    (-1)*vectors[0][3,:]) 
                                 ).T,
                          (vectors[1][0,:] - vectors[0][0,:])
-                    )[2]
+                    )[0]
     intercept = vectors[1][0,:] + (t * vectors[0][3,:])
 
         #Vertical seperation is the distance of the origin of base one
         #and the intercept descibed above
+    #print(vectors[0][1:4,:])
+    #print(vectors[1][1:4,:])
     #print(distance(vectors[1][0,:], intercept))
-    #print(str(basepair[0][0].res_id) + str(basepair[0][0].chain_id) + " und " + str(basepair[1][0].res_id) + str(basepair[1][0].chain_id)) 
+    print(str(basepair[0][0].res_id) + str(basepair[0][0].chain_id) + " und " + str(basepair[1][0].res_id) + str(basepair[1][0].chain_id)) 
     if not (distance(vectors[1][0,:], intercept) <= 2.5):
         return False
-    """    
+      
     #(iii) Angle between normal vectors <= 65°
     
+    print(np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:]))*(180/np.pi))
     if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
-                <= ( (65*np.pi)/180 )
+                >= ( (115*np.pi)/180)
             ):
         return False
     
@@ -475,15 +481,24 @@ def _match_base(base, min_atoms):
 
     trans1, rot, trans2 = transformation
 
+   
+    #print(std_base.coord)
+    
+    
     vector += trans1
     vector  = np.dot(rot, vector.T).T
     vector += trans2
     
+    
     #Normalise the transformed orthogonal base vectors
     
+    
     for i in range(1, 4):
+        vector[i,:] = vector[i,:]-vector[0,:]
         norm_vector(vector[i,:])
     
+    #print(np.dot(vector[1,:], vector[2,:]))
+
     #If the base is incomplete but contains 3 or more atoms of the 
     #   std_base, transform the complete std_base and use it to
     #   approximate the base.
@@ -495,7 +510,7 @@ def _match_base(base, min_atoms):
         ret_hpos = std_hpos
         contains_hydrogens = False
     
-    #If the base is incomplete and conatains less than 3 atoms of the 
+    #If the base is incomplete and contains less than 3 atoms of the 
     #   std_base throw warning
 
     elif (length_difference > 0):
