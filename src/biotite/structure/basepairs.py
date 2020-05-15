@@ -105,9 +105,9 @@ def _get_std_cytosine():
          atom6.coord, atom8.coord, atom9.coord], axis=-2
                             )
     
-    # Create boolean masks for the AtomArray containing the bases 
+    # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
-    # Hydrogen Bond Donors or Acceptors
+    # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donors = np.zeros(9, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
@@ -132,16 +132,26 @@ def _get_std_guanine():
     atom10 = Atom([-2.949, 0.139, -0.001], atom_name="N2", res_name="G")
     atom11 = Atom([-2.342, 2.364, 0.001], atom_name="N3", res_name="G")
     atom12 = Atom([-1.265, 3.177, 0.000], atom_name="C4", res_name="G")
+    guanine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
+         atom9, atom10, atom11, atom12]
+                )
+    guanine_pdbv3 = guanine.copy()
+    guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
-    pyrimidine_center = np.mean([atom5.coord, atom6.coord, atom8.coord,
-                                    atom9.coord, atom11.coord, atom12.coord],
-                                    axis=-2
-                                )
-    imidazole_center = np.mean([atom2.coord, atom3.coord, atom4.coord,
-                                    atom5.coord, atom12.coord],
-                                    axis=-2
-                                )
+    # Calculate the coordinates of the aromatic ring centers.
+    pyrimidine_center = np.mean(
+        [atom5.coord, atom6.coord, atom8.coord,
+         atom9.coord, atom11.coord, atom12.coord], axis=-2
+                            )
+    imidazole_center = np.mean(
+        [atom2.coord, atom3.coord, atom4.coord,
+         atom5.coord, atom12.coord], axis=-2
+                            )
 
+    # Create boolean masks for the AtomArray containing the bases` 
+    # heteroatoms which (or the usually attached hydrogens) can act as
+    # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donors = np.zeros(12, dtype=bool)
     hbond_d = [1, 7, 9]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
@@ -149,16 +159,9 @@ def _get_std_guanine():
     hbond_acceptors = np.zeros(12, dtype=bool)
     hbond_a = [1, 3, 6, 7, 9, 10]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-
-    guanine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-                        atom9, atom10, atom11, atom12]
-                )
-
-    v3 = guanine.copy()
-    v3.atom_name[[0]] = ["C1'"]
-
-    return [guanine, v3], [pyrimidine_center, imidazole_center], \
-                     [hbond_donors, hbond_acceptors]
+    
+    return [guanine, guanine_pdbv3], [pyrimidine_center, imidazole_center], \
+           [hbond_donors, hbond_acceptors]
 
 def _get_std_thymine():
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
