@@ -41,6 +41,24 @@ The hydrogen bond donors and acceptors as list
 
 
 def  _get_1d_boolean_mask(size, true_ids):
+    r"""
+    Get a boolean ndarray of shape=(n,) which can be used as a mask for
+    fancy indexing. 
+    
+    Parameters
+    ----------
+    size : integer
+        Size of the 1-dimensional array.
+    true_ids: list
+        Indices where the boolean mask is `True`.
+        
+    Returns
+    -------
+    mask : ndarray, dtype=bool, shape=(n,)
+        The boolean mask, which is `True` at the specified indices and
+        `False` everywhere else.
+    """
+
     mask = np.zeros(size, dtype=bool)
     mask[true_ids] = np.ones(len(true_ids), dtype=bool)
     return mask
