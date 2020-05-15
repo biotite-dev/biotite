@@ -366,26 +366,18 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
 
     return True
 
-def _check_hbonds(std_bases, std_hpos):
-    #Accept if het_Donor-het_Acceptor Relationship <= 3.5 A exists
-    #Definition from https://proteopedia.org/wiki/index.php/Hydrogen_bonds
-
-    for donor, dmask, acceptor, amask in zip(
-                std_bases, std_hpos, reversed(std_bases), reversed(std_hpos)
-                                            ):
-       
-        for datom in donor[dmask[0]]:
-            for aatom in acceptor[amask[1]]:
-
-                if(distance(aatom.coord, datom.coord) <= 4.0):
+def _check_hbonds(bases, hbond_masks):
+    for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
+        zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
+        for donor_atom in donor_base[hbond_donor_mask[0]]:
+            for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
+                if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
                     return True
-    
     return False
 
 def _check_base_stacking(vectors):
-    #checks for the presence of base stacking corresponding to the
-    #criteria of (Gabb, 1996)
-    #   DOI: 10.1016/0263-7855(95)00086-0
+    # Check for the presence of base stacking corresponding to the
+    # criteria of (Gabb, 1996): DOI: 10.1016/0263-7855(95)00086-0
 
     #Check for Base-Base Stacking
 
