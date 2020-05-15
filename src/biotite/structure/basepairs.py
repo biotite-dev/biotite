@@ -52,17 +52,26 @@ def _get_std_adenine():
     atom9 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
     atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
     atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
+    adenine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
+         atom9, atom10, atom11]
+                )
+    adenine_pdbv3 = adenine.copy()
+    adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
+    # Calculate the coordinates of the aromatic ring centers.
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord, 
          atom9.coord, atom10.coord, atom11.coord], axis=-2
                             )
-
     imidazole_center = np.mean(
         [atom2.coord, atom3.coord, atom4.coord,
          atom5.coord, atom11.coord], axis=-2
                             )
-    
+
+    # Create boolean masks for the AtomArray containing the bases 
+    # heteroatoms which (or the usually attached hydrogens) can act as
+    # Hydrogen Bond Donors or Acceptors
     hbond_donors = np.zeros(11, dtype=bool)
     hbond_d = [1, 6]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
@@ -70,14 +79,6 @@ def _get_std_adenine():
     hbond_acceptors = np.zeros(11, dtype=bool)
     hbond_a = [1, 3, 6, 7, 9]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-
-    adenine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-         atom9, atom10, atom11]
-                )
-    
-    adenine_pdbv3 = adenine.copy()
-    adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
     return [adenine, adenine_pdbv3], [pyrimidine_center, imidazole_center], \
            [hbond_donors, hbond_acceptors]
