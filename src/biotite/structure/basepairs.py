@@ -40,6 +40,12 @@ The hydrogen bond donors and acceptors as list
 """
 
 
+def  _get_1d_boolean_mask(size, true_ids):
+    mask = np.zeros(size, dtype=bool)
+    mask[true_ids] = np.ones(len(true_ids), dtype=bool)
+    return mask
+
+
 def _get_std_adenine():
     atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
@@ -52,11 +58,11 @@ def _get_std_adenine():
     atom9 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
     atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
     atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
-    adenine = array(
+    adenine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11]
                 )
-    adenine_pdbv3 = adenine.copy()
+    adenine_pdbv3 = adenine_pdbv2.copy()
     adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Calculate the coordinates of the aromatic ring centers.
@@ -69,19 +75,19 @@ def _get_std_adenine():
          atom5.coord, atom11.coord], axis=-2
                             )
 
-    # Create boolean masks for the AtomArray containing the bases 
+    # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
-    # Hydrogen Bond Donors or Acceptors
-    hbond_donors = np.zeros(11, dtype=bool)
-    hbond_d = [1, 6]
-    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
-    
-    hbond_acceptors = np.zeros(11, dtype=bool)
-    hbond_a = [1, 3, 6, 7, 9]
-    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
+    # Hydrogen Bond Donors or Acceptors respectively.
+    hbond_donor_mask = _get_1d_boolean_mask(
+        adenine_pdbv2.array_length(), [1, 6]
+                                        )
+    hbond_acceptor_mask = _get_1d_boolean_mask(
+        adenine_pdbv2.array_length(), [1, 3, 6, 7, 9]
+                                            )
 
-    return [adenine, adenine_pdbv3], [pyrimidine_center, imidazole_center], \
-           [hbond_donors, hbond_acceptors]
+    return [adenine_pdbv2, adenine_pdbv3], \
+           [pyrimidine_center, imidazole_center], \
+           [hbond_donor_mask, hbond_acceptor_mask]
 
 
 def _get_std_cytosine():
@@ -94,10 +100,10 @@ def _get_std_cytosine():
     atom7 = Atom([1.875, 2.027, 0.000], atom_name="N4", res_name="C")
     atom8 = Atom([1.056, 4.275, 0.000], atom_name="C5", res_name="C")
     atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6", res_name="C")
-    cytosine = array(
+    cytosine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
                     )
-    cytosine_pdbv3 = cytosine.copy()
+    cytosine_pdbv3 = cytosine_pdbv2.copy()
     cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Calculate the coordinates of the aromatic ring center.
@@ -109,16 +115,15 @@ def _get_std_cytosine():
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donors = np.zeros(9, dtype=bool)
-    hbond_d = [1, 6]
-    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
-    
-    hbond_acceptors = np.zeros(9, dtype=bool)
-    hbond_a = [1, 3, 4, 6]
-    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
+    hbond_donor_mask = _get_1d_boolean_mask(
+        cytosine_pdbv2.array_length(), [1, 6]
+                                        )
+    hbond_acceptor_mask = _get_1d_boolean_mask(
+        cytosine_pdbv2.array_length(), [1, 3, 4, 6]
+                                            )
 
-    return [cytosine, cytosine_pdbv3], [pyrimidine_center], \
-           [hbond_donors, hbond_acceptors]
+    return [cytosine_pdbv2, cytosine_pdbv3], [pyrimidine_center], \
+           [hbond_donor_mask, hbond_acceptor_mask]
 
 
 def _get_std_guanine():
@@ -134,11 +139,11 @@ def _get_std_guanine():
     atom10 = Atom([-2.949, 0.139, -0.001], atom_name="N2", res_name="G")
     atom11 = Atom([-2.342, 2.364, 0.001], atom_name="N3", res_name="G")
     atom12 = Atom([-1.265, 3.177, 0.000], atom_name="C4", res_name="G")
-    guanine = array(
+    guanine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11, atom12]
                 )
-    guanine_pdbv3 = guanine.copy()
+    guanine_pdbv3 = guanine_pdbv2.copy()
     guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Calculate the coordinates of the aromatic ring centers.
@@ -154,16 +159,16 @@ def _get_std_guanine():
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donors = np.zeros(12, dtype=bool)
-    hbond_d = [1, 7, 9]
-    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
-    
-    hbond_acceptors = np.zeros(12, dtype=bool)
-    hbond_a = [1, 3, 6, 7, 9, 10]
-    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-    
-    return [guanine, guanine_pdbv3], [pyrimidine_center, imidazole_center], \
-           [hbond_donors, hbond_acceptors]
+    hbond_donor_mask = _get_1d_boolean_mask(
+        guanine_pdbv2.array_length(), [1, 7, 9]
+                                        )
+    hbond_acceptor_mask = _get_1d_boolean_mask(
+        guanine_pdbv2.array_length(), [1, 3, 6, 7, 9, 10]
+                                            )
+
+    return [guanine_pdbv2, guanine_pdbv3], \
+           [pyrimidine_center, imidazole_center], \
+           [hbond_donor_mask, hbond_acceptor_mask]
 
 
 def _get_std_thymine():
@@ -177,10 +182,10 @@ def _get_std_thymine():
     atom8 = Atom([1.106, 4.338, 0.000], atom_name="C5", res_name="T")
     atom9 = Atom([2.466, 4.961, 0.001], atom_name="C5M", res_name="T")
     atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6", res_name="T")
-    thymine = array(
+    thymine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
                 )
-    thymine_pdbv3 = thymine.copy()
+    thymine_pdbv3 = thymine_pdbv2.copy()
     thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
 
     # Calculate the coordinates of the aromatic ring center.
@@ -192,16 +197,15 @@ def _get_std_thymine():
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donors = np.zeros(10, dtype=bool)
-    hbond_d = [1, 4]
-    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
-    
-    hbond_acceptors = np.zeros(10, dtype=bool)
-    hbond_a = [1, 3, 4, 6]
-    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-
-    return [thymine, thymine_pdbv3], [pyrimidine_center], \
-           [hbond_donors, hbond_acceptors]
+    hbond_donor_mask = _get_1d_boolean_mask(
+        thymine_pdbv2.array_length(), [1, 4]
+                                        )
+    hbond_acceptor_mask = _get_1d_boolean_mask(
+        thymine_pdbv2.array_length(), [1, 3, 4, 6]
+                                            )
+      
+    return [thymine_pdbv2, thymine_pdbv3], [pyrimidine_center], \
+           [hbond_donor_mask, hbond_acceptor_mask]
 
 
 def _get_std_uracil():
@@ -214,10 +218,10 @@ def _get_std_uracil():
     atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4", res_name="U")
     atom8 = Atom([1.089, 4.311, 0.000], atom_name="C5", res_name="U")
     atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6", res_name="U")
-    uracil = array(
+    uracil_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
                 )
-    uracil_pdbv3 = uracil.copy()
+    uracil_pdbv3 = uracil_pdbv2.copy()
     uracil_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Calculate the coordinates of the aromatic ring center.
@@ -229,16 +233,15 @@ def _get_std_uracil():
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donors = np.zeros(9, dtype=bool)
-    hbond_d = [1, 4]
-    hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
-    
-    hbond_acceptors = np.zeros(9, dtype=bool)
-    hbond_a = [1, 3, 4, 6]
-    hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-  
-    return [uracil, uracil_pdbv3], [pyrimidine_center], \
-           [hbond_donors, hbond_acceptors]
+    hbond_donor_mask = _get_1d_boolean_mask(
+        uracil_pdbv2.array_length(), [1, 4]
+                                        )
+    hbond_acceptor_mask = _get_1d_boolean_mask(
+        uracil_pdbv2.array_length(), [1, 3, 4, 6]
+                                            )
+
+    return [uracil_pdbv2, uracil_pdbv3], [pyrimidine_center], \
+           [hbond_donor_mask, hbond_acceptor_mask]
 
 
 _std_adenine, _std_adenine_ring_centers, \
