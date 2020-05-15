@@ -375,46 +375,37 @@ def _check_hbonds(bases, hbond_masks):
                     return True
     return False
 
-def _check_base_stacking(vectors):
+def _check_base_stacking(transformed_vectors):
     # Check for the presence of base stacking corresponding to the
     # criteria of (Gabb, 1996): DOI: 10.1016/0263-7855(95)00086-0
 
-    #Check for Base-Base Stacking
+    # Contains the normalized distance vectors between ring centers less
+    # than 4.5 Å apart.
+    normalized_distance_vectors = []
 
-    #(i) distance between ring centers <= 4.5 A
-
+    # Criterion 1: Distance between aromatic ring centers <= 4.5 Å
     wrongdistance = True
-    norm_dist_vectors = []
-
-    for center1 in vectors[0][4:][:]:
-        for center2 in vectors[1][4:][:]:
-            
-            if (distance(center1, center2) <= 4.5):
+    for ring_center1 in transformed_vectors[0][4:][:]:
+        for ring_center2 in transformed_vectors[1][4:][:]:
+            if (distance(ring_center1, ring_center2) <= 4.5):
                 wrongdistance = False
-                norm_dist_vectors.append(center2 - center1)
-                norm_vector(norm_dist_vectors[-1]) 
-    
+                normalized_distance_vectors.append(ring_center2 - ring_center1)
+                norm_vector(normalized_distance_vectors[-1]) 
     if(wrongdistance == True):
         return False
     
-    #(ii) angle between normal vectors <= 23°
-
-    if not ( ( np.arccos(np.dot(vectors[0][3,:], vectors[1][3,:])) )
-                <= ( (23*np.pi)/180 )
-            ):
-            
-            return False
+    # Criterion 2: Angle between normal vectors <= 23°
+    if not ((np.arccos(np.dot(transformed_vectors[0][3,:],
+                              transformed_vectors[1][3,:])))
+            <= ((23*np.pi)/180)):
+        return False
     
-    #(iii) angle between normalised distance vector and one 
-    #   normal vector <= 40°
-    
-    for vector in vectors:
-        for norm_dist_vector in norm_dist_vectors:
-            
-            if ( np.arccos(np.dot(vector[3,:], norm_dist_vector))
-                <= ( (40*np.pi)/180 )
-            ):
-            
+    # Criterion 3: Angle between normalized distance vector and one 
+    # normal vector <= 40°
+    for vector in transformed_vectors:
+        for normalized_dist_vector in normalized_distance_vectors:    
+            if (np.arccos(np.dot(vector[3,:], normalized_dist_vector))
+                <= ((40*np.pi)/180)):
                 return True
     
     return False
