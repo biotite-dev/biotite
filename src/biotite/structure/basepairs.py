@@ -262,17 +262,23 @@ _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
 
-def get_basepairs(array, min_atoms = 3):
+def get_basepairs(atom_array, min_atoms_per_base = 3):
 
-    basepair_candidates = _get_proximate_basepair_candidates(array)
-    
+    basepair_candidates = _get_proximate_basepair_candidates(atom_array)
     basepairs = []
 
-    for basepair_c in basepair_candidates:
-        base1 = array[_filter_residues(array, basepair_c[0], basepair_c[1])]
-        base2 = array[_filter_residues(array, basepair_c[2], basepair_c[3])]
-        if _check_dssr_criteria([base1, base2], min_atoms):
-            basepairs.append(basepair_c)
+    for basepair_candidate in basepair_candidates:
+        base1 = atom_array[_filter_residues(
+            atom_array, basepair_candidate[0],basepair_candidate[1]
+                                        )
+                        ]
+        base2 = atom_array[_filter_residues(
+            atom_array, basepair_candidate[2], basepair_candidate[3]
+                                        )
+                        ]
+                        
+        if _check_dssr_criteria([base1, base2], min_atoms_per_base):
+            basepairs.append(basepair_candidate)
     
     return basepairs
 
