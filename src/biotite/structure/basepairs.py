@@ -178,8 +178,7 @@ def _get_std_thymine():
     atom9 = Atom([2.466, 4.961, 0.001], atom_name="C5M", res_name="T")
     atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6", res_name="T")
     thymine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-         atom9, atom10]
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
                 )
     thymine_pdbv3 = thymine.copy()
     thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
@@ -189,7 +188,7 @@ def _get_std_thymine():
         [atom2.coord, atom3.coord, atom5.coord,
          atom6.coord, atom8.coord, atom10.coord], axis=-2
                             )
-                            
+
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
@@ -215,12 +214,21 @@ def _get_std_uracil():
     atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4", res_name="U")
     atom8 = Atom([1.089, 4.311, 0.000], atom_name="C5", res_name="U")
     atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6", res_name="U")
-    
-    pyrimidine_center = np.mean([atom2.coord, atom3.coord, atom5.coord,
-                                    atom6.coord, atom8.coord, atom9.coord],
-                                    axis=-2
+    uracil = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+                )
+    uracil_pdbv3 = uracil.copy()
+    uracil_pdbv3.atom_name[[0]] = ["C1'"]
+
+    # Calculate the coordinates of the aromatic ring center.
+    pyrimidine_center = np.mean(
+        [atom2.coord, atom3.coord, atom5.coord,
+         atom6.coord, atom8.coord, atom9.coord], axis=-2
                             )
 
+    # Create boolean masks for the AtomArray containing the bases` 
+    # heteroatoms which (or the usually attached hydrogens) can act as
+    # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donors = np.zeros(9, dtype=bool)
     hbond_d = [1, 4]
     hbond_donors[hbond_d] = np.ones(len(hbond_d), dtype=bool)
@@ -228,18 +236,9 @@ def _get_std_uracil():
     hbond_acceptors = np.zeros(9, dtype=bool)
     hbond_a = [1, 3, 4, 6]
     hbond_acceptors[hbond_a] = np.ones(len(hbond_a), dtype=bool)
-
-    uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
-                        atom9]
-                )
-
-    v3 = uracil.copy()
-    v3.atom_name[[0]] = ["C1'"]
-
-    return [uracil, v3], [pyrimidine_center], [hbond_donors, hbond_acceptors]
-
-
-
+  
+    return [uracil, uracil_pdbv3], [pyrimidine_center], \
+           [hbond_donors, hbond_acceptors]
 
 
 _std_adenine, _std_adenine_ring_centers, \
