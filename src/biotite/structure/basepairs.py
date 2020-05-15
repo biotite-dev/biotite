@@ -267,18 +267,11 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
     basepair_candidates = _get_proximate_basepair_candidates(atom_array)
     basepairs = []
 
-    for basepair_candidate in basepair_candidates:
-        base1 = atom_array[_filter_residues(
-            atom_array, basepair_candidate[0],basepair_candidate[1]
-                                        )
-                        ]
-        base2 = atom_array[_filter_residues(
-            atom_array, basepair_candidate[2], basepair_candidate[3]
-                                        )
-                        ]
-
+    for base1_index, base2_index in basepair_candidates:
+        base1 = atom_array[_filter_residues(atom_array, base1_index)]
+        base2 = atom_array[_filter_residues(atom_array, base2_index)]
         if _check_dssr_criteria([base1, base2], min_atoms_per_base):
-            basepairs.append(basepair_candidate)
+            basepairs.append((base1_index, base2_index))
     
     return basepairs
 
@@ -546,29 +539,28 @@ def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
     basepair_candidates = []
     for ix, iy in np.ndindex(adjacency_matrix.shape):
         if (adjacency_matrix[ix][iy]):
-            candidate = [c1sugars[ix].res_id, c1sugars[ix].chain_id]
-            partner = [c1sugars[iy].res_id, c1sugars[iy].chain_id]
+            candidate = np.where(
+                (atom_array.res_id == c1sugars[ix].res_id)
+                & (atom_array.chain_id == c1sugars[ix].chain_id)
+                                )[0][0]
+            partner = np.where(
+                (atom_array.res_id == c1sugars[iy].res_id)
+                & (atom_array.chain_id == c1sugars[iy].chain_id)
+                            )[0][0]
             if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
-                 & ((partner + candidate) not in basepair_candidates)):
-                basepair_candidates.append(candidate + partner)
+                 & ((partner, candidate) not in basepair_candidates)):
+                basepair_candidates.append((candidate, partner))
     
     return basepair_candidates
 
 
 def _filter_atom_type(atom_array, atom_names):
     # Filter all atoms having the desired `atom_name`.
-    return (
-        np.isin(atom_array.atom_name, atom_names)
-        & (atom_array.res_id != -1)
-        )
+    return (np.isin(atom_array.atom_name, atom_names)
+            & (atom_array.res_id != -1))
 
 
-def _filter_residues(atom_array, res_ids, chain_id = None):
-    # Filter all atoms having the desired 'residue_id' and 'chain_id'
-    if chain_id is None:
-        chain_mask =  np.ones(atom_array.array_length(), dtype=bool)
-    else:
-        chain_mask = np.isin(atom_array.chain_id, chain_id)
-
-    return np.isin(atom_array.res_id, res_ids) & chain_mask
+def _filter_residues(atom_array, index):
+    return (np.isin(atom_array.res_id, atom_array[int(index)].res_id)
+            & np.isin(atom_array.chain_id, atom_array[int(index)].chain_id))
         

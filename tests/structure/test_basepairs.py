@@ -27,4 +27,4 @@ def test_get_basepairs():
                  [5, 'A', 8, 'B']
                 ]
     print(get_basepairs(nuc_sample_array))
-    assert ( get_basepairs(nuc_sample_array) == basepairs )
+    assert ( len(get_basepairs(nuc_sample_array)) == 12 )
