@@ -383,6 +383,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # [Aromatic Ring Center coordinates]
     transformed_std_vectors = [None] * 2
     contains_hydrogens = np.zeros(2, dtype=bool)
+    is_purine = np.zeros(2, dtype=bool)
 
     # Generate the data necessary for analysis for each base.
     for i in range(2):
@@ -392,7 +393,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
             return False
         
         transformed_bases[i], hbond_masks[i], contains_hydrogens[i], \
-            transformed_std_vectors[i] = base_tuple
+            transformed_std_vectors[i], is_purine[i] = base_tuple
 
     
     # Criterion 1: Distance between orgins <= 15 Å
@@ -402,12 +403,33 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     
     # Criterion 2: Vertical seperation <= 2.5 Å
     #
-    # DSSR uses a different reference frame to calculate the vertical
-    # distance: The y-axis is defined by the vector connecting the C4
-    # and N1 atoms and the N3 and C6 atoms fur purines and pyrimidines
-    # respectively, while the z-Vector remains unchanged
-    # 
-    # Get transformed unit vectors:
+    #Base 0
+    
+    Ti0 = transformed_std_vectors[0][1:4,:].T
+    Ti1 = transformed_std_vectors[1][1:4,:].T
+
+    rolltiltangle = np.arccos(np.dot(transformed_std_vectors[0][3,:],
+                                 transformed_std_vectors[1][3,:]))
+
+    rolltiltaxis = np.cross(transformed_std_vectors[0][3,:],
+                                 transformed_std_vectors[1][3,:])
+    norm_vector(rolltiltaxis)
+
+    Ti0 = np.dot(_get_rotation_matrix(rolltiltaxis, rolltiltangle/2), Ti0)
+    Ti1 = np.dot(_get_rotation_matrix(rolltiltaxis, ((-1)*rolltiltangle)/2), Ti1)
+    Tmst = (Ti0 + Ti1)/2
+    #print(Tmst)
+    for i in range(3):
+        norm_vector(Tmst[:,i])
+    #print(Tmst)
+    OriginDif = transformed_std_vectors[1][0,:] - transformed_std_vectors[0][0,:]
+    
+    
+    print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
+    print(np.dot(OriginDif, Tmst))
+    if not abs(int(np.dot(OriginDif, Tmst)[2])) <= 2.5:
+        return False
+
 
 
     # 
@@ -538,22 +560,27 @@ def _match_base(base, min_atoms_per_base):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
         std_hbond_masks = _std_adenine_hbond_masks
+        is_purine = True
     elif(base[0].res_name in _thymine_containing_nucleotides):
         std_base = _std_thymine
         std_ring_centers = _std_thymine_ring_centers
         std_hbond_masks = _std_thymine_hbond_masks
+        is_purine = False
     elif(base[0].res_name in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
         std_hbond_masks = _std_cytosine_hbond_masks
+        is_purine = False
     elif(base[0].res_name in _guanine_containing_nucleotides):
         std_base = _std_guanine
         std_ring_centers = _std_guanine_ring_centers
         std_hbond_masks = _std_guanine_hbond_masks
+        is_purine = True
     elif(base[0].res_name in _uracil_containing_nucleotides):
         std_base = _std_uracil
         std_ring_centers = _std_uracil_ring_centers
-        std_hbond_masks = _std_uracil_hbond_masks 
+        std_hbond_masks = _std_uracil_hbond_masks
+        is_purine = False 
     else:
         raise UnexpectedStructureWarning("Base Type not supported. Unable to "
                                          "check for basepair")
@@ -608,12 +635,16 @@ def _match_base(base, min_atoms_per_base):
     else:
         # If the base is complete use the base for further calculations.
         #
-        # Generate a boolean mask containing only the base atoms, 
-        # disregarding the sugar atoms and the phosphate backbone.
+        # Generate a boolean mask containing only the base atoms and
+        # their hydrogens(if available), disregarding the sugar atoms
+        # and the phosphate backbone.
         base_atom_mask = np.ones(len(base), dtype=bool)
         for i in range(len(base)):
-            if((base[i].atom_name not in std_base.atom_name) and
-               (base[i].element != "H")):
+            if (
+                ("'" in base[i].atom_name) or ("*" in base[i].atom_name) or
+                ((base[i].atom_name not in std_base.atom_name) and
+                 (base[i].element != "H"))
+            ):
                 base_atom_mask[i] = False
         
         # Create boolean masks for the AtomArray containing the bases` 
@@ -631,7 +662,8 @@ def _match_base(base, min_atoms_per_base):
         else:
             return_base = base[base_atom_mask]
         
-    return return_base, return_hbond_masks, contains_hydrogens, vectors
+    return return_base, return_hbond_masks, \
+           contains_hydrogens, vectors, is_purine
 
 
 def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
@@ -672,3 +704,20 @@ def _filter_residues(atom_array, index):
     return (np.isin(atom_array.res_id, atom_array[int(index)].res_id)
             & np.isin(atom_array.chain_id, atom_array[int(index)].chain_id))
         
+def _get_rotation_matrix(axis, angle):
+    rot_matrix = np.zeros((3,3), dtype=float)
+    n1, n2, n3 = axis
+    normal_cos = np.cos(angle)
+    inverse_cos = 1 - normal_cos
+
+    rot_matrix[0,0] = ((n1*n1)*inverse_cos) + normal_cos
+    rot_matrix[0,1] = ((n1*n2)*inverse_cos) - (n3*np.sin(angle))
+    rot_matrix[0,2] = ((n1*n3)*inverse_cos) + (n2*np.sin(angle))
+    rot_matrix[1,0] = ((n2*n1)*inverse_cos) + (n3*np.sin(angle))
+    rot_matrix[1,1] = ((n2*n2)*inverse_cos) + normal_cos
+    rot_matrix[1,2] = ((n2*n3)*inverse_cos) - (n1*np.sin(angle))
+    rot_matrix[2,0] = ((n3*n1)*inverse_cos) - (n2*np.sin(angle))
+    rot_matrix[2,1] = ((n3*n2)*inverse_cos) + (n1*np.sin(angle))
+    rot_matrix[2,2] = ((n3*n3)*inverse_cos) + normal_cos
+
+    return rot_matrix
