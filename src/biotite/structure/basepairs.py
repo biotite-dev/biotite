@@ -65,17 +65,18 @@ def _get_std_adenine():
         that can act as a hydrogen bond acceptor
     """
 
-    atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
-    atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
-    atom3 = Atom([0.024, 4.897, 0.000], atom_name="C8", res_name="A")
-    atom4 = Atom([0.877, 3.902, 0.000], atom_name="N7", res_name="A")
-    atom5 = Atom([0.071, 2.771, 0.000], atom_name="C5", res_name="A")
-    atom6 = Atom([0.369, 1.398, 0.000], atom_name="C6", res_name="A")
-    atom7 = Atom([1.611, 0.909, 0.000], atom_name="N6", res_name="A")
-    atom8 = Atom([-0.668, 0.532, 0.000], atom_name="N1", res_name="A")
-    atom9 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
-    atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
-    atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
+    atom1 = Atom([-0.68056893, 3.7679946, 0.0], atom_name="C1*", res_name="A")
+    atom2 = Atom([0.28598812, 2.6742783, 0.0], atom_name="N9", res_name="A")
+    atom3 = Atom([1.6570601, 2.766945, 0.0], atom_name="C8", res_name="A")
+    atom4 = Atom([2.2641208, 1.6054324, 0.0], atom_name="N7", res_name="A")
+    atom5 = Atom([1.2241601, 0.6849548, 0.0], atom_name="C5", res_name="A")
+    atom6 = Atom([1.2053612, -0.71988654, 0.0], atom_name="C6", res_name="A")
+    atom7 = Atom([2.3053644, -1.4759803, 0.0], atom_name="N6", res_name="A")
+    atom8 = Atom([0.0, -1.3301566, 0.0], atom_name="N1", res_name="A")
+    atom9 = Atom([-1.1015016, -0.57166386, 0.0], atom_name="C2", res_name="A")
+    atom10 = Atom([-1.2137452, 0.7546673, 0.0], atom_name="N3", res_name="A")
+    atom11 = Atom([0.0, 1.3301566, 0.0], atom_name="C4", res_name="A")
+
     adenine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11]
@@ -400,7 +401,18 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         return False
     
     # Criterion 2: Vertical seperation <= 2.5 Å
-    #    
+    #
+    # DSSR uses a different reference frame to calculate the vertical
+    # distance: The y-axis is defined by the vector connecting the C4
+    # and N1 atoms and the N3 and C6 atoms fur purines and pyrimidines
+    # respectively, while the z-Vector remains unchanged
+    # 
+    # Get transformed unit vectors:
+
+
+    # 
+
+    """    
     # Find the intercept between the xy-plane of `transformed_bases[0]`
     # and a line consisting of the origin of `transformed_base[1]` and
     # normal vector (`transformed_std_vectors[0][0,:]` -> z-vector) of
@@ -418,7 +430,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # `transformed_bases[1]` and the intercept described above.
     if not (distance(transformed_std_vectors[1][0,:], intercept) <= 2.5):
         return False
-      
+    """  
     # Criterion 3: Angle between normal vectors <= 65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
                               transformed_std_vectors[1][3,:])
