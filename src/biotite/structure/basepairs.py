@@ -77,13 +77,14 @@ def _get_std_adenine():
     ring_centers : tuple
         Coordinates of the aromatic ring centers, `ndarray` containing
         the coordinates of the pyrimidine ring center, `ndarray`
-        containing the coordinates of the imidazol ring center
+        containing the coordinates of the imidazole ring center
     hbond_masks : tuple
         The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
         with dtype=bool, boolean mask for heteroatoms which are bound to
         a hydrogen that can act as a donor, boolean mask for heteroatoms
         that can act as a hydrogen bond acceptor
     """
+
     atom1 = Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
     atom3 = Atom([0.024, 4.897, 0.000], atom_name="C8", res_name="A")
@@ -128,6 +129,25 @@ def _get_std_adenine():
 
 
 def _get_std_cytosine():
+    """
+    Get standard base variables for cytosine. 
+        
+    Returns
+    -------
+    standard_base : tuple
+        Standard coordinates nomenclature of the cytosine base, 
+        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
+        with nomenclature of PDB File Format V3
+    ring_center : tuple
+        Coordinates of the aromatic ring centers, `ndarray` containing
+        the coordinates of the pyrimidine ring center
+    hbond_masks : tuple
+        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
+        with dtype=bool, boolean mask for heteroatoms which are bound to
+        a hydrogen that can act as a donor, boolean mask for heteroatoms
+        that can act as a hydrogen bond acceptor
+    """
+
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
     atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1", res_name="C")
     atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2", res_name="C")
@@ -159,8 +179,8 @@ def _get_std_cytosine():
         cytosine_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
 
-    return [cytosine_pdbv2, cytosine_pdbv3], [pyrimidine_center], \
-           [hbond_donor_mask, hbond_acceptor_mask]
+    return (cytosine_pdbv2, cytosine_pdbv3), (pyrimidine_center,), \
+           (hbond_donor_mask, hbond_acceptor_mask)
 
 
 def _get_std_guanine():
