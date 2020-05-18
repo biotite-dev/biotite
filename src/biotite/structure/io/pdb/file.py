@@ -12,7 +12,7 @@ from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
 from ..general import _guess_element as guess_element
 from ...error import BadStructureError
-from ...filter import filter_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 import copy
 from warnings import warn
@@ -89,7 +89,7 @@ class PDBFile(TextFile):
         the atom array (stack) from the corresponding
         :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
-        *altlocs*, while `get_coord()` does not.
+        *altloc* IDs, while `get_coord()` does not.
         
         Examples
         --------
@@ -194,7 +194,7 @@ class PDBFile(TextFile):
             return coord
 
 
-    def get_structure(self, model=None, altloc=[], extra_fields=[]):
+    def get_structure(self, model=None, altloc="first", extra_fields=[]):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
         
@@ -210,18 +210,16 @@ class PDBFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        altloc : list of tuple, optional
-            In case the structure contains *altloc* entries, those can be
-            specified here:
-            Each tuple consists of the following elements:
-
-                - A chain ID, specifying the residue
-                - A residue ID, specifying the residue
-                - The desired *altoc* ID for the specified residue
-
-            For each of the given residues the atoms with the given *altloc*
-            ID are filtered.
-            By default the location with the *altloc* ID "A" is used.
+        altloc : {'first', 'occupancy', 'all'}
+            This parameter defines how *altloc* IDs are handled:
+                - ``'first'`` - Use atoms that have the first *altloc* ID
+                appearing in a residue.
+                - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                with the highest occupancy for a residue.
+                - ``'all'`` - Use all atoms.
+                Note that this leads to duplicate atoms.
+                When this option is chosen, the ``altloc_id`` annotation
+                array is added to the returned structure.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -280,30 +278,70 @@ class PDBFile(TextFile):
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
         
-        # Create altloc array for the final filtering
-        altloc_array = np.zeros(array.array_length(), dtype="U1")
-        
-        # Add optional annotation arrays
-        for field in extra_fields:
-            if field in ["atom_id", "charge"]:
-                array.add_annotation(field, dtype=int)
-            elif field in ["occupancy", "b_factor"]:
-                array.add_annotation(field, dtype=float)
-            else:
-                raise ValueError(f"Unknown extra field: {field}")
-        
-        # Fill in annotation
+        # Create mandatory and optional annotation arrays
+        chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
+        res_id    = np.zeros(array.array_length(), array.res_id.dtype)
+        ins_code  = np.zeros(array.array_length(), array.ins_code.dtype)
+        res_name  = np.zeros(array.array_length(), array.res_name.dtype)
+        hetero    = np.zeros(array.array_length(), array.hetero.dtype)
+        atom_name = np.zeros(array.array_length(), array.atom_name.dtype)
+        element   = np.zeros(array.array_length(), array.element.dtype)
+
+        atom_id_raw = np.zeros(array.array_length(), "U5")
+        charge_raw  = np.zeros(array.array_length(), "U2")
+        occupancy = np.zeros(array.array_length(), float)
+        b_factor  = np.zeros(array.array_length(), float)
+
+        altloc_id = np.zeros(array.array_length(), dtype="U1")
+
+        # Fill annotation array
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
-            altloc_array[i] = line[16]
-            array.chain_id[i] = line[21].upper().strip()
-            array.res_id[i] = decode_hybrid36(line[22:26])
-            array.ins_code[i] = line[26].strip()
-            array.res_name[i] = line[17:20].strip()
-            array.hetero[i] = (False if line[0:4] == "ATOM" else True)
-            array.atom_name[i] = line[12:16].strip()
-            array.element[i] = line[76:78].strip()
+            
+            chain_id[i] = line[21].upper().strip()
+            res_id[i] = decode_hybrid36(line[22:26])
+            ins_code[i] = line[26].strip()
+            res_name[i] = line[17:20].strip()
+            hetero[i] = (False if line[0:4] == "ATOM" else True)
+            atom_name[i] = line[12:16].strip()
+            element[i] = line[76:78].strip()
+
+            altloc_id[i] = line[16]
+
+            atom_id_raw[i] = line[6:11]
+            charge_raw[i] = line[78:80]
+            occupancy[i] = float(line[54:60].strip())
+            b_factor[i] = float(line[60:66].strip())
+        
+        # Add annotation arrays to atom array (stack)
+        array.chain_id = chain_id
+        array.res_id = res_id
+        array.ins_code = ins_code
+        array.res_name = res_name
+        array.hetero = hetero
+        array.atom_name = atom_name
+        array.element = element
+
+        for field in (extra_fields if extra_fields is not None else []):
+            if field == "atom_id":
+                array.set_annotation("atom_id", np.array(
+                    [decode_hybrid36(raw_id.item()) for raw_id in atom_id_raw],
+                    dtype=int
+                ))
+            elif field == "charge":
+                array.set_annotation("charge", np.array(
+                    [0 if raw_number == " " else
+                     (-float(raw_number) if sign == "-" else float(raw_number))
+                     for raw_number, sign in charge_raw],
+                    dtype=int
+                ))
+            elif field == "occupancy":
+                array.set_annotation("occupancy", occupancy)
+            elif field == "b_factor":
+                array.set_annotation("b_factor", b_factor)
+            else:
+                raise ValueError(f"Unknown extra field: {field}")
 
         # Replace empty strings for elements with guessed types
         # This is used e.g. for PDB files created by Gromacs
@@ -315,20 +353,6 @@ class PDBFile(TextFile):
                     array.element[idx] = guess_element(atom_name)
                     rep_num += 1
             warn("{} elements were guessed from atom_name.".format(rep_num))
-                            
-        if extra_fields:
-            for i, line_i in enumerate(annot_i):
-                line = self.lines[line_i]
-                if "atom_id" in extra_fields:
-                    array.atom_id[i] = decode_hybrid36(line[6:11])
-                if "occupancy" in extra_fields:
-                    array.occupancy[i] = float(line[54:60].strip())
-                if "b_factor" in extra_fields:
-                    array.b_factor[i] = float(line[60:66].strip())
-                if "charge" in extra_fields:
-                    sign = -1 if line[79] == "-" else 1
-                    array.charge[i] = (0 if line[78] == " "
-                                       else int(line[78]) * sign)
         
         # Fill in coordinates
         if isinstance(array, AtomArray):
@@ -374,8 +398,21 @@ class PDBFile(TextFile):
                     )
                 break
 
-        # Apply final filter and return
-        return array[..., filter_altloc(array, altloc_array, altloc)]
+        # Filter altloc IDs and return
+        if altloc_id is None:
+            return array
+        elif altloc == "occupancy":
+            return array[
+                ...,
+                filter_highest_occupancy_altloc(array, altloc_id, occupancy)
+            ]
+        elif altloc == "first":
+            return array[..., filter_first_altloc(array, altloc_id)]
+        elif altloc == "all":
+            array.set_annotation("altloc_id", altloc_id)
+            return array
+        else:
+            raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
 

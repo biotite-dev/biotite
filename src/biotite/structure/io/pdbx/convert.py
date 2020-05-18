@@ -12,7 +12,7 @@ import numpy as np
 from ...error import BadStructureError
 from ....file import InvalidFileError
 from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
-from ...filter import filter_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...util import matrix_rotate
 from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
@@ -28,12 +28,12 @@ _other_type_list = ["cyclic-pseudo-peptide", "other", "peptide nucleic acid",
 def get_sequence(pdbx_file, data_block=None):
     """
     Get the protein and nucleotide sequences from the
-    `entity_poly.pdbx_seq_one_letter_code_can` entry.
+    ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
 
-    Supported polymer types (`_entity_poly.type`) are: polypeptide(D),
-    polypeptide(L), polydeoxyribonucleotide, polyribonucleotide,
-    polydeoxyribonucleotide/polyribonucleotide hybrid
-
+    Supported polymer types (``_entity_poly.type``) are:
+    ``'polypeptide(D)'``, ``'polypeptide(L)'``,
+    ``'polydeoxyribonucleotide'``, ``'polyribonucleotide'`` and
+    ``'polydeoxyribonucleotide/polyribonucleotide hybrid'``.
     Uracil is converted to Thymine.
     
     Parameters
@@ -65,7 +65,7 @@ def get_sequence(pdbx_file, data_block=None):
 
 
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
+def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                   extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
@@ -85,18 +85,16 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
     data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -250,15 +248,28 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
             array.set_annotation(field, model_dict[field].astype(str))
 
 
-def _filter_altloc(array, model_dict, selected):
-    altlocs = model_dict.get("label_alt_id")
-    if altlocs is None:
+def _filter_altloc(array, model_dict, altloc):
+    altloc_ids = model_dict.get("label_alt_id")
+    occupancy =  model_dict.get("occupancy")
+    
+    # Filter altloc IDs and return
+    if altloc_ids is None:
+        return array
+    elif altloc == "occupancy" and occupancy is not None:
+        return array[
+            ...,
+            filter_highest_occupancy_altloc(
+                array, altloc_ids, occupancy.astype(float)
+            )
+        ]
+    # 'first' is also fallback if file has no occupancy information
+    elif altloc == "first":
+        return array[..., filter_first_altloc(array, altloc_ids)]
+    elif altloc == "all":
+        array.set_annotation("altloc_id", altloc_ids)
         return array
     else:
-        return array[..., filter_altloc(
-            array, altlocs, selected
-        )]
-
+        raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 def _get_model_dict(atom_site_dict, model):
     model_dict = {}
@@ -480,7 +491,7 @@ def list_assemblies(pdbx_file, data_block=None):
 
 
 def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
-                 altloc=None, extra_fields=None, use_author_fields=True):
+                 altloc="first", extra_fields=None, use_author_fields=True):
     """
     Build the given biological assembly.
 
@@ -506,18 +517,16 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         The name of the data block.
         Defaults to the first (and most times only) data block of the
         file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
