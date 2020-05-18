@@ -76,7 +76,6 @@ def _get_std_adenine():
     atom9 = Atom([-1.1015016, -0.57166386, 0.0], atom_name="C2", res_name="A")
     atom10 = Atom([-1.2137452, 0.7546673, 0.0], atom_name="N3", res_name="A")
     atom11 = Atom([0.0, 1.3301566, 0.0], atom_name="C4", res_name="A")
-
     adenine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11]
@@ -129,15 +128,16 @@ def _get_std_cytosine():
         that can act as a hydrogen bond acceptor
     """
 
-    atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
-    atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1", res_name="C")
-    atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2", res_name="C")
-    atom4 = Atom([-2.628, 2.709, 0.000], atom_name="O2", res_name="C")
-    atom5 = Atom([-0.391, 2.344, 0.000], atom_name="N3", res_name="C")
-    atom6 = Atom([0.837, 2.868, 0.000], atom_name="C4", res_name="C")
-    atom7 = Atom([1.875, 2.027, 0.000], atom_name="N4", res_name="C")
-    atom8 = Atom([1.056, 4.275, 0.000], atom_name="C5", res_name="C")
-    atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6", res_name="C")
+
+    atom1 = Atom([-2.4766238, -1.3768258, 0.0], atom_name="C1*", res_name="C")
+    atom2 = Atom([-1.1802185, -0.6841519, 0.0], atom_name="N1", res_name="C")
+    atom3 = Atom([-1.1802462, 0.71242416, 0.0], atom_name="C2", res_name="C")
+    atom4 = Atom([-2.2657278, 1.3121465, 0.0], atom_name="O2", res_name="C")
+    atom5 = Atom([0.0, 1.3743725, 0.0], atom_name="N3", res_name="C")
+    atom6 = Atom([1.1467924, 0.69068617, 0.0], atom_name="C4", res_name="C")
+    atom7 = Atom([2.2880406, 1.3851486, 0.0], atom_name="N4", res_name="C")
+    atom8 = Atom([1.1754527, -0.7329672, 0.0], atom_name="C5", res_name="C")
+    atom9 = Atom([0.0, -1.3743725, 0.0], atom_name="C6", res_name="C")
     cytosine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
                     )
@@ -184,19 +184,19 @@ def _get_std_guanine():
         a hydrogen that can act as a donor, boolean mask for heteroatoms
         that can act as a hydrogen bond acceptor
     """
-
-    atom1 = Atom([-2.477, 5.399, 0.000], atom_name="C1*", res_name="G")
-    atom2 = Atom([-1.289, 4.551, 0.000], atom_name="N9", res_name="G")
-    atom3 = Atom([0.023, 4.962, 0.000], atom_name="C8", res_name="G")
-    atom4 = Atom([0.870, 3.969, 0.000], atom_name="N7", res_name="G")
-    atom5 = Atom([0.071, 2.833, 0.000], atom_name="C5", res_name="G")
-    atom6 = Atom([0.424, 1.460, 0.000], atom_name="C6", res_name="G")
-    atom7 = Atom([1.554, 0.955, 0.000], atom_name="O6", res_name="G")
-    atom8 = Atom([-0.700, 0.641, 0.000], atom_name="N1", res_name="G")
-    atom9 = Atom([-1.999, 1.087, 0.000], atom_name="C2", res_name="G")
-    atom10 = Atom([-2.949, 0.139, -0.001], atom_name="N2", res_name="G")
-    atom11 = Atom([-2.342, 2.364, 0.001], atom_name="N3", res_name="G")
-    atom12 = Atom([-1.265, 3.177, 0.000], atom_name="C4", res_name="G")
+    
+    atom1 = Atom([-0.69979936, 3.731476, 0.0], atom_name="C1*", res_name="G")
+    atom2 = Atom([0.2753646, 2.6454268, 0.0], atom_name="N9", res_name="G")
+    atom3 = Atom([1.6453435, 2.761283, 0.0], atom_name="C8", res_name="G")
+    atom4 = Atom([2.2561362, 1.6078576, 0.0], atom_name="N7", res_name="G")
+    atom5 = Atom([1.229222, 0.67279345, 0.0], atom_name="C5", res_name="G")
+    atom6 = Atom([1.2752016, -0.7441129, 0.0], atom_name="C6", res_name="G")
+    atom7 = Atom([2.2683425, -1.4827579, 0.0], atom_name="O6", res_name="G")
+    atom8 = Atom([0.0, -1.2990883, 0.0], atom_name="N1", res_name="G")
+    atom9 = Atom([-1.1709266, -0.5812807, 0.0], atom_name="C2", res_name="G")
+    atom10 = Atom([-2.3043447, -1.300007, -0.001], atom_name="N2", res_name="G")
+    atom11 = Atom([-1.2280219, 0.73974866, 0.001], atom_name="N3", res_name="G")
+    atom12 = Atom([0.0, 1.2990883, 0.0], atom_name="C4", res_name="G")
     guanine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11, atom12]
@@ -248,17 +248,16 @@ def _get_std_thymine():
         a hydrogen that can act as a donor, boolean mask for heteroatoms
         that can act as a hydrogen bond acceptor
     """
-
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
-    atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="T")
-    atom3 = Atom([-1.462, 3.135, 0.000], atom_name="C2", res_name="T")
-    atom4 = Atom([-2.562, 2.608, 0.000], atom_name="O2", res_name="T")
-    atom5 = Atom([-0.298, 2.407, 0.000], atom_name="N3", res_name="T")
-    atom6 = Atom([0.994, 2.897, 0.000], atom_name="C4", res_name="T")
-    atom7 = Atom([1.944, 2.119, 0.000], atom_name="O4", res_name="T")
-    atom8 = Atom([1.106, 4.338, 0.000], atom_name="C5", res_name="T")
-    atom9 = Atom([2.466, 4.961, 0.001], atom_name="C5M", res_name="T")
-    atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6", res_name="T")
+    atom1 = Atom([-2.4745166, -1.3747915, -0.0], atom_name="C1*", res_name="T")
+    atom2 = Atom([-1.196032, -0.64842904, -0.0], atom_name="N1", res_name="T")
+    atom3 = Atom([-1.2327007, 0.72763944, -0.0], atom_name="C2", res_name="T")
+    atom4 = Atom([-2.2726667, 1.3649775, -0.0], atom_name="O2", res_name="T")
+    atom5 = Atom([0.0, 1.3320639, -0.0], atom_name="N3", res_name="T")
+    atom6 = Atom([1.2347531, 0.7117828, -0.0], atom_name="C4", res_name="T")
+    atom7 = Atom([2.2597313, 1.3879516, -0.0], atom_name="O4", res_name="T")
+    atom8 = Atom([1.1979554, -0.73309445, -0.0], atom_name="C5", res_name="T")
+    atom9 = Atom([2.4866693, -1.4926641, -0.001], atom_name="C5M", res_name="T")
+    atom10 = Atom([0.0, -1.3320639, -0.0], atom_name="C6", res_name="T")
     thymine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
                 )
@@ -305,15 +304,15 @@ def _get_std_uracil():
         that can act as a hydrogen bond acceptor
     """
 
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
-    atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="U")
-    atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2", res_name="U")
-    atom4 = Atom([-2.563, 2.608, 0.000], atom_name="O2", res_name="U")
-    atom5 = Atom([-0.302, 2.397, 0.000], atom_name="N3", res_name="U")
-    atom6 = Atom([0.989, 2.884, 0.000], atom_name="C4", res_name="U")
-    atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4", res_name="U")
-    atom8 = Atom([1.089, 4.311, 0.000], atom_name="C5", res_name="U")
-    atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6", res_name="U")
+    atom1 = Atom([-2.4749846, -1.378846, -0.0], atom_name="C1*", res_name="U")
+    atom2 = Atom([-1.195587, -0.6540935, -0.0], atom_name="N1", res_name="U")
+    atom3 = Atom([-1.2301071, 0.7259982, -0.0], atom_name="C2", res_name="U")
+    atom4 = Atom([-2.270681, 1.3607708, -0.0], atom_name="O2", res_name="U")
+    atom5 = Atom([0.0, 1.3352546, -0.0], atom_name="N3", res_name="U")
+    atom6 = Atom([1.233289, 0.7165072, -0.0], atom_name="C4", res_name="U")
+    atom7 = Atom([2.2563882, 1.4037365, 0.001], atom_name="O4", res_name="U")
+    atom8 = Atom([1.184195, -0.7131495, -0.0], atom_name="C5", res_name="U")
+    atom9 = Atom([0.0, -1.3352546, -0.0], atom_name="C6", res_name="U")
     uracil_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
                 )
@@ -395,6 +394,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         transformed_bases[i], hbond_masks[i], contains_hydrogens[i], \
             transformed_std_vectors[i] = base_tuple
 
+    
     # Criterion 1: Distance between orgins <= 15 Å
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
@@ -434,11 +434,11 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # Criterion 3: Angle between normal vectors <= 65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
                               transformed_std_vectors[1][3,:])
-                    ) >=
-            ((115*np.pi)/180)
+                    ) <=
+            ((65*np.pi)/180)
         ):
         return False
-    
+   
     # Criterion 4: Absence of stacking
     if _check_base_stacking(transformed_std_vectors):
         return False
@@ -464,7 +464,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         # if the structure does not contain hydrogens, check for
         # plausibility of hydrogen bonds between heteroatoms
         return False
-
+    
     return True
 
 
@@ -588,7 +588,8 @@ def _match_base(base, min_atoms_per_base):
     # 
     # A length difference of zero means the base contains all atoms of
     # the std_base          
-    length_difference = len(std_base) - len(fitted) 
+    length_difference = len(std_base) - len(fitted)
+    
     if(length_difference > 0 and len(fitted) >= min_atoms_per_base):
         # If the base is incomplete but contains 3 or more atoms of the 
         # std_base, transform the complete std_base and use it to
