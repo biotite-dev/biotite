@@ -19,26 +19,6 @@ from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
 
-"""
-The following functions describe the bases adenine, cytosine, thymine,
-guanine and uracil in standard coordinates as described by (Wilma, 2001)
-TODO: DOI
-
-They Return:
-
-The bases as list:
-    0: AtomArray with nomenclature of PDB File Format V2
-    1: AtomArray with nomenclature of PDB File Format V3
-
-The center-coordinates of the aromatic rings as list:
-    0: Pyrimidine Ring
-    1: Imidazole Ring (if present)
-
-The hydrogen bond donors and acceptors as list
-    0: Heteroatoms that are bound to a hydrogen that can act as a donor
-    1: Heteroatoms that can act as an acceptor
-"""
-
 
 def  _get_1d_boolean_mask(size, true_ids):
     """
@@ -305,6 +285,25 @@ def _get_std_thymine():
 
 
 def _get_std_uracil():
+    """
+    Get standard base variables for uracil. 
+        
+    Returns
+    -------
+    standard_base : tuple
+        Standard coordinates nomenclature of the uracil base, 
+        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
+        with nomenclature of PDB File Format V3
+    ring_center : tuple
+        Coordinates of the aromatic ring centers, `ndarray` containing
+        the coordinates of the pyrimidine ring center
+    hbond_masks : tuple
+        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
+        with dtype=bool, boolean mask for heteroatoms which are bound to
+        a hydrogen that can act as a donor, boolean mask for heteroatoms
+        that can act as a hydrogen bond acceptor
+    """
+
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
     atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="U")
     atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2", res_name="U")
@@ -336,8 +335,8 @@ def _get_std_uracil():
         uracil_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
 
-    return [uracil_pdbv2, uracil_pdbv3], [pyrimidine_center], \
-           [hbond_donor_mask, hbond_acceptor_mask]
+    return (uracil_pdbv2, uracil_pdbv3), (pyrimidine_center,), \
+           (hbond_donor_mask, hbond_acceptor_mask)
 
 
 _std_adenine, _std_adenine_ring_centers, \
