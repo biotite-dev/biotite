@@ -11,7 +11,7 @@ __author__ = "Tom Müller"
 __all__ = []
 
 import numpy as np
-from .atoms import *
+from .atoms import Atom, array
 from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides
 from .celllist import CellList
