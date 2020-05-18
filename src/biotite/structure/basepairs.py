@@ -249,6 +249,25 @@ def _get_std_guanine():
 
 
 def _get_std_thymine():
+    """
+    Get standard base variables for thymine. 
+        
+    Returns
+    -------
+    standard_base : tuple
+        Standard coordinates nomenclature of the thymine base, 
+        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
+        with nomenclature of PDB File Format V3
+    ring_center : tuple
+        Coordinates of the aromatic ring centers, `ndarray` containing
+        the coordinates of the pyrimidine ring center
+    hbond_masks : tuple
+        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
+        with dtype=bool, boolean mask for heteroatoms which are bound to
+        a hydrogen that can act as a donor, boolean mask for heteroatoms
+        that can act as a hydrogen bond acceptor
+    """
+
     atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
     atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="T")
     atom3 = Atom([-1.462, 3.135, 0.000], atom_name="C2", res_name="T")
@@ -281,8 +300,8 @@ def _get_std_thymine():
         thymine_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
       
-    return [thymine_pdbv2, thymine_pdbv3], [pyrimidine_center], \
-           [hbond_donor_mask, hbond_acceptor_mask]
+    return (thymine_pdbv2, thymine_pdbv3), (pyrimidine_center,), \
+           (hbond_donor_mask, hbond_acceptor_mask)
 
 
 def _get_std_uracil():
