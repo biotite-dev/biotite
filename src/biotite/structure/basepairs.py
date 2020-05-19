@@ -425,8 +425,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     OriginDif = transformed_std_vectors[1][0,:] - transformed_std_vectors[0][0,:]
     
     
-    print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
-    print(np.dot(OriginDif, Tmst))
+    #print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
+    #print(np.dot(OriginDif, Tmst))
     if not abs(int(np.dot(OriginDif, Tmst)[2])) <= 2.5:
         return False
 
