@@ -1,10 +1,10 @@
-import numpy as np
+import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import pytest
 from os.path import join
 from ..util import data_dir
-from biotite.structure.basepairs import _get_proximate_basepair_candidates, get_basepairs
+from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
+                                        get_basepairs
 
 
 def convert_indices_to_res_chain_id(atomarray, indices):
