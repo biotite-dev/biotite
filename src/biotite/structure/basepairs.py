@@ -403,56 +403,34 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     
     # Criterion 2: Vertical seperation <= 2.5 Å
     #
-    #Base 0
-    
-    Ti0 = transformed_std_vectors[0][1:4,:].T
-    Ti1 = transformed_std_vectors[1][1:4,:].T
-
-    rolltiltangle = np.arccos(np.dot(transformed_std_vectors[0][3,:],
-                                 transformed_std_vectors[1][3,:]))
-
-    rolltiltaxis = np.cross(transformed_std_vectors[0][3,:],
+    # Calculate the angle between normal vectors of the bases
+    normal_vector_angle = np.arccos(np.dot(transformed_std_vectors[0][3,:],
+                                           transformed_std_vectors[1][3,:]))
+    # Calculate the orthonormal vector to the normal vector of the bases
+    rotation_axis = np.cross(transformed_std_vectors[0][3,:],
                                  transformed_std_vectors[1][3,:])
-    norm_vector(rolltiltaxis)
-
-    Ti0 = np.dot(_get_rotation_matrix(rolltiltaxis, rolltiltangle/2), Ti0)
-    Ti1 = np.dot(_get_rotation_matrix(rolltiltaxis, ((-1)*rolltiltangle)/2), Ti1)
-    Tmst = (Ti0 + Ti1)/2
-    #print(Tmst)
-    for i in range(3):
-        norm_vector(Tmst[:,i])
-    #print(Tmst)
-    OriginDif = transformed_std_vectors[1][0,:] - transformed_std_vectors[0][0,:]
-    
-    
-    #print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
-    #print(np.dot(OriginDif, Tmst))
-    if not abs(int(np.dot(OriginDif, Tmst)[2])) <= 2.5:
+    norm_vector(rotation_axis)
+    # Rotate the base normal vectors by ± half the angle between the two
+    # vectors
+    rotated_normal_vector_0 = np.dot(
+        _get_rotation_matrix(rotation_axis, normal_vector_angle/2),
+        transformed_std_vectors[0][3,:]
+                                )
+    rotated_normal_vector_1 = np.dot(
+        _get_rotation_matrix(rotation_axis, ((-1)*normal_vector_angle)/2),
+        transformed_std_vectors[1][3,:]
+                                )
+    # Average and normalize the rotated vectors
+    z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
+    norm_vector(z_rot_average)
+    # Calculate the vector between the two origins    
+    origin_vector = transformed_std_vectors[1][0,:] \
+                    - transformed_std_vectors[0][0,:]
+    # The angle between the averaged rotated normal vectors and the 
+    # vector between the two origins is the vertical seperation
+    if not abs(int(np.dot(origin_vector, z_rot_average))) <= 2.5:
         return False
-
-
-
-    # 
-
-    """    
-    # Find the intercept between the xy-plane of `transformed_bases[0]`
-    # and a line consisting of the origin of `transformed_base[1]` and
-    # normal vector (`transformed_std_vectors[0][0,:]` -> z-vector) of
-    # `transformed_bases[0]`.
-    t = np.linalg.solve(
-        np.vstack((transformed_std_vectors[0][1,:],
-                   transformed_std_vectors[0][2,:],
-                   (-1)*transformed_std_vectors[0][3,:]) 
-                ).T,
-        (transformed_std_vectors[1][0,:] - transformed_std_vectors[0][0,:])
-                    )[0]
-    intercept = (transformed_std_vectors[1][0,:]
-                + (t * transformed_std_vectors[0][3,:]))
-    # The vertical seperation is the distance of the origin of
-    # `transformed_bases[1]` and the intercept described above.
-    if not (distance(transformed_std_vectors[1][0,:], intercept) <= 2.5):
-        return False
-    """  
+    
     # Criterion 3: Angle between normal vectors <= 65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
                               transformed_std_vectors[1][3,:])
