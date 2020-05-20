@@ -1,3 +1,7 @@
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -8,6 +12,11 @@ from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
 
 
 def convert_indices_to_res_chain_id(atomarray, indices):
+    """
+    Convert a list of tuples containg the first indices of the residues 
+    of the bases to a list of tuples containg the residue ids and
+    chain ids of the bases.
+    """
     res_chain_id = []
     for base1, base2 in indices:
         res_chain_id.append(
@@ -18,17 +27,10 @@ def convert_indices_to_res_chain_id(atomarray, indices):
 
 
 def reversed_iterator(iter):
+    """
+    Returned a reversed list of the elements of an iterator.
+    """
     return reversed(list(iter))
-
-
-#TODO: Remove tests for private functions
-def test_get_proximate_basepair_candidates():
-    nuc_sample_array = strucio.load_structure(
-        join(data_dir("structure"), "5ugo.cif")
-    )
-    
-    assert ( len(_get_proximate_basepair_candidates(nuc_sample_array))
-                == 128 )
 
 
 @pytest.fixture
@@ -38,6 +40,9 @@ def nuc_sample_array():
 
 @pytest.fixture
 def basepairs_fw(nuc_sample_array):
+    """
+    Generate a test output for the get_basepairs function.
+    """
     residue_indices = struc.residues.get_residue_starts(nuc_sample_array)[0:24]
     basepairs = []
     for i in range(12):
@@ -47,12 +52,19 @@ def basepairs_fw(nuc_sample_array):
 
 @pytest.fixture
 def basepairs_rv(basepairs_fw):
+    """
+    Generate a reversed test output for the get_basepairs function.
+    """
     reverser = []
     for base1, base2 in basepairs_fw:
         reverser.append((base2, base1))
     return reverser
 
 def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
+    """
+    Check the output of get_basepairs.
+    """
+
     # Check if basepairs are unique in computed_basepairs
     seen = set()
     assert (not any(
@@ -68,6 +80,9 @@ def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
 
 
 def test_get_basepairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
+    """
+    Test for the function get_basepairs.
+    """
     computed_basepairs = get_basepairs(nuc_sample_array)
     check_output(convert_indices_to_res_chain_id(
         nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
@@ -75,6 +90,11 @@ def test_get_basepairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
 
 
 def test_get_basepairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
+    """
+    Reverse the order of residues in the atom_array and then test the
+    function get_basepairs.
+    """
+    
     # Reverse sequence of residues in nuc_sample_array
     reversed_nuc_sample_array = struc.AtomArray(0) 
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
