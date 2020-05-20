@@ -375,7 +375,7 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
     ----------
     atom_array : AtomArray
         The `AtomArray` to find basepairs in.
-    min_atoms_per_base : integer
+    min_atoms_per_base : integer, optional
         The number of atoms a base must have to be considered a 
         candidate for a basepair.
         
@@ -406,11 +406,11 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
 
-    For structures without hydrogens only the plausibility can be 
-    checked. A hydrogen bond is considered as plausible if a cutoff of
-    4.0 Å between a heteroatom that is bonded to a hydrogen, that can
-    act as hydrogen bond donor, and a heteroatom that can accept
-    hydrogen bonds is met [1].
+    For structures without hydrogens only the plausibility of hydrogen 
+    bonds can be checked. A hydrogen bond is considered as plausible if
+    a cutoff of 4.0 Å between a heteroatom that is bonded to a hydrogen,
+    that can act as hydrogen bond donor, and a heteroatom that can
+    accept hydrogen bonds is met [1].
 
     References
     ----------
@@ -532,9 +532,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # Criterion 3: Angle between normal vectors <=65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
                               transformed_std_vectors[1][3,:])
-                    ) <=
-            ((65*np.pi)/180)
-        ):
+                    ) 
+            <= ((65*np.pi)/180)):
         return False
    
     # Criterion 4: Absence of stacking
@@ -561,7 +560,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
             ) == 0):
             return False           
     elif not _check_hbonds(transformed_bases, hbond_masks):
-        # if the structure does not contain hydrogens, check for
+        # if the structure does not contain hydrogens, check for the
         # plausibility of hydrogen bonds between heteroatoms
         return False
     
