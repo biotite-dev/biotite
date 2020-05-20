@@ -662,28 +662,43 @@ def _match_base(base, min_atoms_per_base):
 
 def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
                                        min_cutoff = 9):
+    # Get a boolean mask for the C1 sugar atoms
     c1mask = (filter_nucleotides(atom_array) 
               & _filter_atom_type(atom_array, ["C1'", "C1*"]))
+    # Get the indices of the C1 atoms that are within the maximum cutoff
+    # of each other
     indices = CellList( 
         atom_array, max_cutoff, selection=c1mask
-                            ).get_atoms(atom_array.coord[c1mask], max_cutoff)
+                    ).get_atoms(atom_array.coord[c1mask], max_cutoff)
     
+    # Loop through the indices of potential partners
     basepair_candidates = []
     for candidate, partners in zip(np.argwhere(c1mask), indices):
         for partner in partners:
             if partner == -1:
                 break
-            candidate_res_start = np.where(
-                (atom_array.res_id == atom_array[candidate].res_id)
-                & (atom_array.chain_id == atom_array[candidate].chain_id)
-                                        )[0][0]
-            partner_res_start = np.where(
-                (atom_array.res_id == atom_array[partner].res_id)
-                & (atom_array.chain_id == atom_array[partner].chain_id)
-                            )[0][0]
-            if ((distance(atom_array[candidate].coord, atom_array[partner].coord) > min_cutoff) and
-                (partner_res_start, candidate_res_start) not in basepair_candidates):
-                basepair_candidates.append((candidate_res_start, partner_res_start))
+            # Check if the basepair candidates have a distance which is
+            # greater than the minimum cutoff
+            if(distance(
+                atom_array[candidate].coord, atom_array[partner].coord
+                        ) > min_cutoff
+            ): 
+                # Find the indices of the first atom of the residues
+                candidate_res_start = np.where(
+                    (atom_array.res_id == atom_array[candidate].res_id)
+                    & (atom_array.chain_id == atom_array[candidate].chain_id)
+                                            )[0][0]
+                partner_res_start = np.where(
+                    (atom_array.res_id == atom_array[partner].res_id)
+                    & (atom_array.chain_id == atom_array[partner].chain_id)
+                                )[0][0]
+                # If the countperpart of the basepair candidates is not
+                # already in the output list, append to the output
+                if (partner_res_start, candidate_res_start) \
+                    not in basepair_candidates:
+                    basepair_candidates.append(
+                        (candidate_res_start, partner_res_start)
+                                            )
     return basepair_candidates
 
 
