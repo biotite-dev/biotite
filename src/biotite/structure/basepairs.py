@@ -662,60 +662,16 @@ def _match_base(base, min_atoms_per_base):
 
 def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
                                        min_cutoff = 9):
-    def _find_c1(index_list, c1):
-        for i in index_list:
-            if (atom_array[i].res_id == c1.res_id) \
-                &(atom_array[i].chain_id == c1.chain_id) \
-                &(atom_array[i].atom_name == c1.atom_name):
-                indexc1 = i
-                return indexc1
-    # gets proximate basepairs, where the C1-Sugar-Atoms are within
-    # `min_cutoff<=x<=max_cutoff`
-    """
-    cell_list = CellList(atom_array, max_cutoff)
-    adjacency_matrix = cell_list.create_adjacency_matrix(max_cutoff)
-
-    c1sugar_boolean_mask = filter_nucleotides(atom_array) \
-                           & _filter_atom_type(atom_array, ["C1'", "C1*"])
-    c1sugars = atom_array[c1sugar_boolean_mask]
-    c1sugars_adj_matrix = adjacency_matrix[c1sugar_boolean_mask,:]
-    #print(c1sugars_adj_matrix.shape)  
-    c1sugars_adj_matrix = c1sugars_adj_matrix[:,c1sugar_boolean_mask]
-    #print(c1sugars_adj_matrix.shape)                 
-    
-    basepair_candidates = []
-    for ix, iy in np.ndindex(c1sugars_adj_matrix.shape):
-        if (c1sugars_adj_matrix[ix][iy]):
-            candidate_indices = cell_list.get_atoms_in_cells(c1sugars[ix].coord)
-            indexc1 = _find_c1(candidate_indices, c1sugars[ix])
-            candidate = np.amin(candidate_indices[_filter_residues(atom_array[candidate_indices], indexc1)])
-            #print(str(iy) + " und " + str(len(c1sugars)) + str(c1sugars_adj_matrix.shape))
-            partner_indices = cell_list.get_atoms_in_cells(c1sugars[iy].coord)
-            indexc1 = _find_c1(partner_indices, c1sugars[iy])
-            partner = np.amin(partner_indices[_filter_residues(atom_array[partner_indices], indexc1)])
-            if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
-                 & ((partner, candidate) not in basepair_candidates)):
-                #print(str(candidate) + " und " + str(partner))
-                basepair_candidates.append((candidate, partner))
-    
-    
-    """
     c1mask = (filter_nucleotides(atom_array) 
               & _filter_atom_type(atom_array, ["C1'", "C1*"]))
-
-    c1sugar_coords = atom_array.coord[filter_nucleotides(atom_array) 
-                     & _filter_atom_type(atom_array, ["C1'", "C1*"])]
     indices = CellList( 
         atom_array, max_cutoff, selection=c1mask
                             ).get_atoms(atom_array.coord[c1mask], max_cutoff)
     
     basepair_candidates = []
-    print(indices)
     for candidate, partners in zip(np.argwhere(c1mask), indices):
         for partner in partners:
-            #candidate = int(candidate)
-            print(partners)
-            if not ((candidate > -1) and (partner > -1)):
+            if partner == -1:
                 break
             candidate_res_start = np.where(
                 (atom_array.res_id == atom_array[candidate].res_id)
@@ -725,30 +681,9 @@ def _get_proximate_basepair_candidates(atom_array, max_cutoff = 15,
                 (atom_array.res_id == atom_array[partner].res_id)
                 & (atom_array.chain_id == atom_array[partner].chain_id)
                             )[0][0]
-            
-            #print(str(candidate_res_start) + " und " + str(partner_res_start))
             if ((distance(atom_array[candidate].coord, atom_array[partner].coord) > min_cutoff) and
                 (partner_res_start, candidate_res_start) not in basepair_candidates):
                 basepair_candidates.append((candidate_res_start, partner_res_start))
-
-    """
-    basepair_candidates = []
-    for ix, iy in np.ndindex(adjacency_matrix.shape):
-        if (adjacency_matrix[ix][iy]):
-            candidate = np.where(
-                (atom_array.res_id == c1sugars[ix].res_id)
-                & (atom_array.chain_id == c1sugars[ix].chain_id)
-                                )[0][0]
-            partner = np.where(
-                (atom_array.res_id == c1sugars[iy].res_id)
-                & (atom_array.chain_id == c1sugars[iy].chain_id)
-                            )[0][0]
-            if ((distance(c1sugars[ix].coord, c1sugars[iy].coord) > min_cutoff) 
-                 & ((partner, candidate) not in basepair_candidates)):
-                basepair_candidates.append((candidate, partner))
-    """
-    #print(c1sugar_coords.shape)
-    print(basepair_candidates)
     return basepair_candidates
 
 
