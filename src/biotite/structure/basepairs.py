@@ -11,6 +11,7 @@ __author__ = "Tom Müller"
 __all__ = []
 
 import numpy as np
+import warnings
 from .atoms import Atom, array
 from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides
@@ -576,8 +577,8 @@ def _match_base(base, min_atoms_per_base):
         std_hbond_masks = _std_uracil_hbond_masks
         is_purine = False 
     else:
-        raise UnexpectedStructureWarning("Base Type not supported. Unable to "
-                                         "check for basepair")
+        warnings.warn("Base Type not supported. Unable to check for basepair",
+                      UnexpectedStructureWarning)
         return None
 
     # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
@@ -615,16 +616,16 @@ def _match_base(base, min_atoms_per_base):
         # If the base is incomplete but contains 3 or more atoms of the 
         # std_base, transform the complete std_base and use it to
         # approximate the base.
-        raise IncompleteStructureWarning("Base is not complete. Attempting "
-                                            "to emulate with std_base.")
+        warnings.warn("Base is not complete. Attempting to emulate with "
+                      "std_base.", IncompleteStructureWarning)
         return_base = superimpose_apply(std_base, transformation)
         return_hbond_masks = std_hbond_masks
         contains_hydrogens = False
     elif (length_difference > 0):
         # If the base is incomplete and contains less than 3 atoms of 
         # the std_base throw warning
-        raise IncompleteStructureWarning("Base is smaller than 3 atoms. "
-                                            "Unable to check for basepair.")
+        warnings.warn("Base is smaller than 3 atoms. Unable to check for "
+                     "basepair.", IncompleteStructureWarning)
         return None
     else:
         # If the base is complete use the base for further calculations.

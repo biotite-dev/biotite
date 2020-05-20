@@ -8,7 +8,8 @@ This module contains all possible errors of the `structure` subpackage.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["BadStructureError"]
+__all__ = ["BadStructureError", "IncompleteStructureWarning",
+           "UnexpectedStructureWarning"]
 
 
 class BadStructureError(Exception):
@@ -19,12 +20,12 @@ class BadStructureError(Exception):
 
 class IncompleteStructureWarning(Warning):
     """
-    Indicates that a structure is not complete
+    Indicates that a structure is not complete.
     """
     pass
 
 class UnexpectedStructureWarning(Warning):
     """
-    Indicates that a structure was not exspected
+    Indicates that a structure was not expected.
     """
     pass
