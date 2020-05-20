@@ -353,8 +353,24 @@ _uracil_containing_nucleotides = ["U", "DU"]
 
 def get_basepairs(atom_array, min_atoms_per_base = 3):
     """
-    Use DSSR criteria to find the basepairs in an `Atom Array`.
+    Use DSSR criteria [1] to find the basepairs in an `Atom Array`.
+
+    A standard reference frame for the bases adenine, thymine, guanine,
+    cytosine, and uracil has been implemented [2]. Averaged structures
+    [3] have been transformed to this reference frame. 
+
+    The DSSR Criteria are as follows:
+
+    (i) Distance between base origins <=15 Å
+
+    (ii) Vertical seperation between the base planes <=2.5 Å
     
+    (iii) Angle between the base normal vectors <=65°
+
+    (iv) Absence of stacking between the two bases
+
+    (v) Presence of a least one hydrogen bond involving a base atom
+
     Parameters
     ----------
     atom_array : AtomArray
@@ -368,6 +384,55 @@ def get_basepairs(atom_array, min_atoms_per_base = 3):
     basepairs : list
         Contains the basepairs, `tuple` of the first indices of the 
         corresponding residues.
+
+    Notes
+    -----
+    If a base is incomplete but contains the minimum number of atoms
+    specified a superimposed standard base is used to emulate it.
+
+    The vertical seperation has been implemented as the rise parameter
+    between the base triads [2].
+
+    The presence of base stacking is assumed if the following criteria
+    are met [4]:
+
+    (i) Distance between aromatic ring centers <=4.5 Å
+
+    (ii) Angle between the ring normal vectors <=23°
+    
+    (iii) Angle between normalized distance vector between two ring
+    centers and one normal vector <=40°
+
+    Please note that ring normal vectors are assumed to be equal to the
+    base normal vectors.
+
+    For structures without hydrogens only the plausibility can be 
+    checked. A hydrogen bond is considered as plausible if a cutoff of
+    4.0 Å between a heteroatom that is bonded to a hydrogen, that can
+    act as hydrogen bond donor, and a heteroatom that can accept
+    hydrogen bonds is met [1].
+
+    References
+    ----------
+    
+    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
+       "DSSR: an integrated software tool for dissecting the spatial
+       structure of RNA."
+       Nucleic acids research, 43(21), e142 (2015).
+
+    .. [2] XJ Lu, MA El Hassan and CA Hunter,
+       "tructure and conformation of helical nucleic acids: analysis
+       program (SCHNAaP)."
+       J Mol Biol, 273, 668-680 (1997).
+
+    .. [3] WK Olson, M Bansal and SK Burley et al.,
+       "A standard reference frame for the description of nucleic acid
+       base-pair geometry."
+       J Mol Biol, 313(1), 229-237 (2001).
+
+    .. [4] HA Gabb, SR Sanghani and CH Robert et al.,
+       "Finding and visualizing nucleic acid base stacking"
+       J Mol Biol Graph, 14(1), 6-11 (1996).
     """
     basepair_candidates = _get_proximate_basepair_candidates(atom_array)
     basepairs = []
@@ -429,12 +494,12 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
             = base_tuple
 
     
-    # Criterion 1: Distance between orgins <= 15 Å
+    # Criterion 1: Distance between orgins <=15 Å
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
         return False
     
-    # Criterion 2: Vertical seperation <= 2.5 Å
+    # Criterion 2: Vertical seperation <=2.5 Å
     #
     # Calculate the angle between normal vectors of the bases
     normal_vector_angle = np.arccos(np.dot(transformed_std_vectors[0][3,:],
@@ -464,7 +529,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     if not abs(int(np.dot(origin_vector, z_rot_average))) <= 2.5:
         return False
     
-    # Criterion 3: Angle between normal vectors <= 65°
+    # Criterion 3: Angle between normal vectors <=65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
                               transformed_std_vectors[1][3,:])
                     ) <=
@@ -506,9 +571,9 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
 def _check_hbonds(bases, hbond_masks):
     """
     Check if hydrogen bonds are plausible between two bases. A cutoff
-    of 4.0 Å between a heteroatom that is bonded to a hydrogen tha can
-    act as hydrogen bond donor and a heteroatom that can accept
-    hydrogen bonds. 
+    of 4.0 Å between a heteroatom that is bonded to a hydrogen, that can
+    act as hydrogen bond donor, and a heteroatom that can accept
+    hydrogen bonds is used.
     
     Parameters
     ----------
