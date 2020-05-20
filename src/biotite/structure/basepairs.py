@@ -189,8 +189,8 @@ def _get_std_guanine():
     atom7 = Atom([2.2683425, -1.4827579, 0.0], atom_name="O6", res_name="G")
     atom8 = Atom([0.0, -1.2990883, 0.0], atom_name="N1", res_name="G")
     atom9 = Atom([-1.1709266, -0.5812807, 0.0], atom_name="C2", res_name="G")
-    atom10 = Atom([-2.3043447, -1.300007, -0.001], atom_name="N2", res_name="G")
-    atom11 = Atom([-1.2280219, 0.73974866, 0.001], atom_name="N3", res_name="G")
+    atom10 = Atom([-2.304345, -1.300007, -0.001], atom_name="N2", res_name="G")
+    atom11 = Atom([-1.228022, 0.73974866, 0.001], atom_name="N3", res_name="G")
     atom12 = Atom([0.0, 1.2990883, 0.0], atom_name="C4", res_name="G")
     guanine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
@@ -251,7 +251,7 @@ def _get_std_thymine():
     atom6 = Atom([1.2347531, 0.7117828, -0.0], atom_name="C4", res_name="T")
     atom7 = Atom([2.2597313, 1.3879516, -0.0], atom_name="O4", res_name="T")
     atom8 = Atom([1.1979554, -0.73309445, -0.0], atom_name="C5", res_name="T")
-    atom9 = Atom([2.4866693, -1.4926641, -0.001], atom_name="C5M", res_name="T")
+    atom9 = Atom([2.486670, -1.4926641, -0.001], atom_name="C5M", res_name="T")
     atom10 = Atom([0.0, -1.3320639, -0.0], atom_name="C6", res_name="T")
     thymine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
@@ -656,9 +656,9 @@ def _match_base(nucleotide, min_atoms_per_base):
     
     # Match the selected std_base to the base.
     fitted, transformation = superimpose(
-                        nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)],
-                        std_base[np.in1d(std_base.atom_name, nucleotide.atom_name)]
-                                        )
+        nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)],
+        std_base[np.in1d(std_base.atom_name, nucleotide.atom_name)]
+                                    )
     # Transform the vectors
     trans1, rot, trans2 = transformation
     vectors += trans1
@@ -698,9 +698,10 @@ def _match_base(nucleotide, min_atoms_per_base):
         base_atom_mask = np.ones(len(nucleotide), dtype=bool)
         for i in range(len(nucleotide)):
             if (
-                ("'" in nucleotide[i].atom_name) or ("*" in nucleotide[i].atom_name) or
-                ((nucleotide[i].atom_name not in std_base.atom_name) and
-                 (nucleotide[i].element != "H"))
+                ("'" in nucleotide[i].atom_name)
+                or ("*" in nucleotide[i].atom_name)
+                or ((nucleotide[i].atom_name not in std_base.atom_name)
+                    and (nucleotide[i].element != "H"))
             ):
                 base_atom_mask[i] = False
         
@@ -709,8 +710,10 @@ def _match_base(nucleotide, min_atoms_per_base):
         # as Hydrogen Bond Donors or Acceptors respectively, using the
         # std_base as a template.
         for i in range(2):
-            return_hbond_masks[i] = _filter_atom_type(nucleotide[base_atom_mask], 
-                                std_base[std_hbond_masks[i]].atom_name)
+            return_hbond_masks[i] = _filter_atom_type(
+                nucleotide[base_atom_mask], 
+                std_base[std_hbond_masks[i]].atom_name
+                                                    )
         return_base = nucleotide[base_atom_mask]
 
     return return_base, return_hbond_masks, vectors
