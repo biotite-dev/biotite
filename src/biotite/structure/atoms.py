@@ -1368,7 +1368,7 @@ def from_template(template, coord, box=None):
     if template.array_length() != coord.shape[-2]:
         raise ValueError(
             f"Template has {template.array_length()} atoms, but "
-            f"{self.get_coord().shape[-2]} coordinates are given"
+            f"{coord.shape[-2]} coordinates are given"
         )
 
     # Create empty stack with no models
