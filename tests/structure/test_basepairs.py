@@ -8,13 +8,13 @@ import biotite.structure.io as strucio
 from os.path import join
 from ..util import data_dir
 from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
-                                        get_basepairs
+                                        base_pairs
 
 
 def convert_indices_to_res_chain_id(atomarray, indices):
     """
-    Convert a list of tuples containg the first indices of the residues 
-    of the bases to a list of tuples containg the residue ids and
+    Convert a list of tuples containing the first indices of the residues 
+    of the bases to a list of tuples containing the residue ids and
     chain ids of the bases.
     """
     res_chain_id = []
@@ -28,7 +28,7 @@ def convert_indices_to_res_chain_id(atomarray, indices):
 
 def reversed_iterator(iter):
     """
-    Returned a reversed list of the elements of an iterator.
+    Returns a reversed list of the elements of an iterator.
     """
     return reversed(list(iter))
 
@@ -41,7 +41,7 @@ def nuc_sample_array():
 @pytest.fixture
 def basepairs_fw(nuc_sample_array):
     """
-    Generate a test output for the get_basepairs function.
+    Generate a test output for the base_pairs function.
     """
     residue_indices = struc.residues.get_residue_starts(nuc_sample_array)[0:24]
     basepairs = []
@@ -53,7 +53,7 @@ def basepairs_fw(nuc_sample_array):
 @pytest.fixture
 def basepairs_rv(basepairs_fw):
     """
-    Generate a reversed test output for the get_basepairs function.
+    Generate a reversed test output for the base_pairs function.
     """
     reverser = []
     for base1, base2 in basepairs_fw:
@@ -62,7 +62,7 @@ def basepairs_rv(basepairs_fw):
 
 def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
     """
-    Check the output of get_basepairs.
+    Check the output of base_pairs.
     """
 
     # Check if basepairs are unique in computed_basepairs
@@ -79,20 +79,20 @@ def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
                 or (comp_basepair in basepairs_rv))
 
 
-def test_get_basepairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
+def test_base_pairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
     """
-    Test for the function get_basepairs.
+    Test for the function base_pairs.
     """
-    computed_basepairs = get_basepairs(nuc_sample_array)
+    computed_basepairs = base_pairs(nuc_sample_array)
     check_output(convert_indices_to_res_chain_id(
         nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
             )
 
 
-def test_get_basepairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
+def test_base_pairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
     """
     Reverse the order of residues in the atom_array and then test the
-    function get_basepairs.
+    function base_pairs.
     """
     
     # Reverse sequence of residues in nuc_sample_array
@@ -100,7 +100,7 @@ def test_get_basepairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
     
-    computed_basepairs = get_basepairs(reversed_nuc_sample_array)
+    computed_basepairs = base_pairs(reversed_nuc_sample_array)
     computed_basepairs = convert_indices_to_res_chain_id(
         reversed_nuc_sample_array, computed_basepairs
                                                     )

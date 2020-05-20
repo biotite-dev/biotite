@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom Müller"
-__all__ = ["get_basepairs"]
+__all__ = ["base_pairs"]
 
 import numpy as np
 import warnings
@@ -351,7 +351,7 @@ _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
 
-def get_basepairs(atom_array, min_atoms_per_base = 3):
+def base_pairs(atom_array, min_atoms_per_base = 3):
     """
     Use DSSR criteria [1] to find the basepairs in an `Atom Array`.
 
