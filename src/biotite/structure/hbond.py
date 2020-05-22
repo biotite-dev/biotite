@@ -24,11 +24,13 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     Find hydrogen bonds in a structure using the Baker-Hubbard
     algorithm. [1]_
 
-    This method identifies hydrogen bonds based on the bond angle
+    This function identifies hydrogen bonds based on the bond angle
     :math:`\theta` and the bond distance :math:`d_{H,A}`.
     The default criteria is :math:`\theta > 120^{\circ}`
     and :math:`d_{H,A} \le 2.5 \mathring{A}`.
-    .
+    Consequently, the given structure must have annotated hydrogen
+    atoms.
+    Otherwise, no hydrogen atoms will be found.
     
     Parameters
     ----------

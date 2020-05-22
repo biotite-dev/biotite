@@ -6,12 +6,13 @@ __name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MMTFFile"]
 
+import io
 from collections.abc import MutableMapping
 import struct
 import copy
 import numpy as np
 import msgpack
-from ....file import File
+from ....file import File, is_binary
 from ...error import BadStructureError
 from .decode import decode_array
 from .encode import encode_array
@@ -73,6 +74,8 @@ class MMTFFile(File, MutableMapping):
                 )
         # File object
         else:
+            if not is_binary(file):
+                raise TypeError("A file opened in 'binary' mode is required")
             mmtf_file._content = msgpack.unpackb(
                 file.read(), use_list=True, raw=False
             )
@@ -95,6 +98,8 @@ class MMTFFile(File, MutableMapping):
             with open(file, "wb") as f:
                 f.write(packed_bytes)
         else:
+            if not is_binary(file):
+                raise TypeError("A file opened in 'binary' mode is required")
             file.write(packed_bytes)
     
     def __copy_fill__(self, clone):

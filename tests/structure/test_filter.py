@@ -10,27 +10,118 @@ from ..util import data_dir
 import pytest
 
 @pytest.fixture
-def sample_array():
-    return strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
-
-def test_solvent_filter(sample_array):
-    assert len(sample_array[struc.filter_solvent(sample_array)]) == 287
-
-def test_amino_acid_filter(sample_array):
-    assert len(sample_array[struc.filter_amino_acids(sample_array)]) == 982
-
-def test_backbone_filter(sample_array):
-    assert len(sample_array[struc.filter_backbone(sample_array)]) == 384
-
-def test_intersection_filter(sample_array):
-    assert len(sample_array[:200][
-               struc.filter_intersection(sample_array[:200],sample_array[100:])
-           ]) == 100
-
-def test_nucleotide_filter():
-    nuc_sample_array = strucio.load_structure(
-        join(data_dir("structure"), "5ugo.pdb")
+def sample_protein():
+    return strucio.load_structure(
+        join(data_dir("structure"), "3o5r.mmtf")
     )
 
-    assert len(nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)
-            ]) == 651
+@pytest.fixture
+def sample_nucleotide():
+    return strucio.load_structure(
+        join(data_dir("structure"), "5ugo.mmtf")
+    )
+
+@pytest.fixture
+def all_atloc_structure():
+    return strucio.load_structure(
+        join(data_dir("structure"), "1o1z.mmtf"),
+        extra_fields = ["occupancy"],
+        altloc="all"
+    )
+
+def test_solvent_filter(sample_protein):
+    assert len(sample_protein[struc.filter_solvent(sample_protein)]) == 287
+
+def test_amino_acid_filter(sample_protein):
+    assert len(sample_protein[struc.filter_amino_acids(sample_protein)]) == 982
+
+def test_backbone_filter(sample_protein):
+    assert len(sample_protein[struc.filter_backbone(sample_protein)]) == 384
+
+def test_intersection_filter(sample_protein):
+    assert len(sample_protein[:200][
+        struc.filter_intersection(sample_protein[:200],sample_protein[100:])
+    ]) == 100
+
+def test_nucleotide_filter(sample_nucleotide):
+
+    assert len(
+        sample_nucleotide[struc.filter_nucleotides(sample_nucleotide)]
+    ) == 651
+
+
+@pytest.mark.parametrize("filter_func", ["first", "occupancy"])
+def test_filter_altloc(all_atloc_structure, filter_func):
+    """
+    For a correctly altloc filtered structure no atom should be missing
+    and no atom should be present twice.
+    """
+    ref_atom_set = set()
+    for atom_tuple in zip(
+        all_atloc_structure.chain_id,
+        all_atloc_structure.res_id,
+        all_atloc_structure.ins_code,
+        all_atloc_structure.atom_name
+    ):
+        ref_atom_set.add(atom_tuple)
+    
+    if filter_func == "first":
+        filtered_structure = all_atloc_structure[struc.filter_first_altloc(
+            all_atloc_structure,
+            all_atloc_structure.altloc_id
+        )]
+    elif filter_func == "occupancy":
+        filtered_structure = all_atloc_structure[
+            struc.filter_highest_occupancy_altloc(
+                all_atloc_structure,
+                all_atloc_structure.altloc_id,
+                all_atloc_structure.occupancy
+            )
+        ]
+
+    test_atom_set = set()
+    for atom_tuple in zip(
+        filtered_structure.chain_id,
+        filtered_structure.res_id,
+        filtered_structure.ins_code,
+        filtered_structure.atom_name
+    ):
+        try:
+            # No atom should be present twice
+            assert atom_tuple not in test_atom_set
+        except AssertionError:
+            print(f"Atom {atom_tuple} is present twice")
+            raise
+        test_atom_set.add(atom_tuple)
+    
+    # No atom should be missing
+    assert test_atom_set == ref_atom_set
+
+
+def test_filter_highest_occupancy_altloc(all_atloc_structure):
+    """
+    When filtering altlocs with the highest occupancy, the average
+    occupancy should be higher than the the average occupancy when the
+    first altloc ID is always filtered.
+    """
+    # Set the occupancy of SECOND altloc ID very high
+    all_atloc_structure.occupancy[all_atloc_structure.altloc_id == "B"] = 1.0
+    
+    # filter_first_altloc
+    filtered_structure = all_atloc_structure[struc.filter_first_altloc(
+        all_atloc_structure,
+        all_atloc_structure.altloc_id
+    )]
+    ref_occupancy_sum = np.average(filtered_structure.occupancy)
+
+    # filter_highest_occupancy_altloc
+    filtered_structure = all_atloc_structure[
+        struc.filter_highest_occupancy_altloc(
+            all_atloc_structure,
+            all_atloc_structure.altloc_id,
+            all_atloc_structure.occupancy
+        )
+    ]
+    test_occupancy_sum = np.average(filtered_structure.occupancy)
+    
+    assert test_occupancy_sum > ref_occupancy_sum

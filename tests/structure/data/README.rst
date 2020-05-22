@@ -12,3 +12,5 @@ Test structures
 5H73: Structure contains residue with "'" in atom name
 5UGO: Structure contains nucleotide
 1QXB: Structure contains complimentary DNA-sequence
+5UGO: Structure contains deoxynucleotide
+4GXY: Structure contains ribonucleotide

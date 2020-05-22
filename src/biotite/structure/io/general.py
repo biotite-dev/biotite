@@ -200,3 +200,40 @@ def save_structure(file_path, array, **kwargs):
         file.write(file_path)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")
+
+
+# Helper function to estimate elements from atom names
+_elements = [elem.upper() for elem in 
+["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg",
+"Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe",
+"Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",
+"Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te",
+"I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb",
+"Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt",
+"Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa",
+"U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf",
+"Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts",
+"Og"]
+]
+def _guess_element(atom_name):
+    # remove digits (1H -> H)
+    elem = "".join([i for i in atom_name if not i.isdigit()])
+    elem = elem.upper()
+
+    # Some often used elements for biomolecules
+    if elem.startswith("C") or elem.startswith("N") or \
+        elem.startswith("O") or elem.startswith("S") or \
+        elem.startswith("H"):
+        return elem[0]
+
+    # Exactly match element abbreviations
+    try:
+        return _elements[_elements.index(elem[:2])]
+    except ValueError:
+        try:
+            return _elements[_elements.index(elem[0])]
+        except ValueError:
+            pass
+
+    return ""
+ 

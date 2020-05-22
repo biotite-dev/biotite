@@ -9,12 +9,13 @@ arrays and atom array stacks.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_amino_acids",
-           "filter_backbone", "filter_intersection",
-           "filter_altloc", "filter_nucleotides"]
+__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
+           "filter_amino_acids", "filter_backbone", "filter_intersection",
+           "filter_first_altloc", "filter_highest_occupancy_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
+from .residues import get_residue_starts
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
@@ -65,6 +66,27 @@ def filter_solvent(array):
         belongs to the solvent.
     """
     return np.in1d(array.res_name, _solvent_list)
+
+
+def filter_nucleotides(array):
+    """
+    Filter all atoms of one array that belong to nucleotides.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+    
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a nucleotide.
+    """
+    return (
+        np.in1d(array.res_name, _ext_nucleotide_list) 
+        & (array.res_id != -1)
+    )
 
 
 def filter_amino_acids(array):
@@ -158,80 +180,160 @@ def filter_intersection(array, intersect):
     return filter
 
 
-def filter_altloc(atoms, altlocs, selected_altlocs):
+def filter_first_altloc(atoms, altloc_ids):
     """
-    Filter all atoms having the desired altloc.
+    Filter all atoms, that have the first *altloc* ID appearing in a
+    residue.
     
     Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
-    in case a residue is found in multiple alternative locations
+    in case a residue is found in multiple alternate locations
     (*altloc*).
-    This function is used to filter the atoms with the desired *altloc*
-    at this position with other *altlocs* are removed.    
-    
-    The function will be rarely used by the end user, since this kind
-    of filtering is automatically performed, when the structure is
-    loaded from a file.
-    In the final atom array (stack) duplicate atoms are not allowed.
+    This function is used to remove such duplicate atoms by choosing a
+    single *altloc ID* for an atom with other *altlocs* being removed.    
     
     Parameters
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
-        The unfiltered atom array to be filtered.
-    altlocs : array-like, shape=(n,)
-        An array containing the alternative location codes for each
-        atom in the unfiltered atom array.
-        Can contain '.', '?', ' ', '' or a letter at each position.
-    selected_altlocs : iterable object of tuple (str, int, str)
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues only those atoms of `atoms` are
-        filtered where the *altloc* ID matches the respective *altloc*
-        ID in `altlocs`.
-        By default the location with the *altloc* ID "A" is used.
+        The unfiltered structure to be filtered.
+    altloc_ids : ndarray, shape=(n,), dtype='U1'
+        An array containing the alternate location IDs for each
+        atom in `atoms`.
+        Can contain `'.'`, `'?'`, `' '`, `''` or a letter at each
+        position.
     
     Returns
     -------
     filter : ndarray, dtype=bool
-        The combined inscode and altloc filters.
-    """
-    # Default: Filter all atoms
-    # with altloc code ".", "?", "A", " " or empty string
-    altloc_filter = np.in1d(altlocs, [".","?","A"," ",""])
+        For each residue, this array is True in the following cases:
+
+            - The atom has no altloc ID (`'.'`, `'?'`, `' '`, `''`).
+            - The atom has the same altloc ID (e.g. `'A'`, `'B'`, etc.)
+              as the first atom in the residue that has an altloc ID.
     
-    for loc in selected_altlocs:
-        chain, residue, altoc = loc
-        residue_filter = (
-            (atoms.chain_id == chain) &
-            (atoms.res_id == residue)
-        )
-        # Reset (set to False) filter for specified residue
-        altloc_filter &= ~residue_filter
-        # Choose only atoms of residue with altloc code
-        altloc_filter |= residue_filter & (altlocs == altloc)
-        
+    Notes
+    -----
+    The function will be rarely used by the end user, since this kind
+    of filtering is usually automatically performed, when the structure
+    is loaded from a file.
+    The exception are structures that were read with `altloc` set to
+    `True`.
+
+    Examples
+    --------
+
+    >>> atoms = array([
+    ...     Atom(coord=[1, 2, 3], res_id=1, atom_name="CA"),
+    ...     Atom(coord=[4, 5, 6], res_id=1, atom_name="CB"),
+    ...     Atom(coord=[6, 5, 4], res_id=1, atom_name="CB")
+    ... ])
+    >>> altloc_ids = np.array([".", "A", "B"])
+    >>> filtered = atoms[filter_first_altloc(atoms, altloc_ids)]
+    >>> print(filtered)
+                1      CA               1.000    2.000    3.000
+                1      CB               4.000    5.000    6.000
+    """
+    # Filter all atoms without altloc code
+    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
+    
+    # And filter all atoms for each residue with the first altloc ID
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
+        letter_altloc_ids = [l for l in altloc_ids[start:stop] if l.isalpha()]
+        if len(letter_altloc_ids) > 0:
+            first_id = letter_altloc_ids[0]
+            altloc_filter[start:stop] |= (altloc_ids[start:stop] == first_id)
+        else:
+            # No altloc ID in this residue -> Nothing to do
+            pass
+    
     return altloc_filter
 
 
-def filter_nucleotides(array):
+def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     """
-    Filter all atoms of one array that belong to nucleotides.
+    For each residue, filter all atoms, that have the *altloc* ID
+    with the highest occupancy for this residue.
+    
+    Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
+    in case a residue is found in multiple alternate locations
+    (*altloc*).
+    This function is used to remove such duplicate atoms by choosing a
+    single *altloc ID* for an atom with other *altlocs* being removed.    
     
     Parameters
     ----------
-    array : AtomArray or AtomArrayStack
-        The array to be filtered.
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The unfiltered structure to be filtered.
+    altloc_ids : ndarray, shape=(n,), dtype='U1'
+        An array containing the alternate location IDs for each
+        atom in `atoms`.
+        Can contain `'.'`, `'?'`, `' '`, `''` or a letter at each
+        position.
+    occupancies : ndarray, shape=(n,), dtype=float
+        An array containing the occupancy values for each atom in
+        `atoms`.
     
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where the atom
-        belongs to a nucleotide.
+        For each residue, this array is True in the following cases:
+
+            - The atom has no altloc ID
+              (``'.'``, ``'?'``, ``' '``, ``''``).
+            - The atom has the altloc ID (e.g. ``'A'``, ``'B'``, etc.),
+              of which the corresponding occupancy values are highest
+              for the **entire** residue.
+    
+    Notes
+    -----
+    The function will be rarely used by the end user, since this kind
+    of filtering is usually automatically performed, when the structure
+    is loaded from a file.
+    The exception are structures that were read with ``altloc`` set to
+    ``True``.
+
+    Examples
+    --------
+
+    >>> atoms = array([
+    ...     Atom(coord=[1, 2, 3], res_id=1, atom_name="CA"),
+    ...     Atom(coord=[4, 5, 6], res_id=1, atom_name="CB"),
+    ...     Atom(coord=[6, 5, 4], res_id=1, atom_name="CB")
+    ... ])
+    >>> altloc_ids = np.array([".", "A", "B"])
+    >>> occupancies = np.array([1.0, 0.1, 0.9])
+    >>> filtered = atoms[filter_highest_occupancy_altloc(
+    ...     atoms, altloc_ids, occupancies
+    ... )]
+    >>> print(filtered)
+                1      CA               1.000    2.000    3.000
+                1      CB               6.000    5.000    4.000
     """
-    return (
-        np.in1d(array.res_name, _ext_nucleotide_list) 
-        & (array.res_id != -1)
-    )
+    # Filter all atoms without altloc code
+    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
+    
+    # And filter all atoms for each residue with the highest sum of
+    # occupancies
+    residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
+    for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
+        occupancies_in_res = occupancies[start:stop]
+        altloc_ids_in_res = altloc_ids[start:stop]
+        
+        letter_altloc_ids = [l for l in altloc_ids_in_res if l.isalpha()]
+        
+        if len(letter_altloc_ids) > 0:
+            highest = -1.0
+            highest_id = None
+            for id in set(letter_altloc_ids):
+                occupancy_sum = np.sum(
+                    occupancies_in_res[altloc_ids_in_res == id]
+                )
+                if occupancy_sum > highest:
+                    highest = occupancy_sum
+                    highest_id = id
+            altloc_filter[start:stop] |= (altloc_ids[start:stop] == highest_id)
+        else:
+            # No altloc ID in this residue -> Nothing to do
+            pass
+    
+    return altloc_filter

@@ -10,6 +10,7 @@ import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...box import is_orthogonal
 from ....file import TextFile, InvalidFileError
+from ..general import _guess_element as guess_element
 from ...error import BadStructureError
 import copy
 from datetime import datetime
@@ -152,13 +153,7 @@ class GROFile(TextFile):
 
             annot_i = get_atom_line_i(model_start_i[model-1], length)
 
-        # Fill in elements
-        def guess_element(atom_name):
-            if atom_name.startswith(("H", "1H", "2H", "3H")):
-                return 'H'
-            else:
-                return atom_name[0]
-
+        # Replace empty strings for elements with guessed types
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
