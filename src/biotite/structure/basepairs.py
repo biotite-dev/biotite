@@ -121,7 +121,7 @@ def _get_std_cytosine():
         Standard coordinates nomenclature of the adenine base, 
         :class:`AtomArray` with nomenclature of PDB File Format V2, 
         :class:`AtomArray` with nomenclature of PDB File Format V3
-    coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
+    coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function base_pairs, :class:`ndarray`
         containing the coordinates of the pyrimidine ring center
@@ -213,7 +213,7 @@ def _get_std_guanine():
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom8.coord, atom12.coord], axis=-2)
-    # Calculate the coordinates of the aromatic ring centers.
+    # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord,
          atom9.coord, atom11.coord, atom12.coord], axis=-2
@@ -225,7 +225,7 @@ def _get_std_guanine():
 
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
-    # Hydrogen Bond Donors or Acceptors respectively.
+    # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         guanine_pdbv2.array_length(), [1, 7, 9]
     )
@@ -244,18 +244,20 @@ def _get_std_thymine():
         
     Returns
     -------
-    standard_base : tuple
-        Standard coordinates nomenclature of the thymine base, 
-        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
-        with nomenclature of PDB File Format V3
-    ring_center : tuple
-        Coordinates of the aromatic ring centers, `ndarray` containing
-        the coordinates of the pyrimidine ring center
-    hbond_masks : tuple
-        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
-        with dtype=bool, boolean mask for heteroatoms which are bound to
-        a hydrogen that can act as a donor, boolean mask for heteroatoms
-        that can act as a hydrogen bond acceptor
+    standard_base : tuple (AtomArray, AtomArray)
+        Standard coordinates nomenclature of the adenine base, 
+        :class:`AtomArray` with nomenclature of PDB File Format V2, 
+        :class:`AtomArray` with nomenclature of PDB File Format V3
+    coordinates : tuple (ndarray, ndarray, dtype=float)
+        :class:`ndarray` containing the center according to the SCHNaP-
+        paper referenced in the function base_pairs, :class:`ndarray`
+        containing the coordinates of the pyrimidine ring center
+    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
+        The hydrogen bond donors and acceptors heteroatoms as 
+        :class:`ndarray` with ``dtype=bool``, boolean mask for
+        heteroatoms which are bound to a hydrogen that can act as a 
+        donor, boolean mask for heteroatoms that can act as a hydrogen
+        bond acceptor
     """
     atom1 =  Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
     atom2 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
@@ -269,27 +271,27 @@ def _get_std_thymine():
     atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
     thymine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
-                )
+    )
     thymine_pdbv3 = thymine_pdbv2.copy()
     thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom5.coord, atom10.coord], axis=-2)
-    # Calculate the coordinates of the aromatic ring center.
+    # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
         [atom2.coord, atom3.coord, atom5.coord,
          atom6.coord, atom8.coord, atom10.coord], axis=-2
-                            )
+    )
 
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
-    # Hydrogen Bond Donors or Acceptors respectively.
+    # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         thymine_pdbv2.array_length(), [1, 4]
-                                        )
+    )
     hbond_acceptor_mask = _get_1d_boolean_mask(
         thymine_pdbv2.array_length(), [1, 3, 4, 6]
-                                            )
+    )
       
     return (thymine_pdbv2, thymine_pdbv3), (midpoint, pyrimidine_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
