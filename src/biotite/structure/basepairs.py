@@ -51,8 +51,8 @@ def _get_std_adenine():
     -------
     standard_base : tuple (AtomArray, AtomArray)
         Standard coordinates nomenclature of the adenine base, 
-        AtomArray with nomenclature of PDB File Format V2, AtomArray
-        with nomenclature of PDB File Format V3
+        :class:`AtomArray` with nomenclature of PDB File Format V2, 
+        :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function base_pairs, :class:`ndarray`
@@ -117,13 +117,14 @@ def _get_std_cytosine():
         
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
+   standard_base : tuple (AtomArray, AtomArray)
         Standard coordinates nomenclature of the adenine base, 
-        AtomArray with nomenclature of PDB File Format V2, AtomArray
-        with nomenclature of PDB File Format V3
-    coordinates : tuple (ndarray, ndarray, dtype=float)
+        :class:`AtomArray` with nomenclature of PDB File Format V2, 
+        :class:`AtomArray` with nomenclature of PDB File Format V3
+    coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs
+        paper referenced in the function base_pairs, :class:`ndarray`
+        containing the coordinates of the pyrimidine ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
         The hydrogen bond donors and acceptors heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
@@ -174,19 +175,22 @@ def _get_std_guanine():
         
     Returns
     -------
-    standard_base : tuple
-        Standard coordinates nomenclature of the guanine base, 
-        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
-        with nomenclature of PDB File Format V3
-    ring_centers : tuple
-        Coordinates of the aromatic ring centers, `ndarray` containing
-        the coordinates of the pyrimidine ring center, `ndarray`
-        containing the coordinates of the imidazole ring center
-    hbond_masks : tuple
-        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
-        with dtype=bool, boolean mask for heteroatoms which are bound to
-        a hydrogen that can act as a donor, boolean mask for heteroatoms
-        that can act as a hydrogen bond acceptor
+    standard_base : tuple (AtomArray, AtomArray)
+        Standard coordinates nomenclature of the adenine base, 
+        :class:`AtomArray` with nomenclature of PDB File Format V2, 
+        :class:`AtomArray` with nomenclature of PDB File Format V3
+    coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
+        :class:`ndarray` containing the center according to the SCHNaP-
+        paper referenced in the function base_pairs, :class:`ndarray`
+        containing the coordinates of the pyrimidine ring center,
+        :class:`ndarray` containing the coordinates of the imidazole 
+        ring center
+    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
+        The hydrogen bond donors and acceptors heteroatoms as 
+        :class:`ndarray` with ``dtype=bool``, boolean mask for
+        heteroatoms which are bound to a hydrogen that can act as a 
+        donor, boolean mask for heteroatoms that can act as a hydrogen
+        bond acceptor
     """
     atom1 =  Atom([-2.477, 5.399, 0.000],  atom_name="C1*", res_name="G")
     atom2 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
@@ -203,7 +207,7 @@ def _get_std_guanine():
     guanine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11, atom12]
-                )
+    )
     guanine_pdbv3 = guanine_pdbv2.copy()
     guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
@@ -213,21 +217,21 @@ def _get_std_guanine():
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord,
          atom9.coord, atom11.coord, atom12.coord], axis=-2
-                            )
+    )
     imidazole_center = np.mean(
         [atom2.coord, atom3.coord, atom4.coord,
          atom5.coord, atom12.coord], axis=-2
-                            )
+    )
 
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donor_mask = _get_1d_boolean_mask(
         guanine_pdbv2.array_length(), [1, 7, 9]
-                                        )
+    )
     hbond_acceptor_mask = _get_1d_boolean_mask(
         guanine_pdbv2.array_length(), [1, 3, 6, 7, 9, 10]
-                                            )
+    )
 
     return (guanine_pdbv2, guanine_pdbv3), \
            (midpoint, pyrimidine_center, imidazole_center), \
