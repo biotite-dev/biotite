@@ -811,21 +811,17 @@ def _match_base(nucleotide, min_atoms_per_base):
     return return_base, return_hbond_masks, vectors
 
 
-def _get_proximate_basepair_candidates(atom_array, max_cutoff = 4,
-                                       min_cutoff = 9):
+def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     """
     Filter for potential basepairs based on the distance between the
-    C1-sugar Atoms.
+    nitrogen and oxygen Atoms.
     
     Parameters
     ----------
     atom_array : AtomArray
         The `AtomArray` to find basepair candidates in.
-    max_cutoff : integer
-        The maximum distance of the C1-sugar Atoms for a pair of bases
-        to be considered a basepair candidate.
-    min_cutoff : integer
-        The minimum distance of the C1-sugar Atoms for a pair of bases
+    cutoff : integer
+        The maximum distance of the N and O Atoms for a pair of bases
         to be considered a basepair candidate.
         
     Returns
@@ -835,14 +831,14 @@ def _get_proximate_basepair_candidates(atom_array, max_cutoff = 4,
         of the corresponding residues.
     """
 
-    # Get a boolean mask for the C1 sugar atoms
+    # Get a boolean mask for the N and O atoms
     NOmask = (filter_nucleotides(atom_array) 
               & np.isin(atom_array.element, ["N", "O"]))
-    # Get the indices of the C1 atoms that are within the maximum cutoff
-    # of each other
+    # Get the indices of the N and O atoms that are within the maximum
+    # cutoff of each other
     indices = CellList( 
-        atom_array, max_cutoff, selection=NOmask
-                    ).get_atoms(atom_array.coord[NOmask], max_cutoff)
+        atom_array, cutoff, selection=NOmask
+                    ).get_atoms(atom_array.coord[NOmask], cutoff)
     
     # Loop through the indices of potential partners
     basepair_candidates = []
@@ -850,8 +846,6 @@ def _get_proximate_basepair_candidates(atom_array, max_cutoff = 4,
         for partner in partners:
             if partner == -1:
                 break
-            # Check if the basepair candidates have a distance which is
-            # greater than the minimum cutoff
             # Find the indices of the first atom of the residues
             candidate_res_start = np.where(
                 (atom_array.res_id == atom_array[candidate].res_id)
@@ -861,8 +855,8 @@ def _get_proximate_basepair_candidates(atom_array, max_cutoff = 4,
                 (atom_array.res_id == atom_array[partner].res_id)
                 & (atom_array.chain_id == atom_array[partner].chain_id)
             )[0][0]
-            # If the countperpart of the basepair candidates is not
-            # already in the output list, append to the output
+            # If the basepair candidate is not already in the output
+            # list, append to the output list
             if (
                 ((partner_res_start, candidate_res_start) \
                 not in basepair_candidates)
