@@ -375,11 +375,11 @@ _uracil_containing_nucleotides = ["U", "DU"]
 
 def base_pairs(atom_array, min_atoms_per_base = 3):
     """
-    Use DSSR criteria [1] to find the basepairs in an `Atom Array`.
+    Use DSSR criteria [1]_ to find the basepairs in an 
+    :class:`AtomArray`.
 
     A standard reference frame for the bases adenine, thymine, guanine,
-    cytosine, and uracil has been implemented [2]. Averaged structures
-    [3] have been transformed to this reference frame. 
+    cytosine, and uracil has been implemented [2]_.
 
     The DSSR Criteria are as follows:
 
@@ -396,34 +396,34 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     Parameters
     ----------
     atom_array : AtomArray
-        The `AtomArray` to find basepairs in.
+        The :class:`AtomArray` to find basepairs in.
     min_atoms_per_base : integer, optional
-        The number of atoms a base must have to be considered a 
-        candidate for a basepair.
+        The number of atoms a nucleotides base must have to be 
+        considered a candidate for a basepair.
         
     Returns
     -------
-    basepairs : list
+    basepairs : list [(integer, integer), ...]
         Contains the basepairs, `tuple` of the first indices of the 
         corresponding residues.
 
     Notes
     -----
-    If a base is incomplete but contains the minimum number of atoms
-    specified a superimposed standard base is used to emulate it.
+    If a base is incomplete but contains the minimum number of base-
+    atoms specified a superimposed standard base is used to emulate it.
 
     The vertical seperation has been implemented as the rise parameter
-    between the base triads [2].
+    between the base triads [3]_.
 
     The presence of base stacking is assumed if the following criteria
-    are met [4]:
+    are met [4]_:
 
     (i) Distance between aromatic ring centers <=4.5 Å
 
     (ii) Angle between the ring normal vectors <=23°
     
     (iii) Angle between normalized distance vector between two ring
-    centers and one normal vector <=40°
+          centers and one normal vector <=40°
 
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
@@ -432,7 +432,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     bonds can be checked. A hydrogen bond is considered as plausible if
     a cutoff of 4.0 Å between a heteroatom that is bonded to a hydrogen,
     that can act as hydrogen bond donor, and a heteroatom that can
-    accept hydrogen bonds is met [1].
+    accept hydrogen bonds is met [1]_.
 
     References
     ----------
@@ -442,15 +442,15 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
        structure of RNA."
        Nucleic acids research, 43(21), e142 (2015).
 
-    .. [2] XJ Lu, MA El Hassan and CA Hunter,
-       "tructure and conformation of helical nucleic acids: analysis
-       program (SCHNAaP)."
-       J Mol Biol, 273, 668-680 (1997).
-
-    .. [3] WK Olson, M Bansal and SK Burley et al.,
+    .. [2] WK Olson, M Bansal and SK Burley et al.,
        "A standard reference frame for the description of nucleic acid
        base-pair geometry."
        J Mol Biol, 313(1), 229-237 (2001).
+
+    .. [3] XJ Lu, MA El Hassan and CA Hunter,
+        "Structure and conformation of helical nucleic acids: analysis
+        program (SCHNAaP)."
+        J Mol Biol, 273, 668-680 (1997).
 
     .. [4] HA Gabb, SR Sanghani and CH Robert et al.,
        "Finding and visualizing nucleic acid base stacking"
@@ -474,21 +474,21 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     
     Parameters
     ----------
-    basepair : tuple
-        The two bases to check the criteria for as `AtomArray`.
+    basepair : tuple (AtomArray, AtomArray)
+        The two bases to check the criteria for as :class:`AtomArray`.
     min_atoms_per_base : integer
-        The number of atoms a base must have to be considered a 
-        candidate for a basepair.
+        The number of atoms a nucleotides base must have to be 
+        considered a candidate for a basepair.
         
     Returns
     -------
     satisfied : bool
-        `True` if the basepairs satisfies the criteria and `False` if it
-        does not.
+        ``True`` if the basepairs satisfies the criteria and ``False`` 
+        if it does not.
     """
 
     # Contains the bases to use for the analysis. If the bases are 
-    # incomplete transformed standard bases are used. If they are 
+    # incomplete, transformed standard bases are used. If they are 
     # complete, the original structure is used.
     transformed_bases = [None] * 2
     # Contains the hydrogen bond donors and acceptors heteroatoms as 
@@ -496,12 +496,13 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # bound to a hydrogen that can act as a donor, boolean mask for
     # heteroatoms that can act as a hydrogen bond acceptor
     hbond_masks = [None] * 2
-    # A list containing one NumPy array for each base with transformed
+    # A list containing ndarray for each base with transformed
     # vectors from the standard base reference frame to the structures
     # coordinates. The layout is as follows:
     #
     # [Origin coordinates]
-    # [Orthonormal base vectors] * 3 in the order x, y, z
+    # [Base normal vector]
+    # [SCHNAaP origin coordinates]
     # [Aromatic Ring Center coordinates]
     transformed_std_vectors = [None] * 2
     
@@ -559,8 +560,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     origin_vector = transformed_std_vectors[1][2,:] \
                     - transformed_std_vectors[0][2,:]
     
-    # The angle between the averaged rotated normal vectors and the 
-    # vector between the two origins is the vertical seperation
+    # The dot product between the averaged rotated normal vectors and 
+    # the vector between the two origins is the vertical seperation
     if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
         return False
     
@@ -611,19 +612,19 @@ def _check_hbonds(bases, hbond_masks):
     
     Parameters
     ----------
-    bases : list
-        The two bases to check for hydrogen bonds as `AtomArray`.
+    bases : list [AtomArray, AtomArray]
+        The two bases to check for hydrogen bonds as :class:`AtomArray`.
     hbond_masks : list
         Contains the hydrogen bond donors and acceptors heteroatoms as 
-        `ndarray` with dtype=bool, boolean mask for heteroatoms which 
+        :class:`ndarray` with dtype=bool, boolean mask for heteroatoms which 
         are bound to a hydrogen that can act as a donor, boolean mask 
         for heteroatoms that can act as a hydrogen bond acceptor
         
     Returns
     -------
     plausible : bool
-        `True` if at least one hydrogen bond is plausible and `False` 
-        not.
+        ``True`` if at least one hydrogen bond is plausible and 
+        ``False`` not.
     """
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
@@ -642,20 +643,20 @@ def _check_base_stacking(transformed_vectors):
     ----------
     transformed_vectors : list
         A list with transformed vectors as `ndarray` for both bases,
-        origin coordinates, Orthonormal base vectors * 3 in the order
-        (x, y, z), aromatic ring center coordinates
+        origin coordinates, base normal vector, SCHNAaP origing,
+        aromatic ring center coordinates
         
     Returns
     -------
     base_stacking : bool
-        `True` if base stacking is detected and `False` if not
+        ``True`` if base stacking is detected and ``False`` if not
     """
 
     # Contains the normalized distance vectors between ring centers less
     # than 4.5 Å apart.
     normalized_distance_vectors = []
 
-    # Criterion 1: Distance between aromatic ring centers <= 4.5 Å
+    # Criterion 1: Distance between aromatic ring centers <=4.5 Å
     wrongdistance = True
     for ring_center1 in transformed_vectors[0][3:][:]:
         for ring_center2 in transformed_vectors[1][3:][:]:
@@ -666,7 +667,7 @@ def _check_base_stacking(transformed_vectors):
     if(wrongdistance == True):
         return False
     
-    # Criterion 2: Angle between normal vectors or its supplement <= 23°
+    # Criterion 2: Angle between normal vectors or its supplement <=23°
     if (
             (np.arccos(np.dot(transformed_vectors[0][1,:],
                               transformed_vectors[1][1,:]))
@@ -678,7 +679,7 @@ def _check_base_stacking(transformed_vectors):
         return False
     
     # Criterion 3: Angle between normalized distance vector and one 
-    # normal vector <= 40°
+    # normal vector <=40°
     for vector in transformed_vectors:
         for normalized_dist_vector in normalized_distance_vectors:    
             if (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
@@ -705,46 +706,46 @@ def _match_base(nucleotide, min_atoms_per_base):
     return_base or None : AtomArray
         The base of the nucleotide. If the given base is incomplete but
         contains the minimum number of atoms specified a superimposed
-        standard base is returned. Else `None` is returned.
+        standard base is returned. Else ``None`` is returned.
     return_hbond_masks : list
-        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
-        with dtype=bool, boolean mask for heteroatoms which are bound to
-        a hydrogen that can act as a donor, boolean mask for heteroatoms
-        that can act as a hydrogen bond acceptor
+        The hydrogen bond donors and acceptors heteroatoms as 
+        :class:`ndarray` with `dtype=bool`, boolean mask for heteroatoms
+        which are bound to a hydrogen that can act as a donor, boolean
+        mask for heteroatoms that can act as a hydrogen bond acceptor
     vectors : ndarray, dtype=float, shape=(n,3)
-        Transformed standard vectors, origin coordinates, orthonormal
-        base vectors * 3 in the order (x, y, z), aromatic ring center
-        coordinates
+        Transformed standard vectors, origin coordinates, base normal
+        vector, aromatic ring center coordinates
     """
     return_hbond_masks = [None] * 2
-    # Standard vectors containing the origin and the orthonormal base
-    # vectors
+    # Standard vectors containing the origin and the base normal vectors
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Check base type and match standard base.
-    if(nucleotide[0].res_name in _adenine_containing_nucleotides):
+    if(nucleotide.res_name[0] in _adenine_containing_nucleotides):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
         std_hbond_masks = _std_adenine_hbond_masks
-    elif(nucleotide[0].res_name in _thymine_containing_nucleotides):
+    elif(nucleotide.res_name[0] in _thymine_containing_nucleotides):
         std_base = _std_thymine
         std_ring_centers = _std_thymine_ring_centers
         std_hbond_masks = _std_thymine_hbond_masks
-    elif(nucleotide[0].res_name in _cytosine_containing_nucleotides):
+    elif(nucleotide.res_name[0] in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
         std_hbond_masks = _std_cytosine_hbond_masks
-    elif(nucleotide[0].res_name in _guanine_containing_nucleotides):
+    elif(nucleotide.res_name[0] in _guanine_containing_nucleotides):
         std_base = _std_guanine
         std_ring_centers = _std_guanine_ring_centers
         std_hbond_masks = _std_guanine_hbond_masks
-    elif(nucleotide[0].res_name in _uracil_containing_nucleotides):
+    elif(nucleotide.res_name[0] in _uracil_containing_nucleotides):
         std_base = _std_uracil
         std_ring_centers = _std_uracil_ring_centers
         std_hbond_masks = _std_uracil_hbond_masks
     else:
-        warnings.warn("Base Type not supported. Unable to check for basepair",
-                      UnexpectedStructureWarning)
+        warnings.warn(
+            f"Base Type {nucleotide.res_name[0]} not supported. Unable to "
+            "check for basepair", UnexpectedStructureWarning
+        )
         return None
 
     # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
@@ -761,7 +762,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     fitted, transformation = superimpose(
         nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)],
         std_base[np.in1d(std_base.atom_name, nucleotide.atom_name)]
-                                    )
+    )
 
     # Transform the vectors
     trans1, rot, trans2 = transformation
@@ -782,21 +783,28 @@ def _match_base(nucleotide, min_atoms_per_base):
         # If the base is incomplete but contains 3 or more atoms of the 
         # std_base, transform the complete std_base and use it to
         # approximate the base.
-        warnings.warn("Base is not complete. Attempting to emulate with "
-                      "std_base.", IncompleteStructureWarning)
+        warnings.warn(
+            f"Base with res_id {nucleotide.res_id[0]} and chain_id " 
+            f"{nucleotide.chain_id[0]} is not complete. Attempting to "
+            "emulate with std_base.", IncompleteStructureWarning
+        )
         return_base = superimpose_apply(std_base, transformation)
         return_hbond_masks = std_hbond_masks
     elif (length_difference > 0):
         # If the base is incomplete and contains less than 3 atoms of 
         # the std_base throw warning
-        warnings.warn("Base is smaller than 3 atoms. Unable to check for "
-                     "basepair.", IncompleteStructureWarning)
+        warnings.warn(
+            f"Base with res_id {nucleotide.res_id[0]} and chain_id "
+            f"{nucleotide.chain_id[0]} has an overlap with std_base "
+            "which is less than 3 atoms. Unable to check for basepair."
+            , IncompleteStructureWarning
+        )
         return None
     else:
         # If the base is complete use the base for further calculations.
         #
         # Generate a boolean mask containing only the base atoms and
-        # their hydrogens(if available), disregarding the sugar atoms
+        # their hydrogens (if available), disregarding the sugar atoms
         # and the phosphate backbone.
         base_atom_mask = np.ones(len(nucleotide), dtype=bool)
         for i in range(len(nucleotide)):
@@ -830,15 +838,15 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     Parameters
     ----------
     atom_array : AtomArray
-        The `AtomArray` to find basepair candidates in.
+        The :class:`AtomArray`` to find basepair candidates in.
     cutoff : integer
         The maximum distance of the N and O Atoms for a pair of bases
         to be considered a basepair candidate.
         
     Returns
     -------
-    basepair_candidates : list
-        Contains the basepair candidates, `tuple` of the first indices 
+    basepair_candidates : list [(integer, integer), ...]
+        Contains the basepair candidates, ``tuple`` of the first indices 
         of the corresponding residues.
     """
 
@@ -888,15 +896,15 @@ def _filter_atom_type(atom_array, atom_names):
     Parameters
     ----------
     atom_array : AtomArray
-        The `AtomArray` to filter.
+        The :class:`AtomArray` to filter.
     atom_names : array_like
         The desired atom names.
         
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where the atom
-        has the desired atom names.
+        This array is ``True`` for all indices in ``array``, where the 
+        atom has the desired atom names.
     """
     return (np.isin(atom_array.atom_name, atom_names)
             & (atom_array.res_id != -1))
@@ -909,15 +917,15 @@ def _filter_residues(atom_array, index):
     Parameters
     ----------
     atom_array : AtomArray
-        The `AtomArray` to filter.
+        The :class:`AtomArray` to filter.
     index : integer
         The index of an atom of the desired residue.
         
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where the atom
-        has the desired residue_name and chain_id.
+        This array is ``True`` for all indices in `array`, where the 
+        atom has the desired ``residue_name`` and ``chain_id``.
     """
     return (np.isin(atom_array.res_id, atom_array[int(index)].res_id)
             & np.isin(atom_array.chain_id, atom_array[int(index)].chain_id))
