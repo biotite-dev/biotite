@@ -19,7 +19,6 @@ from .celllist import CellList
 from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
-from .compare import rmsd
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -31,13 +30,13 @@ def  _get_1d_boolean_mask(size, true_ids):
     size : integer
         Size of the 1-dimensional array.
     true_ids: array_like
-        Indices where the boolean mask is `True`.
+        Indices where the boolean mask is ``True``.
         
     Returns
     -------
     mask : ndarray, dtype=bool, shape=(n,)
-        The boolean mask which is `True` at the specified indices and
-        `False` everywhere else.
+        The boolean mask which is ``True`` at the specified indices and
+        ``False`` everywhere else.
     """
     mask = np.zeros(size, dtype=bool)
     mask[true_ids] = np.ones(len(true_ids), dtype=bool)
@@ -50,19 +49,22 @@ def _get_std_adenine():
         
     Returns
     -------
-    standard_base : tuple
+    standard_base : tuple (AtomArray, AtomArray)
         Standard coordinates nomenclature of the adenine base, 
-        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
+        AtomArray with nomenclature of PDB File Format V2, AtomArray
         with nomenclature of PDB File Format V3
-    ring_centers : tuple
-        Coordinates of the aromatic ring centers, `ndarray` containing
-        the coordinates of the pyrimidine ring center, `ndarray`
-        containing the coordinates of the imidazole ring center
-    hbond_masks : tuple
-        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
-        with dtype=bool, boolean mask for heteroatoms which are bound to
-        a hydrogen that can act as a donor, boolean mask for heteroatoms
-        that can act as a hydrogen bond acceptor
+    coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
+        :class:`ndarray` containing the center according to the SCHNaP-
+        paper referenced in the function base_pairs, :class:`ndarray`
+        containing the coordinates of the pyrimidine ring center,
+        :class:`ndarray` containing the coordinates of the imidazole 
+        ring center
+    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
+        The hydrogen bond donors and acceptors heteroatoms as 
+        :class:`ndarray` with ``dtype=bool``, boolean mask for
+        heteroatoms which are bound to a hydrogen that can act as a 
+        donor, boolean mask for heteroatoms that can act as a hydrogen
+        bond acceptor
     """
     atom1 =  Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
@@ -78,7 +80,7 @@ def _get_std_adenine():
     adenine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, 
          atom9, atom10, atom11]
-                )
+    )
     adenine_pdbv3 = adenine_pdbv2.copy()
     adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
@@ -88,21 +90,21 @@ def _get_std_adenine():
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord, 
          atom9.coord, atom10.coord, atom11.coord], axis=-2
-                            )
+    )
     imidazole_center = np.mean(
         [atom2.coord, atom3.coord, atom4.coord,
          atom5.coord, atom11.coord], axis=-2
-                            )
+    )
 
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
     # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donor_mask = _get_1d_boolean_mask(
         adenine_pdbv2.array_length(), [1, 6]
-                                        )
+    )
     hbond_acceptor_mask = _get_1d_boolean_mask(
         adenine_pdbv2.array_length(), [1, 3, 6, 7, 9]
-                                            )
+    )
 
     return (adenine_pdbv2, adenine_pdbv3), \
            (midpoint, pyrimidine_center, imidazole_center), \
