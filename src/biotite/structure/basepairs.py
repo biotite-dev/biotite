@@ -19,6 +19,7 @@ from .celllist import CellList
 from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
+from .compare import rmsd
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -81,6 +82,8 @@ def _get_std_adenine():
     adenine_pdbv3 = adenine_pdbv2.copy()
     adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
+    # Get the midpoint between the N1 and C4 atoms
+    midpoint = np.mean([atom8.coord, atom11.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers.
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord, 
@@ -102,7 +105,7 @@ def _get_std_adenine():
                                             )
 
     return (adenine_pdbv2, adenine_pdbv3), \
-           (pyrimidine_center, imidazole_center), \
+           (midpoint, pyrimidine_center, imidazole_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
 
 
@@ -140,6 +143,8 @@ def _get_std_cytosine():
     cytosine_pdbv3 = cytosine_pdbv2.copy()
     cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
+    # Get the midpoint between the N3 and C6 atoms
+    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center.
     pyrimidine_center = np.mean(
         [atom2.coord, atom3.coord, atom5.coord,
@@ -156,7 +161,7 @@ def _get_std_cytosine():
         cytosine_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
 
-    return (cytosine_pdbv2, cytosine_pdbv3), (pyrimidine_center,), \
+    return (cytosine_pdbv2, cytosine_pdbv3), (midpoint, pyrimidine_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
 
 
@@ -199,6 +204,8 @@ def _get_std_guanine():
     guanine_pdbv3 = guanine_pdbv2.copy()
     guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
+    # Get the midpoint between the N1 and C4 atoms
+    midpoint = np.mean([atom8.coord, atom12.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers.
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord,
@@ -220,7 +227,7 @@ def _get_std_guanine():
                                             )
 
     return (guanine_pdbv2, guanine_pdbv3), \
-           (pyrimidine_center, imidazole_center), \
+           (midpoint, pyrimidine_center, imidazole_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
 
 
@@ -259,6 +266,8 @@ def _get_std_thymine():
     thymine_pdbv3 = thymine_pdbv2.copy()
     thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
 
+    # Get the midpoint between the N3 and C6 atoms
+    midpoint = np.mean([atom5.coord, atom10.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center.
     pyrimidine_center = np.mean(
         [atom2.coord, atom3.coord, atom5.coord,
@@ -275,7 +284,7 @@ def _get_std_thymine():
         thymine_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
       
-    return (thymine_pdbv2, thymine_pdbv3), (pyrimidine_center,), \
+    return (thymine_pdbv2, thymine_pdbv3), (midpoint, pyrimidine_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
 
 
@@ -313,6 +322,8 @@ def _get_std_uracil():
     uracil_pdbv3 = uracil_pdbv2.copy()
     uracil_pdbv3.atom_name[[0]] = ["C1'"]
 
+    # Get the midpoint between the N3 and C6 atoms
+    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center.
     pyrimidine_center = np.mean(
         [atom2.coord, atom3.coord, atom5.coord,
@@ -329,7 +340,7 @@ def _get_std_uracil():
         uracil_pdbv2.array_length(), [1, 3, 4, 6]
                                             )
 
-    return (uracil_pdbv2, uracil_pdbv3), (pyrimidine_center,), \
+    return (uracil_pdbv2, uracil_pdbv3), (midpoint, pyrimidine_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
 
 
@@ -482,7 +493,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # [Orthonormal base vectors] * 3 in the order x, y, z
     # [Aromatic Ring Center coordinates]
     transformed_std_vectors = [None] * 2
-
+    
     # Generate the data necessary for analysis for each base.
     for i in range(2):
         base_tuple = _match_base(basepair[i], min_atoms_per_base)
@@ -492,50 +503,69 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         
         transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
             = base_tuple
-
     
+    #print(transformed_bases[0][0].res_id)
+    #if(transformed_bases[0][0].res_id == "1" and transformed_bases[1][0].res_id == "24"):
+    #    print(1)
     # Criterion 1: Distance between orgins <=15 Å
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
         return False
-    
+    #print(transformed_std_vectors[0])
     # Criterion 2: Vertical seperation <=2.5 Å
     #
+    z_vector_schnaapp = [None]*2
+    for i in range(2):
+        if(
+            transformed_bases[i].res_name[0] not in (
+                _adenine_containing_nucleotides \
+                + _guanine_containing_nucleotides
+            )
+        ):
+            z_vector_schnaapp[i] = (-1)*transformed_std_vectors[i][1,:]
+            print(transformed_bases[i].res_name[0])
+        else:
+            z_vector_schnaapp[i] = transformed_std_vectors[i][1,:]
+
     # Calculate the angle between normal vectors of the bases
-    normal_vector_angle = np.arccos(np.dot(transformed_std_vectors[0][3,:],
-                                           transformed_std_vectors[1][3,:]))
-    # Calculate the orthonormal vector to the normal vector of the bases
-    rotation_axis = np.cross(transformed_std_vectors[0][3,:],
-                                 transformed_std_vectors[1][3,:])
+    normal_vector_angle = np.arccos(np.dot(z_vector_schnaapp[0],
+                                           z_vector_schnaapp[1]))
+    # Calculate the orthonormal vector to the normal vectors of the bases
+    rotation_axis = np.cross(z_vector_schnaapp[0],
+                                 z_vector_schnaapp[1])
     norm_vector(rotation_axis)
     # Rotate the base normal vectors by ± half the angle between the two
     # vectors
     rotated_normal_vector_0 = np.dot(
         _get_rotation_matrix(rotation_axis, normal_vector_angle/2),
-        transformed_std_vectors[0][3,:]
+        z_vector_schnaapp[0]
                                 )
     rotated_normal_vector_1 = np.dot(
         _get_rotation_matrix(rotation_axis, ((-1)*normal_vector_angle)/2),
-        transformed_std_vectors[1][3,:]
+        z_vector_schnaapp[1]
                                 )
     # Average and normalize the rotated vectors
     z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
     norm_vector(z_rot_average)
     # Calculate the vector between the two origins    
-    origin_vector = transformed_std_vectors[1][0,:] \
-                    - transformed_std_vectors[0][0,:]
+    origin_vector = transformed_std_vectors[1][2,:] \
+                    - transformed_std_vectors[0][2,:]
+    
     # The angle between the averaged rotated normal vectors and the 
     # vector between the two origins is the vertical seperation
-    if not abs(int(np.dot(origin_vector, z_rot_average))) <= 2.5:
+
+    #print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
+    #print(abs(np.dot(origin_vector, z_rot_average)))
+    if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
         return False
     
     # Criterion 3: Angle between normal vectors <=65°
-    if not (np.arccos(np.dot(transformed_std_vectors[0][3,:],
-                              transformed_std_vectors[1][3,:])
+    if not (np.arccos(np.dot(transformed_std_vectors[0][1,:],
+                              transformed_std_vectors[1][1,:])
                     ) 
             >= ((115*np.pi)/180)):
         return False
-   
+    
     # Criterion 4: Absence of stacking
     if _check_base_stacking(transformed_std_vectors):
         return False
@@ -622,8 +652,8 @@ def _check_base_stacking(transformed_vectors):
 
     # Criterion 1: Distance between aromatic ring centers <= 4.5 Å
     wrongdistance = True
-    for ring_center1 in transformed_vectors[0][4:][:]:
-        for ring_center2 in transformed_vectors[1][4:][:]:
+    for ring_center1 in transformed_vectors[0][3:][:]:
+        for ring_center2 in transformed_vectors[1][3:][:]:
             if (distance(ring_center1, ring_center2) <= 4.5):
                 wrongdistance = False
                 normalized_distance_vectors.append(ring_center2 - ring_center1)
@@ -632,8 +662,8 @@ def _check_base_stacking(transformed_vectors):
         return False
     
     # Criterion 2: Angle between normal vectors <= 23°
-    if not ((np.arccos(np.dot(transformed_vectors[0][3,:],
-                              transformed_vectors[1][3,:])))
+    if not ((np.arccos(np.dot(transformed_vectors[0][1,:],
+                              transformed_vectors[1][1,:])))
             <= ((23*np.pi)/180)):
         return False
     
@@ -641,7 +671,7 @@ def _check_base_stacking(transformed_vectors):
     # normal vector <= 40°
     for vector in transformed_vectors:
         for normalized_dist_vector in normalized_distance_vectors:    
-            if (np.arccos(np.dot(vector[3,:], normalized_dist_vector))
+            if (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
                 <= ((40*np.pi)/180)):
                 return True
     
@@ -679,8 +709,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     return_hbond_masks = [None] * 2
     # Standard vectors containing the origin and the orthonormal base
     # vectors
-    vectors = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0],
-                             [0, 0, 1]], np.float)
+    vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Check base type and match standard base.
     if(nucleotide[0].res_name in _adenine_containing_nucleotides):
@@ -723,15 +752,15 @@ def _match_base(nucleotide, min_atoms_per_base):
         nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)],
         std_base[np.in1d(std_base.atom_name, nucleotide.atom_name)]
                                     )
+    #print(rmsd(nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)], fitted))
     # Transform the vectors
     trans1, rot, trans2 = transformation
     vectors += trans1
     vectors  = np.dot(rot, vectors.T).T
     vectors += trans2   
-    # Normalize the transformed orthogonal base vectors   
-    for i in range(1, 4):
-        vectors[i,:] = vectors[i,:]-vectors[0,:]
-        norm_vector(vectors[i,:])
+    # Normalize the base-normal-vector   
+    vectors[1,:] = vectors[1,:]-vectors[0,:]
+    norm_vector(vectors[1,:])
 
     # Investigate the completeness of the base:
     # 
@@ -779,7 +808,6 @@ def _match_base(nucleotide, min_atoms_per_base):
                 std_base[std_hbond_masks[i]].atom_name
                                                     )
         return_base = nucleotide[base_atom_mask]
-
     return return_base, return_hbond_masks, vectors
 
 
