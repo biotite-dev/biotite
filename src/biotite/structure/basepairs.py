@@ -376,10 +376,13 @@ _uracil_containing_nucleotides = ["U", "DU"]
 def base_pairs(atom_array, min_atoms_per_base = 3):
     """
     Use DSSR criteria [1]_ to find the basepairs in an 
-    :class:`AtomArray`.
+    :class:`AtomArray`. The algorithm is able to identify canonical and
+    non-canonical base pairs between the 5 common bases Adenine,
+    Guanine, Thymine, Cytosine, and Uracil bound to Deoxyribose and
+    Ribose.
 
-    A standard reference frame for the bases adenine, thymine, guanine,
-    cytosine, and uracil has been implemented [2]_.
+    A standard reference frame for these bases has been implemented 
+    [2]_.
 
     The DSSR Criteria are as follows:
 
@@ -548,11 +551,11 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     rotated_normal_vector_0 = np.dot(
         _get_rotation_matrix(rotation_axis, normal_vector_angle/2),
         normal_vector_schnaap[0]
-                                )
+    )
     rotated_normal_vector_1 = np.dot(
         _get_rotation_matrix(rotation_axis, ((-1)*normal_vector_angle)/2),
         normal_vector_schnaap[1]
-                                )
+    )
     # Average and normalize the rotated vectors
     z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
     norm_vector(z_rot_average)
@@ -567,8 +570,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     
     # Criterion 3: Angle between normal vectors <=65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][1,:],
-                              transformed_std_vectors[1][1,:])
-                    ) 
+                              transformed_std_vectors[1][1,:])) 
             >= ((115*np.pi)/180)):
         return False
     
@@ -587,13 +589,12 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
                      np.ones_like(
                          transformed_bases[0] + transformed_bases[1],
                          dtype=bool
-                                ), 
+                     ), 
                      np.ones_like(
                          transformed_bases[0] + transformed_bases[1],
                          dtype=bool
-                                )
-                    )
-            ) == 0):
+                     )
+        )) == 0):
             return False           
     elif not _check_hbonds(transformed_bases, hbond_masks):
         # if the structure does not contain hydrogens, check for the
@@ -642,8 +643,8 @@ def _check_base_stacking(transformed_vectors):
     Parameters
     ----------
     transformed_vectors : list
-        A list with transformed vectors as `ndarray` for both bases,
-        origin coordinates, base normal vector, SCHNAaP origing,
+        A list with transformed vectors as :class:`ndarray` for both 
+        bases, origin coordinates, base normal vector, SCHNAaP origing,
         aromatic ring center coordinates
         
     Returns
@@ -824,7 +825,7 @@ def _match_base(nucleotide, min_atoms_per_base):
             return_hbond_masks[i] = _filter_atom_type(
                 nucleotide[base_atom_mask], 
                 std_base[std_hbond_masks[i]].atom_name
-                                                    )
+            )
         return_base = nucleotide[base_atom_mask]
 
     return return_base, return_hbond_masks, vectors
@@ -857,7 +858,7 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     # cutoff of each other
     indices = CellList( 
         atom_array, cutoff, selection=NOmask
-                    ).get_atoms(atom_array.coord[NOmask], cutoff)
+    ).get_atoms(atom_array.coord[NOmask], cutoff)
     
     # Loop through the indices of potential partners
     basepair_candidates = []
@@ -903,8 +904,8 @@ def _filter_atom_type(atom_array, atom_names):
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is ``True`` for all indices in ``array``, where the 
-        atom has the desired atom names.
+        This array is ``True`` for all indices in the :class:`AtomArray`
+        , where the atom has the desired atom names.
     """
     return (np.isin(atom_array.atom_name, atom_names)
             & (atom_array.res_id != -1))
@@ -924,8 +925,9 @@ def _filter_residues(atom_array, index):
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is ``True`` for all indices in `array`, where the 
-        atom has the desired ``residue_name`` and ``chain_id``.
+        This array is ``True`` for all indices in the :class:`AtomArray`
+        where the atom has the desired ``residue_name`` and 
+        ``chain_id``.
     """
     return (np.isin(atom_array.res_id, atom_array[int(index)].res_id)
             & np.isin(atom_array.chain_id, atom_array[int(index)].chain_id))
