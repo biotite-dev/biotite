@@ -55,16 +55,16 @@ def _get_std_adenine():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, :class:`ndarray`
-        containing the coordinates of the pyrimidine ring center,
-        :class:`ndarray` containing the coordinates of the imidazole 
-        ring center
+        paper referenced in the function base_pairs, 
+        :class:`ndarray` containing the coordinates of the pyrimidine
+        ring center, :class:`ndarray` containing the coordinates of the 
+        imidazole ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as 
+        The hydrogen bond donor and acceptor heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
         heteroatoms which are bound to a hydrogen that can act as a 
         donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
+        bond acceptor 
     """
     atom1 =  Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
     atom2 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
@@ -97,7 +97,7 @@ def _get_std_adenine():
     )
 
     # Create boolean masks for the AtomArray containing the bases` 
-    # heteroatoms which (or the usually attached hydrogens) can act as
+    # heteroatoms (or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively.
     hbond_donor_mask = _get_1d_boolean_mask(
         adenine_pdbv2.array_length(), [1, 6]
@@ -156,7 +156,7 @@ def _get_std_cytosine():
     )
     
     # Create boolean masks for the AtomArray containing the bases` 
-    # heteroatoms which (or the usually attached hydrogens) can act as
+    # heteroatoms (or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         cytosine_pdbv2.array_length(), [1, 6]
@@ -223,8 +223,8 @@ def _get_std_guanine():
          atom5.coord, atom12.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases` 
-    # heteroatoms which (or the usually attached hydrogens) can act as
+    # Create(s?) boolean masks for the AtomArray containing the bases` 
+    # heteroatoms (or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         guanine_pdbv2.array_length(), [1, 7, 9]
@@ -284,7 +284,7 @@ def _get_std_thymine():
     )
 
     # Create boolean masks for the AtomArray containing the bases` 
-    # heteroatoms which (or the usually attached hydrogens) can act as
+    # heteroatoms(or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         thymine_pdbv2.array_length(), [1, 4]
@@ -342,7 +342,7 @@ def _get_std_uracil():
     )
 
     # Create boolean masks for the AtomArray containing the bases` 
-    # heteroatoms which (or the usually attached hydrogens) can act as
+    # heteroatoms (or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         uracil_pdbv2.array_length(), [1, 4]
@@ -388,20 +388,20 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
 
     (i) Distance between base origins <=15 Å
 
-    (ii) Vertical seperation between the base planes <=2.5 Å
+    (ii) Vertical separation between the base planes <=2.5 Å
     
     (iii) Angle between the base normal vectors <=65°
 
     (iv) Absence of stacking between the two bases
 
-    (v) Presence of a least one hydrogen bond involving a base atom
+    (v) Presence of at least one hydrogen bond involving a base atom
 
     Parameters
     ----------
     atom_array : AtomArray
         The :class:`AtomArray` to find basepairs in.
     min_atoms_per_base : integer, optional
-        The number of atoms a nucleotides base must have to be 
+        The number of atoms a nucleotides' base must have to be 
         considered a candidate for a basepair.
         
     Returns
@@ -413,9 +413,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     Notes
     -----
     If a base is incomplete but contains the minimum number of base-
-    atoms specified a superimposed standard base is used to emulate it.
+    atoms specified, a superimposed standard base is used to emulate it.
 
-    The vertical seperation has been implemented as the rise parameter
+    The vertical separation has been implemented as the rise parameter
     between the base triads [3]_.
 
     The presence of base stacking is assumed if the following criteria
@@ -435,7 +435,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     bonds can be checked. A hydrogen bond is considered as plausible if
     a cutoff of 4.0 Å between a heteroatom that is bonded to a hydrogen,
     that can act as hydrogen bond donor, and a heteroatom that can
-    accept hydrogen bonds is met [1]_.
+    accept hydrogen bonds, is met [1]_.
 
     References
     ----------
@@ -480,27 +480,27 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     basepair : tuple (AtomArray, AtomArray)
         The two bases to check the criteria for as :class:`AtomArray`.
     min_atoms_per_base : integer
-        The number of atoms a nucleotides base must have to be 
+        The number of atoms a nucleotides' base must have to be 
         considered a candidate for a basepair.
         
     Returns
     -------
     satisfied : bool
-        ``True`` if the basepairs satisfies the criteria and ``False`` 
+        ``True`` if the basepair satisfies the criteria and ``False`` 
         if it does not.
     """
 
-    # Contains the bases to use for the analysis. If the bases are 
+    # Contains the bases to be used for analysis. If the bases are 
     # incomplete, transformed standard bases are used. If they are 
     # complete, the original structure is used.
     transformed_bases = [None] * 2
-    # Contains the hydrogen bond donors and acceptors heteroatoms as 
+    # Contains the hydrogen bond donor and acceptor heteroatoms as 
     # 'ndarray` with dtype=bool, boolean mask for heteroatoms which are
     # bound to a hydrogen that can act as a donor, boolean mask for
     # heteroatoms that can act as a hydrogen bond acceptor
     hbond_masks = [None] * 2
     # A list containing ndarray for each base with transformed
-    # vectors from the standard base reference frame to the structures
+    # vectors from the standard base reference frame to the structures'
     # coordinates. The layout is as follows:
     #
     # [Origin coordinates]
@@ -509,7 +509,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # [Aromatic Ring Center coordinates]
     transformed_std_vectors = [None] * 2
     
-    # Generate the data necessary for analysis for each base.
+    # Generate the data necessary for analysis of each base.
     for i in range(2):
         base_tuple = _match_base(basepair[i], min_atoms_per_base)
         
@@ -523,7 +523,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
         return False
-    # Criterion 2: Vertical seperation <=2.5 Å
+    # Criterion 2: Vertical separation <=2.5 Å
     #
     #Align Base Normal Vectors with the reference frame described by
     #the SCHNAaP algorithm
@@ -564,7 +564,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
                     - transformed_std_vectors[0][2,:]
     
     # The dot product between the averaged rotated normal vectors and 
-    # the vector between the two origins is the vertical seperation
+    # the vector between the two origins is the vertical separation
     if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
         return False
     
@@ -578,7 +578,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     if _check_base_stacking(transformed_std_vectors):
         return False
     
-    # Criterion 5: Presence of at least on hydrogen bond
+    # Criterion 5: Presence of at least one hydrogen bond
     #
     # Check if both bases came with hydrogens.
     if (("H" in transformed_bases[0].element)
@@ -609,14 +609,14 @@ def _check_hbonds(bases, hbond_masks):
     Check if hydrogen bonds are plausible between two bases. A cutoff
     of 4.0 Å between a heteroatom that is bonded to a hydrogen, that can
     act as hydrogen bond donor, and a heteroatom that can accept
-    hydrogen bonds is used.
+    hydrogen bonds, is used.
     
     Parameters
     ----------
     bases : list [AtomArray, AtomArray]
         The two bases to check for hydrogen bonds as :class:`AtomArray`.
     hbond_masks : list
-        Contains the hydrogen bond donors and acceptors heteroatoms as 
+        Contains the hydrogen bond donor and acceptor heteroatoms as 
         :class:`ndarray` with dtype=bool, boolean mask for heteroatoms which 
         are bound to a hydrogen that can act as a donor, boolean mask 
         for heteroatoms that can act as a hydrogen bond acceptor
@@ -625,7 +625,7 @@ def _check_hbonds(bases, hbond_masks):
     -------
     plausible : bool
         ``True`` if at least one hydrogen bond is plausible and 
-        ``False`` not.
+        ``False`` if not.
     """
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
@@ -644,7 +644,7 @@ def _check_base_stacking(transformed_vectors):
     ----------
     transformed_vectors : list
         A list with transformed vectors as :class:`ndarray` for both 
-        bases, origin coordinates, base normal vector, SCHNAaP origing,
+        bases, origin coordinates, base normal vector, SCHNAaP origin,
         aromatic ring center coordinates
         
     Returns
@@ -709,7 +709,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         contains the minimum number of atoms specified a superimposed
         standard base is returned. Else ``None`` is returned.
     return_hbond_masks : list
-        The hydrogen bond donors and acceptors heteroatoms as 
+        The hydrogen bond donor and acceptor heteroatoms as 
         :class:`ndarray` with `dtype=bool`, boolean mask for heteroatoms
         which are bound to a hydrogen that can act as a donor, boolean
         mask for heteroatoms that can act as a hydrogen bond acceptor
@@ -776,8 +776,8 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     # Investigate the completeness of the base:
     # 
-    # A length difference of zero means the base contains all atoms of
-    # the std_base          
+    # A difference in length of zero means the base contains all atoms
+    # of the std_base          
     length_difference = len(std_base) - len(fitted)
     
     if(length_difference > 0 and len(fitted) >= min_atoms_per_base):
@@ -793,7 +793,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         return_hbond_masks = std_hbond_masks
     elif (length_difference > 0):
         # If the base is incomplete and contains less than 3 atoms of 
-        # the std_base throw warning
+        # the std_base, throw warning
         warnings.warn(
             f"Base with res_id {nucleotide.res_id[0]} and chain_id "
             f"{nucleotide.chain_id[0]} has an overlap with std_base "
@@ -818,7 +818,7 @@ def _match_base(nucleotide, min_atoms_per_base):
                 base_atom_mask[i] = False
         
         # Create boolean masks for the AtomArray containing the bases` 
-        # heteroatoms, which (or the usually attached hydrogens) can act 
+        # heteroatoms (or the usually attached hydrogens), which can act 
         # as Hydrogen Bond Donors or Acceptors respectively, using the
         # std_base as a template.
         for i in range(2):
@@ -834,14 +834,14 @@ def _match_base(nucleotide, min_atoms_per_base):
 def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     """
     Filter for potential basepairs based on the distance between the
-    nitrogen and oxygen Atoms.
+    nitrogen and oxygen atoms.
     
     Parameters
     ----------
     atom_array : AtomArray
         The :class:`AtomArray`` to find basepair candidates in.
     cutoff : integer
-        The maximum distance of the N and O Atoms for a pair of bases
+        The maximum distance of the N and O Atoms for two bases
         to be considered a basepair candidate.
         
     Returns
@@ -913,7 +913,8 @@ def _filter_atom_type(atom_array, atom_names):
 
 def _filter_residues(atom_array, index):
     """
-    Get all residue that atom at the specified index belongs to.
+    Get all atoms of a residue that an atom at the specified index 
+    belongs to.
     
     Parameters
     ----------
