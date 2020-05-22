@@ -661,10 +661,15 @@ def _check_base_stacking(transformed_vectors):
     if(wrongdistance == True):
         return False
     
-    # Criterion 2: Angle between normal vectors <= 23°
-    if not ((np.arccos(np.dot(transformed_vectors[0][1,:],
-                              transformed_vectors[1][1,:])))
-            <= ((23*np.pi)/180)):
+    # Criterion 2: Angle between normal vectors or its supplement <= 23°
+    if (
+            (np.arccos(np.dot(transformed_vectors[0][1,:],
+                              transformed_vectors[1][1,:]))
+            ) >= ((23*np.pi)/180)
+            and (np.arccos(np.dot(transformed_vectors[0][1,:],
+                              transformed_vectors[1][1,:]))
+            ) <= ((157*np.pi)/180)
+    ):
         return False
     
     # Criterion 3: Angle between normalized distance vector and one 
