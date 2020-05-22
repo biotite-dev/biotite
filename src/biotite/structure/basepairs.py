@@ -504,17 +504,15 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
             = base_tuple
     
-    #print(transformed_bases[0][0].res_id)
-    #if(transformed_bases[0][0].res_id == "1" and transformed_bases[1][0].res_id == "24"):
-    #    print(1)
     # Criterion 1: Distance between orgins <=15 Å
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
         return False
-    #print(transformed_std_vectors[0])
     # Criterion 2: Vertical seperation <=2.5 Å
     #
-    z_vector_schnaapp = [None]*2
+    #Align Base Normal Vectors with the reference frame described by
+    #the SCHNAaP algorithm
+    normal_vector_schnaap = [None]*2
     for i in range(2):
         if(
             transformed_bases[i].res_name[0] not in (
@@ -522,27 +520,26 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
                 + _guanine_containing_nucleotides
             )
         ):
-            z_vector_schnaapp[i] = (-1)*transformed_std_vectors[i][1,:]
-            print(transformed_bases[i].res_name[0])
+            normal_vector_schnaap[i] = (-1)*transformed_std_vectors[i][1,:]
         else:
-            z_vector_schnaapp[i] = transformed_std_vectors[i][1,:]
+            normal_vector_schnaap[i] = transformed_std_vectors[i][1,:]
 
     # Calculate the angle between normal vectors of the bases
-    normal_vector_angle = np.arccos(np.dot(z_vector_schnaapp[0],
-                                           z_vector_schnaapp[1]))
+    normal_vector_angle = np.arccos(np.dot(normal_vector_schnaap[0],
+                                           normal_vector_schnaap[1]))
     # Calculate the orthonormal vector to the normal vectors of the bases
-    rotation_axis = np.cross(z_vector_schnaapp[0],
-                                 z_vector_schnaapp[1])
+    rotation_axis = np.cross(normal_vector_schnaap[0],
+                                 normal_vector_schnaap[1])
     norm_vector(rotation_axis)
     # Rotate the base normal vectors by ± half the angle between the two
     # vectors
     rotated_normal_vector_0 = np.dot(
         _get_rotation_matrix(rotation_axis, normal_vector_angle/2),
-        z_vector_schnaapp[0]
+        normal_vector_schnaap[0]
                                 )
     rotated_normal_vector_1 = np.dot(
         _get_rotation_matrix(rotation_axis, ((-1)*normal_vector_angle)/2),
-        z_vector_schnaapp[1]
+        normal_vector_schnaap[1]
                                 )
     # Average and normalize the rotated vectors
     z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
@@ -553,9 +550,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     
     # The angle between the averaged rotated normal vectors and the 
     # vector between the two origins is the vertical seperation
-
-    #print(str(basepair[0][0].res_id) + " und " + str(basepair[1][0].res_id))
-    #print(abs(np.dot(origin_vector, z_rot_average)))
     if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
         return False
     
@@ -757,7 +751,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)],
         std_base[np.in1d(std_base.atom_name, nucleotide.atom_name)]
                                     )
-    #print(rmsd(nucleotide[np.in1d(nucleotide.atom_name, std_base.atom_name)], fitted))
+
     # Transform the vectors
     trans1, rot, trans2 = transformation
     vectors += trans1
@@ -813,6 +807,7 @@ def _match_base(nucleotide, min_atoms_per_base):
                 std_base[std_hbond_masks[i]].atom_name
                                                     )
         return_base = nucleotide[base_atom_mask]
+
     return return_base, return_hbond_masks, vectors
 
 
