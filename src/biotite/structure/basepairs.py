@@ -86,7 +86,7 @@ def _get_std_adenine():
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom8.coord, atom11.coord], axis=-2)
-    # Calculate the coordinates of the aromatic ring centers.
+    # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
         [atom5.coord, atom6.coord, atom8.coord, 
          atom9.coord, atom10.coord, atom11.coord], axis=-2
@@ -117,18 +117,19 @@ def _get_std_cytosine():
         
     Returns
     -------
-    standard_base : tuple
-        Standard coordinates nomenclature of the cytosine base, 
-        `AtomArray` with nomenclature of PDB File Format V2, `AtomArray`
+    standard_base : tuple (AtomArray, AtomArray)
+        Standard coordinates nomenclature of the adenine base, 
+        AtomArray with nomenclature of PDB File Format V2, AtomArray
         with nomenclature of PDB File Format V3
-    ring_center : tuple
-        Coordinates of the aromatic ring centers, `ndarray` containing
-        the coordinates of the pyrimidine ring center
-    hbond_masks : tuple
-        The hydrogen bond donors and acceptors heteroatoms as 'ndarray`
-        with dtype=bool, boolean mask for heteroatoms which are bound to
-        a hydrogen that can act as a donor, boolean mask for heteroatoms
-        that can act as a hydrogen bond acceptor
+    coordinates : tuple (ndarray, ndarray, dtype=float)
+        :class:`ndarray` containing the center according to the SCHNaP-
+        paper referenced in the function base_pairs
+    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
+        The hydrogen bond donors and acceptors heteroatoms as 
+        :class:`ndarray` with ``dtype=bool``, boolean mask for
+        heteroatoms which are bound to a hydrogen that can act as a 
+        donor, boolean mask for heteroatoms that can act as a hydrogen
+        bond acceptor
     """
     atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
     atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
@@ -141,27 +142,27 @@ def _get_std_cytosine():
     atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
     cytosine_pdbv2 = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
-                    )
+    )
     cytosine_pdbv3 = cytosine_pdbv2.copy()
     cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
-    # Calculate the coordinates of the aromatic ring center.
+    # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
         [atom2.coord, atom3.coord, atom5.coord,
          atom6.coord, atom8.coord, atom9.coord], axis=-2
-                            )
+    )
     
     # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms which (or the usually attached hydrogens) can act as
-    # Hydrogen Bond Donors or Acceptors respectively.
+    # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
         cytosine_pdbv2.array_length(), [1, 6]
-                                        )
+    )
     hbond_acceptor_mask = _get_1d_boolean_mask(
         cytosine_pdbv2.array_length(), [1, 3, 4, 6]
-                                            )
+    )
 
     return (cytosine_pdbv2, cytosine_pdbv3), (midpoint, pyrimidine_center), \
            (hbond_donor_mask, hbond_acceptor_mask)
