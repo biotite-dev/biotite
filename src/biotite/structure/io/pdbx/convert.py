@@ -682,17 +682,17 @@ def _parse_operation_expression(expression):
     return list(itertools.product(*operations))
 
 
-    def _convert_string_to_sequence(string, stype):
-        # Convert strings to ProteinSequence-Object if stype is
-        # contained in _proteinseq_type_list or to NucleotideSequence-
-        # Object if stype is contained in _nucleotideseq_type_list
-        if stype in _proteinseq_type_list:
-            return ProteinSequence(string)
-        elif stype in _nucleotideseq_type_list:
-            string = string.replace("U", "T")
-            return NucleotideSequence(string)
-        elif stype in _other_type_list:
-            return None
-        else:
-            raise InvalidFileError("mmCIF _entity_poly.type unsupported"
-                                        " type: " + stype)
+def _convert_string_to_sequence(string, stype):
+    # Convert strings to ProteinSequence-Object if stype is
+    # contained in _proteinseq_type_list or to NucleotideSequence-
+    # Object if stype is contained in _nucleotideseq_type_list
+    if stype in _proteinseq_type_list:
+        return ProteinSequence(string)
+    elif stype in _nucleotideseq_type_list:
+        string = string.replace("U", "T")
+        return NucleotideSequence(string)
+    elif stype in _other_type_list:
+        return None
+    else:
+        raise InvalidFileError("mmCIF _entity_poly.type unsupported"
+                               " type: " + stype)

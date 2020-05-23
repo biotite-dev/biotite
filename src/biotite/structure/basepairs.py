@@ -679,12 +679,16 @@ def _check_base_stacking(transformed_vectors):
     ):
         return False
     
-    # Criterion 3: Angle between normalized distance vector and one 
-    # normal vector <=40°
+    # Criterion 3: Angle between one normalized distance vector and one 
+    # normal vector or its supplement <=40°
     for vector in transformed_vectors:
         for normalized_dist_vector in normalized_distance_vectors:    
-            if (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
-                <= ((40*np.pi)/180)):
+            if (
+                (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
+                <= ((40*np.pi)/180))
+                or (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
+                >= ((120*np.pi)/180))
+            ):
                 return True
     
     return False
