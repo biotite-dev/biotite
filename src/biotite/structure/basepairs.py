@@ -381,8 +381,8 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     Guanine, Thymine, Cytosine, and Uracil bound to Deoxyribose and
     Ribose.
 
-    A standard reference frame for these bases has been implemented 
-    [2]_.
+    A standard reference frame for these bases as described in [2]_  has
+    been implemented.
 
     The DSSR Criteria are as follows:
 

@@ -13,8 +13,8 @@ from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
 
 def convert_indices_to_res_chain_id(atomarray, indices):
     """
-    Convert a list of tuples containing the first indices of the residues 
-    of the bases to a list of tuples containing the residue ids and
+    Convert a list of tuples, containing the first indices of the
+    base residues, to a list of tuples containing the residue ids and
     chain ids of the bases.
     """
     res_chain_id = []
@@ -28,7 +28,7 @@ def convert_indices_to_res_chain_id(atomarray, indices):
 
 def reversed_iterator(iter):
     """
-    Returns a reversed list of the elements of an iterator.
+    Returns a reversed list of the elements of an Iterator.
     """
     return reversed(list(iter))
 
