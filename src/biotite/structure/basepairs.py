@@ -376,7 +376,7 @@ _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
 
-def base_pairs(atom_array, min_atoms_per_base = 3):
+def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
     Use DSSR criteria [1]_ to find the basepairs in an 
     :class:`AtomArray`. The algorithm is able to identify canonical and
@@ -444,7 +444,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     --------
     Compute the basepairs for the structure with the PDB id 1QXB:
     
-    >>> basepairs = base_pairs[atom_array]
+    >>> basepairs = base_pairs(atom_array)
     >>> print(basepairs)
     [(0, 723), (28, 693), (61, 660), (91, 630), (124, 598), (156, 566),
      (188, 534), (220, 502), (252, 469), (282, 439), (315, 406),
@@ -473,15 +473,42 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
     basepair_candidates = _get_proximate_basepair_candidates(atom_array)
+
     basepairs = []
+    basepairs_hbonds = []
 
     for base1_index, base2_index in basepair_candidates:
         base1 = atom_array[_filter_residues(atom_array, base1_index)]
         base2 = atom_array[_filter_residues(atom_array, base2_index)]
-        if _check_dssr_criteria((base1, base2), min_atoms_per_base):
+        hbonds =  _check_dssr_criteria((base1, base2), min_atoms_per_base)
+        if hbonds > 0:
             basepairs.append((base1_index, base2_index))
+            if unique:
+                basepairs_hbonds.append(hbonds)
+
+    basepair_array = np.array(basepairs)
+
+    if unique:
+        to_remove = []
+        base_indices, occurrences = np.unique(basepairs, return_counts=True)
+        for base_index, occurrence in zip(base_indices, occurrences):
+            if(occurrence > 1):
+                remove_candidates = {}
+                for i, row in enumerate(np.asarray(basepair_array == base_index)):
+                    if(np.any(row)):
+                        remove_candidates[i] = basepairs_hbonds[i]
+                print(remove_candidates)
+                del remove_candidates[max(remove_candidates, key=remove_candidates.get)]
+                to_remove += list(remove_candidates.keys())
+        basepair_array = np.delete(basepair_array, to_remove, axis=0)
+                    
+
+                
+
+
+
     
-    return basepairs
+    return basepair_array
 
 
 def _check_dssr_criteria(basepair, min_atoms_per_base):
@@ -527,7 +554,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         base_tuple = _match_base(basepair[i], min_atoms_per_base)
         
         if(base_tuple is None):
-            return False
+            return 0
         
         transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
             = base_tuple
@@ -535,7 +562,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # Criterion 1: Distance between orgins <=15 Å
     if not (distance(transformed_std_vectors[0][0,:],
             transformed_std_vectors[1][0,:]) <= 15):
-        return False
+        return 0
     # Criterion 2: Vertical separation <=2.5 Å
     #
     # Align the bases` normal vectors with the reference frame described
@@ -580,17 +607,17 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # The dot product between the averaged rotated normal vectors and 
     # the vector between the two origins is the vertical separation
     if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
-        return False
+        return 0
     
     # Criterion 3: Angle between normal vectors <=65°
     if not (np.arccos(np.dot(transformed_std_vectors[0][1,:],
                               transformed_std_vectors[1][1,:])) 
             >= ((115*np.pi)/180)):
-        return False
+        return 0
     
     # Criterion 4: Absence of stacking
     if _check_base_stacking(transformed_std_vectors):
-        return False
+        return 0
     
     # Criterion 5: Presence of at least one hydrogen bond
     #
@@ -599,7 +626,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         and ("H" in transformed_bases[1].element)):
         # For Structures that contain hydrogens, check for their 
         # presence directly.
-        if(len(hbond(transformed_bases[0] + transformed_bases[1],
+        return len(hbond(transformed_bases[0] + transformed_bases[1],
                      np.ones_like(
                          transformed_bases[0] + transformed_bases[1],
                          dtype=bool
@@ -608,15 +635,11 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
                          transformed_bases[0] + transformed_bases[1],
                          dtype=bool
                      )
-        )) == 0):
-            return False           
-    elif not _check_hbonds(transformed_bases, hbond_masks):
+        ))
+    else:
         # if the structure does not contain hydrogens, check for the
-        # plausibility of hydrogen bonds between heteroatoms
-        return False
-    
-    return True
-
+        # plausibility of hydrogen bonds between heteroatoms       
+        return _check_hbonds(transformed_bases, hbond_masks)  
 
 def _check_hbonds(bases, hbond_masks):
     """
@@ -641,13 +664,14 @@ def _check_hbonds(bases, hbond_masks):
         ``True`` if at least one hydrogen bond is plausible and 
         ``False`` if not.
     """
+    hbonds = 0
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
             for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
                 if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
-                    return True
-    return False
+                    hbonds += 1
+    return hbonds
 
 
 def _check_base_stacking(transformed_vectors):
