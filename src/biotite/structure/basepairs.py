@@ -487,7 +487,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
                 basepairs_hbonds.append(hbonds)
 
     basepair_array = np.array(basepairs)
-
+    
     if unique:
         to_remove = []
         base_indices, occurrences = np.unique(basepairs, return_counts=True)
@@ -498,9 +498,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
                     if(np.any(row)):
                         remove_candidates[i] = basepairs_hbonds[i]
                 print(remove_candidates)
-                del remove_candidates[max(remove_candidates, key=remove_candidates.get)]
+                del remove_candidates[min(remove_candidates, key=remove_candidates.get)]
                 to_remove += list(remove_candidates.keys())
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
+    
                     
 
                 
@@ -664,14 +665,16 @@ def _check_hbonds(bases, hbond_masks):
         ``True`` if at least one hydrogen bond is plausible and 
         ``False`` if not.
     """
-    hbonds = 0
+    hbonds = []
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
             for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
                 if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
-                    hbonds += 1
-    return hbonds
+                    hbonds.append(distance(acceptor_atom.coord, donor_atom.coord))
+    if len(hbonds) > 0: 
+        return min(hbonds)
+    return 0
 
 
 def _check_base_stacking(transformed_vectors):
