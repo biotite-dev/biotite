@@ -55,7 +55,7 @@ def _get_std_adenine():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, 
+        paper referenced in the function ``base_pairs``, 
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center, :class:`ndarray` containing the coordinates of the 
         imidazole ring center
@@ -123,8 +123,9 @@ def _get_std_cytosine():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, :class:`ndarray`
-        containing the coordinates of the pyrimidine ring center
+        paper referenced in the function ``base_pairs``, 
+        :class:`ndarray` containing the coordinates of the pyrimidine
+        ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
         The hydrogen bond donors and acceptors heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
@@ -181,10 +182,10 @@ def _get_std_guanine():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, :class:`ndarray`
-        containing the coordinates of the pyrimidine ring center,
-        :class:`ndarray` containing the coordinates of the imidazole 
-        ring center
+        paper referenced in the function ''base_pairs'',
+        :class:`ndarray` containing the coordinates of the pyrimidine 
+        ring center, :class:`ndarray` containing the coordinates of the
+        imidazole ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
         The hydrogen bond donors and acceptors heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
@@ -223,7 +224,7 @@ def _get_std_guanine():
          atom5.coord, atom12.coord], axis=-2
     )
 
-    # Create(s?) boolean masks for the AtomArray containing the bases` 
+    # Create boolean masks for the AtomArray containing the bases` 
     # heteroatoms (or the usually attached hydrogens) which can act as
     # Hydrogen Bond Donors or Acceptors respectively
     hbond_donor_mask = _get_1d_boolean_mask(
@@ -250,8 +251,9 @@ def _get_std_thymine():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, :class:`ndarray`
-        containing the coordinates of the pyrimidine ring center
+        paper referenced in the function ``base_pairs``, 
+        :class:`ndarray` containing the coordinates of the pyrimidine 
+        ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
         The hydrogen bond donors and acceptors heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
@@ -309,8 +311,9 @@ def _get_std_uracil():
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function base_pairs, :class:`ndarray`
-        containing the coordinates of the pyrimidine ring center
+        paper referenced in the function ``base_pairs``, 
+        :class:`ndarray` containing the coordinates of the pyrimidine
+        ring center
     hbond_masks : tuple (ndarray, ndarray, dtype=bool)
         The hydrogen bond donors and acceptors heteroatoms as 
         :class:`ndarray` with ``dtype=bool``, boolean mask for
@@ -433,7 +436,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
 
     For structures without hydrogens only the plausibility of hydrogen 
     bonds can be checked. A hydrogen bond is considered as plausible if
-    a cutoff of 4.0 Å between a heteroatom that is bonded to a hydrogen,
+    a cutoff of 4.0 Å between a heteroatom that is bound to a hydrogen,
     that can act as hydrogen bond donor, and a heteroatom that can
     accept hydrogen bonds, is met [1]_.
 
@@ -525,8 +528,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         return False
     # Criterion 2: Vertical separation <=2.5 Å
     #
-    #Align Base Normal Vectors with the reference frame described by
-    #the SCHNAaP algorithm
+    # Align the bases` normal vectors with the reference frame described
+    # by the SCHNAaP algorithm
     normal_vector_schnaap = [None]*2
     for i in range(2):
         if(
@@ -542,7 +545,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     # Calculate the angle between normal vectors of the bases
     normal_vector_angle = np.arccos(np.dot(normal_vector_schnaap[0],
                                            normal_vector_schnaap[1]))
-    # Calculate the orthonormal vector to the normal vectors of the bases
+    # Calculate the orthonormal vector to the normal vectors of the
+    # bases
     rotation_axis = np.cross(normal_vector_schnaap[0],
                                  normal_vector_schnaap[1])
     norm_vector(rotation_axis)
@@ -607,7 +611,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
 def _check_hbonds(bases, hbond_masks):
     """
     Check if hydrogen bonds are plausible between two bases. A cutoff
-    of 4.0 Å between a heteroatom that is bonded to a hydrogen, that can
+    of 4.0 Å between a heteroatom that is bound to a hydrogen, that can
     act as hydrogen bond donor, and a heteroatom that can accept
     hydrogen bonds, is used.
     
@@ -617,9 +621,9 @@ def _check_hbonds(bases, hbond_masks):
         The two bases to check for hydrogen bonds as :class:`AtomArray`.
     hbond_masks : list
         Contains the hydrogen bond donor and acceptor heteroatoms as 
-        :class:`ndarray` with dtype=bool, boolean mask for heteroatoms which 
-        are bound to a hydrogen that can act as a donor, boolean mask 
-        for heteroatoms that can act as a hydrogen bond acceptor
+        :class:`ndarray` with dtype=bool, boolean mask for heteroatoms
+        which are bound to a hydrogen that can act as a donor, boolean
+        mask for heteroatoms that can act as a hydrogen bond acceptor
         
     Returns
     -------
