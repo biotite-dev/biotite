@@ -9,11 +9,10 @@ mimic (PDB id: 4P5J) from the Turnip Yellow Mosaic Virus (TYMV).
 # Code source: Tom David Müller
 # License: BSD 3 clause
 
-from tempfile import gettempdir, NamedTemporaryFile
-import src.biotite.structure.io.pdb as pdb
-import src.biotite.database.rcsb as rcsb
-import src.biotite.structure.io as strucio
-import src.biotite.structure as struc
+from tempfile import gettempdir
+import biotite.structure.io.pdb as pdb
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
