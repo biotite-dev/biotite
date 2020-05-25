@@ -7,7 +7,7 @@ This module provides functions for basepair identification.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Tom Müller"
+__author__ = "Tom David Müller"
 __all__ = ["base_pairs"]
 
 import numpy as np
@@ -442,7 +442,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
 
     Examples
     --------
-    Compute the basepairs for the structure with the PDB_ID 1QXB:
+    Compute the basepairs for the structure with the PDB id 1QXB:
     
     >>> basepairs = base_pairs[atom_array]
     >>> print(basepairs)
