@@ -440,6 +440,16 @@ def base_pairs(atom_array, min_atoms_per_base = 3):
     that can act as hydrogen bond donor, and a heteroatom that can
     accept hydrogen bonds, is met [1]_.
 
+    Examples
+    --------
+    Compute the basepairs for the structure with the PDB_ID 1QXB:
+    
+    >>> basepairs = base_pairs[atom_array]
+    >>> print(basepairs)
+    [(0, 723), (28, 693), (61, 660), (91, 630), (124, 598), (156, 566),
+     (188, 534), (220, 502), (252, 469), (282, 439), (315, 406),
+     (345, 378)]
+
     References
     ----------
     
