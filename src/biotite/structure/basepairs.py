@@ -500,7 +500,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     for base1_index, base2_index in basepair_candidates:
         base1 = atom_array[_filter_residues(atom_array, base1_index)]
         base2 = atom_array[_filter_residues(atom_array, base2_index)]
-        hbonds =  _check_dssr_criteria((base1, base2), min_atoms_per_base)
+        hbonds =  _check_dssr_criteria(
+            (base1, base2), min_atoms_per_base, unique
+        )
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -518,7 +520,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         for base_index, occurrence in zip(base_indices, occurrences):
             if(occurrence > 1):
                 # Write the non-unique basepairs to a dictionary as 
-                # 'index: shortest_hbond_distance'
+                # 'index: shortest_hbond_length'
                 remove_candidates = {}
                 for i, row in enumerate(
                     np.asarray(basepair_array == base_index)
@@ -537,7 +539,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     return basepair_array
 
 
-def _check_dssr_criteria(basepair, min_atoms_per_base):
+def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     """
     Check the DSSR criteria of a potential basepair.
     
@@ -548,12 +550,16 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
     min_atoms_per_base : integer
         The number of atoms a nucleotides' base must have to be 
         considered a candidate for a basepair.
+    unique : bool
+        If ``True``, the shortest hydrogen bond length between the bases
+        is calculated for plausible basepairs.
         
     Returns
     -------
-    satisfied : bool
-        ``True`` if the basepair satisfies the criteria and ``False`` 
-        if it does not.
+    satisfied : integer
+        `>0` if the basepair satisfies the criteria and `-1` if it does
+        not. If unique is ``True``, the shortest hydrogen bond length
+        is returned for plausible basepairs.
     """
 
     # Contains the bases to be used for analysis. If the bases are 
@@ -652,30 +658,38 @@ def _check_dssr_criteria(basepair, min_atoms_per_base):
         and ("H" in transformed_bases[1].element)):
         # For Structures that contain hydrogens, check for their 
         # presence directly.
+        #
+        # Default return value if no basepair is found
         hbonds = -1
+        # Generate input atom array for ``hbond```
         potential_basepair = transformed_bases[0] + transformed_bases[1]
-        for bond in hbond(potential_basepair,
-                     np.ones_like(
-                         transformed_bases[0] + transformed_bases[1],
-                         dtype=bool
-                     ), 
-                     np.ones_like(
-                         transformed_bases[0] + transformed_bases[1],
-                         dtype=bool
-                     )
+
+        # Iterate through output of ``hbond```
+        for bond in hbond(
+            potential_basepair,
+            np.ones_like(potential_basepair, dtype=bool), 
+            np.ones_like(potential_basepair, dtype=bool)
         ):
+            if not unique:
+                # If there is output but the uniqueness is not checked
+                # return `1`
+                return 1
+
             if (distance(potential_basepair[bond[0]].coord, 
-                potential_basepair[bond[2]].coord) > hbonds) \
+                potential_basepair[bond[2]].coord) < hbonds) \
                 or (hbonds == -1):
+                # If the distance is smaller than previously found use
+                # as output value
                 hbonds = distance(potential_basepair[bond[0]].coord, 
                                   potential_basepair[bond[2]].coord)
         return hbonds
-    else:
-        # if the structure does not contain hydrogens, check for the
-        # plausibility of hydrogen bonds between heteroatoms       
-        return _check_hbonds(transformed_bases, hbond_masks)  
 
-def _check_hbonds(bases, hbond_masks):
+    else:
+        # If the structure does not contain hydrogens, check for the
+        # plausibility of hydrogen bonds between heteroatoms       
+        return _check_hbonds(transformed_bases, hbond_masks, unique)  
+
+def _check_hbonds(bases, hbond_masks, unique):
     """
     Check if hydrogen bonds are plausible between two bases. A cutoff
     of 4.0 Å between a heteroatom that is bound to a hydrogen, that can
@@ -691,22 +705,37 @@ def _check_hbonds(bases, hbond_masks):
         :class:`ndarray` with dtype=bool, boolean mask for heteroatoms
         which are bound to a hydrogen that can act as a donor, boolean
         mask for heteroatoms that can act as a hydrogen bond acceptor
+    unique : bool
+        If ``True``, the shortest hydrogen bond length between the bases
+        is calculated for plausible basepairs.
         
     Returns
     -------
-    plausible : bool
-        ``True`` if at least one hydrogen bond is plausible and 
-        ``False`` if not.
+    plausible : integer
+        `>0` if the basepair has plausible hydrogen bonds and `-1` if it
+        does not. If unique is ``True``, the shortest hydrogen bond
+        length is returned for plausible basepairs.
     """
+
+    # Contains the length of plausible hydrogen bonds
     hbonds = []
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
             for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
                 if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
-                    hbonds.append(distance(acceptor_atom.coord, donor_atom.coord))
-    if len(hbonds) > 0: 
+                    if not unique:
+                        # If a plausible hydrogen bond is found but the 
+                        # uniqueness is not checked return `1`
+                        return 1
+                    hbonds.append(
+                        distance(acceptor_atom.coord, donor_atom.coord)
+                    )
+
+    if len(hbonds) > 0:
+        # Return the shortest hydrogen bond length
         return min(hbonds)
+
     return -1
 
 

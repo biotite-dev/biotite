@@ -83,7 +83,7 @@ def test_base_pairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array)
+    computed_basepairs = base_pairs(nuc_sample_array, unique=False)
     check_output(convert_indices_to_res_chain_id(
         nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
             )
