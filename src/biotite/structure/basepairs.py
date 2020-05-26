@@ -403,15 +403,19 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     ----------
     atom_array : AtomArray
         The :class:`AtomArray` to find basepairs in.
-    min_atoms_per_base : integer, optional
+    min_atoms_per_base : integer, optional (default: 3)
         The number of atoms a nucleotides' base must have to be 
         considered a candidate for a basepair.
+    unique : bool, optional (default: True)
+        If ``True``, each base is assumed to be only paired with one
+        other base. If multiple basepairs are plausible, the one with
+        the shortest hydrogen bond is selected.
         
     Returns
     -------
-    basepairs : list [(integer, integer), ...]
-        Contains the basepairs, `tuple` of the first indices of the 
-        corresponding residues.
+    basepairs : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one basepair and contains the first
+        indices of the residues corresponding to each base.
 
     Notes
     -----
