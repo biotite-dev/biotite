@@ -50,6 +50,7 @@ for base1, base2 in struc.base_pairs(atom_array):
         np.mean((atom_array.res_id[base1],atom_array.res_id[base2])), 1.5
     )
     arc_diameter = abs(atom_array.res_id[base2] - atom_array.res_id[base1])
+    
     arc = Arc(
         arc_center, arc_diameter, arc_diameter, 180, theta1=180, theta2=0 
     )
