@@ -10,9 +10,11 @@ mimic (PDB id: 4P5J) from the Turnip Yellow Mosaic Virus (TYMV).
 # License: BSD 3 clause
 
 from tempfile import gettempdir
+import biotite
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
+import biotite.sequence.graphics as graphics
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib.patches import Arc
@@ -29,11 +31,12 @@ residue_names = nucleotides[struc.get_residue_starts(nucleotides)].res_name
 residue_ids = nucleotides[struc.get_residue_starts(nucleotides)].res_id
 
 # Create a matplotlib pyplot
-fig, ax = plt.subplots(figsize=(12, 4))
+fig, ax = plt.subplots(figsize=(10, 10))
 
 # Setup the axis
-ax.set_xlim(0, len(residue_ids)+1)
+ax.set_xlim(1, len(residue_ids))
 ax.set_ylim(0, len(residue_ids)/2)
+ax.set_aspect("equal")
 ax.xaxis.set_major_locator(ticker.MultipleLocator(3))
 ax.set_yticks([])
 
@@ -50,10 +53,12 @@ for base1, base2 in struc.base_pairs(atom_array):
         np.mean((atom_array.res_id[base1],atom_array.res_id[base2])), 1.5
     )
     arc_diameter = abs(atom_array.res_id[base2] - atom_array.res_id[base1])
-    
+
     arc = Arc(
-        arc_center, arc_diameter, arc_diameter, 180, theta1=180, theta2=0 
+        arc_center, arc_diameter, arc_diameter, 180, theta1=180, theta2=0,
+        color=biotite.colors["dimorange"]
     )
+
     ax.add_patch(arc)
 
 # Display the plot
