@@ -408,7 +408,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         considered a candidate for a basepair.
     unique : bool, optional (default: True)
         If ``True``, each base is assumed to be only paired with one
-        other base. If multiple basepairs are plausible, the one with
+        other base. If multiple pairings are plausible, the one with
         the shortest hydrogen bond is selected.
         
     Returns
@@ -450,9 +450,18 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     
     >>> basepairs = base_pairs(atom_array)
     >>> print(basepairs)
-    [(0, 723), (28, 693), (61, 660), (91, 630), (124, 598), (156, 566),
-     (188, 534), (220, 502), (252, 469), (282, 439), (315, 406),
-     (345, 378)]
+    [[  0 723]
+     [ 28 693]
+     [ 61 660]
+     [ 91 630]
+     [124 598]
+     [156 566]
+     [188 534]
+     [220 502]
+     [252 469]
+     [282 439]
+     [315 406]
+     [345 378]]
 
     References
     ----------
@@ -476,9 +485,16 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
        "Finding and visualizing nucleic acid base stacking"
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
+
+    # Get the basepair candidates according to a N/O cutoff distance,
+    # where each base is identified as the first index of its respective
+    # residue
     basepair_candidates = _get_proximate_basepair_candidates(atom_array)
 
+    # Contains the plausible basepairs
     basepairs = []
+    # Contains the distance of the shortest Hydrogen Bond for each
+    # plausible basepair
     basepairs_hbonds = []
 
     for base1_index, base2_index in basepair_candidates:
@@ -493,25 +509,30 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     basepair_array = np.array(basepairs)
     
     if unique:
+        # Contains all non-unique basepairs that are flagged to be
+        # removed
         to_remove = []
+
+        # Get all bases that have non-unique pairing interactions
         base_indices, occurrences = np.unique(basepairs, return_counts=True)
         for base_index, occurrence in zip(base_indices, occurrences):
             if(occurrence > 1):
+                # Write the non-unique basepairs to a dictionary as 
+                # 'index: shortest_hbond_distance'
                 remove_candidates = {}
-                for i, row in enumerate(np.asarray(basepair_array == base_index)):
+                for i, row in enumerate(
+                    np.asarray(basepair_array == base_index)
+                ):
                     if(np.any(row)):
                         remove_candidates[i] = basepairs_hbonds[i]
-                print(remove_candidates)
-                del remove_candidates[min(remove_candidates, key=remove_candidates.get)]
+                # Flag all non-unique basepairs for removal except the
+                # one that has the shortest hydrogen bond
+                del remove_candidates[
+                    min(remove_candidates, key=remove_candidates.get)
+                ]
                 to_remove += list(remove_candidates.keys())
+        # Remove all flagged basepairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
-    
-                    
-
-                
-
-
-
     
     return basepair_array
 
