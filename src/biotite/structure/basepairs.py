@@ -734,8 +734,11 @@ def _check_hbonds(bases, hbond_masks, unique):
 
     if len(hbonds) > 0:
         # Return the shortest hydrogen bond length
+        if(bases[0].res_id[0] == 6 or bases[1].res_id[0] == 6):
+            print(min(hbonds))
+            print(str(bases[0].res_id[0]) + "und" + str(bases[1].res_id[0]))
         return min(hbonds)
-
+        
     return -1
 
 
