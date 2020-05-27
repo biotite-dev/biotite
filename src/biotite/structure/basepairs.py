@@ -408,7 +408,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         considered a candidate for a basepair.
     unique : bool, optional (default: True)
         If ``True``, each base is assumed to be only paired with one
-        other base. If multiple pairings are plausible, the one with
+        other base. If multiple pairings are plausible, the pairing with
         the most hydrogen bonds is selected.
         
     Returns
@@ -494,8 +494,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     # Contains the plausible basepairs
     basepairs = []
-    # Contains the distance of the shortest Hydrogen Bond for each
-    # plausible basepair
+    # Contains the number of hydrogens for each plausible basepair
     basepairs_hbonds = []
 
     for base1_index, base2_index in basepair_candidates:
@@ -708,8 +707,8 @@ def _check_hbonds(bases, hbond_masks, unique):
         hydrogen bonds is returned.
     """
 
-    # Contains the length of plausible hydrogen bonds
-    hbonds = []
+    # Contains the number of plausible hydrogen bonds
+    hbonds = 0
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
@@ -719,13 +718,11 @@ def _check_hbonds(bases, hbond_masks, unique):
                         # If a plausible hydrogen bond is found but the 
                         # uniqueness is not checked return `1`
                         return 1
-                    hbonds.append(
-                        distance(acceptor_atom.coord, donor_atom.coord)
-                    )
+                    hbonds += 1
 
-    if len(hbonds) > 0:
+    if hbonds > 0:
         # Return the number of plausible hydrogen bonds
-        return len(hbonds)
+        return hbonds
 
     return -1
 
