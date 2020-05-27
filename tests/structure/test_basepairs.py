@@ -7,9 +7,10 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 from os.path import join
 from ..util import data_dir
+import itertools
 from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
                                         base_pairs
-
+import numpy as np
 
 def convert_indices_to_res_chain_id(atomarray, indices):
     """
@@ -32,11 +33,15 @@ def reversed_iterator(iter):
     """
     return reversed(list(iter))
 
-
 @pytest.fixture
 def nuc_sample_array():
     return strucio.load_structure(join(data_dir("structure"), "1qxb.cif"))
 
+@pytest.fixture
+def nuc_sample_array_no_hydrogens(nuc_sample_array):
+    return nuc_sample_array[
+        np.isin(nuc_sample_array.element, ["H"], invert=True)
+    ]
 
 @pytest.fixture
 def basepairs_fw(nuc_sample_array):
@@ -77,15 +82,21 @@ def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
     for comp_basepair in computed_basepairs:
         assert ((comp_basepair in basepairs_fw) \
                 or (comp_basepair in basepairs_rv))
+"""
+@pytest.mark.parametrize(
+    "atom_array, test_unique",
+    itertools.product([nuc_sample_array, nuc_sample_array_no_hydrogens],
+                      [True, False])
+)
+"""
 
-
-def test_base_pairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
+def test_base_pairs_forward(nuc_sample_array_no_hydrogens, basepairs_fw, basepairs_rv):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array, unique=False)
+    computed_basepairs = base_pairs(nuc_sample_array_no_hydrogens, unique=True)
     check_output(convert_indices_to_res_chain_id(
-        nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
+        nuc_sample_array_no_hydrogens, computed_basepairs), basepairs_fw, basepairs_rv
             )
 
 
@@ -105,3 +116,4 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
         reversed_nuc_sample_array, computed_basepairs
                                                     )
     check_output(computed_basepairs, basepairs_fw, basepairs_rv)
+
