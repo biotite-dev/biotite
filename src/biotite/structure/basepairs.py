@@ -449,19 +449,19 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Compute the basepairs for the structure with the PDB id 1QXB:
     
     >>> basepairs = base_pairs(atom_array)
-    >>> print(basepairs)
-    [[  0 723]
-     [ 28 693]
-     [ 61 660]
-     [ 91 630]
-     [124 598]
-     [156 566]
-     [188 534]
-     [220 502]
-     [252 469]
-     [282 439]
-     [315 406]
-     [345 378]]
+    >>> print(atom_array[basepairs])
+    [['DC' 'DG']
+     ['DG' 'DC']
+     ['DC' 'DG']
+     ['DG' 'DC']
+     ['DA' 'DT']
+     ['DA' 'DT']
+     ['DT' 'DA']
+     ['DT' 'DA']
+     ['DC' 'DG']
+     ['DG' 'DC']
+     ['DC' 'DG'] 
+     ['DG' 'DC']]
 
     References
     ----------
