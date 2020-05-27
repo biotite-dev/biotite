@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from pytest import approx
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
@@ -104,15 +105,34 @@ def test_pdbx_consistency(path, model):
             return
         else:
             raise
+    
     pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     # Sometimes mmCIF files can have 'cell' entry
     # but corresponding MMTF file has not 'unitCell' entry
     # -> Do not assert for dummy entry in mmCIF file
     # (all vector elements = {0, 1})
     if a2.box is not None and not ((a2.box == 0) | (a2.box == 1)).all():
         assert np.allclose(a1.box, a2.box)
-    for category in a1.get_annotation_categories():
+    # MMTF might assign some residues, that PDBx assigns as 'hetero',
+    # as 'non-hetero' if they are RNA/DNA or peptide linking
+    try:
+        assert a1.hetero.tolist() == \
+               a2.hetero.tolist()
+    except AssertionError:
+        conflict_residues = np.unique(
+            a1.res_name[a1.hetero != a2.hetero]
+        )
+        for res in conflict_residues:
+            assert info.link_type(res) in [
+                "L-PEPTIDE LINKING", "PEPTIDE LINKING",
+                "DNA LINKING", "RNA LINKING"
+            ]
+    # Test the remaining categories
+    for category in [
+        c for c in a1.get_annotation_categories() if c != "hetero"
+    ]:
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \
