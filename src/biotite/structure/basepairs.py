@@ -448,9 +448,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Examples
     --------
     Compute the basepairs for the structure with the PDB id 1QXB:
-    
-    >>> basepairs = base_pairs(atom_array)
-    >>> print(atom_array[basepairs])
+
+    >>> from os.path import join
+    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> basepairs = base_pairs(dna_helix)
+    >>> print(dna_helix[basepairs].res_name)
     [['DC' 'DG']
      ['DG' 'DC']
      ['DC' 'DG']
@@ -461,7 +463,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
      ['DT' 'DA']
      ['DC' 'DG']
      ['DG' 'DC']
-     ['DC' 'DG'] 
+     ['DC' 'DG']
      ['DG' 'DC']]
 
     References

@@ -57,6 +57,8 @@ def test_base_pairs_forward(nuc_sample_array, basepairs):
     Test for the function base_pairs.
     """
     computed_basepairs = base_pairs(nuc_sample_array)
+    print(nuc_sample_array[computed_basepairs].res_name)
+    assert False
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
