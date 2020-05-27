@@ -33,13 +33,11 @@ residue_ids, residue_names = struc.get_residues(nucleotides)
 fig, ax = plt.subplots(figsize=(8.0, 4.5))
 
 # Setup the axis
-ax.set_xlim(1, len(residue_ids))
-ax.set_ylim(0, len(residue_ids)/2)
+ax.set_xlim(0.5, len(residue_ids) + 0.5)
+ax.set_ylim(0, len(residue_ids)/2 + 0.5)
 ax.set_aspect("equal")
-
 ax.xaxis.set_major_locator(ticker.MultipleLocator(3))
 ax.tick_params(axis='both', which='major', labelsize=8)
-
 ax.set_yticks([])
 
 # Remove the frame
