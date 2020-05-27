@@ -3,28 +3,12 @@
 # information.
 
 import pytest
+import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
+from biotite.structure.basepairs import base_pairs
 from os.path import join
 from ..util import data_dir
-import itertools
-from biotite.structure.basepairs import _get_proximate_basepair_candidates, \
-                                        base_pairs
-import numpy as np
-
-def convert_indices_to_res_chain_id(atomarray, indices):
-    """
-    Convert a list of tuples, containing the first indices of the
-    base residues, to a list of tuples containing the residue ids and
-    chain ids of the bases.
-    """
-    res_chain_id = []
-    for base1, base2 in indices:
-        res_chain_id.append(
-            ((atomarray[base1].chain_id, atomarray[base1].res_id),
-            (atomarray[base2].chain_id, atomarray[base2].res_id))
-            )
-    return res_chain_id
 
 
 def reversed_iterator(iter):
@@ -33,39 +17,23 @@ def reversed_iterator(iter):
     """
     return reversed(list(iter))
 
+
 @pytest.fixture
 def nuc_sample_array():
     return strucio.load_structure(join(data_dir("structure"), "1qxb.cif"))
 
 @pytest.fixture
-def nuc_sample_array_no_hydrogens(nuc_sample_array):
-    return nuc_sample_array[
-        np.isin(nuc_sample_array.element, ["H"], invert=True)
-    ]
-
-@pytest.fixture
-def basepairs_fw(nuc_sample_array):
+def basepairs(nuc_sample_array):
     """
     Generate a test output for the base_pairs function.
     """
-    residue_indices = struc.residues.get_residue_starts(nuc_sample_array)[0:24]
-    basepairs = []
-    for i in range(12):
-        basepairs.append((residue_indices[i], residue_indices[-1*(i+1)]))
-    basepairs = convert_indices_to_res_chain_id(nuc_sample_array, basepairs)
-    return basepairs
+    residue_indices, residue_names = struc.residues.get_residues(
+        nuc_sample_array
+    )[0:24]
+    return np.vstack((residue_indices[:12], np.flip(residue_indices)[:12])).T
 
-@pytest.fixture
-def basepairs_rv(basepairs_fw):
-    """
-    Generate a reversed test output for the base_pairs function.
-    """
-    reverser = []
-    for base1, base2 in basepairs_fw:
-        reverser.append((base2, base1))
-    return reverser
 
-def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
+def check_output(computed_basepairs, basepairs):
     """
     Check the output of base_pairs.
     """
@@ -77,23 +45,22 @@ def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
         or seen.add((base1, base2)) for base1, base2 in computed_basepairs
         )
     # Check if the right number of basepairs is in computed_baspairs
-    assert(len(computed_basepairs) == len(basepairs_fw))
+    assert(len(computed_basepairs) == len(basepairs))
     # Check if the right basepairs are in computed_basepairs
     for comp_basepair in computed_basepairs:
-        assert ((comp_basepair in basepairs_fw) \
-                or (comp_basepair in basepairs_rv))
+        assert ((comp_basepair in basepairs) \
+                or (comp_basepair in np.flip(basepairs)))
 
-def test_base_pairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
+
+def test_base_pairs_forward(nuc_sample_array, basepairs):
     """
     Test for the function base_pairs.
     """
     computed_basepairs = base_pairs(nuc_sample_array)
-    check_output(convert_indices_to_res_chain_id(
-        nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
-            )
+    check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
-def test_base_pairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
+def test_base_pairs_reverse(nuc_sample_array, basepairs):
     """
     Reverse the order of residues in the atom_array and then test the
     function base_pairs.
@@ -105,8 +72,6 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs_fw, basepairs_rv):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
     
     computed_basepairs = base_pairs(reversed_nuc_sample_array)
-    computed_basepairs = convert_indices_to_res_chain_id(
-        reversed_nuc_sample_array, computed_basepairs
-                                                    )
-    check_output(computed_basepairs, basepairs_fw, basepairs_rv)
-
+    check_output(
+        reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
+    )
