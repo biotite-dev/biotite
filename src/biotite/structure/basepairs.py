@@ -409,7 +409,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     unique : bool, optional (default: True)
         If ``True``, each base is assumed to be only paired with one
         other base. If multiple pairings are plausible, the one with
-        the shortest hydrogen bond is selected.
+        the most hydrogen bonds is selected.
         
     Returns
     -------
@@ -423,7 +423,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     atoms specified, a superimposed standard base is used to emulate it.
 
     The vertical separation has been implemented as the rise parameter
-    between the base triads [3]_.
+    ``DZ`` between the base triads [3]_.
 
     The presence of base stacking is assumed if the following criteria
     are met [4]_:
@@ -438,11 +438,12 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
 
-    For structures without hydrogens only the plausibility of hydrogen 
-    bonds can be checked. A hydrogen bond is considered as plausible if
-    a cutoff of 4.0 Å between a heteroatom that is bound to a hydrogen,
-    that can act as hydrogen bond donor, and a heteroatom that can
-    accept hydrogen bonds, is met [1]_.
+    For structures without hydrogens the accuracy of the algorithm is 
+    limited as only the plausibility of hydrogen bonds can be checked. 
+    A hydrogen bond is considered as plausible if a cutoff of 4.0 Å 
+    between a heteroatom that is bound to a hydrogen, that can act as 
+    hydrogen bond donor, and a heteroatom that can accept hydrogen
+    bonds, is met [1]_.
 
     Examples
     --------
@@ -520,7 +521,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         for base_index, occurrence in zip(base_indices, occurrences):
             if(occurrence > 1):
                 # Write the non-unique basepairs to a dictionary as 
-                # 'index: shortest_hbond_length'
+                # 'index: number of hydrogen bonds'
                 remove_candidates = {}
                 for i, row in enumerate(
                     np.asarray(basepair_array == base_index)
@@ -528,7 +529,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
                     if(np.any(row)):
                         remove_candidates[i] = basepairs_hbonds[i]
                 # Flag all non-unique basepairs for removal except the
-                # one that has the shortest hydrogen bond
+                # one that has the most hydrogen bonds
                 del remove_candidates[
                     max(remove_candidates, key=remove_candidates.get)
                 ]
@@ -558,8 +559,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     -------
     satisfied : integer
         `>0` if the basepair satisfies the criteria and `-1` if it does
-        not. If unique is ``True``, the shortest hydrogen bond length
-        is returned for plausible basepairs.
+        not. If unique is ``True``, the number of hydrogen bonds is 
+        returned for plausible basepairs.
     """
 
     # Contains the bases to be used for analysis. If the bases are 
@@ -659,30 +660,20 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         # For Structures that contain hydrogens, check for their 
         # presence directly.
         #
-        # Default return value if no basepair is found
-        hbonds = -1
         # Generate input atom array for ``hbond```
         potential_basepair = transformed_bases[0] + transformed_bases[1]
 
-        # Iterate through output of ``hbond```
-        for bond in hbond(
+        # Get the number of hydrogen bonds
+        bonds = len(hbond(
             potential_basepair,
             np.ones_like(potential_basepair, dtype=bool), 
             np.ones_like(potential_basepair, dtype=bool)
-        ):
-            if not unique:
-                # If there is output but the uniqueness is not checked
-                # return `1`
-                return 1
+        ))
 
-            if (distance(potential_basepair[bond[0]].coord, 
-                potential_basepair[bond[2]].coord) < hbonds) \
-                or (hbonds == -1):
-                # If the distance is smaller than previously found use
-                # as output value
-                hbonds = distance(potential_basepair[bond[0]].coord, 
-                                  potential_basepair[bond[2]].coord)
-        return hbonds
+        if bonds > 0:
+            return bonds
+
+        return -1
 
     else:
         # If the structure does not contain hydrogens, check for the
@@ -713,8 +704,8 @@ def _check_hbonds(bases, hbond_masks, unique):
     -------
     plausible : integer
         `>0` if the basepair has plausible hydrogen bonds and `-1` if it
-        does not. If unique is ``True``, the shortest hydrogen bond
-        length is returned for plausible basepairs.
+        does not. If unique is ``True``, the number of plausible
+        hydrogen bonds is returned.
     """
 
     # Contains the length of plausible hydrogen bonds
@@ -733,7 +724,7 @@ def _check_hbonds(bases, hbond_masks, unique):
                     )
 
     if len(hbonds) > 0:
-        # Return the shortest hydrogen bond length
+        # Return the number of plausible hydrogen bonds
         return len(hbonds)
 
     return -1
