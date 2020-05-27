@@ -378,26 +378,26 @@ _uracil_containing_nucleotides = ["U", "DU"]
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
-    Use DSSR criteria [1]_ to find the basepairs in an 
-    :class:`AtomArray`. The algorithm is able to identify canonical and
-    non-canonical base pairs between the 5 common bases Adenine,
-    Guanine, Thymine, Cytosine, and Uracil bound to Deoxyribose and
-    Ribose.
+    Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
+ 
+    The algorithm is able to identify canonical and non-canonical 
+    base pairs between the 5 common bases Adenine, Guanine, Thymine, 
+    Cytosine, and Uracil bound to Deoxyribose and Ribose.
 
-    A standard reference frame for these bases as described in [2]_  has
+    A standard reference frame for these bases as described in [1]_  has
     been implemented.
 
-    The DSSR Criteria are as follows:
+    The DSSR Criteria are as follows [2]_ :
 
-    (i) Distance between base origins <=15 Å
+    1. Distance between base origins <=15 Å
 
-    (ii) Vertical separation between the base planes <=2.5 Å
+    2. Vertical separation between the base planes <=2.5 Å
     
-    (iii) Angle between the base normal vectors <=65°
+    3. Angle between the base normal vectors <=65°
 
-    (iv) Absence of stacking between the two bases
+    4. Absence of stacking between the two bases
 
-    (v) Presence of at least one hydrogen bond involving a base atom
+    5. Presence of at least one hydrogen bond involving a base atom
 
     Parameters
     ----------
@@ -423,16 +423,16 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     atoms specified, a superimposed standard base is used to emulate it.
 
     The vertical separation has been implemented as the rise parameter
-    ``DZ`` between the base triads [3]_.
+    `DZ` between the base triads [3]_.
 
     The presence of base stacking is assumed if the following criteria
     are met [4]_:
 
-    (i) Distance between aromatic ring centers <=4.5 Å
+    1. Distance between aromatic ring centers <=4.5 Å
 
-    (ii) Angle between the ring normal vectors <=23°
+    2. Angle between the ring normal vectors <=23°
     
-    (iii) Angle between normalized distance vector between two ring
+    3. Angle between normalized distance vector between two ring
           centers and one normal vector <=40°
 
     Please note that ring normal vectors are assumed to be equal to the
@@ -443,7 +443,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     A hydrogen bond is considered as plausible if a cutoff of 4.0 Å 
     between a heteroatom that is bound to a hydrogen, that can act as 
     hydrogen bond donor, and a heteroatom that can accept hydrogen
-    bonds, is met [1]_.
+    bonds, is met.
 
     Examples
     --------
@@ -469,15 +469,15 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     References
     ----------
     
-    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
-       "DSSR: an integrated software tool for dissecting the spatial
-       structure of RNA."
-       Nucleic acids research, 43(21), e142 (2015).
-
-    .. [2] WK Olson, M Bansal and SK Burley et al.,
+    .. [1] WK Olson, M Bansal and SK Burley et al.,
        "A standard reference frame for the description of nucleic acid
        base-pair geometry."
        J Mol Biol, 313(1), 229-237 (2001).
+
+    .. [2] XJ Lu, HJ Bussemaker and WK Olson,
+       "DSSR: an integrated software tool for dissecting the spatial
+       structure of RNA."
+       Nucleic acids research, 43(21), e142 (2015).
 
     .. [3] XJ Lu, MA El Hassan and CA Hunter,
         "Structure and conformation of helical nucleic acids: analysis
