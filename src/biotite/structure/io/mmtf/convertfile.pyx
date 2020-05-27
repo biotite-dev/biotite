@@ -17,6 +17,7 @@ from ...error import BadStructureError
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_starts
 from ...box import vectors_from_unitcell
+from ....file import InvalidFileError
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -172,9 +173,9 @@ def get_structure(file, model=None, altloc="first",
         # Check if each model has the same amount of atoms
         # If not, raise exception
         if (lengths != lengths[0]).any():
-            raise BadStructureError("The models in the file have unequal "
-                                    "amount of atoms, give an explicit "
-                                    "model instead")
+            raise InvalidFileError("The models in the file have unequal "
+                                   "amount of atoms, give an explicit "
+                                   "model instead")
         length = lengths[0]
 
         depth = model_count
