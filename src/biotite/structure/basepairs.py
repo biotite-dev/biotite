@@ -389,15 +389,15 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     The DSSR Criteria are as follows [2]_ :
 
-    1. Distance between base origins <=15 Å
+    (i) Distance between base origins <=15 Å
 
-    2. Vertical separation between the base planes <=2.5 Å
+    (ii) Vertical separation between the base planes <=2.5 Å
     
-    3. Angle between the base normal vectors <=65°
+    (iii) Angle between the base normal vectors <=65°
 
-    4. Absence of stacking between the two bases
+    (iv) Absence of stacking between the two bases
 
-    5. Presence of at least one hydrogen bond involving a base atom
+    (v) Presence of at least one hydrogen bond involving a base atom
 
     Parameters
     ----------
@@ -428,11 +428,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     The presence of base stacking is assumed if the following criteria
     are met [4]_:
 
-    1. Distance between aromatic ring centers <=4.5 Å
+    (i) Distance between aromatic ring centers <=4.5 Å
 
-    2. Angle between the ring normal vectors <=23°
+    (ii) Angle between the ring normal vectors <=23°
     
-    3. Angle between normalized distance vector between two ring
+    (iii) Angle between normalized distance vector between two ring
           centers and one normal vector <=40°
 
     Please note that ring normal vectors are assumed to be equal to the
