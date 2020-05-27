@@ -87,7 +87,9 @@ class PDBFile(TextFile):
         model : int, optional
             If this parameter is given, the function will return a
             2D coordinate array from the atoms corresponding to the
-            given model number.
+            given model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
             If this parameter is omitted, an 2D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
@@ -226,14 +228,16 @@ class PDBFile(TextFile):
         model : int, optional
             If this parameter is given, the function will return an
             :class:`AtomArray` from the atoms corresponding to the given
-            model number.
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
         altloc : {'first', 'occupancy', 'all'}
             This parameter defines how *altloc* IDs are handled:
-                - ``'first'`` - Use atoms that have the first *altloc* ID
-                appearing in a residue.
+                - ``'first'`` - Use atoms that have the first
+                *altloc* ID appearing in a residue.
                 - ``'occupancy'`` - Use atoms that have the *altloc* ID
                 with the highest occupancy for a residue.
                 - ``'all'`` - Use all atoms.

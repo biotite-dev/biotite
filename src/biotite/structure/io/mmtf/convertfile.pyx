@@ -61,7 +61,9 @@ def get_structure(file, model=None, altloc="first",
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.

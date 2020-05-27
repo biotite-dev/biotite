@@ -45,10 +45,12 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
-        containing all models will be returned, even if the
-        structure contains only one model.
+        containing all models will be returned, even if the structure
+        contains only one model.
     altloc : {'first', 'occupancy', 'all'}
         This parameter defines how *altloc* IDs are handled:
             - ``'first'`` - Use atoms that have the first *altloc* ID
