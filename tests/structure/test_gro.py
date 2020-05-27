@@ -15,6 +15,13 @@ from biotite.structure import Atom, array
 from ..util import data_dir
 
 
+def test_get_model_count():
+    gro_file = gro.GROFile.read(join(data_dir("structure"), "1l2y.gro"))
+    test_model_count = gro_file.get_model_count()
+    ref_model_count = gro_file.get_structure().stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
     "path, single_model",
     itertools.product(
@@ -47,13 +54,6 @@ def test_pdb_consistency(path):
     a1 = pdb_file.get_structure(model=1)
     gro_file = gro.GROFile.read(path)
     a2 = gro_file.get_structure(model=1)
-    ###
-    print(a1[a1.res_id == 12])
-    #print(np.where(a1.atom_name != a2.atom_name[:len(a1)]))
-    #print(a1[a1.atom_name != a2.atom_name[:len(a1)]])
-    #print()
-    #print(a2[a1.atom_name != a2.atom_name])
-    ###
 
     assert a1.array_length() == a2.array_length()
 

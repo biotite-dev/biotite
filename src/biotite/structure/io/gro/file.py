@@ -48,7 +48,22 @@ class GROFile(TextFile):
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.gro"))
     
     """
-    
+    def get_model_count(self):
+        """
+        Get the number of models contained in this GRO file.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
+        model_count = 0
+        for line in self.lines:
+            if _is_int(line):
+                model_count += 1
+        return model_count
+
+
     def get_structure(self, model=None):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
@@ -69,16 +84,6 @@ class GROFile(TextFile):
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-        def is_int(line):
-            """
-            helper function: returns true
-            if the string can be parsed to an int
-            """
-            try:
-                int(line)
-                return True
-            except ValueError:
-                return False
         
         def get_atom_line_i(model_start_i, model_atom_counts):
             """
@@ -120,7 +125,7 @@ class GROFile(TextFile):
 
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
-                                  if is_int(self.lines[i])],
+                                  if _is_int(self.lines[i])],
                                  dtype=int)
 
         # Number of atoms in each model
@@ -320,3 +325,13 @@ class GROFile(TextFile):
         # Add terminal newline, since PyMOL requires it
         self.lines.append("")
 
+
+def _is_int(string):
+    """
+    Return ``True`, if the string can be parsed to an int.
+    """
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False

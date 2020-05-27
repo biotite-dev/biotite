@@ -14,6 +14,13 @@ import pytest
 from pytest import approx
 
 
+def test_get_model_count():
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
+    test_model_count = pdbx.get_model_count(pdbx_file)
+    ref_model_count = pdbx.get_structure(pdbx_file).stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
     "category, key, exp_value", 
     [

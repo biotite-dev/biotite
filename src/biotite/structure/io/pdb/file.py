@@ -62,7 +62,22 @@ class PDBFile(TextFile):
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
+    def get_model_count(self):
+        """
+        Get the number of models contained in the PDB file.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
+        model_count = 0
+        for line in (self.lines):
+            if line.startswith("MODEL"):
+                model_count += 1
+        return model_count
     
+
     def get_coord(self, model=None):
         """
         Get only the coordinates of the PDB file.
@@ -137,7 +152,7 @@ class PDBFile(TextFile):
         """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
+                                  if self.lines[i].startswith("MODEL")],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
         atom_line_i = np.array([i for i in range(len(self.lines)) if

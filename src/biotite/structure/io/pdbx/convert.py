@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_structure", "set_structure",
+__all__ = ["get_sequence", "get_model_count", "get_structure", "set_structure",
            "list_assemblies", "get_assembly"]
 
 import itertools
@@ -63,6 +63,26 @@ def get_sequence(pdbx_file, data_block=None):
         sequences.append(_convert_string_to_sequence(seq_string, seq_type))
     return sequences
 
+
+def get_model_count(file, data_block=None):
+    """
+    Get the number of models contained in a :class:`PDBxFile`.
+
+    Parameters
+    ----------
+    file : PDBxFile
+        The file object.
+    data_block : str, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    atom_site_dict = file.get_category("atom_site", data_block)
+    return int(atom_site_dict["pdbx_PDB_model_num"][-1])
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",

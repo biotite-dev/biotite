@@ -17,6 +17,15 @@ import biotite.structure.io as io
 from ..util import data_dir
 
 
+def test_get_model_count():
+    pdb_file = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb"))
+    # Test also the thin wrapper around the method
+    # 'get_model_count()'
+    test_model_count = pdb.get_model_count(pdb_file)
+    ref_model_count = pdb.get_structure(pdb_file).stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
     "path, single_model, hybrid36",
     itertools.product(

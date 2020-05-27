@@ -9,7 +9,24 @@ subpackages.
 
 __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_structure", "set_structure"]
+__all__ = ["get_model_count", "get_structure", "set_structure"]
+
+
+def get_model_count(pdb_file):
+    """
+    Get the number of models contained in a :class:`PDBFile`.
+
+    Parameters
+    ----------
+    pdb_file : PDBFile
+        The file object.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    return pdb_file.get_model_count()
 
 
 def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):

@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_structure"]
+__all__ = ["get_model_count", "get_structure"]
 
 cimport cython
 cimport numpy as np
@@ -29,6 +29,19 @@ ctypedef np.float32_t float32
 
 
 def get_model_count(file):
+    """
+    Get the number of models contained in a MMTF file.
+
+    Parameters
+    ----------
+    file : MMTFFile
+        The file object.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
     return file["numModels"]
 
     

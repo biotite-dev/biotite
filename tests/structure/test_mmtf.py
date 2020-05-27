@@ -15,6 +15,13 @@ import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
 
 
+def test_get_model_count():
+    mmtf_file = mmtf.MMTFFile.read(join(data_dir("structure"), "1l2y.mmtf"))
+    test_model_count = mmtf.get_model_count(mmtf_file)
+    ref_model_count = mmtf.get_structure(mmtf_file).stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
     "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
 )
