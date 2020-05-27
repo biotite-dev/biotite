@@ -87,6 +87,11 @@ def test_dihedral_backbone_result(file_name):
     mmtf_file = mmtf.MMTFFile.read(file_name)
     array = mmtf.get_structure(mmtf_file, model=1)
     array = array[struc.filter_amino_acids(array)]
+    if array.array_length() == 0:
+        # Structure contains no protein
+        # -> determination of backbone angles makes no sense
+        return
+    
     for chain in struc.chain_iter(array):
         print("Chain: ", chain.chain_id[0])
         if len(struc.check_id_continuity(chain)) != 0:

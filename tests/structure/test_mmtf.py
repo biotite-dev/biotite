@@ -9,6 +9,7 @@ from os.path import join, splitext
 import numpy as np
 import pytest
 from pytest import approx
+import biotite
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
@@ -56,7 +57,7 @@ def test_array_conversion(path, model):
     mmtf_file = mmtf.MMTFFile.read(path)
     try:
         a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms
@@ -97,7 +98,7 @@ def test_pdbx_consistency(path, model):
     mmtf_file = mmtf.MMTFFile.read(path)
     try:
         a1 = mmtf.get_structure(mmtf_file, model=model)
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms

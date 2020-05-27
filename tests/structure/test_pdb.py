@@ -9,6 +9,7 @@ from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
@@ -40,7 +41,7 @@ def test_array_conversion(path, model, hybrid36):
     # 'get_structure()' and 'set_structure()'
     try:
         array1 = pdb.get_structure(pdb_file, model=model)
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms
@@ -85,7 +86,7 @@ def test_pdbx_consistency(path, model):
     pdb_file = pdb.PDBFile.read(path)
     try:
         a1 = pdb_file.get_structure(model=model)
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms
@@ -171,7 +172,16 @@ def test_guess_elements():
 )
 def test_box_shape(path, model):
     pdb_file = pdb.PDBFile.read(path)
-    a = pdb_file.get_structure(model=model)
+    try:
+        a = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     if isinstance(a, struc.AtomArray):
         expected_box_dim = (3, 3)
@@ -255,7 +265,7 @@ def test_get_coord(model):
     
     try:
         ref_coord = pdb_file.get_structure(model=model).coord
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms

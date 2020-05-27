@@ -9,6 +9,7 @@ from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
+import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
@@ -78,7 +79,16 @@ def test_pdb_to_gro(path, model):
     """
     # Read in data
     pdb_file = pdb.PDBFile.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     # Save stack as gro
     temp = TemporaryFile("w+")

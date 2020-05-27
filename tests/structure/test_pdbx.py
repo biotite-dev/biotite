@@ -2,16 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
+import glob
+from os.path import join
+import numpy as np
+import pytest
+from pytest import approx
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 import biotite.sequence as seq
-import itertools
-import numpy as np
-import glob
-from os.path import join
 from ..util import data_dir
-import pytest
-from pytest import approx
 
 
 def test_get_model_count():
@@ -91,7 +92,7 @@ def test_conversion(path, model):
     
     try:
         array1 = pdbx.get_structure(pdbx_file, model=model)
-    except struc.BadStructureError:
+    except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
             # as the models contain different numbers of atoms
@@ -216,7 +217,7 @@ def test_get_assembly(model):
             assembly = pdbx.get_assembly(
                 pdbx_file, assembly_id=id, model=model
             )
-        except struc.BadStructureError:
+        except biotite.InvalidFileError:
             if model is None:
                 # The file cannot be parsed into an AtomArrayStack,
                 # as the models contain different numbers of atoms
