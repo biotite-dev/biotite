@@ -157,11 +157,11 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
+    model_count = int(models[-1])
     
     if model is None:
         # For a stack, the annotation are derived from the first model
         model_dict = _get_model_dict(atom_site_dict, 1)
-        model_count = int(models[-1])
         model_length = len(model_dict["group_PDB"])
         stack = AtomArrayStack(model_count, model_length)
         
@@ -193,6 +193,16 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         return stack
     
     else:
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean model indexing starting from last model
+        model = model_count + model + 1 if model < 0 else model
+        if model > model_count:
+            raise ValueError(
+                f"The file has {model_count} models, "
+                f"the given model {model} does not exist"
+            )
+
         model_dict = _get_model_dict(atom_site_dict, model)
         model_length = len(model_dict["group_PDB"])
         array = AtomArray(model_length)

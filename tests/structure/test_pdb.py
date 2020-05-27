@@ -27,15 +27,14 @@ def test_get_model_count():
 
 
 @pytest.mark.parametrize(
-    "path, single_model, hybrid36",
+    "path, model, hybrid36",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True],
+        [None, 1, -1],
         [False, True]
     )
 )
-def test_array_conversion(path, single_model, hybrid36):
-    model = 1 if single_model else None
+def test_array_conversion(path, model, hybrid36):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
@@ -66,14 +65,13 @@ def test_array_conversion(path, single_model, hybrid36):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = 1 if single_model else None
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     pdb_file = pdb.PDBFile.read(path)
     a1 = pdb_file.get_structure(model=model)
@@ -147,14 +145,13 @@ def test_guess_elements():
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_box_shape(path, single_model):
-    model = 1 if single_model else None
+def test_box_shape(path, model):
     pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure(model=model)
 

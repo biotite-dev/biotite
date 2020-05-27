@@ -45,14 +45,13 @@ def test_codecs(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.mmtf")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_array_conversion(path, model):
     mmtf_file = mmtf.MMTFFile.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
@@ -77,14 +76,13 @@ def test_array_conversion(path, single_model):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.mmtf")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = None if single_model else 1
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     mmtf_file = mmtf.MMTFFile.read(path)
     a1 = mmtf.get_structure(mmtf_file, model=model)

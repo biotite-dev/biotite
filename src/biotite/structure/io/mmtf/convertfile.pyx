@@ -222,10 +222,18 @@ def get_structure(file, model=None, altloc="first",
     
 
     else:
-        if model < 1:
-            raise ValueError("The model number greater than 0")
         lengths = _get_model_lengths(res_type_i, chains_per_model,
                                      res_per_chain, atoms_per_res)
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean model index starting from last model
+        model = len(lengths) + model + 1 if model < 0 else model
+        if model > len(lengths):
+            raise ValueError(
+                f"The file has {len(lengths)} models, "
+                f"the given model {model} does not exist"
+            )
+
         length = lengths[model-1]
         # Indices to filter coords and some annotations
         # for the specified model

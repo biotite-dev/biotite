@@ -23,14 +23,13 @@ def test_get_model_count():
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.gro")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_array_conversion(path, model):
     gro_file = gro.GROFile.read(path)
     array1 = gro_file.get_structure(model=model)
     gro_file = gro.GROFile()
@@ -67,16 +66,16 @@ def test_pdb_consistency(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdb_to_gro(path, single_model):
-    # Converting stacks between formats should not change data
-    model = 1 if single_model else None
-    
+def test_pdb_to_gro(path, model):
+    """
+    Converting stacks between formats should not change data
+    """
     # Read in data
     pdb_file = pdb.PDBFile.read(path)
     a1 = pdb_file.get_structure(model=model)

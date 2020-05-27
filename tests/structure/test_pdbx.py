@@ -80,14 +80,13 @@ def test_empty_values(string, use_array):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.cif")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_conversion(path, model):
     pdbx_file = pdbx.PDBxFile.read(path)
     array1 = pdbx.get_structure(pdbx_file, model=model)
     pdbx_file = pdbx.PDBxFile()
@@ -178,8 +177,8 @@ def test_list_assemblies():
     }
 
 
-@pytest.mark.parametrize("single_model", [False, True])
-def test_get_assembly(single_model):
+@pytest.mark.parametrize("model", [None, 1, -1])
+def test_get_assembly(model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
@@ -187,7 +186,6 @@ def test_get_assembly(single_model):
     Furthermore, check if the number of atoms in the entire assembly
     is a multiple of the numbers of atoms in a monomer.
     """
-    model = 1 if single_model else None
 
     path = join(data_dir("structure"), "1f2n.cif")
     pdbx_file = pdbx.PDBxFile.read(path)
@@ -205,10 +203,10 @@ def test_get_assembly(single_model):
         protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
 
-        if single_model:
-            assert isinstance(assembly, struc.AtomArray)
-        else:
+        if model is None:
             assert isinstance(assembly, struc.AtomArrayStack)
+        else:
+            assert isinstance(assembly, struc.AtomArray)
         assert test_oligomer_count == int(ref_oligomer_count)
 
         # The atom count of the entire assembly should be a multiple

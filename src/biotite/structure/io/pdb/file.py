@@ -170,6 +170,11 @@ class PDBFile(TextFile):
         
         else:
             last_model = len(model_start_i)
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
+
             if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
                                 ( atom_line_i <  model_start_i[model  ] ) )
@@ -177,8 +182,8 @@ class PDBFile(TextFile):
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
                 raise ValueError(
-                    f"Requested model number {model} is larger than the "
-                    f"amount of models ({last_model})"
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
                 )
             coord_i = atom_line_i[line_filter]
             length = len(coord_i)
@@ -276,19 +281,20 @@ class PDBFile(TextFile):
         
         else:
             last_model = len(model_start_i)
-            if model < 1:
-                raise ValueError(
-                    f"Requested model number {model} is smaller than 1"
-                )
-            elif model < last_model:
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
+
+            if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
                                 ( atom_line_i <  model_start_i[model  ] ) )
             elif model == last_model:
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
                 raise ValueError(
-                    f"Requested model number {model} is larger than the "
-                    f"amount of models ({last_model})"
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
                 )
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))

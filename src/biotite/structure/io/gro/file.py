@@ -147,10 +147,14 @@ class GROFile(TextFile):
             # from model 1
             annot_i = get_atom_line_i(model_start_i[0], length)
         else:
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = len(model_start_i) + model + 1 if model < 0 else model
             if model > len(model_start_i):
                 raise ValueError(
-                    f"Requested model {model} is larger than the "
-                    f"amount of models ({len(model_start_i)})"
+                    f"The file has {len(model_start_i)} models, "
+                    f"the given model {model} does not exist"
                 )
 
             length = model_atom_counts[model-1]
