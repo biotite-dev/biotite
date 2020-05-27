@@ -82,21 +82,14 @@ def check_output(computed_basepairs, basepairs_fw, basepairs_rv):
     for comp_basepair in computed_basepairs:
         assert ((comp_basepair in basepairs_fw) \
                 or (comp_basepair in basepairs_rv))
-"""
-@pytest.mark.parametrize(
-    "atom_array, test_unique",
-    itertools.product([nuc_sample_array, nuc_sample_array_no_hydrogens],
-                      [True, False])
-)
-"""
 
-def test_base_pairs_forward(nuc_sample_array_no_hydrogens, basepairs_fw, basepairs_rv):
+def test_base_pairs_forward(nuc_sample_array, basepairs_fw, basepairs_rv):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array_no_hydrogens, unique=True)
+    computed_basepairs = base_pairs(nuc_sample_array)
     check_output(convert_indices_to_res_chain_id(
-        nuc_sample_array_no_hydrogens, computed_basepairs), basepairs_fw, basepairs_rv
+        nuc_sample_array, computed_basepairs), basepairs_fw, basepairs_rv
             )
 
 
