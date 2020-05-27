@@ -316,8 +316,12 @@ def _get_box(pdbx_file, data_block):
         cell_dict = pdbx_file.get((data_block, "cell"))
     if cell_dict is None:
         return None
-    len_a, len_b, len_c = [float(cell_dict[length]) for length
-                           in ["length_a", "length_b", "length_c"]]
+    try:
+        len_a, len_b, len_c = [float(cell_dict[length]) for length
+                               in ["length_a", "length_b", "length_c"]]
+    except ValueError:
+        # 'cell_dict' has no proper unit cell values, e.g. '?'
+        return None
     alpha, beta, gamma =  [np.deg2rad(float(cell_dict[angle])) for angle
                            in ["angle_alpha", "angle_beta", "angle_gamma"]]
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
