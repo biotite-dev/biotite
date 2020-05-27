@@ -88,10 +88,23 @@ def test_empty_values(string, use_array):
 )
 def test_conversion(path, model):
     pdbx_file = pdbx.PDBxFile.read(path)
-    array1 = pdbx.get_structure(pdbx_file, model=model)
+    
+    try:
+        array1 = pdbx.get_structure(pdbx_file, model=model)
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
+    
     array2 = pdbx.get_structure(pdbx_file, model=model)
+    
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -199,7 +212,18 @@ def test_get_assembly(model):
         assembly_category["oligomeric_count"]
     ):    
         print("Assembly ID:", id)
-        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+        try:
+            assembly = pdbx.get_assembly(
+                pdbx_file, assembly_id=id, model=model
+            )
+        except struc.BadStructureError:
+            if model is None:
+                # The file cannot be parsed into an AtomArrayStack,
+                # as the models contain different numbers of atoms
+                # -> skip this test case
+                return
+            else:
+                raise
         protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
 

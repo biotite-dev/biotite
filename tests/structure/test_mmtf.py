@@ -53,7 +53,16 @@ def test_codecs(path):
 )
 def test_array_conversion(path, model):
     mmtf_file = mmtf.MMTFFile.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
@@ -85,7 +94,16 @@ def test_array_conversion(path, model):
 def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     mmtf_file = mmtf.MMTFFile.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model)
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
     # Sometimes mmCIF files can have 'cell' entry

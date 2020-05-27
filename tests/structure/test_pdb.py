@@ -38,7 +38,16 @@ def test_array_conversion(path, model, hybrid36):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
-    array1 = pdb.get_structure(pdb_file, model=model)
+    try:
+        array1 = pdb.get_structure(pdb_file, model=model)
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     if hybrid36 and (array1.res_id < 1).any():
         with pytest.raises(
@@ -74,7 +83,16 @@ def test_array_conversion(path, model, hybrid36):
 def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     pdb_file = pdb.PDBFile.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
@@ -234,8 +252,20 @@ def test_get_coord(model):
     # to avoid atom filtering in reference atom array (stack)
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
-    ref_coord = pdb_file.get_structure(model=model).coord
+    
+    try:
+        ref_coord = pdb_file.get_structure(model=model).coord
+    except struc.BadStructureError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     test_coord = pdb_file.get_coord(model=model)
+    
     assert test_coord.shape == ref_coord.shape
     assert (test_coord == ref_coord).all()
 
