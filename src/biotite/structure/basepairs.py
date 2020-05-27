@@ -530,7 +530,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
                 # Flag all non-unique basepairs for removal except the
                 # one that has the shortest hydrogen bond
                 del remove_candidates[
-                    min(remove_candidates, key=remove_candidates.get)
+                    max(remove_candidates, key=remove_candidates.get)
                 ]
                 to_remove += list(remove_candidates.keys())
         # Remove all flagged basepairs from the output `ndarray`
@@ -734,7 +734,7 @@ def _check_hbonds(bases, hbond_masks, unique):
 
     if len(hbonds) > 0:
         # Return the shortest hydrogen bond length
-        return min(hbonds)
+        return len(hbonds)
 
     return -1
 
