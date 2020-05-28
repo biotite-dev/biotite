@@ -619,7 +619,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Calculate the orthonormal vector to the normal vectors of the
     # bases
     rotation_axis = np.cross(normal_vector_schnaap[0],
-                                 normal_vector_schnaap[1])
+                             normal_vector_schnaap[1])
     norm_vector(rotation_axis)
     # Rotate the base normal vectors by ± half the angle between the two
     # vectors
