@@ -634,7 +634,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Average and normalize the rotated vectors
     z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
     norm_vector(z_rot_average)
-    # Calculate the distance vector between the two origins    
+    # Calculate the distance vector between the two SCHNAaP origins    
     origin_vector = transformed_std_vectors[1][2,:] \
                     - transformed_std_vectors[0][2,:]
     
