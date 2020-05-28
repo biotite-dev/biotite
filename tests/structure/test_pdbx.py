@@ -2,16 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
+import glob
+from os.path import join
+import numpy as np
+import pytest
+from pytest import approx
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 import biotite.sequence as seq
-import itertools
-import numpy as np
-import glob
-from os.path import join
 from ..util import data_dir
-import pytest
-from pytest import approx
+
+
+def test_get_model_count():
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
+    test_model_count = pdbx.get_model_count(pdbx_file)
+    ref_model_count = pdbx.get_structure(pdbx_file).stack_depth()
+    assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
@@ -73,19 +81,31 @@ def test_empty_values(string, use_array):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.cif")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_conversion(path, model):
     pdbx_file = pdbx.PDBxFile.read(path)
-    array1 = pdbx.get_structure(pdbx_file, model=model)
+    
+    try:
+        array1 = pdbx.get_structure(pdbx_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
+    
     array2 = pdbx.get_structure(pdbx_file, model=model)
+    
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -171,8 +191,8 @@ def test_list_assemblies():
     }
 
 
-@pytest.mark.parametrize("single_model", [False, True])
-def test_get_assembly(single_model):
+@pytest.mark.parametrize("model", [None, 1, -1])
+def test_get_assembly(model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
@@ -180,7 +200,6 @@ def test_get_assembly(single_model):
     Furthermore, check if the number of atoms in the entire assembly
     is a multiple of the numbers of atoms in a monomer.
     """
-    model = 1 if single_model else None
 
     path = join(data_dir("structure"), "1f2n.cif")
     pdbx_file = pdbx.PDBxFile.read(path)
@@ -194,14 +213,25 @@ def test_get_assembly(single_model):
         assembly_category["oligomeric_count"]
     ):    
         print("Assembly ID:", id)
-        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+        try:
+            assembly = pdbx.get_assembly(
+                pdbx_file, assembly_id=id, model=model
+            )
+        except biotite.InvalidFileError:
+            if model is None:
+                # The file cannot be parsed into an AtomArrayStack,
+                # as the models contain different numbers of atoms
+                # -> skip this test case
+                return
+            else:
+                raise
         protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
 
-        if single_model:
-            assert isinstance(assembly, struc.AtomArray)
-        else:
+        if model is None:
             assert isinstance(assembly, struc.AtomArrayStack)
+        else:
+            assert isinstance(assembly, struc.AtomArray)
         assert test_oligomer_count == int(ref_oligomer_count)
 
         # The atom count of the entire assembly should be a multiple

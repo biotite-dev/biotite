@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_structure"]
+__all__ = ["get_model_count", "get_structure"]
 
 cimport cython
 cimport numpy as np
@@ -17,6 +17,7 @@ from ...error import BadStructureError
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_starts
 from ...box import vectors_from_unitcell
+from ....file import InvalidFileError
 
 ctypedef np.int8_t int8
 ctypedef np.int16_t int16
@@ -26,6 +27,23 @@ ctypedef np.uint16_t uint16
 ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.float32_t float32
+
+
+def get_model_count(file):
+    """
+    Get the number of models contained in a MMTF file.
+
+    Parameters
+    ----------
+    file : MMTFFile
+        The file object.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    return file["numModels"]
 
     
 def get_structure(file, model=None, altloc="first",
@@ -42,10 +60,13 @@ def get_structure(file, model=None, altloc="first",
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
-        :class:`AtomArray` from the atoms corresponding to the given model number.
-        If this parameter is omitted, an :class:`AtomArrayStack` containing all
-        models will be returned, even if the structure contains only one
-        model.
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
     altloc : {'first', 'occupancy', 'all'}
         This parameter defines how *altloc* IDs are handled:
             - ``'first'`` - Use atoms that have the first *altloc* ID
@@ -149,15 +170,18 @@ def get_structure(file, model=None, altloc="first",
     
     
     if model == None:
-        length = _get_model_length(1, res_type_i, chains_per_model,
-                                   res_per_chain, atoms_per_res)
-        depth = model_count
+        lengths = _get_model_lengths(res_type_i, chains_per_model,
+                                     res_per_chain, atoms_per_res)
         # Check if each model has the same amount of atoms
         # If not, raise exception
-        if length * model_count != atom_count:
-            raise BadStructureError("The models in the file have unequal "
-                                    "amount of atoms, give an explicit "
-                                    "model instead")
+        if (lengths != lengths[0]).any():
+            raise InvalidFileError("The models in the file have unequal "
+                                   "amount of atoms, give an explicit "
+                                   "model instead")
+        length = lengths[0]
+
+        depth = model_count
+        
         
         array = AtomArrayStack(depth, length)
         array.coord = np.stack(
@@ -201,14 +225,22 @@ def get_structure(file, model=None, altloc="first",
     
 
     else:
-        length = _get_model_length(model, res_type_i, chains_per_model,
-                                   res_per_chain, atoms_per_res)
+        lengths = _get_model_lengths(res_type_i, chains_per_model,
+                                     res_per_chain, atoms_per_res)
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean model index starting from last model
+        model = len(lengths) + model + 1 if model < 0 else model
+        if model > len(lengths):
+            raise ValueError(
+                f"The file has {len(lengths)} models, "
+                f"the given model {model} does not exist"
+            )
+
+        length = lengths[model-1]
         # Indices to filter coords and some annotations
         # for the specified model
-        start_i = 0
-        for m in range(1, model):
-            start_i += _get_model_length(m, res_type_i, chains_per_model,
-                                         res_per_chain, atoms_per_res)
+        start_i = np.sum(lengths[:model-1])
         stop_i = start_i + length
         
         array = AtomArray(length)
@@ -281,20 +313,35 @@ def get_structure(file, model=None, altloc="first",
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
-def _get_model_length(int model, int32[:] res_type_i,
-                      int32[:] chains_per_model,
-                      int32[:] res_per_chain,
-                      int32[:] atoms_per_res):
+def _get_model_lengths(int32[:] res_type_i,
+                       int32[:] chains_per_model,
+                       int32[:] res_per_chain,
+                       int32[:] atoms_per_res):
+    cdef int[:] model_lengths = np.zeros(len(chains_per_model), np.int32)
     cdef int atom_count = 0
+    cdef int model_i = 0
     cdef int chain_i = 0
-    cdef int res_i = 0
-    cdef int i,j
-    for i in range(chains_per_model[model-1]):
-        for j in range(res_per_chain[chain_i]): 
-            atom_count += atoms_per_res[res_type_i[res_i]]
-            res_i += 1
-        chain_i += 1
-    return atom_count
+    cdef int res_i
+    cdef int res_count_in_chain = 0
+    cdef int chain_count_in_model = 0
+    # The length of 'res_type_i'
+    # is equal to the total number of residues
+    for res_i in range(res_type_i.shape[0]):
+        atom_count += atoms_per_res[res_type_i[res_i]]
+        res_count_in_chain += 1
+        if res_count_in_chain == res_per_chain[chain_i]:
+            # Chain is full -> Bump chain index and reset residue count
+            res_count_in_chain = 0
+            chain_i += 1
+            chain_count_in_model += 1
+        if chain_count_in_model == chains_per_model[model_i]:
+            # Model is full -> Bump model index and reset chain count
+            chain_count_in_model = 0
+            model_lengths[model_i] = atom_count
+            # Restart counting for the next model
+            atom_count = 0
+            model_i += 1
+    return np.asarray(model_lengths)
 
     
 def _fill_annotations(int model, array,
@@ -321,39 +368,62 @@ def _fill_annotations(int model, array,
     cdef np.ndarray element   = array.element
     if extra_charge:
         charge = array.charge
-    
+
+    cdef int model_i = 0
+    cdef int chain_i = 0
+    cdef int res_i
+    cdef int atom_i = 0
+    cdef int res_count_in_chain = 0
+    cdef int chain_count_in_model = 0
+    cdef int atom_index_in_res
+
     cdef chain_id_for_chain
     cdef res_name_for_res
     cdef inscode_for_res
     cdef bint hetero_for_res
     cdef int res_id_for_res
     cdef int type_i
-    cdef int chain_i = 0
-    cdef int res_i = 0
-    cdef int atom_i = 0
-    cdef int i, j, k
-    for i in range(chains_per_model[model-1]):
-        chain_id_for_chain = chain_names[chain_i]
-        for j in range(res_per_chain[chain_i]): 
+
+    # The length of 'res_type_i'
+    # is equal to the total number of residues
+    for res_i in range(res_type_i.shape[0]):
+        # Wait for the data of the given model
+        if model_i == model-1: 
+            chain_id_for_chain = chain_names[chain_i]
             res_id_for_res = res_ids[res_i]
             if res_inscodes is not None:
                 inscode_for_res = res_inscodes[res_i]
             type_i = res_type_i[res_i]
             res_name_for_res = res_names[type_i]
             hetero_for_res = hetero_res[type_i]
-            for k in range(atoms_per_res[type_i]):
+
+            for atom_index_in_res in range(atoms_per_res[type_i]):
                 chain_id[atom_i]  = chain_id_for_chain
                 res_id[atom_i]    = res_id_for_res
                 ins_code[atom_i]  = inscode_for_res
                 hetero[atom_i]    = hetero_for_res
                 res_name[atom_i]  = res_name_for_res
-                atom_name[atom_i] = atom_names[type_i][k]
-                element[atom_i]   = elements[type_i][k].upper()
+                atom_name[atom_i] = atom_names[type_i][atom_index_in_res]
+                element[atom_i]   = elements[type_i][atom_index_in_res].upper()
                 if extra_charge:
-                    charge[atom_i] = charges[type_i][k]
+                    charge[atom_i] = charges[type_i][atom_index_in_res]
                 atom_i += 1
-            res_i += 1
-        chain_i += 1
+        
+        elif model_i > model-1:
+            # The given model has already been parsed
+            # -> parsing is finished
+            break
+        
+        res_count_in_chain += 1
+        if res_count_in_chain == res_per_chain[chain_i]:
+            # Chain is full -> Bump chain index and reset residue count
+            res_count_in_chain = 0
+            chain_i += 1
+            chain_count_in_model += 1
+        if chain_count_in_model == chains_per_model[model_i]:
+            # Model is full -> Bump model index and reset chain count
+            chain_count_in_model = 0
+            model_i += 1
 
 
 def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
@@ -374,32 +444,51 @@ def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
     cdef np.ndarray intra_bonds = np.zeros(
         (len(group_list), max_bonds_per_res, 3), dtype=np.uint32
     )
-    # Array for intermediate storing
-    cdef np.ndarray bonds_in_residue
     # Dictionary for groupList entry
     cdef dict residue
     # Fill the array
     for i in range(len(group_list)):
         residue = group_list[i]
         bonds_in_residue = np.array(residue["bondAtomList"], dtype=np.uint32)
-        intra_bonds[i, :bonds_per_res[i], :2] \
-            = bonds_in_residue.reshape((len(bonds_in_residue)//2, 2))
+        intra_bonds[i, :bonds_per_res[i], :2] = \
+            np.array(residue["bondAtomList"], dtype=np.uint32).reshape((-1, 2))
         intra_bonds[i, :bonds_per_res[i], 2] = residue["bondOrderList"]
 
     # Unify intra-residue bonds to one BondList
-    cdef int chain_i=0, res_i=0
+    cdef int model_i = 0
+    cdef int chain_i = 0
+    cdef int res_i
+    cdef int res_count_in_chain = 0
+    cdef int chain_count_in_model = 0
     cdef int type_i
     intra_bond_list = BondList(0)
-    for i in range(chains_per_model[model-1]):
-        for j in range(res_per_chain[chain_i]): 
+    # The length of 'res_type_i'
+    # is equal to the total number of residues
+    for res_i in range(res_type_i.shape[0]):
+        # Wait for the data of the given model
+        if model_i == model-1: 
             type_i = res_type_i[res_i]
             bond_list_per_res = BondList(
                 atoms_per_res[type_i],
                 intra_bonds[type_i, :bonds_per_res[type_i]]
             )
             intra_bond_list += bond_list_per_res
-            res_i += 1
-        chain_i += 1
+        
+        elif model_i > model-1:
+            # The given model has already been parsed
+            # -> parsing is finished
+            break
+
+        res_count_in_chain += 1
+        if res_count_in_chain == res_per_chain[chain_i]:
+            # Chain is full -> Bump chain index and reset residue count
+            res_count_in_chain = 0
+            chain_i += 1
+            chain_count_in_model += 1
+        if chain_count_in_model == chains_per_model[model_i]:
+            # Model is full -> Bump model index and reset chain count
+            chain_count_in_model = 0
+            model_i += 1
     
     # Add inter-residue bonds to BondList
     cdef np.ndarray inter_bonds = np.zeros((len(bond_types), 3),
