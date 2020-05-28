@@ -241,10 +241,9 @@ def test_get_assembly(model):
 
 
 def test_get_sequence():
-    file = pdb.PDBxFile()
-    file.read("data/5ugo.cif")
+    file = pdbx.PDBxFile.read(join(data_dir("structure"), "5ugo.cif"))
     sequences = pdbx.get_sequence(file)
-    file.read("data/4gxy.cif")
+    file = pdbx.PDBxFile.read(join(data_dir("structure"), "4gxy.cif"))
     sequences.append(pdbx.get_sequence(file))
     assert (sequences[0] == "CCGACGGCGCATCAGC")
     assert (type(sequences[0]) is seq.NucleotideSequence)
