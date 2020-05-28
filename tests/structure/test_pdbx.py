@@ -239,31 +239,32 @@ def test_get_assembly(model):
         monomer_atom_count = pdbx.get_structure(pdbx_file).array_length()
         assert assembly.array_length() % monomer_atom_count == 0
 
-    def test_get_sequence():
-        file = pdb.PDBxFile()
-        file.read("data/5ugo.cif")
-        sequences = pdbx.get_sequence(file)
-        file.read("data/4gxy.cif")
-        sequences.append(pdbx.get_sequence(file))
-        assert (sequences[0] == "CCGACGGCGCATCAGC")
-        assert (type(sequences[0]) is seq.NucleotideSequence)
-        assert (sequences[1] == "GCTGATGCGCC")
-        assert (type(sequences[1]) is seq.NucleotideSequence)
-        assert (sequences[2] == "GTCGG")
-        assert (type(sequences[2]) is seq.NucleotideSequence)
-        assert (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
-                    "VIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSSSINFL"
-                    "TRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKRIPREEML"
-                    "QMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSESTKQPKLLH"
-                    "QVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDIRLIPKDQYYCG"
-                    "VLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPLPVDSEKDIFDYIQ"
-                    "WKYREPKDRSE"
-        )
-        assert (type(sequences[3]) is seq.ProteinSequence)
-        assert (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
-                    "GCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTCGGGAT"
-                    "GTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGGAGTCAGG"
-                    "AAACCTGCCTGCCGTC"
-        )
-        assert (type(sequences[4]) is seq.NucleotideSequence)
+
+def test_get_sequence():
+    file = pdb.PDBxFile()
+    file.read("data/5ugo.cif")
+    sequences = pdbx.get_sequence(file)
+    file.read("data/4gxy.cif")
+    sequences.append(pdbx.get_sequence(file))
+    assert (sequences[0] == "CCGACGGCGCATCAGC")
+    assert (type(sequences[0]) is seq.NucleotideSequence)
+    assert (sequences[1] == "GCTGATGCGCC")
+    assert (type(sequences[1]) is seq.NucleotideSequence)
+    assert (sequences[2] == "GTCGG")
+    assert (type(sequences[2]) is seq.NucleotideSequence)
+    assert (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
+                "VIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSSSINFL"
+                "TRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKRIPREEML"
+                "QMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSESTKQPKLLH"
+                "QVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDIRLIPKDQYYCG"
+                "VLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPLPVDSEKDIFDYIQ"
+                "WKYREPKDRSE"
+    )
+    assert (type(sequences[3]) is seq.ProteinSequence)
+    assert (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
+                "GCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTCGGGAT"
+                "GTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGGAGTCAGG"
+                "AAACCTGCCTGCCGTC"
+    )
+    assert (type(sequences[4]) is seq.NucleotideSequence)
         
