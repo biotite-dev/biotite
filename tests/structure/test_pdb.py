@@ -9,6 +9,7 @@ from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
+import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
@@ -17,20 +18,37 @@ import biotite.structure.io as io
 from ..util import data_dir
 
 
+def test_get_model_count():
+    pdb_file = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb"))
+    # Test also the thin wrapper around the method
+    # 'get_model_count()'
+    test_model_count = pdb.get_model_count(pdb_file)
+    ref_model_count = pdb.get_structure(pdb_file).stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
-    "path, single_model, hybrid36",
+    "path, model, hybrid36",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True],
+        [None, 1, -1],
         [False, True]
     )
 )
-def test_array_conversion(path, single_model, hybrid36):
-    model = 1 if single_model else None
+def test_array_conversion(path, model, hybrid36):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
-    array1 = pdb.get_structure(pdb_file, model=model)
+    try:
+        array1 = pdb.get_structure(pdb_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     if hybrid36 and (array1.res_id < 1).any():
         with pytest.raises(
@@ -57,17 +75,25 @@ def test_array_conversion(path, single_model, hybrid36):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = 1 if single_model else None
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     pdb_file = pdb.PDBFile.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
@@ -138,16 +164,24 @@ def test_guess_elements():
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_box_shape(path, single_model):
-    model = 1 if single_model else None
+def test_box_shape(path, model):
     pdb_file = pdb.PDBFile.read(path)
-    a = pdb_file.get_structure(model=model)
+    try:
+        a = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     if isinstance(a, struc.AtomArray):
         expected_box_dim = (3, 3)
@@ -228,8 +262,20 @@ def test_get_coord(model):
     # to avoid atom filtering in reference atom array (stack)
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
-    ref_coord = pdb_file.get_structure(model=model).coord
+    
+    try:
+        ref_coord = pdb_file.get_structure(model=model).coord
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     test_coord = pdb_file.get_coord(model=model)
+    
     assert test_coord.shape == ref_coord.shape
     assert (test_coord == ref_coord).all()
 

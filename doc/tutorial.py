@@ -89,6 +89,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
                     "show_memory": False,
                     "capture_repr": (),
                     "image_scrapers": (scrapers.matplotlib_scraper,),
+                    "expected_failing_examples" : [],
                 }
             )
             content_rst += genrst.codestr2rst(

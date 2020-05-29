@@ -62,7 +62,22 @@ class PDBFile(TextFile):
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
+    def get_model_count(self):
+        """
+        Get the number of models contained in the PDB file.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
+        model_count = 0
+        for line in (self.lines):
+            if line.startswith("MODEL"):
+                model_count += 1
+        return model_count
     
+
     def get_coord(self, model=None):
         """
         Get only the coordinates of the PDB file.
@@ -72,7 +87,9 @@ class PDBFile(TextFile):
         model : int, optional
             If this parameter is given, the function will return a
             2D coordinate array from the atoms corresponding to the
-            given model number.
+            given model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
             If this parameter is omitted, an 2D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
@@ -137,7 +154,7 @@ class PDBFile(TextFile):
         """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
+                                  if self.lines[i].startswith("MODEL")],
                                  dtype=int)
         # Line indices with ATOM or HETATM records
         atom_line_i = np.array([i for i in range(len(self.lines)) if
@@ -155,6 +172,11 @@ class PDBFile(TextFile):
         
         else:
             last_model = len(model_start_i)
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
+
             if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
                                 ( atom_line_i <  model_start_i[model  ] ) )
@@ -162,8 +184,8 @@ class PDBFile(TextFile):
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
                 raise ValueError(
-                    f"Requested model number {model} is larger than the "
-                    f"amount of models ({last_model})"
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
                 )
             coord_i = atom_line_i[line_filter]
             length = len(coord_i)
@@ -206,14 +228,16 @@ class PDBFile(TextFile):
         model : int, optional
             If this parameter is given, the function will return an
             :class:`AtomArray` from the atoms corresponding to the given
-            model number.
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
         altloc : {'first', 'occupancy', 'all'}
             This parameter defines how *altloc* IDs are handled:
-                - ``'first'`` - Use atoms that have the first *altloc* ID
-                appearing in a residue.
+                - ``'first'`` - Use atoms that have the first
+                *altloc* ID appearing in a residue.
                 - ``'occupancy'`` - Use atoms that have the *altloc* ID
                 with the highest occupancy for a residue.
                 - ``'all'`` - Use all atoms.
@@ -261,19 +285,20 @@ class PDBFile(TextFile):
         
         else:
             last_model = len(model_start_i)
-            if model < 1:
-                raise ValueError(
-                    f"Requested model number {model} is smaller than 1"
-                )
-            elif model < last_model:
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
+
+            if model < last_model:
                 line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
                                 ( atom_line_i <  model_start_i[model  ] ) )
             elif model == last_model:
                 line_filter = (atom_line_i >= model_start_i[model-1])
             else:
                 raise ValueError(
-                    f"Requested model number {model} is larger than the "
-                    f"amount of models ({last_model})"
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
                 )
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))

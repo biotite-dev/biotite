@@ -9,10 +9,19 @@ from os.path import join, splitext
 import numpy as np
 import pytest
 from pytest import approx
+import biotite
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
+
+
+def test_get_model_count():
+    mmtf_file = mmtf.MMTFFile.read(join(data_dir("structure"), "1l2y.mmtf"))
+    test_model_count = mmtf.get_model_count(mmtf_file)
+    ref_model_count = mmtf.get_structure(mmtf_file).stack_depth()
+    assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
@@ -38,16 +47,24 @@ def test_codecs(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.mmtf")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_array_conversion(path, model):
     mmtf_file = mmtf.MMTFFile.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
@@ -70,26 +87,53 @@ def test_array_conversion(path, single_model):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.mmtf")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = None if single_model else 1
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
     mmtf_file = mmtf.MMTFFile.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     # Sometimes mmCIF files can have 'cell' entry
     # but corresponding MMTF file has not 'unitCell' entry
     # -> Do not assert for dummy entry in mmCIF file
     # (all vector elements = {0, 1})
     if a2.box is not None and not ((a2.box == 0) | (a2.box == 1)).all():
         assert np.allclose(a1.box, a2.box)
-    for category in a1.get_annotation_categories():
+    # MMTF might assign some residues, that PDBx assigns as 'hetero',
+    # as 'non-hetero' if they are RNA/DNA or peptide linking
+    try:
+        assert a1.hetero.tolist() == \
+               a2.hetero.tolist()
+    except AssertionError:
+        conflict_residues = np.unique(
+            a1.res_name[a1.hetero != a2.hetero]
+        )
+        for res in conflict_residues:
+            assert info.link_type(res) in [
+                "L-PEPTIDE LINKING", "PEPTIDE LINKING",
+                "DNA LINKING", "RNA LINKING"
+            ]
+    # Test the remaining categories
+    for category in [
+        c for c in a1.get_annotation_categories() if c != "hetero"
+    ]:
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \

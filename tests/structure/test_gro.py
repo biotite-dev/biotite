@@ -9,21 +9,28 @@ from os.path import join, splitext
 import pytest
 from pytest import approx
 import numpy as np
+import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
 from ..util import data_dir
 
 
+def test_get_model_count():
+    gro_file = gro.GROFile.read(join(data_dir("structure"), "1l2y.gro"))
+    test_model_count = gro_file.get_model_count()
+    ref_model_count = gro_file.get_structure().stack_depth()
+    assert test_model_count == ref_model_count
+
+
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.gro")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
+def test_array_conversion(path, model):
     gro_file = gro.GROFile.read(path)
     array1 = gro_file.get_structure(model=model)
     gro_file = gro.GROFile()
@@ -47,13 +54,6 @@ def test_pdb_consistency(path):
     a1 = pdb_file.get_structure(model=1)
     gro_file = gro.GROFile.read(path)
     a2 = gro_file.get_structure(model=1)
-    ###
-    print(a1[a1.res_id == 12])
-    #print(np.where(a1.atom_name != a2.atom_name[:len(a1)]))
-    #print(a1[a1.atom_name != a2.atom_name[:len(a1)]])
-    #print()
-    #print(a2[a1.atom_name != a2.atom_name])
-    ###
 
     assert a1.array_length() == a2.array_length()
 
@@ -67,19 +67,28 @@ def test_pdb_consistency(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
-        [False, True]
+        [None, 1, -1]
     )
 )
-def test_pdb_to_gro(path, single_model):
-    # Converting stacks between formats should not change data
-    model = 1 if single_model else None
-    
+def test_pdb_to_gro(path, model):
+    """
+    Converting stacks between formats should not change data
+    """
     # Read in data
     pdb_file = pdb.PDBFile.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     # Save stack as gro
     temp = TemporaryFile("w+")
