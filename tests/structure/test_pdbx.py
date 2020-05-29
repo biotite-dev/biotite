@@ -244,14 +244,14 @@ def test_get_sequence():
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "5ugo.cif"))
     sequences = pdbx.get_sequence(file)
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "4gxy.cif"))
-    sequences.append(pdbx.get_sequence(file))
-    assert (sequences[0] == "CCGACGGCGCATCAGC")
+    sequences += pdbx.get_sequence(file)
+    assert (sequences[0].__str__() == "CCGACGGCGCATCAGC")
     assert (type(sequences[0]) is seq.NucleotideSequence)
-    assert (sequences[1] == "GCTGATGCGCC")
+    assert (sequences[1].__str__() == "GCTGATGCGCC")
     assert (type(sequences[1]) is seq.NucleotideSequence)
-    assert (sequences[2] == "GTCGG")
+    assert (sequences[2].__str__() == "GTCGG")
     assert (type(sequences[2]) is seq.NucleotideSequence)
-    assert (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
+    assert (sequences[3].__str__() == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
                 "VIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSSSINFL"
                 "TRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKRIPREEML"
                 "QMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSESTKQPKLLH"
@@ -260,7 +260,7 @@ def test_get_sequence():
                 "WKYREPKDRSE"
     )
     assert (type(sequences[3]) is seq.ProteinSequence)
-    assert (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
+    assert (sequences[4].__str__() == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
                 "GCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTCGGGAT"
                 "GTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGGAGTCAGG"
                 "AAACCTGCCTGCCGTC"
