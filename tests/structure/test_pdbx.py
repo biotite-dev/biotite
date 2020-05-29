@@ -245,25 +245,25 @@ def test_get_sequence():
     sequences = pdbx.get_sequence(file)
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "4gxy.cif"))
     sequences += pdbx.get_sequence(file)
-    assert (sequences[0].__str__() == "CCGACGGCGCATCAGC")
+    assert (str(sequences[0]) == "CCGACGGCGCATCAGC")
     assert (type(sequences[0]) is seq.NucleotideSequence)
-    assert (sequences[1].__str__() == "GCTGATGCGCC")
+    assert (str(sequences[1]) == "GCTGATGCGCC")
     assert (type(sequences[1]) is seq.NucleotideSequence)
-    assert (sequences[2].__str__() == "GTCGG")
+    assert (str(sequences[2]) == "GTCGG")
     assert (type(sequences[2]) is seq.NucleotideSequence)
-    assert (sequences[3].__str__() == "MSKRKAPQETLNGGITDMLTELANFEKNVSQA"
-                "IHKYNAYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLE"
-                "KIRQDDTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGL"
-                "KYFGDFEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVL"
-                "LTHPSFTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEK"
-                "EYPHRRIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLG"
-                "VTGVAGEPLPVDSEKDIFDYIQWKYREPKDRSE"
+    assert (str(sequences[3]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+                "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
+                "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
+                "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
+                "FTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHR"
+                "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
+                "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
     assert (type(sequences[3]) is seq.ProteinSequence)
-    assert (sequences[4].__str__() == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGA"
-                "GTTAAAAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAG"
-                "TCGCCCCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCG"
-                "AGGATCCGGAGTCAGGAAACCTGCCTGCCGTC"
+    assert (str(sequences[4]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
+                "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
+                "CCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGAT"
+                "CCGGAGTCAGGAAACCTGCCTGCCGTC"
     )
     assert (type(sequences[4]) is seq.NucleotideSequence)
         
