@@ -607,7 +607,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         return -1
     # Criterion 2: Vertical separation <=2.5 Å
     #
-    # 
+    # Average normal vectors. If the angle between the vectors is >=90°,
+    # flip one vector before averaging
     mean_normal_vector = (
         normal_vectors[0] + (normal_vectors[1] * np.sign(np.dot(
             normal_vectors[0], normal_vectors[1]
@@ -694,7 +695,7 @@ def _check_hbonds(bases, hbond_masks, unique):
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
             for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
-                if(distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
+                if (distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
                     if not unique:
                         # If a plausible hydrogen bond is found but the 
                         # uniqueness is not checked return `1`
@@ -737,7 +738,7 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
                 wrongdistance = False
                 normalized_distance_vectors.append(ring_center2 - ring_center1)
                 norm_vector(normalized_distance_vectors[-1]) 
-    if(wrongdistance == True):
+    if (wrongdistance == True):
         return False
     
     # Criterion 2: Angle between normal vectors or its supplement <=23°
@@ -796,23 +797,23 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Check base type and match standard base.
-    if(nucleotide.res_name[0] in _adenine_containing_nucleotides):
+    if (nucleotide.res_name[0] in _adenine_containing_nucleotides):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
         std_hbond_masks = _std_adenine_hbond_masks
-    elif(nucleotide.res_name[0] in _thymine_containing_nucleotides):
+    elif (nucleotide.res_name[0] in _thymine_containing_nucleotides):
         std_base = _std_thymine
         std_ring_centers = _std_thymine_ring_centers
         std_hbond_masks = _std_thymine_hbond_masks
-    elif(nucleotide.res_name[0] in _cytosine_containing_nucleotides):
+    elif (nucleotide.res_name[0] in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
         std_hbond_masks = _std_cytosine_hbond_masks
-    elif(nucleotide.res_name[0] in _guanine_containing_nucleotides):
+    elif (nucleotide.res_name[0] in _guanine_containing_nucleotides):
         std_base = _std_guanine
         std_ring_centers = _std_guanine_ring_centers
         std_hbond_masks = _std_guanine_hbond_masks
-    elif(nucleotide.res_name[0] in _uracil_containing_nucleotides):
+    elif (nucleotide.res_name[0] in _uracil_containing_nucleotides):
         std_base = _std_uracil
         std_ring_centers = _std_uracil_ring_centers
         std_hbond_masks = _std_uracil_hbond_masks
@@ -854,7 +855,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     # of the std_base          
     length_difference = len(std_base) - len(fitted)
     
-    if(length_difference > 0 and len(fitted) >= min_atoms_per_base):
+    if (length_difference > 0 and len(fitted) >= min_atoms_per_base):
         # If the base is incomplete but contains 3 or more atoms of the 
         # std_base, transform the complete std_base and use it to
         # approximate the base.
