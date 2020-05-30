@@ -600,40 +600,17 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Criterion 2: Vertical separation <=2.5 Å
     #
     # Align the bases` normal vectors with the reference frame described
-    # by the SCHNAaP algorithm
-    normal_vector_schnaap = [None]*2
-    for i in range(2):
-        if(
-            transformed_bases[i].res_name[0] not in (
-                _adenine_containing_nucleotides \
-                + _guanine_containing_nucleotides
-            )
-        ):
-            normal_vector_schnaap[i] = (-1)*transformed_std_vectors[i][1,:]
-        else:
-            normal_vector_schnaap[i] = transformed_std_vectors[i][1,:]
-
-    # Calculate the angle between normal vectors of the bases
-    normal_vector_angle = np.arccos(np.dot(normal_vector_schnaap[0],
-                                           normal_vector_schnaap[1]))
-    # Calculate the orthonormal vector to the normal vectors of the
-    # bases
-    rotation_axis = np.cross(normal_vector_schnaap[0],
-                             normal_vector_schnaap[1])
-    norm_vector(rotation_axis)
-    # Rotate the base normal vectors by ± half the angle between the two
-    # vectors
-    rotated_normal_vector_0 = np.dot(
-        _get_rotation_matrix(rotation_axis, normal_vector_angle/2),
-        normal_vector_schnaap[0]
-    )
-    rotated_normal_vector_1 = np.dot(
-        _get_rotation_matrix(rotation_axis, ((-1)*normal_vector_angle)/2),
-        normal_vector_schnaap[1]
-    )
-    # Average and normalize the rotated vectors
-    z_rot_average = (rotated_normal_vector_0 + rotated_normal_vector_1)/2
-    norm_vector(z_rot_average)
+    # by the SCHNAaP algorithm PYRIMIDIN
+    mean_normal_vector = (
+        transformed_std_vectors[0][1] + (
+            transformed_std_vectors[1][1]
+            * np.sign(np.dot(
+                transformed_std_vectors[0][1],
+                transformed_std_vectors[1][1]
+            ))
+        )
+    ) / 2
+    norm_vector(mean_normal_vector)
     # Calculate the distance vector between the two SCHNAaP origins    
     origin_vector = transformed_std_vectors[1][2,:] \
                     - transformed_std_vectors[0][2,:]
@@ -641,7 +618,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # The scalar projection of the distance vector between the two
     # origins onto the averaged normal vectors is the vertical
     # seperation
-    if not abs(np.dot(origin_vector, z_rot_average)) <= 2.5:
+    if not abs(np.dot(origin_vector, mean_normal_vector)) <= 2.5:
         return -1
     
     # Criterion 3: Angle between normal vectors <=65°
