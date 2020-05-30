@@ -599,8 +599,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         return -1
     # Criterion 2: Vertical separation <=2.5 Å
     #
-    # Align the bases` normal vectors with the reference frame described
-    # by the SCHNAaP algorithm PYRIMIDIN
+    # 
     mean_normal_vector = (
         transformed_std_vectors[0][1] + (
             transformed_std_vectors[1][1]
@@ -1005,8 +1004,8 @@ def _filter_residues(atom_array, index):
         where the atom has the desired ``residue_name`` and 
         ``chain_id``.
     """
-    return (np.isin(atom_array.res_id, atom_array[int(index)].res_id)
-            & np.isin(atom_array.chain_id, atom_array[int(index)].chain_id))
+    return ((atom_array.res_id == atom_array.res_id[index])
+            & (atom_array.chain_id == atom_array.chain_id[index]))
         
 def _get_rotation_matrix(axis, angle):
     """
