@@ -592,42 +592,44 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         
         transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
             = base_tuple
-    
+
+    origins = np.vstack((transformed_std_vectors[0][0], 
+                         transformed_std_vectors[1][0]))
+    normal_vectors = np.vstack((transformed_std_vectors[0][1], 
+                                transformed_std_vectors[1][1]))
+    SCHNAaP_origins = np.vstack((transformed_std_vectors[0][2], 
+                                 transformed_std_vectors[1][2]))
+    aromatic_ring_centers = [transformed_std_vectors[0][3:], 
+                                       transformed_std_vectors[1][3:]]
+
     # Criterion 1: Distance between orgins <=15 Å
-    if not (distance(transformed_std_vectors[0][0,:],
-            transformed_std_vectors[1][0,:]) <= 15):
+    if not (distance(origins[0], origins[1]) <= 15):
         return -1
     # Criterion 2: Vertical separation <=2.5 Å
     #
     # 
     mean_normal_vector = (
-        transformed_std_vectors[0][1] + (
-            transformed_std_vectors[1][1]
-            * np.sign(np.dot(
-                transformed_std_vectors[0][1],
-                transformed_std_vectors[1][1]
-            ))
-        )
+        normal_vectors[0] + (normal_vectors[1] * np.sign(np.dot(
+            normal_vectors[0], normal_vectors[1]
+        )))
     ) / 2
     norm_vector(mean_normal_vector)
     # Calculate the distance vector between the two SCHNAaP origins    
-    origin_vector = transformed_std_vectors[1][2,:] \
-                    - transformed_std_vectors[0][2,:]
+    origin_distance_vector = SCHNAaP_origins[1] - SCHNAaP_origins[0]
     
     # The scalar projection of the distance vector between the two
     # origins onto the averaged normal vectors is the vertical
     # seperation
-    if not abs(np.dot(origin_vector, mean_normal_vector)) <= 2.5:
+    if not abs(np.dot(origin_distance_vector, mean_normal_vector)) <= 2.5:
         return -1
     
     # Criterion 3: Angle between normal vectors <=65°
-    if not (np.arccos(np.dot(transformed_std_vectors[0][1,:],
-                              transformed_std_vectors[1][1,:])) 
+    if not (np.arccos(np.dot(normal_vectors[0], normal_vectors[1])) 
             >= ((115*np.pi)/180)):
         return -1
     
     # Criterion 4: Absence of stacking
-    if _check_base_stacking(transformed_std_vectors):
+    if _check_base_stacking(aromatic_ring_centers, normal_vectors):
         return -1
     
     # Criterion 5: Presence of at least one hydrogen bond
@@ -706,7 +708,7 @@ def _check_hbonds(bases, hbond_masks, unique):
     return -1
 
 
-def _check_base_stacking(transformed_vectors):
+def _check_base_stacking(aromatic_ring_centers, normal_vectors):
     """
     Check for base stacking between two bases. 
     
@@ -729,8 +731,8 @@ def _check_base_stacking(transformed_vectors):
 
     # Criterion 1: Distance between aromatic ring centers <=4.5 Å
     wrongdistance = True
-    for ring_center1 in transformed_vectors[0][3:][:]:
-        for ring_center2 in transformed_vectors[1][3:][:]:
+    for ring_center1 in aromatic_ring_centers[0]:
+        for ring_center2 in aromatic_ring_centers[1]:
             if (distance(ring_center1, ring_center2) <= 4.5):
                 wrongdistance = False
                 normalized_distance_vectors.append(ring_center2 - ring_center1)
@@ -740,23 +742,21 @@ def _check_base_stacking(transformed_vectors):
     
     # Criterion 2: Angle between normal vectors or its supplement <=23°
     if (
-            (np.arccos(np.dot(transformed_vectors[0][1,:],
-                              transformed_vectors[1][1,:]))
-            ) >= ((23*np.pi)/180)
-            and (np.arccos(np.dot(transformed_vectors[0][1,:],
-                              transformed_vectors[1][1,:]))
-            ) <= ((157*np.pi)/180)
+            (np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
+            >= ((23*np.pi)/180))
+            and (np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
+            <= ((157*np.pi)/180))
     ):
         return False
     
     # Criterion 3: Angle between one normalized distance vector and one 
     # normal vector or its supplement <=40°
-    for vector in transformed_vectors:
+    for normal_vector in normal_vectors:
         for normalized_dist_vector in normalized_distance_vectors:    
             if (
-                (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
+                (np.arccos(np.dot(normal_vector, normalized_dist_vector))
                 <= ((40*np.pi)/180))
-                or (np.arccos(np.dot(vector[1,:], normalized_dist_vector))
+                or (np.arccos(np.dot(normal_vector, normalized_dist_vector))
                 >= ((120*np.pi)/180))
             ):
                 return True
