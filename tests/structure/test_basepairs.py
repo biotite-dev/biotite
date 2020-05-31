@@ -51,21 +51,50 @@ def check_output(computed_basepairs, basepairs):
         assert ((comp_basepair in basepairs) \
                 or (comp_basepair in np.flip(basepairs)))
 
-
-def test_base_pairs_forward(nuc_sample_array, basepairs):
+@pytest.mark.parametrize("unique_bool", [False, True])
+def test_base_pairs_forward(nuc_sample_array, basepairs, unique_bool):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array)
+    computed_basepairs = base_pairs(nuc_sample_array, unique=unique_bool)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
-def test_base_pairs_reverse(nuc_sample_array, basepairs):
+def test_base_pairs_forward_no_H(nuc_sample_array, basepairs):
+    """
+    Test for the function base_pairs with the hydrogens removed from the
+    test structure.
+    """
+    nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
+    computed_basepairs = base_pairs(nuc_sample_array)
+    check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
+
+@pytest.mark.parametrize("unique_bool", [False, True])
+def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     """
     Reverse the order of residues in the atom_array and then test the
     function base_pairs.
     """
     
+    # Reverse sequence of residues in nuc_sample_array
+    reversed_nuc_sample_array = struc.AtomArray(0) 
+    for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
+        reversed_nuc_sample_array = reversed_nuc_sample_array + residue
+    
+    computed_basepairs = base_pairs(
+        reversed_nuc_sample_array, unique=unique_bool
+    )
+    check_output(
+        reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
+    )
+
+def test_base_pairs_reverse_no_H(nuc_sample_array, basepairs):
+    """
+    Remove the hydrogens from the sample structure. Then reverse the 
+    order of residues in the atom_array and then test the function 
+    base_pairs.
+    """
+    nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
     # Reverse sequence of residues in nuc_sample_array
     reversed_nuc_sample_array = struc.AtomArray(0) 
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
