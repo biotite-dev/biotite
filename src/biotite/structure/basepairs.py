@@ -715,10 +715,11 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
     
     Parameters
     ----------
-    transformed_vectors : list
-        A list with transformed vectors as :class:`ndarray` for both 
-        bases, origin coordinates, base normal vector, SCHNAaP origin,
-        aromatic ring center coordinates
+    aromatic_ring_centers : list [ndarray, ndarray]
+        A list with the aromatic ring center coordinates as 
+        :class:`ndarray`. Each row represents a ring center.
+    normal_vectors : ndarray shape=(2, 3)
+        The normal vectors of the bases.
         
     Returns
     -------
