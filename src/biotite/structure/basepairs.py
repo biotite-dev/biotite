@@ -422,8 +422,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     If a base is incomplete but contains the minimum number of base-
     atoms specified, a superimposed standard base is used to emulate it.
 
-    The vertical separation has been implemented as the rise parameter
-    `DZ` between the base triads [3]_.
+    The vertical separation has been implemented as the scalar
+    projection of the distance vectors between the base origins
+    according to [3]_ onto the averaged base normal vectors.
 
     The presence of base stacking is assumed if the following criteria
     are met [4]_:
