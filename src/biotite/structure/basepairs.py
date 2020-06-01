@@ -1010,36 +1010,3 @@ def _filter_residues(atom_array, index):
     """
     return ((atom_array.res_id == atom_array.res_id[index])
             & (atom_array.chain_id == atom_array.chain_id[index]))
-        
-def _get_rotation_matrix(axis, angle):
-    """
-    Get a rotation matrix for a rotation in 3d space.
-    
-    Parameters
-    ----------
-    axis : ndarray, dtype=float, shape=(3,)
-        The axis the rotation is performed on.
-    angle : float
-        The angle of the rotation in radians.
-        
-    Returns
-    -------
-    rotation_matrix : ndarray, dtype=float, shape=(3,3)
-        The rotation matrix for the desired rotation.
-    """
-    rotation_matrix = np.zeros((3,3), dtype=float)
-    n1, n2, n3 = axis
-    normal_cos = np.cos(angle)
-    inverse_cos = 1 - normal_cos
-
-    rotation_matrix[0,0] = ((n1*n1)*inverse_cos) + normal_cos
-    rotation_matrix[0,1] = ((n1*n2)*inverse_cos) - (n3*np.sin(angle))
-    rotation_matrix[0,2] = ((n1*n3)*inverse_cos) + (n2*np.sin(angle))
-    rotation_matrix[1,0] = ((n2*n1)*inverse_cos) + (n3*np.sin(angle))
-    rotation_matrix[1,1] = ((n2*n2)*inverse_cos) + normal_cos
-    rotation_matrix[1,2] = ((n2*n3)*inverse_cos) - (n1*np.sin(angle))
-    rotation_matrix[2,0] = ((n3*n1)*inverse_cos) - (n2*np.sin(angle))
-    rotation_matrix[2,1] = ((n3*n2)*inverse_cos) + (n1*np.sin(angle))
-    rotation_matrix[2,2] = ((n3*n3)*inverse_cos) + normal_cos
-
-    return rotation_matrix
