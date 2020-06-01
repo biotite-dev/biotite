@@ -606,10 +606,11 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Criterion 1: Distance between orgins <=15 Å
     if not (distance(origins[0], origins[1]) <= 15):
         return -1
+
     # Criterion 2: Vertical separation <=2.5 Å
     #
-    # Average normal vectors. If the angle between the vectors is >=90°,
-    # flip one vector before averaging
+    # Average the base normal vectors. If the angle between the vectors
+    # is >=90°, flip one vector before averaging
     mean_normal_vector = (
         normal_vectors[0] + (normal_vectors[1] * np.sign(np.dot(
             normal_vectors[0], normal_vectors[1]
