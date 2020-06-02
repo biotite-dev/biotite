@@ -14,6 +14,7 @@ import pytest
 def array():
     return strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
 
+
 def test_apply_residue_wise(array):
     data = struc.apply_residue_wise(array, np.ones(len(array)), np.sum)
     assert data.tolist() == [len(array[array.res_id == i])
@@ -35,6 +36,18 @@ def test_get_residue_masks(array):
         assert mask.tolist() == ref_mask.tolist()
 
 
+def test_get_residue_starts_for(array):
+    SAMPLE_SIZE = 100
+    np.random.seed(0)
+    indices = np.random.randint(0, array.array_length(), SAMPLE_SIZE)
+    ref_starts = np.array(
+        [np.where(mask)[0][0] for mask
+         in struc.get_residue_masks(array, indices)]
+    )
+    test_starts = struc.get_residue_starts_for(array, indices)
+    assert test_starts.tolist() == ref_starts.tolist()
+
+
 def test_get_residues(array):
     ids, names = struc.get_residues(array)
     assert ids.tolist() == list(range(1, 21))
@@ -42,6 +55,7 @@ def test_get_residues(array):
                               "ASP","GLY","GLY","PRO","SER","SER","GLY","ARG",
                               "PRO","PRO","PRO","SER"]
     assert len(ids) == struc.get_residue_count(array)
+
 
 def test_residue_iter(array):
     centroid = [struc.centroid(res).tolist()
