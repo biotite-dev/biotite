@@ -19,6 +19,7 @@ from .celllist import CellList
 from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
+from .residues import get_residue_starts_for
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -945,14 +946,9 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
             if partner == -1:
                 break
             # Find the indices of the first atom of the residues
-            candidate_res_start = np.where(
-                (atom_array.res_id == atom_array[candidate].res_id)
-                & (atom_array.chain_id == atom_array[candidate].chain_id)
-            )[0][0]
-            partner_res_start = np.where(
-                (atom_array.res_id == atom_array[partner].res_id)
-                & (atom_array.chain_id == atom_array[partner].chain_id)
-            )[0][0]
+            candidate_res_start, partner_res_start = get_residue_starts_for(
+                atom_array, (candidate, partner)
+            )
             # If the basepair candidate is not already in the output
             # list, append to the output list
             if (
