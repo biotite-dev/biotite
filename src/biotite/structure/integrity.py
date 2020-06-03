@@ -9,11 +9,13 @@ errors in the structure.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
-__all__ = ["check_atom_id_continuity", "check_res_id_continuity",
-           "check_bond_continuity", "check_duplicate_atoms",
+__all__ = ["check_id_continuity", "check_atom_id_continuity",
+           "check_res_id_continuity", "check_bond_continuity",
+           "check_duplicate_atoms",
            "renumber_atom_ids", "renumber_res_ids"]
 
 import numpy as np
+import warnings
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
 from .box import coord_to_fraction
@@ -23,6 +25,32 @@ def _check_continuity(array):
     diff = np.diff(array)
     discontinuity = np.where( ((diff != 0) & (diff != 1)) )
     return discontinuity[0] + 1
+
+
+def check_id_continuity(array):
+    """
+    Check if the residue IDs are incremented by more than 1 or
+    decremented, from one atom to the next one.
+    
+    An increment by more than 1 is as strong clue for missing residues,
+    a decrement means probably a start of a new chain.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    discontinuity : ndarray, dtype=bool
+        Contains the indices of atoms after a discontinuity
+    """
+    warnings.warn(
+        "'check_id_continuity()' is deprecated, "
+        "use 'check_res_id_continuity()' instead",
+        DeprecationWarning
+    )
+    return check_res_id_continuity(array)
 
 
 def check_atom_id_continuity(array):
