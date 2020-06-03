@@ -50,7 +50,7 @@ def check_res_id_continuity(array):
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
     
-    An increment by more than 1 is as strong clue for missung residues,
+    An increment by more than 1 is as strong clue for missing residues,
     a decrement means probably a start of a new chain.
     
     Parameters
