@@ -873,7 +873,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         warnings.warn(
             f"Base with res_id {nucleotide.res_id[0]} and chain_id " 
             f"{nucleotide.chain_id[0]} is not complete. Attempting to "
-            "emulate with std_base.", IncompleteStructureWarning
+            f"emulate with std_base.", IncompleteStructureWarning
         )
         return_base = superimpose_apply(std_base, transformation)
         return_hbond_masks = std_hbond_masks
@@ -883,8 +883,8 @@ def _match_base(nucleotide, min_atoms_per_base):
         warnings.warn(
             f"Base with res_id {nucleotide.res_id[0]} and chain_id "
             f"{nucleotide.chain_id[0]} has an overlap with std_base "
-            "which is less than 3 atoms. Unable to check for basepair."
-            , IncompleteStructureWarning
+            f"which is less than 3 atoms. Unable to check for basepair.",
+            IncompleteStructureWarning
         )
         return None
     else:
