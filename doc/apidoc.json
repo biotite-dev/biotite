@@ -228,6 +228,8 @@
         "Checks" : [
             "check_bond_continuity",
             "check_id_continuity",
+            "check_atom_id_continuity",
+            "check_res_id_continuity",
             "check_duplicate_atoms"
         ],
         "Residue level utility" : [
