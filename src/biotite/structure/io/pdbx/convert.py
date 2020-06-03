@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_structure", "set_structure",
+__all__ = ["get_sequence", "get_model_count", "get_structure", "set_structure",
            "list_assemblies", "get_assembly"]
 
 import itertools
@@ -64,6 +64,26 @@ def get_sequence(pdbx_file, data_block=None):
     return sequences
 
 
+def get_model_count(file, data_block=None):
+    """
+    Get the number of models contained in a :class:`PDBxFile`.
+
+    Parameters
+    ----------
+    file : PDBxFile
+        The file object.
+    data_block : str, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    atom_site_dict = file.get_category("atom_site", data_block)
+    return int(atom_site_dict["pdbx_PDB_model_num"][-1])
+
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                   extra_fields=None, use_author_fields=True):
@@ -78,7 +98,9 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
@@ -137,11 +159,11 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
+    model_count = int(models[-1])
     
     if model is None:
         # For a stack, the annotation are derived from the first model
         model_dict = _get_model_dict(atom_site_dict, 1)
-        model_count = int(models[-1])
         model_length = len(model_dict["group_PDB"])
         stack = AtomArrayStack(model_count, model_length)
         
@@ -151,9 +173,9 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         # If not, raise exception
         atom_count = len(models)
         if model_length * model_count != atom_count:
-            raise BadStructureError("The models in the file have unequal "
-                                    "amount of atoms, give an explicit model "
-                                    "instead")
+            raise InvalidFileError("The models in the file have unequal "
+                                   "amount of atoms, give an explicit model "
+                                   "instead")
         
         stack.coord = np.zeros((model_count,model_length,3), dtype=np.float32)
         stack.coord[:,:,0] = atom_site_dict["Cartn_x"].reshape((model_count,
@@ -173,6 +195,16 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         return stack
     
     else:
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean model indexing starting from last model
+        model = model_count + model + 1 if model < 0 else model
+        if model > model_count:
+            raise ValueError(
+                f"The file has {model_count} models, "
+                f"the given model {model} does not exist"
+            )
+
         model_dict = _get_model_dict(atom_site_dict, model)
         model_length = len(model_dict["group_PDB"])
         array = AtomArray(model_length)
@@ -286,8 +318,12 @@ def _get_box(pdbx_file, data_block):
         cell_dict = pdbx_file.get((data_block, "cell"))
     if cell_dict is None:
         return None
-    len_a, len_b, len_c = [float(cell_dict[length]) for length
-                           in ["length_a", "length_b", "length_c"]]
+    try:
+        len_a, len_b, len_c = [float(cell_dict[length]) for length
+                               in ["length_a", "length_b", "length_c"]]
+    except ValueError:
+        # 'cell_dict' has no proper unit cell values, e.g. '?'
+        return None
     alpha, beta, gamma =  [np.deg2rad(float(cell_dict[angle])) for angle
                            in ["angle_alpha", "angle_beta", "angle_gamma"]]
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
@@ -509,7 +545,9 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
@@ -682,17 +720,17 @@ def _parse_operation_expression(expression):
     return list(itertools.product(*operations))
 
 
-    def _convert_string_to_sequence(string, stype):
-        # Convert strings to ProteinSequence-Object if stype is
-        # contained in _proteinseq_type_list or to NucleotideSequence-
-        # Object if stype is contained in _nucleotideseq_type_list
-        if stype in _proteinseq_type_list:
-            return ProteinSequence(string)
-        elif stype in _nucleotideseq_type_list:
-            string = string.replace("U", "T")
-            return NucleotideSequence(string)
-        elif stype in _other_type_list:
-            return None
-        else:
-            raise InvalidFileError("mmCIF _entity_poly.type unsupported"
-                                        " type: " + stype)
+def _convert_string_to_sequence(string, stype):
+    # Convert strings to ProteinSequence-Object if stype is
+    # contained in _proteinseq_type_list or to NucleotideSequence-
+    # Object if stype is contained in _nucleotideseq_type_list
+    if stype in _proteinseq_type_list:
+        return ProteinSequence(string)
+    elif stype in _nucleotideseq_type_list:
+        string = string.replace("U", "T")
+        return NucleotideSequence(string)
+    elif stype in _other_type_list:
+        return None
+    else:
+        raise InvalidFileError("mmCIF _entity_poly.type unsupported"
+                                    " type: " + stype)
