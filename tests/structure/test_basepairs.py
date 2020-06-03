@@ -60,7 +60,7 @@ def test_base_pairs_forward(nuc_sample_array, basepairs, unique_bool):
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
-def test_base_pairs_forward_no_H(nuc_sample_array, basepairs):
+def test_base_pairs_forward_no_hydrogen(nuc_sample_array, basepairs):
     """
     Test for the function base_pairs with the hydrogens removed from the
     test structure.
@@ -88,7 +88,7 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
 
-def test_base_pairs_reverse_no_H(nuc_sample_array, basepairs):
+def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     """
     Remove the hydrogens from the sample structure. Then reverse the 
     order of residues in the atom_array and then test the function 
