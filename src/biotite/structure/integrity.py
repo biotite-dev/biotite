@@ -18,6 +18,10 @@ from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
 from .box import coord_to_fraction
 
+def _check_continuity(array):
+    diff = np.diff(array)
+    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
+    return discontinuity[0] + 1
 
 def check_atom_id_continuity(array):
     """
@@ -38,9 +42,7 @@ def check_atom_id_continuity(array):
         Contains the indices of atoms after a discontinuity
     """
     ids = array.atom_id
-    diff = np.diff(ids)
-    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
-    return discontinuity[0] + 1
+    return _check_continuity(ids)
 
 
 def check_res_id_continuity(array):
@@ -62,9 +64,7 @@ def check_res_id_continuity(array):
         Contains the indices of atoms after a discontinuity
     """
     ids = array.res_id
-    diff = np.diff(ids)
-    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
-    return discontinuity[0] + 1
+    return _check_continuity(ids)
 
 
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
