@@ -208,7 +208,6 @@ def renumber_res_ids(array):
     start : int
         The starting index for renumbering. Defaults to the first ID in
         the array.
-
     
     Returns
     -------
@@ -217,6 +216,6 @@ def renumber_res_ids(array):
     """
     diff = np.diff(array.res_id)
     diff[diff != 0] = 1
-    new_res_ids =  np.hstack((array.res_id[0], diff)).cumsum()
+    new_res_ids =  np.concatenate(([array.res_id[0]], diff)).cumsum()
     array.res_id = new_res_ids
     return array
