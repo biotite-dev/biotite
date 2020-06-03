@@ -10,7 +10,8 @@ errors in the structure.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["check_atom_id_continuity", "check_res_id_continuity",
-           "check_bond_continuity", "check_duplicate_atoms"]
+           "check_bond_continuity", "check_duplicate_atoms",
+           "renumber_atom_ids", "renumber_res_ids"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
@@ -170,3 +171,52 @@ def check_in_box(array):
     box = array.box
     fractions = coord_to_fraction(array, box)
     return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]
+
+
+def renumber_atom_ids(array, start=None):
+    """
+    Renumbers the atom IDs of the given array.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    start : int
+        The starting index for renumbering. Defaults to the first ID in the
+        array.
+
+    
+    Returns
+    -------
+    array : AtomArray or AtomArrayStack
+        The renumbered array.
+    """
+    if start is None:
+        start = array.atom_id[0]
+    array.atom_id = np.arange(start, array.shape[-1]+1)
+    return array
+    
+
+def renumber_res_ids(array, start=None):
+    """
+    Renumbers the atom IDs of the given array.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    start : int
+        The starting index for renumbering. Defaults to the first ID in the
+        array.
+
+    
+    Returns
+    -------
+    array : AtomArray or AtomArrayStack
+        The renumbered array.
+    """
+    diff = np.diff(array.res_id)
+    diff[diff != 0] = 1
+    new_res_ids =  np.hstack((array.res_id[0], diff)).cumsum()
+    array.res_id = new_res_ids
+    return array
