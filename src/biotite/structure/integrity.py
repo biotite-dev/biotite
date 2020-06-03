@@ -34,6 +34,8 @@ def check_id_continuity(array):
     
     An increment by more than 1 is as strong clue for missing residues,
     a decrement means probably a start of a new chain.
+
+    DEPRECATED: Use :func:`check_res_id_continuity()` instead.
     
     Parameters
     ----------
