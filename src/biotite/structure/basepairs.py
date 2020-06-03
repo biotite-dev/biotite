@@ -19,7 +19,7 @@ from .celllist import CellList
 from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
-from .residues import get_residue_starts_for
+from .residues import get_residue_starts_for, get_residue_masks
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -502,8 +502,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     basepairs_hbonds = []
 
     for base1_index, base2_index in basepair_candidates:
-        base1 = atom_array[_filter_residues(atom_array, base1_index)]
-        base2 = atom_array[_filter_residues(atom_array, base2_index)]
+        base1_mask, base2_mask = get_residue_masks(
+            atom_array, (base1_index, base2_index)
+        )
+        base1 = atom_array[base1_mask]
+        base2 = atom_array[base2_mask]
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
@@ -983,26 +986,3 @@ def _filter_atom_type(atom_array, atom_names):
     """
     return (np.isin(atom_array.atom_name, atom_names)
             & (atom_array.res_id != -1))
-
-
-def _filter_residues(atom_array, index):
-    """
-    Get all atoms of a residue that an atom at the specified index 
-    belongs to.
-    
-    Parameters
-    ----------
-    atom_array : AtomArray
-        The :class:`AtomArray` to filter.
-    index : integer
-        The index of an atom of the desired residue.
-        
-    Returns
-    -------
-    filter : ndarray, dtype=bool
-        This array is ``True`` for all indices in the :class:`AtomArray`
-        where the atom has the desired ``residue_name`` and 
-        ``chain_id``.
-    """
-    return ((atom_array.res_id == atom_array.res_id[index])
-            & (atom_array.chain_id == atom_array.chain_id[index]))
