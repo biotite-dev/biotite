@@ -698,6 +698,9 @@ def _check_hbonds(bases, hbond_masks, unique):
 
     # Contains the number of plausible hydrogen bonds
     hbonds = 0
+    # Check the plausibility of hydrogen bonds with bases[0] as the
+    # hydrogen bond donor and bases[1] as the hydrogen bond 
+    # acceptor. Afterwards the complimentary order is checked.
     for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
         zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
         for donor_atom in donor_base[hbond_donor_mask[0]]:
