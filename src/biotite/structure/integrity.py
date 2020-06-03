@@ -8,9 +8,9 @@ errors in the structure.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
-__all__ = ["check_id_continuity", "check_bond_continuity",
-           "check_duplicate_atoms"]
+__author__ = "Patrick Kunzmann, Daniel Bauer"
+__all__ = ["check_atom_id_continuity", "check_res_id_continuity",
+           "check_bond_continuity", "check_duplicate_atoms"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
@@ -18,7 +18,31 @@ from .filter import filter_backbone
 from .box import coord_to_fraction
 
 
-def check_id_continuity(array):
+def check_atom_id_continuity(array):
+    """
+    Check if the atom IDs are incremented by more than 1 or
+    decremented, from one atom to the next one.
+    
+    An increment by more than 1 is as strong clue for missing atoms,
+    a decrement means probably a start of a new chain.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    discontinuity : ndarray, dtype=bool
+        Contains the indices of atoms after a discontinuity
+    """
+    ids = array.atom_id
+    diff = np.diff(ids)
+    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
+    return discontinuity[0] + 1
+
+
+def check_res_id_continuity(array):
     """
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.

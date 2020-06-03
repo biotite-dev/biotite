@@ -17,6 +17,9 @@ def sample_array():
 
 @pytest.fixture
 def gapped_sample_array(sample_array):
+    atom_ids = np.arange(1, sample_array.shape[0]+1)
+    sample_array.add_annotation("atom_id", dtype=int)
+    sample_array.atom_id = atom_ids
     sample_array = sample_array[sample_array.res_id != 5]
     sample_array = sample_array[(sample_array.res_id != 9) |
                                 (sample_array.atom_name != "N")]
@@ -28,8 +31,13 @@ def duplicate_sample_array(sample_array):
     sample_array[234] = sample_array[123]
     return sample_array
 
-def test_id_continuity_check(gapped_sample_array):
-    discon = struc.check_id_continuity(gapped_sample_array)
+def test_atom_id_continuity_check(gapped_sample_array):
+    discon = struc.check_atom_id_continuity(gapped_sample_array)
+    discon_array = gapped_sample_array[discon]
+    assert discon_array.atom_id.tolist() == [93, 159]
+
+def test_res_id_continuity_check(gapped_sample_array):
+    discon = struc.check_res_id_continuity(gapped_sample_array)
     discon_array = gapped_sample_array[discon]
     assert discon_array.res_id.tolist() == [6]
 
