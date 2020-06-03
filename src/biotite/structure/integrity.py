@@ -18,18 +18,19 @@ from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
 from .box import coord_to_fraction
 
+
 def _check_continuity(array):
     diff = np.diff(array)
     discontinuity = np.where( ((diff != 0) & (diff != 1)) )
     return discontinuity[0] + 1
+
 
 def check_atom_id_continuity(array):
     """
     Check if the atom IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
     
-    An increment by more than 1 is as strong clue for missing atoms,
-    a decrement means probably a start of a new chain.
+    An increment by more than 1 is as strong clue for missing atoms.
     
     Parameters
     ----------
@@ -175,17 +176,16 @@ def check_in_box(array):
 
 def renumber_atom_ids(array, start=None):
     """
-    Renumbers the atom IDs of the given array.
+    Renumber the atom IDs of the given array.
 
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
     start : int
-        The starting index for renumbering. Defaults to the first ID in the
-        array.
+        The starting index for renumbering. Defaults to the first ID in
+        the array.
 
-    
     Returns
     -------
     array : AtomArray or AtomArrayStack
@@ -199,15 +199,15 @@ def renumber_atom_ids(array, start=None):
 
 def renumber_res_ids(array):
     """
-    Renumbers the residue IDs of the given array.
+    Renumber the residue IDs of the given array.
 
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
     start : int
-        The starting index for renumbering. Defaults to the first ID in the
-        array.
+        The starting index for renumbering. Defaults to the first ID in
+        the array.
 
     
     Returns
