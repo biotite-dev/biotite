@@ -199,7 +199,7 @@ def renumber_atom_ids(array, start=None):
 
 def renumber_res_ids(array, start=None):
     """
-    Renumbers the atom IDs of the given array.
+    Renumbers the residue IDs of the given array.
 
     Parameters
     ----------
