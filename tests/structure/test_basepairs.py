@@ -44,7 +44,7 @@ def check_output(computed_basepairs, basepairs):
         (base1, base2) in seen) or (base2, base1 in seen)
         or seen.add((base1, base2)) for base1, base2 in computed_basepairs
         )
-    # Check if the right number of basepairs is in computed_baspairs
+    # Check if the right number of basepairs is in computed_basepairs
     assert(len(computed_basepairs) == len(basepairs))
     # Check if the right basepairs are in computed_basepairs
     for comp_basepair in computed_basepairs:
