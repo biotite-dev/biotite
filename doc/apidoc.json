@@ -255,7 +255,8 @@
             "sasa",
             "annotate_sse",
             "hbond",
-            "hbond_frequency"
+            "hbond_frequency",
+            "base_pairs"
         ]
     }
 }
