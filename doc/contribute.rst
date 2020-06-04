@@ -10,8 +10,8 @@ developers who would like to extend the package with new functionalities or
 improve existing code.
 The complete development workflow is hosted on
 `GitHub <https://github.com/biotite-dev/biotite>`_.
-This is also the place where you would post feature propositions,
-questions, bug reports, etc.
+This is also the place where you would post feature propositions, questions,
+bug reports, etc.
 
 The following page explains the development guidelines in order to keep
 *Biotite*'s source code consistent.
@@ -24,7 +24,8 @@ Writing code
 Scope
 ^^^^^
 The scope of *Biotite* are methods that make up the backbone of
-computational molecular biology. Thus, new functionalities added to
+computational molecular biology and bioinformatics.
+Thus, new functionalities added to
 *Biotite* should be relatively general and well established.
 
 Code of which the purpose is too special could be published as
@@ -97,8 +98,7 @@ module level, one or two short sentences are sufficient.
 In the class docstring, the class itself is described and the constructor is
 documented.
 The publicly accessible instance variables are documented under the
-`Attributes` headline, while class variables are documented in their separate
-docstrings.
+`Attributes` headline.
 Methods do not need to be summarized in the class docstring.
 
 Module imports
@@ -129,8 +129,8 @@ So import statements like the following are totally OK:
 In order to prevent namespace pollution, all modules must define the `__all__`
 variable with all publicly accessible attributes of the module.
 
-When using *Biotite* internal imports, always use relative imports. Otherwise
-:ref:`in-development testing <tests>` is not possible.
+When using *Biotite* internal imports, always use relative imports.
+Otherwise :ref:`in-development testing <tests>` is not possible.
 
 .. Type annotations
    ^^^^^^^^^^^^^^^^
