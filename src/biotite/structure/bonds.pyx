@@ -555,7 +555,7 @@ class BondList(Copyable):
                 index1_ptr = &all_bonds_v[i,0]
                 index2_ptr = &all_bonds_v[i,1]
                 if mask_v[index1_ptr[0]] and mask_v[index2_ptr[0]]:
-                    # Both atoms invloved in bond are masked
+                    # Both atoms involved in bond are masked
                     # -> decrease atom index by offset
                     index1_ptr[0] -= offsets_v[index1_ptr[0]]
                     index2_ptr[0] -= offsets_v[index2_ptr[0]]
@@ -603,6 +603,9 @@ class BondList(Copyable):
         
 
     def _get_max_bonds_per_atom(self):
+        if self._atom_count == 0:
+            return 0
+        
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
         # Create array that counts number of occurences of each index
@@ -677,9 +680,17 @@ cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
     if index < 0:
         pos_index = <uint32> (array_length + index)
         if pos_index < 0:
-            raise IndexError(f"Index {index} is out of range")
+            raise IndexError(
+                f"Index {index} is out of range "
+                f"for an atom count of {array_length}"
+            )
         return pos_index
     else:
+        if <uint32> index >= array_length:
+            raise IndexError(
+                f"Index {index} is out of range "
+                f"for an atom count of {array_length}"
+            )
         return <uint32> index
 
 
@@ -694,7 +705,15 @@ def _to_positive_index_array(index_array, array_length):
     negatives = index_array < 0
     index_array[negatives] = array_length + index_array[negatives]
     if (index_array < 0).any():
-        raise IndexError(f"Atom indices are out of range") 
+        raise IndexError(
+            f"Index {np.min(index_array)} is out of range "
+            f"for an atom count of {array_length}"
+        )
+    if (index_array >= array_length).any():
+        raise IndexError(
+            f"Index {np.max(index_array)} is out of range "
+            f"for an atom count of {array_length}"
+        )
     return index_array.reshape(orig_shape)
 
 
@@ -723,38 +742,21 @@ def _to_bool_mask(object index, uint32 length):
     Convert an index of arbitrary type into a boolean mask
     with given length.
     """
-    cdef int i=0, j=0
-    cdef int64[:] index_array
-    cdef uint8[:] bool_mask
-    if isinstance(index, np.ndarray):
-        
-        if index.dtype == np.bool:
-            # Index is already boolean mask -> simply return as uint8
-            return index.astype(np.uint8, copy=False)
-        
-        elif np.issubdtype(index.dtype, np.integer):
-            # Index is an index array
-            # -> construct a boolean mask from it
-            index_array = index.astype(np.int64, copy=False)
-            bool_mask = np.zeros(length, dtype=np.uint8)
-            # Flip mask to true for every index in index array
-            for i in range(index_array.shape[0]):
-                j = _to_positive_index(index_array[i], length)
-                bool_mask[j] = True
-            return np.asarray(bool_mask)
-        
-        else:
-            raise TypeError(
-                f"Arrays of type '{str(index.dtype)}' are not supported")
-
+    if isinstance(index, np.ndarray) and index.dtype == np.bool:
+        # Index is already boolean mask -> simply return as uint8
+        if len(index) != length:
+            raise IndexError(
+                f"Boolean mask has length {len(index)}, expected {length}"
+            )
+        # Use 'uint8' instead of 'bool' for memory view
+        return index.astype(np.uint8, copy=False)
     else:
-        # Any other index type -> construct an intermediate index array
-        array = np.arange(length, dtype=np.int64)
-        array = array[index]
-        if not isinstance(array, np.ndarray):
-            raise TypeError("A single integer is not a valid index "
-                            "for this method")
-        return _to_bool_mask(array, length)
+        # Use 'uint8' instead of 'bool' for memory view
+        mask = np.zeros(length, dtype=np.uint8)
+        # 1 -> True
+        mask[index] = 1
+        return mask
+
 
 
 
