@@ -730,6 +730,10 @@ def _to_bool_mask(object index, uint32 length):
         
         if index.dtype == np.bool:
             # Index is already boolean mask -> simply return as uint8
+            if len(index) != length:
+                raise IndexError(
+                    f"Boolean mask has length {len(index)}, expected {length}"
+                )
             return index.astype(np.uint8, copy=False)
         
         elif np.issubdtype(index.dtype, np.integer):
