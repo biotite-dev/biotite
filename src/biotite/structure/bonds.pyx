@@ -742,42 +742,20 @@ def _to_bool_mask(object index, uint32 length):
     Convert an index of arbitrary type into a boolean mask
     with given length.
     """
-    cdef int i=0, j=0
-    cdef int64[:] index_array
-    cdef uint8[:] bool_mask
-    if isinstance(index, np.ndarray):
-        
-        if index.dtype == np.bool:
-            # Index is already boolean mask -> simply return as uint8
-            if len(index) != length:
-                raise IndexError(
-                    f"Boolean mask has length {len(index)}, expected {length}"
-                )
-            return index.astype(np.uint8, copy=False)
-        
-        elif np.issubdtype(index.dtype, np.integer):
-            # Index is an index array
-            # -> construct a boolean mask from it
-            index_array = index.astype(np.int64, copy=False)
-            bool_mask = np.zeros(length, dtype=np.uint8)
-            # Flip mask to true for every index in index array
-            for i in range(index_array.shape[0]):
-                j = _to_positive_index(index_array[i], length)
-                bool_mask[j] = True
-            return np.asarray(bool_mask)
-        
-        else:
-            raise TypeError(
-                f"Arrays of type '{str(index.dtype)}' are not supported")
-
+    if isinstance(index, np.ndarray) and index.dtype == np.bool:
+        # Index is already boolean mask -> simply return as uint8
+        if len(index) != length:
+            raise IndexError(
+                f"Boolean mask has length {len(index)}, expected {length}"
+            )
+        # Use 'uint8' instead of 'bool' for memory view
+        return index.astype(np.uint8, copy=False)
     else:
-        # Any other index type -> construct an intermediate index array
-        array = np.arange(length, dtype=np.int64)
-        array = array[index]
-        if not isinstance(array, np.ndarray):
-            raise TypeError("A single integer is not a valid index "
-                            "for this method")
-        return _to_bool_mask(array, length)
+        # Use 'uint8' instead of 'bool' for memory view
+        mask = np.zeros(length, dtype=np.uint8)
+        # 1 -> True
+        mask[index] = 1
+        return mask
 
 
 
