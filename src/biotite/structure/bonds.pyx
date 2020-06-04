@@ -680,9 +680,17 @@ cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
     if index < 0:
         pos_index = <uint32> (array_length + index)
         if pos_index < 0:
-            raise IndexError(f"Index {index} is out of range")
+            raise IndexError(
+                f"Index {index} is out of range "
+                f"for an atom count of {array_length}"
+            )
         return pos_index
     else:
+        if <uint32> index >= array_length:
+            raise IndexError(
+                f"Index {index} is out of range "
+                f"for an atom count of {array_length}"
+            )
         return <uint32> index
 
 
@@ -697,7 +705,15 @@ def _to_positive_index_array(index_array, array_length):
     negatives = index_array < 0
     index_array[negatives] = array_length + index_array[negatives]
     if (index_array < 0).any():
-        raise IndexError(f"Atom indices are out of range") 
+        raise IndexError(
+            f"Index {np.min(index_array)} is out of range "
+            f"for an atom count of {array_length}"
+        )
+    if (index_array >= array_length).any():
+        raise IndexError(
+            f"Index {np.max(index_array)} is out of range "
+            f"for an atom count of {array_length}"
+        )
     return index_array.reshape(orig_shape)
 
 
@@ -762,6 +778,7 @@ def _to_bool_mask(object index, uint32 length):
             raise TypeError("A single integer is not a valid index "
                             "for this method")
         return _to_bool_mask(array, length)
+
 
 
 
