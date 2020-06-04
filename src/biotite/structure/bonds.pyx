@@ -555,7 +555,7 @@ class BondList(Copyable):
                 index1_ptr = &all_bonds_v[i,0]
                 index2_ptr = &all_bonds_v[i,1]
                 if mask_v[index1_ptr[0]] and mask_v[index2_ptr[0]]:
-                    # Both atoms invloved in bond are masked
+                    # Both atoms involved in bond are masked
                     # -> decrease atom index by offset
                     index1_ptr[0] -= offsets_v[index1_ptr[0]]
                     index2_ptr[0] -= offsets_v[index2_ptr[0]]
@@ -603,6 +603,9 @@ class BondList(Copyable):
         
 
     def _get_max_bonds_per_atom(self):
+        if self._atom_count == 0:
+            return 0
+        
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
         # Create array that counts number of occurences of each index
