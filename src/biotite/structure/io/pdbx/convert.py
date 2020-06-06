@@ -57,7 +57,7 @@ def get_sequence(pdbx_file, data_block=None):
     if isinstance(seq_string, np.ndarray):
         for string, stype in zip(seq_string, seq_type):
             sequence = _convert_string_to_sequence(string, stype)
-            if(issubclass(sequence, Sequence)):
+            if sequence is not None:
                 sequences.append(sequence) 
     else:
         sequences.append(_convert_string_to_sequence(seq_string, seq_type))
@@ -733,4 +733,4 @@ def _convert_string_to_sequence(string, stype):
         return None
     else:
         raise InvalidFileError("mmCIF _entity_poly.type unsupported"
-                                    " type: " + stype)
+                               " type: " + stype)

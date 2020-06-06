@@ -8,14 +8,23 @@ errors in the structure.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
-__all__ = ["check_id_continuity", "check_bond_continuity",
-           "check_duplicate_atoms"]
+__author__ = "Patrick Kunzmann, Daniel Bauer"
+__all__ = ["check_id_continuity", "check_atom_id_continuity",
+           "check_res_id_continuity", "check_bond_continuity",
+           "check_duplicate_atoms",
+           "renumber_atom_ids", "renumber_res_ids"]
 
 import numpy as np
+import warnings
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .filter import filter_backbone
 from .box import coord_to_fraction
+
+
+def _check_continuity(array):
+    diff = np.diff(array)
+    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
+    return discontinuity[0] + 1
 
 
 def check_id_continuity(array):
@@ -23,7 +32,56 @@ def check_id_continuity(array):
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
     
-    An increment by more than 1 is as strong clue for missung residues,
+    An increment by more than 1 is as strong clue for missing residues,
+    a decrement means probably a start of a new chain.
+
+    DEPRECATED: Use :func:`check_res_id_continuity()` instead.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    discontinuity : ndarray, dtype=bool
+        Contains the indices of atoms after a discontinuity
+    """
+    warnings.warn(
+        "'check_id_continuity()' is deprecated, "
+        "use 'check_res_id_continuity()' instead",
+        DeprecationWarning
+    )
+    return check_res_id_continuity(array)
+
+
+def check_atom_id_continuity(array):
+    """
+    Check if the atom IDs are incremented by more than 1 or
+    decremented, from one atom to the next one.
+    
+    An increment by more than 1 is as strong clue for missing atoms.
+    
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    
+    Returns
+    -------
+    discontinuity : ndarray, dtype=bool
+        Contains the indices of atoms after a discontinuity
+    """
+    ids = array.atom_id
+    return _check_continuity(ids)
+
+
+def check_res_id_continuity(array):
+    """
+    Check if the residue IDs are incremented by more than 1 or
+    decremented, from one atom to the next one.
+    
+    An increment by more than 1 is as strong clue for missing residues,
     a decrement means probably a start of a new chain.
     
     Parameters
@@ -37,9 +95,7 @@ def check_id_continuity(array):
         Contains the indices of atoms after a discontinuity
     """
     ids = array.res_id
-    diff = np.diff(ids)
-    discontinuity = np.where( ((diff != 0) & (diff != 1)) )
-    return discontinuity[0] + 1
+    return _check_continuity(ids)
 
 
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
@@ -146,3 +202,50 @@ def check_in_box(array):
     box = array.box
     fractions = coord_to_fraction(array, box)
     return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]
+
+
+def renumber_atom_ids(array, start=None):
+    """
+    Renumber the atom IDs of the given array.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    start : int
+        The starting index for renumbering. Defaults to the first ID in
+        the array.
+
+    Returns
+    -------
+    array : AtomArray or AtomArrayStack
+        The renumbered array.
+    """
+    if start is None:
+        start = array.atom_id[0]
+    array.atom_id = np.arange(start, array.shape[-1]+1)
+    return array
+    
+
+def renumber_res_ids(array):
+    """
+    Renumber the residue IDs of the given array.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be checked.
+    start : int
+        The starting index for renumbering. Defaults to the first ID in
+        the array.
+    
+    Returns
+    -------
+    array : AtomArray or AtomArrayStack
+        The renumbered array.
+    """
+    diff = np.diff(array.res_id)
+    diff[diff != 0] = 1
+    new_res_ids =  np.concatenate(([array.res_id[0]], diff)).cumsum()
+    array.res_id = new_res_ids
+    return array

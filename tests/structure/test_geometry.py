@@ -94,7 +94,7 @@ def test_dihedral_backbone_result(file_name):
     
     for chain in struc.chain_iter(array):
         print("Chain: ", chain.chain_id[0])
-        if len(struc.check_id_continuity(chain)) != 0:
+        if len(struc.check_res_id_continuity(chain)) != 0:
             # Do not test discontinuous chains
             return
         test_phi, test_psi, test_ome = struc.dihedral_backbone(chain)
