@@ -1,9 +1,9 @@
 """
-                    
-Plotting the basepairs of a tRNA-like-structure
-===============================================
+Plotting the base pairs of a tRNA-like-structure
+================================================
+
 In this example we plot a linear secondary-structure diagram of a tRNA
-mimic (PDB id: 4P5J) from the Turnip Yellow Mosaic Virus (TYMV).
+mimic (PDB ID: 4P5J) from the *turnip yellow mosaic virus* (TYMV).
 """
 
 # Code source: Tom David Müller
