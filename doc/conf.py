@@ -67,6 +67,7 @@ master_doc = "index"
 project = "Biotite"
 copyright = "2017-2020, the Biotite contributors"
 version = biotite.__version__
+release = biotite.__version__
 
 exclude_patterns = ["build"]
 
