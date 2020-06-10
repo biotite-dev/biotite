@@ -131,7 +131,7 @@ databases, including the arguably most important ones: the *RCSB PDB* and the
    :hidden:
    
    install
-   tutorial/index
+   tutorial/target/index
    apidoc/index
    examples/gallery/index
    extensions

@@ -16,7 +16,10 @@ import warnings
 from sphinx_gallery.sorting import FileNameSortKey
 import matplotlib
 
+import biotite
+
 doc_path = dirname(realpath(__file__))
+package_path = join(dirname(doc_path), "src")
 
 # Include biotite/doc in PYTHONPATH
 # in order to import modules for API doc generation etc.
@@ -34,7 +37,7 @@ matplotlib.rcdefaults()
 apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
 
 # Creation of tutorial *.rst files from Python script
-tutorial.create_tutorial("tutorial_src", "tutorial")
+tutorial.create_tutorial(join("tutorial", "src"), join("tutorial", "target"))
 
 
 #### General ####
