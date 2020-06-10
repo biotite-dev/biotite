@@ -18,12 +18,6 @@ import matplotlib
 
 doc_path = dirname(realpath(__file__))
 
-# Include biotite/src in PYTHONPATH
-# in order to import the 'biotite' package
-package_path = join(dirname(doc_path), "src")
-sys.path.insert(0, package_path)
-import biotite
-
 # Include biotite/doc in PYTHONPATH
 # in order to import modules for API doc generation etc.
 sys.path.insert(0, doc_path)
