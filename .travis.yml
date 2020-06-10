@@ -12,7 +12,7 @@ matrix:
       - PY_VERSION='3.6'
       - COMPLETE=false
       - BIN=true
-      - SRC=true
+      - SRC=false
   - os: linux
     dist: trusty
     sudo: false
@@ -28,7 +28,7 @@ matrix:
       - PY_VERSION='3.8'
       - COMPLETE=true
       - BIN=true
-      - SRC=false
+      - SRC=true
   - os: osx
     env:
       - PY_VERSION='3.6'
@@ -63,18 +63,18 @@ install:
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda install -n biotite-dev "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
   - source activate biotite-dev
+  - python setup.py bdist_wheel
+  - pip install ./dist/*.whl
 
 script:
-  - if [ $COMPLETE == true ];  then python setup.py test --pytest-args="--ignore=tests/application/test_blast.py"; fi
-  - if [ $COMPLETE == false ]; then python setup.py test --pytest-args="--ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/ --ignore=tests/test_doctest.py"; fi
+  - if [ $COMPLETE == true ];  then pytest --ignore=tests/application/test_blast.py; fi
+  - if [ $COMPLETE == false ]; then pytest --ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/ --ignore=tests/test_doctest.py; fi
 
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
-  - if [ $BIN == true ]; then python setup.py bdist_wheel; fi
   - if [ $BIN == true ] && [ $TRAVIS_OS_NAME == "linux" ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
-  - if [ $COMPLETE == true ]; then python setup.py build_sphinx; fi
+  - if [ $COMPLETE == true ]; then sphinx-build ./doc ./doc/_build/doc; fi
   - if [ $COMPLETE == true ]; then cd doc/_build; fi
-  - if [ $COMPLETE == true ]; then mv html doc; fi
   - if [ $COMPLETE == true ]; then zip -r doc.zip doc; fi
   - if [ $COMPLETE == true ]; then cd ../..; fi
 
