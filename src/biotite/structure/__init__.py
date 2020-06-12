@@ -37,7 +37,7 @@ The following annotation categories are mandatory:
 =========  ===========  =================  =======================================
 Category   Type         Examples           Description
 =========  ===========  =================  =======================================
-chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
+chain_id   string (U4)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
 ins_code   string (U1)  '', 'A','B',..     PDB insertion code (iCode)
 res_name   string (U3)  'GLY','ALA', ...   Residue name
