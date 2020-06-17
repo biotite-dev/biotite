@@ -26,30 +26,48 @@ _scope_to_target = {
     "dna":     "pdb_dna_sequence"
 }
 
-_node_id = 0
-
 
 class Query(metaclass=abc.ABCMeta):
     """
-    A representation for a JSON query for the RCSB search API.
+    A representation of a JSON query for the RCSB search API.
     
     This class is the abstract base class for all queries.
     """
     @abc.abstractmethod
     def get_content(self):
+        """
+        Get the query content, i.e. the data belonging to the
+        `'query'` attribute in the RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        and :func:`count` methods.
+        """
         pass
 
 
 class SingleQuery(Query, metaclass=abc.ABCMeta):
+    """
+    A terminal query node for the RCSB search API.
+    
+    Multiple :class:`SingleQuery` objects can be combined to
+    :class:`CompositeQuery`objects using the ``|`` and ``&`` operators.
+
+    This class is the abstract base class for all queries that are
+    terminal nodes.
+    """
+    # The node ID is incremented for every created 'SingleQuery' object
+    _node_id = 0
+
+    def __init__(self):
+        self._node_id = SingleQuery._node_id
+        SingleQuery._node_id += 1
+
     @abc.abstractmethod
     def get_content(self):
-        global _node_id
-        content = {
-            "node_id": _node_id,
+        return {
+            "node_id": self._node_id,
             "parameters": {}
         }
-        _node_id += 1
-        return content
     
     def __and__(self, query):
         return CompositeQuery([self, query], "and")
@@ -60,10 +78,17 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
 
 class CompositeQuery(Query):
     """
-    A representation of an composite query for the RCSB search API.
+    A group query node for the RCSB search API.
     
-    A composite query is an accumulation of other queries, combined
-    either with an 'and' or 'or' operator.
+    A composite query is an combination of other queries, combined
+    either with the `'and'` or `'or'` operator.
+
+    Parameters
+    ----------
+    queries : iterable object of Query
+        The queries to be combined.
+    operator : {'or', 'and'}
+        The type of combination.
     """
     def __init__(self, queries, operator):
         self._queries = queries
@@ -84,6 +109,17 @@ class CompositeQuery(Query):
 
 
 class BasicQuery(SingleQuery):
+    """
+    A text query for searching for a given term across all available
+    fields.
+
+    Parameters
+    ----------
+    term : str
+        The search term.
+        If the term contains multiple words, the query will return
+        results where of the entire term is present.
+    """
     def __init__(self, term):
         super().__init__()
         self._term = term
@@ -92,13 +128,47 @@ class BasicQuery(SingleQuery):
         content = super().get_content()
         content["type"] = "terminal"
         content["service"] = "text"
-        content["parameters"]["value"] = self._term
+        content["parameters"]["value"] = f'"{self._term}"'
         return content
 
 
 class FieldQuery(SingleQuery):
     """
-    https://search.rcsb.org/search-attributes.html
+    A text query for searching for values in a given field using the
+    given operator.
+
+    The operators are keyword arguments of this function and the search
+    value is the value given to the respective parameter.
+    The operators are mutually exclusive.
+    If none is given, the search will return results where the given
+    field exists.
+
+    Parameters
+    ----------
+    field : str
+        The field to search in.
+    exact_match : str, optional
+        Operator for returning results whose field exactly matches the
+        given value.
+    contains_words, contains_phrase : str, optional
+        Operator for returning results whose field matches
+        individual words from the given value or the value as exact
+        phrase, respectively.
+    greater, less, greater_or_equal, less_or_equal, equals : int or float or datetime, optional
+        Operator for returning results whose field values are larger,
+        smaller or equal to the given value.
+    range, range_closed : tuple(int, int) or tuple(float, float) or tuple(datetime, datetime), optional
+        Operator for returning results whose field matches values within
+        the given range. `range_closed` includes the interval limits.
+    is_in : tuple of str or list of str, optional
+        Operator for returning results whose field matches any of the
+        values in the given list.
+
+    Notes
+    -----
+    A complete list of the available fields and its supported operators
+    is documented at
+    `<https://search.rcsb.org/search-attributes.html>`_.
     """
     def __init__(self, field, **kwargs):
         super().__init__()
@@ -139,14 +209,6 @@ class FieldQuery(SingleQuery):
                 for val in self._value
             ]
 
-    def negate(self):
-        clone = copy.deepcopy(self)
-        clone._negation = True
-        return clone
-    
-    def is_negated(self):
-        return self._negation
-
     def get_content(self):
         content = super().get_content()
         content["type"] = "terminal"
@@ -159,10 +221,37 @@ class FieldQuery(SingleQuery):
         return content
 
     def __invert__(self):
-        return self.negate()
+        clone = copy.deepcopy(self)
+        clone._negation = True
+        return clone
 
 
 class SequenceQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules with a sequence similar to a
+    given input sequence using
+    `MMseqs2 <https://github.com/soedinglab/mmseqs2>`_.
+
+    Parameters
+    ----------
+    sequence : Sequence or str
+        The input sequence.
+    scope : {'protein', 'dna', 'rna'}
+        The type of molecule to find.
+    min_identity : float, optional
+        A match is only returned, if the sequence identity between
+        the match and the input sequence exceeds this value.
+        Must be between 0 and 1.
+        By default, the sequence identity is ignored.
+    max_expect_value : float, optional
+        A match is only returned, if the *expect value* (E-value) does
+        not exceed this value.
+        By default, the value is effectively ignored.
+
+    Notes
+    -----
+    *MMseqs2* is run on the RCSB servers.
+    """
     def __init__(self, sequence, scope,
                  min_identity=0.0, max_expect_value=10000000.0):
         super().__init__()
@@ -190,6 +279,19 @@ class SequenceQuery(SingleQuery):
 
 
 class MotifQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules containing the given sequence
+    motif.
+
+    Parameters
+    ----------
+    sequence : str
+        The sequence pattern.
+    pattern_type : {'simple', 'prosite', 'regex'}
+        The type of the pattern.
+    scope : {'protein', 'dna', 'rna'}
+        The type of molecule to find.
+    """
     def __init__(self, pattern, pattern_type, scope):
         super().__init__()
         self._pattern = pattern
@@ -207,6 +309,22 @@ class MotifQuery(SingleQuery):
 
 
 class StructureQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules with structural similarity
+    to the query structure.
+
+    Either the chain or assembly ID of the query structure must be
+    specified.
+
+    Parameters
+    ----------
+    pdb_id : str
+        The PDB ID of the query structure.
+    chain : str, optional
+        The chain ID (more exactly ``asym_id``) of the query structure.
+    assembly : str, optional
+        The assembly ID (``assembly_id``) of the query structure.
+    """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
 
@@ -239,6 +357,43 @@ class StructureQuery(SingleQuery):
 
 
 def count(query, return_type="entry"):
+    """
+    Count PDB entries that meet the given query requirements,
+    via the RCSB search API.
+    
+    This function requires an internet connection.
+    
+    Parameters
+    ----------
+    query : Query
+        The search query.
+    return_type : {'entry', 'assembly', 'polymer_entity', 'non_polymer_entity', 'polymer_instance'}, optional
+        The type of the counted identifiers:
+
+        - ``'entry'``: All macthing PDB entries are counted.
+        - ``'assembly'``: All matching assemblies are counted.
+        - ``'polymer_entity'``: All matching polymeric entities are
+          counted.
+        - ``'non_polymer_entity'``: All matching non-polymeric entities
+          are counted.
+        - ``'polymer_instance'``: All matching chains are counted.
+
+    Returns
+    -------
+    ids : list of str
+        A list of strings containing all PDB IDs that meet the query
+        requirements.
+    
+    Examples
+    --------
+    
+    >>> query = rcsb.FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(count(query))
+    6
+    >>> ids = search(query)
+    >>> print(ids)
+    ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
+    """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
         "polymer_entity", "non_polymer_entity",
@@ -275,7 +430,7 @@ def count(query, return_type="entry"):
 def search(query, return_type="entry", range=None, sort_by=None):
     """
     Get all PDB IDs that meet the given query requirements,
-    via the RCSB search API service.
+    via the RCSB search API.
     
     This function requires an internet connection.
     
@@ -283,18 +438,41 @@ def search(query, return_type="entry", range=None, sort_by=None):
     ----------
     query : Query
         The search query.
+    return_type : {'entry', 'assembly', 'polymer_entity', 'non_polymer_entity', 'polymer_instance'}, optional
+        The type of the returned identifiers:
+
+        - ``'entry'``: Only the PDB ID is returned (e.g. ``'XXXX'``).
+          These can be used directly a input to :func:`fetch()`.
+        - ``'assembly'``: The PDB ID appended with assembly ID is
+          returned (e.g. ``'XXXX-1'``).
+        - ``'polymer_entity'``: The PDB ID appended with entity ID of
+          polymers is returned (e.g. ``'XXXX_1'``).
+        - ``'non_polymer_entity'``: The PDB ID appended with entity ID
+          of non-polymeric entities is returned (e.g. ``'XXXX_1'``).
+        - ``'polymer_instance'``: The PDB ID appended with chain ID
+          (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
     
+    range : tuple(int, int), optional
+        If this parameter is specified, the PDB IDs in this range are
+        selected from all matching PDB IDs and returned (pagination).
+    sort_by : str, optional
+        If specified, the returned PDB IDs are sorted by the values
+        of the given field name in descending order.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/search-attributes.html>`_.
+
     Returns
     -------
     ids : list of str
         A list of strings containing all PDB IDs that meet the query
-        requirements
+        requirements.
 
-    
     Examples
     --------
     
-    >>> query = ResolutionQuery(max=0.6)
+    >>> query = rcsb.FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(count(query))
+    6
     >>> ids = search(query)
     >>> print(ids)
     ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
