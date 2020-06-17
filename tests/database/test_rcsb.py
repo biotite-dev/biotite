@@ -184,7 +184,33 @@ def test_search_composite():
 
     assert ids_or  == ids_1 | ids_2
     assert ids_and == ids_1 & ids_2
-    
+
+
+@pytest.mark.parametrize(
+    "return_type, expected",
+    [
+        ("entry",              ["1L2Y"]  ),
+        ("assembly",           ["1L2Y-1"]),
+        ("polymer_entity",     ["1L2Y_1"]),
+        ("non_polymer_entity", []        ),
+        ("polymer_instance",   ["1L2Y.A"]),
+    ]
+)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_return_type(return_type, expected):
+    query = rcsb.BasicQuery("tc5b")
+    assert rcsb.search(query, return_type) == expected
+    assert rcsb.count(query, return_type) == len(expected)
+
+
+def test_search_empty():
+    query = rcsb.BasicQuery("This will not match any ID")
+    assert rcsb.search(query) == []
+    assert rcsb.count(query) == 0
+
 
 @pytest.mark.parametrize(
     "field, params",
