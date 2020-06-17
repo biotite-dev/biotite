@@ -123,6 +123,13 @@ class BasicQuery(SingleQuery):
         If the term contains multiple words, the query will return
         results where of the entire term is present.
         The matching is not case-sensitive.
+    
+    Examples
+    --------
+    
+    >>> query = BasicQuery("tc5b")
+    >>> print(search(query))
+    ['1L2Y']
     """
     def __init__(self, term):
         super().__init__()
@@ -177,6 +184,13 @@ class FieldQuery(SingleQuery):
     A complete list of the available fields and its supported operators
     is documented at
     `<https://search.rcsb.org/search-attributes.html>`_.
+
+    Examples
+    --------
+    
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(search(query))
+    ['1I0T', '1EJG', '3P4J', '2GLT', '4JLJ', '3NIR', '5NW3', '5D8V']
     """
     def __init__(self, field, **kwargs):
         super().__init__()
@@ -259,6 +273,14 @@ class SequenceQuery(SingleQuery):
     Notes
     -----
     *MMseqs2* is run on the RCSB servers.
+
+    Examples
+    --------
+    
+    >>> sequence = "NLYIQWLKDGGPSSGRPPPS"
+    >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.8)
+    >>> print(search(query))
+    ['1L2Y', '2LDJ', '2MJ9', '2JOF', '3UC8', '3UC7', '1RIJ', '2LL5']
     """
     def __init__(self, sequence, scope,
                  min_identity=0.0, max_expect_value=10000000.0):
@@ -299,6 +321,15 @@ class MotifQuery(SingleQuery):
         The type of the pattern.
     scope : {'protein', 'dna', 'rna'}
         The type of molecule to find.
+    
+    Examples
+    --------
+    
+    >>> query = MotifQuery(
+    ...     "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H.",
+    ...     "prosite",
+    ...     "protein"
+    ... )
     """
     def __init__(self, pattern, pattern_type, scope):
         super().__init__()
@@ -335,6 +366,13 @@ class StructureQuery(SingleQuery):
     strict : bool, optional
         If true, structure comparison is strict, otherwise it is
         relaxed.
+    
+    Examples
+    --------
+
+    >>> query = StructureQuery("1L2Y", chain="A")
+    >>> print(search(query))
+    ['1L2Y', '2LDJ', '2JOF', '2M7D', '1RIJ']
     """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
