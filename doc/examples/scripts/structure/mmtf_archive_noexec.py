@@ -28,19 +28,12 @@ import biotite.structure.io.mmtf as mmtf
 # and the .tar archive is created here
 base_path = "path/to/directoy"
 
-# A Query class for getting all available PDB IDs 
-class HoldingsQuery(rcsb.SimpleQuery):
-
-    def __init__(self, method="ignore", molecule_type="ignore", has_data=None):
-        super().__init__("HoldingsQuery")
-        self.add_param("experimentalMethod", method)
-        self.add_param("moleculeType", molecule_type)
-
-# Obtain all PDB IDs
-all_id_query = HoldingsQuery()
+# Obtain all PDB IDs using a query that includes all entries
+# Each PDB entry has a title
+all_id_query = rcsb.FieldQuery("struct.title")
 pdb_ids = rcsb.search(all_id_query)
 
-# Name for donwload directory
+# Name for download directory
 now = datetime.datetime.now()
 mmtf_dir = os.path.join(
     base_path, f"mmtf_{now.year:04d}{now.month:02d}{now.day:02d}"

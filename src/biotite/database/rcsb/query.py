@@ -82,6 +82,9 @@ class CompositeQuery(Query):
     
     A composite query is an combination of other queries, combined
     either with the `'and'` or `'or'` operator.
+    Usually, a :class:`CompositeQuery` will not be created by calling
+    its constructor, but by combining queries using the ``|`` or ``&``
+    operator.
 
     Parameters
     ----------
@@ -119,6 +122,7 @@ class BasicQuery(SingleQuery):
         The search term.
         If the term contains multiple words, the query will return
         results where of the entire term is present.
+        The matching is not case-sensitive.
     """
     def __init__(self, term):
         super().__init__()
@@ -143,6 +147,8 @@ class FieldQuery(SingleQuery):
     If none is given, the search will return results where the given
     field exists.
 
+    A :class:`FieldQuery` is negated using the ``~`` operator.
+
     Parameters
     ----------
     field : str
@@ -150,10 +156,12 @@ class FieldQuery(SingleQuery):
     exact_match : str, optional
         Operator for returning results whose field exactly matches the
         given value.
+        The matching is not case-sensitive.
     contains_words, contains_phrase : str, optional
         Operator for returning results whose field matches
         individual words from the given value or the value as exact
         phrase, respectively.
+        The matching is not case-sensitive.
     greater, less, greater_or_equal, less_or_equal, equals : int or float or datetime, optional
         Operator for returning results whose field values are larger,
         smaller or equal to the given value.
@@ -324,6 +332,9 @@ class StructureQuery(SingleQuery):
         The chain ID (more exactly ``asym_id``) of the query structure.
     assembly : str, optional
         The assembly ID (``assembly_id``) of the query structure.
+    strict : bool, optional
+        If true, structure comparison is strict, otherwise it is
+        relaxed.
     """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
@@ -387,12 +398,12 @@ def count(query, return_type="entry"):
     Examples
     --------
     
-    >>> query = rcsb.FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(count(query))
-    6
+    8
     >>> ids = search(query)
     >>> print(ids)
-    ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
+    ['1I0T', '1EJG', '3P4J', '2GLT', '4JLJ', '3NIR', '5NW3', '5D8V']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
@@ -470,12 +481,15 @@ def search(query, return_type="entry", range=None, sort_by=None):
     Examples
     --------
     
-    >>> query = rcsb.FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
-    >>> print(count(query))
-    6
-    >>> ids = search(query)
-    >>> print(ids)
-    ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(search(query))
+    ['1I0T', '1EJG', '3P4J', '2GLT', '4JLJ', '3NIR', '5NW3', '5D8V']
+    >>> print(search(query, range=(1,4)))
+    ['1EJG', '3P4J', '2GLT']
+    >>> print(search(query, sort_by="rcsb_accession_info.initial_release_date"))
+    ['5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG', '2GLT']
+    >>> print(search(query, return_type="polymer_instance"))
+    ['4JLJ.A', '4JLJ.B', '5NW3.A', '3NIR.A', '3P4J.B', '3P4J.A', '1EJG.A', '5D8V.A']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
