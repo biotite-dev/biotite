@@ -60,7 +60,6 @@ print("\n".join(lines[:10] + ["..."]))
 # In many cases you are not interested in a specific structure, but you
 # want a set of structures that fits your desired criteria.
 # For this purpose the *RCSB* search API can be used.
-# 
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
 # The :func:`search()` method takes the :class:`Query` and returns a
@@ -95,7 +94,7 @@ query2 = rcsb.FieldQuery("reflns.d_resolution_high", less=1.5)
 ########################################################################
 # The search API allows even more complex queries, e.g. for sequence
 # or structure similarity. Have a look at the API reference of
-# of :mod:`biotite.database.rcsb`.
+# :mod:`biotite.database.rcsb`.
 #
 # Multiple :class:`Query` objects can be combined using the ``|`` (or)
 # or ``&`` (and) operator for a more fine-grained selection.

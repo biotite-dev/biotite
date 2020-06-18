@@ -31,13 +31,13 @@ class Query(metaclass=abc.ABCMeta):
     """
     A representation of a JSON query for the RCSB search API.
     
-    This class is the abstract base class for all queries.
+    This is the abstract base class for all queries.
     """
     @abc.abstractmethod
     def get_content(self):
         """
         Get the query content, i.e. the data belonging to the
-        `'query'` attribute in the RCSB search API.
+        ``'query'`` attribute in the RCSB search API.
 
         This content is converted into JSON by the :func:`search`
         and :func:`count` methods.
@@ -52,7 +52,7 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     Multiple :class:`SingleQuery` objects can be combined to
     :class:`CompositeQuery`objects using the ``|`` and ``&`` operators.
 
-    This class is the abstract base class for all queries that are
+    This is the abstract base class for all queries that are
     terminal nodes.
     """
     # The node ID is incremented for every created 'SingleQuery' object
@@ -121,7 +121,7 @@ class BasicQuery(SingleQuery):
     term : str
         The search term.
         If the term contains multiple words, the query will return
-        results where of the entire term is present.
+        results where the entire term is present.
         The matching is not case-sensitive.
     
     Examples
@@ -258,6 +258,8 @@ class SequenceQuery(SingleQuery):
     ----------
     sequence : Sequence or str
         The input sequence.
+        If `sequence` is a :class:`NucleotideSequence` and the `scope`
+        is ``'rna'``, ``'T'`` is automatically replaced by ``'U'``.
     scope : {'protein', 'dna', 'rna'}
         The type of molecule to find.
     min_identity : float, optional
@@ -315,7 +317,7 @@ class MotifQuery(SingleQuery):
 
     Parameters
     ----------
-    sequence : str
+    pattern : str
         The sequence pattern.
     pattern_type : {'simple', 'prosite', 'regex'}
         The type of the pattern.
