@@ -146,7 +146,7 @@ fig = plt.figure(figsize=(8.0, 8.0))
 fig.suptitle("Rotamers of tyrosine", fontsize=20, weight="bold")
 for i, rotamer in enumerate(rotamers):
     ax = fig.add_subplot(3, 3, i+1, projection="3d")
-    graphics.plot_atoms(ax, rotamer, colors, line_width=3, size=size)
+    graphics.plot_atoms(ax, rotamer, colors, line_width=3, size=size, zoom=0.9)
 
 fig.tight_layout()
 plt.show()
