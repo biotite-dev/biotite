@@ -1,6 +1,15 @@
 """
-Test
-====
+Arrangement of beta-sheets
+==========================
+
+This scripts plots the arrangements of β-sheets in a protein structure.
+The information is entirely taken from the ``struct_sheet_order`` and
+``struct_sheet_range`` categories of the structure's *PDBx/mmCIF* file.
+
+In this case the β-barrel of a split fluorescent protein is shown,
+but the script can be customized to show the β-sheets of any protein
+you like.
+You just need to adjust the options shown below.
 """
 
 # Code source: Patrick Kunzmann
@@ -15,42 +24,53 @@ import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 
 
-PDB_ID = "1GYA"
+##### OPTIONS #####
+PDB_ID = "3AKO"
+SHEETS = ["A"]
 
-SHEET_DISTANCE = 2.0
+FIG_SIZE = (8.0, 4.0)
+Y_LIMIT = 2.0
+SHEET_DISTANCE = 3.0
 ARROW_TAIL_WITH = 0.4
 ARROW_HEAD_WITH = 0.7
 ARROW_HEAD_LENGTH = 0.25
 ARROW_LINE_WIDTH = 1
 ARROW_COLORS = [
     biotite.colors["darkgreen"],
-    biotite.colors["lightgreen"],
     biotite.colors["dimorange"],
+    biotite.colors["lightgreen"],
     biotite.colors["brightorange"],
 ]
 CONNECTION_COLOR = "black"
 CONNECTION_LINE_WIDTH = 1.5
-CONNECTION_HEIGHT = 0.2
+CONNECTION_HEIGHT = 0.1
 CONNECTION_SEPARATION = 0.1
 RES_ID_HEIGHT = -0.2
 RES_ID_FONT_SIZE = 8
+RES_ID_FONT_WEIGHT = "bold"
+ADAPTIVE_ARROW_LENGTHS = True
+SHOW_SHEET_NAMES = False
+SHEET_NAME_FONT_SIZE = 14
+##### SNOITPO #####
 
 
-pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(PDB_ID, "pdbx", "."))
+pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(PDB_ID, "pdbx"))
 sheet_order_dict = pdbx_file["struct_sheet_order"]
-sheet_range_dict = pdbx_file["struct_sheet_range"]
 
-unique_sheet_ids = np.unique(sheet_order_dict["sheet_id"]).tolist()
-sheet_indices = np.array(
-    [unique_sheet_ids.index(sheet) for sheet in sheet_order_dict["sheet_id"]]
-)
-print(sheet_indices)
-print()
+if SHEETS is None:
+    sele = np.full(len(sheet_order_dict["sheet_id"]), True)
+else:
+    sele = np.array([
+        sheet in SHEETS for sheet in sheet_order_dict["sheet_id"]
+    ])
+sheet_ids = sheet_order_dict["sheet_id"][sele]
+
+is_parallel_list = sheet_order_dict["sense"][sele] == "parallel"
 
 adjacent_strands = np.array([
     (strand_i, strand_j) for strand_i, strand_j in zip(
-        sheet_order_dict["range_id_1"],
-        sheet_order_dict["range_id_2"]
+        sheet_order_dict["range_id_1"][sele],
+        sheet_order_dict["range_id_2"][sele]
     )
 ])
 print(adjacent_strands)
@@ -58,57 +78,79 @@ print()
 
 
 
-strand_chain_ids = sheet_range_dict["beg_auth_asym_id"]
-strand_res_id_begs = sheet_range_dict["beg_auth_seq_id"].astype(int)
-strand_res_id_ends = sheet_range_dict["end_auth_seq_id"].astype(int)
+sheet_range_dict = pdbx_file["struct_sheet_range"]
+
+sele = np.array([
+    sheet in sheet_ids for sheet in sheet_range_dict["sheet_id"]
+])
+strand_chain_ids = sheet_range_dict["beg_auth_asym_id"][sele]
+strand_res_id_begs = sheet_range_dict["beg_auth_seq_id"].astype(int)[sele]
+strand_res_id_ends = sheet_range_dict["end_auth_seq_id"].astype(int)[sele]
+
 
 # Secondarily sort by residue ID
-order = np.argsort(strand_res_id_begs)
+order = np.argsort(strand_res_id_begs, kind="stable")
 # Primarily sort by chain ID
-order = order[np.argsort(strand_chain_ids[order])]
+order = order[np.argsort(strand_chain_ids[order], kind="stable")]
 
-sorted_strand_ids = sheet_range_dict["id"][order]
-sorted_sheet_indices = np.array(
-    [unique_sheet_ids.index(sheet) for sheet in sheet_range_dict["sheet_id"]]
-)[order]
+sorted_strand_ids = sheet_range_dict["id"][sele][order]
+sorted_sheet_ids = sheet_range_dict["sheet_id"][sele][order]
 sorted_chain_ids = strand_chain_ids[order]
+sorted_res_id_begs = strand_res_id_begs[order]
+sorted_res_id_ends = strand_res_id_ends[order]
 
+# Remove duplicate entries,
+# i.e. entries with the same chain ID and residue ID
+# Duplicate entries appear e.g. in beta-barrel structure files
+# Draw one of each duplicate as orphan -> no connections
+non_duplicate_mask = (np.diff(strand_res_id_begs[order], prepend=[-1]) != 0)
 connections = []
-for i in range(len(sorted_strand_ids) -1):
-    if sorted_chain_ids[i] == sorted_chain_ids[i+1]:
-        connections.append((
-            (sorted_sheet_indices[i],   sorted_strand_ids[i]  ),
-            (sorted_sheet_indices[i+1], sorted_strand_ids[i+1])
-        ))
+non_duplicate_indices =  np.arange(len(sorted_strand_ids))[non_duplicate_mask]
+for i in range(len(non_duplicate_indices) - 1):
+    current_i = non_duplicate_indices[i]
+    next_i = non_duplicate_indices[i+1]
+    if sorted_chain_ids[current_i] != sorted_chain_ids[next_i]:
+        # No connection between separate chains
+        continue
+    connections.append((
+        (sorted_sheet_ids[current_i], sorted_strand_ids[current_i]),
+        (sorted_sheet_ids[next_i],    sorted_strand_ids[next_i]   )
+    ))
 for strand_i, strand_j in connections:
     print(f"{strand_i} -> {strand_j}")
 print()
 
 ranges = {
-    (sheet_i, strand_id): (begin, end)
-    for sheet_i, strand_id, begin, end
+    (sheet_id, strand_id): (begin, end)
+    for sheet_id, strand_id, begin, end
     in zip(
-        sorted_sheet_indices, sorted_strand_ids,
-        strand_res_id_begs[order], strand_res_id_ends[order]
+        sorted_sheet_ids, sorted_strand_ids,
+        sorted_res_id_begs, sorted_res_id_ends
     )
 }
-print(ranges)
-print()
+
+chain_ids = {
+    (sheet_id, strand_id): chain_id
+    for sheet_id, strand_id, chain_id
+    in zip(sorted_sheet_ids, sorted_strand_ids, sorted_chain_ids)
+}
+unique_chain_ids = np.unique(sorted_chain_ids)
 
 
 
-sheet_graphs = []
-for sheet_index in np.unique(sheet_indices):
-    sheet_mask = sheet_indices == sheet_index
-    sheet_graphs.append(nx.Graph([
+sheet_graphs = {}
+for sheet_id in np.unique(sheet_ids):
+    # Select only strands from the current sheet
+    sheet_mask = (sheet_ids == sheet_id)
+    sheet_graphs[sheet_id] = nx.Graph([
         (strand_i, strand_j, {"is_parallel": is_parallel})
         for (strand_i, strand_j), is_parallel in zip(
             adjacent_strands[sheet_mask],
-            sheet_order_dict["sense"][sheet_mask] == "parallel"
+            is_parallel_list[sheet_mask]
         )
-    ]))
+    ])
 
-for graph in sheet_graphs:
+for graph in sheet_graphs.values():
     initial_strand = adjacent_strands[0,0]
     graph.nodes[initial_strand]["is_upwards"] = True
     for strand in graph.nodes:
@@ -140,11 +182,16 @@ for graph in sheet_graphs:
 
 
 
-fig, ax = plt.subplots(figsize=(8.0, 4.0))
+fig, ax = plt.subplots(figsize=FIG_SIZE)
 
+### Plot arrows
+MAX_ARROW_LENGTH = 2 # from -1 to 1
+arrow_length_per_seq_length = MAX_ARROW_LENGTH / np.max(
+    [end - beg + 1 for beg, end in ranges.values()]
+)
 coord_dict = {}
 current_position = 0
-for sheet_index, graph in enumerate(sheet_graphs):
+for sheet_id, graph in sheet_graphs.items():
     positions = nx.kamada_kawai_layout(graph, dim=1)
     strand_ids = np.array(list(positions.keys()))
     positions = np.array(list(positions.values()))
@@ -160,12 +207,20 @@ for sheet_index, graph in enumerate(sheet_graphs):
     current_position = np.max(positions) + SHEET_DISTANCE
 
     for strand_id, pos in zip(strand_ids, positions):
-        if graph.nodes[strand_id]["is_upwards"]:
-            y = -1
-            dy = 2
+        chain_id = chain_ids[sheet_id, strand_id]
+        color_index = unique_chain_ids.tolist().index(chain_id)
+        if ADAPTIVE_ARROW_LENGTHS:
+            beg, end = ranges[sheet_id, strand_id]
+            seq_length = end - beg + 1
+            arrow_length = arrow_length_per_seq_length * seq_length
         else:
-            y = 1
-            dy = -2
+            arrow_length = MAX_ARROW_LENGTH
+        if graph.nodes[strand_id]["is_upwards"]:
+            y = -arrow_length / 2
+            dy = arrow_length
+        else:
+            y = arrow_length / 2
+            dy = -arrow_length
         ax.add_patch(
             FancyArrow(
                 x=pos, y=y, dx=0, dy=dy,
@@ -173,20 +228,30 @@ for sheet_index, graph in enumerate(sheet_graphs):
                 width = ARROW_TAIL_WITH,
                 head_width = ARROW_HEAD_WITH,
                 head_length = ARROW_HEAD_LENGTH,
-                facecolor = ARROW_COLORS[sheet_index % len(ARROW_COLORS)],
+                facecolor = ARROW_COLORS[color_index % len(ARROW_COLORS)],
                 edgecolor = CONNECTION_COLOR,
                 linewidth = ARROW_LINE_WIDTH,
             )
         )
         # Start and end coordinates of the respective arrow
-        coord_dict[sheet_index, strand_id] = ((pos, y), (pos, y + dy))
+        coord_dict[sheet_id, strand_id] = ((pos, y), (pos, y + dy))
 
+### Plot connections
+# Plot the short connections at low height
+# to decrease line intersections
+# -> sort connections by length of connection 
+order = np.argsort([
+    np.abs(coord_dict[strand_i][0][0] - coord_dict[strand_j][0][0])
+    for strand_i, strand_j in connections
+])
+connections = [connections[i] for i in order]
 for i, (strand_i, strand_j) in enumerate(connections):
     horizontal_line_height = 1 + CONNECTION_HEIGHT + i * CONNECTION_SEPARATION
     coord_i_beg, coord_i_end = coord_dict[strand_i]
     coord_j_beg, coord_j_end = coord_dict[strand_j]
     
-    if coord_i_end[1] == coord_j_beg[1]:
+    if np.sign(coord_i_end[1]) == np.sign(coord_j_beg[1]):
+        # Start and end are on the same side of the arrows
         x = (
             coord_i_end[0],
             coord_i_end[0],
@@ -199,14 +264,14 @@ for i, (strand_i, strand_j) in enumerate(connections):
             np.sign(coord_j_beg[1]) * horizontal_line_height,
             coord_j_beg[1]
         )
-        # Start and end are on the same side of the arrows
     else:
         # Start and end are on different sides
+        offset = 0.4 if coord_j_beg[0] >= coord_i_end[0] else -0.4
         x = (
             coord_i_end[0],
             coord_i_end[0],
-            coord_i_end[0] + 0.5,
-            coord_i_end[0] + 0.5,
+            coord_i_end[0] + offset,
+            coord_i_end[0] + offset,
             coord_j_beg[0],
             coord_j_beg[0]
         )
@@ -222,10 +287,11 @@ for i, (strand_i, strand_j) in enumerate(connections):
         x, y,
         color = CONNECTION_COLOR,
         linewidth = CONNECTION_LINE_WIDTH,
-        # Avoid intersecticoord_i_beg, coord_i_endon of the line's end with the arrow
+        # Avoid intersection of the line's end with the arrow
         solid_capstyle = "butt"
     )
 
+### Plot residue ID labels
 for strand, (res_id_beg, res_id_end) in ranges.items():
     coord_beg, coord_end = coord_dict[strand]
     for coord, res_id in zip((coord_beg, coord_end), (res_id_beg, res_id_end)):
@@ -233,10 +299,31 @@ for strand, (res_id_beg, res_id_end) in ranges.items():
             coord[0],
             np.sign(coord[1]) * (np.abs(coord[1]) + RES_ID_HEIGHT),
             str(res_id),
-            ha="center", va="center", fontsize=RES_ID_FONT_SIZE, weight="bold"
+            ha="center", va="center",
+            fontsize=RES_ID_FONT_SIZE, weight=RES_ID_FONT_WEIGHT
         )
 
+### Plot sheet names as x-axis ticks
+if SHOW_SHEET_NAMES:
+    tick_pos = [
+        np.mean([
+            coord_dict[key][0][0] for key in coord_dict if key[0] == sheet_id
+        ])
+        for sheet_id in sheet_ids
+    ]
+    ax.set_xticks(tick_pos)
+    ax.set_xticklabels([f"Sheet {sheet_id}" for sheet_id in sheet_ids])
+    ax.set_frame_on(False)
+    ax.yaxis.set_visible(False)
+    ax.xaxis.set_tick_params(
+        bottom=False, top=False, labelbottom=True, labeltop=False,
+        labelsize=SHEET_NAME_FONT_SIZE
+    )
+else:
+    ax.axis("off")
+
+
 ax.set_xlim(-1, current_position - SHEET_DISTANCE + 1)
-ax.set_ylim(-2, 2)
+ax.set_ylim(-Y_LIMIT, Y_LIMIT)
 fig.tight_layout()
 plt.show()
