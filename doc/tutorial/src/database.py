@@ -59,29 +59,49 @@ print("\n".join(lines[:10] + ["..."]))
 ########################################################################
 # In many cases you are not interested in a specific structure, but you
 # want a set of structures that fits your desired criteria.
-# For this purpose the *RCSB SEARCH* service can be interfaced.
-# 
+# For this purpose the *RCSB* search API can be used.
 # At first you have to create :class:`Query` object for the property you
 # want to filter.
 # The :func:`search()` method takes the :class:`Query` and returns a
-# list of PDB IDs, which itself can be used as input for :func:`fetch()`.
+# list of PDB IDs, which itself can be used as input for
+# :func:`fetch()`.
+# Likewise, :func:`count()` is used to count the number of matching
+# PDB IDs.
 
-query = rcsb.ResolutionQuery(min=0.0, max=0.6)
+query = rcsb.BasicQuery("HCN1")
 pdb_ids = rcsb.search(query)
 print(pdb_ids)
+print(rcsb.count(query))
 files = rcsb.fetch(pdb_ids, "mmtf", gettempdir())
 
 ########################################################################
-# Not all query types of the SEARCH service are supported yet. But it is
-# quite easy to implement your needed query type by inheriting
-# :class:`SimpleQuery`.
-# 
-# Multiple :class:`SimpleQuery` objects can be 'and'/'or' combined using
-# a :class:`CompositeQuery`.
+# This was a simple search for the occurrence of the search term in any
+# field. 
+# You can also search for a value in a specific field with a
+# :class:`FieldQuery`.
+# A complete list of the available fields and its supported operators
+# is documented
+# `on this page <https://search.rcsb.org/search-attributes.html>`_.
 
-query1 = rcsb.ResolutionQuery(0.0, 1.0)
-query2 = rcsb.MolecularWeightQuery(10000, 100000)
-composite = rcsb.CompositeQuery("and", [query1, query2])
+# Query for 'lacA' gene
+query1 = rcsb.FieldQuery(
+    "rcsb_entity_source_organism.rcsb_gene_name.value",
+    exact_match="lacA"
+)
+# Query for resolution below 1.5 Å
+query2 = rcsb.FieldQuery("reflns.d_resolution_high", less=1.5)
+
+########################################################################
+# The search API allows even more complex queries, e.g. for sequence
+# or structure similarity. Have a look at the API reference of
+# :mod:`biotite.database.rcsb`.
+#
+# Multiple :class:`Query` objects can be combined using the ``|`` (or)
+# or ``&`` (and) operator for a more fine-grained selection.
+# A :class:`FieldQuery` is negated with ``~``.
+
+composite_query = query1 & ~query2
+print(rcsb.search(composite_query))
 
 ########################################################################
 # Fetching files from the NCBI Entrez database
@@ -137,12 +157,9 @@ print(file_path)
 temp_file.close()
 
 ########################################################################
-# Similar to the *RCSB PDB*, you can also search in the *NCBI Entrez*
-# database, but in an even more powerful manner:
-# Due to the simple design of the search queries accepted by
-# *NCBI Entrez*, you can search in every
+# Similar to the *RCSB PDB*, you can also search every
 # `field <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_
-# of the database.
+# of the *NCBI Entrez* database.
 
 # Search in all fields
 print(entrez.SimpleQuery("BL21 genome"))
@@ -150,7 +167,7 @@ print(entrez.SimpleQuery("BL21 genome"))
 print(entrez.SimpleQuery("Escherichia coli", field="Organism"))
 
 ########################################################################
-# You can even combine multiple :class:`Query` objects in any way you
+# You can also combine multiple :class:`Query` objects in any way you
 # like using the binary operators ``|``, ``&`` and ``^``,
 # that represent ``OR``,  ``AND`` and ``NOT`` linkage, respectively.
 

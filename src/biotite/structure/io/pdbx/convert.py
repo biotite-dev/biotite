@@ -230,7 +230,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
 def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     prefix = "auth" if use_author_fields else "label"
     array.set_annotation(
-        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U3")
+        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U4")
     )
     array.set_annotation(
         "res_id", np.array(

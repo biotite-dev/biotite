@@ -40,33 +40,16 @@
     "biotite.database.rcsb" : {
         "Queries" : [
             "Query",
+            "SingleQuery",
             "CompositeQuery",
-            "SimpleQuery",
-            "RangeQuery",
-            "ResolutionQuery",
-            "BFactorQuery",
-            "MolecularWeightQuery",
-            "ChainCountQuery",
-            "EntityCountQuery",
-            "ModelCountQuery",
-            "ChainLengthQuery",
-            "MoleculeTypeQuery",
-            "MethodQuery",
-            "SoftwareQuery",
-            "PubMedIDQuery",
-            "UniProtIDQuery",
-            "PfamIDQuery",
-            "SequenceClusterQuery",
-            "TextSearchQuery",
-            "KeywordQuery",
-            "TitleQuery",
-            "DecriptionQuery",
-            "MacromoleculeNameQuery",
-            "ExpressionOrganismQuery",
-            "AuthorQuery",
-            "DateQuery"
+            "BasicQuery",
+            "FieldQuery",
+            "SequenceQuery",
+            "MotifQuery",
+            "StructureQuery"
         ],
         "Search and fetch" : [
+            "count",
             "search",
             "fetch"
         ]

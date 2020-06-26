@@ -4,626 +4,413 @@
 
 __name__ = "biotite.database.rcsb"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
-__all__ = ["Query", "CompositeQuery", "RangeQuery", "SimpleQuery",
-           "ResolutionQuery", "BFactorQuery", "MolecularWeightQuery",
-           "ChainCountQuery", "EntityCountQuery", "ModelCountQuery",
-           "ChainLengthQuery",
-           "MoleculeTypeQuery", "MethodQuery", "SoftwareQuery",
-           "PubMedIDQuery", "UniProtIDQuery", "PfamIDQuery",
-           "SequenceClusterQuery",
-           "TextSearchQuery", "KeywordQuery", "TitleQuery",
-           "DecriptionQuery", "MacromoleculeNameQuery",
-           "ExpressionOrganismQuery", "AuthorQuery",
-           "DateQuery",
-           "search"]
+__all__ = ["Query", "SingleQuery", "CompositeQuery",
+           "BasicQuery", "FieldQuery",
+           "SequenceQuery", "StructureQuery", "MotifQuery",
+           "search", "count"]
 
-from xml.etree.ElementTree import Element, SubElement, tostring
-import datetime
 import abc
+import json
+import copy
+from datetime import datetime
+import numpy as np
 import requests
+from ...sequence.seqtypes import ProteinSequence, NucleotideSequence
 from ..error import RequestError
 
 
-_search_url = "https://www.rcsb.org/pdb/rest/search"
+_search_url = "http://search.rcsb.org/rcsbsearch/v1/query"
+_scope_to_target = {
+    "protein": "pdb_protein_sequence",
+    "rna":     "pdb_rna_sequence",
+    "dna":     "pdb_dna_sequence"
+}
+
 
 class Query(metaclass=abc.ABCMeta):
     """
-    A representation for an XML query for the RCSB SEARCH service.
+    A representation of a JSON query for the RCSB search API.
     
-    This class is the abstract base class for all queries.
+    This is the abstract base class for all queries.
     """
+    @abc.abstractmethod
+    def get_content(self):
+        """
+        Get the query content, i.e. the data belonging to the
+        ``'query'`` attribute in the RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        and :func:`count` methods.
+        """
+        pass
+
+
+class SingleQuery(Query, metaclass=abc.ABCMeta):
+    """
+    A terminal query node for the RCSB search API.
     
+    Multiple :class:`SingleQuery` objects can be combined to
+    :class:`CompositeQuery`objects using the ``|`` and ``&`` operators.
+
+    This is the abstract base class for all queries that are
+    terminal nodes.
+    """
+    # The node ID is incremented for every created 'SingleQuery' object
+    _node_id = 0
+
     def __init__(self):
-        self.query = None
+        self._node_id = SingleQuery._node_id
+        SingleQuery._node_id += 1
+
+    @abc.abstractmethod
+    def get_content(self):
+        return {
+            "node_id": self._node_id,
+            "parameters": {}
+        }
     
-    def get_query(self):
-        """
-        Get the root XML `Element` representing the query.
-        
-        Returns
-        -------
-        query : Element
-            The root element of the query.
-        """
-        return self.query
+    def __and__(self, query):
+        return CompositeQuery([self, query], "and")
     
-    def __str__(self):
-        return tostring(self.query, encoding="unicode")
+    def __or__(self, query):
+        return CompositeQuery([self, query], "or") 
+
 
 class CompositeQuery(Query):
     """
-    A representation of an composite XML query.
+    A group query node for the RCSB search API.
     
-    A composite query is an accumulation of other queries, combined
-    either with an 'and' or 'or' operator.
-    
-    A combination of :class:`CompositeQuery` instances is not possible.
-    
+    A composite query is an combination of other queries, combined
+    either with the `'and'` or `'or'` operator.
+    Usually, a :class:`CompositeQuery` will not be created by calling
+    its constructor, but by combining queries using the ``|`` or ``&``
+    operator.
+
     Parameters
     ----------
-    operator: str, 'or' or 'and'
-        The combination operator.
-    queries : iterable object of SimpleQuery
+    queries : iterable object of Query
         The queries to be combined.
+    operator : {'or', 'and'}
+        The type of combination.
     """
-    def __init__(self, operator, queries):
+    def __init__(self, queries, operator):
+        self._queries = queries
+        if operator not in ("or", "and"):
+            raise ValueError(
+                f"Operator must be 'or' or 'and', not '{operator}'"
+            )
+        self._operator = operator
+    
+    def get_content(self):
+        content = {
+            "type": "group",
+            "logical_operator": self._operator,
+            "nodes": [query.get_content() for query in self._queries]
+        }
+        return content
+
+
+
+class BasicQuery(SingleQuery):
+    """
+    A text query for searching for a given term across all available
+    fields.
+
+    Parameters
+    ----------
+    term : str
+        The search term.
+        If the term contains multiple words, the query will return
+        results where the entire term is present.
+        The matching is not case-sensitive.
+    
+    Examples
+    --------
+    
+    >>> query = BasicQuery("tc5b")
+    >>> print(search(query))
+    ['1L2Y']
+    """
+    def __init__(self, term):
         super().__init__()
-        self.query = Element("orgPdbCompositeQuery")
-        for i, q in enumerate(queries):
-            refinement = SubElement(self.query, "queryRefinement")
-            ref_level = SubElement(refinement, "queryRefinementLevel")
-            ref_level.text = str(i)
-            if i != 0:
-                conj_type = SubElement(refinement, "conjunctionType")
-                conj_type.text = operator
-            refinement.append(q.query)
+        self._term = term
 
-class SimpleQuery(Query, metaclass=abc.ABCMeta):
+    def get_content(self):
+        content = super().get_content()
+        content["type"] = "terminal"
+        content["service"] = "text"
+        content["parameters"]["value"] = f'"{self._term}"'
+        return content
+
+
+class FieldQuery(SingleQuery):
     """
-    The abstract base class for all non-composite queries.
-    
-    Offers the convenient `add_param()` method for simple creation
-    of custom queries.
-    
+    A text query for searching for values in a given field using the
+    given operator.
+
+    The operators are keyword arguments of this function and the search
+    value is the value given to the respective parameter.
+    The operators are mutually exclusive.
+    If none is given, the search will return results where the given
+    field exists.
+
+    A :class:`FieldQuery` is negated using the ``~`` operator.
+
     Parameters
     ----------
-    query_type: str
-        The name of the query type. This is the suffix for the
-        'QueryType' XML tag.
-    parameter_class : optional
-        If specifed, this string is the prefix for all parameters
-        (XML tags) of the query.
+    field : str
+        The field to search in.
+    exact_match : str, optional
+        Operator for returning results whose field exactly matches the
+        given value.
+        The matching is not case-sensitive.
+    contains_words, contains_phrase : str, optional
+        Operator for returning results whose field matches
+        individual words from the given value or the value as exact
+        phrase, respectively.
+        The matching is not case-sensitive.
+    greater, less, greater_or_equal, less_or_equal, equals : int or float or datetime, optional
+        Operator for returning results whose field values are larger,
+        smaller or equal to the given value.
+    range, range_closed : tuple(int, int) or tuple(float, float) or tuple(datetime, datetime), optional
+        Operator for returning results whose field matches values within
+        the given range. `range_closed` includes the interval limits.
+    is_in : tuple of str or list of str, optional
+        Operator for returning results whose field matches any of the
+        values in the given list.
+
+    Notes
+    -----
+    A complete list of the available fields and its supported operators
+    is documented at
+    `<https://search.rcsb.org/search-attributes.html>`_.
+
+    Examples
+    --------
+    
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(sorted(search(query)))
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
     """
-    def __init__(self, query_type, parameter_class=""):
+    def __init__(self, field, **kwargs):
         super().__init__()
-        self.query = Element("orgPdbQuery")
-        self._param_cls = parameter_class
-        type = SubElement(self.query, "queryType")
-        type.text = "org.pdb.query.simple." + query_type
-    
-    def add_param(self, param, content):
-        """
-        Add a parameter (XML tag/text pair) to the query.
-
-        PROTECTED: Do not call from outside.
+        self._negation = False
+        self._field = field
         
-        Parameters
-        ----------
-        param: str
-            The XML tag name for the parameter.
-        content : str
-            The text content for the parameter.
-        """
-        if self._param_cls == "":
-            child = SubElement(self.query, param)
+        if len(kwargs) > 1:
+            raise TypeError("Only one operator must be given")
+        elif len(kwargs) == 1:
+            self._operator = list(kwargs.keys())[0]
+            self._value = list(kwargs.values())[0]
+            if self._operator == "is_in":
+                self._operator = "in"
         else:
-            child = SubElement(self.query, self._param_cls + "." + param)
-        child.text = content
-
-class RangeQuery(SimpleQuery, metaclass=abc.ABCMeta):
-    """
-    The abstract base class for all non-composite queries, that allow
-    a minimum and a maximum value
-    (comparator ``between`` in the XML query).
-    
-    Parameters
-    ----------
-    query_type: str
-        The name of the query type. This is the suffix for the
-        'QueryType' XML tag.
-    parameter_class : optional
-        If specifed, this string is the prefix for all parameters
-        (XML tags) of the query.
-    min, max: float or int or date
-        The value range.
-    """
-    def __init__(self, query_type, parameter_class, min, max):
-        super().__init__(query_type, parameter_class)
-        self.add_param("comparator", "between")
-        if min is not None:
-            if isinstance(min, float):
-                self.add_param("min", f"{min:.5f}")
-            else:
-                self.add_param("min", str(min))
-        if max is not None:
-            if isinstance(max, float):
-                self.add_param("max", f"{max:.5f}")
-            else:
-                self.add_param("max", str(max))
-    
-    def add_param(self, param, content, omit_prefix=False):
-        """
-        Add a parameter (XML tag/text pair) to the query.
-
-        PROTECTED: Do not call from outside.
+            # No operator is given
+            self._operator = "exists"
+            self._value = None
         
-        Parameters
-        ----------
-        param: str
-            The XML tag name for the parameter.
-        content : str
-            The text content for the parameter.
-        omit_prefix : bool, optional
-            If true, the parameter prefix, specified with
-            `parameter_class` in the constructor, is omitted.
-        """
-        if self._param_cls == "" or omit_prefix:
-            child = SubElement(self.query, param)
-        else:
-            child = SubElement(self.query, self._param_cls + "." + param)
-        child.text = content
-
-
-class ResolutionQuery(RangeQuery):
-    """
-    Query that filters X-ray elucidated structures within a defined
-    resolution range.
-    
-    Parameters
-    ----------
-    min: float, optional
-        The minimum resolution value.
-    max: float, optional
-        The maximum resolution value.
-    """
-    def __init__(self, min=None, max=None):
-        super().__init__(
-            "ResolutionQuery", "refine.ls_d_res_high",
-            min, max
-        )
-    
-class BFactorQuery(RangeQuery):
-    """
-    Query that filters structures within a defined average B-factor
-    range.
-    
-    Parameters
-    ----------
-    min: float, optional
-        The minimum B-factor value.
-    max: float, optional
-        The maximum B-factor value.
-    """
-    def __init__(self, min=None, max=None):
-        super().__init__("AverageBFactorQuery", "refine.B_iso_mean", min, max)
-
-class MolecularWeightQuery(RangeQuery):
-    """
-    Query that filters structures within a molecular weight range.
-    Water molecules are excluded from the molecular weight.
-    
-    Parameters
-    ----------
-    min: float, optional
-        The minimum molecular weight (g/mol).
-    max: float, optional
-        The maximum molecular weight (g/mol).
-    """
-    def __init__(self, min=None, max=None):
-        super().__init__(
-            "MolecularWeightQuery", "mvStructure.structureMolecularWeight",
-            min, max
-        )
-
-class ChainCountQuery(SimpleQuery):
-    """
-    Query that filters structures within a given range of number of
-    chains.
-    
-    Parameters
-    ----------
-    min, max: int, optional
-        The minimum and maximum number of chains.
-    bio_assembly: bool, optional
-        If set to true, the number of chains in a
-        `biological assembly <https://pdb101.rcsb.org/learn/guide-to-understanding-pdb-data/biological-assemblies>`_
-        (oligomer) is counted.
-        Otherwise, the number of chains in the asymmetric subunit, that
-        is equal to the amount of chains in the file, is counted.
-    """
-    def __init__(self, min=None, max=None, bio_assembly=False):
-        if bio_assembly:
-            super().__init__("BiolUnitQuery")
-            if min is not None:
-                self.add_param("oligomeric_statemin", str(min))
-            if max is not None:
-                self.add_param("oligomeric_statemax", str(max))
-        else:
-            super().__init__("NumberOfChainsQuery", "struct_asym.numChains")
-            if min is not None:
-                self.add_param("min", str(min))
-            if max is not None:
-                self.add_param("max", str(max))
-
-class EntityCountQuery(RangeQuery):
-    """
-    Query that filters structures, that have given number of entities,
-    i.e. different chemical compounds.
-    
-    Parameters
-    ----------
-    min, max: int, optional
-        The minimum and maximum number of entities.
-    entity_type: {'protein', 'rna', 'dna', 'ligand', 'other'}, optional
-        If set, only entities of the given type are considered.
-    """
-    _entity_type_dict = {
-        "protein": "p",
-        "rna": "r",
-        "dna": "d",
-        "ligand": "n",
-        "other": "?",
-    }
-    
-    def __init__(self, min=None, max=None, entity_type=None):
-        super().__init__(
-            "NumberOfEntitiesQuery", "struct_asym.numEntities", min, max
-        )
-        if entity_type is not None:
-            self.add_param(
-                "entity.type.",
-                EntityCountQuery._entity_type_dict[entity_type.lower()],
-                omit_prefix=True
+        if self._operator not in [
+            "exact_match",
+            "contains_words", "contains_phrase",
+            "greater", "less", "greater_or_equal", "less_or_equal", "equals",
+            "range", "range_closed",
+            "in",
+            "exists"
+        ]:
+            raise TypeError(
+                f"Constructor got an unexpected keyword argument "
+                f"'{self._operator}'"
             )
-
-class ModelCountQuery(RangeQuery):
-    """
-    Query that filters structures, that have given number of models.
-    
-    Parameters
-    ----------
-    min, max: int, optional
-        The minimum and maximum number of models.
-    """
-    def __init__(self, min=None, max=None):
-        super().__init__(
-            "ModelCountQuery", "mvStructure.modelCount", min, max
-        )
-
-class ChainLengthQuery(RangeQuery):
-    """
-    Query that filters structures with chains in the given chain length
-    range.
-    
-    Parameters
-    ----------
-    min, max: int, optional
-        The minimum and maximum number of chains.
-    """
-    def __init__(self, min=None, max=None):
-        super().__init__(
-            "SequenceLengthQuery", "v_sequence.chainLength", min, max
-        )
-
-class MoleculeTypeQuery(SimpleQuery):
-    """
-    Query that filters structures with a defined molecular type.
-
-    Parameters
-    ----------
-    rna: bool, optional
-        If true, RNA structures are selected, otherwise excluded.
-        By default, the occurrence of this molecule type is ignored.
-    dna: bool, optional
-        If true, DNA structures are selected, otherwise excluded.
-        By default, the occurrence of this molecule type is ignored.
-    hyrbid: bool, optional
-        If true, DNA/RNA hybrid structures are selected,
-        otherwise excluded.
-        By default, the occurrence of this molecule type is ignored.
-    protein: bool, optional
-        If true, protein structures are selected, otherwise excluded.
-        selected.
-        By default, the occurrence of this molecule type is ignored.
-    """
-    def __init__(self, rna=None, dna=None, hybrid=None, protein=None):
-        super().__init__("ChainTypeQuery","")
         
-        if rna is None:
-            self.add_param("containsRna","?")
-        elif rna:
-            self.add_param("containsRna","Y")
-        else:
-            self.add_param("containsRna","N")
+        # Convert dates into ISO 8601
+        if isinstance(self._value, datetime):
+             self._value = _to_isoformat(self._value)
+        elif isinstance(self._value, (tuple, list, np.ndarray)):
+            self._value = [
+                _to_isoformat(val) if isinstance(val, datetime) else val
+                for val in self._value
+            ]
+
+    def get_content(self):
+        content = super().get_content()
+        content["type"] = "terminal"
+        content["service"] = "text"
+        content["parameters"]["attribute"] = self._field
+        content["parameters"]["operator"] = self._operator
+        content["parameters"]["negation"] = self._negation
+        if self._value is not None:
+            content["parameters"]["value"] = self._value
+        return content
+
+    def __invert__(self):
+        clone = copy.deepcopy(self)
+        clone._negation = True
+        return clone
+
+
+class SequenceQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules with a sequence similar to a
+    given input sequence using
+    `MMseqs2 <https://github.com/soedinglab/mmseqs2>`_.
+
+    Parameters
+    ----------
+    sequence : Sequence or str
+        The input sequence.
+        If `sequence` is a :class:`NucleotideSequence` and the `scope`
+        is ``'rna'``, ``'T'`` is automatically replaced by ``'U'``.
+    scope : {'protein', 'dna', 'rna'}
+        The type of molecule to find.
+    min_identity : float, optional
+        A match is only returned, if the sequence identity between
+        the match and the input sequence exceeds this value.
+        Must be between 0 and 1.
+        By default, the sequence identity is ignored.
+    max_expect_value : float, optional
+        A match is only returned, if the *expect value* (E-value) does
+        not exceed this value.
+        By default, the value is effectively ignored.
+
+    Notes
+    -----
+    *MMseqs2* is run on the RCSB servers.
+
+    Examples
+    --------
+    
+    >>> sequence = "NLYIQWLKDGGPSSGRPPPS"
+    >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.8)
+    >>> print(sorted(search(query)))
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2LL5', '2MJ9', '3UC7', '3UC8']
+    """
+    def __init__(self, sequence, scope,
+                 min_identity=0.0, max_expect_value=10000000.0):
+        super().__init__()
+        self._target = _scope_to_target.get(scope.lower())
+        if self._target is None:
+            raise ValueError(f"'{scope}' is an invalid scope")
         
-        if dna is None:
-            self.add_param("containsDna","?")
-        elif dna:
-            self.add_param("containsDna","Y")
+        if isinstance(sequence, NucleotideSequence) and scope.lower() == "rna":
+            self._sequence = str(sequence).replace("T", "U")
         else:
-            self.add_param("containsDna","N")
+            self._sequence = str(sequence)
         
-        if hybrid is None:
-            self.add_param("containsHybrid","?")
-        elif hybrid:
-            self.add_param("containsHybrid","Y")
+        self._min_identity = min_identity
+        self._max_expect_value = max_expect_value
+
+    def get_content(self):
+        content = super().get_content()
+        content["type"] = "terminal"
+        content["service"] = "sequence"
+        content["parameters"]["value"] = self._sequence
+        content["parameters"]["target"] = self._target
+        content["parameters"]["identity_cutoff"] = self._min_identity
+        content["parameters"]["evalue_cutoff"] = self._max_expect_value
+        return content
+
+
+class MotifQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules containing the given sequence
+    motif.
+
+    Parameters
+    ----------
+    pattern : str
+        The sequence pattern.
+    pattern_type : {'simple', 'prosite', 'regex'}
+        The type of the pattern.
+    scope : {'protein', 'dna', 'rna'}
+        The type of molecule to find.
+    
+    Examples
+    --------
+    
+    >>> query = MotifQuery(
+    ...     "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H.",
+    ...     "prosite",
+    ...     "protein"
+    ... )
+    """
+    def __init__(self, pattern, pattern_type, scope):
+        super().__init__()
+        self._pattern = pattern
+        self._pattern_type = pattern_type
+        self._target = _scope_to_target.get(scope.lower())
+
+    def get_content(self):
+        content = super().get_content()
+        content["type"] = "terminal"
+        content["service"] = "seqmotif"
+        content["parameters"]["value"] = self._pattern
+        content["parameters"]["pattern_type"] = self._pattern_type
+        content["parameters"]["target"] = self._target
+        return content
+
+
+class StructureQuery(SingleQuery):
+    """
+    A query for protein/DNA/RNA molecules with structural similarity
+    to the query structure.
+
+    Either the chain or assembly ID of the query structure must be
+    specified.
+
+    Parameters
+    ----------
+    pdb_id : str
+        The PDB ID of the query structure.
+    chain : str, optional
+        The chain ID (more exactly ``asym_id``) of the query structure.
+    assembly : str, optional
+        The assembly ID (``assembly_id``) of the query structure.
+    strict : bool, optional
+        If true, structure comparison is strict, otherwise it is
+        relaxed.
+    
+    Examples
+    --------
+
+    >>> query = StructureQuery("1L2Y", chain="A")
+    >>> print(sorted(search(query)))
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D']
+    """
+    def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
+        super().__init__()
+
+        if (chain is None and assembly is None) \
+           or (chain is not None and assembly is not None):
+                raise TypeError(
+                    "Either the chain ID or assembly ID must be set"
+                )
+        elif chain is None:
+            self._value = {
+                "entry_id": pdb_id,
+                "asssembly_id": assembly
+            }
         else:
-            self.add_param("containsHybrid","N")
+            self._value = {
+                "entry_id": pdb_id,
+                "asym_id": chain
+            }
         
-        if protein is None:
-            self.add_param("containsProtein","?")
-        elif protein:
-            self.add_param("containsProtein","Y")
-        else:
-            self.add_param("containsProtein","N")
+        self._operator = "strict_shape_match" if strict \
+                         else "relaxed_shape_match"
 
-class MethodQuery(SimpleQuery):
-    """
-    Query that filters structures, that were elucidated with a certain
-    method.
-    
-    Parameters
-    ----------
-    method: str
-        Structures of the given method are filtered. Possible values
-        are:
-        'X-RAY', 'SOLUTION_NMR', 'SOLID-STATE NMR',
-        'ELECTRON MICROSCOPY', 'ELECTRON CRYSTALLOGRAPHY',
-        'FIBER DIFFRACTION', 'NEUTRON DIFFRACTION',
-        'SOLUTION SCATTERING', 'HYBRID' and 'OTHER'.
-    has_data: bool, optional
-        If specified, the query additionally filters structures, that
-        store or do not store experimental data, respectively.
-    """
-    def __init__(self, method, has_data=None):
-        super().__init__("ExpTypeQuery", "mvStructure")
-        self.add_param("expMethod.value", method.upper())
-        if has_data == True:
-            self.add_param("hasExperimentalData.value", "Y")
-        elif has_data == False:
-            self.add_param("hasExperimentalData.value", "N")
-
-class SoftwareQuery(SimpleQuery):
-    """
-    Query that filters structures, that were elucidated with the help
-    of the given software.
-    
-    Parameters
-    ----------
-    name: str
-        Name of the software.
-    """
-    def __init__(self, name):
-        super().__init__("SoftwareQuery", "VSoftware.name")
-        self.add_param("value", name)
-
-class PubMedIDQuery(SimpleQuery):
-    """
-    Query that filters structures, that are published by any article
-    in the given list of PubMed IDs.
-    
-    Parameters
-    ----------
-    ids: iterable object of str
-        A list of PubMed IDs.
-    """
-    def __init__(self, ids):
-        super().__init__("PubmedIdQuery")
-        self.add_param("pubMedIdList", ", ".join(ids))
-
-class UniProtIDQuery(SimpleQuery):
-    """
-    Query that filters structures, that are referenced by any entry
-    in the given list of UniProtKB IDs.
-    
-    Parameters
-    ----------
-    ids: iterable object of str
-        A list of UniProtKB IDs.
-    """
-    def __init__(self, ids):
-        super().__init__("UpAccessionIdQuery")
-        self.add_param("accessionIdList", ", ".join(ids))
-
-class PfamIDQuery(SimpleQuery):
-    """
-    Query that filters structures, that are referenced by any entry
-    in the given list of Pfam family IDs.
-    
-    Parameters
-    ----------
-    ids: iterable object of str
-        A list of Pfam family IDs.
-    """
-    def __init__(self, ids):
-        super().__init__("PfamIdQuery")
-        self.add_param("pfamID", ", ".join(ids))
-
-class SequenceClusterQuery(SimpleQuery):
-    """
-    Query that filters structures, that are in part of a
-    `PDB sequence cluster <http://www.rcsb.org/pdb/statistics/clusterStatistics.do>`_
-    with the given ID.
-    
-    Parameters
-    ----------
-    cluster_id: int
-        The sequence cluster ID.
-    """
-    def __init__(self, cluster_id):
-        super().__init__("SequenceClusterQuery")
-        self.add_param("sequenceClusterName", cluster_id)
-
-class TextSearchQuery(SimpleQuery):
-    """
-    Query that filters structures, that have the given text in their
-    corresponding *mmCIF* coordinate file.
-    
-    Parameters
-    ----------
-    tex: str
-        The text to search.
-    """
-    def __init__(self, text):
-        super().__init__("AdvancedKeywordQuery")
-        self.add_param("keywords", text)
-
-class KeywordQuery(SimpleQuery):
-    """
-    Query that filters structures, that have the given keyword in their
-    corresponding *mmCIF* field ``_struct_keywords.pdbx_keywords``.
-    
-    Parameters
-    ----------
-    keyword: str
-        The text to search.
-    """
-    def __init__(self, keyword):
-        super().__init__("TokenKeywordQuery", "struct_keywords.pdbx_keywords")
-        self.add_param("value", keyword)
-
-class TitleQuery(SimpleQuery):
-    """
-    Query that filters structures, that have the given text in their
-    tile (*mmCIF* field ``_struct.title``).
-    
-    Parameters
-    ----------
-    keyword: str
-        The text to search.
-    """
-    def __init__(self, text):
-        super().__init__("StructTitleQuery", "struct.title")
-        self.add_param("comparator", "contains")
-        self.add_param("value", text)
-
-class DecriptionQuery(SimpleQuery):
-    """
-    Query that filters structures, that have the given text in their
-    description (*mmCIF* field ``_entity.pdbx_description``).
-    
-    Parameters
-    ----------
-    keyword: str
-        The text to search.
-    """
-    def __init__(self, text):
-        super().__init__("StructDescQuery", "entity.pdbx_description")
-        self.add_param("comparator", "contains")
-        self.add_param("value", text)
-
-class MacromoleculeNameQuery(SimpleQuery):
-    """
-    Query that filters structures, that contain macromolecules with the
-    given name
-    (*mmCIF* fields
-    ``_entity.pdbx_description`` or ``_entity_name_com.name``).
-    
-    Parameters
-    ----------
-    name: str
-        The name of the macromolecule.
-    """
-    def __init__(self, name):
-        super().__init__("MoleculeNameQuery")
-        self.add_param("macromoleculeName", name)
-
-class ExpressionOrganismQuery(SimpleQuery):
-    """
-    Query that filters structures, of which the protein was expressed
-    in the specified host organism
-    (*mmCIF* field ``_entity_src_gen.pdbx_host_org_scientific_name``).
-
-    The unabbreviated scientific name is required,
-    e.g. ``Escherichia coli``.
-    Capitalization is not required.
-    
-    Parameters
-    ----------
-    name: str
-        The scientific name of the host organism.
-    """
-    def __init__(self, name):
-        super().__init__(
-            "ExpressionOrganismQuery",
-            "entity_src_gen.pdbx_host_org_scientific_name"
-        )
-        self.add_param("value", name)
-
-class AuthorQuery(SimpleQuery):
-    """
-    Query that filters structures from a given author.
-    
-    Parameters
-    ----------
-    name: str
-        The text to search.
-    exact : bool, optional
-        If true, the author name must completely match the given query
-        name.
-        If false, the author name merely must contain the given query
-        name.
-    """
-    def __init__(self, name, exact=False):
-        super().__init__("AdvancedAuthorQuery")
-        if exact:
-            self.add_param("exactMatch", "true")
-        else:
-            self.add_param("exactMatch", "false")
-        self.add_param("audit_author.name", name)
-
-class DateQuery(RangeQuery):
-    """
-    Query that filters structures that were deposited, released or
-    revised in a given time interval
-    
-    Parameters
-    ----------
-    min_date, max_date: date or str
-        The time interval, represented by two dates.
-    event : {'deposition', 'release', 'revision'}
-        The event to look for: Either the structure deposition, release
-        or revision.
-    """
-    def __init__(self, min_date, max_date, event="deposition"):
-        if event == "deposition":
-            super().__init__(
-                "DepositDateQuery",
-                "pdbx_database_status.recvd_initial_deposition_date",
-                min_date, max_date
-            )
-        elif event == "release":
-            super().__init__(
-                "ReleaseDateQuery",
-                "pdbx_audit_revision_history.revision_date",
-                min_date, max_date
-            )
-        elif event == "revision":
-            super().__init__(
-                "ReviseDateQuery",
-                "pdbx_audit_revision_history.revision_date",
-                min_date, max_date
-            )
-        else:
-            raise ValueError(f"'{event}' is not a valid event")
+    def get_content(self):
+        content = super().get_content()
+        content["type"] = "terminal"
+        content["service"] = "structure"
+        content["parameters"]["value"] = self._value
+        content["parameters"]["operator"] = self._operator
+        return content
 
 
-
-
-def search(query, omit_chain=True):
+def count(query, return_type="entry"):
     """
-    Get all PDB IDs that meet the given query requirements,
-    via the RCSB SEARCH service.
+    Count PDB entries that meet the given query requirements,
+    via the RCSB search API.
     
     This function requires an internet connection.
     
@@ -631,47 +418,169 @@ def search(query, omit_chain=True):
     ----------
     query : Query
         The search query.
-    
+    return_type : {'entry', 'assembly', 'polymer_entity', 'non_polymer_entity', 'polymer_instance'}, optional
+        The type of the counted identifiers:
+
+        - ``'entry'``: All macthing PDB entries are counted.
+        - ``'assembly'``: All matching assemblies are counted.
+        - ``'polymer_entity'``: All matching polymeric entities are
+          counted.
+        - ``'non_polymer_entity'``: All matching non-polymeric entities
+          are counted.
+        - ``'polymer_instance'``: All matching chains are counted.
+
     Returns
     -------
     ids : list of str
         A list of strings containing all PDB IDs that meet the query
         requirements.
-    omit_chain: bool, optional
-        If true, the chain information is removed from the IDs,
-        e.g. '1L2Y:1' is converted into '1L2Y'.
-        Only the ID without the chain information can be used as input
-        to :func:`fetch()`.
-    
-    Warnings
-    --------
-    Even if you give valid input to this function, in rare cases the
-    database might return no or malformed data to you.
-    In these cases the request should be retried.
-    When the issue occurs repeatedly, the error is probably in your
-    input.
-
     
     Examples
     --------
     
-    >>> query = ResolutionQuery(max=0.6)
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(count(query))
+    8
     >>> ids = search(query)
-    >>> print(ids)
-    ['1EJG', '1I0T', '3NIR', '3P4J', '5D8V', '5NW3']
+    >>> print(sorted(ids))
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
     """
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    r = requests.post(_search_url, data=str(query), headers=headers)
-    if r.text.startswith("Problem creating Query from XML"):
-        raise RequestError(r.text)
-    if "<html>" in r.text:
-        # Response should contain plain PDB IDs,
-        # a HTML tag indicates an error
-        raise RequestError(r.text.replace("\n", " "))
-    ids = r.text.split()
-    if omit_chain:
-        for i, id in enumerate(ids):
-            if ":" in id:
-                ids[i] = id.split(":")[0]
-    return ids
+    if return_type not in [
+        "entry", "polymer_instance", "assembly",
+        "polymer_entity", "non_polymer_entity",
+    ]:
+        raise ValueError(f"'{return_type}' is an invalid return type")
     
+    query_dict = {
+        "query": query.get_content(),
+        "return_type": return_type,
+        "request_options": {
+            # Do not return any IDs,
+            # as we are only interested in the 'total_count' attribute
+            "pager": {
+                "start": 0,
+                "rows": 0
+            }
+        }
+    }
+    r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
+    
+    if r.status_code == 200:
+        return r.json()["total_count"]
+    elif r.status_code == 204:
+        # Search did not return any results
+        return 0
+    else:
+        try:
+            raise RequestError(f"Error {r.status_code}: {r.json()['message']}")
+        except json.decoder.JSONDecodeError:
+            # In case there an error response without message
+            raise RequestError(f"Error {r.status_code}")
+
+
+def search(query, return_type="entry", range=None, sort_by=None):
+    """
+    Get all PDB IDs that meet the given query requirements,
+    via the RCSB search API.
+    
+    This function requires an internet connection.
+    
+    Parameters
+    ----------
+    query : Query
+        The search query.
+    return_type : {'entry', 'assembly', 'polymer_entity', 'non_polymer_entity', 'polymer_instance'}, optional
+        The type of the returned identifiers:
+
+        - ``'entry'``: Only the PDB ID is returned (e.g. ``'XXXX'``).
+          These can be used directly a input to :func:`fetch()`.
+        - ``'assembly'``: The PDB ID appended with assembly ID is
+          returned (e.g. ``'XXXX-1'``).
+        - ``'polymer_entity'``: The PDB ID appended with entity ID of
+          polymers is returned (e.g. ``'XXXX_1'``).
+        - ``'non_polymer_entity'``: The PDB ID appended with entity ID
+          of non-polymeric entities is returned (e.g. ``'XXXX_1'``).
+        - ``'polymer_instance'``: The PDB ID appended with chain ID
+          (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
+    
+    range : tuple(int, int), optional
+        If this parameter is specified, the PDB IDs in this range are
+        selected from all matching PDB IDs and returned (pagination).
+    sort_by : str, optional
+        If specified, the returned PDB IDs are sorted by the values
+        of the given field name in descending order.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/search-attributes.html>`_.
+
+    Returns
+    -------
+    ids : list of str
+        A list of strings containing all PDB IDs that meet the query
+        requirements.
+
+    Examples
+    --------
+    
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> print(sorted(search(query)))
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
+    >>> print(sorted(search(query, range=(1,4))))
+    ['1EJG', '2GLT', '3P4J']
+    >>> print(search(query, sort_by="rcsb_accession_info.initial_release_date"))
+    ['5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG', '2GLT']
+    >>> print(sorted(search(query, return_type="polymer_instance")))
+    ['1EJG.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A']
+    """
+    if return_type not in [
+        "entry", "polymer_instance", "assembly",
+        "polymer_entity", "non_polymer_entity",
+    ]:
+        raise ValueError(f"'{return_type}' is an invalid return type")
+    
+    if sort_by is None:
+        sort_by = "score"
+
+    if range is None:
+        start = 0
+        rows = count(query)
+    elif range[1] <= range[0]:
+        raise ValueError("Range stop must be greater than range start")
+    else:
+        start = range[0]
+        rows = range[1] - start
+
+    query_dict = {
+        "query": query.get_content(),
+        "return_type": return_type,
+        "request_options": {
+            "pager": {
+                "start": start,
+                "rows": rows
+            },
+            "sort": [
+                {
+                    "sort_by": sort_by,
+                }
+            ]
+        }
+    }
+    r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
+    
+    if r.status_code == 200:
+        return [result["identifier"] for result in r.json()["result_set"]]
+    elif r.status_code == 204:
+        # Search did not return any results
+        return []
+    else:
+        try:
+            raise RequestError(f"Error {r.status_code}: {r.json()['message']}")
+        except json.decoder.JSONDecodeError:
+            # In case there an error response without message
+            raise RequestError(f"Error {r.status_code}")
+
+
+def _to_isoformat(object):
+    """
+    Convert a datetime into the specifc ISO 8601 format required by the RCSB.
+    """
+    return object.strftime("%Y-%m-%dT%H:%M:%SZ")

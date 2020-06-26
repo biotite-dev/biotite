@@ -402,7 +402,7 @@ fig.tight_layout()
 
 ########################################################################
 # If you are interested in more advanced visualization examples, have a
-# look at the :doc:`example gallery <../examples/gallery/index>`.
+# look at the :doc:`example gallery <../../examples/gallery/index>`.
 # 
 # You can also do some simple analysis on these objects, like
 # determining the sequence identity or calculating the score.

@@ -1,8 +1,11 @@
 .. image:: https://img.shields.io/pypi/v/biotite.svg
    :target: https://pypi.python.org/pypi/biotite
+   :alt: Biotite at PyPI
 .. image:: https://img.shields.io/pypi/pyversions/biotite.svg
+   :alt: Python version
 .. image:: https://img.shields.io/travis/biotite-dev/biotite.svg
    :target: https://travis-ci.org/biotite-dev/biotite
+   :alt: Travis CI status
 
 .. image:: doc/static/assets/general/biotite_logo_m.png
    :alt: The Biotite Project

@@ -66,20 +66,6 @@ def get_extensions():
     return ext_modules
 
 
-class PyTestCommand(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.pytest_args = ''
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
-
-
 setup(
     name="biotite",
     version = __version__,
@@ -127,15 +113,7 @@ setup(
                         "msgpack >= 0.5.6"],
     python_requires = ">=3.6",
     
-    cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],
-    
-    command_options = {
-        'build_sphinx':
-            {"source_dir" : ("setup.py", "./doc"),
-             "build_dir"  : ("setup.py", "./doc/_build"),
-             "release"    : ("setup.py", __version__)}
-    }
 )
 
 
