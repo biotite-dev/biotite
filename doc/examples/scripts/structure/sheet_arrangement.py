@@ -2,7 +2,8 @@
 Arrangement of beta-sheets
 ==========================
 
-This scripts plots the arrangements of β-sheets in a protein structure.
+This scripts plots the arrangements of strands in selected β-sheets of a
+protein structure.
 The information is entirely taken from the ``struct_sheet_order`` and
 ``struct_sheet_range`` categories of the structure's *PDBx/mmCIF* file.
 
@@ -28,35 +29,46 @@ import biotite.database.rcsb as rcsb
 PDB_ID = "3AKO"
 SHEETS = ["A"]
 
-FIG_SIZE = (8.0, 4.0)
-Y_LIMIT = 2.0
-SHEET_DISTANCE = 3.0
-ARROW_TAIL_WITH = 0.4
-ARROW_HEAD_WITH = 0.7
-ARROW_HEAD_LENGTH = 0.25
-ARROW_LINE_WIDTH = 1
-ARROW_COLORS = [
+FIG_SIZE = (8.0, 4.0)           # Figure size in inches
+Y_LIMIT = 2.0                   # Vertical plot limits
+SHEET_DISTANCE = 3.0            # Separation of strands in different sheets
+ARROW_TAIL_WITH = 0.4           # Width of the arrow tails
+ARROW_HEAD_WITH = 0.7           # Width of the arrow heads
+ARROW_HEAD_LENGTH = 0.25        # Length of the arrow heads
+ARROW_LINE_WIDTH = 1            # Width of the arrow edges
+ARROW_COLORS = [                # Each chain is colored differently
     biotite.colors["darkgreen"],
     biotite.colors["dimorange"],
     biotite.colors["lightgreen"],
     biotite.colors["brightorange"],
 ]
-CONNECTION_COLOR = "black"
-CONNECTION_LINE_WIDTH = 1.5
-CONNECTION_HEIGHT = 0.1
-CONNECTION_SEPARATION = 0.1
-RES_ID_HEIGHT = -0.2
-RES_ID_FONT_SIZE = 8
-RES_ID_FONT_WEIGHT = "bold"
-ADAPTIVE_ARROW_LENGTHS = True
-SHOW_SHEET_NAMES = False
-SHEET_NAME_FONT_SIZE = 14
+CONNECTION_COLOR = "black"      # Color of the connection lines 
+CONNECTION_LINE_WIDTH = 1.5     # Width of the connection lines 
+CONNECTION_HEIGHT = 0.1         # Minimum height of the connection lines 
+CONNECTION_SEPARATION = 0.1     # Minimum vertical distance between the connection lines 
+RES_ID_HEIGHT = -0.2            # The vertical distance of the residue ID labels from the arrow ends
+RES_ID_FONT_SIZE = 8            # The font size of the residue ID labels
+RES_ID_FONT_WEIGHT = "bold"     # The font weight of the residue ID labels
+ADAPTIVE_ARROW_LENGTHS = True   # If true, the arrow length is proportional to the number of its residues
+SHOW_SHEET_NAMES = False        # If true, the sheets are labeled below the plot
+SHEET_NAME_FONT_SIZE = 14       # The font size of the sheet labels
 ##### SNOITPO #####
 
+########################################################################
+# The ``struct_sheet_order`` category of the *mmCIF* file gives us the
+# information about the existing sheets, the strands these sheets
+# contain and which of these strands are connected with one another
+# in either parallel or anti-parallel orientation.
+#
+# We can use this to select only strands that belong to those sheets,
+# we are interested in.
+# The strand adjacency and relative orientation is also saved for later.
 
 pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(PDB_ID, "pdbx"))
 sheet_order_dict = pdbx_file["struct_sheet_order"]
 
+# Create a boolean mask that covers the selected sheets
+# or all sheets if none is given
 if SHEETS is None:
     sele = np.full(len(sheet_order_dict["sheet_id"]), True)
 else:
@@ -73,20 +85,31 @@ adjacent_strands = np.array([
         sheet_order_dict["range_id_2"][sele]
     )
 ])
-print(adjacent_strands)
-print()
 
+print("Adjacent strands (sheet ID, strand ID):")
+for sheet_id, (strand_i, strand_j) in zip(sheet_ids, adjacent_strands):
+    print(f"{sheet_id, strand_i} <-> {sheet_id, strand_j}")
 
+########################################################################
+# The ``struct_sheet_range`` category of the *mmCIF* file tells us
+# which residues compose each strand in terms of chain and
+# residue IDs.
+# 
+# Later the plot shall display connections between consecutive strands
+# in a protein chain.
+# Although, this category does not provide this connection information
+# directly, we can sort the strands by their beginning chain and residue
+# IDs and then simply connect successive entries.
 
 sheet_range_dict = pdbx_file["struct_sheet_range"]
 
+# Again, create a boolean mask that covers the selected sheets
 sele = np.array([
     sheet in sheet_ids for sheet in sheet_range_dict["sheet_id"]
 ])
 strand_chain_ids = sheet_range_dict["beg_auth_asym_id"][sele]
 strand_res_id_begs = sheet_range_dict["beg_auth_seq_id"].astype(int)[sele]
 strand_res_id_ends = sheet_range_dict["end_auth_seq_id"].astype(int)[sele]
-
 
 # Secondarily sort by residue ID
 order = np.argsort(strand_res_id_begs, kind="stable")
@@ -116,10 +139,12 @@ for i in range(len(non_duplicate_indices) - 1):
         (sorted_sheet_ids[current_i], sorted_strand_ids[current_i]),
         (sorted_sheet_ids[next_i],    sorted_strand_ids[next_i]   )
     ))
+
+print("Connected strands (sheet ID, strand ID):")
 for strand_i, strand_j in connections:
     print(f"{strand_i} -> {strand_j}")
-print()
 
+# Save the start and end residue IDs for each strand for labeling
 ranges = {
     (sheet_id, strand_id): (begin, end)
     for sheet_id, strand_id, begin, end
@@ -129,6 +154,7 @@ ranges = {
     )
 }
 
+# Save the chains ID for each strand for coloring
 chain_ids = {
     (sheet_id, strand_id): chain_id
     for sheet_id, strand_id, chain_id
@@ -136,7 +162,15 @@ chain_ids = {
 }
 unique_chain_ids = np.unique(sorted_chain_ids)
 
-
+########################################################################
+# So far we only know which strands to plot adjacent to each other, but
+# we still need to determine the position in the plot for each strand.
+# For this purpose we will later use one of *NetworkX*'s layouting
+# algorithms.
+# For now the information about the adjacent strands is stored in a
+# *NetworkX* graph, one for each sheet:
+# The strand IDs are nodes and the adjacency is represented by edges.
+# The relative strand orientation is stored as edge attribute.
 
 sheet_graphs = {}
 for sheet_id in np.unique(sheet_ids):
@@ -149,6 +183,19 @@ for sheet_id in np.unique(sheet_ids):
             is_parallel_list[sheet_mask]
         )
     ])
+
+########################################################################
+# Another missing information is the direction of the plotted arrows,
+# we only know their relative orientations.
+# To solve this, we initially let the arrow for the first strand of each
+# sheet point upwards and then iteratively determine the direction of
+# the other arrows from the relative orientations.
+#
+# For example, strand ``'1'`` is set to point upward, strand ``'2'``
+# is anti-parallel to strand ``'1'``, so it points downward, strand
+# ``'3'`` is parallel to strand ``'2'`` so it points also downward.
+#
+# The calculated arrow direction is stored as node attribute.
 
 for graph in sheet_graphs.values():
     initial_strand = adjacent_strands[0,0]
@@ -180,18 +227,26 @@ for graph in sheet_graphs.values():
                 "Conflicting arrow directions from adjacent strands"
             )
 
-
+########################################################################
+# No we have got all positioning information we need to start plotting.
 
 fig, ax = plt.subplots(figsize=FIG_SIZE)
 
 ### Plot arrows
-MAX_ARROW_LENGTH = 2 # from -1 to 1
+MAX_ARROW_LENGTH = 2 # from y=-1 to y=1
 arrow_length_per_seq_length = MAX_ARROW_LENGTH / np.max(
     [end - beg + 1 for beg, end in ranges.values()]
 )
+# The coordinates of the arrow ends are stored in this dictionary
+# for each strand, accessed via a tuple of sheet and strand ID
 coord_dict = {}
 current_position = 0
+# Plot each sheet separately,
+# the start position of each sheet is given by 'current_position'
 for sheet_id, graph in sheet_graphs.items():
+    # Use *NetworkX*'s layouting algorithm to find the arrow positions
+    # As we arrange the sheets along the x-axis,
+    # there is only one dimension
     positions = nx.kamada_kawai_layout(graph, dim=1)
     strand_ids = np.array(list(positions.keys()))
     positions = np.array(list(positions.values()))
@@ -206,6 +261,7 @@ for sheet_id, graph in sheet_graphs.items():
     positions += np.min(current_position)
     current_position = np.max(positions) + SHEET_DISTANCE
 
+    # Draw an arrow for each strand
     for strand_id, pos in zip(strand_ids, positions):
         chain_id = chain_ids[sheet_id, strand_id]
         color_index = unique_chain_ids.tolist().index(chain_id)
@@ -237,6 +293,8 @@ for sheet_id, graph in sheet_graphs.items():
         coord_dict[sheet_id, strand_id] = ((pos, y), (pos, y + dy))
 
 ### Plot connections
+# Each connection is plotted on a different height in order to keep them
+# separable
 # Plot the short connections at low height
 # to decrease line intersections
 # -> sort connections by length of connection 
