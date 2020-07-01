@@ -120,7 +120,7 @@ sphinx_gallery_conf = {
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : ".*ignore\.py",
-    "backreferences_dir"        : False,
+    "backreferences_dir"        : None,
     "download_section_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
