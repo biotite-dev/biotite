@@ -6,6 +6,9 @@ This script displays the adenine-thymine and guanine-cytosine base
 pairs, taken from an actual DNA 3D structure.
 """
 
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 import numpy as np
 import matplotlib.pyplot as plt
 import biotite.structure as struc
