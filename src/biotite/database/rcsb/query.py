@@ -189,8 +189,8 @@ class FieldQuery(SingleQuery):
     --------
     
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
-    >>> print(search(query))
-    ['1I0T', '1EJG', '3P4J', '2GLT', '4JLJ', '3NIR', '5NW3', '5D8V']
+    >>> print(sorted(search(query)))
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
     """
     def __init__(self, field, **kwargs):
         super().__init__()
@@ -281,8 +281,8 @@ class SequenceQuery(SingleQuery):
     
     >>> sequence = "NLYIQWLKDGGPSSGRPPPS"
     >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.8)
-    >>> print(search(query))
-    ['1L2Y', '2LDJ', '2MJ9', '2JOF', '3UC8', '3UC7', '1RIJ', '2LL5']
+    >>> print(sorted(search(query)))
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2LL5', '2MJ9', '3UC7', '3UC8']
     """
     def __init__(self, sequence, scope,
                  min_identity=0.0, max_expect_value=10000000.0):
@@ -373,8 +373,8 @@ class StructureQuery(SingleQuery):
     --------
 
     >>> query = StructureQuery("1L2Y", chain="A")
-    >>> print(search(query))
-    ['1L2Y', '2LDJ', '2JOF', '2M7D', '1RIJ']
+    >>> print(sorted(search(query)))
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D']
     """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
@@ -442,8 +442,8 @@ def count(query, return_type="entry"):
     >>> print(count(query))
     8
     >>> ids = search(query)
-    >>> print(ids)
-    ['1I0T', '1EJG', '3P4J', '2GLT', '4JLJ', '3NIR', '5NW3', '5D8V']
+    >>> print(sorted(ids))
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",

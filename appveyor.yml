@@ -14,10 +14,10 @@ environment:
       WHL_NAME: "biotite-0.22.0-cp37-cp37m-win_amd64.whl"
     - PYTHON: "C:\\Miniconda36"
       PY_VERSION: "3.8"
-      WHL_NAME: "biotite-0.22.0-cp38-cp38m-win32.whl"
+      WHL_NAME: "biotite-0.22.0-cp38-cp38-win32.whl"
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.8"
-      WHL_NAME: "biotite-0.22.0-cp38-cp38m-win_amd64.whl"
+      WHL_NAME: "biotite-0.22.0-cp38-cp38-win_amd64.whl"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
