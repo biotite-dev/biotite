@@ -127,8 +127,10 @@ sphinx_gallery_conf = {
     "default_thumb_file"        : join(
         doc_path, "static/assets/general/biotite_icon_thumb.png"
     ),
-    "image_scrapers": ("matplotlib", scraper.static_image_scraper),
-    'matplotlib_animations': True,
+    "image_scrapers"            : ("matplotlib", scraper.static_image_scraper),
+    "matplotlib_animations"     : True,
+    "backreferences_dir"        : "examples/backreferences",
+    "doc_module"                : ("biotite",)
 }
 
 
