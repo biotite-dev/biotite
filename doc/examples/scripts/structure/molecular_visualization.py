@@ -16,11 +16,12 @@ This example displays the small molecule caffeine.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.graphics as graphics
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 # Get an atom array for caffeine
@@ -33,7 +34,7 @@ n3 = caffeine[caffeine.atom_name == "N3"][0]
 n7 = caffeine[caffeine.atom_name == "N7"][0]
 # Normal vector of ring plane
 normal = np.cross(n1.coord - n3.coord, n1.coord - n7.coord)
-# Align ring plane normal to x-y plane normal
+# Align ring plane normal to z-axis
 caffeine = struc.align_vectors(caffeine, normal, np.array([0,0,1]))
 
 # Caffeine should be colored by element
@@ -53,4 +54,18 @@ graphics.plot_atoms(
 # Restrain the axes to quadratic extents
 # to ensure a correct aspect ratio
 plt.subplots_adjust(left=-0.3, right=1.3, bottom=-0.3, top=1.3)
+
+# Create an animation that rotates the molecule about the x-axis 
+def update(angle):
+    ax.elev = angle
+
+FPS = 50
+DURATION = 4
+angles = np.linspace(-180, 180, DURATION * FPS)
+# Start at 90 degrees
+angles = np.concatenate([
+    np.linspace(  90, 180, int(DURATION * FPS * 1/4)),
+    np.linspace(-180, 90,  int(DURATION * FPS * 3/4))
+])
+animation = FuncAnimation(fig, update, angles, interval=int(1000/FPS))
 plt.show()

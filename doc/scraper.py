@@ -1,6 +1,7 @@
 from glob import glob
 import shutil
 import os
+from os.path import splitext
 from sphinx_gallery.scrapers import figure_rst
 
 
@@ -24,7 +25,11 @@ def static_image_scraper(block, block_vars, gallery_conf):
     image_destinations = []
     image_path_iterator = block_vars['image_path_iterator']
     for image in image_sources:
+        suffix = splitext(image)[1]
         image_destination = image_path_iterator.next()
+        # Replace destination file suffix with the suffix from the input
+        # file, e.g. '.png' with '.gif' for animated images
+        image_destination = splitext(image_destination)[0] + suffix
         image_destinations.append(image_destination)
         shutil.copy(image, image_destination)
     
