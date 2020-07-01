@@ -37,7 +37,11 @@ matplotlib.rcdefaults()
 apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
 
 # Creation of tutorial *.rst files from Python script
-tutorial.create_tutorial(join("tutorial", "src"), join("tutorial", "target"))
+if not "plot_gallery=0" in sys.argv:
+    tutorial.create_tutorial(
+        join("tutorial", "src"),
+        join("tutorial", "target")
+    )
 
 
 #### General ####
@@ -130,7 +134,7 @@ sphinx_gallery_conf = {
     "image_scrapers"            : ("matplotlib", scraper.static_image_scraper),
     "matplotlib_animations"     : True,
     "backreferences_dir"        : "examples/backreferences",
-    "doc_module"                : ("biotite",)
+    "doc_module"                : ("biotite",),
 }
 
 

@@ -285,7 +285,15 @@ The Sphinx documentation is created using
    $ sphinx-build doc doc/_build/doc
 
 in the top-level directory.
+The building process can take a while, since the code from the tutorial
+and the example gallery is executed.
+In order to omit building the tutorial and gallery, type
 
+.. code-block:: console
+
+   $ sphinx-build -D plot_gallery=0 doc doc/_build/doc
+
+instead.
 
 
 Required packages
