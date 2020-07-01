@@ -524,12 +524,14 @@ def search(query, return_type="entry", range=None, sort_by=None):
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
-    >>> print(sorted(search(query, range=(1,4))))
-    ['1EJG', '2GLT', '3P4J']
     >>> print(search(query, sort_by="rcsb_accession_info.initial_release_date"))
     ['5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG', '2GLT']
+    >>> print(search(
+    ...     query, range=(1,4), sort_by="rcsb_accession_info.initial_release_date"
+    ... ))
+    ['5D8V', '4JLJ', '3P4J']
     >>> print(sorted(search(query, return_type="polymer_instance")))
-    ['1EJG.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A']
+    ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
@@ -542,7 +544,7 @@ def search(query, return_type="entry", range=None, sort_by=None):
 
     if range is None:
         start = 0
-        rows = count(query)
+        rows = count(query, return_type=return_type)
     elif range[1] <= range[0]:
         raise ValueError("Range stop must be greater than range start")
     else:
