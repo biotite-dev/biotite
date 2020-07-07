@@ -281,7 +281,7 @@ The Sphinx documentation is created using
 
 .. code-block:: console
 
-   $ pip install .
+   $ pip install -e .
    $ sphinx-build doc doc/_build/doc
 
 in the top-level directory.

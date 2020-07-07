@@ -123,7 +123,7 @@ sphinx_gallery_conf = {
     "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
-    "ignore_pattern"            : ".*ignore\.py",
+    "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
     "backreferences_dir"        : None,
     "download_section_examples" : False,
     # Never report run time
@@ -131,7 +131,11 @@ sphinx_gallery_conf = {
     "default_thumb_file"        : join(
         doc_path, "static/assets/general/biotite_icon_thumb.png"
     ),
-    "image_scrapers"            : ("matplotlib", scraper.static_image_scraper),
+    "image_scrapers"            : (
+        "matplotlib",
+        scraper.static_image_scraper,
+        scraper.pymol_scraper
+    ),
     "matplotlib_animations"     : True,
     "backreferences_dir"        : "examples/backreferences",
     "doc_module"                : ("biotite",),
