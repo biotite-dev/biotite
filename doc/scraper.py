@@ -47,6 +47,10 @@ def pymol_scraper(block, block_vars, gallery_conf):
         for line in code.splitlines()
     ]):
         pymol_script_path = splitext(block_vars["src_file"])[0] + "_pymol.py"
+        # The rendered image will be created in the same directory as
+        # the example script
+        # -> the image will be included in version control
+        # -> Rendering with PyMOL is not necessary for building the docs
         pymol_image_path  = splitext(block_vars["src_file"])[0] + ".png"
         if not isfile(pymol_script_path):
             raise ExtensionError(
@@ -55,7 +59,7 @@ def pymol_scraper(block, block_vars, gallery_conf):
             )
         
         # If PyMOL image is already created, do not run PyMOL script,
-        # ad this should not be required for building the documentation
+        # as this should not be required for building the documentation
         if not isfile(pymol_image_path):
             # Create a shallow copy,
             # to avoid ading new variables to example script

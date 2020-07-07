@@ -1,4 +1,6 @@
 import numpy as np
+from matplotlib.colors import to_rgb
+import biotite
 import biotite.structure as struc
 import ammolite
 
@@ -8,14 +10,15 @@ PNG_SIZE = (1000, 550)
 # General configuration
 ammolite.cmd.set("cartoon_side_chain_helper", 1)
 ammolite.cmd.set("cartoon_discrete_colors", 1)
+ammolite.cmd.set("depth_cue", 0)
 ammolite.cmd.set("cartoon_oval_length", 0.8)
-ammolite.cmd.set("cartoon_discrete_colors", 1)
 
 # Define colors
-ammolite.cmd.set_color("biotite_brightorange", [255/255, 181/255, 105/255])
-ammolite.cmd.set_color("biotite_dimorange",    [220/255, 112/255,   0/255])
-ammolite.cmd.set_color("biotite_lightgreen",   [111/255, 222/255,  76/255])
-ammolite.cmd.set_color("biotite_darkgreen",    [ 56/255, 154/255,  26/255])
+for color_name, color_value in biotite.colors:
+    ammolite.cmd.set_color(
+        "biotite_" + color_name,
+        to_rgb(color_value)
+    )
 
 # Add bonds to structure and convert to PyMOL
 structure = structure[~struc.filter_solvent(structure)]
