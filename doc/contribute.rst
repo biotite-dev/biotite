@@ -168,19 +168,42 @@ Please refer to its
 for further information on script formatting.
 The example scripts are placed in ``doc/examples/scripts``.
 
-Normally, *sphinx-gallery* only creates plots for *Matplotlib* and
-*Mayavi* outputs. However, the *Biotite* documentation implements
-a custom image scraper, that allows using static images, e.g. created by
-*PyMOL*, to be included.
-You have to do two things to achieve that:
+Static images and molecular visualizations
+""""""""""""""""""""""""""""""""""""""""""
 
-   - Put the image in the same directory as the example script
-   - In the respective code block of the example script, add the following
-     comment line:
-     ``# biotite_static_image = <some_image.png>``
+In addition to *Matplotlib* plots, the *Biotite* example gallery can also
+show molecular visualizations, via the *PyMOL* software, and static images.
 
-An example of this can be seen in the ``structure/ku_superimposition.py``
-example.
+Static images can be included by adding the following comment in the
+corresponding code block:
+
+.. code-block:: python
+
+   # biotite_static_image = <name_of_the_image>.png
+
+The image file must be stored in the same directory as the example script.
+
+To visualize images using *PyMOL* the
+`Ammolite <https://ammolite.biotite-python.org/>`_ package is required.
+Please make sure to use open-source *PyMOL* to avoid licensing issues.
+The visualization is initiated by adding the comment
+
+.. code-block:: python
+
+   # Visualization with PyMOL..
+
+anywhere to the example script.
+Then the visualization script ``<name_of_the_script>_pymol.py`` is executed,
+which can use the global variables from the example script.
+The rendered image is created in the directory of the example script and is
+added to version control.
+The visualization script is only executed, if the rendered image does not
+exist, yet.
+The traceback of errors in the visualization script are printed, if
+``sphinx-build`` is run in verbose (``-v``) mode.
+An example of this can be seen in the
+``doc/examples/structure/contact_sites.py`` example.
+
 
 Updating the tutorial
 ^^^^^^^^^^^^^^^^^^^^^
@@ -294,6 +317,7 @@ In order to omit building the tutorial and gallery, type
    $ sphinx-build -D plot_gallery=0 doc doc/_build/doc
 
 instead.
+
 
 
 Required packages
