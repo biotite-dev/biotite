@@ -258,10 +258,9 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             category_dict = _process_singlevalued(lines)
         
-        if expect_looped:
-            if not is_loop:
-                for key, val in category_dict:
-                    category_dict[key] = np.array([val], dtype=object)
+        if expect_looped and not is_loop:
+            category_dict = {key: np.array([val], dtype=object)
+                             for key, val in category_dict.items()}
 
         return category_dict
             
