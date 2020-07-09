@@ -14,7 +14,7 @@ ammolite.cmd.set("depth_cue", 0)
 ammolite.cmd.set("cartoon_oval_length", 0.8)
 
 # Define colors
-for color_name, color_value in biotite.colors:
+for color_name, color_value in biotite.colors.items():
     ammolite.cmd.set_color(
         "biotite_" + color_name,
         to_rgb(color_value)
