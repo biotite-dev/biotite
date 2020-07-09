@@ -513,11 +513,19 @@ class PDBxFile(TextFile, MutableMapping):
     
 def _process_singlevalued(lines):
     category_dict = {}
-    for line in lines:
-        parts = shlex.split(line)
+    i = 0
+    while i < len(lines):
+        parts = shlex.split(lines[i])
         key = parts[0].split(".")[1]
-        value = parts[1]
+        if len(parts) > 1:
+            value = parts[1]
+        else:
+            # The value is not in the same line,
+            # but in the following one
+            i += 1
+            value = shlex.split(lines[i])[0]
         category_dict[key] = value
+        i += 1
     return category_dict
 
 
