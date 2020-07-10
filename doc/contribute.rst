@@ -209,7 +209,7 @@ Updating the tutorial
 ^^^^^^^^^^^^^^^^^^^^^
 
 When adding new content for broad audience, it is appreciated to update the
-tutorial pages (``doc/tutorial_src``) as well.
+tutorial pages (``doc/tutorial/src``) as well.
 The tutorial uses functionality from ``sphinx-gallery`` to generate
 the tutorial from example scripts.
 This has the advantage that the output of code snippets is not static but
