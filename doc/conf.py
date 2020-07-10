@@ -37,7 +37,11 @@ matplotlib.rcdefaults()
 apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
 
 # Creation of tutorial *.rst files from Python script
-tutorial.create_tutorial(join("tutorial", "src"), join("tutorial", "target"))
+if not "plot_gallery=0" in sys.argv:
+    tutorial.create_tutorial(
+        join("tutorial", "src"),
+        join("tutorial", "target")
+    )
 
 
 #### General ####
@@ -119,15 +123,22 @@ sphinx_gallery_conf = {
     "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
-    "ignore_pattern"            : ".*ignore\.py",
-    "backreferences_dir"        : False,
+    "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
+    "backreferences_dir"        : None,
     "download_section_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
         doc_path, "static/assets/general/biotite_icon_thumb.png"
     ),
-    "image_scrapers": ("matplotlib", scraper.static_image_scraper),
+    "image_scrapers"            : (
+        "matplotlib",
+        scraper.static_image_scraper,
+        scraper.pymol_scraper
+    ),
+    "matplotlib_animations"     : True,
+    "backreferences_dir"        : "examples/backreferences",
+    "doc_module"                : ("biotite",),
 }
 
 

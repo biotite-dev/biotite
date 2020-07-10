@@ -244,6 +244,5 @@ atom_array = assemble_peptide(sequence)
 out_file = NamedTemporaryFile(suffix=".mmtf", delete=False)
 strucio.save_structure(out_file.name, atom_array)
 # Visualization with PyMOL...
-# biotite_static_image = peptide_assembly.png
 
 out_file.close()

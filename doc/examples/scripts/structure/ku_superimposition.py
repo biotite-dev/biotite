@@ -56,7 +56,6 @@ cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_superimposed, data_block="ku")
 cif_file.write(ku_file_name)
 # Visualization with PyMOL...
-# biotite_static_image = ku_superimposition.png
 
 ku_dna_file.close()
 ku_file.close()

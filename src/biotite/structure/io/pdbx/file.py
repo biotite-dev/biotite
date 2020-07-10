@@ -258,10 +258,9 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             category_dict = _process_singlevalued(lines)
         
-        if expect_looped:
-            if not is_loop:
-                for key, val in category_dict:
-                    category_dict[key] = np.array([val], dtype=object)
+        if expect_looped and not is_loop:
+            category_dict = {key: np.array([val], dtype=object)
+                             for key, val in category_dict.items()}
 
         return category_dict
             
@@ -514,11 +513,19 @@ class PDBxFile(TextFile, MutableMapping):
     
 def _process_singlevalued(lines):
     category_dict = {}
-    for line in lines:
-        parts = shlex.split(line)
+    i = 0
+    while i < len(lines):
+        parts = shlex.split(lines[i])
         key = parts[0].split(".")[1]
-        value = parts[1]
+        if len(parts) > 1:
+            value = parts[1]
+        else:
+            # The value is not in the same line,
+            # but in the following one
+            i += 1
+            value = shlex.split(lines[i])[0]
         category_dict[key] = value
+        i += 1
     return category_dict
 
 
