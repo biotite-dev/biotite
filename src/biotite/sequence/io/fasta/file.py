@@ -4,13 +4,11 @@
 
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
+__all__ = ["FastaFile"]
 
-from ....file import TextFile, InvalidFileError
-import textwrap
+from ....file import TextFile, InvalidFileError, wrap_string
 from collections import OrderedDict
 from collections.abc import MutableMapping
-
-__all__ = ["FastaFile"]
 
 
 class FastaFile(TextFile, MutableMapping):
@@ -114,7 +112,7 @@ class FastaFile(TextFile, MutableMapping):
         # Append header line
         self.lines += [">" + header.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
-        self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
+        self.lines += wrap_string(seq_str, width=self._chars_per_line)
         self._find_entries()
     
     def __getitem__(self, header):

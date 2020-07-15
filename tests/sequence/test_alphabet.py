@@ -134,3 +134,30 @@ def test_contains(alphabet_symbols, use_letter_alphabet):
     else:
         alph = seq.Alphabet(alphabet_symbols)
     assert "D" in alph
+
+@pytest.mark.parametrize(
+    "source_alph_symbols, target_alph_symbols", 
+    [
+        ("A", "AB"),
+        (["foo", "bar"], ["bar", "foo", 42]),
+        ("ACGT", "AGTC"),
+        ("ACGT", "ACGNT"),
+        (np.arange(0, 1000), np.arange(999, -1, -1)),
+    ]
+)
+def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
+    CODE_LENGTH = 10000
+    source_alph = seq.Alphabet(source_alph_symbols)
+    target_alph = seq.Alphabet(target_alph_symbols)
+    mapper = seq.AlphabetMapper(source_alph, target_alph)
+    
+    ref_sequence = seq.GeneralSequence(source_alph)
+    np.random.seed(0)
+    ref_sequence.code = np.random.randint(
+        len(source_alph), size=CODE_LENGTH, dtype=int
+    )
+
+    test_sequence = seq.GeneralSequence(target_alph)
+    test_sequence.code = mapper[ref_sequence.code]
+
+    assert test_sequence.symbols == ref_sequence.symbols

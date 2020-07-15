@@ -6,12 +6,10 @@ __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from numbers import Integral
-import textwrap
 from collections import OrderedDict
 from collections.abc import MutableMapping
 import numpy as np
-from ...seqtypes import NucleotideSequence
-from ....file import TextFile, InvalidFileError
+from ....file import TextFile, InvalidFileError, wrap_string
 
 __all__ = ["FastqFile"]
 
@@ -67,8 +65,8 @@ class FastqFile(TextFile, MutableMapping):
     
     >>> import os.path
     >>> file = FastqFile(offset="Sanger")
-    >>> file["seq1"] = NucleotideSequence("ATACT"), [0,3,10,7,12]
-    >>> file["seq2"] = NucleotideSequence("TTGTAGG"), [15,13,24,21,28,38,35]
+    >>> file["seq1"] = str(NucleotideSequence("ATACT")), [0,3,10,7,12]
+    >>> file["seq2"] = str(NucleotideSequence("TTGTAGG")), [15,13,24,21,28,38,35]
     >>> print(file)
     @seq1
     ATACT
@@ -143,9 +141,9 @@ class FastqFile(TextFile, MutableMapping):
         file._find_entries()
         return file
     
-    def get_sequence(self, identifier):
+    def get_seq_string(self, identifier):
         """
-        Get the sequence for the specified identifier.
+        Get the string representing the sequence for the specified identifier.
 
         Parameters
         ----------
@@ -154,7 +152,7 @@ class FastqFile(TextFile, MutableMapping):
         
         Returns
         -------
-        sequence : NucleotideSequence
+        sequence : str
             The sequence corresponding to the identifier.
         """
         if not isinstance(identifier, str):
@@ -164,10 +162,8 @@ class FastqFile(TextFile, MutableMapping):
         seq_start, seq_stop, score_start, score_stop \
             = self._entries[identifier]
         # Concatenate sequence string from the sequence lines
-        sequence = NucleotideSequence("".join(
-            self.lines[seq_start : seq_stop]
-        ))
-        return sequence
+        seq_str = "".join(self.lines[seq_start : seq_stop])
+        return seq_str
     
     def get_quality(self, identifier):
         """
@@ -180,7 +176,7 @@ class FastqFile(TextFile, MutableMapping):
         
         Returns
         -------
-        sequence : NucleotideSequence
+        scores : ndarray, dtype=int
             The quality scores corresponding to the identifier.
         """
         if not isinstance(identifier, str):
@@ -210,8 +206,6 @@ class FastqFile(TextFile, MutableMapping):
             raise IndexError(
                 "'FastqFile' only supports header strings as keys"
             )
-        if not isinstance(sequence, NucleotideSequence):
-            raise IndexError("Can only set 'NucleotideSequence' objects")
         # Delete lines of entry corresponding to the identifier,
         # if already existing
         if identifier in self:
@@ -222,9 +216,7 @@ class FastqFile(TextFile, MutableMapping):
         if self._chars_per_line is None:
             self.lines.append(str(sequence))
         else:
-            self.lines += textwrap.wrap(
-                str(sequence), width=self._chars_per_line
-            )
+            self.lines += wrap_string(sequence, width=self._chars_per_line)
         # Append sequence-score separator
         self.lines += ["+"]
         # Append scores
@@ -237,13 +229,11 @@ class FastqFile(TextFile, MutableMapping):
         if self._chars_per_line is None:
             self.lines.append(score_chars)
         else:
-            self.lines += textwrap.wrap(
-                score_chars, width=self._chars_per_line
-            )
+            self.lines += wrap_string(score_chars, width=self._chars_per_line)
         self._find_entries()
     
     def __getitem__(self, identifier):
-        return self.get_sequence(identifier), self.get_quality(identifier)
+        return self.get_seq_string(identifier), self.get_quality(identifier)
     
     def __delitem__(self, identifier):
         seq_start, seq_stop, score_start, score_stop \

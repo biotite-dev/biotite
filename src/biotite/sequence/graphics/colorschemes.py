@@ -90,7 +90,7 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
     Examples
     --------
 
-    >>> alphabet = NucleotideSequence.alphabet
+    >>> alphabet = NucleotideSequence.alphabet_unamb
     >>> color_scheme = get_color_scheme("rainbow", alphabet)
     >>> print(color_scheme)
     ['#3737f5', '#37f537', '#f5f537', '#f53737']

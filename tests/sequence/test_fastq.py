@@ -23,14 +23,14 @@ def test_access(chars_per_line):
     assert len(file) == 19
     assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)
                                  if i+1 != 5]
-    for sequence, scores in file.values():
-        assert len(sequence) == len(scores)
+    for seq_str, scores in file.values():
+        assert len(seq_str) == len(scores)
         assert (scores >= 0).all()
-    sequence = seq.NucleotideSequence("ACTCGGT")
+    seq_str = "ACTCGGT"
     scores = np.array([10,12,20,11,0,80,42])
-    file["test"] = sequence, scores
-    sequence2, scores2 = file["test"]
-    assert sequence == sequence2
+    file["test"] = seq_str, scores
+    seq_str2, scores2 = file["test"]
+    assert seq_str == seq_str2
     assert np.array_equal(scores, scores2)
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])

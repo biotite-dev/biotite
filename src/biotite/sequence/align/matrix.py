@@ -105,7 +105,7 @@ class SubstitutionMatrix(object):
 
     Creating an identity substitution matrix via the score matrix:
 
-    >>> alph = NucleotideSequence.alphabet
+    >>> alph = NucleotideSequence.alphabet_unamb
     >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph)))
     >>> print(matrix)
         A   C   G   T
@@ -382,7 +382,7 @@ class SubstitutionMatrix(object):
 _matrix_blosum62 = SubstitutionMatrix(ProteinSequence.alphabet,
                                       ProteinSequence.alphabet,
                                       "BLOSUM62")
-_matrix_nuc = SubstitutionMatrix(NucleotideSequence.alphabet,
-                                 NucleotideSequence.alphabet,
+_matrix_nuc = SubstitutionMatrix(NucleotideSequence.alphabet_amb,
+                                 NucleotideSequence.alphabet_amb,
                                  "NUC")
 
