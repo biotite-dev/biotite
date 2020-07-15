@@ -5,6 +5,7 @@
 __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
+import warnings
 from numbers import Integral
 from collections import OrderedDict
 from collections.abc import MutableMapping
@@ -210,15 +211,19 @@ class FastqFile(TextFile, MutableMapping):
         # if already existing
         if identifier in self:
             del self[identifier]
-        # Append identifier line
-        self.lines += ["@" + identifier.replace("\n","").strip()]
+        
+        # Create new lines
+        # Star with identifier line
+        new_lines = ["@" + identifier.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
+        seq_start_i = len(new_lines)
         if self._chars_per_line is None:
-            self.lines.append(str(sequence))
+            new_lines.append(str(sequence))
         else:
-            self.lines += wrap_string(sequence, width=self._chars_per_line)
+            new_lines += wrap_string(sequence, width=self._chars_per_line)
+        seq_stop_i =len(new_lines)
         # Append sequence-score separator
-        self.lines += ["+"]
+        new_lines += ["+"]
         # Append scores
         if not isinstance(scores, np.ndarray):
             scores = np.array(scores)
@@ -226,11 +231,30 @@ class FastqFile(TextFile, MutableMapping):
         score_chars = scores.astype(np.int8, copy=False) \
                             .tobytes() \
                             .decode("ascii")
+        score_start_i = len(new_lines)
         if self._chars_per_line is None:
-            self.lines.append(score_chars)
+            new_lines.append(score_chars)
         else:
-            self.lines += wrap_string(score_chars, width=self._chars_per_line)
-        self._find_entries()
+            new_lines += wrap_string(score_chars, width=self._chars_per_line)
+        score_stop_i = len(new_lines)
+
+        if identifier in self:
+            # Delete lines of entry corresponding to the header,
+            # if existing
+            del self[identifier]
+            self.lines += new_lines
+            self._find_entries()
+        else:
+            # Simply append lines
+            # Add entry in a more efficient way than '_find_entries()'
+            # for this simple case
+            self._entries[identifier] = (
+                len(self.lines) + seq_start_i,
+                len(self.lines) + seq_stop_i,
+                len(self.lines) + score_start_i,
+                len(self.lines) + score_stop_i
+            )
+            self.lines += new_lines
     
     def __getitem__(self, identifier):
         return self.get_seq_string(identifier), self.get_quality(identifier)
