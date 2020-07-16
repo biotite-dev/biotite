@@ -30,7 +30,11 @@ def test_saving_single(suffix):
         join(data_dir("sequence"), "random.fasta")
     )
     temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
-    seqio.save_sequence(temp.name, ref_sequence)
+    try:
+        seqio.save_sequence(temp.name, ref_sequence)
+    except PermissionError:
+        # This error might occur on AppVeyor
+        pytest.skip("Permission is denied")
 
 
 @pytest.mark.parametrize(
@@ -50,7 +54,11 @@ def test_saving_multiple(suffix):
         join(data_dir("sequence"), "random.fasta")
     )
     temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
-    seqio.save_sequences(temp.name, ref_sequences)
+    try:
+        seqio.save_sequences(temp.name, ref_sequences)
+    except PermissionError:
+        # This error might occur on AppVeyor
+        pytest.skip("Permission is denied")
 
 @pytest.mark.parametrize("file_name", ["gg_avidin.gb", "bt_lysozyme.gp"])
 def test_genbank(file_name):
@@ -61,4 +69,8 @@ def test_genbank(file_name):
 
     temp = NamedTemporaryFile("w+", suffix=".gb")
     sequence = seqio.load_sequence(join(data_dir("sequence"), file_name))
-    seqio.save_sequence(temp.name, sequence)
+    try:
+        seqio.save_sequence(temp.name, sequence)
+    except PermissionError:
+        # This error might occur on AppVeyor
+        pytest.skip("Permission is denied")
