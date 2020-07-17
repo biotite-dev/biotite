@@ -63,8 +63,8 @@ def align_ungapped(seq1, seq2, matrix, score_only=False):
         raise ValueError(
             f"Different sequence lengths ({len(seq1):d} and {len(seq2):d})"
         )
-    if (matrix.get_alphabet1() != seq1.get_alphabet() and
-        matrix.get_alphabet2() != seq2.get_alphabet()):
+    if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
+        or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
     score = _add_scores(seq1.code, seq2.code, matrix.score_matrix())
     if score_only:

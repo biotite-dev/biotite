@@ -37,6 +37,35 @@ class GeneralSequence(Sequence):
     
     def get_alphabet(self):
         return self._alphabet
+    
+    def as_type(self, sequence):
+        """
+        Convert the `GeneralSequence` into a sequence of another
+        `Sequence` type.
+
+        This function simply replaces the sequence code of the given
+        sequence with the sequence code of this object.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The `Sequence` whose sequence code is replaced with the one
+            of this object.
+            The alphabet must equal or extend the alphabet of this
+            object.
+        
+        Returns
+        -------
+        sequence : Sequence
+            The input `sequence` with replaced sequence code.
+        """
+        if not sequence.get_alphabet().extends(self._alphabet):
+            raise AlphabetError(
+                f"The alphabet of '{type(sequence).__name__}' "
+                f"is not compatible with the alphabet of this sequence"
+            )
+        sequence.code = self.code
+        return sequence
 
 class NucleotideSequence(Sequence):
     """
@@ -61,9 +90,11 @@ class NucleotideSequence(Sequence):
         is used.
     """
     
-    alphabet     = LetterAlphabet(["A","C","G","T"])
-    alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
-                                   "M","K","H","B","V","D","N"])
+    alphabet_unamb = LetterAlphabet(["A","C","G","T"])
+    alphabet_amb   = LetterAlphabet(
+        ["A","C","G","T","R","Y","W","S",
+         "M","K","H","B","V","D","N"]
+    )
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -88,18 +119,21 @@ class NucleotideSequence(Sequence):
     # Vectorized function that returns a complement code
     _complement_func = np.vectorize(_compl_dict.__getitem__)
     
-    def __init__(self, sequence=[], ambiguous=False):
+    def __init__(self, sequence=[], ambiguous=None):
         if isinstance(sequence, str):
             sequence = sequence.upper()
         else:
             sequence = [symbol.upper() for symbol in sequence]
-        if ambiguous == False:
+        if ambiguous is None:
             try:
-                self._alphabet = NucleotideSequence.alphabet
+                self._alphabet = NucleotideSequence.alphabet_unamb
                 seq_code = self._alphabet.encode_multiple(sequence)
             except AlphabetError:
                 self._alphabet = NucleotideSequence.alphabet_amb
                 seq_code = self._alphabet.encode_multiple(sequence)
+        elif not ambiguous:
+            self._alphabet = NucleotideSequence.alphabet_unamb
+            seq_code = self._alphabet.encode_multiple(sequence)
         else:
             self._alphabet = NucleotideSequence.alphabet_amb
             seq_code = self._alphabet.encode_multiple(sequence)
@@ -262,7 +296,7 @@ class NucleotideSequence(Sequence):
     
     @staticmethod
     def unambiguous_alphabet():
-        return NucleotideSequence.alphabet
+        return NucleotideSequence.alphabet_unamb
     
     @staticmethod
     def ambiguous_alphabet():

@@ -11,7 +11,7 @@ def test_nucleotide_construction():
     string = "AATGCGTTA"
     string_amb = "ANNGCBRTAN"
     dna = seq.NucleotideSequence(string)
-    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet
+    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_unamb
     assert str(dna) == string
     dna = seq.NucleotideSequence(string_amb)
     assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_amb

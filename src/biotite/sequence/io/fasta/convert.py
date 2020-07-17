@@ -5,6 +5,7 @@
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
+from collections import OrderedDict
 from ...sequence import Sequence
 from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence
@@ -28,8 +29,8 @@ def get_sequence(fasta_file, header=None):
     
     Returns
     -------
-    sequence : :class:`NucleotideSequence` or :class:`ProteinSequence`
-        The first sequence in the :class:`FastaFile`.
+    sequence : NucleotideSequence or ProteinSequence
+        The requested sequence in the `FastaFile`.
         :class:`NucleotideSequence` if the sequence string fits the
         corresponding alphabet, :class:`ProteinSequence` otherwise.
     
@@ -67,8 +68,9 @@ def get_sequences(fasta_file):
     Returns
     -------
     seq_dict : dict
-        A dictionary containg :class:`NucleotideSequence` and/or
-        :class:`ProteinSequence` instances.
+        A dictionary that maps headers to
+        :class:`NucleotideSequence` and/or :class:`ProteinSequence`
+        instances as values.
     
     Raises
     ------
@@ -77,7 +79,7 @@ def get_sequences(fasta_file):
         into a :class:`NucleotideSequence` nor a
         :class:`ProteinSequence`.
     """
-    seq_dict = {}
+    seq_dict = OrderedDict()
     for header, seq_str in fasta_file.items():
         seq_dict[header] = _convert_to_sequence(seq_str)
     return seq_dict
@@ -94,7 +96,7 @@ def set_sequence(fasta_file, sequence, header=None):
     sequence : Sequence
         The sequence to be set.
     header : str, optional
-        The header for the sequence. Default is 'sequence'.
+        The header for the sequence. Default is ``'sequence'``.
     
     Raises
     ------
@@ -190,7 +192,7 @@ def _convert_to_sequence(seq_str):
     # and theres is only one letter for completely unknown nucleotides
     nuc_seq_str = seq_str.replace("U","T").replace("X","N")
     try:
-        code = NucleotideSequence.alphabet.encode_multiple(nuc_seq_str)
+        code = NucleotideSequence.alphabet_unamb.encode_multiple(nuc_seq_str)
         seq = NucleotideSequence()
         seq.code = code
         return seq

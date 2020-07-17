@@ -5,13 +5,12 @@
 __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
+import warnings
 from numbers import Integral
-import textwrap
 from collections import OrderedDict
 from collections.abc import MutableMapping
 import numpy as np
-from ...seqtypes import NucleotideSequence
-from ....file import TextFile, InvalidFileError
+from ....file import TextFile, InvalidFileError, wrap_string
 
 __all__ = ["FastqFile"]
 
@@ -67,8 +66,8 @@ class FastqFile(TextFile, MutableMapping):
     
     >>> import os.path
     >>> file = FastqFile(offset="Sanger")
-    >>> file["seq1"] = NucleotideSequence("ATACT"), [0,3,10,7,12]
-    >>> file["seq2"] = NucleotideSequence("TTGTAGG"), [15,13,24,21,28,38,35]
+    >>> file["seq1"] = str(NucleotideSequence("ATACT")), [0,3,10,7,12]
+    >>> file["seq2"] = str(NucleotideSequence("TTGTAGG")), [15,13,24,21,28,38,35]
     >>> print(file)
     @seq1
     ATACT
@@ -143,9 +142,9 @@ class FastqFile(TextFile, MutableMapping):
         file._find_entries()
         return file
     
-    def get_sequence(self, identifier):
+    def get_seq_string(self, identifier):
         """
-        Get the sequence for the specified identifier.
+        Get the string representing the sequence for the specified identifier.
 
         Parameters
         ----------
@@ -154,7 +153,7 @@ class FastqFile(TextFile, MutableMapping):
         
         Returns
         -------
-        sequence : NucleotideSequence
+        sequence : str
             The sequence corresponding to the identifier.
         """
         if not isinstance(identifier, str):
@@ -164,10 +163,8 @@ class FastqFile(TextFile, MutableMapping):
         seq_start, seq_stop, score_start, score_stop \
             = self._entries[identifier]
         # Concatenate sequence string from the sequence lines
-        sequence = NucleotideSequence("".join(
-            self.lines[seq_start : seq_stop]
-        ))
-        return sequence
+        seq_str = "".join(self.lines[seq_start : seq_stop])
+        return seq_str
     
     def get_quality(self, identifier):
         """
@@ -180,7 +177,7 @@ class FastqFile(TextFile, MutableMapping):
         
         Returns
         -------
-        sequence : NucleotideSequence
+        scores : ndarray, dtype=int
             The quality scores corresponding to the identifier.
         """
         if not isinstance(identifier, str):
@@ -210,23 +207,23 @@ class FastqFile(TextFile, MutableMapping):
             raise IndexError(
                 "'FastqFile' only supports header strings as keys"
             )
-        if not isinstance(sequence, NucleotideSequence):
-            raise IndexError("Can only set 'NucleotideSequence' objects")
         # Delete lines of entry corresponding to the identifier,
         # if already existing
         if identifier in self:
             del self[identifier]
-        # Append identifier line
-        self.lines += ["@" + identifier.replace("\n","").strip()]
+        
+        # Create new lines
+        # Star with identifier line
+        new_lines = ["@" + identifier.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
+        seq_start_i = len(new_lines)
         if self._chars_per_line is None:
-            self.lines.append(str(sequence))
+            new_lines.append(str(sequence))
         else:
-            self.lines += textwrap.wrap(
-                str(sequence), width=self._chars_per_line
-            )
+            new_lines += wrap_string(sequence, width=self._chars_per_line)
+        seq_stop_i =len(new_lines)
         # Append sequence-score separator
-        self.lines += ["+"]
+        new_lines += ["+"]
         # Append scores
         if not isinstance(scores, np.ndarray):
             scores = np.array(scores)
@@ -234,16 +231,33 @@ class FastqFile(TextFile, MutableMapping):
         score_chars = scores.astype(np.int8, copy=False) \
                             .tobytes() \
                             .decode("ascii")
+        score_start_i = len(new_lines)
         if self._chars_per_line is None:
-            self.lines.append(score_chars)
+            new_lines.append(score_chars)
         else:
-            self.lines += textwrap.wrap(
-                score_chars, width=self._chars_per_line
+            new_lines += wrap_string(score_chars, width=self._chars_per_line)
+        score_stop_i = len(new_lines)
+
+        if identifier in self:
+            # Delete lines of entry corresponding to the header,
+            # if existing
+            del self[identifier]
+            self.lines += new_lines
+            self._find_entries()
+        else:
+            # Simply append lines
+            # Add entry in a more efficient way than '_find_entries()'
+            # for this simple case
+            self._entries[identifier] = (
+                len(self.lines) + seq_start_i,
+                len(self.lines) + seq_stop_i,
+                len(self.lines) + score_start_i,
+                len(self.lines) + score_stop_i
             )
-        self._find_entries()
+            self.lines += new_lines
     
     def __getitem__(self, identifier):
-        return self.get_sequence(identifier), self.get_quality(identifier)
+        return self.get_seq_string(identifier), self.get_quality(identifier)
     
     def __delitem__(self, identifier):
         seq_start, seq_stop, score_start, score_stop \
