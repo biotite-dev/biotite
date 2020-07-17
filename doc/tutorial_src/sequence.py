@@ -456,11 +456,12 @@ print(align.get_codes(alignment))
 #
 #    #. Conversion of both sequences into *words*
 #    #. Finding *word* matches
-#    #. Local alignments at the match position
+#    #. (Optional) Ungapped alignment at position of matching *word*
+#    #. Local gapped alignment at the match position
 #
 # In the following example the short protein sequence ``BIQTITE``
 # is aligned to a longer sequence containing the homologous
-# ``IQLITE`` in its middle.
+# ``NIQBITE`` in its middle.
 # While both sequences are relatively short and they could be easily
 # aligned with the :func:`align_optimal()` function, the following
 # approach scales well for real world applications, where the reference
