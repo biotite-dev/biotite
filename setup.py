@@ -14,28 +14,12 @@ import numpy
 from Cython.Build import cythonize
 from src.biotite import __version__
 
-long_description = """
-The Biotite package bundles popular tools in computational biology into an
-unifying framework. It offers file I/O operations, analyses and manipulations
-for biological sequence and structure data. Furthermore, the package provides
-interfaces for popular biological databases and external software.
-
-The internal structure and sequence representations are based on *NumPy*
-`ndarrays`, taking the advantage of C-accelerated operations. Time consuming
-operations that could not be vectorised are mostly implemented in *Cython* in
-order to achieve C-accelerations in those places, too.
-
-Additionally the package aims for simple usability and extensibility: The
-objects representing structures and sequences can be indexed and scliced like
-an `ndarray`. Even the actual internal `ndarrays` are easily accessible
-allowing advanced users to implement their own algorithms upon the existing
-types.
-"""
-
 original_wd = os.getcwd()
 # Change directory to setup directory to ensure correct file identification
 os.chdir(dirname(abspath(__file__)))
 
+with open("README.rst") as readme:
+    long_description = readme.read()
 
 # Compile Cython into C
 try:
@@ -84,8 +68,7 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
