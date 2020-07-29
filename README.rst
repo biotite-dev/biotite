@@ -72,6 +72,52 @@ Some functions require some extra packages:
    $ pip install biotite
 
 
+Usage
+-----
+
+Here is a small example that downloads two protein sequences from the
+*NCBI Entrez* database and aligns them:
+
+.. code-block:: python
+
+   import biotite.sequence.align as align
+   import biotite.sequence.io.fasta as fasta
+   import biotite.database.entrez as entrez
+
+   # Download FASTA file for the sequences of avidin and streptavidin
+   file_name = entrez.fetch_single_file(
+       uids=["CAC34569", "ACL82594"], file_name="sequences.fasta",
+       db_name="protein", ret_type="fasta"
+   )
+
+   # Parse the downloaded FASTA file
+   # and create 'ProteinSequence' objects from it
+   fasta_file = fasta.FastaFile.read(file_name)
+   avidin_seq, streptavidin_seq = fasta.get_sequences(fasta_file).values()
+
+   # Align sequences using the BLOSUM62 matrix with affine gap penalty
+   matrix = align.SubstitutionMatrix.std_protein_matrix()
+   alignments = align.align_optimal(
+       avidin_seq, streptavidin_seq, matrix,
+       gap_penalty=(-10, -1), terminal_penalty=False
+   )
+   print(alignments[0])
+
+.. code-block:: none
+
+   MVHATSPLLLLLLLSLALVAPGLSAR------KCSLTGKWDNDLGSNMTIGAVNSKGEFTGTYTTAV-TA
+   -------------------DPSKESKAQAAVAEAGITGTWYNQLGSTFIVTA-NPDGSLTGTYESAVGNA
+
+   TSNEIKESPLHGTQNTINKRTQPTFGFTVNWKFS----ESTTVFTGQCFIDRNGKEV-LKTMWLLRSSVN
+   ESRYVLTGRYDSTPATDGSGT--ALGWTVAWKNNYRNAHSATTWSGQYV---GGAEARINTQWLLTSGTT
+
+   DIGDDWKATRVGINIFTRLRTQKE---------------------
+   -AANAWKSTLVGHDTFTKVKPSAASIDAAKKAGVNNGNPLDAVQQ
+
+More documentation, including a tutorial, an example gallery and the API
+reference is available at `<https://www.biotite-python.org/>`_.
+
+
 Contribution
 ------------
 
