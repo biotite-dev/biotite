@@ -123,5 +123,5 @@ Contribution
 
 Interested in improving *Biotite*?
 Have a look at the
-`contribution guidelines <https://www.biotite-python.org/contribute.html>`.
+`contribution guidelines <https://www.biotite-python.org/contribute.html>`_.
 Feel free to join or community chat on `Discord <https://discord.gg/ECdDbvD>`_.
