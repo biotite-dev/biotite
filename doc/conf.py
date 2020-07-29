@@ -114,7 +114,8 @@ html_theme_options = {
     "page_width"    : "1200px",
     "fixed_sidebar" : "true",
     
-    "sidebar_link_underscore" : "#FFFFFF"
+    "sidebar_link_underscore" : "#FFFFFF",
+    "link"                    : "#006B99",
 }
 
 sphinx_gallery_conf = {
