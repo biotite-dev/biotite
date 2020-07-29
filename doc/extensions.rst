@@ -20,7 +20,7 @@ Python packages that are developed independently.
 
 .. only:: html
 
-    .. figure:: https://ammolite.biotite-python.org/_static/assets/ammolite_icon.svg
+    .. figure:: https://ammolite.biotite-python.org/_static/assets/ammolite_logo.svg
         :target: https://ammolite.biotite-python.org/
         :alt: Ammolite logo
 

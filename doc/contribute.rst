@@ -8,14 +8,23 @@ Contributing
 As the aim of *Biotite* is to create a comprehensive library, we welcome
 developers who would like to extend the package with new functionalities or
 improve existing code.
+
 The complete development workflow is hosted on
 `GitHub <https://github.com/biotite-dev/biotite>`_.
 This is also the place where you would post feature propositions,
 questions, bug reports, etc.
 
+If you are interested in improving *Biotite*, you feel free join our chat on
+`Discord <https://discord.gg/cUjDguF>`_.
+We are happy to answer questions, discuss ideas and provide mentoring for
+newcomers.
+Alternatively, you can also contact `<padix.key@gmail.com>`_.
+A good place to find projects to start with are the
+`Open Issues <https://github.com/biotite-dev/biotite/issues>`_ and
+the `Project Boards <https://github.com/biotite-dev/biotite/projects>`_.
+
 The following page explains the development guidelines in order to keep
 *Biotite*'s source code consistent.
-
 
 
 Writing code
