@@ -4,13 +4,11 @@
 
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
+__all__ = ["FastaFile"]
 
-from ....file import TextFile, InvalidFileError
-import textwrap
+from ....file import TextFile, InvalidFileError, wrap_string
 from collections import OrderedDict
 from collections.abc import MutableMapping
-
-__all__ = ["FastaFile"]
 
 
 class FastaFile(TextFile, MutableMapping):
@@ -107,15 +105,24 @@ class FastaFile(TextFile, MutableMapping):
         if not isinstance(seq_str, str):
             raise TypeError("'FastaFile' only supports sequence strings "
                              "as values")
-        # Delete lines of entry corresponding to the header,
-        # if existing
+        # Create lines for new header and sequence (with line breaks)
+        new_lines = [">" + header.replace("\n","").strip()] + \
+                    wrap_string(seq_str, width=self._chars_per_line)
         if header in self:
+            # Delete lines of entry corresponding to the header,
+            # if existing
             del self[header]
-        # Append header line
-        self.lines += [">" + header.replace("\n","").strip()]
-        # Append new lines with sequence string (with line breaks)
-        self.lines += textwrap.wrap(seq_str, width=self._chars_per_line)
-        self._find_entries()
+            self.lines += new_lines
+            self._find_entries()
+        else:
+            # Simply append lines
+            # Add entry in a more efficient way than '_find_entries()'
+            # for this simple case
+            self._entries[header] = (
+                len(self.lines),
+                len(self.lines) + len(new_lines)
+            )
+            self.lines += new_lines
     
     def __getitem__(self, header):
         if not isinstance(header, str):

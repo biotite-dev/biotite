@@ -86,7 +86,7 @@ cbar = figure.colorbar(heatmap)
 figure.tight_layout()
 
 ########################################################################
-# As, the plot creates a heatmap field for every alignment column,
+# As the plot creates a heatmap field for every alignment column,
 # the plot looks quite confusing.
 # It is not clearly visible, which parts of the sequences have a low or
 # high similarity to each other. 
@@ -126,7 +126,7 @@ figure.tight_layout()
 # Finally we show the alignment columns without the terminal gaps of the
 # PI3K sequence, comprising the more conserved parts.
 #
-# Since the alignment is still relatively long we will reduce the
+# Since the alignment is still relatively long, we will reduce the
 # size of the font and the backgrounbd boxes, to fit more alignment
 # columns into one line.
 

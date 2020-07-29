@@ -14,7 +14,7 @@ from .seqtypes import NucleotideSequence, ProteinSequence
 
 
 # Abbreviations
-_NUC_ALPH = NucleotideSequence.alphabet
+_NUC_ALPH = NucleotideSequence.alphabet_unamb
 _PROT_ALPH = ProteinSequence.alphabet
 
 # Multiplier array that converts a codon in code representation
