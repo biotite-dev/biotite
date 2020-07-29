@@ -3,6 +3,7 @@
 # information.
 
 import sys
+import re
 import shlex
 import glob
 from os.path import join, abspath, dirname, normpath
@@ -12,14 +13,27 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as TestCommand
 import numpy
 from Cython.Build import cythonize
-from src.biotite import __version__
 
 original_wd = os.getcwd()
 # Change directory to setup directory to ensure correct file identification
 os.chdir(dirname(abspath(__file__)))
 
+# Simply import long description from README file
 with open("README.rst") as readme:
     long_description = readme.read()
+
+# Parse the top level package for the version
+# Do not use an import to prevent side effects
+# e.g. required runtime dependencies
+with open(join("src", "biotite", "__init__.py")) as init_file:
+    for line in init_file.read().splitlines():
+        if line.lstrip().startswith("__version__"):
+            version_match = re.search('".*"', line)
+            if version_match:
+                # Remove quotes
+                version = version_match.group(0)[1 : -1]
+            else:
+                raise ValueError("No version is specified in '__init__.py'")
 
 # Compile Cython into C
 try:
@@ -52,7 +66,7 @@ def get_extensions():
 
 setup(
     name="biotite",
-    version = __version__,
+    version = version,
     description = ("A comprehensive library for "
                    "computational molecular biology"),
     long_description = long_description,
