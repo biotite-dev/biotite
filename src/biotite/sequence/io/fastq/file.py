@@ -11,6 +11,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 import numpy as np
 from ....file import TextFile, InvalidFileError, wrap_string
+from ...seqtypes import NucleotideSequence
 
 __all__ = ["FastqFile"]
 
@@ -142,9 +143,34 @@ class FastqFile(TextFile, MutableMapping):
         file._find_entries()
         return file
     
+    def get_sequence(self, identifier):
+        """
+        Get the sequence for the specified identifier.
+
+        DEPRECATED: Use :meth:`get_seq_string()` or
+        :func:`get_sequence()` instead.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier of the sequence.
+        
+        Returns
+        -------
+        sequence : NucleotideSequence
+            The sequence corresponding to the identifier.
+        """
+        warnings.warn(
+            "'get_sequence()' is deprecated, use the 'get_seq_string()'"
+            "method or 'fasta.get_sequence()' function instead",
+            DeprecationWarning
+        )
+        return NucleotideSequence(self.get_seq_string(identifier))
+    
     def get_seq_string(self, identifier):
         """
-        Get the string representing the sequence for the specified identifier.
+        Get the string representing the sequence for the specified
+        identifier.
 
         Parameters
         ----------
