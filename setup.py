@@ -57,7 +57,6 @@ setup(
                    "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
-    url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = [
         "Development Status :: 4 - Beta",
@@ -72,6 +71,11 @@ setup(
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
+    url = "https://www.biotite-python.org",
+    project_urls = {
+        "Documentation": "https://biotite.biotite-python.org",
+        "Repository": "https://github.com/biotite-dev/biotite",
+    },
     
     zip_safe = False,
     packages = find_packages("src"),
