@@ -21,7 +21,7 @@ install:
   - conda install -n biotite-dev -c anaconda -c conda-forge "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"
   - activate biotite-dev
   - python setup.py bdist_wheel
-  - pip install .\dist\*
+  - pip install --find-links=.\dist biotite
 
 build: false
 
