@@ -103,7 +103,7 @@ Here is a small example that downloads two protein sequences from the
    )
    print(alignments[0])
 
-.. code-block:: none
+.. code-block::
 
    MVHATSPLLLLLLLSLALVAPGLSAR------KCSLTGKWDNDLGSNMTIGAVNSKGEFTGTYTTAV-TA
    -------------------DPSKESKAQAAVAEAGITGTWYNQLGSTFIVTA-NPDGSLTGTYESAVGNA
