@@ -32,3 +32,4 @@ dependencies:
   - clustalo
   - mafft
   - muscle
+  - sra-tools
