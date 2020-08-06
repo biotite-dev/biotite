@@ -3,7 +3,7 @@
 # information.
 
 __name__ = "biotite.sequence"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann", "Thomas Nevolianis"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
 from .sequence import Sequence
