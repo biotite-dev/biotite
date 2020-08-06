@@ -318,7 +318,29 @@ class ProteinSequence(Sequence):
         given, the list elements can be 1-letter or 3-letter amino acid
         representations. By default the sequence is empty.
     """
-    
+    _dict_mol_weight = {
+        "A": 71.08,
+        "C": 103.14,
+        "D": 115.09,
+        "E": 129.12,
+        "F": 147.18,
+        "G": 57.06,
+        "H": 137.15,
+        "I": 113.17,
+        "K": 128.18,
+        "L": 113.17,
+        "M": 131.21,
+        "N": 114.11,
+        "P": 97.12,
+        "Q": 128.41,
+        "R": 156.20,
+        "S": 87.08,
+        "T": 101.11,
+        "V": 99.14,
+        "W": 186.21,
+        "Y": 163.18,
+    }
+
     _codon_table = None
     
     alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
@@ -416,4 +438,14 @@ class ProteinSequence(Sequence):
             3-letter amino acid representation.
         """
         return ProteinSequence._dict_1to3[symbol.upper()]
-    
+
+    def get_molecular_weight(self):
+        """
+        Convert a protein sequence to molecular weight of a protein.
+
+        Returns
+        -------
+        convert : float
+            molecular weight of a protein.
+        """
+        return sum([self._dict_mol_weight[p] for p in self.symbols])
