@@ -328,7 +328,7 @@ class PDBxFile(TextFile, MutableMapping):
 
         
         # Value arrays (looped categories) can be modified (e.g. quoted)
-        # Hence make a copy to avoid unwaned side effects
+        # Hence make a copy to avoid unwanted side effects
         # due to modification of input values
         if is_looped:
             category_dict = {key : val.copy() for key, val
@@ -343,7 +343,7 @@ class PDBxFile(TextFile, MutableMapping):
                 category_dict[key] = _quote(value)
         
         if is_looped:
-            keylines = ["_" + category + "." + key
+            keylines = ["_" + category + "." + key + " "
                          for key in category_dict.keys()]
             value_arr = list(category_dict.values())
             # Array containing the number of characters + whitespace
