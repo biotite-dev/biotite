@@ -26,10 +26,11 @@ class FastqDumpApp(LocalApp):
             self._prefix = self._out_file.name
         else:
             self._prefix = output_path_prefix
+            self._out_file = None
 
     def run(self):
         self.set_arguments([
-            "-o", self._prefix,
+            "-o", self._prefix + ".fastq",
             "-t", gettempdir(),
             "-f",
             self._uid
@@ -51,7 +52,8 @@ class FastqDumpApp(LocalApp):
     
     def clean_up(self):
         super().clean_up()
-        self._out_file.close()
+        if self._out_file is not None:
+            self._out_file.close()
     
     @requires_state(AppState.JOINED)
     def get_sequences(self):
@@ -63,9 +65,7 @@ class FastqDumpApp(LocalApp):
     
     @staticmethod
     def fetch(uid, output_path_prefix=None, bin_path="fasterq-dump"):
-        app = FastqDumpApp(
-            uid, output_path_prefix=None, bin_path="fasterq-dump"
-        )
+        app = FastqDumpApp(uid, output_path_prefix, bin_path)
         app.start()
         app.join()
         return app.get_sequences()
