@@ -71,3 +71,13 @@ def test_letter_conversion():
         three_letters = seq.ProteinSequence.convert_letter_1to3(symbol)
         single_letter = seq.ProteinSequence.convert_letter_3to1(three_letters)
         assert symbol == single_letter
+
+
+def test_get_molecular_weight():
+    """
+    Test whether the molecular weight of a protein is calculated
+    correctly.
+    """
+    protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVWY")
+    mol_weight_protein = protein.get_molecular_weight()
+    assert mol_weight_protein == 2378.11
