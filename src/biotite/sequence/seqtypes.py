@@ -318,34 +318,39 @@ class ProteinSequence(Sequence):
         given, the list elements can be 1-letter or 3-letter amino acid
         representations. By default the sequence is empty.
     """
-    _dict_mol_weight = {
-        "A": 71.08,
-        "C": 103.14,
-        "D": 115.09,
-        "E": 129.12,
-        "F": 147.18,
-        "G": 57.06,
-        "H": 137.15,
-        "I": 113.17,
-        "K": 128.18,
-        "L": 113.17,
-        "M": 131.21,
-        "N": 114.11,
-        "P": 97.12,
-        "Q": 128.41,
-        "R": 156.20,
-        "S": 87.08,
-        "T": 101.11,
-        "V": 99.14,
-        "W": 186.21,
-        "Y": 163.18,
-    }
 
     _codon_table = None
     
     alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
                                "M","N","P","Q","R","S","T","V","W","Y",
                                "B","Z","X","*"])
+    
+    _mol_weight = np.array([
+        71.08,  # A
+        103.14, # C
+        115.09, # D
+        129.12, # E
+        147.18, # F
+        57.06,  # G
+        137.15, # H
+        113.17, # I
+        128.18, # K
+        113.17, # L
+        131.21, # M
+        114.11, # N
+        97.12,  # P
+        128.41, # Q
+        156.20, # R
+        87.08,  # S
+        101.11, # T
+        99.14,  # V
+        186.21, # W
+        163.18, # Y
+        np.nan, # B
+        np.nan, # Z
+        np.nan, # X
+        np.nan, # *
+    ])
     
     _dict_1to3 = {"A" : "ALA",
                   "C" : "CYS",
@@ -441,11 +446,12 @@ class ProteinSequence(Sequence):
 
     def get_molecular_weight(self):
         """
-        Convert a protein sequence to molecular weight of a protein.
+        Calculate the molecular weight of this protein.
 
         Returns
         -------
-        convert : float
-            molecular weight of a protein.
+        weight : float
+            Molecular weight of the protein represented by the sequence.
         """
-        return sum([self._dict_mol_weight[p] for p in self.symbols])
+        return np.sum(self._mol_weight[self.code])
+
