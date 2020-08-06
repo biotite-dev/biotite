@@ -453,5 +453,10 @@ class ProteinSequence(Sequence):
         weight : float
             Molecular weight of the protein represented by the sequence.
         """
-        return np.sum(self._mol_weight[self.code])
-
+        weight = np.sum(self._mol_weight[self.code])
+        if np.isnan(weight):
+            raise ValueError(
+                "Sequence contains ambiguous amino acids, "
+                "cannot calculate weight"
+            )
+        return weight
