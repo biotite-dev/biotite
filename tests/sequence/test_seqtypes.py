@@ -73,11 +73,16 @@ def test_letter_conversion():
         assert symbol == single_letter
 
 
-def test_get_molecular_weight():
+@pytest.mark.parametrize("monoisotopic, expected_mol_weight_protein",
+                         [(True, 2231.06), (False, 2232.56)]
+                         )
+def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     """
     Test whether the molecular weight of a protein is calculated
     correctly.
     """
-    protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVWY")
-    mol_weight_protein = protein.get_molecular_weight()
-    assert mol_weight_protein == pytest.approx(2378.11)
+    protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVW")
+    mol_weight_protein = protein.get_molecular_weight(
+        monoisotopic=monoisotopic)
+    assert mol_weight_protein == \
+           pytest.approx(expected_mol_weight_protein, abs=1e-2)
