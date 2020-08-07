@@ -80,4 +80,4 @@ def test_get_molecular_weight():
     """
     protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVWY")
     mol_weight_protein = protein.get_molecular_weight()
-    assert mol_weight_protein == 2378.11
+    assert mol_weight_protein == pytest.approx(2378.11)
