@@ -324,34 +324,61 @@ class ProteinSequence(Sequence):
     alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
                                "M","N","P","Q","R","S","T","V","W","Y",
                                "B","Z","X","*"])
-    
-    _mol_weight = np.array([
-        71.08,  # A
-        103.14, # C
-        115.09, # D
-        129.12, # E
-        147.18, # F
-        57.06,  # G
-        137.15, # H
-        113.17, # I
-        128.18, # K
-        113.17, # L
-        131.21, # M
-        114.11, # N
-        97.12,  # P
-        128.41, # Q
-        156.20, # R
-        87.08,  # S
-        101.11, # T
-        99.14,  # V
-        186.21, # W
-        163.18, # Y
-        np.nan, # B
-        np.nan, # Z
-        np.nan, # X
-        np.nan, # *
+
+    _mol_weight_average = np.array([
+        71.0788,  # A
+        103.1388,  # C
+        115.0886,  # D
+        129.1155,  # E
+        147.1766,  # F
+        57.0519,  # G
+        137.1411,  # H
+        113.1594,  # I
+        128.1741,  # K
+        113.1594,  # L
+        131.1926,  # M
+        114.1038,  # N
+        97.1167,  # P
+        128.1307,  # Q
+        156.1875,  # R
+        87.0782,  # S
+        101.1051,  # T
+        99.1326,  # V
+        186.2132,  # W
+        163.1760,  # Y
+        np.nan,  # B
+        np.nan,  # Z
+        np.nan,  # X
+        np.nan,  # *
     ])
-    
+
+    _mol_weight_monoisotopic = np.array([
+        71.03711,  # A
+        103.00919,  # C
+        115.02694,  # D
+        129.04259,  # E
+        147.06841,  # F
+        57.02146,  # G
+        137.05891,  # H
+        113.08406,  # I
+        128.09496,  # K
+        113.08406,  # L
+        131.04049,  # M
+        114.04293,  # N
+        97.05276,  # P
+        128.05858,  # Q
+        156.10111,  # R
+        87.03203,  # S
+        101.04768,  # T
+        99.06841,  # V
+        186.07931,  # W
+        163.06333,  # Y
+        np.nan,  # B
+        np.nan,  # Z
+        np.nan,  # X
+        np.nan,  # *
+    ])
+
     _dict_1to3 = {"A" : "ALA",
                   "C" : "CYS",
                   "D" : "ASP",
@@ -444,16 +471,23 @@ class ProteinSequence(Sequence):
         """
         return ProteinSequence._dict_1to3[symbol.upper()]
 
-    def get_molecular_weight(self):
+    def get_molecular_weight(self, monoisotopic=False):
         """
-        Calculate the molecular weight of this protein.
+        Calculate the molecular weight of this protein. Protein Mw is
+        calculated by the addition of average isotopic masses of amino acids
+        in the protein and the average isotopic mass of one water molecule.
 
         Returns
         -------
         weight : float
             Molecular weight of the protein represented by the sequence.
+            Molecular weight values are given in Dalton (Da).
         """
-        weight = np.sum(self._mol_weight[self.code])
+        if monoisotopic:
+            weight = np.sum(self._mol_weight_monoisotopic[self.code]) + 18.015
+        else:
+            weight = np.sum(self._mol_weight_average[self.code]) + 18.015
+
         if np.isnan(weight):
             raise ValueError(
                 "Sequence contains ambiguous amino acids, "
