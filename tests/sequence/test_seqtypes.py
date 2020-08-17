@@ -73,9 +73,11 @@ def test_letter_conversion():
         assert symbol == single_letter
 
 
-@pytest.mark.parametrize("monoisotopic, expected_mol_weight_protein",
-                         [(True, 2231.06), (False, 2232.56)]
-                         )
+@pytest.mark.parametrize(
+    "monoisotopic, expected_mol_weight_protein",
+    # Reference values taken from https://web.expasy.org/compute_pi/
+    [(True, 2231.06), (False, 2232.56)]
+)
 def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     """
     Test whether the molecular weight of a protein is calculated
