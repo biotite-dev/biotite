@@ -222,6 +222,5 @@ fig.tight_layout()
 # The dataset has quite an unusual repetition profile:
 # Usually one would expect, that most sequences occur only once and the
 # following duplication numbers become decreasingly likely.
-# However, in this case we have another duplication peak around 60
-# times.
+# However, in this case we have another peak at around 60 duplications.
 # And one read is even repeated astonishing 187 times!
