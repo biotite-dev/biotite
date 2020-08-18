@@ -103,7 +103,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     ----------
     uids : str or iterable object of str
         A single *unique identifier* (UID) or a list of UIDs of the
-        file(s) to be downloaded .
+        file(s) to be downloaded.
     target_path : str or None
         The target directory of the downloaded files.
         If ``None``, the file content is stored in a file-like object
