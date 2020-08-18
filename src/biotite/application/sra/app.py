@@ -18,9 +18,11 @@ class FastqDumpApp(LocalApp):
     """
     """
     
-    def __init__(self, uid, output_path_prefix=None, bin_path="fasterq-dump"):
+    def __init__(self, uid, output_path_prefix=None, bin_path="fasterq-dump",
+                 offset="Sanger"):
         super().__init__(bin_path)
         self._uid = uid
+        self._offset = offset
         if output_path_prefix is None:
             self._out_file = NamedTemporaryFile("r")
             self._prefix = self._out_file.name
@@ -46,7 +48,7 @@ class FastqDumpApp(LocalApp):
             glob.glob(self._prefix + "_*.fastq")
         )
         self._fastq_files = [
-            FastqFile.read(file_name, offset="Sanger")
+            FastqFile.read(file_name, offset=self._offset)
             for file_name in file_names
         ]
     
