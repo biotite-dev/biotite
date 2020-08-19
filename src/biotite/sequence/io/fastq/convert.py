@@ -50,7 +50,7 @@ def get_sequence(fastq_file, header=None):
 
 def get_sequences(fastq_file):
     """
-    Get dictionary from a `FastqFile` instance,
+    Get a dictionary from a `FastqFile` instance,
     where identifiers are keys and sequence-score-tuples are values.
     
     Parameters

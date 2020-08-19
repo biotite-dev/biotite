@@ -67,7 +67,7 @@ install:
   - pip install ./dist/*.whl
 
 script:
-  - if [ $COMPLETE == true ];  then pytest --ignore=tests/application/test_blast.py; fi
+  - if [ $COMPLETE == true ];  then pytest --ignore=tests/application/test_blast.py --ignore=tests/application/test_sra.py; fi
   - if [ $COMPLETE == false ]; then pytest --ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/ --ignore=tests/test_doctest.py; fi
 
 before_deploy:
