@@ -15,3 +15,4 @@ Test structures
 1QXB: Structure contains complimentary DNA-sequence
 5UGO: Structure contains deoxynucleotide
 4GXY: Structure contains ribonucleotide
+1CCR: Multi-model structure with the first model ID not beeing 1
