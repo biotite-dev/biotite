@@ -223,4 +223,4 @@ fig.tight_layout()
 # Usually one would expect, that most sequences occur only once and the
 # following duplication numbers become decreasingly likely.
 # However, in this case we have another peak at around 60 duplications.
-# And one read is even repeated astonishing 187 times!
+# And one read is even repeated astonishing 161 times!
