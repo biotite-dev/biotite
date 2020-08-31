@@ -39,9 +39,10 @@ def test_dssp(path):
     # -> compare PDB and local DSSP
     sse = mmtf_file["secStructList"]
     sse = sse[:n_residues]
-    if (sse == -1).all():
-        # First chain is not a polypeptide chain (presumably DNA/RNA)
-        # DSSP not applicable -> return
+    if (sse == -1).any():
+        # First chain is not a pure polypeptide chain
+        # (presumably DNA/RNA)
+        # -> DSSP not applicable -> return
         return
     sse = np.array([sec_struct_codes[code] for code in sse],
                     dtype="U1")

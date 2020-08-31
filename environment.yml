@@ -23,12 +23,13 @@ dependencies:
   - cython >=0.29
   - mdtraj >=1.9.3
   - matplotlib >=3.3
-  - pytest >=3.2
+  - pytest >=5.2
   - pytest-cov >=2.5
   - sphinx >=1.7
-  - sphinx-gallery =0.5.0
+  - sphinx-gallery =0.7.0
   - numpydoc >=0.8
   - dssp
   - clustalo
   - mafft
   - muscle
+  - sra-tools

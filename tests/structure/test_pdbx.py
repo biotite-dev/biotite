@@ -106,6 +106,7 @@ def test_conversion(path, model):
     
     array2 = pdbx.get_structure(pdbx_file, model=model)
     
+    assert array1.array_length() > 0
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds

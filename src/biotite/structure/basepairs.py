@@ -952,7 +952,7 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     
     # Loop through the indices of potential partners
     basepair_candidates = []
-    for candidate, partners in zip(np.argwhere(n_o_mask), indices):
+    for candidate, partners in zip(np.argwhere(n_o_mask)[:, 0], indices):
         for partner in partners:
             if partner == -1:
                 break

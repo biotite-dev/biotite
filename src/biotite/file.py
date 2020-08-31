@@ -152,6 +152,20 @@ class InvalidFileError(Exception):
     pass
 
 
+def wrap_string(text, width):
+    """
+    A much simpler and hence much more efficient version of
+    `textwrap.wrap()`.
+
+    This function simply wraps the given `text` after `width`
+    characters, ignoring sentences, whitespaces, etc.
+    """
+    lines = []
+    for i in range(0, len(text), width):
+        lines.append(text[i : i+width])
+    return lines
+
+
 def is_binary(file):
     if isinstance(file, io.BufferedIOBase):
         return True

@@ -82,7 +82,7 @@ def get_model_count(file, data_block=None):
         The number of models.
     """
     atom_site_dict = file.get_category("atom_site", data_block)
-    return int(atom_site_dict["pdbx_PDB_model_num"][-1])
+    return len(_get_model_starts(atom_site_dict["pdbx_PDB_model_num"]))
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
@@ -159,11 +159,14 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
-    model_count = int(models[-1])
+    model_starts = _get_model_starts(models)
+    model_count = len(model_starts)
+    atom_count = len(models)
     
     if model is None:
-        # For a stack, the annotation are derived from the first model
-        model_dict = _get_model_dict(atom_site_dict, 1)
+        # For a stack, the annotations are derived from the first model
+        model_dict = _get_model_dict(atom_site_dict, model_starts, 1)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         stack = AtomArrayStack(model_count, model_length)
         
@@ -171,7 +174,6 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         
         # Check if each model has the same amount of atoms
         # If not, raise exception
-        atom_count = len(models)
         if model_length * model_count != atom_count:
             raise InvalidFileError("The models in the file have unequal "
                                    "amount of atoms, give an explicit model "
@@ -205,19 +207,26 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 f"the given model {model} does not exist"
             )
 
-        model_dict = _get_model_dict(atom_site_dict, model)
+        model_dict = _get_model_dict(atom_site_dict, model_starts, model)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         array = AtomArray(model_length)
         
         _fill_annotations(array, model_dict, extra_fields, use_author_fields)
         
-        model_filter = (models == str(model))
+        # Append exclusive stop
+        model_starts = np.append(
+            model_starts, [len(atom_site_dict["group_PDB"])]
+        )
+        # Indexing starts at 0, but model number starts at 1
+        model_index = model - 1
+        start, stop = model_starts[model_index], model_starts[model_index+1]
         array.coord = np.zeros((model_length, 3), dtype=np.float32)
-        array.coord[:,0] = atom_site_dict["Cartn_x"][model_filter] \
+        array.coord[:,0] = atom_site_dict["Cartn_x"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,1] = atom_site_dict["Cartn_y"][model_filter] \
+        array.coord[:,1] = atom_site_dict["Cartn_y"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,2] = atom_site_dict["Cartn_z"][model_filter] \
+        array.coord[:,2] = atom_site_dict["Cartn_z"][start : stop] \
                            .astype(np.float32)
         
         array = _filter_altloc(array, model_dict, altloc)
@@ -303,11 +312,33 @@ def _filter_altloc(array, model_dict, altloc):
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
-def _get_model_dict(atom_site_dict, model):
+
+def _get_model_starts(model_array):
+    """
+    Get the start index for each model in the arrays of the
+    ``atom_site`` category.
+    """
+    models, indices = np.unique(model_array, return_index=True)
+    indices.sort()
+    return indices
+
+
+def _get_model_dict(atom_site_dict, model_starts, model):
+    """
+    Reduce the ``atom_site`` dictionary to the values for the given
+    model.
+    """
+    # Append exclusive stop
+    model_starts = np.append(
+        model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])]
+    )
     model_dict = {}
-    models = atom_site_dict["pdbx_PDB_model_num"]
+    # Indexing starts at 0, but model number starts at 1
+    model_index = model - 1
     for key in atom_site_dict.keys():
-        model_dict[key] = atom_site_dict[key][models == str(model)]
+        model_dict[key] = atom_site_dict[key][
+            model_starts[model_index] : model_starts[model_index+1]
+        ]
     return model_dict
 
 

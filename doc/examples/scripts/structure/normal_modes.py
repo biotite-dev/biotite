@@ -33,6 +33,7 @@ The file containing the eigenvectors can be downloaded via this
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import NamedTemporaryFile
 from os.path import join
 import numpy as np
 from numpy import newaxis
@@ -108,6 +109,8 @@ for i in range(len(residue_starts) -1):
 # An atom array stack containing all frames
 oscillating_structure = struc.from_template(protein_chain, oscillation)
 # Save as PDB for rendering a video with PyMOL
-#strucio.save_structure("glycosylase_oscillation.pdb", oscillating_structure)
-
+temp = NamedTemporaryFile(suffix=".pdb")
+strucio.save_structure(temp.name, oscillating_structure)
 # biotite_static_image = glycosylase_oscillation.gif
+
+temp.close()

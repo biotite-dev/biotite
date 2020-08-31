@@ -87,11 +87,11 @@ def density(atoms, selection=None, delta=1.0, bins=None,
         grid_min, grid_max = np.min(
             coords, axis=axis), np.max(coords, axis=axis
         )
-        bins = np.array([
+        bins = [
             np.arange(grid_min[0], grid_max[0]+delta, delta),
             np.arange(grid_min[1], grid_max[1]+delta, delta),
             np.arange(grid_min[2], grid_max[2]+delta, delta),
-        ])
+        ]
 
     if selection is None:
         selected_coords = coords

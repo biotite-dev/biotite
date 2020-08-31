@@ -11,23 +11,26 @@ from importlib import import_module
 import biotite
 
 
-def _index_attributes(package_name, src_path, attribute_index, file_index):
+def _index_attributes(package_name, src_path):
+    attribute_index = {}
+    file_index = {}
+    
     if not _is_package(src_path):
         # Directory is not a Python package/subpackage
         # -> Nothing to do
-        return []
+        return attribute_index, file_index
     
     # Identify all subdirectories...
     directory_content = listdir(src_path)
     dirs = [f for f in directory_content if isdir(join(src_path, f))]
     # ... and index them recursively 
     for directory in dirs:
-        _index_attributes(
+        sub_attribute_index, sub_file_index = _index_attributes(
             f"{package_name}.{directory}",
             join(src_path, directory),
-            attribute_index,
-            file_index
         )
+        attribute_index.update(sub_attribute_index)
+        file_index.update(sub_file_index)
     
     # Import all modules in directory and index attributes
     source_files = [
@@ -45,6 +48,8 @@ def _index_attributes(package_name, src_path, attribute_index, file_index):
         module = import_module(module_name)
         for attribute in module.__all__:
             attribute_index[(package_name, attribute)] = module_name
+    
+    return attribute_index, file_index
 
 
 def _is_package(path):
@@ -52,10 +57,10 @@ def _is_package(path):
     return "__init__.py" in content
 
 
-_attribute_index = {}
-_file_index = {}
-_index_attributes(
-    "biotite", dirname(biotite.__file__), _attribute_index, _file_index
+_attribute_index, _file_index = _index_attributes(
+    "biotite",
+    # Directory to src/biotite
+    join(dirname(dirname(__file__)), "src", "biotite")
 )
 
 

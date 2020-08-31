@@ -175,6 +175,9 @@ f"""
     :members:
     :undoc-members:
     :inherited-members:
+.. minigallery:: {package_name}.{class_name}
+    :add-heading: Gallery
+    :heading-level: "
 """
     with open(join(doc_path, f"{package_name}.{class_name}.rst"), "w") as f:
         f.write(file_content)
@@ -186,6 +189,9 @@ f"""
 {package_name}.{function_name}
 {"=" * (len(package_name)+len(function_name)+1)}
 .. autofunction:: {package_name}.{function_name}
+.. minigallery:: {package_name}.{function_name}
+    :add-heading: Gallery
+    :heading-level: "
 """
     with open(join(doc_path, f"{package_name}.{function_name}.rst"), "w") as f:
         f.write(file_content)

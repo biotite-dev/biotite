@@ -2,9 +2,12 @@ import os.path
 import os
 import codeop
 import logging
+import copy
+from importlib.util import module_from_spec, spec_from_loader
 from sphinx.util.logging import getLogger
 from sphinx.util import status_iterator
 import sphinx_gallery.gen_rst as genrst
+from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
 import sphinx_gallery.scrapers as scrapers
 import sphinx_gallery.py_source_parser as parser
 import biotite
@@ -61,16 +64,27 @@ def _create_tutorial_section(fname, src_dir, target_dir):
     image_path_template = os.path.join(target_dir,
                                        base_image_name+"_{0:02}.png")
 
+    fake_main = module_from_spec(spec_from_loader('__main__', None))
     script_vars = {
         "execute_script": True,
         "image_path_iterator": scrapers.ImagePathIterator(image_path_template),
         "src_file": src_file,
         "memory_delta": [],
+        "fake_main": fake_main
     }
-    tutorial_globals = {
+    tutorial_globals = fake_main.__dict__
+    tutorial_globals.update({
         "__doc__": "",
-        "__name__": "__main__"
-    }
+    })
+    gallery_conf = copy.deepcopy(DEFAULT_GALLERY_CONF)
+    gallery_conf.update({
+        "abort_on_example_error": True,
+        "src_dir": ".",
+        "execute_script": True,
+        "inspect_global_variables": False,
+        "call_memory": (lambda func: (0., func())),
+        "image_scrapers": (scrapers.matplotlib_scraper,),
+    })
     compiler = codeop.Compile()
 
     content_rst = ""
@@ -82,15 +96,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
                 block=(block_label, block_content, line_no),
                 example_globals=tutorial_globals,
                 script_vars=script_vars,
-                gallery_conf = {
-                    "abort_on_example_error": True,
-                    "src_dir": ".",
-                    "execute_script": True,
-                    "show_memory": False,
-                    "capture_repr": (),
-                    "image_scrapers": (scrapers.matplotlib_scraper,),
-                    "expected_failing_examples" : [],
-                }
+                gallery_conf=gallery_conf
             )
             content_rst += genrst.codestr2rst(
                 block_content, lineno=None

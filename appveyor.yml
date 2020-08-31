@@ -2,22 +2,16 @@ environment:
   matrix:
     - PYTHON: "C:\\Miniconda36"
       PY_VERSION: "3.6"
-      WHL_NAME: "biotite-0.22.0-cp36-cp36m-win32.whl"
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.6"
-      WHL_NAME: "biotite-0.22.0-cp36-cp36m-win_amd64.whl"
     - PYTHON: "C:\\Miniconda36"
       PY_VERSION: "3.7"
-      WHL_NAME: "biotite-0.22.0-cp37-cp37m-win32.whl"
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.7"
-      WHL_NAME: "biotite-0.22.0-cp37-cp37m-win_amd64.whl"
     - PYTHON: "C:\\Miniconda36"
       PY_VERSION: "3.8"
-      WHL_NAME: "biotite-0.22.0-cp38-cp38-win32.whl"
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.8"
-      WHL_NAME: "biotite-0.22.0-cp38-cp38-win_amd64.whl"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
@@ -27,7 +21,7 @@ install:
   - conda install -n biotite-dev -c anaconda -c conda-forge "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"
   - activate biotite-dev
   - python setup.py bdist_wheel
-  - pip install .\dist\%WHL_NAME%
+  - pip install --find-links=.\dist biotite
 
 build: false
 

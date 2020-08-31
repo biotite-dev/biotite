@@ -16,3 +16,4 @@ __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from .file import *
+from .convert import *
