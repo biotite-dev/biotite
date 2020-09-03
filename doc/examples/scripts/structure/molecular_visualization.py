@@ -49,11 +49,10 @@ colors[caffeine.element == "O"] = (0.8, 0.0, 0.0) # red
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="3d")
 graphics.plot_atoms(
-    ax, caffeine, colors, line_width=5, background_color="white"
+    ax, caffeine, colors, line_width=5, background_color="white",
+    zoom=1.5
 )
-# Restrain the axes to quadratic extents
-# to ensure a correct aspect ratio
-plt.subplots_adjust(left=-0.3, right=1.3, bottom=-0.3, top=1.3)
+fig.tight_layout()
 
 # Create an animation that rotates the molecule about the x-axis 
 def update(angle):

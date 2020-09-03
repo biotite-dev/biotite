@@ -79,7 +79,7 @@ colors[atoms.element == "N"] = (0.0, 0.0, 0.8) # blue
 colors[atoms.element == "O"] = (0.8, 0.0, 0.0) # red
 colors[atoms.element == "P"] = (0.0, 0.6, 0.0) # green
 graphics.plot_atoms(
-    ax, atoms, colors, line_width=3, background_color="white"
+    ax, atoms, colors, line_width=3, background_color="white", zoom=1.5
 )
 
 # Plot hydrogen bonds
@@ -105,5 +105,5 @@ for pair in pairs:
             fontsize=20, fontweight="bold", va="center", ha="center"
         )
 
-plt.subplots_adjust(left=-0.3, right=1.3, bottom=-0.3, top=1.3)
+fig.tight_layout()
 plt.show()

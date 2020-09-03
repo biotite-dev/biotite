@@ -13,9 +13,11 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 
 def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
-               center=None, size=None):
+               center=None, size=None, zoom=1.0):
     """
     Plot an :class:`AtomArray` as lines between bonded atoms.
+
+    The z-axis points into the screen plane.
     
     Parameters
     ----------
@@ -42,10 +44,15 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
         The coordinates of the structure that are in the center of the
         plot.
         By default the complete molecule is centered.
-    size : float
+    size : float, optional
         The size of each dimension in the plot.
         The limits of the :class:`Axes3D` are set to
-        ``(center - size/2), (center + size/2)``.
+        ``(center - size/(2*zoom)), (center + size/(2*zoom))``.
+    zoom : float, optional
+        Zoom in or zoom out.
+
+        - ``> 1.0``: Zoom in.
+        - ``< 1.0``: Zoom out.
     
     Notes
     -----
@@ -98,10 +105,10 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
     if background_color is not None:
         axes.set_facecolor(background_color)
         axes.get_figure().set_facecolor(background_color)
-    _set_box(axes, atoms.coord, center, size)
+    _set_box(axes, atoms.coord, center, size, zoom)
 
 
-def _set_box(axes, coord, center, size):
+def _set_box(axes, coord, center, size, zoom):
     """
     This ensures an approximately equal aspect ratio in a 3D plot under
     the condition, that the :class:`Axes` is quadratic on the display.
@@ -119,7 +126,7 @@ def _set_box(axes, coord, center, size):
             coord[:, 1].max() - coord[:, 1].min(),
             coord[:, 2].max() - coord[:, 2].min()
         ]).max()
-
-    axes.set_xlim(center[0] - size/2, center[0] + size/2)
-    axes.set_ylim(center[1] - size/2, center[1] + size/2)
-    axes.set_zlim(center[2] - size/2, center[2] + size/2)
+    
+    axes.set_xlim(center[0] - size/(2*zoom), center[0] + size/(2*zoom))
+    axes.set_ylim(center[1] - size/(2*zoom), center[1] + size/(2*zoom))
+    axes.set_zlim(center[2] - size/(2*zoom), center[2] + size/(2*zoom))
