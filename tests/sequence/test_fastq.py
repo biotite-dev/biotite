@@ -59,3 +59,13 @@ def test_conversion(chars_per_line):
         test_sequence, test_scores = content[identifier]
         assert test_sequence == ref_sequence
         assert np.array_equal(test_scores, ref_scores)
+
+
+def test_rna_conversion():
+    sequence = seq.NucleotideSequence("ACGT")
+    scores = np.array([0, 0, 0, 0])
+    fastq_file = fastq.FastqFile(offset="Sanger")
+    fastq.set_sequence(fastq_file, sequence, scores, "seq1", as_rna=False)
+    fastq.set_sequence(fastq_file, sequence, scores, "seq2", as_rna=True)
+    assert fastq_file["seq1"][0] == "ACGT" 
+    assert fastq_file["seq2"][0] == "ACGU"
