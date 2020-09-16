@@ -11,7 +11,7 @@ from ..util import data_dir
 import pytest
 
    
-def test_access():
+def test_access_low_level():
     path = os.path.join(data_dir("sequence"), "nuc.fasta")
     file = fasta.FastaFile.read(path)
     assert file["dna sequence"] == "ACGCTACGT"
@@ -20,16 +20,34 @@ def test_access():
     assert dict(file.items()) == {
         "dna sequence" : "ACGCTACGT",
         "another dna sequence" : "A",
-        "third dna sequence" : "ACGT"
+        "third dna sequence" : "ACGT",
+        "rna sequence" : "ACGU",
+        "ambiguous rna sequence" : "ACGUNN",
     }
     file["another dna sequence"] = "AA"
     del file["dna sequence"]
     file["yet another sequence"] = "ACGT"
     assert dict(file.items()) == {
         "another dna sequence" : "AA",
-        "third dna sequence"   : "ACGT",
-        "yet another sequence" : "ACGT"
+        "third dna sequence" : "ACGT",
+        "rna sequence" : "ACGU",
+        "ambiguous rna sequence" : "ACGUNN",
+        "yet another sequence" : "ACGT",
     }
+
+
+def test_access_high_level():
+    path = os.path.join(data_dir("sequence"), "nuc.fasta")
+    file = fasta.FastaFile.read(path)
+    sequences = fasta.get_sequences(file)
+    assert sequences == {
+        "dna sequence" : seq.NucleotideSequence("ACGCTACGT", False),
+        "another dna sequence" : seq.NucleotideSequence("A", False),
+        "third dna sequence" : seq.NucleotideSequence("ACGT", False),
+        "rna sequence" : seq.NucleotideSequence("ACGT", False),
+        "ambiguous rna sequence" : seq.NucleotideSequence("ACGTNN", True),
+    }
+
 
 def test_sequence_conversion():
     path = os.path.join(data_dir("sequence"), "nuc.fasta")
@@ -40,7 +58,10 @@ def test_sequence_conversion():
     file2 = fasta.FastaFile()
     fasta.set_sequences(file2, seq_dict)
     seq_dict2 = fasta.get_sequences(file2)
-    assert seq_dict == seq_dict2
+    # Cannot compare dicts directly, since the original RNA sequence is
+    # now guessed as protein sequence
+    for seq1, seq2 in zip(seq_dict.values(), seq_dict2.values()):
+        assert str(seq1) == str(seq2)
     
     file3 = fasta.FastaFile()
     fasta.set_sequence(file3, seq.NucleotideSequence("AACCTTGG"))
