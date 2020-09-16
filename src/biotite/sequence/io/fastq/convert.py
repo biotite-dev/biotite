@@ -42,10 +42,8 @@ def get_sequence(fastq_file, header=None):
             break
         if seq_str is None:
             raise ValueError("File does not contain any sequences")
-    # Determine the sequence type:
-    # If NucleotideSequence can be created it is a DNA sequence,
-    # otherwise protein sequence
-    return NucleotideSequence(seq_str), scores
+    processed_seq_str = seq_str.replace("U","T").replace("X","N")
+    return NucleotideSequence(processed_seq_str), scores
 
 
 def get_sequences(fastq_file):
@@ -66,7 +64,8 @@ def get_sequences(fastq_file):
     """
     seq_dict = OrderedDict()
     for header, (seq_str, scores) in fastq_file.items():
-        seq_dict[header] = NucleotideSequence(seq_str), scores
+        processed_seq_str = seq_str.replace("U","T").replace("X","N")
+        seq_dict[header] = NucleotideSequence(processed_seq_str), scores
     return seq_dict
 
 
