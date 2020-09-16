@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import glob
 from tempfile import TemporaryFile
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
@@ -59,3 +60,19 @@ def test_conversion(chars_per_line):
         test_sequence, test_scores = content[identifier]
         assert test_sequence == ref_sequence
         assert np.array_equal(test_scores, ref_scores)
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    glob.glob(os.path.join(data_dir("sequence"), "*.fastq"))
+)
+def test_read_iter(file_name):
+    ref_dict = dict(fastq.FastqFile.read(file_name, offset="Sanger").items())
+    
+    test_dict = dict(fastq.FastqFile.read_iter(file_name, offset="Sanger"))
+
+    for (test_id, (test_seq, test_sc)), (ref_id, (ref_seq, ref_sc)) \
+        in zip(test_dict.items(), ref_dict.items()):
+            assert test_id == ref_id
+            assert test_seq == ref_seq
+            assert (test_sc == ref_sc).all()

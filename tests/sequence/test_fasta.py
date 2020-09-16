@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import glob
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import numpy as np
@@ -67,3 +68,14 @@ def test_alignment_conversion():
     fasta.set_alignment(file2, alignment, seq_names=["seq1","seq2","seq3"])
     alignment2 = fasta.get_alignment(file2)
     assert str(alignment) == str(alignment2)
+
+@pytest.mark.parametrize(
+    "file_name",
+    glob.glob(os.path.join(data_dir("sequence"), "*.fasta"))
+)
+def test_read_iter(file_name):
+    ref_dict = dict(fasta.FastaFile.read(file_name).items())
+    
+    test_dict = dict(fasta.FastaFile.read_iter(file_name))
+
+    assert test_dict == ref_dict
