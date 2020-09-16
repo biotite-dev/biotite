@@ -76,6 +76,16 @@ def test_sequence_conversion():
     with pytest.raises(ValueError):
         seq.NucleotideSequence(fasta.get_sequence(file5))
 
+
+def test_rna_conversion():
+    sequence = seq.NucleotideSequence("ACGT")
+    fasta_file = fasta.FastaFile()
+    fasta.set_sequence(fasta_file, sequence, "seq1", as_rna=False)
+    fasta.set_sequence(fasta_file, sequence, "seq2", as_rna=True)
+    assert fasta_file["seq1"] == "ACGT"
+    assert fasta_file["seq2"] == "ACGU"
+
+
 def test_alignment_conversion():
     path = os.path.join(data_dir("sequence"), "alignment.fasta")
     file = fasta.FastaFile.read(path)
