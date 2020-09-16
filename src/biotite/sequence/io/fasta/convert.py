@@ -18,6 +18,8 @@ __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
 def get_sequence(fasta_file, header=None):
     """
     Get a sequence from a :class:`FastaFile` instance.
+
+    The type of sequence is guessed from the sequence string.
     
     Parameters
     ----------
@@ -59,6 +61,8 @@ def get_sequences(fasta_file):
     """
     Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
+
+    The type of sequence is guessed from the sequence string.
     
     Parameters
     ----------
@@ -192,24 +196,15 @@ def _convert_to_sequence(seq_str):
     # and theres is only one letter for completely unknown nucleotides
     nuc_seq_str = seq_str.replace("U","T").replace("X","N")
     try:
-        code = NucleotideSequence.alphabet_unamb.encode_multiple(nuc_seq_str)
-        seq = NucleotideSequence()
-        seq.code = code
-        return seq
+        return NucleotideSequence(nuc_seq_str, ambiguous=False)
     except AlphabetError:
         pass
     try:
-        code = ProteinSequence.alphabet.encode_multiple(seq_str)
-        seq = ProteinSequence()
-        seq.code = code
-        return seq
+        return ProteinSequence(seq_str)
     except AlphabetError:
         pass
     try:
-        code = NucleotideSequence.alphabet_amb.encode_multiple(nuc_seq_str)
-        seq = NucleotideSequence()
-        seq.code = code
-        return seq
+        return NucleotideSequence(nuc_seq_str, ambiguous=True)
     except AlphabetError:
         raise ValueError("FASTA data cannot be converted either to "
                          "'NucleotideSequence' nor to 'ProteinSequence'")
