@@ -42,10 +42,8 @@ def get_sequence(fastq_file, header=None):
             break
         if seq_str is None:
             raise ValueError("File does not contain any sequences")
-    # Determine the sequence type:
-    # If NucleotideSequence can be created it is a DNA sequence,
-    # otherwise protein sequence
-    return NucleotideSequence(seq_str), scores
+    processed_seq_str = seq_str.replace("U","T").replace("X","N")
+    return NucleotideSequence(processed_seq_str), scores
 
 
 def get_sequences(fastq_file):
@@ -66,11 +64,12 @@ def get_sequences(fastq_file):
     """
     seq_dict = OrderedDict()
     for header, (seq_str, scores) in fastq_file.items():
-        seq_dict[header] = NucleotideSequence(seq_str), scores
+        processed_seq_str = seq_str.replace("U","T").replace("X","N")
+        seq_dict[header] = NucleotideSequence(processed_seq_str), scores
     return seq_dict
 
 
-def set_sequence(fastq_file, sequence, scores, header=None):
+def set_sequence(fastq_file, sequence, scores, header=None, as_rna=False):
     """
     Set a sequence and a quality score array in a `FastqFile` instance.
     
@@ -84,13 +83,16 @@ def set_sequence(fastq_file, sequence, scores, header=None):
         The quality scores to be set.
     header : str, optional
         The identifier for the sequence. Default is 'sequence'.
+    as_rna : bool, optional
+        If set to true, the sequence symbol ``'T'`` will be replaced
+        by ``'U'``.
     """
     if header is None:
         header = "sequence"
-    fastq_file[header] = str(sequence), scores
+    fastq_file[header] = _convert_to_string(sequence, as_rna), scores
 
 
-def set_sequences(fastq_file, sequence_dict):
+def set_sequences(fastq_file, sequence_dict, as_rna=False):
     """
     Set sequences in a `FastqFile` instance from a dictionary.
     
@@ -101,7 +103,17 @@ def set_sequences(fastq_file, sequence_dict):
     sequence_dict : dict
         A dictionary containing the sequences and scores to be set.
         Identifiers are keys,
-        (`NucleotideSequence`, `ndarray`) tuples are values. 
+        (`NucleotideSequence`, `ndarray`) tuples are values.
+    as_rna : bool, optional
+        If set to true, the sequence symbol ``'T'`` will be replaced
+        by ``'U'``.
     """
     for header, (sequence, scores) in sequence_dict.items():
-        fastq_file[header] = str(sequence), scores
+        fastq_file[header] = _convert_to_string(sequence, as_rna), scores
+
+
+def _convert_to_string(sequence, as_rna):
+    if as_rna:
+        return(str(sequence).replace("T", "U"))
+    else:
+        return(str(sequence))
