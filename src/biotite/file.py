@@ -115,6 +115,40 @@ class TextFile(File, metaclass=abc.ABCMeta):
         file_object = cls(*args, **kwargs)
         file_object.lines = lines
         return file_object
+    
+    @staticmethod
+    def read_iter(file):
+        """
+        Create an iterator over each line of the given text file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Yields
+        ------
+        line : str
+            The current line in the file.
+        """
+        # File name
+        if isinstance(file, str):
+            with open(file, "r") as f:
+                while True:
+                    line = f.readline()
+                    if not line:
+                        break
+                    yield line
+        # File object
+        else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            while True:
+                line = file.readline()
+                if not line:
+                    break
+                yield line
 
     def write(self, file):
         """

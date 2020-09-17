@@ -175,4 +175,49 @@ class FastaFile(TextFile, MutableMapping):
                 # Last header -> entry stops at end of file
                 stop = len(self.lines)
             self._entries[header] = (start, stop)
-    
+
+
+    @staticmethod
+    def read_iter(file):
+        """
+        Create an iterator over each sequence of the given FASTA file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Yields
+        ------
+        header : str
+            The header of the current sequence.
+        seq_str : str
+            The current sequence as string.
+        
+        Notes
+        -----
+        This approach gives the same results as
+        `FastaFile.read(file).items()`, but is slightly faster and much
+        more memory efficient.
+        """
+        header = None
+        seq_str_list = []
+        for line in TextFile.read_iter(file):
+            line = line.strip()
+            # Ignore empty and comment lines
+            if len(line) == 0 or line[0] == ";":
+                continue
+            if line[0] == ">":
+                # New entry
+                # -> yield previous entry
+                if header is not None:
+                    yield header, "".join(seq_str_list)
+                # Track new header and reset sequence
+                header = line[1:]
+                seq_str_list = []
+            else:
+                seq_str_list.append(line)
+        # Yield final entry
+        if header is not None:
+            yield header, "".join(seq_str_list)
