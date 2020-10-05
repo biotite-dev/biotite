@@ -60,7 +60,7 @@ ax.set_xlabel("Year")
 ax.set_ylabel("Released structures per year")
 ax.bar(
     years, xray_count,
-    color=biotite.colors["darkorange"], label="X-RAY"
+    color=biotite.colors["darkorange"], label="X-Ray"
 )
 ax.bar(
     years, nmr_count, bottom=xray_count,
