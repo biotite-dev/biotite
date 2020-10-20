@@ -394,7 +394,7 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
 
 
         # TODO: Check Base Stacking
-            # Contains the bases to be used for analysis. If the bases are
+        # Contains the bases to be used for analysis. If the bases are
         # incomplete, transformed standard bases are used. If they are
         # complete, the original structure is used.
         transformed_bases = [None] * 2
