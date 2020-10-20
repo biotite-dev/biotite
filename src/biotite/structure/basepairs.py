@@ -432,6 +432,8 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         aromatic_ring_centers = [transformed_std_vectors[0][3:],
                                         transformed_std_vectors[1][3:]]
 
+        stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
+
         if stacked:
             basepairs.append((base1_index, base2_index))
 
