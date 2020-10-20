@@ -377,15 +377,17 @@ _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
 def base_stacking(atom_array, min_atoms_per_base = 3):
-    # Get the basepair candidates according to a N/O cutoff distance,
+    # Get the stacking candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    basepair_candidates = _get_proximate_basepair_candidates(atom_array)
+    stacking_candidates = _get_proximate_basepair_candidates(
+        atom_array, cutoff=15
+    )
 
-    # Contains the plausible basepairs
-    basepairs = []
+    # Contains the plausible pairs of stacked bases
+    stacked_bases = []
 
-    for base1_index, base2_index in basepair_candidates:
+    for base1_index, base2_index in stacking_candidates:
         base1_mask, base2_mask = get_residue_masks(
             atom_array, (base1_index, base2_index)
         )
@@ -419,11 +421,9 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
 
         if stacked:
-            basepairs.append((base1_index, base2_index))
+            stacked_bases.append((base1_index, base2_index))
 
-    basepair_array = np.array(basepairs)
-    # TODO: Fill Basepair Array
-    return basepair_array
+    return np.array(stacked_bases)
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
