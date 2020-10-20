@@ -392,17 +392,6 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         base1 = atom_array[base1_mask]
         base2 = atom_array[base2_mask]
 
-
-        # TODO: Check Base Stacking
-        # Contains the bases to be used for analysis. If the bases are
-        # incomplete, transformed standard bases are used. If they are
-        # complete, the original structure is used.
-        transformed_bases = [None] * 2
-        # Contains the hydrogen bond donor and acceptor heteroatoms as
-        # 'ndarray` with dtype=bool, boolean mask for heteroatoms which are
-        # bound to a hydrogen that can act as a donor, boolean mask for
-        # heteroatoms that can act as a hydrogen bond acceptor
-        hbond_masks = [None] * 2
         # A list containing ndarray for each base with transformed
         # vectors from the standard base reference frame to the structures'
         # coordinates. The layout is as follows:
@@ -415,20 +404,15 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
 
         # Generate the data necessary for analysis of each base.
         for i in range(2):
-            base_tuple = _match_base(basepair[i], min_atoms_per_base)
+            base_tuple = _match_base((base1, base2), min_atoms_per_base)
 
             if(base_tuple is None):
-                return -1
+                break
 
-            transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
-                = base_tuple
+            _, _, transformed_std_vectors[i] = base_tuple
 
-        origins = np.vstack((transformed_std_vectors[0][0],
-                            transformed_std_vectors[1][0]))
         normal_vectors = np.vstack((transformed_std_vectors[0][1],
                                     transformed_std_vectors[1][1]))
-        schnaap_origins = np.vstack((transformed_std_vectors[0][2],
-                                    transformed_std_vectors[1][2]))
         aromatic_ring_centers = [transformed_std_vectors[0][3:],
                                         transformed_std_vectors[1][3:]]
 
