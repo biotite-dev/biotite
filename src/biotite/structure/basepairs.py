@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs"]
+__all__ = ["base_pairs", "base_stacking"]
 
 import numpy as np
 import warnings
@@ -391,8 +391,7 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         base1_mask, base2_mask = get_residue_masks(
             atom_array, (base1_index, base2_index)
         )
-        base1 = atom_array[base1_mask]
-        base2 = atom_array[base2_mask]
+        bases = (atom_array[base1_mask], atom_array[base2_mask])
 
         # A list containing ndarray for each base with transformed
         # vectors from the standard base reference frame to the structures'
@@ -406,7 +405,7 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
 
         # Generate the data necessary for analysis of each base.
         for i in range(2):
-            base_tuple = _match_base((base1, base2), min_atoms_per_base)
+            base_tuple = _match_base(bases[i], min_atoms_per_base)
 
             if(base_tuple is None):
                 break
