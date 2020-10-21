@@ -490,9 +490,6 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
        "Finding and visualizing nucleic acid base stacking"
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
-    # Reorder the atoms for each residue to obtain the standard
-    # RCSB PDB atom order
-    atom_array = atom_array[standardize_order(atom_array)]
 
     # Get the basepair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
@@ -852,11 +849,22 @@ def _match_base(nucleotide, min_atoms_per_base):
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
 
+    # Select the matching atoms of the nucleotide and the standard base
+    nucleotide_matched = nucleotide[
+        np.isin(nucleotide.atom_name, std_base.atom_name)
+    ]
+    std_base_matched = std_base[
+        np.isin(std_base.atom_name, nucleotide.atom_name)
+    ]
+
+    # Reorder the atoms of the nucleotide to obtain the standard RCSB
+    # PDB atom order
+    nucleotide_matched = nucleotide_matched[standardize_order(
+        nucleotide_matched
+    )]
+
     # Match the selected std_base to the base.
-    fitted, transformation = superimpose(
-        nucleotide[np.isin(nucleotide.atom_name, std_base.atom_name)],
-        std_base[np.isin(std_base.atom_name, nucleotide.atom_name)]
-    )
+    fitted, transformation = superimpose(nucleotide_matched, std_base_matched)
 
     # Transform the vectors
     trans1, rot, trans2 = transformation
