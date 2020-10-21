@@ -20,7 +20,7 @@ def test_mass():
     """
     array = load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
     _, res_names = struc.get_residues(array)
-    water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O") 
+    water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O")
     # Mass of water must be subtracted
     masses = [strucinfo.mass(res_name) - water_mass for res_name in res_names]
     # C-terminus normally has additional oxygen atom
@@ -102,3 +102,7 @@ def test_full_name():
 def test_link_type():
     assert strucinfo.link_type("Ala").upper() == "L-PEPTIDE LINKING"
     assert strucinfo.link_type("ALA").upper() == "L-PEPTIDE LINKING"
+
+def test_is_nucleotide():
+    assert strucinfo.is_nucleotide("ALA") == False
+    assert strucinfo.is_nucleotide("DG") == True
