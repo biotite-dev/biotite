@@ -75,12 +75,12 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     Reverse the order of residues in the atom_array and then test the
     function base_pairs.
     """
-    
+
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(
         reversed_nuc_sample_array, unique=unique_bool
     )
@@ -90,17 +90,33 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
 
 def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     """
-    Remove the hydrogens from the sample structure. Then reverse the 
-    order of residues in the atom_array and then test the function 
+    Remove the hydrogens from the sample structure. Then reverse the
+    order of residues in the atom_array and then test the function
     base_pairs.
     """
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(reversed_nuc_sample_array)
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
+
+def test_base_pairs_reordered():
+    """
+    Test the function base_pairs with structure where the atoms are not
+    in the RCSB-Order.
+    """
+    standard_order = strucio.load_structure(
+        join(data_dir("structure"), "4p5j.pdb")
+    )
+    non_standard_order = strucio.load_structure(
+        join(data_dir("structure"), "4p5j_reordered.pdb")
+    )
+    assert(np.all(
+        struc.base_pairs(standard_order)
+        == struc.base_pairs(non_standard_order)
+    ))
