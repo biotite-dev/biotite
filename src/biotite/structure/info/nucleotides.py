@@ -15,7 +15,8 @@ _info_dir = dirname(realpath(__file__))
 # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
 # (2020/10/21)
 # The json-file contains all three-letter-codes of the components where
-# the data item `_chem_comp.type` is equal to the following values:
+# the data item `_chem_comp.type` is equal to one of the following
+# values:
 # DNA OH 3 prime terminus, DNA OH 5 prime terminus, DNA linking,
 # RNA OH 3 prime terminus, RNA OH 5 prime terminus, RNA linking,
 # L-RNA LINKING, L-DNA LINKING
