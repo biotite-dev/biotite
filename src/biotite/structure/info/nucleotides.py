@@ -18,6 +18,7 @@ with open(join(_info_dir, "nucleotides.json"), "r") as file:
 def is_nucleotide(three_letter_code):
     """TODO: Docstring
     """
+    print(three_letter_code)
     if three_letter_code in _nucleotides:
         return True
     return False
