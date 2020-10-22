@@ -44,7 +44,6 @@ def is_nucleotide(three_letter_code):
     >>> print(is_nucleotide("A"))
     True
     """
-    print(three_letter_code)
     if three_letter_code in _nucleotides:
         return True
     return False
