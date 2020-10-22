@@ -24,7 +24,25 @@ with open(join(_info_dir, "nucleotides.json"), "r") as file:
     _nucleotides = json.load(file)
 
 def is_nucleotide(three_letter_code):
-    """TODO: Docstring
+    """
+    Check if a residue is a nucleotide from the up to 3-letter
+    residue name, based on the PDB chemical compound dictionary.
+
+    Parameters
+    ----------
+    three_letter_code : str
+        The up to 3-letter residue name.
+
+    Returns
+    -------
+    is_nucleotide : bool
+        boolean indicating wether or not the residue is a nucleotide
+
+    Examples
+    --------
+
+    >>> print(is_nucleotide("A"))
+    True
     """
     print(three_letter_code)
     if three_letter_code in _nucleotides:
