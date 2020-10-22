@@ -21,6 +21,7 @@ from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
+from .compare import rmsd
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -830,12 +831,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         std_ring_centers = _std_uracil_ring_centers
         std_hbond_masks = _std_uracil_hbond_masks
     else:
-        warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
-            f"Unable to check for basepair",
-            UnexpectedStructureWarning
-        )
-        return None
+        return _match_non_standard_base(nucleotide, min_atoms_per_base)
 
     # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
     if (
@@ -931,6 +927,88 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return return_base, return_hbond_masks, vectors
 
+def _match_non_standard_base(nucleotide, min_atoms_per_base):
+    std_base_list = [
+        _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
+        _std_uracil
+    ]
+    std_ring_centers_list = [
+        _std_adenine_ring_centers, _std_thymine_ring_centers,
+        _std_cytosine_ring_centers, _std_guanine_ring_centers,
+        _std_uracil_ring_centers
+    ]
+    std_hbond_masks = [
+        _std_adenine_hbond_masks, _std_thymine_hbond_masks,
+        _std_cytosine_hbond_masks, _std_guanine_hbond_masks,
+        _std_uracil_hbond_masks
+    ]
+
+    matched_atom_no = []
+    matched_std_base = []
+
+    for ref_base, ring_centers, hbond_mask in zip(
+        std_base_list, std_ring_centers_list, std_hbond_masks
+    ):
+        # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
+        if (
+            np.sum(np.isin(ref_base[1].atom_name, nucleotide.atom_name)) >
+            np.sum(np.isin(ref_base[0].atom_name, nucleotide.atom_name))
+        ):
+            ref_base = ref_base[1]
+        else:
+            ref_base = ref_base[0]
+        matched_atom_no.append(np.sum(
+            np.isin(ref_base.atom_name, nucleotide.atom_name)
+        ))
+        matched_std_base.append(ref_base)
+
+    if max(matched_atom_no) < 3:
+        warnings.warn(
+            f"Base Type {nucleotide.res_name[0]} not supported. "
+            f"Unable to check for basepair",
+            UnexpectedStructureWarning
+        )
+        return None
+
+    best_rmsd = 0.28
+    best_base = None
+    for ref_base in np.array(matched_std_base)[
+        np.array(matched_std_base) == max(matched_atom_no)
+    ]:
+        nuc = nucleotide.deepcopy()
+        nuc.res_name = ref_base.res_name
+
+        # Select the matching atoms of the nucleotide and the standard base
+        nuc = nuc[
+            np.isin(nucleotide.atom_name, ref_base.atom_name)
+        ]
+        ref_base_matched = ref_base[
+            np.isin(ref_base.atom_name, nucleotide.atom_name)
+        ]
+
+        # Reorder the atoms of the nucleotide to obtain the standard RCSB
+        # PDB atom order
+        nuc = nuc[standardize_order(nuc)]
+
+        # Match the selected std_base to the base.
+        fitted, _ = superimpose(nuc, ref_base_matched)
+
+        if(rmsd(fitted, ref_base_matched) < best_rmsd):
+            best_rmsd = rmsd(fitted, ref_base_matched)
+            best_base = ref_base_matched[0]
+
+    if best_base is None:
+        warnings.warn(
+            f"Base Type {nucleotide.res_name[0]} not supported. "
+            f"Unable to check for basepair",
+            UnexpectedStructureWarning
+        )
+        return None
+
+    nuc = nucleotide.deepcopy()
+    nuc.res_name = np.array([best_base]*len(nuc.res_name))
+
+    return _match_base(nuc, min_atoms_per_base)
 
 def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     """
