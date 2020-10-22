@@ -11,7 +11,14 @@ from os.path import join, dirname, realpath
 
 
 _info_dir = dirname(realpath(__file__))
-# TODO: components.cif version
+# Data is taken from
+# ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
+# (2020/10/21)
+# The json-file contains all three-letter-codes of the components where
+# the data item `_chem_comp.type` is equal to the following values:
+# DNA OH 3 prime terminus, DNA OH 5 prime terminus, DNA linking,
+# RNA OH 3 prime terminus, RNA OH 5 prime terminus, RNA linking,
+# L-RNA LINKING, L-DNA LINKING
 with open(join(_info_dir, "nucleotides.json"), "r") as file:
     _nucleotides = json.load(file)
 
