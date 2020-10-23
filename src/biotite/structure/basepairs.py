@@ -927,6 +927,95 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return return_base, return_hbond_masks, vectors
 
+def map_nucleotides(nucleotide):
+    if nucleotide.res_name[0] in (_thymine_containing_nucleotides +
+        _guanine_containing_nucleotides, _uracil_containing_nucleotides
+        + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
+    ):
+        return nucleotide.res_name[0][-1]
+
+    std_base_list = [
+        _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
+        _std_uracil
+    ]
+    std_ring_centers_list = [
+        _std_adenine_ring_centers, _std_thymine_ring_centers,
+        _std_cytosine_ring_centers, _std_guanine_ring_centers,
+        _std_uracil_ring_centers
+    ]
+    std_hbond_masks = [
+        _std_adenine_hbond_masks, _std_thymine_hbond_masks,
+        _std_cytosine_hbond_masks, _std_guanine_hbond_masks,
+        _std_uracil_hbond_masks
+    ]
+
+    matched_atom_no = []
+    matched_std_base = []
+
+    for ref_base, ring_centers, hbond_mask in zip(
+        std_base_list, std_ring_centers_list, std_hbond_masks
+    ):
+        # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
+        if (
+            np.sum(np.isin(ref_base[1].atom_name, nucleotide.atom_name)) >
+            np.sum(np.isin(ref_base[0].atom_name, nucleotide.atom_name))
+        ):
+            ref_base = ref_base[1]
+        else:
+            ref_base = ref_base[0]
+        matched_atom_no.append(np.sum(
+            np.isin(ref_base.atom_name, nucleotide.atom_name)
+        ))
+        matched_std_base.append(ref_base)
+
+    if max(matched_atom_no) < 3:
+        warnings.warn(
+            f"Base Type {nucleotide.res_name[0]} not supported. "
+            f"Unable to check for basepair",
+            UnexpectedStructureWarning
+        )
+        return None
+
+    best_rmsd = 0.28
+    best_base = None
+    for ref_base in np.array(matched_std_base)[
+        np.array(matched_atom_no) == max(matched_atom_no)
+    ]:
+        nuc = nucleotide.copy()
+
+        # Select the matching atoms of the nucleotide and the standard base
+        nuc = nuc[
+            np.isin(nucleotide.atom_name, ref_base.atom_name)
+        ]
+        ref_base_matched = ref_base[
+            np.isin(ref_base.atom_name, nucleotide.atom_name)
+        ]
+
+        # Reorder the atoms of the nucleotide to obtain the standard RCSB
+        # PDB atom order
+        print(nuc.atom_name)
+        print(ref_base_matched.atom_name)
+        nuc.res_name = ref_base_matched.res_name
+        try:
+            nuc = nuc[standardize_order(nuc)]
+        except:
+            continue
+        # Match the selected std_base to the base.
+        fitted, _ = superimpose(nuc, ref_base_matched)
+        if(rmsd(fitted, ref_base_matched) < best_rmsd):
+            best_rmsd = rmsd(fitted, ref_base_matched)
+            best_base = ref_base_matched[0]
+
+    if best_base is None:
+        warnings.warn(
+            f"Base Type {nucleotide.res_name[0]} not supported. "
+            f"Unable to check for basepair",
+            UnexpectedStructureWarning
+        )
+        return 'N'
+
+    return best_base.lower()
+
 def _match_non_standard_base(nucleotide, min_atoms_per_base):
     std_base_list = [
         _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
@@ -973,10 +1062,9 @@ def _match_non_standard_base(nucleotide, min_atoms_per_base):
     best_rmsd = 0.28
     best_base = None
     for ref_base in np.array(matched_std_base)[
-        np.array(matched_std_base) == max(matched_atom_no)
+        np.array(matched_atom_no) == max(matched_atom_no)
     ]:
-        nuc = nucleotide.deepcopy()
-        nuc.res_name = ref_base.res_name
+        nuc = nucleotide.copy()
 
         # Select the matching atoms of the nucleotide and the standard base
         nuc = nuc[
@@ -988,11 +1076,15 @@ def _match_non_standard_base(nucleotide, min_atoms_per_base):
 
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
-        nuc = nuc[standardize_order(nuc)]
-
+        print(nuc.atom_name)
+        print(ref_base_matched.atom_name)
+        nuc.res_name = ref_base_matched.res_name
+        try:
+            nuc = nuc[standardize_order(nuc)]
+        except:
+            continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(nuc, ref_base_matched)
-
         if(rmsd(fitted, ref_base_matched) < best_rmsd):
             best_rmsd = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched[0]
@@ -1005,7 +1097,7 @@ def _match_non_standard_base(nucleotide, min_atoms_per_base):
         )
         return None
 
-    nuc = nucleotide.deepcopy()
+    nuc = nucleotide.copy()
     nuc.res_name = np.array([best_base]*len(nuc.res_name))
 
     return _match_base(nuc, min_atoms_per_base)

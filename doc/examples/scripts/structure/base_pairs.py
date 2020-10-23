@@ -21,7 +21,7 @@ from matplotlib.patches import Arc
 import numpy as np
 
 # Download the PDB file and read the structure
-pdb_file_path = rcsb.fetch("4p5j", "pdb", gettempdir())
+pdb_file_path = rcsb.fetch("1ehz", "pdb", gettempdir())
 pdb_file = pdb.PDBFile.read(pdb_file_path)
 atom_array = pdb.get_structure(pdb_file)[0]
 nucleotides = atom_array[struc.filter_nucleotides(atom_array)]
