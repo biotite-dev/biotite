@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs"]
+__all__ = ["base_pairs", "map_nucleotides"]
 
 import numpy as np
 import warnings
@@ -929,7 +929,7 @@ def _match_base(nucleotide, min_atoms_per_base):
 
 def map_nucleotides(nucleotide):
     if nucleotide.res_name[0] in (_thymine_containing_nucleotides +
-        _guanine_containing_nucleotides, _uracil_containing_nucleotides
+        _guanine_containing_nucleotides + _uracil_containing_nucleotides
         + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
     ):
         return nucleotide.res_name[0][-1]
@@ -976,6 +976,7 @@ def map_nucleotides(nucleotide):
         )
         return None
 
+    #print(matched_atom_no)
     best_rmsd = 0.28
     best_base = None
     for ref_base in np.array(matched_std_base)[
@@ -993,15 +994,16 @@ def map_nucleotides(nucleotide):
 
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
-        print(nuc.atom_name)
-        print(ref_base_matched.atom_name)
+        #print(nuc.atom_name)
+        #print(ref_base_matched.atom_name)
         nuc.res_name = ref_base_matched.res_name
         try:
             nuc = nuc[standardize_order(nuc)]
         except:
             continue
         # Match the selected std_base to the base.
-        fitted, _ = superimpose(nuc, ref_base_matched)
+        fitted, _ = superimpose(ref_base_matched, nuc)
+        print(rmsd(fitted, ref_base_matched))
         if(rmsd(fitted, ref_base_matched) < best_rmsd):
             best_rmsd = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched[0]
@@ -1014,7 +1016,7 @@ def map_nucleotides(nucleotide):
         )
         return 'N'
 
-    return best_base.lower()
+    return best_base.res_name[0][-1].lower()
 
 def _match_non_standard_base(nucleotide, min_atoms_per_base):
     std_base_list = [
@@ -1076,8 +1078,8 @@ def _match_non_standard_base(nucleotide, min_atoms_per_base):
 
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
-        print(nuc.atom_name)
-        print(ref_base_matched.atom_name)
+        #print(nuc.atom_name)
+        #print(ref_base_matched.atom_name)
         nuc.res_name = ref_base_matched.res_name
         try:
             nuc = nuc[standardize_order(nuc)]

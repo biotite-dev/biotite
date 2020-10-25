@@ -27,7 +27,13 @@ atom_array = pdb.get_structure(pdb_file)[0]
 nucleotides = atom_array[struc.filter_nucleotides(atom_array)]
 
 # Get the residue names and residue ids of the nucleotides
-residue_ids, residue_names = struc.get_residues(nucleotides)
+#residue_ids, residue_names = struc.get_residues(nucleotides)
+
+residue_ids = []
+residue_names = []
+for nucleotide in struc.residue_iter(nucleotides):
+    residue_ids.append(nucleotide.res_id[0])
+    residue_names.append(struc.map_nucleotides(nucleotide))
 
 # Create a matplotlib pyplot
 fig, ax = plt.subplots(figsize=(8.0, 4.5))
