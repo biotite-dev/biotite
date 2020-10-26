@@ -404,7 +404,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     stacked_bases : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one pair of stacked bases and
         contains the indices to the first atom for each one of both
-        paired residuse.
+        paired residues.
 
     Notes
     -----
