@@ -376,9 +376,10 @@ _cytosine_containing_nucleotides = ["C", "DC"]
 _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
-def base_stacking(atom_array, min_atoms_per_base = 3):
+def base_stacking(atom_array, min_atoms_per_base=3):
     """
-    Find the stacking interactions in an :class:`AtomArray`.
+    Find pi-stacking interactions between aromatic rings
+    in nucleic acids.
 
     The presence of base stacking is assumed if the following criteria
     are met [1]_:
@@ -402,8 +403,8 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
     -------
     stacked_bases : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one pair of stacked bases and
-        contains the first indices of the residues corresponding to
-        each base.
+        contains the indices to the first atom for each one of both
+        paired residuse.
 
     Notes
     -----
@@ -412,7 +413,7 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
 
     Examples
     --------
-    Compute the stacking interactions for the structure with the PDB id
+    Compute the stacking interactions for the structure with the PDB ID
     1BNA:
 
     >>> from os.path import join
