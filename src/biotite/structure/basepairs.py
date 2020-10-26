@@ -377,6 +377,67 @@ _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
 def base_stacking(atom_array, min_atoms_per_base = 3):
+    """
+    Find the stacking interactions in an :class:`AtomArray`.
+
+    The presence of base stacking is assumed if the following criteria
+    are met [1]_:
+
+    (i) Distance between aromatic ring centers <=4.5 Å
+
+    (ii) Angle between the ring normal vectors <=23°
+
+    (iii) Angle between normalized distance vector between two ring
+          centers and both bases normal vectors <=40°
+
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The :class:`AtomArray` to find stacked bases in.
+    min_atoms_per_base : integer, optional (default: 3)
+        The number of atoms a nucleotides' base must have to be
+        considered a candidate for a stacking interaction.
+
+    Returns
+    -------
+    stacked_bases : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one pair of stacked bases and
+        contains the first indices of the residues corresponding to
+        each base.
+
+    Notes
+    -----
+    Please note that ring normal vectors are assumed to be equal to the
+    base normal vectors.
+
+    Examples
+    --------
+    Compute the basepairs for the structure with the PDB id 1QXB:
+
+    >>> from os.path import join
+    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> basepairs = base_pairs(dna_helix)
+    >>> print(dna_helix[basepairs].res_name)
+    [['DC' 'DG']
+     ['DG' 'DC']
+     ['DC' 'DG']
+     ['DG' 'DC']
+     ['DA' 'DT']
+     ['DA' 'DT']
+     ['DT' 'DA']
+     ['DT' 'DA']
+     ['DC' 'DG']
+     ['DG' 'DC']
+     ['DC' 'DG']
+     ['DG' 'DC']]
+
+    References
+    ----------
+
+    .. [1] HA Gabb, SR Sanghani and CH Robert et al.,
+       "Finding and visualizing nucleic acid base stacking"
+       J Mol Biol Graph, 14(1), 6-11 (1996).
+    """
     # Get the stacking candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
@@ -394,8 +455,8 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         bases = (atom_array[base1_mask], atom_array[base2_mask])
 
         # A list containing ndarray for each base with transformed
-        # vectors from the standard base reference frame to the structures'
-        # coordinates. The layout is as follows:
+        # vectors from the standard base reference frame to the
+        # structures' coordinates. The layout is as follows:
         #
         # [Origin coordinates]
         # [Base normal vector]
@@ -417,8 +478,11 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
         aromatic_ring_centers = [transformed_std_vectors[0][3:],
                                         transformed_std_vectors[1][3:]]
 
+        # Check if the basepairs are stacked.
         stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
 
+        # If a stacking interaction is found, append the first indices
+        # of the bases´'residues to the output.
         if stacked:
             stacked_bases.append((base1_index, base2_index))
 
