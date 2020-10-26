@@ -412,7 +412,8 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
 
     Examples
     --------
-    Compute the basepairs for the structure with the PDB id 1QXB:
+    Compute the stacking interactions for the structure with the PDB id
+    1BNA:
 
     >>> from os.path import join
     >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
