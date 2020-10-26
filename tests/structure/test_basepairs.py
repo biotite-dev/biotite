@@ -106,12 +106,17 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     )
 
 def test_base_stacking():
+    # Load the test structure (1BNA) - a DNA-double-helix
     helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
 
+    # For a DNA-double-helix it is expected that adjacent bases are
+    # stacked.
     expected_stackings = []
     for i in range(1, 24):
         expected_stackings.append([i, i+1])
 
+    # Due to distortions in the helix not all adjacent bases have a
+    # geometry that meets the criteria of `base_stacking`.
     expected_stackings.remove([10, 11])
     expected_stackings.remove([12, 13])
     expected_stackings.remove([13, 14])
