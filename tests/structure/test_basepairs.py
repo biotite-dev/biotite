@@ -108,19 +108,19 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
 def test_base_stacking():
     helix = strucio.load_structure(join(data_dir("structure"), "1bna.pdb"))
 
-    exspected_stackings = []
+    expected_stackings = []
     for i in range(1, 24):
-        exspected_stackings.append([i, i+1])
+        expected_stackings.append([i, i+1])
 
-    exspected_stackings.remove([10, 11])
-    exspected_stackings.remove([12, 13])
-    exspected_stackings.remove([13, 14])
+    expected_stackings.remove([10, 11])
+    expected_stackings.remove([12, 13])
+    expected_stackings.remove([13, 14])
 
     stacking = helix[base_stacking(helix)].res_id
 
-    assert len(base_stacking(helix)) == len(exspected_stackings)
+    assert len(base_stacking(helix)) == len(expected_stackings)
 
     for interaction in stacking:
-        assert list(interaction) in exspected_stackings
+        assert list(interaction) in expected_stackings
 
 
