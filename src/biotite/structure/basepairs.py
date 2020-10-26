@@ -372,11 +372,11 @@ _std_thymine, _std_thymine_ring_centers, \
 _std_uracil, _std_uracil_ring_centers, \
         _std_uracil_hbond_masks = _get_std_uracil()
 
-_adenine_containing_nucleotides = ["A", "DA"]
-_thymine_containing_nucleotides = ["T", "DT"]
-_cytosine_containing_nucleotides = ["C", "DC"]
-_guanine_containing_nucleotides = ["G", "DG"]
-_uracil_containing_nucleotides = ["U", "DU"]
+_adenine_containing_nucleotides = ["A", "DA", "a"]
+_thymine_containing_nucleotides = ["T", "DT", "t"]
+_cytosine_containing_nucleotides = ["C", "DC", "c"]
+_guanine_containing_nucleotides = ["G", "DG", "g"]
+_uracil_containing_nucleotides = ["U", "DU", "u"]
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
@@ -831,7 +831,12 @@ def _match_base(nucleotide, min_atoms_per_base):
         std_ring_centers = _std_uracil_ring_centers
         std_hbond_masks = _std_uracil_hbond_masks
     else:
-        return _match_non_standard_base(nucleotide, min_atoms_per_base)
+        mapped_nucleotide = map_nucleotides(nucleotide)
+        if mapped_nucleotide in [None, 'N']:
+            return None
+        nuc = nucleotide.copy()
+        nuc.res_name = np.array([mapped_nucleotide.upper()]*len(nuc.res_name))
+        return _match_base(nuc, min_atoms_per_base)
 
     # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
     if (
@@ -1003,7 +1008,8 @@ def map_nucleotides(nucleotide):
             continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(ref_base_matched, nuc)
-        print(rmsd(fitted, ref_base_matched))
+        if fitted.res_id[0] in [17, 39, 54, 55]:
+            print(f"{fitted.res_id[0]} [{fitted.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
         if(rmsd(fitted, ref_base_matched) < best_rmsd):
             best_rmsd = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched[0]
