@@ -418,27 +418,28 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
     >>> from os.path import join
     >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
-    >>> print(base_stacking(dna_helix))
-    [[  0  16]
-     [ 16  38]
-     [ 38  57]
-     [ 57  79]
-     [ 79 100]
-     [100 121]
-     [121 141]
-     [141 161]
-     [161 180]
-     [202 221]
-     [259 281]
-     [281 300]
-     [300 322]
-     [322 343]
-     [343 364]
-     [364 384]
-     [384 404]
-     [404 423]
-     [423 445]
-     [445 464]]
+    >>> stacking_interactions = base_stacking(dna_helix)
+    >>> print(dna_helix[stacking_interactions].res_id)
+    [[ 1  2]
+     [ 2  3]
+     [ 3  4]
+     [ 4  5]
+     [ 5  6]
+     [ 6  7]
+     [ 7  8]
+     [ 8  9]
+     [ 9 10]
+     [11 12]
+     [14 15]
+     [15 16]
+     [16 17]
+     [17 18]
+     [18 19]
+     [19 20]
+     [20 21]
+     [21 22]
+     [22 23]
+     [23 24]]
 
     References
     ----------
