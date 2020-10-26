@@ -388,7 +388,7 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
     (ii) Angle between the ring normal vectors <=23°
 
     (iii) Angle between normalized distance vector between two ring
-          centers and both bases normal vectors <=40°
+          centers and both bases' normal vectors <=40°
 
     Parameters
     ----------
@@ -553,7 +553,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     (ii) Angle between the ring normal vectors <=23°
 
     (iii) Angle between normalized distance vector between two ring
-          centers and one normal vector <=40°
+          centers and both bases' normal vectors <=40°
 
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
