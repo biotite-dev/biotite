@@ -415,21 +415,28 @@ def base_stacking(atom_array, min_atoms_per_base = 3):
     Compute the basepairs for the structure with the PDB id 1QXB:
 
     >>> from os.path import join
-    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
-    >>> basepairs = base_pairs(dna_helix)
-    >>> print(dna_helix[basepairs].res_name)
-    [['DC' 'DG']
-     ['DG' 'DC']
-     ['DC' 'DG']
-     ['DG' 'DC']
-     ['DA' 'DT']
-     ['DA' 'DT']
-     ['DT' 'DA']
-     ['DT' 'DA']
-     ['DC' 'DG']
-     ['DG' 'DC']
-     ['DC' 'DG']
-     ['DG' 'DC']]
+    >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
+    >>> print(base_stacking(dna_helix))
+    [[  0  16]
+     [ 16  38]
+     [ 38  57]
+     [ 57  79]
+     [ 79 100]
+     [100 121]
+     [121 141]
+     [141 161]
+     [161 180]
+     [202 221]
+     [259 281]
+     [281 300]
+     [300 322]
+     [322 343]
+     [343 364]
+     [364 384]
+     [384 404]
+     [404 423]
+     [423 445]
+     [445 464]]
 
     References
     ----------
