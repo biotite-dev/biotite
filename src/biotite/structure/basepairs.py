@@ -831,7 +831,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         std_ring_centers = _std_uracil_ring_centers
         std_hbond_masks = _std_uracil_hbond_masks
     else:
-        mapped_nucleotide = map_nucleotides(nucleotide)
+        mapped_nucleotide = map_nucleotide(nucleotide)
         if mapped_nucleotide in [None, 'N']:
             return None
         nuc = nucleotide.copy()
@@ -932,7 +932,7 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return return_base, return_hbond_masks, vectors
 
-def map_nucleotides(nucleotide):
+def map_nucleotide(nucleotide):
     if nucleotide.res_name[0] in (_thymine_containing_nucleotides +
         _guanine_containing_nucleotides + _uracil_containing_nucleotides
         + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
