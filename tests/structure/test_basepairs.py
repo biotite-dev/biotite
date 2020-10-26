@@ -106,7 +106,7 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     )
 
 def test_base_stacking():
-    helix = strucio.load_structure(join(data_dir("structure"), "1bna.pdb"))
+    helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
 
     expected_stackings = []
     for i in range(1, 24):
