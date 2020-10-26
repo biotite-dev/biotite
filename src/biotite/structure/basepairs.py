@@ -872,19 +872,19 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
     ):
         return False
 
-    # Criterion 3: Angle between one normalized distance vector and one
-    # normal vector or its supplement <=40°
+    # Criterion 3: Angle between one normalized distance vector and
+    # each of the bases' normal vector or supplement <=40°
     for normal_vector in normal_vectors:
         for normalized_dist_vector in normalized_distance_vectors:
             if (
                 (np.arccos(np.dot(normal_vector, normalized_dist_vector))
-                <= ((40*np.pi)/180))
-                or (np.arccos(np.dot(normal_vector, normalized_dist_vector))
-                >= ((120*np.pi)/180))
+                >= ((40*np.pi)/180))
+                and (np.arccos(np.dot(normal_vector, normalized_dist_vector))
+                <= ((120*np.pi)/180))
             ):
-                return True
+                return False
 
-    return False
+    return True
 
 
 def _match_base(nucleotide, min_atoms_per_base):
