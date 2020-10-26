@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import base_pairs
+from biotite.structure.basepairs import base_pairs, base_stacking
 from os.path import join
 from ..util import data_dir
 
@@ -75,12 +75,12 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     Reverse the order of residues in the atom_array and then test the
     function base_pairs.
     """
-    
+
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(
         reversed_nuc_sample_array, unique=unique_bool
     )
@@ -90,17 +90,37 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
 
 def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     """
-    Remove the hydrogens from the sample structure. Then reverse the 
-    order of residues in the atom_array and then test the function 
+    Remove the hydrogens from the sample structure. Then reverse the
+    order of residues in the atom_array and then test the function
     base_pairs.
     """
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(reversed_nuc_sample_array)
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
+
+def test_base_stacking():
+    helix = strucio.load_structure(join(data_dir("structure"), "1bna.pdb"))
+
+    exspected_stackings = []
+    for i in range(1, 24):
+        exspected_stackings.append([i, i+1])
+
+    exspected_stackings.remove([10, 11])
+    exspected_stackings.remove([12, 13])
+    exspected_stackings.remove([13, 14])
+
+    stacking = helix[base_stacking(helix)].res_id
+
+    assert len(base_stacking(helix)) == len(exspected_stackings)
+
+    for interaction in stacking:
+        assert list(interaction) in exspected_stackings
+
+
