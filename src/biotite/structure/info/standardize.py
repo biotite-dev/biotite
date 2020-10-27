@@ -162,6 +162,19 @@ def _reorder(origin, target):
     target_hits, origin_hits = np.where(
         target[:, np.newaxis] == origin[np.newaxis, :]
     )
+
+    counts = np.bincount(target_hits, minlength=len(target))
+    if (counts > 1).any():
+        counts = np.bincount(target_hits, minlength=len(target))
+        # Identify which atom is duplicate
+        duplicate_i = np.where(
+            counts > 1
+        )[0][0]
+        duplicate_name = target[duplicate_i]
+        raise BadStructureError(
+            f"Input structure has duplicate atom '{duplicate_name}'"
+        )
+
     if len(origin_hits) < len(origin):
         # The origin structure has additional atoms
         # to the target structure
@@ -174,15 +187,5 @@ def _reorder(origin, target):
             origin_hits,
             np.where(~missing_atom_mask)[0]
         ])
-    counts = np.bincount(target_hits, minlength=len(target))
-    if (counts > 1).any():
-        counts = np.bincount(target_hits, minlength=len(target))
-        # Identify which atom is duplicate
-        duplicate_i = np.where(
-            counts > 1
-        )[0][0]
-        duplicate_name = target[duplicate_i]
-        raise BadStructureError(
-            f"Input structure has duplicate atom '{duplicate_name}'"
-        )
-    return origin_hits
+    else:
+        return origin_hits
