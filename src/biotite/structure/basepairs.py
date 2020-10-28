@@ -74,23 +74,20 @@ def _get_std_adenine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    atom1 =  Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
-    atom2 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
-    atom3 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
-    atom4 =  Atom([0.877, 3.902, 0.000],  atom_name="N7",  res_name="A")
-    atom5 =  Atom([0.071, 2.771, 0.000],  atom_name="C5",  res_name="A")
-    atom6 =  Atom([0.369, 1.398, 0.000],  atom_name="C6",  res_name="A")
-    atom7 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
-    atom8 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
-    atom9 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
-    atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
-    atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
-    adenine_pdbv2 = array(
+    atom1 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
+    atom2 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
+    atom3 =  Atom([0.877, 3.902, 0.000],  atom_name="N7",  res_name="A")
+    atom4 =  Atom([0.071, 2.771, 0.000],  atom_name="C5",  res_name="A")
+    atom5 =  Atom([0.369, 1.398, 0.000],  atom_name="C6",  res_name="A")
+    atom6 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
+    atom7 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
+    atom8 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
+    atom9 = Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
+    atom10 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
+    adenine = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10, atom11]
+         atom9, atom10]
     )
-    adenine_pdbv3 = adenine_pdbv2.copy()
-    adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom8.coord, atom11.coord], axis=-2)
@@ -104,19 +101,7 @@ def _get_std_adenine():
          atom5.coord, atom11.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donor_mask = _get_1d_boolean_mask(
-        adenine_pdbv2.array_length(), [1, 6]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        adenine_pdbv2.array_length(), [1, 3, 6, 7, 9]
-    )
-
-    return (adenine_pdbv2, adenine_pdbv3), \
-           (midpoint, pyrimidine_center, imidazole_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return adenine, (midpoint, pyrimidine_center, imidazole_center)
 
 
 def _get_std_cytosine():
@@ -141,7 +126,7 @@ def _get_std_cytosine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
+    #atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
     atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
     atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
     atom4 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
@@ -151,10 +136,11 @@ def _get_std_cytosine():
     atom8 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
     atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
     cytosine_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
     )
     cytosine_pdbv3 = cytosine_pdbv2.copy()
-    cytosine_pdbv3.atom_name[[0]] = ["C1'"]
+    #cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
@@ -201,7 +187,7 @@ def _get_std_guanine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    atom1 =  Atom([-2.477, 5.399, 0.000],  atom_name="C1*", res_name="G")
+    #atom1 =  Atom([-2.477, 5.399, 0.000],  atom_name="C1*", res_name="G")
     atom2 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
     atom3 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
     atom4 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
@@ -214,11 +200,12 @@ def _get_std_guanine():
     atom11 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
     atom12 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
     guanine_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
+    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
+        [atom2, atom3, atom4, atom5, atom6, atom7, atom8,
          atom9, atom10, atom11, atom12]
     )
     guanine_pdbv3 = guanine_pdbv2.copy()
-    guanine_pdbv3.atom_name[[0]] = ["C1'"]
+    #guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom8.coord, atom12.coord], axis=-2)
@@ -269,7 +256,7 @@ def _get_std_thymine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    atom1 =  Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
+    #atom1 =  Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
     atom2 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
     atom3 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
     atom4 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
@@ -280,10 +267,12 @@ def _get_std_thymine():
     atom9 =  Atom([2.466, 4.961, 0.001],  atom_name="C5M", res_name="T")
     atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
     thymine_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
+    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
+        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
     )
     thymine_pdbv3 = thymine_pdbv2.copy()
-    thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
+    #thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
+    thymine_pdbv3.atom_name[[7]] = ["C7"]
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom5.coord, atom10.coord], axis=-2)
@@ -329,7 +318,7 @@ def _get_std_uracil():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
+    #atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
     atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
     atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
     atom4 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
@@ -339,10 +328,11 @@ def _get_std_uracil():
     atom8 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
     atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
     uracil_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
     )
     uracil_pdbv3 = uracil_pdbv2.copy()
-    uracil_pdbv3.atom_name[[0]] = ["C1'"]
+    #uracil_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
@@ -844,6 +834,8 @@ def _match_base(nucleotide, min_atoms_per_base):
         return _match_base(nuc, min_atoms_per_base)
 
     # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
+    std_base = std_base[1]
+    """
     if (
         np.sum(np.isin(std_base[1].atom_name, nucleotide.atom_name)) >
         np.sum(np.isin(std_base[0].atom_name, nucleotide.atom_name))
@@ -851,6 +843,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         std_base = std_base[1]
     else:
         std_base = std_base[0]
+    """
 
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
@@ -966,6 +959,8 @@ def map_nucleotide(nucleotide):
         std_base_list, std_ring_centers_list, std_hbond_masks
     ):
         # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
+        ref_base = ref_base[1]
+        """
         if (
             np.sum(np.isin(ref_base[1].atom_name, nucleotide.atom_name)) >
             np.sum(np.isin(ref_base[0].atom_name, nucleotide.atom_name))
@@ -973,6 +968,7 @@ def map_nucleotide(nucleotide):
             ref_base = ref_base[1]
         else:
             ref_base = ref_base[0]
+        """
         matched_atom_no.append(np.sum(
             np.isin(ref_base.atom_name, nucleotide.atom_name)
         ))
@@ -986,7 +982,8 @@ def map_nucleotide(nucleotide):
         )
         return None
 
-    #print(matched_atom_no)
+    #if nucleotide.res_id[0] == 54:
+    #    print(nucleotide)
     best_rmsd = 0.28
     best_base = None
     for ref_base in np.array(matched_std_base)[
@@ -1005,6 +1002,11 @@ def map_nucleotide(nucleotide):
             np.isin(ref_base.atom_name, nuc.atom_name)
         ]
 
+        if nucleotide.res_id[0] == 54:
+            print(nuc)
+            print("ref")
+            print(ref_base_matched)
+
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
         #print(nuc.atom_name)
@@ -1012,12 +1014,12 @@ def map_nucleotide(nucleotide):
         nuc.res_name = ref_base_matched.res_name
         try:
             nuc = nuc[standardize_order(nuc)]
-        except:
-            print("That didnt Work")
+        except Exception as ex:
+            print(ex)
             continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(ref_base_matched, nuc)
-        if fitted.res_id[0] == 17:
+        if fitted.res_id[0] == 54:
             print(f"{nucleotide.res_id[0]} [{nucleotide.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
             """
             fitted.bonds = connect_via_residue_names(fitted)
