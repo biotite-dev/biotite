@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotides"]
+__all__ = ["base_pairs", "map_nucleotide"]
 
 import numpy as np
 import warnings
@@ -22,6 +22,11 @@ from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
 from .compare import rmsd
+
+import ammolite
+from .bonds import connect_via_residue_names
+
+#ammolite.launch_interactive_pymol("-qixkF", "-W", "400", "-H", "400")
 
 
 def  _get_1d_boolean_mask(size, true_ids):
@@ -988,13 +993,16 @@ def map_nucleotide(nucleotide):
         np.array(matched_atom_no) == max(matched_atom_no)
     ]:
         nuc = nucleotide.copy()
+        if (nucleotide.res_name[0] in ["PSU", "H2U"]):
+            nuc = nuc[nuc.atom_name != "C1'"]
+
 
         # Select the matching atoms of the nucleotide and the standard base
         nuc = nuc[
-            np.isin(nucleotide.atom_name, ref_base.atom_name)
+            np.isin(nuc.atom_name, ref_base.atom_name)
         ]
         ref_base_matched = ref_base[
-            np.isin(ref_base.atom_name, nucleotide.atom_name)
+            np.isin(ref_base.atom_name, nuc.atom_name)
         ]
 
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
@@ -1005,11 +1013,29 @@ def map_nucleotide(nucleotide):
         try:
             nuc = nuc[standardize_order(nuc)]
         except:
+            print("That didnt Work")
             continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(ref_base_matched, nuc)
-        if fitted.res_id[0] in [17, 39, 54, 55]:
-            print(f"{fitted.res_id[0]} [{fitted.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
+        if fitted.res_id[0] == 17:
+            print(f"{nucleotide.res_id[0]} [{nucleotide.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
+            """
+            fitted.bonds = connect_via_residue_names(fitted)
+            pymol_object1 = ammolite.PyMOLObject.from_structure(fitted)
+            for index, atom in enumerate(fitted):
+                pymol_object1.label(index, atom.atom_name)
+            pymol_object1.color('blue')
+
+
+            ref_base_matched.bonds = connect_via_residue_names(ref_base_matched)
+            pymol_object2 = ammolite.PyMOLObject.from_structure(ref_base_matched)
+            for index, atom in enumerate(ref_base_matched):
+                pymol_object2.label(index, atom.atom_name)
+            pymol_object2.color('red')
+            print("y u red")
+
+            input()
+            """
         if(rmsd(fitted, ref_base_matched) < best_rmsd):
             best_rmsd = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched[0]

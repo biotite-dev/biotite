@@ -33,7 +33,7 @@ residue_ids = []
 residue_names = []
 for nucleotide in struc.residue_iter(nucleotides):
     residue_ids.append(nucleotide.res_id[0])
-    residue_names.append(struc.map_nucleotides(nucleotide))
+    residue_names.append(struc.map_nucleotide(nucleotide))
 
 # Create a matplotlib pyplot
 fig, ax = plt.subplots(figsize=(8.0, 4.5))
