@@ -225,44 +225,28 @@ def _get_std_thymine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    #atom1 =  Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
-    atom2 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
-    atom3 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
-    atom4 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
-    atom5 =  Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
-    atom6 =  Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
-    atom7 =  Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
-    atom8 =  Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
-    atom9 =  Atom([2.466, 4.961, 0.001],  atom_name="C5M", res_name="T")
-    atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
-    thymine_pdbv2 = array(
-    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
-        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
+    atom1 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
+    atom2 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
+    atom3 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
+    atom4 =  Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
+    atom5 =  Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
+    atom6 =  Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
+    atom7 =  Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
+    atom8 =  Atom([2.466, 4.961, 0.001],  atom_name="C7", res_name="T")
+    atom9 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
+    thymine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
     )
-    thymine_pdbv3 = thymine_pdbv2.copy()
-    #thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
-    thymine_pdbv3.atom_name[[7]] = ["C7"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom10.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom9.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom10.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom9.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms(or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        thymine_pdbv2.array_length(), [1, 4]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        thymine_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (thymine_pdbv2, thymine_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return thymine, (midpoint, pyrimidine_center)
 
 
 def _get_std_uracil():
