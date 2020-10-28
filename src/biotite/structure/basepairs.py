@@ -271,42 +271,27 @@ def _get_std_uracil():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    #atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
-    atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
-    atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
-    atom4 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
-    atom5 = Atom([-0.302, 2.397, 0.000], atom_name="N3",  res_name="U")
-    atom6 = Atom([0.989, 2.884, 0.000],  atom_name="C4",  res_name="U")
-    atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4",  res_name="U")
-    atom8 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
-    atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
-    uracil_pdbv2 = array(
-    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
-        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
+    atom2 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
+    atom3 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
+    atom4 = Atom([-0.302, 2.397, 0.000], atom_name="N3",  res_name="U")
+    atom5 = Atom([0.989, 2.884, 0.000],  atom_name="C4",  res_name="U")
+    atom6 = Atom([1.935, 2.094, -0.001], atom_name="O4",  res_name="U")
+    atom7 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
+    atom8 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
+    uracil = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
     )
-    uracil_pdbv3 = uracil_pdbv2.copy()
-    #uracil_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom9.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom8.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        uracil_pdbv2.array_length(), [1, 4]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        uracil_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (uracil_pdbv2, uracil_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return uracil, (midpoint, pyrimidine_center)
 
 
 _std_adenine, _std_adenine_ring_centers, \
