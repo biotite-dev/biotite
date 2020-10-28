@@ -172,51 +172,35 @@ def _get_std_guanine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    #atom1 =  Atom([-2.477, 5.399, 0.000],  atom_name="C1*", res_name="G")
-    atom2 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
-    atom3 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
-    atom4 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
-    atom5 =  Atom([0.071, 2.833, 0.000],   atom_name="C5",  res_name="G")
-    atom6 =  Atom([0.424, 1.460, 0.000],   atom_name="C6",  res_name="G")
-    atom7 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
-    atom8 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
-    atom9 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
-    atom10 = Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
-    atom11 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
-    atom12 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
-    guanine_pdbv2 = array(
-    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-        [atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10, atom11, atom12]
+    atom1 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
+    atom2 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
+    atom3 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
+    atom4 =  Atom([0.071, 2.833, 0.000],   atom_name="C5",  res_name="G")
+    atom5 =  Atom([0.424, 1.460, 0.000],   atom_name="C6",  res_name="G")
+    atom6 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
+    atom7 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
+    atom8 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
+    atom9 = Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
+    atom10 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
+    atom11 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
+    guanine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
+         atom9, atom10, atom11]
     )
-    guanine_pdbv3 = guanine_pdbv2.copy()
-    #guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N1 and C4 atoms
-    midpoint = np.mean([atom8.coord, atom12.coord], axis=-2)
+    midpoint = np.mean([atom7.coord, atom11.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom5.coord, atom6.coord, atom8.coord,
-         atom9.coord, atom11.coord, atom12.coord], axis=-2
+        [atom4.coord, atom5.coord, atom7.coord,
+         atom8.coord, atom10.coord, atom11.coord], axis=-2
     )
     imidazole_center = np.mean(
-        [atom2.coord, atom3.coord, atom4.coord,
-         atom5.coord, atom12.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord,
+         atom4.coord, atom11.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        guanine_pdbv2.array_length(), [1, 7, 9]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        guanine_pdbv2.array_length(), [1, 3, 6, 7, 9, 10]
-    )
-
-    return (guanine_pdbv2, guanine_pdbv3), \
-           (midpoint, pyrimidine_center, imidazole_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return guanine, (midpoint, pyrimidine_center, imidazole_center)
 
 
 def _get_std_thymine():
