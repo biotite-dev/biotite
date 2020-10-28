@@ -126,42 +126,27 @@ def _get_std_cytosine():
         donor, boolean mask for heteroatoms that can act as a hydrogen
         bond acceptor
     """
-    #atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
-    atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
-    atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
-    atom4 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
-    atom5 = Atom([-0.391, 2.344, 0.000], atom_name="N3",  res_name="C")
-    atom6 = Atom([0.837, 2.868, 0.000],  atom_name="C4",  res_name="C")
-    atom7 = Atom([1.875, 2.027, 0.000],  atom_name="N4",  res_name="C")
-    atom8 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
-    atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
-    cytosine_pdbv2 = array(
-    #    [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
-        [atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    atom1 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
+    atom2 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
+    atom3 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
+    atom4 = Atom([-0.391, 2.344, 0.000], atom_name="N3",  res_name="C")
+    atom5 = Atom([0.837, 2.868, 0.000],  atom_name="C4",  res_name="C")
+    atom6 = Atom([1.875, 2.027, 0.000],  atom_name="N4",  res_name="C")
+    atom7 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
+    atom8 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
+    cytosine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
     )
-    cytosine_pdbv3 = cytosine_pdbv2.copy()
-    #cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom9.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom8.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        cytosine_pdbv2.array_length(), [1, 6]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        cytosine_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (cytosine_pdbv2, cytosine_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return cytosine, (midpoint, pyrimidine_center)
 
 
 def _get_std_guanine():
