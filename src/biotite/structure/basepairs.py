@@ -294,22 +294,17 @@ def _get_std_uracil():
     return uracil, (midpoint, pyrimidine_center)
 
 
-_std_adenine, _std_adenine_ring_centers, \
-        _std_adenine_hbond_masks = _get_std_adenine()
-_std_cytosine, _std_cytosine_ring_centers, \
-        _std_cytosine_hbond_masks = _get_std_cytosine()
-_std_guanine, _std_guanine_ring_centers, \
-        _std_guanine_hbond_masks = _get_std_guanine()
-_std_thymine, _std_thymine_ring_centers, \
-        _std_thymine_hbond_masks = _get_std_thymine()
-_std_uracil, _std_uracil_ring_centers, \
-        _std_uracil_hbond_masks = _get_std_uracil()
+_std_adenine, _std_adenine_ring_centers  = _get_std_adenine()
+_std_cytosine, _std_cytosine_ring_centers = _get_std_cytosine()
+_std_guanine, _std_guanine_ring_centers = _get_std_guanine()
+_std_thymine, _std_thymine_ring_centers = _get_std_thymine()
+_std_uracil, _std_uracil_ring_centers = _get_std_uracil()
 
-_adenine_containing_nucleotides = ["A", "DA", "a"]
-_thymine_containing_nucleotides = ["T", "DT", "t"]
-_cytosine_containing_nucleotides = ["C", "DC", "c"]
-_guanine_containing_nucleotides = ["G", "DG", "g"]
-_uracil_containing_nucleotides = ["U", "DU", "u"]
+_adenine_containing_nucleotides = ["A", "DA"]
+_thymine_containing_nucleotides = ["T", "DT"]
+_cytosine_containing_nucleotides = ["C", "DC"]
+_guanine_containing_nucleotides = ["G", "DG"]
+_uracil_containing_nucleotides = ["U", "DU"]
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
