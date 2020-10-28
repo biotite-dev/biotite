@@ -90,15 +90,15 @@ def _get_std_adenine():
     )
 
     # Get the midpoint between the N1 and C4 atoms
-    midpoint = np.mean([atom8.coord, atom11.coord], axis=-2)
+    midpoint = np.mean([atom7.coord, atom10.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom5.coord, atom6.coord, atom8.coord,
-         atom9.coord, atom10.coord, atom11.coord], axis=-2
+        [atom4.coord, atom5.coord, atom7.coord,
+         atom8.coord, atom9.coord, atom10.coord], axis=-2
     )
     imidazole_center = np.mean(
-        [atom2.coord, atom3.coord, atom4.coord,
-         atom5.coord, atom11.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord,
+         atom4.coord, atom10.coord], axis=-2
     )
 
     return adenine, (midpoint, pyrimidine_center, imidazole_center)
