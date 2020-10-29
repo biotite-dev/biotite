@@ -594,58 +594,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     else:
         # If the structure does not contain hydrogens, check for the
         # plausibility of hydrogen bonds between heteroatoms
-        return _check_hbonds(transformed_bases, unique)
-
-
-def _check_hbonds(bases, hbond_masks, unique):
-    """
-    Check if hydrogen bonds are plausible between two bases. A cutoff
-    of 4.0 Å between a heteroatom that is bound to a hydrogen, that can
-    act as hydrogen bond donor, and a heteroatom that can accept
-    hydrogen bonds, is used.
-
-    Parameters
-    ----------
-    bases : list of [AtomArray, AtomArray]
-        The two bases to check for hydrogen bonds as :class:`AtomArray`.
-    hbond_masks : list of :class:`ndarray`, dtype=bool
-        Contains the hydrogen bond donor and acceptor heteroatoms as,
-        boolean mask for heteroatoms
-        which are bound to a hydrogen that can act as a donor, boolean
-        mask for heteroatoms that can act as a hydrogen bond acceptor
-    unique : bool
-        If ``True``, the shortest hydrogen bond length between the bases
-        is calculated for plausible basepairs.
-
-    Returns
-    -------
-    plausible : integer
-        `>0` if the basepair has plausible hydrogen bonds and `-1` if it
-        does not. If unique is ``True``, the number of plausible
-        hydrogen bonds is returned.
-    """
-
-    # Contains the number of plausible hydrogen bonds
-    hbonds = 0
-    # Check the plausibility of hydrogen bonds with bases[0] as the
-    # hydrogen bond donor and bases[1] as the hydrogen bond
-    # acceptor. Afterwards the complimentary order is checked.
-    for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
-        zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
-        for donor_atom in donor_base[hbond_donor_mask[0]]:
-            for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
-                if (distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
-                    if not unique:
-                        # If a plausible hydrogen bond is found but the
-                        # uniqueness is not checked return `1`
-                        return 1
-                    hbonds += 1
-
-    if hbonds > 0:
-        # Return the number of plausible hydrogen bonds
-        return hbonds
-
-    return -1
+        return 1
 
 
 def _check_base_stacking(aromatic_ring_centers, normal_vectors):
@@ -1090,7 +1039,7 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
         Contains the basepair candidates, ``tuple`` of the first indices
         of the corresponding residues.
     """
-
+    #TODO: Return Number of Candidates
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
               & np.isin(atom_array.element, ["N", "O"]))
