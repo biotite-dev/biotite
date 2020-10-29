@@ -507,7 +507,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # 'ndarray` with dtype=bool, boolean mask for heteroatoms which are
     # bound to a hydrogen that can act as a donor, boolean mask for
     # heteroatoms that can act as a hydrogen bond acceptor
-    hbond_masks = [None] * 2
+    # hbond_masks = [None] * 2
     # A list containing ndarray for each base with transformed
     # vectors from the standard base reference frame to the structures'
     # coordinates. The layout is as follows:
@@ -525,8 +525,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         if(base_tuple is None):
             return -1
 
-        transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
-            = base_tuple
+        transformed_bases[i], transformed_std_vectors[i] = base_tuple
 
     origins = np.vstack((transformed_std_vectors[0][0],
                          transformed_std_vectors[1][0]))
@@ -595,7 +594,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     else:
         # If the structure does not contain hydrogens, check for the
         # plausibility of hydrogen bonds between heteroatoms
-        return _check_hbonds(transformed_bases, hbond_masks, unique)
+        return _check_hbonds(transformed_bases, unique)
 
 
 def _check_hbonds(bases, hbond_masks, unique):
