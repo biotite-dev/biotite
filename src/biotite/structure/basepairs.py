@@ -691,7 +691,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         std_ring_centers = _std_adenine_ring_centers
     elif (nucleotide.res_name[0] in _thymine_containing_nucleotides):
         std_base = _std_thymine
-        std_ring_centers = _std_thymine_ring_centersks
+        std_ring_centers = _std_thymine_ring_centers
     elif (nucleotide.res_name[0] in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
