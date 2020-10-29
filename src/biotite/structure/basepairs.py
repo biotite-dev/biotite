@@ -681,7 +681,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         Transformed standard vectors, origin coordinates, base normal
         vector, aromatic ring center coordinates.
     """
-    return_hbond_masks = [None] * 2
+
     # Standard vectors containing the origin and the base normal vectors
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
@@ -689,23 +689,18 @@ def _match_base(nucleotide, min_atoms_per_base):
     if (nucleotide.res_name[0] in _adenine_containing_nucleotides):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
-        std_hbond_masks = _std_adenine_hbond_masks
     elif (nucleotide.res_name[0] in _thymine_containing_nucleotides):
         std_base = _std_thymine
-        std_ring_centers = _std_thymine_ring_centers
-        std_hbond_masks = _std_thymine_hbond_masks
+        std_ring_centers = _std_thymine_ring_centersks
     elif (nucleotide.res_name[0] in _cytosine_containing_nucleotides):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
-        std_hbond_masks = _std_cytosine_hbond_masks
     elif (nucleotide.res_name[0] in _guanine_containing_nucleotides):
         std_base = _std_guanine
         std_ring_centers = _std_guanine_ring_centers
-        std_hbond_masks = _std_guanine_hbond_masks
     elif (nucleotide.res_name[0] in _uracil_containing_nucleotides):
         std_base = _std_uracil
         std_ring_centers = _std_uracil_ring_centers
-        std_hbond_masks = _std_uracil_hbond_masks
     else:
         mapped_nucleotide = map_nucleotide(nucleotide)
         if mapped_nucleotide in [None, 'N']:
@@ -713,18 +708,6 @@ def _match_base(nucleotide, min_atoms_per_base):
         nuc = nucleotide.copy()
         nuc.res_name = np.array([mapped_nucleotide.upper()]*len(nuc.res_name))
         return _match_base(nuc, min_atoms_per_base)
-
-    # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
-    std_base = std_base[1]
-    """
-    if (
-        np.sum(np.isin(std_base[1].atom_name, nucleotide.atom_name)) >
-        np.sum(np.isin(std_base[0].atom_name, nucleotide.atom_name))
-    ):
-        std_base = std_base[1]
-    else:
-        std_base = std_base[0]
-    """
 
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
@@ -761,18 +744,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     # of the std_base
     length_difference = len(std_base) - len(fitted)
 
-    if (length_difference > 0 and len(fitted) >= min_atoms_per_base):
-        # If the base is incomplete but contains 3 or more atoms of the
-        # std_base, transform the complete std_base and use it to
-        # approximate the base.
-        warnings.warn(
-            f"Base with res_id {nucleotide.res_id[0]} and chain_id "
-            f"{nucleotide.chain_id[0]} is not complete. Attempting to "
-            f"emulate with std_base.", IncompleteStructureWarning
-        )
-        return_base = superimpose_apply(std_base, transformation)
-        return_hbond_masks = std_hbond_masks
-    elif (length_difference > 0):
+    if (length_difference > 0 and len(fitted) < min_atoms_per_base):
         # If the base is incomplete and contains less than 3 atoms of
         # the std_base, throw warning
         warnings.warn(
@@ -782,6 +754,7 @@ def _match_base(nucleotide, min_atoms_per_base):
             IncompleteStructureWarning
         )
         return None
+
     else:
         # If the base is complete use the base for further calculations.
         #
@@ -798,18 +771,9 @@ def _match_base(nucleotide, min_atoms_per_base):
             ):
                 base_atom_mask[i] = False
 
-        # Create boolean masks for the AtomArray containing the bases`
-        # heteroatoms (or the usually attached hydrogens), which can act
-        # as Hydrogen Bond Donors or Acceptors respectively, using the
-        # std_base as a template.
-        for i in range(2):
-            return_hbond_masks[i] = _filter_atom_type(
-                nucleotide[base_atom_mask],
-                std_base[std_hbond_masks[i]].atom_name
-            )
         return_base = nucleotide[base_atom_mask]
 
-    return return_base, return_hbond_masks, vectors
+    return return_base, vectors
 
 def map_nucleotide(nucleotide):
     if nucleotide.res_name[0] in (_thymine_containing_nucleotides +
