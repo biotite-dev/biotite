@@ -786,34 +786,11 @@ def map_nucleotide(nucleotide):
         _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
         _std_uracil
     ]
-    std_ring_centers_list = [
-        _std_adenine_ring_centers, _std_thymine_ring_centers,
-        _std_cytosine_ring_centers, _std_guanine_ring_centers,
-        _std_uracil_ring_centers
-    ]
-    std_hbond_masks = [
-        _std_adenine_hbond_masks, _std_thymine_hbond_masks,
-        _std_cytosine_hbond_masks, _std_guanine_hbond_masks,
-        _std_uracil_hbond_masks
-    ]
 
     matched_atom_no = []
     matched_std_base = []
 
-    for ref_base, ring_centers, hbond_mask in zip(
-        std_base_list, std_ring_centers_list, std_hbond_masks
-    ):
-        # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
-        ref_base = ref_base[1]
-        """
-        if (
-            np.sum(np.isin(ref_base[1].atom_name, nucleotide.atom_name)) >
-            np.sum(np.isin(ref_base[0].atom_name, nucleotide.atom_name))
-        ):
-            ref_base = ref_base[1]
-        else:
-            ref_base = ref_base[0]
-        """
+    for ref_base in std_base_list:
         matched_atom_no.append(np.sum(
             np.isin(ref_base.atom_name, nucleotide.atom_name)
         ))
