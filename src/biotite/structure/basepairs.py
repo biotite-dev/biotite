@@ -430,7 +430,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     # Contains the number of hydrogens for each plausible basepair
     basepairs_hbonds = []
 
-    for base1_index, base2_index in basepair_candidates:
+    for (base1_index, base2_index), n_o_matches in basepair_candidates.items():
         base1_mask, base2_mask = get_residue_masks(
             atom_array, (base1_index, base2_index)
         )
@@ -439,6 +439,8 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
+        if hbonds is None:
+            hbonds = n_o_matches/2
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -594,7 +596,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     else:
         # If the structure does not contain hydrogens, check for the
         # plausibility of hydrogen bonds between heteroatoms
-        return 1
+        return None
 
 
 def _check_base_stacking(aromatic_ring_centers, normal_vectors):
