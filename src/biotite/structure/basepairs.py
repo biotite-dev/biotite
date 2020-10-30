@@ -991,7 +991,7 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     ).get_atoms(atom_array.coord[n_o_mask], cutoff)
 
     # Loop through the indices of potential partners
-    basepair_candidates = []
+    basepair_candidates = {}
     for candidate, partners in zip(np.argwhere(n_o_mask)[:, 0], indices):
         for partner in partners:
             if partner == -1:
@@ -1009,9 +1009,22 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
                 not in basepair_candidates)
                 and not (candidate_res_start == partner_res_start)
             ):
-                basepair_candidates.append(
+                basepair_candidates[
                     (candidate_res_start, partner_res_start)
-                )
+                ] = 1
+            elif (candidate_res_start != partner_res_start):
+                if (
+                    (candidate_res_start, partner_res_start) \
+                     in basepair_candidates
+                ):
+                    basepair_candidates[
+                        (candidate_res_start, partner_res_start)
+                    ] += 1
+                else:
+                    basepair_candidates[
+                        (partner_res_start, candidate_res_start)
+                    ] += 1
+
     return basepair_candidates
 
 
