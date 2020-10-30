@@ -441,6 +441,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         )
         if hbonds is None:
             hbonds = n_o_matches/2
+            #print(hbonds)
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -826,10 +827,10 @@ def map_nucleotide(nucleotide):
             np.isin(ref_base.atom_name, nuc.atom_name)
         ]
 
-        if nucleotide.res_id[0] == 54:
-            print(nuc)
-            print("ref")
-            print(ref_base_matched)
+        #if nucleotide.res_id[0] == 54:
+            #print(nuc)
+            #print("ref")
+            #print(ref_base_matched)
 
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
@@ -839,12 +840,12 @@ def map_nucleotide(nucleotide):
         try:
             nuc = nuc[standardize_order(nuc)]
         except Exception as ex:
-            print(ex)
+            #print(ex)
             continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(ref_base_matched, nuc)
         if fitted.res_id[0] == 54:
-            print(f"{nucleotide.res_id[0]} [{nucleotide.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
+            #print(f"{nucleotide.res_id[0]} [{nucleotide.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
             """
             fitted.bonds = connect_via_residue_names(fitted)
             pymol_object1 = ammolite.PyMOLObject.from_structure(fitted)
@@ -962,7 +963,7 @@ def _match_non_standard_base(nucleotide, min_atoms_per_base):
 
     return _match_base(nuc, min_atoms_per_base)
 
-def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
+def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     """
     Filter for potential basepairs based on the distance between the
     nitrogen and oxygen atoms, as potential hydrogen donor/acceptor
@@ -982,10 +983,19 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
         Contains the basepair candidates, ``tuple`` of the first indices
         of the corresponding residues.
     """
-    #TODO: Return Number of Candidates
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
               & np.isin(atom_array.element, ["N", "O"]))
+    # Get a boolean mask for atoms that do not belong to the phosphate-
+    # backbone
+    backbone_mask = (filter_nucleotides(atom_array)
+              & ~ np.isin(atom_array.atom_name, ["OP1", "OP2", "OP3", "O5'"]))
+    print(backbone_mask)
+
+    # Combine the N/O-mask with the backbone-mask
+    n_o_mask = np.logical_and(n_o_mask, backbone_mask)
+
+
     # Get the indices of the N and O atoms that are within the maximum
     # cutoff of each other
     indices = CellList(
