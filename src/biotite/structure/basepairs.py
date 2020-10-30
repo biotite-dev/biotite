@@ -658,29 +658,28 @@ def _match_base(nucleotide, min_atoms_per_base):
     # Standard vectors containing the origin and the base normal vectors
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
-    # Check base type and match standard base.
-    if (nucleotide.res_name[0] in _adenine_containing_nucleotides):
+    # Map the nucleotide to a reference base
+    base_tuple = map_nucleotide(nucleotide)
+
+    if base_tuple is None:
+        return None
+
+    one_letter_code, _ = base_tuple
+    if (one_letter_code == 'A'):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
-    elif (nucleotide.res_name[0] in _thymine_containing_nucleotides):
+    elif (one_letter_code == 'T'):
         std_base = _std_thymine
         std_ring_centers = _std_thymine_ring_centers
-    elif (nucleotide.res_name[0] in _cytosine_containing_nucleotides):
+    elif (one_letter_code == 'C'):
         std_base = _std_cytosine
         std_ring_centers = _std_cytosine_ring_centers
-    elif (nucleotide.res_name[0] in _guanine_containing_nucleotides):
+    elif (one_letter_code == 'G'):
         std_base = _std_guanine
         std_ring_centers = _std_guanine_ring_centers
-    elif (nucleotide.res_name[0] in _uracil_containing_nucleotides):
+    elif (one_letter_code == 'U'):
         std_base = _std_uracil
         std_ring_centers = _std_uracil_ring_centers
-    else:
-        mapped_nucleotide = map_nucleotide(nucleotide)
-        if mapped_nucleotide in [None, 'N']:
-            return None
-        nuc = nucleotide.copy()
-        nuc.res_name = np.array([mapped_nucleotide.upper()]*len(nuc.res_name))
-        return _match_base(nuc, min_atoms_per_base)
 
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
@@ -700,7 +699,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     )]
 
     # Match the selected std_base to the base.
-    fitted, transformation = superimpose(nucleotide_matched, std_base_matched)
+    _, transformation = superimpose(nucleotide_matched, std_base_matched)
 
     # Transform the vectors
     trans1, rot, trans2 = transformation
@@ -711,38 +710,14 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors[1,:] = vectors[1,:]-vectors[0,:]
     norm_vector(vectors[1,:])
 
-    if (len(fitted) < min_atoms_per_base):
-        # If the base is incomplete and contains less than 3 atoms of
-        # the std_base, throw warning
-        warnings.warn(
-            f"Base with res_id {nucleotide.res_id[0]} and chain_id "
-            f"{nucleotide.chain_id[0]} has an overlap with std_base "
-            f"which is less than 3 atoms. Unable to check for basepair.",
-            IncompleteStructureWarning
-        )
-        return None
+    # Disregard the phosphate-backbone
+    nucleotide = nucleotide[~ np.isin(
+        nucleotide, ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
+    )]
 
-    else:
-        # If the base is complete use the base for further calculations.
-        #
-        # Generate a boolean mask containing only the base atoms and
-        # their hydrogens (if available), disregarding the sugar atoms
-        # and the phosphate backbone.
-        base_atom_mask = np.ones(len(nucleotide), dtype=bool)
-        for i in range(len(nucleotide)):
-            if (
-                ("'" in nucleotide[i].atom_name)
-                or ("*" in nucleotide[i].atom_name)
-                or ((nucleotide[i].atom_name not in std_base.atom_name)
-                    and (nucleotide[i].element != "H"))
-            ):
-                base_atom_mask[i] = False
+    return nucleotide, vectors
 
-        return_base = nucleotide[base_atom_mask]
-
-    return return_base, vectors
-
-def map_nucleotide(residue, rsmd_cutoff=0.28):
+def map_nucleotide(residue, rmsd_cutoff=0.28):
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
         _guanine_containing_nucleotides + _uracil_containing_nucleotides
@@ -767,9 +742,13 @@ def map_nucleotide(residue, rsmd_cutoff=0.28):
 
     if max(matched_atom_no) < 3:
         warnings.warn(
-            f"Base Type {residue.res_name[0]} not supported."
-            f"At least three atoms must match with a reference base.",
-            UnexpectedStructureWarning
+            warnings.warn(
+            f"Base with res_id {residue.res_id[0]} and chain_id "
+            f"{residue.chain_id[0]} has an overlap with the reference "
+            f"bases which is less than 3 atoms. Unable to map "
+            f"nucleotide.",
+            IncompleteStructureWarning
+        )
         )
         return None
 
@@ -855,7 +834,6 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     # backbone
     backbone_mask = (filter_nucleotides(atom_array)
               & ~ np.isin(atom_array.atom_name, ["OP1", "OP2", "OP3", "O5'"]))
-    print(backbone_mask)
 
     # Combine the N/O-mask with the backbone-mask
     n_o_mask = np.logical_and(n_o_mask, backbone_mask)
