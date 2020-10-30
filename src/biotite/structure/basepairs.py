@@ -30,9 +30,8 @@ def _get_std_adenine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the adenine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the adenine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
@@ -40,12 +39,6 @@ def _get_std_adenine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donor and acceptor heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
     atom1 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
     atom2 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
@@ -83,21 +76,14 @@ def _get_std_cytosine():
 
     Returns
     -------
-   standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the cytosine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+   standard_base : AtomArray
+        Standard coordinates nomenclature of the cytosine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
     atom1 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
     atom2 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
@@ -128,9 +114,8 @@ def _get_std_guanine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the guanine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the guanine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
@@ -138,12 +123,6 @@ def _get_std_guanine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
     atom1 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
     atom2 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
@@ -182,21 +161,14 @@ def _get_std_thymine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the thymine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the thymine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
     atom1 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
     atom2 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
@@ -228,21 +200,14 @@ def _get_std_uracil():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the uracil base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the uracil base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
     atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
     atom2 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
