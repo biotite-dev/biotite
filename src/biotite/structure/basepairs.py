@@ -742,45 +742,51 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return return_base, vectors
 
-def map_nucleotide(nucleotide):
-    if nucleotide.res_name[0] in (_thymine_containing_nucleotides +
+def map_nucleotide(residue, rsmd_cutoff=0.28):
+    # Check if the residue is a 'standard' nucleotide
+    if residue.res_name[0] in (_thymine_containing_nucleotides +
         _guanine_containing_nucleotides + _uracil_containing_nucleotides
         + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
     ):
-        return nucleotide.res_name[0][-1]
+        return residue.res_name[0][-1], True
 
+    # List of the standard bases for easy iteration
     std_base_list = [
         _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
         _std_uracil
     ]
 
+    # The number of matched atoms for each 'standard' base
     matched_atom_no = []
-    matched_std_base = []
 
+    # Count the number of matching atoms with the reference bases
     for ref_base in std_base_list:
         matched_atom_no.append(np.sum(
-            np.isin(ref_base.atom_name, nucleotide.atom_name)
+            np.isin(ref_base.atom_name, residue.atom_name)
         ))
-        matched_std_base.append(ref_base)
 
     if max(matched_atom_no) < 3:
         warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported.",
+            f"Base Type {residue.res_name[0]} not supported."
+            f"At least three atoms must match with a reference base.",
             UnexpectedStructureWarning
         )
         return None
 
-    best_rmsd = 0.28
+    # The one letter code of the best matching reference base
     best_base = None
-    for ref_base in np.array(matched_std_base)[
+
+    # Iterate through the reference bases with the maximum number of
+    # matching atoms
+    for ref_base in np.array(std_base_list)[
         np.array(matched_atom_no) == max(matched_atom_no)
     ]:
-        nuc = nucleotide.copy()
-        if (nucleotide.res_name[0] in ["PSU", "H2U"]):
-            nuc = nuc[nuc.atom_name != "C1'"]
+        # Copy the residue as the res_name property of the ``AtomArray``
+        # has to be modified for later function calls.
+        nuc = residue.copy()
 
-
-        # Select the matching atoms of the nucleotide and the standard base
+        # Select the matching atoms of the nucleotide and the reference
+        # base
         nuc = nuc[
             np.isin(nuc.atom_name, ref_base.atom_name)
         ]
@@ -788,28 +794,38 @@ def map_nucleotide(nucleotide):
             np.isin(ref_base.atom_name, nuc.atom_name)
         ]
 
-        # Reorder the atoms of the nucleotide to obtain the standard RCSB
-        # PDB atom order
+        # Set the res_name property to the same as the reference base.
+        # This is a requirement for ``standardize_order``
         nuc.res_name = ref_base_matched.res_name
+        # Reorder the atoms of the nucleotide to obtain the standard
+        # RCSB PDB atom order. If a residue contains multiple Atoms with
+        # the same ``atom_name`` an exception is thrown by
+        # ``standardize_order``. The Exception is caught and the
+        # selected reference is disregarded
         try:
             nuc = nuc[standardize_order(nuc)]
         except Exception:
             continue
-        # Match the selected std_base to the base.
+
+        # Superimpose the nucleotide to the reference base
         fitted, _ = superimpose(ref_base_matched, nuc)
 
-        if(rmsd(fitted, ref_base_matched) < best_rmsd):
-            best_rmsd = rmsd(fitted, ref_base_matched)
-            best_base = ref_base_matched[0]
+        # If the RMSD is lower than the specified cutoff or better than
+        # a previous found reference, the current reference is selected
+        # as best base
+        if(rmsd(fitted, ref_base_matched) < rmsd_cutoff):
+            rmsd_cutoff = rmsd(fitted, ref_base_matched)
+            best_base = ref_base_matched.res_name[0][-1]
 
     if best_base is None:
         warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
+            f"Base Type {residue.res_name[0]} not supported. "
             f"Unable to check for basepair",
             UnexpectedStructureWarning
         )
         return None
-    return best_base.res_name[0][-1].lower()
+
+    return best_base, False
 
 
 def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
