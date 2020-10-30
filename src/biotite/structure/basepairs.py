@@ -23,33 +23,6 @@ from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
 from .compare import rmsd
 
-import ammolite
-from .bonds import connect_via_residue_names
-
-#ammolite.launch_interactive_pymol("-qixkF", "-W", "400", "-H", "400")
-
-
-def  _get_1d_boolean_mask(size, true_ids):
-    """
-    Get a boolean mask for fancy indexing.
-
-    Parameters
-    ----------
-    size : integer
-        Size of the 1-dimensional array.
-    true_ids: array_like
-        Indices where the boolean mask is ``True``.
-
-    Returns
-    -------
-    mask : ndarray, dtype=bool, shape=(n,)
-        The boolean mask which is ``True`` at the specified indices and
-        ``False`` everywhere else.
-    """
-    mask = np.zeros(size, dtype=bool)
-    mask[true_ids] = np.ones(len(true_ids), dtype=bool)
-    return mask
-
 
 def _get_std_adenine():
     """
@@ -439,9 +412,12 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
+        # If no hydrogens are present use the number N/O pairs to
+        # decide between multiple pairing posibilities.
         if hbonds is None:
+            # Each N/O-pair is detected twice. Thus, the number of
+            # matches must be divided by two.
             hbonds = n_o_matches/2
-            #print(hbonds)
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -506,11 +482,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # incomplete, transformed standard bases are used. If they are
     # complete, the original structure is used.
     transformed_bases = [None] * 2
-    # Contains the hydrogen bond donor and acceptor heteroatoms as
-    # 'ndarray` with dtype=bool, boolean mask for heteroatoms which are
-    # bound to a hydrogen that can act as a donor, boolean mask for
-    # heteroatoms that can act as a hydrogen bond acceptor
-    # hbond_masks = [None] * 2
     # A list containing ndarray for each base with transformed
     # vectors from the standard base reference frame to the structures'
     # coordinates. The layout is as follows:
@@ -595,8 +566,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         return -1
 
     else:
-        # If the structure does not contain hydrogens, check for the
-        # plausibility of hydrogen bonds between heteroatoms
+        # If the structure does not contain hydrogens return None
         return None
 
 
@@ -741,13 +711,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors[1,:] = vectors[1,:]-vectors[0,:]
     norm_vector(vectors[1,:])
 
-    # Investigate the completeness of the base:
-    #
-    # A difference in length of zero means the base contains all atoms
-    # of the std_base
-    length_difference = len(std_base) - len(fitted)
-
-    if (length_difference > 0 and len(fitted) < min_atoms_per_base):
+    if (len(fitted) < min_atoms_per_base):
         # If the base is incomplete and contains less than 3 atoms of
         # the std_base, throw warning
         warnings.warn(
@@ -801,14 +765,11 @@ def map_nucleotide(nucleotide):
 
     if max(matched_atom_no) < 3:
         warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
-            f"Unable to check for basepair",
+            f"Base Type {nucleotide.res_name[0]} not supported.",
             UnexpectedStructureWarning
         )
         return None
 
-    #if nucleotide.res_id[0] == 54:
-    #    print(nucleotide)
     best_rmsd = 0.28
     best_base = None
     for ref_base in np.array(matched_std_base)[
@@ -827,42 +788,16 @@ def map_nucleotide(nucleotide):
             np.isin(ref_base.atom_name, nuc.atom_name)
         ]
 
-        #if nucleotide.res_id[0] == 54:
-            #print(nuc)
-            #print("ref")
-            #print(ref_base_matched)
-
         # Reorder the atoms of the nucleotide to obtain the standard RCSB
         # PDB atom order
-        #print(nuc.atom_name)
-        #print(ref_base_matched.atom_name)
         nuc.res_name = ref_base_matched.res_name
         try:
             nuc = nuc[standardize_order(nuc)]
-        except Exception as ex:
-            #print(ex)
+        except Exception:
             continue
         # Match the selected std_base to the base.
         fitted, _ = superimpose(ref_base_matched, nuc)
-        if fitted.res_id[0] == 54:
-            #print(f"{nucleotide.res_id[0]} [{nucleotide.res_name[0]}] to {ref_base_matched.res_name[0]} with rmsd {rmsd(fitted, ref_base_matched)}")
-            """
-            fitted.bonds = connect_via_residue_names(fitted)
-            pymol_object1 = ammolite.PyMOLObject.from_structure(fitted)
-            for index, atom in enumerate(fitted):
-                pymol_object1.label(index, atom.atom_name)
-            pymol_object1.color('blue')
 
-
-            ref_base_matched.bonds = connect_via_residue_names(ref_base_matched)
-            pymol_object2 = ammolite.PyMOLObject.from_structure(ref_base_matched)
-            for index, atom in enumerate(ref_base_matched):
-                pymol_object2.label(index, atom.atom_name)
-            pymol_object2.color('red')
-            print("y u red")
-
-            input()
-            """
         if(rmsd(fitted, ref_base_matched) < best_rmsd):
             best_rmsd = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched[0]
@@ -873,95 +808,9 @@ def map_nucleotide(nucleotide):
             f"Unable to check for basepair",
             UnexpectedStructureWarning
         )
-        return 'N'
-
+        return None
     return best_base.res_name[0][-1].lower()
 
-def _match_non_standard_base(nucleotide, min_atoms_per_base):
-    std_base_list = [
-        _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
-        _std_uracil
-    ]
-    std_ring_centers_list = [
-        _std_adenine_ring_centers, _std_thymine_ring_centers,
-        _std_cytosine_ring_centers, _std_guanine_ring_centers,
-        _std_uracil_ring_centers
-    ]
-    std_hbond_masks = [
-        _std_adenine_hbond_masks, _std_thymine_hbond_masks,
-        _std_cytosine_hbond_masks, _std_guanine_hbond_masks,
-        _std_uracil_hbond_masks
-    ]
-
-    matched_atom_no = []
-    matched_std_base = []
-
-    for ref_base, ring_centers, hbond_mask in zip(
-        std_base_list, std_ring_centers_list, std_hbond_masks
-    ):
-        # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
-        if (
-            np.sum(np.isin(ref_base[1].atom_name, nucleotide.atom_name)) >
-            np.sum(np.isin(ref_base[0].atom_name, nucleotide.atom_name))
-        ):
-            ref_base = ref_base[1]
-        else:
-            ref_base = ref_base[0]
-        matched_atom_no.append(np.sum(
-            np.isin(ref_base.atom_name, nucleotide.atom_name)
-        ))
-        matched_std_base.append(ref_base)
-
-    if max(matched_atom_no) < 3:
-        warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
-            f"Unable to check for basepair",
-            UnexpectedStructureWarning
-        )
-        return None
-
-    best_rmsd = 0.28
-    best_base = None
-    for ref_base in np.array(matched_std_base)[
-        np.array(matched_atom_no) == max(matched_atom_no)
-    ]:
-        nuc = nucleotide.copy()
-
-        # Select the matching atoms of the nucleotide and the standard base
-        nuc = nuc[
-            np.isin(nucleotide.atom_name, ref_base.atom_name)
-        ]
-        ref_base_matched = ref_base[
-            np.isin(ref_base.atom_name, nucleotide.atom_name)
-        ]
-
-        # Reorder the atoms of the nucleotide to obtain the standard RCSB
-        # PDB atom order
-        #print(nuc.atom_name)
-        #print(ref_base_matched.atom_name)
-        nuc.res_name = ref_base_matched.res_name
-        try:
-            nuc = nuc[standardize_order(nuc)]
-        except:
-            continue
-        # Match the selected std_base to the base.
-        fitted, _ = superimpose(nuc, ref_base_matched)
-        if(rmsd(fitted, ref_base_matched) < best_rmsd):
-            best_rmsd = rmsd(fitted, ref_base_matched)
-            best_base = ref_base_matched[0]
-
-    if best_base is None:
-        warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
-            f"Unable to check for basepair",
-            UnexpectedStructureWarning
-        )
-        return None
-
-    nuc = nucleotide.copy()
-    nuc.res_name = np.array([best_base]*len(nuc.res_name))
-
-    return _match_base(nuc, min_atoms_per_base)
 
 def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     """
