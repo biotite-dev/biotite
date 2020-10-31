@@ -246,7 +246,6 @@ _uracil_containing_nucleotides = ["U", "DU"]
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
-
     """
     Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
 
@@ -359,10 +358,28 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
 
+    # Get the nucleotides for the given atom_array
+    nucleotides_boolean = filter_nucleotides(atom_array)
+
+    # Disregard the phosphate-backbone
+    non_phosphate_boolean = (
+        ~ np.isin(
+            atom_array.atom_name,
+            ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
+        )
+    )
+
+    # Combine the two boolean masks
+    boolean_mask = np.logical_and(nucleotides_boolean, non_phosphate_boolean)
+
+    # Get only the nucleosides
+    nucleosides = atom_array[boolean_mask]
+
+
     # Get the basepair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    basepair_candidates = _get_proximate_basepair_candidates(atom_array)
+    basepair_candidates = _get_proximate_basepair_candidates(nucleosides)
 
     # Contains the plausible basepairs
     basepairs = []
@@ -371,10 +388,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     for (base1_index, base2_index), n_o_matches in basepair_candidates.items():
         base1_mask, base2_mask = get_residue_masks(
-            atom_array, (base1_index, base2_index)
+            nucleosides, (base1_index, base2_index)
         )
-        base1 = atom_array[base1_mask]
-        base2 = atom_array[base2_mask]
+        base1 = nucleosides[base1_mask]
+        base2 = nucleosides[base2_mask]
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
@@ -417,6 +434,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         # Remove all flagged basepairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
+        # Remap values to original atom array
+        basepair_array = np.where(boolean_mask)[0][basepair_array]
+
     return basepair_array
 
 
@@ -444,10 +464,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         returned for plausible basepairs.
     """
 
-    # Contains the bases to be used for analysis. If the bases are
-    # incomplete, transformed standard bases are used. If they are
-    # complete, the original structure is used.
-    transformed_bases = [None] * 2
     # A list containing ndarray for each base with transformed
     # vectors from the standard base reference frame to the structures'
     # coordinates. The layout is as follows:
@@ -460,12 +476,12 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
 
     # Generate the data necessary for analysis of each base.
     for i in range(2):
-        base_tuple = _match_base(basepair[i], min_atoms_per_base)
+        transformed_std_vectors[i] = _match_base(
+            basepair[i], min_atoms_per_base
+        )
 
-        if(base_tuple is None):
+        if(transformed_std_vectors[i] is None):
             return -1
-
-        transformed_bases[i], transformed_std_vectors[i] = base_tuple
 
     origins = np.vstack((transformed_std_vectors[0][0],
                          transformed_std_vectors[1][0]))
@@ -511,13 +527,13 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Criterion 5: Presence of at least one hydrogen bond
     #
     # Check if both bases came with hydrogens.
-    if (("H" in transformed_bases[0].element)
-        and ("H" in transformed_bases[1].element)):
+    if (("H" in basepair[0].element)
+        and ("H" in basepair[1].element)):
         # For Structures that contain hydrogens, check for their
         # presence directly.
         #
         # Generate input atom array for ``hbond```
-        potential_basepair = transformed_bases[0] + transformed_bases[1]
+        potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
         bonds = len(hbond(
@@ -676,12 +692,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors[1,:] = vectors[1,:]-vectors[0,:]
     norm_vector(vectors[1,:])
 
-    # Disregard the phosphate-backbone
-    nucleotide = nucleotide[~ np.isin(
-        nucleotide, ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
-    )]
-
-    return nucleotide, vectors
+    return vectors
 
 def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     # Check if the residue is a 'standard' nucleotide
@@ -796,14 +807,6 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
               & np.isin(atom_array.element, ["N", "O"]))
-    # Get a boolean mask for atoms that do not belong to the phosphate-
-    # backbone
-    backbone_mask = (filter_nucleotides(atom_array)
-              & ~ np.isin(atom_array.atom_name, ["OP1", "OP2", "OP3", "O5'"]))
-
-    # Combine the N/O-mask with the backbone-mask
-    n_o_mask = np.logical_and(n_o_mask, backbone_mask)
-
 
     # Get the indices of the N and O atoms that are within the maximum
     # cutoff of each other
