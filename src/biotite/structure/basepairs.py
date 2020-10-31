@@ -246,6 +246,7 @@ _uracil_containing_nucleotides = ["U", "DU"]
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
+
     """
     Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
 
