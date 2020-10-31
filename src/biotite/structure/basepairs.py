@@ -624,7 +624,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Map the nucleotide to a reference base
-    base_tuple = map_nucleotide(nucleotide)
+    base_tuple = map_nucleotide(nucleotide, min_atoms_per_base)
 
     if base_tuple is None:
         return None
@@ -682,7 +682,7 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return nucleotide, vectors
 
-def map_nucleotide(residue, rmsd_cutoff=0.28):
+def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
         _guanine_containing_nucleotides + _uracil_containing_nucleotides
@@ -705,13 +705,13 @@ def map_nucleotide(residue, rmsd_cutoff=0.28):
             np.isin(ref_base.atom_name, residue.atom_name)
         ))
 
-    if max(matched_atom_no) < 3:
+    if max(matched_atom_no) < min_atoms_per_base:
         warnings.warn(
             warnings.warn(
             f"Base with res_id {residue.res_id[0]} and chain_id "
             f"{residue.chain_id[0]} has an overlap with the reference "
-            f"bases which is less than 3 atoms. Unable to map "
-            f"nucleotide.",
+            f"bases which is less than {min_atoms_per_base} atoms."
+            f"Unable to map nucleotide.",
             IncompleteStructureWarning
         )
         )
