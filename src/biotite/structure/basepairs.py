@@ -288,9 +288,6 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Notes
     -----
-    If a base is incomplete but contains the minimum number of base-
-    atoms specified, a superimposed standard base is used to emulate it.
-
     The vertical separation is implemented as the scalar
     projection of the distance vectors between the base origins
     according to [3]_ onto the averaged base normal vectors.
@@ -311,9 +308,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     For structures without hydrogens the accuracy of the algorithm is
     limited as the hydrogen bonds can be only checked be checked for
     plausibility.
-    A hydrogen bond is considered as plausible if a cutoff of 4.0 Å
-    between a heteroatom, that can act as hydrogen bond donor, and a
-    heteroatom, that can act as hydrogen bond acceptor, is met.
+    A hydrogen bond is considered as plausible if a cutoff of 3.6 Å
+    between N/O atom pairs is met. 3.6Å was chosen as hydrogen bonds are
+    typically 1.5-2.5Å in length. N-H and O-H bonds are 1.00Å and 0.96Å
+    respectively. Thus, including some buffer, a 3.6Å cutoff should
+    cover all hydrogen bonds.
 
     Examples
     --------
