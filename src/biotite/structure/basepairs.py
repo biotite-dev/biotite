@@ -250,10 +250,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
 
     The algorithm is able to identify canonical and non-canonical
-    base pairs between the 5 common bases Adenine, Guanine, Thymine,
+    base pairs. between the 5 common bases Adenine, Guanine, Thymine,
     Cytosine, and Uracil bound to Deoxyribose and Ribose.
-    A standard reference frame for these bases as described in [1]_ is
-    used.
+    Each Base is mapped to the 5 common bases Adenine, Guanine, Thymine,
+    Cytosine, and Uracil in a standard reference frame described in
+    [1]_ using :func:`map_nucleotide()`.
 
     The DSSR Criteria are as follows [2]_ :
 
