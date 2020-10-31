@@ -310,9 +310,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     plausibility.
     A hydrogen bond is considered as plausible if a cutoff of 3.6 Å
     between N/O atom pairs is met. 3.6Å was chosen as hydrogen bonds are
-    typically 1.5-2.5Å in length. N-H and O-H bonds are 1.00Å and 0.96Å
-    respectively. Thus, including some buffer, a 3.6Å cutoff should
-    cover all hydrogen bonds.
+    typically 1.5-2.5Å in length. N-H and O-H bonds have a length of
+    1.00Å and 0.96Å respectively. Thus, including some buffer, a 3.6Å
+    cutoff should cover all hydrogen bonds.
 
     Examples
     --------
