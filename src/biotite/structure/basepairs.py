@@ -288,6 +288,12 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Notes
     -----
+    The bases from the standard reference frame described in [1]_ were
+    modified such that only the base atoms are implemented. Sugar atoms
+    (specifically C1') were disregarded, as nucleosides such as PSU do
+    not posess the usual N-glycosidic linkage, thus leading to
+    inaccurate results.
+
     The vertical separation is implemented as the scalar
     projection of the distance vectors between the base origins
     according to [3]_ onto the averaged base normal vectors.
