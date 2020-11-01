@@ -619,7 +619,8 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
 
 def _match_base(nucleotide, min_atoms_per_base):
     """
-    Match the nucleotide to a corresponding standard base.
+    Match the nucleotide to a corresponding standard base reference
+    frame.
 
     Parameters
     ----------
@@ -631,15 +632,6 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     Returns
     -------
-    return_base or None : AtomArray
-        The base of the nucleotide. If the given base is incomplete but
-        contains the minimum number of atoms specified a superimposed
-        standard base is returned. Else ``None`` is returned.
-    return_hbond_masks : list
-        The hydrogen bond donor and acceptor heteroatoms as
-        :class:`ndarray` with `dtype=bool`, boolean mask for heteroatoms
-        which are bound to a hydrogen that can act as a donor, boolean
-        mask for heteroatoms that can act as a hydrogen bond acceptor.
     vectors : ndarray, dtype=float, shape=(n,3)
         Transformed standard vectors, origin coordinates, base normal
         vector, aromatic ring center coordinates.
@@ -655,6 +647,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         return None
 
     one_letter_code, _ = base_tuple
+
     if (one_letter_code == 'A'):
         std_base = _std_adenine
         std_ring_centers = _std_adenine_ring_centers
