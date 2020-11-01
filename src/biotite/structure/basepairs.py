@@ -696,6 +696,45 @@ def _match_base(nucleotide, min_atoms_per_base):
     return vectors
 
 def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
+    """
+    Maps a nucleotide to one of the 5 common bases Adenine, Guanine,
+    Thymine, Cytosine, and Uracil. If one of those bases bound to
+    Deoxyribose and Ribose is detected as input, the corresponding one-
+    letter-code (A, G, T, C, U) is returned.
+
+    If a different nucleotide is given, it is mapped to the best best
+    fitting base using the algorithm described below.
+
+    (i) The number of matching atom names with the reference bases is
+        counted. If the number of matching atoms with all reference
+        bases is less than the specified ``min_atoms_per_base``
+        (default 3) the nucleotide cannot be mapped and ``None```is
+        returned.
+
+    (ii) The bases with maximum number of matching atoms are selected
+         and superimposed with each reference. The base with lowest RMSD
+         is chosen. If the RMSD is more than the specified
+         ``rmsd_cutoff`` (default 0.28) the nucleotide cannot be mapped
+         and ``None```is returned.
+
+    Parameters
+    ----------
+    residue : AtomArray
+        The nucleotide to be mapped.
+    min_atoms_per_base : integer, optional (default: 3)
+        The number of atoms the residue must have in common with the
+        reference.
+    rmsd_cutoff : float, optional (default: 0.28)
+        The maximum RSMD that is allowed for a mapping to occur.
+
+    Returns
+    -------
+    one_letter_code : string
+        The one-letter-code of the mapped base
+    exact_match : boolean
+        Wether or not the residue name exactly matches with the
+        reference.
+    """
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
         _guanine_containing_nucleotides + _uracil_containing_nucleotides
