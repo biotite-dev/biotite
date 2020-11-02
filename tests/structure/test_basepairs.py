@@ -6,7 +6,8 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import base_pairs
+from biotite.structure.basepairs import base_pairs, map_nucleotide
+from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 
@@ -120,3 +121,34 @@ def test_base_pairs_reordered():
         struc.base_pairs(standard_order)
         == struc.base_pairs(non_standard_order)
     ))
+
+def test_map_nucleotide():
+    """Test the function map_nucleotide with some examples.
+    """
+    pyrimidines = ['C', 'T', 'U']
+    purines = ['A', 'G']
+
+    # Test that the standard bases are correctly identified
+    assert map_nucleotide(residue('U')) == ('U', True)
+    assert map_nucleotide(residue('A')) == ('A', True)
+    assert map_nucleotide(residue('T')) == ('T', True)
+    assert map_nucleotide(residue('G')) == ('G', True)
+    assert map_nucleotide(residue('C')) == ('C', True)
+
+    # Test that some non_standard nucleotides are mapped correctly to
+    # pyrimidine/purine references
+    psu_tuple = map_nucleotide(residue('PSU'))
+    assert psu_tuple[0] in pyrimidines
+    assert psu_tuple[1] == False
+
+    psu_tuple = map_nucleotide(residue('3MC'))
+    assert psu_tuple[0] in pyrimidines
+    assert psu_tuple[1] == False
+
+    i_tuple = map_nucleotide(residue('I'))
+    assert i_tuple[0] in purines
+    assert i_tuple[1] == False
+
+    m7g_tuple = map_nucleotide(residue('M7G'))
+    assert m7g_tuple[0] in purines
+    assert m7g_tuple[1] == False
