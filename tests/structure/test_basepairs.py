@@ -6,7 +6,11 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import base_pairs
+import biotite.structure.io.pdb as pdb
+import biotite.database.rcsb as rcsb
+from tempfile import gettempdir
+from biotite.structure.basepairs import base_pairs, map_nucleotide, base_pairs_edge
+from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 
@@ -75,12 +79,12 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     Reverse the order of residues in the atom_array and then test the
     function base_pairs.
     """
-    
+
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(
         reversed_nuc_sample_array, unique=unique_bool
     )
@@ -90,17 +94,31 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
 
 def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     """
-    Remove the hydrogens from the sample structure. Then reverse the 
-    order of residues in the atom_array and then test the function 
+    Remove the hydrogens from the sample structure. Then reverse the
+    order of residues in the atom_array and then test the function
     base_pairs.
     """
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
     # Reverse sequence of residues in nuc_sample_array
-    reversed_nuc_sample_array = struc.AtomArray(0) 
+    reversed_nuc_sample_array = struc.AtomArray(0)
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
-    
+
     computed_basepairs = base_pairs(reversed_nuc_sample_array)
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
+
+def test_base_pairs_edge():
+    """
+    Test the function base_pairs with structure where the atoms are not
+    in the RCSB-Order.
+    """
+    pdb_file_path = rcsb.fetch("2HUA", "pdb", gettempdir())
+    pdb_file = pdb.PDBFile.read(pdb_file_path)
+    atom_array = pdb.get_structure(pdb_file)[0]
+    pairs = base_pairs(atom_array)
+    print(np.array((pairs[0],)))
+    edges = base_pairs_edge(atom_array, pairs)
+    print(edges)
+    assert False
