@@ -761,7 +761,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         warnings.warn(
             f"Base with res_id {residue.res_id[0]} and chain_id "
             f"{residue.chain_id[0]} has an overlap with the reference "
-            f"bases which is less than {min_atoms_per_base} atoms."
+            f"bases which is less than {min_atoms_per_base} atoms. "
             f"Unable to map nucleotide.",
             IncompleteStructureWarning
         )
