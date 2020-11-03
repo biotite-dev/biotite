@@ -12,6 +12,7 @@ __all__ = ["base_pairs"]
 
 import numpy as np
 import warnings
+from enum import IntEnum
 from .atoms import Atom, array
 from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides
@@ -375,6 +376,82 @@ _thymine_containing_nucleotides = ["T", "DT"]
 _cytosine_containing_nucleotides = ["C", "DC"]
 _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
+
+# Atoms that are part of each edge according to the Leontis-Westhof
+# nomenclature
+_watson_crick_edge = {
+    "A" : ["N6", "N1", "C2"],
+    "G" : ["O6", "N1", "N2"],
+    "U" : ["O4", "N3", "O2"],
+    "T" : ["O4", "N3", "O2"],
+    "C" : ["N4", "N3", "O2"]
+}
+_hoogsteen_edge = {
+    "A" : ["N6", "N7"],
+    "G" : ["O6", "N7"],
+    "U" : ["O4", "C5"],
+    "T" : ["O4", "C5"],
+    "C" : ["N4", "C5"]
+}
+_sugar_edge = {
+    "A" : ["C2", "N3", "O2'"],
+    "G" : ["N2", "N3", "O2'"],
+    "U" : ["O2", "O2'"],
+    "T" : ["O2", "O2'"],
+    "C" : ["O2", "O2'"]
+}
+_edges = [_watson_crick_edge, _hoogsteen_edge, _sugar_edge]
+
+# Define the edges as ``IntEnum``
+class edge(IntEnum):
+    watson_crick = 0,
+    hoogsteen = 1,
+    sugar = 2,
+    invalid = 3
+
+def base_pairs_edge(atom_array, base_pairs):
+    # Result ``ndarray`` matches the dimensions of the input array
+    results = np.empty_like(base_pairs, dtype=edge)
+
+    # Check each basepair seperately
+    for i, base_pair in enumerate(base_pairs):
+        # Boolean masks for each bases residue
+        base_masks = get_residue_masks(atom_array, base_pair)
+        # The hbonds between the residues
+        hbonds = hbond(atom_array, base_masks[0], base_masks[1])
+        # Filter out the Donor/Acceptor Heteroatoms and flatten for
+        # easy iteration
+        hbonds = hbonds[:, (0,2)].flatten()
+        # ``ndarray``` with one row for each base and the percentage of
+        # bonded edge heteroatoms as in ``_edge`` as columns
+        base_edges = np.zeros((2, 3), dtype='float')
+
+        # Iterate through the atoms and corresponding atoms indices
+        # that are part of the hydrogen bonds
+        for atom, atom_index in zip(atom_array[hbonds], hbonds):
+
+            if atom.res_name[-1] not in _watson_crick_edge:
+                continue
+
+            # Iterate over the edge types
+            for edge_type_index, edge_type in enumerate(_edges):
+                # Iterate over the two base masks
+                for base_index, base_mask in enumerate(base_masks):
+                    # If a donor/acceptor atom name matches a name in
+                    # the corresponding edge list add the corresponding
+                    # percentage to the ``base_edges`` 'tally'
+                    if (base_mask[atom_index] and
+                        atom.atom_name in edge_type[atom.res_name[-1]]):
+                        percentage = 1 / len(edge_type[atom.res_name[-1]])
+                        base_edges[base_index, edge_type_index] += percentage
+
+        # Classify the base edges based on the highest percentage of
+        # matching hydrogen bonded atoms
+        for j, base in enumerate(base_edges):
+            if base.res_name not in _watson_crick_edge:
+                results[i, j] = edge.invalid
+            else:
+                results[i, j] = edge(np.argmax(base))
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
