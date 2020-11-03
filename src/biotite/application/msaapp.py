@@ -383,7 +383,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             Path of the MSA software binary. By default, the default
             path will be used.
         matrix : SubstitutionMatrix, optional
-        A custom substitution matrix.
+            A custom substitution matrix.
         
         Returns
         -------
