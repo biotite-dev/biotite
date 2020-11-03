@@ -3,6 +3,7 @@
 # information.
 
 import glob
+import itertools
 from os.path import join
 import numpy as np
 import pytest
@@ -106,3 +107,37 @@ def test_link_type():
 def test_is_nucleotide():
     assert strucinfo.is_nucleotide("ALA") == False
     assert strucinfo.is_nucleotide("DG") == True
+
+@pytest.mark.parametrize(
+    "multi_model, seed", itertools.product(
+        [False, True],
+        range(10)
+    )
+)
+def test_standardize_order(multi_model, seed):
+    original = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    if not multi_model:
+        original = original[0]
+    # The box is not preserved when concatenating atom arrays later
+    # This would complicate the atom array equality later
+    original.box = None
+
+    # Randomly reorder the atoms in each residue
+    np.random.seed(seed)
+    if multi_model:
+        reordered = struc.AtomArrayStack(original.stack_depth(), 0)
+    else:
+        reordered = struc.AtomArray(0)
+    for residue in struc.residue_iter(original):
+        bound = residue.array_length()
+        indices = np.random.choice(
+            np.arange(bound), bound,replace=False
+        )
+        reordered += residue[..., indices]
+
+    # Restore the original PDB standard order
+    restored = reordered[..., strucinfo.standardize_order(reordered)]
+
+    assert restored.shape == original.shape
+    assert restored[..., restored.element != "H"] \
+        == original[..., original.element != "H"]
