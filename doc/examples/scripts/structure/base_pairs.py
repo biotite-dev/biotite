@@ -21,25 +21,22 @@ from matplotlib.patches import Arc
 import numpy as np
 
 # Download the PDB file and read the structure
-pdb_file_path = rcsb.fetch("1ehz", "pdb", gettempdir())
+pdb_file_path = rcsb.fetch("4p5j", "pdb", gettempdir())
 pdb_file = pdb.PDBFile.read(pdb_file_path)
 atom_array = pdb.get_structure(pdb_file)[0]
 nucleotides = atom_array[struc.filter_nucleotides(atom_array)]
 
 # Get the residue names and residue ids of the nucleotides
-#residue_ids, residue_names = struc.get_residues(nucleotides)
-
 residue_ids = []
 residue_names = []
-for nucleotide in struc.residue_iter(nucleotides):
-    map_tuple = struc.map_nucleotide(nucleotide)
-    if map_tuple is None:
-        continue
-    residue_ids.append(nucleotide.res_id[0])
-    if map_tuple[1]:
-        residue_names.append(map_tuple[0])
-    else:
-        residue_names.append(map_tuple[0].lower())
+for residue in struc.residue_iter(nucleotides):
+    map_tuple = struc.map_nucleotide(residue)
+    if map_tuple is not None:
+        residue_ids.append(residue[0].res_id)
+        if map_tuple[1]:
+            residue_names.append(map_tuple[0])
+        else:
+            residue_names.append(map_tuple[0].lower())
 
 # Create a matplotlib pyplot
 fig, ax = plt.subplots(figsize=(8.0, 4.5))
