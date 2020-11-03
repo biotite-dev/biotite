@@ -9,7 +9,7 @@ import biotite.structure.io as strucio
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 from tempfile import gettempdir
-from biotite.structure.basepairs import base_pairs, map_nucleotide, base_pairs_edge
+from biotite.structure.basepairs import base_pairs, base_pairs_edge
 from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
