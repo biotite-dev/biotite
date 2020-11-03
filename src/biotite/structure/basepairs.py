@@ -402,7 +402,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
             (base1, base2), min_atoms_per_base, unique
         )
         # If no hydrogens are present use the number N/O pairs to
-        # decide between multiple pairing posibilities.
+        # decide between multiple pairing posiblities.
         if hbonds is None:
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
