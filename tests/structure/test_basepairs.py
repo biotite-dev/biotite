@@ -152,3 +152,5 @@ def test_map_nucleotide():
     m7g_tuple = map_nucleotide(residue('M7G'))
     assert m7g_tuple[0] in purines
     assert m7g_tuple[1] == False
+
+    assert map_nucleotide(residue('ALA')) is None
