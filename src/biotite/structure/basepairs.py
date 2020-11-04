@@ -419,6 +419,7 @@ def base_pairs_edge(atom_array, base_pairs):
         base_masks = get_residue_masks(atom_array, base_pair)
         # The hbonds between the residues
         hbonds = hbond(atom_array, base_masks[0], base_masks[1])
+        print(hbonds)
         # Filter out the Donor/Acceptor Heteroatoms and flatten for
         # easy iteration
         hbonds = hbonds[:, (0,2)].flatten()
@@ -447,11 +448,11 @@ def base_pairs_edge(atom_array, base_pairs):
 
                         percentage = 1 / len(edge_type[atom.res_name[-1]])
                         base_edges[base_index, edge_type_index] += percentage
-        print(base_edges)
+        #print(base_edges)
         # Classify the base edges based on the highest percentage of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
-            if atom_array[base_pair[j]].res_name not in _watson_crick_edge:
+            if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge:
                 results[i, j] = edge.invalid
             else:
                 results[i, j] = edge(np.argmax(base))

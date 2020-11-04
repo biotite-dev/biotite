@@ -114,11 +114,11 @@ def test_base_pairs_edge():
     Test the function base_pairs with structure where the atoms are not
     in the RCSB-Order.
     """
-    pdb_file_path = rcsb.fetch("2HUA", "pdb", gettempdir())
+    pdb_file_path = rcsb.fetch("2ms0", "pdb", gettempdir())
     pdb_file = pdb.PDBFile.read(pdb_file_path)
     atom_array = pdb.get_structure(pdb_file)[0]
     pairs = base_pairs(atom_array)
-    print(np.array((pairs[0],)))
+    print(atom_array[pairs].res_id)
     edges = base_pairs_edge(atom_array, pairs)
     print(edges)
     assert False
