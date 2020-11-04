@@ -23,10 +23,6 @@ _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC", "UNK"]
 
-_ext_nucleotide_list = ["DT", "T", "DA", "A", "DG", "G", "DC", "C", "DU", "U",
-                        "H2U", "I", "JMH", "5MC", "4OC", "U8U", "4SU", "PSU",
-                        "4AC"]
-
 _solvent_list = ["HOH","SOL"]
 
 
