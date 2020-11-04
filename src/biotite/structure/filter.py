@@ -8,7 +8,7 @@ arrays and atom array stacks.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Tom Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_amino_acids", "filter_backbone", "filter_intersection",
            "filter_first_altloc", "filter_highest_occupancy_altloc"]
@@ -16,15 +16,12 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .residues import get_residue_starts
+from .info.nucleotides import is_nucleotide
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC", "UNK"]
-
-_ext_nucleotide_list = ["DT", "T", "DA", "A", "DG", "G", "DC", "C", "DU", "U",
-                        "H2U", "I", "JMH", "5MC", "4OC", "U8U", "4SU", "PSU",
-                        "4AC"]
 
 _solvent_list = ["HOH","SOL"]
 
@@ -33,12 +30,12 @@ def filter_monoatomic_ions(array):
     """
     Filter all atoms of an atom array, that are monoatomic ions
     (e.g. sodium or chloride ions).
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -53,12 +50,12 @@ def filter_monoatomic_ions(array):
 def filter_solvent(array):
     """
     Filter all atoms of one array that are part of the solvent.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -71,12 +68,12 @@ def filter_solvent(array):
 def filter_nucleotides(array):
     """
     Filter all atoms of one array that belong to nucleotides.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -84,20 +81,19 @@ def filter_nucleotides(array):
         belongs to a nucleotide.
     """
     return (
-        np.in1d(array.res_name, _ext_nucleotide_list) 
-        & (array.res_id != -1)
+        np.array([is_nucleotide(res_name) for res_name in array.res_name])
     )
 
 
 def filter_amino_acids(array):
     """
     Filter all atoms of one array that belong to amino acid residues.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -110,14 +106,14 @@ def filter_amino_acids(array):
 def filter_backbone(array):
     """
     Filter all peptide backbone atoms of one array.
-    
+
     This includes the "N", "CA" and "C" atoms of amino acids.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -129,33 +125,33 @@ def filter_backbone(array):
               (array.atom_name == "C")) &
               filter_amino_acids(array) )
 
-    
+
 def filter_intersection(array, intersect):
     """
     Filter all atoms of one array that exist also in another array.
-    
+
     An atom is defined as existent in the second array, if there is an
     atom in the second array that has the same annotation values in all
     categories that exists in both arrays.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
     intersect : AtomArray
         Atoms in `array` that also exists in `intersect` are filtered.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         exists also in `intersect`.
-    
+
     Examples
     --------
-    
+
     Creating an atom array from atoms:
-    
+
     >>> array1 = AtomArray(length=5)
     >>> array1.chain_id = np.array(["A","B","C","D","E"])
     >>> array2 = AtomArray(length=3)
@@ -163,7 +159,7 @@ def filter_intersection(array, intersect):
     >>> array1 = array1[filter_intersection(array1, array2)]
     >>> print(array1.chain_id)
     ['B' 'C' 'D']
-    
+
     """
     filter = np.full(array.array_length(), True, dtype=bool)
     intersect_categories = intersect.get_annotation_categories()
@@ -184,13 +180,13 @@ def filter_first_altloc(atoms, altloc_ids):
     """
     Filter all atoms, that have the first *altloc* ID appearing in a
     residue.
-    
+
     Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
     in case a residue is found in multiple alternate locations
     (*altloc*).
     This function is used to remove such duplicate atoms by choosing a
-    single *altloc ID* for an atom with other *altlocs* being removed.    
-    
+    single *altloc ID* for an atom with other *altlocs* being removed.
+
     Parameters
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
@@ -200,7 +196,7 @@ def filter_first_altloc(atoms, altloc_ids):
         atom in `atoms`.
         Can contain `'.'`, `'?'`, `' '`, `''` or a letter at each
         position.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -209,7 +205,7 @@ def filter_first_altloc(atoms, altloc_ids):
             - The atom has no altloc ID (`'.'`, `'?'`, `' '`, `''`).
             - The atom has the same altloc ID (e.g. `'A'`, `'B'`, etc.)
               as the first atom in the residue that has an altloc ID.
-    
+
     Notes
     -----
     The function will be rarely used by the end user, since this kind
@@ -234,7 +230,7 @@ def filter_first_altloc(atoms, altloc_ids):
     """
     # Filter all atoms without altloc code
     altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
-    
+
     # And filter all atoms for each residue with the first altloc ID
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
@@ -245,7 +241,7 @@ def filter_first_altloc(atoms, altloc_ids):
         else:
             # No altloc ID in this residue -> Nothing to do
             pass
-    
+
     return altloc_filter
 
 
@@ -253,13 +249,13 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     """
     For each residue, filter all atoms, that have the *altloc* ID
     with the highest occupancy for this residue.
-    
+
     Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
     in case a residue is found in multiple alternate locations
     (*altloc*).
     This function is used to remove such duplicate atoms by choosing a
-    single *altloc ID* for an atom with other *altlocs* being removed.    
-    
+    single *altloc ID* for an atom with other *altlocs* being removed.
+
     Parameters
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
@@ -272,7 +268,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     occupancies : ndarray, shape=(n,), dtype=float
         An array containing the occupancy values for each atom in
         `atoms`.
-    
+
     Returns
     -------
     filter : ndarray, dtype=bool
@@ -283,7 +279,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
             - The atom has the altloc ID (e.g. ``'A'``, ``'B'``, etc.),
               of which the corresponding occupancy values are highest
               for the **entire** residue.
-    
+
     Notes
     -----
     The function will be rarely used by the end user, since this kind
@@ -311,16 +307,16 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     """
     # Filter all atoms without altloc code
     altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
-    
+
     # And filter all atoms for each residue with the highest sum of
     # occupancies
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
         occupancies_in_res = occupancies[start:stop]
         altloc_ids_in_res = altloc_ids[start:stop]
-        
+
         letter_altloc_ids = [l for l in altloc_ids_in_res if l.isalpha()]
-        
+
         if len(letter_altloc_ids) > 0:
             highest = -1.0
             highest_id = None
@@ -335,5 +331,5 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
         else:
             # No altloc ID in this residue -> Nothing to do
             pass
-    
+
     return altloc_filter

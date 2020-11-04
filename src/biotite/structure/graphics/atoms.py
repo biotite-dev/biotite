@@ -130,3 +130,7 @@ def _set_box(axes, coord, center, size, zoom):
     axes.set_xlim(center[0] - size/(2*zoom), center[0] + size/(2*zoom))
     axes.set_ylim(center[1] - size/(2*zoom), center[1] + size/(2*zoom))
     axes.set_zlim(center[2] - size/(2*zoom), center[2] + size/(2*zoom))
+    # Make the axis lengths of the 'plot box' equal
+    # The 'plot box' is not visible due to 'axes.axis("off")'
+    
+    axes.set_box_aspect([1,1,1])
