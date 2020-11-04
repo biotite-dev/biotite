@@ -106,20 +106,26 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
 
-def test_base_pairs_reordered():
+@pytest.mark.parametrize("seed", range(10))
+def test_base_pairs_reordered(nuc_sample_array, seed):
     """
     Test the function base_pairs with structure where the atoms are not
     in the RCSB-Order.
     """
-    standard_order = strucio.load_structure(
-        join(data_dir("structure"), "4p5j.pdb")
-    )
-    non_standard_order = strucio.load_structure(
-        join(data_dir("structure"), "4p5j_reordered.pdb")
-    )
+    # Randomly reorder the atoms in each residue
+    nuc_sample_array_reordered = struc.AtomArray(0)
+    np.random.seed(seed)
+
+    for residue in struc.residue_iter(nuc_sample_array):
+        bound = residue.array_length()
+        indices = np.random.choice(
+            np.arange(bound), bound,replace=False
+        )
+        nuc_sample_array_reordered += residue[..., indices]
+
     assert(np.all(
-        struc.base_pairs(standard_order)
-        == struc.base_pairs(non_standard_order)
+        struc.base_pairs(nuc_sample_array)
+        == struc.base_pairs(nuc_sample_array_reordered)
     ))
 
 def test_map_nucleotide():
