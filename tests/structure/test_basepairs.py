@@ -9,10 +9,11 @@ import biotite.structure.io as strucio
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 from tempfile import gettempdir
-from biotite.structure.basepairs import *
+from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge
 from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
+import json
 
 
 def reversed_iterator(iter):
@@ -164,12 +165,65 @@ def test_map_nucleotide():
 
     assert map_nucleotide(residue('ALA')) is None
 
-def test_base_pairs_edge():
-    pdb_file_path = rcsb.fetch("2ms0", "pdb", gettempdir())
-    pdb_file = pdb.PDBFile.read(pdb_file_path)
-    atom_array = pdb.get_structure(pdb_file)[0]
-    pairs = base_pairs(atom_array)
-    print(atom_array[pairs].res_id)
-    edges = base_pairs_edge(atom_array, pairs)
-    print(edges)
-    assert False
+@pytest.fixture
+def reference_edges():
+    """Gets the reference edges from specified pdb files
+    """
+    reference = strucio.load_structure(
+        join(data_dir("structure"), "base_pairs/1gid.cif")
+    )
+
+    with open(
+        join(data_dir("structure"), "base_pairs/1gid.json"
+    ), "r") as file:
+        edges = np.array(json.load(file))
+    #edges = json.loads(join(data_dir("structure"), "base_pairs/1gid.json"))
+    return reference, edges
+
+def test_base_pairs_edge(reference_edges):
+    reference_structure, reference_edges = reference_edges
+    pairs = base_pairs(reference_structure, unique=False)
+    for pair_res_ids in reference_structure[pairs].res_id:
+        print(pair_res_ids[0])
+        print(pair_res_ids[1])
+        if (
+            np.any(
+                np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                )
+
+            ) or
+            np.any(
+                np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                )
+
+            )
+        ):
+            print('found')
+        else:
+            print("not_found")
+    """
+
+
+    edges = base_pairs_edge(reference_structure, pairs)
+    #print(reference_structure[pairs.flatten()].res_id)
+    for pair in pairs:
+        if np.any(reference_structure[pair].res_id == 108):
+            print(reference_structure[pair[0]].res_id)
+            print(reference_structure[pair[1]].res_id)
+
+    for res, sedge in zip(reference_structure[pairs.flatten()].res_id, edges.flatten()):
+        if sedge == edge.invalid:
+            continue
+        if str(res) in reference_edges:
+            if edge(reference_edges[str(res)]) != sedge:
+                print(res)
+                print(edge(reference_edges[str(res)]))
+                print(sedge)
+        else:
+            print(res)
+            print(f"weird {sedge}")
+    """

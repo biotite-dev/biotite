@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge"]
+__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge"]
 
 import numpy as np
 import warnings
@@ -287,7 +287,7 @@ def base_pairs_edge(atom_array, base_pairs):
         base_masks = get_residue_masks(atom_array, base_pair)
         # The hbonds between the residues
         hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-        print(hbonds)
+        #print(hbonds)
         # Filter out the Donor/Acceptor Heteroatoms and flatten for
         # easy iteration
         hbonds = hbonds[:, (0,2)].flatten()
@@ -322,8 +322,13 @@ def base_pairs_edge(atom_array, base_pairs):
         for j, base in enumerate(base_edges):
             if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge:
                 results[i, j] = edge.invalid
+            elif max(base) < 1:
+                results[i, j] = edge.invalid
             else:
                 results[i, j] = edge(np.argmax(base))
+                if atom_array[base_pair[j]].res_id == 205:
+                 print(base)
+                 print('next')
     return results
 
 
@@ -522,10 +527,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         # Remove all flagged basepairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
-        # Remap values to original atom array
-        basepair_array = np.where(boolean_mask)[0][basepair_array]
-        for i, row in enumerate(basepair_array):
-            basepair_array[i] = get_residue_starts_for(atom_array, row)
+    # Remap values to original atom array
+    basepair_array = np.where(boolean_mask)[0][basepair_array]
+    for i, row in enumerate(basepair_array):
+        basepair_array[i] = get_residue_starts_for(atom_array, row)
 
     return basepair_array
 
