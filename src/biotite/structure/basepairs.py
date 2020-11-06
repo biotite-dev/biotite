@@ -281,7 +281,6 @@ def get_matrix(atom_array, base_masks):
 
     # The hbonds between the residues
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-    #print(hbonds)
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
     # easy iteration
     hbonds = hbonds[:, (0,2)].flatten()
@@ -297,7 +296,6 @@ def get_matrix(atom_array, base_masks):
     for atom, atom_index in zip(atom_array[hbonds], hbonds):
 
         if atom.res_name[-1] not in _watson_crick_edge:
-            print('continue')
             continue
 
         # Iterate over the edge types
@@ -326,58 +324,18 @@ def base_pairs_edge(atom_array, base_pairs):
     for i, base_pair in enumerate(base_pairs):
         # Boolean masks for each bases residue
         base_masks = get_residue_masks(atom_array, base_pair)
-        # The hbonds between the residues
+        # Get the absolute atom count for each edge
         base_edges = get_matrix(atom_array, base_masks)
-        """
-        hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-        #print(hbonds)
-        # Filter out the Donor/Acceptor Heteroatoms and flatten for
-        # easy iteration
-        hbonds = hbonds[:, (0,2)].flatten()
-        # Count atoms that participate in multiple hydrogen bonds only once
-        hbonds = np.unique(hbonds)
-        # ``ndarray``` with one row for each base and the percentage of
-        # bonded edge heteroatoms as in ``_edge`` as columns
-        base_edges = np.zeros((2, 3), dtype='float')
-
-        # Iterate through the atoms and corresponding atoms indices
-        # that are part of the hydrogen bonds
-        for atom, atom_index in zip(atom_array[hbonds], hbonds):
-
-            if atom.res_name[-1] not in _watson_crick_edge:
-                continue
-            if atom.res_id == 105:
-                print(f"105: {atom.atom_name}")
-            if atom.res_id == 215:
-                print(f"215: {atom.atom_name}")
-
-            # Iterate over the edge types
-            for edge_type_index, edge_type in enumerate(_edges):
-                # Iterate over the two base masks
-                for base_index, base_mask in enumerate(base_masks):
-                    # If a donor/acceptor atom name matches a name in
-                    # the corresponding edge list add the corresponding
-                    # percentage to the ``base_edges`` 'tally'
-                    if (base_mask[atom_index] and
-                        atom.atom_name in edge_type[atom.res_name[-1]]):
-
-                        percentage = 1 / len(edge_type[atom.res_name[-1]])
-                        base_edges[base_index, edge_type_index] += percentage
-        #print(base_edges)
-        """
-        # Classify the base edges based on the highest percentage of
+        # Classify the base edges based on the highest number of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
-            if (atom_array[base_pair[j]].res_id == 205):
-                print(base)
+
             if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge:
                 results[i, j] = edge.invalid
-                """
-                elif max(base) < 1:
-                    results[i, j] = edge.invalid
-                """
+
             else:
                 results[i, j] = edge(np.argmax(base))
+
     return results
 
 
