@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge"]
+__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge", "get_matrix"]
 
 import numpy as np
 import warnings
@@ -277,9 +277,10 @@ class edge(IntEnum):
     sugar = 2,
     invalid = 3
 
-def get_matrix(base_pair):
+def get_matrix(atom_array, base_masks):
+
     # The hbonds between the residues
-    hbonds = hbond(base_pair)
+    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
     #print(hbonds)
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
     # easy iteration
@@ -288,18 +289,16 @@ def get_matrix(base_pair):
     hbonds = np.unique(hbonds)
     # ``ndarray``` with one row for each base and the percentage of
     # bonded edge heteroatoms as in ``_edge`` as columns
-    matrix = np.zeros((2, 3), dtype='float')
+    #matrix = np.zeros((2, 3), dtype='float')
+    matrix = np.zeros((2, 3), dtype='int32')
 
     # Iterate through the atoms and corresponding atoms indices
     # that are part of the hydrogen bonds
     for atom, atom_index in zip(atom_array[hbonds], hbonds):
 
         if atom.res_name[-1] not in _watson_crick_edge:
+            print('continue')
             continue
-        if atom.res_id == 105:
-            print(f"105: {atom.atom_name}")
-        if atom.res_id == 215:
-            print(f"215: {atom.atom_name}")
 
         # Iterate over the edge types
         for edge_type_index, edge_type in enumerate(_edges):
@@ -312,7 +311,11 @@ def get_matrix(base_pair):
                     atom.atom_name in edge_type[atom.res_name[-1]]):
 
                     percentage = 1 / len(edge_type[atom.res_name[-1]])
-                    matrix[base_index, edge_type_index] += percentage
+                    #matrix[base_index, edge_type_index] += percentage
+                    matrix[base_index, edge_type_index] += 1
+
+                    print(f"Residue: {atom.res_name} Edge: {atom.atom_name}")
+                    print(f"Edge Type: {edge_type_index}")
     return matrix
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -324,6 +327,8 @@ def base_pairs_edge(atom_array, base_pairs):
         # Boolean masks for each bases residue
         base_masks = get_residue_masks(atom_array, base_pair)
         # The hbonds between the residues
+        base_edges = get_matrix(atom_array, base_masks)
+        """
         hbonds = hbond(atom_array, base_masks[0], base_masks[1])
         #print(hbonds)
         # Filter out the Donor/Acceptor Heteroatoms and flatten for
@@ -359,6 +364,7 @@ def base_pairs_edge(atom_array, base_pairs):
                         percentage = 1 / len(edge_type[atom.res_name[-1]])
                         base_edges[base_index, edge_type_index] += percentage
         #print(base_edges)
+        """
         # Classify the base edges based on the highest percentage of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):

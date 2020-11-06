@@ -9,8 +9,9 @@ import biotite.structure.io as strucio
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 from tempfile import gettempdir
-from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge
+from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge, get_matrix
 from biotite.structure.info import residue
+from biotite.structure.residues import get_residue_masks
 from os.path import join
 from ..util import data_dir
 import json
@@ -193,8 +194,8 @@ def test_base_pairs_edge(reference_edges):
     incorrect = 0
     extra = 0
 
-    for pair_res_ids, pair_edges in zip(reference_structure[pairs].res_id, edges):
-        #print(pair_res_ids)
+    for pair, pair_edges in zip(pairs, edges):
+        pair_res_ids = reference_structure[pair].res_id
         if (
             np.any(
                 np.logical_and(
@@ -216,6 +217,7 @@ def test_base_pairs_edge(reference_edges):
                 print(f"Basepair: {pair_res_ids}")
                 print(f"reference: {struc.edge(reference_edges[index, 2])}, {struc.edge(reference_edges[index, 3])}")
                 print(f"my algorithm: {pair_edges[0]}, {pair_edges[1]}")
+                print(f"matrix : \n{get_matrix(reference_structure, get_residue_masks(reference_structure, pair))}")
                 print("Hydrogen Bonds:")
                 display_array = reference_structure[np.isin(reference_structure.res_id, pair_res_ids)]
                 print(display_array[hbond(display_array)].atom_name)
@@ -227,7 +229,7 @@ def test_base_pairs_edge(reference_edges):
                 for index, atom in enumerate(display_array):
                     pymol_object.label(index, atom.atom_name)
                     pymol_object
-                #input()
+                input()
                 incorrect +=1
 
         elif (
@@ -251,15 +253,18 @@ def test_base_pairs_edge(reference_edges):
                 print(f"Basepair: {pair_res_ids}")
                 print(f"reference: {struc.edge(reference_edges[index, 2])}, {struc.edge(reference_edges[index, 3])}")
                 print(f"my alogorithm: {pair_edges[1]}, {pair_edges[0]}")
+                print(f"matrix : \n{get_matrix(reference_structure, get_residue_masks(reference_structure, pair))}")
+                print("Hydrogen Bonds:")
                 display_array = reference_structure[np.isin(reference_structure.res_id, pair_res_ids)]
-                display_array.bonds = struc.connect_via_residue_names(display_array)
+                print(display_array[hbond(display_array)].atom_name)
+                print(display_array[hbond(display_array)].res_id)
                 #print(display_array.bonds)
                 pymol_object = ammolite.PyMOLObject.from_structure(display_array)
                 pymol_object.show('sticks')
                 for index, atom in enumerate(display_array):
                     pymol_object.label(index, atom.atom_name)
                     pymol_object
-                #input()
+                input()
                 incorrect +=1
         else:
 
