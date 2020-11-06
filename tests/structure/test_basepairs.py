@@ -17,6 +17,7 @@ from ..util import data_dir
 import json
 import ammolite
 from biotite.structure.hbond import hbond
+from biotite.structure.basepairs import _match_base
 
 ammolite.launch_interactive_pymol("-qixkF", "-W", "400", "-H", "400")
 
@@ -214,6 +215,7 @@ def test_base_pairs_edge(reference_edges):
                 struc.edge(reference_edges[index, 3]) == pair_edges[1]):
                 correct += 1
             else:
+                print('normal')
                 print(f"Basepair: {pair_res_ids}")
                 print(f"reference: {struc.edge(reference_edges[index, 2])}, {struc.edge(reference_edges[index, 3])}")
                 print(f"my algorithm: {pair_edges[0]}, {pair_edges[1]}")
