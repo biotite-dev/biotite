@@ -9,7 +9,7 @@ import biotite.structure.io as strucio
 import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 from tempfile import gettempdir
-from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge, get_matrix
+from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge
 from biotite.structure.info import residue
 from biotite.structure.residues import get_residue_masks
 from os.path import join
@@ -17,7 +17,8 @@ from ..util import data_dir
 import json
 import ammolite
 from biotite.structure.hbond import hbond
-from biotite.structure.basepairs import _match_base
+# TODO: Why
+from biotite.structure.basepairs import _get_edge_matrix
 
 ammolite.launch_interactive_pymol("-qixkF", "-W", "400", "-H", "400")
 
@@ -186,6 +187,71 @@ def reference_edges():
     #edges = json.loads(join(data_dir("structure"), "base_pairs/1gid.json"))
     return reference, edges
 
+def check_edge_plausibility(
+    reference_structure, pair, reference_edges, output_edges
+):
+    edge_matrix = _get_edge_matrix(
+        reference_structure, get_residue_masks(reference_structure, pair)
+    )
+    for edges, reference_edge, output_edge in zip(
+        edge_matrix, reference_edges, output_edges
+    ):
+        max_matches = np.max(edges)
+        max_match_edges = np.argwhere(edges == max_matches).flatten()
+        assert reference_edge in max_match_edges
+        assert output_edge in output_edges
+
+def test_base_pairs_edge(reference_edges):
+    reference_structure, reference_edges = reference_edges
+    pairs = base_pairs(reference_structure, unique=False)
+    edges = base_pairs_edge(reference_structure, pairs)
+
+    for pair, pair_edges in zip(pairs, edges):
+        pair_res_ids = reference_structure[pair].res_id
+        if (
+            np.any(
+                np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                )
+
+            )
+        ):
+            index = np.where(np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                ))
+            pair_reference_edges =  [
+                reference_edges[index, 2], reference_edges[index, 3]
+            ]
+            check_edge_plausibility(
+                reference_structure, pair, pair_reference_edges, pair_edges
+            )
+
+        elif (
+            np.any(
+                np.logical_and(
+                    reference_edges[:, 1] == pair_res_ids[0],
+                    reference_edges[:, 0] == pair_res_ids[1]
+                )
+
+            )
+        ):
+            index = np.where(np.logical_and(
+                    reference_edges[:, 1] == pair_res_ids[0],
+                    reference_edges[:, 0] == pair_res_ids[1]
+                ))
+            pair_reference_edges =  [
+                reference_edges[index, 3], reference_edges[index, 2]
+            ]
+            check_edge_plausibility(
+                reference_structure, pair, pair_reference_edges, pair_edges
+            )
+        else:
+            print('Somethings Wrong!')
+
+
+"""
 def test_base_pairs_edge(reference_edges):
     reference_structure, reference_edges = reference_edges
     pairs = base_pairs(reference_structure, unique=False)
@@ -276,25 +342,24 @@ def test_base_pairs_edge(reference_edges):
     print(correct)
     print(incorrect)
     print(extra)
-    """
 
 
-    edges = base_pairs_edge(reference_structure, pairs)
+    #edges = base_pairs_edge(reference_structure, pairs)
     #print(reference_structure[pairs.flatten()].res_id)
-    for pair in pairs:
-        if np.any(reference_structure[pair].res_id == 108):
-            print(reference_structure[pair[0]].res_id)
-            print(reference_structure[pair[1]].res_id)
-
-    for res, sedge in zip(reference_structure[pairs.flatten()].res_id, edges.flatten()):
-        if sedge == edge.invalid:
-            continue
-        if str(res) in reference_edges:
-            if edge(reference_edges[str(res)]) != sedge:
-                print(res)
-                print(edge(reference_edges[str(res)]))
-                print(sedge)
-        else:
-            print(res)
-            print(f"weird {sedge}")
-    """
+    #for pair in pairs:
+    #    if np.any(reference_structure[pair].res_id == 108):
+    #        print(reference_structure[pair[0]].res_id)
+    #        print(reference_structure[pair[1]].res_id)
+    #
+    #for res, sedge in zip(reference_structure[pairs.flatten()].res_id, edges.flatten()):
+    #    if sedge == edge.invalid:
+    #        continue
+    #    if str(res) in reference_edges:
+    #        if edge(reference_edges[str(res)]) != sedge:
+    #            print(res)
+    #            print(edge(reference_edges[str(res)]))
+    #            print(sedge)
+    #    else:
+    #        print(res)
+    #        print(f"weird {sedge}")
+"""

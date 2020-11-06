@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge", "get_matrix"]
+__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge"]
 
 import numpy as np
 import warnings
@@ -277,7 +277,7 @@ class edge(IntEnum):
     sugar = 2,
     invalid = 3
 
-def get_matrix(atom_array, base_masks):
+def _get_edge_matrix(atom_array, base_masks):
 
     # The hbonds between the residues
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
@@ -312,8 +312,8 @@ def get_matrix(atom_array, base_masks):
                     #matrix[base_index, edge_type_index] += percentage
                     matrix[base_index, edge_type_index] += 1
 
-                    print(f"Residue: {atom.res_name} Edge: {atom.atom_name}")
-                    print(f"Edge Type: {edge_type_index}")
+                    #print(f"Residue: {atom.res_name} Edge: {atom.atom_name}")
+                    #print(f"Edge Type: {edge_type_index}")
     return matrix
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -325,7 +325,7 @@ def base_pairs_edge(atom_array, base_pairs):
         # Boolean masks for each bases residue
         base_masks = get_residue_masks(atom_array, base_pair)
         # Get the absolute atom count for each edge
-        base_edges = get_matrix(atom_array, base_masks)
+        base_edges = _get_edge_matrix(atom_array, base_masks)
         # Classify the base edges based on the highest number of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
@@ -597,8 +597,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     if not (distance(origins[0], origins[1]) <= 15):
         return -1
 
-    if (basepair[0].res_id[0] == 163 and basepair[1].res_id[0] == 177):
-        print(distance(origins[0], origins[1]))
     # Criterion 2: Vertical separation <=2.5 Å
     #
     # Average the base normal vectors. If the angle between the vectors
@@ -639,12 +637,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
-        if (basepair[0].res_id[0] == 163 and basepair[1].res_id[0] == 177):
-            print(potential_basepair[hbond(
-                potential_basepair,
-                np.ones_like(potential_basepair, dtype=bool),
-                np.ones_like(potential_basepair, dtype=bool)
-            )].atom_name)
         bonds = len(hbond(
             potential_basepair,
             np.ones_like(potential_basepair, dtype=bool),
