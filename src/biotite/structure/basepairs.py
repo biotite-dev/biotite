@@ -248,7 +248,7 @@ _uracil_containing_nucleotides = ["U", "DU"]
 # Atoms that are part of each edge according to the Leontis-Westhof
 # nomenclature
 _watson_crick_edge = {
-    "A" : ["N6", "N1", "C2"],
+    "A" : ["N6", "N1"],
     "G" : ["O6", "N1", "N2"],
     "U" : ["O4", "N3", "O2"],
     "T" : ["O4", "N3", "O2"],
@@ -257,12 +257,12 @@ _watson_crick_edge = {
 _hoogsteen_edge = {
     "A" : ["N6", "N7"],
     "G" : ["O6", "N7"],
-    "U" : ["O4", "C5"],
-    "T" : ["O4", "C5"],
-    "C" : ["N4", "C5"]
+    "U" : ["O4"],
+    "T" : ["O4"],
+    "C" : ["N4"]
 }
 _sugar_edge = {
-    "A" : ["C2", "N3", "O2'"],
+    "A" : ["N3", "O2'"],
     "G" : ["N2", "N3", "O2'"],
     "U" : ["O2", "O2'"],
     "T" : ["O2", "O2'"],
@@ -276,6 +276,44 @@ class edge(IntEnum):
     hoogsteen = 1,
     sugar = 2,
     invalid = 3
+
+def get_matrix(base_pair):
+    # The hbonds between the residues
+    hbonds = hbond(base_pair)
+    #print(hbonds)
+    # Filter out the Donor/Acceptor Heteroatoms and flatten for
+    # easy iteration
+    hbonds = hbonds[:, (0,2)].flatten()
+    # Count atoms that participate in multiple hydrogen bonds only once
+    hbonds = np.unique(hbonds)
+    # ``ndarray``` with one row for each base and the percentage of
+    # bonded edge heteroatoms as in ``_edge`` as columns
+    matrix = np.zeros((2, 3), dtype='float')
+
+    # Iterate through the atoms and corresponding atoms indices
+    # that are part of the hydrogen bonds
+    for atom, atom_index in zip(atom_array[hbonds], hbonds):
+
+        if atom.res_name[-1] not in _watson_crick_edge:
+            continue
+        if atom.res_id == 105:
+            print(f"105: {atom.atom_name}")
+        if atom.res_id == 215:
+            print(f"215: {atom.atom_name}")
+
+        # Iterate over the edge types
+        for edge_type_index, edge_type in enumerate(_edges):
+            # Iterate over the two base masks
+            for base_index, base_mask in enumerate(base_masks):
+                # If a donor/acceptor atom name matches a name in
+                # the corresponding edge list add the corresponding
+                # percentage to the ``base_edges`` 'tally'
+                if (base_mask[atom_index] and
+                    atom.atom_name in edge_type[atom.res_name[-1]]):
+
+                    percentage = 1 / len(edge_type[atom.res_name[-1]])
+                    matrix[base_index, edge_type_index] += percentage
+    return matrix
 
 def base_pairs_edge(atom_array, base_pairs):
     # Result ``ndarray`` matches the dimensions of the input array
@@ -303,6 +341,10 @@ def base_pairs_edge(atom_array, base_pairs):
 
             if atom.res_name[-1] not in _watson_crick_edge:
                 continue
+            if atom.res_id == 105:
+                print(f"105: {atom.atom_name}")
+            if atom.res_id == 215:
+                print(f"215: {atom.atom_name}")
 
             # Iterate over the edge types
             for edge_type_index, edge_type in enumerate(_edges):
@@ -320,15 +362,16 @@ def base_pairs_edge(atom_array, base_pairs):
         # Classify the base edges based on the highest percentage of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
+            if (atom_array[base_pair[j]].res_id == 205):
+                print(base)
             if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge:
                 results[i, j] = edge.invalid
-            elif max(base) < 1:
-                results[i, j] = edge.invalid
+                """
+                elif max(base) < 1:
+                    results[i, j] = edge.invalid
+                """
             else:
                 results[i, j] = edge(np.argmax(base))
-                if atom_array[base_pair[j]].res_id == 205:
-                 print(base)
-                 print('next')
     return results
 
 
@@ -490,6 +533,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         )
         # If no hydrogens are present use the number N/O pairs to
         # decide between multiple pairing possibilities.
+
         if hbonds is None:
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
@@ -591,6 +635,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     if not (distance(origins[0], origins[1]) <= 15):
         return -1
 
+    if (basepair[0].res_id[0] == 163 and basepair[1].res_id[0] == 177):
+        print(distance(origins[0], origins[1]))
     # Criterion 2: Vertical separation <=2.5 Å
     #
     # Average the base normal vectors. If the angle between the vectors
@@ -631,6 +677,12 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
+        if (basepair[0].res_id[0] == 163 and basepair[1].res_id[0] == 177):
+            print(potential_basepair[hbond(
+                potential_basepair,
+                np.ones_like(potential_basepair, dtype=bool),
+                np.ones_like(potential_basepair, dtype=bool)
+            )].atom_name)
         bonds = len(hbond(
             potential_basepair,
             np.ones_like(potential_basepair, dtype=bool),

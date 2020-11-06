@@ -14,6 +14,10 @@ from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 import json
+import ammolite
+from biotite.structure.hbond import hbond
+
+ammolite.launch_interactive_pymol("-qixkF", "-W", "400", "-H", "400")
 
 
 def reversed_iterator(iter):
@@ -183,17 +187,15 @@ def reference_edges():
 def test_base_pairs_edge(reference_edges):
     reference_structure, reference_edges = reference_edges
     pairs = base_pairs(reference_structure, unique=False)
-    for pair_res_ids in reference_structure[pairs].res_id:
-        print(pair_res_ids[0])
-        print(pair_res_ids[1])
-        if (
-            np.any(
-                np.logical_and(
-                    reference_edges[:, 0] == pair_res_ids[0],
-                    reference_edges[:, 1] == pair_res_ids[1]
-                )
+    edges = base_pairs_edge(reference_structure, pairs)
 
-            ) or
+    correct = 0
+    incorrect = 0
+    extra = 0
+
+    for pair_res_ids, pair_edges in zip(reference_structure[pairs].res_id, edges):
+        #print(pair_res_ids)
+        if (
             np.any(
                 np.logical_and(
                     reference_edges[:, 0] == pair_res_ids[0],
@@ -202,9 +204,71 @@ def test_base_pairs_edge(reference_edges):
 
             )
         ):
-            print('found')
+            index = np.where(np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                ))
+
+            if (struc.edge(reference_edges[index, 2]) == pair_edges[0] and
+                struc.edge(reference_edges[index, 3]) == pair_edges[1]):
+                correct += 1
+            else:
+                print(f"Basepair: {pair_res_ids}")
+                print(f"reference: {struc.edge(reference_edges[index, 2])}, {struc.edge(reference_edges[index, 3])}")
+                print(f"my algorithm: {pair_edges[0]}, {pair_edges[1]}")
+                print("Hydrogen Bonds:")
+                display_array = reference_structure[np.isin(reference_structure.res_id, pair_res_ids)]
+                print(display_array[hbond(display_array)].atom_name)
+                print(display_array[hbond(display_array)].res_id)
+                display_array.bonds = struc.connect_via_residue_names(display_array)
+                #print(display_array.bonds)
+                pymol_object = ammolite.PyMOLObject.from_structure(display_array)
+                pymol_object.show('sticks')
+                for index, atom in enumerate(display_array):
+                    pymol_object.label(index, atom.atom_name)
+                    pymol_object
+                #input()
+                incorrect +=1
+
+        elif (
+            np.any(
+                np.logical_and(
+                    reference_edges[:, 0] == pair_res_ids[0],
+                    reference_edges[:, 1] == pair_res_ids[1]
+                )
+
+            )
+        ):
+            index = np.where(np.logical_and(
+                reference_edges[:, 0] == pair_res_ids[0],
+                reference_edges[:, 1] == pair_res_ids[1]
+            ))
+            if (struc.edge(reference_edges[index, 2]) == pair_edges[1] and
+                struc.edge(reference_edges[index, 3]) == pair_edges[0]):
+                correct += 1
+            else:
+                pair_res_ids.reverse()
+                print(f"Basepair: {pair_res_ids}")
+                print(f"reference: {struc.edge(reference_edges[index, 2])}, {struc.edge(reference_edges[index, 3])}")
+                print(f"my alogorithm: {pair_edges[1]}, {pair_edges[0]}")
+                display_array = reference_structure[np.isin(reference_structure.res_id, pair_res_ids)]
+                display_array.bonds = struc.connect_via_residue_names(display_array)
+                #print(display_array.bonds)
+                pymol_object = ammolite.PyMOLObject.from_structure(display_array)
+                pymol_object.show('sticks')
+                for index, atom in enumerate(display_array):
+                    pymol_object.label(index, atom.atom_name)
+                    pymol_object
+                #input()
+                incorrect +=1
         else:
-            print("not_found")
+
+            print(pair_res_ids)
+            extra += 1
+
+    print(correct)
+    print(incorrect)
+    print(extra)
     """
 
 
