@@ -770,9 +770,13 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
     # PDB atom order
-    nucleotide_matched = nucleotide_matched[standardize_order(
-        nucleotide_matched
-    )]
+    try:
+        nucleotide_matched = nucleotide_matched[standardize_order(
+            nucleotide_matched
+        )]
+    except Exception as ex:
+        print(ex)
+        print(f'res_id : {nucleotide_matched.res_id[0]}')
 
     # Match the selected std_base to the base.
     _, transformation = superimpose(nucleotide_matched, std_base_matched)

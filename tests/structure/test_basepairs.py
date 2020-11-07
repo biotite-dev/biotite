@@ -172,16 +172,15 @@ def test_map_nucleotide():
 
     assert map_nucleotide(residue('ALA')) is None
 
-@pytest.fixture
-def reference_edges():
+def get_reference(pdb_id):
     """Gets the reference edges from specified pdb files
     """
     reference = strucio.load_structure(
-        join(data_dir("structure"), "base_pairs/1gid.cif")
+        join(data_dir("structure"), f"base_pairs/{pdb_id}.cif")
     )
 
     with open(
-        join(data_dir("structure"), "base_pairs/1gid.json"
+        join(data_dir("structure"), f"base_pairs/{pdb_id}.json"
     ), "r") as file:
         edges = np.array(json.load(file))
     #edges = json.loads(join(data_dir("structure"), "base_pairs/1gid.json"))
@@ -198,12 +197,32 @@ def check_edge_plausibility(
     ):
         max_matches = np.max(edges)
         max_match_edges = np.argwhere(edges == max_matches).flatten()
-        assert reference_edge in max_match_edges
+        if not reference_edge in max_match_edges:
+            print(f"Edge Matrix: \n{edge_matrix}")
+            print(f"Reference Edges: \n{reference_edges}")
+            print(f"Output Edges: \n{output_edges}")
+            print(reference_structure.res_id[pair])
+            display_masks = get_residue_masks(reference_structure, pair)
+            display_array = reference_structure[np.logical_or(display_masks[0], display_masks[1])]
+            print(f'Hydrogen bonds :\n{display_array[hbond(display_array)].atom_name}')
+            display_array.bonds = struc.connect_via_residue_names(display_array)
+            #print(display_array.bonds)
+            pymol_object = ammolite.PyMOLObject.from_structure(display_array)
+            pymol_object.show('sticks')
+            for index, atom in enumerate(display_array):
+                pymol_object.label(index, atom.atom_name)
+            input()
+
+
         assert output_edge in output_edges
 
-def test_base_pairs_edge(reference_edges):
-    reference_structure, reference_edges = reference_edges
-    pairs = base_pairs(reference_structure, unique=False)
+@pytest.mark.parametrize("pdb_id", ["1gid", "1xnr"])
+def test_base_pairs_edge(pdb_id):
+    reference_structure, reference_edges = get_reference(pdb_id)
+    reference_structure = reference_structure[np.isin(reference_structure.res_name, ['DA', 'A', 'DT', 'T', 'DU', 'U', 'DG', 'G', 'DC', 'C'])]
+    if pdb_id == '1xnr':
+        reference_structure = reference_structure[reference_structure.res_id != 190]
+    pairs = base_pairs(reference_structure)
     edges = base_pairs_edge(reference_structure, pairs)
 
     for pair, pair_edges in zip(pairs, edges):
@@ -249,6 +268,7 @@ def test_base_pairs_edge(reference_edges):
             )
         else:
             print('Somethings Wrong!')
+            print(reference_structure.res_id[pair])
 
 
 """
