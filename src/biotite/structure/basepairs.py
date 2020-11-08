@@ -284,12 +284,17 @@ def _get_edge_matrix(atom_array, base_masks):
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
     # easy iteration
     hbonds = hbonds[:, (0,2)].flatten()
+
     # Count atoms that participate in multiple hydrogen bonds only once
     #hbonds = np.unique(hbonds)
     # ``ndarray``` with one row for each base and the percentage of
     # bonded edge heteroatoms as in ``_edge`` as columns
     #matrix = np.zeros((2, 3), dtype='float')
     matrix = np.zeros((2, 3), dtype='int32')
+
+    if len(hbonds) < 2:
+        print('less than two hbonds')
+        return matrix
 
     # Iterate through the atoms and corresponding atoms indices
     # that are part of the hydrogen bonds
@@ -330,7 +335,8 @@ def base_pairs_edge(atom_array, base_pairs):
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
 
-            if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge:
+            if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge \
+               or max(base) == 0:
                 results[i, j] = edge.invalid
             else:
                 results[i, j] = edge(np.argmax(base))

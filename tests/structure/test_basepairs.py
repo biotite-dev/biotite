@@ -197,7 +197,12 @@ def check_edge_plausibility(
     ):
         max_matches = np.max(edges)
         max_match_edges = np.argwhere(edges == max_matches).flatten()
-        if not reference_edge in max_match_edges:
+        assert reference_edge in max_match_edges
+        assert output_edge in max_match_edges
+        """
+        max_matches = np.max(edges)
+        max_match_edges = np.argwhere(edges == max_matches).flatten()
+        if reference_edge != np.argmax(edges):
             print(f"Edge Matrix: \n{edge_matrix}")
             print(f"Reference Edges: \n{reference_edges}")
             print(f"Output Edges: \n{output_edges}")
@@ -213,16 +218,18 @@ def check_edge_plausibility(
                 pymol_object.label(index, atom.atom_name)
             input()
 
-
-        assert output_edge in output_edges
+        """
+        #assert output_edge in output_edges
 
 @pytest.mark.parametrize("pdb_id", ["1gid", "1xnr"])
 def test_base_pairs_edge(pdb_id):
+    not_counted = 0
     reference_structure, reference_edges = get_reference(pdb_id)
     reference_structure = reference_structure[np.isin(reference_structure.res_name, ['DA', 'A', 'DT', 'T', 'DU', 'U', 'DG', 'G', 'DC', 'C'])]
     if pdb_id == '1xnr':
         reference_structure = reference_structure[reference_structure.res_id != 190]
     pairs = base_pairs(reference_structure)
+    total = len(pairs)
     edges = base_pairs_edge(reference_structure, pairs)
 
     for pair, pair_edges in zip(pairs, edges):
@@ -267,8 +274,13 @@ def test_base_pairs_edge(pdb_id):
                 reference_structure, pair, pair_reference_edges, pair_edges
             )
         else:
+            print(pair_edges)
             print('Somethings Wrong!')
+            #assert edge.invalid in pair_edges
             print(reference_structure.res_id[pair])
+            not_counted +=1
+    print(f'Total BP: {total}')
+    print(f'Not Checked: {not_counted}')
 
 
 """
