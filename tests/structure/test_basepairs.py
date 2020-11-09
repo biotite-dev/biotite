@@ -272,8 +272,8 @@ def get_reference_orientation(pdb_id):
         sugar_orientations = np.array(json.load(file))
     return reference, sugar_orientations
 
-@pytest.mark.parametrize("pdb_id", ["1nkw"])
-def test_base_pairs_edge(pdb_id):
+@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw"])
+def test_base_pairs_glycosidic_bonds(pdb_id):
     # Get the references
     reference_structure, reference_gly_bonds = get_reference_orientation(
         pdb_id
