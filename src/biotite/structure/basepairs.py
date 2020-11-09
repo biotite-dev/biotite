@@ -259,12 +259,30 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
         for base_index, base_mask in enumerate(
             get_residue_masks(atom_array, pair)
         ):
-            ring_center = _match_base(atom_array[base_mask], 3)[3:]
-            if len(ring_center) == 2:
+            base = atom_array[base_mask]
+            ring_center = _match_base(base, 3)[3:]
+            if (base.res_name[0] in _adenine_containing_nucleotides or
+                base.res_name[0] in _guanine_containing_nucleotides):
                 ring_center = (ring_center[0] + ring_center[1]) / 2
+                base_atom = base[base.atom_name == "N9"][0]
             else:
                 ring_center = ring_center[0]
+                base_atom = base[base.atom_name == "N1"][0]
+            sugar_atom = base[base.atom_name == "C1'"][0]
+            glycosidic_bonds[base_index] = sugar_atom.coord - base_atom.coord
             geometric_centers[base_index] = ring_center
+        geometric_centers_vector = geometric_centers[1] - geometric_centers[0]
+
+        if np.dot(
+            np.cross(geometric_centers_vector, glycosidic_bonds[0]),
+            np.cross(geometric_centers_vector, glycosidic_bonds[1])
+        ) < 0:
+            results[i] = glycosidic_bond.trans
+        else:
+            results[i] = glycosidic_bond.cis
+    return results
+
+
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
