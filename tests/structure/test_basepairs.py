@@ -7,10 +7,7 @@ import json
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.structure.io.pdb as pdb
-import biotite.database.rcsb as rcsb
-from tempfile import gettempdir
-from biotite.structure.basepairs import base_pairs, base_pairs_edge, map_nucleotide, edge
+from biotite.structure.basepairs import *
 from biotite.structure.info import residue
 from biotite.structure.residues import get_residue_masks
 from biotite.structure.hbond import hbond
@@ -261,3 +258,64 @@ def test_base_pairs_edge(pdb_id):
             check_edge_plausibility(
                 reference_structure, pair, pair_reference_edges, pair_edges
             )
+
+def get_reference_orientation(pdb_id):
+    """Gets the reference sugars from specified pdb files
+    """
+    reference = strucio.load_structure(
+        join(data_dir("structure"), f"base_pairs/{pdb_id}.cif")
+    )
+
+    with open(
+        join(data_dir("structure"), f"base_pairs/{pdb_id}_sugar.json"
+    ), "r") as file:
+        sugar_orientations = np.array(json.load(file))
+    return reference, sugar_orientations
+
+@pytest.mark.parametrize("pdb_id", ["1nkw"])
+def test_base_pairs_edge(pdb_id):
+    # Get the references
+    reference_structure, reference_gly_bonds = get_reference_orientation(
+        pdb_id
+    )
+    # Calculate basepairs and edges for the references
+    pairs = base_pairs(reference_structure)
+    glycosidic_bond_orientations = base_pairs_glycosidic_bonds(
+        reference_structure, pairs
+    )
+
+    # Check the plausibility with the reference data for each basepair
+    for pair, pair_orientation in zip(pairs, glycosidic_bond_orientations):
+        pair_res_ids = reference_structure[pair].res_id
+        if (
+            np.any(
+                np.logical_and(
+                    reference_gly_bonds[:, 0] == pair_res_ids[0],
+                    reference_gly_bonds[:, 1] == pair_res_ids[1]
+                )
+            )
+        ):
+            index = np.where(np.logical_and(
+                    reference_gly_bonds[:, 0] == pair_res_ids[0],
+                    reference_gly_bonds[:, 1] == pair_res_ids[1]
+                ))
+            reference_orientation = glycosidic_bond(
+                reference_gly_bonds[index, 2]
+            )
+            assert reference_orientation == pair_orientation
+        elif (
+            np.any(
+                np.logical_and(
+                    reference_gly_bonds[:, 1] == pair_res_ids[0],
+                    reference_gly_bonds[:, 0] == pair_res_ids[1]
+                )
+            )
+        ):
+            index = np.where(np.logical_and(
+                    reference_gly_bonds[:, 1] == pair_res_ids[0],
+                    reference_gly_bonds[:, 0] == pair_res_ids[1]
+                ))
+            reference_orientation = glycosidic_bond(
+                reference_gly_bonds[index, 2]
+            )
+            assert reference_orientation == pair_orientation
