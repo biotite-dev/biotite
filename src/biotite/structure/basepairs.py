@@ -22,6 +22,7 @@ from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
 from .compare import rmsd
+from enum import IntEnum
 
 
 def _get_std_adenine():
@@ -243,6 +244,27 @@ _thymine_containing_nucleotides = ["T", "DT"]
 _cytosine_containing_nucleotides = ["C", "DC"]
 _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
+
+class glycosidic_bond(IntEnum):
+    cis = 0,
+    trans = 1
+
+def base_pairs_glycosidic_bonds(atom_array, base_pairs):
+    results = np.zeros(len(base_pairs), dtype=glycosidic_bond)
+    for i, pair in enumerate(base_pairs):
+
+        geometric_centers = np.zeros((2, 3))
+        glycosidic_bonds = np.zeros((2, 3))
+
+        for base_index, base_mask in enumerate(
+            get_residue_masks(atom_array, pair)
+        ):
+            ring_center = _match_base(atom_array[base_mask], 3)[3:]
+            if len(ring_center) == 2:
+                ring_center = (ring_center[0] + ring_center[1]) / 2
+            else:
+                ring_center = ring_center[0]
+            geometric_centers[base_index] = ring_center
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
