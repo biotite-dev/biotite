@@ -3,6 +3,7 @@
 # information.
 
 import pytest
+import json
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
