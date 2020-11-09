@@ -1074,22 +1074,28 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
         for partner in partners:
             if partner == -1:
                 break
-            # Find the indices of the first atom of the residues
-            candidate_res_start, partner_res_start = get_residue_starts_for(
-                atom_array, (candidate, partner)
-            )
-            # If the basepair candidate is not already in the output
-            # list, append to the output list
-            if (
-                ((partner_res_start, candidate_res_start) \
-                not in basepair_candidates)
-                and ((candidate_res_start, partner_res_start) \
-                not in basepair_candidates)
-                and not (candidate_res_start == partner_res_start)
-            ):
-                basepair_candidates.append(
-                    (candidate_res_start, partner_res_start)
-                )
+            basepair_candidates.append((candidate, partner))
+
+    # Get the residue starts for the indices of the candidate/partner
+    # indices.
+    basepair_candidates = np.array(basepair_candidates)
+    basepair_candidates_shape = basepair_candidates.shape
+    basepair_candidates = get_residue_starts_for(
+        atom_array, basepair_candidates.flatten()
+    ).reshape(basepair_candidates_shape)
+
+    # Remove candidates where the N/O pairs are from the same residue
+    basepair_candidates = np.delete(
+        basepair_candidates, np.where(
+            basepair_candidates[:,0] == basepair_candidates[:,1]
+        ), axis=0
+    )
+    # Sort the residue starts for each potential basepair
+    for i, candidate in enumerate(basepair_candidates):
+        basepair_candidates[i] = sorted(candidate)
+    # Make sure each base pair candidate is only listed once
+    basepair_candidates = np.unique(basepair_candidates, axis=0)
+
     return basepair_candidates
 
 
