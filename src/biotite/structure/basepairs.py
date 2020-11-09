@@ -458,10 +458,18 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     # Contains the plausible pairs of stacked bases
     stacked_bases = []
 
-    for base1_index, base2_index in stacking_candidates:
-        base1_mask, base2_mask = get_residue_masks(
-            atom_array, (base1_index, base2_index)
-        )
+    # Get the residue masks for each residue
+    base_masks = get_residue_masks(atom_array, stacking_candidates.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in stacking_candidates)
+    base_masks = base_masks.reshape(
+        (stacking_candidates.shape[0], 2, atom_array.shape[0])
+    )
+
+    for (base1_index, base2_index), (base1_mask, base2_mask) in zip(
+        stacking_candidates, base_masks
+    ):
         bases = (atom_array[base1_mask], atom_array[base2_mask])
 
         # A list containing ndarray for each base with transformed
