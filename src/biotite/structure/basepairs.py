@@ -278,23 +278,15 @@ class edge(IntEnum):
     invalid = 3
 
 def _get_edge_matrix(atom_array, base_masks):
-
     # The hbonds between the residues
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
     # easy iteration
     hbonds = hbonds[:, (0,2)].flatten()
 
-    # Count atoms that participate in multiple hydrogen bonds only once
-    #hbonds = np.unique(hbonds)
-    # ``ndarray``` with one row for each base and the percentage of
+    # ``ndarray``` with one row for each base and the number of
     # bonded edge heteroatoms as in ``_edge`` as columns
-    #matrix = np.zeros((2, 3), dtype='float')
     matrix = np.zeros((2, 3), dtype='int32')
-
-    if len(hbonds) < 2:
-        print('less than two hbonds')
-        return matrix
 
     # Iterate through the atoms and corresponding atoms indices
     # that are part of the hydrogen bonds
@@ -312,13 +304,7 @@ def _get_edge_matrix(atom_array, base_masks):
                 # percentage to the ``base_edges`` 'tally'
                 if (base_mask[atom_index] and
                     atom.atom_name in edge_type[atom.res_name[-1]]):
-
-                    percentage = 1 / len(edge_type[atom.res_name[-1]])
-                    #matrix[base_index, edge_type_index] += percentage
                     matrix[base_index, edge_type_index] += 1
-
-                    #print(f"Residue: {atom.res_name} Edge: {atom.atom_name}")
-                    #print(f"Edge Type: {edge_type_index}")
     return matrix
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -331,12 +317,11 @@ def base_pairs_edge(atom_array, base_pairs):
         base_masks = get_residue_masks(atom_array, base_pair)
         # Get the absolute atom count for each edge
         base_edges = _get_edge_matrix(atom_array, base_masks)
+
         # Classify the base edges based on the highest number of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
-
-            if atom_array[base_pair[j]].res_name[-1] not in _watson_crick_edge \
-               or max(base) == 0:
+            if max(base) == 0:
                 results[i, j] = edge.invalid
             else:
                 results[i, j] = edge(np.argmax(base))
