@@ -8,7 +8,8 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide"]
+__all__ = ["base_pairs", "map_nucleotide", "base_pairs_glycosidic_bonds",
+           "glycosid_bond"]
 
 import numpy as np
 import warnings
