@@ -106,6 +106,12 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     )
 
 def test_base_stacking():
+    """
+    Test ``base_stacking()`` using the DNA-double-helix 1BNA. It is
+    expected that adjacent bases are stacked. However, due to
+    distortions in the helix there are exception for this particular
+    helix.
+    """
     # Load the test structure (1BNA) - a DNA-double-helix
     helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
 
