@@ -629,10 +629,18 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     # Contains the number of hydrogens for each plausible basepair
     basepairs_hbonds = []
 
-    for base1_index, base2_index in basepair_candidates:
-        base1_mask, base2_mask = get_residue_masks(
-            atom_array, (base1_index, base2_index)
-        )
+    # Get the residue masks for each residue
+    base_masks = get_residue_masks(atom_array, basepair_candidates.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in basepair_candidates)
+    base_masks = base_masks.reshape(
+        (basepair_candidates.shape[0], 2, atom_array.shape[0])
+    )
+
+    for (base1_index, base2_index), (base1_mask, base2_mask) in zip(
+        basepair_candidates, base_masks
+    ):
         base1 = atom_array[base1_mask]
         base2 = atom_array[base2_mask]
         hbonds =  _check_dssr_criteria(
