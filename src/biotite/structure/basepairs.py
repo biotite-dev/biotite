@@ -462,7 +462,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     base_masks = get_residue_masks(atom_array, stacking_candidates.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
-    # respective to a row in stacking_candidates)
+    # respective to a row in ``stacking_candidates``)
     base_masks = base_masks.reshape(
         (stacking_candidates.shape[0], 2, atom_array.shape[0])
     )
@@ -633,7 +633,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     base_masks = get_residue_masks(atom_array, basepair_candidates.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
-    # respective to a row in basepair_candidates)
+    # respective to a row in ``basepair_candidates``)
     base_masks = base_masks.reshape(
         (basepair_candidates.shape[0], 2, atom_array.shape[0])
     )
