@@ -360,13 +360,19 @@ def base_pairs_edge(atom_array, base_pairs):
        "Geometric nomenclature and classification of RNA base pairs."
        RNA, 7(4), 499-512 (2001).
     """
-    # Result ``ndarray`` matches the dimensions of the input array
+    # Result-``ndarray`` matches the dimensions of the input array
     results = np.empty_like(base_pairs, dtype=edge)
 
-    # Check each basepair seperately
-    for i, base_pair in enumerate(base_pairs):
-        # Boolean masks for each bases residue
-        base_masks = get_residue_masks(atom_array, base_pair)
+    # Get the residue masks for each residue
+    base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in ``base_pairs```)
+    base_pairs_masks = base_pairs_masks.reshape(
+        (base_pairs.shape[0], 2, atom_array.shape[0])
+    )
+
+    for i, base_masks in enumerate(base_pairs_masks):
         # Get the absolute atom count for each edge
         base_edges = _get_edge_matrix(atom_array, base_masks)
 
@@ -378,6 +384,37 @@ def base_pairs_edge(atom_array, base_pairs):
             else:
                 results[i, j] = edge(np.argmax(base))
     return results
+
+
+def _get_edge_matrix(atom_array, base_masks):
+    # The hbonds between the residues
+    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
+    # Filter out the Donor/Acceptor Heteroatoms and flatten for
+    # easy iteration
+    hbonds = hbonds[:, (0,2)].flatten()
+
+    # ``ndarray``` with one row for each base and the number of
+    # bonded edge heteroatoms as in ``_edge`` as columns
+    matrix = np.zeros((2, 3), dtype='int32')
+
+    # Iterate through the atoms and corresponding atoms indices
+    # that are part of the hydrogen bonds
+    for atom, atom_index in zip(atom_array[hbonds], hbonds):
+
+        if atom.res_name[-1] not in _watson_crick_edge:
+            continue
+
+        # Iterate over the edge types
+        for edge_type_index, edge_type in enumerate(_edges):
+            # Iterate over the two base masks
+            for base_index, base_mask in enumerate(base_masks):
+                # If a donor/acceptor atom name matches a name in
+                # the corresponding edge list add the corresponding
+                # percentage to the ``base_edges`` 'tally'
+                if (base_mask[atom_index] and
+                    atom.atom_name in edge_type[atom.res_name[-1]]):
+                    matrix[base_index, edge_type_index] += 1
+    return matrix
 
 
 def base_pairs_glycosidic_bonds(atom_array, base_pairs):
@@ -412,37 +449,6 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
         else:
             results[i] = glycosidic_bond.CIS
     return results
-
-
-def _get_edge_matrix(atom_array, base_masks):
-    # The hbonds between the residues
-    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-    # Filter out the Donor/Acceptor Heteroatoms and flatten for
-    # easy iteration
-    hbonds = hbonds[:, (0,2)].flatten()
-
-    # ``ndarray``` with one row for each base and the number of
-    # bonded edge heteroatoms as in ``_edge`` as columns
-    matrix = np.zeros((2, 3), dtype='int32')
-
-    # Iterate through the atoms and corresponding atoms indices
-    # that are part of the hydrogen bonds
-    for atom, atom_index in zip(atom_array[hbonds], hbonds):
-
-        if atom.res_name[-1] not in _watson_crick_edge:
-            continue
-
-        # Iterate over the edge types
-        for edge_type_index, edge_type in enumerate(_edges):
-            # Iterate over the two base masks
-            for base_index, base_mask in enumerate(base_masks):
-                # If a donor/acceptor atom name matches a name in
-                # the corresponding edge list add the corresponding
-                # percentage to the ``base_edges`` 'tally'
-                if (base_mask[atom_index] and
-                    atom.atom_name in edge_type[atom.res_name[-1]]):
-                    matrix[base_index, edge_type_index] += 1
-    return matrix
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
