@@ -69,7 +69,9 @@ def test_sequence_conversion():
     
     path = os.path.join(data_dir("sequence"), "prot.fasta")
     file4 = fasta.FastaFile.read(path)
-    assert seq.ProteinSequence("YAHGFRTGS") == fasta.get_sequence(file4)
+    # Expect a warning for selenocysteine conversion
+    with pytest.warns(UserWarning):
+        assert seq.ProteinSequence("YAHCGFRTGS") == fasta.get_sequence(file4)
     
     path = os.path.join(data_dir("sequence"), "invalid.fasta")
     file5 = fasta.FastaFile.read(path)
