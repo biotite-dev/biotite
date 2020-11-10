@@ -193,25 +193,27 @@ def _convert_to_sequence(seq_str):
     # Biotite alphabets for nucleotide and proteins
     # do not accept lower case letters
     seq_str = seq_str.upper()
-    # For nucleotides uracil is represented by thymine
-    # and theres is only one letter for completely unknown nucleotides
-    nuc_seq_str = seq_str.replace("U","T").replace("X","N")
     try:
-        return NucleotideSequence(nuc_seq_str, ambiguous=False)
+        # For nucleotides uracil is represented by thymine and
+        # there is is only one letter for completely unknown nucleotides
+        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
     except AlphabetError:
         pass
     try:
         if "U" in seq_str:
+            warn = True
+            seq_str = seq_str.replace("U", "C")
+        else:
+            warn = False
+        prot_seq = ProteinSequence(seq_str)
+        # Raise Warning after conversion into 'ProteinSequence'
+        # to wait for potential 'AlphabetError'
+        if warn:
             warnings.warn(
                 "ProteinSequence objects do not support selenocysteine (U), "
                 "occurrences were substituted by cysteine (C)"
             )
-            seq_str = seq_str.replace("U", "C")
-        return ProteinSequence(seq_str)
-    except AlphabetError:
-        pass
-    try:
-        return NucleotideSequence(nuc_seq_str, ambiguous=True)
+        return prot_seq
     except AlphabetError:
         raise ValueError("FASTA data cannot be converted either to "
                          "'NucleotideSequence' nor to 'ProteinSequence'")
