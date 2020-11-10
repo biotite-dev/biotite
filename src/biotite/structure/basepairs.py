@@ -272,18 +272,25 @@ _sugar_edge = {
 }
 _edges = [_watson_crick_edge, _hoogsteen_edge, _sugar_edge]
 
-# Define the edges
-class edge(IntEnum):
-    watson_crick = 0,
-    hoogsteen = 1,
-    sugar = 2,
-    invalid = 3
 
-# Define the glycosidic bond orientations
+class edge(IntEnum):
+    """
+    This enum type represents the interacting edge for a given base.
+    """
+    WATSON_CRICK = 0,
+    HOOGSTEEN = 1,
+    SUGAR = 2,
+    INVALID = 3
+
+
 class glycosidic_bond(IntEnum):
-    cis = 0,
-    trans = 1,
-    invalid = 2
+    """
+    This enum type represents the relative glycosidic bond orientation
+    for a given basepair.
+    """
+    CIS = 0,
+    TRANS = 1,
+    INVALID = 2
 
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -301,7 +308,7 @@ def base_pairs_edge(atom_array, base_pairs):
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
             if max(base) == 0:
-                results[i, j] = edge.invalid
+                results[i, j] = edge.INVALID
             else:
                 results[i, j] = edge(np.argmax(base))
     return results
@@ -335,9 +342,9 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
             np.cross(geometric_centers_vector, glycosidic_bonds[0]),
             np.cross(geometric_centers_vector, glycosidic_bonds[1])
         ) < 0:
-            results[i] = glycosidic_bond.trans
+            results[i] = glycosidic_bond.TRANS
         else:
-            results[i] = glycosidic_bond.cis
+            results[i] = glycosidic_bond.CIS
     return results
 
 
