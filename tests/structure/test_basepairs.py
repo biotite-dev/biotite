@@ -206,7 +206,7 @@ def check_edge_plausibility(
         assert output_edge in max_match_edges
 
 
-@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw"])
+@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
 def test_base_pairs_edge(pdb_id):
     # Get the references
     reference_structure, reference_edges = get_reference(pdb_id)
