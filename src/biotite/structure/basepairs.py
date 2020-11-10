@@ -516,19 +516,19 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     basepairs_hbonds = []
 
     # Get the residue masks for each residue
-    base_masks = get_residue_masks(atom_array, basepair_candidates.flatten())
+    base_masks = get_residue_masks(nucleosides, basepair_candidates.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
     # respective to a row in ``basepair_candidates``)
     base_masks = base_masks.reshape(
-        (basepair_candidates.shape[0], 2, atom_array.shape[0])
+        (basepair_candidates.shape[0], 2, nucleosides.shape[0])
     )
 
     for (base1_index, base2_index), (base1_mask, base2_mask), n_o_pairs in zip(
         basepair_candidates, base_masks, n_o_matches
     ):
-        base1 = atom_array[base1_mask]
-        base2 = atom_array[base2_mask]
+        base1 = nucleosides[base1_mask]
+        base2 = nucleosides[base2_mask]
 
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
