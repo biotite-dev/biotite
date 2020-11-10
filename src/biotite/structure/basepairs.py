@@ -272,6 +272,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     -----
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
+
     Examples
     --------
     Compute the stacking interactions for a DNA-double-helix (PDB ID
