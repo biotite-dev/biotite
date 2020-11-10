@@ -40,8 +40,8 @@ class GeneralSequence(Sequence):
     
     def as_type(self, sequence):
         """
-        Convert the `GeneralSequence` into a sequence of another
-        `Sequence` type.
+        Convert the :class:`GeneralSequence` into a sequence of another
+        :class:`Sequence` type.
 
         This function simply replaces the sequence code of the given
         sequence with the sequence code of this object.
@@ -58,6 +58,12 @@ class GeneralSequence(Sequence):
         -------
         sequence : Sequence
             The input `sequence` with replaced sequence code.
+        
+        Raises
+        ------
+        AlphabetError
+            If the the :class:`Alphabet` of the input `sequence` does
+            not extend the :class:`Alphabet` of this sequence.
         """
         if not sequence.get_alphabet().extends(self._alphabet):
             raise AlphabetError(
@@ -317,6 +323,14 @@ class ProteinSequence(Sequence):
         string. May take upper or lower case letters. If a list is
         given, the list elements can be 1-letter or 3-letter amino acid
         representations. By default the sequence is empty.
+    
+    Notes
+    -----
+    The :class:`Alphabet` of this :class:`Sequence` class does not
+    support selenocysteine.
+    Please convert selenocysteine (``U``) into cysteine (``C``)
+    or use a custom :class:`Sequence` class, if the differentiation is
+    necessary.
     """
 
     _codon_table = None
