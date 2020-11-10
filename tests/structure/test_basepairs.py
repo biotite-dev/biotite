@@ -6,7 +6,6 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import base_pairs, map_nucleotide, base_stacking
 from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
@@ -57,7 +56,7 @@ def test_base_pairs_forward(nuc_sample_array, basepairs, unique_bool):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array, unique=unique_bool)
+    computed_basepairs = struc.base_pairs(nuc_sample_array, unique=unique_bool)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
@@ -67,7 +66,7 @@ def test_base_pairs_forward_no_hydrogen(nuc_sample_array, basepairs):
     test structure.
     """
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
-    computed_basepairs = base_pairs(nuc_sample_array)
+    computed_basepairs = struc.base_pairs(nuc_sample_array)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 @pytest.mark.parametrize("unique_bool", [False, True])
@@ -82,7 +81,7 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
 
-    computed_basepairs = base_pairs(
+    computed_basepairs = struc.base_pairs(
         reversed_nuc_sample_array, unique=unique_bool
     )
     check_output(
@@ -101,7 +100,7 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
 
-    computed_basepairs = base_pairs(reversed_nuc_sample_array)
+    computed_basepairs = struc.base_pairs(reversed_nuc_sample_array)
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
@@ -135,31 +134,31 @@ def test_map_nucleotide():
     purines = ['A', 'G']
 
     # Test that the standard bases are correctly identified
-    assert map_nucleotide(residue('U')) == ('U', True)
-    assert map_nucleotide(residue('A')) == ('A', True)
-    assert map_nucleotide(residue('T')) == ('T', True)
-    assert map_nucleotide(residue('G')) == ('G', True)
-    assert map_nucleotide(residue('C')) == ('C', True)
+    assert struc.map_nucleotide(residue('U')) == ('U', True)
+    assert struc.map_nucleotide(residue('A')) == ('A', True)
+    assert struc.map_nucleotide(residue('T')) == ('T', True)
+    assert struc.map_nucleotide(residue('G')) == ('G', True)
+    assert struc.map_nucleotide(residue('C')) == ('C', True)
 
     # Test that some non_standard nucleotides are mapped correctly to
     # pyrimidine/purine references
-    psu_tuple = map_nucleotide(residue('PSU'))
+    psu_tuple = struc.map_nucleotide(residue('PSU'))
     assert psu_tuple[0] in pyrimidines
     assert psu_tuple[1] == False
 
-    psu_tuple = map_nucleotide(residue('3MC'))
+    psu_tuple = struc.map_nucleotide(residue('3MC'))
     assert psu_tuple[0] in pyrimidines
     assert psu_tuple[1] == False
 
-    i_tuple = map_nucleotide(residue('I'))
+    i_tuple = struc.map_nucleotide(residue('I'))
     assert i_tuple[0] in purines
     assert i_tuple[1] == False
 
-    m7g_tuple = map_nucleotide(residue('M7G'))
+    m7g_tuple = struc.map_nucleotide(residue('M7G'))
     assert m7g_tuple[0] in purines
     assert m7g_tuple[1] == False
 
-    assert map_nucleotide(residue('ALA')) is None
+    assert struc.map_nucleotide(residue('ALA')) is None
 
 
 def test_base_stacking():
@@ -184,9 +183,9 @@ def test_base_stacking():
     expected_stackings.remove([12, 13])
     expected_stackings.remove([13, 14])
 
-    stacking = helix[base_stacking(helix)].res_id
+    stacking = helix[struc.base_stacking(helix)].res_id
 
-    assert len(base_stacking(helix)) == len(expected_stackings)
+    assert len(struc.base_stacking(helix)) == len(expected_stackings)
 
     for interaction in stacking:
         assert list(interaction) in expected_stackings
