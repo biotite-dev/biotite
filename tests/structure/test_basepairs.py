@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import base_pairs, map_nucleotide
+from biotite.structure.basepairs import base_pairs, map_nucleotide, base_stacking
 from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
@@ -160,3 +160,35 @@ def test_map_nucleotide():
     assert m7g_tuple[1] == False
 
     assert map_nucleotide(residue('ALA')) is None
+
+
+def test_base_stacking():
+    """
+    Test ``base_stacking()`` using the DNA-double-helix 1BNA. It is
+    expected that adjacent bases are stacked. However, due to
+    distortions in the helix there are exception for this particular
+    helix.
+    """
+    # Load the test structure (1BNA) - a DNA-double-helix
+    helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
+
+    # For a DNA-double-helix it is expected that adjacent bases are
+    # stacked.
+    expected_stackings = []
+    for i in range(1, 24):
+        expected_stackings.append([i, i+1])
+
+    # Due to distortions in the helix not all adjacent bases have a
+    # geometry that meets the criteria of `base_stacking`.
+    expected_stackings.remove([10, 11])
+    expected_stackings.remove([12, 13])
+    expected_stackings.remove([13, 14])
+
+    stacking = helix[base_stacking(helix)].res_id
+
+    assert len(base_stacking(helix)) == len(expected_stackings)
+
+    for interaction in stacking:
+        assert list(interaction) in expected_stackings
+
+
