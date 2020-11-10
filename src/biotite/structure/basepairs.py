@@ -310,8 +310,8 @@ def base_pairs_edge(atom_array, base_pairs):
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,2)
-        Each row is equivalent to one basepair and contains an
-        ``IntEnum`` describing the type of edge interaction.
+        Each row is equivalent to the respective basepair and contains
+        an ``IntEnum`` describing the type of edge interaction.
 
     Notes
     -----
@@ -387,6 +387,22 @@ def base_pairs_edge(atom_array, base_pairs):
 
 
 def _get_edge_matrix(atom_array, base_masks):
+    """
+    Get the number of atoms interacting for each edge as a matrix, where
+    each row corresponds to a base and each column to the number of
+    Watson-Crick-, Hoogsteen- and Sugar-edge interactions respectively.
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The :class:`AtomArray` containing the bases.
+    base_masks : ndarray, dtype=bool, shape=(2,n)
+        Boolean masks for the interacting bases
+
+    Returns
+    -------
+    matrix : ndarray, dtype=int, shape=(2,3)
+        The edge matrix.
+    """
     # The hbonds between the residues
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
@@ -418,6 +434,72 @@ def _get_edge_matrix(atom_array, base_masks):
 
 
 def base_pairs_glycosidic_bonds(atom_array, base_pairs):
+    """
+    Calculate the glycosidic bond orientation for given base pairs in an
+    :class:`AtomArray` according to the Leontis-Westhof nomenclature
+    [1]_.
+
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The :class:`AtomArray` containing the bases.
+    base_pairs : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one basepair and contains the first
+        indices of the residues corresponding to each base.
+
+    Returns
+    -------
+    results : ndarray, dtype=edge, shape=(n,)
+        Each row is equivalent to the respective basepair and contains
+        an ``IntEnum`` describing the glycosidic bond orientation.
+
+    Notes
+    -----
+    The base pairs for a given :class:`AtomArray` can be found using
+    :func:`base_pairs()`.
+
+    The interacting base edges are also part of the Leontis-Westhof
+    nomenclature. They can be calculated using
+    :func:`base_pairs_edge()`
+
+    The orientation is found using the geometric centers of the bases
+    and the glycosidic bonds as described in [2]_
+
+    Examples
+    --------
+    Compute the glycosidic bond orientations for the dna helix with the
+    PDB id 1QXB:
+
+    >>> from os.path import join
+    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> basepairs = base_pairs(dna_helix)
+    >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
+    >>> print(interacting_edges)
+    [<glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0>]
+
+    References
+    ----------
+
+    .. [1] NB Leontis and E Westhof,
+       "Geometric nomenclature and classification of RNA base pairs."
+       RNA, 7(4), 499-512 (2001).
+
+    .. [2] H Yang, F Jossinet and NB Leontis et al.,
+        "Tools for the automatic identification and classification of
+        RNA base pairs."
+        Nucleic Acids Research, 31(13), 3450-3460 (2003).
+    """
     results = np.zeros(len(base_pairs), dtype=glycosidic_bond)
     for i, pair in enumerate(base_pairs):
 
