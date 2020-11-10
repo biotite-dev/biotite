@@ -95,8 +95,14 @@ def _convert_seq_str(seq_str, format):
     if len(seq_str) == 0:
         raise InvalidFileError("The file's 'ORIGIN' field is empty")
     if format == "gb":
-        return NucleotideSequence(seq_str)
+        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
     elif format == "gp":
+        if "U" in seq_str:
+            warnings.warn(
+                "ProteinSequence objects do not support selenocysteine (U), "
+                "occurrences were substituted by cysteine (C)"
+            )
+            seq_str = seq_str.replace("U", "C")
         return ProteinSequence(seq_str)
     else:
         raise ValueError(f"Unknown format '{format}'")
@@ -118,7 +124,7 @@ def set_sequence(gb_file, sequence, sequence_start=1):
     ----------
     gb_file : GenBankFile
         The GenBank file to be edited.
-    sequence : NucleotideSequence or ProteinSequence
+    sequence : str or NucleotideSequence or ProteinSequence
         The sequence that is put into the GenBank file.
     sequence_start : int, optional
         The number of the first base of the sequence.

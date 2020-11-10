@@ -5,6 +5,7 @@
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
+import warnings
 from collections import OrderedDict
 from ...sequence import Sequence
 from ...alphabet import AlphabetError, LetterAlphabet
@@ -200,6 +201,12 @@ def _convert_to_sequence(seq_str):
     except AlphabetError:
         pass
     try:
+        if "U" in seq_str:
+            warnings.warn(
+                "ProteinSequence objects do not support selenocysteine (U), "
+                "occurrences were substituted by cysteine (C)"
+            )
+            seq_str = seq_str.replace("U", "C")
         return ProteinSequence(seq_str)
     except AlphabetError:
         pass
