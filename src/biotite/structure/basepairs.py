@@ -294,6 +294,72 @@ class glycosidic_bond(IntEnum):
 
 
 def base_pairs_edge(atom_array, base_pairs):
+    """
+    Get the interacting edges for given base pairs in an
+    :class:`AtomArray` according to the Leontis-Westhof nomenclature
+    [1]_.
+
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The :class:`AtomArray` containing the bases.
+    base_pairs : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one basepair and contains the first
+        indices of the residues corresponding to each base.
+
+    Returns
+    -------
+    results : ndarray, dtype=edge, shape=(n,2)
+        Each row is equivalent to one basepair and contains an
+        ``IntEnum`` describing the type of edge interaction.
+
+    Notes
+    -----
+    The base pairs for a given :class:`AtomArray` can be found using
+    :func:`base_pairs()`.
+
+    The glycosidic bond orientation is also part of the Leontis-Westhof
+    nomenclature. It can be calculated using
+    :func:`base_pairs_glycosidic_bonds()`
+
+    If a base is not a canonical base (A, C, G, T, U) or no hydrogen
+    bonds are found between the bases that conform to the interacting
+    edges described by Leontis and Westhof, ``edge.invalid`` is
+    returned.
+
+    The edge returned always corresponds to the edge with the most
+    hydrogen bonding interactions.
+
+    Examples
+    --------
+    Compute the interacting base edges for the dna helix with the PDB
+    id 1QXB:
+
+    >>> from os.path import join
+    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> basepairs = base_pairs(dna_helix)
+    >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
+    >>> print(interacting_edges)
+    [[<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
+     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]]
+
+    References
+    ----------
+
+    .. [1] NB Leontis and E Westhof,
+       "Geometric nomenclature and classification of RNA base pairs."
+       RNA, 7(4), 499-512 (2001).
+    """
     # Result ``ndarray`` matches the dimensions of the input array
     results = np.empty_like(base_pairs, dtype=edge)
 
