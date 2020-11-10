@@ -272,42 +272,19 @@ _sugar_edge = {
 }
 _edges = [_watson_crick_edge, _hoogsteen_edge, _sugar_edge]
 
-# Define the edges as ``IntEnum``
+# Define the edges
 class edge(IntEnum):
     watson_crick = 0,
     hoogsteen = 1,
     sugar = 2,
     invalid = 3
 
-def _get_edge_matrix(atom_array, base_masks):
-    # The hbonds between the residues
-    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-    # Filter out the Donor/Acceptor Heteroatoms and flatten for
-    # easy iteration
-    hbonds = hbonds[:, (0,2)].flatten()
+# Define the glycosidic bond orientations
+class glycosidic_bond(IntEnum):
+    cis = 0,
+    trans = 1,
+    invalid = 2
 
-    # ``ndarray``` with one row for each base and the number of
-    # bonded edge heteroatoms as in ``_edge`` as columns
-    matrix = np.zeros((2, 3), dtype='int32')
-
-    # Iterate through the atoms and corresponding atoms indices
-    # that are part of the hydrogen bonds
-    for atom, atom_index in zip(atom_array[hbonds], hbonds):
-
-        if atom.res_name[-1] not in _watson_crick_edge:
-            continue
-
-        # Iterate over the edge types
-        for edge_type_index, edge_type in enumerate(_edges):
-            # Iterate over the two base masks
-            for base_index, base_mask in enumerate(base_masks):
-                # If a donor/acceptor atom name matches a name in
-                # the corresponding edge list add the corresponding
-                # percentage to the ``base_edges`` 'tally'
-                if (base_mask[atom_index] and
-                    atom.atom_name in edge_type[atom.res_name[-1]]):
-                    matrix[base_index, edge_type_index] += 1
-    return matrix
 
 def base_pairs_edge(atom_array, base_pairs):
     # Result ``ndarray`` matches the dimensions of the input array
@@ -329,9 +306,6 @@ def base_pairs_edge(atom_array, base_pairs):
                 results[i, j] = edge(np.argmax(base))
     return results
 
-class glycosidic_bond(IntEnum):
-    cis = 0,
-    trans = 1
 
 def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     results = np.zeros(len(base_pairs), dtype=glycosidic_bond)
@@ -367,6 +341,35 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     return results
 
 
+def _get_edge_matrix(atom_array, base_masks):
+    # The hbonds between the residues
+    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
+    # Filter out the Donor/Acceptor Heteroatoms and flatten for
+    # easy iteration
+    hbonds = hbonds[:, (0,2)].flatten()
+
+    # ``ndarray``` with one row for each base and the number of
+    # bonded edge heteroatoms as in ``_edge`` as columns
+    matrix = np.zeros((2, 3), dtype='int32')
+
+    # Iterate through the atoms and corresponding atoms indices
+    # that are part of the hydrogen bonds
+    for atom, atom_index in zip(atom_array[hbonds], hbonds):
+
+        if atom.res_name[-1] not in _watson_crick_edge:
+            continue
+
+        # Iterate over the edge types
+        for edge_type_index, edge_type in enumerate(_edges):
+            # Iterate over the two base masks
+            for base_index, base_mask in enumerate(base_masks):
+                # If a donor/acceptor atom name matches a name in
+                # the corresponding edge list add the corresponding
+                # percentage to the ``base_edges`` 'tally'
+                if (base_mask[atom_index] and
+                    atom.atom_name in edge_type[atom.res_name[-1]]):
+                    matrix[base_index, edge_type_index] += 1
+    return matrix
 
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
