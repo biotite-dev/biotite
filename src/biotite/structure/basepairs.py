@@ -1088,9 +1088,8 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     basepair_candidates = []
     for candidate, partners in zip(np.argwhere(n_o_mask)[:, 0], indices):
         for partner in partners:
-            if partner == -1:
-                break
-            basepair_candidates.append((candidate, partner))
+            if partner != -1:
+                basepair_candidates.append((candidate, partner))
 
     # Get the residue starts for the indices of the candidate/partner
     # indices.
