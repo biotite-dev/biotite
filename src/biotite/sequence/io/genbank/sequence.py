@@ -8,7 +8,7 @@ Functions for converting a sequence from/to a GenBank file.
 
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_annotated_sequence",
+__all__ = ["get_raw_sequence", "get_sequence", "get_annotated_sequence",
            "set_sequence", "set_annotated_sequence"]
 
 import re
@@ -22,6 +22,31 @@ from .annotation import get_annotation, set_annotation
 _SYMBOLS_PER_CHUNK = 10
 _SEQ_CHUNKS_PER_LINE = 6
 _SYMBOLS_PER_LINE = _SYMBOLS_PER_CHUNK * _SEQ_CHUNKS_PER_LINE
+
+
+def get_raw_sequence(gb_file):
+    """
+    Get the raw sequence string from the *ORIGIN* field
+    of a GenBank file.
+
+    Parameters
+    ----------
+    gb_file : GenBankFile
+        The GenBank file to read the *ORIGIN* field from.
+    
+    Returns
+    -------
+    seq_str: str
+        The unaltered sequence as string.
+        Sequence positions and whitespace characters are removed.
+    """
+    fields = gb_file.get_fields("ORIGIN")
+    if len(fields) == 0:
+        raise InvalidFileError("File has no 'ORIGIN' field")
+    if len(fields) > 1:
+        raise InvalidFileError("File has multiple 'ORIGIN' fields")
+    lines, _ = fields[0]
+    return _field_to_seq_string(lines)
 
 
 def get_sequence(gb_file, format="gb"):
@@ -42,14 +67,7 @@ def get_sequence(gb_file, format="gb"):
     sequence : NucleotideSequence or ProteinSequence
         The reference sequence in the file.
     """
-    fields = gb_file.get_fields("ORIGIN")
-    if len(fields) == 0:
-        raise InvalidFileError("File has no 'ORIGIN' field")
-    if len(fields) > 1:
-        raise InvalidFileError("File has multiple 'ORIGIN' fields")
-    lines, _ = fields[0]
-    seq_str = _field_to_seq_string(lines)
-    return _convert_seq_str(seq_str, format)
+    return _convert_seq_str(get_raw_sequence(gb_file), format)
 
 
 def get_annotated_sequence(gb_file, format="gb", include_only=None):
@@ -76,8 +94,7 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     if len(fields) > 1:
         raise InvalidFileError("File has multiple 'ORIGIN' fields")
     lines, _ = fields[0]
-    seq_str = _field_to_seq_string(lines)
-    sequence = _convert_seq_str(seq_str, format)
+    sequence = _convert_seq_str(_field_to_seq_string(lines), format)
     seq_start = _get_seq_start(lines)
     annotation = get_annotation(gb_file, include_only)
     return AnnotatedSequence(annotation, sequence, sequence_start=seq_start)
@@ -95,8 +112,14 @@ def _convert_seq_str(seq_str, format):
     if len(seq_str) == 0:
         raise InvalidFileError("The file's 'ORIGIN' field is empty")
     if format == "gb":
-        return NucleotideSequence(seq_str)
+        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
     elif format == "gp":
+        if "U" in seq_str:
+            warnings.warn(
+                "ProteinSequence objects do not support selenocysteine (U), "
+                "occurrences were substituted by cysteine (C)"
+            )
+            seq_str = seq_str.replace("U", "C")
         return ProteinSequence(seq_str)
     else:
         raise ValueError(f"Unknown format '{format}'")
@@ -118,7 +141,7 @@ def set_sequence(gb_file, sequence, sequence_start=1):
     ----------
     gb_file : GenBankFile
         The GenBank file to be edited.
-    sequence : NucleotideSequence or ProteinSequence
+    sequence : str or NucleotideSequence or ProteinSequence
         The sequence that is put into the GenBank file.
     sequence_start : int, optional
         The number of the first base of the sequence.
