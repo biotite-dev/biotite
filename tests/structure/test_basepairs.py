@@ -7,7 +7,6 @@ import json
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.basepairs import *
 from biotite.structure.info import residue
 from biotite.structure.residues import get_residue_masks
 from biotite.structure.hbond import hbond
@@ -68,7 +67,7 @@ def test_base_pairs_forward(nuc_sample_array, basepairs, unique_bool):
     """
     Test for the function base_pairs.
     """
-    computed_basepairs = base_pairs(nuc_sample_array, unique=unique_bool)
+    computed_basepairs = struc.base_pairs(nuc_sample_array, unique=unique_bool)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
@@ -78,7 +77,7 @@ def test_base_pairs_forward_no_hydrogen(nuc_sample_array, basepairs):
     test structure.
     """
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
-    computed_basepairs = base_pairs(nuc_sample_array)
+    computed_basepairs = struc.base_pairs(nuc_sample_array)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
 
@@ -94,7 +93,7 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
 
-    computed_basepairs = base_pairs(
+    computed_basepairs = struc.base_pairs(
         reversed_nuc_sample_array, unique=unique_bool
     )
     check_output(
@@ -114,7 +113,7 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
         reversed_nuc_sample_array = reversed_nuc_sample_array + residue
 
-    computed_basepairs = base_pairs(reversed_nuc_sample_array)
+    computed_basepairs = struc.base_pairs(reversed_nuc_sample_array)
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
@@ -150,32 +149,31 @@ def test_map_nucleotide():
     purines = ['A', 'G']
 
     # Test that the standard bases are correctly identified
-    assert map_nucleotide(residue('U')) == ('U', True)
-    assert map_nucleotide(residue('A')) == ('A', True)
-    assert map_nucleotide(residue('T')) == ('T', True)
-    assert map_nucleotide(residue('G')) == ('G', True)
-    assert map_nucleotide(residue('C')) == ('C', True)
+    assert struc.map_nucleotide(residue('U')) == ('U', True)
+    assert struc.map_nucleotide(residue('A')) == ('A', True)
+    assert struc.map_nucleotide(residue('T')) == ('T', True)
+    assert struc.map_nucleotide(residue('G')) == ('G', True)
+    assert struc.map_nucleotide(residue('C')) == ('C', True)
 
     # Test that some non_standard nucleotides are mapped correctly to
     # pyrimidine/purine references
-    psu_tuple = map_nucleotide(residue('PSU'))
+    psu_tuple = struc.map_nucleotide(residue('PSU'))
     assert psu_tuple[0] in pyrimidines
     assert psu_tuple[1] == False
 
-    psu_tuple = map_nucleotide(residue('3MC'))
+    psu_tuple = struc.map_nucleotide(residue('3MC'))
     assert psu_tuple[0] in pyrimidines
     assert psu_tuple[1] == False
 
-    i_tuple = map_nucleotide(residue('I'))
+    i_tuple = struc.map_nucleotide(residue('I'))
     assert i_tuple[0] in purines
     assert i_tuple[1] == False
 
-    m7g_tuple = map_nucleotide(residue('M7G'))
+    m7g_tuple = struc.map_nucleotide(residue('M7G'))
     assert m7g_tuple[0] in purines
     assert m7g_tuple[1] == False
 
-    assert map_nucleotide(residue('ALA')) is None
-
+    assert struc.map_nucleotide(residue('ALA')) is None
 
 def get_reference(pdb_id):
     """Gets the reference edges from specified pdb files
@@ -213,8 +211,8 @@ def test_base_pairs_edge(pdb_id):
     # Get the references
     reference_structure, reference_edges = get_reference(pdb_id)
     # Calculate basepairs and edges for the references
-    pairs = base_pairs(reference_structure)
-    edges = base_pairs_edge(reference_structure, pairs)
+    pairs = struc.base_pairs(reference_structure)
+    edges = struc.base_pairs_edge(reference_structure, pairs)
 
     # Check the plausibility with the reference data for each basepair
     for pair, pair_edges in zip(pairs, edges):
@@ -279,8 +277,8 @@ def test_base_pairs_glycosidic_bonds(pdb_id):
         pdb_id
     )
     # Calculate basepairs and edges for the references
-    pairs = base_pairs(reference_structure)
-    glycosidic_bond_orientations = base_pairs_glycosidic_bonds(
+    pairs = struc.base_pairs(reference_structure)
+    glycosidic_bond_orientations = struc.base_pairs_glycosidic_bonds(
         reference_structure, pairs
     )
 
@@ -299,7 +297,7 @@ def test_base_pairs_glycosidic_bonds(pdb_id):
                     reference_gly_bonds[:, 0] == pair_res_ids[0],
                     reference_gly_bonds[:, 1] == pair_res_ids[1]
                 ))
-            reference_orientation = glycosidic_bond(
+            reference_orientation = struc.glycosidic_bond(
                 reference_gly_bonds[index, 2]
             )
             assert reference_orientation == pair_orientation
@@ -315,7 +313,38 @@ def test_base_pairs_glycosidic_bonds(pdb_id):
                     reference_gly_bonds[:, 1] == pair_res_ids[0],
                     reference_gly_bonds[:, 0] == pair_res_ids[1]
                 ))
-            reference_orientation = glycosidic_bond(
+            reference_orientation = struc.glycosidic_bond(
                 reference_gly_bonds[index, 2]
             )
             assert reference_orientation == pair_orientation
+
+def test_base_stacking():
+    """
+    Test ``base_stacking()`` using the DNA-double-helix 1BNA. It is
+    expected that adjacent bases are stacked. However, due to
+    distortions in the helix there are exception for this particular
+    helix.
+    """
+    # Load the test structure (1BNA) - a DNA-double-helix
+    helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
+
+    # For a DNA-double-helix it is expected that adjacent bases are
+    # stacked.
+    expected_stackings = []
+    for i in range(1, 24):
+        expected_stackings.append([i, i+1])
+
+    # Due to distortions in the helix not all adjacent bases have a
+    # geometry that meets the criteria of `base_stacking`.
+    expected_stackings.remove([10, 11])
+    expected_stackings.remove([12, 13])
+    expected_stackings.remove([13, 14])
+
+    stacking = helix[struc.base_stacking(helix)].res_id
+
+    assert len(struc.base_stacking(helix)) == len(expected_stackings)
+
+    for interaction in stacking:
+        assert list(interaction) in expected_stackings
+
+

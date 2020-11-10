@@ -8,8 +8,8 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide", "base_pairs_edge", "edge",
-           "base_pairs_glycosidic_bonds", "glycosidic_bond"]
+__all__ = ["base_pairs", "map_nucleotide", "base_stacking", "base_pairs_edge",
+           "edge", "base_pairs_glycosidic_bonds", "glycosidic_bond"]
 
 import numpy as np
 import warnings
@@ -451,6 +451,127 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     return results
 
 
+def base_stacking(atom_array, min_atoms_per_base=3):
+    """
+    Find pi-stacking interactions between aromatic rings
+    in nucleic acids.
+    The presence of base stacking is assumed if the following criteria
+    are met [1]_:
+    (i) Distance between aromatic ring centers <=4.5 Å
+    (ii) Angle between the ring normal vectors <=23°
+    (iii) Angle between normalized distance vector between two ring
+          centers and both bases' normal vectors <=40°
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The :class:`AtomArray` to find stacked bases in.
+    min_atoms_per_base : integer, optional (default: 3)
+        The number of atoms a nucleotides' base must have to be
+        considered a candidate for a stacking interaction.
+    Returns
+    -------
+    stacked_bases : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one pair of stacked bases and
+        contains the indices to the first atom for each one of both
+        paired residues.
+    Notes
+    -----
+    Please note that ring normal vectors are assumed to be equal to the
+    base normal vectors.
+    Examples
+    --------
+    Compute the stacking interactions for a DNA-double-helix (PDB ID
+    1BNA):
+    >>> from os.path import join
+    >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
+    >>> stacking_interactions = base_stacking(dna_helix)
+    >>> print(dna_helix[stacking_interactions].res_id)
+    [[ 1  2]
+     [ 2  3]
+     [ 3  4]
+     [ 4  5]
+     [ 5  6]
+     [ 6  7]
+     [ 7  8]
+     [ 8  9]
+     [ 9 10]
+     [11 12]
+     [14 15]
+     [15 16]
+     [16 17]
+     [17 18]
+     [18 19]
+     [19 20]
+     [20 21]
+     [21 22]
+     [22 23]
+     [23 24]]
+
+    References
+    ----------
+    .. [1] HA Gabb, SR Sanghani and CH Robert et al.,
+       "Finding and visualizing nucleic acid base stacking"
+       J Mol Biol Graph, 14(1), 6-11 (1996).
+    """
+    # Get the stacking candidates according to a N/O cutoff distance,
+    # where each base is identified as the first index of its respective
+    # residue
+    stacking_candidates, _ = _get_proximate_basepair_candidates(
+        atom_array, cutoff=15
+    )
+
+    # Contains the plausible pairs of stacked bases
+    stacked_bases = []
+
+    # Get the residue masks for each residue
+    base_masks = get_residue_masks(atom_array, stacking_candidates.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in ``stacking_candidates``)
+    base_masks = base_masks.reshape(
+        (stacking_candidates.shape[0], 2, atom_array.shape[0])
+    )
+
+    for (base1_index, base2_index), (base1_mask, base2_mask) in zip(
+        stacking_candidates, base_masks
+    ):
+        bases = (atom_array[base1_mask], atom_array[base2_mask])
+
+        # A list containing ndarray for each base with transformed
+        # vectors from the standard base reference frame to the
+        # structures' coordinates. The layout is as follows:
+        #
+        # [Origin coordinates]
+        # [Base normal vector]
+        # [SCHNAaP origin coordinates]
+        # [Aromatic Ring Center coordinates]
+        transformed_std_vectors = [None] * 2
+
+        # Generate the data necessary for analysis of each base.
+        for i in range(2):
+            base_tuple = _match_base(bases[i], min_atoms_per_base)
+
+            if(base_tuple is None):
+                break
+
+            transformed_std_vectors[i] = base_tuple
+
+        normal_vectors = np.vstack((transformed_std_vectors[0][1],
+                                    transformed_std_vectors[1][1]))
+        aromatic_ring_centers = [transformed_std_vectors[0][3:],
+                                        transformed_std_vectors[1][3:]]
+
+        # Check if the basepairs are stacked.
+        stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
+
+        # If a stacking interaction is found, append the first indices
+        # of the bases´'residues to the output.
+        if stacked:
+            stacked_bases.append((base1_index, base2_index))
+
+    return np.array(stacked_bases)
+
+
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
     Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
@@ -512,7 +633,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     (ii) Angle between the ring normal vectors <=23°
 
     (iii) Angle between normalized distance vector between two ring
-          centers and one normal vector <=40°
+          centers and both bases' normal vectors <=40°
 
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
@@ -591,29 +712,41 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     # Get the basepair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    basepair_candidates = _get_proximate_basepair_candidates(nucleosides)
+    basepair_candidates, n_o_matches = _get_proximate_basepair_candidates(
+        nucleosides
+    )
 
     # Contains the plausible basepairs
     basepairs = []
     # Contains the number of hydrogens for each plausible basepair
     basepairs_hbonds = []
 
-    for (base1_index, base2_index), n_o_matches in basepair_candidates.items():
-        base1_mask, base2_mask = get_residue_masks(
-            nucleosides, (base1_index, base2_index)
-        )
+    # Get the residue masks for each residue
+    base_masks = get_residue_masks(nucleosides, basepair_candidates.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in ``basepair_candidates``)
+    base_masks = base_masks.reshape(
+        (basepair_candidates.shape[0], 2, nucleosides.shape[0])
+    )
+
+    for (base1_index, base2_index), (base1_mask, base2_mask), n_o_pairs in zip(
+        basepair_candidates, base_masks, n_o_matches
+    ):
         base1 = nucleosides[base1_mask]
         base2 = nucleosides[base2_mask]
+
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
+
         # If no hydrogens are present use the number N/O pairs to
         # decide between multiple pairing possibilities.
 
         if hbonds is None:
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
-            hbonds = n_o_matches/2
+            hbonds = n_o_pairs/2
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -759,7 +892,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
 
         if bonds > 0:
             return bonds
-
         return -1
 
     else:
@@ -801,27 +933,24 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
         return False
 
     # Criterion 2: Angle between normal vectors or its supplement <=23°
-    if (
-            (np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
-            >= ((23*np.pi)/180))
-            and (np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
-            <= ((157*np.pi)/180))
-    ):
+    normal_vectors_angle = np.rad2deg(
+        np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
+    )
+    if (normal_vectors_angle >= 23) and (normal_vectors_angle <= 157):
         return False
 
-    # Criterion 3: Angle between one normalized distance vector and one
-    # normal vector or its supplement <=40°
+    # Criterion 3: Angle between one normalized distance vector and
+    # each of the bases' normal vector or supplement <=40°
     for normal_vector in normal_vectors:
         for normalized_dist_vector in normalized_distance_vectors:
-            if (
-                (np.arccos(np.dot(normal_vector, normalized_dist_vector))
-                <= ((40*np.pi)/180))
-                or (np.arccos(np.dot(normal_vector, normalized_dist_vector))
-                >= ((120*np.pi)/180))
-            ):
-                return True
+            dist_normal_vector_angle = np.rad2deg(
+                np.arccos(np.dot(normal_vector, normalized_dist_vector))
+            )
+            if ((dist_normal_vector_angle >= 40) and
+                (dist_normal_vector_angle <= 120)):
+                return False
 
-    return False
+    return True
 
 
 def _match_base(nucleotide, min_atoms_per_base):
@@ -1049,9 +1178,12 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
 
     Returns
     -------
-    basepair_candidates : list [(integer, integer), ...]
-        Contains the basepair candidates, ``tuple`` of the first indices
-        of the corresponding residues.
+    basepair_candidates : ndarray, dtype=int, shape=(n,2)
+        Contains the basepair candidates. Each row is equivalent to one
+        potential basepair. bases are represented as the first indices
+        of their corresponding residues.
+    n_o_pairs : ndarray, dtype=int, shape=(n,)
+        Contains the number of N/O pairs for each potential basepair.
     """
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
@@ -1064,41 +1196,35 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     ).get_atoms(atom_array.coord[n_o_mask], cutoff)
 
     # Loop through the indices of potential partners
-    basepair_candidates = {}
+    basepair_candidates = []
     for candidate, partners in zip(np.argwhere(n_o_mask)[:, 0], indices):
         for partner in partners:
-            if partner == -1:
-                break
-            # Find the indices of the first atom of the residues
-            candidate_res_start, partner_res_start = get_residue_starts_for(
-                atom_array, (candidate, partner)
-            )
-            # If the basepair candidate is not already in the output
-            # list, append to the output list
-            if (
-                ((partner_res_start, candidate_res_start) \
-                not in basepair_candidates)
-                and ((candidate_res_start, partner_res_start) \
-                not in basepair_candidates)
-                and not (candidate_res_start == partner_res_start)
-            ):
-                basepair_candidates[
-                    (candidate_res_start, partner_res_start)
-                ] = 1
-            elif (candidate_res_start != partner_res_start):
-                if (
-                    (candidate_res_start, partner_res_start) \
-                     in basepair_candidates
-                ):
-                    basepair_candidates[
-                        (candidate_res_start, partner_res_start)
-                    ] += 1
-                else:
-                    basepair_candidates[
-                        (partner_res_start, candidate_res_start)
-                    ] += 1
+            if partner != -1:
+                basepair_candidates.append((candidate, partner))
 
-    return basepair_candidates
+    # Get the residue starts for the indices of the candidate/partner
+    # indices.
+    basepair_candidates = np.array(basepair_candidates)
+    basepair_candidates_shape = basepair_candidates.shape
+    basepair_candidates = get_residue_starts_for(
+        atom_array, basepair_candidates.flatten()
+    ).reshape(basepair_candidates_shape)
+
+    # Remove candidates where the N/O pairs are from the same residue
+    basepair_candidates = np.delete(
+        basepair_candidates, np.where(
+            basepair_candidates[:,0] == basepair_candidates[:,1]
+        ), axis=0
+    )
+    # Sort the residue starts for each potential basepair
+    for i, candidate in enumerate(basepair_candidates):
+        basepair_candidates[i] = sorted(candidate)
+    # Make sure each base pair candidate is only listed once
+    basepair_candidates, n_o_pairs = np.unique(
+        basepair_candidates, axis=0, return_counts=True
+    )
+
+    return basepair_candidates, n_o_pairs
 
 
 def _filter_atom_type(atom_array, atom_names):
