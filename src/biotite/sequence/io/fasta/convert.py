@@ -20,7 +20,9 @@ def get_sequence(fasta_file, header=None):
     """
     Get a sequence from a :class:`FastaFile` instance.
 
-    The type of sequence is guessed from the sequence string.
+    The type of sequence is guessed from the sequence string:
+    First, a conversion into a :class:`NucleotideSequence` and
+    second a conversion into a :class:`ProteinSequence` is tried.
     
     Parameters
     ----------
@@ -63,7 +65,9 @@ def get_sequences(fasta_file):
     Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
 
-    The type of sequence is guessed from the sequence string.
+    The type of sequence is guessed from the sequence string:
+    First, a conversion into a :class:`NucleotideSequence` and
+    second a conversion into a :class:`ProteinSequence` is tried.
     
     Parameters
     ----------
