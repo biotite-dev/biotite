@@ -410,7 +410,8 @@ def _get_edge_matrix(atom_array, base_masks):
     if len(hbonds) == 0:
         raise BadStructureError(
             f"No hydrogen bonds between nucleotides with residue start "
-            f"indices {np.where(base_masks[0])} and {np.where(base_masks[1])}"
+            f"indices {np.argmax(base_masks[0])} and "
+            f"{np.argmax(base_masks[1])}"
         )
 
     hbonds = hbonds[:, (0,2)].flatten()
