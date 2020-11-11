@@ -510,24 +510,31 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
 
     for i, pair_masks in enumerate(base_pairs_masks):
 
+        # position vectors of each bases geometric center
         geometric_centers = np.zeros((2, 3))
+        # direction vectors of the glycosidic bonds
         glycosidic_bonds = np.zeros((2, 3))
 
         for base_index, base_mask in enumerate(pair_masks):
             base = atom_array[base_mask]
             ring_center = _match_base(base, 3)[3:]
 
+            # For Purines the glycosidic bond is between the C1' and the
+            # N9 atoms, for pyrimidines it is between the C1' atom and
+            # the N1 atom
             if (base.res_name[0] in _adenine_containing_nucleotides or
                 base.res_name[0] in _guanine_containing_nucleotides):
 
-                ring_center = (ring_center[0] + ring_center[1]) / 2
+                geometric_centers[base_index] = (
+                    (ring_center[0] + ring_center[1]) / 2
+                )
                 base_atom = base[base.atom_name == "N9"][0]
 
             elif (base.res_name[0] in _thymine_containing_nucleotides or
                 base.res_name[0] in _uracil_containing_nucleotides or
                 base.res_name[0] in _cytosine_containing_nucleotides):
 
-                ring_center = ring_center[0]
+                geometric_centers[base_index] = ring_center[0]
                 base_atom = base[base.atom_name == "N1"][0]
 
             else:
@@ -536,21 +543,25 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
                 break
 
             sugar_atom = base[base.atom_name == "C1'"][0]
+
+            # Calculate the glycosidic bond direction vector
             glycosidic_bonds[base_index] = sugar_atom.coord - base_atom.coord
-            geometric_centers[base_index] = ring_center
-
-        geometric_centers_vector = geometric_centers[1] - geometric_centers[0]
-
-        if np.dot(
-            np.cross(geometric_centers_vector, glycosidic_bonds[0]),
-            np.cross(geometric_centers_vector, glycosidic_bonds[1])
-        ) < 0:
-
-            results[i] = glycosidic_bond.TRANS
 
         else:
+            # Calculate the direction vector between the geometric centers
+            geometric_centers_dir = geometric_centers[1] - geometric_centers[0]
 
-            results[i] = glycosidic_bond.CIS
+            # Check the orientation of the glycosidic bonds
+            if np.dot(
+                np.cross(geometric_centers_dir, glycosidic_bonds[0]),
+                np.cross(geometric_centers_dir, glycosidic_bonds[1])
+            ) < 0:
+
+                results[i] = glycosidic_bond.TRANS
+
+            else:
+
+                results[i] = glycosidic_bond.CIS
 
     return results
 
