@@ -9,7 +9,7 @@ This module provides functions for basepair identification.
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["base_pairs", "map_nucleotide", "base_stacking", "base_pairs_edge",
-           "edge", "base_pairs_glycosidic_bonds", "glycosidic_bond"]
+           "edge", "base_pairs_glycosidic_bond", "glycosidic_bond"]
 
 import numpy as np
 import warnings
@@ -317,7 +317,7 @@ def base_pairs_edge(atom_array, base_pairs):
     See Also
     --------
     base_pairs
-    base_pairs_glycosidic_bonds
+    base_pairs_glycosidic_bond
 
     Notes
     -----
@@ -442,7 +442,7 @@ def _get_edge_matrix(atom_array, base_masks):
     return matrix
 
 
-def base_pairs_glycosidic_bonds(atom_array, base_pairs):
+def base_pairs_glycosidic_bond(atom_array, base_pairs):
     """
     Calculate the glycosidic bond orientation for given base pairs in an
     :class:`AtomArray` according to the Leontis-Westhof nomenclature
@@ -482,7 +482,7 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     ...     join(path_to_structures, "base_pairs/1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
-    >>> orientations = base_pairs_glycosidic_bonds(dna_helix, basepairs)
+    >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
     >>> print(orientations)
     [<glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
      <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>

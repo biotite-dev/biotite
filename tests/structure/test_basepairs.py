@@ -269,7 +269,7 @@ def test_base_pairs_edge(pdb_id):
 
 
 @pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
-def test_base_pairs_glycosidic_bonds(pdb_id):
+def test_base_pairs_glycosidic_bond(pdb_id):
     """
     Test the function ``base_pairs_edge``. Each test structure is a
     crystal structure onto which hydrogens were added using gromacs
@@ -280,7 +280,7 @@ def test_base_pairs_glycosidic_bonds(pdb_id):
     reference_structure, reference_gly_bonds = get_reference(pdb_id, "sugar")
     # Calculate basepairs and edges for the references
     pairs = struc.base_pairs(reference_structure)
-    glycosidic_bond_orientations = struc.base_pairs_glycosidic_bonds(
+    glycosidic_bond_orientations = struc.base_pairs_glycosidic_bond(
         reference_structure, pairs
     )
 

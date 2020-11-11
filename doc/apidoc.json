@@ -1,4 +1,4 @@
-{   
+{
     "biotite" : {
         "File classes" : [
             "File",
@@ -13,7 +13,7 @@
             "AdaptiveFancyArrow"
         ]
     },
-    
+
     "biotite.application" : {
         "Application classes" : [
             "Application",
@@ -36,7 +36,7 @@
             "fetch_single_file"
         ]
     },
-    
+
     "biotite.database.rcsb" : {
         "Queries" : [
             "Query",
@@ -241,7 +241,10 @@
             "annotate_sse",
             "hbond",
             "hbond_frequency",
-            "base_pairs"
+            "base_pairs",
+            "base_stacking",
+            "base_pairs_edge",
+            "base_pairs_glycosidic_bond"
         ]
     }
 }
