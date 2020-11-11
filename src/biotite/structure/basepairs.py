@@ -498,35 +498,60 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
         Nucleic Acids Research, 31(13), 3450-3460 (2003).
     """
     results = np.zeros(len(base_pairs), dtype=glycosidic_bond)
-    for i, pair in enumerate(base_pairs):
+
+    # Get the residue masks for each residue
+    base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
+
+    # Group every two masks together for easy iteration (each 'row' is
+    # respective to a row in ``base_pairs```)
+    base_pairs_masks = base_pairs_masks.reshape(
+        (base_pairs.shape[0], 2, atom_array.shape[0])
+    )
+
+    for i, pair_masks in enumerate(base_pairs_masks):
 
         geometric_centers = np.zeros((2, 3))
         glycosidic_bonds = np.zeros((2, 3))
 
-        for base_index, base_mask in enumerate(
-            get_residue_masks(atom_array, pair)
-        ):
+        for base_index, base_mask in enumerate(pair_masks):
             base = atom_array[base_mask]
             ring_center = _match_base(base, 3)[3:]
+
             if (base.res_name[0] in _adenine_containing_nucleotides or
                 base.res_name[0] in _guanine_containing_nucleotides):
+
                 ring_center = (ring_center[0] + ring_center[1]) / 2
                 base_atom = base[base.atom_name == "N9"][0]
-            else:
+
+            elif (base.res_name[0] in _thymine_containing_nucleotides or
+                base.res_name[0] in _uracil_containing_nucleotides or
+                base.res_name[0] in _cytosine_containing_nucleotides):
+
                 ring_center = ring_center[0]
                 base_atom = base[base.atom_name == "N1"][0]
+
+            else:
+
+                results[i] = glycosidic_bond.INVALID
+                break
+
             sugar_atom = base[base.atom_name == "C1'"][0]
             glycosidic_bonds[base_index] = sugar_atom.coord - base_atom.coord
             geometric_centers[base_index] = ring_center
+
         geometric_centers_vector = geometric_centers[1] - geometric_centers[0]
 
         if np.dot(
             np.cross(geometric_centers_vector, glycosidic_bonds[0]),
             np.cross(geometric_centers_vector, glycosidic_bonds[1])
         ) < 0:
+
             results[i] = glycosidic_bond.TRANS
+
         else:
+
             results[i] = glycosidic_bond.CIS
+
     return results
 
 
