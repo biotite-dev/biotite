@@ -248,8 +248,8 @@ _cytosine_containing_nucleotides = ["C", "DC"]
 _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
-# Atoms that are part of each edge according to the Leontis-Westhof
-# nomenclature
+# Atoms that are part of respective base edges according to the
+# Leontis-Westhof nomenclature
 _watson_crick_edge = {
     "A" : ["N6", "N1"],
     "G" : ["O6", "N1", "N2"],
