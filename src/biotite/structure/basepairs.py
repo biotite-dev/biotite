@@ -19,7 +19,8 @@ from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides
 from .celllist import CellList
 from .hbond import hbond
-from .error import IncompleteStructureWarning, UnexpectedStructureWarning
+from .error import IncompleteStructureWarning, UnexpectedStructureWarning, \
+    BadStructureError
 from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
@@ -406,6 +407,12 @@ def _get_edge_matrix(atom_array, base_masks):
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
     # Filter out the Donor/Acceptor Heteroatoms and flatten for
     # easy iteration
+    if len(hbonds) == 0:
+        raise BadStructureError(
+            f"No hydrogen bonds between nucleotides with residue start "
+            f"indices {np.where(base_masks[0])} and {np.where(base_masks[1])}"
+        )
+
     hbonds = hbonds[:, (0,2)].flatten()
 
     # ``ndarray``` with one row for each base and the number of
