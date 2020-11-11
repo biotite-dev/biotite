@@ -335,7 +335,9 @@ def base_pairs_edge(atom_array, base_pairs):
     id 1QXB:
 
     >>> from os.path import join
-    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> dna_helix = load_structure(
+    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
     >>> print(interacting_edges)
@@ -476,7 +478,9 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     PDB id 1QXB:
 
     >>> from os.path import join
-    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> dna_helix = load_structure(
+    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bonds(dna_helix, basepairs)
     >>> print(orientations)
@@ -600,7 +604,9 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     Compute the stacking interactions for a DNA-double-helix (PDB ID
     1BNA):
     >>> from os.path import join
-    >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
+    >>> dna_helix = load_structure(
+    ...     join(path_to_structures, "base_pairs/1bna.pdb")
+    ... )
     >>> stacking_interactions = base_stacking(dna_helix)
     >>> print(dna_helix[stacking_interactions].res_id)
     [[ 1  2]
@@ -769,7 +775,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Compute the basepairs for the structure with the PDB id 1QXB:
 
     >>> from os.path import join
-    >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
+    >>> dna_helix = load_structure(
+    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> print(dna_helix[basepairs].res_name)
     [['DC' 'DG']
