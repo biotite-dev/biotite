@@ -266,7 +266,7 @@ def test_base_pairs_edge(pdb_id):
             )
 
 
-@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw"])
+@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
 def test_base_pairs_glycosidic_bonds(pdb_id):
     """
     Test the function ``base_pairs_edge``. Each test structure is a
