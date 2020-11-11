@@ -24,10 +24,25 @@ import numpy as np
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
+ctypedef np.uint8_t  uint8
+ctypedef np.uint16_t uint16
 ctypedef np.uint32_t uint32
-ctypedef np.uint8_t uint8
-ctypedef np.int32_t int32
-ctypedef np.int64_t int64
+ctypedef np.uint64_t uint64
+ctypedef np.int8_t   int8
+ctypedef np.int16_t  int16
+ctypedef np.int32_t  int32
+ctypedef np.int64_t  int64
+
+
+ctypedef fused IndexType:
+    uint8
+    uint16
+    uint32
+    uint64
+    int8
+    int16
+    int32
+    int64
 
 
 class BondType(IntEnum):
@@ -516,33 +531,94 @@ class BondList(Copyable):
         return merged_bond_list
 
     def __getitem__(self, index):
-        copy = self.copy()
-        cdef uint32[:,:] all_bonds_v = copy._bonds
+
+        ## Variables for both, integer and boolean index arrays
+        cdef uint32[:,:] all_bonds_v
+        cdef int32 new_index
+        cdef int i
+        cdef uint32* index1_ptr
+        cdef uint32* index2_ptr
+        cdef np.ndarray removal_filter
+        cdef uint8[:] removal_filter_v
+
+        ## Variables for integer arrays
+        cdef int32[:] index_v, inverse_index
+        cdef int32 new_index1, new_index2
+        
+        ## Variables for boolean mask
         # Boolean mask representation of the index
         cdef np.ndarray mask
         cdef uint8[:] mask_v
         # Boolean mask for removal of bonds
-        cdef np.ndarray removal_filter
-        cdef uint8[:] removal_filter_v
         cdef np.ndarray offsets
         cdef uint32[:] offsets_v
-        cdef int i
-        cdef uint32* index1_ptr
-        cdef uint32* index2_ptr
         
         if isinstance(index, numbers.Integral):
-            return copy.get_bonds(index)
+            ## Handle single index
+            return self.get_bonds(index)
         
+        elif isinstance(index, np.ndarray) \
+            and np.issubdtype(index.dtype, np.integer):
+                ## Handle index array
+                copy = self.copy()
+                all_bonds_v = copy._bonds
+
+                # A boolean mask is still required for correct offset
+                # handling, i.e. taking removed atoms into account
+                mask = _to_bool_mask(index, length=copy._atom_count)
+                # Each time an atom is missing in the mask,
+                # the offset is increased by one
+                offsets = np.cumsum(
+                    ~mask.astype(bool, copy=False), dtype=np.uint32
+                )
+                offsets_v = offsets
+
+                index = _to_positive_index_array(index, self._atom_count)
+                # The inverse index is required to efficiently obtain
+                # the new index of an atom in case of an unsorted index
+                # array
+                inverse_index_v = _invert_index(index, self._atom_count)
+                removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
+                removal_filter_v = removal_filter
+                for i in range(all_bonds_v.shape[0]):
+                    # Usage of pointer to increase performance
+                    # as redundant indexing is avoided
+                    index1_ptr = &all_bonds_v[i,0]
+                    index2_ptr = &all_bonds_v[i,1]
+                    new_index1 = inverse_index_v[index1_ptr[0]]
+                    new_index2 = inverse_index_v[index2_ptr[0]]
+                    if new_index1 != -1 and new_index2 != -1:
+                        # Both atoms involved in bond are included
+                        # by index array
+                        # -> assign new atom indices
+                        index1_ptr[0] = <int32>new_index1 - offsets_v[new_index1]
+                        index2_ptr[0] = <int32>new_index2 - offsets_v[new_index2]
+                    else:
+                        # At least one atom in bond is not included
+                        # -> remove bond
+                        removal_filter_v[i] = False
+                copy._bonds = copy._bonds[
+                    removal_filter.astype(bool, copy=False)
+                ]
+                copy._atom_count = len(index)
+                copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
+                return copy
+
         else:
+            ## Handle all other arrays as boolean mask
+            copy = self.copy()
+            all_bonds_v = copy._bonds
+
             mask = _to_bool_mask(index, length=copy._atom_count)
             # Each time an atom is missing in the mask,
             # the offset is increased by one
-            offsets = np.cumsum(~mask.astype(bool, copy=False),
-                                dtype=np.uint32)
+            offsets = np.cumsum(
+                ~mask.astype(bool, copy=False), dtype=np.uint32
+            )
             removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
+            removal_filter_v = removal_filter
             mask_v = mask
             offsets_v = offsets
-            removal_filter_v = removal_filter
             # If an atom in a bond is not masked,
             # the bond is removed from the list
             # If an atom is masked,
@@ -560,7 +636,7 @@ class BondList(Copyable):
                     index1_ptr[0] -= offsets_v[index1_ptr[0]]
                     index2_ptr[0] -= offsets_v[index2_ptr[0]]
                 else:
-                    # At least one atom invloved in bond is not masked
+                    # At least one atom involved in bond is not masked
                     # -> remove bond
                     removal_filter_v[i] = False
             # Apply the bond removal filter
@@ -608,7 +684,7 @@ class BondList(Copyable):
         
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
-        # Create array that counts number of occurences of each index
+        # Create an array that counts number of occurences of each index
         cdef np.ndarray index_count = np.zeros(self._atom_count,
                                                dtype=np.uint32)
         cdef uint32[:] index_count_v = index_count
@@ -694,25 +770,25 @@ cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
         return <uint32> index
 
 
-def _to_positive_index_array(index_array, array_length):
+def _to_positive_index_array(index_array, length):
     """
     Convert potentially negative values in an array into positive
-    values.
+    values and check for out-of-bounds values.
     """
     index_array = index_array.copy()
     orig_shape = index_array.shape
     index_array = index_array.flatten()
     negatives = index_array < 0
-    index_array[negatives] = array_length + index_array[negatives]
+    index_array[negatives] = length + index_array[negatives]
     if (index_array < 0).any():
         raise IndexError(
             f"Index {np.min(index_array)} is out of range "
-            f"for an atom count of {array_length}"
+            f"for an atom count of {length}"
         )
-    if (index_array >= array_length).any():
+    if (index_array >= length).any():
         raise IndexError(
             f"Index {np.max(index_array)} is out of range "
-            f"for an atom count of {array_length}"
+            f"for an atom count of {length}"
         )
     return index_array.reshape(orig_shape)
 
@@ -729,6 +805,7 @@ cdef inline bint _in_array(uint32* array, uint32 atom_index, int array_length):
             return True
     return False
 
+
 cdef inline void _sort(uint32* index1_ptr, uint32* index2_ptr):
     cdef uint32 swap
     if index1_ptr[0] > index2_ptr[0]:
@@ -736,6 +813,35 @@ cdef inline void _sort(uint32* index1_ptr, uint32* index2_ptr):
         swap = index1_ptr[0]
         index1_ptr[0] = index2_ptr[0]
         index2_ptr[0] = swap
+
+
+@cython.wraparound(False)
+# Do bounds check, as the input indices may be out of bounds
+def _invert_index(IndexType[:] index_v, uint32 length):
+    """
+    Invert an input index array, so that
+    if *input[i] = j*, *output[j] = i*.
+    For all elements *j*, that are not in *input*, *output[j]* = -1.
+    """
+    cdef int32 i
+    cdef IndexType index_val
+    inverse_index = np.full(length, -1, dtype=np.int32)
+    cdef int32[:] inverse_index_v = inverse_index
+
+    for i in range(index_v.shape[0]):
+        index_val = index_v[i]
+        if inverse_index_v[index_val] != -1:
+            # One index can theoretically appear multiple times
+            # This is currently not supported
+            raise NotImplementedError(
+                f"Duplicate indices are not supported, "
+                f"but index {index_val} appeared multiple times" 
+            )
+        inverse_index_v[index_val] = i
+
+
+    return inverse_index
+
 
 def _to_bool_mask(object index, uint32 length):
     """
@@ -1157,11 +1263,11 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     >>> bonds.add_bond(0, 1)
     >>> bonds.add_bond(1, 2)
     >>> print(find_connected(bonds, 0))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 1))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 2))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 3))
     [3]
     """
