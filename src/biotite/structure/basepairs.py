@@ -478,20 +478,14 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
     >>> from os.path import join
     >>> dna_helix = load_structure(join(path_to_structures, "1qxb.cif"))
     >>> basepairs = base_pairs(dna_helix)
-    >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
-    >>> print(interacting_edges)
-    [<glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0>]
+    >>> orientations = base_pairs_glycosidic_bonds(dna_helix, basepairs)
+    >>> print(orientations)
+    [<glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
+     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>]
 
     References
     ----------
