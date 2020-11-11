@@ -313,15 +313,13 @@ def base_pairs_edge(atom_array, base_pairs):
         Each row is equivalent to the respective basepair and contains
         an ``IntEnum`` describing the type of edge interaction.
 
+    See Also
+    --------
+    base_pairs
+    base_pairs_glycosidic_bonds
+
     Notes
     -----
-    The base pairs for a given :class:`AtomArray` can be found using
-    :func:`base_pairs()`.
-
-    The glycosidic bond orientation is also part of the Leontis-Westhof
-    nomenclature. It can be calculated using
-    :func:`base_pairs_glycosidic_bonds()`
-
     If a base is not a canonical base (A, C, G, T, U) or no hydrogen
     bonds are found between the bases that conform to the interacting
     edges described by Leontis and Westhof, ``edge.invalid`` is
@@ -391,6 +389,7 @@ def _get_edge_matrix(atom_array, base_masks):
     Get the number of atoms interacting for each edge as a matrix, where
     each row corresponds to a base and each column to the number of
     Watson-Crick-, Hoogsteen- and Sugar-edge interactions respectively.
+
     Parameters
     ----------
     atom_array : AtomArray
@@ -453,17 +452,15 @@ def base_pairs_glycosidic_bonds(atom_array, base_pairs):
         Each row is equivalent to the respective basepair and contains
         an ``IntEnum`` describing the glycosidic bond orientation.
 
+    See Also
+    --------
+    base_pairs
+    base_pairs_edge
+
     Notes
     -----
-    The base pairs for a given :class:`AtomArray` can be found using
-    :func:`base_pairs()`.
-
-    The interacting base edges are also part of the Leontis-Westhof
-    nomenclature. They can be calculated using
-    :func:`base_pairs_edge()`
-
     The orientation is found using the geometric centers of the bases
-    and the glycosidic bonds as described in [2]_
+    and the glycosidic bonds as described in [2]_.
 
     Examples
     --------
