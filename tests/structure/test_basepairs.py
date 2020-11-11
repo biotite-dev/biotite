@@ -29,7 +29,9 @@ def reversed_iterator(iter):
 
 @pytest.fixture
 def nuc_sample_array():
-    return strucio.load_structure(join(data_dir("structure"), "1qxb.cif"))
+    return strucio.load_structure(
+        join(data_dir("structure"), "base_pairs/1qxb.cif")
+    )
 
 
 @pytest.fixture
@@ -301,7 +303,9 @@ def test_base_stacking():
     helix.
     """
     # Load the test structure (1BNA) - a DNA-double-helix
-    helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
+    helix = strucio.load_structure(
+        join(data_dir("structure"), "base_pairs/1bna.mmtf")
+    )
 
     # For a DNA-double-helix it is expected that adjacent bases are
     # stacked.
