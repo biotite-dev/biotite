@@ -12,9 +12,9 @@ from biotite.structure.residues import get_residue_masks
 from biotite.structure.hbond import hbond
 from os.path import join
 from ..util import data_dir
-# For ``base_pairs_edge`` differences to a reference can be arbitrary as
-# the number hydrogen bonds between two different edges can be equal. In
-# order to distinguish arbitrarily identified edges from wrongfully
+# For ``base_pairs_edge()`` differences to a reference can be arbitrary
+# as the number hydrogen bonds between two different edges can be equal.
+# In order to distinguish arbitrarily identified edges from wrongfully
 # identified edges the full edge matrix, listing the number of hydrogen
 # bonds for each edge has to be considered.
 from biotite.structure.basepairs import _get_edge_matrix
@@ -175,23 +175,56 @@ def test_map_nucleotide():
 
     assert struc.map_nucleotide(residue('ALA')) is None
 
-def get_reference(pdb_id):
-    """Gets the reference edges from specified pdb files
+
+def get_reference(pdb_id, suffix):
     """
-    reference = strucio.load_structure(
+    Gets a reference structure and a related json array depending on
+    a specified JSON-suffix and pdb id.
+    """
+    structure = strucio.load_structure(
         join(data_dir("structure"), f"base_pairs/{pdb_id}.cif")
     )
 
     with open(
-        join(data_dir("structure"), f"base_pairs/{pdb_id}.json"
+        join(data_dir("structure"), f"base_pairs/{pdb_id}_{suffix}.json"
     ), "r") as file:
-        edges = np.array(json.load(file))
-    return reference, edges
+        reference = np.array(json.load(file))
+
+    return structure, reference
+
+def get_reference_index(pair, array):
+    """
+    Get the index of the row in a reference array, where the first two
+    columns match the values of pair in the same or opposite order. If
+    no match is found ``Ǹone`` is returned.
+    """
+    if np.any(
+        np.logical_and(array[:, 0] == pair[0], array[:, 1] == pair[1])
+    ):
+        return np.where(
+            np.logical_and(array[:, 0] == pair[0], array[:, 1] == pair[1])
+        )
+
+    elif np.any(
+        np.logical_and(array[:, 1] == pair[0], array[:, 0] == pair[1])
+    ):
+        return np.where(
+            np.logical_and(array[:, 1] == pair[0], array[:, 0] == pair[1])
+        )
+    else:
+        return None
+
 
 
 def check_edge_plausibility(
     reference_structure, pair, reference_edges, output_edges
 ):
+    """
+    Checks if the difference to a reference edge is at least arbitrary.
+    A difference is defined as arbitrary, if the number of hydrogen
+    bonds on a given edge is the same as on the edge specified in the
+    reference.
+    """
     # Get the complete edge matrix for a given edge
     edge_matrix = _get_edge_matrix(
         reference_structure, get_residue_masks(reference_structure, pair)
@@ -208,8 +241,14 @@ def check_edge_plausibility(
 
 @pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
 def test_base_pairs_edge(pdb_id):
+    """
+    Test the function ``base_pairs_edge``. Each test structure is a
+    crystal structure onto which hydrogens were added using gromacs
+    force fields. The reference data was taken from the NDB-database
+    annotations and parsed as json array.
+    """
     # Get the references
-    reference_structure, reference_edges = get_reference(pdb_id)
+    reference_structure, reference_edges = get_reference(pdb_id, "edges")
     # Calculate basepairs and edges for the references
     pairs = struc.base_pairs(reference_structure)
     edges = struc.base_pairs_edge(reference_structure, pairs)
@@ -217,19 +256,8 @@ def test_base_pairs_edge(pdb_id):
     # Check the plausibility with the reference data for each basepair
     for pair, pair_edges in zip(pairs, edges):
         pair_res_ids = reference_structure[pair].res_id
-        if (
-            np.any(
-                np.logical_and(
-                    reference_edges[:, 0] == pair_res_ids[0],
-                    reference_edges[:, 1] == pair_res_ids[1]
-                )
-
-            )
-        ):
-            index = np.where(np.logical_and(
-                    reference_edges[:, 0] == pair_res_ids[0],
-                    reference_edges[:, 1] == pair_res_ids[1]
-                ))
+        index = get_reference_index(pair_res_ids, reference_edges)
+        if index is not None:
             pair_reference_edges =  [
                 reference_edges[index, 2], reference_edges[index, 3]
             ]
@@ -237,45 +265,17 @@ def test_base_pairs_edge(pdb_id):
                 reference_structure, pair, pair_reference_edges, pair_edges
             )
 
-        elif (
-            np.any(
-                np.logical_and(
-                    reference_edges[:, 1] == pair_res_ids[0],
-                    reference_edges[:, 0] == pair_res_ids[1]
-                )
-
-            )
-        ):
-            index = np.where(np.logical_and(
-                    reference_edges[:, 1] == pair_res_ids[0],
-                    reference_edges[:, 0] == pair_res_ids[1]
-                ))
-            pair_reference_edges =  [
-                reference_edges[index, 3], reference_edges[index, 2]
-            ]
-            check_edge_plausibility(
-                reference_structure, pair, pair_reference_edges, pair_edges
-            )
-
-def get_reference_orientation(pdb_id):
-    """Gets the reference sugars from specified pdb files
-    """
-    reference = strucio.load_structure(
-        join(data_dir("structure"), f"base_pairs/{pdb_id}.cif")
-    )
-
-    with open(
-        join(data_dir("structure"), f"base_pairs/{pdb_id}_sugar.json"
-    ), "r") as file:
-        sugar_orientations = np.array(json.load(file))
-    return reference, sugar_orientations
 
 @pytest.mark.parametrize("pdb_id", ["1gid", "1nkw"])
 def test_base_pairs_glycosidic_bonds(pdb_id):
+    """
+    Test the function ``base_pairs_edge``. Each test structure is a
+    crystal structure onto which hydrogens were added using gromacs
+    force fields. The reference data was taken from the NDB-database
+    annotations and parsed as json array.
+    """
     # Get the references
-    reference_structure, reference_gly_bonds = get_reference_orientation(
-        pdb_id
-    )
+    reference_structure, reference_gly_bonds = get_reference(pdb_id, "sugar")
     # Calculate basepairs and edges for the references
     pairs = struc.base_pairs(reference_structure)
     glycosidic_bond_orientations = struc.base_pairs_glycosidic_bonds(
@@ -285,38 +285,13 @@ def test_base_pairs_glycosidic_bonds(pdb_id):
     # Check the plausibility with the reference data for each basepair
     for pair, pair_orientation in zip(pairs, glycosidic_bond_orientations):
         pair_res_ids = reference_structure[pair].res_id
-        if (
-            np.any(
-                np.logical_and(
-                    reference_gly_bonds[:, 0] == pair_res_ids[0],
-                    reference_gly_bonds[:, 1] == pair_res_ids[1]
-                )
-            )
-        ):
-            index = np.where(np.logical_and(
-                    reference_gly_bonds[:, 0] == pair_res_ids[0],
-                    reference_gly_bonds[:, 1] == pair_res_ids[1]
-                ))
+        index = get_reference_index(pair_res_ids, reference_gly_bonds)
+        if index is not None:
             reference_orientation = struc.glycosidic_bond(
                 reference_gly_bonds[index, 2]
             )
             assert reference_orientation == pair_orientation
-        elif (
-            np.any(
-                np.logical_and(
-                    reference_gly_bonds[:, 1] == pair_res_ids[0],
-                    reference_gly_bonds[:, 0] == pair_res_ids[1]
-                )
-            )
-        ):
-            index = np.where(np.logical_and(
-                    reference_gly_bonds[:, 1] == pair_res_ids[0],
-                    reference_gly_bonds[:, 0] == pair_res_ids[1]
-                ))
-            reference_orientation = struc.glycosidic_bond(
-                reference_gly_bonds[index, 2]
-            )
-            assert reference_orientation == pair_orientation
+
 
 def test_base_stacking():
     """
