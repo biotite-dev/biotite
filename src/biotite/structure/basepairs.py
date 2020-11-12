@@ -1133,3 +1133,72 @@ def _filter_atom_type(atom_array, atom_names):
     """
     return (np.isin(atom_array.atom_name, atom_names)
             & (atom_array.res_id != -1))
+
+class region():
+
+    def __init__ (self, base_pairs, start, stop):
+        # The Start and Stop indices for each Region
+        self.start = start
+        self.stop = stop
+        # The base pair array
+        self.base_pairs = base_pairs
+
+        # TODO: Setter and Getter Function
+        self.paired_region = None
+
+    # Gets a boolean mask from the original basepair array
+    def get_boolean_mask(self):
+        pass
+
+    #Checks if this is the downstream region
+    def is_downstream(self):
+        pass
+
+def pseudoknots(base_pairs, scoring=None):
+
+    # Result array
+    results = np.array(len(base_pairs), dtype='int32')
+
+    # if no scoring function is given, each basepairs score is one
+    if scoring is None:
+        scoring = np.ones(len(base_pairs))
+
+    # Make sure base_pairs has the same length as the scoring function
+    # TODO: Throw Error
+    assert len(base_pairs) == len(scoring)
+
+    # Split the basepairs in regions
+    # TODO: Specify very rough layout
+    regions = _find_regions(base_pairs)
+
+    # Only retain conflicting regions
+    # TODO: Specify very rough layout
+    cleaned_regions = _remove_non_conflicting_regions()
+
+    # Cleaned regions are of order zero
+    for region in regions:
+        if region not in cleaned_regions:
+            results[region.get_boolean_mask] = 0
+
+    # Group mutually conflicting regions
+    # TODO: Specify very rough layout
+    conflict_clusters = _cluster_conflicts(regions)
+
+    for cluster in conflict_clusters:
+        # TODO: Get solutions
+        pass
+
+
+
+def _find_regions(base_pairs):
+    # Return consecutive pairs as regions
+    return [region(base_pairs, None, None)]
+
+def _remove_non_conflicting_regions(regions):
+    # Remove regions that are not conflicting
+    return regions
+
+def _cluster_conflicts(regions):
+    # Return the conflict clusters as list of lists
+    return [[regions]]
+
