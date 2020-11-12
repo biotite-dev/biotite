@@ -1263,11 +1263,11 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     >>> bonds.add_bond(0, 1)
     >>> bonds.add_bond(1, 2)
     >>> print(find_connected(bonds, 0))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 1))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 2))
-    [0, 1, 2]
+    [0 1 2]
     >>> print(find_connected(bonds, 3))
     [3]
     """

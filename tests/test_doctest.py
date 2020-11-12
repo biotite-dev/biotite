@@ -109,12 +109,30 @@ def test_doctest(package_name, context_package_names):
     np.set_printoptions(precision=3, floatmode="maxprec_equal")
 
     # Run doctests
+    # This test does not use 'testfile()' or 'testmod()'
+    # due to problems with doctest identification for Cython modules
+    # More information below
     package = import_module(package_name)
-    results = doctest.testmod(
-        package, extraglobs=globs,
-        optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE,
-        verbose=False, report=False
+    runner = doctest.DocTestRunner(
+        verbose=False,
+        optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE
     )
+    for test in doctest.DocTestFinder(exclude_empty=False).find(
+        package, package.__name__,
+        # It is necessary to set 'module' to 'False', as otherwise
+        # Cython functions and classes would be falsely identified
+        # as members of an external module by 'DocTestFinder._find()'
+        # and consequently would be ignored
+        #
+        # Setting 'module=False' omits this check
+        # This check is not necessary as the biotite subpackages
+        # ('__init__.py' modules) should only contain attributes, that
+        # are part of the package itself.
+        module=False,
+        extraglobs=globs
+    ):
+        runner.run(test)
+    results = doctest.TestResults(runner.failures, runner.tries)
     try:
         assert results.failed == 0
     except AssertionError:
