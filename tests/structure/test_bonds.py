@@ -28,7 +28,7 @@ def bond_list(request):
 
 def test_creation(bond_list):
     """
-    Test creating a `BondList` on a known example.
+    Test creating a :class:`BondList` on a known example.
     """
     # Test includes redundancy removal and max bonds calculation
     assert bond_list.as_array().tolist() == [[0, 1, 0],
@@ -39,6 +39,56 @@ def test_creation(bond_list):
                                              [4, 6, 0]]
     assert bond_list._max_bonds_per_atom == 3
     assert bond_list._atom_count == 7
+
+
+def test_invalid_creation():
+    """
+    Check for appropriate errors when invalid input is given to the
+    :class:`BondLst` constructor.
+    """
+    # Test invalid input shapes
+    with pytest.raises(ValueError):
+        struc.BondList(
+            5,
+            np.array([
+                [1,2,3,4]
+            ])
+        )
+    with pytest.raises(ValueError):
+        struc.BondList(
+            5,
+            np.array([1,2])
+        )
+
+    # Test invalid atom indices
+    with pytest.raises(IndexError):
+        struc.BondList(
+            5,
+            np.array([
+                [1,2],
+                # 5 is an invalid index for an atom count of 5
+                [5,2]
+            ])
+        )
+    with pytest.raises(IndexError):
+        struc.BondList(
+            5,
+            np.array([
+                # Index -6 is invalid for an atom count of 5
+                [-6,3],
+                [3,4]
+            ])
+        )
+    
+    # Test invalid BondType
+    with pytest.raises(ValueError):
+        struc.BondList(
+            5,
+            np.array([
+                # BondType '6' does not exist
+                [1,2,6]
+            ])
+        )
 
 
 def test_modification(bond_list):
