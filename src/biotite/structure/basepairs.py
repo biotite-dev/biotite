@@ -1199,11 +1199,7 @@ def _find_regions(base_pairs):
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
     downstream_order = np.argsort(sorted_base_pairs[:,1])
-    downstream_rank = np.argsort(sorted_base_pairs[:,1])
-
-    print(base_pairs[:, 1])
-    print(np.argsort(np.argsort(base_pairs[:, 1])))
-    #print(base_pairs[:,1][np.argsort(base_pairs[:,1])])
+    downstream_rank = np.argsort(downstream_order)
 
     # Region Pairs
     region_pairs = []
@@ -1214,19 +1210,15 @@ def _find_regions(base_pairs):
             region_pairs.append(original_indices[i])
             continue
 
-        previous_base_pair = sorted_base_pairs[i-1]
         previous_rank = downstream_rank[i-1]
         this_rank = downstream_rank[i]
-        print(previous_rank - this_rank)
-        #print(this_rank)
 
-        if (previous_base_pair[1] > base_pair[1] and
-           ((previous_rank - this_rank) == 1)):
-            region_pairs.append(original_indices[i])
-
-        else:
+        if (previous_rank - this_rank) != 1:
             regions.append(region(base_pairs, np.array(region_pairs)))
             region_pairs = []
+
+        region_pairs.append(original_indices[i])
+    regions.append(region(base_pairs, np.array(region_pairs)))
 
     return regions
 
