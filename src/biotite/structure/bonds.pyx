@@ -159,6 +159,10 @@ class BondList(Copyable):
                     _to_positive_index_array(bonds[:,:2], atom_count), axis=1
                 )
                 # Bond type:
+                if (bonds[:, 2] >= len(BondType)).any():
+                    raise ValueError(
+                        f"BondType {np.max(bonds[:, 2])} is invalid"
+                    )
                 self._bonds[:,2] = bonds[:, 2]
 
                 # Indices are sorted per bond
@@ -226,8 +230,7 @@ class BondList(Copyable):
         """
         if offset < 0:
             raise ValueError("Offest must be positive")
-        self._bonds[:,0] += offset
-        self._bonds[:,1] += offset
+        self._bonds[:,:2] += offset
         self._atom_count += offset
     
     def as_array(self):
@@ -374,13 +377,11 @@ class BondList(Copyable):
         bond_type : BondType or int, optional
             The type of the bond. Default is :attr:`BondType.ANY`.
         """
+        if bond_type >= len(BondType):
+            raise ValueError(f"BondType {bond_type} is invalid")
+
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
-        if index1 >= self._atom_count or index2 >= self._atom_count:
-            raise ValueError(
-                f"Index {max(index1, index2)} in new bond is too large "
-                f"for atom count of {self._atom_count}"
-            )
         _sort(&index1, &index2)
         
         cdef int i
@@ -754,7 +755,7 @@ class BondList(Copyable):
 
 cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
     """
-    Convert a potentially negative index intop a positive index.
+    Convert a potentially negative index into a positive index.
     """
     cdef uint32 pos_index
     if index < 0:
