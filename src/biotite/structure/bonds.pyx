@@ -150,21 +150,27 @@ class BondList(Copyable):
                     f"Index {np.max(bonds[:,:2])} in bonds is too large "
                     f"for atom count of {atom_count}"
                 )
+            self._bonds = np.zeros((bonds.shape[0], 3), dtype=np.uint32)
             if bonds.shape[1] == 3:
                 # Input contains bonds (index 0 and 1)
-                # including the bond type value (index 3)
-                # -> Simply copy input
-                self._bonds = _to_positive_index_array(bonds, atom_count) \
-                              .astype(np.uint32)
+                # including the bond type value (index 2)
+                # Bond indices:
+                self._bonds[:,:2] = np.sort(
+                    # Indices are sorted per bond
+                    # so that the lower index is at the first position
+                    _to_positive_index_array(bonds[:,:2], atom_count), axis=1
+                )
+                # Bond type:
+                self._bonds[:,2] = bonds[:, 2]
+
                 # Indices are sorted per bond
                 # so that the lower index is at the first position
-                self._bonds[:,:2] = np.sort(self._bonds[:,:2], axis=1)
             elif bonds.shape[1] == 2:
-                # input contains the bonds without bond type
+                # Input contains the bonds without bond type
                 # -> Default: Set bond type ANY (0)
-                self._bonds = np.zeros((bonds.shape[0], 3), dtype=np.uint32)
-                # Set and sort atom indices per bond
                 self._bonds[:,:2] = np.sort(
+                    # Indices are sorted per bond
+                    # so that the lower index is at the first position
                     _to_positive_index_array(bonds[:,:2], atom_count), axis=1
                 )
             else:
