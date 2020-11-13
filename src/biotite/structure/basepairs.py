@@ -824,33 +824,34 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return vectors
 
+
 def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     """
-    Maps a nucleotide to one of the 5 common bases Adenine, Guanine,
+    Map a nucleotide to one of the 5 common bases Adenine, Guanine,
     Thymine, Cytosine, and Uracil. If one of those bases bound to
     Deoxyribose and Ribose is detected as input, the corresponding one-
-    letter-code (A, G, T, C, U) is returned.
+    letter-code (``A``, ``G``, ``T``, ``C``, ``U``) is returned.
 
-    If a different nucleotide is given, it is mapped to the best best
+    If a different nucleotide is given, it is mapped to the best
     fitting base using the algorithm described below.
 
     (i) The number of matching atom names with the reference bases is
         counted. If the number of matching atoms with all reference
-        bases is less than the specified ``min_atoms_per_base``
-        (default 3) the nucleotide cannot be mapped and ``None```is
+        bases is less than the specified `min_atoms_per_base`
+        (default 3) the nucleotide cannot be mapped and ``None`` is
         returned.
 
     (ii) The bases with maximum number of matching atoms are selected
          and superimposed with each reference. The base with lowest RMSD
          is chosen. If the RMSD is more than the specified
-         ``rmsd_cutoff`` (default 0.28) the nucleotide cannot be mapped
-         and ``None```is returned.
+         `rmsd_cutoff` (default 0.28) the nucleotide cannot be mapped
+         and ``None`` is returned.
 
     Parameters
     ----------
     residue : AtomArray
         The nucleotide to be mapped.
-    min_atoms_per_base : integer, optional (default: 3)
+    min_atoms_per_base : int, optional (default: 3)
         The number of atoms the residue must have in common with the
         reference.
     rmsd_cutoff : float, optional (default: 0.28)
@@ -858,11 +859,13 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     Returns
     -------
-    one_letter_code : string
-        The one-letter-code of the mapped base
-    exact_match : boolean
-        Wether or not the residue name exactly matches with the
-        reference.
+    one_letter_code : str
+        The one-letter-code of the mapped base.
+    exact_match : bool
+        Wether or not the residue name exactly matches one of the common
+        bases, i.e. the ``res_name`` of the input `residue` is one of
+        ``A``, ``G``, ``T``, ``C``, ``U``, ``DA``, ``DG``, ``DT``,
+        ``DC`` or ``DU``.
     """
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
