@@ -1194,7 +1194,10 @@ def _find_regions(base_pairs):
     """
 
     # Presort base pairs
+
+    # Make sure the lower residue is on the left for each row
     sorted_base_pairs = np.sort(base_pairs, axis=1)
+
     original_indices = np.argsort(sorted_base_pairs[:, 0])
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
@@ -1205,6 +1208,7 @@ def _find_regions(base_pairs):
     region_pairs = []
     regions = []
 
+    #TODO: Make code less spaghetti
     for i, base_pair in enumerate(sorted_base_pairs):
         if len(region_pairs) == 0:
             region_pairs.append(original_indices[i])
@@ -1223,8 +1227,28 @@ def _find_regions(base_pairs):
     return regions
 
 def _remove_non_conflicting_regions(regions):
-    # Remove regions that are not conflicting
-    return regions
+    """
+    Remove regions that are not conflicting
+    """
+    region_array = np.empty(len(regions)*2, dtype=region)
+    index_array = np.empty(len(regions)*2, dtype='int32')
+
+    for i, reg in enumerate(regions):
+        indices = [2*i, 2*i+1]
+        region_array[indices] = reg
+        index_array[indices] = [reg.start, reg.stop]
+    region_array = region_array[np.argsort(index_array)]
+
+
+    to_remove = [None]
+    while len(to_remove) != 0:
+        to_remove = []
+        for i in range(len(region_array)-1):
+            if region_array[i] is region_array[i+1]:
+                to_remove.append(region_array[i])
+        region_array = region_array[~ np.isin(region_array, to_remove)]
+    return list(set(region_array))
+
 
 def _cluster_conflicts(regions):
     # Return the conflict clusters as list of lists
