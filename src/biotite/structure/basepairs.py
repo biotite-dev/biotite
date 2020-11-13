@@ -1136,23 +1136,20 @@ def _filter_atom_type(atom_array, atom_names):
 
 class region():
 
-    def __init__ (self, base_pairs, start, stop):
+    def __init__ (self, base_pairs, region_pairs):
         # The Start and Stop indices for each Region
-        self.start = start
-        self.stop = stop
+        #print(region_pairs)
+        self.start = np.min(base_pairs[region_pairs])
+        self.stop = np.max(base_pairs[region_pairs])
         # The base pair array
         self.base_pairs = base_pairs
+        self.region_pairs = region_pairs
 
-        # TODO: Setter and Getter Function
-        self.paired_region = None
 
     # Gets a boolean mask from the original basepair array
-    def get_boolean_mask(self):
-        pass
+    def get_index_mask(self):
+        return self.region_pairs
 
-    #Checks if this is the downstream region
-    def is_downstream(self):
-        pass
 
 def pseudoknots(base_pairs, scoring=None):
 
@@ -1173,26 +1170,65 @@ def pseudoknots(base_pairs, scoring=None):
 
     # Only retain conflicting regions
     # TODO: Specify very rough layout
-    cleaned_regions = _remove_non_conflicting_regions()
+    cleaned_regions = _remove_non_conflicting_regions(regions)
 
     # Cleaned regions are of order zero
     for region in regions:
         if region not in cleaned_regions:
-            results[region.get_boolean_mask] = 0
+            results[region.get_index_mask] = 0
 
     # Group mutually conflicting regions
     # TODO: Specify very rough layout
     conflict_clusters = _cluster_conflicts(regions)
 
     for cluster in conflict_clusters:
-        # TODO: Get solutions
-        pass
+        # TODO: Specify very rough layout
+        optimal_solutions = _get_optimal_solutions(cluster)
+        ### TODO: RESULTS PROCESSING
 
 
 
 def _find_regions(base_pairs):
-    # Return consecutive pairs as regions
-    return [region(base_pairs, None, None)]
+    """
+    Return consecutive pairs as regions
+    """
+
+    # Presort base pairs
+    sorted_base_pairs = np.sort(base_pairs, axis=1)
+    original_indices = np.argsort(sorted_base_pairs[:, 0])
+    sorted_base_pairs = sorted_base_pairs[original_indices]
+
+    downstream_order = np.argsort(sorted_base_pairs[:,1])
+    downstream_rank = np.argsort(sorted_base_pairs[:,1])
+
+    print(base_pairs[:, 1])
+    print(np.argsort(np.argsort(base_pairs[:, 1])))
+    #print(base_pairs[:,1][np.argsort(base_pairs[:,1])])
+
+    # Region Pairs
+    region_pairs = []
+    regions = []
+
+    for i, base_pair in enumerate(sorted_base_pairs):
+        if len(region_pairs) == 0:
+            region_pairs.append(original_indices[i])
+            continue
+
+        previous_base_pair = sorted_base_pairs[i-1]
+        previous_rank = downstream_rank[i-1]
+        this_rank = downstream_rank[i]
+        print(previous_rank - this_rank)
+        #print(this_rank)
+
+        if (previous_base_pair[1] > base_pair[1] and
+           ((previous_rank - this_rank) == 1)):
+            region_pairs.append(original_indices[i])
+
+        else:
+            regions.append(region(base_pairs, np.array(region_pairs)))
+            region_pairs = []
+
+    return regions
 
 def _remove_non_conflicting_regions(regions):
     # Remove regions that are not conflicting
@@ -1202,3 +1238,6 @@ def _cluster_conflicts(regions):
     # Return the conflict clusters as list of lists
     return [[regions]]
 
+def _get_optimal_solutions(cluster):
+    # Return optimal solution as list of lists of regions
+    return [[region(base_pairs, None)]]
