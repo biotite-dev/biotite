@@ -10,7 +10,7 @@ import abc
 import copy
 import time
 import io
-from os import chdir, getcwd
+from os import chdir, getcwd, remove
 from .application import Application, AppState, requires_state
 from subprocess import Popen, PIPE, SubprocessError
 
@@ -241,3 +241,24 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:
             self._process.kill()
+
+
+def cleanup_tempfile(temp_file):
+    """
+    Close a :class:`NamedTemporaryFile` and delete it manually,
+    if `delete` is set to ``False``.
+    This function is a small helper function intended for usage in
+    `LocalApp` subclasses. 
+
+    The manual deletion is necessary, as Windows does not allow to open
+    a :class:`NamedTemporaryFile` as second time
+    (e.g. by the file name), if `delete` is set to ``True``.
+
+    Parameters
+    ----------
+    temp_file : NamedTemporaryFile
+        The temporary file to be closed and deleted.
+    """
+    temp_file.close()
+    if not temp_file.delete:
+        remove(temp_file.name)
