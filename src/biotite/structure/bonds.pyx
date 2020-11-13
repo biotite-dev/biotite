@@ -145,11 +145,9 @@ class BondList(Copyable):
         self._atom_count = atom_count
         
         if bonds is not None and len(bonds) > 0:
-            if (bonds[:,:2] >= atom_count).any():
-                raise ValueError(
-                    f"Index {np.max(bonds[:,:2])} in bonds is too large "
-                    f"for atom count of {atom_count}"
-                )
+            if bonds.ndim != 2:
+                raise ValueError("Expected a 2D-ndarray for input bonds")
+
             self._bonds = np.zeros((bonds.shape[0], 3), dtype=np.uint32)
             if bonds.shape[1] == 3:
                 # Input contains bonds (index 0 and 1)
