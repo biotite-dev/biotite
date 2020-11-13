@@ -924,9 +924,9 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         # This is a requirement for ``standardize_order``
         nuc.res_name = ref_base_matched.res_name
         # Reorder the atoms of the nucleotide to obtain the standard
-        # RCSB PDB atom order. If a residue contains multiple Atoms with
+        # RCSB PDB atom order. If a residue contains multiple atoms with
         # the same ``atom_name`` an exception is thrown by
-        # ``standardize_order``. The Exception is caught and the
+        # ``standardize_order``. The exception is caught and the
         # selected reference is disregarded
         try:
             nuc = nuc[standardize_order(nuc)]
@@ -946,7 +946,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     if best_base is None:
         warnings.warn(
             f"Base Type {residue.res_name[0]} not supported. "
-            f"Unable to check for basepair",
+            f"Unable to check for base pair",
             UnexpectedStructureWarning
         )
         return None
