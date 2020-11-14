@@ -1206,7 +1206,7 @@ def _find_regions(base_pairs):
 
     # Region Pairs
     region_pairs = []
-    regions = []
+    regions = set()
 
     #TODO: Make code less spaghetti
     for i, base_pair in enumerate(sorted_base_pairs):
@@ -1218,11 +1218,11 @@ def _find_regions(base_pairs):
         this_rank = downstream_rank[i]
 
         if (previous_rank - this_rank) != 1:
-            regions.append(region(base_pairs, np.array(region_pairs)))
+            regions.add(region(base_pairs, np.array(region_pairs)))
             region_pairs = []
 
         region_pairs.append(original_indices[i])
-    regions.append(region(base_pairs, np.array(region_pairs)))
+    regions.add(region(base_pairs, np.array(region_pairs)))
 
     return regions
 
@@ -1247,7 +1247,7 @@ def _remove_non_conflicting_regions(regions):
             if region_array[i] is region_array[i+1]:
                 to_remove.append(region_array[i])
         region_array = region_array[~ np.isin(region_array, to_remove)]
-    return list(set(region_array))
+    return set(region_array)
 
 
 def _cluster_conflicts(regions):
