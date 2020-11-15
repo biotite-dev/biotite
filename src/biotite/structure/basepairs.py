@@ -1216,7 +1216,7 @@ def _find_regions(base_pairs):
 
         previous_rank = downstream_rank[i-1]
         this_rank = downstream_rank[i]
-
+        print((previous_rank - this_rank))
         if (previous_rank - this_rank) != 1:
             regions.add(region(base_pairs, np.array(region_pairs)))
             region_pairs = []
@@ -1231,14 +1231,16 @@ def _remove_non_conflicting_regions(regions):
     Remove regions that are not conflicting
     """
     region_array = _get_region_array_for(regions)
-
+    #print([reg.get_index_mask() for reg in region_array])
     to_remove = [None]
-    while len(to_remove) != 0:
+    while to_remove != []:
         to_remove = []
         for i in range(len(region_array)-1):
             if region_array[i] is region_array[i+1]:
                 to_remove.append(region_array[i])
+        print([reg.get_index_mask() for reg in region_array])
         region_array = region_array[~ np.isin(region_array, to_remove)]
+        print([reg.get_index_mask() for reg in region_array])
     return set(region_array)
 
 """
@@ -1269,15 +1271,18 @@ def _get_region_array_for(regions, content=[], dtype=[]):
         for c in range(len(content_list)):
             content_list[c][indices] = content[c](reg)
         index_array[indices] = [reg.start, reg.stop]
-
+    #print(region_array)
+    #print(content_list)
     # Order the arrays
     sort_mask = np.argsort(index_array)
     region_array = region_array[sort_mask]
+    #print(index_array[sort_mask])
     if content == []:
-        return(region_array[np.argsort(index_array)])
+        return region_array
 
     for i in range(len(content_list)):
         content_list[i] = content_list[i][sort_mask]
+        #print(content_list[i])
     return region_array, content_list
 
 def _cluster_conflicts(regions):
