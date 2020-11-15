@@ -1230,15 +1230,7 @@ def _remove_non_conflicting_regions(regions):
     """
     Remove regions that are not conflicting
     """
-    region_array = np.empty(len(regions)*2, dtype=region)
-    index_array = np.empty(len(regions)*2, dtype='int32')
-
-    for i, reg in enumerate(regions):
-        indices = [2*i, 2*i+1]
-        region_array[indices] = reg
-        index_array[indices] = [reg.start, reg.stop]
-    region_array = region_array[np.argsort(index_array)]
-
+    region_array = _get_region_array_for(regions)
 
     to_remove = [None]
     while len(to_remove) != 0:
@@ -1249,10 +1241,64 @@ def _remove_non_conflicting_regions(regions):
         region_array = region_array[~ np.isin(region_array, to_remove)]
     return set(region_array)
 
+"""
+def _get_region_array(regions, content):
+    region_array = np.empty(len(regions)*2, dtype=region)
+    index_array = np.empty(len(regions)*2, dtype='int32')
+
+    for i, reg in enumerate(regions):
+        indices = [2*i, 2*i+1]
+        region_array[indices] = content(reg)
+        index_array[indices] = [reg.start, reg.stop]
+    return(region_array[np.argsort(index_array)])
+"""
+def _get_region_array_for(regions, content=[], dtype=[]):
+    # region_array and index array
+    region_array = np.empty(len(regions)*2, dtype=region)
+    index_array = np.empty(len(regions)*2, dtype='int32')
+
+    # Content array for custom return arrays
+    content_list = [None]*len(content)
+    for i in range(len(content)):
+        content_list[i] = np.empty(len(regions)*2, dtype=dtype[i])
+
+    # Fill the arrays
+    for i, reg in enumerate(regions):
+        indices = [2*i, 2*i+1]
+        region_array[indices] = reg
+        for c in range(len(content_list)):
+            content_list[c][indices] = content[c](reg)
+        index_array[indices] = [reg.start, reg.stop]
+
+    # Order the arrays
+    sort_mask = np.argsort(index_array)
+    region_array = region_array[sort_mask]
+    if content == []:
+        return(region_array[np.argsort(index_array)])
+
+    for i in range(len(content_list)):
+        content_list[i] = content_list[i][sort_mask]
+    return region_array, content_list
 
 def _cluster_conflicts(regions):
+    region_array, start_stops = _get_region_array_for(
+        regions, content=[lambda a : [1, -1]], dtype=['int32']
+    )
+    start_stops = start_stops[0]
+
+    total = 0
+    last = 0
+    clusters = []
+    for i in range(len(start_stops)):
+        total += start_stops[i]
+        if total == 0:
+            clusters.append(set(region_array[last:i+1]))
+            last = i
+    if len(region_array[last+1:]) > 0:
+        clusters.append(set(region_array[last+1:]))
+
     # Return the conflict clusters as list of lists
-    return [[regions]]
+    return clusters
 
 def _get_optimal_solutions(cluster):
     # Return optimal solution as list of lists of regions
