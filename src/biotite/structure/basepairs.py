@@ -1292,7 +1292,7 @@ def _cluster_conflicts(regions):
     for i in range(len(start_stops)):
         total += start_stops[i]
         if total == 0:
-            clusters.append(set(region_array[last:i+1]))
+            clusters.append(set(region_array[last+1:i+1]))
             last = i
     if len(region_array[last+1:]) > 0:
         clusters.append(set(region_array[last+1:]))
