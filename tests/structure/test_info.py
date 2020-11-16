@@ -103,20 +103,6 @@ def test_link_type():
     assert strucinfo.link_type("Ala").upper() == "L-PEPTIDE LINKING"
     assert strucinfo.link_type("ALA").upper() == "L-PEPTIDE LINKING"
 
-def test_is_nucleotide():
-    assert strucinfo.is_nucleotide("ALA") == False
-    assert strucinfo.is_nucleotide("DG") == True
-    assert strucinfo.is_nucleotide("G") == True
-    assert strucinfo.is_nucleotide("DT") == True
-    assert strucinfo.is_nucleotide("T") == True
-    assert strucinfo.is_nucleotide("DU") == True
-    assert strucinfo.is_nucleotide("U") == True
-    assert strucinfo.is_nucleotide("DC") == True
-    assert strucinfo.is_nucleotide("C") == True
-    assert strucinfo.is_nucleotide("DA") == True
-    assert strucinfo.is_nucleotide("A") == True
-    assert strucinfo.is_nucleotide("PSU") == True
-    assert strucinfo.is_nucleotide("I") == True
 
 @pytest.mark.parametrize(
     "multi_model, seed", itertools.product([False, True], range(10))
