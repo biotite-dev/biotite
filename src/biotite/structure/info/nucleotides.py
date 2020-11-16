@@ -32,7 +32,7 @@ def nucleotide_names():
     Returns
     -------
     nucleotide_names : list
-        A list of three-letter-codes for residues that are
-        DNA/RNA-Linking
+        A list of three-letter-codes containing residues that are
+        DNA/RNA-Linking.
     """
     return _nucleotides

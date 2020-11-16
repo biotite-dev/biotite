@@ -865,6 +865,20 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         bases, i.e. the ``res_name`` of the input `residue` is one of
         ``A``, ``G``, ``T``, ``C``, ``U``, ``DA``, ``DG``, ``DT``,
         ``DC`` or ``DU``.
+
+    Notes
+    -----
+    The default RMSD cutoff was chosen according to [1]_, where the same
+    cutoff is used to detect if a given base is a nucleotide, by
+    superimposing the base ring atoms onto a reference structure.
+
+    References
+    ----------
+
+    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
+       "DSSR: an integrated software tool for dissecting the spatial
+       structure of RNA."
+       Nucleic Acids Res, 43(21), e142 (2015).
     """
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
