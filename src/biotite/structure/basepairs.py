@@ -897,7 +897,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
             f"Unable to map nucleotide.",
             IncompleteStructureWarning
         )
-        return None
+        return None, False
 
     # The one letter code of the best matching reference base
     best_base = None
