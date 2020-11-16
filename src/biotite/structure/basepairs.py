@@ -880,13 +880,10 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     ]
 
     # The number of matched atoms for each 'standard' base
-    matched_atom_no = []
-
-    # Count the number of matching atoms with the reference bases
-    for ref_base in std_base_list:
-        matched_atom_no.append(np.sum(
-            np.isin(ref_base.atom_name, residue.atom_name)
-        ))
+    matched_atom_no = [
+        np.sum(np.isin(ref_base.atom_name, residue.atom_name))
+        for ref_base in std_base_list
+    ]
 
     if max(matched_atom_no) < min_atoms_per_base:
         warnings.warn(
