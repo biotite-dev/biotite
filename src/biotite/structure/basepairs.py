@@ -914,7 +914,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     # Iterate through the reference bases with the maximum number of
     # matching atoms
-    for ref_base in np.array(std_base_list)[
+    for ref_base in np.array(std_base_list, dtype='object')[
         np.array(matched_atom_no) == max(matched_atom_no)
     ]:
         # Copy the residue as the res_name property of the ``AtomArray``
