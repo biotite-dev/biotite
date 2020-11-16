@@ -770,9 +770,7 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Map the nucleotide to a reference base
-    one_letter_code, _ = base_tuple = map_nucleotide(
-        nucleotide, min_atoms_per_base
-    )
+    one_letter_code, _ = map_nucleotide(nucleotide, min_atoms_per_base)
 
     if one_letter_code is None:
         return None
