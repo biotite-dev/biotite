@@ -76,7 +76,6 @@ def test_protOr_radii():
     for res_name, atom_name in zip(array.res_name, array.atom_name):
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
         assert isinstance(radius, float)
-        print(res_name, atom_name)
         assert radius != None
 
 
