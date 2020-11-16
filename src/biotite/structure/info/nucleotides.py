@@ -7,6 +7,7 @@ __author__ = "Tom David Müller"
 __all__ = ["is_nucleotide"]
 
 import json
+import numpy as np
 from os.path import join, dirname, realpath
 
 
@@ -21,7 +22,7 @@ _info_dir = dirname(realpath(__file__))
 # RNA OH 3 prime terminus, RNA OH 5 prime terminus, RNA linking,
 # L-RNA LINKING, L-DNA LINKING
 with open(join(_info_dir, "nucleotides.json"), "r") as file:
-    _nucleotides = json.load(file)
+    _nucleotides = np.array(json.load(file))
 
 def is_nucleotide(three_letter_code):
     """

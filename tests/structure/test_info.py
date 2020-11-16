@@ -120,10 +120,7 @@ def test_is_nucleotide():
     assert strucinfo.is_nucleotide("I") == True
 
 @pytest.mark.parametrize(
-    "multi_model, seed", itertools.product(
-        [False, True],
-        range(10)
-    )
+    "multi_model, seed", itertools.product([False, True], range(10))
 )
 def test_standardize_order(multi_model, seed):
     original = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
