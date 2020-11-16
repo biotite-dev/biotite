@@ -945,6 +945,10 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
             best_base = ref_base_matched.res_name[0][-1]
 
     if best_base is None:
+        warnings.warn(
+            f"Base Type {residue.res_name[0]} not supported. "
+            UnexpectedStructureWarning
+        )
         return None
 
     return best_base, False
