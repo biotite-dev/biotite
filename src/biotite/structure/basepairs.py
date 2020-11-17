@@ -1298,11 +1298,16 @@ def _get_region_array_for(regions, content=[], dtype=[]):
     return region_array, content_list
 
 def _cluster_conflicts(regions):
+    # Get a region array and an array where each region start is +1 and
+    # each stop is -1
     region_array, start_stops = _get_region_array_for(
         regions, content=[lambda a : [1, -1]], dtype=['int32']
     )
     start_stops = start_stops[0]
 
+    # Iterate through the array and add up the values of the
+    # corresponding ``start_stop`` array. Separate conflicts are marked
+    # by zero sums.
     total = 0
     start = 0
     clusters = []
