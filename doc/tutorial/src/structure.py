@@ -176,7 +176,7 @@ print(tc5b.shape)
 
 pdb_file = pdb.PDBFile()
 pdb_file.set_structure(tc5b)
-temp_file = NamedTemporaryFile(suffix=".pdb")
+temp_file = NamedTemporaryFile(suffix=".pdb", delete=False)
 pdb_file.write(temp_file.name)
 temp_file.close()
 
@@ -351,7 +351,7 @@ import biotite.structure.io as strucio
 
 stack_from_pdb = strucio.load_structure(pdb_file_path)
 stack_from_cif = strucio.load_structure(cif_file_path)
-temp_file = NamedTemporaryFile(suffix=".cif")
+temp_file = NamedTemporaryFile(suffix=".cif", delete=False)
 strucio.save_structure(temp_file.name, stack_from_pdb)
 temp_file.close()
 
@@ -371,7 +371,7 @@ import requests
 import biotite.structure.io.xtc as xtc
 
 # Download 1L2Y as XTC file for demonstration purposes
-temp_xtc_file = NamedTemporaryFile("wb", suffix=".xtc")
+temp_xtc_file = NamedTemporaryFile("wb", suffix=".xtc", delete=False)
 response = requests.get(
     "https://raw.githubusercontent.com/biotite-dev/biotite/master/"
     "tests/structure/data/1l2y.xtc"

@@ -10,7 +10,7 @@ import abc
 from tempfile import NamedTemporaryFile
 from collections import OrderedDict
 import numpy as np
-from .localapp import LocalApp
+from .localapp import LocalApp, cleanup_tempfile
 from .application import AppState, requires_state
 from ..sequence.sequence import Sequence
 from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -120,9 +120,15 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             self._matrix = MSAApp._map_matrix(matrix)
 
         self._sequences = sequences
-        self._in_file     = NamedTemporaryFile("w", suffix=".fa")
-        self._out_file    = NamedTemporaryFile("r", suffix=".fa")
-        self._matrix_file = NamedTemporaryFile("w", suffix=".mat")
+        self._in_file = NamedTemporaryFile(
+            "w", suffix=".fa", delete=False
+        )
+        self._out_file = NamedTemporaryFile(
+            "r", suffix=".fa", delete=False
+        )
+        self._matrix_file = NamedTemporaryFile(
+            "w", suffix=".mat", delete=False
+        )
 
     def run(self):
         sequences = self._sequences if not self._is_mapped \
@@ -154,9 +160,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     
     def clean_up(self):
         super().clean_up()
-        self._in_file.close()
-        self._out_file.close()
-        self._matrix_file.close()
+        cleanup_tempfile(self._in_file)
+        cleanup_tempfile(self._out_file)
+        cleanup_tempfile(self._matrix_file)
     
     @requires_state(AppState.JOINED)
     def get_alignment(self):

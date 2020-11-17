@@ -4,9 +4,10 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Tom David Müller"
-__all__ = ["is_nucleotide"]
+__all__ = ["nucleotide_names"]
 
 import json
+import numpy as np
 from os.path import join, dirname, realpath
 
 
@@ -23,27 +24,15 @@ _info_dir = dirname(realpath(__file__))
 with open(join(_info_dir, "nucleotides.json"), "r") as file:
     _nucleotides = json.load(file)
 
-def is_nucleotide(three_letter_code):
+def nucleotide_names():
     """
-    Check if a residue is a nucleotide from the up to 3-letter
-    residue name, based on the PDB chemical compound dictionary.
-
-    Parameters
-    ----------
-    three_letter_code : str
-        The up to 3-letter residue name.
+    Get a list of nucleotide three-letter codes according to the PDB
+    chemical compound dictionary.
 
     Returns
     -------
-    is_nucleotide : bool
-        boolean indicating wether or not the residue is a nucleotide
-
-    Examples
-    --------
-
-    >>> print(is_nucleotide("A"))
-    True
+    nucleotide_names : list
+        A list of three-letter-codes containing residues that are
+        DNA/RNA-Linking.
     """
-    if three_letter_code in _nucleotides:
-        return True
-    return False
+    return _nucleotides
