@@ -1282,18 +1282,19 @@ def _get_region_array_for(regions, content=[], dtype=[]):
         for c in range(len(content_list)):
             content_list[c][indices] = content[c](reg)
         index_array[indices] = [reg.start, reg.stop]
-    #print(region_array)
-    #print(content_list)
-    # Order the arrays
+
+    # Order the arrays by the base indices
     sort_mask = np.argsort(index_array)
     region_array = region_array[sort_mask]
-    #print(index_array[sort_mask])
+
+    # if no custom array content is given only return the ordered array
+    # containing the regions
     if content == []:
         return region_array
 
+    # if custom content is given also return the ordered content
     for i in range(len(content_list)):
         content_list[i] = content_list[i][sort_mask]
-        #print(content_list[i])
     return region_array, content_list
 
 def _cluster_conflicts(regions):
@@ -1303,15 +1304,15 @@ def _cluster_conflicts(regions):
     start_stops = start_stops[0]
 
     total = 0
-    last = 0
+    start = 0
     clusters = []
     for i in range(len(start_stops)):
         total += start_stops[i]
         if total == 0:
-            clusters.append(set(region_array[last+1:i+1]))
-            last = i
-    if len(region_array[last+1:]) > 0:
-        clusters.append(set(region_array[last+1:]))
+            clusters.append(set(region_array[start:i+1]))
+            start = i+1
+    if len(region_array[start:]) > 0:
+        clusters.append(set(region_array[start:]))
 
     # Return the conflict clusters as list of lists
     return clusters
