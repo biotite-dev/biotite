@@ -1190,33 +1190,50 @@ def pseudoknots(base_pairs, scoring=None):
 
 def _find_regions(base_pairs):
     """
-    Return consecutive pairs as regions
-    """
+    Find regions in a base pair arrray. A region is defined as a set of
+    consecutively nested basepairs.
 
-    # Presort base pairs
+    Parameters
+    ----------
+    base_pairs : ndarray, dtype=int, shape=(n,2)
+        Each row is equivalent to one basepair and contains the first
+        indices of the residues corresponding to each base.
+
+    Returns
+    -------
+    basepair_candidates : set {region, ...]
+        The regions representing the consecutively nested basepairs.
+    """
 
     # Make sure the lower residue is on the left for each row
     sorted_base_pairs = np.sort(base_pairs, axis=1)
 
+    # Sort the first column in ascending order
     original_indices = np.argsort(sorted_base_pairs[:, 0])
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
+    # Rank the right side in ascending order
     downstream_order = np.argsort(sorted_base_pairs[:,1])
     downstream_rank = np.argsort(downstream_order)
 
-    # Region Pairs
+    # The basepairs belonging to the current region
     region_pairs = []
+    # The individual regions
     regions = set()
 
-    #TODO: Make code less spaghetti
+    # Find seperate regions
     for i, base_pair in enumerate(sorted_base_pairs):
+        # if a new region is to be started append the current basepair
         if len(region_pairs) == 0:
             region_pairs.append(original_indices[i])
             continue
 
+        # Check if the current basepair belongs to the region that is
+        # currently being defined
         previous_rank = downstream_rank[i-1]
         this_rank = downstream_rank[i]
-        print((previous_rank - this_rank))
+        # if the current basepair belongs to a new region, save the
+        # current region and start a new region
         if (previous_rank - this_rank) != 1:
             regions.add(region(base_pairs, np.array(region_pairs)))
             region_pairs = []
