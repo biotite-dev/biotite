@@ -1342,8 +1342,8 @@ def _get_optimal_solutions(cluster, scoring):
 
     region_array, (start_stops,) = _get_region_array_for(
         cluster,
-        [lambda a: reg.start, reg.stop],
-        [reg]
+        [lambda a : (a.start, a.stop)],
+        ['int32']
     )
 
     for i in range(len(dp_matrix)):
@@ -1353,19 +1353,88 @@ def _get_optimal_solutions(cluster, scoring):
     for j in range(len(cluster)):
         for i in range(j-1, -1, -1):
             dp_matrix[i, j] = []
+            left = dp_matrix[i, j-1]
+            bottom = dp_matrix[i+1, j]
+            solution_candidates = []
             # Add all solutions of the cell to the left
-            for solution in dp_matrix[i, j-1]:
-                dp_matrix[i, j].append(solution)
+            for solution in left:
+                solution_candidates.append(solution)
             # Add all solutions of the cell to the bottom
-            for solution in dp_matrix[i+1, j]:
-                dp_matrix[i, j].append(solution)
+            for solution in bottom:
+               solution_candidates.append(solution)
             # Check if i and j are endpoints of the same region
             if region_array[i] is region_array[j]:
                 # Add all solutions from the cell to the bottom left
                 # plus this region
-                for solution in dp_matrix[i+1, j-1]:
-                    dp_matrix[i, j].append(solution + region_array[i])
-                if dp_matrix[i+1, j-1] == []:
-                    dp_matrix[i, j].append(region_array[i])
+                bottom_left = dp_matrix[i+1, j-1]
+                for solution in bottom_left:
+                    solution_candidates.append(solution)
+                    solution_candidates[-1].add(region_array[i])
+                if bottom_left == []:
+                    solution_candidates.append(set(region_array[i]))
+            # Perform additional tests if solution in the left cell and
+            # bottom cell both differ from an empty solution
+            if (left != []) and (bottom != []):
+                starts = np.array(
+                    (max(len(left), len(bottom)), 2), dtype='int32'
+                )
+                stops = np.empty_like(starts)
 
-    return [[region(base_pairs, None)]]
+                for c, cell in enumerate(left, bottom):
+                    for s, solution in enumerate(cell):
+                        minimum = -1
+                        maximum = -1
+                        for regio in solution:
+                            if minimum == -1 or maximum == -1:
+                                minimum = regio.start
+                                maximum = regio.stop
+                                continue
+                            if minimum > regio.start:
+                                minimum = regio.start
+                            if maximum < regio.stop:
+                                maximum = regio.stop
+                        starts[c, s] = minimum
+                        stops[c, s] = maximum
+
+
+                for l, solution1 in enumerate(left):
+                    for b, solution2 in enumerate(bottom):
+                        lowest = min(starts[0][l], starts[1][b])
+                        highest = max(stops[0][l], stops[1][b])
+                        if highest < lowest:
+                            # Both solutions are disjoint
+                            solution_candidates.append(solution1 | solution2)
+                        else:
+                            for k in range(
+                                np.where(start_stops==lowest)-1,
+                                np.where(start_stops==highest)+1
+                            ):
+                                cell1 = dp_matrix[i, k]
+                                cell2 = dp_matrix[k+1, j]
+                                for subsolution1 in cell1:
+                                    for subsolution2 in cell2:
+                                        solution_candidates.append(
+                                            subsolution1 | subsolution2
+                                        )
+            if len(solution_candidates) > 0:
+                scores = np.zeros(len(solution_candidates))
+                for i, solution in enumerate(solution_candidates):
+                    score = 0
+                    for regio in solution:
+                        score += regio.get_score()
+                    scores[i] = score
+                print('a')
+                return 0
+                solution_candidates = solution_candidates[
+                    np.argwhere(scores == np.amax(scores))
+                ]
+                dp_matrix[i, j] = solution_candidates
+    return dp_matrix
+
+
+
+
+
+
+
+
