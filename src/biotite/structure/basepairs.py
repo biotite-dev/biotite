@@ -1238,7 +1238,11 @@ def _find_regions(base_pairs):
             regions.add(region(base_pairs, np.array(region_pairs)))
             region_pairs = []
 
+        # Append the current basepair to the region
         region_pairs.append(original_indices[i])
+
+    # The last regions has no endpoint defined by the beginning of a
+    # new region.
     regions.add(region(base_pairs, np.array(region_pairs)))
 
     return regions
