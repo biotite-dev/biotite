@@ -1144,11 +1144,17 @@ class region():
         # The base pair array
         self.base_pairs = base_pairs
         self.region_pairs = region_pairs
+        self.score = None
 
 
     # Gets a boolean mask from the original basepair array
     def get_index_mask(self):
         return self.region_pairs
+
+    def get_score(self, score_matrix):
+        if self.score is None:
+            self.score = np.sum(score_matrix(self.get_index_mask()))
+        return self.score
 
 
 def pseudoknots(base_pairs, scoring=None):
@@ -1306,7 +1312,7 @@ def _cluster_conflicts(regions):
     start_stops = start_stops[0]
 
     # Iterate through the array and add up the values of the
-    # corresponding ``start_stop`` array. Separate conflicts are marked
+    # corresponding ``start_stops`` array. Separate conflicts are marked
     # by zero sums.
     total = 0
     start = 0
