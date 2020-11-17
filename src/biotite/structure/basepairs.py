@@ -8,7 +8,7 @@ This module provides functions for basepair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "base_stacking"]
+__all__ = ["base_pairs", "map_nucleotide", "base_stacking"]
 
 import numpy as np
 import warnings
@@ -20,28 +20,8 @@ from .hbond import hbond
 from .error import IncompleteStructureWarning, UnexpectedStructureWarning
 from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
-
-
-def  _get_1d_boolean_mask(size, true_ids):
-    """
-    Get a boolean mask for fancy indexing.
-
-    Parameters
-    ----------
-    size : integer
-        Size of the 1-dimensional array.
-    true_ids: array_like
-        Indices where the boolean mask is ``True``.
-
-    Returns
-    -------
-    mask : ndarray, dtype=bool, shape=(n,)
-        The boolean mask which is ``True`` at the specified indices and
-        ``False`` everywhere else.
-    """
-    mask = np.zeros(size, dtype=bool)
-    mask[true_ids] = np.ones(len(true_ids), dtype=bool)
-    return mask
+from .info.standardize import standardize_order
+from .compare import rmsd
 
 
 def _get_std_adenine():
@@ -50,9 +30,8 @@ def _get_std_adenine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the adenine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the adenine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
@@ -60,56 +39,35 @@ def _get_std_adenine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donor and acceptor heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
-    atom1 =  Atom([-2.479, 5.346, 0.000], atom_name="C1*", res_name="A")
-    atom2 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
-    atom3 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
-    atom4 =  Atom([0.877, 3.902, 0.000],  atom_name="N7",  res_name="A")
-    atom5 =  Atom([0.071, 2.771, 0.000],  atom_name="C5",  res_name="A")
-    atom6 =  Atom([0.369, 1.398, 0.000],  atom_name="C6",  res_name="A")
-    atom7 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
-    atom8 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
-    atom9 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
-    atom10 = Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
-    atom11 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
-    adenine_pdbv2 = array(
+    atom1 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
+    atom2 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
+    atom3 =  Atom([0.877, 3.902, 0.000],  atom_name="N7",  res_name="A")
+    atom4 =  Atom([0.071, 2.771, 0.000],  atom_name="C5",  res_name="A")
+    atom5 =  Atom([0.369, 1.398, 0.000],  atom_name="C6",  res_name="A")
+    atom6 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
+    atom7 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
+    atom8 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
+    atom9 = Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
+    atom10 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
+    adenine = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10, atom11]
+         atom9, atom10]
     )
-    adenine_pdbv3 = adenine_pdbv2.copy()
-    adenine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N1 and C4 atoms
-    midpoint = np.mean([atom8.coord, atom11.coord], axis=-2)
+    midpoint = np.mean([atom7.coord, atom10.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom5.coord, atom6.coord, atom8.coord,
-         atom9.coord, atom10.coord, atom11.coord], axis=-2
+        [atom4.coord, atom5.coord, atom7.coord,
+         atom8.coord, atom9.coord, atom10.coord], axis=-2
     )
     imidazole_center = np.mean(
-        [atom2.coord, atom3.coord, atom4.coord,
-         atom5.coord, atom11.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord,
+         atom4.coord, atom10.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively.
-    hbond_donor_mask = _get_1d_boolean_mask(
-        adenine_pdbv2.array_length(), [1, 6]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        adenine_pdbv2.array_length(), [1, 3, 6, 7, 9]
-    )
-
-    return (adenine_pdbv2, adenine_pdbv3), \
-           (midpoint, pyrimidine_center, imidazole_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return adenine, (midpoint, pyrimidine_center, imidazole_center)
 
 
 def _get_std_cytosine():
@@ -118,57 +76,36 @@ def _get_std_cytosine():
 
     Returns
     -------
-   standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the cytosine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+   standard_base : AtomArray
+        Standard coordinates nomenclature of the cytosine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
-    atom1 = Atom([-2.477, 5.402, 0.000], atom_name="C1*", res_name="C")
-    atom2 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
-    atom3 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
-    atom4 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
-    atom5 = Atom([-0.391, 2.344, 0.000], atom_name="N3",  res_name="C")
-    atom6 = Atom([0.837, 2.868, 0.000],  atom_name="C4",  res_name="C")
-    atom7 = Atom([1.875, 2.027, 0.000],  atom_name="N4",  res_name="C")
-    atom8 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
-    atom9 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
-    cytosine_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    atom1 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
+    atom2 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
+    atom3 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
+    atom4 = Atom([-0.391, 2.344, 0.000], atom_name="N3",  res_name="C")
+    atom5 = Atom([0.837, 2.868, 0.000],  atom_name="C4",  res_name="C")
+    atom6 = Atom([1.875, 2.027, 0.000],  atom_name="N4",  res_name="C")
+    atom7 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
+    atom8 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
+    cytosine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
     )
-    cytosine_pdbv3 = cytosine_pdbv2.copy()
-    cytosine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom9.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom8.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        cytosine_pdbv2.array_length(), [1, 6]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        cytosine_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (cytosine_pdbv2, cytosine_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return cytosine, (midpoint, pyrimidine_center)
 
 
 def _get_std_guanine():
@@ -177,9 +114,8 @@ def _get_std_guanine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the guanine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the guanine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
@@ -187,57 +123,36 @@ def _get_std_guanine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
-    atom1 =  Atom([-2.477, 5.399, 0.000],  atom_name="C1*", res_name="G")
-    atom2 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
-    atom3 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
-    atom4 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
-    atom5 =  Atom([0.071, 2.833, 0.000],   atom_name="C5",  res_name="G")
-    atom6 =  Atom([0.424, 1.460, 0.000],   atom_name="C6",  res_name="G")
-    atom7 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
-    atom8 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
-    atom9 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
-    atom10 = Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
-    atom11 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
-    atom12 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
-    guanine_pdbv2 = array(
+    atom1 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
+    atom2 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
+    atom3 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
+    atom4 =  Atom([0.071, 2.833, 0.000],   atom_name="C5",  res_name="G")
+    atom5 =  Atom([0.424, 1.460, 0.000],   atom_name="C6",  res_name="G")
+    atom6 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
+    atom7 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
+    atom8 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
+    atom9 = Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
+    atom10 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
+    atom11 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
+    guanine = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10, atom11, atom12]
+         atom9, atom10, atom11]
     )
-    guanine_pdbv3 = guanine_pdbv2.copy()
-    guanine_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N1 and C4 atoms
-    midpoint = np.mean([atom8.coord, atom12.coord], axis=-2)
+    midpoint = np.mean([atom7.coord, atom11.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom5.coord, atom6.coord, atom8.coord,
-         atom9.coord, atom11.coord, atom12.coord], axis=-2
+        [atom4.coord, atom5.coord, atom7.coord,
+         atom8.coord, atom10.coord, atom11.coord], axis=-2
     )
     imidazole_center = np.mean(
-        [atom2.coord, atom3.coord, atom4.coord,
-         atom5.coord, atom12.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord,
+         atom4.coord, atom11.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        guanine_pdbv2.array_length(), [1, 7, 9]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        guanine_pdbv2.array_length(), [1, 3, 6, 7, 9, 10]
-    )
-
-    return (guanine_pdbv2, guanine_pdbv3), \
-           (midpoint, pyrimidine_center, imidazole_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return guanine, (midpoint, pyrimidine_center, imidazole_center)
 
 
 def _get_std_thymine():
@@ -246,58 +161,37 @@ def _get_std_thymine():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the thymine base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the thymine base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
-    atom1 =  Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="T")
-    atom2 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
-    atom3 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
-    atom4 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
-    atom5 =  Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
-    atom6 =  Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
-    atom7 =  Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
-    atom8 =  Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
-    atom9 =  Atom([2.466, 4.961, 0.001],  atom_name="C5M", res_name="T")
-    atom10 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
-    thymine_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
+    atom1 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
+    atom2 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
+    atom3 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
+    atom4 =  Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
+    atom5 =  Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
+    atom6 =  Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
+    atom7 =  Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
+    atom8 =  Atom([2.466, 4.961, 0.001],  atom_name="C7", res_name="T")
+    atom9 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
+    thymine = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
     )
-    thymine_pdbv3 = thymine_pdbv2.copy()
-    thymine_pdbv3.atom_name[[0, 8]] = ["C1'", "C7"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom10.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom9.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom10.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom9.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms(or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        thymine_pdbv2.array_length(), [1, 4]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        thymine_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (thymine_pdbv2, thymine_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return thymine, (midpoint, pyrimidine_center)
 
 
 def _get_std_uracil():
@@ -306,69 +200,43 @@ def _get_std_uracil():
 
     Returns
     -------
-    standard_base : tuple (AtomArray, AtomArray)
-        Standard coordinates nomenclature of the uracil base,
-        :class:`AtomArray` with nomenclature of PDB File Format V2,
+    standard_base : AtomArray
+        Standard coordinates nomenclature of the uracil base as
         :class:`AtomArray` with nomenclature of PDB File Format V3
     coordinates : tuple (ndarray, ndarray, dtype=float)
         :class:`ndarray` containing the center according to the SCHNaP-
         paper referenced in the function ``base_pairs``,
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
-    hbond_masks : tuple (ndarray, ndarray, dtype=bool)
-        The hydrogen bond donors and acceptors heteroatoms as
-        :class:`ndarray` with ``dtype=bool``, boolean mask for
-        heteroatoms which are bound to a hydrogen that can act as a
-        donor, boolean mask for heteroatoms that can act as a hydrogen
-        bond acceptor
     """
-    atom1 = Atom([-2.481, 5.354, 0.000], atom_name="C1*", res_name="U")
-    atom2 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
-    atom3 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
-    atom4 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
-    atom5 = Atom([-0.302, 2.397, 0.000], atom_name="N3",  res_name="U")
-    atom6 = Atom([0.989, 2.884, 0.000],  atom_name="C4",  res_name="U")
-    atom7 = Atom([1.935, 2.094, -0.001], atom_name="O4",  res_name="U")
-    atom8 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
-    atom9 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
-    uracil_pdbv2 = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
+    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
+    atom2 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
+    atom3 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
+    atom4 = Atom([-0.302, 2.397, 0.000], atom_name="N3",  res_name="U")
+    atom5 = Atom([0.989, 2.884, 0.000],  atom_name="C4",  res_name="U")
+    atom6 = Atom([1.935, 2.094, -0.001], atom_name="O4",  res_name="U")
+    atom7 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
+    atom8 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
+    uracil = array(
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
     )
-    uracil_pdbv3 = uracil_pdbv2.copy()
-    uracil_pdbv3.atom_name[[0]] = ["C1'"]
 
     # Get the midpoint between the N3 and C6 atoms
-    midpoint = np.mean([atom5.coord, atom9.coord], axis=-2)
+    midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom2.coord, atom3.coord, atom5.coord,
-         atom6.coord, atom8.coord, atom9.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord,
+         atom5.coord, atom7.coord, atom8.coord], axis=-2
     )
 
-    # Create boolean masks for the AtomArray containing the bases`
-    # heteroatoms (or the usually attached hydrogens) which can act as
-    # Hydrogen Bond Donors or Acceptors respectively
-    hbond_donor_mask = _get_1d_boolean_mask(
-        uracil_pdbv2.array_length(), [1, 4]
-    )
-    hbond_acceptor_mask = _get_1d_boolean_mask(
-        uracil_pdbv2.array_length(), [1, 3, 4, 6]
-    )
-
-    return (uracil_pdbv2, uracil_pdbv3), (midpoint, pyrimidine_center), \
-           (hbond_donor_mask, hbond_acceptor_mask)
+    return uracil, (midpoint, pyrimidine_center)
 
 
-_std_adenine, _std_adenine_ring_centers, \
-        _std_adenine_hbond_masks = _get_std_adenine()
-_std_cytosine, _std_cytosine_ring_centers, \
-        _std_cytosine_hbond_masks = _get_std_cytosine()
-_std_guanine, _std_guanine_ring_centers, \
-        _std_guanine_hbond_masks = _get_std_guanine()
-_std_thymine, _std_thymine_ring_centers, \
-        _std_thymine_hbond_masks = _get_std_thymine()
-_std_uracil, _std_uracil_ring_centers, \
-        _std_uracil_hbond_masks = _get_std_uracil()
+_std_adenine, _std_adenine_ring_centers  = _get_std_adenine()
+_std_cytosine, _std_cytosine_ring_centers = _get_std_cytosine()
+_std_guanine, _std_guanine_ring_centers = _get_std_guanine()
+_std_thymine, _std_thymine_ring_centers = _get_std_thymine()
+_std_uracil, _std_uracil_ring_centers = _get_std_uracil()
 
 _adenine_containing_nucleotides = ["A", "DA"]
 _thymine_containing_nucleotides = ["T", "DT"]
@@ -376,21 +244,17 @@ _cytosine_containing_nucleotides = ["C", "DC"]
 _guanine_containing_nucleotides = ["G", "DG"]
 _uracil_containing_nucleotides = ["U", "DU"]
 
+
 def base_stacking(atom_array, min_atoms_per_base=3):
     """
     Find pi-stacking interactions between aromatic rings
     in nucleic acids.
-
     The presence of base stacking is assumed if the following criteria
     are met [1]_:
-
     (i) Distance between aromatic ring centers <=4.5 Å
-
     (ii) Angle between the ring normal vectors <=23°
-
     (iii) Angle between normalized distance vector between two ring
           centers and both bases' normal vectors <=40°
-
     Parameters
     ----------
     atom_array : AtomArray
@@ -398,24 +262,20 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     min_atoms_per_base : integer, optional (default: 3)
         The number of atoms a nucleotides' base must have to be
         considered a candidate for a stacking interaction.
-
     Returns
     -------
     stacked_bases : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one pair of stacked bases and
         contains the indices to the first atom for each one of both
         paired residues.
-
     Notes
     -----
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
-
     Examples
     --------
     Compute the stacking interactions for a DNA-double-helix (PDB ID
     1BNA):
-
     >>> from os.path import join
     >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
     >>> stacking_interactions = base_stacking(dna_helix)
@@ -443,7 +303,6 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
     References
     ----------
-
     .. [1] HA Gabb, SR Sanghani and CH Robert et al.,
        "Finding and visualizing nucleic acid base stacking"
        J Mol Biol Graph, 14(1), 6-11 (1996).
@@ -451,7 +310,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     # Get the stacking candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    stacking_candidates = _get_proximate_basepair_candidates(
+    stacking_candidates, _ = _get_proximate_basepair_candidates(
         atom_array, cutoff=15
     )
 
@@ -489,7 +348,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
             if(base_tuple is None):
                 break
 
-            _, _, transformed_std_vectors[i] = base_tuple
+            transformed_std_vectors[i] = base_tuple
 
         normal_vectors = np.vstack((transformed_std_vectors[0][1],
                                     transformed_std_vectors[1][1]))
@@ -506,15 +365,17 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
     return np.array(stacked_bases)
 
+
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
     Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
 
     The algorithm is able to identify canonical and non-canonical
-    base pairs between the 5 common bases Adenine, Guanine, Thymine,
+    base pairs. between the 5 common bases Adenine, Guanine, Thymine,
     Cytosine, and Uracil bound to Deoxyribose and Ribose.
-    A standard reference frame for these bases as described in [1]_ is
-    used.
+    Each Base is mapped to the 5 common bases Adenine, Guanine, Thymine,
+    Cytosine, and Uracil in a standard reference frame described in
+    [1]_ using :func:`map_nucleotide()`.
 
     The DSSR Criteria are as follows [2]_ :
 
@@ -548,8 +409,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Notes
     -----
-    If a base is incomplete but contains the minimum number of base-
-    atoms specified, a superimposed standard base is used to emulate it.
+    The bases from the standard reference frame described in [1]_ were
+    modified such that only the base atoms are implemented. Sugar atoms
+    (specifically C1') were disregarded, as nucleosides such as PSU do
+    not posess the usual N-glycosidic linkage, thus leading to
+    inaccurate results.
 
     The vertical separation is implemented as the scalar
     projection of the distance vectors between the base origins
@@ -571,9 +435,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     For structures without hydrogens the accuracy of the algorithm is
     limited as the hydrogen bonds can be only checked be checked for
     plausibility.
-    A hydrogen bond is considered as plausible if a cutoff of 4.0 Å
-    between a heteroatom, that can act as hydrogen bond donor, and a
-    heteroatom, that can act as hydrogen bond acceptor, is met.
+    A hydrogen bond is considered as plausible if a cutoff of 3.6 Å
+    between N/O atom pairs is met. 3.6Å was chosen as hydrogen bonds are
+    typically 1.5-2.5Å in length. N-H and O-H bonds have a length of
+    1.00Å and 0.96Å respectively. Thus, including some buffer, a 3.6Å
+    cutoff should cover all hydrogen bonds.
 
     Examples
     --------
@@ -619,10 +485,30 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
 
+    # Get the nucleotides for the given atom_array
+    nucleotides_boolean = filter_nucleotides(atom_array)
+
+    # Disregard the phosphate-backbone
+    non_phosphate_boolean = (
+        ~ np.isin(
+            atom_array.atom_name,
+            ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
+        )
+    )
+
+    # Combine the two boolean masks
+    boolean_mask = np.logical_and(nucleotides_boolean, non_phosphate_boolean)
+
+    # Get only the nucleosides
+    nucleosides = atom_array[boolean_mask]
+
+
     # Get the basepair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    basepair_candidates = _get_proximate_basepair_candidates(atom_array)
+    basepair_candidates, n_o_matches = _get_proximate_basepair_candidates(
+        nucleosides
+    )
 
     # Contains the plausible basepairs
     basepairs = []
@@ -630,22 +516,30 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     basepairs_hbonds = []
 
     # Get the residue masks for each residue
-    base_masks = get_residue_masks(atom_array, basepair_candidates.flatten())
+    base_masks = get_residue_masks(nucleosides, basepair_candidates.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
     # respective to a row in ``basepair_candidates``)
     base_masks = base_masks.reshape(
-        (basepair_candidates.shape[0], 2, atom_array.shape[0])
+        (basepair_candidates.shape[0], 2, nucleosides.shape[0])
     )
 
-    for (base1_index, base2_index), (base1_mask, base2_mask) in zip(
-        basepair_candidates, base_masks
+    for (base1_index, base2_index), (base1_mask, base2_mask), n_o_pairs in zip(
+        basepair_candidates, base_masks, n_o_matches
     ):
-        base1 = atom_array[base1_mask]
-        base2 = atom_array[base2_mask]
+        base1 = nucleosides[base1_mask]
+        base2 = nucleosides[base2_mask]
+
         hbonds =  _check_dssr_criteria(
             (base1, base2), min_atoms_per_base, unique
         )
+
+        # If no hydrogens are present use the number N/O pairs to
+        # decide between multiple pairing possibilities.
+        if hbonds is None:
+            # Each N/O-pair is detected twice. Thus, the number of
+            # matches must be divided by two.
+            hbonds = n_o_pairs/2
         if not hbonds == -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -679,6 +573,11 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         # Remove all flagged basepairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
+    # Remap values to original atom array
+    basepair_array = np.where(boolean_mask)[0][basepair_array]
+    for i, row in enumerate(basepair_array):
+        basepair_array[i] = get_residue_starts_for(atom_array, row)
+
     return basepair_array
 
 
@@ -706,15 +605,6 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         returned for plausible basepairs.
     """
 
-    # Contains the bases to be used for analysis. If the bases are
-    # incomplete, transformed standard bases are used. If they are
-    # complete, the original structure is used.
-    transformed_bases = [None] * 2
-    # Contains the hydrogen bond donor and acceptor heteroatoms as
-    # 'ndarray` with dtype=bool, boolean mask for heteroatoms which are
-    # bound to a hydrogen that can act as a donor, boolean mask for
-    # heteroatoms that can act as a hydrogen bond acceptor
-    hbond_masks = [None] * 2
     # A list containing ndarray for each base with transformed
     # vectors from the standard base reference frame to the structures'
     # coordinates. The layout is as follows:
@@ -727,13 +617,12 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
 
     # Generate the data necessary for analysis of each base.
     for i in range(2):
-        base_tuple = _match_base(basepair[i], min_atoms_per_base)
+        transformed_std_vectors[i] = _match_base(
+            basepair[i], min_atoms_per_base
+        )
 
-        if(base_tuple is None):
+        if(transformed_std_vectors[i] is None):
             return -1
-
-        transformed_bases[i], hbond_masks[i], transformed_std_vectors[i] \
-            = base_tuple
 
     origins = np.vstack((transformed_std_vectors[0][0],
                          transformed_std_vectors[1][0]))
@@ -779,13 +668,13 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Criterion 5: Presence of at least one hydrogen bond
     #
     # Check if both bases came with hydrogens.
-    if (("H" in transformed_bases[0].element)
-        and ("H" in transformed_bases[1].element)):
+    if (("H" in basepair[0].element)
+        and ("H" in basepair[1].element)):
         # For Structures that contain hydrogens, check for their
         # presence directly.
         #
         # Generate input atom array for ``hbond```
-        potential_basepair = transformed_bases[0] + transformed_bases[1]
+        potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
         bonds = len(hbond(
@@ -796,64 +685,11 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
 
         if bonds > 0:
             return bonds
-
         return -1
 
     else:
-        # If the structure does not contain hydrogens, check for the
-        # plausibility of hydrogen bonds between heteroatoms
-        return _check_hbonds(transformed_bases, hbond_masks, unique)
-
-
-def _check_hbonds(bases, hbond_masks, unique):
-    """
-    Check if hydrogen bonds are plausible between two bases. A cutoff
-    of 4.0 Å between a heteroatom that is bound to a hydrogen, that can
-    act as hydrogen bond donor, and a heteroatom that can accept
-    hydrogen bonds, is used.
-
-    Parameters
-    ----------
-    bases : list of [AtomArray, AtomArray]
-        The two bases to check for hydrogen bonds as :class:`AtomArray`.
-    hbond_masks : list of :class:`ndarray`, dtype=bool
-        Contains the hydrogen bond donor and acceptor heteroatoms as,
-        boolean mask for heteroatoms
-        which are bound to a hydrogen that can act as a donor, boolean
-        mask for heteroatoms that can act as a hydrogen bond acceptor
-    unique : bool
-        If ``True``, the shortest hydrogen bond length between the bases
-        is calculated for plausible basepairs.
-
-    Returns
-    -------
-    plausible : integer
-        `>0` if the basepair has plausible hydrogen bonds and `-1` if it
-        does not. If unique is ``True``, the number of plausible
-        hydrogen bonds is returned.
-    """
-
-    # Contains the number of plausible hydrogen bonds
-    hbonds = 0
-    # Check the plausibility of hydrogen bonds with bases[0] as the
-    # hydrogen bond donor and bases[1] as the hydrogen bond
-    # acceptor. Afterwards the complimentary order is checked.
-    for donor_base, hbond_donor_mask, acceptor_base, hbond_acceptor_mask in \
-        zip(bases, hbond_masks, reversed(bases), reversed(hbond_masks)):
-        for donor_atom in donor_base[hbond_donor_mask[0]]:
-            for acceptor_atom in acceptor_base[hbond_acceptor_mask[1]]:
-                if (distance(acceptor_atom.coord, donor_atom.coord) <= 4.0):
-                    if not unique:
-                        # If a plausible hydrogen bond is found but the
-                        # uniqueness is not checked return `1`
-                        return 1
-                    hbonds += 1
-
-    if hbonds > 0:
-        # Return the number of plausible hydrogen bonds
-        return hbonds
-
-    return -1
+        # If the structure does not contain hydrogens return None
+        return None
 
 
 def _check_base_stacking(aromatic_ring_centers, normal_vectors):
@@ -912,7 +748,8 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
 
 def _match_base(nucleotide, min_atoms_per_base):
     """
-    Match the nucleotide to a corresponding standard base.
+    Match the nucleotide to a corresponding standard base reference
+    frame.
 
     Parameters
     ----------
@@ -924,69 +761,55 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     Returns
     -------
-    return_base or None : AtomArray
-        The base of the nucleotide. If the given base is incomplete but
-        contains the minimum number of atoms specified a superimposed
-        standard base is returned. Else ``None`` is returned.
-    return_hbond_masks : list
-        The hydrogen bond donor and acceptor heteroatoms as
-        :class:`ndarray` with `dtype=bool`, boolean mask for heteroatoms
-        which are bound to a hydrogen that can act as a donor, boolean
-        mask for heteroatoms that can act as a hydrogen bond acceptor.
     vectors : ndarray, dtype=float, shape=(n,3)
         Transformed standard vectors, origin coordinates, base normal
         vector, aromatic ring center coordinates.
     """
-    return_hbond_masks = [None] * 2
+
     # Standard vectors containing the origin and the base normal vectors
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
-    # Check base type and match standard base.
-    if (nucleotide.res_name[0] in _adenine_containing_nucleotides):
-        std_base = _std_adenine
-        std_ring_centers = _std_adenine_ring_centers
-        std_hbond_masks = _std_adenine_hbond_masks
-    elif (nucleotide.res_name[0] in _thymine_containing_nucleotides):
-        std_base = _std_thymine
-        std_ring_centers = _std_thymine_ring_centers
-        std_hbond_masks = _std_thymine_hbond_masks
-    elif (nucleotide.res_name[0] in _cytosine_containing_nucleotides):
-        std_base = _std_cytosine
-        std_ring_centers = _std_cytosine_ring_centers
-        std_hbond_masks = _std_cytosine_hbond_masks
-    elif (nucleotide.res_name[0] in _guanine_containing_nucleotides):
-        std_base = _std_guanine
-        std_ring_centers = _std_guanine_ring_centers
-        std_hbond_masks = _std_guanine_hbond_masks
-    elif (nucleotide.res_name[0] in _uracil_containing_nucleotides):
-        std_base = _std_uracil
-        std_ring_centers = _std_uracil_ring_centers
-        std_hbond_masks = _std_uracil_hbond_masks
-    else:
-        warnings.warn(
-            f"Base Type {nucleotide.res_name[0]} not supported. "
-            f"Unable to check for basepair",
-            UnexpectedStructureWarning
-        )
+    # Map the nucleotide to a reference base
+    one_letter_code, _ = map_nucleotide(nucleotide, min_atoms_per_base)
+
+    if one_letter_code is None:
         return None
 
-    # Check if the structure uses PDBv3 or PDBv2 atom nomenclature.
-    if (
-        np.sum(np.isin(std_base[1].atom_name, nucleotide.atom_name)) >
-        np.sum(np.isin(std_base[0].atom_name, nucleotide.atom_name))
-    ):
-        std_base = std_base[1]
-    else:
-        std_base = std_base[0]
+    if (one_letter_code == 'A'):
+        std_base = _std_adenine
+        std_ring_centers = _std_adenine_ring_centers
+    elif (one_letter_code == 'T'):
+        std_base = _std_thymine
+        std_ring_centers = _std_thymine_ring_centers
+    elif (one_letter_code == 'C'):
+        std_base = _std_cytosine
+        std_ring_centers = _std_cytosine_ring_centers
+    elif (one_letter_code == 'G'):
+        std_base = _std_guanine
+        std_ring_centers = _std_guanine_ring_centers
+    elif (one_letter_code == 'U'):
+        std_base = _std_uracil
+        std_ring_centers = _std_uracil_ring_centers
 
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
 
+    # Select the matching atoms of the nucleotide and the standard base
+    nucleotide_matched = nucleotide[
+        np.isin(nucleotide.atom_name, std_base.atom_name)
+    ]
+    std_base_matched = std_base[
+        np.isin(std_base.atom_name, nucleotide.atom_name)
+    ]
+
+    # Reorder the atoms of the nucleotide to obtain the standard RCSB
+    # PDB atom order
+    nucleotide_matched = nucleotide_matched[standardize_order(
+        nucleotide_matched
+    )]
+
     # Match the selected std_base to the base.
-    fitted, transformation = superimpose(
-        nucleotide[np.isin(nucleotide.atom_name, std_base.atom_name)],
-        std_base[np.isin(std_base.atom_name, nucleotide.atom_name)]
-    )
+    _, transformation = superimpose(nucleotide_matched, std_base_matched)
 
     # Transform the vectors
     trans1, rot, trans2 = transformation
@@ -997,64 +820,150 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors[1,:] = vectors[1,:]-vectors[0,:]
     norm_vector(vectors[1,:])
 
-    # Investigate the completeness of the base:
-    #
-    # A difference in length of zero means the base contains all atoms
-    # of the std_base
-    length_difference = len(std_base) - len(fitted)
+    return vectors
 
-    if (length_difference > 0 and len(fitted) >= min_atoms_per_base):
-        # If the base is incomplete but contains 3 or more atoms of the
-        # std_base, transform the complete std_base and use it to
-        # approximate the base.
+
+def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
+    """
+    Map a nucleotide to one of the 5 common bases Adenine, Guanine,
+    Thymine, Cytosine, and Uracil. If one of those bases bound to
+    Deoxyribose and Ribose is detected as input, the corresponding one-
+    letter-code (``A``, ``G``, ``T``, ``C``, ``U``) is returned.
+
+    If a different nucleotide is given, it is mapped to the best
+    fitting base using the algorithm described below.
+
+    (i) The number of matching atom names with the reference bases is
+        counted. If the number of matching atoms with all reference
+        bases is less than the specified `min_atoms_per_base`
+        (default 3) the nucleotide cannot be mapped and ``None`` is
+        returned.
+
+    (ii) The bases with maximum number of matching atoms are selected
+         and superimposed with each reference. The base with lowest RMSD
+         is chosen. If the RMSD is more than the specified
+         `rmsd_cutoff` (default 0.28) the nucleotide cannot be mapped
+         and ``None`` is returned.
+
+    Parameters
+    ----------
+    residue : AtomArray
+        The nucleotide to be mapped.
+    min_atoms_per_base : int, optional (default: 3)
+        The number of atoms the residue must have in common with the
+        reference.
+    rmsd_cutoff : float, optional (default: 0.28)
+        The maximum RSMD that is allowed for a mapping to occur.
+
+    Returns
+    -------
+    one_letter_code : str
+        The one-letter-code of the mapped base. ``None`` if no base can
+        be mapped.
+    exact_match : bool
+        Wether or not the residue name exactly matches one of the common
+        bases, i.e. the ``res_name`` of the input `residue` is one of
+        ``A``, ``G``, ``T``, ``C``, ``U``, ``DA``, ``DG``, ``DT``,
+        ``DC`` or ``DU``.
+
+    Notes
+    -----
+    The default RMSD cutoff was chosen according to [1]_, where the same
+    cutoff is used to detect if a given base is a nucleotide, by
+    superimposing the base ring atoms onto a reference structure.
+
+    References
+    ----------
+
+    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
+       "DSSR: an integrated software tool for dissecting the spatial
+       structure of RNA."
+       Nucleic Acids Res, 43(21), e142 (2015).
+    """
+    # Check if the residue is a 'standard' nucleotide
+    if residue.res_name[0] in (_thymine_containing_nucleotides +
+        _guanine_containing_nucleotides + _uracil_containing_nucleotides
+        + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
+    ):
+        return residue.res_name[0][-1], True
+
+    # List of the standard bases for easy iteration
+    std_base_list = [
+        _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
+        _std_uracil
+    ]
+
+    # The number of matched atoms for each 'standard' base
+    matched_atom_no = [
+        np.sum(np.isin(ref_base.atom_name, residue.atom_name))
+        for ref_base in std_base_list
+    ]
+
+    if max(matched_atom_no) < min_atoms_per_base:
         warnings.warn(
-            f"Base with res_id {nucleotide.res_id[0]} and chain_id "
-            f"{nucleotide.chain_id[0]} is not complete. Attempting to "
-            f"emulate with std_base.", IncompleteStructureWarning
-        )
-        return_base = superimpose_apply(std_base, transformation)
-        return_hbond_masks = std_hbond_masks
-    elif (length_difference > 0):
-        # If the base is incomplete and contains less than 3 atoms of
-        # the std_base, throw warning
-        warnings.warn(
-            f"Base with res_id {nucleotide.res_id[0]} and chain_id "
-            f"{nucleotide.chain_id[0]} has an overlap with std_base "
-            f"which is less than 3 atoms. Unable to check for basepair.",
+            f"Base with res_id {residue.res_id[0]} and chain_id "
+            f"{residue.chain_id[0]} has an overlap with the reference "
+            f"bases which is less than {min_atoms_per_base} atoms. "
+            f"Unable to map nucleotide.",
             IncompleteStructureWarning
         )
+        return None, False
+
+    # The one letter code of the best matching reference base
+    best_base = None
+
+    # Iterate through the reference bases with the maximum number of
+    # matching atoms
+    for ref_base in np.array(std_base_list, dtype='object')[
+        np.array(matched_atom_no) == max(matched_atom_no)
+    ]:
+        # Copy the residue as the res_name property of the ``AtomArray``
+        # has to be modified for later function calls.
+        nuc = residue.copy()
+
+        # Select the matching atoms of the nucleotide and the reference
+        # base
+        nuc = nuc[
+            np.isin(nuc.atom_name, ref_base.atom_name)
+        ]
+        ref_base_matched = ref_base[
+            np.isin(ref_base.atom_name, nuc.atom_name)
+        ]
+
+        # Set the res_name property to the same as the reference base.
+        # This is a requirement for ``standardize_order``
+        nuc.res_name = ref_base_matched.res_name
+        # Reorder the atoms of the nucleotide to obtain the standard
+        # RCSB PDB atom order. If a residue contains multiple atoms with
+        # the same ``atom_name`` an exception is thrown by
+        # ``standardize_order``. The exception is caught and the
+        # selected reference is disregarded
+        try:
+            nuc = nuc[standardize_order(nuc)]
+        except Exception:
+            continue
+
+        # Superimpose the nucleotide to the reference base
+        fitted, _ = superimpose(ref_base_matched, nuc)
+
+        # If the RMSD is lower than the specified cutoff or better than
+        # a previous found reference, the current reference is selected
+        # as best base
+        if(rmsd(fitted, ref_base_matched) < rmsd_cutoff):
+            rmsd_cutoff = rmsd(fitted, ref_base_matched)
+            best_base = ref_base_matched.res_name[0][-1]
+
+    if best_base is None:
+        warnings.warn(
+            f"Base Type {residue.res_name[0]} not supported. ",
+            UnexpectedStructureWarning
+        )
         return None
-    else:
-        # If the base is complete use the base for further calculations.
-        #
-        # Generate a boolean mask containing only the base atoms and
-        # their hydrogens (if available), disregarding the sugar atoms
-        # and the phosphate backbone.
-        base_atom_mask = np.ones(len(nucleotide), dtype=bool)
-        for i in range(len(nucleotide)):
-            if (
-                ("'" in nucleotide[i].atom_name)
-                or ("*" in nucleotide[i].atom_name)
-                or ((nucleotide[i].atom_name not in std_base.atom_name)
-                    and (nucleotide[i].element != "H"))
-            ):
-                base_atom_mask[i] = False
 
-        # Create boolean masks for the AtomArray containing the bases`
-        # heteroatoms (or the usually attached hydrogens), which can act
-        # as Hydrogen Bond Donors or Acceptors respectively, using the
-        # std_base as a template.
-        for i in range(2):
-            return_hbond_masks[i] = _filter_atom_type(
-                nucleotide[base_atom_mask],
-                std_base[std_hbond_masks[i]].atom_name
-            )
-        return_base = nucleotide[base_atom_mask]
-
-    return return_base, return_hbond_masks, vectors
+    return best_base, False
 
 
-def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
+def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     """
     Filter for potential basepairs based on the distance between the
     nitrogen and oxygen atoms, as potential hydrogen donor/acceptor
@@ -1070,14 +979,17 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
 
     Returns
     -------
-    basepair_candidates : list [(integer, integer), ...]
-        Contains the basepair candidates, ``tuple`` of the first indices
-        of the corresponding residues.
+    basepair_candidates : ndarray, dtype=int, shape=(n,2)
+        Contains the basepair candidates. Each row is equivalent to one
+        potential basepair. bases are represented as the first indices
+        of their corresponding residues.
+    n_o_pairs : ndarray, dtype=int, shape=(n,)
+        Contains the number of N/O pairs for each potential basepair.
     """
-
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
               & np.isin(atom_array.element, ["N", "O"]))
+
     # Get the indices of the N and O atoms that are within the maximum
     # cutoff of each other
     indices = CellList(
@@ -1109,9 +1021,11 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 4):
     for i, candidate in enumerate(basepair_candidates):
         basepair_candidates[i] = sorted(candidate)
     # Make sure each base pair candidate is only listed once
-    basepair_candidates = np.unique(basepair_candidates, axis=0)
+    basepair_candidates, n_o_pairs = np.unique(
+        basepair_candidates, axis=0, return_counts=True
+    )
 
-    return basepair_candidates
+    return basepair_candidates, n_o_pairs
 
 
 def _filter_atom_type(atom_array, atom_names):

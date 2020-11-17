@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
+from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 
@@ -103,6 +104,62 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
+
+@pytest.mark.parametrize("seed", range(10))
+def test_base_pairs_reordered(nuc_sample_array, seed):
+    """
+    Test the function base_pairs with structure where the atoms are not
+    in the RCSB-Order.
+    """
+    # Randomly reorder the atoms in each residue
+    nuc_sample_array_reordered = struc.AtomArray(0)
+    np.random.seed(seed)
+
+    for residue in struc.residue_iter(nuc_sample_array):
+        bound = residue.array_length()
+        indices = np.random.choice(
+            np.arange(bound), bound,replace=False
+        )
+        nuc_sample_array_reordered += residue[..., indices]
+
+    assert(np.all(
+        struc.base_pairs(nuc_sample_array)
+        == struc.base_pairs(nuc_sample_array_reordered)
+    ))
+
+def test_map_nucleotide():
+    """Test the function map_nucleotide with some examples.
+    """
+    pyrimidines = ['C', 'T', 'U']
+    purines = ['A', 'G']
+
+    # Test that the standard bases are correctly identified
+    assert struc.map_nucleotide(residue('U')) == ('U', True)
+    assert struc.map_nucleotide(residue('A')) == ('A', True)
+    assert struc.map_nucleotide(residue('T')) == ('T', True)
+    assert struc.map_nucleotide(residue('G')) == ('G', True)
+    assert struc.map_nucleotide(residue('C')) == ('C', True)
+
+    # Test that some non_standard nucleotides are mapped correctly to
+    # pyrimidine/purine references
+    psu_tuple = struc.map_nucleotide(residue('PSU'))
+    assert psu_tuple[0] in pyrimidines
+    assert psu_tuple[1] == False
+
+    psu_tuple = struc.map_nucleotide(residue('3MC'))
+    assert psu_tuple[0] in pyrimidines
+    assert psu_tuple[1] == False
+
+    i_tuple = struc.map_nucleotide(residue('I'))
+    assert i_tuple[0] in purines
+    assert i_tuple[1] == False
+
+    m7g_tuple = struc.map_nucleotide(residue('M7G'))
+    assert m7g_tuple[0] in purines
+    assert m7g_tuple[1] == False
+
+    assert struc.map_nucleotide(residue('ALA')) == (None, False)
+
 
 def test_base_stacking():
     """
