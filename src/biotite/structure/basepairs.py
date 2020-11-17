@@ -12,6 +12,7 @@ __all__ = ["base_pairs", "base_stacking"]
 
 import numpy as np
 import warnings
+from enum import IntEnum
 from .atoms import Atom, array
 from .superimpose import superimpose, superimpose_apply
 from .filter import filter_nucleotides
@@ -1151,9 +1152,11 @@ class region():
     def get_index_mask(self):
         return self.region_pairs
 
-    def get_score(self, score_matrix):
+    # Get the score of a given region. Only calculate when score is
+    # needed.
+    def get_score(self, scoring):
         if self.score is None:
-            self.score = np.sum(score_matrix(self.get_index_mask()))
+            self.score = np.sum(scoring[self.get_index_mask()])
         return self.score
 
 
@@ -1328,6 +1331,41 @@ def _cluster_conflicts(regions):
     # Return the conflict clusters as list of lists
     return clusters
 
-def _get_optimal_solutions(cluster):
+def _get_optimal_solutions(cluster, scoring):
     # Return optimal solution as list of lists of regions
+    class reg (IntEnum):
+        start = 0,
+        stop = 1
+
+    dp_matrix_shape = len(cluster)*2, len(cluster)*2
+    dp_matrix = np.empty(dp_matrix_shape, dtype=list)
+
+    region_array, (start_stops,) = _get_region_array_for(
+        cluster,
+        [lambda a: reg.start, reg.stop],
+        [reg]
+    )
+
+    for i in range(len(dp_matrix)):
+        dp_matrix[i, i] = []
+
+
+    for j in range(len(cluster)):
+        for i in range(j-1, -1, -1):
+            dp_matrix[i, j] = []
+            # Add all solutions of the cell to the left
+            for solution in dp_matrix[i, j-1]:
+                dp_matrix[i, j].append(solution)
+            # Add all solutions of the cell to the bottom
+            for solution in dp_matrix[i+1, j]:
+                dp_matrix[i, j].append(solution)
+            # Check if i and j are endpoints of the same region
+            if region_array[i] is region_array[j]:
+                # Add all solutions from the cell to the bottom left
+                # plus this region
+                for solution in dp_matrix[i+1, j-1]:
+                    dp_matrix[i, j].append(solution + region_array[i])
+                if dp_matrix[i+1, j-1] == []:
+                    dp_matrix[i, j].append(region_array[i])
+
     return [[region(base_pairs, None)]]
