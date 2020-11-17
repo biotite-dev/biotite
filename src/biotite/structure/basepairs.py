@@ -1187,7 +1187,6 @@ def pseudoknots(base_pairs, scoring=None):
         ### TODO: RESULTS PROCESSING
 
 
-
 def _find_regions(base_pairs):
     """
     Find regions in a base pair arrray. A region is defined as a set of
@@ -1247,6 +1246,7 @@ def _find_regions(base_pairs):
 
     return regions
 
+
 def _remove_non_conflicting_regions(regions):
     """
     Remove regions that are not conflicting
@@ -1264,17 +1264,7 @@ def _remove_non_conflicting_regions(regions):
         region_array = region_array[~ np.isin(region_array, to_remove)]
     return set(region_array)
 
-"""
-def _get_region_array(regions, content):
-    region_array = np.empty(len(regions)*2, dtype=region)
-    index_array = np.empty(len(regions)*2, dtype='int32')
 
-    for i, reg in enumerate(regions):
-        indices = [2*i, 2*i+1]
-        region_array[indices] = content(reg)
-        index_array[indices] = [reg.start, reg.stop]
-    return(region_array[np.argsort(index_array)])
-"""
 def _get_region_array_for(regions, content=[], dtype=[]):
     # region_array and index array
     region_array = np.empty(len(regions)*2, dtype=region)
