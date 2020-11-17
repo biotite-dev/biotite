@@ -13,6 +13,7 @@ from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
 from ...sequence.phylo.tree import Tree
+from ..localapp import cleanup_tempfile
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 
@@ -54,10 +55,18 @@ class ClustalOmegaApp(MSAApp):
         self._mbed = True
         self._dist_matrix = None
         self._tree = None
-        self._in_dist_matrix_file  = NamedTemporaryFile("w", suffix=".mat")
-        self._out_dist_matrix_file = NamedTemporaryFile("r", suffix=".mat")
-        self._in_tree_file         = NamedTemporaryFile("w", suffix=".tree")
-        self._out_tree_file        = NamedTemporaryFile("r", suffix=".tree")
+        self._in_dist_matrix_file = NamedTemporaryFile(
+            "w", suffix=".mat", delete=False
+        )
+        self._out_dist_matrix_file = NamedTemporaryFile(
+            "r", suffix=".mat", delete=False
+        )
+        self._in_tree_file = NamedTemporaryFile(
+            "w", suffix=".tree", delete=False
+        )
+        self._out_tree_file = NamedTemporaryFile(
+            "r", suffix=".tree", delete=False
+        )
     
     def run(self):
         args = [
@@ -130,10 +139,10 @@ class ClustalOmegaApp(MSAApp):
     
     def clean_up(self):
         super().clean_up()
-        self._in_dist_matrix_file.close()
-        self._out_dist_matrix_file.close()
-        self._in_tree_file.close()
-        self._out_tree_file.close()
+        cleanup_tempfile(self._in_dist_matrix_file)
+        cleanup_tempfile(self._out_dist_matrix_file)
+        cleanup_tempfile(self._in_tree_file)
+        cleanup_tempfile(self._out_tree_file)
     
     @requires_state(AppState.CREATED)
     def full_matrix_calculation(self):

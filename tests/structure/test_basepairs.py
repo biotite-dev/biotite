@@ -175,7 +175,7 @@ def test_map_nucleotide():
     assert m7g_tuple[0] in purines
     assert m7g_tuple[1] == False
 
-    assert struc.map_nucleotide(residue('ALA')) is None
+    assert struc.map_nucleotide(residue('ALA')) == (None, False)
 
 
 def get_reference(pdb_id, suffix):

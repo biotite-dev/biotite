@@ -16,12 +16,14 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .residues import get_residue_starts
-from .info.nucleotides import is_nucleotide
+from .info.nucleotides import nucleotide_names
 
 
 _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
                 "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
                 "MSE", "ASX", "GLX", "SEC", "UNK"]
+
+_nucleotide_list = nucleotide_names()
 
 _solvent_list = ["HOH","SOL"]
 
@@ -80,9 +82,7 @@ def filter_nucleotides(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to a nucleotide.
     """
-    return (
-        np.array([is_nucleotide(res_name) for res_name in array.res_name])
-    )
+    return np.isin(array.res_name, _nucleotide_list)
 
 
 def filter_amino_acids(array):

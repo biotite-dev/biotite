@@ -1102,12 +1102,10 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors = np.array([[0, 0, 0], [0, 0, 1]], np.float)
 
     # Map the nucleotide to a reference base
-    base_tuple = map_nucleotide(nucleotide, min_atoms_per_base)
+    one_letter_code, _ = map_nucleotide(nucleotide, min_atoms_per_base)
 
-    if base_tuple is None:
+    if one_letter_code is None:
         return None
-
-    one_letter_code, _ = base_tuple
 
     if (one_letter_code == 'A'):
         std_base = _std_adenine
@@ -1160,33 +1158,34 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     return vectors
 
+
 def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     """
-    Maps a nucleotide to one of the 5 common bases Adenine, Guanine,
+    Map a nucleotide to one of the 5 common bases Adenine, Guanine,
     Thymine, Cytosine, and Uracil. If one of those bases bound to
     Deoxyribose and Ribose is detected as input, the corresponding one-
-    letter-code (A, G, T, C, U) is returned.
+    letter-code (``A``, ``G``, ``T``, ``C``, ``U``) is returned.
 
-    If a different nucleotide is given, it is mapped to the best best
+    If a different nucleotide is given, it is mapped to the best
     fitting base using the algorithm described below.
 
     (i) The number of matching atom names with the reference bases is
         counted. If the number of matching atoms with all reference
-        bases is less than the specified ``min_atoms_per_base``
-        (default 3) the nucleotide cannot be mapped and ``None```is
+        bases is less than the specified `min_atoms_per_base`
+        (default 3) the nucleotide cannot be mapped and ``None`` is
         returned.
 
     (ii) The bases with maximum number of matching atoms are selected
          and superimposed with each reference. The base with lowest RMSD
          is chosen. If the RMSD is more than the specified
-         ``rmsd_cutoff`` (default 0.28) the nucleotide cannot be mapped
-         and ``None```is returned.
+         `rmsd_cutoff` (default 0.28) the nucleotide cannot be mapped
+         and ``None`` is returned.
 
     Parameters
     ----------
     residue : AtomArray
         The nucleotide to be mapped.
-    min_atoms_per_base : integer, optional (default: 3)
+    min_atoms_per_base : int, optional (default: 3)
         The number of atoms the residue must have in common with the
         reference.
     rmsd_cutoff : float, optional (default: 0.28)
@@ -1194,11 +1193,28 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     Returns
     -------
-    one_letter_code : string
-        The one-letter-code of the mapped base
-    exact_match : boolean
-        Wether or not the residue name exactly matches with the
-        reference.
+    one_letter_code : str
+        The one-letter-code of the mapped base. ``None`` if no base can
+        be mapped.
+    exact_match : bool
+        Wether or not the residue name exactly matches one of the common
+        bases, i.e. the ``res_name`` of the input `residue` is one of
+        ``A``, ``G``, ``T``, ``C``, ``U``, ``DA``, ``DG``, ``DT``,
+        ``DC`` or ``DU``.
+
+    Notes
+    -----
+    The default RMSD cutoff was chosen according to [1]_, where the same
+    cutoff is used to detect if a given base is a nucleotide, by
+    superimposing the base ring atoms onto a reference structure.
+
+    References
+    ----------
+
+    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
+       "DSSR: an integrated software tool for dissecting the spatial
+       structure of RNA."
+       Nucleic Acids Res, 43(21), e142 (2015).
     """
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in (_thymine_containing_nucleotides +
@@ -1214,13 +1230,10 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     ]
 
     # The number of matched atoms for each 'standard' base
-    matched_atom_no = []
-
-    # Count the number of matching atoms with the reference bases
-    for ref_base in std_base_list:
-        matched_atom_no.append(np.sum(
-            np.isin(ref_base.atom_name, residue.atom_name)
-        ))
+    matched_atom_no = [
+        np.sum(np.isin(ref_base.atom_name, residue.atom_name))
+        for ref_base in std_base_list
+    ]
 
     if max(matched_atom_no) < min_atoms_per_base:
         warnings.warn(
@@ -1230,14 +1243,14 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
             f"Unable to map nucleotide.",
             IncompleteStructureWarning
         )
-        return None
+        return None, False
 
     # The one letter code of the best matching reference base
     best_base = None
 
     # Iterate through the reference bases with the maximum number of
     # matching atoms
-    for ref_base in np.array(std_base_list)[
+    for ref_base in np.array(std_base_list, dtype='object')[
         np.array(matched_atom_no) == max(matched_atom_no)
     ]:
         # Copy the residue as the res_name property of the ``AtomArray``
@@ -1257,9 +1270,9 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         # This is a requirement for ``standardize_order``
         nuc.res_name = ref_base_matched.res_name
         # Reorder the atoms of the nucleotide to obtain the standard
-        # RCSB PDB atom order. If a residue contains multiple Atoms with
+        # RCSB PDB atom order. If a residue contains multiple atoms with
         # the same ``atom_name`` an exception is thrown by
-        # ``standardize_order``. The Exception is caught and the
+        # ``standardize_order``. The exception is caught and the
         # selected reference is disregarded
         try:
             nuc = nuc[standardize_order(nuc)]
@@ -1278,8 +1291,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     if best_base is None:
         warnings.warn(
-            f"Base Type {residue.res_name[0]} not supported. "
-            f"Unable to check for basepair",
+            f"Base Type {residue.res_name[0]} not supported. ",
             UnexpectedStructureWarning
         )
         return None

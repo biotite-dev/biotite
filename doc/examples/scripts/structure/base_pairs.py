@@ -30,13 +30,14 @@ nucleotides = atom_array[struc.filter_nucleotides(atom_array)]
 residue_ids = []
 residue_names = []
 for residue in struc.residue_iter(nucleotides):
-    map_tuple = struc.map_nucleotide(residue)
-    if map_tuple is not None:
-        residue_ids.append(residue[0].res_id)
-        if map_tuple[1]:
-            residue_names.append(map_tuple[0])
-        else:
-            residue_names.append(map_tuple[0].lower())
+    mapped_nucleotide, exact_match = struc.map_nucleotide(residue)
+    if mapped_nucleotide is None:
+        continue
+    residue_ids.append(residue[0].res_id)
+    if exact_match:
+        residue_names.append(mapped_nucleotide)
+    else:
+        residue_names.append(mapped_nucleotide.lower())
 
 # Create a matplotlib pyplot
 fig, ax = plt.subplots(figsize=(8.0, 4.5))

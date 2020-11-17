@@ -95,6 +95,8 @@ def residue(res_name):
 
     array = AtomArray(len(array_dict["res_name"]))
 
+    array.add_annotation("charge", int)
+
     array.res_name = array_dict["res_name"]
     array.atom_name = array_dict["atom_name"]
     array.element = array_dict["element"]
