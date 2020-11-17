@@ -1347,7 +1347,8 @@ def _get_optimal_solutions(cluster, scoring):
     )
 
     for i in range(len(dp_matrix)):
-        dp_matrix[i, i] = []
+        dp_matrix[i, i] = [set()]
+    #print(dp_matrix)
 
     #print(len(cluster)*2)
     for j in range(len(cluster)*2):
@@ -1374,15 +1375,14 @@ def _get_optimal_solutions(cluster, scoring):
                 # plus this region
                 #print(region_array[i].stop)
                 bottom_left = dp_matrix[i+1, j-1]
+                #print(bottom_left)
                 for solution in bottom_left:
-                    solution_candidates.append(solution)
-                    solution_candidates[-1].add(region_array[i])
-                if bottom_left == []:
-                    solution_candidates.append(set([region_array[i]]))
+                    #print(solution)
+                    solution_candidates.append((solution | set([region_array[i]])))
                 #print(solution_candidates)
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            if (left != []) and (bottom != []):
+            if (left != [set()]) and (bottom != [set()]):
                 #print('test')
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
@@ -1420,18 +1420,22 @@ def _get_optimal_solutions(cluster, scoring):
                                 np.where(start_stops==highest)[0][0]+1
                             ):
                                 cell1 = dp_matrix[i, k]
-                                print(f"{i}, {k}")
-                                print(f"{k+1}, {j}")
+                                #print(f"{i}, {k}")
+                                #print(f"{k+1}, {j}")
                                 #print(k)
                                 cell2 = dp_matrix[k+1, j]
                                 for subsolution1 in cell1:
                                     for subsolution2 in cell2:
-                                        print(subsolution1)
-                                        print(subsolution2)
+                                        #print('test')
+                                        #print(subsolution1)
+                                        #print(subsolution2)
+                                        if subsolution1 | subsolution2 == set():
+                                            continue
                                         solution_candidates.append(
                                             subsolution1 | subsolution2
                                         )
             solution_candidates = np.array(solution_candidates)
+            solution_candidates = solution_candidates[solution_candidates != set()]
             if len(solution_candidates) > 0:
                 scores = np.zeros(len(solution_candidates))
                 for s, solution in enumerate(solution_candidates):
@@ -1439,10 +1443,11 @@ def _get_optimal_solutions(cluster, scoring):
                     for regio in solution:
                         score += regio.get_score(scoring)
                     scores[s] = score
-                highest_scores = np.argwhere(scores == np.amax(scores))[0]
+                highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
+                print(np.argwhere(scores == np.amax(scores)))
                 solution_candidates = solution_candidates[highest_scores]
                 #print(solution_candidates)
-
+            solution_candidates = [set(x) for x in set(tuple(solution) for solution in solution_candidates)]
             dp_matrix[i, j] = list(solution_candidates)
             #print(f"{i}, {j}")
             #print(dp_matrix[i, j])
