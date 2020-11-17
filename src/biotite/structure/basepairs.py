@@ -1250,18 +1250,18 @@ def _find_regions(base_pairs):
 def _remove_non_conflicting_regions(regions):
     """
     Remove regions that are not conflicting
+    TODO: Some Regions cant be removed
+        Right now only non-conflicting-regions of type ABB'A' can be
+        removed but ABCB'C'A' -> BCB'C' cannot be performed!
     """
     region_array = _get_region_array_for(regions)
-    #print([reg.get_index_mask() for reg in region_array])
     to_remove = [None]
     while to_remove != []:
         to_remove = []
         for i in range(len(region_array)-1):
             if region_array[i] is region_array[i+1]:
                 to_remove.append(region_array[i])
-        print([reg.get_index_mask() for reg in region_array])
         region_array = region_array[~ np.isin(region_array, to_remove)]
-        print([reg.get_index_mask() for reg in region_array])
     return set(region_array)
 
 """
