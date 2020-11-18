@@ -546,7 +546,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
             hbonds = n_o_pairs/2
-        if not hbonds == -1:
+        if hbonds != -1:
             basepairs.append((base1_index, base2_index))
             if unique:
                 basepairs_hbonds.append(hbonds)
