@@ -344,6 +344,7 @@ class BondList(Copyable):
         cdef np.ndarray bond_types = np.zeros(self._max_bonds_per_atom,
                                               dtype=np.uint8)
         cdef uint8[:] bond_types_v = bond_types
+
         for i in range(all_bonds_v.shape[0]):
             # If a bond is found for the desired atom index
             # at the first or second position of the bond,
@@ -356,11 +357,57 @@ class BondList(Copyable):
                 bonds_v[j] = all_bonds_v[i,0]
                 bond_types_v[j] = all_bonds_v[i,2]
                 j += 1
+        
         # Trim to correct size
         bonds = bonds[:j]
         bond_types = bond_types[:j]
+
         return bonds, bond_types
     
+    
+    def get_all_bonds(self):
+        cdef int i=0
+        cdef uint32 atom_index_i, atom_index_j, bond_type
+
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        # Pessimistic array allocation:
+        # assume size of 2nd dimension
+        # is equal to the atom with most bonds
+        # Since each atom can have an individual number of bonded atoms,
+        # The arrays are padded with '-1'
+        cdef np.ndarray bonds = np.full(
+            (self.atom_count, self._max_bonds_per_atom), -1, dtype=np.int32
+        )
+        cdef int32[:,:] bonds_v = bonds
+        cdef np.ndarray bond_types = np.full(
+            (self.atom_count, self._max_bonds_per_atom), -1, dtype=np.int8
+        )
+        cdef int8[:,:] bond_types_v = bond_types
+        # Track the number of already found bonds for each given index
+        cdef np.ndarray lengths = np.zeros(self.atom_count, dtype=np.uint32)
+        cdef uint32[:] lengths_v = lengths
+        
+        for i in range(all_bonds_v.shape[0]):
+            atom_index_i = all_bonds_v[i,0]
+            atom_index_j = all_bonds_v[i,1]
+            bond_type = all_bonds_v[i,2]
+            # Add second bonded atom for the first bonded atom
+            # and vice versa
+            # Use 'lengths' variable to append the value
+            bonds_v[atom_index_i, lengths_v[atom_index_i]] = atom_index_j
+            bonds_v[atom_index_j, lengths_v[atom_index_j]] = atom_index_i
+            # Increment lengths
+            lengths_v[atom_index_i] += 1
+            lengths_v[atom_index_j] += 1
+        
+        # Trim to correct size
+        max_length = np.max(lengths)
+        bonds = bonds[:, max_length]
+        bond_types = bond_types[:, max_length]
+
+        return bonds, bond_types
+
+
     def add_bond(self, int32 atom_index1, int32 atom_index2,
                  bond_type=BondType.ANY):
         """
