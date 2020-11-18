@@ -406,6 +406,24 @@ class BondList(Copyable):
         bond_types = bond_types[:, max_length]
 
         return bonds, bond_types
+    
+
+    def adjacency_matrix(self):
+        matrix = np.zeros(
+            (self._atom_count, self._atom_count), dtype=bool
+        )
+        matrix[self._bonds[:,0], self._bonds[:,1]] = True
+        matrix[self._bonds[:,1], self._bonds[:,0]] = True
+        return matrix
+
+
+    def bond_type_matrix(self):
+        matrix = np.full(
+            (self._atom_count, self._atom_count), -1, dtype=np.int8
+        )
+        matrix[self._bonds[:,0], self._bonds[:,1]] = self._bonds[:,2]
+        matrix[self._bonds[:,1], self._bonds[:,0]] = self._bonds[:,2]
+        return matrix
 
 
     def add_bond(self, int32 atom_index1, int32 atom_index2,
