@@ -277,6 +277,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     --------
     Compute the stacking interactions for a DNA-double-helix (PDB ID
     1BNA):
+
     >>> from os.path import join
     >>> dna_helix = load_structure(join(path_to_structures, "1bna.pdb"))
     >>> stacking_interactions = base_stacking(dna_helix)
