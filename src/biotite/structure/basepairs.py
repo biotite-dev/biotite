@@ -502,9 +502,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     )
 
     # Combine the two boolean masks
-    boolean_mask = np.logical_and(nucleotides_boolean, non_phosphate_boolean)
+    boolean_mask = nucleotides_boolean & non_phosphate_boolean
 
-    # Get only the nucleosides
+    # Get only nucleosides
     nucleosides = atom_array[boolean_mask]
 
 
