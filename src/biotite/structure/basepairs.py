@@ -1174,11 +1174,9 @@ def pseudoknots(base_pairs, scoring=None):
     assert len(base_pairs) == len(scoring)
 
     # Split the basepairs in regions
-    # TODO: Specify very rough layout
     regions = _find_regions(base_pairs)
 
     # Only retain conflicting regions
-    # TODO: Specify very rough layout
     cleaned_regions = _remove_non_conflicting_regions(regions)
 
     # Cleaned regions are of order zero
@@ -1187,12 +1185,12 @@ def pseudoknots(base_pairs, scoring=None):
             results[region.get_index_mask] = 0
 
     # Group mutually conflicting regions
-    # TODO: Specify very rough layout
     conflict_clusters = _cluster_conflicts(regions)
 
     for cluster in conflict_clusters:
-        # TODO: Specify very rough layout
-        optimal_solutions = _get_optimal_solutions(cluster)
+        order = 0
+        while len(cluster) != 0:
+            optimal_solutions = _get_optimal_solutions(cluster, scoring)
         ### TODO: RESULTS PROCESSING
 
 
