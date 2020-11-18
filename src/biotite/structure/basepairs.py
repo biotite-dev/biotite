@@ -1347,7 +1347,7 @@ def _get_optimal_solutions(cluster, scoring):
     )
 
     for i in range(len(dp_matrix)):
-        dp_matrix[i, i] = [set()]
+        dp_matrix[i, i] = [frozenset()]
     #print(dp_matrix)
 
     #print(len(cluster)*2)
@@ -1362,13 +1362,13 @@ def _get_optimal_solutions(cluster, scoring):
             bottom = dp_matrix[i+1, j]
             #print(bottom)
             #print(left)
-            solution_candidates = []
+            solution_candidates = set()
             # Add all solutions of the cell to the left
             for solution in left:
-                solution_candidates.append(solution)
+                solution_candidates.add(solution)
             # Add all solutions of the cell to the bottom
             for solution in bottom:
-               solution_candidates.append(solution)
+               solution_candidates.add(solution)
             # Check if i and j are endpoints of the same region
             if region_array[i] is region_array[j]:
                 # Add all solutions from the cell to the bottom left
@@ -1378,11 +1378,11 @@ def _get_optimal_solutions(cluster, scoring):
                 #print(bottom_left)
                 for solution in bottom_left:
                     #print(solution)
-                    solution_candidates.append((solution | set([region_array[i]])))
+                    solution_candidates.add((solution | set([region_array[i]])))
                 #print(solution_candidates)
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            if (left != [set()]) and (bottom != [set()]):
+            if (left != [frozenset()]) and (bottom != [frozenset()]):
                 #print('test')
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
@@ -1413,7 +1413,7 @@ def _get_optimal_solutions(cluster, scoring):
                         highest = stops[0][l]
                         if highest < lowest:
                             # Both solutions are disjoint
-                            solution_candidates.append(solution1 | solution2)
+                            solution_candidates.add(solution1 | solution2)
                         else:
                             for k in range(
                                 np.where(start_stops==lowest)[0][0]-1,
@@ -1429,29 +1429,35 @@ def _get_optimal_solutions(cluster, scoring):
                                         #print('test')
                                         #print(subsolution1)
                                         #print(subsolution2)
-                                        if subsolution1 | subsolution2 == set():
+                                        if subsolution1 | subsolution2 == frozenset():
                                             continue
-                                        solution_candidates.append(
+                                        solution_candidates.add(
                                             subsolution1 | subsolution2
                                         )
-            solution_candidates = np.array(solution_candidates)
-            solution_candidates = solution_candidates[solution_candidates != set()]
+            #solution_candidates = [set(x) for x in set(tuple(solution) for solution in solution_candidates)]
+
+            #print(solution_candidates)
+            solution_candidates = np.array(list(solution_candidates))
+            #print('cleaned')
+            #print(solution_candidates)
+
+            solution_candidates = solution_candidates[solution_candidates != frozenset()]
             if len(solution_candidates) > 0:
                 scores = np.zeros(len(solution_candidates))
                 for s, solution in enumerate(solution_candidates):
                     score = 0
+                    #print(solution_candidates)
                     for regio in solution:
                         score += regio.get_score(scoring)
                     scores[s] = score
                 highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
-                print(np.argwhere(scores == np.amax(scores)))
+                #print(np.argwhere(scores == np.amax(scores)))
                 solution_candidates = solution_candidates[highest_scores]
                 #print(solution_candidates)
-            solution_candidates = [set(x) for x in set(tuple(solution) for solution in solution_candidates)]
-            dp_matrix[i, j] = list(solution_candidates)
+            dp_matrix[i, j] = frozenset(solution_candidates)
             #print(f"{i}, {j}")
             #print(dp_matrix[i, j])
-    return dp_matrix
+    return dp_matrix[0, -1]
 
 
 
