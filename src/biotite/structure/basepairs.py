@@ -309,9 +309,13 @@ def base_stacking(atom_array, min_atoms_per_base=3):
        "Finding and visualizing nucleic acid base stacking"
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
-    # Get the stacking candidates according to a N/O cutoff distance,
-    # where each base is identified as the first index of its respective
-    # residue
+    # Get the stacking candidates according to a cutoff distance, where
+    # each base is identified as the first index of its respective
+    # residue.
+    # The diameter from the C1'-sugar-atom across a purine base is ~5Å
+    # and the distance between the base centers can be at most 4.5Å.
+    # Thus, accounting for buffer, a cutoff of 15Å between the
+    # nucleotides' C1'-atoms was chosen.
     c1_mask = filter_nucleotides(atom_array) & (atom_array.atom_name == "C1'")
     stacking_candidates, _ = _get_proximate_residues(atom_array, c1_mask, 15)
 
