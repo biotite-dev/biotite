@@ -1332,131 +1332,123 @@ def _cluster_conflicts(regions):
     return clusters
 
 def _get_optimal_solutions(cluster, scoring):
-    # Return optimal solution as list of lists of regions
-    class reg (IntEnum):
-        start = 0,
-        stop = 1
 
+    # Create dynamic programming matrix
     dp_matrix_shape = len(cluster)*2, len(cluster)*2
-    dp_matrix = np.empty(dp_matrix_shape, dtype=list)
+    dp_matrix = np.empty(dp_matrix_shape, dtype='object')
 
+    # Each index corresponds to the position in the dp matrix.
+    # ``region_array`` contains the region objects and ``start_stops``
+    # contains the lowest and highest positions of the regions
     region_array, (start_stops,) = _get_region_array_for(
         cluster,
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
 
+    # Initialise the matrix diagonal with ``ndarray``s of empty
+    # ``frozenset``s
     for i in range(len(dp_matrix)):
-        dp_matrix[i, i] = [frozenset()]
-    #print(dp_matrix)
+        dp_matrix[i, i] = np.array([frozenset()])
 
-    #print(len(cluster)*2)
+    # Iterate through the top right of the dynamic programming matrix
     for j in range(len(cluster)*2):
         for i in range(j-1, -1, -1):
-            #print(f"{i}, {j}")
-            #print(dp_matrix)
-            #print(dp_matrix[1, 3])
 
-            #dp_matrix[i, j] = []
+            solution_candidates = set()
             left = dp_matrix[i, j-1]
             bottom = dp_matrix[i+1, j]
-            #print(bottom)
-            #print(left)
-            solution_candidates = set()
+
             # Add all solutions of the cell to the left
             for solution in left:
                 solution_candidates.add(solution)
+
             # Add all solutions of the cell to the bottom
             for solution in bottom:
                solution_candidates.add(solution)
-            # Check if i and j are endpoints of the same region
+
+            # Check if i and j are start/end-points of the same region
             if region_array[i] is region_array[j]:
+
                 # Add all solutions from the cell to the bottom left
                 # plus this region
-                #print(region_array[i].stop)
                 bottom_left = dp_matrix[i+1, j-1]
-                #print(bottom_left)
                 for solution in bottom_left:
-                    #print(solution)
-                    solution_candidates.add((solution | set([region_array[i]])))
-                #print(solution_candidates)
+                    solution_candidates.add(solution | set([region_array[i]]))
+
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
             if (left != [frozenset()]) and (bottom != [frozenset()]):
-                #print('test')
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
                 )
-                #print(starts)
                 stops = np.empty_like(starts)
 
+                # Precalculate the minimum and maximum base position of
+                # each solution
                 for c, cell in enumerate([left, bottom]):
                     for s, solution in enumerate(cell):
                         minimum = -1
                         maximum = -1
-                        for regio in solution:
+                        for reg in solution:
                             if minimum == -1 or maximum == -1:
-                                minimum = regio.start
-                                maximum = regio.stop
+                                minimum = reg.start
+                                maximum = reg.stop
                                 continue
-                            if minimum > regio.start:
-                                minimum = regio.start
-                            if maximum < regio.stop:
-                                maximum = regio.stop
+                            if minimum > reg.start:
+                                minimum = reg.start
+                            if maximum < reg.stop:
+                                maximum = reg.stop
                         starts[c, s] = minimum
                         stops[c, s] = maximum
 
-
+                # For each pair of solutions check if solutions are
+                # disjoint
                 for l, solution1 in enumerate(left):
                     for b, solution2 in enumerate(bottom):
+                        # for each pair of solutions get the lowest and
+                        # highest value
                         lowest = starts[1][b]
                         highest = stops[0][l]
                         if highest < lowest:
                             # Both solutions are disjoint
                             solution_candidates.add(solution1 | solution2)
                         else:
+                            # Both solutions are not disjoint
+                            # Add subsolutions
                             for k in range(
                                 np.where(start_stops==lowest)[0][0]-1,
                                 np.where(start_stops==highest)[0][0]+1
                             ):
                                 cell1 = dp_matrix[i, k]
-                                #print(f"{i}, {k}")
-                                #print(f"{k+1}, {j}")
-                                #print(k)
                                 cell2 = dp_matrix[k+1, j]
                                 for subsolution1 in cell1:
                                     for subsolution2 in cell2:
-                                        #print('test')
-                                        #print(subsolution1)
-                                        #print(subsolution2)
-                                        if subsolution1 | subsolution2 == frozenset():
-                                            continue
                                         solution_candidates.add(
                                             subsolution1 | subsolution2
                                         )
-            #solution_candidates = [set(x) for x in set(tuple(solution) for solution in solution_candidates)]
 
-            #print(solution_candidates)
+            # Make solution candidates ``ndarray`` array of sets to
+            # allow fancy indexing
             solution_candidates = np.array(list(solution_candidates))
-            #print('cleaned')
-            #print(solution_candidates)
 
-            solution_candidates = solution_candidates[solution_candidates != frozenset()]
-            if len(solution_candidates) > 0:
-                scores = np.zeros(len(solution_candidates))
-                for s, solution in enumerate(solution_candidates):
-                    score = 0
-                    #print(solution_candidates)
-                    for regio in solution:
-                        score += regio.get_score(scoring)
-                    scores[s] = score
-                highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
-                #print(np.argwhere(scores == np.amax(scores)))
-                solution_candidates = solution_candidates[highest_scores]
-                #print(solution_candidates)
-            dp_matrix[i, j] = frozenset(solution_candidates)
-            #print(f"{i}, {j}")
-            #print(dp_matrix[i, j])
+            # Calculate the scores for each solution
+            scores = np.zeros(len(solution_candidates))
+            for s, solution in enumerate(solution_candidates):
+                score = 0
+                for regio in solution:
+                    score += regio.get_score(scoring)
+                scores[s] = score
+            # Get the indices where the score is at a maximum
+            highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
+
+            # Get the solutions with the highest score
+            solution_candidates = solution_candidates[highest_scores]
+
+            # Add the solutions to the dynamic programming matrix
+            dp_matrix[i, j] = solution_candidates
+
+    # The top right corner contains the optimal solutions
     return dp_matrix[0, -1]
 
 
