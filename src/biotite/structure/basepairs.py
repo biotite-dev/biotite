@@ -1436,8 +1436,8 @@ def _get_optimal_solutions(cluster, scoring):
             scores = np.zeros(len(solution_candidates))
             for s, solution in enumerate(solution_candidates):
                 score = 0
-                for regio in solution:
-                    score += regio.get_score(scoring)
+                for reg in solution:
+                    score += reg.get_score(scoring)
                 scores[s] = score
             # Get the indices where the score is at a maximum
             highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
