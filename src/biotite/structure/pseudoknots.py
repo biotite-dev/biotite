@@ -36,6 +36,10 @@ class region():
             self.score = np.sum(scoring[self.get_index_mask()])
         return self.score
 
+    # Required for numpy unique support
+    def __lt__(self, other):
+        return False
+
 
 def pseudoknots(base_pairs, scoring=None):
 
@@ -169,6 +173,35 @@ def _remove_non_conflicting_regions(regions):
         Right now only non-conflicting-regions of type ABB'A' can be
         removed but ABCB'C'A' -> BCB'C' cannot be performed!
     """
+    region_array, start_stops = _get_region_array_for(
+        regions, content=[lambda a : [True, False]], dtype=['bool']
+    )
+    print(len(start_stops[0]))
+    print(region_array)
+    starts = np.nonzero(start_stops[0])[0]
+    print(starts)
+    to_remove = []
+    #print(starts)
+    for start_index in starts:
+        #print(region_array)
+        #print(start_index)
+        stop_index = _get_first_occurrence_for(
+            region_array[start_index+1:], region_array[start_index]
+        )
+        stop_index = start_index + 1 + stop_index
+        _, counts = np.unique(region_array[start_index+1:stop_index], return_counts=True)
+        print(counts)
+        print(region_array[start_index])
+        print(region_array[stop_index])
+        if len(counts) == 0:
+            to_remove.append(region_array[start_index])
+        elif np.amin(counts) == 2:
+            to_remove.append(region_array[start_index])
+
+    region_array = region_array[~ np.isin(region_array, to_remove)]
+    return set(region_array)
+
+
     region_array = _get_region_array_for(regions)
     to_remove = [None]
     while to_remove != []:
@@ -178,6 +211,15 @@ def _remove_non_conflicting_regions(regions):
                 to_remove.append(region_array[i])
         region_array = region_array[~ np.isin(region_array, to_remove)]
     return set(region_array)
+
+
+def _get_first_occurrence_for(array, wanted_value):
+    """
+    Returns the first occurrences of a numpy array
+    """
+    for i, value in enumerate(array):
+        if value is wanted_value:
+            return i
 
 
 def _get_region_array_for(regions, content=[], dtype=[]):
@@ -283,7 +325,12 @@ def _get_optimal_solutions(cluster, scoring):
 
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            if (left != [frozenset()]) and (bottom != [frozenset()]):
+            #print(left)
+            #print(bottom)
+            if (np.any(left != [frozenset()])) and (np.any(bottom != [frozenset()])):
+                #print(dp_matrix)
+                #print(i)
+                #print(j)
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
                 )
