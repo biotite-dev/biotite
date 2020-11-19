@@ -38,7 +38,7 @@ class region():
 
     # Required for numpy unique support
     def __lt__(self, other):
-        return False
+        return id(self) < id(other)
 
 
 def pseudoknots(base_pairs, scoring=None):
@@ -89,14 +89,11 @@ def _get_result_diff(cluster, scoring, order=0):
         next_cluster = _remove_non_conflicting_regions(next_cluster)
 
         if len(next_cluster) > 0:
+            print(next_cluster)
             next_result_diff = _get_result_diff(next_cluster, scoring)
 
             this_result_diff = []
             for i, diff in enumerate(next_result_diff):
-                print('start')
-                print(this_result_diff)
-                print(diff)
-                print('stop')
 
                 this_result_diff.append(deepcopy(results))
                 this_result_diff[-1] = (this_result_diff[-1] + diff)
@@ -219,7 +216,7 @@ def _remove_non_conflicting_regions(regions):
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
     #print(len(start_stops[0]))
-    #print(region_array)
+    print(region_array)
     starts = np.nonzero(start_stops[0])[0]
     #print(starts)
     to_remove = []
@@ -232,9 +229,10 @@ def _remove_non_conflicting_regions(regions):
         )
         stop_index = start_index + 1 + stop_index
         _, counts = np.unique(region_array[start_index+1:stop_index], return_counts=True)
-        #print(counts)
-        #print(region_array[start_index])
-        #print(region_array[stop_index])
+        print(counts)
+        print(_)
+        print(region_array[start_index])
+        print(region_array[stop_index])
         if len(counts) == 0:
             to_remove.append(region_array[start_index])
         elif np.amin(counts) == 2:
