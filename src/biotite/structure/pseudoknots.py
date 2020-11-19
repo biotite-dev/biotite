@@ -65,51 +65,88 @@ def pseudoknots(base_pairs, scoring=None):
 
     # For each cluster calculate all optimal solutions
     for cluster in conflict_clusters:
-        results = _get_results(cluster, scoring, results)
+        results = _get_result_diff(cluster, scoring, results)
 
     return np.vstack(results)
 
-def _get_results(cluster, scoring, results, order=0):
+def _get_result_diff(cluster, scoring, order=0):
 
     # Get the optimal solutions for the given cluster
     optimal_solutions = _get_optimal_solutions(cluster, scoring)
 
-    # Each optimal solution branches their own set of subsolutions
-    results_copy = []
-    for i in range(len(optimal_solutions)):
-        results_copy.append(deepcopy(results))
+    results_diff = np.empty(len(optimal_solutions), dtype=list)
 
     # Get the results for each optimal solution
     for o, optimal_solution in enumerate(optimal_solutions):
-        for r in range(len(results)):
-            # The regions retained in the optimal solutions are of the
-            # current order
-            for reg in optimal_solution:
-                results_copy[o][r][reg.get_index_mask()] = order
 
-            # Get the regions not retained in the optimal solution
-            new_cluster = cluster - optimal_solution
+        results = np.zeros(len(scoring), dtype='int32')
 
-            # remove non-conflicting regions in new cluster
-            new_cluster_cleaned =_remove_non_conflicting_regions(new_cluster)
-            for reg in (new_cluster - new_cluster_cleaned):
+        next_cluster = cluster - optimal_solution
+
+        for reg in next_cluster:
+            results[reg.get_index_mask()] += 1
+
+        next_cluster = _remove_non_conflicting_regions(next_cluster)
+
+        if len(next_cluster) > 0:
+            next_result_diff = _get_result_diff(next_cluster, scoring)
+
+            this_result_diff = []
+            for i, diff in enumerate(next_result_diff):
+                print('start')
+                print(this_result_diff)
+                print(diff)
+                print('stop')
+
+                this_result_diff.append(deepcopy(results))
+                this_result_diff[-1] = (this_result_diff[-1] + diff)
+
+        else:
+            this_result_diff = [results]
+
+        results_diff[o] = this_result_diff
+
+
+        """
+        if len(next_cluster) > 0:
+            next_results = _get_results(next_cluster)
+        # The regions retained in the optimal solutions are of the
+        # current order
+        for reg in optimal_solution:
+            results_copy[o][r][reg.get_index_mask()] = order
+
+        # Get the regions not retained in the optimal solution
+        new_cluster = cluster - optimal_solution
+
+
+        # remove non-conflicting regions in new cluster
+        new_cluster_cleaned =_remove_non_conflicting_regions(new_cluster)
+        for reg in (new_cluster - new_cluster_cleaned):
+            print('a')
+            print(results_copy[o][r])
+            results_copy[o][r][reg.get_index_mask()] = order + 1
+            print(results_copy[o][r])
+            print(reg.get_index_mask())
+            print(order)
+        new_cluster = new_cluster_cleaned
+        # if there is more than one region remaining, increase the
+        # order and solve for the remaining regions
+        if len(new_cluster) > 1:
+            new_results = _get_results(
+                new_cluster, scoring, results_copy[o][r], order=(order+1)
+            )
+        # if there is one or less region remaining it is of the next
+        # highest order
+        else:
+            for reg in new_cluster:
                 results_copy[o][r][reg.get_index_mask()] = order + 1
-            new_cluster = new_cluster_cleaned
-            # if there is more than one region remaining, increase the
-            # order and solve for the remaining regions
-            if len(new_cluster) > 1:
-                results_copy[o][r] = _get_results(
-                    new_cluster, scoring, results, order=(order+1)
-                )
-            # if there is one or less region remaining it is of the next
-            # highest order
-            else:
-                for reg in new_cluster:
-                    results_copy[o][r][reg.get_index_mask()] = order + 1
+        """
 
     # Return flattened results
-    return [result for results in results_copy for result in results]
+    return [result for results in results_diff for result in results]
 
+def _apply_results():
+    pass
 
 def _find_regions(base_pairs):
     """
@@ -298,7 +335,7 @@ def _get_optimal_solutions(cluster, scoring):
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
-    print(region_array)
+    #print(region_array)
     # Initialise the matrix diagonal with ``ndarray``s of empty
     # ``frozenset``s
     for i in range(len(dp_matrix)):
