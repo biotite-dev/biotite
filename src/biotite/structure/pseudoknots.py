@@ -90,6 +90,11 @@ def _get_results(cluster, scoring, results, order=0):
             # Get the regions not retained in the optimal solution
             new_cluster = cluster - optimal_solution
 
+            # remove non-conflicting regions in new cluster
+            new_cluster_cleaned =_remove_non_conflicting_regions(new_cluster)
+            for reg in (new_cluster - new_cluster_cleaned):
+                results_copy[o][r][reg.get_index_mask()] = order + 1
+            new_cluster = new_cluster_cleaned
             # if there is more than one region remaining, increase the
             # order and solve for the remaining regions
             if len(new_cluster) > 1:
@@ -176,10 +181,10 @@ def _remove_non_conflicting_regions(regions):
     region_array, start_stops = _get_region_array_for(
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
-    print(len(start_stops[0]))
-    print(region_array)
+    #print(len(start_stops[0]))
+    #print(region_array)
     starts = np.nonzero(start_stops[0])[0]
-    print(starts)
+    #print(starts)
     to_remove = []
     #print(starts)
     for start_index in starts:
@@ -190,9 +195,9 @@ def _remove_non_conflicting_regions(regions):
         )
         stop_index = start_index + 1 + stop_index
         _, counts = np.unique(region_array[start_index+1:stop_index], return_counts=True)
-        print(counts)
-        print(region_array[start_index])
-        print(region_array[stop_index])
+        #print(counts)
+        #print(region_array[start_index])
+        #print(region_array[stop_index])
         if len(counts) == 0:
             to_remove.append(region_array[start_index])
         elif np.amin(counts) == 2:
@@ -293,7 +298,7 @@ def _get_optimal_solutions(cluster, scoring):
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
-
+    print(region_array)
     # Initialise the matrix diagonal with ``ndarray``s of empty
     # ``frozenset``s
     for i in range(len(dp_matrix)):
