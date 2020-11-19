@@ -85,7 +85,7 @@ def _get_results(cluster, scoring, results, order=0):
 
             new_cluster = cluster - optimal_solution
 
-            if len(optimal_solution) > 1:
+            if len(new_cluster) > 1:
                 results_copy[o][r] = _get_results(
                     new_cluster, scoring, results, order=(order+1)
                 )
@@ -272,7 +272,7 @@ def _cluster_conflicts(regions):
     return clusters
 
 def _get_optimal_solutions(cluster, scoring):
-
+    print(cluster)
     # Create dynamic programming matrix
     dp_matrix_shape = len(cluster)*2, len(cluster)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
@@ -294,7 +294,10 @@ def _get_optimal_solutions(cluster, scoring):
     # Iterate through the top right of the dynamic programming matrix
     for j in range(len(cluster)*2):
         for i in range(j-1, -1, -1):
-
+            print(dp_matrix)
+            print(dp_matrix.shape)
+            print(i)
+            print(j)
             solution_candidates = set()
             left = dp_matrix[i, j-1]
             bottom = dp_matrix[i+1, j]
