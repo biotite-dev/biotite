@@ -3,7 +3,7 @@
 # information.
 
 """
-This module provides functions for pseudoknot detection
+This module provides functions for pseudoknot detection.
 """
 
 __name__ = "biotite.structure"
@@ -11,12 +11,12 @@ __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
 import numpy as np
+from copy import deepcopy
 
 class region():
 
     def __init__ (self, base_pairs, region_pairs):
         # The Start and Stop indices for each Region
-        #print(region_pairs)
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
         # The base pair array
@@ -40,7 +40,7 @@ class region():
 def pseudoknots(base_pairs, scoring=None):
 
     # Result array
-    results = np.array(len(base_pairs), dtype='int32')
+    results = [np.zeros(len(base_pairs), dtype='int32')]
 
     # if no scoring function is given, each basepairs score is one
     if scoring is None:
@@ -56,20 +56,85 @@ def pseudoknots(base_pairs, scoring=None):
     # Only retain conflicting regions
     cleaned_regions = _remove_non_conflicting_regions(regions)
 
+    """
     # Cleaned regions are of order zero
-    for region in regions:
-        if region not in cleaned_regions:
-            results[region.get_index_mask] = 0
-
+    for reg in regions:
+        if reg not in cleaned_regions:
+            results[0][reg.get_index_mask()] = 0
+    """
     # Group mutually conflicting regions
-    conflict_clusters = _cluster_conflicts(regions)
+    conflict_clusters = _cluster_conflicts(cleaned_regions)
 
     for cluster in conflict_clusters:
-        order = 0
-        while len(cluster) != 0:
-            optimal_solutions = _get_optimal_solutions(cluster, scoring)
-        ### TODO: RESULTS PROCESSING
+        results = _get_results(cluster, scoring, results)
 
+    return np.vstack(results)
+
+def _get_results(cluster, scoring, results, order=0):
+    optimal_solutions = _get_optimal_solutions(cluster, scoring)
+    results_copy = []
+    for i in range(len(optimal_solutions)):
+        results_copy.append(deepcopy(results))
+    print(results)
+    print(results_copy)
+    for o, optimal_solution in enumerate(optimal_solutions):
+        #specific_results = results
+        for r in range(len(results)):
+            for reg in optimal_solution:
+                results_copy[o][r][reg.get_index_mask()] = order
+
+            new_cluster = cluster - optimal_solution
+
+            if len(optimal_solution) > 1:
+                results_copy[o][r] = _get_results(
+                    new_cluster, scoring, results, order=(order+1)
+                )
+            else:
+                for reg in new_cluster:
+                    results_copy[o][r][reg.get_index_mask()] = order + 1
+
+    results = [result for results in results_copy for result in results]
+    print(results)
+
+    return results
+
+    """
+
+            for r in range(len(results)):
+                for reg in optimal_solution:
+                    results[r][reg.get_index_mask()] = order + 1
+            if o == 0:
+                for reg in optimal_solution:
+                    results[r][reg.get_index_mask()] = order
+            else:
+                print('here')
+                print(cluster)
+                print(optimal_solution)
+                print(cluster-optimal_solution)
+                results.append(results_copy[r].copy())
+                prin(results[-1])
+
+                for reg in (cluster - optimal_solution):
+                    print(reg.get_index_mask())
+                    print(results[-1])
+                    print(order - 1)
+                    results[-1][reg.get_index_mask()] = order - 1
+
+                for reg in optimal_solution:
+                    print(reg.get_index_mask())
+                    print(order)
+                    results[-1][reg.get_index_mask()] = order
+        optimal_solution = cluster - optimal_solution
+        if len(optimal_solution) > 1:
+            results = _get_results(
+                optimal_solution, scoring, results, order=(order+1)
+            )
+        else:
+            for r in range(len(results)):
+                for reg in optimal_solution:
+                    results[r][reg.get_index_mask()] = order + 1
+    return results
+    """
 
 def _find_regions(base_pairs):
     """
@@ -78,7 +143,7 @@ def _find_regions(base_pairs):
 
     Parameters
     ----------
-    base_pairs : ndarray, dtype=int, shape=(n,2)
+    base_pairs : ndarray, dtype=int, shape=(n, 2)
         Each row is equivalent to one basepair and contains the first
         indices of the residues corresponding to each base.
 
