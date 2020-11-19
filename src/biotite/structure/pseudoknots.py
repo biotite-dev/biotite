@@ -56,85 +56,51 @@ def pseudoknots(base_pairs, scoring=None):
     # Only retain conflicting regions
     cleaned_regions = _remove_non_conflicting_regions(regions)
 
-    """
-    # Cleaned regions are of order zero
-    for reg in regions:
-        if reg not in cleaned_regions:
-            results[0][reg.get_index_mask()] = 0
-    """
     # Group mutually conflicting regions
     conflict_clusters = _cluster_conflicts(cleaned_regions)
 
+    # For each cluster calculate all optimal solutions
     for cluster in conflict_clusters:
         results = _get_results(cluster, scoring, results)
 
     return np.vstack(results)
 
 def _get_results(cluster, scoring, results, order=0):
+
+    # Get the optimal solutions for the given cluster
     optimal_solutions = _get_optimal_solutions(cluster, scoring)
+
+    # Each optimal solution branches their own set of subsolutions
     results_copy = []
     for i in range(len(optimal_solutions)):
         results_copy.append(deepcopy(results))
-    print(results)
-    print(results_copy)
+
+    # Get the results for each optimal solution
     for o, optimal_solution in enumerate(optimal_solutions):
-        #specific_results = results
         for r in range(len(results)):
+            # The regions retained in the optimal solutions are of the
+            # current order
             for reg in optimal_solution:
                 results_copy[o][r][reg.get_index_mask()] = order
 
+            # Get the regions not retained in the optimal solution
             new_cluster = cluster - optimal_solution
 
+            # if there is more than one region remaining, increase the
+            # order and solve for the remaining regions
             if len(new_cluster) > 1:
                 results_copy[o][r] = _get_results(
                     new_cluster, scoring, results, order=(order+1)
                 )
+            # if there is one or less region remaining it is of the next
+            # highest order
             else:
                 for reg in new_cluster:
                     results_copy[o][r][reg.get_index_mask()] = order + 1
 
-    results = [result for results in results_copy for result in results]
-    print(results)
+    # Return flattened results
+    return [result for results in results_copy for result in results]
 
-    return results
-
-    """
-
-            for r in range(len(results)):
-                for reg in optimal_solution:
-                    results[r][reg.get_index_mask()] = order + 1
-            if o == 0:
-                for reg in optimal_solution:
-                    results[r][reg.get_index_mask()] = order
-            else:
-                print('here')
-                print(cluster)
-                print(optimal_solution)
-                print(cluster-optimal_solution)
-                results.append(results_copy[r].copy())
-                prin(results[-1])
-
-                for reg in (cluster - optimal_solution):
-                    print(reg.get_index_mask())
-                    print(results[-1])
-                    print(order - 1)
-                    results[-1][reg.get_index_mask()] = order - 1
-
-                for reg in optimal_solution:
-                    print(reg.get_index_mask())
-                    print(order)
-                    results[-1][reg.get_index_mask()] = order
-        optimal_solution = cluster - optimal_solution
-        if len(optimal_solution) > 1:
-            results = _get_results(
-                optimal_solution, scoring, results, order=(order+1)
-            )
-        else:
-            for r in range(len(results)):
-                for reg in optimal_solution:
-                    results[r][reg.get_index_mask()] = order + 1
-    return results
-    """
 
 def _find_regions(base_pairs):
     """
@@ -272,7 +238,7 @@ def _cluster_conflicts(regions):
     return clusters
 
 def _get_optimal_solutions(cluster, scoring):
-    print(cluster)
+
     # Create dynamic programming matrix
     dp_matrix_shape = len(cluster)*2, len(cluster)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
@@ -294,10 +260,6 @@ def _get_optimal_solutions(cluster, scoring):
     # Iterate through the top right of the dynamic programming matrix
     for j in range(len(cluster)*2):
         for i in range(j-1, -1, -1):
-            print(dp_matrix)
-            print(dp_matrix.shape)
-            print(i)
-            print(j)
             solution_candidates = set()
             left = dp_matrix[i, j-1]
             bottom = dp_matrix[i+1, j]
