@@ -145,26 +145,34 @@ class BondList(Copyable):
         self._atom_count = atom_count
         
         if bonds is not None and len(bonds) > 0:
-            if (bonds[:,:2] >= atom_count).any():
-                raise ValueError(
-                    f"Index {np.max(bonds[:,:2])} in bonds is too large "
-                    f"for atom count of {atom_count}"
-                )
+            if bonds.ndim != 2:
+                raise ValueError("Expected a 2D-ndarray for input bonds")
+
+            self._bonds = np.zeros((bonds.shape[0], 3), dtype=np.uint32)
             if bonds.shape[1] == 3:
                 # Input contains bonds (index 0 and 1)
-                # including the bond type value (index 3)
-                # -> Simply copy input
-                self._bonds = _to_positive_index_array(bonds, atom_count) \
-                              .astype(np.uint32)
+                # including the bond type value (index 2)
+                # Bond indices:
+                self._bonds[:,:2] = np.sort(
+                    # Indices are sorted per bond
+                    # so that the lower index is at the first position
+                    _to_positive_index_array(bonds[:,:2], atom_count), axis=1
+                )
+                # Bond type:
+                if (bonds[:, 2] >= len(BondType)).any():
+                    raise ValueError(
+                        f"BondType {np.max(bonds[:, 2])} is invalid"
+                    )
+                self._bonds[:,2] = bonds[:, 2]
+
                 # Indices are sorted per bond
                 # so that the lower index is at the first position
-                self._bonds[:,:2] = np.sort(self._bonds[:,:2], axis=1)
             elif bonds.shape[1] == 2:
-                # input contains the bonds without bond type
+                # Input contains the bonds without bond type
                 # -> Default: Set bond type ANY (0)
-                self._bonds = np.zeros((bonds.shape[0], 3), dtype=np.uint32)
-                # Set and sort atom indices per bond
                 self._bonds[:,:2] = np.sort(
+                    # Indices are sorted per bond
+                    # so that the lower index is at the first position
                     _to_positive_index_array(bonds[:,:2], atom_count), axis=1
                 )
             else:
@@ -222,8 +230,7 @@ class BondList(Copyable):
         """
         if offset < 0:
             raise ValueError("Offest must be positive")
-        self._bonds[:,0] += offset
-        self._bonds[:,1] += offset
+        self._bonds[:,:2] += offset
         self._atom_count += offset
     
     def as_array(self):
@@ -370,13 +377,11 @@ class BondList(Copyable):
         bond_type : BondType or int, optional
             The type of the bond. Default is :attr:`BondType.ANY`.
         """
+        if bond_type >= len(BondType):
+            raise ValueError(f"BondType {bond_type} is invalid")
+
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
-        if index1 >= self._atom_count or index2 >= self._atom_count:
-            raise ValueError(
-                f"Index {max(index1, index2)} in new bond is too large "
-                f"for atom count of {self._atom_count}"
-            )
         _sort(&index1, &index2)
         
         cdef int i
@@ -750,7 +755,7 @@ class BondList(Copyable):
 
 cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
     """
-    Convert a potentially negative index intop a positive index.
+    Convert a potentially negative index into a positive index.
     """
     cdef uint32 pos_index
     if index < 0:

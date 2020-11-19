@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
 from tempfile import NamedTemporaryFile
-from ..localapp import LocalApp
+from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
 from ...structure.io.pdb import PDBFile
 import numpy as np
@@ -54,8 +54,8 @@ class DsspApp(LocalApp):
     def __init__(self, atom_array, bin_path="mkdssp"):
         super().__init__(bin_path)
         self._array = atom_array
-        self._in_file  = NamedTemporaryFile("w", suffix=".pdb")
-        self._out_file = NamedTemporaryFile("r", suffix=".dssp")
+        self._in_file  = NamedTemporaryFile("w", suffix=".pdb",  delete=False)
+        self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
     def run(self):
         in_file = PDBFile()
@@ -88,8 +88,8 @@ class DsspApp(LocalApp):
     
     def clean_up(self):
         super().clean_up()
-        self._in_file.close()
-        self._out_file.close()
+        cleanup_tempfile(self._in_file)
+        cleanup_tempfile(self._out_file)
     
     @requires_state(AppState.JOINED)
     def get_sse(self):
