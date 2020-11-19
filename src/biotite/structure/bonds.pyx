@@ -635,16 +635,6 @@ class BondList(Copyable):
                 copy = self.copy()
                 all_bonds_v = copy._bonds
 
-                # A boolean mask is still required for correct offset
-                # handling, i.e. taking removed atoms into account
-                mask = _to_bool_mask(index, length=copy._atom_count)
-                # Each time an atom is missing in the mask,
-                # the offset is increased by one
-                offsets = np.cumsum(
-                    ~mask.astype(bool, copy=False), dtype=np.uint32
-                )
-                offsets_v = offsets
-
                 index = _to_positive_index_array(index, self._atom_count)
                 # The inverse index is required to efficiently obtain
                 # the new index of an atom in case of an unsorted index
@@ -663,8 +653,8 @@ class BondList(Copyable):
                         # Both atoms involved in bond are included
                         # by index array
                         # -> assign new atom indices
-                        index1_ptr[0] = <int32>new_index1 - offsets_v[new_index1]
-                        index2_ptr[0] = <int32>new_index2 - offsets_v[new_index2]
+                        index1_ptr[0] = <int32>new_index1
+                        index2_ptr[0] = <int32>new_index2
                     else:
                         # At least one atom in bond is not included
                         # -> remove bond

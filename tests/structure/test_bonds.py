@@ -11,12 +11,28 @@ import biotite.structure.io.mmtf as mmtf
 from ..util import data_dir
 
 
+def generate_random_bond_list(atom_count, bond_count, seed=0):
+    """
+    Generate a random :class:`BondList`.
+    """
+    np.random.seed(seed)
+    # Create random bonds between atoms of
+    # a potential atom array of length ATOM_COUNT
+    bonds = np.random.randint(atom_count, size=(bond_count, 3))
+    # Clip bond types to allowed BondType values
+    bonds[:, 2] %= len(struc.BondType)
+    # Remove bonds of atoms to itself
+    bonds = bonds[bonds[:,0] != bonds[:,1]]
+    assert len(bonds) > 0
+    return struc.BondList(atom_count, bonds)
+
+
 @pytest.fixture(
     params=[False, True] # as_negative
 )
 def bond_list(request):
     """
-    A toy `BondList`.
+    A toy :class:`BondList`.
     """
     as_negative = request.param
     bond_array = np.array([(0,1),(2,1),(3,1),(3,4),(3,1),(1,2),(4,0),(6,4)])
@@ -217,21 +233,12 @@ def test_sorted_array_indexing():
     BOND_COUNT = 500
     INDEX_SIZE = 80
 
-    np.random.seed(0)
-    # Create random bonds between atoms of
-    # a potential atom array of length ATOM_COUNT
-    bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 3))
-    # Clip bond types to allowed BondType values
-    bonds[:, 2] %= len(struc.BondType)
-    # Remove bonds of elements to itself
-    bonds = bonds[bonds[:,0] != bonds[:,1]]
-    assert len(bonds) > 0
-    bonds = struc.BondList(ATOM_COUNT, bonds)
+    bonds = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
 
     # Create a sorted array of random indices for the BondList
     # Indices may not occur multiple times -> 'replace=False'
     index_array = np.sort(np.random.choice(
-        np.arange(ATOM_COUNT), ATOM_COUNT, replace=False
+        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
     ))
     test_bonds = bonds[index_array]
 
@@ -239,6 +246,14 @@ def test_sorted_array_indexing():
     mask = np.zeros(ATOM_COUNT, dtype=bool)
     mask[index_array] = True
     ref_bonds = bonds[mask]
+
+    print(bonds.as_array())
+    print()
+    print(index_array)
+    print()
+    print(test_bonds.as_array())
+    print()
+    print(ref_bonds.as_array())
 
     assert test_bonds.as_array().tolist() == ref_bonds.as_array().tolist()
 
@@ -269,7 +284,7 @@ def test_unsorted_array_indexing():
     # Create an unsorted array of random indices for the BondList
     # Indices should be unsorted -> 'replace=False'
     unsorted_index = np.random.choice(
-        np.arange(ATOM_COUNT), ATOM_COUNT, replace=False
+        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
     )
     test_bonds = bonds[unsorted_index]
 
