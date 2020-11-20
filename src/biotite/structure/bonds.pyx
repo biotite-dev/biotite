@@ -86,19 +86,20 @@ class BondList(Copyable):
     Effectively, this means that after indexing an :class:`AtomArray`
     and a :class:`BondList` with the same index, the atom indices in the
     :class:`BondList` will still point to the same atoms in the
-    :class:`AtomArray` before and after indexing.
-    If a :class:`BondList` is indexed with single integer as index,
-    :func:`get_bonds()` will be called with the index as parameter.
+    :class:`AtomArray`.
+    Indexing a :class:`BondList` with a single integer is equivalent
+    to calling :func:`get_bonds()`.
 
     The same consistency applies to adding :class:`BondList` instances
     via the '+' operator:
     The atom indices of the second :class:`BondList` are increased by
-    the atom count of the first :class:`BondList`.
+    the atom count of the first :class:`BondList` and then both
+    :class:`BondList` objects are merged.
     
     Parameters
     ----------
     atom_count : int
-        A positive integer, that specifies the amount of atoms the
+        A positive integer, that specifies the number of atoms the
         :class:`BondList` refers to
         (usually the length of an atom array (stack)).
         Effectively, this value is the exclusive maximum for the indices
@@ -139,6 +140,81 @@ class BondList(Copyable):
     >>> print(bond_list)
     [[0 2 0]
      [0 3 0]]
+    
+    :class:`BondList` objects can be associated to an :class:`AtomArray`
+    or :class:`AtomArrayStack`.
+    The following snipped shows this for a benzene molecule:
+
+    >>> benzene = AtomArray(12)
+    >>> # Omit filling most required annotation categories for brevity
+    >>> benzene.atom_name = np.array(
+    ...     ["C1", "C2", "C3", "C4", "C5", "C6", "H1", "H2", "H3", "H4", "H5", "H6"]
+    ... )
+    >>> benzene.bonds = BondList(
+    ...     benzene.array_length(),
+    ...     np.array([
+    ...         # Bonds between carbon atoms in the ring
+    ...         (0,  1, BondType.AROMATIC),
+    ...         (1,  2, BondType.AROMATIC),
+    ...         (2,  3, BondType.AROMATIC),
+    ...         (3,  4, BondType.AROMATIC),
+    ...         (4,  5, BondType.AROMATIC),
+    ...         (5,  0, BondType.AROMATIC),
+    ...         # Bonds between carbon and hydrogen
+    ...         (0,  6, BondType.SINGLE),
+    ...         (1,  7, BondType.SINGLE),
+    ...         (2,  8, BondType.SINGLE),
+    ...         (3,  9, BondType.SINGLE),
+    ...         (4, 10, BondType.SINGLE),
+    ...         (5, 11, BondType.SINGLE),
+    ...     ])
+    >>> )
+    >>> for i, j, bond_type in benzene.bonds.as_array():
+    ...     print(
+    ...         f"{str(BondType(bond_type))} bond between "
+    ...         f"{benzene.atom_name[i]} and {benzene.atom_name[j]}"
+    ...     )
+    BondType.AROMATIC bond between C1 and C2
+    BondType.AROMATIC bond between C2 and C3
+    BondType.AROMATIC bond between C3 and C4
+    BondType.AROMATIC bond between C4 and C5
+    BondType.AROMATIC bond between C5 and C6
+    BondType.AROMATIC bond between C1 and C6
+    BondType.SINGLE bond between C1 and H1
+    BondType.SINGLE bond between C2 and H2
+    BondType.SINGLE bond between C3 and H3
+    BondType.SINGLE bond between C4 and H4
+    BondType.SINGLE bond between C5 and H5
+    BondType.SINGLE bond between C6 and H6
+    
+    Obtain the bonded atoms for the :math:`C_1`:
+
+    >>> bonds, types = benzene.bonds.get_bonds(0)
+    >>> print(bonds)
+    [1 5 6]
+    >>> print(types)
+    [5 5 1]
+    >>> print(f"C1 is bonded to {', '.join(benzene.atom_name[bonds])}")
+    C1 is bonded to C2, C6, H1
+
+    Cut the benzene molecule in half.
+    Although the first half of the atoms are missing the indices of
+    the cropped :class:`BondList` still represents the bonds of the
+    remaining atoms:
+
+    >>> half_benzene = benzene[
+    ...     np.isin(benzene.atom_name, ["C4", "C5", "C6", "H4", "H5", "H6"])
+    ... ]
+    >>> for i, j, bond_type in half_benzene.bonds.as_array():
+    ...     print(
+    ...         f"{str(BondType(bond_type))} bond between "
+    ...         f"{half_benzene.atom_name[i]} and {half_benzene.atom_name[j]}"
+    ...     )
+    BondType.AROMATIC bond between C4 and C5
+    BondType.AROMATIC bond between C5 and C6
+    BondType.SINGLE bond between C4 and H4
+    BondType.SINGLE bond between C5 and H5
+    BondType.SINGLE bond between C6 and H6
     """
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
@@ -397,7 +473,7 @@ class BondList(Copyable):
         --------
 
         >>> # BondList for benzene
-        >>> benzene_bond_list = BondList(
+        >>> bond_list = BondList(
         ...     12,
         ...     np.array([
         ...         # Bonds between the carbon atoms in the ring
@@ -407,7 +483,7 @@ class BondList(Copyable):
         ...         (3,  4, BondType.AROMATIC),
         ...         (4,  5, BondType.AROMATIC),
         ...         (5,  0, BondType.AROMATIC),
-        ...         # Bonds of carbon to hydrogen
+        ...         # Bonds between carbon and hydrogen
         ...         (0,  6, BondType.SINGLE),
         ...         (1,  7, BondType.SINGLE),
         ...         (2,  8, BondType.SINGLE),
@@ -416,7 +492,7 @@ class BondList(Copyable):
         ...         (5, 11, BondType.SINGLE),
         ...     ])
         ... )
-        >>> bonds, types = benzene_bond_list.get_all_bonds()
+        >>> bonds, types = bond_list.get_all_bonds()
         >>> print(bonds)
         [[ 1  5  6]
          [ 0  2  7]
@@ -499,6 +575,47 @@ class BondList(Copyable):
     
 
     def adjacency_matrix(self):
+        r"""
+        adjacency_matrix(bond_list)
+        
+        Represent this :class:`BondList` as adjacency matrix.
+
+        The adjacency matrix is a quadratic matrix with boolean values
+        according to
+        
+        .. math::
+
+            M_{i,j} =
+            \begin{cases}
+                \text{True},  & \text{if } \text{Atom}_i \text{ and } \text{Atom}_j \text{ form a bond} \\
+                \text{False}, & \text{otherwise}
+            \end{cases}.
+
+        Returns
+        -------
+        matrix : ndarray, dtype=bool, shape=(n,n)
+            The created adjacency matrix.
+        
+        Examples
+        --------
+
+        >>> # BondList for formaldehyde
+        >>> bond_list = BondList(
+        ...     4,
+        ...     np.array([
+        ...         # Bond between carbon and oxygen
+        ...         (0,  1, BondType.DOUBLE),
+        ...         # Bonds between carbon and hydrogen
+        ...         (0,  2, BondType.SINGLE),
+        ...         (0,  3, BondType.SINGLE),
+        ...     ])
+        ... )
+        >>> print(bond_list.adjacency_matrix())
+        [[False  True  True  True]
+         [ True False False False]
+         [ True False False False]
+         [ True False False False]]
+        """
         matrix = np.zeros(
             (self._atom_count, self._atom_count), dtype=bool
         )
@@ -508,6 +625,47 @@ class BondList(Copyable):
 
 
     def bond_type_matrix(self):
+        r"""
+        adjacency_matrix(bond_list)
+        
+        Represent this :class:`BondList` as a matrix, depicting the bond
+        type.
+
+        The matrix is a quadratic matrix:
+        
+        .. math::
+
+            M_{i,j} =
+            \begin{cases}
+                \text{BondType}_{ij},  & \text{if } \text{Atom}_i \text{ and } \text{Atom}_j \text{ form a bond} \\
+                -1,                    & \text{otherwise}
+            \end{cases}.
+
+        Returns
+        -------
+        matrix : ndarray, dtype=bool, shape=(n,n)
+            The created adjacency matrix.
+        
+        Examples
+        --------
+
+        >>> # BondList for formaldehyde
+        >>> bond_list = BondList(
+        ...     4,
+        ...     np.array([
+        ...         # Bond between carbon and oxygen
+        ...         (0,  1, BondType.DOUBLE),
+        ...         # Bonds between carbon and hydrogen
+        ...         (0,  2, BondType.SINGLE),
+        ...         (0,  3, BondType.SINGLE),
+        ...     ])
+        ... )
+        >>> print(bond_list.bond_type_matrix())
+        [[-1  2  1  1]
+         [ 2 -1 -1 -1]
+         [ 1 -1 -1 -1]
+         [ 1 -1 -1 -1]]
+        """
         matrix = np.full(
             (self._atom_count, self._atom_count), -1, dtype=np.int8
         )
@@ -631,7 +789,7 @@ class BondList(Copyable):
         """
         merge(bond_list)
         
-        Merge the this instance with another :class:`BondList` in a new
+        Merge this instance with another :class:`BondList` into a new
         object.
 
         The internal :class:`ndarray` instances containg the bonds are
