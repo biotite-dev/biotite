@@ -243,6 +243,7 @@
             "hbond_frequency",
             "base_pairs",
             "base_stacking"
+            "pseudoknots"
         ]
     }
 }

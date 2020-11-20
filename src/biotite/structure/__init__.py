@@ -3,7 +3,7 @@
 # information.
 
 """
-A subpackage for handling molecular structures. 
+A subpackage for handling molecular structures.
 
 In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
@@ -91,7 +91,7 @@ Based on the implementation in *NumPy* arrays, this package furthermore
 contains a comprehensive set of functions for structure analysis,
 manipulation and visualization.
 
-The universal length unit in this package is Å. 
+The universal length unit in this package is Å.
 """
 
 __name__ = "biotite.structure"
@@ -117,4 +117,5 @@ from .sse import *
 from .superimpose import *
 from .transform import *
 from .basepairs import *
+from .pseudoknots import *
 # util is used internally

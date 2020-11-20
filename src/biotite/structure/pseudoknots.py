@@ -40,7 +40,6 @@ class _region():
     def __lt__(self, other):
         return id(self) < id(other)
 
-
 def pseudoknots(base_pairs, scoring=None):
 
     # Result array
@@ -290,8 +289,8 @@ def _get_optimal_solutions(cluster, scoring):
 
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            if (np.any(left != [frozenset()])) and
-                np.any(bottom != [frozenset()]):
+            if (np.any(left != [frozenset()]) and
+                np.any(bottom != [frozenset()])):
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
                 )
