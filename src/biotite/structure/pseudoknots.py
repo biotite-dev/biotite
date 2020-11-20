@@ -13,7 +13,8 @@ __all__ = ["pseudoknots"]
 import numpy as np
 from copy import deepcopy
 
-class region():
+
+class _region():
 
     def __init__ (self, base_pairs, region_pairs):
         # The Start and Stop indices for each Region
@@ -68,48 +69,6 @@ def pseudoknots(base_pairs, scoring=None):
 
     return np.vstack(results)
 
-def _get_result_diff(cluster, scoring):
-
-    # Get the optimal solutions for the given cluster
-    optimal_solutions = _get_optimal_solutions(cluster, scoring)
-
-    # Each optimal solution gets their own list of solutions
-    results_diff = np.empty(len(optimal_solutions), dtype=list)
-
-    # Get the results for each optimal solution
-    for o, optimal_solution in enumerate(optimal_solutions):
-
-        # The results for the ṕarticular solution
-        results = np.zeros(len(scoring), dtype='int32')
-
-        # The removed regions in the optimal solution
-        next_cluster = cluster - optimal_solution
-
-        # Increment the order of the basepairs in the removed regions
-        for reg in next_cluster:
-            results[reg.get_index_mask()] += 1
-
-        # Remove non-conflicting-regions for evaluation of the next
-        # cluster
-        next_cluster = _remove_non_conflicting_regions(next_cluster)
-
-        # The next cluster is only evaluated if it contains conflicting
-        # regions
-        if len(next_cluster) > 0:
-            next_result_diff = _get_result_diff(next_cluster, scoring)
-
-            # Merge results of this cluster with the next cluster
-            results_diff[o] = []
-            for i, diff in enumerate(next_result_diff):
-                results_diff[o].append(deepcopy(results))
-                results_diff[o][-1] = (results_diff[o][-1] + diff)
-
-        else:
-            results_diff[o] = [results]
-
-    # Return flattened results
-    return [result for results in results_diff for result in results]
-
 
 def _find_regions(base_pairs):
     """
@@ -158,7 +117,7 @@ def _find_regions(base_pairs):
         # if the current basepair belongs to a new region, save the
         # current region and start a new region
         if (previous_rank - this_rank) != 1:
-            regions.add(region(base_pairs, np.array(region_pairs)))
+            regions.add(_region(base_pairs, np.array(region_pairs)))
             region_pairs = []
 
         # Append the current basepair to the region
@@ -166,7 +125,7 @@ def _find_regions(base_pairs):
 
     # The last regions has no endpoint defined by the beginning of a
     # new region.
-    regions.add(region(base_pairs, np.array(region_pairs)))
+    regions.add(_region(base_pairs, np.array(region_pairs)))
 
     return regions
 
@@ -227,7 +186,7 @@ def _get_first_occurrence_for(array, wanted_value):
 
 def _get_region_array_for(regions, content=[], dtype=[]):
     # region_array and index array
-    region_array = np.empty(len(regions)*2, dtype=region)
+    region_array = np.empty(len(regions)*2, dtype=_region)
     index_array = np.empty(len(regions)*2, dtype='int32')
 
     # Content array for custom return arrays
@@ -257,6 +216,7 @@ def _get_region_array_for(regions, content=[], dtype=[]):
         content_list[i] = content_list[i][sort_mask]
     return region_array, content_list
 
+
 def _cluster_conflicts(regions):
     # Get a region array and an array where each region start is +1 and
     # each stop is -1
@@ -281,6 +241,7 @@ def _cluster_conflicts(regions):
 
     # Return the conflict clusters as list of lists
     return clusters
+
 
 def _get_optimal_solutions(cluster, scoring):
 
@@ -401,9 +362,44 @@ def _get_optimal_solutions(cluster, scoring):
     return dp_matrix[0, -1]
 
 
+def _get_result_diff(cluster, scoring):
 
+    # Get the optimal solutions for the given cluster
+    optimal_solutions = _get_optimal_solutions(cluster, scoring)
 
+    # Each optimal solution gets their own list of solutions
+    results_diff = np.empty(len(optimal_solutions), dtype=list)
 
+    # Get the results for each optimal solution
+    for o, optimal_solution in enumerate(optimal_solutions):
 
+        # The results for the ṕarticular solution
+        results = np.zeros(len(scoring), dtype='int32')
 
+        # The removed regions in the optimal solution
+        next_cluster = cluster - optimal_solution
 
+        # Increment the order of the basepairs in the removed regions
+        for reg in next_cluster:
+            results[reg.get_index_mask()] += 1
+
+        # Remove non-conflicting-regions for evaluation of the next
+        # cluster
+        next_cluster = _remove_non_conflicting_regions(next_cluster)
+
+        # The next cluster is only evaluated if it contains conflicting
+        # regions
+        if len(next_cluster) > 0:
+            next_result_diff = _get_result_diff(next_cluster, scoring)
+
+            # Merge results of this cluster with the next cluster
+            results_diff[o] = []
+            for i, diff in enumerate(next_result_diff):
+                results_diff[o].append(deepcopy(results))
+                results_diff[o][-1] = (results_diff[o][-1] + diff)
+
+        else:
+            results_diff[o] = [results]
+
+    # Return flattened results
+    return [result for results in results_diff for result in results]
