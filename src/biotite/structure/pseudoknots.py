@@ -110,8 +110,6 @@ def _get_result_diff(cluster, scoring):
     # Return flattened results
     return [result for results in results_diff for result in results]
 
-def _apply_results():
-    pass
 
 def _find_regions(base_pairs):
     """
