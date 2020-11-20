@@ -315,9 +315,9 @@ class BondList(Copyable):
         
         Returns
         -------
-        bonds : np.ndarray, dtype=np.uint32
+        bonds : np.ndarray, dtype=np.uint32, shape=(k,)
             The indices of connected atoms.
-        bond_types : np.ndarray, dtype=np.uint8
+        bond_types : np.ndarray, dtype=np.uint8, shape=(k,)
             Array of integers, interpreted as :class:`BondType`
             instances.
             This array specifies the type (or order) of the bonds to
@@ -366,6 +366,101 @@ class BondList(Copyable):
     
     
     def get_all_bonds(self):
+        """
+        get_all_bonds()
+
+        For each atom index, give the indices of the atoms bonded to
+        this atom as well as the corresponding bond types.
+        
+        Returns
+        -------
+        bonds : np.ndarray, dtype=np.uint32, shape=(n,k)
+            The indices of connected atoms.
+            The first dimension represents the atoms,
+            the second dimension represents the indices of atoms bonded
+            to the respective atom.
+            Atoms can have have different numbers of atoms bonded to
+            them.
+            Therefore, the length of the second dimension *k* is equal
+            to the maximum number of bonds for an atom in this
+            :class:`BondList`.
+            For atoms with less bonds, the corresponding entry in the
+            array is padded with ``-1`` values.
+        bond_types : np.ndarray, dtype=np.uint32, shape=(n,k)
+            Array of integers, interpreted as :class:`BondType`
+            instances.
+            This array specifies the bond type (or order) corresponding
+            to the returned `bonds`.
+            It uses the same ``-1``-padding.
+        
+        Examples
+        --------
+
+        >>> # BondList for benzene
+        >>> benzene_bond_list = BondList(
+        ...     12,
+        ...     np.array([
+        ...         # Bonds between the carbon atoms in the ring
+        ...         (0,  1, BondType.AROMATIC),
+        ...         (1,  2, BondType.AROMATIC),
+        ...         (2,  3, BondType.AROMATIC),
+        ...         (3,  4, BondType.AROMATIC),
+        ...         (4,  5, BondType.AROMATIC),
+        ...         (5,  0, BondType.AROMATIC),
+        ...         # Bonds of carbon to hydrogen
+        ...         (0,  6, BondType.SINGLE),
+        ...         (1,  7, BondType.SINGLE),
+        ...         (2,  8, BondType.SINGLE),
+        ...         (3,  9, BondType.SINGLE),
+        ...         (4, 10, BondType.SINGLE),
+        ...         (5, 11, BondType.SINGLE),
+        ...     ])
+        ... )
+        >>> bonds, types = benzene_bond_list.get_all_bonds()
+        >>> print(bonds)
+        [[ 1  5  6]
+         [ 0  2  7]
+         [ 1  3  8]
+         [ 2  4  9]
+         [ 3  5 10]
+         [ 4  0 11]
+         [ 0 -1 -1]
+         [ 1 -1 -1]
+         [ 2 -1 -1]
+         [ 3 -1 -1]
+         [ 4 -1 -1]
+         [ 5 -1 -1]]
+        >>> print(types)
+        [[ 5  5  1]
+         [ 5  5  1]
+         [ 5  5  1]
+         [ 5  5  1]
+         [ 5  5  1]
+         [ 5  5  1]
+         [ 1 -1 -1]
+         [ 1 -1 -1]
+         [ 1 -1 -1]
+         [ 1 -1 -1]
+         [ 1 -1 -1]
+         [ 1 -1 -1]]
+        >>> for i in range(bond_list.get_atom_count()):
+        ...     bonds_for_atom = bonds[i]
+        ...     # Remove trailing '-1' values
+        ...     bonds_for_atom = bonds_for_atom[bonds_for_atom != -1]
+        ...     print(f"{i}: {bonds_for_atom}")
+        0: [1 5 6]
+        1: [0 2 7]
+        2: [1 3 8]
+        3: [2 4 9]
+        4: [ 3  5 10]
+        5: [ 4  0 11]
+        6: [0]
+        7: [1]
+        8: [2]
+        9: [3]
+        10: [4]
+        11: [5]
+        """
         cdef int i=0
         cdef uint32 atom_index_i, atom_index_j, bond_type
 
