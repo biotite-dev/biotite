@@ -35,6 +35,10 @@ def test_pseudoknots(nuc_sample_array):
     base_pairs = struc.base_pairs(nuc_sample_array)
     pseudoknot_order = struc.pseudoknots(base_pairs)
 
+    # Sample structure should have two optimal solutions with default
+    # scoring parameters
+    assert len(pseudoknot_order) == 2
+
     for optimal_solution in pseudoknot_order:
         # Assert that the right number of pseudoknots is present for
         # each order
