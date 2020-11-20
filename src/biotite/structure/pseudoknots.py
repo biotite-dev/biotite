@@ -24,7 +24,6 @@ class region():
         self.region_pairs = region_pairs
         self.score = None
 
-
     # Gets a boolean mask from the original basepair array
     def get_index_mask(self):
         return self.region_pairs
@@ -65,79 +64,48 @@ def pseudoknots(base_pairs, scoring=None):
 
     # For each cluster calculate all optimal solutions
     for cluster in conflict_clusters:
-        results = _get_result_diff(cluster, scoring, results)
+        results = _get_result_diff(cluster, scoring)
 
     return np.vstack(results)
 
-def _get_result_diff(cluster, scoring, order=0):
+def _get_result_diff(cluster, scoring):
 
     # Get the optimal solutions for the given cluster
     optimal_solutions = _get_optimal_solutions(cluster, scoring)
 
+    # Each optimal solution gets their own list of solutions
     results_diff = np.empty(len(optimal_solutions), dtype=list)
 
     # Get the results for each optimal solution
     for o, optimal_solution in enumerate(optimal_solutions):
 
+        # The results for the ṕarticular solution
         results = np.zeros(len(scoring), dtype='int32')
 
+        # The removed regions in the optimal solution
         next_cluster = cluster - optimal_solution
 
+        # Increment the order of the basepairs in the removed regions
         for reg in next_cluster:
             results[reg.get_index_mask()] += 1
 
+        # Remove non-conflicting-regions for evaluation of the next
+        # cluster
         next_cluster = _remove_non_conflicting_regions(next_cluster)
 
+        # The next cluster is only evaluated if it contains conflicting
+        # regions
         if len(next_cluster) > 0:
-            print(next_cluster)
             next_result_diff = _get_result_diff(next_cluster, scoring)
 
-            this_result_diff = []
+            # Merge results of this cluster with the next cluster
+            results_diff[o] = []
             for i, diff in enumerate(next_result_diff):
-
-                this_result_diff.append(deepcopy(results))
-                this_result_diff[-1] = (this_result_diff[-1] + diff)
+                results_diff[o].append(deepcopy(results))
+                results_diff[o][-1] = (results_diff[o][-1] + diff)
 
         else:
-            this_result_diff = [results]
-
-        results_diff[o] = this_result_diff
-
-
-        """
-        if len(next_cluster) > 0:
-            next_results = _get_results(next_cluster)
-        # The regions retained in the optimal solutions are of the
-        # current order
-        for reg in optimal_solution:
-            results_copy[o][r][reg.get_index_mask()] = order
-
-        # Get the regions not retained in the optimal solution
-        new_cluster = cluster - optimal_solution
-
-
-        # remove non-conflicting regions in new cluster
-        new_cluster_cleaned =_remove_non_conflicting_regions(new_cluster)
-        for reg in (new_cluster - new_cluster_cleaned):
-            print('a')
-            print(results_copy[o][r])
-            results_copy[o][r][reg.get_index_mask()] = order + 1
-            print(results_copy[o][r])
-            print(reg.get_index_mask())
-            print(order)
-        new_cluster = new_cluster_cleaned
-        # if there is more than one region remaining, increase the
-        # order and solve for the remaining regions
-        if len(new_cluster) > 1:
-            new_results = _get_results(
-                new_cluster, scoring, results_copy[o][r], order=(order+1)
-            )
-        # if there is one or less region remaining it is of the next
-        # highest order
-        else:
-            for reg in new_cluster:
-                results_copy[o][r][reg.get_index_mask()] = order + 1
-        """
+            results_diff[o] = [results]
 
     # Return flattened results
     return [result for results in results_diff for result in results]
@@ -212,44 +180,41 @@ def _remove_non_conflicting_regions(regions):
         Right now only non-conflicting-regions of type ABB'A' can be
         removed but ABCB'C'A' -> BCB'C' cannot be performed!
     """
+    # Get the region array and a boolean array, where the start of each
+    # region ``True``.
     region_array, start_stops = _get_region_array_for(
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
-    #print(len(start_stops[0]))
-    print(region_array)
     starts = np.nonzero(start_stops[0])[0]
-    #print(starts)
+
+    # Regions that are not conflicting
     to_remove = []
-    #print(starts)
     for start_index in starts:
-        #print(region_array)
-        #print(start_index)
+        # Get the current regions start and stop indices in the region
+        # array
         stop_index = _get_first_occurrence_for(
             region_array[start_index+1:], region_array[start_index]
         )
         stop_index = start_index + 1 + stop_index
-        _, counts = np.unique(region_array[start_index+1:stop_index], return_counts=True)
-        print(counts)
-        print(_)
-        print(region_array[start_index])
-        print(region_array[stop_index])
+
+        # Count the occurrence of each individual region between the
+        # start and stop indices of the regions
+        _, counts = np.unique(
+            region_array[start_index+1:stop_index], return_counts=True
+        )
+        # if no regions are between the start and stop indices the
+        # region is non-conflicting
         if len(counts) == 0:
             to_remove.append(region_array[start_index])
+        # if every region between the start and stop indices has its
+        # start and stop between the current region's start and stop
+        # indices the current region is not conflicting
         elif np.amin(counts) == 2:
             to_remove.append(region_array[start_index])
 
+    # Remove all non conflicting regions and return the set of
+    # conflicting regions
     region_array = region_array[~ np.isin(region_array, to_remove)]
-    return set(region_array)
-
-
-    region_array = _get_region_array_for(regions)
-    to_remove = [None]
-    while to_remove != []:
-        to_remove = []
-        for i in range(len(region_array)-1):
-            if region_array[i] is region_array[i+1]:
-                to_remove.append(region_array[i])
-        region_array = region_array[~ np.isin(region_array, to_remove)]
     return set(region_array)
 
 
@@ -333,7 +298,6 @@ def _get_optimal_solutions(cluster, scoring):
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
-    #print(region_array)
     # Initialise the matrix diagonal with ``ndarray``s of empty
     # ``frozenset``s
     for i in range(len(dp_matrix)):
@@ -365,12 +329,7 @@ def _get_optimal_solutions(cluster, scoring):
 
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            #print(left)
-            #print(bottom)
             if (np.any(left != [frozenset()])) and (np.any(bottom != [frozenset()])):
-                #print(dp_matrix)
-                #print(i)
-                #print(j)
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
                 )
