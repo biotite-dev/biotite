@@ -465,9 +465,7 @@ class BondList(Copyable):
         cdef uint32 atom_index_i, atom_index_j, bond_type
 
         cdef uint32[:,:] all_bonds_v = self._bonds
-        # Pessimistic array allocation:
-        # assume size of 2nd dimension
-        # is equal to the atom with most bonds
+        # The size of 2nd dimension is equal to the atom with most bonds
         # Since each atom can have an individual number of bonded atoms,
         # The arrays are padded with '-1'
         cdef np.ndarray bonds = np.full(
@@ -496,11 +494,6 @@ class BondList(Copyable):
             # Increment lengths
             lengths_v[atom_index_i] += 1
             lengths_v[atom_index_j] += 1
-        
-        # Trim to correct size
-        max_length = np.max(lengths)
-        bonds = bonds[:, :max_length]
-        bond_types = bond_types[:, :max_length]
 
         return bonds, bond_types
     
