@@ -168,7 +168,7 @@ class BondList(Copyable):
     ...         (4, 10, BondType.SINGLE),
     ...         (5, 11, BondType.SINGLE),
     ...     ])
-    >>> )
+    ... )
     >>> for i, j, bond_type in benzene.bonds.as_array():
     ...     print(
     ...         f"{str(BondType(bond_type))} bond between "
@@ -628,7 +628,7 @@ class BondList(Copyable):
         r"""
         adjacency_matrix(bond_list)
         
-        Represent this :class:`BondList` as a matrix, depicting the bond
+        Represent this :class:`BondList` as a matrix depicting the bond
         type.
 
         The matrix is a quadratic matrix:
@@ -644,7 +644,7 @@ class BondList(Copyable):
         Returns
         -------
         matrix : ndarray, dtype=bool, shape=(n,n)
-            The created adjacency matrix.
+            The created bond type matrix.
         
         Examples
         --------
