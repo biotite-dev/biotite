@@ -10,8 +10,9 @@ atom level.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
-           "get_residue_masks", "get_residue_starts_for", "get_residues",
-           "get_residue_count", "residue_iter"]
+           "get_residue_masks", "get_residue_starts_for",
+           "get_residue_positions", "get_residues", "get_residue_count",
+           "residue_iter"]
 
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
@@ -279,7 +280,7 @@ def get_residue_masks(array, indices):
     See also
     --------
     get_residue_starts_for
-    get_residue_index
+    get_residue_positions
     
     Examples
     --------
@@ -373,7 +374,7 @@ def get_residue_starts_for(array, indices):
     See also
     --------
     get_residue_masks
-    get_residue_index
+    get_residue_positions
     
     Examples
     --------
@@ -407,10 +408,10 @@ def get_residue_starts_for(array, indices):
     return starts[insertion_points]
 
 
-def get_residue_index(array, indices):
+def get_residue_positions(array, indices):
     """
-    For each given atom index, obtain the position of the residue,
-    corresponding to this index, in the input `array`.
+    For each given atom index, obtain the position of the residue
+    corresponding to this index in the input `array`.
 
     For example, the position of the first residue in the atom array is
     ``0``, the the position of the second residue is ``1``, etc.
@@ -421,7 +422,7 @@ def get_residue_index(array, indices):
         The atom array (stack) to determine the residues from.
     indices : ndarray, dtype=int, shape=(k,)
         These indices point to the atoms to get the corresponding
-        residue starts for.
+        residue positions for.
         Negative indices are not allowed.
     
     Returns
@@ -433,6 +434,21 @@ def get_residue_index(array, indices):
     --------
     get_residue_masks
     get_residue_starts_for
+
+    Examples
+    --------
+    >>> atom_index = [5, 42]
+    >>> print(atom_array.res_name[atom_index])
+    ['ASN' 'TYR']
+    >>> _, residues = get_residues(atom_array)
+    >>> print(residues)
+    ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
+     'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
+    >>> residue_index = get_residue_positions(atom_array, atom_index)
+    >>> print(residue_index)
+    [0 2]
+    >>> print(residues[residue_index])
+    ['ASN' 'TYR']
     """
     indices = np.asarray(indices)
     starts = get_residue_starts(array)
