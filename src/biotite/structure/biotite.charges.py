@@ -14,8 +14,7 @@ __author__ = "Jacob Marcel Anter"
 __all__ = ["partial_charges"]
 
 import numpy as np
-import structure as struc
-import .structure.info as info
+from .structure.info import residue
 import warnings
 
 
@@ -225,7 +224,7 @@ def partial_charges(atom_array, iteration_step_num = 6, charges = None):
     is given about the charges of this molecule in each iteration step in the
     respective publication of Gasteiger and Marsili.
 
-    >>> fluoromethane = info.residue("CF0")
+    >>> fluoromethane = residue("CF0")
     >>> print(partial_charges(fluoromethane, 1))
     [ 0.11473086 -0.17542017  0.02022977  0.02022977  0.02022977]
     >>> print(partial_charges(fluoromethane, 6))
