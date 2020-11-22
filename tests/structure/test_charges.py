@@ -5,6 +5,9 @@
 import pytest
 import numpy as np
 from biotite.structure.info import residue
+from biotite.structure import Atom
+from biotite.structure import array
+from biotite.structure import BondList
 
 EN_PARAMETERS = {
     "H": {
@@ -309,25 +312,199 @@ def partial_charges(atom_array, iteration_step_num = 6, charges = None):
 # Now performing tests
 # First testing partial charge of carbon in the molecules given in table 3 of
 # the publication
-# First, the respective AtomArrays are retrieved from the Chemical Component
-# Dictionary
-methane = residue("CH3")
-ethane = residue("EHN")
-ethylene = residue("")
-acetylene = residue("C2H")
-fluoromethane = residue("CF0")
-difluoromethane = residue("")
-trifluoromethane = residue("CFT")
-tetrafluoromethane = residue("")
-fluoroethane = residue("")
-1,1,1-trifluoroethane = residue("")
-methanole = residue("MOH")
-dimethyl_ether = residue("2F2")
-formaldehyde = residue("FLH")
-acetaldehyde = residue("ACU")
-acetone = residue("ACN")
-hydrogen_cyanide = residue("CN")
-acetonitrile = residue("CCN")
+# Since some of the molecules are not available in the Chemical Components
+# Dictionary, the  respective AtomArrays are constructed via Biotite and the
+# coordinates are arbitrarily set to the origin since the decisive information
+# is the BondList
+
+# Creating atoms to build molecules with
+# Creating carbon
+carbon = Atom([0, 0, 0], element = "C")
+
+# Creating hydrogen
+hydrogen = Atom([0, 0, 0], element = "H")
+
+# Creating oxygen
+oxygen = Atom([0, 0, 0], element = "O")
+
+# Creating nitrogen
+nitrogen = Atom([0, 0, 0], element = "N")
+
+# Creating fluorine
+fluorine = Atom([0, 0, 0], element = "F")
+
+# Creating methane
+methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
+# Creating BondList and asssociating it with the AtomArray
+methane_bonds = BondList(
+    methane.array_length(),
+    np.array([])
+)
+
+# Creating ethane
+ethane = array(
+    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen,hydrogen,
+    hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+ethane_bonds = BondList(
+    ethane.array_length(),
+    np.array([])
+)
+
+# Creating ethylene
+ethylene = array(
+    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+ethylene_bonds = BondList(
+    ethylene.array_length(),
+    np.array([])
+)
+
+# Creating acetylene
+acetylene = array(
+    [carbon, carbon, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+acetylene_bonds = BondList(
+    acetylene.array_length(),
+    np.array([])
+)
+
+# Creating fluoromethane
+fluoromethane = array(
+    [carbon, fluorine, hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+fluoromethane_bonds = BondList(
+    fluoromethane.array_length(),
+    np.array([])
+)
+
+# Creating difluoromethane
+difluoromethane = array(
+    [carbon, fluorine, fluorine, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+difluoromethane_bonds = BondList(
+    difluoromethane.array_length(),
+    np.array([])
+)
+
+# Creating trifluoromethane
+trifluoromethane = array(
+    [carbon, fluorine, fluorine, fluorine, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+trifluoromethane_bonds = BondList(
+    trifluoromethane.array_length(),
+    np.array([])
+)
+
+# Creating tetrafluoromethane
+tetrafluoromethane = array(
+    [carbon, fluorine, fluorine, fluorine, fluorine]
+)
+# Creating BondList and asssociating it with the AtomArray
+tetrafluoromethane_bonds = BondList(
+    tetrafluoromethane.array_length(),
+    np.array([])
+)
+
+# Creating fluoroethane
+fluoroethane = array(
+    [carbon, carbon, fluorine, hydrogen, hydrogen, hydrogen, hydrogen,
+    hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+fluoroethane_bonds = BondList(
+    fluoroethane.array_length(),
+    np.array([])
+)
+
+# Creating 1,1,1-trifluoroethane
+trifluoroethane = array(
+    [carbon, carbon, fluorine, fluorine, fluorine, hydrogen, hydrogen,
+    hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+trifluoroethane_bonds = BondList(
+    trifluoroethane.array_length(),
+    np.array([])
+)
+
+# Creating methanole
+methanole = array(
+    [carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+methanole_bonds = BondList(
+    methanole.array_length(),
+    np.array([])
+)
+
+# Creating dimethyl ether
+dimethyl_ether = array(
+    [carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen,
+    hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+DME_bonds = BondList(
+    dimethyl_ether.array_length(),
+    np.array([])
+)
+
+# Creating formaldehyde
+formaldehyde = array(
+    [carbon, oxygen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+formaldehyde_bonds = BondList(
+    formaldehyde.array_length(),
+    np.array([])
+)
+
+# Creating acetaldehyde
+acetaldehyde = array(
+    [carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+acetaldehyde_bonds = BondList(
+    acetaldehyde.array_length(),
+    np.array([])
+)
+
+# Creating acetone
+acetone = array(
+    [carbon, carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen,
+    hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+acetone_bonds = BondList(
+    acetone.array_length(),
+    np.array([])
+)
+
+# Creating hydrogen cyanide
+hydrogen_cyanide = array(
+    [carbon, nitrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+HC_bonds = BondList(
+    hydrogen_cyanide.array_length(),
+    np.array([])
+)
+
+# Creating acetonitrile
+acetonitrile = array(
+    [carbon, carbon, nitrogen, hydrogen, hydrogen, hydrogen]
+)
+# Creating BondList and asssociating it with the AtomArray
+ACN_bonds = BondList(
+    acetonitrile.array_length(),
+    np.array([])
+)
 
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize()
