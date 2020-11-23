@@ -242,8 +242,9 @@
             "hbond",
             "hbond_frequency",
             "base_pairs",
-            "base_stacking"
-            "pseudoknots"
+            "base_stacking",
+            "pseudoknots",
+            "dot_bracket"
         ]
     }
 }
