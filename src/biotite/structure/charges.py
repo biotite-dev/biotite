@@ -107,23 +107,17 @@ def _get_parameters(elements, amount_of_binding_partners):
        rapid access to atomic charges"
        Tetraahedron, 36, 3219 - 3288 (1980).
     """
-    # Initializing a Numpy array to store the parameters in
     parameters = np.zeros((elements.shape[0], 3))
-    # Setting the variable "has_key_error" initially to "False"
     has_key_error = False
     # Preparing warning in case of KeyError
     list_of_unparametrized_elements = []
-    # Retrieving parameters from dictionary with the help of a for loop
     for i, element in enumerate(elements):
         try:
             a, b, c = \
             EN_PARAMETERS[element][amount_of_binding_partners[i]]
-            # Overwriting initial values of array
             parameters[i, 0] = a
             parameters[i, 1] = b
             parameters[i, 2] = c
-        # Exception handling in case atom name is not found in
-        # dictionary
         except KeyError:
             parameters[i, :] = np.nan
             list_of_unparametrized_elements.append(element)
@@ -142,7 +136,7 @@ def _get_parameters(elements, amount_of_binding_partners):
         )
     return parameters
 
-# Defining function for computing partial charge
+
 def partial_charges(atom_array, iteration_step_num=6, charges=None):
     """
     Compute the partial charge of the individual atoms comprised in a
@@ -218,20 +212,13 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     >>> print(partial_charges(fluoromethane, 6))
     [ 0.07915367 -0.25264294  0.05782976  0.05782976  0.05782976]
     """
-    # Creating array to store amount of binding partners of respective atom in
     amount_of_binding_partners = np.zeros(atom_array.shape[0])
-    # Retrieving array containing element names from AtomArray
     elements = atom_array.element
-    # Checking whether BondList is associated to AtomArray
     if atom_array.bonds is None:
         raise AttributeError(
             f"The input AtomArray doesn't possess an associated "
             f"BondList."
         )
-    # Checking whether user entered charge array or not
-    # If not, an array consisting of zero entries will be instantiated
-    # The formal charges of all atoms are arbitrarily set zo zero
-    # Additionally, the user is warned
     if charges is None:
         charges = np.zeros(atom_array.shape[0])
         warnings.warn(
@@ -240,65 +227,42 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             f"to be zero.",
             UserWarning
         )
-    # For CPU time reasons, a nested list containing all binding partners of
-    # a respective atom of the AtomArray is created
-    # Information about binding partners is retrieved from this list instead of
-    # determining binding partners in each iteration step anew
+    # For CPU time reasons, a nested list containing all binding
+    # partners of a respective atom of the AtomArray is created
     bonds = \
-    [atom_array.bonds.get_bonds(i)[0] for i in range(atom_array.shape[0])]
-    # Setting damping factor initially to 1
+    [atom_array.bonds.get_bonds(i)[0] for i in \
+    range(atom_array.shape[0])]
     damping = 1.0
-    # Filling the array 'amount of binding partners' by iterating through the 
-    # list 'bonds'
     for list_num in range(len(bonds)):
         amount_of_binding_partners[list_num] = \
         len(bonds[list_num])
-    # Applying '_get_parameters' function in order to gather parameters
     parameters = _get_parameters(elements, amount_of_binding_partners)
-    # Performing iteration as described in scientific
-    # paper of Gasteiger and Marsilsi
-    # Amount of iteration steps can be chosen by user
-    # If no value is entered, default value of 6 is used
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
-        # multiplied by 0.5 in order to guarantee rapid convergence
+        # halved in order to guarantee rapid convergence
         damping *= 0.5
-        # 'charges' must be converted into a column vector by addibg a second
-        # dimension followed by transponation
+        # For performing matrix-matrix-multiplication, the array
+        # containing the charges, the array containing the squared
+        # charges and another array consisting of entries of '1' and
+        # having the same length as the previous two are converted into
+        # column vectors and then merged to one array
         column_charges = np.transpose(np.atleast_2d(charges))
-        # The same is performed for the squared values of 'charges'
         sq_column_charges = np.transpose(np.atleast_2d(charges**2))
-        # Last but not least, a column vector consisting of ones with the
-        # same length as the charges vectors is created
         ones_vector = np.transpose(np.atleast_2d(np.full(
         atom_array.shape[0], 1)))
-        # Now, the three column vectors are merged to one array with the shape
-        # (atom_array.shape[0], 3)
         charge_array = np.concatenate((ones_vector, column_charges,
         sq_column_charges), axis = 1)
-        # Electronegativity values are computed in each iteration step
-        # 'en_values' is an one-dimensional array, shape=(n), where n 
-        # describes the amount of atoms comprised in the AtomArray
         en_values = np.sum(parameters * charge_array, axis=1)
-        # Computing electronegativity values in case of positive charge which
-        # enter as divisor the equation for charge transfer
-        # For hydrogen, however, the special value of 20.02 eV described in the
-        # paper is used!!!
+        # Computing electronegativity values in case of positive charge
+        # which enter as divisor the equation for charge transfer
         pos_en_values = np.sum(parameters, axis = 1)
-        # Substituting values for the hydrogen with the special value via list
-        # comprehension
-        # At each position where the entry corresponds to the sum of the
-        # parameters for hydrogen (12.85), the special value for Hydrogen
-        # is inserted
-        # This is valid since the value 12.85 doesn't occur elsewhere as the 
-        # sum of the three parameters a, b and c
+        # Substituting values for hydrogen with the special value
         pos_en_values = np.array([20.02 if i == 12.85 else i 
         for i in pos_en_values])
-        # Iterating through the AtomArray
         for i, j, _ in atom_array.bonds.as_array():
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
-            # the partial charge is set to NaN (Not a Number)
+            # the partial charge is set to NaN
             if np.isnan(en_values[[i, j]]).any():
                 if np.isnan(en_values[i]):
                     charges[i] = np.nan
@@ -310,8 +274,6 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 else:
                     charges[j] = np.nan
             else:
-                # Independence of order is not affected by simultaneous partial
-                # equilibration of electronegativity.
                 if en_values[j] > en_values[i]:
                     divisor = pos_en_values[i]
                 else:
