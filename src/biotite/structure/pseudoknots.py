@@ -127,7 +127,7 @@ def _find_regions(base_pairs):
 
     Returns
     -------
-    basepair_candidates : set {region, ...]
+    regions : set {_region, ...}
         The regions representing the consecutively nested basepairs.
     """
 
@@ -176,10 +176,17 @@ def _find_regions(base_pairs):
 
 def _remove_non_conflicting_regions(regions):
     """
-    Remove regions that are not conflicting
-    TODO: Some Regions cant be removed
-        Right now only non-conflicting-regions of type ABB'A' can be
-        removed but ABCB'C'A' -> BCB'C' cannot be performed!
+    Remove regions that are not conflicting.
+
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        Regions including non-conflicting regions.
+
+    Returns
+    -------
+    regions : set {_region, ...}
+        The regions without non-conflicting regions.
     """
     # Get the region array and a boolean array, where the start of each
     # region ``True``.
@@ -219,16 +226,52 @@ def _remove_non_conflicting_regions(regions):
     return set(region_array)
 
 
-def _get_first_occurrence_for(array, wanted_value):
+def _get_first_occurrence_for(iterable, wanted_object):
     """
-    Returns the first occurrences of a numpy array
+    Get the first occurrence of an object in an iterable.
+
+    Parameters
+    ----------
+    iterable : iterable
+        The iterable containing the object.
+    wanted_object : object
+        The object to be found.
+
+    Returns
+    -------
+    index : int
+        The index of the first occurrence of the object.
     """
-    for i, value in enumerate(array):
-        if value is wanted_value:
+    for i, value in enumerate(iterable):
+        if value is wanted_object:
             return i
 
 
 def _get_region_array_for(regions, content=[], dtype=[]):
+    """
+    Get a ``ndarray`` of region objects. Each object occurs twice
+    representing its start and end point. Their position in the array
+    reflects the regions relative positions.
+
+    Furthermore, a list of functions can be provided enabling custom
+    outputs for each objects` start and end point.
+
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        The regions to be considered
+    content : list [function, ...] (default: [])
+        The functions to be considered for custom outputs.
+    dtype : list [str, ...] (default: [])
+        The data type of the output of the custom functions.
+
+    Returns
+    -------
+    region_array : ndarray, dtype=object
+        The array of ordered region objects.
+    custom_content : list [ndarray, ...]
+        The custom output.
+    """
     # region_array and index array
     region_array = np.empty(len(regions)*2, dtype=_region)
     index_array = np.empty(len(regions)*2, dtype='int32')
