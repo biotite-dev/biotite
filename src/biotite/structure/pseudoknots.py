@@ -84,7 +84,39 @@ class _region():
         return id(self) < id(other)
 
 def pseudoknots(base_pairs, scoring=None):
+    """
+    Identify the pseudoknot order for each basepair in a given set of
+    basepairs. By default the algorithm maximizes the number of
+    basepairs but an optional scoring matrix can be provided specifying
+    a score for each individual basepair.
 
+    Smit et al`s dynamic programming approach [1]_ is employed to
+    achieve this goal. The algorithm was originally developed to remove
+    pseudoknots from a structure. However, if it is run iteratively on
+    the removed knotted pairs it can be used to identify the pseudoknot
+    order.
+
+    Parameters
+    ----------
+    base_pairs : ndarray, dtype=int, shape=(n,2)
+        The basepairs to determine the pseudoknot order of
+    soring : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each basepair.
+
+    Returns
+    -------
+    pseudoknot_order : ndarray, dtype=int, shape=(m,n)
+        The pseudoknot order for m individual solutions.
+
+    References
+    ----------
+
+    .. [1] S Smit, K Rother and J Heringa et al.,
+       "From knotted to nested RNA structures: A variety of
+       computational methods for pseudoknot removal."
+       RNA, 14, 410-416 (2008).
+
+    """
     # Result array
     results = [np.zeros(len(base_pairs), dtype='int32')]
 
