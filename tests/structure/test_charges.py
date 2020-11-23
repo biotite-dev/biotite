@@ -338,19 +338,21 @@ methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
 # Creating BondList and asssociating it with the AtomArray
 methane_bonds = BondList(
     methane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,1], [0,3], [0,4]])
 )
+methane.bonds = methane_bonds
 
 # Creating ethane
 ethane = array(
-    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen,hydrogen,
+    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen, hydrogen,
     hydrogen]
 )
 # Creating BondList and asssociating it with the AtomArray
 ethane_bonds = BondList(
     ethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+ethane.bonds = ethane_bonds
 
 # Creating ethylene
 ethylene = array(
@@ -359,8 +361,9 @@ ethylene = array(
 # Creating BondList and asssociating it with the AtomArray
 ethylene_bonds = BondList(
     ethylene.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [1,4], [1,5]])
 )
+ethylene.bonds = ethylene_bonds
 
 # Creating acetylene
 acetylene = array(
@@ -369,8 +372,9 @@ acetylene = array(
 # Creating BondList and asssociating it with the AtomArray
 acetylene_bonds = BondList(
     acetylene.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [1,3]])
 )
+acetylene.bonds = acetylene_bonds
 
 # Creating fluoromethane
 fluoromethane = array(
@@ -379,8 +383,9 @@ fluoromethane = array(
 # Creating BondList and asssociating it with the AtomArray
 fluoromethane_bonds = BondList(
     fluoromethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+fluoromethane.bonds = fluoromethane_bonds
 
 # Creating difluoromethane
 difluoromethane = array(
@@ -389,8 +394,9 @@ difluoromethane = array(
 # Creating BondList and asssociating it with the AtomArray
 difluoromethane_bonds = BondList(
     difluoromethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+difluoromethane.bonds = difluoromethane_bonds
 
 # Creating trifluoromethane
 trifluoromethane = array(
@@ -399,8 +405,9 @@ trifluoromethane = array(
 # Creating BondList and asssociating it with the AtomArray
 trifluoromethane_bonds = BondList(
     trifluoromethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+trifluoromethane.bonds = trifluoromethane_bonds
 
 # Creating tetrafluoromethane
 tetrafluoromethane = array(
@@ -409,8 +416,9 @@ tetrafluoromethane = array(
 # Creating BondList and asssociating it with the AtomArray
 tetrafluoromethane_bonds = BondList(
     tetrafluoromethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+tetrafluoromethane.bonds = tetrafluoromethane_bonds
 
 # Creating fluoroethane
 fluoroethane = array(
@@ -420,8 +428,9 @@ fluoroethane = array(
 # Creating BondList and asssociating it with the AtomArray
 fluoroethane_bonds = BondList(
     fluoroethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+fluoroethane.bonds = fluoroethane_bonds
 
 # Creating 1,1,1-trifluoroethane
 trifluoroethane = array(
@@ -431,8 +440,9 @@ trifluoroethane = array(
 # Creating BondList and asssociating it with the AtomArray
 trifluoroethane_bonds = BondList(
     trifluoroethane.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+trifluoroethane.bonds = trifluoroethane_bonds
 
 # Creating methanole
 methanole = array(
@@ -441,8 +451,9 @@ methanole = array(
 # Creating BondList and asssociating it with the AtomArray
 methanole_bonds = BondList(
     methanole.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3], [0,4], [1,5]])
 )
+methanole.bonds = methanole_bonds
 
 # Creating dimethyl ether
 dimethyl_ether = array(
@@ -452,8 +463,9 @@ dimethyl_ether = array(
 # Creating BondList and asssociating it with the AtomArray
 DME_bonds = BondList(
     dimethyl_ether.array_length(),
-    np.array([])
+    np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], []1,7, [1,8]])
 )
+dimethyl_ether.bonds = DME_bonds
 
 # Creating formaldehyde
 formaldehyde = array(
@@ -462,8 +474,9 @@ formaldehyde = array(
 # Creating BondList and asssociating it with the AtomArray
 formaldehyde_bonds = BondList(
     formaldehyde.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2], [0,3]])
 )
+formaldehyde.bonds = formaldehyde_bonds
 
 # Creating acetaldehyde
 acetaldehyde = array(
@@ -472,8 +485,9 @@ acetaldehyde = array(
 # Creating BondList and asssociating it with the AtomArray
 acetaldehyde_bonds = BondList(
     acetaldehyde.array_length(),
-    np.array([])
+    np.array([[0,1], [1,2], [0,3], [0,4], [0,5], [1,6]])
 )
+acetaldehyde.bonds = acetaldehyde_bonds
 
 # Creating acetone
 acetone = array(
@@ -483,8 +497,10 @@ acetone = array(
 # Creating BondList and asssociating it with the AtomArray
 acetone_bonds = BondList(
     acetone.array_length(),
-    np.array([])
+    np.array([[0,1], [1,2], [1,3], [0,4], [0,5], [0,6], [2,7], [2,8],
+    [2,9]])
 )
+acetone.bonds = acetone_bonds
 
 # Creating hydrogen cyanide
 hydrogen_cyanide = array(
@@ -493,8 +509,9 @@ hydrogen_cyanide = array(
 # Creating BondList and asssociating it with the AtomArray
 HC_bonds = BondList(
     hydrogen_cyanide.array_length(),
-    np.array([])
+    np.array([[0,1], [0,2])
 )
+hydrogen_cyanide.bonds = HC_bonds
 
 # Creating acetonitrile
 acetonitrile = array(
@@ -503,8 +520,9 @@ acetonitrile = array(
 # Creating BondList and asssociating it with the AtomArray
 ACN_bonds = BondList(
     acetonitrile.array_length(),
-    np.array([])
+    np.array([[0,1], [1,2], [0,3], [0,4], [0,5]])
 )
+acetonitrile.bonds = ACN_bonds
 
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize()
