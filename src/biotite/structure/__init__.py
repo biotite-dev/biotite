@@ -117,5 +117,5 @@ from .sse import *
 from .superimpose import *
 from .transform import *
 from .basepairs import *
-from .biotite.charges.py import *
+from .charges.py import *
 # util is used internally
