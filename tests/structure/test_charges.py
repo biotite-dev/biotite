@@ -8,6 +8,7 @@ from biotite.structure.info import residue
 from biotite.structure import Atom
 from biotite.structure import array
 from biotite.structure import BondList
+import warnings
 
 EN_PARAMETERS = {
     "H": {
@@ -463,7 +464,7 @@ dimethyl_ether = array(
 # Creating BondList and asssociating it with the AtomArray
 DME_bonds = BondList(
     dimethyl_ether.array_length(),
-    np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], []1,7, [1,8]])
+    np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], [1,7], [1,8]])
 )
 dimethyl_ether.bonds = DME_bonds
 
@@ -509,7 +510,7 @@ hydrogen_cyanide = array(
 # Creating BondList and asssociating it with the AtomArray
 HC_bonds = BondList(
     hydrogen_cyanide.array_length(),
-    np.array([[0,1], [0,2])
+    np.array([[0,1], [0,2]])
 )
 hydrogen_cyanide.bonds = HC_bonds
 
@@ -525,4 +526,42 @@ ACN_bonds = BondList(
 acetonitrile.bonds = ACN_bonds
 
 # For this purpose, parametrization via pytest is performed
-@pytest.mark.parametrize()
+@pytest.mark.parametrize("carbon_1, expected_results", [
+    ("methane", -0.078),
+    ("ethane", -0.068),
+    ("ethylene", -0.106),
+    ("acetylene", -0.122),
+    ("fluoromethane", 0.079),
+    ("difluoromethane", 0.23),
+    ("trifluoromethane", 0.38),
+    ("tetrafluoromethane", 0.561),
+    ("fluoroethane", 0.087),
+    ("trifluoroethane", 0.387),
+    ("methanole", 0.033),
+    ("dimethyl_ether", 0.036),
+    ("formaldehyde", 0.115),
+    ("acetaldehyde", -0.009),
+    ("acetone", -0.006),
+    ("hydrogen_cyanide", 0.051),
+    ("acetonitrile", 0.023)
+])
+
+# First testing carbon atoms in position 1
+def test_carbon_in_pos_one(carbon_1, expected_results_1):
+    assert partial_charges(carbon_1)[0] == expected_results_1
+
+@pytest.mark.parametrize("carbon_2, expected_results", [
+    ("fluoroethane", -0.037),
+    ("trifluoroethane", -0.039),
+    ("acetaldehyde", 0.123),
+    ("acetone", 0.131),
+    ("acetonitrile", 0.06)
+])
+
+# Then testing carbon atoms in position 2
+def test_carbon_in_pos_two(carbon_2, expected_results_2):
+    assert partial_charges(carbon_2)[0] == expected_results_2
+
+# Now, as a second test, it is verified whether the sum of all partial charges
+# equals the sum of all formal charges (in our case zero since we are
+# exclusively dealing with uncharged molecules)
