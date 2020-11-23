@@ -305,6 +305,19 @@ def _get_region_array_for(regions, content=[], dtype=[]):
 
 
 def _conflict_cliques(regions):
+    """
+    Separate regions into mutually conflicting regions.
+
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        The regions to be seperated.
+
+    Returns
+    -------
+    regions : list [set {_region, ...}, ...]
+        The seperated mutually conflicting regions.
+    """
     # Get a region array and an array where each region start is +1 and
     # each stop is -1
     region_array, start_stops = _get_region_array_for(
@@ -326,14 +339,30 @@ def _conflict_cliques(regions):
     if len(region_array[start:]) > 0:
         cliques.append(set(region_array[start:]))
 
-    # Return the conflict cliques as list of lists
+    # Return the conflict cliques as list of sets
     return cliques
 
 
-def _get_optimal_solutions(clique, scoring):
+def _get_optimal_solutions(regions, scoring):
+    """
+    Get the optimal solutions according to the algorithm referenced in
+    :func:``pseudoknots()``.
 
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        The conflicting regions for whích optimal solutions are to be
+        found.
+    scoring : ndarray
+        The scoring array.
+
+    Returns
+    -------
+    solutions : ndarray, dtype=object
+        The optimal solutions according to the scoring function.
+    """
     # Create dynamic programming matrix
-    dp_matrix_shape = len(clique)*2, len(clique)*2
+    dp_matrix_shape = len(regions)*2, len(regions)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
     dp_matrix_solutions_starts = np.empty_like(dp_matrix)
     dp_matrix_solutions_stops = np.empty_like(dp_matrix)
@@ -342,7 +371,7 @@ def _get_optimal_solutions(clique, scoring):
     # ``region_array`` contains the region objects and ``start_stops``
     # contains the lowest and highest positions of the regions
     region_array, (start_stops,) = _get_region_array_for(
-        clique,
+        regions,
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
@@ -352,7 +381,7 @@ def _get_optimal_solutions(clique, scoring):
         dp_matrix[i, i] = np.array([frozenset()])
 
     # Iterate through the top right of the dynamic programming matrix
-    for j in range(len(clique)*2):
+    for j in range(len(regions)*2):
         for i in range(j-1, -1, -1):
             solution_candidates = set()
             left = dp_matrix[i, j-1]
@@ -453,7 +482,25 @@ def _get_optimal_solutions(clique, scoring):
 
 
 def _get_result_diff(clique, scoring):
+    """
+    Use the dynamic programming algorithm to get the pseudoknot order
+    of a given clique. If there are remaining conflicts the their
+    solutions are recursively calculated and merged with the current
+    solutions.
 
+    Parameters
+    ----------
+    clique : set {_region, ...}
+        The conflicting regions for whích optimal solutions are to be
+        found.
+    scoring : ndarray
+        The scoring array.
+
+    Returns
+    -------
+    solutions : ndarray, dtype=object
+        The pseudoknot orders according to the scoring function.
+    """
     # Get the optimal solutions for the given clique
     optimal_solutions = _get_optimal_solutions(clique, scoring)
 
