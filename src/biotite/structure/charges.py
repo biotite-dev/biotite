@@ -69,39 +69,43 @@ EN_PARAMETERS = {
     }
 }
 
-# Defining constant for the special case of the electronegativity of posotively
-# charged hydrogen (value given in electronvolt, as all electronegativity 
-# values)
+# Defining constant for the special case of the electronegativity of
+# positively charged hydrogen (value given in electronvolt, as all
+# electronegativity values)
 EN_POS_HYDROGEN = 20.02
 
 def _get_parameters(elements, amount_of_binding_partners):
     """
-    Gather the parameters required for electronegativity computation of all
-    atoms comprised in the array 'elements' inserted into the function.
+    Gather the parameters required for electronegativity computation of
+    all atoms comprised in the array 'elements' inserted into the
+    function.
 
-    By doing so, the function accesses the nested dictionary 'EN_PARAMETERS',
-    whose first level represents the element name and whose second level
-    represents the amount of binding partners.
-    The values originate from a publication of Johann Gasteiger and Mario
-    Marsili.
-    By the mean of a 'for' loop, the function iterates through the array
-    'elements' element-wise and adds the three parameters a, b, and c to an
-    array initialized in the beginning of the function.
+    By doing so, the function accesses the nested dictionary
+    'EN_PARAMETERS'. The values originate from a publication of Johann
+    Gasteiger and Mario Marsili. [1]_
 
     Parameters
     ----------
     elements: ndarray, dtype=str
-        The array comprising the elememts which to retrieve the parameters for.
+        The array comprising the elememts which to retrieve the
+        parameters for.
     amount_of_binding_partners: ndarray, dtype=int
-        The array containing information about the amount of binding partners
-        of the respective atom/element.
+        The array containing information about the amount of binding
+        partners of the respective atom/element.
     
     Returns
     -------
     parameters: NumPy array, dtype=float, shape=(n,3)
-        The array containing all three parameters required for the computation
-        of the electronegativities of all atoms comprised in the 'elements'
-        array.
+        The array containing all three parameters required for the
+        computation of the electronegativities of all atoms comprised
+        in the 'elements' array.
+    
+    References
+    ----------
+    .. [1] J Gasteiger and M Marsili,
+       "Iterative partial equalization of orbital electronegativity- a
+       rapid access to atomic charges"
+       Tetraahedron, 36, 3219 - 3288 (1980).
     """
     # Initializing a Numpy array to store the parameters in
     parameters = np.zeros((elements.shape[0], 3))
@@ -118,14 +122,15 @@ def _get_parameters(elements, amount_of_binding_partners):
             parameters[i, 0] = a
             parameters[i, 1] = b
             parameters[i, 2] = c
-        # Exception handling in case atom name is not found in dictionary
+        # Exception handling in case atom name is not found in
+        # dictionary
         except KeyError:
             parameters[i, :] = np.nan
             list_of_unparametrized_elements.append(element)
             has_key_error = True
     if has_key_error:
-        # Using NumPy's 'unique' function to ensure that each atom only occurs
-        # once in the list
+        # Using NumPy's 'unique' function to ensure that each atom only
+        # occurs once in the list
         unique_list = np.unique(list_of_unparametrized_elements)
         # Considering proper punctuation for the warning string
         warnings.warn(
@@ -140,40 +145,30 @@ def _get_parameters(elements, amount_of_binding_partners):
 # Defining function for computing partial charge
 def partial_charges(atom_array, iteration_step_num=6, charges=None):
     """
-    Compute the partial charge of the individual atoms comprised in a given
-    AtomArray depending on their electronegativity.
+    Compute the partial charge of the individual atoms comprised in a
+    given AtomArray depending on their electronegativity.
 
-    The function internally uses the private function '_get_parameters' in
-    to gather all parameters required for the computation of the
-    electronegativity values. This is done once in the whole algorithm.
-    Electronegativity values are obtained by highly efficient multiplication of
-    Numpy arrays, followed by row-wise summation. The same is performed under
-    the assumption that all atoms possess a formal charge of +1 in order to
-    obtain the respective electronegativity values which enter the equation of
-    charge transfer as divisor. However, for hydrogen, the special value of
-    20.02 eV is used due to its special properties!!! Electronegativity values
-    are computed in the beginning if each iteration step as they depend on
-    charge, which in turn alters in each iteration step.
-    The last step of an iteration step consists of the bond-wise iteration
-    through the BondList associated to the inserted AtomArray, the
-    computation of the respective charge transfers and updating the charges.
+    The algorithm implemented here is the so-called PEOE algorithm
+    (partial equalization of orbital electronegativity) developed by
+    Johann Gasteiger and Mario Marsili. [1]_
 
     Parameters
     ----------
     atom_array: AtomArray, shape=(n,)
         The AtomArray to get the partial charge values for. Exclusively
-        AtomArrays can be inserted in this function, not AtomArrayStacks.
+        AtomArrays can be inserted in this function, not
+        AtomArrayStacks.
     iteration_step_num: integer, optional
         The number of iteration steps is an optional argument and can be 
-        chosen by the user depending on the desired precision of the result. 
-        If no value is entered by the user, the default value '6' will be used
-        as Gasteiger and Marsili described this amount of iteration steps as
-        sufficient.
+        chosen by the user depending on the desired precision of the
+        result. If no value is entered by the user, the default value
+        '6' will be used as Gasteiger and Marsili described this amount
+        of iteration steps as sufficient. [1]_
     charges: ndarray, dtype=int, optional
-        The array comprising the formal charges of the atoms comprised in the
-        inserted AtomArray ('atom_array'). Note that if this parameter is
-        omitted, the formal charges of all atoms will be arbitrarily set to
-        zero.
+        The array comprising the formal charges of the atoms comprised
+        in the inserted AtomArray ('atom_array'). Note that if this
+        parameter is omitted, the formal charges of all atoms will be
+        arbitrarily set to zero.
     
     Returns
     -------
@@ -183,35 +178,39 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     
     Notes
     -----
-    A BondList must be added to the AtomArray as annotation category,
-    i. e. it must be associated to the AtomArray inserted into the
+    A BondList must be associated to the AtomArray inserted into the
     function as in the following example:
 
     atom_array.bonds = struc.connect_via_residue_names(atom_array)
 
-    The annotation category name must be "bonds" as well since this is the name
-    that is checked in order to verify the presence of a BondList.
+    The annotation category name must be "bonds" as well since this is
+    the name that is checked in order to verify the presence of a
+    BondList.
 
     Otherwise, an error will be raised and electronegativity values
     won't be delivered.
 
-    This step can be omitted if the AtomArray is obtained by accessing the
-    Chemical Component Dictionary by using the function
-    'biotite.structure.info.residue' as AtomArrays obtained in this way are
-    already associated to BondLists.
+    This step can be omitted if the AtomArray is obtained by accessing
+    the Chemical Component Dictionary by using the function
+    'biotite.structure.info.residue' as AtomArrays obtained in this way
+    are already associated to BondLists.
 
+    For the electronegativity of positively charged hydrogen, the
+    value of 20.02 eV is used.
 
-    The number of iteration steps is an optional argument and can be 
-    chosen by the user depending on the desired precision of the result. 
-    If no value is entered by the user, the default value '6' will be 
-    as Gasteiger and Marsili described this amount of iteration steps as
-    sufficient.
+    References
+    ----------
+    .. [1] J Gasteiger and M Marsili,
+       "Iterative partial equalization of orbital electronegativity- a
+       rapid access to atomic charges"
+       Tetraahedron, 36, 3219 - 3288 (1980).
 
     Examples
     --------
-    The molecule fluoromethane is taken as example since detailed information
-    is given about the charges of this molecule in each iteration step in the
-    respective publication of Gasteiger and Marsili.
+    The molecule fluoromethane is taken as example since detailed
+    information is given about the charges of this molecule in each
+    iteration step in the respective publication of Gasteiger and
+    Marsili. [1]_
 
     >>> fluoromethane = residue("CF0")
     >>> print(partial_charges(fluoromethane, 1))
@@ -226,7 +225,8 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     # Checking whether BondList is associated to AtomArray
     if atom_array.bonds is None:
         raise AttributeError(
-            "The input AtomArray doesn't possess an associated BondList."
+            f"The input AtomArray doesn't possess an associated "
+            f"BondList."
         )
     # Checking whether user entered charge array or not
     # If not, an array consisting of zero entries will be instantiated
@@ -236,7 +236,8 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         charges = np.zeros(atom_array.shape[0])
         warnings.warn(
             f"Charge array wasn't given as optional argument. "
-            f"Therefore, all atoms' formal charge is assumed to be zero.",
+            f"Therefore, all atoms' formal charge is assumed "
+            f"to be zero.",
             UserWarning
         )
     # For CPU time reasons, a nested list containing all binding partners of
