@@ -40,7 +40,7 @@ RCSB_URL = "https://www.rcsb.org/"
                                                  "biotite.sequence.io.fasta"],
                  marks=pytest.mark.filterwarnings("ignore:")                 ),
     pytest.param("biotite.structure",           ["biotite.structure.io",
-                                                ["biotite.structure.info"]     ),
+                                                ["biotite.structure.info"]   ),
     pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
                  marks=pytest.mark.skipif(
                     cannot_import("matplotlib"),
