@@ -100,7 +100,7 @@ def pseudoknots(base_pairs, scoring=None):
     ----------
     base_pairs : ndarray, dtype=int, shape=(n,2)
         The basepairs to determine the pseudoknot order of
-    soring : ndarray, dtype=int, shape=(n,) (default: None)
+    scoring : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each basepair.
 
     Returns
