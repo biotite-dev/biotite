@@ -15,29 +15,72 @@ from copy import deepcopy
 
 
 class _region():
+    """
+    A representation for a region.
+
+    A region is a set of basepairs. This class provides function to
+    access the minimum and maximum index of the bases that are part of
+    the region, handles score calculation and backtracing to the
+    original basepair array.
+    """
 
     def __init__ (self, base_pairs, region_pairs):
         # The Start and Stop indices for each Region
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
-        # The base pair array
+
         self.base_pairs = base_pairs
         self.region_pairs = region_pairs
         self.score = None
 
-    # Gets a boolean mask from the original basepair array
     def get_index_mask(self):
+        """
+        Return an index mask with the positions of the bases in the region
+        in the original basepair array.
+
+        Returns
+        -------
+        region_pairs : ndarray
+            The indices of the bases in the original basepair array.
+        """
         return self.region_pairs
 
-    # Get the score of a given region. Only calculate when score is
-    # needed.
     def get_score(self, scoring):
+        """
+        Return the score of the region according to a scoring array. It is
+        calculated once on demand and then stored in memory.
+
+        Parameters
+        ----------
+        scoring : ndarray
+            The scoring array.
+
+        Returns
+        -------
+        score : int
+            The regions score.
+        """
         if self.score is None:
             self.score = np.sum(scoring[self.get_index_mask()])
         return self.score
 
-    # Required for numpy unique support
     def __lt__(self, other):
+        """
+        This comparison operator is required for :func:`np.unique()`. As
+        only the difference between the regions is relevant and not any
+        particular order, a distinction is made by the objects unique
+        ids.
+
+        Parameters
+        ----------
+        other : _region
+            The other region.
+
+        Returns
+        -------
+        comparision : bool
+            The evaluated comparison.
+        """
         return id(self) < id(other)
 
 def pseudoknots(base_pairs, scoring=None):
