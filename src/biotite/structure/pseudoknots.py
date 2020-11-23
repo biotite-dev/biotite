@@ -12,6 +12,8 @@ __all__ = ["pseudoknots"]
 
 import numpy as np
 from copy import deepcopy
+from .basepairs import base_pairs
+from .residues import get_residue_starts_for
 
 
 class _region():
@@ -82,6 +84,18 @@ class _region():
             The evaluated comparison.
         """
         return id(self) < id(other)
+
+def dot_bracket(nucleic_acid_strand):
+    basepairs = base_pairs(nucleic_acid_strand)
+    pseudoknot_order = pseudoknots(basepairs)
+
+    notation = ""
+
+    for residue_start in get_residue_starts(nucleic_acid_strand):
+        if residue_start not in basepairs:
+            notation += "."
+        else:
+            # Get position in ``basepairs`` and ``pseudoknot_order``
 
 def pseudoknots(base_pairs, scoring=None):
     """
