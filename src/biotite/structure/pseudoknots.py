@@ -249,6 +249,8 @@ def _get_optimal_solutions(cluster, scoring):
     # Create dynamic programming matrix
     dp_matrix_shape = len(cluster)*2, len(cluster)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
+    dp_matrix_solutions_starts = np.empty_like(dp_matrix)
+    dp_matrix_solutions_stops = np.empty_like(dp_matrix)
 
     # Each index corresponds to the position in the dp matrix.
     # ``region_array`` contains the region objects and ``start_stops``
@@ -294,34 +296,14 @@ def _get_optimal_solutions(cluster, scoring):
                 starts = np.empty(
                     (2, max(len(left), len(bottom))), dtype='int32'
                 )
-                stops = np.empty_like(starts)
 
-                # Precalculate the minimum and maximum base position of
-                # each solution
-                for c, cell in enumerate([left, bottom]):
-                    for s, solution in enumerate(cell):
-                        minimum = -1
-                        maximum = -1
-                        for reg in solution:
-                            if minimum == -1 or maximum == -1:
-                                minimum = reg.start
-                                maximum = reg.stop
-                                continue
-                            if minimum > reg.start:
-                                minimum = reg.start
-                            if maximum < reg.stop:
-                                maximum = reg.stop
-                        starts[c, s] = minimum
-                        stops[c, s] = maximum
+                left_highest = dp_matrix_solutions_stops[i, j-1]
+                bottom_lowest = dp_matrix_solutions_starts[i+1, j]
 
                 # For each pair of solutions check if solutions are
                 # disjoint
-                for l, solution1 in enumerate(left):
-                    for b, solution2 in enumerate(bottom):
-                        # for each pair of solutions get the lowest and
-                        # highest value
-                        lowest = starts[1][b]
-                        highest = stops[0][l]
+                for solution1, highest in zip(left, left_highest):
+                    for solution2, lowest in zip(bottom, bottom_lowest):
                         if highest < lowest:
                             # Both solutions are disjoint
                             solution_candidates.add(solution1 | solution2)
@@ -340,8 +322,7 @@ def _get_optimal_solutions(cluster, scoring):
                                             subsolution1 | subsolution2
                                         )
 
-            # Make solution candidates ``ndarray`` array of sets to
-            # allow fancy indexing
+            # Make solution candidates ``ndarray`` array of sets
             solution_candidates = np.array(list(solution_candidates))
 
             # Calculate the scores for each solution
@@ -359,6 +340,27 @@ def _get_optimal_solutions(cluster, scoring):
 
             # Add the solutions to the dynamic programming matrix
             dp_matrix[i, j] = solution_candidates
+
+            solution_starts = np.empty_like(solution_candidates, dtype='int32')
+            solution_stops = np.empty_like(solution_candidates, dtype='int32')
+
+            for s, solution in enumerate(solution_candidates):
+                minimum = -1
+                maximum = -1
+                for reg in solution:
+                    if minimum == -1 or maximum == -1:
+                        minimum = reg.start
+                        maximum = reg.stop
+                        continue
+                    if minimum > reg.start:
+                        minimum = reg.start
+                    if maximum < reg.stop:
+                        maximum = reg.stop
+                solution_starts[s] = minimum
+                solution_stops[s] = maximum
+
+            dp_matrix_solutions_starts[i, j] = solution_starts
+            dp_matrix_solutions_stops[i, j] = solution_stops
 
     # The top right corner contains the optimal solutions
     return dp_matrix[0, -1]
