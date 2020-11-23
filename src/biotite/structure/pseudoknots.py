@@ -105,11 +105,11 @@ def pseudoknots(base_pairs, scoring=None):
     cleaned_regions = _remove_non_conflicting_regions(regions)
 
     # Group mutually conflicting regions
-    conflict_clusters = _cluster_conflicts(cleaned_regions)
+    conflict_cliques = _conflict_cliques(cleaned_regions)
 
-    # For each cluster calculate all optimal solutions
-    for cluster in conflict_clusters:
-        results = _get_result_diff(cluster, scoring)
+    # For each clique calculate all optimal solutions
+    for clique in conflict_cliques:
+        results = _get_result_diff(clique, scoring)
 
     return np.vstack(results)
 
@@ -304,7 +304,7 @@ def _get_region_array_for(regions, content=[], dtype=[]):
     return region_array, content_list
 
 
-def _cluster_conflicts(regions):
+def _conflict_cliques(regions):
     # Get a region array and an array where each region start is +1 and
     # each stop is -1
     region_array, start_stops = _get_region_array_for(
@@ -317,23 +317,23 @@ def _cluster_conflicts(regions):
     # by zero sums.
     total = 0
     start = 0
-    clusters = []
+    cliques = []
     for i in range(len(start_stops)):
         total += start_stops[i]
         if total == 0:
-            clusters.append(set(region_array[start:i+1]))
+            cliques.append(set(region_array[start:i+1]))
             start = i+1
     if len(region_array[start:]) > 0:
-        clusters.append(set(region_array[start:]))
+        cliques.append(set(region_array[start:]))
 
-    # Return the conflict clusters as list of lists
-    return clusters
+    # Return the conflict cliques as list of lists
+    return cliques
 
 
-def _get_optimal_solutions(cluster, scoring):
+def _get_optimal_solutions(clique, scoring):
 
     # Create dynamic programming matrix
-    dp_matrix_shape = len(cluster)*2, len(cluster)*2
+    dp_matrix_shape = len(clique)*2, len(clique)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
     dp_matrix_solutions_starts = np.empty_like(dp_matrix)
     dp_matrix_solutions_stops = np.empty_like(dp_matrix)
@@ -342,7 +342,7 @@ def _get_optimal_solutions(cluster, scoring):
     # ``region_array`` contains the region objects and ``start_stops``
     # contains the lowest and highest positions of the regions
     region_array, (start_stops,) = _get_region_array_for(
-        cluster,
+        clique,
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
@@ -352,7 +352,7 @@ def _get_optimal_solutions(cluster, scoring):
         dp_matrix[i, i] = np.array([frozenset()])
 
     # Iterate through the top right of the dynamic programming matrix
-    for j in range(len(cluster)*2):
+    for j in range(len(clique)*2):
         for i in range(j-1, -1, -1):
             solution_candidates = set()
             left = dp_matrix[i, j-1]
@@ -452,10 +452,10 @@ def _get_optimal_solutions(cluster, scoring):
     return dp_matrix[0, -1]
 
 
-def _get_result_diff(cluster, scoring):
+def _get_result_diff(clique, scoring):
 
-    # Get the optimal solutions for the given cluster
-    optimal_solutions = _get_optimal_solutions(cluster, scoring)
+    # Get the optimal solutions for the given clique
+    optimal_solutions = _get_optimal_solutions(clique, scoring)
 
     # Each optimal solution gets their own list of solutions
     results_diff = np.empty(len(optimal_solutions), dtype=list)
@@ -467,22 +467,22 @@ def _get_result_diff(cluster, scoring):
         results = np.zeros(len(scoring), dtype='int32')
 
         # The removed regions in the optimal solution
-        next_cluster = cluster - optimal_solution
+        next_clique = clique - optimal_solution
 
         # Increment the order of the basepairs in the removed regions
-        for reg in next_cluster:
+        for reg in next_clique:
             results[reg.get_index_mask()] += 1
 
         # Remove non-conflicting-regions for evaluation of the next
-        # cluster
-        next_cluster = _remove_non_conflicting_regions(next_cluster)
+        # clique
+        next_clique = _remove_non_conflicting_regions(next_clique)
 
-        # The next cluster is only evaluated if it contains conflicting
+        # The next clique is only evaluated if it contains conflicting
         # regions
-        if len(next_cluster) > 0:
-            next_result_diff = _get_result_diff(next_cluster, scoring)
+        if len(next_clique) > 0:
+            next_result_diff = _get_result_diff(next_clique, scoring)
 
-            # Merge results of this cluster with the next cluster
+            # Merge results of this clique with the next clique
             results_diff[o] = []
             for i, diff in enumerate(next_result_diff):
                 results_diff[o].append(deepcopy(results))
