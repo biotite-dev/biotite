@@ -287,8 +287,6 @@ carbon = Atom([0, 0, 0], atom_name="C", element="C")
 
 carbon_1 = Atom([0, 0, 0], atom_name="C1", element="C")
 
-carbon_2 = Atom([0, 0, 0], atom_name="C2", element="C")
-
 hydrogen = Atom([0, 0, 0], element ="H")
 
 oxygen = Atom([0, 0, 0], element ="O")
@@ -378,7 +376,7 @@ tetrafluoromethane.bonds = tetrafluoromethane_bonds
 
 
 fluoroethane = array(
-    [carbon_1, carbon_2, fluorine, hydrogen, hydrogen, hydrogen, 
+    [carbon_1, carbon_1, fluorine, hydrogen, hydrogen, hydrogen, 
     hydrogen, hydrogen]
 )
 fluoroethane_bonds = BondList(
@@ -389,7 +387,7 @@ fluoroethane.bonds = fluoroethane_bonds
 
 
 trifluoroethane = array(
-    [carbon_1, carbon_2, fluorine, fluorine, fluorine, hydrogen,
+    [carbon_1, carbon_1, fluorine, fluorine, fluorine, hydrogen,
     hydrogen, hydrogen]
 )
 trifluoroethane_bonds = BondList(
@@ -431,7 +429,7 @@ formaldehyde.bonds = formaldehyde_bonds
 
 
 acetaldehyde = array(
-    [carbon_1, carbon_2, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
+    [carbon_1, carbon_1, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
 )
 acetaldehyde_bonds = BondList(
     acetaldehyde.array_length(),
@@ -441,7 +439,7 @@ acetaldehyde.bonds = acetaldehyde_bonds
 
 
 acetone = array(
-    [carbon_1, carbon_2, carbon, oxygen, hydrogen, hydrogen, hydrogen,
+    [carbon_1, carbon_1, carbon, oxygen, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen, hydrogen]
 )
 acetone_bonds = BondList(
@@ -463,7 +461,7 @@ hydrogen_cyanide.bonds = HC_bonds
 
 
 acetonitrile = array(
-    [carbon_1, carbon_2, nitrogen, hydrogen, hydrogen, hydrogen]
+    [carbon_1, carbon_1, nitrogen, hydrogen, hydrogen, hydrogen]
 )
 ACN_bonds = BondList(
     acetonitrile.array_length(),
@@ -481,15 +479,15 @@ acetonitrile.bonds = ACN_bonds
     (difluoromethane, (0.23,)),
     (trifluoromethane, (0.38,)),
     (tetrafluoromethane, (0.561,)),
-    (fluoroethane, (0.087,)), #-0.037
-    (trifluoroethane, (0.387,)), #-0.039
+    (fluoroethane, (0.087, -0.037)),
+    (trifluoroethane, (0.387, 0.039)),
     (methanole, (0.033,)),
     (dimethyl_ether, (0.036,)),
     (formaldehyde, (0.115,)),
-    (acetaldehyde, (-0.009,)), #0.123
-    (acetone, (-0.006,)), #0.131
+    (acetaldehyde, (-0.009, 0.123)),
+    (acetone, (-0.006, 0.131)),
     (hydrogen_cyanide, (0.051,)),
-    (acetonitrile, (0.023,)) #0.06
+    (acetonitrile, (0.023, 0.06))
 ])
 
 def test_partial_charges(molecule, expected_results):
@@ -502,6 +500,6 @@ def test_partial_charges(molecule, expected_results):
 # charges equals the sum of all formal charges (in our case zero since
 # we are exclusively dealing with uncharged molecules)
 # Fluoromethane is taken as example
-def test_total_charge_zero(fluoroethane):
-    total_charge = np.sum(partial_charges(fluoroethane))
+def test_total_charge_zero():
+    total_charge = np.sum(partial_charges(fluoromethane))
     assert total_charge == pytest.approx(0, abs=1e-15)
