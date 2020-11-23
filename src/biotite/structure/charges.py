@@ -3,10 +3,9 @@
 # information.
 
 """
-This module provides two functions; one for the computation of the
-electronegativity of the individual atoms of a given AtomArrray, and one
-for the computation of the partial charges of the individual atoms of a
-given AtomArray according to the algorithm of Gasteiger-Marsili
+This module provides one function for the computation of the partial
+charges of the individual atoms of a given AtomArray according to the
+PEOE algorithm of Gasteiger-Marsili
 """
 
 __name__ = "biotite.charges"
@@ -75,19 +74,9 @@ EN_PARAMETERS = {
 # values)
 EN_POS_HYDROGEN = 20.02
 
-"""
-Defining 'private' function, i. e. a function for internal use only that
-gathers all parameters required for the electronegativity computation of all
-atoms comprised in the inserted AtomArray.
-Parameters are stored in a NumPy array of the shape (n, 3) where n represents
-the lenght of the inserted AtomArray, i. e. the amount of atoms comprised in
-the AtomArray.
-This is done for CPU time reasons (gathering all parameters once
-is more efficient than retrieving them in each iteration step anew).
-"""
 def _get_parameters(elements, amount_of_binding_partners):
     """
-    Gathers the parameters required for electronegativity computation of all
+    Gather the parameters required for electronegativity computation of all
     atoms comprised in the array 'elements' inserted into the function.
 
     By doing so, the function accesses the nested dictionary 'EN_PARAMETERS',
@@ -149,9 +138,9 @@ def _get_parameters(elements, amount_of_binding_partners):
     return parameters
 
 # Defining function for computing partial charge
-def partial_charges(atom_array, iteration_step_num = 6, charges = None):
+def partial_charges(atom_array, iteration_step_num=6, charges=None):
     """
-    Computes the partial charge of the individual atoms comprised in a given
+    Compute the partial charge of the individual atoms comprised in a given
     AtomArray depending on their electronegativity.
 
     The function internally uses the private function '_get_parameters' in
@@ -287,9 +276,9 @@ def partial_charges(atom_array, iteration_step_num = 6, charges = None):
         charge_array = np.concatenate((ones_vector, column_charges,
         sq_column_charges), axis = 1)
         # Electronegativity values are computed in each iteration step
-        # 'en_values' is an one-dimensional array, shape= (n), where n 
+        # 'en_values' is an one-dimensional array, shape=(n), where n 
         # describes the amount of atoms comprised in the AtomArray
-        en_values = np.sum(parameters * charge_array, axis = 1)
+        en_values = np.sum(parameters * charge_array, axis=1)
         # Computing electronegativity values in case of positive charge which
         # enter as divisor the equation for charge transfer
         # For hydrogen, however, the special value of 20.02 eV described in the
