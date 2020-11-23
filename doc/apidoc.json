@@ -241,7 +241,8 @@
             "annotate_sse",
             "hbond",
             "hbond_frequency",
-            "base_pairs"
+            "base_pairs",
+            "partial_charges"
         ]
     }
 }
