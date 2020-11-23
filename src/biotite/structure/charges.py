@@ -105,7 +105,7 @@ def _get_parameters(elements, amount_of_binding_partners):
     .. [1] J Gasteiger and M Marsili,
        "Iterative partial equalization of orbital electronegativity- a
        rapid access to atomic charges"
-       Tetraahedron, 36, 3219 - 3288 (1980).
+       Tetrahedron, 36, 3219 - 3288 (1980).
     """
     parameters = np.zeros((elements.shape[0], 3))
     has_key_error = False
@@ -197,7 +197,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     .. [1] J Gasteiger and M Marsili,
        "Iterative partial equalization of orbital electronegativity- a
        rapid access to atomic charges"
-       Tetraahedron, 36, 3219 - 3288 (1980).
+       Tetrahedron, 36, 3219 - 3288 (1980).
 
     Examples
     --------
@@ -267,10 +267,11 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 if np.isnan(en_values[i]):
                     charges[i] = np.nan
                 # Determining for which atom exactly no parameters are
-                # available is necessary since the other atom, for which there
-                # indeed are parameters, could be involved in multiple bonds.
-                # Therefore, setting both charges to NaN would falsify the 
-                # result.
+                # available is necessary since the other atom, for which
+                # there indeed are parameters, could be involved in
+                # multiple bonds.
+                # Therefore, setting both charges to NaN would falsify
+                # the result.
                 else:
                     charges[j] = np.nan
             else:
