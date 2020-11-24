@@ -374,7 +374,7 @@ def base_pairs_edge(atom_array, base_pairs):
        RNA, 7(4), 499-512 (2001).
     """
     # Result-``ndarray`` matches the dimensions of the input array
-    results = np.zeros_like(base_pairs, dtype=Edge)
+    results = np.zeros_like(base_pairs, dtype='object')
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -518,7 +518,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
         RNA base pairs.",
         Nucleic Acids Research, 31(13), 3450-3460 (2003).
     """
-    results = np.zeros(len(base_pairs), dtype=GlycosidicBond)
+    results = np.zeros(len(base_pairs), dtype='object')
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
