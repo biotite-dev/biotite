@@ -289,7 +289,7 @@ def test_base_pairs_glycosidic_bond(pdb_id):
         pair_res_ids = reference_structure[pair].res_id
         index = get_reference_index(pair_res_ids, reference_gly_bonds)
         if index is not None:
-            reference_orientation = struc.glycosidicBond(
+            reference_orientation = struc.GlycosidicBond(
                 reference_gly_bonds[index, 2]
             )
             assert reference_orientation == pair_orientation

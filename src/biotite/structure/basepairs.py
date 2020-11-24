@@ -9,7 +9,7 @@ This module provides functions for base pair identification.
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["base_pairs", "map_nucleotide", "base_stacking", "base_pairs_edge",
-           "edge", "base_pairs_glycosidic_bond", "glycosidicBond"]
+           "Edge", "base_pairs_glycosidic_bond", "GlycosidicBond"]
 
 import numpy as np
 import warnings
@@ -280,7 +280,7 @@ _SUGAR_EDGE = {
 _EDGES = [_WATSON_CRICK_EDGE, _HOOGSTEEN_EDGE, _SUGAR_EDGE]
 
 
-class edge(IntEnum):
+class Edge(IntEnum):
     """
     This enum type represents the interacting edge for a given base.
     """
@@ -290,7 +290,7 @@ class edge(IntEnum):
     SUGAR = 3
 
 
-class glycosidicBond(IntEnum):
+class GlycosidicBond(IntEnum):
     """
     This enum type represents the relative glycosidic bond orientation
     for a given base pair.
@@ -306,19 +306,25 @@ def base_pairs_edge(atom_array, base_pairs):
     :class:`AtomArray` according to the Leontis-Westhof nomenclature
     [1]_.
 
+    The :class:`AtomArray` must contain hydrogens as it relies on
+    :func:`hbond()`.
+
     Parameters
     ----------
     atom_array : AtomArray
         The :class:`AtomArray` containing the bases.
     base_pairs : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one base pair and contains the first
-        indices of the residues corresponding to each base.
+        indices of the residues corresponding to each base. The
+        structure of the ``ndarray`` is the same as the output of
+        :func:`base_pairs()`.
 
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,2)
-        Each row is equivalent to the respective base pair and contains
-        an ``IntEnum`` describing the type of edge interaction.
+        The ``ndarray`` has the same dimension as ``base_pairs``. Each
+        cell corresponds to the interacting edge of the referenced base
+        in ``base_pairs``
 
     See Also
     --------
@@ -327,10 +333,10 @@ def base_pairs_edge(atom_array, base_pairs):
 
     Notes
     -----
-    If a base is not a canonical base (A, C, G, T, U) or no hydrogen
-    bonds are found between the bases that conform to the interacting
-    edges described by Leontis and Westhof, ``edge.invalid`` is
-    returned.
+    If a base is not a canonical base (``A``, ``C``, ``G``, ``T``,
+    ``U``) or no hydrogen bonds are found between the bases that conform
+    to the interacting edges described by Leontis and Westhof,
+    ``edge.INVALID`` is returned.
 
     The edge returned always corresponds to the edge with the most
     hydrogen bonding interactions.
@@ -364,11 +370,11 @@ def base_pairs_edge(atom_array, base_pairs):
     ----------
 
     .. [1] NB Leontis and E Westhof,
-       "Geometric nomenclature and classification of RNA base pairs."
+       "Geometric nomenclature and classification of RNA base pairs.",
        RNA, 7(4), 499-512 (2001).
     """
     # Result-``ndarray`` matches the dimensions of the input array
-    results = np.empty_like(base_pairs, dtype=edge)
+    results = np.empty_like(base_pairs, dtype=Edge)
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -387,9 +393,9 @@ def base_pairs_edge(atom_array, base_pairs):
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
             if max(base) == 0:
-                results[i, j] = edge.INVALID
+                results[i, j] = Edge.INVALID
             else:
-                results[i, j] = edge(np.argmax(base) + 1)
+                results[i, j] = Edge(np.argmax(base) + 1)
     return results
 
 
@@ -460,13 +466,16 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
         The :class:`AtomArray` containing the bases.
     base_pairs : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one base pair and contains the first
-        indices of the residues corresponding to each base.
+        indices of the residues corresponding to each base. The
+        structure of the ``ndarray`` is the same as the output of
+        :func:`base_pairs()`.
 
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,)
         Each row is equivalent to the respective base pair and contains
-        an ``IntEnum`` describing the glycosidic bond orientation.
+        a :class:`GlycosidicBond` enum describing the glycosidic bond
+        orientation.
 
     See Also
     --------
@@ -481,7 +490,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     Examples
     --------
     Compute the glycosidic bond orientations for the dna helix with the
-    PDB id 1QXB:
+    PDB ID 1QXB:
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
@@ -501,15 +510,15 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     ----------
 
     .. [1] NB Leontis and E Westhof,
-       "Geometric nomenclature and classification of RNA base pairs."
+       "Geometric nomenclature and classification of RNA base pairs.",
        RNA, 7(4), 499-512 (2001).
 
     .. [2] H Yang, F Jossinet and NB Leontis et al.,
         "Tools for the automatic identification and classification of
-        RNA base pairs."
+        RNA base pairs.",
         Nucleic Acids Research, 31(13), 3450-3460 (2003).
     """
-    results = np.zeros(len(base_pairs), dtype=glycosidicBond)
+    results = np.zeros(len(base_pairs), dtype=GlycosidicBond)
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -551,7 +560,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
             else:
 
-                results[i] = glycosidicBond.INVALID
+                results[i] = GlycosidicBond.INVALID
                 break
 
             sugar_atom = base[base.atom_name == "C1'"][0]
@@ -569,11 +578,11 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
                 np.cross(geometric_centers_dir, glycosidic_bonds[1])
             ) < 0:
 
-                results[i] = glycosidicBond.TRANS
+                results[i] = GlycosidicBond.TRANS
 
             else:
 
-                results[i] = glycosidicBond.CIS
+                results[i] = GlycosidicBond.CIS
 
     return results
 
@@ -582,12 +591,17 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     """
     Find pi-stacking interactions between aromatic rings
     in nucleic acids.
+
     The presence of base stacking is assumed if the following criteria
     are met [1]_:
+
     (i) Distance between aromatic ring centers <=4.5 Å
+
     (ii) Angle between the ring normal vectors <=23°
+
     (iii) Angle between normalized distance vector between two ring
           centers and both bases' normal vectors <=40°
+
     Parameters
     ----------
     atom_array : AtomArray
@@ -595,12 +609,14 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     min_atoms_per_base : integer, optional (default: 3)
         The number of atoms a nucleotides' base must have to be
         considered a candidate for a stacking interaction.
+
     Returns
     -------
     stacked_bases : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one pair of stacked bases and
         contains the indices to the first atom for each one of both
         paired residues.
+
     Notes
     -----
     Please note that ring normal vectors are assumed to be equal to the
@@ -778,7 +794,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Examples
     --------
-    Compute the base pairs for the structure with the PDB id 1QXB:
+    Compute the base pairs for the structure with the PDB ID 1QXB:
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
@@ -804,21 +820,21 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     .. [1] WK Olson, M Bansal and SK Burley et al.,
        "A standard reference frame for the description of nucleic acid
-       base-pair geometry."
+       base-pair geometry.",
        J Mol Biol, 313(1), 229-237 (2001).
 
     .. [2] XJ Lu, HJ Bussemaker and WK Olson,
        "DSSR: an integrated software tool for dissecting the spatial
-       structure of RNA."
+       structure of RNA.",
        Nucleic Acids Res, 43(21), e142 (2015).
 
     .. [3] XJ Lu, MA El Hassan and CA Hunter,
         "Structure and conformation of helical nucleic acids: analysis
-        program (SCHNAaP)."
+        program (SCHNAaP).",
         J Mol Biol, 273, 668-680 (1997).
 
     .. [4] HA Gabb, SR Sanghani and CH Robert et al.,
-       "Finding and visualizing nucleic acid base stacking"
+       "Finding and visualizing nucleic acid base stacking.",
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
 
