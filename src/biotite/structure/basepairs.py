@@ -321,10 +321,11 @@ def base_pairs_edge(atom_array, base_pairs):
 
     Returns
     -------
-    results : ndarray, dtype=edge, shape=(n,2)
-        The ``ndarray`` has the same dimension as ``base_pairs``. Each
+    results : ndarray, dtype=uint8, shape=(n,2)
+        The ``ndarray`` has the same dimensions as ``base_pairs``. Each
         cell corresponds to the interacting edge of the referenced base
-        in ``base_pairs``
+        in ``base_pairs``. The edge type is stored as integer that is
+        interpreted as member of the the :class:`Edge` enum.
 
     See Also
     --------
@@ -335,8 +336,8 @@ def base_pairs_edge(atom_array, base_pairs):
     -----
     If a base is not a canonical base (``A``, ``C``, ``G``, ``T``,
     ``U``) or no hydrogen bonds are found between the bases that conform
-    to the interacting edges described by Leontis and Westhof,
-    ``edge.INVALID`` is returned.
+    to the interacting edges described by Leontis and Westhof, 0 is
+    returned (corresponding to ``Edge.INVALID``).
 
     The edge returned always corresponds to the edge with the most
     hydrogen bonding interactions.
@@ -352,19 +353,20 @@ def base_pairs_edge(atom_array, base_pairs):
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
-    >>> print(interacting_edges)
-    [[<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]
-     [<edge.WATSON_CRICK: 0> <edge.WATSON_CRICK: 0>]]
+    >>> for interaction in interacting_edges:
+    ...     print(Edge(interaction[0]), Edge(interaction[1]))
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    Edge.WATSON_CRICK Edge.WATSON_CRICK
 
     References
     ----------
@@ -374,7 +376,7 @@ def base_pairs_edge(atom_array, base_pairs):
        RNA, 7(4), 499-512 (2001).
     """
     # Result-``ndarray`` matches the dimensions of the input array
-    results = np.zeros_like(base_pairs, dtype='object')
+    results = np.zeros_like(base_pairs, dtype='uint8')
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -392,10 +394,8 @@ def base_pairs_edge(atom_array, base_pairs):
         # Classify the base edges based on the highest number of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
-            if max(base) == 0:
-                results[i, j] = Edge.INVALID
-            else:
-                results[i, j] = Edge(np.argmax(base) + 1)
+            if max(base) != 0:
+                results[i, j] = np.argmax(base) + 1
     return results
 
 
@@ -498,13 +498,20 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
-    >>> print(orientations)
-    [<glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>
-     <glycosidic_bond.CIS: 0> <glycosidic_bond.CIS: 0>]
+    >>> for orientation in orientations:
+    ...     print(orientation)
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
+    GlycosidicBond.CIS
 
     References
     ----------
