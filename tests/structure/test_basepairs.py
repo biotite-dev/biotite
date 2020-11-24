@@ -12,9 +12,9 @@ from biotite.structure.residues import get_residue_masks
 from biotite.structure.hbond import hbond
 from os.path import join
 from ..util import data_dir
-# For ``base_pairs_edge()`` differences to a reference can be arbitrary
+# For ``base_pairs_edge()`` differences to a reference can be ambiguous
 # as the number hydrogen bonds between two different edges can be equal.
-# In order to distinguish arbitrarily identified edges from wrongfully
+# In order to distinguish ambiguously identified edges from wrongfully
 # identified edges the full edge matrix, listing the number of hydrogen
 # bonds for each edge has to be considered.
 from biotite.structure.basepairs import _get_edge_matrix
@@ -222,8 +222,8 @@ def check_edge_plausibility(
     reference_structure, pair, reference_edges, output_edges
 ):
     """
-    Checks if the difference to a reference edge is at least arbitrary.
-    A difference is defined as arbitrary, if the number of hydrogen
+    Checks if the difference to a reference edge is at least ambiguous.
+    A difference is defined as ambiguous, if the number of hydrogen
     bonds on a given edge is the same as on the edge specified in the
     reference.
     """
@@ -245,7 +245,7 @@ def check_edge_plausibility(
 def test_base_pairs_edge(pdb_id):
     """
     Test the function ``base_pairs_edge``. Each test structure is a
-    crystal structure onto which hydrogens were added using gromacs
+    crystal structure onto which hydrogens were added using Gromacs
     force fields. The reference data was taken from the NDB-database
     annotations and parsed as json array.
     """

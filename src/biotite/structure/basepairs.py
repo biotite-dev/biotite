@@ -417,17 +417,16 @@ def _get_edge_matrix(atom_array, base_masks):
     matrix : ndarray, dtype=int, shape=(2,3)
         The edge matrix.
     """
-    # The hbonds between the residues
+    # Get the hydrogen bonds between the residues
     hbonds = hbond(atom_array, base_masks[0], base_masks[1])
-    # Filter out the Donor/Acceptor Heteroatoms and flatten for
-    # easy iteration
     if len(hbonds) == 0:
         raise BadStructureError(
             f"No hydrogen bonds between nucleotides with residue start "
             f"indices {np.argmax(base_masks[0])} and "
             f"{np.argmax(base_masks[1])}"
         )
-
+    # filter out donor/acceptor heteroatoms and flatten for easy
+    # iteration
     hbonds = hbonds[:, (0,2)].flatten()
 
     # ``ndarray``` with one row for each base and the number of
