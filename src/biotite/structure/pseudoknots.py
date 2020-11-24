@@ -114,7 +114,7 @@ def pseudoknots(base_pairs, scoring=None):
 
     .. [1] S Smit, K Rother and J Heringa et al.,
        "From knotted to nested RNA structures: A variety of
-       computational methods for pseudoknot removal."
+       computational methods for pseudoknot removal.",
        RNA, 14, 410-416 (2008).
 
     """

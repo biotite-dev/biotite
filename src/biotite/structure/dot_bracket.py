@@ -20,34 +20,58 @@ _OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
 
 
-def dot_bracket(nucleic_acid_strand):
+def dot_bracket(nucleic_acid_strand, scoring=None):
     """
-    Convert structural information
+    Represent basepairs in a nucleic-acid-strand in
+    dot-bracket-letter-notation (DBL-notation) as described by
+    Antczack et. al. [1]_.
 
-    Args:
-        nucleic_acid_strand ([type]): [description]
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The nucleic-acid-strand to represent in DBL-notation.
+    scoring : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each basepair, which is passed on to
+        :func:``pseudoknots()``
 
-    Returns:
-        [type]: [description]
+    Returns
+    -------
+    notations : list [string, ...]
+        The DBL-notation for each solution from :func:``pseudoknots()``.
+
+    References
+    ----------
+
+    .. [1] M Antczak, M Popenda and T Zok et al.,
+       "New algorithms to represent complex pseudoknotted RNA structures
+        in dot-bracket notation.",
+       Bioinformatics, 34(8), 1304-1312 (2018).
     """
+    # Analyze structure
     basepairs = base_pairs(nucleic_acid_strand)
-    pseudoknot_order = pseudoknots(basepairs)
+    pseudoknot_order = pseudoknots(basepairs, scoring=scoring)
     residue_starts = get_residue_starts(nucleic_acid_strand)
 
-    notation = [""]*len(pseudoknot_order)
+    # Each optimal pseudoknot order solution is represented in
+    # dot-bracket-notation
+    notations = [""]*len(pseudoknot_order)
+
     for s, solution in enumerate(pseudoknot_order):
+        # Bases whose partners have an opened bracket
         opened_brackets = set()
         for residue_start in residue_starts:
             if residue_start not in basepairs:
-                notation[s] += "."
+                notations[s] += "."
             else:
                 # Get position in ``basepairs`` and ``pseudoknot_order``
                 pos = np.where(basepairs == residue_start)[0][0]
+
                 if residue_start in opened_brackets:
-                    notation[s] += _CLOSING_BRACKETS[solution[pos]]
+                    notations[s] += _CLOSING_BRACKETS[solution[pos]]
                 else:
                     for base in basepairs[pos]:
-                        opened_brackets.add(base)
-                    notation[s] += _OPENING_BRACKETS[solution[pos]]
+                        if base != residue_start:
+                            opened_brackets.add(base)
+                    notations[s] += _OPENING_BRACKETS[solution[pos]]
 
-    return notation
+    return notations
