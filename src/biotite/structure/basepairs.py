@@ -498,7 +498,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
@@ -638,7 +638,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     1BNA):
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs/1bna.pdb")
+    ...     join(path_to_structures, "base_pairs", "1bna.pdb")
     ... )
     >>> stacking_interactions = base_stacking(dna_helix)
     >>> print(dna_helix[stacking_interactions].res_id)
@@ -809,7 +809,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> print(dna_helix[basepairs].res_name)
