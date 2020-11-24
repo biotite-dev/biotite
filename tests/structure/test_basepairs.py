@@ -50,15 +50,15 @@ def check_output(computed_basepairs, basepairs):
     Check the output of base_pairs.
     """
 
-    # Check if basepairs are unique in computed_basepairs
+    # Check if base pairs are unique in computed_basepairs
     seen = set()
     assert (not any(
         (base1, base2) in seen) or (base2, base1 in seen)
         or seen.add((base1, base2)) for base1, base2 in computed_basepairs
         )
-    # Check if the right number of basepairs is in computed_basepairs
+    # Check if the right number of base pairs is in computed_base pairs
     assert(len(computed_basepairs) == len(basepairs))
-    # Check if the right basepairs are in computed_basepairs
+    # Check if the right base pairs are in computed_basepairs
     for comp_basepair in computed_basepairs:
         assert ((comp_basepair in basepairs) \
                 or (comp_basepair in np.flip(basepairs)))
@@ -251,11 +251,11 @@ def test_base_pairs_edge(pdb_id):
     """
     # Get the references
     reference_structure, reference_edges = get_reference(pdb_id, "edges")
-    # Calculate basepairs and edges for the references
+    # Calculate base pairs and edges for the references
     pairs = struc.base_pairs(reference_structure)
     edges = struc.base_pairs_edge(reference_structure, pairs)
 
-    # Check the plausibility with the reference data for each basepair
+    # Check the plausibility with the reference data for each base pair
     for pair, pair_edges in zip(pairs, edges):
         pair_res_ids = reference_structure[pair].res_id
         index = get_reference_index(pair_res_ids, reference_edges)
@@ -278,13 +278,13 @@ def test_base_pairs_glycosidic_bond(pdb_id):
     """
     # Get the references
     reference_structure, reference_gly_bonds = get_reference(pdb_id, "sugar")
-    # Calculate basepairs and edges for the references
+    # Calculate base pairs and edges for the references
     pairs = struc.base_pairs(reference_structure)
     glycosidic_bond_orientations = struc.base_pairs_glycosidic_bond(
         reference_structure, pairs
     )
 
-    # Check the plausibility with the reference data for each basepair
+    # Check the plausibility with the reference data for each base pair
     for pair, pair_orientation in zip(pairs, glycosidic_bond_orientations):
         pair_res_ids = reference_structure[pair].res_id
         index = get_reference_index(pair_res_ids, reference_gly_bonds)

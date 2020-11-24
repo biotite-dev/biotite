@@ -3,7 +3,7 @@
 # information.
 
 """
-This module provides functions for basepair identification.
+This module provides functions for base pair identification.
 """
 
 __name__ = "biotite.structure"
@@ -293,7 +293,7 @@ class edge(IntEnum):
 class glycosidicBond(IntEnum):
     """
     This enum type represents the relative glycosidic bond orientation
-    for a given basepair.
+    for a given base pair.
     """
     INVALID = 0
     CIS = 1,
@@ -311,13 +311,13 @@ def base_pairs_edge(atom_array, base_pairs):
     atom_array : AtomArray
         The :class:`AtomArray` containing the bases.
     base_pairs : ndarray, dtype=int, shape=(n,2)
-        Each row is equivalent to one basepair and contains the first
+        Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
 
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,2)
-        Each row is equivalent to the respective basepair and contains
+        Each row is equivalent to the respective base pair and contains
         an ``IntEnum`` describing the type of edge interaction.
 
     See Also
@@ -459,13 +459,13 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     atom_array : AtomArray
         The :class:`AtomArray` containing the bases.
     base_pairs : ndarray, dtype=int, shape=(n,2)
-        Each row is equivalent to one basepair and contains the first
+        Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
 
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,)
-        Each row is equivalent to the respective basepair and contains
+        Each row is equivalent to the respective base pair and contains
         an ``IntEnum`` describing the glycosidic bond orientation.
 
     See Also
@@ -690,7 +690,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
         aromatic_ring_centers = [transformed_std_vectors[0][3:],
                                         transformed_std_vectors[1][3:]]
 
-        # Check if the basepairs are stacked.
+        # Check if the base pairs are stacked.
         stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
 
         # If a stacking interaction is found, append the first indices
@@ -703,7 +703,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
 def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     """
-    Use DSSR criteria to find the basepairs in an :class:`AtomArray`.
+    Use DSSR criteria to find the base pairs in an :class:`AtomArray`.
 
     The algorithm is able to identify canonical and non-canonical
     base pairs. between the 5 common bases Adenine, Guanine, Thymine,
@@ -727,10 +727,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Parameters
     ----------
     atom_array : AtomArray
-        The :class:`AtomArray` to find basepairs in.
+        The :class:`AtomArray` to find base pairs in.
     min_atoms_per_base : integer, optional (default: 3)
         The number of atoms a nucleotides' base must have to be
-        considered a candidate for a basepair.
+        considered a candidate for a base pair.
     unique : bool, optional (default: True)
         If ``True``, each base is assumed to be only paired with one
         other base. If multiple pairings are plausible, the pairing with
@@ -739,7 +739,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Returns
     -------
     basepairs : ndarray, dtype=int, shape=(n,2)
-        Each row is equivalent to one basepair and contains the first
+        Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
 
     Notes
@@ -778,7 +778,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Examples
     --------
-    Compute the basepairs for the structure with the PDB id 1QXB:
+    Compute the base pairs for the structure with the PDB id 1QXB:
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
@@ -840,16 +840,16 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     nucleosides = atom_array[boolean_mask]
 
 
-    # Get the basepair candidates according to a N/O cutoff distance,
+    # Get the base pair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
     basepair_candidates, n_o_matches = _get_proximate_basepair_candidates(
         nucleosides
     )
 
-    # Contains the plausible basepairs
+    # Contains the plausible base pairs
     basepairs = []
-    # Contains the number of hydrogens for each plausible basepair
+    # Contains the number of hydrogens for each plausible base pair
     basepairs_hbonds = []
 
     # Get the residue masks for each residue
@@ -886,7 +886,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     basepair_array = np.array(basepairs)
 
     if unique:
-        # Contains all non-unique basepairs that are flagged to be
+        # Contains all non-unique base pairs that are flagged to be
         # removed
         to_remove = []
 
@@ -894,7 +894,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         base_indices, occurrences = np.unique(basepairs, return_counts=True)
         for base_index, occurrence in zip(base_indices, occurrences):
             if(occurrence > 1):
-                # Write the non-unique basepairs to a dictionary as
+                # Write the non-unique base pairs to a dictionary as
                 # 'index: number of hydrogen bonds'
                 remove_candidates = {}
                 for i, row in enumerate(
@@ -902,13 +902,13 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
                 ):
                     if(np.any(row)):
                         remove_candidates[i] = basepairs_hbonds[i]
-                # Flag all non-unique basepairs for removal except the
+                # Flag all non-unique base pairs for removal except the
                 # one that has the most hydrogen bonds
                 del remove_candidates[
                     max(remove_candidates, key=remove_candidates.get)
                 ]
                 to_remove += list(remove_candidates.keys())
-        # Remove all flagged basepairs from the output `ndarray`
+        # Remove all flagged base pairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
     # Remap values to original atom array
@@ -921,7 +921,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
 def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     """
-    Check the DSSR criteria of a potential basepair.
+    Check the DSSR criteria of a potential base pair.
 
     Parameters
     ----------
@@ -929,18 +929,18 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         The two bases to check the criteria for as :class:`AtomArray`.
     min_atoms_per_base : int
         The number of atoms a nucleotides' base must have to be
-        considered a candidate for a basepair.
+        considered a candidate for a base pair.
     unique : bool
         If ``True``, the shortest hydrogen bond length between the bases
-        is calculated for plausible basepairs.
+        is calculated for plausible base pairs.
 
     Returns
     -------
     satisfied : int
-        `> 0` if the basepair satisfies the criteria and `-1`,
+        `> 0` if the base pair satisfies the criteria and `-1`,
         if it does not.
         If unique is ``True``, the number of hydrogen bonds is
-        returned for plausible basepairs.
+        returned for plausible base pairs.
     """
 
     # A list containing ndarray for each base with transformed
@@ -1095,7 +1095,7 @@ def _match_base(nucleotide, min_atoms_per_base):
         The nucleotide to be matched to a standard base.
     min_atoms_per_base : integer
         The number of atoms a base must have to be considered a
-        candidate for a basepair.
+        candidate for a base pair.
 
     Returns
     -------
@@ -1307,26 +1307,26 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
 def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
     """
-    Filter for potential basepairs based on the distance between the
+    Filter for potential base pairs based on the distance between the
     nitrogen and oxygen atoms, as potential hydrogen donor/acceptor
     pair.
 
     Parameters
     ----------
     atom_array : AtomArray
-        The :class:`AtomArray`` to find basepair candidates in.
+        The :class:`AtomArray`` to find base pair candidates in.
     cutoff : integer
         The maximum distance of the N and O Atoms for two bases
-        to be considered a basepair candidate.
+        to be considered a base pair candidate.
 
     Returns
     -------
     basepair_candidates : ndarray, dtype=int, shape=(n,2)
-        Contains the basepair candidates. Each row is equivalent to one
-        potential basepair. bases are represented as the first indices
+        Contains the base pair candidates. Each row is equivalent to one
+        potential base pair. bases are represented as the first indices
         of their corresponding residues.
     n_o_pairs : ndarray, dtype=int, shape=(n,)
-        Contains the number of N/O pairs for each potential basepair.
+        Contains the number of N/O pairs for each potential base pair.
     """
     # Get a boolean mask for the N and O atoms
     n_o_mask = (filter_nucleotides(atom_array)
@@ -1359,7 +1359,7 @@ def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
             basepair_candidates[:,0] == basepair_candidates[:,1]
         ), axis=0
     )
-    # Sort the residue starts for each potential basepair
+    # Sort the residue starts for each potential base pair
     for i, candidate in enumerate(basepair_candidates):
         basepair_candidates[i] = sorted(candidate)
     # Make sure each base pair candidate is only listed once
