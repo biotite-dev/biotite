@@ -246,13 +246,13 @@ _THYMINE_CONTAINING_NUCLEOTIDES = ["T", "DT"]
 _CYTOSINE_CONTAINING_NUCLEOTIDES = ["C", "DC"]
 _GUANINE_CONTAINING_NUCLEOTIDES = ["G", "DG"]
 _URACIL_CONTAINING_NUCLEOTIDES = ["U", "DU"]
-_REFERENCE_NUCLEOTIDE_NAMES = [
+_REFERENCE_NUCLEOTIDE_NAMES = (
     _ADENINE_CONTAINING_NUCLEOTIDES +
     _THYMINE_CONTAINING_NUCLEOTIDES +
     _CYTOSINE_CONTAINING_NUCLEOTIDES +
     _GUANINE_CONTAINING_NUCLEOTIDES +
     _URACIL_CONTAINING_NUCLEOTIDES
-]
+)
 
 # Atoms that are part of respective base edges according to the
 # Leontis-Westhof nomenclature
@@ -437,7 +437,7 @@ def _get_edge_matrix(atom_array, base_masks):
     # that are part of the hydrogen bonds
     for atom, atom_index in zip(atom_array[hbonds], hbonds):
 
-        if atom.res_name[-1] not in _WATSON_CRICK_EDGE:
+        if atom.res_name not in _REFERENCE_NUCLEOTIDE_NAMES:
             continue
 
         # Iterate over the edge types
@@ -1251,10 +1251,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
        Nucleic Acids Res, 43(21), e142 (2015).
     """
     # Check if the residue is a 'standard' nucleotide
-    if residue.res_name[0] in (_THYMINE_CONTAINING_NUCLEOTIDES +
-        _GUANINE_CONTAINING_NUCLEOTIDES + _URACIL_CONTAINING_NUCLEOTIDES
-        + _CYTOSINE_CONTAINING_NUCLEOTIDES + _ADENINE_CONTAINING_NUCLEOTIDES
-    ):
+    if residue.res_name[0] in _REFERENCE_NUCLEOTIDE_NAMES:
         return residue.res_name[0][-1], True
 
     # List of the standard bases for easy iteration
