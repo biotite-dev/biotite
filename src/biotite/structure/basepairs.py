@@ -374,7 +374,7 @@ def base_pairs_edge(atom_array, base_pairs):
        RNA, 7(4), 499-512 (2001).
     """
     # Result-``ndarray`` matches the dimensions of the input array
-    results = np.empty_like(base_pairs, dtype=Edge)
+    results = np.zeros_like(base_pairs, dtype=Edge)
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
