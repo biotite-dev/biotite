@@ -473,14 +473,18 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     Returns
     -------
     results : ndarray, dtype=edge, shape=(n,)
-        Each row is equivalent to the respective base pair and contains
-        a :class:`GlycosidicBond` enum describing the glycosidic bond
-        orientation.
+        The ``ndarray`` has the same dimensions as ``base_pairs``. Each
+        cell corresponds to the interacting edge of the referenced base
+        in ``base_pairs``.
+        Each row is equivalent to the respective base pair. The
+        glycosidic bond orientation is stored as integer that is
+        interpreted as member of the the :class:`GlycosidicBond` class.
 
     See Also
     --------
     base_pairs
     base_pairs_edge
+    GlycosidicBond
 
     Notes
     -----
@@ -499,7 +503,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
     >>> for orientation in orientations:
-    ...     print(orientation)
+    ...     print(GlycosidicBond(orientation))
     GlycosidicBond.CIS
     GlycosidicBond.CIS
     GlycosidicBond.CIS
@@ -525,7 +529,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
         RNA base pairs.",
         Nucleic Acids Research, 31(13), 3450-3460 (2003).
     """
-    results = np.zeros(len(base_pairs), dtype='object')
+    results = np.zeros(len(base_pairs), dtype='uint8')
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
