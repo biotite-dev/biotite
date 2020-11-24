@@ -10,8 +10,9 @@ atom level.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
-           "get_residue_masks", "get_residue_starts_for", "get_residues",
-           "get_residue_count", "residue_iter"]
+           "get_residue_masks", "get_residue_starts_for",
+           "get_residue_positions", "get_residues", "get_residue_count",
+           "residue_iter"]
 
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
@@ -276,6 +277,11 @@ def get_residue_masks(array, indices):
         Each array masks the atoms that belong to the same residue as
         the atom at the given index.
     
+    See also
+    --------
+    get_residue_starts_for
+    get_residue_positions
+    
     Examples
     --------
 
@@ -326,10 +332,8 @@ def get_residue_masks(array, indices):
         A       3  TYR HH     H         1.187    3.395    5.567
     """
     indices = np.asarray(indices)
-    
     starts = get_residue_starts(array, add_exclusive_stop=True)
     masks = np.zeros((len(indices), array.array_length()), dtype=bool)
-    order = np.argsort(indices)
 
     if (indices < 0).any():
         raise ValueError("This function does not support negative indices")
@@ -338,21 +342,11 @@ def get_residue_masks(array, indices):
         raise ValueError(
             f"Index {index} is out of range for "
             f"an atom array with length {array.array_length()}"
-        ) 
+        )
     
-    starts_i = 0
-    start = starts[starts_i]
-    stop = starts[starts_i+1]
-    # Iterate over the input indices in ascending order
-    for i in range(len(indices)):
-        index = indices[order[i]]
-        # Increase the current residue start and stop
-        # until the index is within the start-stop range
-        while stop <= index:
-           starts_i += 1
-           start = starts[starts_i]
-           stop = starts[starts_i+1]
-        masks[order[i], start:stop] = True
+    insertion_points = np.searchsorted(starts, indices, side="right") - 1
+    for i, point in enumerate(insertion_points):
+        masks[i, starts[point] : starts[point+1]] = True
     
     return masks
 
@@ -367,7 +361,7 @@ def get_residue_starts_for(array, indices):
     array : AtomArray or AtomArrayStack
         The atom array (stack) to determine the residues from.
     indices : ndarray, dtype=int, shape=(k,)
-        These indices point the the atoms to get the corresponding
+        These indices point to the atoms to get the corresponding
         residue starts for.
         Negative indices are not allowed.
     
@@ -380,6 +374,7 @@ def get_residue_starts_for(array, indices):
     See also
     --------
     get_residue_masks
+    get_residue_positions
     
     Examples
     --------
@@ -398,10 +393,7 @@ def get_residue_starts_for(array, indices):
         A       3  TYR N      N        -4.354    3.455   -0.111
     """
     indices = np.asarray(indices)
-    
-    starts = get_residue_starts(array, add_exclusive_stop=True)
-    starts_for_indices = np.zeros(len(indices), dtype=int)
-    order = np.argsort(indices)
+    starts = get_residue_starts(array)
 
     if (indices < 0).any():
         raise ValueError("This function does not support negative indices")
@@ -410,23 +402,67 @@ def get_residue_starts_for(array, indices):
         raise ValueError(
             f"Index {index} is out of range for "
             f"an atom array with length {array.array_length()}"
-        ) 
+        )
     
-    starts_i = 0
-    start = starts[starts_i]
-    stop = starts[starts_i+1]
-    # Iterate over the input indices in ascending order
-    for i in range(len(indices)):
-        index = indices[order[i]]
-        # Increase the current residue start and stop
-        # until the index is within the start-stop range
-        while stop <= index:
-           starts_i += 1
-           start = starts[starts_i]
-           stop = starts[starts_i+1]
-        starts_for_indices[order[i]] = start
+    insertion_points = np.searchsorted(starts, indices, side="right") - 1
+    return starts[insertion_points]
+
+
+def get_residue_positions(array, indices):
+    """
+    For each given atom index, obtain the position of the residue
+    corresponding to this index in the input `array`.
+
+    For example, the position of the first residue in the atom array is
+    ``0``, the the position of the second residue is ``1``, etc.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to determine the residues from.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices point to the atoms to get the corresponding
+        residue positions for.
+        Negative indices are not allowed.
     
-    return starts_for_indices
+    Returns
+    -------
+    start_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the position of the residues.
+    
+    See also
+    --------
+    get_residue_masks
+    get_residue_starts_for
+
+    Examples
+    --------
+    >>> atom_index = [5, 42]
+    >>> print(atom_array.res_name[atom_index])
+    ['ASN' 'TYR']
+    >>> _, residues = get_residues(atom_array)
+    >>> print(residues)
+    ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
+     'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
+    >>> residue_index = get_residue_positions(atom_array, atom_index)
+    >>> print(residue_index)
+    [0 2]
+    >>> print(residues[residue_index])
+    ['ASN' 'TYR']
+    """
+    indices = np.asarray(indices)
+    starts = get_residue_starts(array)
+
+    if (indices < 0).any():
+        raise ValueError("This function does not support negative indices")
+    if (indices >= array.array_length()).any():
+        index = np.min(np.where(indices >= array.array_length())[0])
+        raise ValueError(
+            f"Index {index} is out of range for "
+            f"an atom array with length {array.array_length()}"
+        )
+    
+    return np.searchsorted(starts, indices, side="right") - 1
 
 
 def get_residues(array):

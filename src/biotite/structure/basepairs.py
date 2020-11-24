@@ -670,12 +670,15 @@ def base_stacking(atom_array, min_atoms_per_base=3):
        "Finding and visualizing nucleic acid base stacking"
        J Mol Biol Graph, 14(1), 6-11 (1996).
     """
-    # Get the stacking candidates according to a N/O cutoff distance,
-    # where each base is identified as the first index of its respective
-    # residue
-    stacking_candidates, _ = _get_proximate_basepair_candidates(
-        atom_array, cutoff=15
-    )
+    # Get the stacking candidates according to a cutoff distance, where
+    # each base is identified as the first index of its respective
+    # residue.
+    # The diameter from the C1'-sugar-atom across a purine base is ~5Å
+    # and the distance between the base centers can be at most 4.5Å.
+    # Thus, accounting for buffer, a cutoff of 15Å between the
+    # nucleotides' C1'-atoms was chosen.
+    c1_mask = filter_nucleotides(atom_array) & (atom_array.atom_name == "C1'")
+    stacking_candidates, _ = _get_proximate_residues(atom_array, c1_mask, 15)
 
     # Contains the plausible pairs of stacked bases
     stacked_bases = []
@@ -862,17 +865,18 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     )
 
     # Combine the two boolean masks
-    boolean_mask = np.logical_and(nucleotides_boolean, non_phosphate_boolean)
+    boolean_mask = nucleotides_boolean & non_phosphate_boolean
 
-    # Get only the nucleosides
+    # Get only nucleosides
     nucleosides = atom_array[boolean_mask]
 
 
     # Get the base pair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
     # residue
-    basepair_candidates, n_o_matches = _get_proximate_basepair_candidates(
-        nucleosides
+    n_o_mask = np.isin(nucleosides.element, ["N", "O"])
+    basepair_candidates, n_o_matches = _get_proximate_residues(
+        nucleosides, n_o_mask, 3.6
     )
 
     # Contains the plausible base pairs
@@ -906,7 +910,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
             hbonds = n_o_pairs/2
-        if not hbonds == -1:
+        if hbonds != -1:
             basepairs.append((base1_index, base2_index))
             if unique:
                 basepairs_hbonds.append(hbonds)
@@ -1330,69 +1334,65 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     return best_base, False
 
 
-def _get_proximate_basepair_candidates(atom_array, cutoff = 3.6):
+def _get_proximate_residues(atom_array, boolean_mask, cutoff):
     """
-    Filter for potential base pairs based on the distance between the
-    nitrogen and oxygen atoms, as potential hydrogen donor/acceptor
-    pair.
+    Filter for residue pairs based on the distance between selected
+    atoms.
 
     Parameters
     ----------
-    atom_array : AtomArray
-        The :class:`AtomArray`` to find base pair candidates in.
+    atom_array : AtomArray, shape=(n,)
+        The :class:`AtomArray`` to find basepair candidates in.
+    boolean_mask : ndarray, dtype=bool, shape=(n,)
+        The selection of atoms.
     cutoff : integer
-        The maximum distance of the N and O Atoms for two bases
-        to be considered a base pair candidate.
+        The maximum distance between the atoms of the two residues.
 
     Returns
     -------
-    basepair_candidates : ndarray, dtype=int, shape=(n,2)
-        Contains the base pair candidates. Each row is equivalent to one
-        potential base pair. bases are represented as the first indices
+    pairs : ndarray, dtype=int, shape=(n,2)
+        Contains the basepair candidates. Each row is equivalent to one
+        potential basepair. bases are represented as the first indices
         of their corresponding residues.
-    n_o_pairs : ndarray, dtype=int, shape=(n,)
-        Contains the number of N/O pairs for each potential base pair.
+    count : ndarray, dtype=int, shape=(n,)
+        The number of atom pairs between the residues within the
+        specified cutoff
     """
-    # Get a boolean mask for the N and O atoms
-    n_o_mask = (filter_nucleotides(atom_array)
-              & np.isin(atom_array.element, ["N", "O"]))
 
-    # Get the indices of the N and O atoms that are within the maximum
-    # cutoff of each other
+    # Get the indices of the atoms that are within the maximum cutoff
+    # of each other
     indices = CellList(
-        atom_array, cutoff, selection=n_o_mask
-    ).get_atoms(atom_array.coord[n_o_mask], cutoff)
+        atom_array, cutoff, selection=boolean_mask
+    ).get_atoms(atom_array.coord[boolean_mask], cutoff)
 
     # Loop through the indices of potential partners
-    basepair_candidates = []
-    for candidate, partners in zip(np.argwhere(n_o_mask)[:, 0], indices):
+    pairs = []
+    for candidate, partners in zip(np.argwhere(boolean_mask)[:, 0], indices):
         for partner in partners:
             if partner != -1:
-                basepair_candidates.append((candidate, partner))
+                pairs.append((candidate, partner))
 
     # Get the residue starts for the indices of the candidate/partner
     # indices.
-    basepair_candidates = np.array(basepair_candidates)
-    basepair_candidates_shape = basepair_candidates.shape
-    basepair_candidates = get_residue_starts_for(
-        atom_array, basepair_candidates.flatten()
+    pairs = np.array(pairs)
+    basepair_candidates_shape = pairs.shape
+    pairs = get_residue_starts_for(
+        atom_array, pairs.flatten()
     ).reshape(basepair_candidates_shape)
 
-    # Remove candidates where the N/O pairs are from the same residue
-    basepair_candidates = np.delete(
-        basepair_candidates, np.where(
-            basepair_candidates[:,0] == basepair_candidates[:,1]
+    # Remove candidates where the pairs are from the same residue
+    pairs = np.delete(
+        pairs, np.where(
+            pairs[:,0] == pairs[:,1]
         ), axis=0
     )
-    # Sort the residue starts for each potential base pair
-    for i, candidate in enumerate(basepair_candidates):
-        basepair_candidates[i] = sorted(candidate)
-    # Make sure each base pair candidate is only listed once
-    basepair_candidates, n_o_pairs = np.unique(
-        basepair_candidates, axis=0, return_counts=True
-    )
+    # Sort the residue starts for each pair
+    for i, candidate in enumerate(pairs):
+        pairs[i] = sorted(candidate)
+    # Make sure each pair is only listed once, count the occurrences
+    pairs, count = np.unique(pairs, axis=0, return_counts=True)
 
-    return basepair_candidates, n_o_pairs
+    return pairs, count
 
 
 def _filter_atom_type(atom_array, atom_names):

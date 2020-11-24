@@ -11,12 +11,28 @@ import biotite.structure.io.mmtf as mmtf
 from ..util import data_dir
 
 
+def generate_random_bond_list(atom_count, bond_count, seed=0):
+    """
+    Generate a random :class:`BondList`.
+    """
+    np.random.seed(seed)
+    # Create random bonds between atoms of
+    # a potential atom array of length ATOM_COUNT
+    bonds = np.random.randint(atom_count, size=(bond_count, 3))
+    # Clip bond types to allowed BondType values
+    bonds[:, 2] %= len(struc.BondType)
+    # Remove bonds of atoms to itself
+    bonds = bonds[bonds[:,0] != bonds[:,1]]
+    assert len(bonds) > 0
+    return struc.BondList(atom_count, bonds)
+
+
 @pytest.fixture(
     params=[False, True] # as_negative
 )
 def bond_list(request):
     """
-    A toy `BondList`.
+    A toy :class:`BondList`.
     """
     as_negative = request.param
     bond_array = np.array([(0,1),(2,1),(3,1),(3,4),(3,1),(1,2),(4,0),(6,4)])
@@ -208,6 +224,79 @@ def test_indexing(bond_list):
                                             [2, 3, 0]]
 
 
+def test_get_all_bonds():
+    """
+    Test whether the individual rows returned from
+    :func:`get_all_bonds()` are equal to corresponding calls of
+    :func:`get_bonds()`.
+    """
+    ATOM_COUNT = 100
+    BOND_COUNT = 500
+    
+    bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
+
+    bonds, bond_types = bond_list.get_all_bonds()
+
+    assert (bonds != -1).all(axis=1).any(axis=0)
+    assert (bond_types != -1).all(axis=1).any(axis=0)
+
+    test_bonds = [
+        (
+            bonded_i[bonded_i != -1].tolist(),
+            bond_type[bond_type != -1].tolist()
+        )
+        for bonded_i, bond_type in zip(bonds, bond_types)
+    ]
+
+    ref_bonds = [bond_list.get_bonds(i) for i in range(ATOM_COUNT)]
+    ref_bonds = [
+        (bonded_i.tolist(), bond_type.tolist())
+        for bonded_i, bond_type in ref_bonds
+    ]
+
+    assert test_bonds == ref_bonds
+
+
+def test_adjacency_matrix():
+    """
+    Test whether the matrix created from :func:`adjacency_matrix()`
+    is equal to a manually created matrix using :func:`get_bonds()`.
+    """
+    ATOM_COUNT = 100
+    BOND_COUNT = 500
+    
+    bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
+
+    test_matrix = bond_list.adjacency_matrix()
+
+    ref_matrix = np.zeros((ATOM_COUNT, ATOM_COUNT), dtype=bool)
+    for i in range(ATOM_COUNT):
+        for j, _ in zip(*bond_list.get_bonds(i)):
+            ref_matrix[i, j] = True
+    
+    assert test_matrix.tolist() == ref_matrix.tolist()
+
+
+def test_bond_type_matrix():
+    """
+    Test whether the matrix created from :func:`bond_type_matrix()`
+    is equal to a manually created matrix using :func:`get_bonds()`.
+    """
+    ATOM_COUNT = 100
+    BOND_COUNT = 500
+    
+    bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
+
+    test_matrix = bond_list.bond_type_matrix()
+
+    ref_matrix = np.full((ATOM_COUNT, ATOM_COUNT), -1, dtype=int)
+    for i in range(ATOM_COUNT):
+        for j, bond_type in zip(*bond_list.get_bonds(i)):
+            ref_matrix[i, j] = bond_type
+    
+    assert test_matrix.tolist() == ref_matrix.tolist()
+
+
 def test_sorted_array_indexing():
     """
     Test whether indexing with an sorted index array results in the
@@ -217,21 +306,12 @@ def test_sorted_array_indexing():
     BOND_COUNT = 500
     INDEX_SIZE = 80
 
-    np.random.seed(0)
-    # Create random bonds between atoms of
-    # a potential atom array of length ATOM_COUNT
-    bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 3))
-    # Clip bond types to allowed BondType values
-    bonds[:, 2] %= len(struc.BondType)
-    # Remove bonds of elements to itself
-    bonds = bonds[bonds[:,0] != bonds[:,1]]
-    assert len(bonds) > 0
-    bonds = struc.BondList(ATOM_COUNT, bonds)
+    bonds = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
 
     # Create a sorted array of random indices for the BondList
     # Indices may not occur multiple times -> 'replace=False'
     index_array = np.sort(np.random.choice(
-        np.arange(ATOM_COUNT), ATOM_COUNT, replace=False
+        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
     ))
     test_bonds = bonds[index_array]
 
@@ -255,10 +335,11 @@ def test_unsorted_array_indexing():
     BOND_COUNT = 500
     INDEX_SIZE = 80
 
-    np.random.seed(0)
+    bonds = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
     # For simplicity use a reference integer array
     # instead of an atom array
     integers = np.arange(ATOM_COUNT)
+    
     # Create random bonds between the reference integers
     bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 2))
     # Remove bonds of elements to itself
@@ -269,7 +350,7 @@ def test_unsorted_array_indexing():
     # Create an unsorted array of random indices for the BondList
     # Indices should be unsorted -> 'replace=False'
     unsorted_index = np.random.choice(
-        np.arange(ATOM_COUNT), ATOM_COUNT, replace=False
+        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
     )
     test_bonds = bonds[unsorted_index]
 
