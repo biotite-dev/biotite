@@ -51,7 +51,7 @@ def _get_std_adenine():
     atom6 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
     atom7 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
     atom8 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
-    atom9 = Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
+    atom9 =  Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
     atom10 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
     adenine = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
@@ -135,7 +135,7 @@ def _get_std_guanine():
     atom6 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
     atom7 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
     atom8 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
-    atom9 = Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
+    atom9 =  Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
     atom10 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
     atom11 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
     guanine = array(
@@ -173,14 +173,14 @@ def _get_std_thymine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
     """
-    atom1 =  Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
-    atom2 =  Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
-    atom3 =  Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
-    atom4 =  Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
-    atom5 =  Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
-    atom6 =  Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
-    atom7 =  Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
-    atom8 =  Atom([2.466, 4.961, 0.001],  atom_name="C7", res_name="T")
+    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
+    atom2 = Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
+    atom3 = Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
+    atom4 = Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
+    atom5 = Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
+    atom6 = Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
+    atom7 = Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
+    atom8 = Atom([2.466, 4.961, 0.001],  atom_name="C7", res_name="T")
     atom9 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
     thymine = array(
         [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
