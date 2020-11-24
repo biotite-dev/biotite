@@ -394,7 +394,7 @@ def base_pairs_edge(atom_array, base_pairs):
         # Classify the base edges based on the highest number of
         # matching hydrogen bonded atoms
         for j, base in enumerate(base_edges):
-            if max(base) != 0:
+            if np.max(base) != 0:
                 results[i, j] = np.argmax(base) + 1
     return results
 
@@ -632,10 +632,12 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     -----
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
+
     Examples
     --------
     Compute the stacking interactions for a DNA-double-helix (PDB ID
     1BNA):
+
     >>> from os.path import join
     >>> dna_helix = load_structure(
     ...     join(path_to_structures, "base_pairs", "1bna.pdb")
@@ -1268,7 +1270,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         for ref_base in std_base_list
     ]
 
-    if max(matched_atom_no) < min_atoms_per_base:
+    if np.max(matched_atom_no) < min_atoms_per_base:
         warnings.warn(
             f"Base with res_id {residue.res_id[0]} and chain_id "
             f"{residue.chain_id[0]} has an overlap with the reference "
@@ -1284,7 +1286,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     # Iterate through the reference bases with the maximum number of
     # matching atoms
     for ref_base in np.array(std_base_list, dtype='object')[
-        np.array(matched_atom_no) == max(matched_atom_no)
+        np.array(matched_atom_no) == np.max(matched_atom_no)
     ]:
         # Copy the residue as the res_name property of the ``AtomArray``
         # has to be modified for later function calls.
