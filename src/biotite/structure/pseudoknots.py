@@ -429,8 +429,8 @@ def _get_optimal_solutions(regions, scoring):
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
-    dp_matrix_solutions_starts = np.zero_like(dp_matrix)
-    dp_matrix_solutions_stops = np.zero_like(dp_matrix)
+    dp_matrix_solutions_starts = np.zeros_like(dp_matrix)
+    dp_matrix_solutions_stops = np.zeros_like(dp_matrix)
 
     # Each index corresponds to the position in the dp matrix.
     # ``region_array`` contains the region objects and ``start_stops``
