@@ -184,11 +184,11 @@ def get_reference(pdb_id, suffix):
     a specified JSON-suffix and pdb id.
     """
     structure = strucio.load_structure(
-        join(data_dir("structure"), f"base_pairs/{pdb_id}.cif")
+        join(data_dir("structure"), "base_pairs", f"{pdb_id}.cif")
     )
 
     with open(
-        join(data_dir("structure"), f"base_pairs/{pdb_id}_{suffix}.json"
+        join(data_dir("structure"), "base_pairs", f"{pdb_id}_{suffix}.json"
     ), "r") as file:
         reference = np.array(json.load(file))
 
@@ -236,7 +236,7 @@ def check_edge_plausibility(
         edge_matrix, reference_edges, output_edges
     ):
         max_matches = np.max(edges)
-        max_match_edges = np.argwhere(edges == max_matches).flatten()
+        max_match_edges = np.argwhere(edges == max_matches).flatten() + 1
         assert reference_edge in max_match_edges
         assert output_edge in max_match_edges
 

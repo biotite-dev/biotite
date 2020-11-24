@@ -284,10 +284,10 @@ class edge(IntEnum):
     """
     This enum type represents the interacting edge for a given base.
     """
-    WATSON_CRICK = 0,
-    HOOGSTEEN = 1,
-    SUGAR = 2,
-    INVALID = 3
+    INVALID = 0,
+    WATSON_CRICK = 1,
+    HOOGSTEEN = 2,
+    SUGAR = 3
 
 
 class glycosidicBond(IntEnum):
@@ -295,9 +295,9 @@ class glycosidicBond(IntEnum):
     This enum type represents the relative glycosidic bond orientation
     for a given basepair.
     """
-    CIS = 0,
-    TRANS = 1,
-    INVALID = 2
+    INVALID = 0
+    CIS = 1,
+    TRANS = 2,
 
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -389,7 +389,7 @@ def base_pairs_edge(atom_array, base_pairs):
             if max(base) == 0:
                 results[i, j] = edge.INVALID
             else:
-                results[i, j] = edge(np.argmax(base))
+                results[i, j] = edge(np.argmax(base) + 1)
     return results
 
 
