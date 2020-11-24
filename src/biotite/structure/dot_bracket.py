@@ -22,14 +22,13 @@ _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
 
 def dot_bracket(nucleic_acid_strand, scoring=None):
     """
-    Represent basepairs in a nucleic-acid-strand in
-    dot-bracket-letter-notation (DBL-notation) as described by
-    Antczack et. al. [1]_.
+    Represent a nucleic-acid-strand in dot-bracket-letter-notation
+    (DBL-notation) [1]_.
 
     Parameters
     ----------
     atom_array : AtomArray
-        The nucleic-acid-strand to represent in DBL-notation.
+        The nucleic-acid-strand to be represented in DBL-notation.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each basepair, which is passed on to
         :func:``pseudoknots()``
@@ -38,6 +37,11 @@ def dot_bracket(nucleic_acid_strand, scoring=None):
     -------
     notations : list [string, ...]
         The DBL-notation for each solution from :func:``pseudoknots()``.
+
+    See Also
+    --------
+    base_pairs
+    pseudoknots
 
     References
     ----------

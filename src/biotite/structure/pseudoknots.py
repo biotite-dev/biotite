@@ -3,7 +3,7 @@
 # information.
 
 """
-This module provides functions for pseudoknot detection.
+This module provides functionality for pseudoknot detection.
 """
 
 __name__ = "biotite.structure"
@@ -12,16 +12,109 @@ __all__ = ["pseudoknots"]
 
 import numpy as np
 from copy import deepcopy
-from .basepairs import base_pairs
+
+
+def pseudoknots(base_pairs, scoring=None):
+    """
+    Identify the pseudoknot order for each basepair in a given set of
+    basepairs.
+
+    By default the algorithm maximizes the number of base pairs but an
+    optional scoring matrix specifying a score for each
+    individual basepair can be provided.
+
+    Parameters
+    ----------
+    base_pairs : ndarray, dtype=int, shape=(n,2)
+        The basepairs to determine the pseudoknot order of. Each row
+        represents indices form two paired bases. The structure of
+        the ``ndarray`` is equal to the structure of the output of
+        :func:``base_pairs()``, where the indices represent the
+        beginning of the residues.
+    scoring : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each basepair. If ``Ǹone`` is provided, the score
+        of each base pair is one.
+
+    Returns
+    -------
+    pseudoknot_order : ndarray, dtype=int, shape=(m,n)
+        The pseudoknot order for m individual solutions.
+
+    Notes
+    -----
+    Smit et al`s dynamic programming approach [1]_ is employed to detect
+    and evaluate pseudoknots. The algorithm was originally developed to
+    remove pseudoknots from a structure. However, if it is run
+    iteratively on removed knotted pairs it can be used to identify the
+    pseudoknot order.
+
+    The pseudoknot order is defined as the minimum number of base pair
+    set decompositions resulting in a nested structure [2]_.
+
+    See Also
+    --------
+    base_pairs
+    dot_bracket
+
+    References
+    ----------
+
+    .. [1] S Smit, K Rother and J Heringa et al.,
+       "From knotted to nested RNA structures: A variety of
+       computational methods for pseudoknot removal.",
+       RNA, 14, 410-416 (2008).
+
+    .. [2] M Antczak, M Popenda and T Zok et al.,
+       "New algorithms to represent complex pseudoknotted RNA structures
+        in dot-bracket notation.",
+       Bioinformatics, 34(8), 1304-1312 (2018).
+
+    """
+    # List containing the results
+    results = [np.zeros(len(base_pairs), dtype='int32')]
+
+    # if no scoring function is given, each basepairs score is one
+    if scoring is None:
+        scoring = np.ones(len(base_pairs))
+
+    # Make sure base_pairs has the same length as the scoring function
+    if len(base_pairs) != len(scoring):
+        raise ValueError(
+        "Each Value of the scoring vector must correspond to a basepair."
+    )
+
+    # Split the basepairs in regions
+    regions = _find_regions(base_pairs)
+
+    # Only retain conflicting regions
+    cleaned_regions = _remove_non_conflicting_regions(regions)
+
+    # Group mutually conflicting regions
+    conflict_cliques = _conflict_cliques(cleaned_regions)
+
+    # For each clique calculate all optimal solutions
+    for clique in conflict_cliques:
+        results = _get_result_diff(clique, scoring)
+
+    return np.vstack(results)
+
 
 class _region():
     """
-    A representation for a region.
+    This class represents a paired region.
 
-    A region is a set of basepairs. This class provides function to
+    A region is a set of basepairs. This class provides methods to
     access the minimum and maximum index of the bases that are part of
-    the region, handles score calculation and backtracing to the
+    the region, handles score calculation, and backtracing to the
     original basepair array.
+
+    Parameters
+    ----------
+    base_pairs: ndarray, shape=(n,2), dtype=int
+        All basepairs of the structure the region is a subset for.
+    region_pairs: ndarray, dtype=int
+        The indices of the basepairs in ``base_pairs`` that are part of
+        the region.
     """
 
     def __init__ (self, base_pairs, region_pairs):
@@ -29,14 +122,13 @@ class _region():
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
 
-        self.base_pairs = base_pairs
         self.region_pairs = region_pairs
         self.score = None
 
     def get_index_mask(self):
         """
-        Return an index mask with the positions of the bases in the region
-        in the original basepair array.
+        Return an index mask with the positions of the region`s bases in
+        the original basepair array.
 
         Returns
         -------
@@ -47,8 +139,8 @@ class _region():
 
     def get_score(self, scoring):
         """
-        Return the score of the region according to a scoring array. It is
-        calculated once on demand and then stored in memory.
+        Return the score of the region according to a scoring array. The
+        score is calculated once on demand and then stored in memory.
 
         Parameters
         ----------
@@ -84,69 +176,6 @@ class _region():
         return id(self) < id(other)
 
 
-def pseudoknots(base_pairs, scoring=None):
-    """
-    Identify the pseudoknot order for each basepair in a given set of
-    basepairs. By default the algorithm maximizes the number of
-    basepairs but an optional scoring matrix can be provided specifying
-    a score for each individual basepair.
-
-    Smit et al`s dynamic programming approach [1]_ is employed to
-    achieve this goal. The algorithm was originally developed to remove
-    pseudoknots from a structure. However, if it is run iteratively on
-    the removed knotted pairs it can be used to identify the pseudoknot
-    order.
-
-    Parameters
-    ----------
-    base_pairs : ndarray, dtype=int, shape=(n,2)
-        The basepairs to determine the pseudoknot order of
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair.
-
-    Returns
-    -------
-    pseudoknot_order : ndarray, dtype=int, shape=(m,n)
-        The pseudoknot order for m individual solutions.
-
-    References
-    ----------
-
-    .. [1] S Smit, K Rother and J Heringa et al.,
-       "From knotted to nested RNA structures: A variety of
-       computational methods for pseudoknot removal.",
-       RNA, 14, 410-416 (2008).
-
-    """
-    # Result array
-    results = [np.zeros(len(base_pairs), dtype='int32')]
-
-    # if no scoring function is given, each basepairs score is one
-    if scoring is None:
-        scoring = np.ones(len(base_pairs))
-
-    # Make sure base_pairs has the same length as the scoring function
-    if len(base_pairs) != len(scoring):
-        raise ValueError(
-        "Each Value of the scoring vector must correspond to a basepair."
-    )
-
-    # Split the basepairs in regions
-    regions = _find_regions(base_pairs)
-
-    # Only retain conflicting regions
-    cleaned_regions = _remove_non_conflicting_regions(regions)
-
-    # Group mutually conflicting regions
-    conflict_cliques = _conflict_cliques(cleaned_regions)
-
-    # For each clique calculate all optimal solutions
-    for clique in conflict_cliques:
-        results = _get_result_diff(clique, scoring)
-
-    return np.vstack(results)
-
-
 def _find_regions(base_pairs):
     """
     Find regions in a base pair arrray. A region is defined as a set of
@@ -180,8 +209,8 @@ def _find_regions(base_pairs):
     # The individual regions
     regions = set()
 
-    # Find seperate regions
-    for i, base_pair in enumerate(sorted_base_pairs):
+    # Find separate regions
+    for i in range(len(sorted_base_pairs)):
         # if a new region is to be started append the current basepair
         if len(region_pairs) == 0:
             region_pairs.append(original_indices[i])
@@ -200,7 +229,7 @@ def _find_regions(base_pairs):
         # Append the current basepair to the region
         region_pairs.append(original_indices[i])
 
-    # The last regions has no endpoint defined by the beginning of a
+    # The last region has no endpoint defined by the beginning of a
     # new region.
     regions.add(_region(base_pairs, np.array(region_pairs)))
 
@@ -223,10 +252,10 @@ def _remove_non_conflicting_regions(regions):
     """
     # Get the region array and a boolean array, where the start of each
     # region ``True``.
-    region_array, start_stops = _get_region_array_for(
+    region_array, (start_stops,) = _get_region_array_for(
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
-    starts = np.nonzero(start_stops[0])[0]
+    starts = np.nonzero(start_stops)[0]
 
     # Regions that are not conflicting
     to_remove = []
@@ -282,9 +311,9 @@ def _get_first_occurrence_for(iterable, wanted_object):
 
 def _get_region_array_for(regions, content=[], dtype=[]):
     """
-    Get a ``ndarray`` of region objects. Each object occurs twice
-    representing its start and end point. Their position in the array
-    reflects the regions relative positions.
+    Get a ``ndarray`` of region objects. Each object occurs twice,
+    representing its start and end point. The regions positions in the
+    array reflect their relative positions.
 
     Furthermore, a list of functions can be provided enabling custom
     outputs for each objects` start and end point.
@@ -294,7 +323,10 @@ def _get_region_array_for(regions, content=[], dtype=[]):
     regions : set {_region, ...}
         The regions to be considered
     content : list [function, ...] (default: [])
-        The functions to be considered for custom outputs.
+        The functions to be considered for custom outputs. For a given
+        region they must return a tuple of which the first value is
+        placed at the start position and the second value at the end
+        position of the region relative to the other regions.
     dtype : list [str, ...] (default: [])
         The data type of the output of the custom functions.
 
@@ -344,12 +376,12 @@ def _conflict_cliques(regions):
     Parameters
     ----------
     regions : set {_region, ...}
-        The regions to be seperated.
+        The regions to be separated.
 
     Returns
     -------
     regions : list [set {_region, ...}, ...]
-        The seperated mutually conflicting regions.
+        The separated mutually conflicting regions.
     """
     # Get a region array and an array where each region start is +1 and
     # each stop is -1
@@ -359,8 +391,8 @@ def _conflict_cliques(regions):
     start_stops = start_stops[0]
 
     # Iterate through the array and add up the values of the
-    # corresponding ``start_stops`` array. Separate conflicts are marked
-    # by zero sums.
+    # corresponding ``start_stops`` array. Separation points for two
+    # conflicts are marked by zero sums.
     total = 0
     start = 0
     cliques = []
@@ -397,8 +429,8 @@ def _get_optimal_solutions(regions, scoring):
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2
     dp_matrix = np.empty(dp_matrix_shape, dtype='object')
-    dp_matrix_solutions_starts = np.empty_like(dp_matrix)
-    dp_matrix_solutions_stops = np.empty_like(dp_matrix)
+    dp_matrix_solutions_starts = np.zero_like(dp_matrix)
+    dp_matrix_solutions_stops = np.zero_like(dp_matrix)
 
     # Each index corresponds to the position in the dp matrix.
     # ``region_array`` contains the region objects and ``start_stops``
@@ -408,8 +440,7 @@ def _get_optimal_solutions(regions, scoring):
         [lambda a : (a.start, a.stop)],
         ['int32']
     )
-    # Initialise the matrix diagonal with ``ndarray``s of empty
-    # ``frozenset``s
+    # Initialise the matrix diagonal with ndarrays of empty frozensets
     for i in range(len(dp_matrix)):
         dp_matrix[i, i] = np.array([frozenset()])
 
@@ -517,9 +548,8 @@ def _get_optimal_solutions(regions, scoring):
 def _get_result_diff(clique, scoring):
     """
     Use the dynamic programming algorithm to get the pseudoknot order
-    of a given clique. If there are remaining conflicts the their
-    solutions are recursively calculated and merged with the current
-    solutions.
+    of a given clique. If there are remaining conflicts their solutions
+    are recursively calculated and merged with the current solutions.
 
     Parameters
     ----------
@@ -538,7 +568,7 @@ def _get_result_diff(clique, scoring):
     optimal_solutions = _get_optimal_solutions(clique, scoring)
 
     # Each optimal solution gets their own list of solutions
-    results_diff = np.empty(len(optimal_solutions), dtype=list)
+    results_diff = np.empty(len(optimal_solutions), dtype='object')
 
     # Get the results for each optimal solution
     for o, optimal_solution in enumerate(optimal_solutions):
@@ -564,7 +594,7 @@ def _get_result_diff(clique, scoring):
 
             # Merge results of this clique with the next clique
             results_diff[o] = []
-            for i, diff in enumerate(next_result_diff):
+            for diff in next_result_diff:
                 results_diff[o].append(deepcopy(results))
                 results_diff[o][-1] = (results_diff[o][-1] + diff)
 
