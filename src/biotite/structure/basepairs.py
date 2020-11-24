@@ -9,7 +9,7 @@ This module provides functions for basepair identification.
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["base_pairs", "map_nucleotide", "base_stacking", "base_pairs_edge",
-           "edge", "base_pairs_glycosidic_bond", "glycosidic_bond"]
+           "edge", "base_pairs_glycosidic_bond", "glycosidicBond"]
 
 import numpy as np
 import warnings
@@ -25,7 +25,6 @@ from .util import distance, norm_vector
 from .residues import get_residue_starts_for, get_residue_masks
 from .info.standardize import standardize_order
 from .compare import rmsd
-from enum import IntEnum
 
 
 def _get_std_adenine():
@@ -236,42 +235,49 @@ def _get_std_uracil():
     return uracil, (midpoint, pyrimidine_center)
 
 
-_std_adenine, _std_adenine_ring_centers  = _get_std_adenine()
-_std_cytosine, _std_cytosine_ring_centers = _get_std_cytosine()
-_std_guanine, _std_guanine_ring_centers = _get_std_guanine()
-_std_thymine, _std_thymine_ring_centers = _get_std_thymine()
-_std_uracil, _std_uracil_ring_centers = _get_std_uracil()
+_STD_ADENINE, _STD_ADENINE_RING_CENTERS  = _get_std_adenine()
+_STD_CYTOSINE, _STD_CYTOSINE_RING_CENTERS = _get_std_cytosine()
+_STD_GUANINE, _STD_GUANINE_RING_CENTERS = _get_std_guanine()
+_STD_THYMINE, _STD_THYMINE_RING_CENTERS = _get_std_thymine()
+_STD_URACIL, _STD_URACIL_RING_CENTERS = _get_std_uracil()
 
-_adenine_containing_nucleotides = ["A", "DA"]
-_thymine_containing_nucleotides = ["T", "DT"]
-_cytosine_containing_nucleotides = ["C", "DC"]
-_guanine_containing_nucleotides = ["G", "DG"]
-_uracil_containing_nucleotides = ["U", "DU"]
+_ADENINE_CONTAINING_NUCLEOTIDES = ["A", "DA"]
+_THYMINE_CONTAINING_NUCLEOTIDES = ["T", "DT"]
+_CYTOSINE_CONTAINING_NUCLEOTIDES = ["C", "DC"]
+_GUANINE_CONTAINING_NUCLEOTIDES = ["G", "DG"]
+_URACIL_CONTAINING_NUCLEOTIDES = ["U", "DU"]
+_REFERENCE_NUCLEOTIDE_NAMES = [
+    _ADENINE_CONTAINING_NUCLEOTIDES +
+    _THYMINE_CONTAINING_NUCLEOTIDES +
+    _CYTOSINE_CONTAINING_NUCLEOTIDES +
+    _GUANINE_CONTAINING_NUCLEOTIDES +
+    _URACIL_CONTAINING_NUCLEOTIDES
+]
 
 # Atoms that are part of respective base edges according to the
 # Leontis-Westhof nomenclature
-_watson_crick_edge = {
+_WATSON_CRICK_EDGE = {
     "A" : ["N6", "N1"],
     "G" : ["O6", "N1", "N2"],
     "U" : ["O4", "N3", "O2"],
     "T" : ["O4", "N3", "O2"],
     "C" : ["N4", "N3", "O2"]
 }
-_hoogsteen_edge = {
+_HOOGSTEEN_EDGE = {
     "A" : ["N6", "N7"],
     "G" : ["O6", "N7"],
     "U" : ["O4"],
     "T" : ["O4"],
     "C" : ["N4"]
 }
-_sugar_edge = {
+_SUGAR_EDGE = {
     "A" : ["N3", "O2'"],
     "G" : ["N2", "N3", "O2'"],
     "U" : ["O2", "O2'"],
     "T" : ["O2", "O2'"],
     "C" : ["O2", "O2'"]
 }
-_edges = [_watson_crick_edge, _hoogsteen_edge, _sugar_edge]
+_EDGES = [_WATSON_CRICK_EDGE, _HOOGSTEEN_EDGE, _SUGAR_EDGE]
 
 
 class edge(IntEnum):
@@ -284,7 +290,7 @@ class edge(IntEnum):
     INVALID = 3
 
 
-class glycosidic_bond(IntEnum):
+class glycosidicBond(IntEnum):
     """
     This enum type represents the relative glycosidic bond orientation
     for a given basepair.
@@ -336,7 +342,7 @@ def base_pairs_edge(atom_array, base_pairs):
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs/1qxb.cif")
+    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
@@ -426,11 +432,11 @@ def _get_edge_matrix(atom_array, base_masks):
     # that are part of the hydrogen bonds
     for atom, atom_index in zip(atom_array[hbonds], hbonds):
 
-        if atom.res_name[-1] not in _watson_crick_edge:
+        if atom.res_name[-1] not in _WATSON_CRICK_EDGE:
             continue
 
         # Iterate over the edge types
-        for edge_type_index, edge_type in enumerate(_edges):
+        for edge_type_index, edge_type in enumerate(_EDGES):
             # Iterate over the two base masks
             for base_index, base_mask in enumerate(base_masks):
                 # If a donor/acceptor atom name matches a name in
@@ -503,7 +509,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
         RNA base pairs."
         Nucleic Acids Research, 31(13), 3450-3460 (2003).
     """
-    results = np.zeros(len(base_pairs), dtype=glycosidic_bond)
+    results = np.zeros(len(base_pairs), dtype=glycosidicBond)
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -528,24 +534,24 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
             # For Purines the glycosidic bond is between the C1' and the
             # N9 atoms, for pyrimidines it is between the C1' atom and
             # the N1 atom
-            if (base.res_name[0] in _adenine_containing_nucleotides or
-                base.res_name[0] in _guanine_containing_nucleotides):
+            if (base.res_name[0] in _ADENINE_CONTAINING_NUCLEOTIDES or
+                base.res_name[0] in _GUANINE_CONTAINING_NUCLEOTIDES):
 
                 geometric_centers[base_index] = (
                     (ring_center[0] + ring_center[1]) / 2
                 )
                 base_atom = base[base.atom_name == "N9"][0]
 
-            elif (base.res_name[0] in _thymine_containing_nucleotides or
-                base.res_name[0] in _uracil_containing_nucleotides or
-                base.res_name[0] in _cytosine_containing_nucleotides):
+            elif (base.res_name[0] in _THYMINE_CONTAINING_NUCLEOTIDES or
+                base.res_name[0] in _URACIL_CONTAINING_NUCLEOTIDES or
+                base.res_name[0] in _CYTOSINE_CONTAINING_NUCLEOTIDES):
 
                 geometric_centers[base_index] = ring_center[0]
                 base_atom = base[base.atom_name == "N1"][0]
 
             else:
 
-                results[i] = glycosidic_bond.INVALID
+                results[i] = glycosidicBond.INVALID
                 break
 
             sugar_atom = base[base.atom_name == "C1'"][0]
@@ -563,11 +569,11 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
                 np.cross(geometric_centers_dir, glycosidic_bonds[1])
             ) < 0:
 
-                results[i] = glycosidic_bond.TRANS
+                results[i] = glycosidicBond.TRANS
 
             else:
 
-                results[i] = glycosidic_bond.CIS
+                results[i] = glycosidicBond.CIS
 
     return results
 
@@ -1108,20 +1114,20 @@ def _match_base(nucleotide, min_atoms_per_base):
         return None
 
     if (one_letter_code == 'A'):
-        std_base = _std_adenine
-        std_ring_centers = _std_adenine_ring_centers
+        std_base = _STD_ADENINE
+        std_ring_centers = _STD_ADENINE_RING_CENTERS
     elif (one_letter_code == 'T'):
-        std_base = _std_thymine
-        std_ring_centers = _std_thymine_ring_centers
+        std_base = _STD_THYMINE
+        std_ring_centers = _STD_THYMINE_RING_CENTERS
     elif (one_letter_code == 'C'):
-        std_base = _std_cytosine
-        std_ring_centers = _std_cytosine_ring_centers
+        std_base = _STD_CYTOSINE
+        std_ring_centers = _STD_CYTOSINE_RING_CENTERS
     elif (one_letter_code == 'G'):
-        std_base = _std_guanine
-        std_ring_centers = _std_guanine_ring_centers
+        std_base = _STD_GUANINE
+        std_ring_centers = _STD_GUANINE_RING_CENTERS
     elif (one_letter_code == 'U'):
-        std_base = _std_uracil
-        std_ring_centers = _std_uracil_ring_centers
+        std_base = _STD_URACIL
+        std_ring_centers = _STD_URACIL_RING_CENTERS
 
     # Add the ring centers to the array of vectors to be transformed.
     vectors = np.vstack((vectors, std_ring_centers))
@@ -1133,16 +1139,16 @@ def _match_base(nucleotide, min_atoms_per_base):
     std_base_matched = std_base[
         np.isin(std_base.atom_name, nucleotide.atom_name)
     ]
-
+    # Ensure the nucleotide does not contain duplicate atom names
+    _, unique_indices = np.unique(
+        nucleotide_matched.atom_name, return_index=True
+    )
+    nucleotide_matched = nucleotide_matched[unique_indices]
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
-    # PDB atom order
-    try:
-        nucleotide_matched = nucleotide_matched[standardize_order(
-            nucleotide_matched
-        )]
-    except Exception as ex:
-        print(ex)
-        print(f'res_id : {nucleotide_matched.res_id[0]}')
+    # PDB atom order.
+    nucleotide_matched = nucleotide_matched[
+        standardize_order(nucleotide_matched)
+    ]
 
     # Match the selected std_base to the base.
     _, transformation = superimpose(nucleotide_matched, std_base_matched)
@@ -1217,16 +1223,16 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
        Nucleic Acids Res, 43(21), e142 (2015).
     """
     # Check if the residue is a 'standard' nucleotide
-    if residue.res_name[0] in (_thymine_containing_nucleotides +
-        _guanine_containing_nucleotides + _uracil_containing_nucleotides
-        + _cytosine_containing_nucleotides + _adenine_containing_nucleotides
+    if residue.res_name[0] in (_THYMINE_CONTAINING_NUCLEOTIDES +
+        _GUANINE_CONTAINING_NUCLEOTIDES + _URACIL_CONTAINING_NUCLEOTIDES
+        + _CYTOSINE_CONTAINING_NUCLEOTIDES + _ADENINE_CONTAINING_NUCLEOTIDES
     ):
         return residue.res_name[0][-1], True
 
     # List of the standard bases for easy iteration
     std_base_list = [
-        _std_adenine, _std_thymine, _std_cytosine, _std_guanine,
-        _std_uracil
+        _STD_ADENINE, _STD_THYMINE, _STD_CYTOSINE, _STD_GUANINE,
+        _STD_URACIL
     ]
 
     # The number of matched atoms for each 'standard' base
