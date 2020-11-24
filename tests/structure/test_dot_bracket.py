@@ -3,10 +3,8 @@
 # information.
 
 import pytest
-import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 
@@ -22,7 +20,7 @@ def test_dot_bracket(nuc_sample_array):
     """
     Check the output of ``dot_bracket()``.
     """
-    exspected_output = [
+    expected_output = [
         ".[(((((.[<...)))))(((((((.......)))))))...(((((]>.)..))))[[[...(((((("
         "]]].].))))))(.)",
         ".[(((((.<[...)))))(((((((.......)))))))...(((((>].)..))))[[[...(((((("
@@ -32,8 +30,10 @@ def test_dot_bracket(nuc_sample_array):
         nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)]
     )
 
+    # Check that each solution is a correct output
     for solution in output:
-        assert solution in exspected_output
+        assert solution in expected_output
 
+    # Check that each solution is unique
     unique_solutions = set(output)
     assert len(output) == len(unique_solutions)

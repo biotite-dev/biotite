@@ -6,7 +6,6 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.info import residue
 from os.path import join
 from ..util import data_dir
 
@@ -22,7 +21,6 @@ def test_pseudoknots(nuc_sample_array):
     """
     Check the output of ``pseudoknots()``.
     """
-
     # Known basepairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
     # Known basepairs that can either be of order one or two
