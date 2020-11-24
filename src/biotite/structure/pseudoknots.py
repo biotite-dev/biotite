@@ -99,7 +99,7 @@ def pseudoknots(base_pairs, scoring=None):
     return np.vstack(results)
 
 
-class _region():
+class _Region():
     """
     This class represents a paired region.
 
@@ -223,7 +223,7 @@ def _find_regions(base_pairs):
         # if the current basepair belongs to a new region, save the
         # current region and start a new region
         if (previous_rank - this_rank) != 1:
-            regions.add(_region(base_pairs, np.array(region_pairs)))
+            regions.add(_Region(base_pairs, np.array(region_pairs)))
             region_pairs = []
 
         # Append the current basepair to the region
@@ -231,7 +231,7 @@ def _find_regions(base_pairs):
 
     # The last region has no endpoint defined by the beginning of a
     # new region.
-    regions.add(_region(base_pairs, np.array(region_pairs)))
+    regions.add(_Region(base_pairs, np.array(region_pairs)))
 
     return regions
 
@@ -338,7 +338,7 @@ def _get_region_array_for(regions, content=[], dtype=[]):
         The custom output.
     """
     # region_array and index array
-    region_array = np.empty(len(regions)*2, dtype=_region)
+    region_array = np.empty(len(regions)*2, dtype=_Region)
     index_array = np.empty(len(regions)*2, dtype='int32')
 
     # Content array for custom return arrays
