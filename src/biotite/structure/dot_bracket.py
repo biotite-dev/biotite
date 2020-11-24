@@ -31,12 +31,12 @@ def dot_bracket(nucleic_acid_strand, scoring=None):
         The nucleic-acid-strand to be represented in DBL-notation.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each basepair, which is passed on to
-        :func:``pseudoknots()``
+        :func:`pseudoknots()`
 
     Returns
     -------
     notations : list [string, ...]
-        The DBL-notation for each solution from :func:``pseudoknots()``.
+        The DBL-notation for each solution from :func:`pseudoknots()`.
 
     See Also
     --------

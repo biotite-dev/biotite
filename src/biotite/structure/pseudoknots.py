@@ -29,7 +29,7 @@ def pseudoknots(base_pairs, scoring=None):
         The basepairs to determine the pseudoknot order of. Each row
         represents indices form two paired bases. The structure of
         the ``ndarray`` is equal to the structure of the output of
-        :func:``base_pairs()``, where the indices represent the
+        :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each basepair. If ``Ǹone`` is provided, the score
