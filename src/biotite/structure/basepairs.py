@@ -382,7 +382,7 @@ def base_pairs_edge(atom_array, base_pairs):
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
-    # respective to a row in ``base_pairs```)
+    # respective to a row in ``base_pairs``)
     base_pairs_masks = base_pairs_masks.reshape(
         (base_pairs.shape[0], 2, atom_array.shape[0])
     )
@@ -429,7 +429,7 @@ def _get_edge_matrix(atom_array, base_masks):
     # iteration
     hbonds = hbonds[:, (0,2)].flatten()
 
-    # ``ndarray``` with one row for each base and the number of
+    # ``ndarray`` with one row for each base and the number of
     # bonded edge heteroatoms as in ``_edge`` as columns
     matrix = np.zeros((2, 3), dtype='int32')
 
@@ -445,8 +445,7 @@ def _get_edge_matrix(atom_array, base_masks):
             # Iterate over the two base masks
             for base_index, base_mask in enumerate(base_masks):
                 # If a donor/acceptor atom name matches a name in
-                # the corresponding edge list add the corresponding
-                # percentage to the ``base_edges`` 'tally'
+                # the corresponding edge list increase the tally
                 if (base_mask[atom_index] and
                     atom.atom_name in edge_type[atom.res_name[-1]]):
                     matrix[base_index, edge_type_index] += 1
@@ -534,7 +533,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
 
     # Group every two masks together for easy iteration (each 'row' is
-    # respective to a row in ``base_pairs```)
+    # respective to a row in ``base_pairs``)
     base_pairs_masks = base_pairs_masks.reshape(
         (base_pairs.shape[0], 2, atom_array.shape[0])
     )
@@ -578,6 +577,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
             # Calculate the glycosidic bond direction vector
             glycosidic_bonds[base_index] = sugar_atom.coord - base_atom.coord
 
+        # if the bond is not invalid compute the orientation
         else:
             # Calculate the direction vector between the geometric centers
             geometric_centers_dir = geometric_centers[1] - geometric_centers[0]
@@ -1039,7 +1039,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         # For Structures that contain hydrogens, check for their
         # presence directly.
         #
-        # Generate input atom array for ``hbond```
+        # Generate input atom array for ``hbond``
         potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
