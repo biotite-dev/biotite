@@ -263,12 +263,12 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             np.atleast_2d(np.full(atom_array.shape[0], 1))
         )
         charge_array = np.concatenate(
-            (ones_vector, column_charges,sq_column_charges), axis = 1
+            (ones_vector, column_charges,sq_column_charges), axis=1
         )
         en_values = np.sum(parameters * charge_array, axis=1)
         # Computing electronegativity values in case of positive charge
         # which enter as divisor the equation for charge transfer
-        pos_en_values = np.sum(parameters, axis = 1)
+        pos_en_values = np.sum(parameters, axis=1)
         # Substituting values for hydrogen with the special value
         pos_en_values = np.array(
             [20.02 if i == 12.85 else i for i in pos_en_values]
