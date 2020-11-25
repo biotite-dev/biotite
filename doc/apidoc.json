@@ -243,7 +243,8 @@
             "hbond",
             "hbond_frequency",
             "base_pairs",
-            "base_stacking"
+            "base_stacking",
+            "partial_charges"
         ]
     }
 }
