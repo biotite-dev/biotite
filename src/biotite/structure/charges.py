@@ -224,13 +224,17 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             f"BondList."
         )
     if charges is None:
-        charges = np.zeros(atom_array.shape[0])
-        warnings.warn(
-            f"Charge array wasn't given as optional argument. "
-            f"Therefore, all atoms' formal charge is assumed "
-            f"to be zero.",
-            UserWarning
-        )
+        try:
+            charges = atom_array.charges
+        except AttributeError:
+            charges = np.zeros(atom_array.shape[0])
+            warnings.warn(
+                f"A charge array was neither given as optional "
+                f"argument, nor does a charge annotation of the "
+                f"inserted AtomArray exist. Therefore, all atoms' "
+                f"formal charge is assumed to be zero.",
+                UserWarning
+            )
     # For CPU time reasons, a nested list containing all binding
     # partners of a respective atom of the AtomArray is created
     bonds = \
