@@ -13,7 +13,7 @@ __author__ = "Jacob Marcel Anter"
 __all__ = ["partial_charges"]
 
 import numpy as np
-from .structure.info import residue
+from .info import residue
 import warnings
 
 
