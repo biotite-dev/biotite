@@ -297,177 +297,160 @@ fluorine = Atom([0, 0, 0], element ="F")
 
 # Building molecules
 methane = array([carbon_1, hydrogen, hydrogen, hydrogen, hydrogen])
-methane_bonds = BondList(
+methane.bonds = BondList(
     methane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
-methane.bonds = methane_bonds
 
 
 ethane = array(
     [carbon_1, carbon, hydrogen, hydrogen, hydrogen, hydrogen, hydrogen,
     hydrogen]
 )
-ethane_bonds = BondList(
+ethane.bonds = BondList(
     ethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
-ethane.bonds = ethane_bonds
 
 
 ethylene = array(
     [carbon_1, carbon, hydrogen, hydrogen, hydrogen, hydrogen]
 )
-ethylene_bonds = BondList(
+ethylene.bonds = BondList(
     ethylene.array_length(),
     np.array([[0,1], [0,2], [0,3], [1,4], [1,5]])
 )
-ethylene.bonds = ethylene_bonds
 
 
 acetylene = array(
     [carbon_1, carbon, hydrogen, hydrogen]
 )
-acetylene_bonds = BondList(
+acetylene.bonds = BondList(
     acetylene.array_length(),
     np.array([[0,1], [0,2], [1,3]])
 )
-acetylene.bonds = acetylene_bonds
 
 
 fluoromethane = array(
     [carbon_1, fluorine, hydrogen, hydrogen, hydrogen]
 )
-fluoromethane_bonds = BondList(
+fluoromethane.bonds = BondList(
     fluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
-fluoromethane.bonds = fluoromethane_bonds
 
 
 difluoromethane = array(
     [carbon_1, fluorine, fluorine, hydrogen, hydrogen]
 )
-difluoromethane_bonds = BondList(
+difluoromethane.bonds = BondList(
     difluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
-difluoromethane.bonds = difluoromethane_bonds
 
 
 trifluoromethane = array(
     [carbon_1, fluorine, fluorine, fluorine, hydrogen]
 )
-trifluoromethane_bonds = BondList(
+trifluoromethane.bonds = BondList(
     trifluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
-trifluoromethane.bonds = trifluoromethane_bonds
 
 
 tetrafluoromethane = array(
     [carbon_1, fluorine, fluorine, fluorine, fluorine]
 )
-tetrafluoromethane_bonds = BondList(
+tetrafluoromethane.bonds = BondList(
     tetrafluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
-tetrafluoromethane.bonds = tetrafluoromethane_bonds
 
 
 fluoroethane = array(
     [carbon_1, carbon_1, fluorine, hydrogen, hydrogen, hydrogen, 
     hydrogen, hydrogen]
 )
-fluoroethane_bonds = BondList(
+fluoroethane.bonds = BondList(
     fluoroethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
-fluoroethane.bonds = fluoroethane_bonds
 
 
 trifluoroethane = array(
     [carbon_1, carbon_1, fluorine, fluorine, fluorine, hydrogen,
     hydrogen, hydrogen]
 )
-trifluoroethane_bonds = BondList(
+trifluoroethane.bonds = BondList(
     trifluoroethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
-trifluoroethane.bonds = trifluoroethane_bonds
 
 
 methanole = array(
     [carbon_1, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
 )
-methanole_bonds = BondList(
+methanole.bonds = BondList(
     methanole.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5]])
 )
-methanole.bonds = methanole_bonds
 
 
 dimethyl_ether = array(
     [carbon_1, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen]
 )
-DME_bonds = BondList(
+dimethyl_ether.bonds = BondList(
     dimethyl_ether.array_length(),
     np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], [1,7], [1,8]])
 )
-dimethyl_ether.bonds = DME_bonds
 
 
 formaldehyde = array(
     [carbon_1, oxygen, hydrogen, hydrogen]
 )
-formaldehyde_bonds = BondList(
+formaldehyde.bonds = BondList(
     formaldehyde.array_length(),
     np.array([[0,1], [0,2], [0,3]])
 )
-formaldehyde.bonds = formaldehyde_bonds
 
 
 acetaldehyde = array(
     [carbon_1, carbon_1, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
 )
-acetaldehyde_bonds = BondList(
+acetaldehyde.bonds = BondList(
     acetaldehyde.array_length(),
     np.array([[0,1], [1,2], [0,3], [0,4], [0,5], [1,6]])
 )
-acetaldehyde.bonds = acetaldehyde_bonds
 
 
 acetone = array(
     [carbon_1, carbon_1, carbon, oxygen, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen, hydrogen]
 )
-acetone_bonds = BondList(
+acetone.bonds = BondList(
     acetone.array_length(),
     np.array([[0,1], [1,2], [1,3], [0,4], [0,5], [0,6], [2,7], [2,8],
     [2,9]])
 )
-acetone.bonds = acetone_bonds
 
 
 hydrogen_cyanide = array(
     [carbon_1, nitrogen, hydrogen]
 )
-HC_bonds = BondList(
+hydrogen_cyanide.bonds = BondList(
     hydrogen_cyanide.array_length(),
     np.array([[0,1], [0,2]])
 )
-hydrogen_cyanide.bonds = HC_bonds
 
 
 acetonitrile = array(
     [carbon_1, carbon_1, nitrogen, hydrogen, hydrogen, hydrogen]
 )
-ACN_bonds = BondList(
+acetonitrile.bonds = BondList(
     acetonitrile.array_length(),
     np.array([[0,1], [1,2], [0,3], [0,4], [0,5]])
 )
-acetonitrile.bonds = ACN_bonds
 
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize("molecule, expected_results", [
