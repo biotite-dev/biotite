@@ -284,7 +284,12 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 # multiple bonds.
                 # Therefore, setting both charges to NaN would falsify
                 # the result.
-                if np.isnan(en_values[i]):
+                # The case that both atoms are not parametrized must be
+                # considered as well.
+                if np.isnan(en_values[[i,j]]).all():
+                    charges[i] = np.nan
+                    charges[j] = np.nan
+                elif np.isnan(en_values[i]):
                     charges[i] = np.nan
                 else:
                     charges[j] = np.nan
