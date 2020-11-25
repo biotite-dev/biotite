@@ -71,6 +71,9 @@ def basepair_residue_positions():
     )
 
 def verify_dot_bracket_notation(output, expected_output):
+    """
+    Ensure that the dot_bracket notation matches a reference.
+    """
     # Check that each solution is a correct output
     for solution in output:
         assert solution in expected_output
@@ -86,11 +89,22 @@ def test_dot_bracket_from_structure(nuc_sample_array, expected_output):
     output = struc.dot_bracket_from_structure(nuc_sample_array)
     verify_dot_bracket_notation(output, expected_output)
 
-
-
 def test_dot_bracket(basepair_residue_positions, expected_output):
+    """
+    Check the output of ``dot_bracket()``.
+    """
     output = struc.dot_bracket(
         basepair_residue_positions, len(expected_output[0])
     )
     verify_dot_bracket_notation(output, expected_output)
 
+def test_base_pairs_from_dot_bracket(
+    basepair_residue_positions, expected_output
+):
+    """
+    Ensure that the basepairs are correctly extracted from the
+    DBL-notation
+    """
+    for notation in expected_output:
+        computed_residue_positions = struc.base_pairs_from_dot_bracket(notation)
+        assert np.all(computed_residue_positions == basepair_residue_positions)
