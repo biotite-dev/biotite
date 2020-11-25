@@ -208,12 +208,10 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
 
     >>> fluoromethane = residue("CF0")
     >>> print(fluoromethane.atom_name)
+    ['C1' 'F1' 'H1' 'H2' 'H3']
     >>> print(partial_charges(fluoromethane, 1))
-    ['C1' 'F1' 'H1' 'H2' 'H3']
     [ 0.11473086 -0.17542017  0.02022977  0.02022977  0.02022977]
-    >>> print(fluoromethane.atom_name)
     >>> print(partial_charges(fluoromethane, 6))
-    ['C1' 'F1' 'H1' 'H2' 'H3']
     [ 0.07915367 -0.25264294  0.05782976  0.05782976  0.05782976]
     """
     amount_of_binding_partners = np.zeros(atom_array.shape[0])
