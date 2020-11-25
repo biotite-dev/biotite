@@ -17,6 +17,7 @@ dependencies:
   - requests >=2.12
   - numpy >=1.13
   - scipy >=0.14
+  - scikit-learn >= 0.18.0
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
