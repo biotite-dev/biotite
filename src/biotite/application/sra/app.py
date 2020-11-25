@@ -8,7 +8,7 @@ __all__ = ["FastqDumpApp"]
 
 import glob
 from tempfile import NamedTemporaryFile, gettempdir
-from ..localapp import LocalApp
+from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
 from ...sequence.io.fastq.file import FastqFile
 from ...sequence.io.fastq.convert import get_sequences
@@ -46,6 +46,8 @@ class FastqDumpApp(LocalApp):
         self._uid = uid
         self._offset = offset
         if output_path_prefix is None:
+            # NamedTemporaryFile is only created to obtain prefix
+            # for FASTQ files
             self._out_file = NamedTemporaryFile("r")
             self._prefix = self._out_file.name
         else:

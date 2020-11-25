@@ -9,6 +9,7 @@ __all__ = ["MuscleApp"]
 import numbers
 import warnings
 from tempfile import NamedTemporaryFile
+from ..localapp import cleanup_tempfile
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 from ...sequence.sequence import Sequence
@@ -56,8 +57,12 @@ class MuscleApp(MSAApp):
         self._terminal_penalty = None
         self._tree1 = None
         self._tree2 = None
-        self._out_tree1_file = NamedTemporaryFile("r", suffix=".tree")
-        self._out_tree2_file = NamedTemporaryFile("r", suffix=".tree")
+        self._out_tree1_file = NamedTemporaryFile(
+            "r", suffix=".tree", delete=False
+        )
+        self._out_tree2_file = NamedTemporaryFile(
+            "r", suffix=".tree", delete=False
+        )
     
     def run(self):
         args = [
@@ -104,8 +109,8 @@ class MuscleApp(MSAApp):
     
     def clean_up(self):
         super().clean_up()
-        self._out_tree1_file.close()
-        self._out_tree2_file.close()
+        cleanup_tempfile(self._out_tree1_file)
+        cleanup_tempfile(self._out_tree2_file)
     
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):
