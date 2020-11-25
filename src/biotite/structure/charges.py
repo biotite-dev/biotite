@@ -160,9 +160,11 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         of iteration steps as sufficient. [1]_
     charges: ndarray, dtype=int, optional
         The array comprising the formal charges of the atoms comprised
-        in the inserted AtomArray ('atom_array'). Note that if this
-        parameter is omitted, the formal charges of all atoms will be
-        arbitrarily set to zero.
+        in the inserted AtomArray ('atom_array'). For the formal charges
+        to be used in the calculatation, they either must be explicitly
+        given as parameter upon function calling or must be present as
+        annotation category of the inserted AtomArray. Otherwise, the
+        formal charges of all atoms will be arbitrarily set to zero.
     
     Returns
     -------
