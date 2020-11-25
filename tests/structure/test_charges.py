@@ -283,9 +283,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
 # the decisive information is the BondList
 
 # Creating atoms to build molecules with
-carbon = Atom([0, 0, 0], atom_name="C", element="C")
-
-carbon_1 = Atom([0, 0, 0], atom_name="C1", element="C")
+carbon = Atom([0, 0, 0], element="C")
 
 hydrogen = Atom([0, 0, 0], element ="H")
 
@@ -296,7 +294,7 @@ nitrogen = Atom([0, 0, 0], element ="N")
 fluorine = Atom([0, 0, 0], element ="F")
 
 # Building molecules
-methane = array([carbon_1, hydrogen, hydrogen, hydrogen, hydrogen])
+methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
 methane.bonds = BondList(
     methane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
@@ -304,7 +302,7 @@ methane.bonds = BondList(
 
 
 ethane = array(
-    [carbon_1, carbon, hydrogen, hydrogen, hydrogen, hydrogen, hydrogen,
+    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen, hydrogen,
     hydrogen]
 )
 ethane.bonds = BondList(
@@ -314,7 +312,7 @@ ethane.bonds = BondList(
 
 
 ethylene = array(
-    [carbon_1, carbon, hydrogen, hydrogen, hydrogen, hydrogen]
+    [carbon, carbon, hydrogen, hydrogen, hydrogen, hydrogen]
 )
 ethylene.bonds = BondList(
     ethylene.array_length(),
@@ -323,7 +321,7 @@ ethylene.bonds = BondList(
 
 
 acetylene = array(
-    [carbon_1, carbon, hydrogen, hydrogen]
+    [carbon, carbon, hydrogen, hydrogen]
 )
 acetylene.bonds = BondList(
     acetylene.array_length(),
@@ -332,7 +330,7 @@ acetylene.bonds = BondList(
 
 
 fluoromethane = array(
-    [carbon_1, fluorine, hydrogen, hydrogen, hydrogen]
+    [carbon, fluorine, hydrogen, hydrogen, hydrogen]
 )
 fluoromethane.bonds = BondList(
     fluoromethane.array_length(),
@@ -341,7 +339,7 @@ fluoromethane.bonds = BondList(
 
 
 difluoromethane = array(
-    [carbon_1, fluorine, fluorine, hydrogen, hydrogen]
+    [carbon, fluorine, fluorine, hydrogen, hydrogen]
 )
 difluoromethane.bonds = BondList(
     difluoromethane.array_length(),
@@ -350,7 +348,7 @@ difluoromethane.bonds = BondList(
 
 
 trifluoromethane = array(
-    [carbon_1, fluorine, fluorine, fluorine, hydrogen]
+    [carbon, fluorine, fluorine, fluorine, hydrogen]
 )
 trifluoromethane.bonds = BondList(
     trifluoromethane.array_length(),
@@ -359,7 +357,7 @@ trifluoromethane.bonds = BondList(
 
 
 tetrafluoromethane = array(
-    [carbon_1, fluorine, fluorine, fluorine, fluorine]
+    [carbon, fluorine, fluorine, fluorine, fluorine]
 )
 tetrafluoromethane.bonds = BondList(
     tetrafluoromethane.array_length(),
@@ -368,7 +366,7 @@ tetrafluoromethane.bonds = BondList(
 
 
 fluoroethane = array(
-    [carbon_1, carbon_1, fluorine, hydrogen, hydrogen, hydrogen, 
+    [carbon, carbon, fluorine, hydrogen, hydrogen, hydrogen, 
     hydrogen, hydrogen]
 )
 fluoroethane.bonds = BondList(
@@ -378,7 +376,7 @@ fluoroethane.bonds = BondList(
 
 
 trifluoroethane = array(
-    [carbon_1, carbon_1, fluorine, fluorine, fluorine, hydrogen,
+    [carbon, carbon, fluorine, fluorine, fluorine, hydrogen,
     hydrogen, hydrogen]
 )
 trifluoroethane.bonds = BondList(
@@ -388,7 +386,7 @@ trifluoroethane.bonds = BondList(
 
 
 methanole = array(
-    [carbon_1, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
+    [carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
 )
 methanole.bonds = BondList(
     methanole.array_length(),
@@ -397,7 +395,7 @@ methanole.bonds = BondList(
 
 
 dimethyl_ether = array(
-    [carbon_1, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen,
+    [carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen]
 )
 dimethyl_ether.bonds = BondList(
@@ -407,7 +405,7 @@ dimethyl_ether.bonds = BondList(
 
 
 formaldehyde = array(
-    [carbon_1, oxygen, hydrogen, hydrogen]
+    [carbon, oxygen, hydrogen, hydrogen]
 )
 formaldehyde.bonds = BondList(
     formaldehyde.array_length(),
@@ -416,7 +414,7 @@ formaldehyde.bonds = BondList(
 
 
 acetaldehyde = array(
-    [carbon_1, carbon_1, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
+    [carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen, hydrogen]
 )
 acetaldehyde.bonds = BondList(
     acetaldehyde.array_length(),
@@ -425,7 +423,7 @@ acetaldehyde.bonds = BondList(
 
 
 acetone = array(
-    [carbon_1, carbon_1, carbon, oxygen, hydrogen, hydrogen, hydrogen,
+    [carbon, carbon, carbon, oxygen, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen, hydrogen]
 )
 acetone.bonds = BondList(
@@ -436,7 +434,7 @@ acetone.bonds = BondList(
 
 
 hydrogen_cyanide = array(
-    [carbon_1, nitrogen, hydrogen]
+    [carbon, nitrogen, hydrogen]
 )
 hydrogen_cyanide.bonds = BondList(
     hydrogen_cyanide.array_length(),
@@ -445,7 +443,7 @@ hydrogen_cyanide.bonds = BondList(
 
 
 acetonitrile = array(
-    [carbon_1, carbon_1, nitrogen, hydrogen, hydrogen, hydrogen]
+    [carbon, carbon, nitrogen, hydrogen, hydrogen, hydrogen]
 )
 acetonitrile.bonds = BondList(
     acetonitrile.array_length(),
@@ -455,9 +453,9 @@ acetonitrile.bonds = BondList(
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize("molecule, expected_results", [
     (methane, (-0.078,)),
-    (ethane, (-0.068,)),
-    (ethylene, (-0.106,)),
-    (acetylene, (-0.122,)),
+    (ethane, (-0.068, -0.068)),
+    (ethylene, (-0.106, -0.106)),
+    (acetylene, (-0.122, -0.122)),
     (fluoromethane, (0.079,)),
     (difluoromethane, (0.23,)),
     (trifluoromethane, (0.38,)),
@@ -465,18 +463,18 @@ acetonitrile.bonds = BondList(
     (fluoroethane, (0.087, -0.037)),
     (trifluoroethane, (0.387, 0.039)),
     (methanole, (0.033,)),
-    (dimethyl_ether, (0.036,)),
+    (dimethyl_ether, (0.036, 0.036)),
     (formaldehyde, (0.115,)),
     (acetaldehyde, (-0.009, 0.123)),
-    (acetone, (-0.006, 0.131)),
+    (acetone, (-0.006, 0.131, -0.006)),
     (hydrogen_cyanide, (0.051,)),
     (acetonitrile, (0.023, 0.06))
 ])
 
 def test_partial_charges(molecule, expected_results):
     charges = partial_charges(molecule)
-    assert charges[molecule.atom_name == "C1"].tolist() == \
-    pytest.approx(expected_results, abs=1e-2)
+    assert charges[molecule.element == "C"].tolist() == \
+        pytest.approx(expected_results, abs=1e-2)
 
 
 # Now, as a second test, it is verified whether the sum of all partial
