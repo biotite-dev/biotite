@@ -14,7 +14,7 @@ __all__ = ["dot_bracket_from_structure", "dot_bracket"]
 import numpy as np
 from .basepairs import base_pairs
 from .pseudoknots import pseudoknots
-from .residues import get_residue_starts
+from .residues import get_residue_count, get_residue_positions
 
 _OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
@@ -51,34 +51,10 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
         in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
-    # Analyze structure
     basepairs = base_pairs(nucleic_acid_strand)
-    pseudoknot_order = pseudoknots(basepairs, scoring=scoring)
-    residue_starts = get_residue_starts(nucleic_acid_strand)
-
-    # Each optimal pseudoknot order solution is represented in
-    # dot-bracket-notation
-    notations = [""]*len(pseudoknot_order)
-
-    for s, solution in enumerate(pseudoknot_order):
-        # Bases whose partners have an opened bracket
-        opened_brackets = set()
-        for residue_start in residue_starts:
-            if residue_start not in basepairs:
-                notations[s] += "."
-            else:
-                # Get position in ``basepairs`` and ``pseudoknot_order``
-                pos = np.where(basepairs == residue_start)[0][0]
-
-                if residue_start in opened_brackets:
-                    notations[s] += _CLOSING_BRACKETS[solution[pos]]
-                else:
-                    for base in basepairs[pos]:
-                        if base != residue_start:
-                            opened_brackets.add(base)
-                    notations[s] += _OPENING_BRACKETS[solution[pos]]
-
-    return notations
+    basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
+    length = get_residue_count(nucleic_acid_strand)
+    return dot_bracket(basepairs, length, scoring=scoring)
 
 def dot_bracket(basepairs, length, scoring=None):
     """
@@ -151,7 +127,7 @@ def dot_bracket(basepairs, length, scoring=None):
                 if pos in opened_brackets:
                     notations[s] += _CLOSING_BRACKETS[solution[bp_pos]]
                 else:
-                    for base in basepairs[pos]:
+                    for base in basepairs[bp_pos]:
                         if base != pos:
                             opened_brackets.add(base)
                     notations[s] += _OPENING_BRACKETS[solution[bp_pos]]
