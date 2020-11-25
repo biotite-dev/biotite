@@ -16,9 +16,9 @@ def nuc_sample_array():
     """
     return strucio.load_structure(join(data_dir("structure"), "4p5j.cif"))
 
-def test_dot_bracket(nuc_sample_array):
+def test_dot_bracket_from_structure(nuc_sample_array):
     """
-    Check the output of ``dot_bracket()``.
+    Check the output of ``dot_bracket_from_structure()``.
     """
     expected_output = [
         ".[(((((.[<...)))))(((((((.......)))))))...(((((]>.)..))))[[[...(((((("
@@ -26,7 +26,7 @@ def test_dot_bracket(nuc_sample_array):
         ".[(((((.<[...)))))(((((((.......)))))))...(((((>].)..))))[[[...(((((("
         "]]].].))))))(.)"
     ]
-    output = struc.dot_bracket(
+    output = struc.dot_bracket_from_structure(
         nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)]
     )
 

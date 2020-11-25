@@ -9,7 +9,7 @@ dot-bracket-notation.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["dot_bracket"]
+__all__ = ["dot_bracket_from_structure"]
 
 import numpy as np
 from .basepairs import base_pairs
@@ -20,7 +20,7 @@ _OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
 
 
-def dot_bracket(nucleic_acid_strand, scoring=None):
+def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
