@@ -3,6 +3,7 @@
 # information.
 
 import pytest
+import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from os.path import join
@@ -14,22 +15,62 @@ def nuc_sample_array():
     """
     Sample structure.
     """
-    return strucio.load_structure(join(data_dir("structure"), "4p5j.cif"))
+    nuc_sample_array = strucio.load_structure(
+        join(data_dir("structure"), "4p5j.cif")
+    )
+    return nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)]
 
-def test_dot_bracket_from_structure(nuc_sample_array):
+@pytest.fixture
+def expected_output():
     """
-    Check the output of ``dot_bracket_from_structure()``.
+    Output for sample structure
     """
-    expected_output = [
+    return [
         ".[(((((.[<...)))))(((((((.......)))))))...(((((]>.)..))))[[[...(((((("
         "]]].].))))))(.)",
         ".[(((((.<[...)))))(((((((.......)))))))...(((((>].)..))))[[[...(((((("
         "]]].].))))))(.)"
     ]
-    output = struc.dot_bracket_from_structure(
-        nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)]
+
+@pytest.fixture
+def basepair_residue_positions():
+    """
+    The basepairs in the sample array by their residue postions.
+    """
+    return np.array(
+        [[1, 73],
+         [2, 17],
+         [3, 16],
+         [4, 15],
+         [5, 14],
+         [6, 13],
+         [8, 47],
+         [9, 48],
+         [18, 38],
+         [19, 37],
+         [20, 36],
+         [21, 35],
+         [22, 34],
+         [23, 33],
+         [24, 32],
+         [42, 56],
+         [43, 55],
+         [44, 54],
+         [45, 53],
+         [46, 50],
+         [57, 71],
+         [58, 70],
+         [59, 69],
+         [63, 80],
+         [64, 79],
+         [65, 78],
+         [66, 77],
+         [67, 76],
+         [68, 75],
+         [81, 83]]
     )
 
+def verify_dot_bracket_notation(output, expected_output):
     # Check that each solution is a correct output
     for solution in output:
         assert solution in expected_output
@@ -37,3 +78,19 @@ def test_dot_bracket_from_structure(nuc_sample_array):
     # Check that each solution is unique
     unique_solutions = set(output)
     assert len(output) == len(unique_solutions)
+
+def test_dot_bracket_from_structure(nuc_sample_array, expected_output):
+    """
+    Check the output of ``dot_bracket_from_structure()``.
+    """
+    output = struc.dot_bracket_from_structure(nuc_sample_array)
+    verify_dot_bracket_notation(output, expected_output)
+
+
+
+def test_dot_bracket(basepair_residue_positions, expected_output):
+    output = struc.dot_bracket(
+        basepair_residue_positions, len(expected_output[0])
+    )
+    verify_dot_bracket_notation(output, expected_output)
+
