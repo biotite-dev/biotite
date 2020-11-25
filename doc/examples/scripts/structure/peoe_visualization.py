@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from matplotlib.animation import FuncAnimation
@@ -20,7 +21,13 @@ CMAP_NAME = "bwr_r"
 # Caffeine has the PDB reside name 'CFF'
 molecule = info.residue(MOLECULE_NAME)
 
-# TODO: Align molecule with PCA
+# Align molecule with principal component analysis:
+# The component with the least variance, i.e. the axis with the lowest
+# number of atoms lying over each other, is aligned to the z-axis,
+# which points into the plane of the figure
+pca = PCA(n_components=3)
+pca.fit(molecule.coord)
+molecule = struc.align_vectors(molecule, pca.components_[-1], [0, 0, 1])
 
 # Balls should be colored by partial charge
 charges = struc.partial_charges(molecule, ITERATION_NUMBER)
