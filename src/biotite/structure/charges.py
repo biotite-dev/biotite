@@ -114,7 +114,7 @@ def _get_parameters(elements, amount_of_binding_partners):
     for i, element in enumerate(elements):
         try:
             a, b, c = \
-            EN_PARAMETERS[element][amount_of_binding_partners[i]]
+                EN_PARAMETERS[element][amount_of_binding_partners[i]]
             parameters[i, 0] = a
             parameters[i, 1] = b
             parameters[i, 2] = c
@@ -194,6 +194,9 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     For the electronegativity of positively charged hydrogen, the
     value of 20.02 eV is used.
 
+    Also note that the algorithm used in this function doesn't deliver
+    proper results for expanded pi electron systems like aromatic rings.
+
     References
     ----------
     .. [1] J Gasteiger and M Marsili,
@@ -237,13 +240,13 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             )
     # For CPU time reasons, a nested list containing all binding
     # partners of a respective atom of the AtomArray is created
-    bonds = \
-    [atom_array.bonds.get_bonds(i)[0] for i in \
-    range(atom_array.shape[0])]
+    bonds = [
+        atom_array.bonds.get_bonds(i)[0] for i
+        in range(atom_array.shape[0])
+    ]
     damping = 1.0
     for list_num in range(len(bonds)):
-        amount_of_binding_partners[list_num] = \
-        len(bonds[list_num])
+        amount_of_binding_partners[list_num] = len(bonds[list_num])
     parameters = _get_parameters(elements, amount_of_binding_partners)
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
@@ -256,30 +259,33 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # column vectors and then merged to one array
         column_charges = np.transpose(np.atleast_2d(charges))
         sq_column_charges = np.transpose(np.atleast_2d(charges**2))
-        ones_vector = np.transpose(np.atleast_2d(np.full(
-        atom_array.shape[0], 1)))
-        charge_array = np.concatenate((ones_vector, column_charges,
-        sq_column_charges), axis = 1)
+        ones_vector = np.transpose(
+            np.atleast_2d(np.full(atom_array.shape[0], 1))
+        )
+        charge_array = np.concatenate(
+            (ones_vector, column_charges,sq_column_charges), axis = 1
+        )
         en_values = np.sum(parameters * charge_array, axis=1)
         # Computing electronegativity values in case of positive charge
         # which enter as divisor the equation for charge transfer
         pos_en_values = np.sum(parameters, axis = 1)
         # Substituting values for hydrogen with the special value
-        pos_en_values = np.array([20.02 if i == 12.85 else i 
-        for i in pos_en_values])
+        pos_en_values = np.array(
+            [20.02 if i == 12.85 else i for i in pos_en_values]
+        )
         for i, j, _ in atom_array.bonds.as_array():
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
             # the partial charge is set to NaN
             if np.isnan(en_values[[i, j]]).any():
-                if np.isnan(en_values[i]):
-                    charges[i] = np.nan
                 # Determining for which atom exactly no parameters are
                 # available is necessary since the other atom, for which
                 # there indeed are parameters, could be involved in
                 # multiple bonds.
                 # Therefore, setting both charges to NaN would falsify
                 # the result.
+                if np.isnan(en_values[i]):
+                    charges[i] = np.nan
                 else:
                     charges[j] = np.nan
             else:
@@ -288,7 +294,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 else:
                     divisor = pos_en_values[j]
                 charge_transfer = ((en_values[j] - en_values[i]) /
-                divisor) * damping
+                    divisor) * damping
                 charges[i] += charge_transfer
                 charges[j] -= charge_transfer
     partial_charges = charges
