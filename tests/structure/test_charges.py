@@ -481,6 +481,7 @@ def test_partial_charges(molecule, expected_results):
     assert charges[molecule.element == "C"].tolist() == \
         pytest.approx(expected_results, abs=1e-2)
 
+
 @pytest.mark.parametrize("molecule", [
     (methane),
     (ethane),
