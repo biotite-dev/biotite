@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.animation import FuncAnimation
 import biotite.structure as struc
@@ -34,7 +35,8 @@ charges = struc.partial_charges(molecule, ITERATION_NUMBER)
 # Later this variable stores values between 0 and 1 for use in color map
 charge_in_color_range = charges.copy()
 # Norm charge values to highest absolute value
-charge_in_color_range /= np.max(np.abs(charge_in_color_range))
+max_charge = np.max(np.abs(charge_in_color_range))
+charge_in_color_range /= max_charge
 # Transform range (-1, 1) to range (0,1)
 charge_in_color_range = (charge_in_color_range + 1) / 2
 # Calculate colors
@@ -72,8 +74,11 @@ ax.scatter(
     *molecule.coord.T, s=ray_half_size, c=colors, linewidth=0, alpha=0.2
 )
 
-color_bar = fig.colorbar(ScalarMappable(cmap=color_map))
-color_bar.set_label("Partial charge", color="white")
+color_bar = fig.colorbar(ScalarMappable(
+    norm=Normalize(vmin=-max_charge, vmax=max_charge),
+    cmap=color_map
+))
+color_bar.set_label("Partial charge (e)", color="white")
 color_bar.ax.yaxis.set_tick_params(color="white")
 color_bar.outline.set_edgecolor("white")
 for label in color_bar.ax.get_yticklabels():
