@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.graphics"
 __author__ = "Patrick Kunzmann"
-__all__ = ["plot_atoms"]
+__all__ = ["plot_atoms", "plot_ball_and_stick_model"]
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -95,6 +95,45 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
         line_coord, color=line_colors, linewidths=line_width
     )
     axes.add_collection(lines)
+    
+    # Set viewing angle
+    axes.azim = -90
+    axes.elev = 90
+    # Remove frame
+    axes.axis("off")
+    # Set background color
+    if background_color is not None:
+        axes.set_facecolor(background_color)
+        axes.get_figure().set_facecolor(background_color)
+    _set_box(axes, atoms.coord, center, size, zoom)
+
+
+def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
+                              line_color="black", line_width=1.0,
+                              background_color=None, center=None,
+                              size=None, zoom=1.0):
+    if not isinstance(axes, Axes3D):
+        raise ValueError("The given axes mut be an 'Axes3D'")
+    if atoms.bonds is None:
+        raise ValueError("The atom array must have an associated bond list")
+    
+    # Calculating connections between atoms
+    line_coord = [
+        (atoms.coord[index1], atoms.coord[index2])
+        for index1, index2 in atoms.bonds.as_array()[:,:2]
+    ]
+
+    # Plot sticks
+    # Use 'Line3DCollection' for higher efficiency
+    sticks = Line3DCollection(
+        line_coord, color=line_color, linewidths=line_width
+    )
+    axes.add_collection(sticks)
+
+    # Plot balls
+    axes.scatter(
+        *atoms.coord.T, s=ball_size, c=colors, linewidth=0, alpha=1
+    )
     
     # Set viewing angle
     axes.azim = -90
