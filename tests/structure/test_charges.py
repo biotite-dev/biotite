@@ -481,13 +481,31 @@ def test_partial_charges(molecule, expected_results):
     assert charges[molecule.element == "C"].tolist() == \
         pytest.approx(expected_results, abs=1e-2)
 
-
-def test_total_charge_zero():
+@pytest.mark.parametrize("molecule", [
+    (methane),
+    (ethane),
+    (ethylene),
+    (acetylene),
+    (fluoromethane),
+    (difluoromethane),
+    (trifluoromethane),
+    (tetrafluoromethane),
+    (fluoroethane),
+    (trifluoroethane),
+    (methanole),
+    (dimethyl_ether),
+    (formaldehyde),
+    (acetaldehyde),
+    (acetone),
+    (hydrogen_cyanide),
+    (acetonitrile)
+])
+def test_total_charge_zero(molecule):
     """
     In the case of the 17 molecules given in table 3, it is verified
     whether the sum of all partial charges equals the sum
     of all formal charges (in our case zero since we are exclusively
     dealing with uncharged molecules).
     """
-    total_charge = np.sum(partial_charges(fluoromethane))
+    total_charge = np.sum(partial_charges(molecule))
     assert total_charge == pytest.approx(0, abs=1e-15)
