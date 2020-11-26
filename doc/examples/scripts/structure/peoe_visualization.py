@@ -1,9 +1,25 @@
+"""
+Partial charge distribution
+===========================
+
+This examples shows how partial charges are distributed in a
+small molecule.
+The charges are calculated using the PEOE method [1]_.
+
+.. [1] J Gasteiger and M Marsili,
+    "Iterative partial equalization of orbital electronegativity - a
+    rapid access to atomic charges"
+    Tetrahedron, 36, 3219 - 3288 (1980).
+"""
+
+# Code source: Patrick Kunzmann
+# License: BSD 3 clause
+
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
-from matplotlib.animation import FuncAnimation
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.graphics as graphics
@@ -13,8 +29,8 @@ MOLECULE_NAME = "AIN"
 
 ITERATION_NUMBER = 6
 ELEMENT_FONT_SIZE = 10
-BALL_SCALE = 200
-RAY_SCALE = 3000
+BALL_SCALE = 500
+RAY_SCALE = 8000
 CMAP_NAME = "bwr_r"
 
 
@@ -51,7 +67,7 @@ ball_sizes = np.array(
 
 
 
-fig = plt.figure(figsize=(8.0, 16.0))
+fig = plt.figure(figsize=(8.0, 6.0))
 ax = fig.add_subplot(111, projection="3d")
 graphics.plot_ball_and_stick_model(
     ax, molecule, colors, ball_size=ball_sizes, line_width=3,
