@@ -214,10 +214,10 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     >>> fluoromethane = residue("CF0")
     >>> print(fluoromethane.atom_name)
     ['C1' 'F1' 'H1' 'H2' 'H3']
-    >>> print(partial_charges(fluoromethane, 1))
-    [ 0.11473086 -0.17542017  0.02022977  0.02022977  0.02022977]
-    >>> print(partial_charges(fluoromethane, 6))
-    [ 0.07915367 -0.25264294  0.05782976  0.05782976  0.05782976]
+    >>> print(partial_charges(fluoromethane, iteration_step_num=1))
+    [ 0.115 -0.175  0.020  0.020  0.020]
+    >>> print(partial_charges(fluoromethane, iteration_step_num=6))
+    [ 0.079 -0.253  0.058  0.058  0.058]
     """
     amount_of_binding_partners = np.zeros(atom_array.shape[0])
     elements = atom_array.element
@@ -228,7 +228,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         )
     if charges is None:
         try:
-            charges = atom_array.charges
+            charges = atom_array.charge
         except AttributeError:
             charges = np.zeros(atom_array.shape[0])
             warnings.warn(
@@ -242,8 +242,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     # the AtomArray are obtained by the newly introduced function
     # 'get_all_bonds'
     bonds, _ = atom_array.bonds.get_all_bonds()
-    bool_mask = bonds != -1
-    amount_of_binding_partners = np.count_nonzero(bool_mask, axis=1)
+    amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
     damping = 1.0
     parameters = _get_parameters(elements, amount_of_binding_partners)
     for _ in range(iteration_step_num):
