@@ -238,15 +238,13 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 f"formal charge is assumed to be zero.",
                 UserWarning
             )
-    # For CPU time reasons, a nested list containing all binding
-    # partners of a respective atom of the AtomArray is created
-    bonds = [
-        atom_array.bonds.get_bonds(i)[0] for i
-        in range(atom_array.shape[0])
-    ]
+    # For CPU time reasons, all binding partners of a respective atom of
+    # the AtomArray are obtained by the newly introduced function
+    # 'get_all_bonds'
+    bonds, _ = atom_array.bonds.get_all_bonds()
+    bool_mask = bonds != -1
+    amount_of_binding_partners = np.count_nonzero(bool_mask, axis=1)
     damping = 1.0
-    for list_num in range(len(bonds)):
-        amount_of_binding_partners[list_num] = len(bonds[list_num])
     parameters = _get_parameters(elements, amount_of_binding_partners)
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
