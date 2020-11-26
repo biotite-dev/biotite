@@ -251,10 +251,12 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     in nucleic acids.
     The presence of base stacking is assumed if the following criteria
     are met [1]_:
+
     (i) Distance between aromatic ring centers <=4.5 Å
     (ii) Angle between the ring normal vectors <=23°
     (iii) Angle between normalized distance vector between two ring
           centers and both bases' normal vectors <=40°
+
     Parameters
     ----------
     atom_array : AtomArray
@@ -262,12 +264,14 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     min_atoms_per_base : integer, optional (default: 3)
         The number of atoms a nucleotides' base must have to be
         considered a candidate for a stacking interaction.
+
     Returns
     -------
     stacked_bases : ndarray, dtype=int, shape=(n,2)
         Each row is equivalent to one pair of stacked bases and
         contains the indices to the first atom for each one of both
         paired residues.
+
     Notes
     -----
     Please note that ring normal vectors are assumed to be equal to the
