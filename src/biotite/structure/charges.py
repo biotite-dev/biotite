@@ -229,6 +229,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     if charges is None:
         try:
             charges = atom_array.charge
+            charges = charges.astype(np.float)
         except AttributeError:
             charges = np.zeros(atom_array.shape[0])
             warnings.warn(
