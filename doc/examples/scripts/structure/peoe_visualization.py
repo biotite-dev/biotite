@@ -9,7 +9,7 @@ import biotite.structure.info as info
 import biotite.structure.graphics as graphics
 
 
-MOLECULE_NAME = "CFF"
+MOLECULE_NAME = "AIN"
 
 ITERATION_NUMBER = 6
 ELEMENT_FONT_SIZE = 10
@@ -33,15 +33,16 @@ molecule = struc.align_vectors(molecule, pca.components_[-1], [0, 0, 1])
 # Balls should be colored by partial charge
 charges = struc.partial_charges(molecule, ITERATION_NUMBER)
 # Later this variable stores values between 0 and 1 for use in color map
-charge_in_color_range = charges.copy()
+normalized_charges = charges.copy()
+normalized_charges[np.isnan(normalized_charges)] = 0
 # Norm charge values to highest absolute value
-max_charge = np.max(np.abs(charge_in_color_range))
-charge_in_color_range /= max_charge
+max_charge = np.max(np.abs(normalized_charges))
+normalized_charges /= max_charge
 # Transform range (-1, 1) to range (0,1)
-charge_in_color_range = (charge_in_color_range + 1) / 2
+normalized_charges = (normalized_charges + 1) / 2
 # Calculate colors
 color_map = plt.get_cmap(CMAP_NAME)
-colors = color_map(charge_in_color_range)
+colors = color_map(normalized_charges)
 
 # Ball size should be proportional to VdW radius of the respective atom
 ball_sizes = np.array(
