@@ -80,7 +80,7 @@ def pseudoknots(base_pairs, scoring=None):
     # Make sure base_pairs has the same length as the scoring function
     if len(base_pairs) != len(scoring):
         raise ValueError(
-        "Each Value of the scoring vector must correspond to a basepair."
+        "Each Value of the scoring vector must correspond to a basepair"
     )
 
     # Split the basepairs in regions
