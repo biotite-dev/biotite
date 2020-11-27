@@ -18,7 +18,9 @@ from .pseudoknots import pseudoknots
 from .residues import get_residue_count, get_residue_positions
 
 _OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+_OPENING_BRACKETS_BYTES = bytearray(_OPENING_BRACKETS.encode())
 _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
+_CLOSING_BRACKETS_BYTES = bytearray(_CLOSING_BRACKETS.encode())
 
 
 def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
@@ -114,26 +116,14 @@ def dot_bracket(basepairs, length, scoring=None):
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
-    notations = [""]*len(pseudoknot_order)
-
+    notations = [
+        bytearray(("."*length).encode()) for _ in range(len(pseudoknot_order))
+    ]
     for s, solution in enumerate(pseudoknot_order):
-        # Bases whose partners have an opened bracket
-        opened_brackets = set()
-        for pos in range(length):
-            if pos not in basepairs:
-                notations[s] += "."
-            else:
-                # Get position in ``basepairs`` and ``pseudoknot_order``
-                bp_pos = np.where(basepairs == pos)[0][0]
-                if pos in opened_brackets:
-                    notations[s] += _CLOSING_BRACKETS[solution[bp_pos]]
-                else:
-                    for base in basepairs[bp_pos]:
-                        if base != pos:
-                            opened_brackets.add(base)
-                    notations[s] += _OPENING_BRACKETS[solution[bp_pos]]
-
-    return notations
+        for basepair, order in zip(basepairs, solution):
+            notations[s][basepair[0]] = _OPENING_BRACKETS_BYTES[order]
+            notations[s][basepair[1]] = _CLOSING_BRACKETS_BYTES[order]
+    return [notation.decode() for notation in notations]
 
 def base_pairs_from_dot_bracket(dot_bracket_notation):
     """

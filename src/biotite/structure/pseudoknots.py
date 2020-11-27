@@ -444,7 +444,8 @@ def _get_optimal_solutions(regions, scoring):
     for i in range(len(dp_matrix)):
         dp_matrix[i, i] = np.array([frozenset()])
 
-    # Iterate through the top right of the dynamic programming matrix
+    # Iterate through the top right half of the dynamic programming
+    # matrix
     for j in range(len(regions)*2):
         for i in range(j-1, -1, -1):
             solution_candidates = set()
