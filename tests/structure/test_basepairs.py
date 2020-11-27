@@ -192,7 +192,7 @@ def test_map_nucleotide():
 def get_reference(pdb_id, suffix):
     """
     Gets a reference structure and a related json array depending on
-    a specified JSON-suffix and pdb id.
+    a specified JSON-suffix and PDB ID.
     """
     structure = strucio.load_structure(
         join(data_dir("structure"), "base_pairs", f"{pdb_id}.cif")
@@ -208,8 +208,8 @@ def get_reference(pdb_id, suffix):
 def get_reference_index(pair, array):
     """
     Get the index of the row in a reference array, where the first two
-    columns match the values of pair in the same or opposite order. If
-    no match is found ``Ǹone`` is returned.
+    columns match the values of ``pair``. If no match is found ``Ǹone``
+    is returned.
     """
     pair = sorted(pair)
     if np.any((array[:, 0] == pair[0]) & (array[:, 1] == pair[1])):
@@ -236,6 +236,7 @@ def check_edge_plausibility(
         edge_matrix, reference_edges, output_edges
     ):
         max_matches = np.max(edges)
+        # The edge type corresponds to the index in the edge matrix + 1
         max_match_edges = np.argwhere(edges == max_matches).flatten() + 1
         assert reference_edge in max_match_edges
         assert output_edge in max_match_edges
@@ -272,7 +273,7 @@ def test_base_pairs_edge(pdb_id):
 def test_base_pairs_glycosidic_bond(pdb_id):
     """
     Test the function ``base_pairs_edge``. Each test structure is a
-    crystal structure onto which hydrogens were added using gromacs
+    crystal structure onto which hydrogens were added using Gromacs
     force fields. The reference data was taken from the NDB-database
     annotations and parsed as json array.
     """
