@@ -353,6 +353,22 @@ def base_pairs_edge(atom_array, base_pairs):
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
+    >>> print(interacting_edges)
+    [[1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]
+     [1 1]]
+
+    The resulting integers can be interpreted as :class:`Edge` ``Enum``:
+
     >>> for interaction in interacting_edges:
     ...     print(Edge(interaction[0]), Edge(interaction[1]))
     Edge.WATSON_CRICK Edge.WATSON_CRICK
@@ -500,6 +516,12 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
+    >>> print(orientations)
+    [1 1 1 1 1 1 1 1 1 1 1 1]
+
+    The resulting integers can be interpreted as :class:`GlycosidicBond`
+    ``Enum``:
+
     >>> for orientation in orientations:
     ...     print(GlycosidicBond(orientation))
     GlycosidicBond.CIS
