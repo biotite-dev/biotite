@@ -211,21 +211,10 @@ def get_reference_index(pair, array):
     columns match the values of pair in the same or opposite order. If
     no match is found ``Ǹone`` is returned.
     """
-    if np.any(
-        np.logical_and(array[:, 0] == pair[0], array[:, 1] == pair[1])
-    ):
-        return np.where(
-            np.logical_and(array[:, 0] == pair[0], array[:, 1] == pair[1])
-        )
-
-    elif np.any(
-        np.logical_and(array[:, 1] == pair[0], array[:, 0] == pair[1])
-    ):
-        return np.where(
-            np.logical_and(array[:, 1] == pair[0], array[:, 0] == pair[1])
-        )
-    else:
-        return None
+    pair = sorted(pair)
+    if np.any((array[:, 0] == pair[0]) & (array[:, 1] == pair[1])):
+        return np.where((array[:, 0] == pair[0]) & (array[:, 1] == pair[1]))
+    return None
 
 
 
