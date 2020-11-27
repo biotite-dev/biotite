@@ -165,7 +165,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     basepairs = []
-    opened_brackets = {}
+    opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]
 
     # Iterate through input string and extract base pairs
     for pos, symbol in enumerate(dot_bracket_notation):
@@ -174,8 +174,6 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
             # Add opening residues to list (separate list for each
             # bracket type)
             index = _OPENING_BRACKETS.index(symbol)
-            if index not in opened_brackets:
-                opened_brackets[index] = []
             opened_brackets[index].append(pos)
 
         elif symbol in _CLOSING_BRACKETS:
@@ -188,14 +186,14 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
         else:
             if symbol != ".":
                 raise ValueError(
-                    f"'{symbol}' is an invalid character for DBL-notation."
+                    f"'{symbol}' is an invalid character for DBL-notation"
                 )
 
-    for _, not_closed in opened_brackets.items():
+    for not_closed in opened_brackets:
         if not_closed != []:
             raise ValueError(
                 "Invalid DBL-notation! Not all opening brackets have a "
-                "closing bracket."
+                "closing bracket"
             )
 
 
