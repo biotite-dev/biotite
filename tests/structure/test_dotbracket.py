@@ -35,7 +35,7 @@ def expected_output():
 @pytest.fixture
 def basepair_residue_positions():
     """
-    The basepairs in the sample array by their residue postions.
+    The base pairs in the sample array by their residue postions.
     """
     return np.array(
         [[1, 73],
@@ -102,7 +102,7 @@ def test_base_pairs_from_dot_bracket(
     basepair_residue_positions, expected_output
 ):
     """
-    Ensure that the basepairs are correctly extracted from the
+    Ensure that the base pairs are correctly extracted from the
     DBL-notation
     """
     for notation in expected_output:

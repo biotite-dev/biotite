@@ -21,9 +21,9 @@ def test_pseudoknots(nuc_sample_array):
     """
     Check the output of ``pseudoknots()``.
     """
-    # Known basepairs with pseudoknot-order = 1:
+    # Known base pairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
-    # Known basepairs that can either be of order one or two
+    # Known base pairs that can either be of order one or two
     pseudoknot_order_one_or_two =  [{9, 48}, {10, 49}]
     order_one_count = (
         len(pseudoknot_order_one) + (len(pseudoknot_order_one_or_two)/2)
@@ -45,7 +45,7 @@ def test_pseudoknots(nuc_sample_array):
         assert np.count_nonzero(optimal_solution == 2) == order_two_count
         assert np.amax(optimal_solution) == 2
 
-        # Assert that the each basepair has the right pseudoknot order
+        # Assert that the each base pair has the right pseudoknot order
         for base_pair, order in zip(
             nuc_sample_array[base_pairs].res_id, optimal_solution
         ):

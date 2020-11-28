@@ -21,7 +21,7 @@ def reversed_iterator(iter):
 @pytest.fixture
 def nuc_sample_array():
     """
-    Sample structure for basepair detection.
+    Sample structure for base pair detection.
     """
     return strucio.load_structure(join(data_dir("structure"), "1qxb.cif"))
 
@@ -48,15 +48,15 @@ def check_output(computed_basepairs, basepairs):
     Check the output of base_pairs.
     """
 
-    # Check if basepairs are unique in computed_basepairs
+    # Check if base pairs are unique in `computed_basepairs`
     seen = set()
     assert (not any(
         (base1, base2) in seen) or (base2, base1 in seen)
         or seen.add((base1, base2)) for base1, base2 in computed_basepairs
         )
-    # Check if the right number of basepairs is in computed_basepairs
+    # Check if the right number of base pairs is in `computed_basepairs`
     assert(len(computed_basepairs) == len(basepairs))
-    # Check if the right basepairs are in computed_basepairs
+    # Check if the right base pairs are in computed_base pairs
     for comp_basepair in computed_basepairs:
         assert ((comp_basepair in basepairs) \
                 or (comp_basepair in np.flip(basepairs)))

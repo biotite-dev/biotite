@@ -33,7 +33,7 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     atom_array : AtomArray
         The nucleic-acid-strand to be represented in DBL-notation.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair, which is passed on to
+        The score for each base pair, which is passed on to
         :func:`pseudoknots()`
 
     Returns
@@ -75,7 +75,7 @@ def dot_bracket(basepairs, length, scoring=None):
     length : int
         The number of bases in the strand.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair, which is passed on to
+        The score for each base pair, which is passed on to
         :func:`pseudoknots()`
 
     Returns
@@ -112,7 +112,7 @@ def dot_bracket(basepairs, length, scoring=None):
         in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
-    pseudoknot_order = pseudoknots(basepairs, scoring=scoring)
+    pseudoknot_order = pseudoknots(basepairs, scores=scoring)
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
@@ -127,7 +127,7 @@ def dot_bracket(basepairs, length, scoring=None):
 
 def base_pairs_from_dot_bracket(dot_bracket_notation):
     """
-    Extract the basepairs from a nucleic-acid-strand in
+    Extract the base pairs from a nucleic-acid-strand in
     dot-bracket-letter-notation (DBL-notation) [1]_.
 
     The nucleic acid strand is represented as nucleotide sequence,
@@ -145,7 +145,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     Examples
     --------
-    The notation string ``'(..).'`` contains a basepair between the
+    The notation string ``'(..).'`` contains a base pair between the
     indices 0 and 3. This pairing interaction can be extracted
     conveniently by the use of :func:`base_pairs_from_dot_bracket()`:
 
@@ -177,9 +177,10 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
             opened_brackets[index].append(pos)
 
         elif symbol in _CLOSING_BRACKETS:
-            # For each closing bracket, the the basepair consists out of
-            # the current index and the last index added to the list in
-            # `opened_brackets` corresponding to the same bracket type.
+            # For each closing bracket, the the base pair consists out
+            # of the current index and the last index added to the list
+            # in `opened_brackets` corresponding to the same bracket
+            # type.
             index = _CLOSING_BRACKETS.index(symbol)
             basepairs.append((opened_brackets[index].pop(), pos))
 
@@ -192,7 +193,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
     for not_closed in opened_brackets:
         if not_closed != []:
             raise ValueError(
-                "Invalid DBL-notation! Not all opening brackets have a "
+                "Invalid DBL-notation, not all opening brackets have a "
                 "closing bracket"
             )
 

@@ -14,25 +14,25 @@ import numpy as np
 from copy import deepcopy
 
 
-def pseudoknots(base_pairs, scoring=None):
+def pseudoknots(base_pairs, scores=None):
     """
-    Identify the pseudoknot order for each basepair in a given set of
-    basepairs.
+    Identify the pseudoknot order for each base pair in a given set of
+    base pairs.
 
     By default the algorithm maximizes the number of base pairs but an
     optional scoring matrix specifying a score for each
-    individual basepair can be provided.
+    individual base pair can be provided.
 
     Parameters
     ----------
     base_pairs : ndarray, dtype=int, shape=(n,2)
-        The basepairs to determine the pseudoknot order of. Each row
+        The base pairs to determine the pseudoknot order of. Each row
         represents indices form two paired bases. The structure of
         the ``ndarray`` is equal to the structure of the output of
         :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
     scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair. If ``Ǹone`` is provided, the score
+        The score for each base pair. If ``Ǹone`` is provided, the score
         of each base pair is one.
 
     Returns
@@ -73,17 +73,17 @@ def pseudoknots(base_pairs, scoring=None):
     # List containing the results
     results = [np.zeros(len(base_pairs), dtype='int32')]
 
-    # if no scoring function is given, each basepairs score is one
-    if scoring is None:
-        scoring = np.ones(len(base_pairs))
+    # if no scoring function is given, each base pairs score is one
+    if scores is None:
+        scores = np.ones(len(base_pairs))
 
     # Make sure base_pairs has the same length as the scoring function
-    if len(base_pairs) != len(scoring):
+    if len(base_pairs) != len(scores):
         raise ValueError(
-        "Each Value of the scoring vector must correspond to a basepair"
+        "Each Value of the scoring vector must correspond to a base pair"
     )
 
-    # Split the basepairs in regions
+    # Split the base pairs in regions
     regions = _find_regions(base_pairs)
 
     # Only retain conflicting regions
@@ -94,7 +94,7 @@ def pseudoknots(base_pairs, scoring=None):
 
     # For each clique calculate all optimal solutions
     for clique in conflict_cliques:
-        results = _get_result_diff(clique, scoring)
+        results = _get_result_diff(clique, scores)
 
     return np.vstack(results)
 
@@ -103,17 +103,17 @@ class _Region():
     """
     This class represents a paired region.
 
-    A region is a set of basepairs. This class provides methods to
+    A region is a set of base pairs. This class provides methods to
     access the minimum and maximum index of the bases that are part of
     the region, handles score calculation, and backtracing to the
-    original basepair array.
+    original base pair array.
 
     Parameters
     ----------
     base_pairs: ndarray, shape=(n,2), dtype=int
-        All basepairs of the structure the region is a subset for.
+        All base pairs of the structure the region is a subset for.
     region_pairs: ndarray, dtype=int
-        The indices of the basepairs in ``base_pairs`` that are part of
+        The indices of the base pairs in ``base_pairs`` that are part of
         the region.
     """
 
@@ -128,12 +128,12 @@ class _Region():
     def get_index_mask(self):
         """
         Return an index mask with the positions of the region`s bases in
-        the original basepair array.
+        the original base pair array.
 
         Returns
         -------
         region_pairs : ndarray
-            The indices of the bases in the original basepair array.
+            The indices of the bases in the original base pair array.
         """
         return self.region_pairs
 
@@ -179,18 +179,18 @@ class _Region():
 def _find_regions(base_pairs):
     """
     Find regions in a base pair arrray. A region is defined as a set of
-    consecutively nested basepairs.
+    consecutively nested base pairs.
 
     Parameters
     ----------
     base_pairs : ndarray, dtype=int, shape=(n, 2)
-        Each row is equivalent to one basepair and contains the first
+        Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
 
     Returns
     -------
     regions : set {_region, ...}
-        The regions representing the consecutively nested basepairs.
+        The regions representing the consecutively nested base pairs.
     """
 
     # Make sure the lower residue is on the left for each row
@@ -204,29 +204,29 @@ def _find_regions(base_pairs):
     downstream_order = np.argsort(sorted_base_pairs[:,1])
     downstream_rank = np.argsort(downstream_order)
 
-    # The basepairs belonging to the current region
+    # The base pairs belonging to the current region
     region_pairs = []
     # The individual regions
     regions = set()
 
     # Find separate regions
     for i in range(len(sorted_base_pairs)):
-        # if a new region is to be started append the current basepair
+        # if a new region is to be started append the current base pair
         if len(region_pairs) == 0:
             region_pairs.append(original_indices[i])
             continue
 
-        # Check if the current basepair belongs to the region that is
+        # Check if the current base pair belongs to the region that is
         # currently being defined
         previous_rank = downstream_rank[i-1]
         this_rank = downstream_rank[i]
-        # if the current basepair belongs to a new region, save the
+        # if the current base pair belongs to a new region, save the
         # current region and start a new region
         if (previous_rank - this_rank) != 1:
             regions.add(_Region(base_pairs, np.array(region_pairs)))
             region_pairs = []
 
-        # Append the current basepair to the region
+        # Append the current base pair to the region
         region_pairs.append(original_indices[i])
 
     # The last region has no endpoint defined by the beginning of a
