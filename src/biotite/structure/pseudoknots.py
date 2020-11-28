@@ -200,7 +200,8 @@ def _find_regions(base_pairs):
     original_indices = np.argsort(sorted_base_pairs[:, 0])
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
-    # Rank the right side in ascending order
+    # Rank the right column in ascending order:
+    # E.g. [3, 9, 1] -> [2, 3, 1]
     downstream_order = np.argsort(sorted_base_pairs[:,1])
     downstream_rank = np.argsort(downstream_order)
 
