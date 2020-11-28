@@ -20,7 +20,7 @@ def pseudoknots(base_pairs, scores=None):
     base pairs.
 
     By default the algorithm maximizes the number of base pairs but an
-    optional scoring matrix specifying a score for each
+    optional score array specifying a score for each
     individual base pair can be provided.
 
     Parameters
@@ -31,7 +31,7 @@ def pseudoknots(base_pairs, scores=None):
         the ``ndarray`` is equal to the structure of the output of
         :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair. If ``Ǹone`` is provided, the score
         of each base pair is one.
 
@@ -73,14 +73,14 @@ def pseudoknots(base_pairs, scores=None):
     # List containing the results
     results = [np.zeros(len(base_pairs), dtype='int32')]
 
-    # if no scoring function is given, each base pairs score is one
+    # if no score array is given, each base pairs' score is one
     if scores is None:
         scores = np.ones(len(base_pairs))
 
-    # Make sure base_pairs has the same length as the scoring function
+    # Make sure `base_pairs` has the same length as the score array
     if len(base_pairs) != len(scores):
         raise ValueError(
-        "Each Value of the scoring vector must correspond to a base pair"
+        "Each Value of the score array must correspond to a base pair"
     )
 
     # Split the base pairs in regions
@@ -125,10 +125,10 @@ class _Region():
         self.region_pairs = region_pairs
         self.score = None
 
-    def get_index_mask(self):
+    def get_index_array(self):
         """
-        Return an index mask with the positions of the region`s bases in
-        the original base pair array.
+        Return an index array with the positions of the region`s bases
+        in the original base pair array.
 
         Returns
         -------
@@ -137,15 +137,15 @@ class _Region():
         """
         return self.region_pairs
 
-    def get_score(self, scoring):
+    def get_score(self, scores):
         """
-        Return the score of the region according to a scoring array. The
+        Return the score of the region according to a score array. The
         score is calculated once on demand and then stored in memory.
 
         Parameters
         ----------
-        scoring : ndarray
-            The scoring array.
+        scores : ndarray
+            The score array.
 
         Returns
         -------
@@ -153,7 +153,7 @@ class _Region():
             The regions score.
         """
         if self.score is None:
-            self.score = np.sum(scoring[self.get_index_mask()])
+            self.score = np.sum(scores[self.get_index_array()])
         return self.score
 
     def __lt__(self, other):
@@ -408,7 +408,7 @@ def _conflict_cliques(regions):
     return cliques
 
 
-def _get_optimal_solutions(regions, scoring):
+def _get_optimal_solutions(regions, scores):
     """
     Get the optimal solutions according to the algorithm referenced in
     :func:``pseudoknots()``.
@@ -418,13 +418,13 @@ def _get_optimal_solutions(regions, scoring):
     regions : set {_region, ...}
         The conflicting regions for whích optimal solutions are to be
         found.
-    scoring : ndarray
-        The scoring array.
+    scores : ndarray
+        The score array.
 
     Returns
     -------
     solutions : ndarray, dtype=object
-        The optimal solutions according to the scoring function.
+        The optimal solutions according to the score arrray.
     """
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2
@@ -506,14 +506,16 @@ def _get_optimal_solutions(regions, scoring):
             solution_candidates = np.array(list(solution_candidates))
 
             # Calculate the scores for each solution
-            scores = np.zeros(len(solution_candidates))
+            solution_scores = np.zeros(len(solution_candidates))
             for s, solution in enumerate(solution_candidates):
                 score = 0
                 for reg in solution:
-                    score += reg.get_score(scoring)
-                scores[s] = score
+                    score += reg.get_score(scores)
+                solution_scores[s] = score
             # Get the indices where the score is at a maximum
-            highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
+            highest_scores = np.argwhere(
+                solution_scores == np.amax(solution_scores)
+            ).flatten()
 
             # Get the solutions with the highest score
             solution_candidates = solution_candidates[highest_scores]
@@ -546,7 +548,7 @@ def _get_optimal_solutions(regions, scoring):
     return dp_matrix[0, -1]
 
 
-def _get_result_diff(clique, scoring):
+def _get_result_diff(clique, scores):
     """
     Use the dynamic programming algorithm to get the pseudoknot order
     of a given clique. If there are remaining conflicts their solutions
@@ -557,16 +559,16 @@ def _get_result_diff(clique, scoring):
     clique : set {_region, ...}
         The conflicting regions for whích optimal solutions are to be
         found.
-    scoring : ndarray
-        The scoring array.
+    scores : ndarray
+        The score array.
 
     Returns
     -------
     solutions : ndarray, dtype=object
-        The pseudoknot orders according to the scoring function.
+        The pseudoknot orders according to the score array.
     """
     # Get the optimal solutions for the given clique
-    optimal_solutions = _get_optimal_solutions(clique, scoring)
+    optimal_solutions = _get_optimal_solutions(clique, scores)
 
     # Each optimal solution gets their own list of solutions
     results_diff = np.empty(len(optimal_solutions), dtype='object')
@@ -575,14 +577,14 @@ def _get_result_diff(clique, scoring):
     for o, optimal_solution in enumerate(optimal_solutions):
 
         # The results for the ṕarticular solution
-        results = np.zeros(len(scoring), dtype='int32')
+        results = np.zeros(len(scores), dtype='int32')
 
         # The removed regions in the optimal solution
         next_clique = clique - optimal_solution
 
         # Increment the order of the basepairs in the removed regions
         for reg in next_clique:
-            results[reg.get_index_mask()] += 1
+            results[reg.get_index_array()] += 1
 
         # Remove non-conflicting-regions for evaluation of the next
         # clique
@@ -591,7 +593,7 @@ def _get_result_diff(clique, scoring):
         # The next clique is only evaluated if it contains conflicting
         # regions
         if len(next_clique) > 0:
-            next_result_diff = _get_result_diff(next_clique, scoring)
+            next_result_diff = _get_result_diff(next_clique, scores)
 
             # Merge results of this clique with the next clique
             results_diff[o] = []
