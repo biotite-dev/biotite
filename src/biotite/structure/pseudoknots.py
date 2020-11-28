@@ -123,7 +123,7 @@ class _Region():
         self.stop = np.max(base_pairs[region_pairs])
 
         self.region_pairs = region_pairs
-        self.score = np.sum(scores[self.get_index_array()])
+        self.score = np.sum(scores[region_pairs])
 
     def get_index_array(self):
         """
@@ -509,19 +509,12 @@ def _get_optimal_solutions(regions):
             solution_stops = np.empty_like(solution_candidates, dtype='int32')
 
             for s, solution in enumerate(solution_candidates):
-                minimum = -1
-                maximum = -1
-                for reg in solution:
-                    if minimum == -1 or maximum == -1:
-                        minimum = reg.start
-                        maximum = reg.stop
-                        continue
-                    if minimum > reg.start:
-                        minimum = reg.start
-                    if maximum < reg.stop:
-                        maximum = reg.stop
-                solution_starts[s] = minimum
-                solution_stops[s] = maximum
+                solution_starts[s] = min(
+                    [reg.start for reg in solution], default=-1
+                )
+                solution_stops[s] = max(
+                    [reg.stop for reg in solution], default=-1
+                )
 
             dp_matrix_solutions_starts[i, j] = solution_starts
             dp_matrix_solutions_stops[i, j] = solution_stops
