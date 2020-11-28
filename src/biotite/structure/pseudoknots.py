@@ -86,6 +86,9 @@ def pseudoknots(base_pairs, scores=None):
     # Split the base pairs in regions
     regions = _find_regions(base_pairs, scores)
 
+    results = _get_results(regions, results)
+
+    """
     # Only retain conflicting regions
     cleaned_regions = _remove_non_conflicting_regions(regions)
 
@@ -95,7 +98,7 @@ def pseudoknots(base_pairs, scores=None):
     # For each clique calculate all optimal solutions
     for clique in conflict_cliques:
         results = _get_result_diff(clique, scores)
-
+    """
     return np.vstack(results)
 
 
@@ -581,3 +584,31 @@ def _get_result_diff(clique, scores):
 
     # Return flattened results
     return [result for results in results_diff for result in results]
+
+def _get_results(regions, results):
+
+    regions = _remove_non_conflicting_regions(regions)
+
+    if len(regions) == 0:
+        return results
+
+    solutions = _get_optimal_solutions(regions)
+
+    results_list = [
+        [result.copy() for result in results] for _ in range(len(solutions))
+    ]
+
+    for i, solution in enumerate(solutions):
+
+        pseudoknoted_regions = regions - solution
+        diff = np.zeros(len(results[0]), dtype='int32')
+
+        for region in pseudoknoted_regions:
+            diff[region.get_index_array()] += 1
+
+        for result in results_list[i]:
+            result += diff
+
+        results_list[i] = _get_results(pseudoknoted_regions, results_list[i])
+
+    return [result for results in results_list for result in results]
