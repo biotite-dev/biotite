@@ -586,29 +586,57 @@ def _get_result_diff(clique, scores):
     return [result for results in results_diff for result in results]
 
 def _get_results(regions, results):
+    """
+    Use the dynamic programming algorithm to get the pseudoknot order
+    of a given set of regions. If there are remaining conflicts their
+    results are recursively calculated and merged with the current
+    results.
 
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        The regions for whích optimal solutions are to be found.
+    results : list [ndarray, ...]
+        The results
+
+    Returns
+    -------
+    results : list [ndarray, ...]
+        The results
+    """
+
+    # Remove non-conflicting regions
     regions = _remove_non_conflicting_regions(regions)
 
+    # If no conflicts remain, the results are complete
     if len(regions) == 0:
         return results
 
+    # Get the optimal solutions for given regions
     solutions = _get_optimal_solutions(regions)
 
+    # Get a copy of the current results for each optimal solution
     results_list = [
         [result.copy() for result in results] for _ in range(len(solutions))
     ]
 
+    # Evaluate each optimal solution
     for i, solution in enumerate(solutions):
 
+        # Get the pseudoknotted regions
         pseudoknoted_regions = regions - solution
-        diff = np.zeros(len(results[0]), dtype='int32')
 
+        # The pseudoknot order for each pseudoknotted regions is one
+        diff = np.zeros(len(results[0]), dtype='int32')
         for region in pseudoknoted_regions:
             diff[region.get_index_array()] += 1
 
+        # Increment the pseudoknot order for each solution
         for result in results_list[i]:
             result += diff
 
+        # Evaluate the pseudoknotted region
         results_list[i] = _get_results(pseudoknoted_regions, results_list[i])
 
+    # Flatten the results
     return [result for results in results_list for result in results]
