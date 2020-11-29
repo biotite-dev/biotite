@@ -86,19 +86,9 @@ def pseudoknots(base_pairs, scores=None):
     # Split the base pairs in regions
     regions = _find_regions(base_pairs, scores)
 
+    # Evaluate results
     results = _get_results(regions, results)
 
-    """
-    # Only retain conflicting regions
-    cleaned_regions = _remove_non_conflicting_regions(regions)
-
-    # Group mutually conflicting regions
-    conflict_cliques = _conflict_cliques(cleaned_regions)
-
-    # For each clique calculate all optimal solutions
-    for clique in conflict_cliques:
-        results = _get_result_diff(clique, scores)
-    """
     return np.vstack(results)
 
 
@@ -525,65 +515,6 @@ def _get_optimal_solutions(regions):
     # The top right corner contains the optimal solutions
     return dp_matrix[0, -1]
 
-
-def _get_result_diff(clique, scores):
-    """
-    Use the dynamic programming algorithm to get the pseudoknot order
-    of a given clique. If there are remaining conflicts their solutions
-    are recursively calculated and merged with the current solutions.
-
-    Parameters
-    ----------
-    clique : set {_region, ...}
-        The conflicting regions for whích optimal solutions are to be
-        found.
-    scores : ndarray
-        The score array.
-
-    Returns
-    -------
-    solutions : ndarray, dtype=object
-        The pseudoknot orders according to the score array.
-    """
-    # Get the optimal solutions for the given clique
-    optimal_solutions = _get_optimal_solutions(clique)
-
-    # Each optimal solution gets their own list of solutions
-    results_diff = np.empty(len(optimal_solutions), dtype='object')
-
-    # Get the results for each optimal solution
-    for o, optimal_solution in enumerate(optimal_solutions):
-
-        # The results for the ṕarticular solution
-        results = np.zeros(len(scores), dtype='int32')
-
-        # The removed regions in the optimal solution
-        next_clique = clique - optimal_solution
-
-        # Increment the order of the basepairs in the removed regions
-        for reg in next_clique:
-            results[reg.get_index_array()] += 1
-
-        # Remove non-conflicting-regions for evaluation of the next
-        # clique
-        next_clique = _remove_non_conflicting_regions(next_clique)
-
-        # The next clique is only evaluated if it contains conflicting
-        # regions
-        if len(next_clique) > 0:
-            next_result_diff = _get_result_diff(next_clique, scores)
-
-            # Merge results of this clique with the next clique
-            results_diff[o] = []
-            for diff in next_result_diff:
-                results_diff[o].append(deepcopy(results))
-                results_diff[o][-1] = (results_diff[o][-1] + diff)
-
-        else:
-            results_diff[o] = [results]
-
-    # Return flattened results
-    return [result for results in results_diff for result in results]
 
 def _get_results(regions, results):
     """
