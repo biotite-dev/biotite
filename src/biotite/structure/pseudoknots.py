@@ -546,7 +546,8 @@ def _get_results(regions, results):
     if len(regions) == 0:
         return results
 
-    # Get the optimal solutions for given regions
+    # Get the optimal solutions for given regions. Evaluate each clique
+    # of mutually conflicting regions seperately
     cliques = _conflict_cliques(regions)
     solutions = [set(chain(*e)) for e in product(
         *[_remove_pseudoknots(clique) for clique in cliques]
