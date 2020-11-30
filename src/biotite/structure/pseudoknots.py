@@ -38,7 +38,7 @@ def pseudoknots(base_pairs, scores=None):
     Returns
     -------
     pseudoknot_order : ndarray, dtype=int, shape=(m,n)
-        The pseudoknot order for m individual solutions.
+        The pseudoknot order for *m* individual solutions.
 
     Notes
     -----
@@ -86,7 +86,7 @@ def pseudoknots(base_pairs, scores=None):
     # Split the base pairs in regions
     regions = _find_regions(base_pairs, scores)
 
-    # Evaluate results
+    # Compute results
     results = _get_results(regions, results)
 
     return np.vstack(results)
@@ -152,7 +152,7 @@ class _Region():
 
 def _find_regions(base_pairs, scores):
     """
-    Find regions in a base pair arrray. A region is defined as a set of
+    Find regions in a base pair array. A region is defined as a set of
     consecutively nested base pairs.
 
     Parameters
@@ -399,7 +399,7 @@ def _get_optimal_solutions(regions):
     Returns
     -------
     solutions : ndarray, dtype=object
-        The optimal solutions according to the score arrray.
+        The optimal solutions according to the score array.
     """
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2

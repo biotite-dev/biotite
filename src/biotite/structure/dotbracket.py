@@ -23,7 +23,7 @@ _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
 _CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
-def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
+def dot_bracket_from_structure(nucleic_acid_strand, scores=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -32,7 +32,7 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     ----------
     atom_array : AtomArray
         The nucleic-acid-strand to be represented in DBL-notation.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
         :func:`pseudoknots()`
 
@@ -57,9 +57,9 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     basepairs = base_pairs(nucleic_acid_strand)
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
     length = get_residue_count(nucleic_acid_strand)
-    return dot_bracket(basepairs, length, scoring=scoring)
+    return dot_bracket(basepairs, length, scores=scores)
 
-def dot_bracket(basepairs, length, scoring=None):
+def dot_bracket(basepairs, length, scores=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -74,7 +74,7 @@ def dot_bracket(basepairs, length, scoring=None):
         strand.
     length : int
         The number of bases in the strand.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
         :func:`pseudoknots()`
 
@@ -86,7 +86,7 @@ def dot_bracket(basepairs, length, scoring=None):
     Examples
     --------
     The sequence ``ACGTC`` has a length of 5. If there was to be a
-    pairing interaction between the ``A`` and ``T``, ``basepairs`` would
+    pairing interaction between the ``A`` and ``T``, `basepairs` would
     have the form:
 
     >>> import numpy as np
@@ -112,7 +112,7 @@ def dot_bracket(basepairs, length, scoring=None):
         in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
-    pseudoknot_order = pseudoknots(basepairs, scores=scoring)
+    pseudoknot_order = pseudoknots(basepairs, scores=scores)
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
