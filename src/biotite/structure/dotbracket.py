@@ -18,9 +18,9 @@ from .pseudoknots import pseudoknots
 from .residues import get_residue_count, get_residue_positions
 
 _OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-_OPENING_BRACKETS_BYTES = bytearray(_OPENING_BRACKETS.encode())
+_OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()
 _CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
-_CLOSING_BRACKETS_BYTES = bytearray(_CLOSING_BRACKETS.encode())
+_CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
 def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
@@ -117,7 +117,7 @@ def dot_bracket(basepairs, length, scoring=None):
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
     notations = [
-        bytearray(("."*length).encode()) for _ in range(len(pseudoknot_order))
+        bytearray((b"."*length)) for _ in range(len(pseudoknot_order))
     ]
     for s, solution in enumerate(pseudoknot_order):
         for basepair, order in zip(basepairs, solution):
