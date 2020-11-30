@@ -243,7 +243,9 @@
             "hbond",
             "hbond_frequency",
             "base_pairs",
-            "base_stacking"
+            "base_stacking",
+            "base_pairs_edge",
+            "base_pairs_glycosidic_bond"
         ]
     }
 }
