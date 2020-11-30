@@ -10,7 +10,7 @@ dot-bracket-notation.
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["dot_bracket_from_structure", "dot_bracket",
-    "base_pairs_from_dot_bracket"]
+           "base_pairs_from_dot_bracket"]
 
 import numpy as np
 from .basepairs import base_pairs
