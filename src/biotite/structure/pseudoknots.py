@@ -11,8 +11,7 @@ __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
 import numpy as np
-from copy import deepcopy
-
+from itertools import chain, product
 
 def pseudoknots(base_pairs, scores=None):
     """
@@ -548,7 +547,10 @@ def _get_results(regions, results):
         return results
 
     # Get the optimal solutions for given regions
-    solutions = _remove_pseudoknots(regions)
+    cliques = _conflict_cliques(regions)
+    solutions = [set(chain(*e)) for e in product(
+        *[_remove_pseudoknots(clique) for clique in cliques]
+    )]
 
     # Get a copy of the current results for each optimal solution
     results_list = [
@@ -561,7 +563,7 @@ def _get_results(regions, results):
         # Get the pseudoknotted regions
         pseudoknoted_regions = regions - solution
 
-        # The pseudoknot order for each pseudoknotted regions is one
+        # The pseudoknot order for each pseudoknotted region is one
         diff = np.zeros(len(results[0]), dtype='int32')
         for region in pseudoknoted_regions:
             diff[region.get_index_array()] += 1
@@ -574,4 +576,4 @@ def _get_results(regions, results):
         results_list[i] = _get_results(pseudoknoted_regions, results_list[i])
 
     # Flatten the results
-    return [result for results in results_list for result in results]
+    return list(chain(*results_list))
