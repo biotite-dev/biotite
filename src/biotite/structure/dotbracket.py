@@ -112,6 +112,13 @@ def dot_bracket(basepairs, length, scores=None):
         in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
+    # Make sure the lower residue is on the left for each row
+    basepairs = np.sort(basepairs, axis=1)
+
+    # Sort the first column in ascending order
+    original_indices = np.argsort(basepairs[:, 0])
+    basepairs = basepairs[original_indices]
+
     pseudoknot_order = pseudoknots(basepairs, scores=scores)
 
     # Each optimal pseudoknot order solution is represented in
