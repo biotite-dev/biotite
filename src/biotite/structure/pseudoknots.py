@@ -383,10 +383,13 @@ def _conflict_cliques(regions):
     return cliques
 
 
-def _get_optimal_solutions(regions):
+def _remove_pseudoknots(regions):
     """
     Get the optimal solutions according to the algorithm referenced in
-    :func:``pseudoknots()``.
+    :func:`pseudoknots()`.
+
+    The algorithm uses a dynamic programming matrix in order to find
+    the optimal solution with the highest score.
 
     Parameters
     ----------
@@ -544,7 +547,7 @@ def _get_results(regions, results):
         return results
 
     # Get the optimal solutions for given regions
-    solutions = _get_optimal_solutions(regions)
+    solutions = _remove_pseudoknots(regions)
 
     # Get a copy of the current results for each optimal solution
     results_list = [
