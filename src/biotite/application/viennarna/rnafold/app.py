@@ -10,9 +10,35 @@ from tempfile import NamedTemporaryFile
 from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
 from ....sequence.io.fasta import FastaFile, set_sequence
+from ....sequence import NucleotideSequence
 from ....structure.dot_bracket import base_pairs_from_dot_bracket
 
 class RNAfoldApp(LocalApp):
+    """
+    Compute the secondary structure of a nucleic acid sequence using
+    ViennaRNA's RNAfold software.
+
+    Internally this creates a :class:`Popen` instance, which handles
+    the execution.
+
+    Parameters
+    ----------
+    sequence : NucleotideSequence
+        The nucleotide sequence.
+    bin_path : str, optional
+        Path of the RNAfold binary.
+
+    Examples
+    --------
+
+    >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+    >>> app.start()
+    >>> app.join()
+    >>> print(app.get_mfe())
+    >>> print(app.get_dot_bracket())
+    -1.3
+    '(((.((((.......)).)))))....'
+    """
 
     def __init__(self, sequence, bin_path="RNAfold"):
         super().__init__(bin_path)
@@ -31,7 +57,7 @@ class RNAfoldApp(LocalApp):
         super().evaluate()
         lines = self.get_stdout().split("\n")
         content = lines[2]
-        dotbracket, mfe = content.split(" ")
+        dotbracket, mfe = content.split(" ", maxsplit=1)
         mfe = float(mfe[1:-1])
 
         self._mfe = mfe
