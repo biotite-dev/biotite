@@ -389,7 +389,7 @@ def _remove_pseudoknots(regions):
     :func:`pseudoknots()`.
 
     The algorithm uses a dynamic programming matrix in order to find
-    the optimal solution with the highest score.
+    the optimal solutions with the highest combined region scores.
 
     Parameters
     ----------
@@ -402,7 +402,8 @@ def _remove_pseudoknots(regions):
     Returns
     -------
     solutions : ndarray, dtype=object
-        The optimal solutions according to the score array.
+        The optimal solutions. Each solution in the ``ndarray`` is
+        represented as ``set`` of unknotted regions.
     """
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2
