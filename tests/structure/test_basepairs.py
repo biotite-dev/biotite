@@ -3,12 +3,21 @@
 # information.
 
 import pytest
+import json
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from biotite.structure.info import residue
+from biotite.structure.residues import get_residue_masks
+from biotite.structure.hbond import hbond
 from os.path import join
 from ..util import data_dir
+# For ``base_pairs_edge()`` differences to a reference can be ambiguous
+# as the number hydrogen bonds between two different edges can be equal.
+# In order to distinguish ambiguously identified edges from wrongfully
+# identified edges the full edge matrix, listing the number of hydrogen
+# bonds for each edge has to be considered.
+from biotite.structure.basepairs import _get_edge_matrix
 
 
 def reversed_iterator(iter):
@@ -20,10 +29,10 @@ def reversed_iterator(iter):
 
 @pytest.fixture
 def nuc_sample_array():
-    """
-    Sample structure for base pair detection.
-    """
-    return strucio.load_structure(join(data_dir("structure"), "1qxb.cif"))
+    return strucio.load_structure(
+        join(data_dir("structure"), "base_pairs", "1qxb.cif")
+    )
+
 
 @pytest.fixture
 def basepairs(nuc_sample_array):
@@ -48,18 +57,19 @@ def check_output(computed_basepairs, basepairs):
     Check the output of base_pairs.
     """
 
-    # Check if base pairs are unique in `computed_basepairs`
+    # Check if base pairs are unique in computed_basepairs
     seen = set()
     assert (not any(
         (base1, base2) in seen) or (base2, base1 in seen)
         or seen.add((base1, base2)) for base1, base2 in computed_basepairs
         )
-    # Check if the right number of base pairs is in `computed_basepairs`
+    # Check if the right number of base pairs is in computed_base pairs
     assert(len(computed_basepairs) == len(basepairs))
-    # Check if the right base pairs are in computed_base pairs
+    # Check if the right base pairs are in computed_basepairs
     for comp_basepair in computed_basepairs:
         assert ((comp_basepair in basepairs) \
                 or (comp_basepair in np.flip(basepairs)))
+
 
 @pytest.mark.parametrize("unique_bool", [False, True])
 def test_base_pairs_forward(nuc_sample_array, basepairs, unique_bool):
@@ -81,6 +91,7 @@ def test_base_pairs_forward_no_hydrogen(nuc_sample_array, basepairs):
     check_residue_starts(computed_basepairs, nuc_sample_array)
     check_output(nuc_sample_array[computed_basepairs].res_id, basepairs)
 
+
 @pytest.mark.parametrize("unique_bool", [False, True])
 def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
     """
@@ -101,6 +112,7 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
 
+
 def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     """
     Remove the hydrogens from the sample structure. Then reverse the
@@ -118,6 +130,7 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     check_output(
         reversed_nuc_sample_array[computed_basepairs].res_id, basepairs
     )
+
 
 @pytest.mark.parametrize("seed", range(10))
 def test_base_pairs_reordered(nuc_sample_array, seed):
@@ -140,6 +153,7 @@ def test_base_pairs_reordered(nuc_sample_array, seed):
         struc.base_pairs(nuc_sample_array)
         == struc.base_pairs(nuc_sample_array_reordered)
     ))
+
 
 def test_map_nucleotide():
     """Test the function map_nucleotide with some examples.
@@ -175,6 +189,113 @@ def test_map_nucleotide():
     assert struc.map_nucleotide(residue('ALA')) == (None, False)
 
 
+def get_reference(pdb_id, suffix):
+    """
+    Gets a reference structure and a related json array depending on
+    a specified JSON-suffix and PDB ID.
+    """
+    structure = strucio.load_structure(
+        join(data_dir("structure"), "base_pairs", f"{pdb_id}.cif")
+    )
+
+    with open(
+        join(data_dir("structure"), "base_pairs", f"{pdb_id}_{suffix}.json"
+    ), "r") as file:
+        reference = np.array(json.load(file))
+
+    return structure, reference
+
+def get_reference_index(pair, array):
+    """
+    Get the index of the row in a reference array, where the first two
+    columns match the values of ``pair``. If no match is found ``Ǹone``
+    is returned.
+    """
+    pair = sorted(pair)
+    if np.any((array[:, 0] == pair[0]) & (array[:, 1] == pair[1])):
+        return np.where((array[:, 0] == pair[0]) & (array[:, 1] == pair[1]))
+    return None
+
+
+
+def check_edge_plausibility(
+    reference_structure, pair, reference_edges, output_edges
+):
+    """
+    Checks if the difference to a reference edge is at least ambiguous.
+    A difference is defined as ambiguous, if the number of hydrogen
+    bonds on a given edge is the same as on the edge specified in the
+    reference.
+    """
+    # Get the complete edge matrix for a given edge
+    edge_matrix = _get_edge_matrix(
+        reference_structure, get_residue_masks(reference_structure, pair)
+    )
+    # Check if the difference to the reference is at least arbitrary
+    for edges, reference_edge, output_edge in zip(
+        edge_matrix, reference_edges, output_edges
+    ):
+        max_matches = np.max(edges)
+        # The edge type corresponds to the index in the edge matrix + 1
+        max_match_edges = np.argwhere(edges == max_matches).flatten() + 1
+        assert reference_edge in max_match_edges
+        assert output_edge in max_match_edges
+
+
+@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
+def test_base_pairs_edge(pdb_id):
+    """
+    Test the function ``base_pairs_edge``. Each test structure is a
+    crystal structure onto which hydrogens were added using Gromacs
+    force fields. The reference data was taken from the NDB-database
+    annotations and parsed as json array.
+    """
+    # Get the references
+    reference_structure, reference_edges = get_reference(pdb_id, "edges")
+    # Calculate base pairs and edges for the references
+    pairs = struc.base_pairs(reference_structure)
+    edges = struc.base_pairs_edge(reference_structure, pairs)
+
+    # Check the plausibility with the reference data for each base pair
+    for pair, pair_edges in zip(pairs, edges):
+        pair_res_ids = reference_structure[pair].res_id
+        index = get_reference_index(pair_res_ids, reference_edges)
+        if index is not None:
+            pair_reference_edges =  [
+                reference_edges[index, 2], reference_edges[index, 3]
+            ]
+            check_edge_plausibility(
+                reference_structure, pair, pair_reference_edges, pair_edges
+            )
+
+
+@pytest.mark.parametrize("pdb_id", ["1gid", "1nkw", "1xnr"])
+def test_base_pairs_glycosidic_bond(pdb_id):
+    """
+    Test the function ``base_pairs_edge``. Each test structure is a
+    crystal structure onto which hydrogens were added using Gromacs
+    force fields. The reference data was taken from the NDB-database
+    annotations and parsed as json array.
+    """
+    # Get the references
+    reference_structure, reference_gly_bonds = get_reference(pdb_id, "sugar")
+    # Calculate base pairs and edges for the references
+    pairs = struc.base_pairs(reference_structure)
+    glycosidic_bond_orientations = struc.base_pairs_glycosidic_bond(
+        reference_structure, pairs
+    )
+
+    # Check the plausibility with the reference data for each base pair
+    for pair, pair_orientation in zip(pairs, glycosidic_bond_orientations):
+        pair_res_ids = reference_structure[pair].res_id
+        index = get_reference_index(pair_res_ids, reference_gly_bonds)
+        if index is not None:
+            reference_orientation = struc.GlycosidicBond(
+                reference_gly_bonds[index, 2]
+            )
+            assert reference_orientation == pair_orientation
+
+
 def test_base_stacking():
     """
     Test ``base_stacking()`` using the DNA-double-helix 1BNA. It is
@@ -183,7 +304,9 @@ def test_base_stacking():
     helix.
     """
     # Load the test structure (1BNA) - a DNA-double-helix
-    helix = strucio.load_structure(join(data_dir("structure"), "1bna.mmtf"))
+    helix = strucio.load_structure(
+        join(data_dir("structure"), "base_pairs", "1bna.mmtf")
+    )
 
     residue_starts = struc.get_residue_starts(helix)
 
