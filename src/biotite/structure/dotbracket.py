@@ -17,9 +17,9 @@ from .basepairs import base_pairs
 from .pseudoknots import pseudoknots
 from .residues import get_residue_count, get_residue_positions
 
-_OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+_OPENING_BRACKETS = "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()
-_CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
+_CLOSING_BRACKETS = ")]}>abcdefghijklmnopqrstuvwxyz"
 _CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
