@@ -36,6 +36,10 @@ def dot_bracket_from_structure(
     scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
         :func:`pseudoknots()`
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, it is represented as unpaired. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
@@ -79,6 +83,10 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
         :func:`pseudoknots()`
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, it is represented as unpaired. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
@@ -121,9 +129,10 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     original_indices = np.argsort(basepairs[:, 0])
     basepairs = basepairs[original_indices]
 
+    # Get pseudoknot order
     pseudoknot_order = pseudoknots(basepairs, scores=scores,
                                    max_pseudoknot_order=max_pseudoknot_order)
-    print(pseudoknot_order)
+
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
     notations = [

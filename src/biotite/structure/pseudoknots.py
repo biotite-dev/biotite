@@ -33,6 +33,10 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair. If ``Ǹone`` is provided, the score
         of each base pair is one.
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, its order is specified as -1. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
@@ -532,6 +536,12 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
         The regions for whích optimal solutions are to be found.
     results : list [ndarray, ...]
         The results
+    max_pseudoknot_order : int
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, its order is specified as -1. If ``None``
+        is given, all base pairs are evaluated.
+    order : int (default: 0)
+        The order that is currently evaluated.
 
     Returns
     -------
@@ -543,27 +553,12 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     regions = _remove_non_conflicting_regions(regions)
 
     # If no conflicts remain, the results are complete
-    #print(np.array(results).flatten())
-    #print(np.amax(np.array(results).flatten()))
-    #print(max_pseudoknot_order)
-
     if len(regions) == 0:
+        # All remaining knotted pairs are of the current order
         for i, result in enumerate(results):
             results[i][result == -1] = order
         return results
-    """
-    if (
-        len(regions) == 0 or
-        (
-            (max_pseudoknot_order == order)
-        )
-    ):
-        for i, result in enumerate(results):
-            results[i][result == -1] = order
-        #print(results)
-        #print(order)
-        return results
-    """
+
     # Get the optimal solutions for given regions. Evaluate each clique
     # of mutually conflicting regions seperately
     cliques = _conflict_cliques(regions)
@@ -575,35 +570,32 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     results_list = [
         [result.copy() for result in results] for _ in range(len(solutions))
     ]
-    #print(order)
+
     # Evaluate each optimal solution
     for i, solution in enumerate(solutions):
 
         # Get the pseudoknotted regions
         pseudoknoted_regions = regions - solution
-        index_list_knoted = list(chain(*[region.get_index_array() for region in pseudoknoted_regions]))
-        index_list_unknoted = list(chain(*[region.get_index_array() for region in solution]))
-        #print(results)
-        #print(index_list_unknoted)
-        for j, result in enumerate(results_list[i]):
-            result[result == -1] = order
-            result[index_list_knoted] = -1
-            result[index_list_unknoted] = order
-            #print(result[index_list_unknoted])
-        #print(order)
-        #print(results_list)
-        """
-        # The pseudoknot order for each pseudoknotted region is one
-        diff = np.zeros(len(results[0]), dtype='int32')
-        for region in pseudoknoted_regions:
-            diff[region.get_index_array()] += 1
 
-        # Increment the pseudoknot order for each solution
-        for result in results_list[i]:
-            result += diff
-        """
+        # Get an index list of the knotted base pairs
+        index_list_knoted = list(
+            chain(
+                *[region.get_index_array() for region in pseudoknoted_regions]
+            )
+        )
+
+        # Write results for current solution
+        for j, result in enumerate(results_list[i]):
+            # Set all knotted regions of last round to current order
+            result[result == -1] = order
+            # Set all knotted regions of this round to -1 as they are
+            # still to be evaluated
+            result[index_list_knoted] = -1
+
+        # If this order is the maximum specified order, stop evaluation
         if max_pseudoknot_order == order:
             continue
+
         # Evaluate the pseudoknotted region
         results_list[i] = _get_results(
             pseudoknoted_regions, results_list[i],
