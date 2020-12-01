@@ -213,8 +213,8 @@ def test_partial_charges(molecule, expected_results):
     implementation correspond to the values given in the publication
     within a certain tolerance range.
     """
-    charges = charges.partial_charges(molecule)
-    assert charges[molecule.element == "C"].tolist() == \
+    charges_ = charges.partial_charges(molecule)
+    assert charges_[molecule.element == "C"].tolist() == \
         pytest.approx(expected_results, abs=1e-2)
 
 
