@@ -13,7 +13,7 @@ __all__ = ["pseudoknots"]
 import numpy as np
 from itertools import chain, product
 
-def pseudoknots(base_pairs, scores=None):
+def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     """
     Identify the pseudoknot order for each base pair in a given set of
     base pairs.
@@ -86,7 +86,7 @@ def pseudoknots(base_pairs, scores=None):
     regions = _find_regions(base_pairs, scores)
 
     # Compute results
-    results = _get_results(regions, results)
+    results = _get_results(regions, results, max_pseudoknot_order)
 
     return np.vstack(results)
 
@@ -519,7 +519,7 @@ def _remove_pseudoknots(regions):
     return dp_matrix[0, -1]
 
 
-def _get_results(regions, results):
+def _get_results(regions, results, max_pseudoknot_order, order=0):
     """
     Use the dynamic programming algorithm to get the pseudoknot order
     of a given set of regions. If there are remaining conflicts their
@@ -543,9 +543,27 @@ def _get_results(regions, results):
     regions = _remove_non_conflicting_regions(regions)
 
     # If no conflicts remain, the results are complete
-    if len(regions) == 0:
-        return results
+    #print(np.array(results).flatten())
+    #print(np.amax(np.array(results).flatten()))
+    #print(max_pseudoknot_order)
 
+    if len(regions) == 0:
+        for i, result in enumerate(results):
+            results[i][result == -1] = order
+        return results
+    """
+    if (
+        len(regions) == 0 or
+        (
+            (max_pseudoknot_order == order)
+        )
+    ):
+        for i, result in enumerate(results):
+            results[i][result == -1] = order
+        #print(results)
+        #print(order)
+        return results
+    """
     # Get the optimal solutions for given regions. Evaluate each clique
     # of mutually conflicting regions seperately
     cliques = _conflict_cliques(regions)
@@ -557,13 +575,24 @@ def _get_results(regions, results):
     results_list = [
         [result.copy() for result in results] for _ in range(len(solutions))
     ]
-
+    #print(order)
     # Evaluate each optimal solution
     for i, solution in enumerate(solutions):
 
         # Get the pseudoknotted regions
         pseudoknoted_regions = regions - solution
-
+        index_list_knoted = list(chain(*[region.get_index_array() for region in pseudoknoted_regions]))
+        index_list_unknoted = list(chain(*[region.get_index_array() for region in solution]))
+        #print(results)
+        #print(index_list_unknoted)
+        for j, result in enumerate(results_list[i]):
+            result[result == -1] = order
+            result[index_list_knoted] = -1
+            result[index_list_unknoted] = order
+            #print(result[index_list_unknoted])
+        #print(order)
+        #print(results_list)
+        """
         # The pseudoknot order for each pseudoknotted region is one
         diff = np.zeros(len(results[0]), dtype='int32')
         for region in pseudoknoted_regions:
@@ -572,9 +601,14 @@ def _get_results(regions, results):
         # Increment the pseudoknot order for each solution
         for result in results_list[i]:
             result += diff
-
+        """
+        if max_pseudoknot_order == order:
+            continue
         # Evaluate the pseudoknotted region
-        results_list[i] = _get_results(pseudoknoted_regions, results_list[i])
+        results_list[i] = _get_results(
+            pseudoknoted_regions, results_list[i],
+            max_pseudoknot_order, order=order+1
+        )
 
     # Flatten the results
     return list(chain(*results_list))

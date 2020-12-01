@@ -23,7 +23,8 @@ _CLOSING_BRACKETS = ")]}>abcdefghijklmnopqrstuvwxyz"
 _CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
-def dot_bracket_from_structure(nucleic_acid_strand, scores=None):
+def dot_bracket_from_structure(
+    nucleic_acid_strand, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -57,9 +58,10 @@ def dot_bracket_from_structure(nucleic_acid_strand, scores=None):
     basepairs = base_pairs(nucleic_acid_strand)
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
     length = get_residue_count(nucleic_acid_strand)
-    return dot_bracket(basepairs, length, scores=scores)
+    return dot_bracket(basepairs, length, scores=scores,
+                       max_pseudoknot_order=max_pseudoknot_order)
 
-def dot_bracket(basepairs, length, scores=None):
+def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -119,8 +121,9 @@ def dot_bracket(basepairs, length, scores=None):
     original_indices = np.argsort(basepairs[:, 0])
     basepairs = basepairs[original_indices]
 
-    pseudoknot_order = pseudoknots(basepairs, scores=scores)
-
+    pseudoknot_order = pseudoknots(basepairs, scores=scores,
+                                   max_pseudoknot_order=max_pseudoknot_order)
+    print(pseudoknot_order)
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
     notations = [
@@ -128,6 +131,8 @@ def dot_bracket(basepairs, length, scores=None):
     ]
     for s, solution in enumerate(pseudoknot_order):
         for basepair, order in zip(basepairs, solution):
+            if order == -1:
+                continue
             notations[s][basepair[0]] = _OPENING_BRACKETS_BYTES[order]
             notations[s][basepair[1]] = _CLOSING_BRACKETS_BYTES[order]
     return [notation.decode() for notation in notations]
