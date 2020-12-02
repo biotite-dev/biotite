@@ -11,12 +11,12 @@ from biotite.structure import BondList
 from biotite.structure import charges
 
 
-# First testing partial charge of carbon in the molecules given in table
-# 3 of the publication
+# Test the partial charge of carbon in the molecules given in table
+# 3 of the Gasteiger-Marsili publication
 # Since some of the molecules are not available in the Chemical 
-# Components Dictionary, the  respective AtomArrays are constructed via
+# Components Dictionary, the respective AtomArrays are constructed via
 # Biotite and the coordinates are arbitrarily set to the origin since
-# the decisive information is the BondList
+# the relevant information is the BondList
 
 # Creating atoms to build molecules with
 carbon = Atom([0, 0, 0], element="C")
