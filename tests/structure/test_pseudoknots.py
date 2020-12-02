@@ -4,6 +4,7 @@
 
 import pytest
 import numpy as np
+import pickle as pkl
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from os.path import join
@@ -58,6 +59,52 @@ def test_pseudoknots(nuc_sample_array):
                 assert (
                     set(base_pair) in pseudoknot_order_one_or_two
                 )
+
+def load_test(name):
+    """
+    Load sample input basepair arrays and their solutions according to
+    the reference algorithm which is located at:
+    https://www.ibi.vu.nl/programs/k2nwww/
+    """
+    # Basepair numpy array (input for `pseudoknots()`)
+    with open(
+        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.pkl"),
+        "rb"
+    ) as f:
+        basepairs = pkl.load(f)
+    # List of sulutions (set of tuples)
+    with open(
+        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.pkl"),
+        "rb"
+    ) as f:
+        solutions = pkl.load(f)
+    return basepairs, solutions
+
+@pytest.mark.parametrize("name", [f"test{x}" for x in range(10)])
+def test_pseudoknot_removal(name):
+    basepairs, reference_solutions = load_test(name)
+
+    reference_solutions_set = set()
+    for reference_solution in reference_solutions:
+        reference_solutions_set.add(frozenset(reference_solution))
+    reference_solutions = reference_solutions_set
+
+    raw_solutions = struc.pseudoknots(basepairs, max_pseudoknot_order=0)
+    solutions = set()
+    for raw_solution in raw_solutions:
+        solution = set()
+        for basepair, order in zip(basepairs, raw_solution):
+            if order == -1:
+                continue
+            solution.add(tuple(sorted(basepair)))
+        assert solution in reference_solutions
+        solutions.add(frozenset(solution))
+    if name == "test3" or name == "test4":
+        print(reference_solutions - solutions)
+    print('')
+    assert len(reference_solutions) == len(solutions)
+
+
 
 
 
