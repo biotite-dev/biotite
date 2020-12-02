@@ -80,29 +80,21 @@ def load_test(name):
         solutions = pkl.load(f)
     return basepairs, solutions
 
-@pytest.mark.parametrize("name", [f"test{x}" for x in range(10)])
+@pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
 def test_pseudoknot_removal(name):
     basepairs, reference_solutions = load_test(name)
 
-    reference_solutions_set = set()
-    for reference_solution in reference_solutions:
-        reference_solutions_set.add(frozenset(reference_solution))
-    reference_solutions = reference_solutions_set
-
     raw_solutions = struc.pseudoknots(basepairs, max_pseudoknot_order=0)
-    solutions = set()
+    solutions_count = 0
     for raw_solution in raw_solutions:
         solution = set()
         for basepair, order in zip(basepairs, raw_solution):
             if order == -1:
                 continue
             solution.add(tuple(sorted(basepair)))
+        solutions_count += 1
         assert solution in reference_solutions
-        solutions.add(frozenset(solution))
-    if name == "test3" or name == "test4":
-        print(reference_solutions - solutions)
-    print('')
-    assert len(reference_solutions) == len(solutions)
+    assert len(reference_solutions) == solutions_count
 
 
 

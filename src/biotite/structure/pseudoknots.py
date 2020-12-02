@@ -177,10 +177,11 @@ def _find_regions(base_pairs, scores):
     original_indices = np.argsort(sorted_base_pairs[:, 0])
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
-    # Rank the right column in ascending order:
-    # E.g.: [3, 9, 1] -> [2, 3, 1]
-    downstream_order = np.argsort(sorted_base_pairs[:,1])
-    downstream_rank = np.argsort(downstream_order)
+    # Rank each base
+    # E.g.: [[3, 5]  --> [[1, 2]
+    #        [9, 7]]      [4, 3]]
+    order = np.argsort(sorted_base_pairs.flatten())
+    rank = np.argsort(order).reshape(base_pairs.shape)
 
     # The base pairs belonging to the current region
     region_pairs = []
@@ -196,11 +197,15 @@ def _find_regions(base_pairs, scores):
 
         # Check if the current base pair belongs to the region that is
         # currently being defined
-        previous_rank = downstream_rank[i-1]
-        this_rank = downstream_rank[i]
+        previous_upstream_rank = rank[i-1][0]
+        this_upstream_rank = rank[i][0]
+        previous_downstream_rank = rank[i-1][1]
+        this_downstream_rank = rank[i][1]
+
         # if the current base pair belongs to a new region, save the
         # current region and start a new region
-        if (previous_rank - this_rank) != 1:
+        if ((previous_downstream_rank - this_downstream_rank) != 1 or
+            (this_upstream_rank - previous_upstream_rank) != 1):
             regions.add(_Region(base_pairs, np.array(region_pairs), scores))
             region_pairs = []
 
@@ -455,9 +460,6 @@ def _remove_pseudoknots(regions):
             # bottom cell both differ from an empty solution
             if (np.any(left != [frozenset()]) and
                 np.any(bottom != [frozenset()])):
-                starts = np.empty(
-                    (2, max(len(left), len(bottom))), dtype='int32'
-                )
 
                 left_highest = dp_matrix_solutions_stops[i, j-1]
                 bottom_lowest = dp_matrix_solutions_starts[i+1, j]
@@ -505,8 +507,8 @@ def _remove_pseudoknots(regions):
             # Add the solutions to the dynamic programming matrix
             dp_matrix[i, j] = solution_candidates
 
-            solution_starts = np.empty_like(solution_candidates, dtype='int32')
-            solution_stops = np.empty_like(solution_candidates, dtype='int32')
+            solution_starts = np.zeros_like(solution_candidates, dtype='int32')
+            solution_stops = np.zeros_like(solution_candidates, dtype='int32')
 
             for s, solution in enumerate(solution_candidates):
                 solution_starts[s] = min(
