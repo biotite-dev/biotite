@@ -111,6 +111,8 @@ class _Region():
     region_pairs: ndarray, dtype=int
         The indices of the base pairs in ``base_pairs`` that are part of
         the region.
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair.
     """
 
     def __init__ (self, base_pairs, region_pairs, scores):
@@ -163,6 +165,8 @@ def _find_regions(base_pairs, scores):
     base_pairs : ndarray, dtype=int, shape=(n, 2)
         Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair.
 
     Returns
     -------

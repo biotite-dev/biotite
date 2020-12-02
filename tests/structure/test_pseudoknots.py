@@ -62,17 +62,15 @@ def test_pseudoknots(nuc_sample_array):
 
 def load_test(name):
     """
-    Load sample input basepair arrays and their solutions according to
-    the reference algorithm which is located at:
-    https://www.ibi.vu.nl/programs/k2nwww/
+    Load sample basepair arrays and reference solutions from file.
     """
-    # Basepair numpy array (input for `pseudoknots()`)
+    # Base pairs as numpy array (input for `pseudoknots()`)
     with open(
         join(data_dir("structure"), "pseudoknots", f"{name}_knotted.pkl"),
         "rb"
     ) as f:
         basepairs = pkl.load(f)
-    # List of sulutions (set of tuples)
+    # List of solutions (set of tuples)
     with open(
         join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.pkl"),
         "rb"
@@ -82,6 +80,16 @@ def load_test(name):
 
 @pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
 def test_pseudoknot_removal(name):
+    """
+    Test the implementation dynamic programming algorithm referenced in
+    `pseudoknots()` against the original implementation.
+
+    The reference solutions were created with the following tool:
+    https://www.ibi.vu.nl/programs/k2nwww/
+
+    The original purpose was to remove pseudoknots. Thus, the reference
+    solutions contain unknotted basepairs.
+    """
     basepairs, reference_solutions = load_test(name)
 
     raw_solutions = struc.pseudoknots(basepairs, max_pseudoknot_order=0)
