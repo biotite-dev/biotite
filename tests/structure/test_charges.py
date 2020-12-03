@@ -29,6 +29,8 @@ nitrogen = Atom([0, 0, 0], element ="N")
 
 fluorine = Atom([0, 0, 0], element ="F")
 
+sulfur = Atom([0, 0, 0], element="S")
+
 # Building molecules
 methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
 methane.bonds = BondList(
@@ -246,3 +248,61 @@ def test_total_charge_zero(molecule):
     """
     total_charge = np.sum(charges.partial_charges(molecule))
     assert total_charge == pytest.approx(0, abs=1e-15)
+
+
+# Test whether a formal charge of +1 has the expected effects on
+# carbons's partial charge in methane
+# AtomArray with positive carbon must be created ab inition in order to
+# prevent influencing 'methane'
+pos_methane = array(
+    [carbon, hydrogen, hydrogen, hydrogen, hydrogen]
+)
+pos_methane.bonds = BondList(
+    pos_methane.array_length(),
+    np.array([[0,1], [0,2], [0,3], [0,4]])
+)
+pos_methane.charge = np.array([1, 0, 0, 0, 0])
+
+def test_pos_formal_charge():
+    """
+    Test whether the partial charge of carbon in methane behaves as
+    expected if it carries a formal charge of +1. To be more precise,
+    it is expected to be smaller than 1 since this is the value which
+    negative charge is addded to during iteration and also greater than
+    the partial charge of carbon in methane carrying no formal charge.
+    """
+    ref_carb_part_charge = charges.partial_charges(
+        methane, iteration_step_num=6
+    )[0]
+    pos_carb_part_charge = charges.partial_charges(
+        pos_methane, iteration_step_num=6
+    )[0]
+    assert pos_carb_part_charge < 1
+    assert pos_carb_part_charge > ref_carb_part_charge
+
+
+def test_valence_state_not_parametrized():
+    """
+    Test case in which parameters for a certain valence state of a
+    generally parametrized atom are not available.
+    In our case, it is sulfur having a double bond, i. e. only one
+    binding partner.
+    For this purpose, a fictitious molecule consisting of a central
+    carbon bound to two hydrogen atoms via single bonds and to one
+    sulfur atom via a double bond is created and tested.
+    The expectations are the following: the sulfur's partial charge to
+    be NaN and the carbons's partial charge to be smaller than that of
+    the two hydrogens.
+    """
+    fictitious_molecule = array(
+        [carbon, sulfur, hydrogen, hydrogen]
+    )
+    fictitious_molecule.bonds = BondList(
+        fictitious_molecule.array_length(),
+        np.array([[0,1], [0,2], [0,3]])
+    )
+    sulfur_part_charge = charges.partial_charges(fictitious_molecule)[1]
+    carb_part_charge = charges.partial_charges(fictitious_molecule)[0]
+    hyd_part_charge = charges.partial_charges(fictitious_molecule)[2]
+    assert np.isnan(sulfur_part_charge)
+    assert carb_part_charge < hyd_part_charge
