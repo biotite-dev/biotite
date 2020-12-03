@@ -20,7 +20,7 @@ def nuc_sample_array():
 
 def test_pseudoknots(nuc_sample_array):
     """
-    Check the output of ``pseudoknots()``.
+    Check the output of :func:`pseudoknots()`.
     """
     # Known base pairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
@@ -62,7 +62,7 @@ def test_pseudoknots(nuc_sample_array):
 
 def load_test(name):
     """
-    Load sample basepair arrays and reference solutions from file.
+    Load sample base pair arrays and reference solutions from file.
     """
     # Base pairs as numpy array (input for `pseudoknots()`)
     with open(
@@ -81,8 +81,9 @@ def load_test(name):
 @pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
 def test_pseudoknot_removal(name):
     """
-    Test the implementation dynamic programming algorithm referenced in
-    `pseudoknots()` against the original implementation.
+    Test the implementation of the dynamic programming algorithm
+    referenced in :func:`pseudoknots()` against the original
+    implementation.
 
     The reference solutions were created with the following tool:
     https://www.ibi.vu.nl/programs/k2nwww/
