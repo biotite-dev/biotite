@@ -128,7 +128,13 @@ class RNAfoldApp(LocalApp):
         >>> app.start()
         >>> app.join()
         >>> print(app.get_base_pairs())
-        '(((.((((.......)).)))))....'
+        array([[ 0, 22],
+               [ 1, 21],
+               [ 2, 20],
+               [ 4, 19],
+               [ 5, 18],
+               [ 6, 16],
+               [ 7, 15]])
         """
         return base_pairs_from_dot_bracket(self._dotbracket)
 
