@@ -118,5 +118,5 @@ from .superimpose import *
 from .transform import *
 from .basepairs import *
 from .pseudoknots import *
-from .dot_bracket import *
+from .dotbracket import *
 # util is used internally

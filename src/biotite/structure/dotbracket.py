@@ -10,18 +10,21 @@ dot-bracket-notation.
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["dot_bracket_from_structure", "dot_bracket",
-    "base_pairs_from_dot_bracket"]
+           "base_pairs_from_dot_bracket"]
 
 import numpy as np
 from .basepairs import base_pairs
 from .pseudoknots import pseudoknots
 from .residues import get_residue_count, get_residue_positions
 
-_OPENING_BRACKETS = "([<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-_CLOSING_BRACKETS = ")]>abcdefghijklmnopqrstuvwxyz"
+_OPENING_BRACKETS = "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+_OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()
+_CLOSING_BRACKETS = ")]}>abcdefghijklmnopqrstuvwxyz"
+_CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
-def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
+def dot_bracket_from_structure(
+    nucleic_acid_strand, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -30,9 +33,13 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     ----------
     atom_array : AtomArray
         The nucleic-acid-strand to be represented in DBL-notation.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair, which is passed on to
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair, which is passed on to
         :func:`pseudoknots()`
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, it is represented as unpaired. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
@@ -55,9 +62,10 @@ def dot_bracket_from_structure(nucleic_acid_strand, scoring=None):
     basepairs = base_pairs(nucleic_acid_strand)
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
     length = get_residue_count(nucleic_acid_strand)
-    return dot_bracket(basepairs, length, scoring=scoring)
+    return dot_bracket(basepairs, length, scores=scores,
+                       max_pseudoknot_order=max_pseudoknot_order)
 
-def dot_bracket(basepairs, length, scoring=None):
+def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
@@ -72,9 +80,13 @@ def dot_bracket(basepairs, length, scoring=None):
         strand.
     length : int
         The number of bases in the strand.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair, which is passed on to
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair, which is passed on to
         :func:`pseudoknots()`
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, it is represented as unpaired. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
@@ -84,7 +96,7 @@ def dot_bracket(basepairs, length, scoring=None):
     Examples
     --------
     The sequence ``ACGTC`` has a length of 5. If there was to be a
-    pairing interaction between the ``A`` and ``T``, ``basepairs`` would
+    pairing interaction between the ``A`` and ``T``, `basepairs` would
     have the form:
 
     >>> import numpy as np
@@ -110,34 +122,33 @@ def dot_bracket(basepairs, length, scoring=None):
         in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
-    pseudoknot_order = pseudoknots(basepairs, scoring=scoring)
+    # Make sure the lower residue is on the left for each row
+    basepairs = np.sort(basepairs, axis=1)
+
+    # Sort the first column in ascending order
+    original_indices = np.argsort(basepairs[:, 0])
+    basepairs = basepairs[original_indices]
+
+    # Get pseudoknot order
+    pseudoknot_order = pseudoknots(basepairs, scores=scores,
+                                   max_pseudoknot_order=max_pseudoknot_order)
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
-    notations = [""]*len(pseudoknot_order)
-
+    notations = [
+        bytearray((b"."*length)) for _ in range(len(pseudoknot_order))
+    ]
     for s, solution in enumerate(pseudoknot_order):
-        # Bases whose partners have an opened bracket
-        opened_brackets = set()
-        for pos in range(length):
-            if pos not in basepairs:
-                notations[s] += "."
-            else:
-                # Get position in ``basepairs`` and ``pseudoknot_order``
-                bp_pos = np.where(basepairs == pos)[0][0]
-                if pos in opened_brackets:
-                    notations[s] += _CLOSING_BRACKETS[solution[bp_pos]]
-                else:
-                    for base in basepairs[bp_pos]:
-                        if base != pos:
-                            opened_brackets.add(base)
-                    notations[s] += _OPENING_BRACKETS[solution[bp_pos]]
-
-    return notations
+        for basepair, order in zip(basepairs, solution):
+            if order == -1:
+                continue
+            notations[s][basepair[0]] = _OPENING_BRACKETS_BYTES[order]
+            notations[s][basepair[1]] = _CLOSING_BRACKETS_BYTES[order]
+    return [notation.decode() for notation in notations]
 
 def base_pairs_from_dot_bracket(dot_bracket_notation):
     """
-    Extract the basepairs from a nucleic-acid-strand in
+    Extract the base pairs from a nucleic-acid-strand in
     dot-bracket-letter-notation (DBL-notation) [1]_.
 
     The nucleic acid strand is represented as nucleotide sequence,
@@ -155,7 +166,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     Examples
     --------
-    The notation string ``'(..).'`` contains a basepair between the
+    The notation string ``'(..).'`` contains a base pair between the
     indices 0 and 3. This pairing interaction can be extracted
     conveniently by the use of :func:`base_pairs_from_dot_bracket()`:
 
@@ -175,7 +186,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     basepairs = []
-    opened_brackets = {}
+    opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]
 
     # Iterate through input string and extract base pairs
     for pos, symbol in enumerate(dot_bracket_notation):
@@ -184,28 +195,27 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
             # Add opening residues to list (separate list for each
             # bracket type)
             index = _OPENING_BRACKETS.index(symbol)
-            if index not in opened_brackets:
-                opened_brackets[index] = []
             opened_brackets[index].append(pos)
 
         elif symbol in _CLOSING_BRACKETS:
-            # For each closing bracket, the the basepair consists out of
-            # the current index and the last index added to the list in
-            # `opened_brackets` corresponding to the same bracket type.
+            # For each closing bracket, the the base pair consists out
+            # of the current index and the last index added to the list
+            # in `opened_brackets` corresponding to the same bracket
+            # type.
             index = _CLOSING_BRACKETS.index(symbol)
             basepairs.append((opened_brackets[index].pop(), pos))
 
         else:
             if symbol != ".":
                 raise ValueError(
-                    f"'{symbol}' is an invalid character for DBL-notation."
+                    f"'{symbol}' is an invalid character for DBL-notation"
                 )
 
-    for _, not_closed in opened_brackets.items():
+    for not_closed in opened_brackets:
         if not_closed != []:
             raise ValueError(
-                "Invalid DBL-notation! Not all opening brackets have a "
-                "closing bracket."
+                "Invalid DBL-notation, not all opening brackets have a "
+                "closing bracket"
             )
 
 

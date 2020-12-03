@@ -4,6 +4,7 @@
 
 import pytest
 import numpy as np
+import pickle as pkl
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from os.path import join
@@ -21,9 +22,9 @@ def test_pseudoknots(nuc_sample_array):
     """
     Check the output of ``pseudoknots()``.
     """
-    # Known basepairs with pseudoknot-order = 1:
+    # Known base pairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
-    # Known basepairs that can either be of order one or two
+    # Known base pairs that can either be of order one or two
     pseudoknot_order_one_or_two =  [{9, 48}, {10, 49}]
     order_one_count = (
         len(pseudoknot_order_one) + (len(pseudoknot_order_one_or_two)/2)
@@ -45,7 +46,7 @@ def test_pseudoknots(nuc_sample_array):
         assert np.count_nonzero(optimal_solution == 2) == order_two_count
         assert np.amax(optimal_solution) == 2
 
-        # Assert that the each basepair has the right pseudoknot order
+        # Assert that the each base pair has the right pseudoknot order
         for base_pair, order in zip(
             nuc_sample_array[base_pairs].res_id, optimal_solution
         ):
@@ -58,6 +59,60 @@ def test_pseudoknots(nuc_sample_array):
                 assert (
                     set(base_pair) in pseudoknot_order_one_or_two
                 )
+
+def load_test(name):
+    """
+    Load sample basepair arrays and reference solutions from file.
+    """
+    # Base pairs as numpy array (input for `pseudoknots()`)
+    with open(
+        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.pkl"),
+        "rb"
+    ) as f:
+        basepairs = pkl.load(f)
+    # List of solutions (set of tuples)
+    with open(
+        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.pkl"),
+        "rb"
+    ) as f:
+        solutions = pkl.load(f)
+    return basepairs, solutions
+
+@pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
+def test_pseudoknot_removal(name):
+    """
+    Test the implementation dynamic programming algorithm referenced in
+    `pseudoknots()` against the original implementation.
+
+    The reference solutions were created with the following tool:
+    https://www.ibi.vu.nl/programs/k2nwww/
+
+    The original purpose was to remove pseudoknots. Thus, the reference
+    solutions contain unknotted basepairs.
+    """
+    # Get base pairs and reference solutions
+    basepairs, reference_solutions = load_test(name)
+
+    # Calculate solutions from the base pairs
+    raw_solutions = struc.pseudoknots(basepairs, max_pseudoknot_order=0)
+
+    # The number of solutions calculated
+    solutions_count = 0
+
+    # Verify that each solution is in the reference solutions
+    for raw_solution in raw_solutions:
+        solution = set()
+        for basepair, order in zip(basepairs, raw_solution):
+            if order == -1:
+                continue
+            solution.add(tuple(sorted(basepair)))
+        solutions_count += 1
+        assert solution in reference_solutions
+
+    # Verify that the number of solutions matches the reference
+    assert len(reference_solutions) == solutions_count
+
+
 
 
 

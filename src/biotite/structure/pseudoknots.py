@@ -11,34 +11,37 @@ __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
 import numpy as np
-from copy import deepcopy
+from itertools import chain, product
 
-
-def pseudoknots(base_pairs, scoring=None):
+def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     """
-    Identify the pseudoknot order for each basepair in a given set of
-    basepairs.
+    Identify the pseudoknot order for each base pair in a given set of
+    base pairs.
 
     By default the algorithm maximizes the number of base pairs but an
-    optional scoring matrix specifying a score for each
-    individual basepair can be provided.
+    optional score array specifying a score for each
+    individual base pair can be provided.
 
     Parameters
     ----------
     base_pairs : ndarray, dtype=int, shape=(n,2)
-        The basepairs to determine the pseudoknot order of. Each row
+        The base pairs to determine the pseudoknot order of. Each row
         represents indices form two paired bases. The structure of
         the ``ndarray`` is equal to the structure of the output of
         :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
-    scoring : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each basepair. If ``Ǹone`` is provided, the score
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair. If ``Ǹone`` is provided, the score
         of each base pair is one.
+    max_pseudoknot_order : int (default: None)
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, its order is specified as -1. If ``None``
+        is given, all base pairs are evaluated.
 
     Returns
     -------
     pseudoknot_order : ndarray, dtype=int, shape=(m,n)
-        The pseudoknot order for m individual solutions.
+        The pseudoknot order for *m* individual solutions.
 
     Notes
     -----
@@ -73,28 +76,21 @@ def pseudoknots(base_pairs, scoring=None):
     # List containing the results
     results = [np.zeros(len(base_pairs), dtype='int32')]
 
-    # if no scoring function is given, each basepairs score is one
-    if scoring is None:
-        scoring = np.ones(len(base_pairs))
+    # if no score array is given, each base pairs' score is one
+    if scores is None:
+        scores = np.ones(len(base_pairs))
 
-    # Make sure base_pairs has the same length as the scoring function
-    if len(base_pairs) != len(scoring):
+    # Make sure `base_pairs` has the same length as the score array
+    if len(base_pairs) != len(scores):
         raise ValueError(
-        "Each Value of the scoring vector must correspond to a basepair."
+        "Each Value of the score array must correspond to a base pair"
     )
 
-    # Split the basepairs in regions
-    regions = _find_regions(base_pairs)
+    # Split the base pairs in regions
+    regions = _find_regions(base_pairs, scores)
 
-    # Only retain conflicting regions
-    cleaned_regions = _remove_non_conflicting_regions(regions)
-
-    # Group mutually conflicting regions
-    conflict_cliques = _conflict_cliques(cleaned_regions)
-
-    # For each clique calculate all optimal solutions
-    for clique in conflict_cliques:
-        results = _get_result_diff(clique, scoring)
+    # Compute results
+    results = _get_results(regions, results, max_pseudoknot_order)
 
     return np.vstack(results)
 
@@ -103,58 +99,41 @@ class _Region():
     """
     This class represents a paired region.
 
-    A region is a set of basepairs. This class provides methods to
+    A region is a set of base pairs. This class provides methods to
     access the minimum and maximum index of the bases that are part of
     the region, handles score calculation, and backtracing to the
-    original basepair array.
+    original base pair array.
 
     Parameters
     ----------
     base_pairs: ndarray, shape=(n,2), dtype=int
-        All basepairs of the structure the region is a subset for.
+        All base pairs of the structure the region is a subset for.
     region_pairs: ndarray, dtype=int
-        The indices of the basepairs in ``base_pairs`` that are part of
+        The indices of the base pairs in ``base_pairs`` that are part of
         the region.
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair.
     """
 
-    def __init__ (self, base_pairs, region_pairs):
+    def __init__ (self, base_pairs, region_pairs, scores):
         # The Start and Stop indices for each Region
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
 
         self.region_pairs = region_pairs
-        self.score = None
+        self.score = np.sum(scores[region_pairs])
 
-    def get_index_mask(self):
+    def get_index_array(self):
         """
-        Return an index mask with the positions of the region`s bases in
-        the original basepair array.
+        Return an index array with the positions of the region`s bases
+        in the original base pair array.
 
         Returns
         -------
         region_pairs : ndarray
-            The indices of the bases in the original basepair array.
+            The indices of the bases in the original base pair array.
         """
         return self.region_pairs
-
-    def get_score(self, scoring):
-        """
-        Return the score of the region according to a scoring array. The
-        score is calculated once on demand and then stored in memory.
-
-        Parameters
-        ----------
-        scoring : ndarray
-            The scoring array.
-
-        Returns
-        -------
-        score : int
-            The regions score.
-        """
-        if self.score is None:
-            self.score = np.sum(scoring[self.get_index_mask()])
-        return self.score
 
     def __lt__(self, other):
         """
@@ -176,21 +155,23 @@ class _Region():
         return id(self) < id(other)
 
 
-def _find_regions(base_pairs):
+def _find_regions(base_pairs, scores):
     """
-    Find regions in a base pair arrray. A region is defined as a set of
-    consecutively nested basepairs.
+    Find regions in a base pair array. A region is defined as a set of
+    consecutively nested base pairs.
 
     Parameters
     ----------
     base_pairs : ndarray, dtype=int, shape=(n, 2)
-        Each row is equivalent to one basepair and contains the first
+        Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
+    scores : ndarray, dtype=int, shape=(n,) (default: None)
+        The score for each base pair.
 
     Returns
     -------
     regions : set {_region, ...}
-        The regions representing the consecutively nested basepairs.
+        The regions representing the consecutively nested base pairs.
     """
 
     # Make sure the lower residue is on the left for each row
@@ -200,38 +181,44 @@ def _find_regions(base_pairs):
     original_indices = np.argsort(sorted_base_pairs[:, 0])
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
-    # Rank the right side in ascending order
-    downstream_order = np.argsort(sorted_base_pairs[:,1])
-    downstream_rank = np.argsort(downstream_order)
+    # Rank each base
+    # E.g.: [[3, 5]  --> [[1, 2]
+    #        [9, 7]]      [4, 3]]
+    order = np.argsort(sorted_base_pairs.flatten())
+    rank = np.argsort(order).reshape(base_pairs.shape)
 
-    # The basepairs belonging to the current region
+    # The base pairs belonging to the current region
     region_pairs = []
     # The individual regions
     regions = set()
 
     # Find separate regions
     for i in range(len(sorted_base_pairs)):
-        # if a new region is to be started append the current basepair
+        # if a new region is to be started append the current base pair
         if len(region_pairs) == 0:
             region_pairs.append(original_indices[i])
             continue
 
-        # Check if the current basepair belongs to the region that is
+        # Check if the current base pair belongs to the region that is
         # currently being defined
-        previous_rank = downstream_rank[i-1]
-        this_rank = downstream_rank[i]
-        # if the current basepair belongs to a new region, save the
+        previous_upstream_rank = rank[i-1][0]
+        this_upstream_rank = rank[i][0]
+        previous_downstream_rank = rank[i-1][1]
+        this_downstream_rank = rank[i][1]
+
+        # if the current base pair belongs to a new region, save the
         # current region and start a new region
-        if (previous_rank - this_rank) != 1:
-            regions.add(_Region(base_pairs, np.array(region_pairs)))
+        if ((previous_downstream_rank - this_downstream_rank) != 1 or
+            (this_upstream_rank - previous_upstream_rank) != 1):
+            regions.add(_Region(base_pairs, np.array(region_pairs), scores))
             region_pairs = []
 
-        # Append the current basepair to the region
+        # Append the current base pair to the region
         region_pairs.append(original_indices[i])
 
     # The last region has no endpoint defined by the beginning of a
     # new region.
-    regions.add(_Region(base_pairs, np.array(region_pairs)))
+    regions.add(_Region(base_pairs, np.array(region_pairs), scores))
 
     return regions
 
@@ -408,23 +395,27 @@ def _conflict_cliques(regions):
     return cliques
 
 
-def _get_optimal_solutions(regions, scoring):
+def _remove_pseudoknots(regions):
     """
     Get the optimal solutions according to the algorithm referenced in
-    :func:``pseudoknots()``.
+    :func:`pseudoknots()`.
+
+    The algorithm uses a dynamic programming matrix in order to find
+    the optimal solutions with the highest combined region scores.
 
     Parameters
     ----------
     regions : set {_region, ...}
         The conflicting regions for whích optimal solutions are to be
         found.
-    scoring : ndarray
-        The scoring array.
+    scores : ndarray
+        The score array.
 
     Returns
     -------
     solutions : ndarray, dtype=object
-        The optimal solutions according to the scoring function.
+        The optimal solutions. Each solution in the ``ndarray`` is
+        represented as ``set`` of unknotted regions.
     """
     # Create dynamic programming matrix
     dp_matrix_shape = len(regions)*2, len(regions)*2
@@ -444,7 +435,8 @@ def _get_optimal_solutions(regions, scoring):
     for i in range(len(dp_matrix)):
         dp_matrix[i, i] = np.array([frozenset()])
 
-    # Iterate through the top right of the dynamic programming matrix
+    # Iterate through the top right half of the dynamic programming
+    # matrix
     for j in range(len(regions)*2):
         for i in range(j-1, -1, -1):
             solution_candidates = set()
@@ -472,9 +464,6 @@ def _get_optimal_solutions(regions, scoring):
             # bottom cell both differ from an empty solution
             if (np.any(left != [frozenset()]) and
                 np.any(bottom != [frozenset()])):
-                starts = np.empty(
-                    (2, max(len(left), len(bottom))), dtype='int32'
-                )
 
                 left_highest = dp_matrix_solutions_stops[i, j-1]
                 bottom_lowest = dp_matrix_solutions_starts[i+1, j]
@@ -505,14 +494,16 @@ def _get_optimal_solutions(regions, scoring):
             solution_candidates = np.array(list(solution_candidates))
 
             # Calculate the scores for each solution
-            scores = np.zeros(len(solution_candidates))
+            solution_scores = np.zeros(len(solution_candidates))
             for s, solution in enumerate(solution_candidates):
                 score = 0
                 for reg in solution:
-                    score += reg.get_score(scoring)
-                scores[s] = score
+                    score += reg.score
+                solution_scores[s] = score
             # Get the indices where the score is at a maximum
-            highest_scores = np.argwhere(scores == np.amax(scores)).flatten()
+            highest_scores = np.argwhere(
+                solution_scores == np.amax(solution_scores)
+            ).flatten()
 
             # Get the solutions with the highest score
             solution_candidates = solution_candidates[highest_scores]
@@ -520,23 +511,16 @@ def _get_optimal_solutions(regions, scoring):
             # Add the solutions to the dynamic programming matrix
             dp_matrix[i, j] = solution_candidates
 
-            solution_starts = np.empty_like(solution_candidates, dtype='int32')
-            solution_stops = np.empty_like(solution_candidates, dtype='int32')
+            solution_starts = np.zeros_like(solution_candidates, dtype='int32')
+            solution_stops = np.zeros_like(solution_candidates, dtype='int32')
 
             for s, solution in enumerate(solution_candidates):
-                minimum = -1
-                maximum = -1
-                for reg in solution:
-                    if minimum == -1 or maximum == -1:
-                        minimum = reg.start
-                        maximum = reg.stop
-                        continue
-                    if minimum > reg.start:
-                        minimum = reg.start
-                    if maximum < reg.stop:
-                        maximum = reg.stop
-                solution_starts[s] = minimum
-                solution_stops[s] = maximum
+                solution_starts[s] = min(
+                    [reg.start for reg in solution], default=-1
+                )
+                solution_stops[s] = max(
+                    [reg.stop for reg in solution], default=-1
+                )
 
             dp_matrix_solutions_starts[i, j] = solution_starts
             dp_matrix_solutions_stops[i, j] = solution_stops
@@ -545,61 +529,84 @@ def _get_optimal_solutions(regions, scoring):
     return dp_matrix[0, -1]
 
 
-def _get_result_diff(clique, scoring):
+def _get_results(regions, results, max_pseudoknot_order, order=0):
     """
     Use the dynamic programming algorithm to get the pseudoknot order
-    of a given clique. If there are remaining conflicts their solutions
-    are recursively calculated and merged with the current solutions.
+    of a given set of regions. If there are remaining conflicts their
+    results are recursively calculated and merged with the current
+    results.
 
     Parameters
     ----------
-    clique : set {_region, ...}
-        The conflicting regions for whích optimal solutions are to be
-        found.
-    scoring : ndarray
-        The scoring array.
+    regions : set {_region, ...}
+        The regions for whích optimal solutions are to be found.
+    results : list [ndarray, ...]
+        The results
+    max_pseudoknot_order : int
+        The maximum pseudoknot order to be found. If a base pair would
+        be of a higher order, its order is specified as -1. If ``None``
+        is given, all base pairs are evaluated.
+    order : int (default: 0)
+        The order that is currently evaluated.
 
     Returns
     -------
-    solutions : ndarray, dtype=object
-        The pseudoknot orders according to the scoring function.
+    results : list [ndarray, ...]
+        The results
     """
-    # Get the optimal solutions for the given clique
-    optimal_solutions = _get_optimal_solutions(clique, scoring)
 
-    # Each optimal solution gets their own list of solutions
-    results_diff = np.empty(len(optimal_solutions), dtype='object')
+    # Remove non-conflicting regions
+    regions = _remove_non_conflicting_regions(regions)
 
-    # Get the results for each optimal solution
-    for o, optimal_solution in enumerate(optimal_solutions):
+    # If no conflicts remain, the results are complete
+    if len(regions) == 0:
+        # All remaining knotted pairs are of the current order
+        for i, result in enumerate(results):
+            results[i][result == -1] = order
+        return results
 
-        # The results for the ṕarticular solution
-        results = np.zeros(len(scoring), dtype='int32')
+    # Get the optimal solutions for given regions. Evaluate each clique
+    # of mutually conflicting regions seperately
+    cliques = _conflict_cliques(regions)
+    solutions = [set(chain(*e)) for e in product(
+        *[_remove_pseudoknots(clique) for clique in cliques]
+    )]
 
-        # The removed regions in the optimal solution
-        next_clique = clique - optimal_solution
+    # Get a copy of the current results for each optimal solution
+    results_list = [
+        [result.copy() for result in results] for _ in range(len(solutions))
+    ]
 
-        # Increment the order of the basepairs in the removed regions
-        for reg in next_clique:
-            results[reg.get_index_mask()] += 1
+    # Evaluate each optimal solution
+    for i, solution in enumerate(solutions):
 
-        # Remove non-conflicting-regions for evaluation of the next
-        # clique
-        next_clique = _remove_non_conflicting_regions(next_clique)
+        # Get the pseudoknotted regions
+        pseudoknoted_regions = regions - solution
 
-        # The next clique is only evaluated if it contains conflicting
-        # regions
-        if len(next_clique) > 0:
-            next_result_diff = _get_result_diff(next_clique, scoring)
+        # Get an index list of the knotted base pairs
+        index_list_knoted = list(
+            chain(
+                *[region.get_index_array() for region in pseudoknoted_regions]
+            )
+        )
 
-            # Merge results of this clique with the next clique
-            results_diff[o] = []
-            for diff in next_result_diff:
-                results_diff[o].append(deepcopy(results))
-                results_diff[o][-1] = (results_diff[o][-1] + diff)
+        # Write results for current solution
+        for j, result in enumerate(results_list[i]):
+            # Set all knotted regions of last round to current order
+            result[result == -1] = order
+            # Set all knotted regions of this round to -1 as they are
+            # still to be evaluated
+            result[index_list_knoted] = -1
 
-        else:
-            results_diff[o] = [results]
+        # If this order is the maximum specified order, stop evaluation
+        if max_pseudoknot_order == order:
+            continue
 
-    # Return flattened results
-    return [result for results in results_diff for result in results]
+        # Evaluate the pseudoknotted region
+        results_list[i] = _get_results(
+            pseudoknoted_regions, results_list[i],
+            max_pseudoknot_order, order=order+1
+        )
+
+    # Flatten the results
+    return list(chain(*results_list))
