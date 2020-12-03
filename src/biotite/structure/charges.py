@@ -291,9 +291,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # which enter as divisor the equation for charge transfer
         pos_en_values = np.sum(parameters, axis=1)
         # Substituting values for hydrogen with the special value
-        pos_en_values = np.array(
-            [20.02 if i == 12.85 else i for i in pos_en_values]
-        )
+        pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
         for i, j, _ in atom_array.bonds.as_array():
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
