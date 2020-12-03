@@ -77,8 +77,7 @@ EN_POS_HYDROGEN = 20.02
 def _get_parameters(elements, amount_of_binding_partners):
     """
     Gather the parameters required for electronegativity computation of
-    all atoms comprised in the array 'elements' inserted into the
-    function.
+    all atoms comprised in the input array `elements`.
 
     By doing so, the function accesses the nested dictionary
     ``EN_PARAMETERS``. The values originate from a publication of Johann
@@ -103,7 +102,7 @@ def _get_parameters(elements, amount_of_binding_partners):
     References
     ----------
     .. [1] J Gasteiger and M Marsili,
-       "Iterative partial equalization of orbital electronegativity- a
+       "Iterative partial equalization of orbital electronegativity - a
        rapid access to atomic charges"
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
@@ -142,59 +141,53 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     Compute the partial charge of the individual atoms comprised in a
     given :class:`AtomArray` depending on their electronegativity.
 
-    This function implements the *partial equalization of orbital
-    electronegativity* (PEOE) algorithm [1]_.
+    This function implements the
+    *partial equalization of orbital electronegativity* (PEOE)
+    algorithm [1]_.
 
     Parameters
     ----------
     atom_array: AtomArray, shape=(n,)
-        The AtomArray to get the partial charge values for. Exclusively
-        AtomArrays can be inserted in this function, not
-        AtomArrayStacks.
-    iteration_step_num: integer, optional
+        The :class:`AtomArray` to get the partial charge values for.
+        Must have an associated `BondList`.
+    iteration_step_num: int, optional
         The number of iteration steps is an optional argument and can be 
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
         '6' will be used.
         Gasteiger and Marsili described this number as sufficient [1]_.
     charges: ndarray, dtype=int, optional
-        The array comprising the formal charges of the atoms comprised
-        in the inserted AtomArray ('atom_array'). For the formal charges
-        to be used in the calculatation, they either must be explicitly
-        given as parameter upon function calling or must be present as
-        annotation category of the inserted AtomArray. Otherwise, the
-        formal charges of all atoms will be arbitrarily set to zero.
+        The array comprising the formal charges of the atoms in the
+        input `atom_array`.
+        If none is given, the ``charge`` annotation category of the
+        input `atom_array` is used.
+        If neither of them is given, the formal charges of all atoms
+        will be arbitrarily set to zero.
     
     Returns
     -------
     partial_charges: ndarray, dtype=float
-        The partial charge values of the individual atoms comprised in
-        'atom_array'.
+        The partial charge values of the individual atoms in the input
+        `atom_array`.
     
     Notes
     -----
-    A BondList must be associated to the AtomArray inserted into the
-    function as in the following example:
+    A :class:`BondList` must be associated to the input
+    :class:`AtomArray`.
+    Otherwise, an error will be raised.
+    Example:
 
-    atom_array.bonds = struc.connect_via_residue_names(atom_array)
+    .. highlight:: python
 
-    The annotation category name must be "bonds" as well since this is
-    the name that is checked in order to verify the presence of a
-    BondList.
+        atom_array.bonds = struc.connect_via_residue_names(atom_array)
 
-    Otherwise, an error will be raised and electronegativity values
-    won't be delivered.
-
-    This step can be omitted if the AtomArray is obtained by accessing
-    the Chemical Component Dictionary by using the function
-    'biotite.structure.info.residue' as AtomArrays obtained in this way
-    are already associated to BondLists.
+    |
 
     For the electronegativity of positively charged hydrogen, the
     value of 20.02 eV is used.
 
-    Also note that the algorithm used in this function doesn't deliver
-    proper results for expanded pi electron systems like aromatic rings.
+    Also note that the algorithm used in this function does not deliver
+    proper results for expanded pi-electron systems like aromatic rings.
 
     References
     ----------
@@ -238,9 +231,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 f"formal charge is assumed to be zero.",
                 UserWarning
             )
-    # For CPU time reasons, all binding partners of a respective atom of
-    # the AtomArray are obtained by the newly introduced function
-    # 'get_all_bonds'
+
     bonds, _ = atom_array.bonds.get_all_bonds()
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
     damping = 1.0
