@@ -108,7 +108,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     """
     # List containing the results
-    results = [np.zeros(len(base_pairs), dtype='int32')]
+    results = [np.full(len(base_pairs), -1, dtype='int32')]
 
     # if no score array is given, each base pairs' score is one
     if scores is None:
@@ -257,19 +257,19 @@ def _find_regions(base_pairs, scores):
     return regions
 
 
-def _remove_non_conflicting_regions(regions):
+def _find_non_conflicting_regions(regions):
     """
-    Remove regions that are not conflicting.
+    Find regions that are not conflicting.
 
     Parameters
     ----------
     regions : set {_region, ...}
-        Regions including non-conflicting regions.
+        Regions including conflicting regions.
 
     Returns
     -------
     regions : set {_region, ...}
-        The regions without non-conflicting regions.
+        The non-conflicting regions.
     """
     # Get the region array and a boolean array, where the start of each
     # region ``True``.
@@ -279,7 +279,7 @@ def _remove_non_conflicting_regions(regions):
     starts = np.nonzero(start_stops)[0]
 
     # Regions that are not conflicting
-    to_remove = []
+    non_conflicting_regions = set()
     for start_index in starts:
         # Get the current regions start and stop indices in the region
         # array
@@ -296,17 +296,15 @@ def _remove_non_conflicting_regions(regions):
         # if no regions are between the start and stop indices the
         # region is non-conflicting
         if len(counts) == 0:
-            to_remove.append(region_array[start_index])
+            non_conflicting_regions.add(region_array[start_index])
         # if every region between the start and stop indices has its
         # start and stop between the current region's start and stop
         # indices the current region is not conflicting
         elif np.amin(counts) == 2:
-            to_remove.append(region_array[start_index])
+            non_conflicting_regions.add(region_array[start_index])
 
-    # Remove all non conflicting regions and return the set of
-    # conflicting regions
-    region_array = region_array[~ np.isin(region_array, to_remove)]
-    return set(region_array)
+    # Return the non-conflicting regions
+    return non_conflicting_regions
 
 
 def _get_first_occurrence_for(iterable, wanted_object):
@@ -590,13 +588,21 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     """
 
     # Remove non-conflicting regions
-    regions = _remove_non_conflicting_regions(regions)
+    non_conflicting = _find_non_conflicting_regions(regions)
+    regions = regions - non_conflicting
+
+    # Non-conflicting regions are of the current order:
+    index_list_non_conflicting = list(
+            chain(
+                *[region.get_index_array() for region in non_conflicting]
+            )
+        )
+    for result in results:
+        result[index_list_non_conflicting] = order
+
 
     # If no conflicts remain, the results are complete
     if len(regions) == 0:
-        # All remaining knotted pairs are of the current order
-        for i, result in enumerate(results):
-            results[i][result == -1] = order
         return results
 
     # Get the optimal solutions for given regions. Evaluate each clique
@@ -618,19 +624,15 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
         pseudoknoted_regions = regions - solution
 
         # Get an index list of the knotted base pairs
-        index_list_knoted = list(
+        index_list_unknoted = list(
             chain(
-                *[region.get_index_array() for region in pseudoknoted_regions]
+                *[region.get_index_array() for region in solution]
             )
         )
 
         # Write results for current solution
         for j, result in enumerate(results_list[i]):
-            # Set all knotted regions of last round to current order
-            result[result == -1] = order
-            # Set all knotted regions of this round to -1 as they are
-            # still to be evaluated
-            result[index_list_knoted] = -1
+            result[index_list_unknoted] = order
 
         # If this order is the maximum specified order, stop evaluation
         if max_pseudoknot_order == order:
