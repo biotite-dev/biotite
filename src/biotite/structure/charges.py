@@ -107,9 +107,14 @@ def _get_parameters(elements, amount_of_binding_partners):
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
     parameters = np.zeros((elements.shape[0], 3))
-    has_key_error = False
+    has_atom_key_error = False
+    has_valence_key_error = False
     # Preparing warning in case of KeyError
+    # It is differentiated between atoms that are not parametrized at
+    # all and specific valence states that are parametrized
     list_of_unparametrized_elements = []
+    unparametrized_valences = []
+    unparam_valence_names = []
     for i, element in enumerate(elements):
         try:
             a, b, c = \
@@ -118,10 +123,34 @@ def _get_parameters(elements, amount_of_binding_partners):
             parameters[i, 1] = b
             parameters[i, 2] = c
         except KeyError:
+            try:
+                EN_PARAMETERS[element]
+            except KeyError:
+                list_of_unparametrized_elements.append(element)
+                has_atom_key_error = True
+            else:
+                unparam_valence_names.append(element)
+                unparametrized_valences.append(
+                    amount_of_binding_partners[i]
+                )
+                has_valence_key_error = True
             parameters[i, :] = np.nan
-            list_of_unparametrized_elements.append(element)
-            has_key_error = True
-    if has_key_error:
+    if has_valence_key_error:
+        unparam_valence_names = np.unique(unparam_valence_names)
+        unparametrized_valences = np.unique(unparametrized_valences)
+        joined_list = []
+        for i in range(len(unparam_valence_names)):
+            joined_list.append(unparam_valence_names[i] + "     ")
+            joined_list.append(str(unparametrized_valences[i]) + "\n")
+        warnings.warn(
+            f"Parameters for specific valence states of some atoms "
+            f"are not available. These valence states are: \n",
+            f"Atom:     Amount of binding partners:\n",
+            f"{''.join(joined_list)}"
+            f"Their electronegativity is given as NaN.",
+            UserWarning
+        )
+    if has_atom_key_error:
         # Using NumPy's 'unique' function to ensure that each atom only
         # occurs once in the list
         unique_list = np.unique(list_of_unparametrized_elements)
