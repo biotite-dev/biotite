@@ -50,7 +50,7 @@ class RNAfoldApp(LocalApp):
         set_sequence(in_file, self._sequence)
         in_file.write(self._in_file)
         self._in_file.flush()
-        self.set_arguments([self._in_file.name])
+        self.set_arguments([self._in_file.name, "--noPS"])
         super().run()
 
     def evaluate(self):
