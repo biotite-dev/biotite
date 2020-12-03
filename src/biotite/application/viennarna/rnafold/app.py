@@ -15,8 +15,8 @@ from ....structure.dotbracket import base_pairs_from_dot_bracket
 
 class RNAfoldApp(LocalApp):
     """
-    Compute the secondary structure of a nucleic acid sequence using
-    ViennaRNA's RNAfold software.
+    Compute the minimum free energy secondary structure of a nucleic
+    acid sequence using ViennaRNA's RNAfold software.
 
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
@@ -69,14 +69,67 @@ class RNAfoldApp(LocalApp):
 
     @requires_state(AppState.JOINED)
     def get_mfe(self):
+        """
+        Get the minimum free energy of the input sequence.
+
+        Returns
+        -------
+        mfe : float
+            The minimum free energy.
+
+        Examples
+        --------
+
+        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_mfe())
+        -1.3
+        """
         return self._mfe
 
     @requires_state(AppState.JOINED)
     def get_dot_bracket(self):
+        """
+        Get the minimum free energy secondary structure of the input
+        sequence.
+
+        Returns
+        -------
+        dotbracket : string
+            The secondary structure in dot bracket notation.
+
+        Examples
+        --------
+
+        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_dot_bracket())
+        '(((.((((.......)).)))))....'
+        """
         return self._dotbracket
 
     @requires_state(AppState.JOINED)
     def get_base_pairs(self):
+        """
+        Get the minimum free energy secondary structure of the input
+        sequence.
+
+        Returns
+        -------
+        dotbracket : string
+            The secondary structure in dot bracket notation.
+
+        Examples
+        --------
+
+        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_base_pairs())
+        '(((.((((.......)).)))))....'
+        """
         return base_pairs_from_dot_bracket(self._dotbracket)
 
     @staticmethod
