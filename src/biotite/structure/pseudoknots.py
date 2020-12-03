@@ -235,10 +235,10 @@ def _find_regions(base_pairs, scores):
 
         # Check if the current base pair belongs to the region that is
         # currently being defined
-        previous_upstream_rank = rank[i-1][0]
-        this_upstream_rank = rank[i][0]
-        previous_downstream_rank = rank[i-1][1]
-        this_downstream_rank = rank[i][1]
+        previous_upstream_rank = rank[i-1, 0]
+        this_upstream_rank = rank[i, 0]
+        previous_downstream_rank = rank[i-1, 1]
+        this_downstream_rank = rank[i, 1]
 
         # if the current base pair belongs to a new region, save the
         # current region and start a new region
