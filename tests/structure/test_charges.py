@@ -219,23 +219,23 @@ def test_partial_charges(molecule, expected_results):
 
 
 @pytest.mark.parametrize("molecule", [
-    (methane),
-    (ethane),
-    (ethylene),
-    (acetylene),
-    (fluoromethane),
-    (difluoromethane),
-    (trifluoromethane),
-    (tetrafluoromethane),
-    (fluoroethane),
-    (trifluoroethane),
-    (methanole),
-    (dimethyl_ether),
-    (formaldehyde),
-    (acetaldehyde),
-    (acetone),
-    (hydrogen_cyanide),
-    (acetonitrile)
+    methane,
+    ethane,
+    ethylene,
+    acetylene,
+    fluoromethane,
+    difluoromethane,
+    trifluoromethane,
+    tetrafluoromethane,
+    fluoroethane,
+    trifluoroethane,
+    methanole,
+    dimethyl_ether,
+    formaldehyde,
+    acetaldehyde,
+    acetone,
+    hydrogen_cyanide,
+    acetonitrile
 ])
 def test_total_charge_zero(molecule):
     """
