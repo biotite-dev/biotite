@@ -11,7 +11,7 @@ from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
 from ....sequence.io.fasta import FastaFile, set_sequence
 from ....sequence import NucleotideSequence
-from ....structure.dot_bracket import base_pairs_from_dot_bracket
+from ....structure.dotbracket import base_pairs_from_dot_bracket
 
 class RNAfoldApp(LocalApp):
     """
