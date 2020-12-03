@@ -19,8 +19,8 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     base pairs.
 
     By default the algorithm maximizes the number of base pairs but an
-    optional score array specifying a score for each
-    individual base pair can be provided.
+    optional score array specifying a score for each individual base
+    pair can be provided.
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     Notes
     -----
-    Smit et al`s dynamic programming approach [1]_ is employed to detect
+    Smit et al`s dynamic programming approach [1]_ is applied to detect
     and evaluate pseudoknots. The algorithm was originally developed to
     remove pseudoknots from a structure. However, if it is run
     iteratively on removed knotted pairs it can be used to identify the

@@ -163,6 +163,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
     -------
     basepairs : ndarray, shape=(n,2)
         Each row corresponds to the positions of the bases in the
+        sequence.
 
     Examples
     --------
