@@ -2,17 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
-import glob
-from subprocess import SubprocessError
 import numpy as np
 import pytest
-import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.sequence as seq
-import biotite.structure.io.mmtf as mmtf
 from biotite.application.viennarna.rnafold import RNAfoldApp
-from ..util import data_dir, is_not_installed
+from ..util import is_not_installed
 
 
 @pytest.fixture
