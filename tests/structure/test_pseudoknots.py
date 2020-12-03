@@ -90,10 +90,16 @@ def test_pseudoknot_removal(name):
     The original purpose was to remove pseudoknots. Thus, the reference
     solutions contain unknotted basepairs.
     """
+    # Get base pairs and reference solutions
     basepairs, reference_solutions = load_test(name)
 
+    # Calculate solutions from the base pairs
     raw_solutions = struc.pseudoknots(basepairs, max_pseudoknot_order=0)
+
+    # The number of solutions calculated
     solutions_count = 0
+
+    # Verify that each solution is in the reference solutions
     for raw_solution in raw_solutions:
         solution = set()
         for basepair, order in zip(basepairs, raw_solution):
@@ -102,6 +108,8 @@ def test_pseudoknot_removal(name):
             solution.add(tuple(sorted(basepair)))
         solutions_count += 1
         assert solution in reference_solutions
+
+    # Verify that the number of solutions matches the reference
     assert len(reference_solutions) == solutions_count
 
 
