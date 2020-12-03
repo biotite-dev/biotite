@@ -54,6 +54,40 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     The pseudoknot order is defined as the minimum number of base pair
     set decompositions resulting in a nested structure [2]_.
 
+    Examples
+    --------
+    Remove the pseudoknotted base pair for the sequence *ABCbac*, where
+    the corresponding big and small letters each represent a base pair:
+
+    Define the base pairs as ``ndarray``:
+
+    >>> basepairs = np.array([[0, 4],
+    ...                       [1, 3],
+    ...                       [2, 5]])
+
+    Find the unknotted base pairs, optimizing for the maximum number of
+    base pairs:
+
+    >>> print(pseudoknots(basepairs, max_pseudoknot_order=0))
+    [[ 0  0 -1]]
+
+    This indicates that the base pair *Cc* is a pseudoknot.
+
+    Given the length of the sequence (6 bases), we can also represent
+    the unknotted structure in dot bracket notation:
+
+    >>> print(dot_bracket(basepairs, 6, max_pseudoknot_order=0)[0])
+    ((.)).
+
+    If the maximum pseudoknot order is not restricted, the order of the
+    knotted pairs is determined and can be represented using dot bracket
+    letter notation:
+
+    >>> print(pseudoknots(basepairs))
+    [[0 0 1]]
+    >>> print(dot_bracket(basepairs, 6)[0])
+    (([))]
+
     See Also
     --------
     base_pairs
