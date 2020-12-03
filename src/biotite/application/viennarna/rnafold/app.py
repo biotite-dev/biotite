@@ -92,11 +92,11 @@ class RNAfoldApp(LocalApp):
     def get_dot_bracket(self):
         """
         Get the minimum free energy secondary structure of the input
-        sequence.
+        sequence in dot bracket notation.
 
         Returns
         -------
-        dotbracket : string
+        dotbracket : str
             The secondary structure in dot bracket notation.
 
         Examples
@@ -113,13 +113,14 @@ class RNAfoldApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_base_pairs(self):
         """
-        Get the minimum free energy secondary structure of the input
-        sequence.
+        Get the basepairs from the minimum free energy secondary
+        structure of the input sequence.
 
         Returns
         -------
-        dotbracket : string
-            The secondary structure in dot bracket notation.
+        basepairs : ndarray, shape=(n,2)
+            Each row corresponds to the positions of the bases in the
+            sequence.
 
         Examples
         --------
@@ -135,11 +136,38 @@ class RNAfoldApp(LocalApp):
                [ 5, 18],
                [ 6, 16],
                [ 7, 15]])
+
+        For reference, the corresponding dot bracket notation can be
+        displayed as below.
+
+        >>> print(app.get_dot_bracket())
+        '(((.((((.......)).)))))....'
         """
         return base_pairs_from_dot_bracket(self._dotbracket)
 
     @staticmethod
     def compute_secondary_structure(sequence, bin_path="RNAfold"):
+        """
+        Compute the minimum free energy secondary structure of a nucleic
+        acid sequence using ViennaRNA's RNAfold software.
+
+        This is a convenience function, that wraps the
+        :class:`RNAfoldApp` execution.
+
+        Parameters
+        ----------
+        sequence : NucleotideSequence
+            The nucleotide sequence.
+        bin_path : str, optional
+            Path of the RNAfold binary.
+
+        Returns
+        -------
+        dotbracket : str
+            The secondary structure in dot bracket notation.
+        mfe : float
+            The minimum free energy.
+        """
         app = RNAfoldApp(sequence, bin_path)
         app.start()
         app.join()
