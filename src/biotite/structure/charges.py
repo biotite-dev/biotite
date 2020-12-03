@@ -140,12 +140,16 @@ def _get_parameters(elements, amount_of_binding_partners):
         unparametrized_valences = np.unique(unparametrized_valences)
         joined_list = []
         for i in range(len(unparam_valence_names)):
-            joined_list.append(unparam_valence_names[i] + "     ")
+            joined_list.append(
+                unparam_valence_names[i]
+                +
+                " " * (10 - len(unparam_valence_names[i]))
+            )
             joined_list.append(str(unparametrized_valences[i]) + "\n")
         warnings.warn(
             f"Parameters for specific valence states of some atoms "
-            f"are not available. These valence states are: \n",
-            f"Atom:     Amount of binding partners:\n",
+            f"are not available. These valence states are: \n"
+            f"Atom:     Amount of binding partners:\n"
             f"{''.join(joined_list)}"
             f"Their electronegativity is given as NaN.",
             UserWarning
