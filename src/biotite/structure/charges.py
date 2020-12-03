@@ -5,7 +5,7 @@
 """
 This module provides one function for the computation of the partial
 charges of the individual atoms of a given AtomArray according to the
-PEOE algorithm of Gasteiger-Marsili
+PEOE algorithm of Gasteiger-Marsili.
 """
 
 __name__ = "biotite.charges"
@@ -81,7 +81,7 @@ def _get_parameters(elements, amount_of_binding_partners):
     function.
 
     By doing so, the function accesses the nested dictionary
-    'EN_PARAMETERS'. The values originate from a publication of Johann
+    ``EN_PARAMETERS``. The values originate from a publication of Johann
     Gasteiger and Mario Marsili. [1]_
 
     Parameters
@@ -98,7 +98,7 @@ def _get_parameters(elements, amount_of_binding_partners):
     parameters: NumPy array, dtype=float, shape=(n,3)
         The array containing all three parameters required for the
         computation of the electronegativities of all atoms comprised
-        in the 'elements' array.
+        in the `elements` array.
     
     References
     ----------
@@ -131,7 +131,7 @@ def _get_parameters(elements, amount_of_binding_partners):
             f"Parameters required for computation of "
             f"electronegativity aren't available for the following "
             f"atoms: {', '.join(unique_list)}. "
-            f"Their electronegativity is given as NaN (Not a Number).", 
+            f"Their electronegativity is given as NaN.", 
             UserWarning
         )
     return parameters
@@ -140,11 +140,10 @@ def _get_parameters(elements, amount_of_binding_partners):
 def partial_charges(atom_array, iteration_step_num=6, charges=None):
     """
     Compute the partial charge of the individual atoms comprised in a
-    given AtomArray depending on their electronegativity.
+    given :class:`AtomArray` depending on their electronegativity.
 
-    The algorithm implemented here is the so-called PEOE algorithm
-    (partial equalization of orbital electronegativity) developed by
-    Johann Gasteiger and Mario Marsili. [1]_
+    This function implements the *partial equalization of orbital
+    electronegativity* (PEOE) algorithm [1]_.
 
     Parameters
     ----------
@@ -156,8 +155,8 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         The number of iteration steps is an optional argument and can be 
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
-        '6' will be used as Gasteiger and Marsili described this amount
-        of iteration steps as sufficient. [1]_
+        '6' will be used.
+        Gasteiger and Marsili described this number as sufficient [1]_.
     charges: ndarray, dtype=int, optional
         The array comprising the formal charges of the atoms comprised
         in the inserted AtomArray ('atom_array'). For the formal charges
