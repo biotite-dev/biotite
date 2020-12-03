@@ -216,8 +216,8 @@ def _find_regions(base_pairs, scores):
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
     # Rank each base
-    # E.g.: [[3, 5]  --> [[1, 2]
-    #        [9, 7]]      [4, 3]]
+    # E.g.: [[3, 5]  --> [[0, 1]
+    #        [9, 7]]      [3, 2]]
     order = np.argsort(sorted_base_pairs.flatten())
     rank = np.argsort(order).reshape(base_pairs.shape)
 
