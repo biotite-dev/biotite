@@ -253,8 +253,8 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         )
     if charges is None:
         try:
-            charges = atom_array.charge
-            charges = charges.astype(np.float)
+            # Implicitly this creates a copy of the charges
+            charges = atom_array.charge.astype(np.float)
         except AttributeError:
             charges = np.zeros(atom_array.shape[0])
             warnings.warn(
@@ -305,12 +305,9 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 # the result.
                 # The case that both atoms are not parametrized must be
                 # considered as well.
-                if np.isnan(en_values[[i,j]]).all():
+                if np.isnan(en_values[i]):
                     charges[i] = np.nan
-                    charges[j] = np.nan
-                elif np.isnan(en_values[i]):
-                    charges[i] = np.nan
-                else:
+                if np.isnan(en_values[j]):
                     charges[j] = np.nan
             else:
                 if en_values[j] > en_values[i]:
