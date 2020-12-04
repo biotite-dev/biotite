@@ -125,10 +125,6 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     # Make sure the lower residue is on the left for each row
     basepairs = np.sort(basepairs, axis=1)
 
-    # Sort the first column in ascending order
-    original_indices = np.argsort(basepairs[:, 0])
-    basepairs = basepairs[original_indices]
-
     # Get pseudoknot order
     pseudoknot_order = pseudoknots(basepairs, scores=scores,
                                    max_pseudoknot_order=max_pseudoknot_order)
