@@ -343,3 +343,23 @@ def test_valence_state_not_parametrized():
     hyd_part_charge = charges.partial_charges(fictitious_molecule)[2]
     assert np.isnan(sulfur_part_charge)
     assert carb_part_charge < hyd_part_charge
+
+
+def test_correct_output_ions():
+    """
+    Ions such as sodium or potassium are not parametrized. However,
+    their formal charge is taken as partial charge since they are not
+    involved in covalent bonding.
+    Hence, it is expected that no warning is raised.
+    The test is performed with a sodium ion.
+    """
+    sodium = Atom([0, 0, 0], element="NA")
+    sodium_array = array([sodium])
+    # Sodium possesses a formal charge of +1
+    sodium_array.charge = np.array([1])
+    # Sodium is not involved in covalent bonding
+    sodium_array.bonds = BondList(sodium_array.array_length())
+    with pytest.warns(None) as record:
+        None
+    charges.partial_charges(sodium_array, iteration_step_num=1)
+    assert len(record) == 0
