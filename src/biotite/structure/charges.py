@@ -5,7 +5,7 @@
 """
 This module provides one function for the computation of the partial
 charges of the individual atoms of a given AtomArray according to the
-PEOE algorithm of Gasteiger-Marsili
+PEOE algorithm of Gasteiger-Marsili.
 """
 
 __name__ = "biotite.charges"
@@ -77,11 +77,10 @@ EN_POS_HYDROGEN = 20.02
 def _get_parameters(elements, amount_of_binding_partners):
     """
     Gather the parameters required for electronegativity computation of
-    all atoms comprised in the array 'elements' inserted into the
-    function.
+    all atoms comprised in the input array `elements`.
 
     By doing so, the function accesses the nested dictionary
-    'EN_PARAMETERS'. The values originate from a publication of Johann
+    ``EN_PARAMETERS``. The values originate from a publication of Johann
     Gasteiger and Mario Marsili. [1]_
 
     Parameters
@@ -98,31 +97,64 @@ def _get_parameters(elements, amount_of_binding_partners):
     parameters: NumPy array, dtype=float, shape=(n,3)
         The array containing all three parameters required for the
         computation of the electronegativities of all atoms comprised
-        in the 'elements' array.
+        in the `elements` array.
     
     References
     ----------
     .. [1] J Gasteiger and M Marsili,
-       "Iterative partial equalization of orbital electronegativity- a
+       "Iterative partial equalization of orbital electronegativity - a
        rapid access to atomic charges"
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
     parameters = np.zeros((elements.shape[0], 3))
-    has_key_error = False
+    has_atom_key_error = False
+    has_valence_key_error = False
     # Preparing warning in case of KeyError
+    # It is differentiated between atoms that are not parametrized at
+    # all and specific valence states that are parametrized
     list_of_unparametrized_elements = []
+    unparametrized_valences = []
+    unparam_valence_names = []
     for i, element in enumerate(elements):
         try:
             a, b, c = \
-            EN_PARAMETERS[element][amount_of_binding_partners[i]]
+                EN_PARAMETERS[element][amount_of_binding_partners[i]]
             parameters[i, 0] = a
             parameters[i, 1] = b
             parameters[i, 2] = c
         except KeyError:
+            try:
+                EN_PARAMETERS[element]
+            except KeyError:
+                list_of_unparametrized_elements.append(element)
+                has_atom_key_error = True
+            else:
+                unparam_valence_names.append(element)
+                unparametrized_valences.append(
+                    amount_of_binding_partners[i]
+                )
+                has_valence_key_error = True
             parameters[i, :] = np.nan
-            list_of_unparametrized_elements.append(element)
-            has_key_error = True
-    if has_key_error:
+    if has_valence_key_error:
+        unparam_valence_names = np.unique(unparam_valence_names)
+        unparametrized_valences = np.unique(unparametrized_valences)
+        joined_list = []
+        for i in range(len(unparam_valence_names)):
+            joined_list.append(
+                unparam_valence_names[i]
+                +
+                " " * (10 - len(unparam_valence_names[i]))
+            )
+            joined_list.append(str(unparametrized_valences[i]) + "\n")
+        warnings.warn(
+            f"Parameters for specific valence states of some atoms "
+            f"are not available. These valence states are: \n"
+            f"Atom:     Amount of binding partners:\n"
+            f"{''.join(joined_list)}"
+            f"Their electronegativity is given as NaN.",
+            UserWarning
+        )
+    if has_atom_key_error:
         # Using NumPy's 'unique' function to ensure that each atom only
         # occurs once in the list
         unique_list = np.unique(list_of_unparametrized_elements)
@@ -131,7 +163,7 @@ def _get_parameters(elements, amount_of_binding_partners):
             f"Parameters required for computation of "
             f"electronegativity aren't available for the following "
             f"atoms: {', '.join(unique_list)}. "
-            f"Their electronegativity is given as NaN (Not a Number).", 
+            f"Their electronegativity is given as NaN.", 
             UserWarning
         )
     return parameters
@@ -140,57 +172,55 @@ def _get_parameters(elements, amount_of_binding_partners):
 def partial_charges(atom_array, iteration_step_num=6, charges=None):
     """
     Compute the partial charge of the individual atoms comprised in a
-    given AtomArray depending on their electronegativity.
+    given :class:`AtomArray` depending on their electronegativity.
 
-    The algorithm implemented here is the so-called PEOE algorithm
-    (partial equalization of orbital electronegativity) developed by
-    Johann Gasteiger and Mario Marsili. [1]_
+    This function implements the
+    *partial equalization of orbital electronegativity* (PEOE)
+    algorithm [1]_.
 
     Parameters
     ----------
     atom_array: AtomArray, shape=(n,)
-        The AtomArray to get the partial charge values for. Exclusively
-        AtomArrays can be inserted in this function, not
-        AtomArrayStacks.
-    iteration_step_num: integer, optional
+        The :class:`AtomArray` to get the partial charge values for.
+        Must have an associated `BondList`.
+    iteration_step_num: int, optional
         The number of iteration steps is an optional argument and can be 
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
-        '6' will be used as Gasteiger and Marsili described this amount
-        of iteration steps as sufficient. [1]_
+        '6' will be used.
+        Gasteiger and Marsili described this number as sufficient [1]_.
     charges: ndarray, dtype=int, optional
-        The array comprising the formal charges of the atoms comprised
-        in the inserted AtomArray ('atom_array'). Note that if this
-        parameter is omitted, the formal charges of all atoms will be
-        arbitrarily set to zero.
+        The array comprising the formal charges of the atoms in the
+        input `atom_array`.
+        If none is given, the ``charge`` annotation category of the
+        input `atom_array` is used.
+        If neither of them is given, the formal charges of all atoms
+        will be arbitrarily set to zero.
     
     Returns
     -------
     partial_charges: ndarray, dtype=float
-        The partial charge values of the individual atoms comprised in
-        'atom_array'.
+        The partial charge values of the individual atoms in the input
+        `atom_array`.
     
     Notes
     -----
-    A BondList must be associated to the AtomArray inserted into the
-    function as in the following example:
+    A :class:`BondList` must be associated to the input
+    :class:`AtomArray`.
+    Otherwise, an error will be raised.
+    Example:
 
-    atom_array.bonds = struc.connect_via_residue_names(atom_array)
+    .. highlight:: python
 
-    The annotation category name must be "bonds" as well since this is
-    the name that is checked in order to verify the presence of a
-    BondList.
+        atom_array.bonds = struc.connect_via_residue_names(atom_array)
 
-    Otherwise, an error will be raised and electronegativity values
-    won't be delivered.
-
-    This step can be omitted if the AtomArray is obtained by accessing
-    the Chemical Component Dictionary by using the function
-    'biotite.structure.info.residue' as AtomArrays obtained in this way
-    are already associated to BondLists.
+    |
 
     For the electronegativity of positively charged hydrogen, the
     value of 20.02 eV is used.
+
+    Also note that the algorithm used in this function does not deliver
+    proper results for expanded pi-electron systems like aromatic rings.
 
     References
     ----------
@@ -208,13 +238,11 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
 
     >>> fluoromethane = residue("CF0")
     >>> print(fluoromethane.atom_name)
-    >>> print(partial_charges(fluoromethane, 1))
     ['C1' 'F1' 'H1' 'H2' 'H3']
-    [ 0.11473086 -0.17542017  0.02022977  0.02022977  0.02022977]
-    >>> print(fluoromethane.atom_name)
-    >>> print(partial_charges(fluoromethane, 6))
-    ['C1' 'F1' 'H1' 'H2' 'H3']
-    [ 0.07915367 -0.25264294  0.05782976  0.05782976  0.05782976]
+    >>> print(partial_charges(fluoromethane, iteration_step_num=1))
+    [ 0.115 -0.175  0.020  0.020  0.020]
+    >>> print(partial_charges(fluoromethane, iteration_step_num=6))
+    [ 0.079 -0.253  0.058  0.058  0.058]
     """
     amount_of_binding_partners = np.zeros(atom_array.shape[0])
     elements = atom_array.element
@@ -224,22 +252,22 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             f"BondList."
         )
     if charges is None:
-        charges = np.zeros(atom_array.shape[0])
-        warnings.warn(
-            f"Charge array wasn't given as optional argument. "
-            f"Therefore, all atoms' formal charge is assumed "
-            f"to be zero.",
-            UserWarning
-        )
-    # For CPU time reasons, a nested list containing all binding
-    # partners of a respective atom of the AtomArray is created
-    bonds = \
-    [atom_array.bonds.get_bonds(i)[0] for i in \
-    range(atom_array.shape[0])]
+        try:
+            # Implicitly this creates a copy of the charges
+            charges = atom_array.charge.astype(np.float)
+        except AttributeError:
+            charges = np.zeros(atom_array.shape[0])
+            warnings.warn(
+                f"A charge array was neither given as optional "
+                f"argument, nor does a charge annotation of the "
+                f"inserted AtomArray exist. Therefore, all atoms' "
+                f"formal charge is assumed to be zero.",
+                UserWarning
+            )
+
+    bonds, _ = atom_array.bonds.get_all_bonds()
+    amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
     damping = 1.0
-    for list_num in range(len(bonds)):
-        amount_of_binding_partners[list_num] = \
-        len(bonds[list_num])
     parameters = _get_parameters(elements, amount_of_binding_partners)
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
@@ -252,31 +280,34 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # column vectors and then merged to one array
         column_charges = np.transpose(np.atleast_2d(charges))
         sq_column_charges = np.transpose(np.atleast_2d(charges**2))
-        ones_vector = np.transpose(np.atleast_2d(np.full(
-        atom_array.shape[0], 1)))
-        charge_array = np.concatenate((ones_vector, column_charges,
-        sq_column_charges), axis = 1)
+        ones_vector = np.transpose(
+            np.atleast_2d(np.full(atom_array.shape[0], 1))
+        )
+        charge_array = np.concatenate(
+            (ones_vector, column_charges,sq_column_charges), axis=1
+        )
         en_values = np.sum(parameters * charge_array, axis=1)
         # Computing electronegativity values in case of positive charge
         # which enter as divisor the equation for charge transfer
-        pos_en_values = np.sum(parameters, axis = 1)
+        pos_en_values = np.sum(parameters, axis=1)
         # Substituting values for hydrogen with the special value
-        pos_en_values = np.array([20.02 if i == 12.85 else i 
-        for i in pos_en_values])
+        pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
         for i, j, _ in atom_array.bonds.as_array():
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
             # the partial charge is set to NaN
             if np.isnan(en_values[[i, j]]).any():
-                if np.isnan(en_values[i]):
-                    charges[i] = np.nan
                 # Determining for which atom exactly no parameters are
                 # available is necessary since the other atom, for which
                 # there indeed are parameters, could be involved in
                 # multiple bonds.
                 # Therefore, setting both charges to NaN would falsify
                 # the result.
-                else:
+                # The case that both atoms are not parametrized must be
+                # considered as well.
+                if np.isnan(en_values[i]):
+                    charges[i] = np.nan
+                if np.isnan(en_values[j]):
                     charges[j] = np.nan
             else:
                 if en_values[j] > en_values[i]:
@@ -284,7 +315,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 else:
                     divisor = pos_en_values[j]
                 charge_transfer = ((en_values[j] - en_values[i]) /
-                divisor) * damping
+                    divisor) * damping
                 charges[i] += charge_transfer
                 charges[j] -= charge_transfer
     partial_charges = charges

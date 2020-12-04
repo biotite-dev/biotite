@@ -244,7 +244,9 @@
             "hbond_frequency",
             "base_pairs",
             "base_stacking",
-            "partial_charges"
+            "partial_charges",
+            "base_pairs_edge",
+            "base_pairs_glycosidic_bond"
         ]
     }
 }
