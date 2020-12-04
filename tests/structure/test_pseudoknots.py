@@ -113,8 +113,36 @@ def test_pseudoknot_removal(name):
     # Verify that the number of solutions matches the reference
     assert len(reference_solutions) == solutions_count
 
+@pytest.mark.parametrize("seed", range(10))
+def test_pseudoknot_orders(seed):
+    """
+    Generate a random set of basepairs. Assert that increasing
+    pseudoknot orders contain less or equal base pairs. Furthermore,
+    assert that each individual order only contains unknotted base
+    pairs.
+    """
+    # Generate Random set of basepairs
+    np.random.seed(seed)
+    bases = range(100)
+    basepairs = np.random.choice(bases, size=(20, 2), replace=False)
 
+    # Get pseudoknot order for each basepair
+    solutions = struc.pseudoknots(basepairs)
 
+    # Iterate through the solutions
+    for solution in solutions:
+        # Number of base pairs in the last order
+        last_order = -1
+        for order in range(np.amax(solution)+1):
+            # Ensure that the base pairs of the same order are unknotted
+            assert(
+                np.amax(struc.pseudoknots(basepairs[solution == order])) == 0
+            )
 
-
-
+            # Number of base pairs in the current order
+            this_order = len(solution[solution == order])
+            # Ensure that that higher orders contain less or equal base
+            # pairs than lower orders
+            if last_order != -1:
+                assert this_order <= last_order
+            last_order = this_order
