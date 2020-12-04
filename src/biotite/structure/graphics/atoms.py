@@ -23,22 +23,18 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
     ----------
     axes : Axes3D
         The *Matplotlib* 3D-axes to plot the structure on.
-        For a correct aspect ratio of the visualized structure, the
-        :class:`Axes3D` must have quadratic extents on the display.
-        This can be approximately achieved by giving the :class:`Figure`
-        equal values for the width and height in its `figsize`.
-    atoms : AtomArray, length=n
+    atoms : AtomArray, shape=(n,)
         The structure to be plotted.
         The atom array must have an associated :class:`BondList`, i.e.
-        its `bonds` attribute must be defined.
+        its ``bonds`` attribute must be defined.
         One line for each bond is drawn.
     colors : ndarray, shape=(n,3) or shape=(n,4), dtype=float
         An array of RGB or RGBA colors for each atom in `atoms`.
         The values for each color channel are in the range 0 to 1.
     line_width : float, optional
         The width of the lines to be drawn.
-    background_color : string or iterable object
-        A matplotlib compatible color (color name or RGB values).
+    background_color : object
+        A *Matplotlib* compatible color (color name or RGB values).
         If set, the background is colored with the given value.
     center : tuple of (float, float, float), optional
         The coordinates of the structure that are in the center of the
@@ -112,6 +108,59 @@ def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
                               line_color="black", line_width=1.0,
                               background_color=None, center=None,
                               size=None, zoom=1.0):
+    """
+    Plot an :class:`AtomArray` as *ball-and-stick* model.
+
+    The z-axis points into the screen plane.
+
+    UNSTABLE: This function is probably subject to future changes.
+    
+    Parameters
+    ----------
+    axes : Axes3D
+        The *Matplotlib* 3D-axes to plot the structure on.
+    atoms : AtomArray, length=n
+        The structure to be plotted.
+        The atom array must have an associated :class:`BondList`, i.e.
+        its ``bonds`` attribute must be defined.
+        One line for each bond is drawn.
+    colors : ndarray, shape=(n,3) or shape=(n,4), dtype=float
+        An array of RGB or RGBA colors for each atom in `atoms`, that
+        is used to color the *balls* of the model.
+        The values for each color channel are in the range 0 to 1.
+    ball_size : int or iterable of int, shape=(n,)
+        The size of the *balls* in the model in *pt*.
+        Either a single value for all atoms or an iterable object of
+        values for each atom.
+    line_color : object
+        A *Matplotlib* compatible color value for the *sticks* of the
+        model.
+    line_width : float, optional
+        The width of the *sticks* in the model in *pt*.
+    background_color : object
+        A *Matplotlib* compatible color (color name or RGB values).
+        If set, the background is colored with the given value.
+    center : tuple of (float, float, float), optional
+        The coordinates of the structure that are in the center of the
+        plot.
+        By default the complete molecule is centered.
+    size : float, optional
+        The size of each dimension in the plot.
+        The limits of the :class:`Axes3D` are set to
+        ``(center - size/(2*zoom)), (center + size/(2*zoom))``.
+    zoom : float, optional
+        Zoom in or zoom out.
+
+        - ``> 1.0``: Zoom in.
+        - ``< 1.0``: Zoom out.
+    
+    Notes
+    -----
+    This is a very simple visualization tools for quick visual analysis
+    of a structure.
+    For publication-ready molecular images the usage of a dedicated
+    molecular visualization tool is recommended.
+    """
     if not isinstance(axes, Axes3D):
         raise ValueError("The given axes mut be an 'Axes3D'")
     if atoms.bonds is None:
@@ -169,7 +218,7 @@ def _set_box(axes, coord, center, size, zoom):
     axes.set_xlim(center[0] - size/(2*zoom), center[0] + size/(2*zoom))
     axes.set_ylim(center[1] - size/(2*zoom), center[1] + size/(2*zoom))
     axes.set_zlim(center[2] - size/(2*zoom), center[2] + size/(2*zoom))
+    
     # Make the axis lengths of the 'plot box' equal
     # The 'plot box' is not visible due to 'axes.axis("off")'
-    
     axes.set_box_aspect([1,1,1])
