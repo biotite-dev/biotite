@@ -18,8 +18,23 @@ class RNAplotApp(LocalApp):
     def __init__(self, dot_bracket = None, base_pairs=None, length = None,
                  bin_path="RNAplot"):
         super().__init__(bin_path)
-        # TODO
+
+        if (
+            (dot_bracket is None) and
+            ((base_pairs is None) or (length is None))
+        ):
+            raise ValueError(
+                "Structure has to be provided in either dot bracket notation "
+                "or as base pairs and the total sequence length"
+            )
+
+        self._dot_bracket = dot_bracket
+        self._base_pairs = base_pairs
+        self._length = length
+
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
+        self._out_file = NamedTemporaryFile("r", delete=False)
+        self._out_file.name = "rna.ss"
 
     def run(self):
         # TODO
