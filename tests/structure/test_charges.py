@@ -3,6 +3,7 @@
 # information.
 
 import pytest
+import warnings
 import numpy as np
 from biotite.structure.info import residue
 from biotite.structure import Atom
@@ -319,6 +320,15 @@ def test_valence_state_not_parametrized():
     be NaN and the carbons's partial charge to be smaller than that of
     the two hydrogens.
     """
+    with pytest.warns(UserWarning):
+        warnings.warn(
+            f"Parameters for specific valence states of some atoms are "
+            f"not available. These valence states are:\n"
+            f"Atom:     Amount of binding partners:"
+            f"S         1\n"
+            f"Their electronegativity is given as NaN.",
+            UserWarning
+        )
     fictitious_molecule = array(
         [carbon, sulfur, hydrogen, hydrogen]
     )
