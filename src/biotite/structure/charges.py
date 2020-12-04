@@ -123,6 +123,10 @@ def _get_parameters(elements, amount_of_binding_partners):
             parameters[i, 1] = b
             parameters[i, 2] = c
         except KeyError:
+            # Considering the special case of ions
+            if amount_of_binding_partners[i] == 0:
+                parameters[i, :] = np.nan
+                continue
             try:
                 EN_PARAMETERS[element]
             except KeyError:
