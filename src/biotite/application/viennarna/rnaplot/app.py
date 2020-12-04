@@ -11,7 +11,7 @@ from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
 from ....sequence.io.fasta import FastaFile, set_sequence
 from ....sequence import NucleotideSequence
-from ....structure.dotbracket import base_pairs_from_dot_bracket
+from ....structure.dotbracket import dot_bracket
 
 class RNAplotApp(LocalApp):
 
@@ -19,25 +19,28 @@ class RNAplotApp(LocalApp):
                  bin_path="RNAplot"):
         super().__init__(bin_path)
 
-        if (
-            (dot_bracket is None) and
-            ((base_pairs is None) or (length is None))
-        ):
+        if dot_bracket is not None:
+            self._dot_bracket = dot_bracket
+
+        elif (base_pairs is not None) and (length is not None):
+            self._dot_bracket = dot_bracket(
+                base_pairs, length, max_pseudoknot_depth = 0
+            )
+        else:
             raise ValueError(
                 "Structure has to be provided in either dot bracket notation "
-                "or as base pairs and the total sequence length"
+                "or as base pairs and total sequence length"
             )
-
-        self._dot_bracket = dot_bracket
-        self._base_pairs = base_pairs
-        self._length = length
 
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
         self._out_file = NamedTemporaryFile("r", delete=False)
         self._out_file.name = "rna.ss"
 
     def run(self):
-        # TODO
+        with open(self._in_file.name, "w") as f:
+            f.write("N"*len(self._dot_bracket))
+            f.write(self._dot_bracket)
+        self.set_arguments([self._in_file.name, "-o", "xrna"])
         super().run()
 
     def evaluate(self):
