@@ -11,8 +11,6 @@ from tempfile import NamedTemporaryFile
 from os import remove
 from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
-from ....sequence.io.fasta import FastaFile, set_sequence
-from ....sequence import NucleotideSequence
 from ....structure.dotbracket import dot_bracket
 
 class RNAplotApp(LocalApp):
@@ -106,11 +104,11 @@ class RNAplotApp(LocalApp):
         >>> app.join()
         >>> print(app.get_coordinates())
         [[ -92.5 ,   92.5 ],
-        [ -92.5 ,   77.5 ],
-        [ -90.31,   58.24],
-        [-109.69,   58.24],
-        [-107.5 ,   77.5 ],
-        [-107.5 ,   92.5 ]]
+         [ -92.5 ,   77.5 ],
+         [ -90.31,   58.24],
+         [-109.69,   58.24],
+         [-107.5 ,   77.5 ],
+         [-107.5 ,   92.5 ]]
         """
         return self._coordinates
 
