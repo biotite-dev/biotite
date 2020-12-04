@@ -635,10 +635,10 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     for i, solution in enumerate(solutions):
 
         # Get the pseudoknotted regions
-        pseudoknoted_regions = regions - solution
+        pseudoknotted_regions = regions - solution
 
-        # Get an index list of the knotted base pairs
-        index_list_unknoted = list(
+        # Get an index list of the unknotted base pairs
+        index_list_unknotted = list(
             chain(
                 *[region.get_index_array() for region in solution]
             )
@@ -646,15 +646,15 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
 
         # Write results for current solution
         for j, result in enumerate(results_list[i]):
-            result[index_list_unknoted] = order
+            result[index_list_unknotted] = order
 
-        # If this order is the maximum specified order, stop evaluation
+        # If this order is the specified maximum order, stop evaluation
         if max_pseudoknot_order == order:
             continue
 
         # Evaluate the pseudoknotted region
         results_list[i] = _get_results(
-            pseudoknoted_regions, results_list[i],
+            pseudoknotted_regions, results_list[i],
             max_pseudoknot_order, order=order+1
         )
 
