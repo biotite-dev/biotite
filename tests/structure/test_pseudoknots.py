@@ -3,6 +3,7 @@
 # information.
 
 import pytest
+import json
 import numpy as np
 import pickle as pkl
 import biotite.structure as struc
@@ -66,16 +67,18 @@ def load_test(name):
     """
     # Base pairs as numpy array (input for `pseudoknots()`)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.pkl"),
-        "rb"
+        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.json"),
+        "r"
     ) as f:
-        basepairs = pkl.load(f)
+        basepairs = np.array(json.load(f))
     # List of solutions (set of tuples)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.pkl"),
+        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.json"),
         "rb"
     ) as f:
-        solutions = pkl.load(f)
+        solutions = json.load(f)
+    for i, solution in enumerate(solutions):
+        solutions[i] = set([tuple(pair) for pair in solution])
     return basepairs, solutions
 
 @pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
