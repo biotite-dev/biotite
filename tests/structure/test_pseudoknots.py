@@ -134,8 +134,8 @@ def test_pseudoknot_orders(seed):
 
     # Iterate through the solutions
     for solution in solutions:
-        # Number of base pairs in the last order
-        last_order = -1
+        # Number of base pairs in the previous order
+        previous_order = -1
         for order in range(np.amax(solution)+1):
             # Ensure that the base pairs of the same order are unknotted
             assert(
@@ -146,6 +146,6 @@ def test_pseudoknot_orders(seed):
             this_order = len(solution[solution == order])
             # Ensure that that higher orders contain less or equal base
             # pairs than lower orders
-            if last_order != -1:
-                assert this_order <= last_order
-            last_order = this_order
+            if previous_order != -1:
+                assert this_order <= previous_order
+            previous_order = this_order
