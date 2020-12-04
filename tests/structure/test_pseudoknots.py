@@ -45,7 +45,7 @@ def test_pseudoknots(nuc_sample_array):
         assert len(base_pairs) == len(optimal_solution)
         assert np.count_nonzero(optimal_solution == 1) == order_one_count
         assert np.count_nonzero(optimal_solution == 2) == order_two_count
-        assert np.amax(optimal_solution) == 2
+        assert np.max(optimal_solution) == 2
 
         # Assert that the each base pair has the right pseudoknot order
         for base_pair, order in zip(
@@ -136,11 +136,9 @@ def test_pseudoknot_orders(seed):
     for solution in solutions:
         # Number of base pairs in the previous order
         previous_order = -1
-        for order in range(np.amax(solution)+1):
+        for order in range(np.max(solution)+1):
             # Ensure that the base pairs of the same order are unknotted
-            assert(
-                np.amax(struc.pseudoknots(basepairs[solution == order])) == 0
-            )
+            assert (struc.pseudoknots(basepairs[solution == order]) == 0).all()
 
             # Number of base pairs in the current order
             this_order = len(solution[solution == order])
