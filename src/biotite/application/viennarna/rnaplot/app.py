@@ -6,7 +6,9 @@ __name__ = "biotite.application.viennarna.rnafold"
 __author__ = "Tom David Müller"
 __all__ = ["RNAplotApp"]
 
+import numpy as np
 from tempfile import NamedTemporaryFile
+from os import remove
 from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
 from ....sequence.io.fasta import FastaFile, set_sequence
@@ -33,34 +35,30 @@ class RNAplotApp(LocalApp):
             )
 
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
-        self._out_file = NamedTemporaryFile("r", delete=False)
-        self._out_file.name = "rna.ss"
 
     def run(self):
-        with open(self._in_file.name, "w") as f:
-            f.write("N"*len(self._dot_bracket))
-            f.write(self._dot_bracket)
-        self.set_arguments([self._in_file.name, "-o", "xrna"])
+        self._in_file.write("N"*len(self._dot_bracket) + "\n")
+        self._in_file.write(self._dot_bracket)
+        self._in_file.flush()
+        self.set_arguments(["-i", self._in_file.name, "-o", "xrna"])
         super().run()
 
     def evaluate(self):
-        # TODO
         super().evaluate()
+        self._coordinates = np.loadtxt("rna.ss", usecols=(2, 3))
 
     def clean_up(self):
         super().clean_up()
-        # TODO
         cleanup_tempfile(self._in_file)
+        remove("rna.ss")
 
     @requires_state(AppState.JOINED)
     def get_coordinates(self):
-        # TODO
-        pass
+        return self._coordinates
 
     @staticmethod
     def compute_coordinates(dot_bracket = None, base_pairs=None, length = None,
                             bin_path="RNAplot"):
-        # TODO
         app = RNAplotApp(dot_bracket=dot_bracket, base_pairs=base_pairs,
                          length=length, bin_path=bin_path)
         app.start()
