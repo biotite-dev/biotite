@@ -210,7 +210,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     Otherwise, an error will be raised.
     Example:
 
-    .. highlight:: python
+    .. code-block:: python
 
         atom_array.bonds = struc.connect_via_residue_names(atom_array)
 
