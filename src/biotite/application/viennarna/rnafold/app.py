@@ -168,7 +168,7 @@ class RNAfoldApp(LocalApp):
         mfe : float
             The minimum free energy.
         """
-        app = RNAfoldApp(sequence, bin_path)
+        app = RNAfoldApp(sequence, bin_path=bin_path)
         app.start()
         app.join()
         return app.get_dot_bracket(), app.get_mfe()
