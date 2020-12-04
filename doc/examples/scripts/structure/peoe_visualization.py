@@ -25,7 +25,7 @@ import biotite.structure.info as info
 import biotite.structure.graphics as graphics
 
 
-#Acetylsalicylic acid
+# Acetylsalicylic acid
 MOLECULE_NAME = "AIN"
 
 # The number of iterations for the PEOE algorithm
@@ -78,6 +78,7 @@ ball_sizes = np.array(
 ) * BALL_SCALE
 
 # Gradient of ray strength
+# The ray size is proportional to the absolute charge value
 ray_full_sizes = ball_sizes + np.abs(charges) * RAY_SCALE   
 ray_sizes = np.array([
     np.linspace(ray_full_sizes[i], ball_sizes[i], N_RAY_STEPS, endpoint=False)
