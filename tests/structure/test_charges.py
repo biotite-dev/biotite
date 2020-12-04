@@ -285,19 +285,6 @@ def test_total_charge_zero(molecule):
     assert total_charge == pytest.approx(0, abs=1e-15)
 
 
-# Test whether a formal charge of +1 has the expected effects on
-# carbons's partial charge in methane
-# AtomArray with positive carbon must be created ab inition in order to
-# prevent influencing 'methane'
-pos_methane = array(
-    [carbon, hydrogen, hydrogen, hydrogen, hydrogen]
-)
-pos_methane.bonds = BondList(
-    pos_methane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
-)
-pos_methane.charge = np.array([1, 0, 0, 0, 0])
-
 def test_pos_formal_charge():
     """
     Test whether the partial charge of carbon in methane behaves as
@@ -306,6 +293,9 @@ def test_pos_formal_charge():
     negative charge is addded to during iteration and also greater than
     the partial charge of carbon in methane carrying no formal charge.
     """
+    pos_methane = methane.copy()
+    pos_methane.charge = np.array([1, 0, 0, 0, 0])
+
     ref_carb_part_charge = charges.partial_charges(
         methane, iteration_step_num=6
     )[0]
