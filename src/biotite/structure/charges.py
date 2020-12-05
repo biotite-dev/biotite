@@ -149,7 +149,8 @@ def _get_parameters(elements, amount_of_binding_partners):
             )
             joined_list.append(str(unparametrized_valences[i]) + "\n")
             joined_array = np.reshape(
-                joined_list, newshape=(len(unparametrized_valences),2)
+                joined_list,
+                newshape=(int(len(joined_list) / 2), 2)
             )
             joined_array = np.unique(joined_array, axis=0)
             # Array must be flattened in order ro be able to apply the
