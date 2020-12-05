@@ -140,8 +140,6 @@ def _get_parameters(elements, amount_of_binding_partners):
                 has_valence_key_error = True
             parameters[i, :] = np.nan
     if has_valence_key_error:
-        unparam_valence_names = np.unique(unparam_valence_names)
-        unparametrized_valences = np.unique(unparametrized_valences)
         joined_list = []
         for i in range(len(unparam_valence_names)):
             joined_list.append(
@@ -150,11 +148,20 @@ def _get_parameters(elements, amount_of_binding_partners):
                 " " * (10 - len(unparam_valence_names[i]))
             )
             joined_list.append(str(unparametrized_valences[i]) + "\n")
+            joined_array = np.reshape(
+                joined_list, newshape=(len(unparametrized_valences),2)
+            )
+            joined_array = np.unique(joined_array, axis=0)
+            # Array must be flattened in order ro be able to apply the
+            # 'join' method
+            flattened_joined_array = np.reshape(
+                joined_array, newshape=(2*joined_array.shape[0])
+            )
         warnings.warn(
             f"Parameters for specific valence states of some atoms "
             f"are not available. These valence states are: \n"
             f"Atom:     Amount of binding partners:\n"
-            f"{''.join(joined_list)}"
+            f"{''.join(flattened_joined_array)}"
             f"Their electronegativity is given as NaN.",
             UserWarning
         )
