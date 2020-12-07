@@ -244,6 +244,7 @@
             "hbond_frequency",
             "base_pairs",
             "base_stacking",
+            "pseudoknots"
             "base_pairs_edge",
             "base_pairs_glycosidic_bond"
         ]
