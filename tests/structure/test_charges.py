@@ -9,7 +9,7 @@ from biotite.structure.info import residue
 from biotite.structure import Atom
 from biotite.structure import array
 from biotite.structure import BondList
-from biotite.structure import charges
+from biotite.structure import partial_charges
 
 
 # Test the partial charge of carbon in the molecules given in table
@@ -251,8 +251,8 @@ def test_partial_charges(molecule, expected_results):
     implementation correspond to the values given in the publication
     within a certain tolerance range.
     """
-    charges_ = charges.partial_charges(molecule)
-    assert charges_[molecule.element == "C"].tolist() == \
+    charges = partial_charges(molecule)
+    assert charges[molecule.element == "C"].tolist() == \
         pytest.approx(expected_results, abs=1e-2)
 
 
@@ -282,7 +282,7 @@ def test_total_charge_zero(molecule):
     of all formal charges (in our case zero since we are exclusively
     dealing with uncharged molecules).
     """
-    total_charge = np.sum(charges.partial_charges(molecule))
+    total_charge = np.sum(partial_charges(molecule))
     assert total_charge == pytest.approx(0, abs=1e-15)
 
 
@@ -297,11 +297,13 @@ def test_pos_formal_charge():
     pos_methane = methane.copy()
     pos_methane.charge = np.array([1, 0, 0, 0, 0])
 
-    ref_carb_part_charge = charges.partial_charges(
-        methane, iteration_step_num=6
+    ref_carb_part_charge = partial_charges(
+        methane,
+        iteration_step_num=6
     )[0]
-    pos_carb_part_charge = charges.partial_charges(
-        pos_methane, iteration_step_num=6
+    pos_carb_part_charge = partial_charges(
+        pos_methane,
+        iteration_step_num=6
     )[0]
     assert pos_carb_part_charge < 1
     assert pos_carb_part_charge > ref_carb_part_charge
@@ -321,26 +323,19 @@ def test_valence_state_not_parametrized():
     the two hydrogens.
     """
     with pytest.warns(UserWarning):
-        warnings.warn(
-            f"Parameters for specific valence states of some atoms are "
-            f"not available. These valence states are:\n"
-            f"Atom:     Amount of binding partners:"
-            f"S         1\n"
-            f"Their electronegativity is given as NaN.",
-            UserWarning
+        fictitious_molecule = array(
+            [carbon, sulfur, hydrogen, hydrogen]
         )
-    fictitious_molecule = array(
-        [carbon, sulfur, hydrogen, hydrogen]
-    )
-    fictitious_molecule.bonds = BondList(
-        fictitious_molecule.array_length(),
-        np.array([[0,1], [0,2], [0,3]])
-    )
-    mol_length = fictitious_molecule.array_length()
-    fictitious_molecule.charge = np.array([0] * mol_length)
-    sulfur_part_charge = charges.partial_charges(fictitious_molecule)[1]
-    carb_part_charge = charges.partial_charges(fictitious_molecule)[0]
-    hyd_part_charge = charges.partial_charges(fictitious_molecule)[2]
+        fictitious_molecule.bonds = BondList(
+            fictitious_molecule.array_length(),
+            np.array([[0,1], [0,2], [0,3]])
+        )
+        mol_length = fictitious_molecule.array_length()
+        fictitious_molecule.charge = np.array([0] * mol_length)
+        charges = partial_charges(fictitious_molecule)
+        sulfur_part_charge = charges[1]
+        carb_part_charge = charges[0]
+        hyd_part_charge = charges[2]
     assert np.isnan(sulfur_part_charge)
     assert carb_part_charge < hyd_part_charge
 
@@ -360,6 +355,5 @@ def test_correct_output_ions():
     # Sodium is not involved in covalent bonding
     sodium_array.bonds = BondList(sodium_array.array_length())
     with pytest.warns(None) as record:
-        None
-    charges.partial_charges(sodium_array, iteration_step_num=1)
+        partial_charges(sodium_array, iteration_step_num=1)
     assert len(record) == 0
