@@ -3,12 +3,13 @@
 # information.
 
 import pytest
+import warnings
 import numpy as np
 from biotite.structure.info import residue
 from biotite.structure import Atom
 from biotite.structure import array
 from biotite.structure import BondList
-from biotite.structure import charges
+from biotite.structure import partial_charges
 
 
 # Test the partial charge of carbon in the molecules given in table
@@ -31,12 +32,15 @@ fluorine = Atom([0, 0, 0], element ="F")
 
 sulfur = Atom([0, 0, 0], element="S")
 
+
 # Building molecules
 methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
 methane.bonds = BondList(
     methane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+mol_length = methane.array_length()
+methane.charge = np.array([0] * mol_length)
 
 
 ethane = array(
@@ -47,6 +51,8 @@ ethane.bonds = BondList(
     ethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+mol_length = ethane.array_length()
+ethane.charge = np.array([0] * mol_length)
 
 
 ethylene = array(
@@ -56,6 +62,8 @@ ethylene.bonds = BondList(
     ethylene.array_length(),
     np.array([[0,1], [0,2], [0,3], [1,4], [1,5]])
 )
+mol_length = ethylene.array_length()
+ethylene.charge = np.array([0] * mol_length)
 
 
 acetylene = array(
@@ -65,6 +73,8 @@ acetylene.bonds = BondList(
     acetylene.array_length(),
     np.array([[0,1], [0,2], [1,3]])
 )
+mol_length = acetylene.array_length()
+acetylene.charge = np.array([0] * mol_length)
 
 
 fluoromethane = array(
@@ -74,6 +84,8 @@ fluoromethane.bonds = BondList(
     fluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+mol_length = fluoromethane.array_length()
+fluoromethane.charge = np.array([0] * mol_length)
 
 
 difluoromethane = array(
@@ -83,6 +95,8 @@ difluoromethane.bonds = BondList(
     difluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+mol_length = difluoromethane.array_length()
+difluoromethane.charge = np.array([0] * mol_length)
 
 
 trifluoromethane = array(
@@ -92,6 +106,8 @@ trifluoromethane.bonds = BondList(
     trifluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+mol_length = trifluoromethane.array_length()
+trifluoromethane.charge = np.array([0] * mol_length)
 
 
 tetrafluoromethane = array(
@@ -101,6 +117,8 @@ tetrafluoromethane.bonds = BondList(
     tetrafluoromethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4]])
 )
+mol_length = tetrafluoromethane.array_length()
+tetrafluoromethane.charge = np.array([0] * mol_length)
 
 
 fluoroethane = array(
@@ -111,6 +129,8 @@ fluoroethane.bonds = BondList(
     fluoroethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+mol_length = fluoroethane.array_length()
+fluoroethane.charge = np.array([0] * mol_length)
 
 
 trifluoroethane = array(
@@ -121,6 +141,8 @@ trifluoroethane.bonds = BondList(
     trifluoroethane.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
 )
+mol_length = trifluoroethane.array_length()
+trifluoroethane.charge = np.array([0] * mol_length)
 
 
 methanole = array(
@@ -130,6 +152,8 @@ methanole.bonds = BondList(
     methanole.array_length(),
     np.array([[0,1], [0,2], [0,3], [0,4], [1,5]])
 )
+mol_length = methanole.array_length()
+methanole.charge = np.array([0] * mol_length)
 
 
 dimethyl_ether = array(
@@ -140,6 +164,8 @@ dimethyl_ether.bonds = BondList(
     dimethyl_ether.array_length(),
     np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], [1,7], [1,8]])
 )
+mol_length = dimethyl_ether.array_length()
+dimethyl_ether.charge = np.array([0] * mol_length)
 
 
 formaldehyde = array(
@@ -149,6 +175,8 @@ formaldehyde.bonds = BondList(
     formaldehyde.array_length(),
     np.array([[0,1], [0,2], [0,3]])
 )
+mol_length = formaldehyde.array_length()
+formaldehyde.charge = np.array([0] * mol_length)
 
 
 acetaldehyde = array(
@@ -158,6 +186,8 @@ acetaldehyde.bonds = BondList(
     acetaldehyde.array_length(),
     np.array([[0,1], [1,2], [0,3], [0,4], [0,5], [1,6]])
 )
+mol_length = acetaldehyde.array_length()
+acetaldehyde.charge = np.array([0] * mol_length)
 
 
 acetone = array(
@@ -169,6 +199,8 @@ acetone.bonds = BondList(
     np.array([[0,1], [1,2], [1,3], [0,4], [0,5], [0,6], [2,7], [2,8],
     [2,9]])
 )
+mol_length = acetone.array_length()
+acetone.charge = np.array([0] * mol_length)
 
 
 hydrogen_cyanide = array(
@@ -178,6 +210,8 @@ hydrogen_cyanide.bonds = BondList(
     hydrogen_cyanide.array_length(),
     np.array([[0,1], [0,2]])
 )
+mol_length = hydrogen_cyanide.array_length()
+hydrogen_cyanide.charge = np.array([0] * mol_length)
 
 
 acetonitrile = array(
@@ -187,6 +221,8 @@ acetonitrile.bonds = BondList(
     acetonitrile.array_length(),
     np.array([[0,1], [1,2], [0,3], [0,4], [0,5]])
 )
+mol_length = acetonitrile.array_length()
+acetonitrile.charge = np.array([0] * mol_length)
 
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize("molecule, expected_results", [
@@ -215,8 +251,8 @@ def test_partial_charges(molecule, expected_results):
     implementation correspond to the values given in the publication
     within a certain tolerance range.
     """
-    charges_ = charges.partial_charges(molecule)
-    assert charges_[molecule.element == "C"].tolist() == \
+    charges = partial_charges(molecule)
+    assert charges[molecule.element == "C"].tolist() == \
         pytest.approx(expected_results, abs=1e-2)
 
 
@@ -246,22 +282,9 @@ def test_total_charge_zero(molecule):
     of all formal charges (in our case zero since we are exclusively
     dealing with uncharged molecules).
     """
-    total_charge = np.sum(charges.partial_charges(molecule))
+    total_charge = np.sum(partial_charges(molecule))
     assert total_charge == pytest.approx(0, abs=1e-15)
 
-
-# Test whether a formal charge of +1 has the expected effects on
-# carbons's partial charge in methane
-# AtomArray with positive carbon must be created ab inition in order to
-# prevent influencing 'methane'
-pos_methane = array(
-    [carbon, hydrogen, hydrogen, hydrogen, hydrogen]
-)
-pos_methane.bonds = BondList(
-    pos_methane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
-)
-pos_methane.charge = np.array([1, 0, 0, 0, 0])
 
 def test_pos_formal_charge():
     """
@@ -271,11 +294,16 @@ def test_pos_formal_charge():
     negative charge is addded to during iteration and also greater than
     the partial charge of carbon in methane carrying no formal charge.
     """
-    ref_carb_part_charge = charges.partial_charges(
-        methane, iteration_step_num=6
+    pos_methane = methane.copy()
+    pos_methane.charge = np.array([1, 0, 0, 0, 0])
+
+    ref_carb_part_charge = partial_charges(
+        methane,
+        iteration_step_num=6
     )[0]
-    pos_carb_part_charge = charges.partial_charges(
-        pos_methane, iteration_step_num=6
+    pos_carb_part_charge = partial_charges(
+        pos_methane,
+        iteration_step_num=6
     )[0]
     assert pos_carb_part_charge < 1
     assert pos_carb_part_charge > ref_carb_part_charge
@@ -294,15 +322,38 @@ def test_valence_state_not_parametrized():
     be NaN and the carbons's partial charge to be smaller than that of
     the two hydrogens.
     """
-    fictitious_molecule = array(
-        [carbon, sulfur, hydrogen, hydrogen]
-    )
-    fictitious_molecule.bonds = BondList(
-        fictitious_molecule.array_length(),
-        np.array([[0,1], [0,2], [0,3]])
-    )
-    sulfur_part_charge = charges.partial_charges(fictitious_molecule)[1]
-    carb_part_charge = charges.partial_charges(fictitious_molecule)[0]
-    hyd_part_charge = charges.partial_charges(fictitious_molecule)[2]
+    with pytest.warns(UserWarning):
+        fictitious_molecule = array(
+            [carbon, sulfur, hydrogen, hydrogen]
+        )
+        fictitious_molecule.bonds = BondList(
+            fictitious_molecule.array_length(),
+            np.array([[0,1], [0,2], [0,3]])
+        )
+        mol_length = fictitious_molecule.array_length()
+        fictitious_molecule.charge = np.array([0] * mol_length)
+        charges = partial_charges(fictitious_molecule)
+        sulfur_part_charge = charges[1]
+        carb_part_charge = charges[0]
+        hyd_part_charge = charges[2]
     assert np.isnan(sulfur_part_charge)
     assert carb_part_charge < hyd_part_charge
+
+
+def test_correct_output_ions():
+    """
+    Ions such as sodium or potassium are not parametrized. However,
+    their formal charge is taken as partial charge since they are not
+    involved in covalent bonding.
+    Hence, it is expected that no warning is raised.
+    The test is performed with a sodium ion.
+    """
+    sodium = Atom([0, 0, 0], element="NA")
+    sodium_array = array([sodium])
+    # Sodium possesses a formal charge of +1
+    sodium_array.charge = np.array([1])
+    # Sodium is not involved in covalent bonding
+    sodium_array.bonds = BondList(sodium_array.array_length())
+    with pytest.warns(None) as record:
+        partial_charges(sodium_array, iteration_step_num=1)
+    assert len(record) == 0

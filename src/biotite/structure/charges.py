@@ -123,6 +123,10 @@ def _get_parameters(elements, amount_of_binding_partners):
             parameters[i, 1] = b
             parameters[i, 2] = c
         except KeyError:
+            # Considering the special case of ions
+            if amount_of_binding_partners[i] == 0:
+                parameters[i, :] = np.nan
+                continue
             try:
                 EN_PARAMETERS[element]
             except KeyError:
@@ -136,8 +140,6 @@ def _get_parameters(elements, amount_of_binding_partners):
                 has_valence_key_error = True
             parameters[i, :] = np.nan
     if has_valence_key_error:
-        unparam_valence_names = np.unique(unparam_valence_names)
-        unparametrized_valences = np.unique(unparametrized_valences)
         joined_list = []
         for i in range(len(unparam_valence_names)):
             joined_list.append(
@@ -146,11 +148,21 @@ def _get_parameters(elements, amount_of_binding_partners):
                 " " * (10 - len(unparam_valence_names[i]))
             )
             joined_list.append(str(unparametrized_valences[i]) + "\n")
+            joined_array = np.reshape(
+                joined_list,
+                newshape=(int(len(joined_list) / 2), 2)
+            )
+            joined_array = np.unique(joined_array, axis=0)
+            # Array must be flattened in order ro be able to apply the
+            # 'join' method
+            flattened_joined_array = np.reshape(
+                joined_array, newshape=(2*joined_array.shape[0])
+            )
         warnings.warn(
             f"Parameters for specific valence states of some atoms "
             f"are not available. These valence states are: \n"
             f"Atom:     Amount of binding partners:\n"
-            f"{''.join(joined_list)}"
+            f"{''.join(flattened_joined_array)}"
             f"Their electronegativity is given as NaN.",
             UserWarning
         )
@@ -269,6 +281,11 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
     damping = 1.0
     parameters = _get_parameters(elements, amount_of_binding_partners)
+    # Computing electronegativity values in case of positive charge
+    # which enter as divisor the equation for charge transfer
+    pos_en_values = np.sum(parameters, axis=1)
+    # Substituting values for hydrogen with the special value
+    pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
         # halved in order to guarantee rapid convergence
@@ -287,11 +304,6 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             (ones_vector, column_charges,sq_column_charges), axis=1
         )
         en_values = np.sum(parameters * charge_array, axis=1)
-        # Computing electronegativity values in case of positive charge
-        # which enter as divisor the equation for charge transfer
-        pos_en_values = np.sum(parameters, axis=1)
-        # Substituting values for hydrogen with the special value
-        pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
         for i, j, _ in atom_array.bonds.as_array():
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
