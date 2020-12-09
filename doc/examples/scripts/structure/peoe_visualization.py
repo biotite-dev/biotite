@@ -60,13 +60,13 @@ molecule = struc.align_vectors(molecule, pca.components_[-1], [0, 0, 1])
 charges = struc.partial_charges(molecule, ITERATION_NUMBER)
 # Later this variable stores values between 0 and 1 for use in color map
 normalized_charges = charges.copy()
-# Show no partial charged for atoms
+# Show no partial charge for atoms
 # that are not parametrized for the PEOE algorithm
 normalized_charges[np.isnan(normalized_charges)] = 0
 # Norm charge values to highest absolute value
 max_charge = np.max(np.abs(normalized_charges))
 normalized_charges /= max_charge
-# Transform range (-1, 1) to range (0,1)
+# Transform range (-1, 1) to range (0, 1)
 normalized_charges = (normalized_charges + 1) / 2
 # Calculate colors
 color_map = plt.get_cmap(CMAP_NAME)
@@ -91,7 +91,7 @@ fig = plt.figure(figsize=(8.0, 6.0))
 ax = fig.add_subplot(111, projection="3d")
 
 # Plot the atoms
-# As `axes.scatter` uses sizes in points**2,
+# As 'axes.scatter()' uses sizes in points**2,
 # the VdW-radii as also squared
 graphics.plot_ball_and_stick_model(
     ax, molecule, colors, ball_size=ball_sizes**2, line_width=3,
