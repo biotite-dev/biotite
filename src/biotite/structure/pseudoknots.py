@@ -32,7 +32,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     base_pairs : ndarray, dtype=int, shape=(n,2)
         The base pairs to determine the pseudoknot order of. Each row
         represents indices form two paired bases. The structure of
-        the ``ndarray`` is equal to the structure of the output of
+        the :class:`ndarray` is equal to the structure of the output of
         :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
     scores : ndarray, dtype=int, shape=(n,), optional
@@ -54,7 +54,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     Notes
     -----
-    The dynamic programming approach by Smit *et al*[1]_ is applied to
+    The dynamic programming approach by Smit *et al* [1]_ is applied to
     detect pseudoknots.
     The algorithm was originally developed to remove pseudoknots from a
     structure.
@@ -71,7 +71,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     Remove the pseudoknotted base pair for the sequence *ABCbac*, where
     the corresponding big and small letters each represent a base pair:
 
-    Define the base pairs as ``ndarray``:
+    Define the base pairs as :class:`ndarray`:
 
     >>> basepairs = np.array([[0, 4],
     ...                       [1, 3],
@@ -115,7 +115,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     .. [2] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
 
     """

@@ -56,7 +56,7 @@ def dot_bracket_from_structure(
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     basepairs = base_pairs(nucleic_acid_strand)
@@ -119,7 +119,7 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     # Make sure the lower residue is on the left for each row
@@ -179,8 +179,9 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
+    
     """
     basepairs = []
     opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]
