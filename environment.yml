@@ -17,6 +17,7 @@ dependencies:
   - requests >=2.12
   - numpy >=1.13
   - scipy >=0.14
+  - scikit-learn >= 0.18.0
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
@@ -24,7 +25,6 @@ dependencies:
   - mdtraj >=1.9.3
   - matplotlib >=3.3
   - pytest >=5.2
-  - pytest-cov >=2.5
   - sphinx >=1.7
   - sphinx-gallery =0.7.0
   - numpydoc >=0.8
