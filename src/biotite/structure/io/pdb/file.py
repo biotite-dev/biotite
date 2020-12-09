@@ -538,7 +538,7 @@ class PDBFile(TextFile):
                                   "{:>8.3f}".format(array.coord[i,1]) +
                                   "{:>8.3f}".format(array.coord[i,2]) +
                                   "{:>6.2f}".format(occupancy[i]) +
-                                  "{:>6.3f}".format(b_factor[i]) +
+                                  "{:>6.2f}".format(b_factor[i]) +
                                   (" " * 10) + 
                                   "{:2}".format(array.element[i]) +
                                   "{:2}".format(charge[i])
