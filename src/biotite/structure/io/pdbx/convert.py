@@ -416,7 +416,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
     
     if "atom_id" in annot_categories:
-        atom_site_dict["id"] = array.atom_id.astype("U6")
+        atom_site_dict["id"] = np.array([str(e) for e in array.atom_id])
     else:
         atom_site_dict["id"] = None
     if "b_factor" in annot_categories:
