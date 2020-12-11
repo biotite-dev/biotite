@@ -481,7 +481,8 @@ def index_dihedral(*args, **kwargs):
 
 def dihedral_backbone(atom_array):
     """
-    Measure the characteristic backbone dihedral angles of a structure.
+    Measure the characteristic backbone dihedral angles of a protein
+    structure.
     
     Parameters
     ----------
