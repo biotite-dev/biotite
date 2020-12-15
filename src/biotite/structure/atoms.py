@@ -105,7 +105,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : str
             The annotation category to be removed.
         """
-        if category not in self._annot:
+        if category in self._annot:
             del self._annot[str(category)]
             
     def get_annotation(self, category):
