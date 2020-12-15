@@ -21,6 +21,7 @@ import numbers
 import itertools
 from enum import IntEnum
 import numpy as np
+import networkx as nx
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -349,6 +350,20 @@ class BondList(Copyable):
                 (all_bonds_v[i,0], all_bonds_v[i,1], all_bonds_v[i,2])
             )
         return bond_set
+    
+    def as_graph(self):
+        cdef int i
+
+        cdef uint32[:,:] all_bonds_v = self._bonds
+
+        g = nx.Graph()
+        cdef list edges = [None] * all_bonds_v.shape[0]
+        for i in range(all_bonds_v.shape[0]):
+            edges[i] = (
+                all_bonds_v[i,0], all_bonds_v[i,1], {"bond_type": all_bonds_v[i,2]}
+            )
+        g.add_edges_from(edges)
+        return g
     
     def get_atom_count(self):
         """
