@@ -1600,9 +1600,9 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
 
 
 cdef _find_connected(bond_list,
-                     uint32 index,
+                     int32 index,
                      uint8[:] is_connected_mask,
-                     uint32[:,:] all_bonds):
+                     int32[:,:] all_bonds):
     if is_connected_mask[index]:
         # This atom has already been visited
         # -> exit condition
@@ -1617,7 +1617,7 @@ cdef _find_connected(bond_list,
             # Ignore padding values
             continue
         _find_connected(
-            bond_list, <uint32>connected_index, is_connected_mask, all_bonds
+            bond_list, connected_index, is_connected_mask, all_bonds
         )
 
     
