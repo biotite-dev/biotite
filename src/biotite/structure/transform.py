@@ -243,7 +243,7 @@ def align_vectors(atoms, origin_direction, target_direction,
     At first the transformation (translation and rotation), that is
     necessary to align the origin vector to the target vector is
     calculated.
-    This means means, that the application of the transformation on the
+    This means, that the application of the transformation on the
     origin vector would give the target vector.
     Then the same transformation is applied to the given
     atoms/coordinates. 
@@ -264,8 +264,8 @@ def align_vectors(atoms, origin_direction, target_direction,
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
-        A copy of the input atoms or coordinates, rotated about the
-        given axis.
+        A copy of the input atoms or coordinates with the applied
+        transformation.
         
     See Also
     --------

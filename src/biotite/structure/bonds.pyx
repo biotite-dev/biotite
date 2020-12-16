@@ -21,6 +21,7 @@ import numbers
 import itertools
 from enum import IntEnum
 import numpy as np
+import networkx as nx
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -349,6 +350,20 @@ class BondList(Copyable):
                 (all_bonds_v[i,0], all_bonds_v[i,1], all_bonds_v[i,2])
             )
         return bond_set
+    
+    def as_graph(self):
+        cdef int i
+
+        cdef uint32[:,:] all_bonds_v = self._bonds
+
+        g = nx.Graph()
+        cdef list edges = [None] * all_bonds_v.shape[0]
+        for i in range(all_bonds_v.shape[0]):
+            edges[i] = (
+                all_bonds_v[i,0], all_bonds_v[i,1], {"bond_type": all_bonds_v[i,2]}
+            )
+        g.add_edges_from(edges)
+        return g
     
     def get_atom_count(self):
         """
@@ -1533,7 +1548,7 @@ def _connect_inter_residue(atoms, residue_starts):
 def find_connected(bond_list, uint32 root, bint as_mask=False):
     """
     Get indices to all atoms that are directly or inderectly connected
-    to the atom indicated by the given index.
+    to the root atom indicated by the given index.
 
     An atom is *connected* to the `root` atom, if that atom is reachable
     by traversing an arbitrary number of bonds, starting from the
@@ -1579,38 +1594,45 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     >>> print(find_connected(bonds, 3))
     [3]
     """
+    all_bonds, _ = bond_list.get_all_bonds()
+
     if root >= bond_list.get_atom_count():
         raise ValueError(
             f"Root atom index {root} is out of bounds for bond list "
             f"representing {bond_list.get_atom_count()} atoms"
         )
     
-    cdef uint8[:] all_connected_mask = np.zeros(
+    cdef uint8[:] is_connected_mask = np.zeros(
         bond_list.get_atom_count(), dtype=np.uint8
     )
-    # Find connections in a recursive way
-    _find_connected(bond_list, root, all_connected_mask)
+    # Find connections in a recursive way,
+    # by visiting all atoms that are reachable by a bonds
+    _find_connected(bond_list, root, is_connected_mask, all_bonds)
     if as_mask:
-        return all_connected_mask
+        return is_connected_mask
     else:
-        return np.where(np.asarray(all_connected_mask))[0]
+        return np.where(np.asarray(is_connected_mask))[0]
 
 
 cdef _find_connected(bond_list,
-                     uint32 root,
-                     uint8[:] all_connected_mask):
-    if all_connected_mask[root]:
-        # Connections for this atom habe already been calculated
+                     int32 index,
+                     uint8[:] is_connected_mask,
+                     int32[:,:] all_bonds):
+    if is_connected_mask[index]:
+        # This atom has already been visited
         # -> exit condition
         return
-    all_connected_mask[root] = True
+    is_connected_mask[index] = True
     
-    bonds, _ = bond_list.get_bonds(root)
-    cdef uint32[:] connected = bonds
-    cdef int32 i
-    cdef uint32 atom_index
-    for i in range(connected.shape[0]):
-        atom_index = connected[i]
-        _find_connected(bond_list, atom_index, all_connected_mask)
+    cdef int32 j
+    cdef int32 connected_index
+    for j in range(all_bonds.shape[1]):
+        connected_index = all_bonds[index, j]
+        if connected_index == -1:
+            # Ignore padding values
+            continue
+        _find_connected(
+            bond_list, connected_index, is_connected_mask, all_bonds
+        )
 
     
