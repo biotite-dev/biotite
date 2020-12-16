@@ -231,6 +231,11 @@
             "get_chain_count",
             "chain_iter"
         ],
+        "Molecule level utility" : [
+            "get_molecule_indices",
+            "get_molecule_masks",
+            "molecule_iter"
+        ],
         "Structure comparison" : [
             "average",
             "rmsd",
