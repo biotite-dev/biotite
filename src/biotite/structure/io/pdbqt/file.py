@@ -11,6 +11,7 @@ import numpy as np
 import networkx as nx
 from ....file import TextFile
 from ...error import BadStructureError
+from ...atoms import AtomArray, AtomArrayStack
 from ...charges import partial_charges
 from ...bonds import BondList, BondType, find_connected
 
@@ -24,14 +25,170 @@ PARAMETRIZED_ELEMENTS = [
 
 class PDBQTFile(TextFile):
 
-    def get_structure(self, model=None, include_charge=False):
-        pass
+    def get_remarks(self, model=None):
+        # Line indices where a new model starts
+        model_start_i = np.array([i for i in range(len(self.lines))
+                                  if self.lines[i].startswith(("MODEL"))],
+                                 dtype=int)
+        # Line indices with ATOM or HETATM records
+        remark_line_i = np.array([i for i in range(len(self.lines)) if
+                                  self.lines[i].startswith("REMARK")],
+                                 dtype=int)
+        # Structures containing only one model may omit MODEL record
+        # In these cases model starting index is set to 0
+        if len(model_start_i) == 0:
+            model_start_i = np.array([0])
+        
+        if model is None:
+            # Add exclusive end of file
+            model_start_i = np.concatenate((model_start_i, [len(self.lines)]))
+            model_i = 0
+            remarks = []
+            for i in range(len(model_start_i) - 1):
+                start = model_start_i[i]
+                stop  = model_start_i[i+1]
+                model_remark_line_i = remark_line_i[
+                    (remark_line_i >= start) & (remark_line_i < stop)
+                ]
+                remarks.append(
+                    "\n".join([self.lines[i][7:] for i in model_remark_line_i])
+                )
+            return remarks
+        
+        else:
+            last_model = len(model_start_i)
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
 
+            if model < last_model:
+                line_filter = ( ( remark_line_i >= model_start_i[model-1] ) &
+                                ( remark_line_i <  model_start_i[model  ] ) )
+            elif model == last_model:
+                line_filter = (remark_line_i >= model_start_i[model-1])
+            else:
+                raise ValueError(
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
+                )
+            remark_line_i = remark_line_i[line_filter]
+            
+            # Do not include 'REMARK ' itself -> begin from pos 8
+            return "\n".join([self.lines[i][7:] for i in remark_line_i])
+
+
+    def get_structure(self, model=None):
+        # Line indices where a new model starts
+        model_start_i = np.array([i for i in range(len(self.lines))
+                                  if self.lines[i].startswith(("MODEL"))],
+                                 dtype=int)
+        # Line indices with ATOM or HETATM records
+        atom_line_i = np.array([i for i in range(len(self.lines)) if
+                                self.lines[i].startswith(("ATOM", "HETATM"))],
+                               dtype=int)
+        # Structures containing only one model may omit MODEL record
+        # In these cases model starting index is set to 0
+        if len(model_start_i) == 0:
+            model_start_i = np.array([0])
+        
+        if model is None:
+            depth = len(model_start_i)
+            length = self._get_model_length(model_start_i, atom_line_i)
+            array = AtomArrayStack(depth, length)
+            # Line indices for annotation determination
+            # Annotation is determined from model 1,
+            # therefore from ATOM records before second MODEL record
+            if len(model_start_i) == 1:
+                annot_i = atom_line_i
+            else:
+                annot_i = atom_line_i[atom_line_i < model_start_i[1]]
+            # Line indices for coordinate determination
+            coord_i = atom_line_i
+        
+        else:
+            last_model = len(model_start_i)
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = last_model + model + 1 if model < 0 else model
+
+            if model < last_model:
+                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
+                                ( atom_line_i <  model_start_i[model  ] ) )
+            elif model == last_model:
+                line_filter = (atom_line_i >= model_start_i[model-1])
+            else:
+                raise ValueError(
+                    f"The file has {last_model} models, "
+                    f"the given model {model} does not exist"
+                )
+            annot_i = coord_i = atom_line_i[line_filter]
+            array = AtomArray(len(coord_i))
+        
+        # Create annotation arrays
+        chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
+        res_id    = np.zeros(array.array_length(), array.res_id.dtype)
+        ins_code  = np.zeros(array.array_length(), array.ins_code.dtype)
+        res_name  = np.zeros(array.array_length(), array.res_name.dtype)
+        hetero    = np.zeros(array.array_length(), array.hetero.dtype)
+        atom_name = np.zeros(array.array_length(), array.atom_name.dtype)
+        element   = np.zeros(array.array_length(), array.element.dtype)
+
+        # Fill annotation array
+        # i is index in array, line_i is line index
+        for i, line_i in enumerate(annot_i):
+            line = self.lines[line_i]
+            
+            chain_id[i] = line[21].upper().strip()
+            res_id[i] = int(line[22:26])
+            ins_code[i] = line[26].strip()
+            res_name[i] = line[17:20].strip()
+            hetero[i] = (False if line[0:4] == "ATOM" else True)
+            atom_name[i] = line[12:16].strip()
+            element[i] = line[76:78].strip()
+        
+        # Add annotation arrays to atom array (stack)
+        array.chain_id = chain_id
+        array.res_id = res_id
+        array.ins_code = ins_code
+        array.res_name = res_name
+        array.hetero = hetero
+        array.atom_name = atom_name
+        array.element = element
+        
+        # Fill in coordinates
+        if isinstance(array, AtomArray):
+            for i, line_i in enumerate(coord_i):
+                line = self.lines[line_i]
+                array.coord[i,0] = float(line[30:38])
+                array.coord[i,1] = float(line[38:46])
+                array.coord[i,2] = float(line[46:54])
+                
+        elif isinstance(array, AtomArrayStack):
+            m = 0
+            i = 0
+            for line_i in atom_line_i:
+                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+                    m += 1
+                    i = 0
+                line = self.lines[line_i]
+                array.coord[m,i,0] = float(line[30:38])
+                array.coord[m,i,1] = float(line[38:46])
+                array.coord[m,i,2] = float(line[46:54])
+                i += 1
+        
+        return array
+    
 
     def set_structure(self, atoms, charges=None, atom_types=None,
                       rotatable_bonds=None):
         if charges is None:
             charges = partial_charges(atoms)
+            charges[np.isnan(charges)] = 0
+        else:
+            if np.isnan(charges).any():
+                raise ValueError("Input charges contain NaN values")
         
         atoms, charges, types, mask = convert_atoms(atoms, charges)
         if atom_types is not None:
@@ -39,8 +196,13 @@ class PDBQTFile(TextFile):
         
         if rotatable_bonds is None:
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
+            use_root = False
+        elif rotatable_bonds == "rigid":
+            rotatable_bonds = BondList(atoms.bonds.get_atom_count())
+            use_root = True
         elif rotatable_bonds == "all":
             rotatable_bonds = find_rotatable_bonds(atoms.bonds)
+            use_root = True
         else:
             rotatable_bonds = BondList(
                 atoms.bonds.get_atom_count(), np.asarray(rotatable_bonds)
@@ -49,6 +211,8 @@ class PDBQTFile(TextFile):
                 raise ValueError(
                     "An (nx2) array is expected for rotatable bonds"
                 )
+            use_root = True
+        
         # Break rotatable bonds
         # for simple branch determination in '_write_atoms()'
         atoms.bonds.remove_bonds(rotatable_bonds)
@@ -57,7 +221,6 @@ class PDBQTFile(TextFile):
         atom_id = np.arange(1, atoms.array_length()+1)
         occupancy = np.ones(atoms.array_length())
         b_factor = np.zeros(atoms.array_length())
-
 
         # Convert rotatable bonds into array for easier handling
         # The bond type is irrelevant from this point on
@@ -68,9 +231,10 @@ class PDBQTFile(TextFile):
             atoms, charges, types,
             atom_id, hetero, occupancy, b_factor,
             0, rotatable_bonds, np.zeros(len(rotatable_bonds), dtype=bool),
-            True
+            use_root
         )
-        self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
+        if use_root:
+            self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
 
         return mask
     
@@ -158,6 +322,30 @@ class PDBQTFile(TextFile):
             self.lines.append(
                 f"ENDBRANCH {atom_id[this_br_i]:>3d} {atom_id[new_br_i]:>3d}"
             )
+    
+
+    def _get_model_length(self, model_start_i, atom_line_i):
+        """
+        Determine length of models and check that all models
+        have equal length.
+        """
+        n_models = len(model_start_i)
+        length = None
+        for model_i in range(len(model_start_i)):
+            model_start = model_start_i[model_i]
+            model_stop = model_start_i[model_i+1] if model_i+1 < n_models \
+                            else len(self.lines)
+            model_length = np.count_nonzero(
+                (atom_line_i >= model_start) & (atom_line_i < model_stop)
+            )
+            if length is None:
+                length = model_length
+            if model_length != length:
+                raise InvalidFileError(
+                    f"Model {model_i+1} has {model_length} atoms, "
+                    f"but model 1 has {length} atoms, must be equal"
+                )
+        return length
 
 
 def convert_atoms(atoms, charges):
