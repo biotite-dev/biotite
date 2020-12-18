@@ -120,7 +120,7 @@ class VinaApp(LocalApp):
 
     @requires_state(AppState.JOINED)
     def get_models(self):
-        return self.self._models
+        return self._models
 
     @requires_state(AppState.JOINED)
     def get_coord(self):
