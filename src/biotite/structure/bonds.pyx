@@ -1247,8 +1247,9 @@ def connect_via_distances(atoms, dict distance_range=None):
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
 
-    A bond is created for two atoms within the same residue, if the
-    distance between them is within the expected bond distance range.
+    A :attr:`BondType.ANY`, bond is created for two atoms within the
+    same residue, if the distance between them is within the expected 
+    bond distance range.
     Bonds between two adjacent residues are created for the atoms
     expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
     peptides and ``"O3'"`` and ``'P'`` for nucleotides.
