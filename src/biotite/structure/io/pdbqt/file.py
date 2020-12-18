@@ -126,6 +126,9 @@ class PDBQTFile(TextFile):
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
         
+        # Save atom IDs for later sorting into the original atom order
+        atom_id  = np.zeros(array.array_length(), int)
+
         # Create annotation arrays
         chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
         res_id    = np.zeros(array.array_length(), array.res_id.dtype)
@@ -140,6 +143,7 @@ class PDBQTFile(TextFile):
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
             
+            atom_id[i] = int(line[6:11])
             chain_id[i] = line[21].upper().strip()
             res_id[i] = int(line[22:26])
             ins_code[i] = line[26].strip()
@@ -178,6 +182,9 @@ class PDBQTFile(TextFile):
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
         
+        # Sort into the original atom order
+        array = array[..., np.argsort(atom_id)]
+
         return array
     
 
