@@ -19,105 +19,112 @@ import warnings
 
 # Creating dictionary to retrieve parameters for  electronegativity
 # computation from
-# First level of dictionary represents atom name, second level the
-# represents hybridisation state via the bond type
-EN_PARAM_BOND_TYPE = {
-    "H": {
-        1: (7.17, 6.24, -0.56)
+# First level of dictionary discriminates between a bond type equal to
+# zero (bond type `any`) respectively unequal to zero, the second level
+# represents the atom name and the third level represents the
+# hybridisation state
+# Depending on whether the bond type is unequal to zero or not,
+# identification of the hybridisation state is either performed via the
+# bond type (primary way of identification since erroneous results are
+# excluded) or via the amount of binding partners (erroneous if a
+# binding partner is lost or added whilst the hybridisation remains
+# unchanged as it is the case with acids or bases, e. g. the hydroxyl
+# group in a carboxyl group: When the proton involved in the hydroxyl
+# group is donated, the amount of binding partners of the remaining
+# oxygen is one; this would erroneously lead to an identification of the
+# hybridisation state as sp2 although it is still sp3)
+EN_PARAMETERS = {
+    "btype_unequal_zero": {
+        "H": {
+            1: (7.17, 6.24, -0.56)
+        },
+
+        "C": {
+            1: (7.98, 9.18, 1.88),
+            2: (8.79, 9.18, 1.88),
+            3: (10.39, 9.45, 0.73)
+        },
+
+        "N": {
+            1: (11.54, 10.82, 1.36),
+            2: (12.87, 11.15, 0.85),
+            3: (15.68, 11.7, -0.27)
+        },
+
+        "O": {
+            1: (14.18, 12.92, 1.39),
+            2: (17.07, 13.79, 0.47)
+        },
+
+        "S": {
+            1: (10.14, 9.13, 1.38)
+        },
+
+        "F": {
+            1: (14.66, 13.85, 2.31)
+        },
+
+        "Cl": {
+            1: (11.00, 9.69, 1.35)
+        },
+
+        "Br": {
+            1: (10.08, 8.47, 1.16)
+        },
+
+        "I": {
+            1: (9.90, 7.96, 0.96)
+        }        
     },
 
-    "C": {
-        1: (7.98, 9.18, 1.88),
-        2: (8.79, 9.18, 1.88),
-        3: (10.39, 9.45, 0.73)
-    },
+    "btype_equal_zero": {
+        "H": {
+            1: (7.17, 6.24, -0.56)
+        },
 
-    "N": {
-        1: (11.54, 10.82, 1.36),
-        2: (12.87, 11.15, 0.85),
-        3: (15.68, 11.7, -0.27)
-    },
+        "C": {
+            4: (7.98, 9.18, 1.88),
+            3: (8.79, 9.18, 1.88),
+            2: (10.39, 9.45, 0.73)
+        },
 
-    "O": {
-        1: (14.18, 12.92, 1.39),
-        2: (17.07, 13.79, 0.47)
-    },
+        "N": {
+            # Considering protonated, e. g. in terminal
+            # amino group (4 binding partners), as well
+            # as unprotonated nitrogen (3 binding partners)
+            4: (11.54, 10.82, 1.36),
+            3: (11.54, 10.82, 1.36),
+            2: (12.87, 11.15, 0.85),
+            1: (15.68, 11.7, -0.27)
+        },
 
-    "S": {
-        1: (10.14, 9.13, 1.38)
-    },
+        "O": {
+            2: (14.18, 12.92, 1.39),
+            1: (17.07, 13.79, 0.47)
+        },
 
-    "F": {
-        1: (14.66, 13.85, 2.31)
-    },
+        "S": {
+            2: (10.14, 9.13, 1.38)
+        },
 
-    "Cl": {
-        1: (11.00, 9.69, 1.35)
-    },
+        "F": {
+            1: (14.66, 13.85, 2.31)
+        },
 
-    "Br": {
-        1: (10.08, 8.47, 1.16)
-    },
+        "Cl": {
+            1: (11.00, 9.69, 1.35)
+        },
 
-    "I": {
-        1: (9.90, 7.96, 0.96)
+        "Br": {
+            1: (10.08, 8.47, 1.16)
+        },
+
+        "I": {
+            1: (9.90, 7.96, 0.96)
+        }
     }
 }
 
-
-# As a fallback case, it is resorted to the amount of binding partners
-# for identification of the hybridisation state if the bond type is
-# `any`
-# A dictionary is created for this purpose in which the first level
-# represents the atom name and the second level represents the
-# hybridisation state, which in turn is given via the amount of binding
-# partners
-EN_PARAM_AMOUNT_BINDING_PARTNER = {
-    "H": {
-        1: (7.17, 6.24, -0.56)
-    },
-
-    "C": {
-        4: (7.98, 9.18, 1.88),
-        3: (8.79, 9.18, 1.88),
-        2: (10.39, 9.45, 0.73)
-    },
-
-    "N": {
-        # Considering protonated, e. g. in terminal
-        # amino group (4 binding partners), as well
-        # as unprotonated nitrogen (3 binding partners)
-        4: (11.54, 10.82, 1.36),
-        3: (11.54, 10.82, 1.36),
-        2: (12.87, 11.15, 0.85),
-        1: (15.68, 11.7, -0.27)
-    },
-
-    "O": {
-        2: (14.18, 12.92, 1.39),
-        1: (17.07, 13.79, 0.47)
-    },
-
-    "S": {
-        2: (10.14, 9.13, 1.38)
-    },
-
-    "F": {
-        1: (14.66, 13.85, 2.31)
-    },
-
-    "Cl": {
-        1: (11.00, 9.69, 1.35)
-    },
-
-    "Br": {
-        1: (10.08, 8.47, 1.16)
-    },
-
-    "I": {
-        1: (9.90, 7.96, 0.96)
-    }
-}
 
 # Defining constant for the special case of the electronegativity of
 # positively charged hydrogen (value given in electronvolt, as all
@@ -129,11 +136,9 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     Gather the parameters required for electronegativity computation of
     all atoms comprised in the input array `elements`.
 
-    By doing so, the function either accesses the nested dictionary
-    ``EN_PARAM_BOND_TYPE`` or ``EN_PARAM_AMOUNT_BINDING_PARTNER``,
-    depending on whether the bond type of the respective atom is `any`
-    or not. The values originate from a publication of Johann Gasteiger
-    and Mario Marsili. [1]_
+    By doing so, the function accesses the nested dictionary
+    ``EN_PARAMETERS``. The values originate from a publication of Johann
+    Gasteiger and Mario Marsili. [1]_
 
     Parameters
     ----------
@@ -171,6 +176,10 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     unparametrized_valences = []
     unparam_valence_names = []
     for i, element in enumerate(elements):
+        pass
+
+
+
         try:
             a, b, c = \
                 EN_PARAMETERS[element][amount_of_binding_partners[i]]
