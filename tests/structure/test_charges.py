@@ -320,7 +320,8 @@ def test_valence_state_not_parametrized():
     sulfur atom via a double bond is created and tested.
     The expectations are the following: the sulfur's partial charge to
     be NaN and the carbons's partial charge to be smaller than that of
-    the two hydrogens.
+    the two hydrogens. Furthermore, the respective warning is expected
+    to be raised.
     """
     with pytest.warns(UserWarning):
         fictitious_molecule = array(
