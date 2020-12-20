@@ -169,6 +169,10 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     parameters = np.zeros((elements.shape[0], 3))
     has_atom_key_error = False
     has_valence_key_error = False
+    each_btype_equal_zero = False
+    some_btype_equal_zero = False
+    if all(btype == 0 for btype in bond_types):
+        each_btype_equal_zero = True
     # Preparing warning in case of KeyError
     # It is differentiated between atoms that are not parametrized at
     # all and specific valence states that are parametrized
@@ -176,13 +180,14 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     unparametrized_valences = []
     unparam_valence_names = []
     for i, element in enumerate(elements):
-        pass
-
-
-
+        if bond_types[i] == 0:
+            btype = "btype_equal_zero"
+            characteristic = amount_of_binding_partners[i]
+        else:
+            btype = "btype_unequal_zero"
+            characteristic = bond_types[i]
         try:
-            a, b, c = \
-                EN_PARAMETERS[element][amount_of_binding_partners[i]]
+            a, b, c = EN_PARAMETERS[btype][element][characteristic]
             parameters[i, 0] = a
             parameters[i, 1] = b
             parameters[i, 2] = c
@@ -192,7 +197,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 parameters[i, :] = np.nan
                 continue
             try:
-                EN_PARAMETERS[element]
+                EN_PARAMETERS[btype][element]
             except KeyError:
                 list_of_unparametrized_elements.append(element)
                 has_atom_key_error = True
@@ -203,6 +208,16 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 )
                 has_valence_key_error = True
             parameters[i, :] = np.nan
+    if some_btype_equal_zero:
+        pass
+    if each_btype_equal_zero:
+        warnings.warn(
+            f"Each atom's bond type is 0 (any). Therefore, it is "
+            f"resorted to the amount of binding partners for the "
+            f"identification of the hybridisation state which can lead "
+            f"to erroneous results.",
+            UserWarning
+        )
     if has_valence_key_error:
         joined_list = []
         for i in range(len(unparam_valence_names)):
