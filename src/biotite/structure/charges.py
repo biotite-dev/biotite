@@ -17,12 +17,62 @@ from .info import residue
 import warnings
 
 
-# Creating dictionary to retrieve parameters for 
-# electronegativity computation from
-# First level of dictionary represents atom name
-# Second level represents hybridisation state
+# Creating dictionary to retrieve parameters for  electronegativity
+# computation from
+# First level of dictionary represents atom name, second level the
+# represents hybridisation state via the bond type
+EN_PARAM_BOND_TYPE = {
+    "H": {
+        1: (7.17, 6.24, -0.56)
+    },
 
-EN_PARAMETERS = {
+    "C": {
+        1: (7.98, 9.18, 1.88),
+        2: (8.79, 9.18, 1.88),
+        3: (10.39, 9.45, 0.73)
+    },
+
+    "N": {
+        1: (11.54, 10.82, 1.36),
+        2: (12.87, 11.15, 0.85),
+        3: (15.68, 11.7, -0.27)
+    },
+
+    "O": {
+        1: (14.18, 12.92, 1.39),
+        2: (17.07, 13.79, 0.47)
+    },
+
+    "S": {
+        1: (10.14, 9.13, 1.38)
+    },
+
+    "F": {
+        1: (14.66, 13.85, 2.31)
+    },
+
+    "Cl": {
+        1: (11.00, 9.69, 1.35)
+    },
+
+    "Br": {
+        1: (10.08, 8.47, 1.16)
+    },
+
+    "I": {
+        1: (9.90, 7.96, 0.96)
+    }
+}
+
+
+# As a fallback case, it is resorted to the amount of binding partners
+# for identification of the hybridisation state if the bond type is
+# `any`
+# A dictionary is created for this purpose in which the first level
+# represents the atom name and the second level represents the
+# hybridisation state, which in turn is given via the amount of binding
+# partners
+EN_PARAM_AMOUNT_BINDING_PARTNER = {
     "H": {
         1: (7.17, 6.24, -0.56)
     },
