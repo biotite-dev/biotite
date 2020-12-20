@@ -124,20 +124,25 @@ EN_PARAM_AMOUNT_BINDING_PARTNER = {
 # electronegativity values)
 EN_POS_HYDROGEN = 20.02
 
-def _get_parameters(elements, amount_of_binding_partners):
+def _get_parameters(elements, bond_types, amount_of_binding_partners):
     """
     Gather the parameters required for electronegativity computation of
     all atoms comprised in the input array `elements`.
 
-    By doing so, the function accesses the nested dictionary
-    ``EN_PARAMETERS``. The values originate from a publication of Johann
-    Gasteiger and Mario Marsili. [1]_
+    By doing so, the function either accesses the nested dictionary
+    ``EN_PARAM_BOND_TYPE`` or ``EN_PARAM_AMOUNT_BINDING_PARTNER``,
+    depending on whether the bond type of the respective atom is `any`
+    or not. The values originate from a publication of Johann Gasteiger
+    and Mario Marsili. [1]_
 
     Parameters
     ----------
     elements: ndarray, dtype=str
         The array comprising the elememts which to retrieve the
         parameters for.
+    bond_types: ndarray, dtype=int
+        The array containing information about the bond type of the
+        respective atom.
     amount_of_binding_partners: ndarray, dtype=int
         The array containing information about the amount of binding
         partners of the respective atom/element.
