@@ -179,7 +179,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         each_btype_equal_zero = True
     elif any(btype == 0 for btype in bond_types):
         some_btype_equal_zero = True
-        list_
+        list_of_atoms_without_specified_btype = []
     
     # Preparing warning in case of KeyError
     # It is differentiated between atoms that are not parametrized at
@@ -187,11 +187,12 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     list_of_unparametrized_elements = []
     unparametrized_valences = []
     unparam_valence_names = []
-    
+
     for i, element in enumerate(elements):
         if bond_types[i] == 0:
             btype = "btype_equal_zero"
             characteristic = amount_of_binding_partners[i]
+            list_of_atoms_without_specified_btype.append(str(i))
         else:
             btype = "btype_unequal_zero"
             characteristic = bond_types[i]
@@ -219,7 +220,16 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             parameters[i, :] = np.nan
         
     if some_btype_equal_zero:
-        pass
+        warnings.warn(
+            f"Some atoms' bond type is unspecified, i. e. the bond "
+            f"type is given as `any`. For these atoms, identification "
+            f"of the hybridisation state is performed via the amount "
+            f"of binding partners which can lead to erroneous results."
+            f"\n\n"
+            f"In detail, these atoms possess the following indices: \n"
+            f"{", ". join(list_of_atoms_without_specified_btype)}.",
+            UserWarning
+        )
 
     if each_btype_equal_zero:
         warnings.warn(
