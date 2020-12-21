@@ -12,9 +12,10 @@ __name__ = "biotite.charges"
 __author__ = "Jacob Marcel Anter"
 __all__ = ["partial_charges"]
 
+import warnings
 import numpy as np
 from .info import residue
-import warnings
+from biotite.structure import AtomArray
 
 
 # Creating dictionary to retrieve parameters for  electronegativity
