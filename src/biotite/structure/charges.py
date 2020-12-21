@@ -372,9 +372,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         raise ValueError(
         "The type of parameter `charges` must be an NumPy ndarray."
         )
-
-    amount_of_binding_partners = np.zeros(atom_array.shape[0])
-    elements = atom_array.element
+    
     if atom_array.bonds is None:
         raise AttributeError(
             f"The input AtomArray doesn't possess an associated "
@@ -393,6 +391,10 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 f"formal charge is assumed to be zero.",
                 UserWarning
             )
+
+    amount_of_binding_partners = np.zeros(atom_array.shape[0])
+    bond_types = np.zeros()
+    elements = atom_array.element
 
     bonds, _ = atom_array.bonds.get_all_bonds()
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
