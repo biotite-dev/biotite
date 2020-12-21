@@ -336,6 +336,20 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     >>> print(partial_charges(fluoromethane, iteration_step_num=6))
     [ 0.079 -0.253  0.058  0.058  0.058]
     """
+
+    if not isinstance(atom_array, AtomArray):
+        raise ValueError(
+        "The type of parameter `atom_array` must be an AtomArray."
+        )
+    if not isinstance(iteration_step_num, int):
+        raise ValueError(
+        "The type of parameter `iteration_step_num` must be an integer."
+        )
+    if not isinstance(charges, np.ndarray) and charges is not None:
+        raise ValueError(
+        "The type of parameter `charges` must be an NumPy ndarray."
+        )
+
     amount_of_binding_partners = np.zeros(atom_array.shape[0])
     elements = atom_array.element
     if atom_array.bonds is None:
