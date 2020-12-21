@@ -43,22 +43,28 @@ EN_PARAMETERS = {
         "C": {
             1: (7.98, 9.18, 1.88),
             2: (8.79, 9.18, 1.88),
-            3: (10.39, 9.45, 0.73)
+            3: (10.39, 9.45, 0.73),
+            5: (8.79, 9.18, 1.88)
         },
 
         "N": {
-            1: (11.54, 10.82, 1.36),
-            2: (12.87, 11.15, 0.85),
-            3: (15.68, 11.7, -0.27)
+            1:   (11.54, 10.82, 1.36),
+            2:   (12.87, 11.15, 0.85),
+            3:   (15.68, 11.7, -0.27),
+            5.1: (11.54, 10.82, 1.36),
+            5.1: (12.87, 11.15, 0.85)
         },
 
         "O": {
-            1: (14.18, 12.92, 1.39),
-            2: (17.07, 13.79, 0.47)
+            1:   (14.18, 12.92, 1.39),
+            2:   (17.07, 13.79, 0.47),
+            5.1: (14.18, 12.92, 1.39),
+            5.2: (17.07, 13.79, 0.47)
         },
 
         "S": {
-            1: (10.14, 9.13, 1.38)
+            1:   (10.14, 9.13, 1.38),
+            5.1: (10.14, 9.13, 1.38)
         },
 
         "F": {
@@ -227,7 +233,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             f"of binding partners which can lead to erroneous results."
             f"\n\n"
             f"In detail, these atoms possess the following indices: \n"
-            f"{", ". join(list_of_atoms_without_specified_btype)}.",
+            f"{', '. join(list_of_atoms_without_specified_btype)}.",
             UserWarning
         )
 
@@ -392,12 +398,18 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 UserWarning
             )
 
-    amount_of_binding_partners = np.zeros(atom_array.shape[0])
-    bond_types = np.zeros()
     elements = atom_array.element
-
-    bonds, _ = atom_array.bonds.get_all_bonds()
+    bonds, types = atom_array.bonds.get_all_bonds()
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
+    # The maximum of a given row of the `types` array must be determined
+    # as this value reveals the hybridisation state
+    bond_types = np.amax(types, axis=1)
+    # As soon as one bond of a given atom is unspecified (equal to
+    # zero), the global bond type is set to zero as well
+    zero_indices_in_first_dim = np.nonzero(types == 0, axis=1)[0]
+    """
+    np.unique
+    """
     damping = 1.0
     parameters = _get_parameters(elements, amount_of_binding_partners)
     # Computing electronegativity values in case of positive charge
@@ -405,6 +417,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     pos_en_values = np.sum(parameters, axis=1)
     # Substituting values for hydrogen with the special value
     pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
+
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
         # halved in order to guarantee rapid convergence
@@ -449,5 +462,6 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                     divisor) * damping
                 charges[i] += charge_transfer
                 charges[j] -= charge_transfer
+
     partial_charges = charges
     return partial_charges
