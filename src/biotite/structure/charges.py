@@ -167,19 +167,27 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
        rapid access to atomic charges"
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
+
     parameters = np.zeros((elements.shape[0], 3))
+
     has_atom_key_error = False
     has_valence_key_error = False
     each_btype_equal_zero = False
     some_btype_equal_zero = False
+
     if all(btype == 0 for btype in bond_types):
         each_btype_equal_zero = True
+    elif any(btype == 0 for btype in bond_types):
+        some_btype_equal_zero = True
+        list_
+    
     # Preparing warning in case of KeyError
     # It is differentiated between atoms that are not parametrized at
     # all and specific valence states that are parametrized
     list_of_unparametrized_elements = []
     unparametrized_valences = []
     unparam_valence_names = []
+    
     for i, element in enumerate(elements):
         if bond_types[i] == 0:
             btype = "btype_equal_zero"
@@ -209,8 +217,10 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 )
                 has_valence_key_error = True
             parameters[i, :] = np.nan
+        
     if some_btype_equal_zero:
         pass
+
     if each_btype_equal_zero:
         warnings.warn(
             f"Each atom's bond type is 0 (any). Therefore, it is "
@@ -219,6 +229,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             f"to erroneous results.",
             UserWarning
         )
+
     if has_valence_key_error:
         joined_list = []
         for i in range(len(unparam_valence_names)):
@@ -246,6 +257,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             f"Their electronegativity is given as NaN.",
             UserWarning
         )
+
     if has_atom_key_error:
         # Using NumPy's 'unique' function to ensure that each atom only
         # occurs once in the list
@@ -258,6 +270,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             f"Their electronegativity is given as NaN.", 
             UserWarning
         )
+
     return parameters
 
 
