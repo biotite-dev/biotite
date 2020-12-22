@@ -185,7 +185,6 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         each_btype_equal_zero = True
     elif any(btype == 0 for btype in bond_types):
         some_btype_equal_zero = True
-        list_of_atoms_without_specified_btype = []
     
     # Preparing warning in case of KeyError
     # It is differentiated between atoms that are not parametrized at
@@ -193,6 +192,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     list_of_unparametrized_elements = []
     unparametrized_valences = []
     unparam_valence_names = []
+    list_of_atoms_without_specified_btype = []
 
     for i, element in enumerate(elements):
         if bond_types[i] == 0:
