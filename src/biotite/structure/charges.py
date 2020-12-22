@@ -48,23 +48,23 @@ EN_PARAMETERS = {
         },
 
         "N": {
-            1:   (11.54, 10.82, 1.36),
-            2:   (12.87, 11.15, 0.85),
-            3:   (15.68, 11.7, -0.27),
-            5.1: (11.54, 10.82, 1.36),
-            5.1: (12.87, 11.15, 0.85)
+            1: (11.54, 10.82, 1.36),
+            2: (12.87, 11.15, 0.85),
+            3: (15.68, 11.7, -0.27)
         },
 
+        # As oxygen and sulfur are exclusively involved in aromatic
+        # systems having single bonds on either side, the values for a
+        # sp3 hybridisation are taken for the bond type `aromatic`
         "O": {
-            1:   (14.18, 12.92, 1.39),
-            2:   (17.07, 13.79, 0.47),
-            5.1: (14.18, 12.92, 1.39),
-            5.2: (17.07, 13.79, 0.47)
+            1: (14.18, 12.92, 1.39),
+            2: (17.07, 13.79, 0.47),
+            5: (14.18, 12.92, 1.39)
         },
 
         "S": {
-            1:   (10.14, 9.13, 1.38),
-            5.1: (10.14, 9.13, 1.38)
+            1: (10.14, 9.13, 1.38),
+            5: (10.14, 9.13, 1.38)
         },
 
         "F": {
@@ -404,12 +404,31 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     # The maximum of a given row of the `types` array must be determined
     # as this value reveals the hybridisation state
     bond_types = np.amax(types, axis=1)
-    # As soon as one bond of a given atom is unspecified (equal to
-    # zero), the global bond type is set to zero as well
-    zero_indices_in_first_dim = np.nonzero(types == 0, axis=1)[0]
-    """
-    np.unique
-    """
+    zero_indices_in_first_dim = np.unique(
+        np.nonzero(types == 0)[0]
+    )
+    bond_types[zero_indices_in_first_dim] = 0
+    # As nitrogen can be involved in aromatic systems having both
+    # only single bonds as well as one double bond and no special
+    # values for atoms involved in aromatic systems are used, it
+    # must be determined whether the considered atom possesses only
+    # single bonds or a double bond as well
+    nitrogen_bond_types = types[elements == "N"]
+    if 5 in nitrogen_bond_types:
+        for i, element in enumerate(elements):
+            if element != "C" and 5 in types[i]:
+                types[i].sort()
+                # Aromaticity implies molecular cyclicality, i. e. an
+                # atom involved in an aromatic system has at least two
+                # bonds with the aromatic bond type and at most
+                second_max = types[i][-3]
+                if second_max == 5:
+                    pass
+                if second_max == 1:
+                    bond_types[i] = 1
+                if second_max == 2:
+                    bond_types[i] = 2
+        # Willkürlich auf Null gesetzte entfernen!
     damping = 1.0
     parameters = _get_parameters(elements, amount_of_binding_partners)
     # Computing electronegativity values in case of positive charge
