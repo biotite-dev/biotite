@@ -37,7 +37,7 @@ sulfur = Atom([0, 0, 0], element="S")
 methane = array([carbon, hydrogen, hydrogen, hydrogen, hydrogen])
 methane.bonds = BondList(
     methane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1]])
 )
 mol_length = methane.array_length()
 methane.charge = np.array([0] * mol_length)
@@ -49,7 +49,9 @@ ethane = array(
 )
 ethane.bonds = BondList(
     ethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
+    np.array([
+        [0,1,1], [0,2,1], [0,3,1], [0,4,1], [1,5,1], [1,6,1], [1,7,1]
+    ])
 )
 mol_length = ethane.array_length()
 ethane.charge = np.array([0] * mol_length)
@@ -60,7 +62,7 @@ ethylene = array(
 )
 ethylene.bonds = BondList(
     ethylene.array_length(),
-    np.array([[0,1], [0,2], [0,3], [1,4], [1,5]])
+    np.array([[0,1,2], [0,2,1], [0,3,1], [1,4,1], [1,5,1]])
 )
 mol_length = ethylene.array_length()
 ethylene.charge = np.array([0] * mol_length)
@@ -71,7 +73,7 @@ acetylene = array(
 )
 acetylene.bonds = BondList(
     acetylene.array_length(),
-    np.array([[0,1], [0,2], [1,3]])
+    np.array([[0,1,3], [0,2,1], [1,3,1]])
 )
 mol_length = acetylene.array_length()
 acetylene.charge = np.array([0] * mol_length)
@@ -82,7 +84,7 @@ fluoromethane = array(
 )
 fluoromethane.bonds = BondList(
     fluoromethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1]])
 )
 mol_length = fluoromethane.array_length()
 fluoromethane.charge = np.array([0] * mol_length)
@@ -93,7 +95,7 @@ difluoromethane = array(
 )
 difluoromethane.bonds = BondList(
     difluoromethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1]])
 )
 mol_length = difluoromethane.array_length()
 difluoromethane.charge = np.array([0] * mol_length)
@@ -104,7 +106,7 @@ trifluoromethane = array(
 )
 trifluoromethane.bonds = BondList(
     trifluoromethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1]])
 )
 mol_length = trifluoromethane.array_length()
 trifluoromethane.charge = np.array([0] * mol_length)
@@ -115,7 +117,7 @@ tetrafluoromethane = array(
 )
 tetrafluoromethane.bonds = BondList(
     tetrafluoromethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1]])
 )
 mol_length = tetrafluoromethane.array_length()
 tetrafluoromethane.charge = np.array([0] * mol_length)
@@ -127,7 +129,9 @@ fluoroethane = array(
 )
 fluoroethane.bonds = BondList(
     fluoroethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
+    np.array([
+        [0,1,1], [0,2,1], [0,3,1], [0,4,1], [1,5,1], [1,6,1], [1,7,1]
+    ])
 )
 mol_length = fluoroethane.array_length()
 fluoroethane.charge = np.array([0] * mol_length)
@@ -139,7 +143,9 @@ trifluoroethane = array(
 )
 trifluoroethane.bonds = BondList(
     trifluoroethane.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4], [1,5], [1,6], [1,7]])
+    np.array([
+        [0,1,1], [0,2,1], [0,3,1], [0,4,1], [1,5,1], [1,6,1], [1,7,1]
+    ])
 )
 mol_length = trifluoroethane.array_length()
 trifluoroethane.charge = np.array([0] * mol_length)
@@ -150,7 +156,7 @@ methanole = array(
 )
 methanole.bonds = BondList(
     methanole.array_length(),
-    np.array([[0,1], [0,2], [0,3], [0,4], [1,5]])
+    np.array([[0,1,1], [0,2,1], [0,3,1], [0,4,1], [1,5,1]])
 )
 mol_length = methanole.array_length()
 methanole.charge = np.array([0] * mol_length)
@@ -162,7 +168,9 @@ dimethyl_ether = array(
 )
 dimethyl_ether.bonds = BondList(
     dimethyl_ether.array_length(),
-    np.array([[0,2], [1,2], [0,3], [0,4], [0,5], [1,6], [1,7], [1,8]])
+    np.array([
+        [0,2,1], [1,2,1], [0,3,1], [0,4,1], [0,5,1], [1,6,1], [1,7,1], [1,8,1]
+    ])
 )
 mol_length = dimethyl_ether.array_length()
 dimethyl_ether.charge = np.array([0] * mol_length)
@@ -173,7 +181,7 @@ formaldehyde = array(
 )
 formaldehyde.bonds = BondList(
     formaldehyde.array_length(),
-    np.array([[0,1], [0,2], [0,3]])
+    np.array([[0,1,2], [0,2,1], [0,3,1]])
 )
 mol_length = formaldehyde.array_length()
 formaldehyde.charge = np.array([0] * mol_length)
@@ -184,7 +192,7 @@ acetaldehyde = array(
 )
 acetaldehyde.bonds = BondList(
     acetaldehyde.array_length(),
-    np.array([[0,1], [1,2], [0,3], [0,4], [0,5], [1,6]])
+    np.array([[0,1,1], [1,2,2], [0,3,1], [0,4,1], [0,5,1], [1,6,1]])
 )
 mol_length = acetaldehyde.array_length()
 acetaldehyde.charge = np.array([0] * mol_length)
@@ -196,8 +204,10 @@ acetone = array(
 )
 acetone.bonds = BondList(
     acetone.array_length(),
-    np.array([[0,1], [1,2], [1,3], [0,4], [0,5], [0,6], [2,7], [2,8],
-    [2,9]])
+    np.array([
+        [0,1,1], [1,2,1], [1,3,2], [0,4,1], [0,5,1], [0,6,1], [2,7,1],
+        [2,8,1], [2,9,1]
+    ])
 )
 mol_length = acetone.array_length()
 acetone.charge = np.array([0] * mol_length)
@@ -208,7 +218,7 @@ hydrogen_cyanide = array(
 )
 hydrogen_cyanide.bonds = BondList(
     hydrogen_cyanide.array_length(),
-    np.array([[0,1], [0,2]])
+    np.array([[0,1,3], [0,2,1]])
 )
 mol_length = hydrogen_cyanide.array_length()
 hydrogen_cyanide.charge = np.array([0] * mol_length)
@@ -219,7 +229,7 @@ acetonitrile = array(
 )
 acetonitrile.bonds = BondList(
     acetonitrile.array_length(),
-    np.array([[0,1], [1,2], [0,3], [0,4], [0,5]])
+    np.array([[0,1,1], [1,2,3], [0,3,1], [0,4,1], [0,5,1]])
 )
 mol_length = acetonitrile.array_length()
 acetonitrile.charge = np.array([0] * mol_length)
@@ -329,7 +339,7 @@ def test_valence_state_not_parametrized():
         )
         fictitious_molecule.bonds = BondList(
             fictitious_molecule.array_length(),
-            np.array([[0,1], [0,2], [0,3]])
+            np.array([[0,1,2], [0,2,1], [0,3,1]])
         )
         mol_length = fictitious_molecule.array_length()
         fictitious_molecule.charge = np.array([0] * mol_length)
@@ -358,3 +368,20 @@ def test_correct_output_ions():
     with pytest.warns(None) as record:
         partial_charges(sodium_array, iteration_step_num=1)
     assert len(record) == 0
+
+
+def test_correct_output_charged_aa():
+    """
+    Identification of hybridisation state is primarily performed via the
+    bond type; if the bond type is `any`, it is resorted to the amount
+    of binding partners of the respective atom, which can lead to an
+    erroneous identification if the respective atom possesses a formal
+    charge due to one additional binding partner or the loss of one
+    binding partner. As an example, oxygen of an hydroxyl group has an
+    formal charge of -1 if it loses the hydrogen, but still has the same
+    hybridisation state. Identification via the amount of binding
+    partners would be wrong.
+
+    Therefore, the aim of this test is to verify that a molecule
+    """
+    pass
