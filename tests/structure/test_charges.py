@@ -5,7 +5,6 @@
 import pytest
 import warnings
 import numpy as np
-from biotite.structure.info import residue
 from biotite.structure import Atom
 from biotite.structure import array
 from biotite.structure import BondList
@@ -382,6 +381,30 @@ def test_correct_output_charged_aa():
     hybridisation state. Identification via the amount of binding
     partners would be wrong.
 
-    Therefore, the aim of this test is to verify that a molecule
+    Therefore, the aim of this test is to verify that a molecule, in our
+    case the amino acid glycine, with charges due to the addition or the
+    loss of protons, delivers values for the partial charges of the
+    atoms where addition/loss of the protons has taken place in an
+    expected manner.
+    A glycine AtomArray is constructed such that the carboxyl group is
+    deprotonated and the amino group is protonated.
+
+    Precisely, in the case of the negatively charged oxygen atom in the
+    carboxyl group, a lower electronegativity value and therefore a
+    lower partial charge is expected in case of correct identification
+    of the hybridisation state via the bond type than in case of an
+    erroneous identification via the amount of binding partners (cf.
+    equation 2 for electronegativity and parameters listed in table 1 of
+    the respective publication of Gasteiger and Marsili). The case of
+    the positively charged nitrogen in the amino group, a correct
+    identification of the hybridisation state via the amount of binding
+    partners is possible as an amount of four binding partners is
+    unambiguous, i. e. only represents the sp3 hybridisation. Hence,
+    it is verified whether both ways of the identification of the
+    hybridisation state deliver the same result.
     """
-    pass
+    glycine_with_btype = array(
+        []
+    )
+    glycine_with_btype = glycine[glycine.atom_name != 
+    glycine_with_btype = glycine + array([hydrogen])
