@@ -401,10 +401,48 @@ def test_correct_output_charged_aa():
     partners is possible as an amount of four binding partners is
     unambiguous, i. e. only represents the sp3 hybridisation. Hence,
     it is verified whether both ways of the identification of the
-    hybridisation state deliver the same result.
+    hybridisation state deliver approximately the same result (small
+    deviation arises from the difference in the parameters for the
+    oxygen atom of the hydroxyl group in the carboxyl group that
+    propagates to the amino group).
     """
     glycine_with_btype = array(
-        []
+        [nitrogen, carbon, carbon, oxygen, oxygen, hydrogen, hydrogen,
+            hydrogen, hydrogen, hydrogen]
     )
-    glycine_with_btype = glycine[glycine.atom_name != 
-    glycine_with_btype = glycine + array([hydrogen])
+    glycine_charge = np.array(
+        [+1, 0, 0, 0, -1, 0, 0, 0, 0, 0]
+    )
+    glycine_with_btype.charge = glycine_charge
+    glycine_with_btype.bonds = BondList(
+        glycine_with_btype.array_length(),
+        np.array([
+            [0,1,1], [0,5,1], [0,6,1], [0,7,1], [1,2,1], [1,8,1],
+            [1,9,1], [2,3,2], [2,4,1]
+        ])
+    )
+    glycine_without_btype = glycine_with_btype.copy()
+    glycine_without_btype.charge = glycine_charge
+    glycine_without_btype.bonds = BondList(
+        glycine_without_btype.array_length(),
+        np.array([
+            [0,1,0], [0,5,0], [0,6,0], [0,7,0], [1,2,0], [1,8,0],
+            [1,9,0], [2,3,0], [2,4,0]
+        ])
+    )
+    part_charges_with_btype = partial_charges(glycine_with_btype)
+    part_charges_without_btype = partial_charges(glycine_without_btype)
+    # Nitrogen of the amino group has the index 0
+    nitr_charge_with_btype = part_charges_with_btype[0]
+    nitr_charge_without_btype = part_charges_without_btype[0]
+    assert nitr_charge_with_btype == pytest.approx(
+        nitr_charge_without_btype, abs=5e-4
+    )
+    # Oxygen of the hydroxyl group in the carboxyl group has the index 2
+    oxyg_charge_with_btype = part_charges_with_btype[2]
+    oxyg_charge_without_btype = part_charges_without_btype[2]
+    assert oxyg_charge_with_btype < oxyg_charge_without_btype
+    # Assert that difference between the two values is significant
+    difference_oxyg_charges = abs(oxyg_charge_with_btype
+        - oxyg_charge_without_btype)
+    assert difference_oxyg_charges > 3e-2
