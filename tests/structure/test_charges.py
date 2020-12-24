@@ -2,8 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import pytest
 import warnings
+import pytest
 import numpy as np
 from biotite.structure import Atom
 from biotite.structure import array
