@@ -168,7 +168,8 @@ dimethyl_ether = array(
 dimethyl_ether.bonds = BondList(
     dimethyl_ether.array_length(),
     np.array([
-        [0,2,1], [1,2,1], [0,3,1], [0,4,1], [0,5,1], [1,6,1], [1,7,1], [1,8,1]
+        [0,2,1], [1,2,1], [0,3,1], [0,4,1], [0,5,1], [1,6,1], [1,7,1],
+        [1,8,1]
     ])
 )
 mol_length = dimethyl_ether.array_length()
