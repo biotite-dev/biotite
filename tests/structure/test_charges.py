@@ -333,16 +333,16 @@ def test_valence_state_not_parametrized():
     to be raised.
     """
     with pytest.warns(UserWarning):
-        fictitious_molecule = array(
+        thioformaldehyde = array(
             [carbon, sulfur, hydrogen, hydrogen]
         )
-        fictitious_molecule.bonds = BondList(
-            fictitious_molecule.array_length(),
+        thioformaldehyde.bonds = BondList(
+            thioformaldehyde.array_length(),
             np.array([[0,1,2], [0,2,1], [0,3,1]])
         )
-        mol_length = fictitious_molecule.array_length()
-        fictitious_molecule.charge = np.array([0] * mol_length)
-        charges = partial_charges(fictitious_molecule)
+        mol_length = thioformaldehyde.array_length()
+        thioformaldehyde.charge = np.array([0] * mol_length)
+        charges = partial_charges(thioformaldehyde)
         sulfur_part_charge = charges[1]
         carb_part_charge = charges[0]
         hyd_part_charge = charges[2]
