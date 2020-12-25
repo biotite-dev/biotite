@@ -223,9 +223,22 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 has_atom_key_error = True
             else:
                 unparam_valence_names.append(element)
-                unparametrized_valences.append(
-                    amount_of_binding_partners[i]
-                )
+                if btype == "btype_equal_zero":
+                    unparametrized_valences.append(
+                        str(amount_of_binding_partners[i])
+                        +
+                        " " * 31
+                        +
+                        "-" * 10
+                    )
+                else:
+                    unparametrized_valences.append(
+                        "-" * 27
+                        +
+                        " " * 5
+                        +
+                        str(bond_types[i])
+                    )
                 has_valence_key_error = True
             parameters[i, :] = np.nan
         
@@ -258,21 +271,21 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 +
                 " " * (10 - len(unparam_valence_names[i]))
             )
-            joined_list.append(str(unparametrized_valences[i]) + "\n")
-            joined_array = np.reshape(
-                joined_list,
-                newshape=(int(len(joined_list) / 2), 2)
-            )
-            joined_array = np.unique(joined_array, axis=0)
-            # Array must be flattened in order ro be able to apply the
-            # 'join' method
-            flattened_joined_array = np.reshape(
-                joined_array, newshape=(2*joined_array.shape[0])
-            )
+            joined_list.append(unparametrized_valences[i] + "\n")
+        joined_array = np.reshape(
+            joined_list,
+            newshape=(int(len(joined_list) / 2), 2)
+        )
+        joined_array = np.unique(joined_array, axis=0)
+        # Array must be flattened in order ro be able to apply the
+        # 'join' method
+        flattened_joined_array = np.reshape(
+            joined_array, newshape=(2*joined_array.shape[0])
+        )
         warnings.warn(
             f"Parameters for specific valence states of some atoms "
             f"are not available. These valence states are: \n"
-            f"Atom:     Amount of binding partners:\n"
+            f"Atom:     Amount of binding partners:     Bond type:\n"
             f"{''.join(flattened_joined_array)}"
             f"Their electronegativity is given as NaN.",
             UserWarning
