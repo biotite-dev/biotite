@@ -333,7 +333,14 @@ def test_valence_state_not_parametrized():
     the two hydrogens. Furthermore, the respective warning is expected
     to be raised.
     """
-    with pytest.warns(UserWarning):
+    warning_message_no_param_for_valence = (
+        "Parameters for specific valence states of some atoms are not "
+        "available. These valence states are: \n"
+        "Atom:     Amount of binding partners:     Bond type:\n"
+        "S         ---------------------------     2\n"
+        "Their electronegativity is given as NaN."
+    )
+    with pytest.warns(None) as record:
         thioformaldehyde = array(
             [carbon, sulfur, hydrogen, hydrogen]
         )
@@ -347,6 +354,10 @@ def test_valence_state_not_parametrized():
         sulfur_part_charge = charges[1]
         carb_part_charge = charges[0]
         hyd_part_charge = charges[2]
+    assert len(record) == 1
+    warning = record[0]
+    assert issubclass(warning.category, UserWarning)
+    assert str(warning.message) == warning_message_no_param_for_valence
     assert np.isnan(sulfur_part_charge)
     assert carb_part_charge < hyd_part_charge
 
