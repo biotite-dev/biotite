@@ -324,9 +324,9 @@ def test_valence_state_not_parametrized():
     generally parametrized atom are not available.
     In our case, it is sulfur having a double bond, i. e. only one
     binding partner.
-    For this purpose, a fictitious molecule consisting of a central
-    carbon bound to two hydrogen atoms via single bonds and to one
-    sulfur atom via a double bond is created and tested.
+    For this purpose, the molecule thioformaldehyde consisting of a
+    central carbon bound to two hydrogen atoms via single bonds and to
+    one sulfur atom via a double bond is created and tested.
     The expectations are the following: the sulfur's partial charge to
     be NaN and the carbons's partial charge to be smaller than that of
     the two hydrogens. Furthermore, the respective warning is expected
