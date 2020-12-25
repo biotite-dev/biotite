@@ -406,6 +406,8 @@ def test_correct_output_charged_aa():
     deviation arises from the difference in the parameters for the
     oxygen atom of the hydroxyl group in the carboxyl group that
     propagates to the amino group).
+    Moreover, it is verified whether the respective UserWarning about
+    unspecified bond types throughout the whole AtomArray is raised.
     """
     glycine_with_btype = array(
         [nitrogen, carbon, carbon, oxygen, oxygen, hydrogen, hydrogen,
