@@ -420,6 +420,11 @@ def test_correct_output_charged_aa():
     Moreover, it is verified whether the respective UserWarning about
     unspecified bond types throughout the whole AtomArray is raised.
     """
+    warning_message_unspecified_btype_throughout_the_array = (
+        "Each atom's bond type is 0 (any). Therefore, it is resorted "
+        "to the amount of binding partners for the identification of "
+        "the hybridisation state which can lead to erroneous results."
+    )
     glycine_with_btype = array(
         [nitrogen, carbon, carbon, oxygen, oxygen, hydrogen, hydrogen,
             hydrogen, hydrogen, hydrogen]
@@ -445,7 +450,15 @@ def test_correct_output_charged_aa():
         ])
     )
     part_charges_with_btype = partial_charges(glycine_with_btype)
-    part_charges_without_btype = partial_charges(glycine_without_btype)
+    with pytest.warns(None) as record:
+        part_charges_without_btype = partial_charges(
+            glycine_without_btype
+        )
+    assert len(record) == 1
+    warning = record[0]
+    assert issubclass(warning.category, UserWarning)
+    assert str(warning.message) == \
+        warning_message_unspecified_btype_throughout_the_array
     # Nitrogen of the amino group has the index 0
     nitr_charge_with_btype = part_charges_with_btype[0]
     nitr_charge_without_btype = part_charges_without_btype[0]
