@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 from os import remove
 from ...localapp import LocalApp, cleanup_tempfile
 from ...application import AppState, requires_state
-from ....structure.dotbracket import dot_bracket
+from ....structure.dotbracket import dot_bracket as dot_bracket_
 
 class RNAplotApp(LocalApp):
     """
@@ -58,9 +58,9 @@ class RNAplotApp(LocalApp):
         if dot_bracket is not None:
             self._dot_bracket = dot_bracket
         elif (base_pairs is not None) and (length is not None):
-            self._dot_bracket = dot_bracket(
-                base_pairs, length, max_pseudoknot_depth = 0
-            )
+            self._dot_bracket = dot_bracket_(
+                base_pairs, length, max_pseudoknot_order = 0
+            )[0]
         else:
             raise ValueError(
                 "Structure has to be provided in either dot bracket notation "
