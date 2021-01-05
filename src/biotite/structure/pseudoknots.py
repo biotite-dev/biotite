@@ -416,8 +416,8 @@ def _conflict_cliques(regions):
     regions : list [set {_region, ...}, ...]
         The separated mutually conflicting regions.
     """
-    # Get a region array and an array where each region start is +1 and
-    # each stop is -1
+    # Get a region array and an array where each region start is denoted
+    # as ``True`` and each stop is denoted as ``False``
     region_array, (start_stops,) = _get_region_array_for(
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
@@ -428,7 +428,7 @@ def _conflict_cliques(regions):
     # All regions that have been assigned a clique
     seen = set()
 
-    # Iterate region start points from left to right
+    # Iterate region starting points from left to right
     for start_index in starts:
         # Skip if the current region has already been assigned a clique
         if region_array[start_index] in seen:
@@ -481,14 +481,13 @@ def _conflicting_regions(region_array, start_index):
     conflicting_regions : ndarray, dtype=int
         Start indices of the conflicting regions 
     """
-    # Get the current regions start and stop indices in the region
-    # array
+    # Get the current regions start and stop indices in the region array
     stop_index = _get_first_occurrence_for(
         region_array[start_index+1:], region_array[start_index]
     )
     stop_index = start_index + 1 + stop_index
-    # Count the occurrence of each individual region between the
-    # start and stop indices of the regions
+    # Count the occurrence of each individual region between the start 
+    # and stop indices of the regions
     _, index, counts = np.unique(
         region_array[start_index+1:stop_index], 
         return_counts=True, return_index=True
