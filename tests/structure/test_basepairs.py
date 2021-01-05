@@ -133,7 +133,9 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
 
 def test_base_pairs_incomplete_structure(nuc_sample_array):
     """
-    Remove atoms belonging to the pyrimidine / purine ring of each base.
+    Remove atoms belonging to the pyrimidine / purine ring of each base
+    and the ``O2`` contained in pyrimidine bases.
+
     Test that no base pairs are detected as all bases have less than 3 
     common atoms with their implemented reference base. Previously, 
     input like this resulted in an exception.
@@ -141,7 +143,7 @@ def test_base_pairs_incomplete_structure(nuc_sample_array):
     nuc_sample_array = nuc_sample_array[
         ~ np.isin(
             nuc_sample_array.atom_name, 
-            ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N7', 'C8', 'N9']
+            ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N7', 'C8', 'N9', 'O2']
         )
     ]
     assert len(struc.base_pairs(nuc_sample_array)) == 0
