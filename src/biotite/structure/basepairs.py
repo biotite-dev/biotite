@@ -966,10 +966,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
     # Remap values to original atom array
-    basepair_array = np.where(boolean_mask)[0][basepair_array]
-    for i, row in enumerate(basepair_array):
-        basepair_array[i] = get_residue_starts_for(atom_array, row)
-
+    if len(basepair_array) > 0:
+        basepair_array = np.where(boolean_mask)[0][basepair_array]
+        for i, row in enumerate(basepair_array):
+            basepair_array[i] = get_residue_starts_for(atom_array, row)
     return basepair_array
 
 
