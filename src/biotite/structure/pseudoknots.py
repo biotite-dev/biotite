@@ -418,28 +418,56 @@ def _conflict_cliques(regions):
     """
     # Get a region array and an array where each region start is +1 and
     # each stop is -1
-    region_array, start_stops = _get_region_array_for(
-        regions, content=[lambda a : [1, -1]], dtype=['int32']
+    region_array, (start_stops,) = _get_region_array_for(
+        regions, content=[lambda a : [True, False]], dtype=['bool']
     )
-    start_stops = start_stops[0]
+    starts = np.nonzero(start_stops)[0]
 
-    # Iterate through the array and add up the values of the
-    # corresponding ``start_stops`` array. Separation points for two
-    # conflicts are marked by zero sums.
-    total = 0
-    start = 0
     cliques = []
-    for i in range(len(start_stops)):
-        total += start_stops[i]
-        if total == 0:
-            cliques.append(set(region_array[start:i+1]))
-            start = i+1
-    if len(region_array[start:]) > 0:
-        cliques.append(set(region_array[start:]))
-
+    # All regions that have been assigned a clique
+    seen = set()
+    for start_index in starts:
+        # If the region has already been assigned a clique, skip
+        if region_array[start_index] in seen:
+            continue
+        # Members of the current clique that have not been assigned yet
+        queue = set([start_index])
+        # The current clíque
+        clique = set()
+        
+        while queue != set():
+            #print(queue)
+            current_index = queue.pop()
+            clique.add(region_array[current_index])
+            seen.add(region_array[current_index])
+            mutually_conflicting = _evaluate_region(
+                region_array, current_index
+            )
+            for region_index in mutually_conflicting:
+                if region_array[region_index] not in clique:
+                    queue.add(_get_first_occurrence_for(region_array, region_array[region_index]))
+        cliques.append(clique)
+        #print(clique)
     # Return the conflict cliques as list of sets
     return cliques
 
+def _evaluate_region(region_array, start_index):
+    # Get the current regions start and stop indices in the region
+    # array
+    stop_index = _get_first_occurrence_for(
+        region_array[start_index+1:], region_array[start_index]
+    )
+    stop_index = start_index + 1 + stop_index
+    #print(f"{start_index}-{stop_index}")
+
+    # Count the occurrence of each individual region between the
+    # start and stop indices of the regions
+    _, index, counts = np.unique(
+        region_array[start_index+1:stop_index], 
+        return_counts=True, return_index=True
+    )
+    #print(index[counts==1] + start_index + 1)
+    return index[counts==1] + start_index + 1
 
 def _remove_pseudoknots(regions):
     """
