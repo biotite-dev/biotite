@@ -1198,6 +1198,9 @@ def _match_base(nucleotide, min_atoms_per_base):
         nucleotide_matched.atom_name, return_index=True
     )
     nucleotide_matched = nucleotide_matched[unique_indices]
+    # Only continue if minimum number of matching atoms is reached
+    if len(nucleotide_matched < min_atoms_per_base):
+        return None
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
     # PDB atom order.
     nucleotide_matched = nucleotide_matched[
