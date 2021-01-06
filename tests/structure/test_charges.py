@@ -384,13 +384,13 @@ def test_correct_output_ions():
 def test_correct_output_charged_aa():
     """
     Identification of hybridisation state is primarily performed via the
-    bond type; if the bond type is `any`, it is resorted to the amount
-    of binding partners of the respective atom, which can lead to an
-    erroneous identification if the respective atom possesses a formal
-    charge due to one additional binding partner or the loss of one
-    binding partner. As an example, oxygen of an hydroxyl group has an
-    formal charge of -1 if it loses the hydrogen, but still has the same
-    hybridisation state. Identification via the amount of binding
+    bond type; if the bond type is BondType.ANY, it is resorted to the
+    amount of binding partners of the respective atom, which can lead to
+    an erroneous identification if the respective atom possesses a
+    formal charge due to one additional binding partner or the loss of
+    one binding partner. As an example, oxygen of an hydroxyl group has
+    an formal charge of -1 if it loses the hydrogen, but still has the
+    same hybridisation state. Identification via the amount of binding
     partners would be wrong.
 
     Therefore, the aim of this test is to verify that a molecule, in our
@@ -471,7 +471,7 @@ def test_correct_output_charged_aa():
     assert nitr_charge_with_btype == pytest.approx(
         nitr_charge_without_btype, abs=5e-4
     )
-    
+
     # Oxygen of the hydroxyl group in the carboxyl group has the index 2
     oxyg_charge_with_btype = part_charges_with_btype[2]
     oxyg_charge_without_btype = part_charges_without_btype[2]
