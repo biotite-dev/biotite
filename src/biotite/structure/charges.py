@@ -18,7 +18,7 @@ from .info import residue
 from biotite.structure import AtomArray
 
 
-# Creating dictionary to retrieve parameters for  electronegativity
+# Creating dictionary to retrieve parameters for electronegativity
 # computation from
 # First level of dictionary discriminates between a bond type equal to
 # zero (bond type `any`) respectively unequal to zero, the second level
