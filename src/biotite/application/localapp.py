@@ -8,8 +8,6 @@ __all__ = ["LocalApp"]
 
 import abc
 import copy
-import time
-import io
 from os import chdir, getcwd, remove
 from .application import Application, AppState, requires_state
 from subprocess import Popen, PIPE, SubprocessError
@@ -35,8 +33,6 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._options = []
         self._exec_dir = getcwd()
         self._process = None
-        self._stdout_file_path = None
-        self._stdout_file = None
         self._command = None
     
     @requires_state(AppState.CREATED)
