@@ -40,17 +40,20 @@ class RNAfoldApp(LocalApp):
     '(((.((((.......)).)))))....'
     """
 
-    def __init__(self, sequence, bin_path="RNAfold"):
+    def __init__(self, sequence, temperature=37, bin_path="RNAfold"):
         super().__init__(bin_path)
         self._sequence = sequence
         self._in_file  = NamedTemporaryFile("w", suffix=".fa",  delete=False)
+        self._temperature = str(37)
 
     def run(self):
         in_file = FastaFile()
         set_sequence(in_file, self._sequence)
         in_file.write(self._in_file)
         self._in_file.flush()
-        self.set_arguments([self._in_file.name, "--noPS"])
+        self.set_arguments(
+            [self._in_file.name, "--noPS", "-T", self._temperature]
+        )
         super().run()
 
     def evaluate(self):
