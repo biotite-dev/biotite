@@ -420,17 +420,20 @@ def test_correct_output_charged_aa():
     Moreover, it is verified whether the respective UserWarning about
     unspecified bond types throughout the whole AtomArray is raised.
     """
+
     warning_message_unspecified_btype_throughout_the_array = (
         "Each atom's bond type is 0 (any). Therefore, it is resorted "
         "to the amount of binding partners for the identification of "
         "the hybridisation state which can lead to erroneous results."
     )
+
+    glycine_charge = np.array(
+        [+1, 0, 0, 0, -1, 0, 0, 0, 0, 0]
+    )
+
     glycine_with_btype = array(
         [nitrogen, carbon, carbon, oxygen, oxygen, hydrogen, hydrogen,
             hydrogen, hydrogen, hydrogen]
-    )
-    glycine_charge = np.array(
-        [+1, 0, 0, 0, -1, 0, 0, 0, 0, 0]
     )
     glycine_with_btype.charge = glycine_charge
     glycine_with_btype.bonds = BondList(
@@ -440,6 +443,7 @@ def test_correct_output_charged_aa():
             [1,9,1], [2,3,2], [2,4,1]
         ])
     )
+
     glycine_without_btype = glycine_with_btype.copy()
     glycine_without_btype.charge = glycine_charge
     glycine_without_btype.bonds = BondList(
@@ -449,6 +453,7 @@ def test_correct_output_charged_aa():
             [1,9,0], [2,3,0], [2,4,0]
         ])
     )
+
     part_charges_with_btype = partial_charges(glycine_with_btype)
     with pytest.warns(None) as record:
         part_charges_without_btype = partial_charges(
@@ -459,12 +464,14 @@ def test_correct_output_charged_aa():
     assert issubclass(warning.category, UserWarning)
     assert str(warning.message) == \
         warning_message_unspecified_btype_throughout_the_array
+
     # Nitrogen of the amino group has the index 0
     nitr_charge_with_btype = part_charges_with_btype[0]
     nitr_charge_without_btype = part_charges_without_btype[0]
     assert nitr_charge_with_btype == pytest.approx(
         nitr_charge_without_btype, abs=5e-4
     )
+    
     # Oxygen of the hydroxyl group in the carboxyl group has the index 2
     oxyg_charge_with_btype = part_charges_with_btype[2]
     oxyg_charge_without_btype = part_charges_without_btype[2]
