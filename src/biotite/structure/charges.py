@@ -84,7 +84,7 @@ EN_PARAM_BTYPE = {
     }        
 }
 
-EN_PARAM_BPARTNERS: {
+EN_PARAM_BPARTNERS = {
     "H": {
         1: (7.17, 6.24, -0.56)
     },
@@ -203,26 +203,21 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             parameters[i, :] = np.nan
             continue
         if bond_types[i] == BondType.ANY:
-            btype = "btype_equal_zero"
             characteristic = amount_of_binding_partners[i]
             list_of_atoms_without_specified_btype.append(str(i))
-        else:
-            btype = "btype_unequal_zero"
-            characteristic = bond_types[i]
-        try:
-            a, b, c = EN_PARAMETERS[btype][element][characteristic]
-            parameters[i, 0] = a
-            parameters[i, 1] = b
-            parameters[i, 2] = c
-        except KeyError:
             try:
-                EN_PARAMETERS[btype][element]
+                a, b, c = EN_PARAM_BPARTNERS[element][characteristic]
+                parameters[i, 0] = a
+                parameters[i, 1] = b
+                parameters[i, 2] = c
             except KeyError:
-                list_of_unparametrized_elements.append(element)
-                has_atom_key_error = True
-            else:
-                unparam_valence_names.append(element)
-                if btype == "btype_equal_zero":
+                try:
+                    EN_PARAM_BPARTNERS[element]
+                except KeyError:
+                    list_of_unparametrized_elements.append(element)
+                    has_atom_key_error = True
+                else:
+                    unparam_valence_names.append(element)
                     unparametrized_valences.append(
                         str(amount_of_binding_partners[i])
                         +
@@ -230,7 +225,23 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                         +
                         "-" * 10
                     )
+                    has_valence_key_error = True
+                parameters[i, :] = np.nan
+        else:
+            characteristic = bond_types[i]
+            try:
+                a, b, c = EN_PARAM_BTYPE[element][characteristic]
+                parameters[i, 0] = a
+                parameters[i, 1] = b
+                parameters[i, 2] = c
+            except KeyError:
+                try:
+                    EN_PARAM_BTYPE[element]
+                except KeyError:
+                    list_of_unparametrized_elements.append(element)
+                    has_atom_key_error = True
                 else:
+                    unparam_valence_names.append(element)
                     unparametrized_valences.append(
                         "-" * 27
                         +
@@ -238,8 +249,8 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                         +
                         str(bond_types[i])
                     )
-                has_valence_key_error = True
-            parameters[i, :] = np.nan
+                    has_valence_key_error = True
+                parameters[i, :] = np.nan
         
     if some_btype_equal_zero:
         warnings.warn(
