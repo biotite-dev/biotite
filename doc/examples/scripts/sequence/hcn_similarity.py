@@ -66,9 +66,9 @@ ax.grid(False)
 ax.set_xticks([])
 
 # distance indicator
-indicator_len = 0.05
+indicator_len = 0.1
 indicator_start = (
-    ax.get_xlim()[0] + ax.get_xlim()[1]*0.1,
+    ax.get_xlim()[0] + ax.get_xlim()[1]*0.02,
     ax.get_ylim()[1] - ax.get_ylim()[1]*0.15
 )
 indicator_stop = (
