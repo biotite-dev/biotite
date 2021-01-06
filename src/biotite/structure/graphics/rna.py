@@ -13,13 +13,11 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, length, pseudoknot_order=None, angle=0,
-    bond_linewidth=1, bond_linestyle=None, bond_color='black',
+    base_labels, base_pairs, length, layout_type=1, pseudoknot_order=None, 
+    angle=0, bond_linewidth=1, bond_linestyle=None, bond_color='black',
     backbone_linewidth=1, backbone_linestyle='solid', backbone_color='grey', 
-    base_fontsize='smaller',
-    annotation_positions=None, annotation_offset=8.5, 
-    annotation_fontsize='smaller',
-    bin_path="RNAplot"
+    base_fontsize='smaller', annotation_positions=None, annotation_offset=8.5, 
+    annotation_fontsize='smaller', bin_path="RNAplot"
     ):
 
     #TODO: Check if RNAplot is installed
@@ -56,7 +54,8 @@ def plot_nucleotide_secondary_structure(
     coordinates = RNAplotApp.compute_coordinates(
     base_pairs=unknotted_base_pairs, 
     length=length,
-    bin_path=bin_path
+    bin_path=bin_path,
+    layout_type=layout_type
     )
 
     # Rotate Coordinates

@@ -51,8 +51,8 @@ class RNAplotApp(LocalApp):
      [-107.5 ,   92.5 ]]
     """
 
-    def __init__(self, dot_bracket=None, base_pairs=None, length=None,
-                 bin_path="RNAplot"):
+    def __init__(self, dot_bracket=None, base_pairs=None, length=None, 
+                 layout_type=1, bin_path="RNAplot"):
         super().__init__(bin_path)
 
         if dot_bracket is not None:
@@ -66,14 +66,17 @@ class RNAplotApp(LocalApp):
                 "Structure has to be provided in either dot bracket notation "
                 "or as base pairs and total sequence length"
             )
-
+        
+        self._layout_type = str(layout_type)
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
 
     def run(self):
         self._in_file.write("N"*len(self._dot_bracket) + "\n")
         self._in_file.write(self._dot_bracket)
         self._in_file.flush()
-        self.set_arguments(["-i", self._in_file.name, "-o", "xrna"])
+        self.set_arguments(
+            ["-i", self._in_file.name, "-o", "xrna", "-t", self._layout_type]
+        )
         super().run()
 
     def evaluate(self):
@@ -114,7 +117,7 @@ class RNAplotApp(LocalApp):
 
     @staticmethod
     def compute_coordinates(dot_bracket=None, base_pairs=None, length=None,
-                            bin_path="RNAplot"):
+                            layout_type=1, bin_path="RNAplot"):
         """
         Get coordinates for a 2d representation of any unknotted RNA
         structure using ViennaRNA's RNAplot.
@@ -144,7 +147,8 @@ class RNAplotApp(LocalApp):
             coordinates for a total sequence length of *n*.
         """
         app = RNAplotApp(dot_bracket=dot_bracket, base_pairs=base_pairs,
-                         length=length, bin_path=bin_path)
+                         length=length, layout_type=layout_type, 
+                         bin_path=bin_path)
         app.start()
         app.join()
         return app.get_coordinates()
