@@ -431,6 +431,10 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # values for atoms involved in aromatic systems are used, it
         # must be determined whether the considered atom possesses only
         # single bonds or a double bond as well
+        # One example for nitrogen atoms involved in an aromatic system
+        # having exclusively single bonds as well as one double bond
+        # within one and the same molecule is the aromatic compound
+        # 'imidazole'
         nitrogen_bond_types = types[elements == "N"]
         if 5 in nitrogen_bond_types:
             nitrogen_indices = np.unique(
