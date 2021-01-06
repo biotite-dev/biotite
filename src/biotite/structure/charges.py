@@ -35,101 +35,99 @@ from biotite.structure import AtomArray, BondType
 # amount of binding partners of the remaining oxygen is one; this would
 # erroneously lead to an identification of the hybridisation state as
 # sp2 although it is still sp3)
-EN_PARAMETERS = {
-    "btype_unequal_zero": {
-        "H": {
-            BondType.SINGLE:   (7.17, 6.24, -0.56)
-        },
-
-        "C": {
-            BondType.SINGLE:   (7.98, 9.18, 1.88),
-            BondType.DOUBLE:   (8.79, 9.18, 1.88),
-            BondType.TRIPLE:   (10.39, 9.45, 0.73),
-            BondType.AROMATIC: (8.79, 9.18, 1.88)
-        },
-
-        "N": {
-            BondType.SINGLE:   (11.54, 10.82, 1.36),
-            BondType.DOUBLE:   (12.87, 11.15, 0.85),
-            BondType.TRIPLE:   (15.68, 11.7, -0.27)
-        },
-
-        # As oxygen and sulfur are exclusively involved in aromatic
-        # systems having single bonds on either side, the values for a
-        # sp3 hybridisation are taken for the bond type `aromatic`
-        "O": {
-            BondType.SINGLE:   (14.18, 12.92, 1.39),
-            BondType.DOUBLE:   (17.07, 13.79, 0.47),
-            BondType.AROMATIC: (14.18, 12.92, 1.39)
-        },
-
-        "S": {
-            BondType.SINGLE:   (10.14, 9.13, 1.38),
-            BondType.AROMATIC: (10.14, 9.13, 1.38)
-        },
-
-        "F": {
-            BondType.SINGLE:   (14.66, 13.85, 2.31)
-        },
-
-        "Cl": {
-            BondType.SINGLE:   (11.00, 9.69, 1.35)
-        },
-
-        "Br": {
-            BondType.SINGLE:   (10.08, 8.47, 1.16)
-        },
-
-        "I": {
-            BondType.SINGLE:   (9.90, 7.96, 0.96)
-        }        
+EN_PARAM_BTYPE = {
+    "H": {
+        BondType.SINGLE:   (7.17, 6.24, -0.56)
     },
 
-    "btype_equal_zero": {
-        "H": {
-            1: (7.17, 6.24, -0.56)
-        },
+    "C": {
+        BondType.SINGLE:   (7.98, 9.18, 1.88),
+        BondType.DOUBLE:   (8.79, 9.18, 1.88),
+        BondType.TRIPLE:   (10.39, 9.45, 0.73),
+        BondType.AROMATIC: (8.79, 9.18, 1.88)
+    },
 
-        "C": {
-            4: (7.98, 9.18, 1.88),
-            3: (8.79, 9.18, 1.88),
-            2: (10.39, 9.45, 0.73)
-        },
+    "N": {
+        BondType.SINGLE:   (11.54, 10.82, 1.36),
+        BondType.DOUBLE:   (12.87, 11.15, 0.85),
+        BondType.TRIPLE:   (15.68, 11.7, -0.27)
+    },
 
-        "N": {
-            # Considering protonated, e. g. in terminal
-            # amino group (4 binding partners), as well
-            # as unprotonated nitrogen (3 binding partners)
-            4: (11.54, 10.82, 1.36),
-            3: (11.54, 10.82, 1.36),
-            2: (12.87, 11.15, 0.85),
-            1: (15.68, 11.7, -0.27)
-        },
+    # As oxygen and sulfur are exclusively involved in aromatic
+    # systems having single bonds on either side, the values for a
+    # sp3 hybridisation are taken for BondType.AROMATIC
+    "O": {
+        BondType.SINGLE:   (14.18, 12.92, 1.39),
+        BondType.DOUBLE:   (17.07, 13.79, 0.47),
+        BondType.AROMATIC: (14.18, 12.92, 1.39)
+    },
 
-        "O": {
-            2: (14.18, 12.92, 1.39),
-            1: (17.07, 13.79, 0.47)
-        },
+    "S": {
+        BondType.SINGLE:   (10.14, 9.13, 1.38),
+        BondType.AROMATIC: (10.14, 9.13, 1.38)
+    },
 
-        "S": {
-            2: (10.14, 9.13, 1.38)
-        },
+    "F": {
+        BondType.SINGLE:   (14.66, 13.85, 2.31)
+    },
 
-        "F": {
-            1: (14.66, 13.85, 2.31)
-        },
+    "Cl": {
+        BondType.SINGLE:   (11.00, 9.69, 1.35)
+    },
 
-        "Cl": {
-            1: (11.00, 9.69, 1.35)
-        },
+    "Br": {
+        BondType.SINGLE:   (10.08, 8.47, 1.16)
+    },
 
-        "Br": {
-            1: (10.08, 8.47, 1.16)
-        },
+    "I": {
+        BondType.SINGLE:   (9.90, 7.96, 0.96)
+    }        
+}
 
-        "I": {
-            1: (9.90, 7.96, 0.96)
-        }
+EN_PARAM_BPARTNERS: {
+    "H": {
+        1: (7.17, 6.24, -0.56)
+    },
+
+    "C": {
+        4: (7.98, 9.18, 1.88),
+        3: (8.79, 9.18, 1.88),
+        2: (10.39, 9.45, 0.73)
+    },
+
+    "N": {
+        # Considering protonated, e. g. in terminal
+        # amino group (4 binding partners), as well
+        # as unprotonated nitrogen (3 binding partners)
+        4: (11.54, 10.82, 1.36),
+        3: (11.54, 10.82, 1.36),
+        2: (12.87, 11.15, 0.85),
+        1: (15.68, 11.7, -0.27)
+    },
+
+    "O": {
+        2: (14.18, 12.92, 1.39),
+        1: (17.07, 13.79, 0.47)
+    },
+
+    "S": {
+        2: (10.14, 9.13, 1.38)
+    },
+
+    "F": {
+        1: (14.66, 13.85, 2.31)
+    },
+
+    "Cl": {
+        1: (11.00, 9.69, 1.35)
+    },
+
+    "Br": {
+        1: (10.08, 8.47, 1.16)
+    },
+
+    "I": {
+        1: (9.90, 7.96, 0.96)
     }
 }
 
