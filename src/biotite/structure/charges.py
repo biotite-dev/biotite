@@ -18,22 +18,23 @@ from .info import residue
 from biotite.structure import AtomArray, BondType
 
 
-# Creating dictionary to retrieve parameters for electronegativity
+# Creating two dictionaries to retrieve parameters for electronegativity
 # computation from
-# First level of dictionary discriminates between a bond type equal to
-# zero (bond type `any`) respectively unequal to zero, the second level
-# represents the atom name and the third level represents the
-# hybridisation state
+# The first dictionary uses BondTypes as keys, whereas the second uses
+# the amounts of binding partners as keys
+# First level of dictionaries represents the atom name and the second
+# level represents the hybridisation state
 # Depending on whether the bond type is unequal to zero or not,
 # identification of the hybridisation state is either performed via the
-# bond type (primary way of identification since erroneous results are
-# excluded) or via the amount of binding partners (erroneous if a
-# binding partner is lost or added whilst the hybridisation remains
-# unchanged as it is the case with acids or bases, e. g. the hydroxyl
-# group in a carboxyl group: When the proton involved in the hydroxyl
-# group is donated, the amount of binding partners of the remaining
-# oxygen is one; this would erroneously lead to an identification of the
-# hybridisation state as sp2 although it is still sp3)
+# first dictionary, i. e. the bond type (primary way of identification
+# since erroneous results are excluded) or via the second dictionary,
+# i. e. amount of binding partners (erroneous if a binding partner is
+# lost or added whilst the hybridisation remains unchanged as it is the
+# case with acids or bases, e. g. the hydroxyl group in a carboxyl
+# group: When the proton involved in the hydroxyl group is donated, the
+# amount of binding partners of the remaining oxygen is one; this would
+# erroneously lead to an identification of the hybridisation state as
+# sp2 although it is still sp3)
 EN_PARAMETERS = {
     "btype_unequal_zero": {
         "H": {
