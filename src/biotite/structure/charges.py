@@ -280,9 +280,9 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         joined_list = []
         for i in range(len(unparam_valence_names)):
             joined_list.append(
-                unparam_valence_names[i]
+                unparam_valence_names[i].ljust(2, ' ')
                 +
-                " " * (10 - len(unparam_valence_names[i]))
+                " " * 8
             )
             joined_list.append(unparametrized_valences[i] + "\n")
         joined_array = np.reshape(
