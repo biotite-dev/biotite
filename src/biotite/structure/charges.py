@@ -15,7 +15,7 @@ __all__ = ["partial_charges"]
 import warnings
 import numpy as np
 from .info import residue
-from biotite.structure import AtomArray
+from biotite.structure import AtomArray, BondType
 
 
 # Creating dictionary to retrieve parameters for electronegativity
@@ -37,50 +37,50 @@ from biotite.structure import AtomArray
 EN_PARAMETERS = {
     "btype_unequal_zero": {
         "H": {
-            1: (7.17, 6.24, -0.56)
+            BondType.SINGLE:   (7.17, 6.24, -0.56)
         },
 
         "C": {
-            1: (7.98, 9.18, 1.88),
-            2: (8.79, 9.18, 1.88),
-            3: (10.39, 9.45, 0.73),
-            5: (8.79, 9.18, 1.88)
+            BondType.SINGLE:   (7.98, 9.18, 1.88),
+            BondType.DOUBLE:   (8.79, 9.18, 1.88),
+            BondType.TRIPLE:   (10.39, 9.45, 0.73),
+            BondType.AROMATIC: (8.79, 9.18, 1.88)
         },
 
         "N": {
-            1: (11.54, 10.82, 1.36),
-            2: (12.87, 11.15, 0.85),
-            3: (15.68, 11.7, -0.27)
+            BondType.SINGLE:   (11.54, 10.82, 1.36),
+            BondType.DOUBLE:   (12.87, 11.15, 0.85),
+            BondType.TRIPLE:   (15.68, 11.7, -0.27)
         },
 
         # As oxygen and sulfur are exclusively involved in aromatic
         # systems having single bonds on either side, the values for a
         # sp3 hybridisation are taken for the bond type `aromatic`
         "O": {
-            1: (14.18, 12.92, 1.39),
-            2: (17.07, 13.79, 0.47),
-            5: (14.18, 12.92, 1.39)
+            BondType.SINGLE:   (14.18, 12.92, 1.39),
+            BondType.DOUBLE:   (17.07, 13.79, 0.47),
+            BondType.AROMATIC: (14.18, 12.92, 1.39)
         },
 
         "S": {
-            1: (10.14, 9.13, 1.38),
-            5: (10.14, 9.13, 1.38)
+            BondType.SINGLE:   (10.14, 9.13, 1.38),
+            BondType.AROMATIC: (10.14, 9.13, 1.38)
         },
 
         "F": {
-            1: (14.66, 13.85, 2.31)
+            BondType.SINGLE:   (14.66, 13.85, 2.31)
         },
 
         "Cl": {
-            1: (11.00, 9.69, 1.35)
+            BondType.SINGLE:   (11.00, 9.69, 1.35)
         },
 
         "Br": {
-            1: (10.08, 8.47, 1.16)
+            BondType.SINGLE:   (10.08, 8.47, 1.16)
         },
 
         "I": {
-            1: (9.90, 7.96, 0.96)
+            BondType.SINGLE:   (9.90, 7.96, 0.96)
         }        
     },
 
