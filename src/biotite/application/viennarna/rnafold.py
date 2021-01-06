@@ -2,16 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.application.viennarna.rnafold"
+__name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAfoldApp"]
 
 from tempfile import NamedTemporaryFile
-from ...localapp import LocalApp, cleanup_tempfile
-from ...application import AppState, requires_state
-from ....sequence.io.fasta import FastaFile, set_sequence
-from ....sequence import NucleotideSequence
-from ....structure.dotbracket import base_pairs_from_dot_bracket
+from ..localapp import LocalApp, cleanup_tempfile
+from ..application import AppState, requires_state
+from ...sequence.io.fasta import FastaFile, set_sequence
+from ...sequence import NucleotideSequence
+from ...structure.dotbracket import base_pairs_from_dot_bracket
 
 class RNAfoldApp(LocalApp):
     """

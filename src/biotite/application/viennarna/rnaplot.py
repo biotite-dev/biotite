@@ -2,16 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.application.viennarna.rnafold"
+__name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAplotApp"]
 
 import numpy as np
 from tempfile import NamedTemporaryFile
 from os import remove
-from ...localapp import LocalApp, cleanup_tempfile
-from ...application import AppState, requires_state
-from ....structure.dotbracket import dot_bracket as dot_bracket_
+from ..localapp import LocalApp, cleanup_tempfile
+from ..application import AppState, requires_state
+from ...structure.dotbracket import dot_bracket as dot_bracket_
 
 class RNAplotApp(LocalApp):
     """

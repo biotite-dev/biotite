@@ -4,7 +4,7 @@
 
 import numpy as np
 import pytest
-from biotite.application.viennarna.rnaplot import RNAplotApp
+from biotite.application.viennarna import RNAplotApp
 from ..util import is_not_installed
 
 
