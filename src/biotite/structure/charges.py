@@ -518,5 +518,4 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 charges[i] += charge_transfer
                 charges[j] -= charge_transfer
 
-    partial_charges = charges
-    return partial_charges
+    return charges
