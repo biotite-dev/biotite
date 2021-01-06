@@ -220,6 +220,25 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                     list_of_unparametrized_elements.append(element)
                     has_atom_key_error = True
                 else:
+                    # The warning message printed in case of
+                    # unparametrized valence states contains its main
+                    # information in a table with three columns:
+                    # The first column represents the element, the
+                    # second the amount of binding partners and the
+                    # third the BondType
+                    # The primary way of identifying unparametrized
+                    # valence states that is aimed at is via the
+                    # BondType; if this is possible, the space beneath
+                    # the column representing the amount of binding
+                    # partners is padded with a respective amount the
+                    # '-' (hyphen) character
+                    # If not, the space beneath the column representing
+                    # the BondTypes is padded with a respective amount
+                    # of hyphens
+                    # At either case, an appropriate amount of
+                    # whitespace is added in order to ensure that the
+                    # respective entries appear directly under the
+                    # respective columns
                     unparam_valence_names.append(element)
                     unparametrized_valences.append(
                         str(amount_of_binding_partners[i])
