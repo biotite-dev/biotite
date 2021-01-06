@@ -1200,6 +1200,12 @@ def _match_base(nucleotide, min_atoms_per_base):
     nucleotide_matched = nucleotide_matched[unique_indices]
     # Only continue if minimum number of matching atoms is reached
     if len(nucleotide_matched) < min_atoms_per_base:
+        warnings.warn(
+            f"Nucleotide with res_id {nucleotide.res_id[0]} and "
+            f"chain_id {nucleotide.chain_id[0]} has less than 3 base "
+            f"atoms, unable to check for base pair.",
+            IncompleteStructureWarning
+        )
         return None
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
     # PDB atom order.
