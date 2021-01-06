@@ -51,7 +51,7 @@ class RNAplotApp(LocalApp):
      [-107.5 ,   92.5 ]]
     """
 
-    def __init__(self, dot_bracket = None, base_pairs=None, length = None,
+    def __init__(self, dot_bracket=None, base_pairs=None, length=None,
                  bin_path="RNAplot"):
         super().__init__(bin_path)
 
@@ -113,7 +113,7 @@ class RNAplotApp(LocalApp):
         return self._coordinates
 
     @staticmethod
-    def compute_coordinates(dot_bracket = None, base_pairs=None, length = None,
+    def compute_coordinates(dot_bracket=None, base_pairs=None, length=None,
                             bin_path="RNAplot"):
         """
         Get coordinates for a 2d representation of any unknotted RNA
