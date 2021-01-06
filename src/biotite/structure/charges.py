@@ -444,18 +444,19 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 if BondType.AROMATIC in types[i]:
                     considered_row = types[i]
                     considered_row.sort()
-                    # Aromaticity implies molecular cyclicality, i. e. an
-                    # atom involved in an aromatic system has at least two
-                    # bonds with the aromatic bond type
+                    # Aromaticity implies molecular cyclicality, i. e.
+                    # an atom involved in an aromatic system has at
+                    # least two bonds with the aromatic bond type
                     # Nitrogen has at most three bonds if involved in an
-                    # aromatic system, where the third bond type is `single`
-                    # Therefore, the presence of a third bond type indicates
-                    # a sp3 hybridisation, whereas the absence of a third
-                    # bond type can be either due to sp2 hybridisation or
-                    # deprotonation
-                    # In order to account for this ambiguity, the charge is
-                    # considered in case that a third bond type is not
-                    # present
+                    # aromatic system, where the third bond type is
+                    # `single`
+                    # Therefore, the presence of a third bond type
+                    # indicates a sp3 hybridisation, whereas the absence
+                    # of a third bond type can be either due to sp2
+                    # hybridisation or deprotonation
+                    # In order to account for this ambiguity, the charge
+                    # is considered in case that a third bond type is
+                    # not present
                     try:
                         considered_row[-3]
                         bond_types[i] = BondType.SINGLE
