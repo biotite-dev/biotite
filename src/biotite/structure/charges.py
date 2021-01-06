@@ -180,11 +180,11 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     each_btype_equal_zero = False
     some_btype_equal_zero = False
 
-    if (all(btype == BondType.ANY for btype in bond_types)
+    if (np.all(bond_types == BondType.ANY)
         and
         bond_types.shape[0] != 0):
         each_btype_equal_zero = True
-    elif (any(btype == BondType.ANY for btype in bond_types)
+    elif (np.any(bond_types == BondType.ANY)
         and
         bond_types.shape[0] != 0):
         some_btype_equal_zero = True
