@@ -180,6 +180,9 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     each_btype_equal_zero = False
     some_btype_equal_zero = False
 
+    # The length of `bond_types` is zero in case of an AtomArray
+    # consisting of atoms that are not connected to each other, e. g. if
+    # the AtomArray exclusively contains ions
     if (np.all(bond_types == BondType.ANY)
         and
         bond_types.shape[0] != 0):
