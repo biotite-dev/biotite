@@ -13,24 +13,44 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    backbone_labels, base_pairs, length, pseudoknot_order=None, angle=0,
-    backbone_linewidth, backbone_linestyle, backbone_color, 
-    backbone_fontsize='smaller',
-    annotation_positions=None, annotation_offset=8.5,
+    base_labels, base_pairs, length, pseudoknot_order=None, angle=0,
+    bond_linewidth=1, bond_linestyle=None, bond_color='black',
+    backbone_linewidth=1, backbone_linestyle='solid', backbone_color='grey', 
+    base_fontsize='smaller',
+    annotation_positions=None, annotation_offset=8.5, 
+    annotation_fontsize='smaller',
     bin_path="RNAplot"
     ):
 
     #TODO: Check if RNAplot is installed
-    
-    # If no specific annotation positions are given, annotate every
-    # second base pair
-    if annotation_positions is None:
-        annotation_positions = range(0, length, 2)
 
     # Get the unknotted base pairs
     if pseudoknot_order is None:
         pseudoknot_order = pseudoknots(base_pairs)[0]
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
+
+    # If `bond_linewidth` is not an array, extrapolate
+    if not isinstance(bond_linewidth, np.ndarray):
+        bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
+
+    # If `bond_color` is not an array, extrapolate
+    if not isinstance(bond_color, np.ndarray):
+        bond_color = np.full(base_pairs.shape[0], bond_color)
+
+    # By default pseudoknotted bonds are denoted as dashed lines, while
+    # unknotted bonds are denoted as solid lines
+    if bond_linestyle is None:
+        bond_linestyle = np.full(base_pairs.shape[0], 'solid', dtype='object')
+        bond_linestyle[pseudoknot_order != 0] = 'dashed'
+    # If `bond_linestyle` is not an array, extrapolate
+    elif not isinstance(bond_linestyle, np.ndarray):
+        bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle)
+    
+    
+    # If no specific annotation positions are given, annotate every
+    # second base pair
+    if annotation_positions is None:
+        annotation_positions = range(0, length, 2)
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
@@ -70,10 +90,29 @@ def plot_nucleotide_secondary_structure(
     )
     ax.set_aspect(aspect='equal')
 
-    for coords, label, color in zip(coordinates, base_labels, backbone_color):
-        
+    # Draw backbone
+    ax.plot(coordinates[:,0], coordinates[:,1], color=backbone_color, 
+            linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
-    # Add annotations
+    # Draw base labels
+    for coords, label in zip(coordinates, base_labels):
+        t = ax.text(
+                    x=coords[0], y=coords[1], s=label, 
+                    fontsize=base_fontsize, ha='center', va='center'
+        )
+        t.set_bbox(dict(pad=0, color='white'))
+
+    # Draw bonds
+    for (base1, base2), color, style, width in zip(
+        base_pairs, bond_color, bond_linestyle, bond_linewidth
+    ):
+        base1_coords = coordinates[base1]
+        base2_coords = coordinates[base2]
+        x = base1_coords[0], base2_coords[0]
+        y = base1_coords[1], base2_coords[1]
+        ax.plot(x, y, color=color, linestyle=style, linewidth=width)
+
+    # Draw annotations
     for i in annotation_positions:
         if (i > 0) and ((i+1) < length):
             # Get the average of the direction vectors to the next and
@@ -82,14 +121,14 @@ def plot_nucleotide_secondary_structure(
                 [coordinates[i-1][0] - coordinates[i][0],
                  coordinates[i-1][1] - coordinates[i][1]]
             )
-            vector_to_previous = vector_to_previous / np.linealg.norm(
+            vector_to_previous = vector_to_previous / np.linalg.norm(
                 vector_to_previous
             )
             vector_to_next = np.array(
                 [coordinates[i][0] - coordinates[i+1][0],
                  coordinates[i][1] - coordinates[i+1][1]]
             )
-            vector_to_next = vector_to_next / np.linealg.norm(
+            vector_to_next = vector_to_next / np.linalg.norm(
                 vector_to_next
             )
             vector = (vector_to_next + vector_to_previous) / 2
@@ -113,4 +152,8 @@ def plot_nucleotide_secondary_structure(
         vector = np.array([vector[1], -vector[0]])
         # The annotations are offset in the direction of the 
         # perpendicular vector
-        annotation_coordinates = coordinates[i] + (annotation_offset*vector)
+        x, y = coordinates[i] + (annotation_offset*vector)
+        ax.text(
+            x=x, y=y, s=i+1, 
+            ha='center', va='center', fontsize=annotation_fontsize
+        )
