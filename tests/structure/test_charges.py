@@ -377,8 +377,11 @@ def test_correct_output_ions():
     # Sodium is not involved in covalent bonding
     sodium_array.bonds = BondList(sodium_array.array_length())
     with pytest.warns(None) as record:
-        partial_charges(sodium_array, iteration_step_num=1)
+        sodium_charge = partial_charges(
+            sodium_array, iteration_step_num=1
+        )[0]
     assert len(record) == 0
+    assert sodium_charge == 1
 
 
 def test_correct_output_charged_aa():
