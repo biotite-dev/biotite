@@ -111,6 +111,7 @@ from .geometry import *
 from .hbond import *
 from .integrity import *
 from .mechanics import *
+from .molecules import *
 from .pseudoknots import *
 from .rdf import *
 from .residues import *

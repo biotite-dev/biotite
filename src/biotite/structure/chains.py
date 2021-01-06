@@ -114,11 +114,10 @@ def chain_iter(array):
     array : AtomArray or AtomArrayStack
         The atom array (stack) to iterate over.
         
-    Returns
-    -------
-    count : generator of AtomArray or AtomArrayStack
-        A generator of subarrays or substacks (dependent on the input
-        type) containing each chain of the input `array`.
+    Yields
+    ------
+    chain : AtomArray or AtomArrayStack
+        A single chain of the input `array`.
     
     See also
     --------
