@@ -113,12 +113,12 @@ class RNAfoldApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_base_pairs(self):
         """
-        Get the basepairs from the minimum free energy secondary
+        Get the base pairs from the minimum free energy secondary
         structure of the input sequence.
 
         Returns
         -------
-        basepairs : ndarray, shape=(n,2)
+        base_pairs : ndarray, shape=(n,2)
             Each row corresponds to the positions of the bases in the
             sequence.
 

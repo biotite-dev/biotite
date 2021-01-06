@@ -28,7 +28,7 @@ class RNAplotApp(LocalApp):
     ----------
     dot_bracket : str, optional (default: None)
         The structure in dot bracket notation.
-    basepairs : ndarray, shape=(n,2), optional (default: None)
+    base_pairs : ndarray, shape=(n,2), optional (default: None)
         Each row corresponds to the positions of the bases in the
         strand.
     length : int, optional (default: None)
@@ -129,7 +129,7 @@ class RNAplotApp(LocalApp):
         ----------
         dot_bracket : str, optional (default: None)
             The structure in dot bracket notation.
-        basepairs : ndarray, shape=(n,2), optional (default: None)
+        base_pairs : ndarray, shape=(n,2), optional (default: None)
             Each row corresponds to the positions of the bases in the
             strand.
         length : int, optional (default: None)
