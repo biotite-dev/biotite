@@ -181,11 +181,11 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     each_btype_equal_zero = False
     some_btype_equal_zero = False
 
-    if (all(btype == 0 for btype in bond_types)
+    if (all(btype == BondType.ANY for btype in bond_types)
         and
         bond_types.shape[0] != 0):
         each_btype_equal_zero = True
-    elif (any(btype == 0 for btype in bond_types)
+    elif (any(btype == BondType.ANY for btype in bond_types)
         and
         bond_types.shape[0] != 0):
         some_btype_equal_zero = True
@@ -203,7 +203,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         if amount_of_binding_partners[i] == 0:
             parameters[i, :] = np.nan
             continue
-        if bond_types[i] == 0:
+        if bond_types[i] == BondType.ANY:
             btype = "btype_equal_zero"
             characteristic = amount_of_binding_partners[i]
             list_of_atoms_without_specified_btype.append(str(i))
@@ -425,9 +425,9 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     try:
         bond_types = np.amax(types, axis=1)
         zero_indices_in_first_dim = np.unique(
-            np.nonzero(types == 0)[0]
+            np.nonzero(types == BondType.ANY)[0]
         )
-        bond_types[zero_indices_in_first_dim] = 0
+        bond_types[zero_indices_in_first_dim] = BondType.ANY
         # As nitrogen can be involved in aromatic systems having both
         # only single bonds as well as one double bond and no special
         # values for atoms involved in aromatic systems are used, it
@@ -438,12 +438,10 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # within one and the same molecule is the aromatic compound
         # 'imidazole'
         nitrogen_bond_types = types[elements == "N"]
-        if 5 in nitrogen_bond_types:
-            nitrogen_indices = np.unique(
-                np.where(elements == "N")[0]
-            )
+        if BondType.AROMATIC in nitrogen_bond_types:
+            nitrogen_indices = np.where(elements == "N")[0]
             for i in nitrogen_indices:
-                if 5 in types[i]:
+                if BondType.AROMATIC in types[i]:
                     considered_row = types[i]
                     considered_row.sort()
                     # Aromaticity implies molecular cyclicality, i. e. an
@@ -460,13 +458,13 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                     # present
                     try:
                         considered_row[-3]
-                        bond_types[i] = 1
+                        bond_types[i] = BondType.SINGLE
                     except IndexError:
                         nitrogen_charge = charges[i]
                         if nitrogen_charge == -1:
-                            bond_types[i] = 1
+                            bond_types[i] = BondType.SINGLE
                         else:
-                            bond_types[i] = 2
+                            bond_types[i] =  BondType.DOUBLE
     except ValueError:
         bond_types = np.array([])
     damping = 1.0
