@@ -2,12 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-"""
-A subpackage for visualizing structure related objects.
-"""
-
 __name__ = "biotite.structure.graphics"
-__author__ = "Patrick Kunzmann, Tom David Müller"
+__author__ = "Tom David Müller"
+__all__ = ["plot_nucleotide_secondary_structure"]
 
-from .atoms import *
-from .rna import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_nucleotide_secondary_structure():
+    pass
