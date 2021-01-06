@@ -420,6 +420,8 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
     # The maximum of a given row of the `types` array must be determined
     # as this value reveals the hybridisation state
+    # An atom's overall BondType is assumed to be ANY as soon as one
+    # BondType.ANY occurs
     try:
         bond_types = np.amax(types, axis=1)
         zero_indices_in_first_dim = np.unique(
