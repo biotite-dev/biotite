@@ -4,6 +4,7 @@
 
 import pytest
 import json
+import warnings
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -146,7 +147,8 @@ def test_base_pairs_incomplete_structure(nuc_sample_array):
             ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N7', 'C8', 'N9', 'O2']
         )
     ]
-    assert len(struc.base_pairs(nuc_sample_array)) == 0
+    with pytest.warns(struc.IncompleteStructureWarning):
+        assert len(struc.base_pairs(nuc_sample_array)) == 0
 
 @pytest.mark.parametrize("seed", range(10))
 def test_base_pairs_reordered(nuc_sample_array, seed):
@@ -202,7 +204,8 @@ def test_map_nucleotide():
     assert m7g_tuple[0] in purines
     assert m7g_tuple[1] == False
 
-    assert struc.map_nucleotide(residue('ALA')) == (None, False)
+    with pytest.warns(struc.IncompleteStructureWarning):
+        assert struc.map_nucleotide(residue('ALA')) == (None, False)
 
 
 def get_reference(pdb_id, suffix):
