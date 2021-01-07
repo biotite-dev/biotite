@@ -25,6 +25,8 @@ class RNAfoldApp(LocalApp):
     ----------
     sequence : NucleotideSequence
         The nucleotide sequence.
+    temperature : int
+        The temperature to be assumed for the energy parameters.
     bin_path : str, optional
         Path of the RNAfold binary.
 
@@ -79,9 +81,10 @@ class RNAfoldApp(LocalApp):
         Parameters
         ----------
         temperature : int
+            The temperature.
         """
         self._temperature = str(temperature)
-        
+
     @requires_state(AppState.JOINED)
     def get_mfe(self):
         """
