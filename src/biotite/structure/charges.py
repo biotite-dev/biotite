@@ -183,13 +183,12 @@ def _determine_aromatic_nitrogen_hybridisation(
     )[0]
     for i in aromatic_nitrogen_indices:
         considered_row = types[i]
-        considered_row.sort()
         # Aromaticity implies molecular cyclicality, i. e.
         # an atom involved in an aromatic system has at
         # least two bonds with the aromatic bond type
         # Nitrogen has at most three bonds if involved in an
         # aromatic system, where the third bond type is
-        # `single`
+        # BondType.SINGLE
         # Therefore, the presence of a third bond type
         # indicates a sp3 hybridisation, whereas the absence
         # of a third bond type can be either due to sp2
@@ -197,10 +196,9 @@ def _determine_aromatic_nitrogen_hybridisation(
         # In order to account for this ambiguity, the charge
         # is considered in case that a third bond type is
         # not present
-        try:
-            considered_row[-3]
+        if considered_row.shape[0] >= 3:
             bond_types[i] = BondType.SINGLE
-        except IndexError:
+        else:
             nitrogen_charge = charges[i]
             if nitrogen_charge == -1:
                 bond_types[i] = BondType.SINGLE
