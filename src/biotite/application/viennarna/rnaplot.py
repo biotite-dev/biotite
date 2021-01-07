@@ -33,6 +33,13 @@ class RNAplotApp(LocalApp):
         strand.
     length : int, optional (default: None)
         The number of bases in the strand.
+    layout_type : int, optional (default: 1)
+        The layout type according to the `RNAplot` documentation:
+            0: simple radial layout
+            1: Naview layout (Bruccoleri et al. 1988)
+            2: circular layout
+            3: RNAturtle (Wiegreffe et al. 2018)
+            4: RNApuzzler (Wiegreffe et al. 2018)
     bin_path : str, optional
         Path of the RNAplot binary.
 
@@ -98,7 +105,7 @@ class RNAplotApp(LocalApp):
             2: circular layout
             3: RNAturtle (Wiegreffe et al. 2018)
             4: RNApuzzler (Wiegreffe et al. 2018)
-            
+
         Parameters
         ----------
         type : int
