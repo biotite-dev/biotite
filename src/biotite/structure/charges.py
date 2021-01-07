@@ -462,8 +462,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         # having exclusively single bonds as well as one double bond
         # within one and the same molecule is the aromatic compound
         # 'imidazole'
-        nitrogen_bond_types = types[elements == "N"]
-        if BondType.AROMATIC in nitrogen_bond_types:
+        if "N" in elements:
             nitrogen_indices = np.where(elements == "N")[0]
             for i in nitrogen_indices:
                 if BondType.AROMATIC in types[i]:
