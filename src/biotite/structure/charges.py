@@ -139,7 +139,7 @@ EN_POS_HYDROGEN = 20.02
 
 
 def _determine_aromatic_nitrogen_hybridisation(
-    elements, types, bond_types
+    elements, types, bond_types, charges
 ):
     """
     Determine whether a nitrogen atom involved in an aromatic system
@@ -169,6 +169,10 @@ def _determine_aromatic_nitrogen_hybridisation(
     bond_types: ndarray, dtype=int
         The array containing information about the highest bond type of
         the respective atom (except for BondType.AROMATIC).
+    charges: ndarray, dtype=int
+        Array that comprises the formal charges of the atoms comprised
+        in the `atom_array` inserted into the `partial_charges`
+        function.
 
     Returns
     -------
@@ -526,7 +530,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
         bond_types[zero_indices_in_first_dim] = BondType.ANY
         if "N" in elements:
             bond_types = _determine_aromatic_nitrogen_hybridisation(
-                elements, types, bond_types
+                elements, types, bond_types, charges
             )
             
     damping = 1.0
