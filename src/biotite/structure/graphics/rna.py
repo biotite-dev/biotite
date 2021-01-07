@@ -13,18 +13,18 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, length, layout_type=1, pseudoknot_order=None, 
-    angle=0, bond_linewidth=1, bond_linestyle=None, bond_color='black',
-    backbone_linewidth=1, backbone_linestyle='solid', backbone_color='grey', 
-    base_fontsize='smaller', annotation_positions=None, annotation_offset=8.5, 
-    annotation_fontsize='smaller', bin_path="RNAplot"
+    base_labels, base_pairs, length, layout_type=1, draw_pseudoknots=True,
+    pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
+    bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
+    backbone_color='grey', base_fontsize='smaller', annotation_positions=None, 
+    annotation_offset=8.5, annotation_fontsize='smaller', bin_path="RNAplot"
     ):
 
     #TODO: Check if RNAplot is installed
 
     # Get the unknotted base pairs
     if pseudoknot_order is None:
-        pseudoknot_order = pseudoknots(base_pairs)[0]
+        pseudoknot_order = pseudoknots(base_pairs, max_pseudoknot_order=0)[0]
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
 
     # If `bond_linewidth` is not an array, extrapolate
@@ -43,6 +43,11 @@ def plot_nucleotide_secondary_structure(
     # If `bond_linestyle` is not an array, extrapolate
     elif not isinstance(bond_linestyle, np.ndarray):
         bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle)
+
+    # If pseudoknots are not to be drawn, remove pseudoknotted bonds, 
+    # regardless of the given linestyles
+    if not draw_pseudoknots:
+        bond_linestyle[pseudoknot_order != 0] = 'None'
     
     
     # If no specific annotation positions are given, annotate every
