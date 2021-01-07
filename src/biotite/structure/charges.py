@@ -178,33 +178,34 @@ def _determine_aromatic_nitrogen_hybridisation(
         atoms.
     """
 
-    nitrogen_indices = np.where(elements == "N")[0]
-    for i in nitrogen_indices:
-         if BondType.AROMATIC in types[i]:
-            considered_row = types[i]
-            considered_row.sort()
-            # Aromaticity implies molecular cyclicality, i. e.
-            # an atom involved in an aromatic system has at
-            # least two bonds with the aromatic bond type
-            # Nitrogen has at most three bonds if involved in an
-            # aromatic system, where the third bond type is
-            # `single`
-            # Therefore, the presence of a third bond type
-            # indicates a sp3 hybridisation, whereas the absence
-            # of a third bond type can be either due to sp2
-            # hybridisation or deprotonation
-            # In order to account for this ambiguity, the charge
-            # is considered in case that a third bond type is
-            # not present
-            try:
-                considered_row[-3]
+    aromatic_nitrogen_indices = np.where(
+        (elements == "N") & (bond_types == BondType.AROMATIC)
+    )[0]
+    for i in aromatic_nitrogen_indices:
+        considered_row = types[i]
+        considered_row.sort()
+        # Aromaticity implies molecular cyclicality, i. e.
+        # an atom involved in an aromatic system has at
+        # least two bonds with the aromatic bond type
+        # Nitrogen has at most three bonds if involved in an
+        # aromatic system, where the third bond type is
+        # `single`
+        # Therefore, the presence of a third bond type
+        # indicates a sp3 hybridisation, whereas the absence
+        # of a third bond type can be either due to sp2
+        # hybridisation or deprotonation
+        # In order to account for this ambiguity, the charge
+        # is considered in case that a third bond type is
+        # not present
+        try:
+            considered_row[-3]
+            bond_types[i] = BondType.SINGLE
+        except IndexError:
+            nitrogen_charge = charges[i]
+            if nitrogen_charge == -1:
                 bond_types[i] = BondType.SINGLE
-            except IndexError:
-                nitrogen_charge = charges[i]
-                if nitrogen_charge == -1:
-                    bond_types[i] = BondType.SINGLE
-                else:
-                    bond_types[i] =  BondType.DOUBLE
+            else:
+                bond_types[i] =  BondType.DOUBLE
     
     return bond_types
 
