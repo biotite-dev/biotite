@@ -16,9 +16,75 @@ def plot_nucleotide_secondary_structure(
     base_labels, base_pairs, length, layout_type=1, draw_pseudoknots=True,
     pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
     bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
-    backbone_color='grey', base_fontsize='smaller', annotation_positions=None, 
-    annotation_offset=8.5, annotation_fontsize='smaller', bin_path="RNAplot"
+    backbone_color='grey', base_font={'size': 'small'}, 
+    annotation_positions=None, annotation_offset=8.5, 
+    annotation_font={'size': 'smaller'}, bin_path="RNAplot"
     ):
+    """
+    Generate 2D plots of nucleic acid secondary structures using the 
+    interface to ``RNAplot`` in the ``biotite.application.viennarna`` 
+    subpackage.
+
+    ``ViennaRNA`` must be installed in order to use this function.
+
+    Parameters
+    ----------
+    base_labels : iterable
+        The labels denoting the type of each base.
+    base_pairs : ndarray, shape=(n,2)
+        Each row corresponds to the positions of the bases in the
+        sequence. The positions are counted from zero.
+    length : int
+        The number of bases in the sequence.
+    layout_type : int, optional (default: 1)
+        The layout type according to the `RNAplot` documentation:
+            0: simple radial layout
+            1: Naview layout (Bruccoleri et al. 1988)
+            2: circular layout
+            3: RNAturtle (Wiegreffe et al. 2018)
+            4: RNApuzzler (Wiegreffe et al. 2018)
+    draw_pseudoknots : bool, optional (default: True)
+        Whether the bonds between pseudoknots should be drawn.
+    angle : int
+        The angle the plot should be rotated.
+    bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
+        The linewidth of each bond. Provide a single value to set the
+        linewidth for all bonds or an array to set the linewidth for 
+        each individual bond.
+    bond_linestyle : str or ndarray, shape(n,), optional (default: None)
+        The *Matplotlib* linestyle of each bond. Provide a single value 
+        to set the linewidth for all bonds or an array to set the 
+        linewidth for each individual bond. By default, solid lines are 
+        used for non-pseudoknotted bonds and dashed lines are used for 
+        pseudoknotted bonds.
+    bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4),
+                 optional (default: 'black')
+        The *Matplotlib* color of each bond. Provide a single value to 
+        set the color for all bonds or an array to set the color for 
+        each individual bond. Furthermore, the color for each individual 
+        bond can be provided as array of RGB or RGBA colors.
+    backbone_linewidth : float, optional (default: 1)
+        The linewidth of the backbone.
+    backbone_linestyle : str (default: 'solid')
+        The *Matplotlib* linestyle of the backbone.
+    backbone_color : str or ndarray, shape=(3,) or shape=(4,), 
+                     dtype=float, optional (default: 'grey')
+        The *Matplotlib* compatible color of the backbone.
+    base_font : dict, optional (default: {'size': 'smaller'})
+        The *Matplotlib* compatible font of the labels denoting the type
+        of each base.
+    annotation_positions : iterable, optional (default: None)
+        The positions of the bases to be numbered as integers. By 
+        default every second base is annotated. Please note that while
+        the positions in the sequence are counted from zero, they are
+        displayed in the graph counted from one.
+    annotation_offset : int, optional (default: 8.5)
+        The offset of the annotations from the base pair labels.
+    annotation_font : dict, optional (default: {'size': 'smaller'})
+        The *Matplotlib* compatible font of the annotations.
+    bin_path : str, optional
+        Path of the RNAplot binary.
+    """
 
     #TODO: Check if RNAplot is installed
 
@@ -102,7 +168,7 @@ def plot_nucleotide_secondary_structure(
     for coords, label in zip(coordinates, base_labels):
         t = ax.text(
                     x=coords[0], y=coords[1], s=label, 
-                    fontsize=base_fontsize, ha='center', va='center'
+                    font=base_font, ha='center', va='center'
         )
         t.set_bbox(dict(pad=0, color='white'))
 
@@ -159,5 +225,5 @@ def plot_nucleotide_secondary_structure(
         x, y = coordinates[i] + (annotation_offset*vector)
         ax.text(
             x=x, y=y, s=i+1, 
-            ha='center', va='center', fontsize=annotation_fontsize
+            ha='center', va='center', font=annotation_font
         )
