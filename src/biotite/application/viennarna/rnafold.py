@@ -70,6 +70,18 @@ class RNAfoldApp(LocalApp):
         super().clean_up()
         cleanup_tempfile(self._in_file)
 
+    @requires_state(AppState.CREATED)
+    def set_temperature(self, temperature):
+        """
+        Adjust the energy parameters according to a temperature in 
+        degrees Celsius.
+        
+        Parameters
+        ----------
+        temperature : int
+        """
+        self._temperature = str(temperature)
+        
     @requires_state(AppState.JOINED)
     def get_mfe(self):
         """
