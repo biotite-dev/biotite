@@ -966,10 +966,10 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
 
     # Remap values to original atom array
-    basepair_array = np.where(boolean_mask)[0][basepair_array]
-    for i, row in enumerate(basepair_array):
-        basepair_array[i] = get_residue_starts_for(atom_array, row)
-
+    if len(basepair_array) > 0:
+        basepair_array = np.where(boolean_mask)[0][basepair_array]
+        for i, row in enumerate(basepair_array):
+            basepair_array[i] = get_residue_starts_for(atom_array, row)
     return basepair_array
 
 
@@ -1198,6 +1198,15 @@ def _match_base(nucleotide, min_atoms_per_base):
         nucleotide_matched.atom_name, return_index=True
     )
     nucleotide_matched = nucleotide_matched[unique_indices]
+    # Only continue if minimum number of matching atoms is reached
+    if len(nucleotide_matched) < min_atoms_per_base:
+        warnings.warn(
+            f"Nucleotide with res_id {nucleotide.res_id[0]} and "
+            f"chain_id {nucleotide.chain_id[0]} has less than 3 base "
+            f"atoms, unable to check for base pair.",
+            IncompleteStructureWarning
+        )
+        return None
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
     # PDB atom order.
     nucleotide_matched = nucleotide_matched[
