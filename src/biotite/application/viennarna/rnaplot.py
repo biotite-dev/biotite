@@ -88,6 +88,24 @@ class RNAplotApp(LocalApp):
         cleanup_tempfile(self._in_file)
         remove("rna.ss")
 
+    @requires_state(AppState.CREATED)
+    def set_layout_type(self, layout_type):
+        """
+        Adjust the layout type for the plot according to the `RNAplot` 
+        documentation:
+            0: simple radial layout
+            1: Naview layout (Bruccoleri et al. 1988)
+            2: circular layout
+            3: RNAturtle (Wiegreffe et al. 2018)
+            4: RNApuzzler (Wiegreffe et al. 2018)
+            
+        Parameters
+        ----------
+        type : int
+            The layout type.
+        """
+        self._layout_type = str(layout_type)
+
     @requires_state(AppState.JOINED)
     def get_coordinates(self):
         """
