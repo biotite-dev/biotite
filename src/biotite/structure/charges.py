@@ -183,6 +183,8 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     # The length of `bond_types` is zero in case of an AtomArray
     # consisting of atoms that are not connected to each other, e. g. if
     # the AtomArray exclusively contains ions
+    # The length the array must be checked as well as `any` and `all`
+    # evaluate to true if the iterable is empty
     if (np.all(bond_types == BondType.ANY)
         and
         bond_types.shape[0] != 0):
@@ -437,12 +439,16 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     elements = atom_array.element
     bonds, types = atom_array.bonds.get_all_bonds()
     amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
+
     # The maximum of a given row of the `types` array must be determined
     # as this value reveals the hybridisation state
     # An atom's overall BondType is assumed to be ANY as soon as one
     # BondType.ANY occurs
     try:
         bond_types = np.amax(types, axis=1)
+    except ValueError:
+        bond_types = np.array([])
+    else:
         zero_indices_in_first_dim = np.unique(
             np.nonzero(types == BondType.ANY)[0]
         )
@@ -485,8 +491,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                             bond_types[i] = BondType.SINGLE
                         else:
                             bond_types[i] =  BondType.DOUBLE
-    except ValueError:
-        bond_types = np.array([])
+
     damping = 1.0
     parameters = _get_parameters(
         elements, bond_types, amount_of_binding_partners
