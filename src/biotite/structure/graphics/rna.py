@@ -6,6 +6,7 @@ __name__ = "biotite.structure.graphics"
 __author__ = "Tom David Müller"
 __all__ = ["plot_nucleotide_secondary_structure"]
 
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 from .. import pseudoknots
@@ -93,7 +94,12 @@ def plot_nucleotide_secondary_structure(
         Path of the RNAplot binary.
     """
 
-    #TODO: Check if RNAplot is installed
+    # Check if RNAplot is installed
+    if shutil.which(bin_path) is None:
+        raise FileNotFoundError(
+            'RNAplot is not installed at the specified location, unable to '
+            'plot secondary structure.'
+        )
 
     # Get the unknotted base pairs
     if pseudoknot_order is None:
