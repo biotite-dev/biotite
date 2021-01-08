@@ -6,7 +6,7 @@ __author__ = "Patrick Kunzmann"
 
 import pkgutil
 import doctest
-import os.path
+from os.path import join
 import tempfile
 from importlib import import_module
 import numpy as np
@@ -39,7 +39,8 @@ RCSB_URL = "https://www.rcsb.org/"
     pytest.param("biotite.sequence.io.gff",     ["biotite.sequence",
                                                  "biotite.sequence.io.fasta"],
                  marks=pytest.mark.filterwarnings("ignore:")                 ),
-    pytest.param("biotite.structure",           ["biotite.structure.io"]     ),
+    pytest.param("biotite.structure",           ["biotite.structure.io",
+                                                 "biotite.structure.info"]   ),
     pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
                  marks=pytest.mark.skipif(
                     cannot_import("matplotlib"),
@@ -95,13 +96,13 @@ def test_doctest(package_name, context_package_names):
     
     # Add fixed names for certain paths
     globs["path_to_directory"]  = tempfile.gettempdir()
-    globs["path_to_structures"] = "./tests/structure/data/"
-    globs["path_to_sequences"]  = "./tests/sequence/data/"
+    globs["path_to_structures"] = join(".", "tests", "structure", "data")
+    globs["path_to_sequences"]  = join(".", "tests", "sequence", "data")
     # Add frequently used modules
     globs["np"] = np
     # Add frequently used objects
     globs["atom_array_stack"] = strucio.load_structure(
-        "./tests/structure/data/1l2y.mmtf"
+        join(".", "tests", "structure", "data", "1l2y.mmtf")
     )
     globs["atom_array"] = globs["atom_array_stack"][0]
     

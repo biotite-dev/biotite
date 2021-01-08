@@ -44,8 +44,6 @@ colors[caffeine.element == "C"] = (0.0, 0.8, 0.0) # green
 colors[caffeine.element == "N"] = (0.0, 0.0, 0.8) # blue
 colors[caffeine.element == "O"] = (0.8, 0.0, 0.0) # red
 
-# Create a quadratic figure to ensure a correct aspect ratio
-# in the visualized molecule
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="3d")
 graphics.plot_atoms(

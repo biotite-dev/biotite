@@ -105,7 +105,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         category : str
             The annotation category to be removed.
         """
-        if category not in self._annot:
+        if category in self._annot:
             del self._annot[str(category)]
             
     def get_annotation(self, category):
@@ -606,10 +606,10 @@ class AtomArray(_AtomArrayBase):
     coord : ndarray, dtype=float, shape=(n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
-    bonds: BondList or None
+    bonds : BondList or None
         A :class:`BondList`, specifying the indices of atoms
         that form a chemical bond.
-    box: ndarray, dtype=float, shape=(3,3) or None
+    box : ndarray, dtype=float, shape=(3,3) or None
         The surrounding box. May represent a MD simulation box
         or a crystallographic unit cell.
     shape : tuple of int
