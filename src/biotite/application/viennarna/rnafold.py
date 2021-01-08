@@ -26,14 +26,15 @@ class RNAfoldApp(LocalApp):
     sequence : NucleotideSequence
         The nucleotide sequence.
     temperature : int
-        The temperature to be assumed for the energy parameters.
+        The temperature (°C) to be assumed for the energy parameters.
     bin_path : str, optional
         Path of the RNAfold binary.
 
     Examples
     --------
 
-    >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+    >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
+    >>> app = RNAfoldApp(sequence)
     >>> app.start()
     >>> app.join()
     >>> print(app.get_mfe())
@@ -98,7 +99,8 @@ class RNAfoldApp(LocalApp):
         Examples
         --------
 
-        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
+        >>> app = RNAfoldApp(sequence)
         >>> app.start()
         >>> app.join()
         >>> print(app.get_mfe())
@@ -120,7 +122,8 @@ class RNAfoldApp(LocalApp):
         Examples
         --------
 
-        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
+        >>> app = RNAfoldApp(sequence)
         >>> app.start()
         >>> app.join()
         >>> print(app.get_dot_bracket())
@@ -143,7 +146,8 @@ class RNAfoldApp(LocalApp):
         Examples
         --------
 
-        >>> app = RNAfoldApp(NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC"))
+        >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
+        >>> app = RNAfoldApp(sequence)
         >>> app.start()
         >>> app.join()
         >>> print(app.get_base_pairs())
