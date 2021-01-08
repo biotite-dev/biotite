@@ -32,10 +32,10 @@ def dot_bracket_from_structure(
     Parameters
     ----------
     atom_array : AtomArray
-        The nucleic-acid-strand to be represented in DBL-notation.
+        The nucleic acid strand to be represented in DBL-notation.
     scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
-        :func:`pseudoknots()`
+        :func:`pseudoknots()`.
     max_pseudoknot_order : int (default: None)
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, it is represented as unpaired. If ``None``
@@ -56,7 +56,7 @@ def dot_bracket_from_structure(
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     basepairs = base_pairs(nucleic_acid_strand)
@@ -67,7 +67,7 @@ def dot_bracket_from_structure(
 
 def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     """
-    Represent a nucleic-acid-strand in dot-bracket-letter-notation
+    Represent a nucleic acid strand in dot-bracket-letter-notation
     (DBL-notation) [1]_.
 
     The nucleic acid strand is represented as nucleotide sequence,
@@ -86,7 +86,7 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     max_pseudoknot_order : int (default: None)
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, it is represented as unpaired. If ``None``
-        is given, all base pairs are evaluated.
+        is given, all pseudoknot orders are evaluated.
 
     Returns
     -------
@@ -119,15 +119,11 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
     """
     # Make sure the lower residue is on the left for each row
     basepairs = np.sort(basepairs, axis=1)
-
-    # Sort the first column in ascending order
-    original_indices = np.argsort(basepairs[:, 0])
-    basepairs = basepairs[original_indices]
 
     # Get pseudoknot order
     pseudoknot_order = pseudoknots(basepairs, scores=scores,
@@ -183,8 +179,9 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     .. [1] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
+    
     """
     basepairs = []
     opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]

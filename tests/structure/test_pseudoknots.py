@@ -3,6 +3,7 @@
 # information.
 
 import pytest
+import json
 import numpy as np
 import pickle as pkl
 import biotite.structure as struc
@@ -20,7 +21,7 @@ def nuc_sample_array():
 
 def test_pseudoknots(nuc_sample_array):
     """
-    Check the output of ``pseudoknots()``.
+    Check the output of :func:`pseudoknots()`.
     """
     # Known base pairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
@@ -44,7 +45,7 @@ def test_pseudoknots(nuc_sample_array):
         assert len(base_pairs) == len(optimal_solution)
         assert np.count_nonzero(optimal_solution == 1) == order_one_count
         assert np.count_nonzero(optimal_solution == 2) == order_two_count
-        assert np.amax(optimal_solution) == 2
+        assert np.max(optimal_solution) == 2
 
         # Assert that the each base pair has the right pseudoknot order
         for base_pair, order in zip(
@@ -62,27 +63,30 @@ def test_pseudoknots(nuc_sample_array):
 
 def load_test(name):
     """
-    Load sample basepair arrays and reference solutions from file.
+    Load sample base pair arrays and reference solutions from file.
     """
     # Base pairs as numpy array (input for `pseudoknots()`)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.pkl"),
-        "rb"
+        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.json"),
+        "r"
     ) as f:
-        basepairs = pkl.load(f)
+        basepairs = np.array(json.load(f))
     # List of solutions (set of tuples)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.pkl"),
+        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.json"),
         "rb"
     ) as f:
-        solutions = pkl.load(f)
+        solutions = json.load(f)
+    for i, solution in enumerate(solutions):
+        solutions[i] = set([tuple(pair) for pair in solution])
     return basepairs, solutions
 
 @pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
 def test_pseudoknot_removal(name):
     """
-    Test the implementation dynamic programming algorithm referenced in
-    `pseudoknots()` against the original implementation.
+    Test the implementation of the dynamic programming algorithm
+    referenced in :func:`pseudoknots()` against the original
+    implementation.
 
     The reference solutions were created with the following tool:
     https://www.ibi.vu.nl/programs/k2nwww/
@@ -112,8 +116,34 @@ def test_pseudoknot_removal(name):
     # Verify that the number of solutions matches the reference
     assert len(reference_solutions) == solutions_count
 
+@pytest.mark.parametrize("seed", range(10))
+def test_pseudoknot_orders(seed):
+    """
+    Generate a random set of basepairs. Assert that increasing
+    pseudoknot orders contain less or equal base pairs. Furthermore,
+    assert that each individual order only contains unknotted base
+    pairs.
+    """
+    # Generate Random set of basepairs
+    np.random.seed(seed)
+    bases = range(100)
+    basepairs = np.random.choice(bases, size=(20, 2), replace=False)
 
+    # Get pseudoknot order for each basepair
+    solutions = struc.pseudoknots(basepairs)
 
+    # Iterate through the solutions
+    for solution in solutions:
+        # Number of base pairs in the previous order
+        previous_order = -1
+        for order in range(np.max(solution)+1):
+            # Ensure that the base pairs of the same order are unknotted
+            assert (struc.pseudoknots(basepairs[solution == order]) == 0).all()
 
-
-
+            # Number of base pairs in the current order
+            this_order = len(solution[solution == order])
+            # Ensure that that higher orders contain less or equal base
+            # pairs than lower orders
+            if previous_order != -1:
+                assert this_order <= previous_order
+            previous_order = this_order

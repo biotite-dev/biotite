@@ -101,14 +101,18 @@ from .atoms import *
 from .bonds import *
 from .box import *
 from .celllist import *
+from .charges import *
 from .compare import *
 from .density import *
+from .dotbracket import *
 from .error import *
 from .filter import *
 from .geometry import *
 from .hbond import *
 from .integrity import *
 from .mechanics import *
+from .molecules import *
+from .pseudoknots import *
 from .rdf import *
 from .residues import *
 from .chains import *
@@ -117,6 +121,4 @@ from .sse import *
 from .superimpose import *
 from .transform import *
 from .basepairs import *
-from .pseudoknots import *
-from .dotbracket import *
 # util is used internally

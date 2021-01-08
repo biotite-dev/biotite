@@ -18,41 +18,87 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     Identify the pseudoknot order for each base pair in a given set of
     base pairs.
 
-    By default the algorithm maximizes the number of base pairs but an
-    optional score array specifying a score for each individual base
-    pair can be provided.
+    By default the algorithm removes base pairs until the remaining
+    base pairs are completely nested i.e. no pseudoknots appear.
+    The pseudoknot order of the removed base pairs is incremented and
+    the procedure is repeated with these base pairs.
+    Base pairs are removed in a way that maximizes the number of
+    remaining base pairs.
+    However, an optional score for each individual base pair can be
+    provided.
 
     Parameters
     ----------
     base_pairs : ndarray, dtype=int, shape=(n,2)
         The base pairs to determine the pseudoknot order of. Each row
         represents indices form two paired bases. The structure of
-        the ``ndarray`` is equal to the structure of the output of
+        the :class:`ndarray` is equal to the structure of the output of
         :func:`base_pairs()`, where the indices represent the
         beginning of the residues.
-    scores : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each base pair. If ``Ǹone`` is provided, the score
-        of each base pair is one.
-    max_pseudoknot_order : int (default: None)
+    scores : ndarray, dtype=int, shape=(n,), optional
+        The score for each base pair.
+        By default, the score of each base pair is ``1``.
+    max_pseudoknot_order : int, optional
         The maximum pseudoknot order to be found. If a base pair would
-        be of a higher order, its order is specified as -1. If ``None``
-        is given, all base pairs are evaluated.
+        be of a higher order, its order is specified as ``-1``.
+        By default, the algorithm is run until all base pairs
+        have an assigned pseudoknot order.
 
     Returns
     -------
     pseudoknot_order : ndarray, dtype=int, shape=(m,n)
-        The pseudoknot order for *m* individual solutions.
+        The pseudoknot order of the input `base_pairs`.
+        Multiple solutions that maximize the number of basepairs or
+        the given score, respectively, may be possible.
+        Therefore all *m* individual solutions are returned.
 
     Notes
     -----
-    Smit et al`s dynamic programming approach [1]_ is applied to detect
-    and evaluate pseudoknots. The algorithm was originally developed to
-    remove pseudoknots from a structure. However, if it is run
-    iteratively on removed knotted pairs it can be used to identify the
-    pseudoknot order.
+    The dynamic programming approach by Smit *et al* [1]_ is applied to
+    detect pseudoknots.
+    The algorithm was originally developed to remove pseudoknots from a
+    structure.
+    However, if it is run iteratively on removed knotted pairs it can be
+    used to identify the pseudoknot order.
 
     The pseudoknot order is defined as the minimum number of base pair
     set decompositions resulting in a nested structure [2]_.
+    Therefore, there are no pseudoknots between base pairs with the same
+    pseudoknot order.
+
+    Examples
+    --------
+    Remove the pseudoknotted base pair for the sequence *ABCbac*, where
+    the corresponding big and small letters each represent a base pair:
+
+    Define the base pairs as :class:`ndarray`:
+
+    >>> basepairs = np.array([[0, 4],
+    ...                       [1, 3],
+    ...                       [2, 5]])
+
+    Find the unknotted base pairs, optimizing for the maximum number of
+    base pairs:
+
+    >>> print(pseudoknots(basepairs, max_pseudoknot_order=0))
+    [[ 0  0 -1]]
+
+    This indicates that the base pair *Cc* is a pseudoknot.
+
+    Given the length of the sequence (6 bases), we can also represent
+    the unknotted structure in dot bracket notation:
+
+    >>> print(dot_bracket(basepairs, 6, max_pseudoknot_order=0)[0])
+    ((.)).
+
+    If the maximum pseudoknot order is not restricted, the order of the
+    knotted pairs is determined and can be represented using dot bracket
+    letter notation:
+
+    >>> print(pseudoknots(basepairs))
+    [[0 0 1]]
+    >>> print(dot_bracket(basepairs, 6)[0])
+    (([))]
 
     See Also
     --------
@@ -69,12 +115,12 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     .. [2] M Antczak, M Popenda and T Zok et al.,
        "New algorithms to represent complex pseudoknotted RNA structures
-        in dot-bracket notation.",
+       in dot-bracket notation.",
        Bioinformatics, 34(8), 1304-1312 (2018).
 
     """
     # List containing the results
-    results = [np.zeros(len(base_pairs), dtype='int32')]
+    results = [np.full(len(base_pairs), -1, dtype='int32')]
 
     # if no score array is given, each base pairs' score is one
     if scores is None:
@@ -83,8 +129,8 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     # Make sure `base_pairs` has the same length as the score array
     if len(base_pairs) != len(scores):
         raise ValueError(
-        "Each Value of the score array must correspond to a base pair"
-    )
+            "'base_pair' and 'scores' must have the same shape"
+        )
 
     # Split the base pairs in regions
     regions = _find_regions(base_pairs, scores)
@@ -182,8 +228,8 @@ def _find_regions(base_pairs, scores):
     sorted_base_pairs = sorted_base_pairs[original_indices]
 
     # Rank each base
-    # E.g.: [[3, 5]  --> [[1, 2]
-    #        [9, 7]]      [4, 3]]
+    # E.g.: [[3, 5]  --> [[0, 1]
+    #        [9, 7]]      [3, 2]]
     order = np.argsort(sorted_base_pairs.flatten())
     rank = np.argsort(order).reshape(base_pairs.shape)
 
@@ -201,17 +247,19 @@ def _find_regions(base_pairs, scores):
 
         # Check if the current base pair belongs to the region that is
         # currently being defined
-        previous_upstream_rank = rank[i-1][0]
-        this_upstream_rank = rank[i][0]
-        previous_downstream_rank = rank[i-1][1]
-        this_downstream_rank = rank[i][1]
+        previous_upstream_rank = rank[i-1, 0]
+        this_upstream_rank = rank[i, 0]
+        previous_downstream_rank = rank[i-1, 1]
+        this_downstream_rank = rank[i, 1]
 
         # if the current base pair belongs to a new region, save the
         # current region and start a new region
         if ((previous_downstream_rank - this_downstream_rank) != 1 or
             (this_upstream_rank - previous_upstream_rank) != 1):
-            regions.add(_Region(base_pairs, np.array(region_pairs), scores))
-            region_pairs = []
+                regions.add(
+                    _Region(base_pairs, np.array(region_pairs), scores)
+                )
+                region_pairs = []
 
         # Append the current base pair to the region
         region_pairs.append(original_indices[i])
@@ -223,29 +271,29 @@ def _find_regions(base_pairs, scores):
     return regions
 
 
-def _remove_non_conflicting_regions(regions):
+def _find_non_conflicting_regions(regions):
     """
-    Remove regions that are not conflicting.
+    Find regions that are not conflicting.
 
     Parameters
     ----------
     regions : set {_region, ...}
-        Regions including non-conflicting regions.
+        Regions including conflicting regions.
 
     Returns
     -------
     regions : set {_region, ...}
-        The regions without non-conflicting regions.
+        The non-conflicting regions.
     """
     # Get the region array and a boolean array, where the start of each
-    # region ``True``.
+    # region is ``True``.
     region_array, (start_stops,) = _get_region_array_for(
         regions, content=[lambda a : [True, False]], dtype=['bool']
     )
     starts = np.nonzero(start_stops)[0]
 
     # Regions that are not conflicting
-    to_remove = []
+    non_conflicting_regions = set()
     for start_index in starts:
         # Get the current regions start and stop indices in the region
         # array
@@ -262,17 +310,15 @@ def _remove_non_conflicting_regions(regions):
         # if no regions are between the start and stop indices the
         # region is non-conflicting
         if len(counts) == 0:
-            to_remove.append(region_array[start_index])
+            non_conflicting_regions.add(region_array[start_index])
         # if every region between the start and stop indices has its
         # start and stop between the current region's start and stop
         # indices the current region is not conflicting
         elif np.amin(counts) == 2:
-            to_remove.append(region_array[start_index])
+            non_conflicting_regions.add(region_array[start_index])
 
-    # Remove all non conflicting regions and return the set of
-    # conflicting regions
-    region_array = region_array[~ np.isin(region_array, to_remove)]
-    return set(region_array)
+    # Return the non-conflicting regions
+    return non_conflicting_regions
 
 
 def _get_first_occurrence_for(iterable, wanted_object):
@@ -298,7 +344,7 @@ def _get_first_occurrence_for(iterable, wanted_object):
 
 def _get_region_array_for(regions, content=[], dtype=[]):
     """
-    Get a ``ndarray`` of region objects. Each object occurs twice,
+    Get a :class:`ndarray` of region objects. Each object occurs twice,
     representing its start and end point. The regions positions in the
     array reflect their relative positions.
 
@@ -556,13 +602,21 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     """
 
     # Remove non-conflicting regions
-    regions = _remove_non_conflicting_regions(regions)
+    non_conflicting = _find_non_conflicting_regions(regions)
+    regions = regions - non_conflicting
+
+    # Non-conflicting regions are of the current order:
+    index_list_non_conflicting = list(
+            chain(
+                *[region.get_index_array() for region in non_conflicting]
+            )
+        )
+    for result in results:
+        result[index_list_non_conflicting] = order
+
 
     # If no conflicts remain, the results are complete
     if len(regions) == 0:
-        # All remaining knotted pairs are of the current order
-        for i, result in enumerate(results):
-            results[i][result == -1] = order
         return results
 
     # Get the optimal solutions for given regions. Evaluate each clique
@@ -581,30 +635,26 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     for i, solution in enumerate(solutions):
 
         # Get the pseudoknotted regions
-        pseudoknoted_regions = regions - solution
+        pseudoknotted_regions = regions - solution
 
-        # Get an index list of the knotted base pairs
-        index_list_knoted = list(
+        # Get an index list of the unknotted base pairs
+        index_list_unknotted = list(
             chain(
-                *[region.get_index_array() for region in pseudoknoted_regions]
+                *[region.get_index_array() for region in solution]
             )
         )
 
         # Write results for current solution
         for j, result in enumerate(results_list[i]):
-            # Set all knotted regions of last round to current order
-            result[result == -1] = order
-            # Set all knotted regions of this round to -1 as they are
-            # still to be evaluated
-            result[index_list_knoted] = -1
+            result[index_list_unknotted] = order
 
-        # If this order is the maximum specified order, stop evaluation
+        # If this order is the specified maximum order, stop evaluation
         if max_pseudoknot_order == order:
             continue
 
         # Evaluate the pseudoknotted region
         results_list[i] = _get_results(
-            pseudoknoted_regions, results_list[i],
+            pseudoknotted_regions, results_list[i],
             max_pseudoknot_order, order=order+1
         )
 

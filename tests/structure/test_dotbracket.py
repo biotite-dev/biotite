@@ -106,5 +106,5 @@ def test_base_pairs_from_dot_bracket(
     DBL-notation
     """
     for notation in expected_output:
-        computed_residue_positions = struc.base_pairs_from_dot_bracket(notation)
-        assert np.all(computed_residue_positions == basepair_residue_positions)
+        test_residue_positions = struc.base_pairs_from_dot_bracket(notation)
+        assert np.all(test_residue_positions == basepair_residue_positions)

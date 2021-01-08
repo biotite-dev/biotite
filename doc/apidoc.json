@@ -183,7 +183,6 @@
             "index_angle",
             "dihedral",
             "index_dihedral",
-            "dihedral_backbone",
             "centroid",
             "mass_center",
             "gyration_radius",
@@ -232,21 +231,39 @@
             "get_chain_count",
             "chain_iter"
         ],
+        "Molecule level utility" : [
+            "get_molecule_indices",
+            "get_molecule_masks",
+            "molecule_iter"
+        ],
         "Structure comparison" : [
             "average",
             "rmsd",
             "rmsf"
         ],
-        "Advanced analysis" : [
+        "General analysis" : [
             "sasa",
-            "annotate_sse",
             "hbond",
             "hbond_frequency",
+            "partial_charges",
+            "density"
+        ],
+        "Proteins" : [
+            "dihedral_backbone",
+            "annotate_sse"
+        ],
+        "Nucleic acids" : [
+            "Edge",
+            "GlycosidicBond",
+            "map_nucleotide",
             "base_pairs",
             "base_stacking",
-            "pseudoknots"
+            "pseudoknots",
             "base_pairs_edge",
-            "base_pairs_glycosidic_bond"
+            "base_pairs_glycosidic_bond",
+            "dot_bracket",
+            "dot_bracket_from_structure",
+            "base_pairs_from_dot_bracket"
         ]
     }
 }
