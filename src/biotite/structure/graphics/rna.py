@@ -22,10 +22,12 @@ def plot_nucleotide_secondary_structure(
     ):
     """
     Generate 2D plots of nucleic acid secondary structures using the 
-    interface to ``RNAplot`` in the ``biotite.application.viennarna`` 
-    subpackage.
+    interface to RNAplot, which is part of the ViennaRNA software
+    package.
 
-    ``ViennaRNA`` must be installed in order to use this function.
+    Internally a :class:`RNAplotAPP` instance is created to generate 
+    coordinates for each individual base on a 2D plane. ViennaRNA must 
+    be installed in order to use this function.
 
     Parameters
     ----------
@@ -37,14 +39,19 @@ def plot_nucleotide_secondary_structure(
     length : int
         The number of bases in the sequence.
     layout_type : int, optional (default: 1)
-        The layout type according to the `RNAplot` documentation:
-            0: simple radial layout
-            1: Naview layout (Bruccoleri et al. 1988)
-            2: circular layout
-            3: RNAturtle (Wiegreffe et al. 2018)
-            4: RNApuzzler (Wiegreffe et al. 2018)
+        The layout type according to the RNAplot documentation:
+
+            0: Simple radial layout
+
+            1: Naview layout
+
+            2: Circular layout
+
+            3: RNAturtle
+
+            4: RNApuzzler
     draw_pseudoknots : bool, optional (default: True)
-        Whether the bonds between pseudoknots should be drawn.
+        Whether pseudoknotted bonds should be drawn.
     angle : int
         The angle the plot should be rotated.
     bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
@@ -52,21 +59,21 @@ def plot_nucleotide_secondary_structure(
         linewidth for all bonds or an array to set the linewidth for 
         each individual bond.
     bond_linestyle : str or ndarray, shape(n,), optional (default: None)
-        The *Matplotlib* linestyle of each bond. Provide a single value 
-        to set the linewidth for all bonds or an array to set the 
-        linewidth for each individual bond. By default, solid lines are 
-        used for non-pseudoknotted bonds and dashed lines are used for 
-        pseudoknotted bonds.
+        The *Matplotlib* compatible linestyle of each bond. Provide a
+        single value to set the linewidth for all bonds or an array to 
+        set the linewidth for each individual bond. By default, solid 
+        lines are used for non-pseudoknotted bonds and dashed lines are 
+        used for pseudoknotted bonds.
     bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4),
                  optional (default: 'black')
-        The *Matplotlib* color of each bond. Provide a single value to 
-        set the color for all bonds or an array to set the color for 
-        each individual bond. Furthermore, the color for each individual 
-        bond can be provided as array of RGB or RGBA colors.
+        The *Matplotlib* compatible color of each bond. Provide a single 
+        string to set the color for all bonds or an array to set the 
+        color for each individual bond. Furthermore, the color for each 
+        individual bond can be provided as array of RGB or RGBA colors.
     backbone_linewidth : float, optional (default: 1)
         The linewidth of the backbone.
     backbone_linestyle : str (default: 'solid')
-        The *Matplotlib* linestyle of the backbone.
+        The *Matplotlib* compatible linestyle of the backbone.
     backbone_color : str or ndarray, shape=(3,) or shape=(4,), 
                      dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
@@ -77,9 +84,9 @@ def plot_nucleotide_secondary_structure(
         The positions of the bases to be numbered as integers. By 
         default every second base is annotated. Please note that while
         the positions in the sequence are counted from zero, they are
-        displayed in the graph counted from one.
+        displayed on the graph counted from one.
     annotation_offset : int, optional (default: 8.5)
-        The offset of the annotations from the base pair labels.
+        The offset of the annotations from the base labels.
     annotation_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the annotations.
     bin_path : str, optional
