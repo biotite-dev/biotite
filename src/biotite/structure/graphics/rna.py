@@ -82,10 +82,10 @@ def plot_nucleotide_secondary_structure(
         The *Matplotlib* compatible font of the labels denoting the type
         of each base.
     annotation_positions : iterable, optional (default: None)
-        The positions of the bases to be numbered as integers. By 
-        default every second base is annotated. Please note that while
-        the positions in the sequence are counted from zero, they are
-        displayed on the graph counted from one.
+        The positions of the bases to be numbered. By default every 
+        second base is annotated. Please note that while the positions 
+        in the sequence are counted from zero, they are displayed on the 
+        graph counted from one.
     annotation_offset : int, optional (default: 8.5)
         The offset of the annotations from the base labels.
     annotation_font : dict, optional (default: {'size': 'smaller'})
