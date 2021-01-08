@@ -15,7 +15,7 @@ from ...structure.dotbracket import dot_bracket as dot_bracket_
 
 class RNAplotApp(LocalApp):
     """
-    Get coordinates for a 2d representation of any unknotted RNA
+    Get coordinates for a 2D representation of any unknotted RNA
     structure using ViennaRNA's RNAplot.
 
     The structure has to be provided either in dot bracket notation or
@@ -35,11 +35,16 @@ class RNAplotApp(LocalApp):
         The number of bases in the strand.
     layout_type : int, optional (default: 1)
         The layout type according to the `RNAplot` documentation:
-            0: simple radial layout
-            1: Naview layout (Bruccoleri et al. 1988)
-            2: circular layout
-            3: RNAturtle (Wiegreffe et al. 2018)
-            4: RNApuzzler (Wiegreffe et al. 2018)
+
+            0: Simple radial layout
+
+            1: Naview layout
+
+            2: Circular layout
+
+            3: RNAturtle
+
+            4: RNApuzzler
     bin_path : str, optional
         Path of the RNAplot binary.
 
@@ -100,10 +105,15 @@ class RNAplotApp(LocalApp):
         """
         Adjust the layout type for the plot according to the `RNAplot` 
         documentation:
+
             0: simple radial layout
+
             1: Naview layout (Bruccoleri et al. 1988)
+
             2: circular layout
+
             3: RNAturtle (Wiegreffe et al. 2018)
+
             4: RNApuzzler (Wiegreffe et al. 2018)
 
         Parameters
@@ -116,12 +126,12 @@ class RNAplotApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_coordinates(self):
         """
-        Get coordinates for a 2d representation of the input structure.
+        Get coordinates for a 2D representation of the input structure.
 
         Returns
         -------
         coordinates : ndarray, shape=(n,2)
-            The 2d coordinates. Each row represents the *x* and *y*
+            The 2D coordinates. Each row represents the *x* and *y*
             coordinates for a total sequence length of *n*.
 
         Examples
@@ -144,7 +154,7 @@ class RNAplotApp(LocalApp):
     def compute_coordinates(dot_bracket=None, base_pairs=None, length=None,
                             layout_type=1, bin_path="RNAplot"):
         """
-        Get coordinates for a 2d representation of any unknotted RNA
+        Get coordinates for a 2D representation of any unknotted RNA
         structure using ViennaRNA's RNAplot.
 
         The structure has to be provided either in dot bracket notation
@@ -168,7 +178,7 @@ class RNAplotApp(LocalApp):
         Returns
         -------
         coordinates : ndarray, shape=(n,2)
-            The 2d coordinates. Each row represents the *x* and *y*
+            The 2D coordinates. Each row represents the *x* and *y*
             coordinates for a total sequence length of *n*.
         """
         app = RNAplotApp(dot_bracket=dot_bracket, base_pairs=base_pairs,
