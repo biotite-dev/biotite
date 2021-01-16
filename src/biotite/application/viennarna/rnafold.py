@@ -47,7 +47,7 @@ class RNAfoldApp(LocalApp):
         super().__init__(bin_path)
         self._sequence = sequence
         self._in_file  = NamedTemporaryFile("w", suffix=".fa",  delete=False)
-        self._temperature = str(37)
+        self._temperature = str(temperature)
 
     def run(self):
         in_file = FastaFile()
@@ -76,9 +76,9 @@ class RNAfoldApp(LocalApp):
     @requires_state(AppState.CREATED)
     def set_temperature(self, temperature):
         """
-        Adjust the energy parameters according to a temperature in 
+        Adjust the energy parameters according to a temperature in
         degrees Celsius.
-        
+
         Parameters
         ----------
         temperature : int
