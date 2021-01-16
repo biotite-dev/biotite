@@ -16,7 +16,7 @@ from ...structure.dotbracket import dot_bracket as dot_bracket_
 class RNAplotApp(LocalApp):
     """
     Get coordinates for a 2D representation of any unknotted RNA
-    structure using ViennaRNA's RNAplot.
+    structure using *ViennaRNA's* *RNAplot*.
 
     The structure has to be provided either in dot bracket notation or
     as a ``ndarray`` of base pairs and the total sequence length.
@@ -63,7 +63,7 @@ class RNAplotApp(LocalApp):
      [-107.5 ,   92.5 ]]
     """
 
-    def __init__(self, dot_bracket=None, base_pairs=None, length=None, 
+    def __init__(self, dot_bracket=None, base_pairs=None, length=None,
                  layout_type=1, bin_path="RNAplot"):
         super().__init__(bin_path)
 
@@ -78,7 +78,7 @@ class RNAplotApp(LocalApp):
                 "Structure has to be provided in either dot bracket notation "
                 "or as base pairs and total sequence length"
             )
-        
+
         self._layout_type = str(layout_type)
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
 
@@ -103,7 +103,7 @@ class RNAplotApp(LocalApp):
     @requires_state(AppState.CREATED)
     def set_layout_type(self, layout_type):
         """
-        Adjust the layout type for the plot according to the `RNAplot` 
+        Adjust the layout type for the plot according to the `RNAplot`
         documentation:
 
             0: simple radial layout
@@ -155,7 +155,7 @@ class RNAplotApp(LocalApp):
                             layout_type=1, bin_path="RNAplot"):
         """
         Get coordinates for a 2D representation of any unknotted RNA
-        structure using ViennaRNA's RNAplot.
+        structure using *ViennaRNA's* *RNAplot*.
 
         The structure has to be provided either in dot bracket notation
         or as a ``ndarray`` of base pairs and the total sequence length.
@@ -173,7 +173,7 @@ class RNAplotApp(LocalApp):
         length : int, optional (default: None)
             The number of bases in the strand.
         bin_path : str, optional
-            Path of the RNAplot binary.
+            Path of the *RNAplot* binary.
 
         Returns
         -------
@@ -182,7 +182,7 @@ class RNAplotApp(LocalApp):
             coordinates for a total sequence length of *n*.
         """
         app = RNAplotApp(dot_bracket=dot_bracket, base_pairs=base_pairs,
-                         length=length, layout_type=layout_type, 
+                         length=length, layout_type=layout_type,
                          bin_path=bin_path)
         app.start()
         app.join()

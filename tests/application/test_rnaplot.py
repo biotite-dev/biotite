@@ -11,8 +11,8 @@ from ..util import is_not_installed
 @pytest.fixture
 def sample_app():
     """
-    Provide a `RNAplotApp` object, where RNAplot has been executed for a
-    sample structure.
+    Provide a `RNAplotApp` object, where *RNAplot* has been executed for
+    a sample structure.
     """
     app = RNAplotApp('((..))')
     app.start()

@@ -16,7 +16,7 @@ from ...structure.dotbracket import base_pairs_from_dot_bracket
 class RNAfoldApp(LocalApp):
     """
     Compute the minimum free energy secondary structure of a nucleic
-    acid sequence using ViennaRNA's RNAfold software.
+    acid sequence using *ViennaRNA's* *RNAfold* software.
 
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
@@ -28,7 +28,7 @@ class RNAfoldApp(LocalApp):
     temperature : int
         The temperature (°C) to be assumed for the energy parameters.
     bin_path : str, optional
-        Path of the RNAfold binary.
+        Path of the *RNAfold* binary.
 
     Examples
     --------
@@ -171,7 +171,7 @@ class RNAfoldApp(LocalApp):
     def compute_secondary_structure(sequence, bin_path="RNAfold"):
         """
         Compute the minimum free energy secondary structure of a nucleic
-        acid sequence using ViennaRNA's RNAfold software.
+        acid sequence using *ViennaRNA's* *RNAfold* software.
 
         This is a convenience function, that wraps the
         :class:`RNAfoldApp` execution.
@@ -181,7 +181,7 @@ class RNAfoldApp(LocalApp):
         sequence : NucleotideSequence
             The nucleotide sequence.
         bin_path : str, optional
-            Path of the RNAfold binary.
+            Path of the *RNAfold* binary.
 
         Returns
         -------

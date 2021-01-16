@@ -12,8 +12,8 @@ from ..util import is_not_installed
 @pytest.fixture
 def sample_app():
     """
-    Provide a `RNAfoldApp` object, where RNAfold has been executed for a
-    sample sequence.
+    Provide a `RNAfoldApp` object, where *RNAfold* has been executed for
+    a sample sequence.
     """
     sequence = seq.NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
     app = RNAfoldApp(sequence)
