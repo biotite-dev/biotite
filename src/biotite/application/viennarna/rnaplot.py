@@ -9,6 +9,7 @@ __all__ = ["RNAplotApp"]
 import numpy as np
 from tempfile import NamedTemporaryFile
 from os import remove
+from enum import IntEnum
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
 from ...structure.dotbracket import dot_bracket as dot_bracket_
@@ -81,6 +82,13 @@ class RNAplotApp(LocalApp):
 
         self._layout_type = str(layout_type)
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
+
+    class Layout(IntEnum):
+        RADIAL = 0,
+        NAVIEW = 1,
+        CIRCULAR = 2
+        RNATURTLE = 3
+        RNAPUZZLER = 4
 
     def run(self):
         self._in_file.write("N"*len(self._dot_bracket) + "\n")
