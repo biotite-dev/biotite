@@ -86,8 +86,8 @@ class RNAplotApp(LocalApp):
     class Layout(IntEnum):
         RADIAL = 0,
         NAVIEW = 1,
-        CIRCULAR = 2
-        RNATURTLE = 3
+        CIRCULAR = 2,
+        RNATURTLE = 3,
         RNAPUZZLER = 4
 
     def run(self):
