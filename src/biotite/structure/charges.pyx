@@ -9,13 +9,24 @@ PEOE algorithm of Gasteiger-Marsili.
 """
 
 __name__ = "biotite.charges"
-__author__ = "Jacob Marcel Anter"
+__author__ = "Jacob Marcel Anter, Patrick Kunzmann"
 __all__ = ["partial_charges"]
+
+cimport cython
+cimport numpy as np
+from libc.math cimport isnan
 
 import warnings
 import numpy as np
 from .info import residue
 from biotite.structure import AtomArray, BondType
+
+
+ctypedef np.float32_t float32
+ctypedef np.uint32_t uint32
+
+
+cdef float32 NAN = np.nan
 
 
 # Creating two dictionaries to retrieve parameters for electronegativity
@@ -35,7 +46,7 @@ from biotite.structure import AtomArray, BondType
 # amount of binding partners of the remaining oxygen is one; this would
 # erroneously lead to an identification of the hybridisation state as
 # sp2 although it is still sp3)
-EN_PARAM_BTYPE = {
+cdef dict EN_PARAM_BTYPE = {
     "H": {
         BondType.SINGLE:   (7.17, 6.24, -0.56)
     },
@@ -84,7 +95,7 @@ EN_PARAM_BTYPE = {
     }        
 }
 
-EN_PARAM_BPARTNERS = {
+cdef dict EN_PARAM_BPARTNERS = {
     "H": {
         1: (7.17, 6.24, -0.56)
     },
@@ -248,7 +259,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
 
-    parameters = np.zeros((elements.shape[0], 3))
+    parameters = np.zeros((elements.shape[0], 3), dtype=np.float32)
 
     has_atom_key_error = False
     has_valence_key_error = False
@@ -350,7 +361,9 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                     )
                     has_valence_key_error = True
                 parameters[i, :] = np.nan
-        
+    
+
+    # Error and warning handling
     if some_btype_equal_zero:
         warnings.warn(
             f"Some atoms' bond type is unspecified, i. e. the bond "
@@ -413,11 +426,14 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             UserWarning
         )
 
+
     return parameters
 
 
-def partial_charges(atom_array, iteration_step_num=6, charges=None):
+def partial_charges(atom_array, int iteration_step_num=6, charges=None):
     """
+    partial_charges(atom_array, iteration_step_num=6, charges=None)
+
     Compute the partial charge of the individual atoms comprised in a
     given :class:`AtomArray` depending on their electronegativity.
 
@@ -446,7 +462,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     
     Returns
     -------
-    charges: ndarray, dtype=float
+    charges: ndarray, dtype=float32
         The partial charge values of the individual atoms in the input
         `atom_array`.
     
@@ -491,18 +507,18 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     >>> print(partial_charges(fluoromethane, iteration_step_num=6))
     [ 0.079 -0.253  0.058  0.058  0.058]
     """
-    
     if atom_array.bonds is None:
         raise AttributeError(
             f"The input AtomArray doesn't possess an associated "
             f"BondList."
         )
+    
     if charges is None:
         try:
             # Implicitly this creates a copy of the charges
-            charges = atom_array.charge.astype(np.float)
+            charges = atom_array.charge.astype(np.float32)
         except AttributeError:
-            charges = np.zeros(atom_array.shape[0])
+            charges = np.zeros(atom_array.shape[0], dtype=np.float32)
             warnings.warn(
                 f"A charge array was neither given as optional "
                 f"argument, nor does a charge annotation of the "
@@ -510,6 +526,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 f"formal charge is assumed to be zero.",
                 UserWarning
             )
+    cdef float32[:] charges_v = charges
 
     elements = atom_array.element
     bonds, types = atom_array.bonds.get_all_bonds()
@@ -522,18 +539,16 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     try:
         bond_types = np.amax(types, axis=1)
     except ValueError:
+        # No bonds between atoms
+        # -> types has shape (n,0)
+        # -> np.amax() raises ValueError
         bond_types = np.array([])
     else:
-        zero_indices_in_first_dim = np.unique(
-            np.nonzero(types == BondType.ANY)[0]
+        bond_types[np.any(types == BondType.ANY, axis=1)] = BondType.ANY
+        bond_types = _determine_aromatic_nitrogen_hybridisation(
+            elements, types, bond_types, charges
         )
-        bond_types[zero_indices_in_first_dim] = BondType.ANY
-        if "N" in elements:
-            bond_types = _determine_aromatic_nitrogen_hybridisation(
-                elements, types, bond_types, charges
-            )
             
-    damping = 1.0
     parameters = _get_parameters(
         elements, bond_types, amount_of_binding_partners
     )
@@ -542,30 +557,42 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
     pos_en_values = np.sum(parameters, axis=1)
     # Substituting values for hydrogen with the special value
     pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
+    cdef float32[:] pos_en_values_v = pos_en_values
+
+
+    cdef float32 damping = 1.0
+    cdef float32 divisor
+    cdef float32 charge_transfer
+    cdef uint32[:,:] bonds_v = atom_array.bonds.as_array()
+    cdef int bond_index
+    # Indices to atoms involved in a bonds
+    cdef uint32 i, j
+    cdef float32[:] en_values_v
 
     for _ in range(iteration_step_num):
         # In the beginning of each iteration step, the damping factor is 
         # halved in order to guarantee rapid convergence
         damping *= 0.5
-        # For performing matrix-matrix-multiplication, the array
-        # containing the charges, the array containing the squared
-        # charges and another array consisting of entries of '1' and
-        # having the same length as the previous two are converted into
-        # column vectors and then merged to one array
-        column_charges = np.transpose(np.atleast_2d(charges))
-        sq_column_charges = np.transpose(np.atleast_2d(charges**2))
-        ones_vector = np.transpose(
-            np.atleast_2d(np.full(atom_array.shape[0], 1))
+        # Calculate electronegativity via vectorization:
+        # X = a + bQ + cQ^2 
+        charge_factor = np.stack((
+            np.ones(atom_array.array_length()),
+            charges,
+            charges**2
+        ), axis=-1)
+        en_values_v = np.sum(
+            parameters * charge_factor,
+            axis=1, dtype=np.float32
         )
-        charge_array = np.concatenate(
-            (ones_vector, column_charges,sq_column_charges), axis=1
-        )
-        en_values = np.sum(parameters * charge_array, axis=1)
-        for i, j, _ in atom_array.bonds.as_array():
+        # Iterate over bonds to transfer charges
+        # based on new electronegativity values
+        for bond_index in range(bonds_v.shape[0]):
+            i = bonds_v[bond_index, 0]
+            j = bonds_v[bond_index, 1]
             # For atoms that are not available in the dictionary,
             # but which are incorporated into molecules,
             # the partial charge is set to NaN
-            if np.isnan(en_values[[i, j]]).any():
+            if isnan(en_values_v[i]) or isnan(en_values_v[j]):
                 # Determining for which atom exactly no parameters are
                 # available is necessary since the other atom, for which
                 # there indeed are parameters, could be involved in
@@ -574,18 +601,19 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 # the result.
                 # The case that both atoms are not parametrized must be
                 # considered as well.
-                if np.isnan(en_values[i]):
-                    charges[i] = np.nan
-                if np.isnan(en_values[j]):
-                    charges[j] = np.nan
+                if isnan(en_values_v[i]):
+                    charges_v[i] = NAN
+                if isnan(en_values_v[j]):
+                    charges_v[j] = NAN
             else:
-                if en_values[j] > en_values[i]:
-                    divisor = pos_en_values[i]
+                if en_values_v[j] > en_values_v[i]:
+                    divisor = pos_en_values_v[i]
                 else:
-                    divisor = pos_en_values[j]
-                charge_transfer = ((en_values[j] - en_values[i]) /
-                    divisor) * damping
-                charges[i] += charge_transfer
-                charges[j] -= charge_transfer
+                    divisor = pos_en_values_v[j]
+                charge_transfer = (
+                    (en_values_v[j] - en_values_v[i]) / divisor
+                ) * damping
+                charges_v[i] += charge_transfer
+                charges_v[j] -= charge_transfer
 
     return charges
