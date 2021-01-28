@@ -15,12 +15,11 @@ from ...application.viennarna import RNAplotApp
 
 def plot_nucleotide_secondary_structure(
     base_labels, base_pairs, length, layout_type=RNAplotApp.Layout.NAVIEW, 
-    draw_pseudoknots=True, pseudoknot_order=None, angle=0, bond_linewidth=1, 
+    draw_pseudoknots=True, pseudoknot_order=None, angle=0, bond_linewidth=1,
     bond_linestyle=None, bond_color='black', backbone_linewidth=1, 
-    backbone_linestyle='solid', backbone_color='grey', 
-    base_font={'size': 'small'}, base_box={'pad': 0, 'color': 'white'}, 
-    annotation_positions=None, annotation_offset=8.5, 
-    annotation_font={'size': 'smaller'}, bin_path="RNAplot"
+    backbone_linestyle='solid', backbone_color='grey', base_font=None, 
+    base_box=None, annotation_positions=None, annotation_offset=8.5, 
+    annotation_font=None, bin_path="RNAplot"
     ):
     """
     Generate 2D plots of nucleic acid secondary structures using the 
@@ -129,7 +128,19 @@ def plot_nucleotide_secondary_structure(
     if not draw_pseudoknots:
         bond_linestyle[pseudoknot_order != 0] = 'None'
     
-    
+    # Set the default font properties of the base labels
+    if base_font is None:
+        base_font={'size': 'small'}
+
+    # Set the default properties of the Matplotlib `bbox` surrounding
+    # the base labels
+    if base_box is None:
+        base_box={'pad': 0, 'color': 'white'}
+
+    # Set the default font properties of the base annotations
+    if annotation_font is None:
+        annotation_font={'size': 'smaller'}
+
     # If no specific annotation positions are given, annotate every
     # second base pair
     if annotation_positions is None:
