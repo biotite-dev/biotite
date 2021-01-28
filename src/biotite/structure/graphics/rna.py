@@ -100,6 +100,8 @@ def plot_nucleotide_secondary_structure(
 
     # Get the unknotted base pairs
     if pseudoknot_order is None:
+        # Get a random unknotted structure retaining the maximum number
+        # of base pairs.
         pseudoknot_order = pseudoknots(base_pairs, max_pseudoknot_order=0)[0]
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
 
