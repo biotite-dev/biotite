@@ -45,7 +45,7 @@ def plot_nucleotide_secondary_structure(
         Whether pseudoknotted bonds should be drawn.
     pseudoknot_order : ndarray, dtype=int, shape=(m,n)
         The pseudoknot order of the input `base_pairs`.
-    angle : int
+    angle : int or float
         The angle the plot should be rotated.
     bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
         The linewidth of each bond. Provide a single value to set the
