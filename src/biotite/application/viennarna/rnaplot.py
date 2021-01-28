@@ -34,20 +34,10 @@ class RNAplotApp(LocalApp):
         strand.
     length : int, optional (default: None)
         The number of bases in the strand.
-    layout_type : int, optional (default: 1)
-        The layout type according to the `RNAplot` documentation:
-
-            0: Simple radial layout
-
-            1: Naview layout
-
-            2: Circular layout
-
-            3: RNAturtle
-
-            4: RNApuzzler
+    layout_type : RNAplotApp.Layout (default: RNAplotApp.Layout.NAVIEW)
+        The layout type according to the *RNAplot* documentation.
     bin_path : str, optional
-        Path of the RNAplot binary.
+        Path of the *RNAplot* binary.
 
     Examples
     --------
@@ -64,8 +54,19 @@ class RNAplotApp(LocalApp):
      [-107.5 ,   92.5 ]]
     """
 
+    class Layout(IntEnum):
+        """
+        This enum type represents the layout type of the plot according
+        to the official *RNAplot* orientation.
+        """
+        RADIAL = 0,
+        NAVIEW = 1,
+        CIRCULAR = 2,
+        RNATURTLE = 3,
+        RNAPUZZLER = 4
+
     def __init__(self, dot_bracket=None, base_pairs=None, length=None,
-                 layout_type=1, bin_path="RNAplot"):
+                 layout_type=Layout.NAVIEW, bin_path="RNAplot"):
         super().__init__(bin_path)
 
         if dot_bracket is not None:
@@ -80,15 +81,9 @@ class RNAplotApp(LocalApp):
                 "or as base pairs and total sequence length"
             )
 
-        self._layout_type = str(layout_type)
+        # Get the value of the enum type
+        self._layout_type = str(int(layout_type))
         self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
-
-    class Layout(IntEnum):
-        RADIAL = 0,
-        NAVIEW = 1,
-        CIRCULAR = 2,
-        RNATURTLE = 3,
-        RNAPUZZLER = 4
 
     def run(self):
         self._in_file.write("N"*len(self._dot_bracket) + "\n")
@@ -111,22 +106,12 @@ class RNAplotApp(LocalApp):
     @requires_state(AppState.CREATED)
     def set_layout_type(self, layout_type):
         """
-        Adjust the layout type for the plot according to the `RNAplot`
-        documentation:
-
-            0: simple radial layout
-
-            1: Naview layout (Bruccoleri et al. 1988)
-
-            2: circular layout
-
-            3: RNAturtle (Wiegreffe et al. 2018)
-
-            4: RNApuzzler (Wiegreffe et al. 2018)
+        Adjust the layout type for the plot according to the *RNAplot*
+        documentation.
 
         Parameters
         ----------
-        type : int
+        type : RNAplotApp.Layout
             The layout type.
         """
         self._layout_type = str(layout_type)
@@ -159,8 +144,10 @@ class RNAplotApp(LocalApp):
         return self._coordinates
 
     @staticmethod
-    def compute_coordinates(dot_bracket=None, base_pairs=None, length=None,
-                            layout_type=1, bin_path="RNAplot"):
+    def compute_coordinates(
+        dot_bracket=None, base_pairs=None, length=None,
+        layout_type=Layout.NAVIEW, bin_path="RNAplot"
+    ):
         """
         Get coordinates for a 2D representation of any unknotted RNA
         structure using *ViennaRNA's* *RNAplot*.

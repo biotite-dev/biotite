@@ -14,21 +14,21 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, length, layout_type=1, draw_pseudoknots=True,
-    pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
-    bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
-    backbone_color='grey', base_font={'size': 'small'}, 
-    base_box={'pad': 0, 'color': 'white'}, annotation_positions=None, 
-    annotation_offset=8.5, annotation_font={'size': 'smaller'}, 
-    bin_path="RNAplot"
+    base_labels, base_pairs, length, layout_type=RNAplotApp.Layout.NAVIEW, 
+    draw_pseudoknots=True, pseudoknot_order=None, angle=0, bond_linewidth=1, 
+    bond_linestyle=None, bond_color='black', backbone_linewidth=1, 
+    backbone_linestyle='solid', backbone_color='grey', 
+    base_font={'size': 'small'}, base_box={'pad': 0, 'color': 'white'}, 
+    annotation_positions=None, annotation_offset=8.5, 
+    annotation_font={'size': 'smaller'}, bin_path="RNAplot"
     ):
     """
     Generate 2D plots of nucleic acid secondary structures using the 
-    interface to RNAplot, which is part of the ViennaRNA software
+    interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
     Internally a :class:`RNAplotAPP` instance is created to generate 
-    coordinates for each individual base on a 2D plane. ViennaRNA must 
+    coordinates for each individual base on a 2D plane. *ViennaRNA* must 
     be installed in order to use this function.
 
     Parameters
@@ -40,18 +40,8 @@ def plot_nucleotide_secondary_structure(
         sequence. The positions are counted from zero.
     length : int
         The number of bases in the sequence.
-    layout_type : int, optional (default: 1)
-        The layout type according to the RNAplot documentation:
-
-            0: Simple radial layout
-
-            1: Naview layout
-
-            2: Circular layout
-
-            3: RNAturtle
-
-            4: RNApuzzler
+    layout_type : RNAplotApp.Layout (default: RNAplotApp.Layout.NAVIEW)
+        The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional (default: True)
         Whether pseudoknotted bonds should be drawn.
     angle : int
@@ -98,7 +88,7 @@ def plot_nucleotide_secondary_structure(
     annotation_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the annotations.
     bin_path : str, optional
-        Path of the RNAplot binary.
+        Path of the *RNAplot* binary.
     """
 
     # Check if RNAplot is installed
