@@ -151,10 +151,10 @@ def plot_nucleotide_secondary_structure(
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
-    base_pairs=unknotted_base_pairs, 
-    length=length,
-    bin_path=bin_path,
-    layout_type=layout_type
+        base_pairs=unknotted_base_pairs, 
+        length=length,
+        bin_path=bin_path,
+        layout_type=layout_type
     )
 
     # Rotate Coordinates
