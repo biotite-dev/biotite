@@ -43,6 +43,8 @@ def plot_nucleotide_secondary_structure(
         The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional (default: True)
         Whether pseudoknotted bonds should be drawn.
+    pseudoknot_order : ndarray, dtype=int, shape=(m,n)
+        The pseudoknot order of the input `base_pairs`.
     angle : int
         The angle the plot should be rotated.
     bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
@@ -55,8 +57,7 @@ def plot_nucleotide_secondary_structure(
         set the linewidth for each individual bond. By default, solid 
         lines are used for non-pseudoknotted bonds and dashed lines are 
         used for pseudoknotted bonds.
-    bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4),
-                 optional (default: 'black')
+    bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional (default: 'black')
         The *Matplotlib* compatible color of each bond. Provide a single 
         string to set the color for all bonds or an array to set the 
         color for each individual bond. Furthermore, the color for each 
