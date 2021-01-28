@@ -160,12 +160,12 @@ def plot_nucleotide_secondary_structure(
     # Rotate Coordinates
     if angle != 0:
         angle = np.deg2rad(angle)
-        R = np.array(
+        rot_matrix = np.array(
             [[np.cos(angle), -np.sin(angle)],
             [np.sin(angle),  np.cos(angle)]]
         )
         for i, coord in enumerate(coordinates):
-            coordinates[i] = np.dot(R, coord)
+            coordinates[i] = np.dot(rot_matrix, coord)
 
     # Create Plot
     fig, ax = plt.subplots(figsize=(10, 10))
