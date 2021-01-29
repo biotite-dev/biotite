@@ -505,14 +505,14 @@ class Atom(Copyable):
             )
         
     def __setattr__(self, attr, value):
-        # First condition is required, since call of the second would
-        # result in indefinite calls of __getattr__
+        # First condition is required, to avoid indefinite calls of
+        # __getattr__()
         if attr == "_annot":
             super().__setattr__(attr, value)
-        elif attr in self._annot:
-            self._annot[attr] = value
-        else:
+        elif attr == "coord":
             super().__setattr__(attr, value)
+        else:
+            self._annot[attr] = value
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
@@ -1168,8 +1168,11 @@ def array(atoms):
                 f"The atom at index {i} does not share the same "
                 f"annotation categories as the atom at index 0"
             )
-    # Add all atoms to AtomArray
     array = AtomArray(len(atoms))
+    # Add all (also optional) annotation categories
+    for name in names:
+        array.add_annotation(name, dtype=type(atoms[0]._annot[name])) 
+    # Add all atoms to AtomArray
     for i in range(len(atoms)):
         for name in names:
             array._annot[name][i] = atoms[i]._annot[name]
