@@ -68,7 +68,7 @@ def load_structure(file_path, template=None, **kwargs):
             return array[0]
         else:
             return array
-    if suffix == ".pdbqt":
+    elif suffix == ".pdbqt":
         from .pdbqt import PDBQTFile
         file = PDBQTFile.read(file_path)
         array = file.get_structure(**kwargs)
@@ -168,7 +168,7 @@ def save_structure(file_path, array, **kwargs):
         file = PDBFile()
         file.set_structure(array, **kwargs)
         file.write(file_path)
-    if suffix == ".pdbqt":
+    elif suffix == ".pdbqt":
         from .pdbqt import PDBQTFile
         file = PDBQTFile()
         file.set_structure(array, **kwargs)
