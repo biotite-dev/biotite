@@ -53,10 +53,10 @@ def plot_nucleotide_secondary_structure(
         The linewidth of each bond. Provide a single value to set the
         linewidth for all bonds or an iterable to set the linewidth for
         each individual bond.
-    bond_linestyle : str or ndarray, shape(n,), optional (default: None)
+    bond_linestyle : str or iterable, optional (default: None)
         The *Matplotlib* compatible linestyle of each bond. Provide a
-        single value to set the linewidth for all bonds or an array to
-        set the linewidth for each individual bond. By default, solid
+        single value to set the linewidth for all bonds or an iterable
+        to set the linewidth for each individual bond. By default, solid
         lines are used for non-pseudoknotted bonds and dashed lines are
         used for pseudoknotted bonds.
     bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional (default: 'black')
@@ -108,7 +108,7 @@ def plot_nucleotide_secondary_structure(
         pseudoknot_order = pseudoknots(base_pairs, max_pseudoknot_order=0)[0]
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
 
-    # If `bond_linewidth` is not an array, extrapolate
+    # If `bond_linewidth` is a single value, extrapolate
     if isinstance(bond_linewidth, int) and isinstance(bond_linewidth, float):
         bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
 
@@ -125,8 +125,8 @@ def plot_nucleotide_secondary_structure(
     if bond_linestyle is None:
         bond_linestyle = np.full(base_pairs.shape[0], 'solid', dtype='object')
         bond_linestyle[pseudoknot_order != 0] = 'dashed'
-    # If `bond_linestyle` is not an array, extrapolate
-    elif not isinstance(bond_linestyle, np.ndarray):
+    # If `bond_linestyle` is a string, extrapolate
+    elif isinstance(bond_linestyle, str):
         bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle)
 
     # If pseudoknots are not to be drawn, remove pseudoknotted bonds,
