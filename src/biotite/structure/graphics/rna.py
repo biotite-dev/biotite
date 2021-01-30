@@ -14,20 +14,20 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, length, layout_type=RNAplotApp.Layout.NAVIEW, 
+    base_labels, base_pairs, length, layout_type=RNAplotApp.Layout.NAVIEW,
     draw_pseudoknots=True, pseudoknot_order=None, angle=0, bond_linewidth=1,
-    bond_linestyle=None, bond_color='black', backbone_linewidth=1, 
-    backbone_linestyle='solid', backbone_color='grey', base_font=None, 
-    base_box=None, annotation_positions=None, annotation_offset=8.5, 
-    annotation_font=None, bin_path="RNAplot"
+    bond_linestyle=None, bond_color='black', backbone_linewidth=1,
+    backbone_linestyle='solid', backbone_color='grey', base_font=None,
+    base_box=None, annotation_positions=None, annotation_offset=8.5,
+    annotation_font=None, border=0.03, bin_path="RNAplot"
     ):
     """
-    Generate 2D plots of nucleic acid secondary structures using the 
+    Generate 2D plots of nucleic acid secondary structures using the
     interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
-    Internally a :class:`RNAplotAPP` instance is created to generate 
-    coordinates for each individual base on a 2D plane. *ViennaRNA* must 
+    Internally a :class:`RNAplotAPP` instance is created to generate
+    coordinates for each individual base on a 2D plane. *ViennaRNA* must
     be installed in order to use this function.
 
     Parameters
@@ -49,44 +49,47 @@ def plot_nucleotide_secondary_structure(
         The angle the plot should be rotated.
     bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
         The linewidth of each bond. Provide a single value to set the
-        linewidth for all bonds or an array to set the linewidth for 
+        linewidth for all bonds or an array to set the linewidth for
         each individual bond.
     bond_linestyle : str or ndarray, shape(n,), optional (default: None)
         The *Matplotlib* compatible linestyle of each bond. Provide a
-        single value to set the linewidth for all bonds or an array to 
-        set the linewidth for each individual bond. By default, solid 
-        lines are used for non-pseudoknotted bonds and dashed lines are 
+        single value to set the linewidth for all bonds or an array to
+        set the linewidth for each individual bond. By default, solid
+        lines are used for non-pseudoknotted bonds and dashed lines are
         used for pseudoknotted bonds.
     bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional (default: 'black')
-        The *Matplotlib* compatible color of each bond. Provide a single 
-        string to set the color for all bonds or an array to set the 
-        color for each individual bond. Furthermore, the color for each 
+        The *Matplotlib* compatible color of each bond. Provide a single
+        string to set the color for all bonds or an array to set the
+        color for each individual bond. Furthermore, the color for each
         individual bond can be provided as array of RGB or RGBA colors.
     backbone_linewidth : float, optional (default: 1)
         The linewidth of the backbone.
     backbone_linestyle : str (default: 'solid')
         The *Matplotlib* compatible linestyle of the backbone.
-    backbone_color : str or ndarray, shape=(3,) or shape=(4,), 
+    backbone_color : str or ndarray, shape=(3,) or shape=(4,),
                      dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
     base_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the labels denoting the type
         of each base.
-    base_box : dict or ndarray, shape(n,), optional 
+    base_box : dict or ndarray, shape(n,), optional
                (default: dict(pad=0, color='white'))
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
         set the properties of all base lables or an array to set the
         properties for each individual label.
     annotation_positions : iterable, optional (default: None)
-        The positions of the bases to be numbered. By default every 
-        second base is annotated. Please note that while the positions 
-        in the sequence are counted from zero, they are displayed on the 
+        The positions of the bases to be numbered. By default every
+        second base is annotated. Please note that while the positions
+        in the sequence are counted from zero, they are displayed on the
         graph counted from one.
     annotation_offset : int, optional (default: 8.5)
         The offset of the annotations from the base labels.
     annotation_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the annotations.
+    border : float (default: 0.03)
+        The percentage of the coordinate range to be left as whitespace
+        to create a border around the plot.
     bin_path : str, optional
         Path of the *RNAplot* binary.
     """
@@ -126,11 +129,11 @@ def plot_nucleotide_secondary_structure(
     elif not isinstance(bond_linestyle, np.ndarray):
         bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle)
 
-    # If pseudoknots are not to be drawn, remove pseudoknotted bonds, 
+    # If pseudoknots are not to be drawn, remove pseudoknotted bonds,
     # regardless of the given linestyles
     if not draw_pseudoknots:
         bond_linestyle[pseudoknot_order != 0] = 'None'
-    
+
     # Set the default font properties of the base labels
     if base_font is None:
         base_font={'size': 'small'}
@@ -151,7 +154,7 @@ def plot_nucleotide_secondary_structure(
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
-        base_pairs=unknotted_base_pairs, 
+        base_pairs=unknotted_base_pairs,
         length=length,
         bin_path=bin_path,
         layout_type=layout_type
@@ -177,7 +180,7 @@ def plot_nucleotide_secondary_structure(
 
     # Define buffer area (Border)
     coord_range = abs(np.max(coordinates)) + abs(np.min(coordinates))
-    buffer = 0.03*coord_range
+    buffer = border*coord_range
 
     # Adjust display
     ax.set_xlim(
@@ -189,13 +192,13 @@ def plot_nucleotide_secondary_structure(
     ax.set_aspect(aspect='equal')
 
     # Draw backbone
-    ax.plot(coordinates[:,0], coordinates[:,1], color=backbone_color, 
+    ax.plot(coordinates[:,0], coordinates[:,1], color=backbone_color,
             linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
     # Draw base labels
     for coords, label, box in zip(coordinates, base_labels, base_box):
         t = ax.text(
-                    x=coords[0], y=coords[1], s=label, 
+                    x=coords[0], y=coords[1], s=label,
                     font=base_font, ha='center', va='center'
         )
         t.set_bbox(box)
@@ -248,10 +251,10 @@ def plot_nucleotide_secondary_structure(
         vector = vector / np.linalg.norm(vector)
         # Get the perpendicular vector
         vector = np.array([vector[1], -vector[0]])
-        # The annotations are offset in the direction of the 
+        # The annotations are offset in the direction of the
         # perpendicular vector
         x, y = coordinates[i] + (annotation_offset*vector)
         ax.text(
-            x=x, y=y, s=i+1, 
+            x=x, y=y, s=i+1,
             ha='center', va='center', font=annotation_font
         )
