@@ -49,9 +49,9 @@ def plot_nucleotide_secondary_structure(
         picked at random.
     angle : int or float, optional (default: 0)
         The angle the plot should be rotated.
-    bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
+    bond_linewidth : float or int or iterable, optional (default: 1)
         The linewidth of each bond. Provide a single value to set the
-        linewidth for all bonds or an array to set the linewidth for
+        linewidth for all bonds or an iterable to set the linewidth for
         each individual bond.
     bond_linestyle : str or ndarray, shape(n,), optional (default: None)
         The *Matplotlib* compatible linestyle of each bond. Provide a
@@ -109,7 +109,7 @@ def plot_nucleotide_secondary_structure(
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
 
     # If `bond_linewidth` is not an array, extrapolate
-    if not isinstance(bond_linewidth, np.ndarray):
+    if isinstance(bond_linewidth, int) and isinstance(bond_linewidth, float):
         bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
 
     # If `bond_color` is not an array, extrapolate
