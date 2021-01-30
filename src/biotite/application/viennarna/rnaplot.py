@@ -35,7 +35,7 @@ class RNAplotApp(LocalApp):
     length : int, optional (default: None)
         The number of bases in the strand. This parameter is required if
         ``base_pairs`` is given.
-    layout_type : RNAplotApp.Layout (default: RNAplotApp.Layout.NAVIEW)
+    layout_type : RNAplotApp.Layout, optional (default: RNAplotApp.Layout.NAVIEW)
         The layout type according to the *RNAplot* documentation.
     bin_path : str, optional
         Path of the *RNAplot* binary.

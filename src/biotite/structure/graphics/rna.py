@@ -39,13 +39,15 @@ def plot_nucleotide_secondary_structure(
         sequence. The positions are counted from zero.
     length : int
         The number of bases in the sequence.
-    layout_type : RNAplotApp.Layout (default: RNAplotApp.Layout.NAVIEW)
+    layout_type : RNAplotApp.Layout, optional (default: RNAplotApp.Layout.NAVIEW)
         The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional (default: True)
         Whether pseudoknotted bonds should be drawn.
-    pseudoknot_order : ndarray, dtype=int, shape=(n,)
-        The pseudoknot order of the input `base_pairs`.
-    angle : int or float
+    pseudoknot_order : ndarray, dtype=int, shape=(n,), optional (default: None)
+        The pseudoknot order of the input `base_pairs`. If no pseudoknot
+        order is given, a solution determined by :func:`pseudoknots` is
+        picked at random.
+    angle : int or float, optional (default: 0)
         The angle the plot should be rotated.
     bond_linewidth : float or ndarray, shape(n,), optional (default: 1)
         The linewidth of each bond. Provide a single value to set the
@@ -64,16 +66,14 @@ def plot_nucleotide_secondary_structure(
         individual bond can be provided as array of RGB or RGBA colors.
     backbone_linewidth : float, optional (default: 1)
         The linewidth of the backbone.
-    backbone_linestyle : str (default: 'solid')
+    backbone_linestyle : str, optional (default: 'solid')
         The *Matplotlib* compatible linestyle of the backbone.
-    backbone_color : str or ndarray, shape=(3,) or shape=(4,),
-                     dtype=float, optional (default: 'grey')
+    backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
     base_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the labels denoting the type
         of each base.
-    base_box : dict or ndarray, shape(n,), optional
-               (default: dict(pad=0, color='white'))
+    base_box : dict or ndarray, shape(n,), optional (default: dict(pad=0, color='white'))
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
         set the properties of all base lables or an array to set the
@@ -87,7 +87,7 @@ def plot_nucleotide_secondary_structure(
         The offset of the annotations from the base labels.
     annotation_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the annotations.
-    border : float (default: 0.03)
+    border : float, optional (default: 0.03)
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
     bin_path : str, optional
