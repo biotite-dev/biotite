@@ -73,10 +73,10 @@ def plot_nucleotide_secondary_structure(
     base_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the labels denoting the type
         of each base.
-    base_box : dict or ndarray, shape(n,), optional (default: dict(pad=0, color='white'))
+    base_box : dict or iterable, optional (default: dict(pad=0, color='white'))
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
-        set the properties of all base lables or an array to set the
+        set the properties of all base lables or an iterable to set the
         properties for each individual label.
     annotation_positions : iterable, optional (default: None)
         The positions of the bases to be numbered. By default every
@@ -116,8 +116,8 @@ def plot_nucleotide_secondary_structure(
     if not isinstance(bond_color, np.ndarray):
         bond_color = np.full(base_pairs.shape[0], bond_color)
 
-    # If `background_color` is not an array, extrapolate
-    if not isinstance(base_box, np.ndarray):
+    # If `background_color` is a single dictionary, extrapolate
+    if isinstance(base_box, dict):
         base_box = np.full(length, base_box)
 
     # By default pseudoknotted bonds are denoted as dashed lines, while
