@@ -43,7 +43,7 @@ def plot_nucleotide_secondary_structure(
         The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional (default: True)
         Whether pseudoknotted bonds should be drawn.
-    pseudoknot_order : ndarray, dtype=int, shape=(n,), optional (default: None)
+    pseudoknot_order : iterable, optional (default: None)
         The pseudoknot order of the input `base_pairs`. If no pseudoknot
         order is given, a solution determined by :func:`pseudoknots` is
         picked at random.
