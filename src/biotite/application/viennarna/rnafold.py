@@ -25,7 +25,7 @@ class RNAfoldApp(LocalApp):
     ----------
     sequence : NucleotideSequence
         The nucleotide sequence.
-    temperature : int
+    temperature : int, optional
         The temperature (°C) to be assumed for the energy parameters.
     bin_path : str, optional
         Path of the *RNAfold* binary.
