@@ -109,15 +109,19 @@ def plot_nucleotide_secondary_structure(
     unknotted_base_pairs = base_pairs[pseudoknot_order == 0]
 
     # If `bond_linewidth` is a single value, extrapolate
-    if isinstance(bond_linewidth, int) and isinstance(bond_linewidth, float):
+    if isinstance(bond_linewidth, int) or isinstance(bond_linewidth, float):
         bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
 
     # If `bond_color` is not an array, extrapolate
     if not isinstance(bond_color, np.ndarray):
         bond_color = np.full(base_pairs.shape[0], bond_color)
 
-    # If `background_color` is a single dictionary, extrapolate
-    if isinstance(base_box, dict):
+    # Set the default properties of the Matplotlib `bbox` surrounding
+    # the base labels
+    if base_box is None:
+        base_box=np.full(length, {'pad': 0, 'color': 'white'})
+    # if `base_box` is a dictionary, extrapolate
+    elif isinstance(base_box, dict):
         base_box = np.full(length, base_box)
 
     # By default pseudoknotted bonds are denoted as dashed lines, while
@@ -137,11 +141,6 @@ def plot_nucleotide_secondary_structure(
     # Set the default font properties of the base labels
     if base_font is None:
         base_font={'size': 'small'}
-
-    # Set the default properties of the Matplotlib `bbox` surrounding
-    # the base labels
-    if base_box is None:
-        base_box={'pad': 0, 'color': 'white'}
 
     # Set the default font properties of the base annotations
     if annotation_font is None:
