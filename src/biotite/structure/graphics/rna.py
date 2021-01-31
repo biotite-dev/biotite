@@ -257,3 +257,4 @@ def plot_nucleotide_secondary_structure(
             x=x, y=y, s=i+1,
             ha='center', va='center', font=annotation_font
         )
+    plt.show()
