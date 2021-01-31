@@ -26,9 +26,10 @@ def plot_nucleotide_secondary_structure(
     interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
-    Internally a :class:`RNAplotAPP` instance is created to generate
-    coordinates for each individual base on a 2D plane. *ViennaRNA* must
-    be installed in order to use this function.
+    Internally a :class:`biotite.application.viennarna.RNAplotApp` 
+    instance is created to generate coordinates for each individual base 
+    on a 2D plane. *ViennaRNA* must be installed in order to use this 
+    function.
 
     Parameters
     ----------
@@ -45,8 +46,8 @@ def plot_nucleotide_secondary_structure(
         Whether pseudoknotted bonds should be drawn.
     pseudoknot_order : iterable, optional (default: None)
         The pseudoknot order of the input `base_pairs`. If no pseudoknot
-        order is given, a solution determined by :func:`pseudoknots` is
-        picked at random.
+        order is given, a solution determined by 
+        :func:`biotite.structure.pseudoknots` is picked at random.
     angle : int or float, optional (default: 0)
         The angle the plot should be rotated.
     bond_linewidth : float or int or iterable, optional (default: 1)
@@ -62,8 +63,7 @@ def plot_nucleotide_secondary_structure(
     bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional (default: 'black')
         The *Matplotlib* compatible color of each bond. Provide a single
         string to set the color for all bonds or an array to set the
-        color for each individual bond. Furthermore, the color for each
-        individual bond can be provided as array of RGB or RGBA colors.
+        color for each individual bond.
     backbone_linewidth : float, optional (default: 1)
         The linewidth of the backbone.
     backbone_linestyle : str, optional (default: 'solid')
@@ -73,7 +73,7 @@ def plot_nucleotide_secondary_structure(
     base_font : dict, optional (default: {'size': 'smaller'})
         The *Matplotlib* compatible font of the labels denoting the type
         of each base.
-    base_box : dict or iterable, optional (default: dict(pad=0, color='white'))
+    base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
         set the properties of all base lables or an iterable to set the

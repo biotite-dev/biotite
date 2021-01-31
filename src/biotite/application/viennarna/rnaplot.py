@@ -31,7 +31,7 @@ class RNAplotApp(LocalApp):
         The structure in dot bracket notation.
     base_pairs : ndarray, shape=(n,2), optional (default: None)
         Each row corresponds to the positions of the bases in the
-        strand. This parameter is mutual exclusive to ``dot_bracket``.
+        strand. This parameter is mutually exclusive to ``dot_bracket``.
     length : int, optional (default: None)
         The number of bases in the strand. This parameter is required if
         ``base_pairs`` is given.
