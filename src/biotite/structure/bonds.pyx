@@ -331,7 +331,7 @@ class BondList(Copyable):
         """
         as_set()
         
-        Obtain a set represetion of the :class:`BondList`.
+        Obtain a set representation of the :class:`BondList`.
 
         Returns
         -------
@@ -352,6 +352,34 @@ class BondList(Copyable):
         return bond_set
     
     def as_graph(self):
+        """
+        as_graph()
+        
+        Obtain a graph representation of the :class:`BondList`.
+
+        Returns
+        -------
+        bond_set : Graph
+            A *NetworkX* :class:`Graph`.
+            The atom indices are nodes, the bonds are edges.
+            Each edge has a ``"bond_type"`` attribute containing the
+            :class:`BondType`.
+        
+        Examples
+        --------
+
+        >>> bond_list = struc.BondList(5, np.array([(1,0,2), (1,3,1), (1,4,1)]))
+        >>> graph = bond_list.as_graph()
+        >>> print(graph.nodes)
+        [0, 1, 3, 4]
+        >>> print(graph.edges)
+        [(0, 1), (1, 3), (1, 4)]
+        >>> for i, j in graph.edges:
+        ...     print(i, j, graph.get_edge_data(i, j))
+        0 1 {'bond_type': <BondType.DOUBLE: 2>}
+        1 3 {'bond_type': <BondType.SINGLE: 1>}
+        1 4 {'bond_type': <BondType.SINGLE: 1>}
+        """
         cdef int i
 
         cdef uint32[:,:] all_bonds_v = self._bonds
@@ -360,7 +388,8 @@ class BondList(Copyable):
         cdef list edges = [None] * all_bonds_v.shape[0]
         for i in range(all_bonds_v.shape[0]):
             edges[i] = (
-                all_bonds_v[i,0], all_bonds_v[i,1], {"bond_type": all_bonds_v[i,2]}
+                all_bonds_v[i,0], all_bonds_v[i,1],
+                {"bond_type": BondType(all_bonds_v[i,2])}
             )
         g.add_edges_from(edges)
         return g
