@@ -176,4 +176,4 @@ def test_array_from_atoms(atom_list):
         atom.some_annotation = 42
     array = struc.array(atom_list)
     assert np.all(array.some_annotation == np.full(array.array_length(), 42))
-    assert np.issubdtype(array.some_annotation.dtype, np.int64)
+    assert np.issubdtype(array.some_annotation.dtype, np.integer)
