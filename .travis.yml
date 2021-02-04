@@ -10,6 +10,7 @@ matrix:
     sudo: false
     env:
       - PY_VERSION='3.6'
+      - NUMPY_VERSION='1.13'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -18,6 +19,7 @@ matrix:
     sudo: false
     env:
       - PY_VERSION='3.7.3'
+      - NUMPY_VERSION='1.14'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -26,24 +28,28 @@ matrix:
     sudo: false
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.14'
       - COMPLETE=true
       - BIN=true
       - SRC=true
   - os: osx
     env:
       - PY_VERSION='3.6'
+      - NUMPY_VERSION='1.13'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.7'
+      - NUMPY_VERSION='1.14'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.14'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -60,8 +66,9 @@ install:
 
   - if [ $COMPLETE == true ];  then conda env create -q -f environment.yml; fi
   - if [ $COMPLETE == true ];  then conda install -n biotite-dev python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ];  then conda install -n biotite-dev numpy=$NUMPY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
-  - if [ $COMPLETE == false ]; then conda install -n biotite-dev "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
+  - if [ $COMPLETE == false ]; then conda install -n biotite-dev -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
   - source activate biotite-dev
   - python setup.py bdist_wheel
   - pip install ./dist/*.whl
