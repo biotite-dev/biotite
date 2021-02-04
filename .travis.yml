@@ -7,7 +7,6 @@ matrix:
   include:
   - os: linux
     dist: trusty
-    sudo: false
     env:
       - PY_VERSION='3.7'
       - NUMPY_VERSION='1.14'
@@ -16,7 +15,6 @@ matrix:
       - SRC=false
   - os: linux
     dist: trusty
-    sudo: false
     env:
       - PY_VERSION='3.8'
       - NUMPY_VERSION='1.14'
@@ -25,7 +23,6 @@ matrix:
       - SRC=true
   - os: linux
     dist: trusty
-    sudo: false
     env:
       - PY_VERSION='3.9'
       - NUMPY_VERSION='1.19'
