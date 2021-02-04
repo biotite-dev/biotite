@@ -44,8 +44,8 @@ def get_molecule_indices(array):
     get_molecule_masks
     molecule_iter
 
-    Example
-    -------
+    Examples
+    --------
     Get an :class:`AtomArray` for ATP and show that it is a single
     molecule:
 
@@ -162,8 +162,8 @@ def get_molecule_masks(array):
     get_molecule_indices
     molecule_iter
 
-    Example
-    -------
+    Examples
+    --------
     Get an :class:`AtomArray` for ATP and show that it is a single
     molecule:
 
@@ -276,8 +276,8 @@ def molecule_iter(array):
     get_molecule_indices
     get_molecule_masks
 
-    Example
-    -------
+    Examples
+    --------
     Get an :class:`AtomArray` for ATP and break it into two molecules
     at the glycosidic bond to the triphosphate:
 
