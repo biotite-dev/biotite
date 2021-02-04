@@ -9,7 +9,7 @@ matrix:
     dist: trusty
     env:
       - PY_VERSION='3.7'
-      - NUMPY_VERSION='1.14'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -17,7 +17,7 @@ matrix:
     dist: trusty
     env:
       - PY_VERSION='3.8'
-      - NUMPY_VERSION='1.14'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=true
       - BIN=true
       - SRC=true
@@ -32,14 +32,14 @@ matrix:
   - os: osx
     env:
       - PY_VERSION='3.7'
-      - NUMPY_VERSION='1.14'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.8'
-      - NUMPY_VERSION='1.14'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
