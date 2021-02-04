@@ -1,12 +1,6 @@
 environment:
   matrix:
     - PYTHON: "C:\\Miniconda36"
-      PY_VERSION: "3.6"
-      NUMPY_VERSION: "1.13"
-    - PYTHON: "C:\\Miniconda36-x64"
-      PY_VERSION: "3.6"
-      NUMPY_VERSION: "1.13"
-    - PYTHON: "C:\\Miniconda36"
       PY_VERSION: "3.7"
       NUMPY_VERSION: "1.14"
     - PYTHON: "C:\\Miniconda36-x64"
@@ -18,6 +12,12 @@ environment:
     - PYTHON: "C:\\Miniconda36-x64"
       PY_VERSION: "3.8"
       NUMPY_VERSION: "1.14"
+    - PYTHON: "C:\\Miniconda36"
+      PY_VERSION: "3.9"
+      NUMPY_VERSION: "1.19"
+    - PYTHON: "C:\\Miniconda36-x64"
+      PY_VERSION: "3.9"
+      NUMPY_VERSION: "1.19"
 
 install:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%

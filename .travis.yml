@@ -9,16 +9,7 @@ matrix:
     dist: trusty
     sudo: false
     env:
-      - PY_VERSION='3.6'
-      - NUMPY_VERSION='1.13'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: linux
-    dist: trusty
-    sudo: false
-    env:
-      - PY_VERSION='3.7.3'
+      - PY_VERSION='3.7'
       - NUMPY_VERSION='1.14'
       - COMPLETE=false
       - BIN=true
@@ -32,13 +23,15 @@ matrix:
       - COMPLETE=true
       - BIN=true
       - SRC=true
-  - os: osx
+  - os: linux
+    dist: trusty
+    sudo: false
     env:
-      - PY_VERSION='3.6'
-      - NUMPY_VERSION='1.13'
-      - COMPLETE=false
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
+      - COMPLETE=true
       - BIN=true
-      - SRC=false
+      - SRC=true
   - os: osx
     env:
       - PY_VERSION='3.7'
@@ -50,6 +43,13 @@ matrix:
     env:
       - PY_VERSION='3.8'
       - NUMPY_VERSION='1.14'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
       - COMPLETE=false
       - BIN=true
       - SRC=false
