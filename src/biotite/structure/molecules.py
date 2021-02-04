@@ -346,6 +346,7 @@ def molecule_iter(array):
     
     visited_mask = np.zeros(bonds.get_atom_count(), dtype=bool)
     while not visited_mask.all():
+        # Take the first atom that has not been considered yet as root
         root = np.argmin(visited_mask)
         connected = find_connected(bonds, root)
         visited_mask[connected] = True
