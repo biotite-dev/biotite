@@ -164,3 +164,16 @@ def test_box(array, stack, array_box, stack_box):
     assert (stack[:2].box == np.array([array_box] * 2)).all()
     assert (stack[:2, 3].box == np.array([array_box] * 2)).all()
     assert (stack[[True, False, True]].box == np.array([array_box] * 2)).all()
+
+
+def test_array_from_atoms(atom_list):
+    """
+    Check whether custom annotations in :class:`Atom` objects are
+    properly carried over to the :class:`AtomArray` when using
+    :func:`array()`.
+    """
+    for atom in atom_list:
+        atom.some_annotation = 42
+    array = struc.array(atom_list)
+    assert np.all(array.some_annotation == np.full(array.array_length(), 42))
+    assert np.issubdtype(array.some_annotation.dtype, np.integer)
