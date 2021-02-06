@@ -16,6 +16,7 @@ import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.graphics as graphics
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -62,11 +63,17 @@ for bases, edge_types, orientation in zip(base_pairs, edges, glycosidic_bonds):
             annotation += "S"
         base_labels[base] = annotation
 
+# Create a matplotlib pyplot
+fig, ax = plt.subplots(figsize=(10, 10))
+
 # Plot the secondary structure
 graphics.plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, struc.get_residue_count(nucleotides),
+    ax, base_labels, base_pairs, struc.get_residue_count(nucleotides),
     bond_color=colors
 )
+
+# Display the plot
+plt.show()
 
 ########################################################################
 # The sarcin-ricin loop is part of the 23s rRNA and is considered 
