@@ -48,8 +48,8 @@ def plot_nucleotide_secondary_structure(
     draw_pseudoknots : bool, optional (default: True)
         Whether pseudoknotted bonds should be drawn.
     pseudoknot_order : iterable, optional (default: None)
-        The pseudoknot order of the input `base_pairs`. If no pseudoknot
-        order is given, a solution determined by 
+        The pseudoknot order of each base in the input `base_pairs`. If 
+        no pseudoknot order is given, a solution determined by 
         :func:`biotite.structure.pseudoknots` is picked at random.
     angle : int or float, optional (default: 0)
         The angle the plot should be rotated.
