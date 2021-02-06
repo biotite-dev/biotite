@@ -14,12 +14,13 @@ from ...application.viennarna import RNAplotApp
 
 
 def plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, length, layout_type=RNAplotApp.Layout.NAVIEW,
-    draw_pseudoknots=True, pseudoknot_order=None, angle=0, bond_linewidth=1,
-    bond_linestyle=None, bond_color='black', backbone_linewidth=1,
-    backbone_linestyle='solid', backbone_color='grey', base_font=None,
-    base_box=None, annotation_positions=None, annotation_offset=8.5,
-    annotation_font=None, border=0.03, bin_path="RNAplot"
+    axes, base_labels, base_pairs, length, 
+    layout_type=RNAplotApp.Layout.NAVIEW, draw_pseudoknots=True, 
+    pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
+    bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
+    backbone_color='grey', base_font=None, base_box=None, 
+    annotation_positions=None, annotation_offset=8.5, annotation_font=None, 
+    border=0.03, bin_path="RNAplot"
     ):
     """
     Generate 2D plots of nucleic acid secondary structures using the
@@ -33,6 +34,8 @@ def plot_nucleotide_secondary_structure(
 
     Parameters
     ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
     base_labels : iterable
         The labels denoting the type of each base.
     base_pairs : ndarray, shape=(n,2)
@@ -169,12 +172,9 @@ def plot_nucleotide_secondary_structure(
         for i, coord in enumerate(coordinates):
             coordinates[i] = np.dot(rot_matrix, coord)
 
-    # Create Plot
-    fig, ax = plt.subplots(figsize=(10, 10))
-
     # Remove axes and frame
-    ax.set_xticks([])
-    ax.set_yticks([])
+    axes.set_xticks([])
+    axes.set_yticks([])
     plt.box(False)
 
     # Define buffer area (Border)
@@ -182,21 +182,21 @@ def plot_nucleotide_secondary_structure(
     buffer = border*coord_range
 
     # Adjust display
-    ax.set_xlim(
+    axes.set_xlim(
         np.min(coordinates[:,0])-buffer, np.max(coordinates[:,0])+buffer
     )
-    ax.set_ylim(
+    axes.set_ylim(
         np.min(coordinates[:,1])-buffer, np.max(coordinates[:,1])+buffer
     )
-    ax.set_aspect(aspect='equal')
+    axes.set_aspect(aspect='equal')
 
     # Draw backbone
-    ax.plot(coordinates[:,0], coordinates[:,1], color=backbone_color,
+    axes.plot(coordinates[:,0], coordinates[:,1], color=backbone_color,
             linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
     # Draw base labels
     for coords, label, box in zip(coordinates, base_labels, base_box):
-        t = ax.text(
+        t = axes.text(
                     x=coords[0], y=coords[1], s=label,
                     font=base_font, ha='center', va='center'
         )
@@ -210,7 +210,7 @@ def plot_nucleotide_secondary_structure(
         base2_coords = coordinates[base2]
         x = base1_coords[0], base2_coords[0]
         y = base1_coords[1], base2_coords[1]
-        ax.plot(x, y, color=color, linestyle=style, linewidth=width)
+        axes.plot(x, y, color=color, linestyle=style, linewidth=width)
 
     # Draw annotations
     for i in annotation_positions:
@@ -253,8 +253,7 @@ def plot_nucleotide_secondary_structure(
         # The annotations are offset in the direction of the
         # perpendicular vector
         x, y = coordinates[i] + (annotation_offset*vector)
-        ax.text(
+        axes.text(
             x=x, y=y, s=i+1,
             ha='center', va='center', font=annotation_font
         )
-    plt.show()
