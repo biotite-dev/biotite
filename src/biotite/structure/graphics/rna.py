@@ -175,7 +175,14 @@ def plot_nucleotide_secondary_structure(
     # Remove axes and frame
     axes.set_xticks([])
     axes.set_yticks([])
-    plt.box(False)
+    axes.xaxis.set_tick_params(
+        top=False, bottom=False, labeltop=False, labelbottom=False
+    )
+    axes.yaxis.set_tick_params(
+        top=False, bottom=False, labeltop=False, labelbottom=False
+    )
+    axes.set_frame_on(False)
+
 
     # Define buffer area (Border)
     coord_range = abs(np.max(coordinates)) + abs(np.min(coordinates))
