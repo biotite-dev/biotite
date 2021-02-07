@@ -64,7 +64,7 @@ for bases, edge_types, orientation in zip(base_pairs, edges, glycosidic_bonds):
         base_labels[base] = annotation
 
 # Create a matplotlib pyplot
-fig, ax = plt.subplots(figsize=(10, 10))
+fig, ax = plt.subplots(figsize=(8.0, 8.0))
 
 # Plot the secondary structure
 graphics.plot_nucleotide_secondary_structure(

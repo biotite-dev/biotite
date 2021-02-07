@@ -63,24 +63,30 @@ def plot_rna(pdb_id, axes):
     graphics.plot_nucleotide_secondary_structure(
         axes, base_labels, base_pairs, struc.get_residue_count(nucleotides),
         pseudoknot_order=pseudoknot_order, bond_linestyle=linestyles,
-        bond_color=colors
+        bond_color=colors,
+        # Margin to compensate for reduced axis limits in shared axis
+        border=0.13
     )
 
     # Use the PDB ID to label each plot
-    axes.set_xlabel(pdb_id, horizontalalignment='right', x=1.0)
+    axes.set_title(pdb_id, loc="left")
 
 # Create a matplotlib pyplot
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+fig, (ax1, ax2) = plt.subplots(
+    2, 1, figsize=(8.0, 16.0),
+    # Share both axes to ensure eqaul scaling of bath secondary structures
+    sharex=True, sharey=True
+)
 
 # Plot the secondary structures
 plot_rna('1EHZ', ax1)
 plot_rna('4P5J', ax2)
+fig.tight_layout()
 
-# Display the plot
 plt.show()
 
 ########################################################################
-# The plots generated show that both structures consist of four hairpin 
+# The generated plots show that both structures consist of four hairpin 
 # loops. Two of those loops, which are opposite to each other, interact 
 # through two pseudoknotted base pairs in the otherwise unpaired loop of 
 # the respective hairpin structures. The fact that this interaction was 
