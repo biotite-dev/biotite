@@ -3,8 +3,8 @@ Leontis-Westhof Nomenclature
 ============================
 
 In this example we plot a secondary structure diagram annotated with 
-Leontis-Westhof nomenclature of the sarcin-ricin loop from E. coli (PDB
-ID: 6ZYB).
+Leontis-Westhof nomenclature [1]_ of the sarcin-ricin loop from E. coli 
+(PDB ID: 6ZYB).
 """
 
 # Code source: Tom David Müller
@@ -16,6 +16,7 @@ import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.graphics as graphics
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -62,11 +63,17 @@ for bases, edge_types, orientation in zip(base_pairs, edges, glycosidic_bonds):
             annotation += "S"
         base_labels[base] = annotation
 
+# Create a matplotlib pyplot
+fig, ax = plt.subplots(figsize=(10, 10))
+
 # Plot the secondary structure
 graphics.plot_nucleotide_secondary_structure(
-    base_labels, base_pairs, struc.get_residue_count(nucleotides),
+    ax, base_labels, base_pairs, struc.get_residue_count(nucleotides),
     bond_color=colors
 )
+
+# Display the plot
+plt.show()
 
 ########################################################################
 # The sarcin-ricin loop is part of the 23s rRNA and is considered 
@@ -87,3 +94,10 @@ graphics.plot_nucleotide_secondary_structure(
 # Thus, it can be concluded that the upper part of the sarcin ricin loop 
 # represents a highly organized helix, while the lower part of the loop 
 # is comparatively unorganized.
+#
+# References
+# ----------
+# 
+# .. [1] NB Leontis and E Westhof,
+#    "Geometric nomenclature and classification of RNA base pairs.",
+#    RNA, 7(4), 499-512 (2001).

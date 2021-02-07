@@ -16,11 +16,12 @@ import biotite.structure.io.pdb as pdb
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.graphics as graphics
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Create a function to get the structures and compute information for 
 # the plots.
-def plot_rna(pdb_id):
+def plot_rna(pdb_id, axes):
     # Download the PDB file and read the structure
     pdb_file_path = rcsb.fetch(pdb_id, "pdb", gettempdir())
     pdb_file = pdb.PDBFile.read(pdb_file_path)
@@ -60,20 +61,23 @@ def plot_rna(pdb_id):
 
     # Plot the secondary structure
     graphics.plot_nucleotide_secondary_structure(
-        base_labels, base_pairs, struc.get_residue_count(nucleotides),
+        axes, base_labels, base_pairs, struc.get_residue_count(nucleotides),
         pseudoknot_order=pseudoknot_order, bond_linestyle=linestyles,
         bond_color=colors
     )
 
-########################################################################
-# Plot the tRNA-mimicing structure.
+    # Use the PDB ID to label each plot
+    axes.set_xlabel(pdb_id, horizontalalignment='right', x=1.0)
 
-plot_rna('4P5J')
+# Create a matplotlib pyplot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 
-########################################################################
-# Plot the PHE-tRNA.
+# Plot the secondary structures
+plot_rna('1EHZ', ax1)
+plot_rna('4P5J', ax2)
 
-plot_rna('1EHZ')
+# Display the plot
+plt.show()
 
 ########################################################################
 # The plots generated show that both structures consist of four hairpin 
