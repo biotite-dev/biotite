@@ -94,7 +94,7 @@ def plot_nucleotide_secondary_structure(
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
     bin_path : str, optional
-        Path of the *RNAplot* binary.
+        Path to the *RNAplot* binary.
     """
 
     # Check if RNAplot is installed
@@ -199,7 +199,7 @@ def plot_nucleotide_secondary_structure(
 
     # Draw backbone
     axes.plot(coordinates[:,0], coordinates[:,1], color=backbone_color,
-            linestyle=backbone_linestyle, linewidth=backbone_linewidth)
+              linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
     # Draw base labels
     for coords, label, box in zip(coordinates, base_labels, base_box):
