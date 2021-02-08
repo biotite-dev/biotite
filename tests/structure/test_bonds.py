@@ -480,6 +480,11 @@ def test_find_connected(bond_list):
             ("C15",  "S1" ),
             ("N3",   "S1" )
         ]),
+        ("LEO", [
+            ("C3",   "C8" ),
+            ("C6",   "C17"),
+            ("C17",  "C22"),
+        ]),
     ]
 )
 def test_find_rotatable_bonds(res_name, expected_bonds):
