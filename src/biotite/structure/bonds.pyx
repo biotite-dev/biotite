@@ -729,7 +729,7 @@ class BondList(Copyable):
 
         Parameters
         ----------
-        index1, index2 : int
+        atom_index1, atom_index2 : int
             The indices of the atoms to create a bond for.
         bond_type : BondType or int, optional
             The type of the bond. Default is :attr:`BondType.ANY`.
@@ -773,7 +773,7 @@ class BondList(Copyable):
 
         Parameters
         ----------
-        index1, index2 : int
+        atom_index1, atom_index2 : int
             The indices of the atoms whose bond should be removed.
         """
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
@@ -793,6 +793,35 @@ class BondList(Copyable):
         # Since this value is only used for pessimistic array allocation
         # in 'get_bonds()', the slightly larger memory usage is a better
         # option than the repetitive call of _get_max_bonds_per_atom()
+    
+    def remove_bonds_to(self, int32 atom_index):
+        """
+        remove_bonds_to(self, int32 atom_index)
+
+        Remove all bonds from the :class:`BondList` where the given atom
+        is involved.
+
+        Parameters
+        ----------
+        atom_index : int
+            The index of the atom whose bonds should be removed.
+
+        """
+        cdef uint32 index = _to_positive_index(atom_index, self._atom_count)
+        
+        cdef np.ndarray mask = np.ones(len(self._bonds), dtype=np.uint8)
+        cdef uint8[:] mask_v = mask
+
+        # Find the bond in bond list
+        cdef int i
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        for i in range(all_bonds_v.shape[0]):
+            if (all_bonds_v[i,0] == index or all_bonds_v[i,1] == index):
+                mask_v[i] = False
+        # Remove the bonds
+        self._bonds = self._bonds[mask.astype(np.bool, copy=False)]
+        # The maximum bonds per atom is not recalculated
+        # (see 'remove_bond()')
 
     def remove_bonds(self, bond_list):
         """
