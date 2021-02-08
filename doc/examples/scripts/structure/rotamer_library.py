@@ -14,6 +14,7 @@ an arbitrary small molecule.
 # License: BSD 3 clause
 
 import numpy as np
+import networkx as nx
 import matplotlib.pyplot as plt
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -33,42 +34,15 @@ bond_list = residue.bonds
 
 
 ### Identify rotatable bonds ###
-rotatable_bonds = []
-for atom1, atom2, bond_type in bond_list.as_array():
-    # Can only rotate about single bonds
-    if bond_type != struc.BondType.SINGLE:
-        continue
-    
-    segmented = bond_list.copy()
-    segmented.remove_bond(atom1, atom2)
-    conn_atoms1 = struc.find_connected(segmented, atom1)
-    conn_atoms2 = struc.find_connected(segmented, atom2)
-
-    # Rotation makes no sense if one of the atoms is a terminal atom,
-    # e.g. a hydrogen
-    if len(conn_atoms1) == 1 or len(conn_atoms2) == 1:
-            continue
-
-    # A bond cannot be rotated in a trivial way,
-    # if it is inside a cyclic structure
-    is_circular = atom2 in struc.find_connected(segmented, atom1)
-    if is_circular:
-        continue
-
-    # Do not rotate about backbone bonds,
-    # as these are irrelevant for a amino rotamer library
-    if residue.atom_name[atom1] in BACKBONE or \
-       residue.atom_name[atom2] in BACKBONE:
-            continue
-
-    # If all conditions pass, add this bond to the rotatable bonds
-    rotatable_bonds.append((atom1, atom2, conn_atoms1, conn_atoms2))
-
-
-### Output rotatable bond ###
+rotatable_bonds = struc.find_rotatable_bonds(residue.bonds)
+# Do not rotate about backbone bonds,
+# as these are irrelevant for a amino rotamer library
+for atom_name in BACKBONE:
+    index = np.where(residue.atom_name == atom_name)[0][0]
+    rotatable_bonds.remove_bonds_to(index)
 print("Rotatable bonds in tyrosine:")
-for atom1, atom2, _, _ in rotatable_bonds:
-    print(residue.atom_name[atom1] + " <-> " + residue.atom_name[atom2])
+for atom_i, atom_j, _ in rotatable_bonds.as_array():
+    print(residue.atom_name[atom_i] + " <-> " + residue.atom_name[atom_j])
 
 
 ### VdW radii of each atom, required for the next step ###
@@ -86,18 +60,30 @@ rotamer_coord = np.zeros((LIBRARY_SIZE, residue.array_length(), 3))
 for i in range(LIBRARY_SIZE):
     # Coordinates for the current rotamer model
     coord = residue.coord.copy()
-    for atom1, atom2, conn_atoms1, conn_atoms2 in rotatable_bonds:
+    for atom_i, atom_j, _ in rotatable_bonds.as_array():
+        # The bond axis
+        axis = coord[atom_j] - coord[atom_i]
+        # Position of one of the involved atoms
+        support = coord[atom_i]
+
+        # Only atoms at one side of the rotatable bond should be moved
+        # So the original Bondist is taken...
+        bond_list_without_axis = residue.bonds.copy()
+        # ...the rotatable bond is removed...
+        bond_list_without_axis.remove_bond(atom_i, atom_j)
+        # ...and these atoms are found by identifying the atoms that
+        # are still connected to one of the two atoms involved
+        rotated_atom_indices = struc.find_connected(
+            bond_list_without_axis, root=atom_i
+        )
+
         accepted = False
         while not accepted:
             # A random angle between 0 and 360 degrees
             angle = np.random.rand() * 2*np.pi
-            # The bond axis
-            axis = coord[atom2] - coord[atom1]
-            # Position of one of the involved atoms
-            support = coord[atom1]
             # Rotate
-            coord[conn_atoms1] = struc.rotate_about_axis(
-                coord[conn_atoms1], axis, angle, support
+            coord[rotated_atom_indices] = struc.rotate_about_axis(
+                coord[rotated_atom_indices], axis, angle, support
             )
 
             # Check if the atoms clash with each other:
