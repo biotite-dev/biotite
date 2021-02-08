@@ -24,6 +24,8 @@ from biotite.structure import AtomArray, BondType
 
 ctypedef np.float32_t float32
 ctypedef np.uint32_t uint32
+ctypedef np.int8_t int8
+ctypedef np.int64_t int64
 
 
 cdef float32 NAN = np.nan
@@ -261,7 +263,9 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
        Tetrahedron, 36, 3219 - 3288 (1980).
     """
     cdef int i
-    cdef float32 a, b, c 
+    cdef float32 a, b, c
+    cdef int8[:] bond_types_v = bond_types
+    cdef int64[:] amount_of_binding_partners_v = amount_of_binding_partners
 
     parameters = np.zeros((elements.shape[0], 3), dtype=np.float32)
     cdef float32[:,:] parameters_v = parameters
@@ -278,14 +282,14 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
 
     for i, element in enumerate(elements):
         # Considering the special case of ions
-        if amount_of_binding_partners[i] == 0:
+        if amount_of_binding_partners_v[i] == 0:
             parameters_v[i, :] = np.nan
             continue
-        if bond_types[i] == ANY:
+        if bond_types_v[i] == ANY:
             list_of_atoms_without_specified_btype.append(str(i))
             try:
                 a, b, c = EN_PARAM_BPARTNERS[element] \
-                                            [amount_of_binding_partners[i]]
+                                            [amount_of_binding_partners_v[i]]
                 parameters_v[i, 0] = a
                 parameters_v[i, 1] = b
                 parameters_v[i, 2] = c
@@ -317,7 +321,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                     # respective columns
                     unparam_valence_names.append(element)
                     unparametrized_valences.append(
-                        str(amount_of_binding_partners[i])
+                        str(amount_of_binding_partners_v[i])
                         +
                         " " * 31
                         +
@@ -327,7 +331,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                 parameters_v[i, :] = np.nan
         else:
             try:
-                a, b, c = EN_PARAM_BTYPE[element][bond_types[i]]
+                a, b, c = EN_PARAM_BTYPE[element][bond_types_v[i]]
                 parameters_v[i, 0] = a
                 parameters_v[i, 1] = b
                 parameters_v[i, 2] = c
@@ -344,7 +348,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                         +
                         " " * 5
                         +
-                        str(bond_types[i])
+                        str(bond_types_v[i])
                     )
                     has_valence_key_error = True
                 parameters_v[i, :] = np.nan
@@ -516,7 +520,8 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
 
     elements = atom_array.element
     bonds, types = atom_array.bonds.get_all_bonds()
-    amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1)
+    amount_of_binding_partners = np.count_nonzero(bonds != -1, axis=1) \
+                                 .astype(np.int64, copy=False)
     # The maximum of a given row of the `types` array must be determined
     # as this value reveals the hybridisation state
     # An atom's overall BondType is assumed to be ANY as soon as one
