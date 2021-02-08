@@ -113,13 +113,14 @@ class Tree(Copyable):
 
         Returns
         -------
-        bond_set : Graph
-            A *NetworkX* :class:`Graph`.
+        bond_set : DiGraph
+            A *NetworkX* directed graph.
             For a leaf node the graph node is its reference index.
             For an intermediate and root node the graph node is a tuple
             containing it children nodes.
             Each edge has a ``"distance"`` attribute depicting the
             distance between the nodes.
+            Each edge starts from the parent ends at its child.
         
         Examples
         --------
