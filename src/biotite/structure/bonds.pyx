@@ -11,7 +11,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BondList", "BondType",
            "connect_via_distances", "connect_via_residue_names",
-           "find_connected"]
+           "find_connected", "find_rotatable_bonds"]
 
 cimport cython
 cimport numpy as np
@@ -1664,4 +1664,74 @@ cdef _find_connected(bond_list,
             bond_list, connected_index, is_connected_mask, all_bonds
         )
 
+
+def find_rotatable_bonds(bonds):
+    """
+    find_rotatable_bonds(bonds)
+
+    Find all rotatable bonds in a given :class:`BondList`.
+
+    The following conditions must be true for a bond to be counted as
+    rotatable:
+
+        1. The bond must be a single bond (``BondType.SINGLE``)
+        2. The connected atoms must not be within the same cycle/ring
+        3. Both connected atoms must not be terminal, e.g. not a *C-H*
+           bond, as rotation about such bonds would not change any
+           coordinates
+
+    Parameters
+    ----------
+    bonds : BondList
+        The bonds to find the rotatable bonds in.
     
+    Returns
+    -------
+    rotatable_bonds : BondList
+        The subset of the input `bonds` that contains only rotatable
+        bonds.
+    
+    Examples
+    --------
+
+    >>> molecule = info.residue("TYR")
+    >>> for i, j, _ in struc.find_rotatable_bonds(molecule.bonds).as_array():
+    ...     print(molecule.atom_name[i], molecule.atom_name[j])
+    N CA
+    CA C
+    CA CB
+    C OXT
+    CB CG
+    CZ OH
+    """
+    cdef uint32 i, j
+    cdef uint32 bond_type
+    cdef uint32 SINGLE = int(BondType.SINGLE)
+    cdef bint in_same_cycle
+
+    bond_graph = bonds.as_graph()
+    cycles = nx.algorithms.cycles.cycle_basis(bond_graph)
+
+    cdef int64[:] number_of_partners_v = np.count_nonzero(
+        bonds.get_all_bonds()[0] != -1,
+        axis=1
+    ).astype(np.int64, copy=False)
+
+    rotatable_bonds = []
+    cdef uint32[:,:] bonds_v = bonds.as_array()
+    for i, j, bond_type in bonds_v:
+        # Can only rotate about single bonds
+        # Furthermore, it makes no sense to rotate about a bond,
+        # that leads to a single atom
+        if bond_type == BondType.SINGLE \
+            and number_of_partners_v[i] > 1 \
+            and number_of_partners_v[j] > 1:
+                # Cannot rotate about a bond, if the two connected atoms
+                # are in a cycle
+                in_same_cycle = False
+                for cycle in cycles:
+                    if i in cycle and j in cycle:
+                        in_same_cycle = True
+                if not in_same_cycle:
+                    rotatable_bonds.append((i,j, bond_type))
+    return BondList(bonds.get_atom_count(), np.array(rotatable_bonds))
