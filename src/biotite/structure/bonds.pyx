@@ -368,7 +368,7 @@ class BondList(Copyable):
         Examples
         --------
 
-        >>> bond_list = struc.BondList(5, np.array([(1,0,2), (1,3,1), (1,4,1)]))
+        >>> bond_list = BondList(5, np.array([(1,0,2), (1,3,1), (1,4,1)]))
         >>> graph = bond_list.as_graph()
         >>> print(graph.nodes)
         [0, 1, 3, 4]
@@ -796,7 +796,7 @@ class BondList(Copyable):
     
     def remove_bonds_to(self, int32 atom_index):
         """
-        remove_bonds_to(self, int32 atom_index)
+        remove_bonds_to(self, atom_index)
 
         Remove all bonds from the :class:`BondList` where the given atom
         is involved.
@@ -1723,8 +1723,8 @@ def find_rotatable_bonds(bonds):
     Examples
     --------
 
-    >>> molecule = info.residue("TYR")
-    >>> for i, j, _ in struc.find_rotatable_bonds(molecule.bonds).as_array():
+    >>> molecule = residue("TYR")
+    >>> for i, j, _ in find_rotatable_bonds(molecule.bonds).as_array():
     ...     print(molecule.atom_name[i], molecule.atom_name[j])
     N CA
     CA C
