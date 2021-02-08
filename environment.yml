@@ -33,3 +33,4 @@ dependencies:
   - mafft
   - muscle
   - sra-tools
+  - viennarna
