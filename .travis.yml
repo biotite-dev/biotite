@@ -7,43 +7,46 @@ matrix:
   include:
   - os: linux
     dist: trusty
-    sudo: false
     env:
-      - PY_VERSION='3.6'
+      - PY_VERSION='3.7'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: linux
     dist: trusty
-    sudo: false
-    env:
-      - PY_VERSION='3.7.3'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: linux
-    dist: trusty
-    sudo: false
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.16'
       - COMPLETE=true
+      - BIN=true
+      - SRC=true
+  - os: linux
+    dist: trusty
+    env:
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
+      - COMPLETE=false
       - BIN=true
       - SRC=true
   - os: osx
     env:
-      - PY_VERSION='3.6'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: osx
-    env:
       - PY_VERSION='3.7'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.16'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -60,8 +63,9 @@ install:
 
   - if [ $COMPLETE == true ];  then conda env create -q -f environment.yml; fi
   - if [ $COMPLETE == true ];  then conda install -n biotite-dev python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ];  then conda install -n biotite-dev numpy=$NUMPY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
-  - if [ $COMPLETE == false ]; then conda install -n biotite-dev "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
+  - if [ $COMPLETE == false ]; then conda install -n biotite-dev -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
   - source activate biotite-dev
   - python setup.py bdist_wheel
   - pip install ./dist/*.whl
@@ -80,8 +84,8 @@ before_deploy:
 
 deploy:
   provider: releases
-  api-key:
-    secure: ncH32tO1V1vJMgpHY/JJ+TDpFkj0uFzNVeD2tBFq+uCDSRzQo8hiC+kFveciQNr9UuKFyqBySFpjP+g93f9xWcjruzTbT42vhoM6YzddMcQI/yiINWoco1Lk8RZpv6HsWeLXPFzP6BWWwBH+1rF09AXX4hk5nHGOlawM+f1nwCoqZrvPc5mhfN/JytRgUjjVZ1yI9VL77wMakGYsuuBpgjpk1AC5bG2X0aCYSRub7kAl3CYPvrknx38pbtL8d9mMyFwLe1UVxuyhY5PZ1hzk+6Dkjwx0mWQ95TCoTOwPU2ECF81gORVd/HZeQ/xRPYb8mlufy+v7pjUgMRQVMwjRR+e3JYHxoAjbN41WUYZohyIeVGnQ9hlaa59EHoDyGL6hJFqJ2o7E5DoKCGE+ssQ/pAmczPMCf3lG4nhgA80WXo9fcchMqPqB1uX43gv+qWvLy3N8V+pzK9nQpUsjKXKROp5fABIaz56APUaq1UrzaAvPHUlNiixjWd7FCU9nDGig8vGSfGNumBUFOQHnS12eQ0ICzTK7z9SuigkEAkB236AiopD5d0fZyyz9hWvWua22wqBD4kwtIQczFos5JHibv1taWdtnxs+/XAJpcV6EWYdTpNEItejRjtPRv20Ddx+G3176aYKbXWrANk/F4sp/HgGaLR7xUiH1wabd6QS5OUE=
+  token:
+    secure: d2R8Zq43rfldzjVeC/W2yzhjShI/QJuXfC0UAq2MBorkWrzd0WNKRvsq4lKROhJcOopm5eV6gwlQnvfmuwIvdZzPc/tI0+fdYCikcTJotjX6hwRvjCAiGprZQNzjdk5jewNfr5mE1RrXK04i7OJKne6fp3TuIvF9wY1/LNC8dUcF1Ph9okwbwB6J1b6rq2WJr5rtkwOGfQE5lQ6K9xcyv9u64Th8gzsH79glcY8+tQp+juN7CLfYnx++TzI/mumaUUBD0SNAAD+2BNFl5GcclCMQ30s5Ttx+heqAZ3LGVLgWqEz9xnXR8dDbjxrIt5dj1oyKeF55CrTsQwnpHo4ZUde1lGI9UG85Y3EzOfVE0v3bATjqJ+4OeKMg5T1Q7+9Ok0/qxyh+7gBX6SmIH8gzjMesCgLDbYnCaTFDuWQJ86ggHJHsRRAmLkzlM/fHD1qBBQw28N2pG4VeqOWVVpRpCH6BfBEQAsgx0yRA3tLO0rDOw5yqRzYum1PNiCJa4WePiMG+je/OXFFyJ0bOu4h9aSP1/PvcTtUdCRCWnBrfDZumGoRP/RPZKvmb5Lj3W482QW0a7EEfcRj6PlpKcpMsG+gbXcIknX9eQTpVP5y0Bn+Zpiod+aKMSfPdgFs117PMgl0luYsi9nWZDAUy+uHs4ZD+kx4HFQiOGYhK1lNGzPA=
   file:
     - dist/*
     - doc/_build/doc.zip

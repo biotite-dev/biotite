@@ -498,6 +498,12 @@ class PDBFile(TextFile):
             warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
             raise ValueError("Coordinates contain 'NaN' values")
+        if any([len(name) > 1 for name in array.chain_id]):
+            raise ValueError("Some chain IDs exceed 1 character")
+        if any([len(name) > 3 for name in array.res_name]):
+            raise ValueError("Some residue names exceed 3 characters")
+        if any([len(name) > 4 for name in array.atom_name]):
+            raise ValueError("Some atom names exceed 4 characters")
 
         if hybrid36:
             pdb_atom_id = [encode_hybrid36(i, 5).rjust(5) for i in atom_id]

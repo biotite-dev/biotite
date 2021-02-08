@@ -30,6 +30,7 @@ htmlcov
 # Ignore files created via Cython
 *.c
 *.so
+*.pyd
 
 # Ignore all compiled python files (e.g. from running the unit tests)
 *.pyc

@@ -367,11 +367,11 @@ def test_unsorted_array_indexing():
     # Use a set for simpler comparison between the sorted and unsorted variant
     # Omit the bond type -> 'bonds.as_array()[:, :2]'
     test_integer_pairs = set([
-        (unsorted_indexed_integers[i], unsorted_indexed_integers[j])
+        frozenset((unsorted_indexed_integers[i], unsorted_indexed_integers[j]))
         for i, j in test_bonds.as_array()[:, :2]
     ])
     ref_integer_pairs = set([
-        (sorted_indexed_integers[i], sorted_indexed_integers[j])
+        frozenset((sorted_indexed_integers[i], sorted_indexed_integers[j]))
         for i, j in ref_bonds.as_array()[:, :2]
     ])
 
@@ -380,6 +380,10 @@ def test_unsorted_array_indexing():
     assert test_bonds.as_array().tolist() != ref_bonds.as_array().tolist()
     # But the actual bonded 'atom' pairs, should still be the same
     assert test_integer_pairs == ref_integer_pairs
+    # Additionally, check whether in each bond the lower atom index 
+    # comes first
+    for i, j, _ in test_bonds.as_array():
+        assert i < j
 
 
 def test_atom_array_consistency():

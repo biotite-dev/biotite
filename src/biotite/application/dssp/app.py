@@ -9,7 +9,8 @@ __all__ = ["DsspApp"]
 from tempfile import NamedTemporaryFile
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
-from ...structure.io.pdb import PDBFile
+from ...structure.io.pdbx.file import PDBxFile
+from ...structure.io.pdbx.convert import set_structure
 import numpy as np
 
 
@@ -53,13 +54,31 @@ class DsspApp(LocalApp):
     
     def __init__(self, atom_array, bin_path="mkdssp"):
         super().__init__(bin_path)
-        self._array = atom_array
-        self._in_file  = NamedTemporaryFile("w", suffix=".pdb",  delete=False)
+
+        # mkdssp requires also the
+        # 'occupancy', 'b_factor' and 'charge' fields
+        # -> Add these annotations to a copy of the input structure
+        self._array = atom_array.copy()
+        categories = self._array.get_annotation_categories()
+        if "charge" not in categories:
+            self._array.set_annotation(
+                "charge", np.zeros(self._array.array_length(), dtype=int)
+            )
+        if "b_factor" not in categories:
+            self._array.set_annotation(
+                "b_factor", np.zeros(self._array.array_length(), dtype=float)
+            )
+        if "occupancy" not in categories:
+            self._array.set_annotation(
+                "occupancy", np.ones(self._array.array_length(), dtype=float)
+            )
+
+        self._in_file  = NamedTemporaryFile("w", suffix=".cif",  delete=False)
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
     def run(self):
-        in_file = PDBFile()
-        in_file.set_structure(self._array)
+        in_file = PDBxFile()
+        set_structure(in_file, self._array, data_block="DSSP_INPUT")
         in_file.write(self._in_file)
         self._in_file.flush()
         self.set_arguments(

@@ -922,7 +922,6 @@ class BondList(Copyable):
         return merged_bond_list
 
     def __getitem__(self, index):
-
         ## Variables for both, integer and boolean index arrays
         cdef uint32[:,:] all_bonds_v
         cdef int32 new_index
@@ -978,9 +977,14 @@ class BondList(Copyable):
                         # At least one atom in bond is not included
                         # -> remove bond
                         removal_filter_v[i] = False
+                
                 copy._bonds = copy._bonds[
                     removal_filter.astype(bool, copy=False)
                 ]
+                # Again, sort indices per bond
+                # as the correct order is not guaranteed anymore
+                # for unsorted index arrays
+                copy._bonds[:,:2] = np.sort(copy._bonds[:,:2], axis=1)
                 copy._atom_count = len(index)
                 copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
                 return copy
