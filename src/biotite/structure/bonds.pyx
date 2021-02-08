@@ -819,7 +819,7 @@ class BondList(Copyable):
             if (all_bonds_v[i,0] == index or all_bonds_v[i,1] == index):
                 mask_v[i] = False
         # Remove the bonds
-        self._bonds = self._bonds[mask.astype(np.bool, copy=False)]
+        self._bonds = self._bonds[mask.astype(bool, copy=False)]
         # The maximum bonds per atom is not recalculated
         # (see 'remove_bond()')
 
@@ -854,7 +854,7 @@ class BondList(Copyable):
                         mask_v[i] = False
         
         # Remove the bonds
-        self._bonds = self._bonds[mask.astype(np.bool, copy=False)]
+        self._bonds = self._bonds[mask.astype(bool, copy=False)]
         # The maximum bonds per atom is not recalculated
         # (see 'remove_bond()')
 
@@ -1126,7 +1126,7 @@ class BondList(Copyable):
                 free(<int*>ptrs_v[i])
         
         # Eventually remove redundant bonds
-        self._bonds = self._bonds[redundancy_filter.astype(np.bool,copy=False)]
+        self._bonds = self._bonds[redundancy_filter.astype(bool, copy=False)]
 
 
 cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
@@ -1229,7 +1229,7 @@ def _to_bool_mask(object index, uint32 length):
     Convert an index of arbitrary type into a boolean mask
     with given length.
     """
-    if isinstance(index, np.ndarray) and index.dtype == np.bool:
+    if isinstance(index, np.ndarray) and index.dtype == bool:
         # Index is already boolean mask -> simply return as uint8
         if len(index) != length:
             raise IndexError(
