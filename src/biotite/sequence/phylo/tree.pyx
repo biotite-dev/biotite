@@ -131,9 +131,9 @@ class Tree(Copyable):
         >>> graph = tree.as_graph()
         >>> for node_i, node_j in graph.edges:
         ...     print(f"{str(node_i):12}  ->  {str(node_j):12}")
-        (0, 1)        ->  0           
-        (0, 1)        ->  1           
-        ((0, 1), 2)   ->  (0, 1)      
+        (0, 1)        ->  0
+        (0, 1)        ->  1
+        ((0, 1), 2)   ->  (0, 1)
         ((0, 1), 2)   ->  2
         """
         cdef tuple children
