@@ -12,6 +12,11 @@ Writing input files and reading output files is handled internally.
 The user only needs to provide objects like a :class:`Sequence`
 and will receive objects like an :class:`Alignment`.
 
+Note that in order to use an interface in :mod:`biotite.application`
+the corresponding software must be installed or the web server must be
+reachable, respectively.
+These programs are not shipped with the *Biotite* package.
+
 Each application is represented by its respective :class:`Application`
 class.
 :class:`Application` objects are created, started and after the run has
