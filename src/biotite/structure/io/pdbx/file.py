@@ -18,14 +18,15 @@ class PDBxFile(TextFile, MutableMapping):
     This class represents a PDBx/mmCIF file.
     
     The categories of the file can be accessed using the
-    `get_category()`/`set_category()` methods. The content of each
-    category is represented by a dictionary. The dictionary contains
-    the entry (e.g. *label_entity_id* in *atom_site*) as key. The
-    corresponding values are either strings in *non-looped* categories,
-    or 1-D numpy arrays of string objects in case of *looped*
-    categories.
+    :meth:`get_category()`/:meth:`set_category()` methods.
+    The content of each category is represented by a dictionary.
+    The dictionary contains the entry
+    (e.g. *label_entity_id* in *atom_site*) as key.
+    The corresponding values are either strings in *non-looped*
+    categories, or 1-D numpy arrays of string objects in case of
+    *looped* categories.
     
-    A category can be changed or added using `set_category()`:
+    A category can be changed or added using :meth:`set_category()`:
     If a string-valued dictionary is provided, a *non-looped* category
     will be created; if an array-valued dictionary is given, a
     *looped* category will be created. In case of arrays, it is
@@ -45,15 +46,14 @@ class PDBxFile(TextFile, MutableMapping):
     This class uses a lazy category dictionary creation: When reading
     the file only the line positions of all categories are checked. The
     time consuming task of dictionary creation is done when
-    `get_category()` is called.
+    :meth:`get_category()` is called.
     
     Examples
     --------
     Read the file and get author names:
 
     >>> import os.path
-    >>> file = PDBxFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> author_dict = file.get_category("citation_author", block="1L2Y")
     >>> print(author_dict["name"])
     ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
@@ -87,11 +87,26 @@ class PDBxFile(TextFile, MutableMapping):
         self._categories = {}
     
     
-    def read(self, file):
-        super().read(file)
+    @classmethod
+    def read(cls, file):
+        """
+        Read a PDBx/mmCIF file.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be read.
+            Alternatively a file path can be supplied.
+        
+        Returns
+        -------
+        file_object : PDBxFile
+            The parsed file.
+        """
+        file = super().read(file)
         # Remove emptyline at then end of file, if present
-        if self.lines[-1] == "":
-            del self.lines[-1]
+        if file.lines[-1] == "":
+            del file.lines[-1]
         
         current_data_block = ""
         current_category = None
@@ -99,7 +114,7 @@ class PDBxFile(TextFile, MutableMapping):
         stop = -1
         is_loop = False
         has_multiline_values = False
-        for i, line in enumerate(self.lines):
+        for i, line in enumerate(file.lines):
             # Ignore empty and comment lines
             if not _is_empty(line):
                 data_block_name = _data_block_name(line)
@@ -119,13 +134,13 @@ class PDBxFile(TextFile, MutableMapping):
                     # Start of a new category
                     # Add an entry into the dictionary with the old category
                     stop = i
-                    self._add_category(data_block, current_category, start,
+                    file._add_category(data_block, current_category, start,
                                        stop, is_loop, has_multiline_values)
                     # Track the new category
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is in the
                         # next line
-                        category_in_line = _get_category_name(self.lines[i+1])
+                        category_in_line = _get_category_name(file.lines[i+1])
                     is_loop = is_loop_in_line
                     current_category = category_in_line
                     start = i
@@ -138,9 +153,10 @@ class PDBxFile(TextFile, MutableMapping):
         # Since at the end of the file the end of the category
         # is not determined by the start of a new one,
         # this needs to be handled separately
-        stop = len(self.lines)
-        self._add_category(data_block, current_category, start,
+        stop = len(file.lines)
+        file._add_category(data_block, current_category, start,
                            stop, is_loop, has_multiline_values)
+        return file
     
     
     def get_block_names(self):
@@ -243,10 +259,9 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             category_dict = _process_singlevalued(lines)
         
-        if expect_looped:
-            if not is_loop:
-                for key, val in category_dict:
-                    category_dict[key] = np.array([val], dtype=object)
+        if expect_looped and not is_loop:
+            category_dict = {key: np.array([val], dtype=object)
+                             for key, val in category_dict.items()}
 
         return category_dict
             
@@ -314,7 +329,7 @@ class PDBxFile(TextFile, MutableMapping):
 
         
         # Value arrays (looped categories) can be modified (e.g. quoted)
-        # Hence make a copy to avoid unwaned side effects
+        # Hence make a copy to avoid unwanted side effects
         # due to modification of input values
         if is_looped:
             category_dict = {key : val.copy() for key, val
@@ -329,7 +344,7 @@ class PDBxFile(TextFile, MutableMapping):
                 category_dict[key] = _quote(value)
         
         if is_looped:
-            keylines = ["_" + category + "." + key
+            keylines = ["_" + category + "." + key + " "
                          for key in category_dict.keys()]
             value_arr = list(category_dict.values())
             # Array containing the number of characters + whitespace
@@ -499,11 +514,19 @@ class PDBxFile(TextFile, MutableMapping):
     
 def _process_singlevalued(lines):
     category_dict = {}
-    for line in lines:
-        parts = shlex.split(line)
+    i = 0
+    while i < len(lines):
+        parts = shlex.split(lines[i])
         key = parts[0].split(".")[1]
-        value = parts[1]
+        if len(parts) > 1:
+            value = parts[1]
+        else:
+            # The value is not in the same line,
+            # but in the following one
+            i += 1
+            value = shlex.split(lines[i])[0]
         category_dict[key] = value
+        i += 1
     return category_dict
 
 

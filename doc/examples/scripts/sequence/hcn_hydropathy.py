@@ -62,12 +62,10 @@ query =   entrez.SimpleQuery("HCN1", "Gene Name") \
         & entrez.SimpleQuery("homo sapiens", "Organism") \
         & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
 uids = entrez.search(query, db_name="protein")
-file_name = entrez.fetch(
-    uids[0], biotite.temp_dir(), "gp", db_name="protein", ret_type="gp"
-)
 
-gp_file = gb.GenBankFile()
-gp_file.read(file_name)
+gp_file = gb.GenBankFile.read(entrez.fetch(
+    uids[0], None, "gp", db_name="protein", ret_type="gp"
+))
 hcn1 = seq.ProteinSequence(gb.get_sequence(gp_file, format="gp"))
 print(hcn1)
 
@@ -97,12 +95,10 @@ for name in names:
             & entrez.SimpleQuery("homo sapiens", "Organism") \
             & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
     uids += entrez.search(query, db_name="protein")
-file_name = entrez.fetch_single_file(
-    uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
-)
 
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
+    uids, None, db_name="protein", ret_type="fasta"
+))
 
 for header in fasta_file:
     print(header)

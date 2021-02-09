@@ -30,8 +30,7 @@ templ_file_path = "../../download/lysozyme_md.pdb"
 traj_file_path  = "../../download/lysozyme_md.xtc"
 
 
-xtc_file = xtc.XTCFile()
-xtc_file.read(traj_file_path)
+xtc_file = xtc.XTCFile.read(traj_file_path)
 traj = xtc_file.get_structure(template=strucio.load_structure(templ_file_path))
 time = xtc_file.get_time()
 traj = traj[:, struc.filter_amino_acids(traj)]

@@ -33,19 +33,18 @@ PLASMID_URL = "https://media.addgene.org/snapgene-media/" \
 
 
 response = requests.get(PLASMID_URL)
-file = gb.GenBankFile()
-file.read(io.StringIO(response.text))
-annotation = gb.get_annotation(file, include_only=[
+gb_file = gb.GenBankFile.read(io.StringIO(response.text))
+annotation = gb.get_annotation(gb_file, include_only=[
     "promoter", "terminator", "protein_bind",
     "RBS", "CDS", "rep_origin", "primer_bind"
 ])
-_, seq_length, _, _, _, _ = gb.get_locus(file)
+_, seq_length, _, _, _, _ = gb.get_locus(gb_file)
 # AddGene stores the plasmid name in the 'KEYWORDS' field
 # [0][0][0] ->
 # The first (and only) 'KEYWORDS' field
 # The first entry in the tuple
 # The first (and only) line in the field
-plasmid_name = file.get_fields("KEYWORDS")[0][0][0]
+plasmid_name = gb_file.get_fields("KEYWORDS")[0][0][0]
 
 
 def custom_feature_formatter(feature):

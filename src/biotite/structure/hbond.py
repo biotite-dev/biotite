@@ -10,6 +10,7 @@ __name__ = "biotite.structure"
 __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["hbond", "hbond_frequency"]
 
+import warnings
 from .geometry import distance, angle
 import numpy as np
 from .atoms import AtomArrayStack, stack
@@ -24,11 +25,12 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     Find hydrogen bonds in a structure using the Baker-Hubbard
     algorithm. [1]_
 
-    This method identifies hydrogen bonds based on the bond angle
+    This function identifies hydrogen bonds based on the bond angle
     :math:`\theta` and the bond distance :math:`d_{H,A}`.
     The default criteria is :math:`\theta > 120^{\circ}`
     and :math:`d_{H,A} \le 2.5 \mathring{A}`.
-    .
+    Consequently, the given structure must contain hydrogen atoms.
+    Otherwise, no hydrogen bonds will be found.
     
     Parameters
     ----------
@@ -126,6 +128,11 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
        "Hydrogen bonding in globular proteins"
        Prog Biophys Mol Biol, 44, 97-179 (1984).
     """
+    if not (atoms.element == "H").any():
+        warnings.warn(
+            "Input structure does not contain hydrogen atoms, "
+            "hence no hydrogen bonds can be identified"
+        )
 
     # Create AtomArrayStack from AtomArray
     if not isinstance(atoms, AtomArrayStack):

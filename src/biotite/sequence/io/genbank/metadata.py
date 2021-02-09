@@ -45,8 +45,7 @@ def get_locus(gb_file):
     --------
     
     >>> import os.path
-    >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> file = GenBankFile.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> name, length, mol_type, is_circular, division, date = get_locus(file)
     >>> print(name)
     CP001509
@@ -91,8 +90,7 @@ def get_definition(gb_file):
     --------
     
     >>> import os.path
-    >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> file = GenBankFile.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> print(get_definition(file))
     Escherichia coli BL21(DE3), complete genome.
     """
@@ -117,8 +115,7 @@ def get_accession(gb_file):
     --------
     
     >>> import os.path
-    >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> file = GenBankFile.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> print(get_accession(file))
     CP001509
     """
@@ -187,8 +184,7 @@ def get_db_link(gb_file):
     --------
     
     >>> import os.path
-    >>> file = GenBankFile()
-    >>> file.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
+    >>> file = GenBankFile.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
     >>> for key, val in get_db_link(file).items():
     ...     print(key, ":", val)
     BioProject : PRJNA20713

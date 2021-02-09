@@ -11,7 +11,7 @@ def test_nucleotide_construction():
     string = "AATGCGTTA"
     string_amb = "ANNGCBRTAN"
     dna = seq.NucleotideSequence(string)
-    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet
+    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_unamb
     assert str(dna) == string
     dna = seq.NucleotideSequence(string_amb)
     assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_amb
@@ -71,3 +71,20 @@ def test_letter_conversion():
         three_letters = seq.ProteinSequence.convert_letter_1to3(symbol)
         single_letter = seq.ProteinSequence.convert_letter_3to1(three_letters)
         assert symbol == single_letter
+
+
+@pytest.mark.parametrize(
+    "monoisotopic, expected_mol_weight_protein",
+    # Reference values taken from https://web.expasy.org/compute_pi/
+    [(True, 2231.06), (False, 2232.56)]
+)
+def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
+    """
+    Test whether the molecular weight of a protein is calculated
+    correctly.
+    """
+    protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVW")
+    mol_weight_protein = protein.get_molecular_weight(
+        monoisotopic=monoisotopic)
+    assert mol_weight_protein == \
+           pytest.approx(expected_mol_weight_protein, abs=1e-2)

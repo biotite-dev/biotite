@@ -51,14 +51,14 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
     Notes
     -----
-    This function us the `get_window_extent()` method of the `Text`
-    object.
+    This function uses the :func:`get_window_extent()` method of the
+    :class:`Text` object.
     According to experience, this function does not give the the exact
     visual boundaries of the text.
     Consequently, the scaled text might be slightly smaller or larger
-    than the specified width/height..
-    This behaviour is not equal for all initial font sizes (in 'pt'),
-    the boundaries for an inital size of 1 'pt' seems to be most exact.
+    than the specified width/height.
+    This behavior is not equal for all initial font sizes (in 'pt'),
+    the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
     from matplotlib.transforms import Bbox
     from matplotlib.text import Text

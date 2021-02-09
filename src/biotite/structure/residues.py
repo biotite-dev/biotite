@@ -10,7 +10,8 @@ atom level.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
-           "get_residue_masks", "get_residues", "get_residue_count",
+           "get_residue_masks", "get_residue_starts_for",
+           "get_residue_positions", "get_residues", "get_residue_count",
            "residue_iter"]
 
 import numpy as np
@@ -19,7 +20,7 @@ from .atoms import AtomArray, AtomArrayStack
 
 def get_residue_starts(array, add_exclusive_stop=False):
     """
-    Get the indices in an atom array, which indicates the beginning of
+    Get indices for an atom array, each indicating the beginning of
     a residue.
     
     A new residue starts, either when the chain ID, residue ID,
@@ -54,44 +55,30 @@ def get_residue_starts(array, add_exclusive_stop=False):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
-    chain_ids = array.chain_id
-    res_ids = array.res_id
-    ins_codes = array.ins_code
-    res_names = array.res_name
+    # These mask are 'true' at indices where the value changes
+    chain_id_changes = (array.chain_id[1:] != array.chain_id[:-1])
+    res_id_changes   = (array.res_id[1:]   != array.res_id[:-1]  )
+    ins_code_changes = (array.ins_code[1:] != array.ins_code[:-1])
+    res_name_changes = (array.res_name[1:] != array.res_name[:-1])
 
-    # Maximum length is length of atom array
-    starts = np.zeros(array.array_length(), dtype=int)
-
-    # Variables for current values
-    curr_chain_id = chain_ids[0]
-    curr_res_id = res_ids[0]
-    curr_ins_code = ins_codes[0]
-    curr_res_name = res_names[0]
-
-    # Index for 'starts' begins at second element, since
-    # The first start is already identified
-    # (always at position 0 of the atom array)
-    i = 1
-
-    for j in range(array.array_length()):
-        if curr_chain_id != chain_ids[j] \
-            or curr_res_name != res_names[j] \
-            or curr_res_id != res_ids[j] \
-            or curr_ins_code != ins_codes[j]:
-                starts[i] = j
-                i += 1
-                curr_chain_id  = chain_ids[j]
-                curr_res_id    = res_ids[j]
-                curr_ins_code = ins_codes[j]
-                curr_res_name  = res_names[j]
+    # If any of these annotation arrays change, a new residue starts
+    residue_change_mask = (
+        chain_id_changes | 
+        res_id_changes |
+        ins_code_changes | 
+        res_name_changes
+    )
     
-    # Trim to correct size
-    starts = starts[:i]
-
+    # Convert mask to indices
+    # Add 1, to shift the indices from the end of a residue
+    # to the start of a new residue
+    residue_starts = np.where(residue_change_mask)[0] +1
+    
+    # The first residue is not included yet -> Insert '[0]'
     if add_exclusive_stop:
-        starts = np.append(starts, [array.array_length()])
-
-    return starts
+        return np.concatenate(([0], residue_starts, [array.array_length()]))
+    else:
+        return np.concatenate(([0], residue_starts))
 
 
 def apply_residue_wise(array, data, function, axis=None):
@@ -111,8 +98,7 @@ def apply_residue_wise(array, data, function, axis=None):
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
-        The `res_id` annotation array is taken from `array` in order to
-        determine the intervals.
+        The atom array (stack) to determine the residues from.
     data : ndarray
         The data, whose intervals are the parameter for `function`. Must
         have same length as `array`.
@@ -206,8 +192,10 @@ def apply_residue_wise(array, data, function, axis=None):
 
 def spread_residue_wise(array, input_data):
     """
-    Creates an :class:`ndarray` with residue-wise spread values from an
-    input :class:`ndarray`.
+    Expand residue-wise data to atom-wise data.
+
+    Each value in the residue-wise input is assigned to all atoms of
+    this residue:
     
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,
@@ -216,15 +204,15 @@ def spread_residue_wise(array, input_data):
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
-        The data is spreaded over `array`'s 'res_id` annotation array.
+        The atom array (stack) to determine the residues from.
     input_data : ndarray
-        The data to be spreaded. The length of axis=0 must be equal to
+        The data to be spread. The length of axis=0 must be equal to
         the amount of different residue IDs in `array`.
         
     Returns
     -------
     output_data : ndarray
-        Residue-wise spreaded `input_data`. Length is the same as
+        Residue-wise spread `input_data`. Length is the same as
         `array_length()` of `array`.
         
     Examples
@@ -270,14 +258,13 @@ def spread_residue_wise(array, input_data):
 
 def get_residue_masks(array, indices):
     """
-    Get boolean masks indicating the residues to which the given atoms
-    belong.
+    Get boolean masks indicating the residues to which the given atom
+    indices belong.
 
     Parameters
     ----------
     array : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
-        The `res_id` annotation array is taken from `array` in order to
-        determine the residues.
+        The atom array (stack) to determine the residues from.
     indices : ndarray, dtype=int, shape=(k,)
         These indices indicate the atoms to get the corresponding
         residues for.
@@ -289,6 +276,11 @@ def get_residue_masks(array, indices):
         Multiple boolean masks, one for each given index in `indices`.
         Each array masks the atoms that belong to the same residue as
         the atom at the given index.
+    
+    See also
+    --------
+    get_residue_starts_for
+    get_residue_positions
     
     Examples
     --------
@@ -339,12 +331,9 @@ def get_residue_masks(array, indices):
         A       3  TYR HE2    H         0.033    4.952    4.233
         A       3  TYR HH     H         1.187    3.395    5.567
     """
-    if not isinstance(indices, np.ndarray):
-        indices = np.array(indices)
-    
+    indices = np.asarray(indices)
     starts = get_residue_starts(array, add_exclusive_stop=True)
     masks = np.zeros((len(indices), array.array_length()), dtype=bool)
-    order = np.argsort(indices)
 
     if (indices < 0).any():
         raise ValueError("This function does not support negative indices")
@@ -353,20 +342,127 @@ def get_residue_masks(array, indices):
         raise ValueError(
             f"Index {index} is out of range for "
             f"an atom array with length {array.array_length()}"
-        ) 
+        )
     
-    starts_i = 0
-    start = starts[starts_i]
-    stop = starts[starts_i+1]
-    for i in range(len(indices)):
-        index = indices[order[i]]
-        while stop <= index:
-           starts_i += 1
-           start = starts[starts_i]
-           stop = starts[starts_i+1]
-        masks[order[i], start:stop] = True
+    insertion_points = np.searchsorted(starts, indices, side="right") - 1
+    for i, point in enumerate(insertion_points):
+        masks[i, starts[point] : starts[point+1]] = True
     
     return masks
+
+
+def get_residue_starts_for(array, indices):
+    """
+    For each given atom index, get the index that points to the
+    start of the residue that atom belongs to.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to determine the residues from.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices point to the atoms to get the corresponding
+        residue starts for.
+        Negative indices are not allowed.
+    
+    Returns
+    -------
+    start_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the residue starts for the input
+        `indices`.
+    
+    See also
+    --------
+    get_residue_masks
+    get_residue_positions
+    
+    Examples
+    --------
+
+    >>> indices = [5, 42]
+    >>> residue_starts = get_residue_starts_for(atom_array, indices)
+    >>> print(residue_starts)
+    [ 0 35]
+    >>> print(atom_array[indices[0]])
+        A       1  ASN CG     C       -10.915    3.130   -2.611
+    >>> print(atom_array[residue_starts[0]])
+        A       1  ASN N      N        -8.901    4.127   -0.555
+    >>> print(atom_array[indices[1]])
+        A       3  TYR CD2    C        -1.820    4.326    3.332
+    >>> print(atom_array[residue_starts[1]])
+        A       3  TYR N      N        -4.354    3.455   -0.111
+    """
+    indices = np.asarray(indices)
+    starts = get_residue_starts(array)
+
+    if (indices < 0).any():
+        raise ValueError("This function does not support negative indices")
+    if (indices >= array.array_length()).any():
+        index = np.min(np.where(indices >= array.array_length())[0])
+        raise ValueError(
+            f"Index {index} is out of range for "
+            f"an atom array with length {array.array_length()}"
+        )
+    
+    insertion_points = np.searchsorted(starts, indices, side="right") - 1
+    return starts[insertion_points]
+
+
+def get_residue_positions(array, indices):
+    """
+    For each given atom index, obtain the position of the residue
+    corresponding to this index in the input `array`.
+
+    For example, the position of the first residue in the atom array is
+    ``0``, the the position of the second residue is ``1``, etc.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to determine the residues from.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices point to the atoms to get the corresponding
+        residue positions for.
+        Negative indices are not allowed.
+    
+    Returns
+    -------
+    start_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the position of the residues.
+    
+    See also
+    --------
+    get_residue_masks
+    get_residue_starts_for
+
+    Examples
+    --------
+    >>> atom_index = [5, 42]
+    >>> print(atom_array.res_name[atom_index])
+    ['ASN' 'TYR']
+    >>> _, residues = get_residues(atom_array)
+    >>> print(residues)
+    ['ASN' 'LEU' 'TYR' 'ILE' 'GLN' 'TRP' 'LEU' 'LYS' 'ASP' 'GLY' 'GLY' 'PRO'
+     'SER' 'SER' 'GLY' 'ARG' 'PRO' 'PRO' 'PRO' 'SER']
+    >>> residue_index = get_residue_positions(atom_array, atom_index)
+    >>> print(residue_index)
+    [0 2]
+    >>> print(residues[residue_index])
+    ['ASN' 'TYR']
+    """
+    indices = np.asarray(indices)
+    starts = get_residue_starts(array)
+
+    if (indices < 0).any():
+        raise ValueError("This function does not support negative indices")
+    if (indices >= array.array_length()).any():
+        index = np.min(np.where(indices >= array.array_length())[0])
+        raise ValueError(
+            f"Index {index} is out of range for "
+            f"an atom array with length {array.array_length()}"
+        )
+    
+    return np.searchsorted(starts, indices, side="right") - 1
 
 
 def get_residues(array):
@@ -379,7 +475,7 @@ def get_residues(array):
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
-        The atom array (stack), where the residues are determined.
+        The atom array (stack) to determine the residues from.
         
     Returns
     -------
@@ -439,7 +535,7 @@ def get_residue_count(array):
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
-        The atom array (stack), where the residues are counted.
+        The atom array (stack) to determine the residues from.
         
     Returns
     -------
@@ -458,11 +554,10 @@ def residue_iter(array):
     array : AtomArray or AtomArrayStack
         The atom array (stack) to iterate over.
         
-    Returns
-    -------
-    count : generator of AtomArray or AtomArrayStack
-        A generator of subarrays or substacks (dependent on the input
-        type) containing each residue of the input `array`.
+    Yields
+    ------
+    chain : AtomArray or AtomArrayStack
+        A single residue of the input `array`.
     
     Examples
     --------

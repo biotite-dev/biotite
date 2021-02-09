@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import itertools
 import glob
 from os.path import join, splitext
@@ -14,24 +15,40 @@ import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io as io
-from .util import data_dir
+from ..util import data_dir
+
+
+def test_get_model_count():
+    pdb_file = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb"))
+    # Test also the thin wrapper around the method
+    # 'get_model_count()'
+    test_model_count = pdb.get_model_count(pdb_file)
+    ref_model_count = pdb.get_structure(pdb_file).stack_depth()
+    assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
-    "path, single_model, hybrid36",
+    "path, model, hybrid36",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
-        [False, True],
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1, -1],
         [False, True]
     )
 )
-def test_array_conversion(path, single_model, hybrid36):
-    model = 1 if single_model else None
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+def test_array_conversion(path, model, hybrid36):
+    pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
-    array1 = pdb.get_structure(pdb_file, model=model)
+    try:
+        array1 = pdb.get_structure(pdb_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     if hybrid36 and (array1.res_id < 1).any():
         with pytest.raises(
@@ -58,21 +75,27 @@ def test_array_conversion(path, single_model, hybrid36):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = 1 if single_model else None
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    pdb_file = pdb.PDBFile.read(path)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
     
     if a2.box is not None:
@@ -86,9 +109,8 @@ def test_pdbx_consistency(path, single_model):
 
 @pytest.mark.parametrize("hybrid36", [False, True])
 def test_extra_fields(hybrid36):
-    path = join(data_dir, "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    path = join(data_dir("structure"), "1l2y.pdb")
+    pdb_file = pdb.PDBFile.read(path)
     stack1 = pdb_file.get_structure(
         extra_fields=[
             "atom_id", "b_factor", "occupancy", "charge"
@@ -117,42 +139,49 @@ def test_extra_fields(hybrid36):
 
 @pytest.mark.filterwarnings("ignore")
 def test_guess_elements():
-    # read valid pdb file
-    path = join(data_dir, "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    # Read valid pdb file
+    path = join(data_dir("structure"), "1l2y.pdb")
+    pdb_file = pdb.PDBFile.read(path)
     stack = pdb_file.get_structure()
 
-    # remove all elements
+    # Remove all elements
     removed_stack = stack.copy()
     removed_stack.element[:] = ''
 
-    # save stack without elements to tmp file
-    tmp_file_name = biotite.temp_file(".pdb")
+    # Save stack without elements to tmp file
+    temp = TemporaryFile("w+")
     tmp_pdb_file = pdb.PDBFile()
     tmp_pdb_file.set_structure(removed_stack)
-    tmp_pdb_file.write(tmp_file_name)
+    tmp_pdb_file.write(temp)
 
-    # read new stack from file with guessed elements
-    guessed_pdb_file = pdb.PDBFile()
-    guessed_pdb_file.read(tmp_file_name)
+    # Read new stack from file with guessed elements
+    temp.seek(0)
+    guessed_pdb_file = pdb.PDBFile.read(temp)
+    temp.close()
     guessed_stack = guessed_pdb_file.get_structure()
 
     assert guessed_stack.element.tolist() == stack.element.tolist()
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1, -1]
     )
 )
-def test_box_shape(path, single_model):
-    model = 1 if single_model else None
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
-    a = pdb_file.get_structure(model=model)
+def test_box_shape(path, model):
+    pdb_file = pdb.PDBFile.read(path)
+    try:
+        a = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     if isinstance(a, struc.AtomArray):
         expected_box_dim = (3, 3)
@@ -162,9 +191,8 @@ def test_box_shape(path, single_model):
 
 
 def test_box_parsing():
-    path = join(data_dir, "1igy.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
+    path = join(data_dir("structure"), "1igy.pdb")
+    pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure()
     expected_box = np.array([[
         [66.65,   0.00, 0.00],
@@ -191,47 +219,63 @@ def test_id_overflow():
     
     # Write stack to pdb file and make sure a warning is thrown
     with pytest.warns(UserWarning):
-        tmp_file_name = biotite.temp_file(".pdb")
-        tmp_pdb_file = pdb.PDBFile()
-        tmp_pdb_file.set_structure(a)
-        tmp_pdb_file.write(tmp_file_name)
+        temp = TemporaryFile("w+")
+        pdb_file = pdb.PDBFile()
+        pdb_file.set_structure(a)
+        pdb_file.write(temp)
 
     # Assert file can be read properly
-    a2 = io.load_structure(tmp_file_name)
+    temp.seek(0)
+    a2 = pdb.get_structure(pdb.PDBFile.read(temp))
     assert(a2.array_length() == a.array_length())
     
     # Manually check if the written atom id is correct
-    with open(tmp_file_name) as output:
-        last_line = output.readlines()[-1]
-        atom_id = int(last_line.split()[1])
-        assert(atom_id == 1)
+    temp.seek(0)
+    last_line = temp.readlines()[-1]
+    atom_id = int(last_line.split()[1])
+    assert(atom_id == 1)
+
+    temp.close()
     
     # Write stack as hybrid-36 pdb file: no warning should be thrown
     with pytest.warns(None) as record:
-        tmp_file_name = biotite.temp_file(".pdb")
+        temp = TemporaryFile("w+")
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a, hybrid36=True)
-        tmp_pdb_file.write(tmp_file_name)
+        tmp_pdb_file.write(temp)
     assert len(record) == 0
 
     # Manually check if the output is written as correct hybrid-36
-    with open(tmp_file_name) as output:
-        last_line = output.readlines()[-1]
-        atom_id = last_line.split()[1]
-        assert(atom_id == "A0000")
-        res_id = last_line.split()[4][1:]
-        assert(res_id == "BXG0")
+    temp.seek(0)
+    last_line = temp.readlines()[-1]
+    atom_id = last_line.split()[1]
+    assert(atom_id == "A0000")
+    res_id = last_line.split()[4][1:]
+    assert(res_id == "BXG0")
+
+    temp.close()
 
 
 @pytest.mark.parametrize("model", [None, 1, 10])
 def test_get_coord(model):
     # Choose a structure without inscodes and altlocs
     # to avoid atom filtering in reference atom array (stack)
-    path = join(data_dir, "1l2y.pdb")
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
-    ref_coord = pdb_file.get_structure(model=model).coord
+    path = join(data_dir("structure"), "1l2y.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    
+    try:
+        ref_coord = pdb_file.get_structure(model=model).coord
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     test_coord = pdb_file.get_coord(model=model)
+    
     assert test_coord.shape == ref_coord.shape
     assert (test_coord == ref_coord).all()
 

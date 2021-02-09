@@ -87,7 +87,7 @@ accessible surface area calculation, structure superimposition and more.
    :width: 48 %
    :target: examples/gallery/structure/ramachandran.html
 
-.. image:: /examples/gallery/structure/images/sphx_glr_adjacency_matrix_001.png
+.. image:: /examples/gallery/structure/images/sphx_glr_sheet_arrangement_001.png
    :width: 48 %
    :target: examples/gallery/structure/adjacency_matrix.html
 
@@ -131,7 +131,7 @@ databases, including the arguably most important ones: the *RCSB PDB* and the
    :hidden:
    
    install
-   tutorial/index
+   tutorial/target/index
    apidoc/index
    examples/gallery/index
    extensions

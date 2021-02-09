@@ -16,17 +16,14 @@ the complementary strand of the genome as well.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
 import matplotlib.pyplot as plt
 
 # Download Porcine circovirus genome
-file_name = entrez.fetch("KP282147", biotite.temp_dir(),
-                         "fa", "nuccore", "fasta")
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+file = entrez.fetch("KP282147", None, "fa", "nuccore", "fasta")
+fasta_file = fasta.FastaFile.read(file)
 genome = fasta.get_sequence(fasta_file)
 # Perform translation for forward strand
 proteins, positions = genome.translate()

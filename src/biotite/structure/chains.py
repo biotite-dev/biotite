@@ -42,12 +42,19 @@ def get_chain_starts(array, add_exclusive_stop=False):
     --------
     get_residue_starts
     """
-    chain_ids = array.chain_id
-    chain_changes = np.where((chain_ids[:-1] != chain_ids[1:]))[0] + 1
-    chain_starts = np.append([0], chain_changes)
+    # This mask is 'true' at indices where the value changes
+    chain_id_changes = (array.chain_id[1:] != array.chain_id[:-1])
+    
+    # Convert mask to indices
+    # Add 1, to shift the indices from the end of a chain
+    # to the start of a new chain
+    chain_starts = np.where(chain_id_changes)[0] +1
+    
+    # The first chain is not included yet -> Insert '[0]'
     if add_exclusive_stop:
-        chain_starts = np.append(chain_starts, [array.array_length()])
-    return chain_starts
+        return np.concatenate(([0], chain_starts, [array.array_length()]))
+    else:
+        return np.concatenate(([0], chain_starts))
 
 
 def get_chains(array):
@@ -107,11 +114,10 @@ def chain_iter(array):
     array : AtomArray or AtomArrayStack
         The atom array (stack) to iterate over.
         
-    Returns
-    -------
-    count : generator of AtomArray or AtomArrayStack
-        A generator of subarrays or substacks (dependent on the input
-        type) containing each chain of the input `array`.
+    Yields
+    ------
+    chain : AtomArray or AtomArrayStack
+        A single chain of the input `array`.
     
     See also
     --------

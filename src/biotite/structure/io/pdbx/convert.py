@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_sequence", "get_structure", "set_structure",
+__all__ = ["get_sequence", "get_model_count", "get_structure", "set_structure",
            "list_assemblies", "get_assembly"]
 
 import itertools
@@ -12,17 +12,29 @@ import numpy as np
 from ...error import BadStructureError
 from ....file import InvalidFileError
 from ...atoms import Atom, AtomArray, AtomArrayStack, repeat
-from ...filter import filter_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...util import matrix_rotate
-from ....sequence.seqtypes import ProteinSequence
+from ....sequence.seqtypes import ProteinSequence, NucleotideSequence
 from collections import OrderedDict
 
+_proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
+_nucleotideseq_type_list = ["polydeoxyribonucleotide", "polyribonucleotide",
+                        "polydeoxyribonucleotide/polyribonucleotide hybrid"
+                        ]
+_other_type_list = ["cyclic-pseudo-peptide", "other", "peptide nucleic acid",
+                        "polysaccharide(D)", "polysaccharide(L)"]
 
 def get_sequence(pdbx_file, data_block=None):
     """
-    Get the protein sequences from the
-    `entity_poly.pdbx_seq_one_letter_code_can` entry. 
+    Get the protein and nucleotide sequences from the
+    ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
+
+    Supported polymer types (``_entity_poly.type``) are:
+    ``'polypeptide(D)'``, ``'polypeptide(L)'``,
+    ``'polydeoxyribonucleotide'``, ``'polyribonucleotide'`` and
+    ``'polydeoxyribonucleotide/polyribonucleotide hybrid'``.
+    Uracil is converted to Thymine.
     
     Parameters
     ----------
@@ -34,23 +46,46 @@ def get_sequence(pdbx_file, data_block=None):
         
     Returns
     -------
-    sequences : list of ProteinSequence
-        The protein sequences for each entity (equivalent to chain in
-        most cases).
+    sequences : list of Sequence
+        The protein and nucleotide sequences for each entity
+        (equivalent to chains in most cases).
     """
     poly_dict = pdbx_file.get_category("entity_poly", data_block)
     seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
+    seq_type = poly_dict["type"]
     sequences = []
     if isinstance(seq_string, np.ndarray):
-        for string in seq_string:
-            sequences.append(ProteinSequence(string))
+        for string, stype in zip(seq_string, seq_type):
+            sequence = _convert_string_to_sequence(string, stype)
+            if sequence is not None:
+                sequences.append(sequence) 
     else:
-        sequences.append(ProteinSequence(seq_string))
+        sequences.append(_convert_string_to_sequence(seq_string, seq_type))
     return sequences
 
 
+def get_model_count(file, data_block=None):
+    """
+    Get the number of models contained in a :class:`PDBxFile`.
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
+    Parameters
+    ----------
+    file : PDBxFile
+        The file object.
+    data_block : str, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    atom_site_dict = file.get_category("atom_site", data_block)
+    return len(_get_model_starts(atom_site_dict["pdbx_PDB_model_num"]))
+
+
+def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                   extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
@@ -63,25 +98,25 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
     data_block : str, optional
         The name of the data block. Default is the first
         (and most times only) data block of the file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -113,8 +148,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
     --------
 
     >>> import os.path
-    >>> file = PDBxFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> arr = get_structure(file, model=1)
     >>> print(len(arr))
     304
@@ -125,11 +159,14 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
     
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
+    model_starts = _get_model_starts(models)
+    model_count = len(model_starts)
+    atom_count = len(models)
     
     if model is None:
-        # For a stack, the annotation are derived from the first model
-        model_dict = _get_model_dict(atom_site_dict, 1)
-        model_count = int(models[-1])
+        # For a stack, the annotations are derived from the first model
+        model_dict = _get_model_dict(atom_site_dict, model_starts, 1)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         stack = AtomArrayStack(model_count, model_length)
         
@@ -137,11 +174,10 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
         
         # Check if each model has the same amount of atoms
         # If not, raise exception
-        atom_count = len(models)
         if model_length * model_count != atom_count:
-            raise BadStructureError("The models in the file have unequal "
-                                    "amount of atoms, give an explicit model "
-                                    "instead")
+            raise InvalidFileError("The models in the file have unequal "
+                                   "amount of atoms, give an explicit model "
+                                   "instead")
         
         stack.coord = np.zeros((model_count,model_length,3), dtype=np.float32)
         stack.coord[:,:,0] = atom_site_dict["Cartn_x"].reshape((model_count,
@@ -161,19 +197,36 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
         return stack
     
     else:
-        model_dict = _get_model_dict(atom_site_dict, model)
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean model indexing starting from last model
+        model = model_count + model + 1 if model < 0 else model
+        if model > model_count:
+            raise ValueError(
+                f"The file has {model_count} models, "
+                f"the given model {model} does not exist"
+            )
+
+        model_dict = _get_model_dict(atom_site_dict, model_starts, model)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         array = AtomArray(model_length)
         
         _fill_annotations(array, model_dict, extra_fields, use_author_fields)
         
-        model_filter = (models == str(model))
+        # Append exclusive stop
+        model_starts = np.append(
+            model_starts, [len(atom_site_dict["group_PDB"])]
+        )
+        # Indexing starts at 0, but model number starts at 1
+        model_index = model - 1
+        start, stop = model_starts[model_index], model_starts[model_index+1]
         array.coord = np.zeros((model_length, 3), dtype=np.float32)
-        array.coord[:,0] = atom_site_dict["Cartn_x"][model_filter] \
+        array.coord[:,0] = atom_site_dict["Cartn_x"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,1] = atom_site_dict["Cartn_y"][model_filter] \
+        array.coord[:,1] = atom_site_dict["Cartn_y"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,2] = atom_site_dict["Cartn_z"][model_filter] \
+        array.coord[:,2] = atom_site_dict["Cartn_z"][start : stop] \
                            .astype(np.float32)
         
         array = _filter_altloc(array, model_dict, altloc)
@@ -186,7 +239,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc=None,
 def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     prefix = "auth" if use_author_fields else "label"
     array.set_annotation(
-        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U3")
+        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U4")
     )
     array.set_annotation(
         "res_id", np.array(
@@ -236,21 +289,56 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
             array.set_annotation(field, model_dict[field].astype(str))
 
 
-def _filter_altloc(array, model_dict, selected):
-    altlocs = model_dict.get("label_alt_id")
-    if altlocs is None:
+def _filter_altloc(array, model_dict, altloc):
+    altloc_ids = model_dict.get("label_alt_id")
+    occupancy =  model_dict.get("occupancy")
+    
+    # Filter altloc IDs and return
+    if altloc_ids is None:
+        return array
+    elif altloc == "occupancy" and occupancy is not None:
+        return array[
+            ...,
+            filter_highest_occupancy_altloc(
+                array, altloc_ids, occupancy.astype(float)
+            )
+        ]
+    # 'first' is also fallback if file has no occupancy information
+    elif altloc == "first":
+        return array[..., filter_first_altloc(array, altloc_ids)]
+    elif altloc == "all":
+        array.set_annotation("altloc_id", altloc_ids)
         return array
     else:
-        return array[..., filter_altloc(
-            array, altlocs, selected
-        )]
+        raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
-def _get_model_dict(atom_site_dict, model):
+def _get_model_starts(model_array):
+    """
+    Get the start index for each model in the arrays of the
+    ``atom_site`` category.
+    """
+    models, indices = np.unique(model_array, return_index=True)
+    indices.sort()
+    return indices
+
+
+def _get_model_dict(atom_site_dict, model_starts, model):
+    """
+    Reduce the ``atom_site`` dictionary to the values for the given
+    model.
+    """
+    # Append exclusive stop
+    model_starts = np.append(
+        model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])]
+    )
     model_dict = {}
-    models = atom_site_dict["pdbx_PDB_model_num"]
+    # Indexing starts at 0, but model number starts at 1
+    model_index = model - 1
     for key in atom_site_dict.keys():
-        model_dict[key] = atom_site_dict[key][models == str(model)]
+        model_dict[key] = atom_site_dict[key][
+            model_starts[model_index] : model_starts[model_index+1]
+        ]
     return model_dict
 
 
@@ -261,8 +349,12 @@ def _get_box(pdbx_file, data_block):
         cell_dict = pdbx_file.get((data_block, "cell"))
     if cell_dict is None:
         return None
-    len_a, len_b, len_c = [float(cell_dict[length]) for length
-                           in ["length_a", "length_b", "length_c"]]
+    try:
+        len_a, len_b, len_c = [float(cell_dict[length]) for length
+                               in ["length_a", "length_b", "length_c"]]
+    except ValueError:
+        # 'cell_dict' has no proper unit cell values, e.g. '?'
+        return None
     alpha, beta, gamma =  [np.deg2rad(float(cell_dict[angle])) for angle
                            in ["angle_alpha", "angle_beta", "angle_gamma"]]
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
@@ -316,9 +408,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
-    atom_site_dict["label_seq_id"] = np.array(
-        ["." if e == -1 else str(e) for e in array.res_id]
-    )
+    atom_site_dict["label_seq_id"] = np.array([str(e) for e in array.res_id])
     atom_site_dict["pdbx_PDB_ins_code"] = array.ins_code
     atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
@@ -326,7 +416,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
     
     if "atom_id" in annot_categories:
-        atom_site_dict["id"] = array.atom_id.astype("U6")
+        atom_site_dict["id"] = np.array([str(e) for e in array.atom_id])
     else:
         atom_site_dict["id"] = None
     if "b_factor" in annot_categories:
@@ -466,7 +556,7 @@ def list_assemblies(pdbx_file, data_block=None):
 
 
 def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
-                 altloc=None, extra_fields=None, use_author_fields=True):
+                 altloc="first", extra_fields=None, use_author_fields=True):
     """
     Build the given biological assembly.
 
@@ -484,7 +574,9 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
-        model number.
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the structure
         contains only one model.
@@ -492,18 +584,16 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         The name of the data block.
         Defaults to the first (and most times only) data block of the
         file.
-    altloc : list of tuple, optional
-        In case the structure contains *altloc* entries, those can be
-        specified here:
-        Each tuple consists of the following elements:
-
-            - A chain ID, specifying the residue
-            - A residue ID, specifying the residue
-            - The desired *altoc* ID for the specified residue
-
-        For each of the given residues the atoms with the given *altloc*
-        ID are filtered.
-        By default the location with the *altloc* ID "A" is used.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -552,23 +642,42 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
 
     transformations = _get_transformations(struct_oper_category)
 
+
+    ### Get transformations to apply and the affected asym IDs
     # Find the operation expression for given assembly ID
     # We already asserted that the ID is actually present
-    for id, op_expr, chain_expr in zip(
+    for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"],
         assembly_gen_category["oper_expression"],
         assembly_gen_category["asym_id_list"]
     ):
         if id == assembly_id:
             operations = _parse_operation_expression(op_expr)
-            chains = chain_expr.split(",")
+            asym_ids = asym_id_expr.split(",")
             break
     
-
-    # Apply operations on structure
+    
+    ### Get structure containing the affected asym IDs
+    # Include 'label_asym_id' as annotation array
+    # for correct asym ID filtering
+    extra_fields = [] if extra_fields is None else extra_fields
+    if "label_asym_id" in extra_fields:
+        extra_fields_and_asym = extra_fields
+    else:
+        extra_fields_and_asym = extra_fields + ["label_asym_id"]
     structure = get_structure(
-        pdbx_file, model, data_block, altloc, extra_fields, use_author_fields
+        pdbx_file, model, data_block,
+        altloc, extra_fields_and_asym, use_author_fields
     )
+    # Filter asym IDs
+    structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
+    # Remove 'label_asym_id', if it was not included in the original
+    # user-supplied 'extra_fields'
+    if "label_asym_id" not in extra_fields:
+        structure.del_annotation("label_asym_id")
+
+
+    ### Prepare coordinates
     if model is None:
         # Coordinates for AtomArrayStack
         assembly_coord = np.zeros(
@@ -581,7 +690,8 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
             (len(operations), structure.array_length(), 3)
         )
     
-    # Execute for each copy in the assembly
+
+    ### Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
         # Execute for each transformation step
@@ -637,3 +747,19 @@ def _parse_operation_expression(expression):
 
     # Cartesian product of operations
     return list(itertools.product(*operations))
+
+
+def _convert_string_to_sequence(string, stype):
+    # Convert strings to ProteinSequence-Object if stype is
+    # contained in _proteinseq_type_list or to NucleotideSequence-
+    # Object if stype is contained in _nucleotideseq_type_list
+    if stype in _proteinseq_type_list:
+        return ProteinSequence(string)
+    elif stype in _nucleotideseq_type_list:
+        string = string.replace("U", "T")
+        return NucleotideSequence(string)
+    elif stype in _other_type_list:
+        return None
+    else:
+        raise InvalidFileError("mmCIF _entity_poly.type unsupported"
+                               " type: " + stype)

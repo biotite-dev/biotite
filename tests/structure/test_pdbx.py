@@ -2,16 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
-import biotite.structure.io.pdbx as pdbx
-import biotite
 import itertools
-import numpy as np
 import glob
 from os.path import join
-from .util import data_dir
+import numpy as np
 import pytest
 from pytest import approx
+import biotite
+import biotite.structure as struc
+import biotite.structure.io.pdbx as pdbx
+import biotite.sequence as seq
+from ..util import data_dir
+
+
+def test_get_model_count():
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
+    test_model_count = pdbx.get_model_count(pdbx_file)
+    ref_model_count = pdbx.get_structure(pdbx_file).stack_depth()
+    assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
@@ -32,8 +40,7 @@ from pytest import approx
     ]
 )
 def test_parsing(category, key, exp_value):
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(join(data_dir, "1l2y.cif"))
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
     cat_dict = pdbx_file[category]
     value = cat_dict[key]
     if isinstance(value, np.ndarray):
@@ -74,20 +81,32 @@ def test_empty_values(string, use_array):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.cif")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.cif")),
+        [None, 1, -1]
     )
 )
-def test_conversion(path, single_model):
-    model = 1 if single_model else None
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
-    array1 = pdbx.get_structure(pdbx_file, model=model)
+def test_conversion(path, model):
+    pdbx_file = pdbx.PDBxFile.read(path)
+    
+    try:
+        array1 = pdbx.get_structure(pdbx_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
+    
     array2 = pdbx.get_structure(pdbx_file, model=model)
+    
+    assert array1.array_length() > 0
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -98,9 +117,8 @@ def test_conversion(path, single_model):
 
 
 def test_extra_fields():
-    path = join(data_dir, "1l2y.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    path = join(data_dir("structure"), "1l2y.cif")
+    pdbx_file = pdbx.PDBxFile.read(path)
     stack1 = pdbx.get_structure(pdbx_file, extra_fields=["atom_id","b_factor",
                                 "occupancy","charge"])
     pdbx_file = pdbx.PDBxFile()
@@ -110,9 +128,8 @@ def test_extra_fields():
     assert stack1 == stack2
 
 
-    path = join(data_dir, "1l2y.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    path = join(data_dir("structure"), "1l2y.cif")
+    pdbx_file = pdbx.PDBxFile.read(path)
     stack1 = pdbx.get_structure(
         pdbx_file,
         extra_fields=[
@@ -161,9 +178,8 @@ def test_list_assemblies():
     Test the :func:`list_assemblies()` function based on a known
     example.
     """
-    path = join(data_dir, "1f2n.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    path = join(data_dir("structure"), "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile.read(path)
 
     assembly_list = pdbx.list_assemblies(pdbx_file)
     assert assembly_list == {
@@ -176,18 +192,18 @@ def test_list_assemblies():
     }
 
 
-@pytest.mark.parametrize("single_model", [False, True])
-def test_get_assembly(single_model):
+@pytest.mark.parametrize("model", [None, 1, -1])
+def test_get_assembly(model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
     ``_pdbx_struct_assembly.oligomeric_count`` field indicates.
+    Furthermore, check if the number of atoms in the entire assembly
+    is a multiple of the numbers of atoms in a monomer.
     """
-    model = 1 if single_model else None
 
-    path = join(data_dir, "1f2n.cif")
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(path)
+    path = join(data_dir("structure"), "1f2n.cif")
+    pdbx_file = pdbx.PDBxFile.read(path)
 
     assembly_category = pdbx_file.get_category(
         "pdbx_struct_assembly", expect_looped=True
@@ -197,12 +213,58 @@ def test_get_assembly(single_model):
         assembly_category["id"],
         assembly_category["oligomeric_count"]
     ):    
-        assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+        print("Assembly ID:", id)
+        try:
+            assembly = pdbx.get_assembly(
+                pdbx_file, assembly_id=id, model=model
+            )
+        except biotite.InvalidFileError:
+            if model is None:
+                # The file cannot be parsed into an AtomArrayStack,
+                # as the models contain different numbers of atoms
+                # -> skip this test case
+                return
+            else:
+                raise
         protein_assembly = assembly[..., struc.filter_amino_acids(assembly)]
         test_oligomer_count = struc.get_chain_count(protein_assembly)
 
-        if single_model:
-            assert isinstance(assembly, struc.AtomArray)
-        else:
+        if model is None:
             assert isinstance(assembly, struc.AtomArrayStack)
+        else:
+            assert isinstance(assembly, struc.AtomArray)
         assert test_oligomer_count == int(ref_oligomer_count)
+
+        # The atom count of the entire assembly should be a multiple
+        # a monomer,
+        monomer_atom_count = pdbx.get_structure(pdbx_file).array_length()
+        assert assembly.array_length() % monomer_atom_count == 0
+
+
+def test_get_sequence():
+    file = pdbx.PDBxFile.read(join(data_dir("structure"), "5ugo.cif"))
+    sequences = pdbx.get_sequence(file)
+    file = pdbx.PDBxFile.read(join(data_dir("structure"), "4gxy.cif"))
+    sequences += pdbx.get_sequence(file)
+    assert (str(sequences[0]) == "CCGACGGCGCATCAGC")
+    assert (type(sequences[0]) is seq.NucleotideSequence)
+    assert (str(sequences[1]) == "GCTGATGCGCC")
+    assert (type(sequences[1]) is seq.NucleotideSequence)
+    assert (str(sequences[2]) == "GTCGG")
+    assert (type(sequences[2]) is seq.NucleotideSequence)
+    assert (str(sequences[3]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+                "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
+                "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
+                "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
+                "FTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHR"
+                "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
+                "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
+    )
+    assert (type(sequences[3]) is seq.ProteinSequence)
+    assert (str(sequences[4]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
+                "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
+                "CCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGAT"
+                "CCGGAGTCAGGAAACCTGCCTGCCGTC"
+    )
+    assert (type(sequences[4]) is seq.NucleotideSequence)
+        

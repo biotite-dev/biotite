@@ -17,10 +17,10 @@ of :math:`2.05 \pm 0.05` Å and the dihedral angle of
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -104,8 +104,9 @@ def detect_disulfide_bonds(structure, distance=2.05, distance_tol=0.05,
 # For later verification that the implemented function wroks correctly,
 # the disulfide bonds, that are removed, are printed out.
 
-mmtf_file = mmtf.MMTFFile()
-mmtf_file.read(rcsb.fetch("2IT7", "mmtf", biotite.temp_dir()))
+mmtf_file = mmtf.MMTFFile.read(
+    rcsb.fetch("2IT7", "mmtf", gettempdir())
+)
 knottin = mmtf.get_structure(mmtf_file, include_bonds=True, model=1)
 sulfide_indices = np.where(
     (knottin.res_name == "CYS") & (knottin.atom_name == "SG")

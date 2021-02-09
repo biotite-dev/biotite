@@ -13,14 +13,8 @@ All subpackages provide at least two functions:
 given search parameters.
 The search parameters are usually abstracted by the respective
 :class:`Query` objects.
-Then IDs can be given to the :func:`fetch()` function to download the
-associated files.
-
-.. currentmodule:: biotite
-
-If the file is only needed temporarily, they can be stored in a
-temporary directory by using :func:`biotite.temp_dir()` or
-:func:`biotite.temp_file()` as path name.
+Then the obtained IDs can be given to the :func:`fetch()` function to
+download the associated files.
 """
 
 __name__ = "biotite.database"

@@ -3,7 +3,7 @@
 # information.
 
 """
-A subpackage for handling molecular structures. 
+A subpackage for handling molecular structures.
 
 In this context an atom is described by two kinds of attributes: the
 coordinates and the annotations. The annotations include information
@@ -37,7 +37,7 @@ The following annotation categories are mandatory:
 =========  ===========  =================  =======================================
 Category   Type         Examples           Description
 =========  ===========  =================  =======================================
-chain_id   string (U3)  'A','S','AB', ...  Polypeptide chain
+chain_id   string (U4)  'A','S','AB', ...  Polypeptide chain
 res_id     int          1,2,3, ...         Sequence position of residue
 ins_code   string (U1)  '', 'A','B',..     PDB insertion code (iCode)
 res_name   string (U3)  'GLY','ALA', ...   Residue name
@@ -91,7 +91,7 @@ Based on the implementation in *NumPy* arrays, this package furthermore
 contains a comprehensive set of functions for structure analysis,
 manipulation and visualization.
 
-The universal length unit in this package is Å. 
+The universal length unit in this package is Å.
 """
 
 __name__ = "biotite.structure"
@@ -101,14 +101,18 @@ from .atoms import *
 from .bonds import *
 from .box import *
 from .celllist import *
+from .charges import *
 from .compare import *
 from .density import *
+from .dotbracket import *
 from .error import *
 from .filter import *
 from .geometry import *
 from .hbond import *
 from .integrity import *
 from .mechanics import *
+from .molecules import *
+from .pseudoknots import *
 from .rdf import *
 from .residues import *
 from .chains import *
@@ -116,4 +120,5 @@ from .sasa import *
 from .sse import *
 from .superimpose import *
 from .transform import *
+from .basepairs import *
 # util is used internally

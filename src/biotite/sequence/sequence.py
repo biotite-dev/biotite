@@ -13,7 +13,7 @@ __all__ = ["Sequence"]
 import numbers
 import abc
 import numpy as np
-from .alphabet import Alphabet
+from .alphabet import Alphabet, LetterAlphabet
 from ..copyable import Copyable
 
 
@@ -83,8 +83,8 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         this attribute is accessed. When this attribute is modified,
         the new list of symbols is encoded into the sequence code.
     alphabet : Alphabet
-        The alphabet of this sequence.
-        Equal to :func:`get_alphabet()`.
+        The alphabet of this sequence. Cannot be set.
+        Equal to `get_alphabet()`.
     
     Examples
     --------
@@ -194,6 +194,9 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             raise TypeError("Sequence code must be an integer ndarray")
         self._seq_code = value.astype(dtype, copy=False)
     
+    @property
+    def alphabet(self):
+        return self.get_alphabet()
     
     @abc.abstractmethod
     def get_alphabet(self):
@@ -312,7 +315,11 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     def __str__(self):
         alph = self.get_alphabet()
-        return "".join([str(alph.decode(e)) for e in self._seq_code])
+        if isinstance(alph, LetterAlphabet):
+            return alph.decode_multiple(self._seq_code, as_bytes=True)\
+                   .tobytes().decode("ASCII")
+        else:
+            return "".join(alph.decode_multiple(self._seq_code))
     
     def __add__(self, sequence):
         if self.get_alphabet().extends(sequence.get_alphabet()):

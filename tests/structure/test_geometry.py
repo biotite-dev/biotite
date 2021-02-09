@@ -2,17 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import NamedTemporaryFile
 import itertools
 import glob
 from os.path import join
 import numpy as np
 import numpy.random as random
 import pytest
-import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
 def test_distance():
@@ -44,7 +44,7 @@ def test_dihedral():
 
 @pytest.mark.parametrize("multiple_chains", [False, True])
 def test_dihedral_backbone_general(multiple_chains):
-    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     n_models = stack.stack_depth()
     n_res = stack.res_id[-1]
     if multiple_chains:
@@ -74,25 +74,35 @@ def _assert_plausible_omega(omega):
     assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.6)
 
 
-@pytest.mark.xfail(raises=ImportError)
-@pytest.mark.parametrize("file_name", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
+@pytest.mark.parametrize(
+    "file_name", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_dihedral_backbone_result(file_name):
     import mdtraj
     
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(file_name)
+    mmtf_file = mmtf.MMTFFile.read(file_name)
     array = mmtf.get_structure(mmtf_file, model=1)
     array = array[struc.filter_amino_acids(array)]
+    if array.array_length() == 0:
+        # Structure contains no protein
+        # -> determination of backbone angles makes no sense
+        return
+    
     for chain in struc.chain_iter(array):
         print("Chain: ", chain.chain_id[0])
-        if len(struc.check_id_continuity(chain)) != 0:
+        if len(struc.check_res_id_continuity(chain)) != 0:
             # Do not test discontinuous chains
             return
         test_phi, test_psi, test_ome = struc.dihedral_backbone(chain)
 
-        temp_file_name = biotite.temp_file("pdb")
-        strucio.save_structure(temp_file_name, chain)
-        traj = mdtraj.load(temp_file_name)
+        temp = NamedTemporaryFile("w+", suffix=".pdb")
+        strucio.save_structure(temp.name, chain)
+        traj = mdtraj.load(temp.name)
+        temp.close()
         _, ref_phi = mdtraj.compute_phi(traj)
         _, ref_psi = mdtraj.compute_psi(traj)
         _, ref_ome = mdtraj.compute_omega(traj)
@@ -109,7 +119,7 @@ def test_index_distance_non_periodic():
     Without PBC the result should be equal to the normal distance
     calculation.
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     ref_dist = struc.distance(
         array.coord[np.newaxis, :, :],
         array.coord[:, np.newaxis, :]
@@ -137,7 +147,7 @@ def test_index_distance_periodic_orthogonal(shift):
     The PBC aware computation, should give the same results,
     irrespective of which atoms are centered in the box 
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     array.box = np.diag(
@@ -158,9 +168,10 @@ def test_index_distance_periodic_orthogonal(shift):
 
 
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.xfail(raises=ImportError)
-# index_distance() creates a large ndarray
-@pytest.mark.xfail(raises=(MemoryError, ImportError))
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize(
     "shift, angles", itertools.product(
     [
@@ -180,7 +191,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
     The PBC aware computation, should give the same results,
     irrespective of which atoms are centered in the box 
     """
-    array = strucio.load_structure(join(data_dir, "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     boundaries = np.max(array.coord, axis=0) - np.min(array.coord, axis=0) + 1
@@ -195,11 +206,15 @@ def test_index_distance_periodic_triclinic(shift, angles):
         np.repeat(np.arange(length), length),
           np.tile(np.arange(length), length)
     ], axis=1)
-    ref_dist = struc.index_distance(array, dist_indices, periodic=True)
+    # index_distance() creates a large ndarray
+    try:
+        ref_dist = struc.index_distance(array, dist_indices, periodic=True)
+    except MemoryError:
+        pytest.skip("Not enough memory")
 
     # Compare with MDTraj
     import mdtraj
-    traj = mdtraj.load(join(data_dir, "3o5r.pdb"))
+    traj = mdtraj.load(join(data_dir("structure"), "3o5r.pdb"))
     # Angstrom to Nanometers
     traj.unitcell_vectors = array.box[np.newaxis, :, :] / 10
     # Nanometers to Angstrom
@@ -210,8 +225,12 @@ def test_index_distance_periodic_triclinic(shift, angles):
     # Compare with shifted variant
     array.coord += shift
     array.coord = struc.move_inside_box(array.coord, array.box)
-    dist = struc.index_distance(array, dist_indices, periodic=True)
-    assert np.allclose(dist, ref_dist, atol=1e-5)
+    # index_distance() creates a large ndarray
+    try:
+        test_dist = struc.index_distance(array, dist_indices, periodic=True)
+    except MemoryError:
+        pytest.skip("Not enough memory")
+    assert np.allclose(test_dist, ref_dist, atol=1e-5)
 
 
 def test_index_functions():
@@ -219,7 +238,7 @@ def test_index_functions():
     The `index_xxx()` functions should give the same result as the
     corresponding `xxx` functions.
     """
-    stack = strucio.load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     array = stack[0]
     # Test for atom array, stack and raw coordinates
     samples = (array, stack, struc.coord(array), struc.coord(stack))

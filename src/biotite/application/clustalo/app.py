@@ -6,13 +6,14 @@ __name__ = "biotite.application.clustalo"
 __author__ = "Patrick Kunzmann"
 __all__ = ["ClustalOmegaApp"]
 
+from tempfile import NamedTemporaryFile
 import numpy as np
-from ...temp import temp_file
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.align.alignment import Alignment
 from ...sequence.phylo.tree import Tree
+from ..localapp import cleanup_tempfile
 from ..msaapp import MSAApp
 from ..application import AppState, requires_state
 
@@ -54,15 +55,26 @@ class ClustalOmegaApp(MSAApp):
         self._mbed = True
         self._dist_matrix = None
         self._tree = None
-        self._in_dist_matrix_file_name = temp_file("mat")
-        self._out_dist_matrix_file_name = temp_file("mat")
-        self._in_tree_file_name = temp_file("tree")
-        self._out_tree_file_name = temp_file("tree")
+        self._in_dist_matrix_file = NamedTemporaryFile(
+            "w", suffix=".mat", delete=False
+        )
+        self._out_dist_matrix_file = NamedTemporaryFile(
+            "r", suffix=".mat", delete=False
+        )
+        self._in_tree_file = NamedTemporaryFile(
+            "w", suffix=".tree", delete=False
+        )
+        self._out_tree_file = NamedTemporaryFile(
+            "r", suffix=".tree", delete=False
+        )
     
     def run(self):
         args = [
             "--in", self.get_input_file_path(),
             "--out", self.get_output_file_path(),
+            # The temporary files are already created
+            # -> tell Clustal to overwrite these empty files
+            "--force",
             # Tree order for get_alignment_order() to work properly 
             "--output-order=tree-order",
         ]
@@ -75,12 +87,12 @@ class ClustalOmegaApp(MSAApp):
             # as input and output#
             # -> Only request tree output when not tree is input
             args += [
-                "--guidetree-out", self._out_tree_file_name,
+                "--guidetree-out", self._out_tree_file.name,
             ]
         if not self._mbed:
             args += [
                 "--full",
-                "--distmat-out", self._out_dist_matrix_file_name
+                "--distmat-out", self._out_dist_matrix_file.name
             ]
         if self._dist_matrix is not None:
             # Add the sequence names (0, 1, 2, 3 ...) as first column
@@ -91,18 +103,18 @@ class ClustalOmegaApp(MSAApp):
                 ), axis=1
             )
             np.savetxt(
-                self._in_dist_matrix_file_name, dist_matrix_with_index,
+                self._in_dist_matrix_file.name, dist_matrix_with_index,
                 # The first line contains the amount of sequences
                 comments = "",
                 header = str(self._seq_count),
                 # The sequence indices are integers, the rest are floats
                 fmt = ["%d"] + ["%.5f"] * self._seq_count
             )
-            args += ["--distmat-in", self._in_dist_matrix_file_name]
+            args += ["--distmat-in", self._in_dist_matrix_file.name]
         if self._tree is not None:
-            with open(self._in_tree_file_name, "w") as file:
-                file.write(str(self._tree))
-            args += ["--guidetree-in", self._in_tree_file_name]
+            self._in_tree_file.write(str(self._tree))
+            self._in_tree_file.flush()
+            args += ["--guidetree-in", self._in_tree_file.name]
         self.set_arguments(args)
         super().run()
     
@@ -110,7 +122,7 @@ class ClustalOmegaApp(MSAApp):
         super().evaluate()
         if not self._mbed:
             self._dist_matrix = np.loadtxt(
-                self._out_dist_matrix_file_name,
+                self._out_dist_matrix_file.name,
                 # The first row only contains the number of sequences
                 skiprows = 1,
                 dtype = float
@@ -121,11 +133,26 @@ class ClustalOmegaApp(MSAApp):
             self._dist_matrix = self._dist_matrix[:, 1:]
         # Only read output tree if no tree was input
         if self._tree is None:
-            with open(self._out_tree_file_name, "r") as file:
-                self._tree = Tree.from_newick(file.read().replace("\n", ""))
+            self._tree = Tree.from_newick(
+                self._out_tree_file.read().replace("\n", "")
+            )
+    
+    def clean_up(self):
+        super().clean_up()
+        cleanup_tempfile(self._in_dist_matrix_file)
+        cleanup_tempfile(self._out_dist_matrix_file)
+        cleanup_tempfile(self._in_tree_file)
+        cleanup_tempfile(self._out_tree_file)
     
     @requires_state(AppState.CREATED)
     def full_matrix_calculation(self):
+        """
+        Use full distance matrix for guide-tree calculation, equivalent
+        to the ``--full`` option.
+
+        This makes the distance matrix calculation slower than using the
+        default *mBed* heuristic.
+        """
         self._mbed = False
     
     @requires_state(AppState.CREATED)

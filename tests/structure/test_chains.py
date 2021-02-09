@@ -6,13 +6,13 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import numpy as np
 from os.path import join
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 
 @pytest.fixture
 def array():
-    return strucio.load_structure(join(data_dir, "1igy.mmtf"))
+    return strucio.load_structure(join(data_dir("structure"), "1igy.mmtf"))
 
 def test_get_chain_starts(array):
     _, ref_starts = np.unique(array.chain_id, return_index=True)

@@ -3,6 +3,7 @@
 # information.
 
 import glob
+import itertools
 from os.path import join
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ import biotite.structure as struc
 import biotite.structure.info as strucinfo
 from biotite.structure.io import load_structure, save_structure
 import biotite.structure.io.mmtf as mmtf
-from .util import data_dir
+from ..util import data_dir
 
 
 def test_mass():
@@ -18,9 +19,9 @@ def test_mass():
     Test whether the mass of a residue is the same as the sum of the
     masses of its contained atoms.
     """
-    array = load_structure(join(data_dir, "1l2y.mmtf"))[0]
+    array = load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
     _, res_names = struc.get_residues(array)
-    water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O") 
+    water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O")
     # Mass of water must be subtracted
     masses = [strucinfo.mass(res_name) - water_mass for res_name in res_names]
     # C-terminus normally has additional oxygen atom
@@ -35,15 +36,16 @@ def test_mass():
     assert np.allclose((mass_diff % strucinfo.mass("H")), 0, atol=5e-3)
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_bonds(path):
     """
     Test whether the bond data is consistent with the content of MMTF
     files.
     """
     bond_data = strucinfo.bond_dataset()
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     for group in mmtf_file["groupList"]:
         group_name = group["groupName"]
         atom_names = group["atomNameList"]
@@ -68,13 +70,12 @@ def test_protOr_radii():
     glycosylation.
     This means, that none of the resulting radii should be the None.
     """
-    array = load_structure(join(data_dir, "1gya.mmtf"))
+    array = load_structure(join(data_dir("structure"), "1gya.mmtf"))
     array = array[..., array.element != "H"]
     array = array[..., struc.filter_amino_acids(array)]
     for res_name, atom_name in zip(array.res_name, array.atom_name):
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
         assert isinstance(radius, float)
-        print(res_name, atom_name)
         assert radius != None
 
 
@@ -101,3 +102,35 @@ def test_full_name():
 def test_link_type():
     assert strucinfo.link_type("Ala").upper() == "L-PEPTIDE LINKING"
     assert strucinfo.link_type("ALA").upper() == "L-PEPTIDE LINKING"
+
+
+@pytest.mark.parametrize(
+    "multi_model, seed", itertools.product([False, True], range(10))
+)
+def test_standardize_order(multi_model, seed):
+    original = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    if not multi_model:
+        original = original[0]
+    # The box is not preserved when concatenating atom arrays later
+    # This would complicate the atom array equality later
+    original.box = None
+
+    # Randomly reorder the atoms in each residue
+    np.random.seed(seed)
+    if multi_model:
+        reordered = struc.AtomArrayStack(original.stack_depth(), 0)
+    else:
+        reordered = struc.AtomArray(0)
+    for residue in struc.residue_iter(original):
+        bound = residue.array_length()
+        indices = np.random.choice(
+            np.arange(bound), bound,replace=False
+        )
+        reordered += residue[..., indices]
+
+    # Restore the original PDB standard order
+    restored = reordered[..., strucinfo.standardize_order(reordered)]
+
+    assert restored.shape == original.shape
+    assert restored[..., restored.element != "H"] \
+        == original[..., original.element != "H"]

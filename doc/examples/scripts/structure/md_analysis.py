@@ -1,6 +1,6 @@
 r"""
-Basic analysis of MD simulation
-===============================
+Basic analysis of a MD simulation
+=================================
 
 In this example, we will analyze a trajectory of a *Gromacs* MD
 simulation:
@@ -50,8 +50,7 @@ template = template[protein_mask]
 # Hence, we use the 'XTCFile' class directly to load the trajectory
 # This gives us the additional option that allows us to select the
 # coordinates belonging to the amino acids.
-xtc_file = xtc.XTCFile()
-xtc_file.read(traj_file_path, atom_i=np.where(protein_mask)[0])
+xtc_file = xtc.XTCFile.read(traj_file_path, atom_i=np.where(protein_mask)[0])
 trajectory = xtc_file.get_structure(template)
 # Get simulation time for plotting purposes
 time = xtc_file.get_time()
@@ -90,7 +89,7 @@ figure.tight_layout()
 ########################################################################
 # As we can see the simulation seems to converge already early in the
 # simulation.
-# After a about 200 ps the RMSD stays in a range of approx. 2 - 3 Å.
+# After a about 200 ps the RMSD stays in a range of approx. 1 - 2 Å.
 # 
 # In order to futher evaluate the unfolding of our enzyme in the
 # course of simulation, we calculate and plot the radius of gyration

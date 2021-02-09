@@ -5,8 +5,8 @@ Biological assembly of a structure
 Often the biological assembly (or biological unit) reveals the complete
 picture of a protein function, may it be a viral capsid or a
 microfilament.
-However, the usual records in an *PDB*/*mmCIF*/*MMTF* usually describe
-only the asymmetric unit.
+However, the usual records in an *PDB*/*mmCIF*/*MMTF* file usually
+describe only the asymmetric unit.
 For large complexes the asymmetric unit may only display one monomer or
 one small subcomplex.
 Multiple copies of the asymmetric unit must be geometrically arranged to
@@ -27,8 +27,8 @@ More information about biological assemblies is provided by the
 `this page <https://pdb101.rcsb.org/learn/guide-to-understanding-pdb-data/biological-assemblies>`_.
 
 In this example, we will create the complete biological assembly of the
-capsid from *Paramecium bursaria Chlorella virus type 1*
-- a homo-5040-mer!
+capsid from the *Sulfolobus turreted icosahedral virus*
+- a hetero 1080-mer!
 
 At first we will check, which assemblies are available to us.
 """
@@ -36,6 +36,7 @@ At first we will check, which assemblies are available to us.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import NamedTemporaryFile
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
@@ -43,8 +44,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
 
-pdbx_file = pdbx.PDBxFile()
-pdbx_file.read(rcsb.fetch("1M4X", "mmcif"))
+pdbx_file = pdbx.PDBxFile.read(rcsb.fetch("3J31", "mmcif"))
 
 assemblies = pdbx.list_assemblies(pdbx_file)
 print("ID    name")
@@ -70,7 +70,10 @@ print("Number of protein chains:", struc.get_chain_count(biological_unit))
 # But for this example we will simply save the entire assembly as *PDB*
 # file for later visualization.
 
-# For brevity, save only CA atoms to file for visualization with PyMOL
-#biological_unit = biological_unit[biological_unit.atom_name == "CA"]
-#strucio.save_structure("biological_assembly.pdb", biological_unit)
-# biotite_static_image = biological_assembly.png
+# For brevity, save only CA atoms to file for visualization
+biological_unit = biological_unit[biological_unit.atom_name == "CA"]
+temp = NamedTemporaryFile(suffix=".cif")
+strucio.save_structure(temp.name, biological_unit)
+# Visualization with PyMOL...
+
+temp.close()

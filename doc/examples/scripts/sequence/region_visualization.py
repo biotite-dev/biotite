@@ -9,7 +9,6 @@ in the E. coli BL21 genome.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
 import biotite.sequence.io.genbank as gb
@@ -18,10 +17,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Download E. coli BL21 genome
-file_name = entrez.fetch("CP001509", biotite.temp_dir(), suffix="gb",
+file = entrez.fetch("CP001509", None, suffix="gb",
                          db_name="nuccore", ret_type="gb")
-gb_file = gb.GenBankFile()
-gb_file.read(file_name)
+gb_file = gb.GenBankFile.read(file)
 _, seq_length, _, _, _, _ = gb.get_locus(gb_file)
 annotation = gb.get_annotation(gb_file, include_only=["gene"])
 # Find the minimum and maximum locations of lac genes

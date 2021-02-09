@@ -22,7 +22,6 @@ from matplotlib.text import Text
 import matplotlib.pyplot as plt
 import networkx as nx
 import requests
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
 import biotite.sequence.align as align
@@ -60,9 +59,8 @@ for line in lines:
             genes.append(gene)
             ids.append(ncbi_id)
 
-fasta_file = fasta.FastaFile()
 # Download sequences a file-like object and read the sequences from it
-fasta_file.read(entrez.fetch_single_file(
+fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
     ids, file_name=None, db_name="protein", ret_type="fasta"
 ))
 sequences = [seq.ProteinSequence(seq_str) for seq_str in fasta_file.values()]

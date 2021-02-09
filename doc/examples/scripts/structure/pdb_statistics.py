@@ -14,10 +14,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import biotite
 import biotite.database.rcsb as rcsb 
-import datetime
+from datetime import datetime, time
 
 
-years = np.arange(1990, datetime.date.today().year + 1)
+years = np.arange(1990, datetime.today().year + 1)
 xray_count = np.zeros(len(years), dtype=int)
 nmr_count = np.zeros(len(years), dtype=int)
 em_count = np.zeros(len(years), dtype=int)
@@ -26,22 +26,30 @@ tot_count = np.zeros(len(years), dtype=int)
 # and count the number
 for i, year in enumerate(years):
     # A query that comprises one year
-    date_query = rcsb.DateQuery(
-        datetime.date(year,  1,  1),
-        datetime.date(year, 12, 31),
-        event="release"
+    date_query = rcsb.FieldQuery(
+        "rcsb_accession_info.initial_release_date",
+        range_closed = (
+            datetime.combine(datetime(year,  1,  1), time.min),
+            datetime.combine(datetime(year, 12, 31), time.max)
+        )
     )
-    xray_query = rcsb.MethodQuery("X-RAY")
-    nmr_query = rcsb.MethodQuery("SOLUTION_NMR")
-    em_query = rcsb.MethodQuery("ELECTRON MICROSCOPY")
+    xray_query = rcsb.FieldQuery(
+        "exptl.method", exact_match="X-RAY DIFFRACTION"
+    )
+    nmr_query = rcsb.FieldQuery(
+        "exptl.method", exact_match="SOLUTION NMR"
+    )
+    em_query = rcsb.FieldQuery(
+        "exptl.method", exact_match="ELECTRON MICROSCOPY"
+    )
     # Get the amount of structures, that were released in that year
     # AND were elucidated with the respective method
     xray_count[i], nmr_count[i], em_count[i] = [
-        len(rcsb.search(rcsb.CompositeQuery("and", (date_query, q))))
-        for q in [xray_query, nmr_query, em_query]
+        rcsb.count(date_query & method_query)
+        for method_query in [xray_query, nmr_query, em_query]
     ]
     # Get the total amount of structures released in that year
-    tot_count[i] = len(rcsb.search(date_query))
+    tot_count[i] = rcsb.count(date_query)
 
 fig, ax = plt.subplots(figsize=(8.0, 5.0))
 ax.set_title("PDB release statistics")
@@ -52,7 +60,7 @@ ax.set_xlabel("Year")
 ax.set_ylabel("Released structures per year")
 ax.bar(
     years, xray_count,
-    color=biotite.colors["darkorange"], label="X-RAY"
+    color=biotite.colors["darkorange"], label="X-Ray"
 )
 ax.bar(
     years, nmr_count, bottom=xray_count,

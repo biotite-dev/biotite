@@ -26,6 +26,7 @@ and the violation of the format itself
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import NamedTemporaryFile
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.xtc as xtc
@@ -36,10 +37,8 @@ import os.path
 
 # Put here the path of the downloaded trajectory file
 xtc_file_path = "../../download/lysozyme_md.xtc"
-mmtf_file_path = biotite.temp_file("lysozyme_md.mmtf")
 
-xtc_file = xtc.XTCFile()
-xtc_file.read(xtc_file_path)
+xtc_file = xtc.XTCFile.read(xtc_file_path)
 coord = xtc_file.get_coord()
 coord_x = coord[:,:,0].flatten()
 coord_y = coord[:,:,1].flatten()
@@ -49,9 +48,13 @@ mmtf_file = mmtf.MMTFFile()
 mmtf_file.set_array("xCoordList", coord_x, codec=10, param=1000)
 mmtf_file.set_array("yCoordList", coord_y, codec=10, param=1000)
 mmtf_file.set_array("zCoordList", coord_z, codec=10, param=1000)
-mmtf_file.write(mmtf_file_path)
+file = NamedTemporaryFile("wb", suffix=".mmtf")
+mmtf_file.write(file)
+file.flush()
+
 xtc_size = os.path.getsize(xtc_file_path)
-mmtf_size = os.path.getsize(mmtf_file_path)
+mmtf_size = os.path.getsize(file.name)
+file.close()
 
 figure = plt.figure()
 ax = figure.add_subplot(111)

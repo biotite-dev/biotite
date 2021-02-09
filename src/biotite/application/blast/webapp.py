@@ -72,13 +72,12 @@ class BlastWebApp(WebApp):
         
         requires_protein = (program in ["blastp", "tblastn"])
         if isinstance(query, str) and query.endswith((".fa",".fst",".fasta")):
-                # If string has a file extension, it is interpreted as
-                # FASTA file from which the sequence is taken
-                file = FastaFile()
-                file.read(query)
-                # Get first entry in file and take the sequence
-                # (rather than header) 
-                self._query = str(get_sequence(file))
+            # If string has a file extension, it is interpreted as
+            # FASTA file from which the sequence is taken
+            file = FastaFile.read(query)
+            # Get first entry in file and take the sequence
+            # (rather than header) 
+            self._query = str(get_sequence(file))
         elif isinstance(query, Sequence):
             self._query = str(query)
         else:

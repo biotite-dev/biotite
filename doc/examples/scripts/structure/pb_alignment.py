@@ -35,9 +35,9 @@ PB with the least deviation to this set of angles is chosen.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import gettempdir
 import numpy as np
 import matplotlib.pyplot as plt
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
@@ -94,15 +94,14 @@ ref_angles = np.array([
 # Fetch animal lysoyzme structures
 lyso_files = rcsb.fetch(
     ["1REX", "1AKI", "1DKJ", "1GD6"],
-    format="mmtf", target_path=biotite.temp_dir()
+    format="mmtf", target_path=gettempdir()
 )
 organisms = ["H. sapiens", "G. gallus", "C. viginianus", "B. mori"]
 
 # Create a PB sequence from each structure
 pb_seqs = []
 for file_name in lyso_files:
-    file = mmtf.MMTFFile()
-    file.read(file_name)
+    file = mmtf.MMTFFile.read(file_name)
     # Take only the first model into account
     array = mmtf.get_structure(file, model=1)
     # Remove everything but the first protein chain

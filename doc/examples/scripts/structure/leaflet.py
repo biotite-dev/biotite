@@ -22,6 +22,7 @@ Each leaflet is a connected subgraph.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+from tempfile import NamedTemporaryFile
 import warnings
 import numpy as np
 import networkx as nx
@@ -108,6 +109,9 @@ assert len(leaflets) == 2
 for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
     structure.chain_id[leaflet_mask] = chain_id
 
-# Save marked lipids to structure file for visulaization with PyMOL
-#strucio.save_structure("leaflets.pdb", structure)
-# biotite_static_image = leaflet.png
+# Save marked lipids to structure file
+temp = NamedTemporaryFile(suffix=".pdb")
+strucio.save_structure(temp.name, structure)
+# Visualization with PyMOL...
+
+temp.close()

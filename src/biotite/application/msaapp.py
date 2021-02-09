@@ -7,16 +7,16 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MSAApp"]
 
 import abc
+from tempfile import NamedTemporaryFile
 from collections import OrderedDict
 import numpy as np
-from .localapp import LocalApp
+from .localapp import LocalApp, cleanup_tempfile
 from .application import AppState, requires_state
 from ..sequence.sequence import Sequence
 from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
 from ..sequence.align.matrix import SubstitutionMatrix
-from ..temp import temp_file
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
@@ -120,27 +120,33 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             self._matrix = MSAApp._map_matrix(matrix)
 
         self._sequences = sequences
-        self._in_file_name  = temp_file("fa")
-        self._out_file_name = temp_file("fa")
-        self._matrix_file_name = temp_file("mat")
+        self._in_file = NamedTemporaryFile(
+            "w", suffix=".fa", delete=False
+        )
+        self._out_file = NamedTemporaryFile(
+            "r", suffix=".fa", delete=False
+        )
+        self._matrix_file = NamedTemporaryFile(
+            "w", suffix=".mat", delete=False
+        )
 
     def run(self):
         sequences = self._sequences if not self._is_mapped \
                     else self._mapped_sequences
-        in_file = FastaFile()
+        sequences_file = FastaFile()
         for i, seq in enumerate(sequences):
-            in_file[str(i)] = str(seq)
-        in_file.write(self._in_file_name)
+            sequences_file[str(i)] = str(seq)
+        sequences_file.write(self._in_file)
+        self._in_file.flush()
         if self._matrix is not None:
-            with open(self._matrix_file_name, "w") as matrix_file:
-                matrix_file.write(str(self._matrix))
+            self._matrix_file.write(str(self._matrix))
+            self._matrix_file.flush()
         super().run()
     
     def evaluate(self):
         super().evaluate()
-        out_file = FastaFile()
-        out_file.read(self._out_file_name)
-        seq_dict = OrderedDict(out_file)
+        alignment_file = FastaFile.read(self._out_file)
+        seq_dict = OrderedDict(alignment_file)
         # Get alignment
         out_seq_str = [None] * len(seq_dict)
         for i in range(len(self._sequences)):
@@ -151,6 +157,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         self._order = np.zeros(len(seq_dict), dtype=int)
         for i, seq_index in enumerate(seq_dict):
              self._order[i] = int(seq_index)
+    
+    def clean_up(self):
+        super().clean_up()
+        cleanup_tempfile(self._in_file)
+        cleanup_tempfile(self._out_file)
+        cleanup_tempfile(self._matrix_file)
     
     @requires_state(AppState.JOINED)
     def get_alignment(self):
@@ -207,7 +219,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         path : str
             Path of input file.
         """
-        return self._in_file_name
+        return self._in_file.name
     
     def get_output_file_path(self):
         """
@@ -220,7 +232,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         path : str
             Path of output file.
         """
-        return self._out_file_name
+        return self._out_file.name
     
     def get_matrix_file_path(self):
         """
@@ -234,7 +246,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             Path of substitution matrix.
             None if no matrix was given.
         """
-        return self._matrix_file_name if self._matrix is not None else None
+        return self._matrix_file.name if self._matrix is not None else None
     
     def get_seqtype(self):
         """
@@ -377,7 +389,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             Path of the MSA software binary. By default, the default
             path will be used.
         matrix : SubstitutionMatrix, optional
-        A custom substitution matrix.
+            A custom substitution matrix.
         
         Returns
         -------

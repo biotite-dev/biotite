@@ -10,6 +10,7 @@ import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...box import is_orthogonal
 from ....file import TextFile, InvalidFileError
+from ..general import _guess_element as guess_element
 from ...error import BadStructureError
 import copy
 from datetime import datetime
@@ -39,8 +40,7 @@ class GROFile(TextFile):
     structure into a new file:
     
     >>> import os.path
-    >>> file = GROFile()
-    >>> file.read(os.path.join(path_to_structures, "1l2y.gro"))
+    >>> file = GROFile.read(os.path.join(path_to_structures, "1l2y.gro"))
     >>> array_stack = file.get_structure()
     >>> array_stack_mod = rotate(array_stack, [1,2,3])
     >>> file = GROFile()
@@ -48,7 +48,22 @@ class GROFile(TextFile):
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.gro"))
     
     """
-    
+    def get_model_count(self):
+        """
+        Get the number of models contained in this GRO file.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
+        model_count = 0
+        for line in self.lines:
+            if _is_int(line):
+                model_count += 1
+        return model_count
+
+
     def get_structure(self, model=None):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
@@ -58,8 +73,10 @@ class GROFile(TextFile):
         ----------
         model : int, optional
             If this parameter is given, the function will return an
-            :class:`AtomArray` from the atoms corresponding to the
-            given model number.
+            :class:`AtomArray` from the atoms corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
@@ -69,16 +86,6 @@ class GROFile(TextFile):
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-        def is_int(line):
-            """
-            helper function: returns true
-            if the string can be parsed to an int
-            """
-            try:
-                int(line)
-                return True
-            except ValueError:
-                return False
         
         def get_atom_line_i(model_start_i, model_atom_counts):
             """
@@ -120,7 +127,7 @@ class GROFile(TextFile):
 
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
-                                  if is_int(self.lines[i])],
+                                  if _is_int(self.lines[i])],
                                  dtype=int)
 
         # Number of atoms in each model
@@ -142,10 +149,14 @@ class GROFile(TextFile):
             # from model 1
             annot_i = get_atom_line_i(model_start_i[0], length)
         else:
+            if model == 0:
+                raise ValueError("The model index must not be 0")
+            # Negative models mean index starting from last model
+            model = len(model_start_i) + model + 1 if model < 0 else model
             if model > len(model_start_i):
                 raise ValueError(
-                    f"Requested model {model} is larger than the "
-                    f"amount of models ({len(model_start_i)})"
+                    f"The file has {len(model_start_i)} models, "
+                    f"the given model {model} does not exist"
                 )
 
             length = model_atom_counts[model-1]
@@ -153,13 +164,7 @@ class GROFile(TextFile):
 
             annot_i = get_atom_line_i(model_start_i[model-1], length)
 
-        # Fill in elements
-        def guess_element(atom_name):
-            if atom_name.startswith(("H", "1H", "2H", "3H")):
-                return 'H'
-            else:
-                return atom_name[0]
-
+        # Replace empty strings for elements with guessed types
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
@@ -326,3 +331,13 @@ class GROFile(TextFile):
         # Add terminal newline, since PyMOL requires it
         self.lines.append("")
 
+
+def _is_int(string):
+    """
+    Return ``True`, if the string can be parsed to an int.
+    """
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False

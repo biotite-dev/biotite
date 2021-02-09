@@ -4,15 +4,19 @@
 
 __author__ = "Patrick Kunzmann"
 
-from shutil import which
 import pkgutil
 import doctest
-import os.path
-import numpy as np
+from os.path import join
+import tempfile
 from importlib import import_module
+import numpy as np
 import pytest
-import biotite
 import biotite.structure.io as strucio
+from .util import is_not_installed, cannot_import, cannot_connect_to
+
+
+NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
+RCSB_URL = "https://www.rcsb.org/"
 
 
 @pytest.mark.parametrize("package_name, context_package_names", [
@@ -21,18 +25,26 @@ import biotite.structure.io as strucio
     pytest.param("biotite.sequence.align",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.phylo",      ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.graphics",   ["biotite.sequence"],
-                 marks=pytest.mark.xfail(raises=ImportError)                 ),
+                 marks=pytest.mark.skipif(
+                    cannot_import("matplotlib"),
+                    reason="Matplotlib is not installed")                    ),
     pytest.param("biotite.sequence.io",         ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fasta",   ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.fastq",   ["biotite.sequence"]         ),
     pytest.param("biotite.sequence.io.genbank", ["biotite.sequence",
-                                                 "biotite.database.entrez"]  ),
+                                                 "biotite.database.entrez"],
+                 marks=pytest.mark.skipif(
+                    cannot_connect_to(NCBI_URL),
+                    reason="NCBI Entrez is not available")                   ),
     pytest.param("biotite.sequence.io.gff",     ["biotite.sequence",
                                                  "biotite.sequence.io.fasta"],
                  marks=pytest.mark.filterwarnings("ignore:")                 ),
-    pytest.param("biotite.structure",           ["biotite.structure.io"]     ),
+    pytest.param("biotite.structure",           ["biotite.structure.io",
+                                                 "biotite.structure.info"]   ),
     pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
-                 marks=pytest.mark.xfail(raises=ImportError)                 ),
+                 marks=pytest.mark.skipif(
+                    cannot_import("matplotlib"),
+                    reason="Matplotlib is not installed"),                   ),
     pytest.param("biotite.structure.io",        ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.pdb",    ["biotite.structure",
                                                  "biotite"]                  ),
@@ -40,24 +52,30 @@ import biotite.structure.io as strucio
     pytest.param("biotite.structure.io.npz",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.mmtf",   ["biotite.structure"]        ),
     pytest.param("biotite.structure.info",      ["biotite.structure"]        ),
-    pytest.param("biotite.database.entrez",     []                           ),
-    pytest.param("biotite.database.rcsb",       []                           ),
+    pytest.param("biotite.database.entrez",     [],                           
+                 marks=pytest.mark.skipif(
+                    cannot_connect_to(NCBI_URL),
+                    reason="NCBI Entrez is not available")                   ),
+    pytest.param("biotite.database.rcsb",       [],
+                 marks=pytest.mark.skipif(
+                    cannot_connect_to(RCSB_URL),
+                    reason="RCSB PDB is not available")                      ),
     pytest.param("biotite.application",      ["biotite.application.clustalo",
                                               "biotite.sequence"],            
-                 marks=pytest.mark.skipif(which("clustalo") is None,
+                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.blast",   [],                          ),
     pytest.param("biotite.application.muscle",  ["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("muscle") is None,
+                 marks=pytest.mark.skipif(is_not_installed("muscle"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.clustalo",["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("clustalo") is None,
+                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.mafft",   ["biotite.sequence"],
-                 marks=pytest.mark.skipif(which("mafft") is None,
+                 marks=pytest.mark.skipif(is_not_installed("mafft"),
                                           reason="Software is not installed")),
     pytest.param("biotite.application.dssp",    ["biotite.structure"],
-                 marks=pytest.mark.skipif(which("mkdssp") is None,
+                 marks=pytest.mark.skipif(is_not_installed("mkdssp"),
                                           reason="Software is not installed")),
 ])
 def test_doctest(package_name, context_package_names):
@@ -77,14 +95,14 @@ def test_doctest(package_name, context_package_names):
         )
     
     # Add fixed names for certain paths
-    globs["path_to_directory"]  = biotite.temp_dir()
-    globs["path_to_structures"] = "./tests/structure/data/"
-    globs["path_to_sequences"]  = "./tests/sequence/data/"
+    globs["path_to_directory"]  = tempfile.gettempdir()
+    globs["path_to_structures"] = join(".", "tests", "structure", "data")
+    globs["path_to_sequences"]  = join(".", "tests", "sequence", "data")
     # Add frequently used modules
     globs["np"] = np
     # Add frequently used objects
     globs["atom_array_stack"] = strucio.load_structure(
-        "./tests/structure/data/1l2y.mmtf"
+        join(".", "tests", "structure", "data", "1l2y.mmtf")
     )
     globs["atom_array"] = globs["atom_array_stack"][0]
     
@@ -92,12 +110,30 @@ def test_doctest(package_name, context_package_names):
     np.set_printoptions(precision=3, floatmode="maxprec_equal")
 
     # Run doctests
+    # This test does not use 'testfile()' or 'testmod()'
+    # due to problems with doctest identification for Cython modules
+    # More information below
     package = import_module(package_name)
-    results = doctest.testmod(
-        package, extraglobs=globs,
-        optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE,
-        verbose=False, report=False
+    runner = doctest.DocTestRunner(
+        verbose=False,
+        optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE
     )
+    for test in doctest.DocTestFinder(exclude_empty=False).find(
+        package, package.__name__,
+        # It is necessary to set 'module' to 'False', as otherwise
+        # Cython functions and classes would be falsely identified
+        # as members of an external module by 'DocTestFinder._find()'
+        # and consequently would be ignored
+        #
+        # Setting 'module=False' omits this check
+        # This check is not necessary as the biotite subpackages
+        # ('__init__.py' modules) should only contain attributes, that
+        # are part of the package itself.
+        module=False,
+        extraglobs=globs
+    ):
+        runner.run(test)
+    results = doctest.TestResults(runner.failures, runner.tries)
     try:
         assert results.failed == 0
     except AssertionError:

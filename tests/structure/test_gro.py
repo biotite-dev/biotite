@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import glob
 import itertools
 from os.path import join, splitext
@@ -9,24 +10,28 @@ import pytest
 from pytest import approx
 import numpy as np
 import biotite
-import biotite.structure.io as io
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
-from .util import data_dir
+from ..util import data_dir
+
+
+def test_get_model_count():
+    gro_file = gro.GROFile.read(join(data_dir("structure"), "1l2y.gro"))
+    test_model_count = gro_file.get_model_count()
+    ref_model_count = gro_file.get_structure().stack_depth()
+    assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.gro")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.gro")),
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
-    gro_file = gro.GROFile()
-    gro_file.read(path)
+def test_array_conversion(path, model):
+    gro_file = gro.GROFile.read(path)
     array1 = gro_file.get_structure(model=model)
     gro_file = gro.GROFile()
     gro_file.set_structure(array1)
@@ -40,15 +45,14 @@ def test_array_conversion(path, single_model):
     assert array1.coord.tolist() == array2.coord.tolist()
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir,
-                                                "[!(waterbox)]*.gro")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "[!(waterbox)]*.gro"))
+)
 def test_pdb_consistency(path):
     pdb_path = splitext(path)[0] + ".pdb"
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(pdb_path)
+    pdb_file = pdb.PDBFile.read(pdb_path)
     a1 = pdb_file.get_structure(model=1)
-    gro_file = gro.GROFile()
-    gro_file.read(path)
+    gro_file = gro.GROFile.read(path)
     a2 = gro_file.get_structure(model=1)
 
     assert a1.array_length() == a2.array_length()
@@ -63,30 +67,39 @@ def test_pdb_consistency(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.pdb")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1, -1]
     )
 )
-def test_pdb_to_gro(path, single_model):
-    # Converting stacks between formats should not change data
-    model = 1 if single_model else None
-    
+def test_pdb_to_gro(path, model):
+    """
+    Converting stacks between formats should not change data
+    """
     # Read in data
-    pdb_file = pdb.PDBFile()
-    pdb_file.read(path)
-    a1 = pdb_file.get_structure(model=model)
+    pdb_file = pdb.PDBFile.read(path)
+    try:
+        a1 = pdb_file.get_structure(model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
 
     # Save stack as gro
-    tmp_file_name = biotite.temp_file("gro")
+    temp = TemporaryFile("w+")
     gro_file = gro.GROFile()
     gro_file.set_structure(a1)
-    gro_file.write(tmp_file_name)
+    gro_file.write(temp)
 
     # Reload stack from gro
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     a2 = gro_file.get_structure(model=model)
 
     assert a1.array_length() == a2.array_length()
@@ -108,12 +121,15 @@ def test_gro_id_overflow():
     atoms.box = np.array([[1,0,0], [0,1,0], [0,0,1]])
 
     # Write .gro file
-    tmp_file_name = biotite.temp_file(".gro")
-    io.save_structure(tmp_file_name, atoms)
+    temp = TemporaryFile("w+")
+    gro_file = gro.GROFile()
+    gro_file.set_structure(atoms)
+    gro_file.write(temp)
 
     # Read .gro file
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     assert s.array_length() == num_atoms
@@ -123,7 +139,7 @@ def test_gro_no_box():
     """
     .gro file format requires valid box parameters at the end of each
     model. However, if we read such a file in, the resulting object should not
-    have an assigned box.
+    need to have an assigned box.
     """
 
     # Create an AtomArray
@@ -131,12 +147,15 @@ def test_gro_no_box():
     atoms = array([atom])
 
     # Write .gro file
-    tmp_file_name = biotite.temp_file(".gro")
-    io.save_structure(tmp_file_name, atoms)
+    temp = TemporaryFile("w+")
+    gro_file = gro.GROFile()
+    gro_file.set_structure(atoms)
+    gro_file.write(temp)
     
     # Read in file
-    gro_file = gro.GROFile()
-    gro_file.read(tmp_file_name)
+    temp.seek(0)
+    gro_file = gro.GROFile.read(temp)
+    temp.close()
     s = gro_file.get_structure()
 
     # Assert no box with 0 dimension

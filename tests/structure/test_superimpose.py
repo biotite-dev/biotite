@@ -10,10 +10,12 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
-from .util import data_dir
+from ..util import data_dir
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_superimposition_array(path):
     """
     Take a structure and rotate and translate a copy of it, so that they
@@ -45,7 +47,7 @@ def test_superimposition_stack(ca_only):
     (optimally) superimposed onto each other.
     Then superimpose and expect an improved RMSD.
     """
-    path = join(data_dir, "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.mmtf")
     stack = strucio.load_structure(path)
     fixed = stack[0]
     mobile = stack[1:]
@@ -77,7 +79,7 @@ def test_masked_superimposition(seed):
     the atom in both models should be 0.
     """
 
-    path = join(data_dir, "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.mmtf")
     fixed = strucio.load_structure(path, model=1)
     mobile = strucio.load_structure(path, model=2)
 

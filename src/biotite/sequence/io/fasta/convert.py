@@ -5,6 +5,8 @@
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
+import warnings
+from collections import OrderedDict
 from ...sequence import Sequence
 from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence
@@ -17,6 +19,10 @@ __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
 def get_sequence(fasta_file, header=None):
     """
     Get a sequence from a :class:`FastaFile` instance.
+
+    The type of sequence is guessed from the sequence string:
+    First, a conversion into a :class:`NucleotideSequence` and
+    second a conversion into a :class:`ProteinSequence` is tried.
     
     Parameters
     ----------
@@ -28,8 +34,8 @@ def get_sequence(fasta_file, header=None):
     
     Returns
     -------
-    sequence : :class:`NucleotideSequence` or :class:`ProteinSequence`
-        The first sequence in the :class:`FastaFile`.
+    sequence : NucleotideSequence or ProteinSequence
+        The requested sequence in the `FastaFile`.
         :class:`NucleotideSequence` if the sequence string fits the
         corresponding alphabet, :class:`ProteinSequence` otherwise.
     
@@ -58,6 +64,10 @@ def get_sequences(fasta_file):
     """
     Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
+
+    The type of sequence is guessed from the sequence string:
+    First, a conversion into a :class:`NucleotideSequence` and
+    second a conversion into a :class:`ProteinSequence` is tried.
     
     Parameters
     ----------
@@ -67,8 +77,9 @@ def get_sequences(fasta_file):
     Returns
     -------
     seq_dict : dict
-        A dictionary containg :class:`NucleotideSequence` and/or
-        :class:`ProteinSequence` instances.
+        A dictionary that maps headers to
+        :class:`NucleotideSequence` and/or :class:`ProteinSequence`
+        instances as values.
     
     Raises
     ------
@@ -77,13 +88,13 @@ def get_sequences(fasta_file):
         into a :class:`NucleotideSequence` nor a
         :class:`ProteinSequence`.
     """
-    seq_dict = {}
+    seq_dict = OrderedDict()
     for header, seq_str in fasta_file.items():
         seq_dict[header] = _convert_to_sequence(seq_str)
     return seq_dict
 
 
-def set_sequence(fasta_file, sequence, header=None):
+def set_sequence(fasta_file, sequence, header=None, as_rna=False):
     """
     Set a sequence in a :class:`FastaFile` instance.
     
@@ -94,20 +105,23 @@ def set_sequence(fasta_file, sequence, header=None):
     sequence : Sequence
         The sequence to be set.
     header : str, optional
-        The header for the sequence. Default is 'sequence'.
+        The header for the sequence. Default is ``'sequence'``.
+    as_rna : bool, optional
+        If set to true, ``'T'`` will be replaced by ``'U'``,
+        if a :class:`NucleotideSequence` was given.
     
     Raises
     ------
     ValueError
         If the sequence's alphabet uses symbols other than single
-        letters.
+        characters.
     """
     if header is None:
         header = "sequence"
-    fasta_file[header] = _convert_to_string(sequence)
+    fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
-def set_sequences(fasta_file, sequence_dict):
+def set_sequences(fasta_file, sequence_dict, as_rna=False):
     """
     Set sequences in a :class:`FastaFile` instance from a dictionary.
     
@@ -117,16 +131,19 @@ def set_sequences(fasta_file, sequence_dict):
         The :class:`FastaFile` to be accessed.
     sequence_dict : dict
         A dictionary containing the sequences to be set.
-        Header are keys, :class:`Sequence` instances are values. 
+        Header are keys, :class:`Sequence` instances are values.
+    as_rna : bool, optional
+        If set to true, ``'T'`` will be replaced by ``'U'``,
+        if a :class:`NucleotideSequence` was given.
     
     Raises
     ------
     ValueError
         If the sequences alphabets uses symbols other than single
-        letters.
+        characters.
     """
     for header, sequence in sequence_dict.items():
-        fasta_file[header] = _convert_to_string(sequence)
+        fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
 def get_alignment(fasta_file, additional_gap_chars=("_",)):
@@ -186,35 +203,37 @@ def _convert_to_sequence(seq_str):
     # Biotite alphabets for nucleotide and proteins
     # do not accept lower case letters
     seq_str = seq_str.upper()
-    # For nucleotides uracil is represented by thymine
-    # and theres is only one letter for completely unknown nucleotides
-    nuc_seq_str = seq_str.replace("U","T").replace("X","N")
     try:
-        code = NucleotideSequence.alphabet.encode_multiple(nuc_seq_str)
-        seq = NucleotideSequence()
-        seq.code = code
-        return seq
+        # For nucleotides uracil is represented by thymine and
+        # there is is only one letter for completely unknown nucleotides
+        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
     except AlphabetError:
         pass
     try:
-        code = ProteinSequence.alphabet.encode_multiple(seq_str)
-        seq = ProteinSequence()
-        seq.code = code
-        return seq
-    except AlphabetError:
-        pass
-    try:
-        code = NucleotideSequence.alphabet_amb.encode_multiple(nuc_seq_str)
-        seq = NucleotideSequence()
-        seq.code = code
-        return seq
+        if "U" in seq_str:
+            warn = True
+            seq_str = seq_str.replace("U", "C")
+        else:
+            warn = False
+        prot_seq = ProteinSequence(seq_str)
+        # Raise Warning after conversion into 'ProteinSequence'
+        # to wait for potential 'AlphabetError'
+        if warn:
+            warnings.warn(
+                "ProteinSequence objects do not support selenocysteine (U), "
+                "occurrences were substituted by cysteine (C)"
+            )
+        return prot_seq
     except AlphabetError:
         raise ValueError("FASTA data cannot be converted either to "
                          "'NucleotideSequence' nor to 'ProteinSequence'")
 
 
-def _convert_to_string(sequence):
+def _convert_to_string(sequence, as_rna):
     if not isinstance(sequence.get_alphabet(), LetterAlphabet):
         raise ValueError("Only sequences using single letter alphabets "
                          "can be stored in a FASTA file")
-    return(str(sequence))
+    if isinstance(sequence, NucleotideSequence) and as_rna:
+        return(str(sequence).replace("T", "U"))
+    else:
+        return(str(sequence))

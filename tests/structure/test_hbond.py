@@ -2,21 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import NamedTemporaryFile
 from os.path import join
 import numpy as np
 import pytest
-import biotite
 import biotite.structure as struc
 from biotite.structure.io import load_structure, save_structure
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
 # Ignore warning about dummy unit cell vector
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize("pdb_id", ["1l2y", "1gya", "1igy"])
 def test_hbond_structure(pdb_id):
-    file_name = join(data_dir, pdb_id+".mmtf")
+    file_name = join(data_dir("structure"), pdb_id+".mmtf")
     
     array = load_structure(file_name)
     # Only consider amino acids for consistency
@@ -31,12 +34,13 @@ def test_hbond_structure(pdb_id):
     
     # Save to new pdb file for consistent treatment of inscode/altloc
     # im MDTraj
-    file_name = biotite.temp_file("pdb")
-    save_structure(file_name, array)
+    temp = NamedTemporaryFile("w+", suffix=".pdb")
+    save_structure(temp.name, array)
     
     # Compare with MDTraj
     import mdtraj
-    traj = mdtraj.load(file_name)
+    traj = mdtraj.load(temp.name)
+    temp.close()
     triplets_ref = mdtraj.baker_hubbard(
         traj, freq=0, periodic=False
     )
@@ -54,7 +58,7 @@ def test_hbond_same_res():
     At least one of such bonds is present in 1L2Y (1ASN with N-terminus)
     (model 2).
     """
-    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection = stack.res_id == 1
     # Focus on second model
     array = stack[1]
@@ -68,7 +72,7 @@ def test_hbond_total_count():
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
     (comparision with MDTraj results)
     """
-    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     triplets, mask = struc.hbond(stack)
     freq = struc.hbond_frequency(mask)
 
@@ -81,7 +85,7 @@ def test_hbond_with_selections():
     of this boundary should be found. Also, hbond should respect the
     selection type.
     """
-    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
     selection2 = stack.res_id == 7
 
@@ -112,7 +116,7 @@ def test_hbond_single_selection():
     If only selection1 or selection2 is defined, hbond should run
     against all other atoms as the other selection.
     """
-    stack = load_structure(join(data_dir, "1l2y.mmtf"))
+    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection = (stack.res_id == 2) & (stack.atom_name == "O")  # 2LEU BB Ox
     triplets, mask = struc.hbond(stack, selection1=selection)
     assert len(triplets) == 2
@@ -141,7 +145,7 @@ def test_hbond_periodicity(translation_vector):
     Then the position of the periodic boundary is changed and it is
     expected that all hydrogen bonds are still the same
     """
-    stack = load_structure(join(data_dir, "waterbox.gro"))
+    stack = load_structure(join(data_dir("structure"), "waterbox.gro"))
     array = stack[0]
     ref_hbonds = struc.hbond(array, periodic=True)
     # Put H-bond triplets into as stack for faster comparison with

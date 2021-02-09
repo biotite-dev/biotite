@@ -14,7 +14,6 @@ from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, FancyBboxPatch
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import biotite.database.entrez as entrez
@@ -40,8 +39,8 @@ for name, gene in genes.items():
     assert len(ids) == 1
     uids += ids
 # Download corresponding GenBank files as single, merged file
-file_name = entrez.fetch_single_file(
-    uids, biotite.temp_file("gb"), "protein", ret_type="gb"
+file = entrez.fetch_single_file(
+    uids, None, "protein", ret_type="gb"
 )
 
 # Array that will hold for each of the genes and each of the 4 domains
@@ -52,8 +51,7 @@ domain_pos = np.full((len(genes), 4, 2), -1, dtype=int)
 # Array that will hold the total sequence length of each sigma factor
 seq_lengths = np.zeros(len(genes), dtype=int)
 # Read the merged file containing multiple GenBank entries
-multi_file = gb.MultiFile()
-multi_file.read(file_name)
+multi_file = gb.MultiFile.read(file)
 # Iterate over each GenBank entry
 for i, gb_file in enumerate(multi_file):
     _, length, _, _, _, _ = gb.get_locus(gb_file)

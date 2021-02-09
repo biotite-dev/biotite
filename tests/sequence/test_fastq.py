@@ -2,54 +2,85 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite
+import glob
+from tempfile import TemporaryFile
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
 import numpy as np
 import os
 import os.path
-from .util import data_dir
+from ..util import data_dir
 import pytest
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_access(chars_per_line):
-    path = os.path.join(data_dir, "random.fastq")
-    file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file.read(path)
+    path = os.path.join(data_dir("sequence"), "random.fastq")
+    file = fastq.FastqFile.read(
+        path, offset=33, chars_per_line=chars_per_line
+    )
     assert len(file) == 20
     assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)]
     del(file["Read:05"])
     assert len(file) == 19
     assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)
                                  if i+1 != 5]
-    for sequence, scores in file.values():
-        assert len(sequence) == len(scores)
+    for seq_str, scores in file.values():
+        assert len(seq_str) == len(scores)
         assert (scores >= 0).all()
-    sequence = seq.NucleotideSequence("ACTCGGT")
+    seq_str = "ACTCGGT"
     scores = np.array([10,12,20,11,0,80,42])
-    file["test"] = sequence, scores
-    sequence2, scores2 = file["test"]
-    assert sequence == sequence2
+    file["test"] = seq_str, scores
+    seq_str2, scores2 = file["test"]
+    assert seq_str == seq_str2
     assert np.array_equal(scores, scores2)
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_conversion(chars_per_line):
-    path = os.path.join(data_dir, "random.fastq")
-    file1 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file1.read(path)
-    ref_content = dict(file1.items())
+    path = os.path.join(data_dir("sequence"), "random.fastq")
+    fasta_file = fastq.FastqFile.read(
+        path, offset=33, chars_per_line=chars_per_line
+    )
+    ref_content = dict(fasta_file.items())
 
-    file2 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
+    fasta_file = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
     for identifier, (sequence, scores) in ref_content.items():
-        file2[identifier] = sequence, scores
-    file2.write(biotite.temp_file("fastq"))
+        fasta_file[identifier] = sequence, scores
+    temp = TemporaryFile("w+")
+    fasta_file.write(temp)
 
-    file3 = fastq.FastqFile(offset=33, chars_per_line=chars_per_line)
-    file3.read(path)
-    content = dict(file3.items())
+    temp.seek(0)
+    fasta_file = fastq.FastqFile.read(
+        temp, offset=33, chars_per_line=chars_per_line
+    )
+    content = dict(fasta_file.items())
+    temp.close()
     
     for identifier in ref_content:
         ref_sequence, ref_scores = ref_content[identifier]
-        sequence, scores = content[identifier]
-        assert ref_sequence == sequence
-        assert np.array_equal(ref_scores, scores)
+        test_sequence, test_scores = content[identifier]
+        assert test_sequence == ref_sequence
+        assert np.array_equal(test_scores, ref_scores)
+
+def test_rna_conversion():
+    sequence = seq.NucleotideSequence("ACGT")
+    scores = np.array([0, 0, 0, 0])
+    fastq_file = fastq.FastqFile(offset="Sanger")
+    fastq.set_sequence(fastq_file, sequence, scores, "seq1", as_rna=False)
+    fastq.set_sequence(fastq_file, sequence, scores, "seq2", as_rna=True)
+    assert fastq_file["seq1"][0] == "ACGT" 
+    assert fastq_file["seq2"][0] == "ACGU"
+
+@pytest.mark.parametrize(
+    "file_name",
+    glob.glob(os.path.join(data_dir("sequence"), "*.fastq"))
+)
+def test_read_iter(file_name):
+    ref_dict = dict(fastq.FastqFile.read(file_name, offset="Sanger").items())
+    
+    test_dict = dict(fastq.FastqFile.read_iter(file_name, offset="Sanger"))
+
+    for (test_id, (test_seq, test_sc)), (ref_id, (ref_seq, ref_sc)) \
+        in zip(test_dict.items(), ref_dict.items()):
+            assert test_id == ref_id
+            assert test_seq == ref_seq
+            assert (test_sc == ref_sc).all()

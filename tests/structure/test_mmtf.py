@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 import glob
 import itertools
 from os.path import join, splitext
@@ -10,15 +11,24 @@ import pytest
 from pytest import approx
 import biotite
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
-from .util import data_dir
+from ..util import data_dir
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir, "*.mmtf")))
+def test_get_model_count():
+    mmtf_file = mmtf.MMTFFile.read(join(data_dir("structure"), "1l2y.mmtf"))
+    test_model_count = mmtf.get_model_count(mmtf_file)
+    ref_model_count = mmtf.get_structure(mmtf_file).stack_depth()
+    assert test_model_count == ref_model_count
+
+
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+)
 def test_codecs(path):
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    mmtf_file = mmtf.MMTFFile.read(path)
     for key in mmtf_file:
         if mmtf_file.get_codec(key) is not None:
             codec = mmtf_file.get_codec(key)
@@ -37,25 +47,33 @@ def test_codecs(path):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.mmtf")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.mmtf")),
+        [None, 1, -1]
     )
 )
-def test_array_conversion(path, single_model):
-    model = 1 if single_model else None
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+def test_array_conversion(path, model):
+    mmtf_file = mmtf.MMTFFile.read(path)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
     
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
-    temp_file_name = biotite.temp_file("mmtf")
-    mmtf_file.write(temp_file_name)
+    temp = TemporaryFile("w+b")
+    mmtf_file.write(temp)
 
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(temp_file_name)
+    temp.seek(0)
+    mmtf_file = mmtf.MMTFFile.read(temp)
+    temp.close()
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
     
     for category in a1.get_annotation_categories():
@@ -69,28 +87,53 @@ def test_array_conversion(path, single_model):
 
 
 @pytest.mark.parametrize(
-    "path, single_model",
+    "path, model",
     itertools.product(
-        glob.glob(join(data_dir, "*.mmtf")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "*.mmtf")),
+        [None, 1, -1]
     )
 )
-def test_pdbx_consistency(path, single_model):
-    model = None if single_model else 1
+def test_pdbx_consistency(path, model):
     cif_path = splitext(path)[0] + ".cif"
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
-    a1 = mmtf.get_structure(mmtf_file, model=model)
-    pdbx_file = pdbx.PDBxFile()
-    pdbx_file.read(cif_path)
+    mmtf_file = mmtf.MMTFFile.read(path)
+    try:
+        a1 = mmtf.get_structure(mmtf_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
+    
     # Sometimes mmCIF files can have 'cell' entry
     # but corresponding MMTF file has not 'unitCell' entry
     # -> Do not assert for dummy entry in mmCIF file
     # (all vector elements = {0, 1})
     if a2.box is not None and not ((a2.box == 0) | (a2.box == 1)).all():
         assert np.allclose(a1.box, a2.box)
-    for category in a1.get_annotation_categories():
+    # MMTF might assign some residues, that PDBx assigns as 'hetero',
+    # as 'non-hetero' if they are RNA/DNA or peptide linking
+    try:
+        assert a1.hetero.tolist() == \
+               a2.hetero.tolist()
+    except AssertionError:
+        conflict_residues = np.unique(
+            a1.res_name[a1.hetero != a2.hetero]
+        )
+        for res in conflict_residues:
+            assert info.link_type(res) in [
+                "L-PEPTIDE LINKING", "PEPTIDE LINKING",
+                "DNA LINKING", "RNA LINKING"
+            ]
+    # Test the remaining categories
+    for category in [
+        c for c in a1.get_annotation_categories() if c != "hetero"
+    ]:
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.flatten().tolist() == \
@@ -98,9 +141,8 @@ def test_pdbx_consistency(path, single_model):
 
 
 def test_extra_fields():
-    path = join(data_dir, "1l2y.mmtf")
-    mmtf_file = mmtf.MMTFFile()
-    mmtf_file.read(path)
+    path = join(data_dir("structure"), "1l2y.mmtf")
+    mmtf_file = mmtf.MMTFFile.read(path)
     stack1 = mmtf.get_structure(
         mmtf_file,
         extra_fields=[
@@ -128,9 +170,13 @@ def test_numpy_objects():
     """
     Test whether the Msgpack encoder is able to handle NumPy values
     (e.g. np.float32) properly.
+
+    Only check if no error occurs.
     """
     mmtf_file = mmtf.MMTFFile()
     mmtf_file["A float"] = np.float32(42.0)
     mmtf_file["A list"] = [np.int64(1), np.int64(2), np.int64(3)]
     mmtf_file["A dictionary"] = {"a": np.bool(True), "b": np.bool(False)}
-    mmtf_file.write(biotite.temp_file("mmtf"))
+    temp = TemporaryFile("w+b")
+    mmtf_file.write(temp)
+    temp.close()

@@ -14,7 +14,6 @@ provided by *Biotite*.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.align as align
@@ -26,11 +25,9 @@ import biotite.database.entrez as entrez
 query =   entrez.SimpleQuery("luxA", "Gene Name") \
         & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
 uids = entrez.search(query, db_name="protein")
-file_name = entrez.fetch_single_file(
-    uids, biotite.temp_file("fasta"), db_name="protein", ret_type="fasta"
-)
-fasta_file = fasta.FastaFile()
-fasta_file.read(file_name)
+fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
+    uids, None, db_name="protein", ret_type="fasta"
+))
 
 ids = []
 sequences = []

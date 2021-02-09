@@ -6,10 +6,9 @@ from os.path import join
 import itertools
 import numpy as np
 import pytest
-import biotite
 import biotite.structure as struc
 from biotite.structure.io import load_structure
-from .util import data_dir
+from ..util import data_dir, cannot_import
 
 
 SAMPLE_BOXES = [
@@ -33,7 +32,10 @@ SAMPLE_COORD = [
 
 # Ignore warning about dummy unit cell vector
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.xfail(raises=ImportError)
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
 @pytest.mark.parametrize(
     "len_a, len_b, len_c, alpha, beta, gamma", SAMPLE_BOXES
 )
@@ -112,7 +114,7 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
 
 
 def test_repeat_box():
-    array = load_structure(join(data_dir, "3o5r.mmtf"))
+    array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     repeat_array, _ = struc.repeat_box(array)
     assert repeat_array[:array.array_length()] == array
 
@@ -123,7 +125,7 @@ def test_remove_pbc_unsegmented():
     when the structure is entirely in the box.
     Exclude the solvent, due to high distances between each atom. 
     """
-    ref_array = load_structure(join(data_dir, "3o5r.mmtf"))
+    ref_array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     # Center structure in box
     centroid = struc.centroid(ref_array)
     box_center = np.diag(ref_array.box) / 2
@@ -200,7 +202,7 @@ def test_remove_pbc_restore(multi_model, translation_vector):
                 print(f"Model {m}, Atoms {i} and {j}")
                 raise
     
-    stack = load_structure(join(data_dir, "1gya.mmtf"))
+    stack = load_structure(join(data_dir("structure"), "1gya.mmtf"))
     stack.box = np.array([
         np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + 10)
         for coord in stack.coord
@@ -241,7 +243,7 @@ def test_remove_pbc_selections(multi_model):
     This test makes no assertions, it only test whether an exception
     occurs, when the `selection` parameter is given in `remove_pbc()`.
     """
-    array = load_structure(join(data_dir, "3o5r.mmtf"))
+    array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
     if multi_model:
         array = struc.stack([array, array])
     

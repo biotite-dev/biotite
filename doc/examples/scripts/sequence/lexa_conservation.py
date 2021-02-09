@@ -20,7 +20,6 @@ the entires for their definition (title) and source (species).
 
 import numpy as np
 import matplotlib.pyplot as plt
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.io.genbank as gb
@@ -34,12 +33,12 @@ query =   entrez.SimpleQuery("lexA", "Gene Name") \
 # More than 200 UIDs are not recommended for the EFetch service
 # for a single fetch
 uids = entrez.search(query, db_name="protein", number=200)
-file_name = entrez.fetch_single_file(uids, biotite.temp_file("gp"),
-                              db_name="protein", ret_type="gp")
+file = entrez.fetch_single_file(
+    uids, None, db_name="protein", ret_type="gp"
+)
 # The file contains multiple concatenated GenPept files
 # -> Usage of MultiFile
-multi_file = gb.MultiFile()
-multi_file.read(file_name)
+multi_file = gb.MultiFile.read(file)
 # Separate MultiFile into single GenBankFile instances
 files = [f for f in multi_file]
 print("Definitions:")

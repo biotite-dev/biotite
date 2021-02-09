@@ -9,6 +9,29 @@ This page shows *Biotite*'s extension packages:
 These are packages that build upon *Biotite*'s functionality, but are separate
 Python packages that are developed independently.
 
+
+
+.. raw:: html
+
+    <div
+        class="sphx-glr-thumbcontainer"
+        tooltip="An interface between Biotite and the PyMOL biomolecular visualization software"
+    >
+
+.. only:: html
+
+    .. figure:: https://ammolite.biotite-python.org/_static/assets/ammolite_logo.svg
+        :target: https://ammolite.biotite-python.org/
+        :alt: Ammolite logo
+
+        `Ammolite - From Biotite to PyMOL and back again <https://ammolite.biotite-python.org/>`_
+
+.. raw:: html
+
+    </div>
+
+
+
 .. raw:: html
 
     <div

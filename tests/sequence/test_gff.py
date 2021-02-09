@@ -2,14 +2,14 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from tempfile import TemporaryFile
 from os.path import join
-import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.gff as gff
 import biotite.sequence.io.genbank as gb
 import numpy as np
 import pytest
-from .util import data_dir
+from ..util import data_dir
 
 
 @pytest.mark.parametrize(
@@ -21,19 +21,19 @@ def test_conversion_lowlevel(path):
     Test whether the low-level GFF3 interface can properly read
     a GenBank file and write a file, without data changing.
     """
-    file = gff.GFFFile()
-    file.read(join(data_dir, path))
-    ref_entries = [entry for entry in file]
+    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path))
+    ref_entries = [entry for entry in gff_file]
 
-    file = gff.GFFFile()
+    gff_file = gff.GFFFile()
     for entry in ref_entries:
-        file.append(*entry)
-    temp_file_name = biotite.temp_file("gff3")
-    file.write(temp_file_name)
+        gff_file.append(*entry)
+    temp = TemporaryFile("w+")
+    gff_file.write(temp)
 
-    file = gff.GFFFile()
-    file.read(temp_file_name)
-    test_entries = [field for field in file]
+    temp.seek(0)
+    gff_file = gff.GFFFile.read(temp)
+    temp.close()
+    test_entries = [field for field in gff_file]
     assert test_entries == ref_entries
 
 
@@ -49,24 +49,24 @@ def test_conversion_highlevel(path):
     The 'phase' is tested additionally, since it is not part of a
     `Feature` object.
     """
-    file = gff.GFFFile()
-    file.read(join(data_dir, path))
-    ref_annot = gff.get_annotation(file)
+    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path))
+    ref_annot = gff.get_annotation(gff_file)
     ref_phases = []
-    for _, _, type, _, _, _, _, phase, _ in file:
+    for _, _, type, _, _, _, _, phase, _ in gff_file:
         if type == "CDS":
             ref_phases.append(phase)
 
-    file = gff.GFFFile()
-    gff.set_annotation(file, ref_annot)
-    temp_file_name = biotite.temp_file("gff3")
-    file.write(temp_file_name)
+    gff_file = gff.GFFFile()
+    gff.set_annotation(gff_file, ref_annot)
+    temp = TemporaryFile("w+")
+    gff_file.write(temp)
 
-    file = gff.GFFFile()
-    file.read(temp_file_name)
-    test_annot = gff.get_annotation(file)
+    temp.seek(0)
+    gff_file = gff.GFFFile.read(temp)
+    temp.close()
+    test_annot = gff.get_annotation(gff_file)
     test_phases = []
-    for _, _, type, _, _, _, _, phase, _ in file:
+    for _, _, type, _, _, _, _, phase, _ in gff_file:
         if type == "CDS":
             test_phases.append(phase)
     
@@ -82,13 +82,11 @@ def test_genbank_consistency(path):
     Test whether the same annotation (if reasonable) can be read from a
     GFF3 file and a GenBank file.
     """
-    file = gb.GenBankFile()
-    file.read(join(data_dir, path))
-    ref_annot = gb.get_annotation(file)
+    gb_file = gb.GenBankFile.read(join(data_dir("sequence"), path))
+    ref_annot = gb.get_annotation(gb_file)
 
-    file = gff.GFFFile()
-    file.read(join(data_dir, path[:-3] + ".gff3"))
-    test_annot = gff.get_annotation(file)
+    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path[:-3] + ".gff3"))
+    test_annot = gff.get_annotation(gff_file)
     
     # Remove qualifiers, since they will be different
     # in GFF3 and GenBank
@@ -135,9 +133,10 @@ def test_entry_indexing():
     Test whether a GFF3 file is indexed correctly based on an artificial
     test file with multiple directives, including '##FASTA'.
     """
-    file = gff.GFFFile()
     with pytest.warns(UserWarning):
-        file.read(join(data_dir, "indexing_test.gff3"))
+        file = gff.GFFFile.read(
+            join(data_dir("sequence"), "indexing_test.gff3")
+        )
     assert file._directives == [
         ("directive 1", 1),
         ("directive 2", 2),
@@ -153,8 +152,7 @@ def test_percent_encoding():
     Test whether percent encoding is working correctly based on an
     artificial test file.
     """
-    file = gff.GFFFile()
-    file.read(join(data_dir, "percent_test.gff3"))
+    file = gff.GFFFile.read(join(data_dir("sequence"), "percent_test.gff3"))
     seqid, source, type, start, end, score, strand, phase, attrib \
         = file[0]
     assert seqid == "123,456"
