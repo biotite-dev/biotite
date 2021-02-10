@@ -24,7 +24,7 @@ class SimilarityRule(metaclass=abc.ABCMeta):
 class IdentityRule(SimilarityRule):
 
     def similarities(self, k, alphabet):
-        return np.identity(kmer_number(k, len(alphabet)), dtype=bool)
+        return np.arange(kmer_number(k, len(alphabet)))[:, np.newaxis]
 
 
 class ScoreThresholdRule(SimilarityRule):
@@ -49,15 +49,15 @@ class MatchNumberRule(SimilarityRule):
 
 class CustomRule(SimilarityRule):
 
-    def __init__(self, mask):
-        self._mask = mask
+    def __init__(self, similarities):
+        self._sim = similarities
 
     @abc.abstractmethod
     def similarities(self, k, alphabet):
         n_kmers = kmer_number(k, len(alphabet))
-        if self._mask.shape != (n_kmers, n_kmers):
+        if len(self._sim) != n_kmers:
             raise ValueError(
-                f"Mask is an {self._mask.shape} matrix, "
+                f"similarities has length {len(self._sim)}, "
                 f"but there are {n_kmers} possible k-mers"
             )
-        return self._mask
+        return self._sim
