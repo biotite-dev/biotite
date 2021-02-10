@@ -104,7 +104,7 @@ You do not have to write input files and read output files, you only have to
 input *Python* objects and you get *Python* objects.
 It is basically very similar to using normal *Python* functions.
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_001.png
+.. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_002.png
    :width: 48 %
    :target: examples/gallery/sequence/lexa_conservation.html
 
