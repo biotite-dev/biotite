@@ -11,20 +11,13 @@ from .kmer import kmer_number
 
 
 class SimilarityRule(metaclass=abc.ABCMeta):
+    """
+    Self-similar
+    """
 
     @abc.abstractmethod
     def similarities(self, k, alphabet):
         pass
-    
-    @property
-    def k(self):
-        return self._k
-
-
-class IdentityRule(SimilarityRule):
-
-    def similarities(self, k, alphabet):
-        return np.arange(kmer_number(k, len(alphabet)))[:, np.newaxis]
 
 
 class ScoreThresholdRule(SimilarityRule):

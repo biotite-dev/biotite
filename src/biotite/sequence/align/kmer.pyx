@@ -31,7 +31,8 @@ ctypedef fused CodeType:
 cdef class KmerIndex:
 
     cdef object _alph
-    cdef int64[:,:] _sim_matrix
+    cdef int64[:,:] _sim_kmers
+    cdef bint _has_sim_rule
     cdef int _k
     cdef int _n_sequences
 
@@ -40,7 +41,7 @@ cdef class KmerIndex:
     cdef ptr[:] _kmer_pos
 
 
-    def __cinit__(self, alphabet, k, similarity_rule):
+    def __cinit__(self, alphabet, k, similarity_rule=None):
         # This check is necessary for proper memory management
         # of the allocated arrays
         if self._is_initialized():
@@ -52,13 +53,35 @@ cdef class KmerIndex:
             raise ValueError("Alphabet length must be at least 1")
         
         self._alph = alphabet
-        self._sim_matrix = similarity_rule.similarities(k, alphabet) \
-                           .astype(np.int64)
+        n_kmers = kmer_number(k, len(alphabet))
+
+        if similarity_rule is None:
+            self._has_sim_rule = False
+        else:
+            similar_kmers = similarity_rule.similarities(k, alphabet)
+            if similar_kmers.ndim != 2:
+                raise ValueError(
+                    f"Got an {similar_kmers.ndim}-dimensional array for "
+                    f"for similar kmers, expected 2 dimensions"
+                )
+            if len(similar_kmers) > n_kmers:
+                raise ValueError(
+                    f"k-mer similarity array has {len(similar_kmers)}, "
+                    f"but there are {n_kmers}, must be equal"
+                )
+            max_kmer = np.max(similar_kmers)
+            if max_kmer >= n_kmers:
+                raise ValueError(
+                    f"k-mer similarity array maps to kmer "
+                    f"{len(similar_kmers)}, but there are only {n_kmers}"
+                )
+            self._sim_kmers = similar_kmers.astype(np.int64)
+            self._has_sim_rule = True
+        
         self._k = k
         self._n_sequences = 0
 
         # ndarrays of pointers to C-arrays
-        n_kmers = kmer_number(k, len(alphabet))
         self._kmer_seq = np.zeros(n_kmers, dtype=np.uint64)
         self._kmer_pos = np.zeros(n_kmers, dtype=np.uint64)
         # Stores the length of the C-arrays
@@ -80,21 +103,23 @@ cdef class KmerIndex:
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def add(self, sequence):
+    def add(self, sequence, mask=None):
         """
         If this function raises a :class:`MemoryError` the
         :class:`KmerIndex` becomes invalid.
         """
+        cdef int i
         cdef int64 seq_pos
         cdef int64 length
-        cdef int64 kmer
+        cdef int64 kmer, sim_kmer
         cdef int64* kmer_ptr
 
         # Store in new variables
         # to disable repetitive initialization checks
-        cdef int64[:] self_kmer_len = self._kmer_len
-        cdef ptr[:] self_kmer_seq = self._kmer_seq
-        cdef ptr[:] self_kmer_pos = self._kmer_pos
+        cdef int64[:,:] sim_kmers
+        cdef int64[:] kmer_len = self._kmer_len
+        cdef ptr[:] kmer_seq = self._kmer_seq
+        cdef ptr[:] kmer_pos = self._kmer_pos
         cdef int n_sequences = self._n_sequences
 
         code = sequence.code
@@ -110,34 +135,55 @@ cdef class KmerIndex:
         cdef int64[:] kmers = _create_kmers(
             code, self._k, len(self._alph)
         )
+        
+        if self._has_sim_rule:
+            sim_kmers = self._sim_kmers
+            for seq_pos in range(kmers.shape[0]):
+                kmer = kmers[seq_pos]
+                # There is a similarity rule
+                # -> dd not only this k-mer to the index,
+                # but also all similar kmers
+                # As the array of similar k-mers should include
+                # self-similarity, this k-mer should also be included
+                # in the array
+                for i in range(sim_kmers.shape[1]):
+                    sim_kmer = sim_kmers[kmer, i]
+                    if sim_kmer < 0:
+                        # Reached the trailing '-1' values
+                        break
+                    # Add the k-mer to the index
+                    # and watch out for MemoryError in doing so
+                    if _add_kmer(
+                        kmer, n_sequences, seq_pos,
+                        kmer_len, kmer_seq, kmer_pos
+                    ):
+                        raise MemoryError
+        else:
+            for seq_pos in range(kmers.shape[0]):
+                kmer = kmers[seq_pos]
+                # No similarity rule
+                # -> do not add similar k-mers to the index
+                # Add the k-mer to the index
+                # and watch out for MemoryError in doing so
+                if _add_kmer(
+                    kmer, n_sequences, seq_pos,
+                    kmer_len, kmer_seq, kmer_pos
+                ):
+                    raise MemoryError
+            
 
-        for seq_pos in range(kmers.shape[0]):
-            kmer = kmers[seq_pos]
-            # TODO: Use similarity rule
-            # Increment array length for this kmer and reallocate
-            length = self_kmer_len[kmer] + 1
-            self_kmer_len[kmer] = length
-
-            # Set the index of the sequence in the list for this kmer
-            kmer_ptr = <int64*>self_kmer_seq[kmer]
-            kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
-            if not kmer_ptr:
-                raise MemoryError()
-            kmer_ptr[length-1] = n_sequences
-            self_kmer_seq[kmer] = <ptr>kmer_ptr
-
-            # Set the position of this kmer in the sequence
-            kmer_ptr = <int64*>self_kmer_pos[kmer]
-            kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
-            if not kmer_ptr:
-                raise MemoryError()
-            kmer_ptr[length-1] = seq_pos
-            self_kmer_pos[kmer] = <ptr>kmer_ptr
         
         self._n_sequences += 1
     
 
+    
+
     def add_kmers(self, kmer_sequence, seq_index, position):
+        raise NotImplementedError()
+        # TODO
+    
+
+    def get_kmers(self):
         raise NotImplementedError()
         # TODO
     
@@ -204,7 +250,17 @@ cdef class KmerIndex:
         return np.asarray(matches[:match_i])
     
 
-    def __getitem__(self, item):
+    def update(self, kmer, seq_indices, positions):
+        raise NotImplementedError()
+        # TODO
+    
+
+    def __setitem__(self, kmer, item):
+        raise NotImplementedError()
+        # TODO
+
+
+    def __getitem__(self, kmer):
         raise NotImplementedError()
         # TODO
     
@@ -230,8 +286,8 @@ cdef class KmerIndex:
 
     def __dealloc__(self):
         if self._is_initialized():
-            deallocate_ptrs(self._kmer_seq)
-            deallocate_ptrs(self._kmer_pos)
+            _deallocate_ptrs(self._kmer_seq)
+            _deallocate_ptrs(self._kmer_pos)
     
     cdef inline bint _is_initialized(self):
         # Memoryviews are not initialized on class creation
@@ -278,8 +334,41 @@ cdef class KmerIndex:
             kmer -= code * val
         return seq_code
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef inline int _add_kmer(int64 kmer, int64 seq_index, int64 seq_pos,
+                           int64[:] kmer_len,
+                           ptr[:] kmer_seq, ptr[:] kmer_pos):
+    cdef int64 length = kmer_len[kmer] + 1
+    kmer_len[kmer] = length
+
+    # Increment array length for this kmer and reallocate
+    # Set the index of the sequence in the list for this kmer
+    cdef int64* kmer_ptr = <int64*>kmer_seq[kmer]
+    kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
+    if not kmer_ptr:
+        # '1' is indicator for MemoryError
+        # No exception is raised directly
+        # to keep efficiency of inline function call 
+        return 1
+    kmer_ptr[length-1] = seq_index
+    kmer_seq[kmer] = <ptr>kmer_ptr
+
+    # Set the position of this kmer in the sequence
+    kmer_ptr = <int64*>kmer_pos[kmer]
+    kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
+    if not kmer_ptr:
+        # '1' is indicator for MemoryError
+        # No exception is raised directly
+        # to keep efficiency of inline function call 
+        return 1
+    kmer_ptr[length-1] = seq_pos
+    kmer_pos[kmer] = <ptr>kmer_ptr
     
-cdef inline void deallocate_ptrs(ptr[:] ptrs):
+
+    
+cdef inline void _deallocate_ptrs(ptr[:] ptrs):
     cdef int i
     for i in range(ptrs.shape[0]):
         free(<int*>ptrs[i])
