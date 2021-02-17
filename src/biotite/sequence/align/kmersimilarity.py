@@ -3,11 +3,11 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["SimilarityRule", "IdentityRule"]
+__all__ = ["SimilarityRule",
+           "ScoreThresholdRule", "MatchNumberRule", "CustomRule"]
 
 import abc
 import numpy as np
-from .kmer import kmer_number
 
 
 class SimilarityRule(metaclass=abc.ABCMeta):
@@ -16,7 +16,7 @@ class SimilarityRule(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def similarities(self, k, alphabet):
+    def similarities(self, kmer_alphabet):
         pass
 
 
@@ -26,7 +26,7 @@ class ScoreThresholdRule(SimilarityRule):
         self._matrix = matrix
 
     @abc.abstractmethod
-    def similarities(self, k, alphabet):
+    def similarities(self, kmer_alphabet):
         raise NotImplementedError()
 
 
@@ -36,7 +36,7 @@ class MatchNumberRule(SimilarityRule):
         self._matches = min_matches
 
     @abc.abstractmethod
-    def similarities(self, k, alphabet):
+    def similarities(self, kmer_alphabet):
         raise NotImplementedError()
 
 
@@ -46,8 +46,8 @@ class CustomRule(SimilarityRule):
         self._sim = similarities
 
     @abc.abstractmethod
-    def similarities(self, k, alphabet):
-        n_kmers = kmer_number(k, len(alphabet))
+    def similarities(self, kmer_alphabet):
+        n_kmers = len(kmer_alphabet)
         if len(self._sim) != n_kmers:
             raise ValueError(
                 f"similarities has length {len(self._sim)}, "

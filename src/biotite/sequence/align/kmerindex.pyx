@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["KmerIndex", "kmer_number"]
+__all__ = ["KmerIndex"]
 
 cimport cython
 cimport numpy as np
@@ -11,26 +11,18 @@ from libc.stdlib cimport realloc, malloc, free
 
 import numpy as np
 from ..alphabet import AlphabetError
+from .kmeralphabet import KmerAlphabet
 
 
 ctypedef np.int32_t int32
 ctypedef np.int64_t int64
-ctypedef np.uint8_t uint8
-ctypedef np.uint16_t uint16
-ctypedef np.uint32_t uint32
 ctypedef np.uint64_t uint64
 ctypedef np.uint64_t ptr
-
-ctypedef fused CodeType:
-    uint8
-    #uint16
-    #uint32
-    #uint64
 
 
 cdef class KmerIndex:
 
-    cdef object _alph
+    cdef object _kmer_alph
     cdef int64[:,:] _sim_kmers
     cdef bint _has_sim_rule
     cdef int _k
@@ -52,13 +44,13 @@ cdef class KmerIndex:
         if len(alphabet) < 1:
             raise ValueError("Alphabet length must be at least 1")
         
-        self._alph = alphabet
-        n_kmers = kmer_number(k, len(alphabet))
+        self._kmer_alph = KmerAlphabet(alphabet, k)
+        n_kmers = len(self._kmer_alph)
 
         if similarity_rule is None:
             self._has_sim_rule = False
         else:
-            similar_kmers = similarity_rule.similarities(k, alphabet)
+            similar_kmers = similarity_rule.similarities(self._kmer_alph)
             if similar_kmers.ndim != 2:
                 raise ValueError(
                     f"Got an {similar_kmers.ndim}-dimensional array for "
@@ -89,8 +81,12 @@ cdef class KmerIndex:
 
 
     @property
+    def kmer_alphabet(self):
+        return self._kmer_alph
+    
+    @property
     def alphabet(self):
-        return self._alphabet
+        return self._kmer_alph.base_alphabet
     
     @property
     def k(self):
@@ -126,15 +122,13 @@ cdef class KmerIndex:
         
         if len(code) < self._k:
             raise ValueError("Sequence code is shorter than k")
-        if self._alph != sequence.alphabet:
+        if self._kmer_alph.base_alphabet != sequence.alphabet:
             raise ValueError(
                 "The alphabet used for the k-mer index is not equal to the "
                 "alphabet of the sequence"
             )
         
-        cdef int64[:] kmers = _create_kmers(
-            code, self._k, len(self._alph)
-        )
+        cdef int64[:] kmers = self._kmer_alph.create_kmers(code)
         
         if self._has_sim_rule:
             sim_kmers = self._sim_kmers
@@ -221,10 +215,15 @@ cdef class KmerIndex:
         cdef ptr[:] other_kmer_seq = kmer_index._kmer_seq
         cdef ptr[:] other_kmer_pos = kmer_index._kmer_pos
 
-        if self._alph != kmer_index._alph:
+        if self._kmer_alph != kmer_index._kmer_alph:
             raise ValueError(
                 "The alphabet used for this k-mer index is not equal to the "
                 "alphabet of the other k-mer index"
+            )
+        if self._k != kmer_index._k:
+            raise ValueError(
+                "The 'k' parameter used for this k-mer index is not equal "
+                "to 'k' of the other k-mer index"
             )
 
         cdef int64[:,:] matches = np.zeros((INIT_SIZE, 4), dtype=np.int64)
@@ -278,7 +277,7 @@ cdef class KmerIndex:
                         (<int64*>self._kmer_seq[kmer])[i],
                         (<int64*>self._kmer_pos[kmer])[i],
                     )))
-                symbols = self._alph.decode_multiple(self._to_seq_code(kmer))
+                symbols = self._kmer_alph.decode(kmer)
                 line = str(tuple(symbols)) + ": " + ", ".join(position_strings)
                 lines.append(line)
         return "\n".join(lines)
@@ -300,39 +299,6 @@ cdef class KmerIndex:
                 return False
         except AttributeError:
             return False
-    
-
-    def _to_kmer(self, seq_code):
-        radix_multiplier = np.array(
-            [len(self._alph)**n for n in range(self._k)],
-            dtype=int
-        )
-
-        if len(seq_code) != self._k:
-            raise ValueError(
-                f"Sequence code has length {len(seq_code)}, "
-                f"but k-mer index expects {self._k}"
-            )
-        
-        return np.sum(self._radix_multiplier * seq_code)
-    
-    cdef _to_seq_code(self, kmer):
-        radix_multiplier = np.array(
-            [len(self._alph)**n for n in range(self._k)],
-            dtype=int
-        )
-
-        if kmer >= kmer_number(self._k, len(self._alph)) or kmer < 0:
-            raise ValueError(
-                f"k-mer {kmer} is invalid for the underlying alphabet"
-            )
-        seq_code = np.zeros(self._k, dtype=int)
-        for n in reversed(range(self._k)):
-            val = radix_multiplier[n]
-            code = kmer // val
-            seq_code[n] = code
-            kmer -= code * val
-        return seq_code
 
 
 @cython.boundscheck(False)
@@ -381,35 +347,3 @@ cdef np.ndarray increase_array_size(np.ndarray array):
     new_array = np.empty((array.shape[0]*2, array.shape[1]), dtype=array.dtype)
     new_array[:array.shape[0],:] = array
     return new_array
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _create_kmers(CodeType[:] seq_code not None,
-                  int k, int64 alphabet_length):
-    cdef int64 i
-    cdef int j
-    
-    cdef int64[:] radix_multiplier = np.array(
-        [alphabet_length**n for n in range(k)],
-        dtype=np.int64
-    )
-
-    cdef int64[:] kmers = np.empty(len(seq_code) - k + 1, dtype=np.int64)
-    
-    cdef CodeType code
-    cdef int64 kmer
-    for i in range(kmers.shape[0]):
-        kmer = 0
-        for j in range(k):
-            code = seq_code[i+j]
-            if code >= alphabet_length:
-                raise AlphabetError(f"Symbol code {code} is out of range")
-            kmer += radix_multiplier[j] * code
-        kmers[i] = kmer
-    
-    return kmers
-
-
-def kmer_number(k, alphabet_length):
-    return alphabet_length**k
