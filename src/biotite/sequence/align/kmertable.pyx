@@ -68,8 +68,8 @@ cdef class KmerTable:
         return self._k
 
     
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def add(self, sequence, uint32 reference_index, mask=None):
         """
         If this function raises a :class:`MemoryError` the
@@ -142,8 +142,8 @@ cdef class KmerTable:
         raise NotImplementedError()
 
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def match(self, KmerTable kmer_table):
         """
         Notes
@@ -191,10 +191,10 @@ cdef class KmerTable:
                     for j in range(2, self_length, 2):
                         if match_i >= matches.shape[0]:
                             matches = increase_array_size(np.asarray(matches))
-                        matches[match_i, 0] = self_kmer_ptr[i]
-                        matches[match_i, 1] = other_kmer_ptr[j]
-                        matches[match_i, 2] = self_kmer_ptr[i+1]
-                        matches[match_i, 3] = other_kmer_ptr[j+1]
+                        matches[match_i, 0] = self_kmer_ptr[j]
+                        matches[match_i, 1] = other_kmer_ptr[i]
+                        matches[match_i, 2] = self_kmer_ptr[j+1]
+                        matches[match_i, 3] = other_kmer_ptr[i+1]
                         match_i += 1
 
         return np.asarray(matches[:match_i])
