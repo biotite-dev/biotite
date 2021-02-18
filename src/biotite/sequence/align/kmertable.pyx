@@ -185,10 +185,10 @@ cdef class KmerTable:
             # For each k-mer create the cartesian product
             if self_kmer_ptr != NULL and other_kmer_ptr != NULL:
                 # This kmer exists for both tables
-                self_length  = (<int64*>self_kmer_ptr )[0]
                 other_length = (<int64*>other_kmer_ptr)[0]
-                for i in range(2, self_length, 2):
-                    for j in range(2, other_length, 2):
+                self_length  = (<int64*>self_kmer_ptr )[0]
+                for i in range(2, other_length, 2):
+                    for j in range(2, self_length, 2):
                         if match_i >= matches.shape[0]:
                             matches = increase_array_size(np.asarray(matches))
                         matches[match_i, 0] = self_kmer_ptr[i]
