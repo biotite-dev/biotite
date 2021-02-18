@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["KmerIndex"]
+__all__ = ["KmerTable"]
 
 cimport cython
 cimport numpy as np
@@ -20,7 +20,7 @@ ctypedef np.uint64_t uint64
 ctypedef np.uint64_t ptr
 
 
-cdef class KmerIndex:
+cdef class KmerTable:
 
     cdef object _kmer_alph
     cdef int64[:,:] _sim_kmers
@@ -103,7 +103,7 @@ cdef class KmerIndex:
     def add(self, sequence, mask=None):
         """
         If this function raises a :class:`MemoryError` the
-        :class:`KmerIndex` becomes invalid.
+        :class:`KmerTable` becomes invalid.
         """
         cdef int i
         cdef int64 seq_pos
@@ -196,7 +196,7 @@ cdef class KmerIndex:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, KmerIndex kmer_index):
+    def match(self, KmerTable kmer_index):
         """
         Notes
         -----
