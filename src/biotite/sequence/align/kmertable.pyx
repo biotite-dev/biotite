@@ -24,7 +24,6 @@ cdef class KmerTable:
 
     cdef object _kmer_alph
     cdef int _k
-    cdef int _n_sequences
 
     cdef int64[:] _kmer_len
     cdef ptr[:] _kmer_seq
@@ -46,7 +45,6 @@ cdef class KmerTable:
         n_kmers = len(self._kmer_alph)
         
         self._k = k
-        self._n_sequences = 0
 
         # ndarrays of pointers to C-arrays
         self._kmer_seq = np.zeros(n_kmers, dtype=np.uint64)
@@ -67,14 +65,10 @@ cdef class KmerTable:
     def k(self):
         return self._k
 
-    @property
-    def sequence_number(self):
-        return self._n_sequences
-
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def add(self, sequence, mask=None):
+    def add(self, sequence, int64 reference_index, mask=None):
         """
         If this function raises a :class:`MemoryError` the
         :class:`KmerTable` becomes invalid.
@@ -91,7 +85,6 @@ cdef class KmerTable:
         cdef int64[:] kmer_len = self._kmer_len
         cdef ptr[:] kmer_seq = self._kmer_seq
         cdef ptr[:] kmer_pos = self._kmer_pos
-        cdef int n_sequences = self._n_sequences
         cdef int n_kmers = len(self._kmer_alph)
 
         code = sequence.code
@@ -120,7 +113,7 @@ cdef class KmerTable:
                 # No exception is raised directly
                 # to keep efficiency of inline function call 
                 return 1
-            kmer_ptr[length-1] = n_sequences
+            kmer_ptr[length-1] = reference_index
             kmer_seq[kmer] = <ptr>kmer_ptr
 
             # Set the position of this kmer in the sequence
@@ -133,10 +126,6 @@ cdef class KmerTable:
                 return 1
             kmer_ptr[length-1] = seq_pos
             kmer_pos[kmer] = <ptr>kmer_ptr
-            
-        self._n_sequences += 1
-    
-
     
 
     def add_kmers(self, kmer_sequence, seq_index, position):
