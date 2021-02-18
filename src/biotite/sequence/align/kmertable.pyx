@@ -23,8 +23,6 @@ ctypedef np.uint64_t ptr
 cdef class KmerTable:
 
     cdef object _kmer_alph
-    cdef int64[:,:] _sim_kmers
-    cdef bint _has_sim_rule
     cdef int _k
     cdef int _n_sequences
 
@@ -33,7 +31,7 @@ cdef class KmerTable:
     cdef ptr[:] _kmer_pos
 
 
-    def __cinit__(self, alphabet, k, similarity_rule=None):
+    def __cinit__(self, alphabet, k):
         # This check is necessary for proper memory management
         # of the allocated arrays
         if self._is_initialized():
@@ -46,30 +44,6 @@ cdef class KmerTable:
         
         self._kmer_alph = KmerAlphabet(alphabet, k)
         n_kmers = len(self._kmer_alph)
-
-        if similarity_rule is None:
-            self._has_sim_rule = False
-        else:
-            similar_kmers = similarity_rule.similarities(self._kmer_alph) \
-                            .astype(np.int64, copy=False)
-            if similar_kmers.ndim != 2:
-                raise ValueError(
-                    f"Got an {similar_kmers.ndim}-dimensional array for "
-                    f"for similar kmers, expected 2 dimensions"
-                )
-            if len(similar_kmers) > n_kmers:
-                raise ValueError(
-                    f"k-mer similarity array has {len(similar_kmers)}, "
-                    f"but there are {n_kmers}, must be equal"
-                )
-            max_kmer = np.max(similar_kmers)
-            if max_kmer >= n_kmers:
-                raise ValueError(
-                    f"k-mer similarity array maps to kmer "
-                    f"{len(similar_kmers)}, but there are only {n_kmers}"
-                )
-            self._sim_kmers = similar_kmers.astype(np.int64)
-            self._has_sim_rule = True
         
         self._k = k
         self._n_sequences = 0
@@ -131,50 +105,35 @@ cdef class KmerTable:
             )
         
         cdef int64[:] kmers = self._kmer_alph.create_kmers(code)
-        
-        if self._has_sim_rule:
-            sim_kmers = self._sim_kmers
-            for seq_pos in range(kmers.shape[0]):
-                kmer = kmers[seq_pos]
-                # There is a similarity rule
-                # -> dd not only this k-mer to the index,
-                # but also all similar kmers
-                # As the array of similar k-mers should include
-                # self-similarity, this k-mer should also be included
-                # in the array
-                for i in range(sim_kmers.shape[1]):
-                    sim_kmer = sim_kmers[kmer, i]
-                    if sim_kmer >= n_kmers:
-                        raise ValueError(
-                            f"The similarity rule is invalid: "
-                            f"Similar k-mer {sim_kmer} exceeds the maximum "
-                            f"k-mer {n_kmers-1}"
-                        )
-                    if sim_kmer < 0:
-                        # Reached the trailing '-1' values
-                        break
-                    # Add the k-mer to the index
-                    # and watch out for MemoryError in doing so
-                    if _add_kmer(
-                        kmer, n_sequences, seq_pos,
-                        kmer_len, kmer_seq, kmer_pos
-                    ):
-                        raise MemoryError
-        else:
-            for seq_pos in range(kmers.shape[0]):
-                kmer = kmers[seq_pos]
-                # No similarity rule
-                # -> do not add similar k-mers to the index
-                # Add the k-mer to the index
-                # and watch out for MemoryError in doing so
-                if _add_kmer(
-                    kmer, n_sequences, seq_pos,
-                    kmer_len, kmer_seq, kmer_pos
-                ):
-                    raise MemoryError
-            
 
-        
+        for seq_pos in range(kmers.shape[0]):
+            kmer = kmers[seq_pos]
+            length = kmer_len[kmer] + 1
+            kmer_len[kmer] = length
+
+            # Increment array length for this kmer and reallocate
+            # Set the index of the sequence in the list for this kmer
+            kmer_ptr = <int64*>kmer_seq[kmer]
+            kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
+            if not kmer_ptr:
+                # '1' is indicator for MemoryError
+                # No exception is raised directly
+                # to keep efficiency of inline function call 
+                return 1
+            kmer_ptr[length-1] = n_sequences
+            kmer_seq[kmer] = <ptr>kmer_ptr
+
+            # Set the position of this kmer in the sequence
+            kmer_ptr = <int64*>kmer_pos[kmer]
+            kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
+            if not kmer_ptr:
+                # '1' is indicator for MemoryError
+                # No exception is raised directly
+                # to keep efficiency of inline function call 
+                return 1
+            kmer_ptr[length-1] = seq_pos
+            kmer_pos[kmer] = <ptr>kmer_ptr
+            
         self._n_sequences += 1
     
 
@@ -307,39 +266,6 @@ cdef class KmerTable:
                 return False
         except AttributeError:
             return False
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef inline int _add_kmer(int64 kmer, int64 seq_index, int64 seq_pos,
-                           int64[:] kmer_len,
-                           ptr[:] kmer_seq, ptr[:] kmer_pos):
-    cdef int64 length = kmer_len[kmer] + 1
-    kmer_len[kmer] = length
-
-    # Increment array length for this kmer and reallocate
-    # Set the index of the sequence in the list for this kmer
-    cdef int64* kmer_ptr = <int64*>kmer_seq[kmer]
-    kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
-    if not kmer_ptr:
-        # '1' is indicator for MemoryError
-        # No exception is raised directly
-        # to keep efficiency of inline function call 
-        return 1
-    kmer_ptr[length-1] = seq_index
-    kmer_seq[kmer] = <ptr>kmer_ptr
-
-    # Set the position of this kmer in the sequence
-    kmer_ptr = <int64*>kmer_pos[kmer]
-    kmer_ptr = <int64*>realloc(kmer_ptr, length * sizeof(int64))
-    if not kmer_ptr:
-        # '1' is indicator for MemoryError
-        # No exception is raised directly
-        # to keep efficiency of inline function call 
-        return 1
-    kmer_ptr[length-1] = seq_pos
-    kmer_pos[kmer] = <ptr>kmer_ptr
-    
 
     
 cdef inline void _deallocate_ptrs(ptr[:] ptrs):
