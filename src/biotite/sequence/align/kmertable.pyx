@@ -10,7 +10,7 @@ cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
 
 import numpy as np
-from ..alphabet import AlphabetError
+from ..alphabet import LetterAlphabet
 from .kmeralphabet import KmerAlphabet
 
 
@@ -231,7 +231,11 @@ cdef class KmerTable:
                         (<uint32*>self._ptr_array[kmer])[i+1],
                     )))
                 symbols = self._kmer_alph.decode(kmer)
-                line = str(tuple(symbols)) + ": " + ", ".join(position_strings)
+                if isinstance(self._kmer_alph.base_alphabet, LetterAlphabet):
+                    symbols = "".join(symbols)
+                else:
+                    symbols = str(tuple(symbols))
+                line = symbols + ": " + ", ".join(position_strings)
                 lines.append(line)
         return "\n".join(lines)
 
