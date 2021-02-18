@@ -50,7 +50,8 @@ cdef class KmerIndex:
         if similarity_rule is None:
             self._has_sim_rule = False
         else:
-            similar_kmers = similarity_rule.similarities(self._kmer_alph)
+            similar_kmers = similarity_rule.similarities(self._kmer_alph) \
+                            .astype(np.int64, copy=False)
             if similar_kmers.ndim != 2:
                 raise ValueError(
                     f"Got an {similar_kmers.ndim}-dimensional array for "
@@ -117,6 +118,7 @@ cdef class KmerIndex:
         cdef ptr[:] kmer_seq = self._kmer_seq
         cdef ptr[:] kmer_pos = self._kmer_pos
         cdef int n_sequences = self._n_sequences
+        cdef int n_kmers = len(self._kmer_alph)
 
         code = sequence.code
         
@@ -142,6 +144,12 @@ cdef class KmerIndex:
                 # in the array
                 for i in range(sim_kmers.shape[1]):
                     sim_kmer = sim_kmers[kmer, i]
+                    if sim_kmer >= n_kmers:
+                        raise ValueError(
+                            f"The similarity rule is invalid: "
+                            f"Similar k-mer {sim_kmer} exceeds the maximum "
+                            f"k-mer {n_kmers-1}"
+                        )
                     if sim_kmer < 0:
                         # Reached the trailing '-1' values
                         break
