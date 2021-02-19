@@ -144,8 +144,11 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, KmerTable kmer_table):
+    def match(self, KmerTable kmer_table,  similarity_rule=None):
         """
+        For each equal (or similar, if `similarity_rule` is given,)
+        k-mer the cartesian product of the entries is calculated.
+
         Notes
         -----
 
@@ -154,12 +157,15 @@ cdef class KmerTable:
         """
         cdef int INIT_SIZE = 1
         
-        cdef int64 kmer
+        cdef int64 kmer, sim_kmer
         cdef int64 match_i
-        cdef int64 i, j
+        cdef int64 i, j, l
         cdef int64 self_length, other_length
         cdef uint32* self_kmer_ptr
         cdef uint32* other_kmer_ptr
+
+        # This variable will only be used if a similarity rule exists
+        cdef int64[:] similar_kmers
 
         # Store in new variables
         # to disable repetitive initialization checks
@@ -177,26 +183,65 @@ cdef class KmerTable:
                 "equal to 'k' of the other k-mer index"
             )
 
+        # This array will store the match positions
+        # As the final number of matches is unknown, a list-like
+        # approach is used:
+        # The array is initialized with a relatively small inital size
+        # and every time the limit would be exceeded its size is doubled
         cdef uint32[:,:] matches = np.zeros((INIT_SIZE, 4), dtype=np.uint32)
         match_i = 0
-        for kmer in range(self_ptr_array.shape[0]):
-            self_kmer_ptr = <uint32*>self_ptr_array[kmer]
-            other_kmer_ptr = <uint32*>other_ptr_array[kmer]
-            # For each k-mer create the cartesian product
-            if self_kmer_ptr != NULL and other_kmer_ptr != NULL:
-                # This kmer exists for both tables
-                other_length = (<int64*>other_kmer_ptr)[0]
-                self_length  = (<int64*>self_kmer_ptr )[0]
-                for i in range(2, other_length, 2):
-                    for j in range(2, self_length, 2):
-                        if match_i >= matches.shape[0]:
-                            matches = increase_array_size(np.asarray(matches))
-                        matches[match_i, 0] = self_kmer_ptr[j]
-                        matches[match_i, 1] = other_kmer_ptr[i]
-                        matches[match_i, 2] = self_kmer_ptr[j+1]
-                        matches[match_i, 3] = other_kmer_ptr[i+1]
-                        match_i += 1
+        if similarity_rule is None:
+            for kmer in range(self_ptr_array.shape[0]):
+                self_kmer_ptr = <uint32*>self_ptr_array[kmer]
+                other_kmer_ptr = <uint32*>other_ptr_array[kmer]
+                # For each k-mer create the cartesian product
+                if self_kmer_ptr != NULL and other_kmer_ptr != NULL:
+                    # This kmer exists for both tables
+                    other_length = (<int64*>other_kmer_ptr)[0]
+                    self_length  = (<int64*>self_kmer_ptr )[0]
+                    for i in range(2, other_length, 2):
+                        for j in range(2, self_length, 2):
+                            if match_i >= matches.shape[0]:
+                                # The 'matches' array is full
+                                # -> double its size
+                                matches = expand(np.asarray(matches))
+                            matches[match_i, 0] = other_kmer_ptr[i]
+                            matches[match_i, 1] = self_kmer_ptr[j]
+                            matches[match_i, 2] = other_kmer_ptr[i+1]
+                            matches[match_i, 3] = self_kmer_ptr[j+1]
+                            match_i += 1
+        else:
+            for kmer in range(self_ptr_array.shape[0]):
+                other_kmer_ptr = <uint32*>other_ptr_array[kmer]
+                if other_kmer_ptr != NULL:
+                    # If a similarity rule exists, iterate not only over
+                    # the exact k-mer, but over all k-mers similar to
+                    # the current k-mer
+                    similar_kmers = similarity_rule.similar_kmers(
+                        self._kmer_alphabet, kmer
+                    )
+                    for l in range(similar_kmers.shape[0]):
+                        sim_kmer = similar_kmers[l]
+                        # Actual copy of the code from the other
+                        # if-Branch:
+                        # It cannot be put properly in a cdef-function,
+                        # as every function call would perform reference
+                        # count changes and would decrease performance 
+                        self_kmer_ptr = <uint32*>self_ptr_array[sim_kmer]
+                        if self_kmer_ptr != NULL:
+                            other_length = (<int64*>other_kmer_ptr)[0]
+                            self_length  = (<int64*>self_kmer_ptr )[0]
+                            for i in range(2, other_length, 2):
+                                for j in range(2, self_length, 2):
+                                    if match_i >= matches.shape[0]:
+                                        matches = expand(np.asarray(matches))
+                                    matches[match_i, 0] = self_kmer_ptr[j]
+                                    matches[match_i, 1] = other_kmer_ptr[i]
+                                    matches[match_i, 2] = self_kmer_ptr[j+1]
+                                    matches[match_i, 3] = other_kmer_ptr[i+1]
+                                    match_i += 1
 
+        # Trim to correct size and return
         return np.asarray(matches[:match_i])
     
 
@@ -263,7 +308,7 @@ cdef inline void _deallocate_ptrs(ptr[:] ptrs):
         free(<int*>ptrs[i])
 
 
-cdef np.ndarray increase_array_size(np.ndarray array):
+cdef np.ndarray expand(np.ndarray array):
     """
     Double the size of the first dimension of an existing array.
     """

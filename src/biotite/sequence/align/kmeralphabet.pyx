@@ -69,33 +69,64 @@ class KmerAlphabet(Alphabet):
     
 
     def encode(self, symbol):
-        if len(symbol) != self._k:
-            raise AlphabetError(
-                f"k-mer has {len(symbol)} symbols, "
-                f"but alphabet expects {self._k}-mers"
-            )
-
-        seq_code = self._base_alph.encode_multiple(symbol)
-        return np.sum(self._radix_multiplier * seq_code)
+        return self.fuse(self._base_alph.encode_multiple(symbol))
     
 
     def decode(self, code):
-        if code >= len(self) or code < 0:
-            raise AlphabetError(
-                f"Symbol code {code} is invalid for this alphabet"
-            )
-        
-        seq_code = np.zeros(self._k, dtype=int)
-        for n in reversed(range(self._k)):
-            val = self._radix_multiplier[n]
-            symbol_code = code // val
-            seq_code[n] = symbol_code
-            code -= symbol_code * val
-        return self._base_alph.decode_multiple(seq_code)
+        return self._base_alph.decode_multiple(self.split(code))
     
 
+    def fuse(self, codes):
+        if codes.shape[-1] != self._k:
+            raise AlphabetError(
+                f"Given k-mer(s) has {codes.shape[-1]} symbols, "
+                f"but alphabet expects {self._k}-mers"
+            )
+        if np.any(codes > len(self._base_alph)):
+            raise AlphabetError("Given k-mer(s) contains invalid symbol code")
+        
+        orig_shape = codes.shape
+        codes = np.atleast_2d(codes)
+        kmer_code = np.sum(self._radix_multiplier * codes, axis=-1)
+        # The last dimension is removed since it collpased in np.sum
+        return kmer_code.reshape(orig_shape[:-1])
+    
+    def split(self, code):
+        if np.any(code >= len(self)) or np.any(code < 0):
+            raise AlphabetError(
+                f"Given k-mer symbol code is invalid for this alphabet"
+            )
+        
+        orig_shape = np.shape(code)
+        split_codes = self._split(np.atleast_1d(code))
+        return split_codes.reshape(orig_shape + (self._k,))
+
+    
     #@cython.boundscheck(False)
     #@cython.wraparound(False)
+    def _split(self, int64[:] codes not None):
+        cdef int i, n
+        cdef int64 code, val, symbol_code
+
+        cdef int64[:] radix_multiplier = self._radix_multiplier
+
+        cdef int64[:,:] split_codes = np.empty(
+            (codes.shape[0], self._k), dtype=np.int64
+        )
+        
+        for i in range(codes.shape[0]):
+            code = codes[i]
+            for n in reversed(range(self._k)):
+                val = radix_multiplier[n]
+                symbol_code = code // val
+                split_codes[i,n] = symbol_code
+                code -= symbol_code * val
+        
+        return np.asarray(split_codes)
+    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def create_kmers(self, CodeType[:] seq_code not None):
         """
         create_kmers(seq_code)
