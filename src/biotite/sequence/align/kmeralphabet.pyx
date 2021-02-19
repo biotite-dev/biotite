@@ -102,8 +102,9 @@ class KmerAlphabet(Alphabet):
         return split_codes.reshape(orig_shape + (self._k,))
 
     
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
     def _split(self, int64[:] codes not None):
         cdef int i, n
         cdef int64 code, val, symbol_code
@@ -114,9 +115,10 @@ class KmerAlphabet(Alphabet):
             (codes.shape[0], self._k), dtype=np.int64
         )
         
+        cdef int k = self._k
         for i in range(codes.shape[0]):
             code = codes[i]
-            for n in reversed(range(self._k)):
+            for n in reversed(range(k)):
                 val = radix_multiplier[n]
                 symbol_code = code // val
                 split_codes[i,n] = symbol_code

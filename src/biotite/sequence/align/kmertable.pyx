@@ -144,7 +144,7 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, KmerTable kmer_table,  similarity_rule=None):
+    def match(self, KmerTable kmer_table, similarity_rule=None):
         """
         For each equal (or similar, if `similarity_rule` is given,)
         k-mer the cartesian product of the entries is calculated.

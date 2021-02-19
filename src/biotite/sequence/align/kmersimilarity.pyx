@@ -35,6 +35,8 @@ class ScoreThresholdRule(SimilarityRule):
         self._matrix = matrix
         self._threshold = threshold
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def similar_kmers(self, kmer_alphabet, kmer):
         cdef int INIT_SIZE = 1
         
@@ -81,9 +83,11 @@ class ScoreThresholdRule(SimilarityRule):
         while pos != -1:
             if current_split_kmer[pos] >= alph_len:
                 # All symbol codes were traversed at this position
-                # -> jump one k-mer position back
+                # -> jump one k-mer position back and proceed with
+                # next symbol
                 pos -= 1
-                current_split_kmer[pos] += 1
+                if pos != -1:
+                    current_split_kmer[pos] += 1
             else:
                 # Get total similarity score between the input k-mer
                 # and generated k-mer up to the point of the current
