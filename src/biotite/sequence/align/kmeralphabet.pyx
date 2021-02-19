@@ -153,7 +153,7 @@ class KmerAlphabet(Alphabet):
                 kmer += radix_multiplier[j] * code
             kmers[i] = kmer
         
-        return kmers
+        return np.asarray(kmers)
     
 
     def __str__(self):
