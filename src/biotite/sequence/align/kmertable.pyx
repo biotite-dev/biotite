@@ -8,6 +8,7 @@ __all__ = ["KmerTable"]
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport realloc, malloc, free
+from libc.string cimport memcpy
 
 import numpy as np
 from ..alphabet import LetterAlphabet
@@ -66,6 +67,12 @@ cdef class KmerTable:
     @property
     def k(self):
         return self._k
+    
+
+    def copy(self):
+        clone = KmerTable(self._kmer_alph.base_alphabet, self._k)
+        clone.merge(self)
+        return clone
 
     
     @cython.boundscheck(False)
@@ -90,7 +97,7 @@ cdef class KmerTable:
         
         if len(code) < self._k:
             raise ValueError("Sequence code is shorter than k")
-        if self._kmer_alph.base_alphabet != sequence.alphabet:
+        if not self._kmer_alph.base_alphabet.extends(sequence.alphabet):
             raise ValueError(
                 "The alphabet used for the k-mer index table is not equal to "
                 "the alphabet of the sequence"
@@ -128,23 +135,73 @@ cdef class KmerTable:
             ptr_array[kmer] = <ptr>kmer_ptr
     
 
-    def add_kmers(self, kmer_sequence, reference_index, position):
-        raise NotImplementedError()
-        # TODO
-    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def merge(self, KmerTable table):
+        """
+        If this function raises a :class:`MemoryError` this
+        :class:`KmerTable` becomes invalid.
+        """
+        cdef int64 kmer
+        cdef int64 self_length, other_length, new_length
+        cdef uint32* self_kmer_ptr
+        cdef uint32* other_kmer_ptr
+        cdef int64 i, j
 
-    def get_kmers(self):
-        raise NotImplementedError()
-        # TODO
-    
+        # Store in new variables
+        # to disable repetitive initialization checks
+        cdef ptr[:] self_ptr_array = self._ptr_array
+        cdef ptr[:] other_ptr_array = table._ptr_array
 
-    def merge(self, kmer_table):
-        raise NotImplementedError()
+        if self._kmer_alph.base_alphabet != table._kmer_alph.base_alphabet:
+            raise ValueError(
+                "The alphabet used for this k-mer index table is not equal to "
+                "the alphabet of the other k-mer index table"
+            )
+        if self._k != table._k:
+            raise ValueError(
+                "The 'k' parameter used for this k-mer index table is not "
+                "equal to 'k' of the other k-mer index"
+            )
+        
+        for kmer in range(self_ptr_array.shape[0]):
+            self_kmer_ptr = <uint32*>self_ptr_array[kmer]
+            other_kmer_ptr = <uint32*>other_ptr_array[kmer]
+            if other_kmer_ptr != NULL:
+                other_length = (<int64*>other_kmer_ptr)[0]
+                if self_kmer_ptr == NULL:
+                    # No entry yet, but the space for the array length
+                    # value is still required
+                    self_length  = 2
+                else:
+                    self_length  = (<int64*>self_kmer_ptr)[0]
+                # New new C-array needs the combined space of both
+                # arrays, but only one length value
+                new_length = self_length + other_length - 2
+                
+                # Reallocate C-array and set new length
+                self_kmer_ptr = <uint32*>realloc(
+                    self_kmer_ptr,
+                    new_length * sizeof(uint32)
+                )
+                if not self_kmer_ptr:
+                    raise MemoryError
+                (<int64*> self_kmer_ptr)[0] = new_length
+
+                # Copy all entries from the other table into this table
+                i = self_length
+                for j in range(2, other_length):
+                    self_kmer_ptr[i] = other_kmer_ptr[j]
+                    i += 1
+                
+                # Store new pointer in pointer array
+                self_ptr_array[kmer] = <ptr>self_kmer_ptr
+            
 
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, KmerTable kmer_table, similarity_rule=None):
+    def match(self, KmerTable table, similarity_rule=None):
         """
         For each equal (or similar, if `similarity_rule` is given,)
         k-mer the cartesian product of the entries is calculated.
@@ -170,14 +227,14 @@ cdef class KmerTable:
         # Store in new variables
         # to disable repetitive initialization checks
         cdef ptr[:] self_ptr_array = self._ptr_array
-        cdef ptr[:] other_ptr_array = kmer_table._ptr_array
+        cdef ptr[:] other_ptr_array = table._ptr_array
 
-        if self._kmer_alph != kmer_table._kmer_alph:
+        if self._kmer_alph.base_alphabet != table._kmer_alph.base_alphabet:
             raise ValueError(
                 "The alphabet used for this k-mer index table is not equal to "
                 "the alphabet of the other k-mer index table"
             )
-        if self._k != kmer_table._k:
+        if self._k != table._k:
             raise ValueError(
                 "The 'k' parameter used for this k-mer index table is not "
                 "equal to 'k' of the other k-mer index"
@@ -218,7 +275,7 @@ cdef class KmerTable:
                     # the exact k-mer, but over all k-mers similar to
                     # the current k-mer
                     similar_kmers = similarity_rule.similar_kmers(
-                        self._kmer_alphabet, kmer
+                        self._kmer_alph, kmer
                     )
                     for l in range(similar_kmers.shape[0]):
                         sim_kmer = similar_kmers[l]
@@ -245,19 +302,193 @@ cdef class KmerTable:
         return np.asarray(matches[:match_i])
     
 
-    def update(self, kmer, seq_indices, positions):
-        raise NotImplementedError()
-        # TODO
+    #@cython.boundscheck(False)
+    #@cython.wraparound(False)
+    def match_sequence(self, sequence, similarity_rule=None, mask=None):
+        raise NotImplementedError
+
+
+    #@cython.boundscheck(False)
+    #@cython.wraparound(False)
+    def match_kmers(self, kmers, similarity_rule=None, mask=None):
+        raise NotImplementedError
     
 
-    def __setitem__(self, kmer, item):
-        raise NotImplementedError()
-        # TODO
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def get_kmers(self):
+        cdef int64 kmer
+        cdef ptr[:] ptr_array = self._ptr_array
+        
+        # Pessimistic allocation:
+        # The maximum number of used kmers are all possible kmers
+        cdef int64[:] kmers = np.zeros(ptr_array.shape[0], dtype=np.int64)
+
+        cdef int64 i = 0
+        for kmer in range(ptr_array.shape[0]):
+            if <uint32*>ptr_array[kmer] != NULL:
+                kmers[i] = kmer
+                i += 1
+        
+        # Trim to correct size
+        return np.asarray(kmers)[:i]
+
+    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def update(self, int64 kmer, positions):
+        cdef int64 length
+        cdef uint32* kmer_ptr
+        cdef int64 i, j
+
+        if kmer >= len(self):
+            raise IndexError(
+                f"k-mer {kmer} is out of bounds for this table "
+                f"containing {len(self)} k-mers"
+            )
+
+        cdef uint32[:,:] pos = np.asarray(positions, dtype=np.uint32)
+
+        # Store in new variable
+        # to disable repetitive initialization checks
+        cdef ptr[:] ptr_array = self._ptr_array
+        
+        kmer_ptr = <uint32*>ptr_array[kmer]
+        if kmer_ptr == NULL:
+            # No entry yet, but the space for the array length
+            # value is still required
+            length = 2
+        else:
+            length = (<int64*>kmer_ptr)[0]
+        new_length = length + pos.shape[0] * 2
+        
+        # Reallocate C-array and set new length
+        kmer_ptr = <uint32*>realloc(
+            kmer_ptr,
+            new_length * sizeof(uint32)
+        )
+        if not kmer_ptr:
+            raise MemoryError
+        (<int64*> kmer_ptr)[0] = new_length
+
+        # Copy all entries from the given ndarray into this C-array
+        i = length
+        for j in range(pos.shape[0]):
+            kmer_ptr[i]   = pos[j, 0]
+            kmer_ptr[i+1] = pos[j, 1]
+            i += 2
+        
+        # Store new pointer in pointer array
+        ptr_array[kmer] = <ptr>kmer_ptr
+    
+
+    @cython.cdivision(True)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def __getitem__(self, int64 kmer):
+        cdef int64 i, j
+        cdef int64 length
+        cdef uint32* kmer_ptr
+        cdef uint32[:,:] positions
+        
+        if kmer >= len(self):
+            raise IndexError(
+                f"k-mer {kmer} is out of bounds for this table "
+                f"containing {len(self)} k-mers"
+            )
+        
+        kmer_ptr = <uint32*>self._ptr_array[kmer]
+        if kmer_ptr == NULL:
+            return np.zeros((0, 2), dtype=np.uint32)
+        else:
+            length = (<int64*>kmer_ptr)[0]
+            positions = np.empty(((length - 2) // 2, 2), dtype=np.uint32)
+            i = 0
+            for j in range(2, length, 2):
+                positions[i,0] = kmer_ptr[j]
+                positions[i,1] = kmer_ptr[j+1]
+                i += 1
+            return np.asarray(positions)
 
 
-    def __getitem__(self, kmer):
-        raise NotImplementedError()
-        # TODO
+    def __setitem__(self, int64 kmer, positions):
+        del self[kmer]
+        self.update(kmer, positions)
+    
+
+    def __delitem__(self, int64 kmer):
+        if kmer >= len(self):
+            raise IndexError(
+                f"k-mer {kmer} is out of bounds for this table "
+                f"containing {len(self)} k-mers"
+            )
+        
+        free(<uint32*>self._ptr_array[kmer])
+        self._ptr_array[kmer] = 0
+
+
+    def __contains__(self, kmer):
+        return (kmer >= 0) & (kmer < len(self))
+
+    
+    def __len__(self):
+        return len(self._kmer_alph)
+    
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+
+    def __reversed__(self):
+        for i in reversed(range(len(self))):
+            yield self[i]
+       
+
+    def __eq__(self, item):
+        if item is self:
+            return True
+        if type(item) != KmerTable:
+            return False
+        return self._equals(item)
+    
+    def _equals(self, KmerTable other):
+        cdef int64 kmer
+        cdef int64 i
+        cdef int64 self_length, other_length
+        cdef uint32* self_kmer_ptr
+        cdef uint32* other_kmer_ptr
+
+        # Store in new variables
+        # to disable repetitive initialization checks
+        cdef ptr[:] self_ptr_array = self._ptr_array
+        cdef ptr[:] other_ptr_array = other._ptr_array
+
+        if self._kmer_alph.base_alphabet != other._kmer_alph.base_alphabet:
+            return False
+        if self._k != other._k:
+            return False
+
+        for kmer in range(self_ptr_array.shape[0]):
+            self_kmer_ptr = <uint32*>self_ptr_array[kmer]
+            other_kmer_ptr = <uint32*>other_ptr_array[kmer]
+            if self_kmer_ptr != NULL or other_kmer_ptr != NULL:
+                if self_kmer_ptr == NULL or other_kmer_ptr == NULL:
+                    # One of the tables has entries for this k-mer
+                    # while the other has not
+                    return False
+                # This kmer exists for both tables
+                self_length  = (<int64*>self_kmer_ptr )[0]
+                other_length = (<int64*>other_kmer_ptr)[0]
+                if self_length != other_length:
+                    return False
+                for i in range(2, self_length):
+                    if self_kmer_ptr[i] != other_kmer_ptr[i]:
+                        return False
+        
+        # If none of the previous checks failed, both objects are equal
+        return True
     
 
     def __str__(self):
@@ -283,12 +514,66 @@ cdef class KmerTable:
                 line = symbols + ": " + ", ".join(position_strings)
                 lines.append(line)
         return "\n".join(lines)
+    
+
+    def __getnewargs_ex__(self):
+        return (self._kmer_alph.base_alphabet, self._k), {}
+    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def __getstate__(self):
+        """
+        Pointer arrays.
+        """
+        cdef int64 i
+        cdef list pickled_pointers = [b""] * len(self)
+        cdef ptr[:] ptr_array = self._ptr_array
+        cdef uint32* kmer_ptr
+
+        for kmer in range(ptr_array.shape[0]):
+            kmer_ptr = <uint32*>ptr_array[kmer]
+            length = (<int64*>kmer_ptr)[0]
+            if kmer_ptr != NULL:
+                pickled_pointers[kmer] \
+                    = <bytes>(<char*>kmer_ptr)[:sizeof(uint32) * length]
+        
+        return pickled_pointers
+    
+
+    @cython.cdivision(True)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def __setstate__(self, state):
+        print(len(self._ptr_array))
+        cdef int64 i
+        cdef int64 byte_length
+        cdef uint32* kmer_ptr
+        cdef bytes pickled_bytes
+
+        cdef list pickled_pointers = state
+        if len(pickled_pointers) != len(self._ptr_array):
+            raise ValueError("Invalid pointer array found while unpickling")
+        
+        cdef ptr[:] ptr_array = self._ptr_array
+        for kmer in range(ptr_array.shape[0]):
+            pickled_bytes = pickled_pointers[kmer]
+            byte_length = len(pickled_bytes)
+            if byte_length != 0:
+                kmer_ptr = <uint32*>malloc(byte_length)
+                if not kmer_ptr:
+                    raise MemoryError
+                # Convert byte length to length of uint32 values
+                (<int64*> kmer_ptr)[0] = byte_length // 4
+                memcpy(kmer_ptr, <char*>pickled_bytes, byte_length)
+                ptr_array[kmer] = <ptr>kmer_ptr
 
 
     def __dealloc__(self):
         if self._is_initialized():
             _deallocate_ptrs(self._ptr_array)
     
+
     cdef inline bint _is_initialized(self):
         # Memoryviews are not initialized on class creation
         # This method checks if the _kmer_len memoryview was initialized
@@ -303,9 +588,9 @@ cdef class KmerTable:
 
     
 cdef inline void _deallocate_ptrs(ptr[:] ptrs):
-    cdef int i
-    for i in range(ptrs.shape[0]):
-        free(<int*>ptrs[i])
+    cdef int kmer
+    for kmer in range(ptrs.shape[0]):
+        free(<uint32*>ptrs[kmer])
 
 
 cdef np.ndarray expand(np.ndarray array):
