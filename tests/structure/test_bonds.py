@@ -6,6 +6,7 @@ from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
 from ..util import data_dir
@@ -404,7 +405,7 @@ def test_atom_array_consistency():
     
     # Some random boolean mask as index,
     # but all bonded atoms are included
-    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=np.bool)
+    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=bool)
     masked_ca = ca[mask]
     test_ids = masked_ca.res_id[masked_ca.bonds.as_array()[:,:2].flatten()]
     
@@ -462,3 +463,53 @@ def test_find_connected(bond_list):
     for index in (0,1,2,3,4,6):
         assert struc.find_connected(bond_list, index).tolist() == [0,1,2,3,4,6]
     assert struc.find_connected(bond_list, 5).tolist() == [5]
+
+
+@pytest.mark.parametrize(
+    "res_name, expected_bonds",
+    [
+        # Easy ligand visualization at:
+        # https://www.rcsb.org/ligand/<ABC>
+        ("TYR", [
+            ("N",   "CA" ),
+            ("CA",  "C"  ),
+            ("CA",  "CB" ),
+            ("C",   "OXT"),
+            ("CB",  "CG" ),
+            ("CZ",  "OH" ),
+        ]),
+        ("CEL", [
+            ("C1",   "C4" ),
+            ("C8",   "C11"),
+            ("C15",  "S1" ),
+            ("N3",   "S1" )
+        ]),
+        ("LEO", [
+            ("C3",   "C8" ),
+            ("C6",   "C17"),
+            ("C17",  "C22"),
+        ]),
+    ]
+)
+def test_find_rotatable_bonds(res_name, expected_bonds):
+    """
+    Check the :func:`find_rotatable_bonds()` function based on
+    known examples.
+    """
+    molecule = info.residue(res_name)
+    
+    ref_bond_set = {
+        tuple(sorted((name_i, name_j))) for name_i, name_j in expected_bonds
+    }
+
+    rotatable_bonds = struc.find_rotatable_bonds(molecule.bonds)
+    test_bond_set = set()
+    for i, j, _ in rotatable_bonds.as_array():
+        test_bond_set.add(
+            tuple(sorted((molecule.atom_name[i], molecule.atom_name[j])))
+        )
+    
+    # Compare with reference bonded atom names
+    assert test_bond_set == ref_bond_set
+    # All rotatable bonds must be single bonds
+    assert np.all(rotatable_bonds.as_array()[:, 2] == struc.BondType.SINGLE)

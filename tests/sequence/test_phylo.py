@@ -306,10 +306,3 @@ def test_equality(tree):
         ]
     ))
 
-
-def _show_tree(tree):
-    import biotite.sequence.graphics as graphics
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    graphics.plot_dendrogram(ax, tree)
-    plt.show()
