@@ -131,6 +131,7 @@ cdef class KmerTable:
 
             # Store new pointer in pointer array
             ptr_array[kmer] = <ptr>kmer_ptr
+        return
     
 
     @cython.boundscheck(False)
@@ -300,8 +301,8 @@ cdef class KmerTable:
         return np.asarray(matches[:match_i])
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def match_sequence(self, sequence, similarity_rule=None, mask=None):
         cdef int INIT_SIZE = 1
         
@@ -615,7 +616,7 @@ cdef class KmerTable:
         cdef bytes pickled_bytes
 
         cdef list pickled_pointers = state
-        if len(pickled_pointers) != len(self._ptr_array):
+        if len(pickled_pointers) != self._ptr_array.shape[0]:
             raise ValueError("Invalid pointer array found while unpickling")
         
         cdef ptr[:] ptr_array = self._ptr_array
