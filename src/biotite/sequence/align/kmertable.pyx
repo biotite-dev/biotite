@@ -564,27 +564,17 @@ cdef class KmerTable:
     
 
     def __str__(self):
-        cdef int64 kmer
-        cdef int64 i
-        cdef int64 length
-        
         lines = []
-        for kmer in range(self._ptr_array.shape[0]):
-            if self._ptr_array[kmer] != 0:
-                position_strings = []
-                length = (<int64*>self._ptr_array[kmer])[0]
-                for i in range(2, length, 2):
-                    position_strings.append(str((
-                        (<uint32*>self._ptr_array[kmer])[i],
-                        (<uint32*>self._ptr_array[kmer])[i+1],
-                    )))
-                symbols = self._kmer_alph.decode(kmer)
-                if isinstance(self._kmer_alph.base_alphabet, LetterAlphabet):
-                    symbols = "".join(symbols)
-                else:
-                    symbols = str(tuple(symbols))
-                line = symbols + ": " + ", ".join(position_strings)
-                lines.append(line)
+        for kmer in self.get_kmers():
+            symbols = self._kmer_alph.decode(kmer)
+            if isinstance(self._kmer_alph.base_alphabet, LetterAlphabet):
+                symbols = "".join(symbols)
+            else:
+                symbols = str(tuple(symbols))
+            line = symbols + ": " + ", ".join(
+                [str(tuple(pos)) for pos in self[kmer]]
+            )
+            lines.append(line)
         return "\n".join(lines)
     
 
