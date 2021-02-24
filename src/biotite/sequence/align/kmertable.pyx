@@ -593,44 +593,51 @@ cdef class KmerTable:
         return (self._kmer_alph.base_alphabet, self._k), {}
     
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
+    #@cython.boundscheck(False)
+    #@cython.wraparound(False)
     def __getstate__(self):
         """
         Pointer arrays.
         """
         cdef int64 i
-        cdef list pickled_pointers = [b""] * len(self)
-        cdef ptr[:] ptr_array = self._ptr_array
+        cdef int64 kmer
         cdef uint32* kmer_ptr
 
-        for kmer in range(ptr_array.shape[0]):
+        cdef ptr[:] ptr_array = self._ptr_array
+
+        cdef int64[:] relevant_kmers = self.get_kmers()
+        cdef list pickled_pointers = [b""] * relevant_kmers.shape[0]
+
+        for i in range(relevant_kmers.shape[0]):
+            kmer = relevant_kmers[i]
             kmer_ptr = <uint32*>ptr_array[kmer]
             length = (<int64*>kmer_ptr)[0]
-            if kmer_ptr != NULL:
-                # Get directly the bytes coding for each C-array
-                pickled_pointers[kmer] \
-                    = <bytes>(<char*>kmer_ptr)[:sizeof(uint32) * length]
+            # Get directly the bytes coding for each C-array
+            pickled_pointers[i] \
+                = <bytes>(<char*>kmer_ptr)[:sizeof(uint32) * length]
         
-        return pickled_pointers
+        return np.asarray(relevant_kmers), pickled_pointers
     
 
     @cython.cdivision(True)
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
+    #@cython.boundscheck(False)
+    #@cython.wraparound(False)
     def __setstate__(self, state):
         cdef int64 i
+        cdef int64 kmer
         cdef int64 byte_length
         cdef uint32* kmer_ptr
         cdef bytes pickled_bytes
 
-        cdef list pickled_pointers = state
-        if len(pickled_pointers) != self._ptr_array.shape[0]:
-            raise ValueError("Invalid pointer array found while unpickling")
+        cdef int64[:] relevant_kmers = state[0]
+        cdef list pickled_pointers = state[1]
         
         cdef ptr[:] ptr_array = self._ptr_array
-        for kmer in range(ptr_array.shape[0]):
-            pickled_bytes = pickled_pointers[kmer]
+        for i in range(relevant_kmers.shape[0]):
+            kmer = relevant_kmers[i]
+            if kmer < 0 or kmer >= ptr_array.shape[0]:
+                raise ValueError("Invalid k-mer found while unpickling")
+            pickled_bytes = pickled_pointers[i]
             byte_length = len(pickled_bytes)
             if byte_length != 0:
                 kmer_ptr = <uint32*>malloc(byte_length)
