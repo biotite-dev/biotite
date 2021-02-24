@@ -17,6 +17,7 @@ from .kmeralphabet import KmerAlphabet
 
 ctypedef np.int32_t int32
 ctypedef np.int64_t int64
+ctypedef np.uint8_t uint8
 ctypedef np.uint32_t uint32
 ctypedef np.uint64_t ptr
 
@@ -77,7 +78,7 @@ cdef class KmerTable:
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def add(self, sequence, uint32 reference_index, mask=None):
+    def add(self, sequence, uint32 reference_index, removal_mask=None):
         """
         If this function raises a :class:`MemoryError` the
         :class:`KmerTable` becomes invalid.
@@ -102,36 +103,39 @@ cdef class KmerTable:
             )
         
         cdef int64[:] kmers = self._kmer_alph.create_kmers(sequence.code)
+        cdef uint8[:] kmer_mask = self._prepare_mask(
+            removal_mask, len(sequence.code)
+        )
 
         for seq_pos in range(kmers.shape[0]):
-            kmer = kmers[seq_pos]
-            kmer_ptr = <uint32*> ptr_array[kmer]
-            # Calculate new length (i.e. number of entries)
-            if kmer_ptr == NULL:
-                # C-array does not exist yet
-                # Initial C-array contains 2 elements:
-                # 1. int64 array length
-                # 2. 2 x uint32 for first entry
-                length = 2 + 2
-            else:
-                length = (<int64*> kmer_ptr)[0] + 2
+            if kmer_mask[seq_pos]:
+                kmer = kmers[seq_pos]
+                kmer_ptr = <uint32*> ptr_array[kmer]
+                # Calculate new length (i.e. number of entries)
+                if kmer_ptr == NULL:
+                    # C-array does not exist yet
+                    # Initial C-array contains 2 elements:
+                    # 1. int64 array length
+                    # 2. 2 x uint32 for first entry
+                    length = 2 + 2
+                else:
+                    length = (<int64*> kmer_ptr)[0] + 2
 
-            # Reallocate C-array and set new length
-            kmer_ptr = <uint32*>realloc(
-                kmer_ptr,
-                length * sizeof(uint32)
-            )
-            if not kmer_ptr:
-                raise MemoryError
-            (<int64*> kmer_ptr)[0] = length
+                # Reallocate C-array and set new length
+                kmer_ptr = <uint32*>realloc(
+                    kmer_ptr,
+                    length * sizeof(uint32)
+                )
+                if not kmer_ptr:
+                    raise MemoryError
+                (<int64*> kmer_ptr)[0] = length
 
-            # Add k-mer location to C-array
-            kmer_ptr[length-2] = reference_index
-            kmer_ptr[length-1] = seq_pos
+                # Add k-mer location to C-array
+                kmer_ptr[length-2] = reference_index
+                kmer_ptr[length-1] = seq_pos
 
-            # Store new pointer in pointer array
-            ptr_array[kmer] = <ptr>kmer_ptr
-        return
+                # Store new pointer in pointer array
+                ptr_array[kmer] = <ptr>kmer_ptr
     
 
     @cython.boundscheck(False)
@@ -303,7 +307,8 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match_sequence(self, sequence, similarity_rule=None, mask=None):
+    def match_sequence(self, sequence, similarity_rule=None,
+                       removal_mask=None):
         cdef int INIT_SIZE = 1
         
         cdef int64 kmer, sim_kmer
@@ -328,6 +333,9 @@ cdef class KmerTable:
             )
         
         cdef int64[:] kmers = self._kmer_alph.create_kmers(sequence.code)
+        cdef uint8[:] kmer_mask = self._prepare_mask(
+            removal_mask, len(sequence.code)
+        )
 
         # This array will store the match positions
         # As the final number of matches is unknown, a list-like
@@ -338,38 +346,9 @@ cdef class KmerTable:
         match_i = 0
         if similarity_rule is None:
             for i in range(kmers.shape[0]):
-                kmer = kmers[i]
-                kmer_ptr = <uint32*>ptr_array[kmer]
-                if kmer_ptr != NULL:
-                    # There is at least one entry for the k-mer
-                    length = (<int64*>kmer_ptr)[0]
-                    for j in range(2, length, 2):
-                            if match_i >= matches.shape[0]:
-                                # The 'matches' array is full
-                                # -> double its size
-                                matches = expand(np.asarray(matches))
-                            matches[match_i, 0] = i
-                            matches[match_i, 1] = kmer_ptr[j]
-                            matches[match_i, 2] = kmer_ptr[j+1]
-                            match_i += 1
-        
-        else:
-            for i in range(kmers.shape[0]):
-                kmer = kmers[i]
-                # If a similarity rule exists, iterate not only over
-                # the exact k-mer, but over all k-mers similar to
-                # the current k-mer
-                similar_kmers = similarity_rule.similar_kmers(
-                    self._kmer_alph, kmer
-                )
-                for l in range(similar_kmers.shape[0]):
-                    sim_kmer = similar_kmers[l]
-                    # Actual copy of the code from the other
-                    # if-Branch:
-                    # It cannot be put properly in a cdef-function,
-                    # as every function call would perform reference
-                    # count changes and would decrease performance 
-                    kmer_ptr = <uint32*>ptr_array[sim_kmer]
+                if kmer_mask[i]:
+                    kmer = kmers[i]
+                    kmer_ptr = <uint32*>ptr_array[kmer]
                     if kmer_ptr != NULL:
                         # There is at least one entry for the k-mer
                         length = (<int64*>kmer_ptr)[0]
@@ -382,6 +361,37 @@ cdef class KmerTable:
                                 matches[match_i, 1] = kmer_ptr[j]
                                 matches[match_i, 2] = kmer_ptr[j+1]
                                 match_i += 1
+        
+        else:
+            for i in range(kmers.shape[0]):
+                if kmer_mask[i]:
+                    kmer = kmers[i]
+                    # If a similarity rule exists, iterate not only over
+                    # the exact k-mer, but over all k-mers similar to
+                    # the current k-mer
+                    similar_kmers = similarity_rule.similar_kmers(
+                        self._kmer_alph, kmer
+                    )
+                    for l in range(similar_kmers.shape[0]):
+                        sim_kmer = similar_kmers[l]
+                        # Actual copy of the code from the other
+                        # if-Branch:
+                        # It cannot be put properly in a cdef-function,
+                        # as every function call would perform reference
+                        # count changes and would decrease performance 
+                        kmer_ptr = <uint32*>ptr_array[sim_kmer]
+                        if kmer_ptr != NULL:
+                            # There is at least one entry for the k-mer
+                            length = (<int64*>kmer_ptr)[0]
+                            for j in range(2, length, 2):
+                                    if match_i >= matches.shape[0]:
+                                        # The 'matches' array is full
+                                        # -> double its size
+                                        matches = expand(np.asarray(matches))
+                                    matches[match_i, 0] = i
+                                    matches[match_i, 1] = kmer_ptr[j]
+                                    matches[match_i, 2] = kmer_ptr[j+1]
+                                    match_i += 1
 
         # Trim to correct size and return
         return np.asarray(matches[:match_i])
@@ -609,7 +619,6 @@ cdef class KmerTable:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def __setstate__(self, state):
-        print(len(self._ptr_array))
         cdef int64 i
         cdef int64 byte_length
         cdef uint32* kmer_ptr
@@ -635,6 +644,23 @@ cdef class KmerTable:
     def __dealloc__(self):
         if self._is_initialized():
             _deallocate_ptrs(self._ptr_array)
+    
+
+    def _prepare_mask(self, removal_mask, seq_length):
+        if removal_mask is None:
+            kmer_mask = np.ones(seq_length - self._k + 1, dtype=np.uint8)
+        else:
+            if not isinstance(removal_mask, np.ndarray):
+                raise TypeError(
+                    f"The given mask is a '{type(removal_mask).__name__}', "
+                    f"but an ndarray was expected"
+                )
+            if removal_mask.dtype != np.dtype(bool):
+                raise ValueError("Expected a boolean mask")
+            kmer_mask = _to_kmer_mask(
+                np.frombuffer(removal_mask, dtype=np.uint8), self._k
+            )
+        return kmer_mask
     
 
     cdef inline bint _is_initialized(self):
@@ -663,3 +689,24 @@ cdef np.ndarray expand(np.ndarray array):
     new_array = np.empty((array.shape[0]*2, array.shape[1]), dtype=array.dtype)
     new_array[:array.shape[0],:] = array
     return new_array
+
+
+#@cython.boundscheck(False)
+#@cython.wraparound(False)
+def _to_kmer_mask(uint8[:] mask not None, int64 k):
+    cdef int64 i, j
+    cdef bint is_retained
+    
+    cdef uint8[:] kmer_mask = np.empty(mask.shape[0] - k + 1, dtype=np.uint8)
+    
+    for i in range(kmer_mask.shape[0]):
+        is_retained = True
+        # If any sequence position of this k-mer is removed,
+        # discard this k-mer position
+        for j in range(i, i + k):
+            if mask[j]:
+                is_retained = False
+        kmer_mask[i] = is_retained
+    
+    return np.asarray(kmer_mask)
+    
