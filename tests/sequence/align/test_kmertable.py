@@ -12,7 +12,7 @@ import biotite.sequence.align as align
 
 @pytest.fixture
 def k():
-    return 3
+    return 8
 
 @pytest.fixture
 def alphabet():
@@ -49,9 +49,9 @@ def test_match():
     """
     Test the :meth:`match()` method based on a known example.
     """
-    alphabet = seq.Alphabet(string.ascii_lowercase + " ")
-    phrase1 = "how much wood would a woodchuck chuck if a woodchuck could " \
-              "chuck wood"
+    alphabet = seq.LetterAlphabet(string.ascii_lowercase + "_")
+    phrase1 = "how_much_wood_would_a_woodchuck_chuck_if_a_woodchuck_could_" \
+              "chuck_wood"
     phrase2 = "woodchuck"
     sequence1 = seq.GeneralSequence(alphabet, phrase1)
     sequence2 = seq.GeneralSequence(alphabet, phrase2)
@@ -150,6 +150,9 @@ def test_match_equivalence(alphabet, k, random_sequences):
     # The first column is not present in 'test_matches'
     assert test_matches == ref_matches
 
+
+def test_masking():
+    pass
 
 
 def test_merge(alphabet, k, random_sequences):
