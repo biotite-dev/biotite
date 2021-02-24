@@ -34,6 +34,10 @@ def random_sequences(k, alphabet):
 
 
 def test_add(alphabet, k, random_sequences):
+    """
+    Test the :meth:`add()` method, by checking for sequence position,
+    if the position is in the C-array of the corresponding k-mer.
+    """
     table = align.KmerTable(alphabet, k)
     for i, sequence in enumerate(random_sequences):
         table.add(sequence, i)
@@ -45,9 +49,13 @@ def test_add(alphabet, k, random_sequences):
             assert np.array([i,j]) in table[kmer]
 
 
-def test_match():
+@pytest.mark.parametrize("use_similarity_rule", [False, True])
+def test_match(use_similarity_rule):
     """
     Test the :meth:`match()` method based on a known example.
+    
+    Using the similarity rule should give the same result, as it is
+    chosen to yield only the same k-mer as similar k-mer.
     """
     alphabet = seq.LetterAlphabet(string.ascii_lowercase + "_")
     phrase1 = "how_much_wood_would_a_woodchuck_chuck_if_a_woodchuck_could_" \
@@ -55,6 +63,8 @@ def test_match():
     phrase2 = "woodchuck"
     sequence1 = seq.GeneralSequence(alphabet, phrase1)
     sequence2 = seq.GeneralSequence(alphabet, phrase2)
+
+    rule = _identity_rule(alphabet) if use_similarity_rule else None
     
     table1 = align.KmerTable(alphabet, 4)
     table1.add(sequence1, 0)
@@ -82,22 +92,26 @@ def test_match():
         (0, 65),
     ])
 
-    test_matches = table1.match(table2)
+    test_matches = table1.match(table2, similarity_rule=rule)
     # the reference indices are irrelevant for this test
     test_matches = test_matches[:, [1,3]]
     test_matches = set([tuple(match) for match in test_matches])
     assert test_matches == ref_matches
 
 
-def test_match_sequence(alphabet, k, random_sequences):
+@pytest.mark.parametrize("use_similarity_rule", [False, True])
+def test_match_sequence(alphabet, k, random_sequences, use_similarity_rule):
     """
     Test the :meth:`match_sequence()` method compared to a manual,
     inefficient approach using indexing.
+
+    Using the similarity rule should give the same result, as it is
+    chosen to yield only the same k-mer as similar k-mer.
     """
     query_sequence = random_sequences[0]
-    index_sequences = random_sequences[1:]   
+    table_sequences = random_sequences[1:]   
     table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(index_sequences):
+    for i, sequence in enumerate(table_sequences):
         table.add(sequence, i)
     
     kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
@@ -115,25 +129,40 @@ def test_match_sequence(alphabet, k, random_sequences):
         ref_matches.append(matches)
     ref_matches = np.concatenate(ref_matches)
 
-    test_matches = table.match_sequence(query_sequence)
+    rule = _identity_rule(alphabet) if use_similarity_rule else None
+    test_matches = table.match_sequence(query_sequence, similarity_rule=rule)
 
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
-def test_match_equivalence(alphabet, k, random_sequences):
+@pytest.mark.parametrize("use_mask", [False, True])
+def test_match_equivalence(alphabet, k, random_sequences, use_mask):
     """
     Check if both, the :meth:`match()` and meth:`match_sequence()`
     method, find the same matches.
     """
     query_sequence = random_sequences[0]
-    index_sequences = random_sequences[1:]   
+    table_sequences = random_sequences[1:]
+
+    if use_mask:
+        # Create a random removal mask with low removal probability
+        np.random.seed(0)
+        removal_masks = [
+            np.random.choice([False, True], size=len(sequence), p=[0.95, 0.05])
+            for sequence in random_sequences
+        ]
+    else:
+        removal_masks = [None] * len(random_sequences)
+    query_mask = removal_masks[0]
+    table_masks = removal_masks[1:]
+    
     table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(index_sequences):
-        table.add(sequence, i)
+    for i, (sequence, mask) in enumerate(zip(table_sequences, table_masks)):
+        table.add(sequence, i, removal_mask=mask)
     
     ref_table = align.KmerTable(alphabet, k)
     # 42 -> Dummy value that is distinct from all reference indices
-    ref_table.add(query_sequence, 42)
+    ref_table.add(query_sequence, 42, removal_mask=query_mask)
     ref_matches = table.match(ref_table)
     assert np.all(ref_matches[:,0] == 42)
     # Store matches in set to remove the importance of order
@@ -141,7 +170,9 @@ def test_match_equivalence(alphabet, k, random_sequences):
     # returned by 'match_sequence()' -> [:, 1:]
     ref_matches = set([tuple(match) for match in ref_matches[:, 1:]])
 
-    test_matches = table.match_sequence(query_sequence)
+    test_matches = table.match_sequence(
+        query_sequence, removal_mask=query_mask
+    )
     test_matches = set([tuple(match) for match in test_matches])
 
 
@@ -151,8 +182,43 @@ def test_match_equivalence(alphabet, k, random_sequences):
     assert test_matches == ref_matches
 
 
-def test_masking():
-    pass
+@pytest.mark.parametrize(
+    "k, input_mask, ref_output_mask",
+    [
+        (
+            3,
+            [0,1,1,0,0,0,0,0,1],
+            [0,0,0,1,1,1,0]
+        ),
+        (
+            4,
+            [1,0,0,0,0,1,0,0,0,0,0,1,0,0],
+            [0,1,0,0,0,0,1,1,0,0,0]
+        ),
+    ]
+)
+def test_masking(k, input_mask, ref_output_mask):
+    """
+    Explicitly test the conversion of removal masks to k-mer masks
+    using known examples.
+    Since the conversion function is private, this is tested indirectly,
+    by looking at the sequence positions, that were added to the array.
+    """
+    input_mask = np.array(input_mask, dtype=bool)
+    ref_output_mask = np.array(ref_output_mask, dtype=bool)
+
+    sequence = seq.NucleotideSequence()
+    sequence.code = np.zeros(len(input_mask))
+    table = align.KmerTable(seq.NucleotideSequence.alphabet_unamb, k)
+    table.add(sequence, 0, removal_mask=input_mask)
+
+    # Get the k-mer positions that were masked
+    test_output_mask = np.zeros(len(ref_output_mask), dtype=bool)
+    for kmer in table.get_kmers():
+        seq_indices = table[kmer][:, 1]
+        test_output_mask[seq_indices] = True
+    
+    assert test_output_mask.tolist() == ref_output_mask.tolist()
 
 
 def test_merge(alphabet, k, random_sequences):
@@ -224,3 +290,11 @@ def test_pickle(alphabet, k, random_sequences):
     test_table = pickle.loads(pickle.dumps(ref_table))
 
     assert test_table == ref_table
+
+
+def _identity_rule(alphabet):
+    score_matrix = np.full((len(alphabet),) * 2, -1, dtype=int)
+    np.fill_diagonal(score_matrix, 0)
+    matrix = align.SubstitutionMatrix(alphabet, alphabet, score_matrix)
+    rule = align.ScoreThresholdRule(matrix, 0)
+    return rule
