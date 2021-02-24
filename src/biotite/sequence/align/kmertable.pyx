@@ -430,6 +430,11 @@ cdef class KmerTable:
                 f"k-mer {kmer} is out of bounds for this table "
                 f"containing {len(self)} k-mers"
             )
+        
+        if len(positions) == 0:
+            # No position to add -> simply return and do not create an
+            # unnecessary empty C-array
+            return
 
         cdef uint32[:,:] pos = np.asarray(positions, dtype=np.uint32)
 
@@ -593,8 +598,8 @@ cdef class KmerTable:
         return (self._kmer_alph.base_alphabet, self._k), {}
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def __getstate__(self):
         """
         Pointer arrays.
@@ -620,8 +625,8 @@ cdef class KmerTable:
     
 
     @cython.cdivision(True)
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def __setstate__(self, state):
         cdef int64 i
         cdef int64 kmer
