@@ -131,9 +131,9 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         The sequences to be aligned.
     matrix : SubstitutionMatrix
         The substitution matrix used for scoring.
-    gap_penalty : int or (tuple, dtype=int), optional
+    gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
-        general gap penalty.
+        linear gap penalty.
         If a tuple is provided, an affine gap penalty is used.
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
@@ -196,7 +196,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
-    # Check if gap penalty is general or affine
+    # Check if gap penalty is linear or affine
     if type(gap_penalty) == int:
         if gap_penalty > 0:
             raise ValueError("Gap penalty must be negative")
@@ -222,11 +222,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     # The table saving the directions a field came from
     # A "1" in the corresponding bit in the trace table means
     # the field came from this direction
-    # Values for general gap penalty (one score table)
+    # Values for linear gap penalty (one score table)
     #     bit 1 -> 1  -> diagonal -> alignment of symbols
     #     bit 2 -> 2  -> left     -> gap in first sequence
     #     bit 3 -> 4  -> top      -> gap in second sequence
-    # Values for affine gap penalty (three score table)
+    # Values for affine gap penalty (three score tables)
     #     bit 1 -> 1  -> match - match transition
     #     bit 2 -> 2  -> seq 1 gap - match transition
     #     bit 3 -> 4  -> seq 2 gap - match transition
@@ -275,7 +275,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
                                  m_table, g1_table, g2_table,
                                  gap_open, gap_ext, terminal_penalty, local)
     else:
-        # General gap penalty
+        # Linear gap penalty
         # The table for saving the scores
         score_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         # Initialize first row and column for global alignments
@@ -296,12 +296,12 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     # A trace stores the indices of the aligned symbols
     # in both sequences
     trace_list = []
-    # Lists of trace staring indices
+    # Lists of trace starting indices
     i_list = np.zeros(0, dtype=int)
     j_list = np.zeros(0, dtype=int)
     # List of start states
     # State specifies the table the trace starts in
-    # 0 -> general gap penalty, only one table
+    # 0 -> linear gap penalty, only one table
     # 1 -> m
     # 2 -> g1
     # 3 -> g2
@@ -330,7 +330,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         else:
             max_score = np.max(score_table)
             i_list, j_list = np.where((score_table == max_score))
-            # State is always 0 for general gap penalty
+            # State is always 0 for linear gap penalty
             # since there is only one table
             state_list = np.zeros(len(i_list), dtype=int)
     else:
@@ -365,7 +365,9 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         i_start = i_list[k]
         j_start = j_list[k]
         state_start = state_list[k]
-        # Pessimistic array allocation
+        # Pessimistic array allocation:
+        # The maximum trace length arises from an alignment, where each
+        # symbol is aligned to a gap
         trace = np.full(( i_start+1 + j_start+1, 2 ), -1, dtype=np.int64)
         curr_trace_count = 1
         _follow_trace(trace_table, i_start, j_start, 0, trace, trace_list,
@@ -395,7 +397,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       bint term_penalty,
                       bint local):
     """
-    Fill an alignment table with constant gap penalty using dynamic
+    Fill an alignment table with linear gap penalty using dynamic
     programming.
 
     Parameters
@@ -413,7 +415,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
         The alignment table.
         The matrix is filled in this function.
     gap_penalty
-        The constant gap penalty.
+        The linear gap penalty.
     term_penalty
         Indicates, whether terminal gaps should be penalized.
     local
@@ -573,7 +575,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 g2g2_score = g2_table[i-1,j] + gap_ext
             
             # Find maximum score and trace
-            # (similar to general gap method)
+            # (similar to linear gap method)
             # At first for match table (m_table)
             if mm_score > g1m_score:
                 if mm_score > g2m_score:
@@ -652,8 +654,7 @@ cdef void _follow_trace(uint8[:,:] trace_table,
                         int* curr_trace_count,
                         int max_trace_count):
     """
-    Fill an alignment table with affine gap penalty using dynamic
-    programming.
+    Calculate traces from a trace table.
 
     Parameters
     ----------
@@ -668,14 +669,14 @@ cdef void _follow_trace(uint8[:,:] trace_table,
     pos
         The index in the alignment trace to be created.
         For the first branch, this is 0.
-        For additional branches the value of the mother branch is taken.
+        For additional branches the value of the parent branch is taken.
     trace
         The alignment trace to be filled
     trace_list
         When a trace is finished, it is appened to this list
     state
         The current table (m, g1, g2) the traceback is in, taken from
-        mother branch. Always 0 when a constant gap penalty is used.
+        parent branch. Always 0 when a linear gap penalty is used.
     curr_trace_count
         The current number of branches. The value is a pointer, so that
         updating this value propagates the value to all other branches
@@ -690,7 +691,7 @@ cdef void _follow_trace(uint8[:,:] trace_table,
     cdef int k
     
     if state == 0:
-        # General gap penalty
+        # Linear gap penalty
         while trace_table[i,j] != 0:
             # -1 is necessary due to the shift of the sequences
             # to the bottom/right in the table
