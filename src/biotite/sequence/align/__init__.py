@@ -30,7 +30,7 @@ __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 from .alignment import *
-#from .banded import *
+from .banded import *
 from .kmeralphabet import *
 from .kmertable import *
 from .kmersimilarity import *
