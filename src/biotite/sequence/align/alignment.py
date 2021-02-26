@@ -14,7 +14,7 @@ from ..alphabet import LetterAlphabet
 
 __all__ = ["Alignment", "get_codes", "get_symbols",
            "get_sequence_identity", "get_pairwise_sequence_identity",
-           "score"]
+           "score", "find_terminal_gaps", "remove_terminal_gaps"]
 
 
 class Alignment(object):
@@ -359,13 +359,7 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     if mode == "all":
         length = len(alignment)
     elif mode == "not_terminal":
-        starts = np.zeros(len(codes))
-        stops  = np.zeros(len(codes))
-        for i, row in enumerate(codes):
-           starts[i], stops[i] = _identify_terminal_gaps(row)
-        # Find latest start and earliest stop of all sequences
-        start = np.max(starts)
-        stop = np.min(stops)
+        start, stop = find_terminal_gaps(alignment)
         if stop <= start:
             raise ValueError(
                 "Cannot calculate non-terminal identity, "
@@ -429,16 +423,11 @@ def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
     if mode == "all":
         length = len(alignment)
     elif mode == "not_terminal":
-        starts = np.zeros(n_seq)
-        stops  = np.zeros(n_seq)
-        for i, row in enumerate(codes):
-           starts[i], stops[i] = _identify_terminal_gaps(row)
         length = np.zeros((n_seq, n_seq))
         for i in range(n_seq):
             for j in range(n_seq):
                 # Find latest start and earliest stop of all sequences
-                start = np.max(starts[[i,j]])
-                stop = np.min(stops[[i,j]])
+                start, stop = find_terminal_gaps(alignment[:, [i,j]])
                 if stop <= start:
                     raise ValueError(
                         "Cannot calculate non-terminal identity, "
@@ -506,6 +495,7 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
                 # Ignore gaps
                 if code_i != -1 and code_j != -1:
                     score += matrix[code_i, code_j]
+    
     # Sum gap penalties
     if type(gap_penalty) == int:
         gap_open = gap_penalty
@@ -523,7 +513,7 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
             stop_index = len(seq_code)
         else:
             # Find a start and stop index excluding terminal gaps
-            start_index, stop_index = _identify_terminal_gaps(seq_code)
+            start_index, stop_index = find_terminal_gaps(alignment)
         for i in range(start_index, stop_index):
             if seq_code[i] == -1:
                 if in_gap:
@@ -536,37 +526,119 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
     return score
 
 
-def _identify_terminal_gaps(seq_code):
+def find_terminal_gaps(alignment):
     """
-    Find the start and stop position of the alignment excluding terminal
-    gaps.
+    Find the slice indices that would remove terminal gaps from an
+    alignment.
+
+    Terminal gaps are gaps that appear before all sequences start and
+    after any sequence ends.
 
     Parameters
     ----------
-    seq_code : ndarray, dtype=int
-        The gapped sequence code, where ``-1`` indicates a gap.
+    alignment : Alignment
+        The alignment, where the terminal gaps should be removed from.
 
     Returns
     -------
-    start_index, stop_index : int
-        The start and exclusive stop index.
-        When these indices are used in a slice index on `seq_code`
-        the resulting gapped sequence code, does not contain terminal
-        gaps.
+    start, stop : int
+        Indices that point to the start and exclusive stop of the
+        alignment region without terminal gaps.
+        When these indices are used as slice to an alignment or trace,
+        it would remove terminal gaps.
+
+    See also
+    --------
+    remove_terminal_gaps
+
+    Examples
+    --------
+
+    >>> sequences = [
+    ...     NucleotideSequence(seq_string) for seq_string in (
+    ...         "AAAAACTGATTC",
+    ...         "AAACTGTTCA",
+    ...         "CTGATTCAAA"
+    ...     )
+    ... ]
+    >>> trace = np.transpose([
+    ...     ( 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, -1, -1, -1),
+    ...     (-1, -1,  0,  1,  2,  3,  4,  5, -1,  6,  7,  8,  9, -1, -1),
+    ...     (-1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9),
+    ... ])
+    >>> alignment = Alignment(sequences, trace)
+    >>> print(alignment)
+    AAAAACTGATTC---
+    --AAACTG-TTCA--
+    -----CTGATTCAAA
+    >>> print(find_terminal_gaps(alignment))
+    (5, 12)
     """
-    # Find a start and stop index excluding terminal gaps
-    start_index = -1
-    for i in range(len(seq_code)):
-        # Check if the sequence has a gap at the given position
-        if seq_code[i] != -1:
-            start_index = i
-            break
-    # Reverse iteration
-    stop_index = -1
-    for i in range(len(seq_code)-1, -1, -1):
-        if (seq_code[i] != -1).all():
-            stop_index = i+1
-            break
-    if start_index == -1 or stop_index == -1:
-        raise ValueError("Sequence is empty")
-    return start_index, stop_index
+    trace = alignment.trace
+    # Find for each sequence the positions of non-gap symbols
+    no_gap_pos = [np.where(trace[:,i] != -1)[0] for i in range(trace.shape[1])]
+    # Find for each sequence the positions of the sequence start and end
+    # in the alignment
+    firsts = [no_gap_pos[i][0 ] for i in range(trace.shape[1])]
+    lasts  = [no_gap_pos[i][-1] for i in range(trace.shape[1])]
+    # The terminal gaps are before all sequences start and after any
+    # sequence ends
+    # Use exclusive stop -> -1
+    return np.max(firsts), np.min(lasts) + 1
+
+
+def remove_terminal_gaps(alignment):
+    """
+    Remove terminal gaps from an alignment.
+
+    Terminal gaps are gaps that appear before all sequences start and
+    after any sequence ends.
+
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment, where the terminal gaps should be removed from.
+
+    Returns
+    -------
+    truncated_alignment : Alignment
+        A shallow copy of the input `alignment` with an truncated trace,
+        that does not contain alignment columns with terminal gaps.
+
+    See also
+    --------
+    find_terminal_gaps
+
+    Examples
+    --------
+
+    >>> sequences = [
+    ...     NucleotideSequence(seq_string) for seq_string in (
+    ...         "AAAAACTGATTC",
+    ...         "AAACTGTTCA",
+    ...         "CTGATTCAAA"
+    ...     )
+    ... ]
+    >>> trace = np.transpose([
+    ...     ( 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, -1, -1, -1),
+    ...     (-1, -1,  0,  1,  2,  3,  4,  5, -1,  6,  7,  8,  9, -1, -1),
+    ...     (-1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9),
+    ... ])
+    >>> alignment = Alignment(sequences, trace)
+    >>> print(alignment)
+    AAAAACTGATTC---
+    --AAACTG-TTCA--
+    -----CTGATTCAAA
+    >>> truncated_alignment = remove_terminal_gaps(alignment)
+    >>> print(truncated_alignment)
+    CTGATTC
+    CTG-TTC
+    CTGATTC
+    """
+    start, stop = find_terminal_gaps(alignment)
+    if stop < start:
+        raise ValueError(
+            "Cannot remove terminal gaps, since at least two sequences have "
+            "no overlap and the resulting alignment would be empty"
+        )
+    return alignment[start : stop]
