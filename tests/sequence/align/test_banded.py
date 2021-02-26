@@ -16,7 +16,7 @@ from .util import sequences
     [False, True],
     [2, 5, 20, 100]
 ))
-def test_align_banded_simple(gap_penalty, local, band_width):
+def test_simple_alignment(gap_penalty, local, band_width):
     """
     Test `align_banded()` by comparing the output to `align_optimal()`.
     This test uses a pair of highly similar short sequences.
@@ -51,7 +51,7 @@ def test_align_banded_simple(gap_penalty, local, band_width):
     [False, True],
     [(i,j) for i in range(10) for j in range(i+1)]
 ))
-def test_align_banded_complex(sequences, gap_penalty, local, seq_indices):
+def test_complex_alignment(sequences, gap_penalty, local, seq_indices):
     """
     Test `align_banded()` by comparing the output to `align_optimal()`.
     This test uses a set of long sequences, which are pairwise compared.
@@ -100,6 +100,55 @@ def test_align_banded_complex(sequences, gap_penalty, local, seq_indices):
         print()
         print(ref_alignments[0])
         raise
+
+
+@pytest.mark.parametrize(
+    "length, excerpt_length, seed", itertools.product(
+    [1_000, 1_000_000],
+    [50, 500],
+    range(1)
+))
+def test_large_sequence_mapping(length, excerpt_length, seed):
+    """
+    Test whether an excerpt of a very large sequence is aligned to that
+    sequence at the position, where the excerpt was taken from.
+    """
+    BAND_WIDTH = 100
+    
+    np.random.seed(seed)
+
+    sequence = seq.NucleotideSequence()
+    sequence.code = np.random.randint(len(sequence.alphabet), size=length)
+    excerpt_pos = np.random.randint(len(sequence) - excerpt_length)
+    excerpt = sequence[excerpt_pos : excerpt_pos + excerpt_length]
+
+    diagonal = np.random.randint(
+        excerpt_pos - BAND_WIDTH,
+        excerpt_pos + BAND_WIDTH
+    )
+    band = (
+        diagonal - BAND_WIDTH,
+        diagonal + BAND_WIDTH
+    )
+    print(band)
+    print(len(sequence), len(excerpt))
+
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+    test_alignments = align.align_banded(
+        excerpt, sequence, matrix, band=band
+    )
+    # The excerpt should be uniquely mappable to a single location on
+    # the long sequence
+    assert len(test_alignments) == 1
+    test_alignment = test_alignments[0]
+    test_trace = test_alignment.trace
+
+    ref_trace = np.stack([
+        np.arange(len(excerpt)),
+        np.arange(excerpt_pos, len(excerpt) + excerpt_pos)
+    ], axis=1)
+    assert np.array_equal(test_trace, ref_trace)
+    
 
 
 @pytest.mark.parametrize(
