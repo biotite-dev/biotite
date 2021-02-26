@@ -247,7 +247,7 @@ cdef class KmerTable:
         # approach is used:
         # The array is initialized with a relatively small inital size
         # and every time the limit would be exceeded its size is doubled
-        cdef uint32[:,:] matches = np.empty((INIT_SIZE, 4), dtype=np.uint32)
+        cdef int64[:,:] matches = np.empty((INIT_SIZE, 4), dtype=np.int64)
         match_i = 0
         if similarity_rule is None:
             for kmer in range(self_ptr_array.shape[0]):
@@ -342,7 +342,7 @@ cdef class KmerTable:
         # approach is used:
         # The array is initialized with a relatively small inital size
         # and every time the limit would be exceeded its size is doubled
-        cdef uint32[:,:] matches = np.empty((INIT_SIZE, 3), dtype=np.uint32)
+        cdef int64[:,:] matches = np.empty((INIT_SIZE, 3), dtype=np.int64)
         match_i = 0
         if similarity_rule is None:
             for i in range(kmers.shape[0]):
