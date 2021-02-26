@@ -537,15 +537,15 @@ def find_terminal_gaps(alignment):
     Parameters
     ----------
     alignment : Alignment
-        The alignment, where the terminal gaps should be removed from.
+        The alignment, where the slice indices should be found in.
 
     Returns
     -------
     start, stop : int
         Indices that point to the start and exclusive stop of the
-        alignment region without terminal gaps.
-        When these indices are used as slice to an alignment or trace,
-        it would remove terminal gaps.
+        alignment columns without terminal gaps.
+        When these indices are used as slice index for an alignment or
+        trace, the index would remove terminal gaps.
 
     See also
     --------
