@@ -88,7 +88,7 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     index1, index2 = seq_indices
     seq1 = sequences[index1]
     seq2 = sequences[index2]
-    alignment = align.align_optimal(
+    test_alignment = align.align_optimal(
         seq1, seq2, matrix,
         gap_penalty=gap_penalty, terminal_penalty=True, max_number=1
     )[0]
@@ -99,20 +99,22 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     # or higher as the MUSCLE alignment
     # Direct alignment comparison is not feasible,
     # since the treatment of terminal gaps is different in MUSCLE
-    score = align.score(alignment, matrix, gap_penalty, terminal_penalty=True)
+    test_score = align.score(
+        test_alignment, matrix, gap_penalty, terminal_penalty=True
+    )
     ref_score = align.score(
         ref_alignment, matrix, gap_penalty, terminal_penalty=True
     )
     try:
-        assert score >= ref_score
+        assert test_score >= ref_score
     except AssertionError:
         print("Alignment:")
         print()
-        print(alignment)
+        print(test_alignment)
         print("\n")
         print("Reference alignment:")
         print()
-        print(alignment)
+        print(ref_alignment)
         raise
 
 
