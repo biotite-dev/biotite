@@ -34,6 +34,33 @@ ctypedef fused CodeType2:
     uint64
 
 
+# The trace table will save the directions a cell came from
+# A "1" in the corresponding bit in the trace table means
+# the cell came from this direction
+# Values for linear gap penalty (one score table)
+#     bit 1 -> 1  -> diagonal -> alignment of symbols
+#     bit 2 -> 2  -> left     -> gap in first sequence
+#     bit 3 -> 4  -> top      -> gap in second sequence
+# Values for affine gap penalty (three score tables)
+#     bit 1 -> 1  -> match - match transition
+#     bit 2 -> 2  -> seq 1 gap - match transition
+#     bit 3 -> 4  -> seq 2 gap - match transition
+#     bit 4 -> 8  -> match - seq 1 gap transition
+#     bit 5 -> 16 -> seq 1 gap - seq 1 gap transition
+#     bit 6 -> 32 -> match - seq 2 gap transition
+#     bit 7 -> 64 -> seq 2 gap - seq 2 gap transition
+DEF MATCH    = 1
+DEF GAP_LEFT = 2
+DEF GAP_TOP  = 4
+DEF MATCH_TO_MATCH       = 1
+DEF GAP_LEFT_TO_MATCH    = 2
+DEF GAP_TOP_TO_MATCH     = 4
+DEF MATCH_TO_GAP_LEFT    = 8
+DEF GAP_LEFT_TO_GAP_LEFT = 16
+DEF MATCH_TO_GAP_TOP     = 32
+DEF GAP_TOP_TO_GAP_TOP   = 64
+
+
 def align_ungapped(seq1, seq2, matrix, score_only=False):
     """
     align_ungapped(seq1, seq2, matrix, score_only=False)
@@ -218,22 +245,6 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     # to the common visualization
     # This means the first sequence is one the left
     # and the second sequence is at the top
-    
-    # The table saving the directions a field came from
-    # A "1" in the corresponding bit in the trace table means
-    # the field came from this direction
-    # Values for linear gap penalty (one score table)
-    #     bit 1 -> 1  -> diagonal -> alignment of symbols
-    #     bit 2 -> 2  -> left     -> gap in first sequence
-    #     bit 3 -> 4  -> top      -> gap in second sequence
-    # Values for affine gap penalty (three score tables)
-    #     bit 1 -> 1  -> match - match transition
-    #     bit 2 -> 2  -> seq 1 gap - match transition
-    #     bit 3 -> 4  -> seq 2 gap - match transition
-    #     bit 4 -> 8  -> match - seq 1 gap transition
-    #     bit 5 -> 16 -> seq 1 gap - seq 1 gap transition
-    #     bit 6 -> 32 -> match - seq 2 gap transition
-    #     bit 7 -> 64 -> seq 2 gap - seq 2 gap transition
     trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.uint8)
     code1 = seq1.code
     code2 = seq2.code
@@ -383,6 +394,12 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         trace[~gap_filter] = -1
         trace_list[i] = trace
     
+    # Limit the number of generated alignments to `max_number`:
+    # In most cases this is achieved by discarding branches in
+    # '_follow_trace()', however, if multiple local alignment starts
+    # are used, the number of created traces are the number of
+    # starts times `max_number`
+    trace_list = trace_list[:max_number]
     return [Alignment([seq1, seq2], trace, max_score) for trace in trace_list]
 
 
@@ -458,25 +475,34 @@ def _fill_align_table(CodeType1[:] code1 not None,
             # Find maximum
             if from_diag > from_left:
                 if from_diag > from_top:
-                    trace, score = 1, from_diag
+                    trace = MATCH
+                    score = from_diag
                 elif from_diag == from_top:
-                    trace, score = 5, from_diag
+                    trace = MATCH | GAP_TOP
+                    score = from_diag
                 else:
-                    trace, score = 4, from_top
+                    trace = GAP_TOP
+                    score = from_top
             elif from_diag == from_left:
                 if from_diag > from_top:
-                    trace, score = 3, from_diag
+                    trace = MATCH | GAP_LEFT
+                    score = from_diag
                 elif from_diag == from_top:
-                    trace, score = 7, from_diag
+                    trace = MATCH | GAP_LEFT | GAP_TOP
+                    score = from_diag
                 else:
-                    trace, score =  4, from_top
+                    trace = GAP_TOP
+                    score = from_top
             else:
                 if from_left > from_top:
-                    trace, score = 2, from_left
+                    trace = GAP_LEFT
+                    score = from_left
                 elif from_left == from_top:
-                    trace, score = 6, from_diag
+                    trace = GAP_LEFT | GAP_TOP
+                    score = from_left
                 else:
-                    trace, score = 4, from_top
+                    trace = GAP_TOP
+                    score = from_top
             
             # Local alignment specialty:
             # If score is less than or equal to 0,
@@ -701,11 +727,11 @@ cdef void _follow_trace(uint8[:,:] trace_table,
             # Traces may split
             next_indices = []
             trace_value = trace_table[i,j]
-            if trace_value & 1:
+            if trace_value & MATCH:
                 next_indices.append((i-1, j-1))
-            if trace_value & 2:
+            if trace_value & GAP_LEFT:
                 next_indices.append((i, j-1))
-            if trace_value & 4:
+            if trace_value & GAP_TOP:
                 next_indices.append((i-1, j))
             # Trace branching
             # -> Recursive call of _follow_trace() for indices[1:]
