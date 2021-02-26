@@ -166,6 +166,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     if len(seq2) < len(seq1):
         seq1, seq2 = seq2, seq1
         band = [-diag for diag in band]
+        matrix = matrix.transpose()
         is_swapped = True
     else:
         is_swapped = False
@@ -175,8 +176,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         raise ValueError("The width of the band is 0")
     if len(seq1) + upper_diag <= 0 or lower_diag >= len(seq2):
         raise ValueError(
-            "Alignment band is out of range, "
-            "the shorter of both sequences cannot be fully aligned"
+            "Alignment band is out of range, the band allows no overlap "
+            "between both sequences"
         )
     # Crop band diagonals to reasonable size, so that it at maximum
     # covers the search space of an unbanded alignment
@@ -400,8 +401,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                 for trace in trace_list]
 
 
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _fill_align_table(CodeType1[:] code1 not None,
                       CodeType2[:] code2 not None,
                       const int32[:,:] mat not None,
