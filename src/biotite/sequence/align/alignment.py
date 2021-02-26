@@ -170,7 +170,7 @@ class Alignment(object):
             return False
         if self.sequences != item.sequences:
             return False
-        if (self.trace != item.trace).any():
+        if not np.array_equal(self.trace, item.trace):
             return False
         if self.score != item.score:
             return False
