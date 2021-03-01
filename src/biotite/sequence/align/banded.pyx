@@ -8,7 +8,7 @@ __all__ = ["align_banded"]
 
 cimport cython
 cimport numpy as np
-from .tracetable cimport *
+from .tracetable cimport follow_trace, get_trace_linear, get_trace_affine
 
 from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
@@ -463,38 +463,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
             from_diag = score_table[i-1, j  ] + mat[code1[seq_i], code2[seq_j]]
             from_left = score_table[i,   j-1] + gap_penalty
             from_top  = score_table[i-1, j+1] + gap_penalty
-            
-            # Find maximum
-            if from_diag > from_left:
-                if from_diag > from_top:
-                    trace = MATCH
-                    score = from_diag
-                elif from_diag == from_top:
-                    trace = MATCH | GAP_TOP
-                    score = from_diag
-                else:
-                    trace = GAP_TOP
-                    score = from_top
-            elif from_diag == from_left:
-                if from_diag > from_top:
-                    trace = MATCH | GAP_LEFT
-                    score = from_diag
-                elif from_diag == from_top:
-                    trace = MATCH | GAP_LEFT | GAP_TOP
-                    score = from_diag
-                else:
-                    trace = GAP_TOP
-                    score = from_top
-            else:
-                if from_left > from_top:
-                    trace = GAP_LEFT
-                    score = from_left
-                elif from_left == from_top:
-                    trace = GAP_LEFT | GAP_TOP
-                    score = from_left
-                else:
-                    trace = GAP_TOP
-                    score = from_top
+
+            trace = get_trace_linear(from_diag, from_left, from_top, &score)
             
             # Local alignment specialty:
             # If score is less than or equal to 0,

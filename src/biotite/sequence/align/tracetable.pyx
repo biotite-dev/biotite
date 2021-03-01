@@ -49,6 +49,119 @@ DEF GAP_LEFT_STATE = 2
 DEF GAP_TOP_STATE = 3
 
 
+cdef inline np.uint8_t get_trace_linear(np.int32_t match_score,
+                                        np.int32_t gap_left_score,
+                                        np.int32_t gap_top_score,
+                                        np.int32_t *max_score):
+    """
+    Find maximum score from the input scores and return corresponding
+    trace direction for linear gap penalty.
+    """
+    if match_score > gap_left_score:
+        if match_score > gap_top_score:
+            trace = MATCH
+            max_score[0] = match_score
+        elif match_score == gap_top_score:
+            trace = MATCH | GAP_TOP
+            max_score[0] = match_score
+        else:
+            trace = GAP_TOP
+            max_score[0] = gap_top_score
+    elif match_score == gap_left_score:
+        if match_score > gap_top_score:
+            trace = MATCH | GAP_LEFT
+            max_score[0] = match_score
+        elif match_score == gap_top_score:
+            trace = MATCH | GAP_LEFT | GAP_TOP
+            max_score[0] = match_score
+        else:
+            trace = GAP_TOP
+            max_score[0] = gap_top_score
+    else:
+        if gap_left_score > gap_top_score:
+            trace = GAP_LEFT
+            max_score[0] = gap_left_score
+        elif gap_left_score == gap_top_score:
+            trace = GAP_LEFT | GAP_TOP
+            max_score[0] = gap_left_score
+        else:
+            trace = GAP_TOP
+            max_score[0] = gap_top_score
+    
+    return trace
+
+
+cdef inline np.uint8_t get_trace_affine(np.int32_t match_to_match_score,
+                                        np.int32_t gap_left_to_match_score,
+                                        np.int32_t gap_top_to_match_score,
+                                        np.int32_t match_to_gap_left_score,
+                                        np.int32_t gap_left_to_gap_left_score,
+                                        np.int32_t match_to_gap_top_score,
+                                        np.int32_t gap_top_to_gap_top_score,
+                                        np.int32_t *max_match_score,
+                                        np.int32_t *max_gap_left_score,
+                                        np.int32_t *max_gap_top_score):
+    """
+    Find maximum scores from the input scores and return corresponding
+    trace direction for affine gap penalty.
+    """
+    # Match Table
+    if match_to_match_score > gap_left_to_match_score:
+        if match_to_match_score > gap_top_to_match_score:
+            trace = MATCH_TO_MATCH
+            max_match_score[0] = match_to_match_score
+        elif match_to_match_score == gap_top_to_match_score:
+            trace = MATCH_TO_MATCH | GAP_TOP_TO_MATCH
+            max_match_score[0] = match_to_match_score
+        else:
+            trace = GAP_TOP_TO_MATCH
+            max_match_score[0] = gap_top_to_match_score
+    elif match_to_match_score == gap_left_to_match_score:
+        if match_to_match_score > gap_top_to_match_score:
+            trace = MATCH_TO_MATCH | GAP_LEFT_TO_MATCH
+            max_match_score[0] = match_to_match_score
+        elif match_to_match_score == gap_top_to_match_score:
+            trace = MATCH_TO_MATCH | GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH
+            max_match_score[0] = match_to_match_score
+        else:
+            trace = GAP_TOP_TO_MATCH
+            max_match_score[0] = gap_top_to_match_score
+    else:
+        if gap_left_to_match_score > gap_top_to_match_score:
+            trace = GAP_LEFT_TO_MATCH
+            max_match_score[0] = gap_left_to_match_score
+        elif gap_left_to_match_score == gap_top_to_match_score:
+            trace = GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH
+            max_match_score[0] = gap_left_to_match_score
+        else:
+            trace = GAP_TOP_TO_MATCH
+            max_match_score[0] = gap_top_to_match_score
+    
+    # 'Gap left' table
+    if match_to_gap_left_score > gap_left_to_gap_left_score:
+        trace |= MATCH_TO_GAP_LEFT
+        max_gap_left_score[0] = match_to_gap_left_score
+    elif match_to_gap_left_score < gap_left_to_gap_left_score:
+        trace |= GAP_LEFT_TO_GAP_LEFT
+        max_gap_left_score[0] = gap_left_to_gap_left_score
+    else:
+        trace |= MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT
+        max_gap_left_score[0] = match_to_gap_left_score
+    
+    # 'Gap right' table
+    if match_to_gap_top_score > gap_top_to_gap_top_score:
+        trace |= MATCH_TO_GAP_TOP
+        max_gap_top_score[0] = match_to_gap_top_score
+    elif match_to_gap_top_score < gap_top_to_gap_top_score:
+        trace |= GAP_TOP_TO_GAP_TOP
+        max_gap_top_score[0] = gap_top_to_gap_top_score
+    else:
+        trace |= MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP
+        max_gap_top_score[0] = gap_top_to_gap_top_score
+    
+    return trace
+
+
 cdef int follow_trace(np.uint8_t[:,:] trace_table,
                       bint banded,
                       int i, int j, int pos,
@@ -66,28 +179,39 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
     trace_table
         A matrix containing values indicating the direction for the
         traceback.
+    banded
+        Whether the trace table belongs to a banded alignment
     i, j
         The current position in the trace table.
         For the first branch, this is the start of the traceback.
         For additional branches this is the start of the respective
         branch.
     pos
-        The index in the alignment trace to be created.
+        The current position inthe trace array to be created.
         For the first branch, this is 0.
         For additional branches the value of the parent branch is taken.
     trace
-        The alignment trace to be filled
+        The alignment trace array to be filled.
     trace_list
         When a trace is finished, it is appened to this list
     state
-        The current table (m, g1, g2) the traceback is in, taken from
-        parent branch. Always 0 when a linear gap penalty is used.
+        The current score table (*match*, *gap left*, *gap top*)
+        the traceback is in, taken from parent branch.
+        Always 0 when a linear gap penalty is used.
     curr_trace_count
         The current number of branches. The value is a pointer, so that
         updating this value propagates the value to all other branches
     max_trace_count
         The maximum number of branches created. When the number of
         branches reaches this value, no new branches are created.
+    lower_diag, upper_diag
+        The lower and upper diagonal for a banded alignment.
+        Unused, if `banded` is false.
+    
+    Returns
+    -------
+    int
+        ``0`` if, no exception is raised, otherwisw ``-1``.
     """
     
     cdef list next_indices

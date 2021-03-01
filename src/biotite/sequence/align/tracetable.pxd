@@ -6,6 +6,22 @@ cimport cython
 cimport numpy as np
 
 
+cdef np.uint8_t get_trace_linear(np.int32_t match_score,
+                                 np.int32_t gap_left_score,
+                                 np.int32_t gap_top_score,
+                                 np.int32_t *max_score)
+
+cdef np.uint8_t get_trace_affine(np.int32_t match_to_match_score,
+                                 np.int32_t gap_left_to_match_score,
+                                 np.int32_t gap_top_to_match_score,
+                                 np.int32_t match_to_gap_left_score,
+                                 np.int32_t gap_left_to_gap_left_score,
+                                 np.int32_t match_to_gap_top_score,
+                                 np.int32_t gap_top_to_gap_top_score,
+                                 np.int32_t *max_match_score,
+                                 np.int32_t *max_gap_left_score,
+                                 np.int32_t *max_gap_top_score)
+
 cdef int follow_trace(np.uint8_t[:,:] trace_table,
                       bint banded,
                       int i, int j, int pos,
