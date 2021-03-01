@@ -43,10 +43,10 @@ DEF GAP_TOP_TO_GAP_TOP   = 64
 
 
 # The state specifies the table the traceback is currently in
-DEF NO_STATE = 0 # For linear gap penalty
-DEF MATCH_STATE = 1
+DEF NO_STATE       = 0 # For linear gap penalty
+DEF MATCH_STATE    = 1
 DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE = 3
+DEF GAP_TOP_STATE  = 3
 
 
 cdef inline np.uint8_t get_trace_linear(np.int32_t match_score,

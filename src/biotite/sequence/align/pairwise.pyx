@@ -46,10 +46,10 @@ DEF MATCH_TO_GAP_LEFT    = 8
 DEF GAP_LEFT_TO_GAP_LEFT = 16
 DEF MATCH_TO_GAP_TOP     = 32
 DEF GAP_TOP_TO_GAP_TOP   = 64
-DEF NO_STATE = 0
-DEF MATCH_STATE = 1
+DEF NO_STATE       = 0
+DEF MATCH_STATE    = 1
 DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE = 3
+DEF GAP_TOP_STATE  = 3
 
 
 def align_ungapped(seq1, seq2, matrix, score_only=False):
@@ -256,7 +256,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         if min_score < 0:
             neg_inf -= min_score
         # m_table, g1_table and g2_table are the 3 score tables
-        m_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
+        m_table  = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         g1_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         g2_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
         m_table [0 ,1:] = neg_inf
@@ -530,7 +530,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 mg2_score, g2g2_score
     cdef uint8 trace
     cdef int32 m_score, g1_score, g2_score
-    cdef int32 similarity
+    cdef int32 similarity_score
     
     # For local alignments terminal gaps on the right side are ignored
     # anyway, as the alignment should stop before
@@ -545,10 +545,10 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
         for j in range(1, trace_table.shape[1]):
             # Calculate the scores for possible transitions
             # into the current cell
-            similarity = matrix[code1[i-1], code2[j-1]]
-            mm_score  =  m_table[i-1,j-1] + similarity
-            g1m_score = g1_table[i-1,j-1] + similarity
-            g2m_score = g2_table[i-1,j-1] + similarity
+            similarity_score = matrix[code1[i-1], code2[j-1]]
+            mm_score  =  m_table[i-1,j-1] + similarity_score
+            g1m_score = g1_table[i-1,j-1] + similarity_score
+            g2m_score = g2_table[i-1,j-1] + similarity_score
             # No transition from g1_table to g2_table and vice versa
             # Since this would mean adjacent gaps in both sequences
             # A substitution makes more sense in this case
@@ -581,18 +581,22 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 if m_score <= 0:
                     m_table[i,j] = 0
                     # End trace in specific table
-                    # by filtering the the bits of other tables  
-                    trace &= ~7
+                    # by filtering the bits of other tables  
+                    trace &= ~(
+                        MATCH_TO_MATCH |
+                        GAP_LEFT_TO_MATCH |
+                        GAP_TOP_TO_MATCH
+                    )
                 else:
                     m_table[i,j] = m_score
                 if g1_score <= 0:
                     g1_table[i,j] = 0
-                    trace &= ~24
+                    trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
                 else:
                     g1_table[i,j] = g1_score
                 if g2_score <= 0:
                     g2_table[i,j] = 0
-                    trace &= ~96
+                    trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
                 else:
                     g2_table[i,j] = g2_score
             else:
