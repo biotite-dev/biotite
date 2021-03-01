@@ -8,6 +8,7 @@ __all__ = ["align_banded"]
 
 cimport cython
 cimport numpy as np
+from .tracetable cimport *
 
 from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
@@ -32,23 +33,11 @@ ctypedef fused CodeType2:
     #uint16
     #uint32
     #uint64
+import warnings
+warnings.warn("Not all code types are supported!")
 
 
-# The trace table will save the directions a cell came from
-# A "1" in the corresponding bit in the trace table means
-# the cell came from this direction
-# Values for linear gap penalty (one score table)
-#     bit 1 -> 1  -> diagonal -> alignment of symbols
-#     bit 2 -> 2  -> left     -> gap in first sequence
-#     bit 3 -> 4  -> top      -> gap in second sequence
-# Values for affine gap penalty (three score tables)
-#     bit 1 -> 1  -> match - match transition
-#     bit 2 -> 2  -> seq 1 gap - match transition
-#     bit 3 -> 4  -> seq 2 gap - match transition
-#     bit 4 -> 8  -> match - seq 1 gap transition
-#     bit 5 -> 16 -> seq 1 gap - seq 1 gap transition
-#     bit 6 -> 32 -> match - seq 2 gap transition
-#     bit 7 -> 64 -> seq 2 gap - seq 2 gap transition
+# See tracetable.pyx for more information
 DEF MATCH    = 1
 DEF GAP_LEFT = 2
 DEF GAP_TOP  = 4
@@ -59,6 +48,10 @@ DEF MATCH_TO_GAP_LEFT    = 8
 DEF GAP_LEFT_TO_GAP_LEFT = 16
 DEF MATCH_TO_GAP_TOP     = 32
 DEF GAP_TOP_TO_GAP_TOP   = 64
+DEF NO_STATE = 0
+DEF MATCH_STATE = 1
+DEF GAP_LEFT_STATE = 2
+DEF GAP_TOP_STATE = 3
 
 
 def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
@@ -372,10 +365,11 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         # symbol is aligned to a gap
         trace = np.full((len(seq1) + len(seq2), 2), -1, dtype=np.int64)
         curr_trace_count = 1
-        _follow_trace(
-            trace_table, lower_diag, upper_diag, i_start, j_start, 0,
+        follow_trace(
+            trace_table, True, i_start, j_start, 0,
             trace, trace_list, state=state_start,
-            curr_trace_count=&curr_trace_count, max_trace_count=max_number
+            curr_trace_count=&curr_trace_count, max_trace_count=max_number,
+            lower_diag=lower_diag, upper_diag=upper_diag
         )
     
     # Replace gap entries in trace with -1
@@ -389,7 +383,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
 
     # Limit the number of generated alignments to `max_number`:
     # In most cases this is achieved by discarding branches in
-    # '_follow_trace()', however, if multiple alignment starts
+    # 'follow_trace()', however, if multiple alignment starts
     # are used, the number of created traces are the number of
     # starts times `max_number`
     trace_list = trace_list[:max_number]
@@ -541,152 +535,3 @@ def get_global_trace_starts(seq1_len, seq2_len, lower_diag, upper_diag):
         (seq2_len-1) - j - lower_diag + 2
     )
     return i, j
-
-
-
-cdef int _follow_trace(uint8[:,:] trace_table,
-                        int lower_diag, int upper_diag,
-                        int i, int j, int pos,
-                        int64[:,:] trace,
-                        list trace_list,
-                        int state,
-                        int* curr_trace_count,
-                        int max_trace_count) except -1:
-    """
-    Calculate traces from a trace table.
-
-    Parameters
-    ----------
-    trace_table
-        A matrix containing values indicating the direction for the
-        traceback.
-    i, j
-        The current position in the trace table.
-        For the first branch, this is the start of the traceback.
-        For additional branches this is the start of the respective
-        branch.
-    pos
-        The index in the alignment trace to be created.
-        For the first branch, this is 0.
-        For additional branches the value of the parent branch is taken.
-    trace
-        The alignment trace to be filled
-    trace_list
-        When a trace is finished, it is appened to this list
-    state
-        The current table (m, g1, g2) the traceback is in, taken from
-        parent branch. Always 0 when a linear gap penalty is used.
-    curr_trace_count
-        The current number of branches. The value is a pointer, so that
-        updating this value propagates the value to all other branches
-    max_trace_count
-        The maximum number of branches created. When the number of
-        branches reaches this value, no new branches are created.
-    """
-    
-    cdef list next_indices
-    cdef list next_states
-    cdef int trace_value
-    cdef int k
-    cdef int seq_i, seq_j
-    
-    if state == 0:
-        # linear gap penalty
-        while trace_table[i,j] != 0:
-            seq_i = i - 1
-            seq_j = j + seq_i + lower_diag - 1
-            trace[pos, 0] = seq_i
-            trace[pos, 1] = seq_j
-            pos += 1
-            # Traces may split
-            next_indices = []
-            trace_value = trace_table[i,j]
-            if trace_value & MATCH:
-                next_indices.append((i-1, j  ))
-            if trace_value & GAP_LEFT:
-                next_indices.append((i,   j-1))
-            if trace_value & GAP_TOP:
-                next_indices.append((i-1, j+1))
-            # Trace branching
-            # -> Recursive call of _follow_trace() for indices[1:]
-            for k in range(1, len(next_indices)):
-                if curr_trace_count[0] < max_trace_count:
-                    curr_trace_count[0] += 1
-                    new_i, new_j = next_indices[k]
-                    _follow_trace(
-                        trace_table, lower_diag, upper_diag, new_i, new_j, pos,
-                        np.copy(trace), trace_list, 0, curr_trace_count,
-                        max_trace_count
-                    )
-            # Continue in this method with indices[0]
-            i, j = next_indices[0]
-    """
-    else:
-        # Affine gap penalty -> state specifies the table
-        # we are currently in
-        # The states are
-        # 1 -> m
-        # 2 -> g1
-        # 3 -> g2
-        while True:
-            # Check for loop break condition
-            # -> trace for current table (state) is 0
-            if (   (state == 1 and trace_table[i,j] & 7 == 0)
-                or (state == 2 and trace_table[i,j] & 24 == 0)
-                or (state == 3 and trace_table[i,j] & 96 == 0)):
-                    break
-            # If no break occurred, continue as usual
-            trace[pos, 0] = i-1
-            trace[pos, 1] = j-1
-            pos += 1
-            next_indices = []
-            next_states = []
-            # Get value of trace respective of current state
-            # = table trace is currently in
-            if state == 1:
-                trace_value = trace_table[i,j] & 7
-            elif state == 2:
-                trace_value = trace_table[i,j] & 24
-            else: # state == 3:
-                trace_value = trace_table[i,j] & 96
-            # Determine indices and state of next trace step
-            if trace_value & 1:
-                next_indices.append((i-1, j-1))
-                next_states.append(1)
-            if trace_value & 2:
-                next_indices.append((i-1, j-1))
-                next_states.append(2)
-            if trace_value & 4:
-                next_indices.append((i-1, j-1))
-                next_states.append(3)
-            if trace_value & 8:
-                next_indices.append((i, j-1))
-                next_states.append(1)
-            if trace_value & 16:
-                next_indices.append((i, j-1))
-                next_states.append(2)
-            if trace_value & 32:
-                next_indices.append((i-1, j))
-                next_states.append(1)
-            if trace_value & 64:
-                next_indices.append((i-1, j))
-                next_states.append(3)
-            # Trace branching
-            # -> Recursive call of _follow_trace() for indices[1:]
-            for k in range(1, len(next_indices)):
-                if curr_trace_count[0] < max_trace_count:
-                    curr_trace_count[0] += 1
-                    new_i, new_j = next_indices[k]
-                    new_state = next_states[k]
-                    _follow_trace(trace_table, new_i, new_j, pos,
-                                np.copy(trace), trace_list, new_state,
-                                curr_trace_count, max_trace_count)
-            # Continue in this method with indices[0] and states[0]
-            i, j = next_indices[0]
-            state = next_states[0]
-    """
-    # Trim trace to correct size (delete all pure -1 entries)
-    # and append to trace_list
-    tr_arr = np.asarray(trace)
-    trace_list.append(tr_arr[(tr_arr[:,0] != -1) | (tr_arr[:,1] != -1)])
-    return 0
