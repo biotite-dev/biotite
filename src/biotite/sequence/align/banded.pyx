@@ -48,10 +48,10 @@ DEF MATCH_TO_GAP_LEFT    = 8
 DEF GAP_LEFT_TO_GAP_LEFT = 16
 DEF MATCH_TO_GAP_TOP     = 32
 DEF GAP_TOP_TO_GAP_TOP   = 64
-DEF NO_STATE = 0
-DEF MATCH_STATE = 1
+DEF NO_STATE       = 0
+DEF MATCH_STATE    = 1
 DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE = 3
+DEF GAP_TOP_STATE  = 3
 
 
 def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
@@ -211,54 +211,33 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     min_score = np.min(matrix.score_matrix())
     if min_score < 0:
         neg_inf -= min_score
-    ###
-    neg_inf = -1000
-    np.set_printoptions(edgeitems=1000, linewidth=100000)
-    ###
 
     if affine_penalty:
-        pass
-        """
         # Affine gap penalty
         gap_open = gap_penalty[0]
         gap_ext = gap_penalty[1]
-        # Value for negative infinity
-        # Used to prevent unallowed state transitions
-        # in the first row and column
-        # Subtraction of gap_open, gap_ext and lowest score value
-        # to prevent integer overflow
-        neg_inf = np.iinfo(np.int32).min - 2*gap_open - 2*gap_ext
-        min_score = np.min(matrix.score_matrix())
-        if min_score < 0:
-            neg_inf -= min_score
         # m_table, g1_table and g2_table are the 3 score tables
-        m_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        g1_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        g2_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        m_table [0 ,1:] = neg_inf
-        m_table [1:,0 ] = neg_inf
-        g1_table[:, 0 ] = neg_inf
-        g2_table[0, : ] = neg_inf
-        # Initialize first row and column for global alignments
-        if not local:
-            if terminal_penalty:
-                # Terminal gaps are penalized
-                # -> Penalties in first row/column
-                g1_table[0, 1:] = (np.arange(len(seq2)) * gap_ext) + gap_open
-                g2_table[1:,0 ] = (np.arange(len(seq1)) * gap_ext) + gap_open
-            trace_table[1:,0] = 64
-            trace_table[0,1:] = 16
-        _fill_align_table_affine(code1, code2,
-                                 matrix.score_matrix(), trace_table,
-                                 m_table, g1_table, g2_table,
-                                 gap_open, gap_ext, terminal_penalty, local)
-        """
-    else:
-        # Linear gap penalty
-
+        m_table, g1_table, g2_table = [
+            np.zeros((len(seq1)+1, band_width+2), dtype=np.int32)
+            for _ in range(3)
+        ]
         # As explained for the trace table (see above),
         # the score table is filled with with INVALID values on the left
         # and right column
+        m_table[:,  0] = neg_inf
+        m_table[:, -1] = neg_inf
+        g1_table[:,  0] = neg_inf
+        g1_table[:, -1] = neg_inf
+        g2_table[:,  0] = neg_inf
+        g2_table[:, -1] = neg_inf
+        # Initialize first row and column for global alignments
+        _fill_align_table_affine(code1, code2,
+                                 matrix.score_matrix(), trace_table,
+                                 m_table, g1_table, g2_table,
+                                 lower_diag, upper_diag,
+                                 gap_open, gap_ext, local)
+    else:
+        # Linear gap penalty
         score_table = np.zeros((len(seq1)+1, band_width+2), dtype=np.int32)
         score_table[:,  0] = neg_inf
         score_table[:, -1] = neg_inf
@@ -270,11 +249,6 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
 
     # Traceback
     ###########
-
-    #print(score_table)
-    #print()
-    #print(trace_table)
-    #print()
 
     # Stores all possible traces (= possible alignments)
     # A trace stores the indices of the aligned symbols
@@ -295,8 +269,6 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         # Multiple starting points possible,
         # when duplicates of maximum score exist
         if affine_penalty:
-            pass
-            """
             max_score = np.max([m_table, g1_table, g2_table])
             # Start indices in m_table
             i_list_new, j_list_new = np.where((m_table == max_score))
@@ -313,7 +285,6 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             i_list = np.append(i_list, i_list_new)
             j_list = np.append(j_list, j_list_new)
             state_list = np.append(state_list, np.full(len(i_list_new), 3))
-            """
         else:
             max_score = np.max(score_table)
             i_list, j_list = np.where((score_table == max_score))
@@ -326,24 +297,37 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             len(seq1), len(seq2), lower_diag, upper_diag
         )
         if affine_penalty:
-            pass
-            """
-            max_score = max(m_table[i_start,j_start],
-                            g1_table[i_start,j_start],
-                            g2_table[i_start,j_start])
-            if m_table[i_start,j_start] == max_score:
-                i_list = np.append(i_list, i_start)
-                j_list = np.append(j_list, j_start)
-                state_list = np.append(state_list, 1)
-            if g1_table[i_start,j_start] == max_score:
-                i_list = np.append(i_list, i_start)
-                j_list = np.append(j_list, j_start)
-                state_list = np.append(state_list, 2)
-            if g2_table[i_start,j_start] == max_score:
-                i_list = np.append(i_list, i_start)
-                j_list = np.append(j_list, j_start)
-                state_list = np.append(state_list, 3)
-            """
+            m_scores  =  m_table[possible_i_start, possible_j_start]
+            g1_scores = g1_table[possible_i_start, possible_j_start]
+            g2_scores = g2_table[possible_i_start, possible_j_start]
+            m_max_score  = np.max(m_scores)
+            g1_max_score = np.max(g1_scores)
+            g2_max_score = np.max(g2_scores)
+            max_score = max(m_max_score, g1_max_score, g2_max_score)
+            if m_max_score == max_score:
+                best_indices = np.where(m_scores == max_score)
+                i_list = np.append(i_list, possible_i_start[best_indices])
+                j_list = np.append(j_list, possible_j_start[best_indices])
+                state_list = np.append(
+                    state_list,
+                    np.full(len(best_indices), MATCH_STATE, dtype=int)
+                )
+            if g1_max_score == max_score:
+                best_indices = np.where(g1_scores == max_score)
+                i_list = np.append(i_list, possible_i_start[best_indices])
+                j_list = np.append(j_list, possible_j_start[best_indices])
+                state_list = np.append(
+                    state_list,
+                    np.full(len(best_indices), GAP_LEFT_STATE, dtype=int)
+                )
+            if g2_max_score == max_score:
+                best_indices = np.where(g2_scores == max_score)
+                i_list = np.append(i_list, possible_i_start[best_indices])
+                j_list = np.append(j_list, possible_j_start[best_indices])
+                state_list = np.append(
+                    state_list,
+                    np.full(len(best_indices), GAP_TOP_STATE, dtype=int)
+                )
         else:
             # Choose the trace start index with the highest score
             # in the score table
@@ -426,22 +410,15 @@ def _fill_align_table(CodeType1[:] code1 not None,
         The matrix is filled in this function.
     gap_penalty
         The linear gap penalty.
-    term_penalty
-        Indicates, whether terminal gaps should be penalized.
     local
         Indicates, whether a local alignment should be performed.
     """
     
     cdef int i, j
     cdef int seq_i, seq_j
-    cdef int max_i, max_j
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
     cdef int32 score
-    
-    # Used in case terminal gaps are not penalized
-    i_max = score_table.shape[0] -1
-    j_max = score_table.shape[1] -1
 
     # Starts at 1 since the first row and column are already filled
     for seq_i in range(0, code1.shape[0]):
@@ -474,6 +451,121 @@ def _fill_align_table(CodeType1[:] code1 not None,
             else:
                 score_table[i,j] = score
                 trace_table[i,j] = trace
+
+
+#@cython.boundscheck(False)
+#@cython.wraparound(False)
+def _fill_align_table_affine(CodeType1[:] code1 not None,
+                             CodeType2[:] code2 not None,
+                             const int32[:,:] mat not None,
+                             uint8[:,:] trace_table not None,
+                             int32[:,:] m_table not None,
+                             int32[:,:] g1_table not None,
+                             int32[:,:] g2_table not None,
+                             int lower_diag,
+                             int upper_diag,
+                             int gap_open,
+                             int gap_ext,
+                             bint local):
+    """
+    Fill an alignment table with affine gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    code1, code2
+        The sequence code of each sequence to be aligned.
+    matrix
+        The score matrix obtained from the class:`SubstitutionMatrix`
+        object.
+    trace_table
+        A matrix containing values indicating the direction for the
+        traceback step.
+        The matrix is filled in this function.
+    m_table, g1_table, g2_table
+        The alignment tables containing the scores.
+        `m_table` contains values for matches.
+        `g1_table` contains values for gaps in the first sequence.
+        `g2_table` contains values for gaps in the second sequence.
+        The matrix is filled in this function.
+    gap_open
+        The gap opening penalty.
+    gap_ext
+        The gap extension penalty.
+    local
+        Indicates, whether a local alignment should be performed.
+    """
+    
+    cdef int i, j
+    cdef int seq_i, seq_j
+    cdef int32 mm_score, g1m_score, g2m_score
+    cdef int32 mg1_score, g1g1_score
+    cdef int32 mg2_score, g2g2_score
+    cdef uint8 trace
+    cdef int32 m_score, g1_score, g2_score
+    cdef int32 similarity_score
+    
+    # Starts at 1 since the first row and column are already fil
+    for seq_i in range(0, code1.shape[0]):
+        i = seq_i + 1
+        for seq_j in range(
+            max(0,              seq_i + lower_diag),
+            min(code2.shape[0], seq_i + upper_diag+1)
+        ):
+            j = seq_j - seq_i - lower_diag + 1
+            # Calculate the scores for possible transitions
+            # into the current cell
+            similarity_score = mat[code1[seq_i], code2[seq_j]]
+            mm_score  =  m_table[i-1, j] + similarity_score
+            g1m_score = g1_table[i-1, j] + similarity_score
+            g2m_score = g2_table[i-1, j] + similarity_score
+            # No transition from g1_table to g2_table and vice versa
+            # Since this would mean adjacent gaps in both sequences
+            # A substitution makes more sense in this case
+            mg1_score  =  m_table[i, j-1] + gap_open
+            g1g1_score = g1_table[i, j-1] + gap_ext
+            mg2_score  =  m_table[i-1, j+1] + gap_open
+            g2g2_score = g2_table[i-1, j+1] + gap_ext
+            
+            trace = get_trace_affine(
+                mm_score, g1m_score, g2m_score,
+                mg1_score, g1g1_score,
+                mg2_score, g2g2_score,
+                # The max score values to be written
+                &m_score, &g1_score, &g2_score
+            )
+
+            # Fill values into tables
+            # Local alignment specialty:
+            # If score is less than or equal to 0,
+            # then 0 is saved on the field and the trace ends here
+            if local == True:
+                if m_score <= 0:
+                    m_table[i,j] = 0
+                    # End trace in specific table
+                    # by filtering the bits of other tables  
+                    trace &= ~(
+                        MATCH_TO_MATCH |
+                        GAP_LEFT_TO_MATCH |
+                        GAP_TOP_TO_MATCH
+                    )
+                else:
+                    m_table[i,j] = m_score
+                if g1_score <= 0:
+                    g1_table[i,j] = 0
+                    trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
+                else:
+                    g1_table[i,j] = g1_score
+                if g2_score <= 0:
+                    g2_table[i,j] = 0
+                    trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+                else:
+                    g2_table[i,j] = g2_score
+            else:
+                m_table[i,j] = m_score
+                g1_table[i,j] = g1_score
+                g2_table[i,j] = g2_score
+            trace_table[i,j] = trace
 
 
 def get_global_trace_starts(seq1_len, seq2_len, lower_diag, upper_diag):

@@ -12,7 +12,7 @@ from .util import sequences
 
 @pytest.mark.parametrize(
     "gap_penalty, local, band_width", itertools.product(
-    [-10, ],#(-10,-1)],
+    [-10, (-10,-1)],
     [False, True],
     [2, 5, 20, 100]
 ))
@@ -47,7 +47,7 @@ def test_simple_alignment(gap_penalty, local, band_width):
 
 @pytest.mark.parametrize(
     "gap_penalty, local, seq_indices", itertools.product(
-    [-10, ],#(-10,-1)],
+    [-10, (-10,-1)],
     [False, True],
     [(i,j) for i in range(10) for j in range(i+1)]
 ))
@@ -106,7 +106,7 @@ def test_complex_alignment(sequences, gap_penalty, local, seq_indices):
     "length, excerpt_length, seed", itertools.product(
     [1_000, 1_000_000],
     [50, 500],
-    range(1)
+    range(10)
 ))
 def test_large_sequence_mapping(length, excerpt_length, seed):
     """
@@ -153,7 +153,7 @@ def test_large_sequence_mapping(length, excerpt_length, seed):
 
 @pytest.mark.parametrize(
     "gap_penalty, local, seed", itertools.product(
-    [-10, ],#(-10, -1)],
+    [-10, (-10, -1)],
     [False, True],
     range(100)
 ))
