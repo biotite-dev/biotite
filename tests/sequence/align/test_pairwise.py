@@ -61,6 +61,7 @@ def test_align_optimal_simple(local, term, gap_penalty,
                        matrix,
                        gap_penalty=gap_penalty, terminal_penalty=term,
                        local=local)
+    
     for ali in alignments:
         assert str(ali) in expect
     # Test if separate score function calculates the same score

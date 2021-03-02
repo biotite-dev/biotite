@@ -248,30 +248,40 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         gap_ext = gap_penalty[1]
         # Value for negative infinity
         # Used to prevent unallowed state transitions
-        # in the first row and column
         # Subtraction of gap_open, gap_ext and lowest score value
         # to prevent integer overflow
-        neg_inf = np.iinfo(np.int32).min - 2*gap_open - 2*gap_ext
+        neg_inf = np.iinfo(np.int32).min - gap_open - gap_ext
         min_score = np.min(matrix.score_matrix())
         if min_score < 0:
             neg_inf -= min_score
         # m_table, g1_table and g2_table are the 3 score tables
-        m_table  = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        g1_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        g2_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.int32)
-        m_table [0 ,1:] = neg_inf
-        m_table [1:,0 ] = neg_inf
-        g1_table[:, 0 ] = neg_inf
-        g2_table[0, : ] = neg_inf
+        m_table  = np.zeros((len(seq1)+1, len(seq2)+1), dtype=np.int32)
+        # Fill with negative infinity values to prevent that an
+        # alignment trace starts with a gap extension
+        # instead of a gap opening
+        g1_table = np.full((len(seq1)+1, len(seq2)+1), neg_inf, dtype=np.int32)
+        g2_table = np.full((len(seq1)+1, len(seq2)+1), neg_inf, dtype=np.int32)
+        # Disallow trace coming from the match table on the
+        # left column/top row, as these represent terminal gaps
+        m_table [0, 1:] = neg_inf
+        m_table [1:, 0] = neg_inf
         # Initialize first row and column for global alignments
         if not local:
             if terminal_penalty:
                 # Terminal gaps are penalized
                 # -> Penalties in first row/column
                 g1_table[0, 1:] = (np.arange(len(seq2)) * gap_ext) + gap_open
-                g2_table[1:,0 ] = (np.arange(len(seq1)) * gap_ext) + gap_open
-            trace_table[1:,0] = 64
-            trace_table[0,1:] = 16
+                g2_table[1:, 0] = (np.arange(len(seq1)) * gap_ext) + gap_open
+            else:
+                g1_table[0, 1:] = np.zeros(len(seq2))
+                g2_table[1:, 0] = np.zeros(len(seq1))
+            trace_table[0,  1] = MATCH_TO_GAP_LEFT
+            trace_table[0, 2:] = GAP_LEFT_TO_GAP_LEFT
+            trace_table[1,  0] = MATCH_TO_GAP_TOP
+            trace_table[2: ,0] = GAP_TOP_TO_GAP_TOP
+        else:
+            g1_table[0, 1:] = np.zeros(len(seq2))
+            g2_table[1:, 0] = np.zeros(len(seq1))
         _fill_align_table_affine(code1, code2,
                                  matrix.score_matrix(), trace_table,
                                  m_table, g1_table, g2_table,
@@ -287,10 +297,11 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
                 # -> Penalties in first row/column
                 score_table[:,0] = np.arange(len(seq1)+1) * gap_penalty
                 score_table[0,:] = np.arange(len(seq2)+1) * gap_penalty
-            trace_table[1:,0] = 4
-            trace_table[0,1:] = 2
+            trace_table[1:,0] = GAP_TOP
+            trace_table[0,1:] = GAP_LEFT
         _fill_align_table(code1, code2, matrix.score_matrix(), trace_table,
                           score_table, gap_penalty, terminal_penalty, local)
+    
     
     # Traceback
     ###########
@@ -303,10 +314,6 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     j_list = np.zeros(0, dtype=int)
     # List of start states
     # State specifies the table the trace starts in
-    # 0 -> linear gap penalty, only one table
-    # 1 -> m
-    # 2 -> g1
-    # 3 -> g2
     state_list = np.zeros(0, dtype=int)
     if local:
         # The start point is the maximal score in the table
@@ -471,12 +478,13 @@ def _fill_align_table(CodeType1[:] code1 not None,
             
             # Local alignment specialty:
             # If score is less than or equal to 0,
-            # then 0 is saved on the field and the trace ends here
+            # then the score of the cell remains 0
+            # and the trace ends here
             if local == True and score <= 0:
-                score_table[i,j] = 0
-            else:
-                score_table[i,j] = score
-                trace_table[i,j] = trace
+                continue
+            
+            score_table[i,j] = score
+            trace_table[i,j] = trace
 
 
 @cython.boundscheck(False)
@@ -532,8 +540,8 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity_score
     
-    # For local alignments terminal gaps on the right side are ignored
-    # anyway, as the alignment should stop before
+    # For local alignments terminal gaps on the right and the bottom are
+    # ignored anyway, as the alignment should stop before
     if local:
         term_penalty = True
     # Used in case terminal gaps are not penalized
@@ -576,27 +584,28 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             # Fill values into tables
             # Local alignment specialty:
             # If score is less than or equal to 0,
-            # then 0 is saved on the field and the trace ends here
+            # then the score of the cell remains 0
+            # and the trace ends here
             if local == True:
                 if m_score <= 0:
-                    m_table[i,j] = 0
                     # End trace in specific table
-                    # by filtering the bits of other tables  
+                    # by filtering out the respective bits
                     trace &= ~(
                         MATCH_TO_MATCH |
                         GAP_LEFT_TO_MATCH |
                         GAP_TOP_TO_MATCH
                     )
+                    # m_table[i,j] remains 0
                 else:
                     m_table[i,j] = m_score
                 if g1_score <= 0:
-                    g1_table[i,j] = 0
                     trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
+                    # g1_table[i,j] remains negative infinity
                 else:
                     g1_table[i,j] = g1_score
                 if g2_score <= 0:
-                    g2_table[i,j] = 0
                     trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+                    # g2_table[i,j] remains negative infinity
                 else:
                     g2_table[i,j] = g2_score
             else:
