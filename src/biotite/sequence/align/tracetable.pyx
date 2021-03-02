@@ -290,6 +290,7 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
             pos += 1
             next_indices = []
             next_states = []
+
             # Get value of trace corresponding to current state
             # = table trace is currently in
             if state == MATCH_STATE:
@@ -298,6 +299,7 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
                 trace_value = trace_table[i,j] & (MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
             else: # state == GAP_TOP_STATE:
                 trace_value = trace_table[i,j] & (MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+            
             # Determine indices and state of next trace step
             if trace_value & MATCH_TO_MATCH:
                 next_indices.append((i_match, j_match))
