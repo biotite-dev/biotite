@@ -25,16 +25,14 @@ ctypedef np.uint64_t uint64
 
 ctypedef fused CodeType1:
     uint8
-    #uint16
-    #uint32
-    #uint64
+    uint16
+    uint32
+    uint64
 ctypedef fused CodeType2:
     uint8
-    #uint16
-    #uint32
-    #uint64
-import warnings
-warnings.warn("Not all code types are supported!")
+    uint16
+    uint32
+    uint64
 
 
 # See tracetable.pyx for more information
@@ -217,19 +215,18 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         gap_open = gap_penalty[0]
         gap_ext = gap_penalty[1]
         # m_table, g1_table and g2_table are the 3 score tables
-        m_table, g1_table, g2_table = [
-            np.zeros((len(seq1)+1, band_width+2), dtype=np.int32)
-            for _ in range(3)
-        ]
+        m_table = np.zeros((len(seq1)+1, band_width+2), dtype=np.int32)
+        # Fill with negative infinity values to prevent that an
+        # alignment trace starts with a gap extension
+        # instead of a gap opening
+        g1_table = np.full((len(seq1)+1, band_width+2), neg_inf, np.int32)
+        g2_table = np.full((len(seq1)+1, band_width+2), neg_inf, np.int32)
         # As explained for the trace table (see above),
-        # the score table is filled with with INVALID values on the left
-        # and right column
+        # the score table is filled with with netagive infinty values
+        # on the left and right column to prevent the trace leaving the
+        # alignment band
         m_table[:,  0] = neg_inf
         m_table[:, -1] = neg_inf
-        g1_table[:,  0] = neg_inf
-        g1_table[:, -1] = neg_inf
-        g2_table[:,  0] = neg_inf
-        g2_table[:, -1] = neg_inf
         # Initialize first row and column for global alignments
         _fill_align_table_affine(code1, code2,
                                  matrix.score_matrix(), trace_table,
@@ -305,7 +302,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             g2_max_score = np.max(g2_scores)
             max_score = max(m_max_score, g1_max_score, g2_max_score)
             if m_max_score == max_score:
-                best_indices = np.where(m_scores == max_score)
+                best_indices = np.where(m_scores == max_score)[0]
                 i_list = np.append(i_list, possible_i_start[best_indices])
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
@@ -313,7 +310,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                     np.full(len(best_indices), MATCH_STATE, dtype=int)
                 )
             if g1_max_score == max_score:
-                best_indices = np.where(g1_scores == max_score)
+                best_indices = np.where(g1_scores == max_score)[0]
                 i_list = np.append(i_list, possible_i_start[best_indices])
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
@@ -321,7 +318,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                     np.full(len(best_indices), GAP_LEFT_STATE, dtype=int)
                 )
             if g2_max_score == max_score:
-                best_indices = np.where(g2_scores == max_score)
+                best_indices = np.where(g2_scores == max_score)[0]
                 i_list = np.append(i_list, possible_i_start[best_indices])
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
@@ -453,8 +450,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 trace_table[i,j] = trace
 
 
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _fill_align_table_affine(CodeType1[:] code1 not None,
                              CodeType2[:] code2 not None,
                              const int32[:,:] mat not None,
@@ -538,27 +535,28 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             # Fill values into tables
             # Local alignment specialty:
             # If score is less than or equal to 0,
-            # then 0 is saved on the field and the trace ends here
+            # then the score of the cell remains 0
+            # and the trace ends here
             if local == True:
                 if m_score <= 0:
-                    m_table[i,j] = 0
                     # End trace in specific table
-                    # by filtering the bits of other tables  
+                    # by filtering out the respective bits
                     trace &= ~(
                         MATCH_TO_MATCH |
                         GAP_LEFT_TO_MATCH |
                         GAP_TOP_TO_MATCH
                     )
+                    # m_table[i,j] remains 0
                 else:
                     m_table[i,j] = m_score
                 if g1_score <= 0:
-                    g1_table[i,j] = 0
                     trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
+                    # g1_table[i,j] remains negative infinity
                 else:
                     g1_table[i,j] = g1_score
                 if g2_score <= 0:
-                    g2_table[i,j] = 0
                     trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+                    # g2_table[i,j] remains negative infinity
                 else:
                     g2_table[i,j] = g2_score
             else:
