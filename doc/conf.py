@@ -7,7 +7,11 @@ __author__ = "Patrick Kunzmann"
 # Setup Cython for import of uncompiled *.pyx files
 import pyximport
 import numpy as np
-pyximport.install(setup_args={'include_dirs': np.get_include()})
+pyximport.install(
+    setup_args={'include_dirs': np.get_include()},
+    build_in_temp=False,
+    language_level=3
+)
 
 from os.path import realpath, dirname, join, basename
 import sys
