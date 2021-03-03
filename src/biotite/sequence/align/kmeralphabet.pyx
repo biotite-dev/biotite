@@ -132,6 +132,9 @@ class KmerAlphabet(Alphabet):
     def create_kmers(self, CodeType[:] seq_code not None):
         """
         create_kmers(seq_code)
+
+        Create *k-mer* codes for all overlapping *k-mers* in the given
+        sequence code.
         """
         cdef int64 i
         cdef int j
