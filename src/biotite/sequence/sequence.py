@@ -213,9 +213,19 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         """
         pass
     
-    def reverse(self):
+    def reverse(self, copy=True):
         """
         Reverse the :class:`Sequence`.
+        
+        Parameters
+        ----------
+        copy : bool, optional
+            If set to False, the code :class:`ndarray` of the returned
+            sequence is an array view to the sequence code of this
+            object.
+            In this case, manipulations on the returned sequence would
+            also affect this object.
+            Otherwise, the sequence code is copied.
         
         Returns
         -------
@@ -230,9 +240,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         >>> print(dna_seq_rev)
         ATGCA
         """
-        reversed_code = np.flip(np.copy(self._seq_code), axis=0)
-        reversed = self.copy(reversed_code)
-        return reversed
+        reversed_code = np.flip(self._seq_code, axis=0)
+        if copy:
+            reversed_code = np.copy(reversed_code)
+        return self.copy(reversed_code)
     
     def is_valid(self):
         """

@@ -170,7 +170,7 @@ orig_genome = seqio.load_sequence(orig_genome_file)
 
 ### Create complementary reads
 compl_reads = list(itertools.chain(
-    *[(read, read.reverse().complement()) for read in reads]
+    *[(read, read.reverse(False).complement()) for read in reads]
 ))
 
 ########################################################################
