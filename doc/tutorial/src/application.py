@@ -16,6 +16,11 @@ objects (e.g. instances of :class:`Sequence` or :class:`AtomArray`) and
 the interface returns *Python* objects (e.g. an :class:`Alignment`
 object).
 
+.. note:: Note that in order to use an interface in
+   :mod:`biotite.application` the corresponding software must be
+   installed or the web server must be reachable, respectively.
+   These programs are not shipped with the *Biotite* package.
+
 The base class for all interfaces is the :class:`Application` class.
 Each :class:`Application` instance has a life cycle, starting with its
 creation and ending with the result extraction.

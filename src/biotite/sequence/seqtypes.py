@@ -302,10 +302,29 @@ class NucleotideSequence(Sequence):
     
     @staticmethod
     def unambiguous_alphabet():
+        """
+        Get the unambiguous nucleotide alphabet containing the symbols
+        ``A``,  ``C``,  ``G`` and  ``T``.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The unambiguous nucleotide alphabet.
+        """
         return NucleotideSequence.alphabet_unamb
     
     @staticmethod
     def ambiguous_alphabet():
+        """
+        Get the ambiguous nucleotide alphabet containing the symbols
+        ``A``,  ``C``,  ``G`` and  ``T`` and symbols describing
+        ambiguous combinations of these.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The ambiguous nucleotide alphabet.
+        """
         return NucleotideSequence.alphabet_amb
 
 

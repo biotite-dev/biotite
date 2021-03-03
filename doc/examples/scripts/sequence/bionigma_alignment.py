@@ -289,6 +289,11 @@ fasta_file = fasta.FastaFile.read(
     entrez.fetch_single_file(uids, None, "protein", "fasta")
 )
 sequence_dict = fasta.get_sequences(fasta_file)
+# Currently there seems to b a bug in the NCBI search,
+# so that 'Precursor' results are still included
+# Solve this by filtering the sequence length
+sequence_dict = {header: seq for header, seq in sequence_dict.items()
+                 if len(seq) < 100}
 headers = list(sequence_dict.keys())
 sequences = list(sequence_dict.values())
 labels = [header[-1] for header in headers]
@@ -301,12 +306,15 @@ alignment = alignment[:, order.tolist()]
 labels = [labels[i] for i in order]
 
 # Visualize the alignment using the new alignment plotter
-fig = plt.figure(figsize=(8.0, 3.7))
+fig = plt.figure(figsize=(8.0, 4.0))
 ax = fig.add_subplot(111)
 plot_alignment_shapes(
     ax, alignment, labels=labels, symbols_per_line=len(alignment),
     symbol_size=8
 )
+# The aspect ratio of the shapes should be preserved:
+# Squares should look like squares, circles should look like circles
+ax.set_aspect("equal")
 
 ax.set_ylabel("Type", color="white")
 ax.set_title("Comparison of cyclotide sequences", color="white")

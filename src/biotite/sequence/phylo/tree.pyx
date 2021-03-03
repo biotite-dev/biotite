@@ -11,6 +11,7 @@ cimport numpy as np
 
 import copy
 import numpy as np
+import networkx as nx
 from ...file import InvalidFileError
 from ...copyable import Copyable
 
@@ -103,6 +104,99 @@ class Tree(Copyable):
     @property
     def leaves(self):
         return copy.copy(self._leaves)
+    
+    def as_graph(self):
+        """
+        as_graph()
+        
+        Obtain a graph representation of the :class:`Tree`.
+
+        Returns
+        -------
+        bond_set : DiGraph
+            A *NetworkX* directed graph.
+            For a leaf node the graph node is its reference index.
+            For an intermediate and root node the graph node is a tuple
+            containing it children nodes.
+            Each edge has a ``"distance"`` attribute depicting the
+            distance between the nodes.
+            Each edge starts from the parent ends at its child.
+        
+        Examples
+        --------
+
+        >>> leaves = [TreeNode(index=i) for i in range(3)]
+        >>> intermediate = TreeNode([leaves[0], leaves[1]], [2.0, 3.0])
+        >>> root = TreeNode([intermediate, leaves[2]], [1.0, 5.0])
+        >>> tree = Tree(root)
+        >>> graph = tree.as_graph()
+        >>> for node_i, node_j in graph.edges:
+        ...     print(f"{str(node_i):12}  ->  {str(node_j):12}")
+        (0, 1)        ->  0
+        (0, 1)        ->  1
+        ((0, 1), 2)   ->  (0, 1)
+        ((0, 1), 2)   ->  2
+        """
+        cdef tuple children
+        cdef bint children_already_handled
+        cdef TreeNode node, child, parent
+
+        graph = nx.DiGraph()
+        
+        # This dict maps a TreeNode to its corresponding int or tuple
+        cdef dict node_repr = {}
+
+        # A First-In-First-Out queue for iterative handling of each node
+        # Starting with all leaf nodes 
+        cdef list queue = copy.copy(self._leaves)
+        # A set representation of the same queue for efficient
+        # '__contains__()' operation
+        cdef set queue_set = set(self._leaves)
+        while len(queue) > 0:
+            node = queue.pop(0)
+            
+            if node.is_leaf():
+                node_repr[node] = node.index
+            else:
+                children = node.children
+                children_handled = True
+                for child in children:
+                    if child not in node_repr:
+                        children_handled = False
+                # If the node representation of any child of this node
+                # is not calculated yet, put this node to the end of the
+                # queue and handle it later
+                if not children_handled:
+                    queue.append(node)
+                    continue
+                else:
+                    repr = tuple(node_repr[child] for child in children)
+                    node_repr[node] = repr
+                    # Add adges to children in graph
+                    for child in children:
+                        graph.add_edge(
+                            repr, node_repr[child], distance=child.distance
+                        )
+            
+            # This leads finally to termination of the loop:
+            # When the root node is handled the last element in the
+            # queue is handled and no new node is added to the queue
+            if not node.is_root():
+                parent = node.parent
+                # The parent node might be already in the queue from
+                # handling another child node
+                if parent not in queue_set:
+                    queue.append(parent)
+                    queue_set.add(parent)
+            
+            # Node is handled
+            # -> not in 'queue' anymore
+            # -> remove also from 'queue_set'
+            queue_set.remove(node)
+        
+        return graph
+
+        
 
     def get_distance(self, index1, index2, bint topological=False):
         """
@@ -246,9 +340,7 @@ class Tree(Copyable):
 
 cdef class TreeNode:
     """
-    __init__(child1=None, child2=None,
-             child1_distance=None, child2_distance=None,
-             index=None)
+    __init__(children=None, distances=None, index=None)
     
     :class:`TreeNode` objects are part of a rooted tree
     (e.g. alignment guide tree).

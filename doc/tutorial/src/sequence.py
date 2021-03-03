@@ -879,8 +879,8 @@ fig.tight_layout()
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # When you want to create a :class:`Tree` from distances obtained for
-# example from sequence alignments, you can use the UPGMA algorithm
-# implemented in the function of the same name :func:`upgma()`.
+# example from sequence alignments, you can use the *UPGMA* or
+# *neighbour joining* algorithm.
 
 distances = np.array([
     [ 0, 17, 21, 31, 23],

@@ -27,7 +27,7 @@ class FastqDumpApp(LocalApp):
         The prefix of the path to store the downloaded FASTQ file.
         ``.fastq`` is appended to this prefix if the run contains
         a single read per spot.
-        ``_1.fastq``, `_2.fastq``, etc. is appended if it contains
+        ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
         multiple reads per spot.
         By default, the files are created in a temporary directory and
         deleted after the files have been read.
@@ -146,7 +146,7 @@ class FastqDumpApp(LocalApp):
             The prefix of the path to store the downloaded FASTQ file.
             ``.fastq`` is appended to this prefix if the run contains
             a single read per spot.
-            ``_1.fastq``, `_2.fastq``, etc. is appended if it contains
+            ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
             multiple reads per spot.
             By default, the files are created in a temporary directory and
             deleted after the files have been read.

@@ -115,8 +115,11 @@ def test_doctest(package_name, context_package_names):
     # More information below
     package = import_module(package_name)
     runner = doctest.DocTestRunner(
-        verbose=False,
-        optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE
+        verbose = False,
+        optionflags = 
+            doctest.ELLIPSIS |
+            doctest.REPORT_ONLY_FIRST_FAILURE |
+            doctest.NORMALIZE_WHITESPACE
     )
     for test in doctest.DocTestFinder(exclude_empty=False).find(
         package, package.__name__,

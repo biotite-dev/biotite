@@ -76,51 +76,9 @@ distances = 1 - align.get_pairwise_sequence_identity(
 )
 # Create tree via neighbor joining
 tree = phylo.neighbor_joining(distances)
-
-# Convert the Biotite 'Tree' object into a NetworkX 'Graph' object
-# via a recursive function
-# Since NetworkX has no dedicated class for nodes, but accepts any
-# immutable Python object, the reference index of the node is used for
-# this
-def convert_node(graph, tree_node):
-    """
-    Add a tree node to a graph.
-
-    Parameters
-    ----------
-    graph : Graph
-        The graph where the node should be added.
-    tree_node : Node
-        The node to be added.
-    
-    Returns
-    -------
-    node_id : int or tuple
-        The identifier of the added node in the graph.
-        If the node is a leaf node, this is the reference index,
-        otherwise this is a tuple, containing the identifier of the
-        child nodes.
-    distance : float
-        The distance of the given node to its parent node.
-    """
-    if tree_node.is_leaf():
-        return tree_node.index, tree_node.distance
-    else:
-        child_ids = []
-        child_distances = []
-        for child_node in tree_node.children:
-            id, dist = convert_node(graph, child_node)
-            child_ids.append(id)
-            child_distances.append(dist)
-        this_id = tuple(child_ids)
-        for id, dist in zip(child_ids, child_distances):
-            # Add connection to children as edge in the graph
-            # Distance is added as attribute
-            graph.add_edge(this_id, id, distance=dist)
-        return this_id, tree_node.distance
-
-graph = nx.Graph()
-convert_node(graph, tree.root)
+# Convert to NetworkX graph
+#For the graph visualization, the edge directions are unnecessary
+graph = tree.as_graph().to_undirected()
 
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.gca()
