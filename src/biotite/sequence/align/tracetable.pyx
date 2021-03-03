@@ -5,10 +5,12 @@
 """
 A module for Biotite's internal use only.
 Contains C-functions for handling trace tables in a reuasable way for
-# different alignment functions.
+different alignment functions.
 """
 
+__name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
+__all__ = []
 
 cimport cython
 cimport numpy as np
