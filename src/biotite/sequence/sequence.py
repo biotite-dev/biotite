@@ -278,10 +278,13 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             corresponding number of occurences in the sequence as
             values.
         """
-        frequencies = {}
-        for code, symbol in enumerate(self.get_alphabet()):
-            frequencies[symbol] = len(np.nonzero((self._seq_code == code))[0])
-        return frequencies
+        counts = np.bincount(
+            self._seq_code, minlength=len(self.get_alphabet())
+        )
+        return {
+            symbol: count for symbol, count
+            in zip(self.get_alphabet().get_symbols(), counts)
+        }
     
     def __getitem__(self, index):
         alph = self.get_alphabet()
