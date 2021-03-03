@@ -36,7 +36,6 @@ terms of base-call error probability :math:`P` [2]_:
 
     Q = -10 \log_{10} P
 """
-
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
@@ -158,13 +157,14 @@ fig.tight_layout()
 # An additional challenge is to find the correct sense of the read:
 # In the library preparation both, sense and complementary DNA, is
 # produced from the virus RNA.
-# For this reason we need to create complementary copy for each read
+# For this reason we need to create a complementary copy for each read
 # map both strands to the reference genome.
 # The the *wrong* strand is discarded.
 
 ### Download and read the reference SARS-CoV-2 genome
 orig_genome_file = entrez.fetch(
-    "NC_045512", ".", "gb", db_name="Nucleotide", ret_type="gb"
+    "NC_045512", tempfile.gettempdir(), "gb",
+    db_name="Nucleotide", ret_type="gb"
 )
 orig_genome = seqio.load_sequence(orig_genome_file)
 
@@ -175,84 +175,56 @@ compl_reads = list(itertools.chain(
 
 ########################################################################
 
-# Use length 12 k-mers
 K = 12
 
 alphabet = seq.NucleotideSequence.unambiguous_alphabet()
 
-orig_genome_index = align.KmerIndex(alphabet, K)
-orig_genome_index.add(orig_genome)
+genome_table = align.KmerTable(alphabet, K)
+genome_table.add(orig_genome, 0)
 
-read_index = align.KmerIndex(alphabet, K)
+all_diagonals = []
 for i, read in enumerate(compl_reads):
-    read_index.add(read)
+    matches = genome_table.match_sequence(read)
+    diagonals = matches[:,2] - matches[:,0]
+    all_diagonals.append(diagonals)
 
-matches = orig_genome_index.match(read_index)
-# The k-mer indexes use quite a large amount of RAM
+# k-mer tables use quite a large amount of RAM
 # and we do not need those objects anymore
-del orig_genome_index
-del read_index
+del genome_table
 
 ########################################################################
 
-all_diagonals = matches[:,2] - matches[:,3]
-diagonals = [[] for _ in range(len(compl_reads))]
-for i in range(len(matches)):
-    diagonals[matches[i,1]].append(all_diagonals[i])
+best_diagonals = [None] * len(all_diagonals)
+for i, diagonals_for_read in enumerate(all_diagonals):
+    diag, counts = np.unique(diagonals_for_read, return_counts=True)
+    if len(diag) == 0:
+        # If no match is found for this sequence, ignore this sequence
+        continue
+    best_diagonals[i] = diag[np.argmax(counts)]
 del all_diagonals
 
 ########################################################################
 
-BUFFER = 100
+BAND_WIDTH = 100
 THRESHOLD_SCORE = 200
 
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
-
-def align_restricted(long_sequence, short_sequence, matrix, diagonals, buffer,
-                     gap_penalty=-10):
-    diag, counts = np.unique(diagonals, return_counts=True)
-    if len(diag) == 0:
-        # If no match is found for this sequence, ignore this sequence
+def map_sequence(read, diag):
+    if diag is None:
         return None
-    best_diag = diag[np.argmax(counts)]
-    
-    start = best_diag - buffer
-    if start < 0:
-       start = 0
-    stop = best_diag + len(short_sequence) + buffer
-    if stop > len(long_sequence):
-        stop = len(long_sequence)
-    # Perform a global alignment with an excerpt of the long sequence
-    alignment = align.align_optimal(
-        long_sequence[start : stop], short_sequence, matrix,
-        local=False, terminal_penalty=False, gap_penalty=gap_penalty,
-        max_number=1
-    )[0]
-    # Remove leading and trailing gaps in the short sequence
-    # from the alignment
-    non_gap_indices = np.where(alignment.trace[:, 1] != -1)[0]
-    alignment.trace = alignment.trace[non_gap_indices[0] : 
-                                      non_gap_indices[-1] + 1]
-    # Transform trace indices of the long sequence excerpt back the
-    # indices of the complete long sequence,
-    # exclude '-1' values from gaps
-    alignment.trace[alignment.trace[:, 0] != -1, 0] += start
-    alignment.sequences[0] = long_sequence
-    return alignment
-
+    else:
+        return align.align_banded(
+            read, orig_genome, matrix, gap_penalty=-10,
+            band = (diag - BAND_WIDTH//2, diag + BAND_WIDTH//2),
+            max_number = 1
+        )[0]
 
 with ProcessPoolExecutor() as executor:
-    alignments = executor.map(
-        lambda tup: align_restricted(
-            orig_genome, tup[0], matrix, tup[1], BUFFER
-        ),
-        compl_reads[:10],
-        diagonals[:10],
-        timeout=10
-    )
+    alignments = list(executor.map(
+        map_sequence, compl_reads, best_diagonals, chunksize=1000
+    ))
 
-# Filter out alignments that do not meet the treshold score
 alignments = [alignment
               if alignment is not None
               and alignment.score > THRESHOLD_SCORE else None
@@ -269,23 +241,21 @@ scores = np.stack((
 ),axis=-1)
 
 correct_sense = np.argmax(scores, axis=-1)
-correct_alignments = [for_a if dir == 0 else rev_a for for_a, rev_a, dir
+correct_alignments = [for_a if sense == 0 else rev_a for for_a, rev_a, sense
                       in zip(for_alignments, rev_alignments, correct_sense)]
 # If we use a reverse complementary read,
 # we also need to reverse the scores
-correct_score_arrays = [score if dir == 0 else score[::-1] for score, dir
+correct_score_arrays = [score if sense == 0 else score[::-1] for score, sense
                         in zip(score_arrays, correct_sense)]
 
 ########################################################################
 
-starts = np.array([
-    ali.trace[ali.trace[:,0] != -1][0, 0] for ali in correct_alignments
-    if ali is not None
-])
-stops = np.array([
-    ali.trace[ali.trace[:,0] != -1][-1, 0] for ali in correct_alignments
-    if ali is not None
-])
+starts = np.array(
+    [ali.trace[ 0, 1] for ali in correct_alignments if ali is not None]
+)
+stops = np.array(
+    [ali.trace[-1, 1] for ali in correct_alignments if ali is not None]
+)
 order = np.argsort(starts)
 starts = starts[order]
 stops = stops[order]
@@ -320,24 +290,22 @@ for alignment, score_array in zip(correct_alignments, correct_score_arrays):
         trace = alignment.trace
         
         no_gap_trace = trace[(trace[:,0] != -1) & (trace[:,1] != -1)]
-        seq_code = alignment.sequences[1].code[no_gap_trace[:,1]]
-        phred_sum[no_gap_trace[:,0], seq_code] \
-            += score_array[no_gap_trace[:,1]]
+        seq_code = alignment.sequences[0].code[no_gap_trace[:,0]]
+        phred_sum[no_gap_trace[:,1], seq_code] \
+            += score_array[no_gap_trace[:,0]]
         
-        no_genome_gap_trace = trace[trace[:,0] != -1]
+        no_genome_gap_trace = trace[trace[:,1] != -1]
         sequencing_depth[
-            no_genome_gap_trace[0,0] : no_genome_gap_trace[-1,0]
+            no_genome_gap_trace[0,1] : no_genome_gap_trace[-1,1]
         ] += 1
         
-        read_gap_trace = trace[trace[:,1] == -1]
-        deletion_number[read_gap_trace[:,0]] += 1
+        read_gap_trace = trace[trace[:,0] == -1]
+        deletion_number[read_gap_trace[:,1]] += 1
 
 ########################################################################
 
 most_probable_symbol_codes = np.argmax(phred_sum, axis=1)
-max_phred_sum = phred_sum[
-    np.arange(len(phred_sum)), most_probable_symbol_codes
-]
+max_phred_sum = phred_sum[np.arange(len(phred_sum)), most_probable_symbol_codes]
 
 def moving_average(data_set, window_size):
     weights = np.full(window_size, 1/window_size)
@@ -387,7 +355,6 @@ fasta.set_sequence(
 )
 out_file.write(tempfile.NamedTemporaryFile("w"))
 
-
 ########################################################################
 # We have done it, the genome of the B.1.1.7 variant is assembled!
 # Now we would like to have a closer look on the difference between the
@@ -396,10 +363,13 @@ out_file.write(tempfile.NamedTemporaryFile("w"))
 # Mutations in the B.1.1.7 variant
 # --------------------------------
 
-genome_alignment = align.align_optimal(
-    var_genome, orig_genome, matrix, max_number=1
+BAND_WIDTH = 200
+
+genome_alignment = align.align_banded(
+    var_genome, orig_genome, matrix,
+    band=(-BAND_WIDTH//2, BAND_WIDTH//2), max_number=1
 )[0]
-identity = align.get_sequence_identity(genome_alignment, "all")
+identity = align.get_sequence_identity(genome_alignment, 'all')
 print(f"Sequence identity: {identity * 100:.2f} %")
 
 ########################################################################
@@ -553,6 +523,8 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
             )
 
 fig.tight_layout()
+
+plt.show()
 
 ########################################################################
 # [3]_
