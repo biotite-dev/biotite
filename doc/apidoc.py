@@ -237,7 +237,8 @@ def skip_non_methods(app, what, name, obj, skip, options):
             types.FunctionType, types.BuiltinFunctionType, types.MethodType
         # Functions from C-extensions
         ] or type(obj).__name__ in [
-            "cython_function_or_method", "method_descriptor"
+            "cython_function_or_method", "method_descriptor",
+            "fused_cython_function"
         # Enum Instance or inner class
         ] or isinstance(obj, enum.Enum) or isinstance(obj, type):
             return False

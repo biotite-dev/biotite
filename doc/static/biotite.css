@@ -54,7 +54,7 @@ div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
 
 
 /* Separation between methods in the API reference */
-.method {
+.py.method, .py.attribute{
     border-top: 1px solid #cccccc;
     padding-top: 30px;
     padding-bottom: 30px;
