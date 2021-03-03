@@ -119,7 +119,7 @@ class NucleotideSequence(Sequence):
                          "N" : "N"}
     # List comprehension does not work in this scope
     _compl_symbols = []
-    for _symbol in compl_symbol_dict:
+    for _symbol in alphabet_amb.get_symbols():
         _compl_symbols.append(compl_symbol_dict[_symbol])
     _compl_alphabet_unamb = LetterAlphabet(_compl_symbols)
     _compl_mapper = AlphabetMapper(_compl_alphabet_unamb, alphabet_amb)
