@@ -2,6 +2,8 @@
 Comparative genome assembly of SARS-CoV-2 B.1.1.7 variant
 =========================================================
 
+.. currentmodule:: biotite.sequence.align
+
 In the following script we will perform a comparative genome assembly of
 the emerging SARS-CoV-2 B.1.1.7 variant in a simple manner.
 We will use publicly available sequencing data of the virus variant
@@ -61,12 +63,12 @@ import biotite.database.entrez as entrez
 import biotite.application.sra as sra
 
 
-### Download the sequencing data
+# Download the sequencing data
 app = sra.FastqDumpApp("SRR13453793")
 app.start()
 app.join()
 
-### Load sequences and quality scores from the sequencing data
+# Load sequences and quality scores from the sequencing data
 # There is only one read per spot
 file_path = app.get_file_paths()[0]
 fastq_file = fastq.FastqFile.read(file_path, offset="Sanger")
@@ -112,7 +114,7 @@ fig.tight_layout()
 # longer than 1000 bases.
 # This is one of the big advantages of the employed sequencing
 # technology.
-# Especially for *de novo* genome assembly (which we will no do here),
+# Especially for *de novo* genome assembly (which we will not do here),
 # long reads facilitate the process.
 # However, the sequencing method also comes with a disadvantage:
 # The base-call accuracy is relatively low, as the Phred scores
@@ -158,22 +160,42 @@ fig.tight_layout()
 # In the library preparation both, sense and complementary DNA, is
 # produced from the virus RNA.
 # For this reason we need to create a complementary copy for each read
-# map both strands to the reference genome.
-# The the *wrong* strand is discarded.
+# and map both strands to the reference genome.
+# Later the *wrong* strand is discarded.
 
-### Download and read the reference SARS-CoV-2 genome
+# Download and read the reference SARS-CoV-2 genome
 orig_genome_file = entrez.fetch(
     "NC_045512", tempfile.gettempdir(), "gb",
     db_name="Nucleotide", ret_type="gb"
 )
 orig_genome = seqio.load_sequence(orig_genome_file)
 
-### Create complementary reads
+# Create complementary reads
 compl_reads = list(itertools.chain(
     *[(read, read.reverse(False).complement()) for read in reads]
 ))
 
 ########################################################################
+# To map the reads to their corresponding positions in the reference
+# genome, we need to align them to it.
+# Although we could use :func:`align_optimal()`
+# (Needleman-Wunsch algorithm [4]_) for this purpose, aligning this
+# large number of reads to even a small virus genome would take hours.
+#
+# Instead we choose an heuristic alignment approach, similar to the
+# method used by software like *BLAST* [5]_:
+# First we scan each read for *k-mer* matches with the reference
+# genome.
+# A *k-mer* match is a subsequence of length *k* that appears in both
+# the read an the reference genome.
+# If *k* is chosen sufficiently large, such matches most likely occur
+# in homologous sequence regions.
+# Then we can perform an alignment that is restricted to the region of
+# a match.
+#
+# The :class:`KmerTable` class allows the fast *k-mer* match scanning
+# by tabulation of all *k-mer* positions in the reference genome
+# sequence.
 
 K = 12
 
@@ -182,28 +204,104 @@ alphabet = seq.NucleotideSequence.unambiguous_alphabet()
 genome_table = align.KmerTable(alphabet, K)
 genome_table.add(orig_genome, 0)
 
-all_diagonals = []
+all_matches = []
 for i, read in enumerate(compl_reads):
-    matches = genome_table.match_sequence(read)
-    diagonals = matches[:,2] - matches[:,0]
-    all_diagonals.append(diagonals)
+    if not i % 1000:
+        print(i, end="\r")
+    all_matches.append(genome_table.match_sequence(read))
 
 # k-mer tables use quite a large amount of RAM
 # and we do not need those objects anymore
 del genome_table
 
 ########################################################################
+# However, we can expect a lot of consecutive *k-mer* match positions
+# for each read:
+# For example, for :math:`k = 3`, the nucleotide `ACATT` compared to
+# itself would give matches for the *k-mers* `ACA`, `CAT` and `ATT`.
+# The respective match positions would be `(0,0)`, `(1,1)` and `(2,2)`.
+# However, the diagonal :math:`D = j - i`, where *i* and *j* are
+# positions in the first and second sequence respectively, is always the
+# same in this case: It is 0.
+# The same applies for the read mapping:
+# For the homologous region between the read and the genome all matches
+# should be approximately on the same diagonal.
+# Small deviations may arise from deletions/insertions (indels).
+# As long as no indel occurs, the match diagonal should
+# always be the same.
+# However, we can expect to have some unspecific *k-mer* matches, too.
+# But the diagonal of unspecific matches differs significantly from the
+# diagonal of the 'correct' matches.
+# Therefore, we select the diagonal with the highest frequency as the
+# 'correct' diagonal for each read.
 
-best_diagonals = [None] * len(all_diagonals)
-for i, diagonals_for_read in enumerate(all_diagonals):
-    diag, counts = np.unique(diagonals_for_read, return_counts=True)
-    if len(diag) == 0:
+# Pick the matches for the 6th read as example
+INDEX = 5
+matches = all_matches[INDEX]
+read_length = len(compl_reads[INDEX])
+
+# Find the correct diagonal for the example read
+diagonals = matches[:,2] - matches[:,0]
+diag, counts = np.unique(diagonals, return_counts=True)
+correct_diagonal = diag[np.argmax(counts)]
+
+# Visualize the matches and the correct diagonal
+fig, ax = plt.subplots(figsize=(8.0, 8.0))
+ax.scatter(
+    matches[:,0], matches[:,2],
+    s=4, marker="o", color=biotite.colors["dimorange"], label="Match"
+)
+ax.plot(
+    [0, read_length], [correct_diagonal, read_length+correct_diagonal],
+    linestyle=":", linewidth=1.0, color="black", label="Correct diagonal"
+)
+ax.set_xlim(0, read_length)
+ax.set_xlabel("Read position")
+ax.set_ylabel("Reference genome position")
+ax.legend()
+fig.tight_layout()
+
+
+# Find the correct diagonal for all reads
+correct_diagonals = [None] * len(all_matches)
+for i, matches in enumerate(all_matches):
+    diagonals = matches[:,2] - matches[:,0]
+    unqiue_diag, counts = np.unique(diagonals, return_counts=True)
+    if len(unqiue_diag) == 0:
         # If no match is found for this sequence, ignore this sequence
         continue
-    best_diagonals[i] = diag[np.argmax(counts)]
-del all_diagonals
+    correct_diagonals[i] = unqiue_diag[np.argmax(counts)]
+del matches
 
 ########################################################################
+# As already outlined, we would like to limit the alignment search space
+# to the matching diagonal of the read and the reference genome
+# to reduce the computation time.
+# Hence, we use :func:`align_banded()` to align the sequences.
+# This function aligns two sequences within a diagonal band, defined by
+# a lower diagonal :math:`D_L` and an upper diagonal :math:`D_U` [6]_.
+# Two symbols at position *i* and *j* can only be
+# aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
+# This also means, that the algorithm will not find an alignment,
+# where due to indels it would leave the defined
+# band.
+#
+# We can safely center the band at the correct diagonal we obtained
+# in the previous step for each read, but how do we choose the width
+# of the band, i.e. :math:`D_U - D_L` or in other words the number of
+# indels we allow?
+#
+# Statistics may help us here.
+# As mentioned above, the utilized sequencing technique is relatively
+# error-prone.
+# Hence, let's assume that the number of true indels between the
+# original SARS-CoV-2 and the B.1.1.7 variant can be ignored compared to
+# the larger number of indels introduced by sequencing errors.
+# The indel error rates are approximately known for the
+# *MinION* [7]_.
+# Based on these probabilities we can define a band that will most
+# probably be broad enough to cover the number of appearing read
+# indels [8]_.
 
 BAND_WIDTH = 100
 THRESHOLD_SCORE = 200
@@ -222,7 +320,7 @@ def map_sequence(read, diag):
 
 with ProcessPoolExecutor() as executor:
     alignments = list(executor.map(
-        map_sequence, compl_reads, best_diagonals, chunksize=1000
+        map_sequence, compl_reads, correct_diagonals, chunksize=1000
     ))
 
 alignments = [alignment
@@ -418,7 +516,7 @@ feature_ax.set_xlim(0, len(orig_genome))
 feature_ax.xaxis.set_visible(False)
 feature_ax.yaxis.set_visible(False)
 feature_ax.set_frame_on(False)
-# sphinx_gallery_thumbnail_number = 5
+# sphinx_gallery_thumbnail_number = 6
 
 ########################################################################
 # The *S* gene codes for the infamous *spike protein*: a membrane
@@ -444,7 +542,7 @@ var_spike_prot_seq  =  var_spike_seq.translate(complete=True)
 
 
 spike_annotation_file = gb.GenBankFile.read(entrez.fetch(
-    "P0DTC2", ".", "gp", db_name="Protein", ret_type="gp"
+    "P0DTC2", tempfile.gettempdir(), "gp", db_name="Protein", ret_type="gp"
 ))
 
 with warnings.catch_warnings():
@@ -527,7 +625,7 @@ fig.tight_layout()
 plt.show()
 
 ########################################################################
-# [3]_
+# 
 #
 # References
 # ----------
@@ -537,4 +635,19 @@ plt.show()
 #    "The Sanger FASTQ file format for sequences with quality scores, 
 #    and the Solexa/Illumina FASTQ variants."
 #    Nucleic Acids Res, 38, 1767-1771 (2010).
-# .. [3] https://asm.org/Articles/2021/January/B-1-1-7-What-We-Know-About-the-Novel-SARS-CoV-2-Va
+# .. [?]
+# .. [4] SB Needleman, CD Wunsch,
+#    "A general method applicable to the search for similarities
+#    in the amino acid sequence of two proteins."
+#    J Mol Biol, 48, 443-453 (1970).
+# .. [5] SF Altschul, W Gish, W Miller, EW Myers, DJ Lipman,
+#    "Basic local alignment search tool."
+#    J Mol Biol, 215, 403-410 (1990).
+# .. [6] KM Chao, W Pearson, W Miller,
+#    "Aligning two sequences within a specified diagonal band."
+#    Bioinformatics, 8, 481-487 (1992).
+# .. [7] 
+# .. [8] JF Gibrat,
+#    "A short note on dynamic programming in a band."
+#    BMC Bioinformatics, 19 (2018).
+# .. [9] https://asm.org/Articles/2021/January/B-1-1-7-What-We-Know-About-the-Novel-SARS-CoV-2-Va
