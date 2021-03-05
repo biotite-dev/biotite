@@ -149,7 +149,7 @@ fig.tight_layout()
 # Optionally, you could exclude reads with exceptionally low Phred
 # scores [?]_.
 # But instead we will rely on a high sequencing depth to filter out
-# erroneous base calls
+# erroneous base calls.
 #
 # Read mapping
 # ------------
@@ -276,7 +276,8 @@ del matches
 ########################################################################
 # As already outlined, we would like to limit the alignment search space
 # to the matching diagonal of the read and the reference genome
-# to reduce the computation time.
+# (including some buffer to account for indels) to reduce the
+# computation time.
 # Hence, we use :func:`align_banded()` to align the sequences.
 # This function aligns two sequences within a diagonal band, defined by
 # a lower diagonal :math:`D_L` and an upper diagonal :math:`D_U` [6]_.
@@ -287,9 +288,9 @@ del matches
 # band.
 #
 # We can safely center the band at the correct diagonal we obtained
-# in the previous step for each read, but how do we choose the width
-# of the band, i.e. :math:`D_U - D_L` or in other words the number of
-# indels we allow?
+# in the previous step for each read, but how do we choose the maximum
+# deviation from the center of the band, i.e. the maximum number of
+# indels we allow in either direction?
 #
 # Statistics may help us here.
 # As mentioned above, the utilized sequencing technique is relatively
@@ -298,23 +299,41 @@ del matches
 # original SARS-CoV-2 and the B.1.1.7 variant can be ignored compared to
 # the larger number of indels introduced by sequencing errors.
 # The indel error rates are approximately known for the
-# *MinION* [7]_.
+# *MinION* [7]_:
+# insertion rate :math:`p_i = 0.03`, deletion rate :math:`p_d = 0.05`.
 # Based on these probabilities we can define a band that will most
 # probably be broad enough to cover the number of appearing read
 # indels [8]_.
+# :math:`\sigma` gives the standard deviation from the correct diagonal
+# and can be calculated as
+#
+# .. math::
+#
+#    \sigma = \sqrt{4 N (p_i + p_d - p_i^2 - p_i^2)}
+#
+# where :math:`N` is the read length.
+# We choose :math:`3 \sigma` as the deviation from the center of the
+# band, resulting in a :math:`< 0.3%` chance that the optimal alignment
+# path would leave the band.
+#
+# Although, the computation time is massively reduced by using
+# :func:`align_banded()`, the following step is still the most
+# time-consuming one.
+# Therefore, we use multiprocessing to spread the task to multiple cores
+# on multi-core architectures.
 
-BAND_WIDTH = 100
-THRESHOLD_SCORE = 200
+P_INDEL = 4 * (0.03 + 0.05 - 0.03**2 - 0.05**2)
 
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
 def map_sequence(read, diag):
+    deviation = int(3 * np.sqrt(len(read) * P_INDEL))
     if diag is None:
         return None
     else:
         return align.align_banded(
             read, orig_genome, matrix, gap_penalty=-10,
-            band = (diag - BAND_WIDTH//2, diag + BAND_WIDTH//2),
+            band = (diag - deviation, diag + deviation),
             max_number = 1
         )[0]
 
@@ -323,12 +342,10 @@ with ProcessPoolExecutor() as executor:
         map_sequence, compl_reads, correct_diagonals, chunksize=1000
     ))
 
-alignments = [alignment
-              if alignment is not None
-              and alignment.score > THRESHOLD_SCORE else None
-              for alignment in alignments]
-
 ########################################################################
+# Now we have to select for each read, whether original or complementary
+# strand is the one homologous to the reference genome.
+# We simply select the one with the higher score.
 
 for_alignments = [alignments[i] for i in range(0, len(alignments), 2)]
 rev_alignments = [alignments[i] for i in range(1, len(alignments), 2)]
@@ -342,22 +359,28 @@ correct_sense = np.argmax(scores, axis=-1)
 correct_alignments = [for_a if sense == 0 else rev_a for for_a, rev_a, sense
                       in zip(for_alignments, rev_alignments, correct_sense)]
 # If we use a reverse complementary read,
-# we also need to reverse the scores
+# we also need to reverse the Phred score arrays
 correct_score_arrays = [score if sense == 0 else score[::-1] for score, sense
                         in zip(score_arrays, correct_sense)]
 
 ########################################################################
+# Now we know for each read where its corresponding position on the
+# reference genome is.
+# The mapping is complete.
+# Eventually, we visualize the mapping.
 
+# Find genome positions for the starts and ends of all reads
 starts = np.array(
     [ali.trace[ 0, 1] for ali in correct_alignments if ali is not None]
 )
 stops = np.array(
     [ali.trace[-1, 1] for ali in correct_alignments if ali is not None]
 )
+# For a nicer plot sort these by their start position
 order = np.argsort(starts)
 starts = starts[order]
 stops = stops[order]
-              
+
 fig, ax = plt.subplots(figsize=(8.0, 12.0))
 ax.barh(
     np.arange(len(starts)), left=starts, width=stops-starts, height=1,
@@ -376,11 +399,80 @@ fig.tight_layout()
 # Variant calling
 # ---------------
 #
+# Variant calling is the process of identifying substitutions and indels
+# in the sequencing data compared to a reference genome.
+# Generally, this task is not necessarily straight-forward: For example,
+# the sequencing data might originate from to a diploid genome, so there
+# might be two variants for each position due to heterozygosity.
+# In our case we analyze a virus genome, so we expect only a single
+# variant, which makes the challenge much easier.
+#
+# Sophisticated variant calling methods may take a lot of factors into
+# account, e.g. expected GC content, error rates, etc., to tackle the
+# problem of erroneous base calls from the sequencer.
+# in this script we will take a rather simple approach.
+#
+# Considering a single locus, we are interested in finding the most
+# probable base from the sequencing data, or in other words the base
+# that is least the result of a sequencing error.
+# For a symbol (base) :math:`s \in \{ A, C, G, T\}` the probability
+# :math:`P` of having a genotype :math:`G \neq s` dependent on all base
+# calls :math:`c_i` is proportional to the product of the error
+# probabilities for each base call.
+#
+# .. math::
+#
+#   P(G \neq s | c_1, ... c_n) \propto \prod_{i: c_i = s} p(G \neq s | c_i)
+#
+# The proportionality instead of equality applies here, as this formula
+# ignores base calls where :math:`c_i \neq s`.
+# However, in this case :math:`p(G \neq s | c_i)` is equal for all
+# symbols :math:`s`.
+# Therefore, these terms have the same impact on :math:`P(G \neq s)` for
+# all :math:`s` and do not change which symbol is the most probable.
+#
+# As we consider the base that is least the result of a sequencing
+# error as most probable genotype, we need to find :math:`s_G`, where
+#
+# .. math::
+#
+#   s_G = {\arg\min}_s \left( \prod_{i: c_i = s} p(G \neq s | c_i) \right).
+#
+# We can replace the base call error probability
+# :math:`p(G \neq s | c_i)` with an expression for the Phred score.
+#
+# .. math::
+#
+#   s_G = {\arg\min}_s \left( \prod_{i: c_i = s} 10^{-\frac{Q_i}{10}} \right)
+#
+# To simplify this equation we can take the logarithm on the right
+# expression, as the logarithm is a monotonic function.
+#
+# .. math::
+#
+#   s_G = {\arg\min}_s \left( \sum_{i: c_i = s} log_{10}\left(10^{-\frac{Q_i}{10}}\right) \right)
+#
+#   s_G = {\arg\min}_s \left( \sum_{i: c_i = s} -\frac{Q_i}{10} \right)
+#
+#   s_G = {\arg\min}_s \left( \sum_{i: c_i = s} -Q_i \right)
+#
+#   s_G = {\arg\max}_s \left( \sum_{i: c_i = s} Q_i \right)
+#
+# This means we have to find the symbol with the maximum sum of
+# supporting Phred scores.
+# This approach is quite intuitive:
+# The more often a base has been called, weighted with the certainty of
+# the sequencer, the more likely this base is truly at this position.
+#
 # .. note:: For the sake of brevity possible insertions into the
 #    reference genome are not considered in the approach shown here.
 
+# There are four possible bases for each genome position
 phred_sum = np.zeros((len(orig_genome), 4), dtype=int)
+# Track the sequencing depth over the genome for visualization purposes
 sequencing_depth = np.zeros(len(orig_genome), dtype=int)
+# Also track how many reads have called a deletion
+# for each genome postion
 deletion_number = np.zeros(len(orig_genome), dtype=int)
 
 for alignment, score_array in zip(correct_alignments, correct_score_arrays):
@@ -388,22 +480,33 @@ for alignment, score_array in zip(correct_alignments, correct_score_arrays):
         trace = alignment.trace
         
         no_gap_trace = trace[(trace[:,0] != -1) & (trace[:,1] != -1)]
+        # Get the sequence code for the aligned read symbols
         seq_code = alignment.sequences[0].code[no_gap_trace[:,0]]
+        # The sequence code contains the integers 0 - 3;
+        # one for each possible base
+        # Hence, we can use these integers directly to index the second
+        # dimension of the Pred score sum
+        # The index for the first dimension contains simply the genome
+        # positions taken from the alignment trace
         phred_sum[no_gap_trace[:,1], seq_code] \
             += score_array[no_gap_trace[:,0]]
         
-        no_genome_gap_trace = trace[trace[:,1] != -1]
         sequencing_depth[
-            no_genome_gap_trace[0,1] : no_genome_gap_trace[-1,1]
+            trace[0,1] : trace[-1,1]
         ] += 1
         
         read_gap_trace = trace[trace[:,0] == -1]
         deletion_number[read_gap_trace[:,1]] += 1
 
-########################################################################
-
+# Call the most probable base for each genome position according to the
+# formula above
 most_probable_symbol_codes = np.argmax(phred_sum, axis=1)
-max_phred_sum = phred_sum[np.arange(len(phred_sum)), most_probable_symbol_codes]
+
+
+# Visualize the sequencing depth and score sum over the genome
+max_phred_sum = phred_sum[
+    np.arange(len(phred_sum)), most_probable_symbol_codes
+]
 
 def moving_average(data_set, window_size):
     weights = np.full(window_size, 1/window_size)
@@ -433,10 +536,15 @@ ax.legend(
 fig.tight_layout()
 
 ########################################################################
-# No region has generally bad Phred score
+# We are finally reaching the last step of the assembly.
+# Until now we only covered substitutions, but we also need to cover
+# deletions.
+# The statistics are more complex here, as a missing base in a read has
+# of course no assigned Phred score.
+# For the purpose of this example script we simply define as threshold:
+# At least 60 % of all reads covering a certain location must call a
+# deletion for this location, otherwise the deletion is rejected
 
-# At least 60 % of all reads at a position must include a deletion,
-# so that the deletion is accepted
 DELETION_THRESHOLD = 0.6
 
 var_genome = seq.NucleotideSequence()
@@ -460,8 +568,14 @@ out_file.write(tempfile.NamedTemporaryFile("w"))
 #
 # Mutations in the B.1.1.7 variant
 # --------------------------------
+#
+# To get an rough overview about the overall sequence identity between
+# the genomes and the locations of mutations in the B.1.1.7 variant,
+# we need to align the original genome to our assembled one.
+# As both genomes are expected to be highly similar, we can use a banded
+# alignment again using a very conservative band width.
 
-BAND_WIDTH = 200
+BAND_WIDTH = 1000
 
 genome_alignment = align.align_banded(
     var_genome, orig_genome, matrix,
@@ -471,12 +585,19 @@ identity = align.get_sequence_identity(genome_alignment, 'all')
 print(f"Sequence identity: {identity * 100:.2f} %")
 
 ########################################################################
+# Now we would like to have a closer look at the mutation locations.
+# To contextualize the locations we plot the mutation frequency along
+# with the gene locations.
+# The genomic coordinates for each gene can be extracted from the
+# already downloaded *GenBank* file of the reference genome.
 
 N_BINS = 50
 
+# Get genomic coordinates for all SARS-Cov-2 genes
 gb_file = gb.GenBankFile.read(orig_genome_file)
 annot_seq = gb.get_annotated_sequence(gb_file, include_only=["gene"])
 
+# Calculate the sequence identity within each bin
 bin_identities = np.zeros(N_BINS)
 edges = np.linspace(0, len(orig_genome), N_BINS+1)
 for i, (bin_start, bin_stop) in enumerate(zip(edges[:-1], edges[1:])):
@@ -487,6 +608,7 @@ for i, (bin_start, bin_stop) in enumerate(zip(edges[:-1], edges[1:])):
 
 fig, (deviation_ax, feature_ax) = plt.subplots(nrows=2, figsize=(8.0, 5.0))
 
+# Plot the deviation = 1 - sequence identity
 deviation_ax.bar(
     edges[:-1], width=(edges[1:]-edges[:-1]),
     height=(1 - bin_identities),
@@ -498,6 +620,7 @@ deviation_ax.set_title("Sequence deviation of SARS-CoV-2 B.1.1.7 variant")
 deviation_ax.set_yscale("log")
 deviation_ax.set_ylim(1e-3, 1e-1)
 
+# Plot genmic coordinates of the genes
 for i, feature in enumerate(sorted(
     annot_seq.annotation,
     key=lambda feature: min([loc.first for loc in feature.locs])
@@ -526,7 +649,8 @@ feature_ax.set_frame_on(False)
 #
 # Differences in the Spike protein
 # --------------------------------
-# 
+#
+#
 
 for feature in annot_seq.annotation:
     if feature.qual["gene"] == "S":
@@ -646,7 +770,11 @@ plt.show()
 # .. [6] KM Chao, W Pearson, W Miller,
 #    "Aligning two sequences within a specified diagonal band."
 #    Bioinformatics, 8, 481-487 (1992).
-# .. [7] 
+# .. [7] AD Tyler, L Mataseje, CJ Urfano, L Schmidt, KS Antonation,
+#    MR Mulvey, CR Corbett,
+#    "Evaluation of Oxford Nanopore’s MinION sequencing device for 
+#    microbial whole genome sequencing applications."
+#    Sci Rep, 8 (2018). 
 # .. [8] JF Gibrat,
 #    "A short note on dynamic programming in a band."
 #    BMC Bioinformatics, 19 (2018).
