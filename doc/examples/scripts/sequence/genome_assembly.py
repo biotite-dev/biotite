@@ -82,7 +82,7 @@ print(f"Number of reads: {len(reads)}")
 # General sequencing data analysis
 # --------------------------------
 #
-# First we will have a first glance on the quality of the sequencing
+# First we have a first glance on the quality of the sequencing
 # data: the length of the reads and the Phred scores.
 
 N_BINS = 200
@@ -148,13 +148,13 @@ fig.tight_layout()
 ########################################################################
 # Optionally, you could exclude reads with exceptionally low Phred
 # scores [?]_.
-# But instead we will rely on a high sequencing depth to filter out
+# But instead we rely on a high sequencing depth to filter out
 # erroneous base calls.
 #
 # Read mapping
 # ------------
 #
-# In the next step we will map each read to its respective position
+# In the next step we map each read to its respective position
 # in the reference genome.
 # An additional challenge is to find the correct sense of the read:
 # In the library preparation both, sense and complementary DNA, is
@@ -206,8 +206,6 @@ genome_table.add(orig_genome, 0)
 
 all_matches = []
 for i, read in enumerate(compl_reads):
-    if not i % 1000:
-        print(i, end="\r")
     all_matches.append(genome_table.match_sequence(read))
 
 # k-mer tables use quite a large amount of RAM
@@ -217,8 +215,9 @@ del genome_table
 ########################################################################
 # However, we can expect a lot of consecutive *k-mer* match positions
 # for each read:
-# For example, for :math:`k = 3`, the nucleotide `ACATT` compared to
-# itself would give matches for the *k-mers* `ACA`, `CAT` and `ATT`.
+# For example, for :math:`k = 3`, the nucleotide ``ACATT`` compared to
+# itself would give matches for the *k-mers* ``ACA``, ``CAT`` and
+# ``ATT``.
 # The respective match positions would be `(0,0)`, `(1,1)` and `(2,2)`.
 # However, the diagonal :math:`D = j - i`, where *i* and *j* are
 # positions in the first and second sequence respectively, is always the
@@ -283,7 +282,7 @@ del matches
 # a lower diagonal :math:`D_L` and an upper diagonal :math:`D_U` [6]_.
 # Two symbols at position *i* and *j* can only be
 # aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
-# This also means, that the algorithm will not find an alignment,
+# This also means, that the algorithm does not find an alignment,
 # where due to indels it would leave the defined
 # band.
 #
@@ -410,7 +409,7 @@ fig.tight_layout()
 # Sophisticated variant calling methods may take a lot of factors into
 # account, e.g. expected GC content, error rates, etc., to tackle the
 # problem of erroneous base calls from the sequencer.
-# in this script we will take a rather simple approach.
+# in this script we take a rather simple approach.
 #
 # Considering a single locus, we are interested in finding the most
 # probable base from the sequencing data, or in other words the base
@@ -465,7 +464,7 @@ fig.tight_layout()
 # the sequencer, the more likely this base is truly at this position.
 #
 # .. note:: For the sake of brevity possible insertions into the
-#    reference genome are not considered in the approach shown here.
+#    reference genome are not considered in the method shown here.
 
 # There are four possible bases for each genome position
 phred_sum = np.zeros((len(orig_genome), 4), dtype=int)
@@ -602,7 +601,9 @@ bin_identities = np.zeros(N_BINS)
 edges = np.linspace(0, len(orig_genome), N_BINS+1)
 for i, (bin_start, bin_stop) in enumerate(zip(edges[:-1], edges[1:])):
     orig_genome_trace = genome_alignment.trace[:,1]
-    excerpt = genome_alignment[(orig_genome_trace >= bin_start) & (orig_genome_trace < bin_stop)]
+    excerpt = genome_alignment[
+        (orig_genome_trace >= bin_start) & (orig_genome_trace < bin_stop)
+    ]
     bin_identities[i] = align.get_sequence_identity(excerpt, "all")
 
 
@@ -647,62 +648,68 @@ feature_ax.set_frame_on(False)
 # the host cell.
 # Let's have closer look on it.
 #
-# Differences in the Spike protein
+# Differences in the spike protein
 # --------------------------------
 #
-#
+# For the investigation of the spike protein differences between the
+# original and the varaint SARS-CoV-2, we need to acquire the
+# corresponding protein sequences.
+# The location of the spike protein is annotated in the *GenBank* file
+# for the reference genome.
+# The homologous sequence for B.1.1.7 can be obtained by global
+# sequence alignment of the spike gene sequence with the variant genome.
+# Eventually, we can translate the gene sequences into protein sequences
+# and compare them with each other - again by aligning them.
+# To add meaning to the location of mutations we look at them in the
+# context of the spike protein features/domains, which are well
+# known [9]_.
 
+SYMBOLS_PER_LINE = 75
+SPACING = 3
+
+# The locations of some notable spike protein regions
+FEATURES = {
+    # Signal peptide
+    "SP":  (   1,   12),
+    # N-terminal domain
+    "NTD": (  14,  303),
+    # Receptor binding domain
+    "RBD": ( 319,  541),
+    # Fusion peptide
+    "FP":  ( 788,  806),
+    # Transmembrane domain
+    "TM":  (1214, 1234),
+    # Cytoplasmatic tail
+    "CT":  (1269, 1273),
+}
+
+# Get RNA sequence coding for spike protein from the reference genome
 for feature in annot_seq.annotation:
     if feature.qual["gene"] == "S":
         orig_spike_seq = annot_seq[feature]
-        
+
+# Align spike protein sequence to variant genome to get the B.1.1.7
+# spike protein sequence
 alignment = align.align_optimal(
     var_genome, orig_spike_seq, matrix, local=True, max_number=1
 )[0]
 var_spike_seq = var_genome[alignment.trace[alignment.trace[:,0] != -1, 0]]
 
-orig_spike_prot_seq = orig_spike_seq.translate(complete=True)
-var_spike_prot_seq  =  var_spike_seq.translate(complete=True)
+# Obtain protein sequences from RNA sequences
+orig_spike_prot_seq = orig_spike_seq.translate(complete=True).remove_stops()
+var_spike_prot_seq  =  var_spike_seq.translate(complete=True).remove_stops()
 
-
-spike_annotation_file = gb.GenBankFile.read(entrez.fetch(
-    "P0DTC2", tempfile.gettempdir(), "gp", db_name="Protein", ret_type="gp"
-))
-
-with warnings.catch_warnings():
-    # Ignore warnings about unsupported bond location identifiers
-    warnings.simplefilter("ignore")
-    spike_annotation = gb.get_annotation(spike_annotation_file)
-
-spike_features = {}
-# Get the sequence locations of the signal peptide
-# and the receptor-binding domain (RBD)
-for feature in spike_annotation:
-    qual = feature.qual
-    if "region_name" in qual and "Signal" in qual["region_name"]:
-        # Expect only one location, i.e. the feature is continuous
-        loc = list(feature.locs)[0]
-        spike_features["Signal"] = (loc.first, loc.last)
-    if "note" in qual and "RBD" in qual["note"]:
-        loc = list(feature.locs)[0]
-        spike_features["RBD"] = (loc.first, loc.last)
-
-for feature_name, loc in spike_features.items():
-    print(f"{feature_name}: {loc[0]} - {loc[1]}")
-
-########################################################################
-
-SYMBOLS_PER_LINE = 75
-SPACING = 3
-
+# Align both protein sequences with each other for later comparison
 blosum_matrix = align.SubstitutionMatrix.std_protein_matrix()
 alignment = align.align_optimal(
     var_spike_prot_seq, orig_spike_prot_seq, blosum_matrix, max_number=1
 )[0]
 
+
 fig = plt.figure(figsize=(8.0, 10.0))
 ax = fig.add_subplot(111)
 
+# Plot alignment
 cmap = LinearSegmentedColormap.from_list(
     "custom", colors=[(1.0, 0.3, 0.3), (1.0, 1.0, 1.0)]
     #                    ^ reddish        ^ white
@@ -713,6 +720,7 @@ graphics.plot_alignment_similarity_based(
     number_size=9, symbol_size=7, spacing=SPACING, cmap=cmap
 )
 
+## Add indicator for features to the alignment
 for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
     col_start = SYMBOLS_PER_LINE * row
     col_stop  = SYMBOLS_PER_LINE * (row + 1)
@@ -724,14 +732,15 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
     n_sequences = len(alignment.sequences)
     y_base = (n_sequences + SPACING) * row + n_sequences
     
-    for feature_name, (start, stop) in spike_features.items():
+    for feature_name, (first, last) in FEATURES.items():
         # Zero based sequence indexing
-        start -= 1
-        # Stop needs not to be adjusted, since we use exclusive stops
+        start = first-1
+        # Exclusive stop
+        stop = last
         if start < seq_stop and stop > seq_start:
             # The feature is found in this line
-            x_begin = np.clip(start - seq_start,    0, SYMBOLS_PER_LINE+1)
-            x_end   = np.clip(stop - seq_start + 1, 0, SYMBOLS_PER_LINE+1)
+            x_begin = np.clip(start - seq_start, 0, SYMBOLS_PER_LINE)
+            x_end   = np.clip(stop - seq_start,  0, SYMBOLS_PER_LINE)
             x_mean = (x_begin + x_end) / 2
             y_line = y_base + 0.3
             y_text = y_base + 0.6
@@ -741,15 +750,25 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
             )
             ax.text(
                 x_mean, y_text, feature_name, 
-                fontsize=8, va="top"
+                fontsize=8, va="top", ha="center"
             )
-
+# Increase y-limit to include the feature indicators in the last line 
+ax.set_ylim(y_text, 0)
 fig.tight_layout()
 
 plt.show()
 
 ########################################################################
-# 
+# The most relevant mutations displayed here are the Δ69/70 deletion and
+# the N501Y and D614G substitutions. Δ69/70 might allosterically change
+# the protein conformation [10]_.
+# D614G [11]_ and N501Y [12]_ increase the efficiency of host cell
+# infection.
+# For N501Y the reason is apparent:
+# Being located in the RBD, this residue interacts directly with the
+# human host cell receptor *angiotensin-converting enzyme 2* (ACE2).
+# Therefore, by increasing the binding affinity for ACE2, the infection
+# is also facilitated.
 #
 # References
 # ----------
@@ -778,4 +797,23 @@ plt.show()
 # .. [8] JF Gibrat,
 #    "A short note on dynamic programming in a band."
 #    BMC Bioinformatics, 19 (2018).
-# .. [9] https://asm.org/Articles/2021/January/B-1-1-7-What-We-Know-About-the-Novel-SARS-CoV-2-Va
+# .. [9] X Xia,
+#    "Domains and functions of spike protein in SARS-Cov-2 in the
+#    context of vaccine design."
+#    Viruses, 13, 109 (2021).
+# .. [10] X Xie, Y Liu, X Zhang, J Zou, CR Fontes-Garfias, H Xia,
+#    KA Swanson, M Cutler, D Cooper, VD Menachery, SC Weaver,
+#    PR Dormitzer, PY Shi,
+#    "Neutralization of SARS-CoV-2 spike 69/70 deletion, E484K and N501Y
+#    variants by BNT162b2 accine-elicited sera."
+#    Nat Med (2021).
+# .. [11] Z Daniloski, TX Jordan, JK Ilmain, X Guo, G Bhabha,
+#    BR Tenoever, NE Sanjana,
+#    "The Spike D614G mutation increases SARS-CoV-2 infection of
+#    multiple human cell types."
+#    eLife, 10, e65365 (2021).
+# .. [12] F Tian, B Tong, L Sun, S Shi, B Zheng, Z Wang, X Dong,
+#    P Zheng,
+#    "Mutation N501Y in RBD of Spike Protein Strengthens the Interaction
+#    between COVID-19 and its Receptor ACE2."
+#    BioRxiv (2021).
