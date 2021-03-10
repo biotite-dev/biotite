@@ -417,18 +417,16 @@ fig.tight_layout()
 # For a symbol (base) :math:`s \in \{ A, C, G, T\}` the probability
 # :math:`P` of having a genotype :math:`G \neq s` dependent on all base
 # calls :math:`c_i` is proportional to the product of the error
-# probabilities for each base call.
+# probabilities for each base call, because each base call is considered
+# an independent event.
 #
 # .. math::
 #
 #   P(G \neq s | c_1, ... c_n) \propto \prod_{i: c_i = s} p(G \neq s | c_i)
 #
 # The proportionality instead of equality applies here, as this formula
-# ignores base calls where :math:`c_i \neq s`.
-# However, in this case :math:`p(G \neq s | c_i)` is equal for all
-# symbols :math:`s`.
-# Therefore, these terms have the same impact on :math:`P(G \neq s)` for
-# all :math:`s` and do not change which symbol is the most probable.
+# ignores base calls where :math:`c_i \neq s`, because these cases do
+# not have an impact on which base is most probable.
 #
 # As we consider the base that is least the result of a sequencing
 # error as most probable genotype, we need to find :math:`s_G`, where
@@ -438,14 +436,14 @@ fig.tight_layout()
 #   s_G = {\arg\min}_s \left( \prod_{i: c_i = s} p(G \neq s | c_i) \right).
 #
 # We can replace the base call error probability
-# :math:`p(G \neq s | c_i)` with an expression for the Phred score.
+# :math:`p(G \neq s | c_i)`, as it is given by the Phred score.
 #
 # .. math::
 #
 #   s_G = {\arg\min}_s \left( \prod_{i: c_i = s} 10^{-\frac{Q_i}{10}} \right)
 #
-# To simplify this equation we can take the logarithm on the right
-# expression, as the logarithm is a monotonic function.
+# To simplify this equation we can take the logarithm of product on the
+# right expression, as the logarithm is a monotonic function.
 #
 # .. math::
 #
