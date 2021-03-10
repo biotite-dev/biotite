@@ -556,13 +556,13 @@ for reference_index, position in kmer_table[kmer_alphabet.encode("ITE")]:
 # reference :class:`KmerTable` with the query sequence.
 # A match is a *k-mer* that appears in both, the table and the query
 # sequence.
-# The :meth:`KmerTable.match_sequence()` method iterates over all
+# The :meth:`KmerTable.match()` method iterates over all
 # overlapping *k-mers* in the query and checks whether the
 # :class:`KmerTable` has at least one position for this k-mer.
 # If it does, it adds the position in the query and all corresponding
 # positions saved in the :class:`KmerTable` to the matches
 
-matches = kmer_table.match_sequence(query)
+matches = kmer_table.match(query)
 # Filter out the reference index, because we have only one sequence
 # in the table anyway
 matches = matches[:, [0,2]]

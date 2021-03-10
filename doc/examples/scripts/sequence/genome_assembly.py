@@ -206,7 +206,7 @@ genome_table.add(orig_genome, 0)
 
 all_matches = []
 for i, read in enumerate(compl_reads):
-    all_matches.append(genome_table.match_sequence(read))
+    all_matches.append(genome_table.match(read))
 
 # k-mer tables use quite a large amount of RAM
 # and we do not need those objects anymore

@@ -50,9 +50,9 @@ def test_add(alphabet, k, random_sequences):
 
 
 @pytest.mark.parametrize("use_similarity_rule", [False, True])
-def test_match(use_similarity_rule):
+def test_match_table(use_similarity_rule):
     """
-    Test the :meth:`match()` method based on a known example.
+    Test the :meth:`match_table()` method based on a known example.
     
     Using the similarity rule should give the same result, as it is
     chosen to yield only the same k-mer as similar k-mer.
@@ -92,7 +92,7 @@ def test_match(use_similarity_rule):
         (0, 65),
     ])
 
-    test_matches = table1.match(table2, similarity_rule=rule)
+    test_matches = table1.match_table(table2, similarity_rule=rule)
     # the reference indices are irrelevant for this test
     test_matches = test_matches[:, [1,3]]
     test_matches = set([tuple(match) for match in test_matches])
@@ -100,9 +100,9 @@ def test_match(use_similarity_rule):
 
 
 @pytest.mark.parametrize("use_similarity_rule", [False, True])
-def test_match_sequence(alphabet, k, random_sequences, use_similarity_rule):
+def test_match(alphabet, k, random_sequences, use_similarity_rule):
     """
-    Test the :meth:`match_sequence()` method compared to a manual,
+    Test the :meth:`match()` method compared to a manual,
     inefficient approach using indexing.
 
     Using the similarity rule should give the same result, as it is
@@ -130,7 +130,7 @@ def test_match_sequence(alphabet, k, random_sequences, use_similarity_rule):
     ref_matches = np.concatenate(ref_matches)
 
     rule = _identity_rule(alphabet) if use_similarity_rule else None
-    test_matches = table.match_sequence(query_sequence, similarity_rule=rule)
+    test_matches = table.match(query_sequence, similarity_rule=rule)
 
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
@@ -138,7 +138,7 @@ def test_match_sequence(alphabet, k, random_sequences, use_similarity_rule):
 @pytest.mark.parametrize("use_mask", [False, True])
 def test_match_equivalence(alphabet, k, random_sequences, use_mask):
     """
-    Check if both, the :meth:`match()` and meth:`match_sequence()`
+    Check if both, the :meth:`match()` and meth:`match_table()`
     method, find the same matches.
     """
     query_sequence = random_sequences[0]
@@ -163,14 +163,14 @@ def test_match_equivalence(alphabet, k, random_sequences, use_mask):
     ref_table = align.KmerTable(alphabet, k)
     # 42 -> Dummy value that is distinct from all reference indices
     ref_table.add(query_sequence, 42, removal_mask=query_mask)
-    ref_matches = table.match(ref_table)
+    ref_matches = table.match_table(ref_table)
     assert np.all(ref_matches[:,0] == 42)
     # Store matches in set to remove the importance of order
     # The first column is not present in the matches
     # returned by 'match_sequence()' -> [:, 1:]
     ref_matches = set([tuple(match) for match in ref_matches[:, 1:]])
 
-    test_matches = table.match_sequence(
+    test_matches = table.match(
         query_sequence, removal_mask=query_mask
     )
     test_matches = set([tuple(match) for match in test_matches])

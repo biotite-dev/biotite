@@ -81,7 +81,7 @@ DISCARD_RANGE = 50
 table = align.KmerTable(seq.NucleotideSequence.unambiguous_alphabet(), K)
 for i, sequence in enumerate(genomic_seqs):
     table.add(sequence, i)
-matches = table.match_sequence(m1_sequence)
+matches = table.match(m1_sequence)
 
 fig = plt.figure(figsize=(8.0, 8.0))
 

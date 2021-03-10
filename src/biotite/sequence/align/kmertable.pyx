@@ -203,7 +203,7 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, KmerTable table, similarity_rule=None):
+    def match_table(self, KmerTable table, similarity_rule=None):
         """
         For each equal (or similar, if `similarity_rule` is given,)
         k-mer the cartesian product of the entries is calculated.
@@ -307,7 +307,7 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match_sequence(self, sequence, similarity_rule=None,
+    def match(self, sequence, similarity_rule=None,
                        removal_mask=None):
         cdef int INIT_SIZE = 1
         
