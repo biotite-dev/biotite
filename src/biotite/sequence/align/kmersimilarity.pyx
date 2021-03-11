@@ -194,7 +194,7 @@ class ScoreThresholdRule(SimilarityRule):
                 if score >= positional_thresholds[pos]:
                     # Threshold condition is fulfilled:
                     # Either go deeper in the same branch
-                    # (jump one poistion forward) ...
+                    # (jump one position forward) ...
                     if pos < k-1:
                         pos += 1
                         current_split_kmer[pos] = 0
