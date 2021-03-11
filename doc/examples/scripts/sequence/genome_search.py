@@ -36,9 +36,6 @@ import biotite.application.viennarna as viennarna
 
 
 # Download Escherichia coli BL21 and Salmonella enterica genome
-file_name = entrez.fetch_single_file(
-    ["CP001509", "CP019649"], "sequence.fasta", "nuccore", "gb"
-)
 gb_file = gb.MultiFile.read(entrez.fetch_single_file(
     ["CP001509", "CP019649"], None, "nuccore", "gb"
 ))
