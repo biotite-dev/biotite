@@ -18,16 +18,94 @@ ctypedef np.int32_t int32
 
 class SimilarityRule(metaclass=abc.ABCMeta):
     """
-    Self-similar
-    No duplicates
+    This is the abstract base class for all similarity rules.
+    A :class:`SimilarityRule` calculates all *similar* *k-mers* for
+    a given *k-mer*, while the definition of similarity depends
+    on the derived class.
     """
 
     @abc.abstractmethod
-    def similar_kmers(self, kmer_alphabet, kmer): 
+    def similar_kmers(self, kmer_alphabet, kmer):
+        """
+        Calculate all similar *k-mers* for a given *k-mer*.
+
+        Parameters
+        ----------
+        kmer_alphabet : KmerAlphabet
+            The reference *k-mer* alphabet to select the *k-mers* from.
+        kmer : int
+            The symbol code for the *k-mer* to find similars for.
+        
+        Returns
+        -------
+        similar_kmers : ndarray, dtype=np.int64
+            The symbol codes for all similar *k-mers*.
+        
+        Notes
+        -----
+        The implementations in derived classes must ensure that the
+        returned array
+
+            1. contains no duplicates and
+            2. includes the input `kmer` itself.
+        """
         pass
 
 
 class ScoreThresholdRule(SimilarityRule):
+    """
+    This similarity rule gives all *k-mers* that have a greater or equal
+    similarity score with a given *k-mer* than a defined threshold 
+    score.
+
+    The similarity score :math:`S` of two *k-mers* :math:`a` and
+    :math:`b` is defined as the sum of the pairwise similarity scores
+    from a substitution matrix :math:`M`:
+
+    .. math::
+
+        S(a,b) = \sum_{i=1}^k M(a_i, b_i)
+
+    Therefore, this similarity rule allows substitutions with similar
+    symbols within a *k-mer*.
+
+    This class is especially useful for finding similar *k-mers* in
+    protein sequences.
+
+    Parameters
+    ----------
+    matrix : SubstitutionMatrix
+        The similarity scores are taken from this matrix.
+        The matrix must be symmetric.
+    threshold : int
+        The threshold score.
+        A *k-mer* :math:`b` is regarded as similar to a *k-mer*
+        :math:`a`, if the similarity score between :math:`a` and
+        :math:`b` is equal or greater than the threshold.
+    
+    Notes
+    -----
+    For efficient generation of similar *k-mers* an implementation of
+    the *branch-and-bound* algorithm [1]_ is used.
+
+    References
+    ----------
+    
+    .. [1] M Hauser, CE Mayer, J Söding,
+       "kClust: fast and sensitive clustering of large protein sequence
+       databases."
+       BMC Bioinformatics, 14 (2013).
+    
+    Examples
+    --------
+
+    >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, k=3)
+    >>> matrix = SubstitutionMatrix.std_protein_matrix()
+    >>> rule = ScoreThresholdRule(matrix, threshold=15)
+    >>> similars = rule.similar_kmers(kmer_alphabet, kmer_alphabet.encode("AIW"))
+    >>> print(["".join(s) for s in kmer_alphabet.decode_multiple(similars)])
+    ['AFW', 'AIW', 'ALW', 'AMW', 'AVW', 'CIW', 'GIW', 'SIW', 'SVW', 'TIW', 'VIW', 'XIW']
+    """
 
     def __init__(self, matrix, int32 threshold):
         if not matrix.is_symmetric():
@@ -38,6 +116,21 @@ class ScoreThresholdRule(SimilarityRule):
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def similar_kmers(self, kmer_alphabet, kmer):
+        """
+        Calculate all similar *k-mers* for a given *k-mer*.
+
+        Parameters
+        ----------
+        kmer_alphabet : KmerAlphabet
+            The reference *k-mer* alphabet to select the *k-mers* from.
+        kmer : int
+            The symbol code for the *k-mer* to find similars for.
+        
+        Returns
+        -------
+        similar_kmers : ndarray, dtype=np.int64
+            The symbol codes for all similar *k-mers*.
+        """
         cdef int INIT_SIZE = 1
         
         if not self._matrix.get_alphabet1().extends(
@@ -76,6 +169,8 @@ class ScoreThresholdRule(SimilarityRule):
             positional_thresholds[i] = threshold - total_max_score
             total_max_score += max_scores[split_kmer[i]]
 
+        # 'pos' is the current position within the k-mer
+        # where symbols are substituted
         cdef int pos = 0
         cdef int similar_i = 0
         cdef int32 score
@@ -98,7 +193,8 @@ class ScoreThresholdRule(SimilarityRule):
                 # Check score threshold condition
                 if score >= positional_thresholds[pos]:
                     # Threshold condition is fulfilled:
-                    # Either go deeper in the same branch...
+                    # Either go deeper in the same branch
+                    # (jump one poistion forward) ...
                     if pos < k-1:
                         pos += 1
                         current_split_kmer[pos] = 0
