@@ -92,7 +92,7 @@ cdef class KmerTable:
     pointer points to a C-array that contains
 
         1. The length of the C-array *(int64)*
-        2. The reference index for each match of this *k-mer* *(uint32)*
+        2. The reference ID for each match of this *k-mer* *(uint32)*
         3. The sequence position for each match of this *k-mer* *(uint32)*
     
     Hence, the memory requirements can be quite large for long *k-mers*
@@ -139,8 +139,8 @@ cdef class KmerTable:
 
     Add some sequences to the table:
 
-    >>> table.add(NucleotideSequence("TTATA"), reference_index=0)
-    >>> table.add(NucleotideSequence("CTAG"),  reference_index=1)
+    >>> table.add(NucleotideSequence("TTATA"), ref_id=0)
+    >>> table.add(NucleotideSequence("CTAG"),  ref_id=1)
 
     Display the contents of the table as
     (reference ID, sequence position) tuples:
@@ -204,7 +204,7 @@ cdef class KmerTable:
     # The pointer array is the core of the index table:
     # It maps each possible k-mer (represented by its code) to a
     # C-array of indices.
-    # Each entry in a C-array points to a reference sequence and the
+    # Each entry in a C-array points to a reference ID and the
     # location in that sequence where the respective k-mer appears
     # The memory layout of each C-array is as following:
     #
@@ -252,7 +252,7 @@ cdef class KmerTable:
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def add(self, sequence, uint32 reference_index, removal_mask=None):
+    def add(self, sequence, uint32 ref_id, removal_mask=None):
         """
         If this function raises a :class:`MemoryError` the
         :class:`KmerTable` becomes invalid.
@@ -305,7 +305,7 @@ cdef class KmerTable:
                 (<int64*> kmer_ptr)[0] = length
 
                 # Add k-mer location to C-array
-                kmer_ptr[length-2] = reference_index
+                kmer_ptr[length-2] = ref_id
                 kmer_ptr[length-1] = seq_pos
 
                 # Store new pointer in pointer array

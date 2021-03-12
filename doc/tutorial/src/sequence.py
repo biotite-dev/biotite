@@ -500,13 +500,13 @@ reference = seq.ProteinSequence(
 # Create a k-mer index table...
 kmer_table = align.KmerTable(seq.ProteinSequence.alphabet, k=3)
 # ...and add the k-mers of the reference sequence to it
-kmer_table.add(reference, reference_index=0)
+kmer_table.add(reference, ref_id=0)
 
 ########################################################################
-# The purpose of the reference index is to identify not only the
+# The purpose of the reference ID is to identify not only the
 # position of a *k-mer* in a sequence, but also which sequence is
 # involved, if you add multiple sequences to the table. In this case
-# there is only a single sequence in the table, so the reference index
+# there is only a single sequence in the table, so the reference ID
 # is arbitrary.
 #
 # Let's have a depper look under the hood:
@@ -546,7 +546,7 @@ for kmer in kmer_alphabet.decode_multiple(kmer_codes):
 # respective *k-mer* appears.
 
 # Get all positions for the 'ITE' k-mer
-for reference_index, position in kmer_table[kmer_alphabet.encode("ITE")]:
+for ref_id, position in kmer_table[kmer_alphabet.encode("ITE")]:
     print(position)
 
 ########################################################################
@@ -563,7 +563,7 @@ for reference_index, position in kmer_table[kmer_alphabet.encode("ITE")]:
 # positions saved in the :class:`KmerTable` to the matches
 
 matches = kmer_table.match(query)
-# Filter out the reference index, because we have only one sequence
+# Filter out the reference ID, because we have only one sequence
 # in the table anyway
 matches = matches[:, [0,2]]
 for query_pos, ref_pos in matches:
