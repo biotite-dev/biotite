@@ -23,6 +23,180 @@ ctypedef np.uint64_t ptr
 
 
 cdef class KmerTable:
+    """
+    This class represents a *k-mer* index table.
+    It maps *k-mers* (subsequences with length *k*) to the sequence
+    positions, where the *k-mer* appears.
+    It is primarily used to find *k-mer* matches between two sequences.
+    A match is defined as a *k-mer* that appears in both sequences.
+
+    A sequence can be indexed via the :meth:`add()` method, which takes
+    a :class:`Sequence` and a reference ID.
+    The reference ID is a unique integer, that identifies to which
+    sequence a match position refers to, in case multiple sequences
+    are added to the :class:`KmerTable`.
+    This method iterates through all overlapping *k-mers* in the
+    sequence and, for each *k-mer*, appends the zero-based sequence
+    position of the first symbol in the *k-mer* along with the
+    reference ID to the table entry of the *k-mer*.
+
+    After adding at least one sequence, the :meth:`match()` method
+    iterates through all overlapping *k-mers* in another sequence and,
+    for each *k-mer*, looks up the reference IDs and positions of this
+    *k-mer* in the previously added sequences.
+    For each matching position, it adds the *k-mer* position in this
+    sequence, the matching reference ID and the matching sequence
+    position to the array of matches.
+    Finally these matches are returned to the user.
+
+    :class:`KmerTable` objects can be handled similar to a fixed-sized
+    list for accessing and editing purposes:
+    Indexing a table with a *k-mer* code returns an array
+    of all reference IDs and positions, where this *k-mer* appears.
+    Conversely, setting the table at a given *k-mer* code overwrites
+    the reference IDs and positions for this *k-mer* with new ones.
+    The :meth:`update()` method manually appends new reference IDs and
+    positions to the existing ones, instead of overwriting them.
+    The *k-mer* code for a *k-mer* can be calculated with
+    ``table.kmer_alphabet.encode()`` (see :class:`KmerAlphabet`).
+
+    Parameters
+    ----------
+    alphabet : Alphabet
+        The base alphabet that defines the kind of sequences that are
+        added to / matched by this table.
+        It must be equal to or extend the alphabet of all
+        sequences that are added to the table or are matched.
+    k : int
+        An integer greater than 1 that defines the *k-mer* length.
+    
+    Attributes
+    ----------
+    kmer_alphabet : KmerAlphabet
+        The internal :class:`KmerAlphabet`, that is used to
+        encode all overlapping *k-mers* of an input sequence.
+    alphabet : Alphabet
+        The base alphabet, from which this :class:`KmerTable` was
+        created.
+    k : int
+        The length of the *k-mers*.
+
+    Notes
+    -----
+
+    **Memory consumption**
+
+    For efficient mapping, a :class:`KmerTable` contains a pointer
+    array, that contains one 64-bit pointer for each possible *k-mer*.
+    If there is at least one match for a *k-mer*, the corresponding
+    pointer points to a C-array that contains
+
+        1. The length of the C-array *(int64)*
+        2. The reference index for each match of this *k-mer* *(uint32)*
+        3. The sequence position for each match of this *k-mer* *(uint32)*
+    
+    Hence, the memory requirements can be quite large for long *k-mers*
+    or large alphabets.
+    The required memory space :math:`S` in byte is within the bounds of
+
+    .. math::
+
+        8 n^k + 8L \leq S \leq 16 n^k + 8L,
+
+    where :math:`n` is the number of symbols in the alphabet and
+    :math:`L` is the summed length of all sequences added to the table.
+
+    **Multiprocessing**
+
+    :class:`KmerTable` objects can be used in multi-processed setups:
+    Adding a large database of sequences to a table can be sped up by
+    splitting the database into smaller chunks and adding each chunk
+    to a separate table in separate processes.
+    Eventually, the tables can be merged to one large table using
+    :meth:`merge()`.
+
+    Since :class:`KmerTable` supports the *pickle* protocol,
+    the matching step can also be divided into multiple processes, if
+    multiple sequences need to be matched.
+
+    **Storage on hard drive**
+
+    The most time efficient way to read/write a :class:`KmerTable` is
+    the *pickle* format.
+    If a custom format is desired, the user needs to extract the
+    reference IDs and position for each *k-mer*. To restrict this task
+    to all *k-mer* that have at least one match :meth:`get_kmers()` can
+    be used.
+    Conversely, the reference IDs and position can be restored via
+    :meth:`update()`, which is slightly faster than indexing.
+
+    Examples
+    --------
+
+    Create a *k-mer* index table for unambiguous nucleotide sequences:
+
+    >>> table = KmerTable(NucleotideSequence.unambiguous_alphabet(), k=2)
+
+    Add some sequences to the table:
+
+    >>> table.add(NucleotideSequence("TTATA"), reference_index=0)
+    >>> table.add(NucleotideSequence("CTAG"),  reference_index=1)
+
+    Display the contents of the table as
+    (reference ID, sequence position) tuples:
+
+    >>> print(table)
+    TA: (0, 1), (0, 3), (1, 1)
+    AG: (1, 2)
+    AT: (0, 2)
+    CT: (1, 0)
+    TT: (0, 0)
+
+    Find matches of the table with a sequence:
+
+    >>> query = NucleotideSequence("TAG")
+    >>> matches = table.match(query)
+    >>> for query_pos, table_ref_id, table_pos in matches:
+    ...     print("Query sequence position:", query_pos)
+    ...     print("Table reference ID:  ", table_ref_id)
+    ...     print("Table sequence position:", table_pos)
+    ...     print()
+    Query sequence position: 0
+    Table reference ID: 0
+    Table sequence position: 1
+    <BLANKLINE>
+    Query sequence position: 0
+    Table reference ID: 0
+    Table sequence position: 3
+    <BLANKLINE>
+    Query sequence position: 0
+    Table reference ID: 1
+    Table sequence position: 1
+    <BLANKLINE>
+    Query sequence position: 1
+    Table reference ID: 1
+    Table sequence position: 2
+    <BLANKLINE>
+
+    Get all reference IDs and positions for a given *k-mer*:
+
+    >>> kmer_code = table.kmer_alphabet.encode("TA")
+    >>> print(table[kmer_code])
+    [[0 1]
+     [0 3]
+     [1 1]]
+
+    Edit the table manually:
+
+    >>> table.update(table.kmer_alphabet.encode("TA"), [[2, 42]])
+    >>> table[table.kmer_alphabet.encode("CT")] = [[3, 100], [4, 200]]
+    >>> print(table)
+    TA: (0, 1), (0, 3), (1, 1), (2, 42)
+    AG: (1, 2)
+    AT: (0, 2)
+    CT: (3, 100), (4, 200)
+    TT: (0, 0)
+    """
 
     cdef object _kmer_alph
     cdef int _k

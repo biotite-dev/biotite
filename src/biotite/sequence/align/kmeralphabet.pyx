@@ -49,7 +49,8 @@ class KmerAlphabet(Alphabet):
         The created :class:`KmerAlphabet` contains all combinations of
         *k* symbols from this alphabet.
     k : int
-        An integer ``> 1`` that defines the length of the *k-mers*.
+        An integer greater than 1 that defines the length of the
+        *k-mers*.
     
     Attributes
     ----------
@@ -89,6 +90,7 @@ class KmerAlphabet(Alphabet):
     [3 1]
 
     Encode all overalapping k-mers of a sequence:
+    
     >>> sequence = NucleotideSequence("ATTGCT")
     >>> kmer_codes = kmer_alphabet.create_kmers(sequence.code)
     >>> print(kmer_codes)

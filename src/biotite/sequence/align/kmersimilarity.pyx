@@ -27,6 +27,8 @@ class SimilarityRule(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def similar_kmers(self, kmer_alphabet, kmer):
         """
+        similar_kmers(kmer_alphabet, kmer)
+
         Calculate all similar *k-mers* for a given *k-mer*.
 
         Parameters
@@ -54,6 +56,8 @@ class SimilarityRule(metaclass=abc.ABCMeta):
 
 class ScoreThresholdRule(SimilarityRule):
     """
+    __init__(matrix, threshold)
+
     This similarity rule gives all *k-mers* that have a greater or equal
     similarity score with a given *k-mer* than a defined threshold 
     score.
