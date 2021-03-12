@@ -7,7 +7,9 @@ __all__ = ["KmerTable"]
 
 cimport cython
 cimport numpy as np
-from libc.stdlib cimport realloc, malloc, free
+from cpython.mem cimport PyMem_Malloc as malloc
+from cpython.mem cimport PyMem_Realloc as realloc
+from cpython.mem cimport PyMem_Free as free
 from libc.string cimport memcpy
 
 import numpy as np
