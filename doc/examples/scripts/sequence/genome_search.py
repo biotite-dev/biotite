@@ -4,7 +4,7 @@ Finding homologs of a gene in a genome
 
 .. currentmodule:: biotite.sequence.align
 
-In this example we use a a combination of a :class:`KmerTable`
+In this example we use a combination of a :class:`KmerTable`
 and :func:`align_banded()` to search a genome for homologs to a gene
 from another organism.
 Specifically we take the gene coding for the *M1* RNA from
