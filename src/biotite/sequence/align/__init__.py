@@ -3,7 +3,7 @@
 # information.
 
 """
-This subpackage provides functionality for sequence alignemnts.
+This subpackage provides functionality for sequence alignments.
 
 The two central classes involved are :class:`SubstitutionMatrix` and
 :class:`Alignment`:
@@ -24,6 +24,9 @@ Optionally they also contain the similarity score.
 
 The aligning functions are usually C-accelerated, reducing the
 computation time substantially.
+
+This subpackage also contains functionality for finding *k-mer* matches
+between two sequences, allowing fast heuristic pairwise alignments. 
 """
 
 __name__ = "biotite.sequence.align"
