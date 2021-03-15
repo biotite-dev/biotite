@@ -16,7 +16,7 @@ def k():
 
 @pytest.fixture
 def alphabet():
-    return seq.NucleotideSequence.alphabet_unamb
+    return seq.NucleotideSequence.unambiguous_alphabet()
 
 @pytest.fixture
 def random_sequences(k, alphabet):
@@ -33,20 +33,69 @@ def random_sequences(k, alphabet):
 
 
 
-def test_add(alphabet, k, random_sequences):
+def test_from_sequences(k, random_sequences):
     """
-    Test the :meth:`add()` method, by checking for sequence position,
-    if the position is in the C-array of the corresponding k-mer.
+    Test the :meth:`from_sequences()` constructor, by checking for
+    sequence position, if the position is in the C-array of the
+    corresponding k-mer.
     """
-    table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        table.add(sequence, i)
+    table = align.KmerTable.from_sequences(k, random_sequences)
     kmer_alph = table.kmer_alphabet
 
     for i, sequence in enumerate(random_sequences):
         for j in range(len(sequence) - k + 1):
             kmer = kmer_alph.fuse(sequence.code[j : j+k])
             assert np.array([i,j]) in table[kmer]
+
+
+def test_from_kmers(k, random_sequences):
+    """
+    Test the :meth:`from_kmers()` constructor, by comparing it with an
+    equivalent table created with :meth:`from_sequences()`.
+    """
+    ref_table = align.KmerTable.from_sequences(k, random_sequences)
+    kmer_alph = ref_table.kmer_alphabet
+
+    kmer_arrays = [
+        kmer_alph.create_kmers(sequence.code) for sequence in random_sequences
+    ]
+    test_table = align.KmerTable.from_kmers(kmer_alph, kmer_arrays)
+    
+    assert test_table == ref_table
+
+
+def test_from_tables(k, random_sequences):
+    """
+    Test :meth:`from_tables()` constructor by comparing the merge of
+    single tables with adding sequences directly into a single table.
+    """
+    
+    ref_table = align.KmerTable.from_sequences(
+        k, random_sequences, np.arange(len(random_sequences))
+    )
+
+    tables = [
+        align.KmerTable.from_sequences(k, [sequence], [i])
+        for i, sequence in enumerate(random_sequences)
+    ]
+    test_table = align.KmerTable.from_tables(tables)
+    
+    assert test_table == ref_table
+
+
+def test_from_positions(k, random_sequences):
+    """
+    Test :meth:`from_positions()` constructor by comparing it with an
+    equivalent table created with :meth:`from_sequences()`.
+    """
+    ref_table = align.KmerTable.from_sequences(k, random_sequences)
+
+    kmer_dict = {kmer : ref_table[kmer] for kmer in range(len(ref_table))}
+    test_table = align.KmerTable.from_positions(
+        ref_table.kmer_alphabet, kmer_dict
+    )
+    
+    assert test_table == ref_table
 
 
 @pytest.mark.parametrize("use_similarity_rule", [False, True])
@@ -66,10 +115,8 @@ def test_match_table(use_similarity_rule):
 
     rule = _identity_rule(alphabet) if use_similarity_rule else None
     
-    table1 = align.KmerTable(alphabet, 4)
-    table1.add(sequence1, 0)
-    table2 = align.KmerTable(alphabet, 4)
-    table2.add(sequence2, 0)
+    table1 = align.KmerTable.from_sequences(4, [sequence1])
+    table2 = align.KmerTable.from_sequences(4, [sequence2])
 
     ref_matches = set([
         (0,  9),
@@ -100,7 +147,7 @@ def test_match_table(use_similarity_rule):
 
 
 @pytest.mark.parametrize("use_similarity_rule", [False, True])
-def test_match(alphabet, k, random_sequences, use_similarity_rule):
+def test_match(k, random_sequences, use_similarity_rule):
     """
     Test the :meth:`match()` method compared to a manual,
     inefficient approach using indexing.
@@ -110,9 +157,7 @@ def test_match(alphabet, k, random_sequences, use_similarity_rule):
     """
     query_sequence = random_sequences[0]
     table_sequences = random_sequences[1:]   
-    table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(table_sequences):
-        table.add(sequence, i)
+    table = align.KmerTable.from_sequences(k, table_sequences)
     
     kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
     ref_matches = []
@@ -129,14 +174,14 @@ def test_match(alphabet, k, random_sequences, use_similarity_rule):
         ref_matches.append(matches)
     ref_matches = np.concatenate(ref_matches)
 
-    rule = _identity_rule(alphabet) if use_similarity_rule else None
+    rule = _identity_rule(table.alphabet) if use_similarity_rule else None
     test_matches = table.match(query_sequence, similarity_rule=rule)
 
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
 @pytest.mark.parametrize("use_mask", [False, True])
-def test_match_equivalence(alphabet, k, random_sequences, use_mask):
+def test_match_equivalence(k, random_sequences, use_mask):
     """
     Check if both, the :meth:`match()` and meth:`match_table()`
     method, find the same matches.
@@ -156,22 +201,23 @@ def test_match_equivalence(alphabet, k, random_sequences, use_mask):
     query_mask = removal_masks[0]
     table_masks = removal_masks[1:]
     
-    table = align.KmerTable(alphabet, k)
-    for i, (sequence, mask) in enumerate(zip(table_sequences, table_masks)):
-        table.add(sequence, i, removal_mask=mask)
+    table = align.KmerTable.from_sequences(
+        k, table_sequences, ignore_masks=table_masks
+    )
     
-    ref_table = align.KmerTable(alphabet, k)
     # 42 -> Dummy value that is distinct from all reference indices
-    ref_table.add(query_sequence, 42, removal_mask=query_mask)
+    ref_table = align.KmerTable.from_sequences(
+        k, [query_sequence], [42], ignore_masks=[query_mask]
+    )
     ref_matches = table.match_table(ref_table)
     assert np.all(ref_matches[:,0] == 42)
-    # Store matches in set to remove the importance of order
+    # Store matches in set to remove the order dependency
     # The first column is not present in the matches
     # returned by 'match_sequence()' -> [:, 1:]
     ref_matches = set([tuple(match) for match in ref_matches[:, 1:]])
 
     test_matches = table.match(
-        query_sequence, removal_mask=query_mask
+        query_sequence, ignore_mask=query_mask
     )
     test_matches = set([tuple(match) for match in test_matches])
 
@@ -209,8 +255,9 @@ def test_masking(k, input_mask, ref_output_mask):
 
     sequence = seq.NucleotideSequence()
     sequence.code = np.zeros(len(input_mask))
-    table = align.KmerTable(seq.NucleotideSequence.alphabet_unamb, k)
-    table.add(sequence, 0, removal_mask=input_mask)
+    table = align.KmerTable.from_sequences(
+        k, [sequence], ignore_masks=[input_mask]
+    )
 
     # Get the k-mer positions that were masked
     test_output_mask = np.zeros(len(ref_output_mask), dtype=bool)
@@ -221,71 +268,37 @@ def test_masking(k, input_mask, ref_output_mask):
     assert test_output_mask.tolist() == ref_output_mask.tolist()
 
 
-def test_merge(alphabet, k, random_sequences):
-    """
-    Test :meth:`merge()` method by comparing the merge of single
-    tables with adding sequences directly into a single table.
-    """
-    
-    ref_table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        ref_table.add(sequence, i)
-
-    test_table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        table = align.KmerTable(alphabet, k)
-        table.add(sequence, i)
-        test_table.merge(table)
-    
-    assert test_table == ref_table
-
-
-def test_get_set(alphabet, k, random_sequences):
-    ref_table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        ref_table.add(sequence, i)
-
-    test_table = align.KmerTable(alphabet, k)
-    for i in range(len(ref_table)):
-        # Copy the positions for each k-mer
-        # By calling __getitem__() and __setitem__() 
-        test_table[i] = ref_table[i]
-    
-    assert test_table == ref_table
-
-
 def test_get_kmers():
+    """
+    Test whether the correct used *k-mers* are returned by
+    :meth:`get_kmer()`, by constructing a table with exactly one
+    appearance for each *k-mer* in a random list of *k-mers*.
+    """
     np.random.seed(0)
 
-    alphabet = seq.NucleotideSequence.alphabet_unamb
-    table = align.KmerTable(alphabet, 3)
-
-    ref_mask = np.random.choice([False, True], size=len(table))
+    kmer_alphabet = align.KmerAlphabet(
+        seq.NucleotideSequence.unambiguous_alphabet(),
+        8
+    )
+    ref_mask = np.random.choice([False, True], size=len(kmer_alphabet))
     ref_kmers = np.where(ref_mask)[0]
-    for kmer in ref_kmers:
-        # [[0, 0]] = Dummy position
-        # The actual position is not relevant for the tested function
-        table[kmer] = [[0, 0]]
+    kmer_dict = {kmer: np.zeros((1, 2), dtype=np.uint32) for kmer in ref_kmers}
+    # [[0, 0]] = Dummy position
+    # The actual position is not relevant for the tested function
+    table = align.KmerTable.from_positions(kmer_alphabet, kmer_dict)
 
     test_kmers = table.get_kmers()
 
     assert test_kmers.tolist() == ref_kmers.tolist()
-    
-
-def test_copy(alphabet, k, random_sequences):
-    ref_table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        ref_table.add(sequence, i)
-    
-    test_table = ref_table.copy()
-
-    assert test_table == ref_table
 
 
 def test_pickle(alphabet, k, random_sequences):
-    ref_table = align.KmerTable(alphabet, k)
-    for i, sequence in enumerate(random_sequences):
-        ref_table.add(sequence, i)
+    """
+    Test support of the pickle protocol by pickling and unpickling
+    a :class:`KmerTable` and checking if the object is still equal to
+    the original one.
+    """
+    ref_table = align.KmerTable.from_sequences(k, random_sequences)
     
     test_table = pickle.loads(pickle.dumps(ref_table))
 

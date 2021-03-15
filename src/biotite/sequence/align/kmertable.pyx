@@ -62,6 +62,8 @@ cdef class KmerTable:
     The *k-mer* code for a *k-mer* can be calculated with
     ``table.kmer_alphabet.encode()`` (see :class:`KmerAlphabet`).
 
+    ITERATION
+
     Parameters
     ----------
     alphabet : Alphabet
@@ -305,7 +307,7 @@ cdef class KmerTable:
     
 
     @staticmethod
-    def from_kmers(kmer_alphabet, kmers, ref_ids, masks=None):
+    def from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None):
         if not isinstance(kmer_alphabet, KmerAlphabet):
             raise TypeError(
                 f"Got {type(kmer_alphabet).__name__}, "
@@ -325,11 +327,12 @@ cdef class KmerTable:
             )
 
         # Check given k-mers for out-of-bounds values
-        if np.any((kmers < 0) | (kmers >= len(kmer_alphabet))):
-            raise IndexError(
-                "Given *k-mer* codes contain out-of-bounds values for the "
-                "given KmerAlphabet"
-            )
+        for arr in kmers:
+            if np.any((arr < 0) | (arr >= len(kmer_alphabet))):
+                raise IndexError(
+                    "Given *k-mer* codes contain out-of-bounds values for the "
+                    "given KmerAlphabet"
+                )
         
         table = KmerTable(kmer_alphabet)
 
@@ -361,10 +364,11 @@ cdef class KmerTable:
         return table
     
 
-    def from_tables(self, tables):
+    @staticmethod
+    def from_tables(tables):
         # Check for alphabet compatibility
         kmer_alphabet = tables[0].kmer_alphabet
-        for alph in (tables.kmer_alphabet for tables in tables):
+        for alph in (table.kmer_alphabet for table in tables):
             if not kmer_alphabet == alph:
                 raise ValueError(
                     "The *k-mer* alphabets of the tables are not equal "
@@ -380,13 +384,14 @@ cdef class KmerTable:
         merged_table._init_c_arrays()
 
         for table in tables:
-            merged_table._copy_entries(table)
+            merged_table._append_entries(table)
         
         return merged_table
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @staticmethod
     def from_positions(kmer_alphabet, dict kmer_positions):
         """
         Highest performance if position have dtype uint32
@@ -419,7 +424,7 @@ cdef class KmerTable:
                 )
             
             # Plus the size of array length value (int64)
-            length = positions.shape[0] + 2
+            length = 2 * positions.shape[0] + 2
             kmer_ptr = <uint32*>malloc(length * sizeof(uint32))
             if not kmer_ptr:
                 raise MemoryError
@@ -692,12 +697,12 @@ cdef class KmerTable:
     
 
     def __iter__(self):
-        for i in range(len(self)):
+        for i in self.get_kmers():
             yield self[i]
 
 
     def __reversed__(self):
-        for i in reversed(range(len(self))):
+        for i in reversed(self.get_kmers()):
             yield self[i]
        
 
@@ -762,15 +767,12 @@ cdef class KmerTable:
     
 
     def __getnewargs_ex__(self):
-        return (self._kmer_alph.base_alphabet, self._k), {}
+        return (self._kmer_alph,), {}
     
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def __getstate__(self):
-        """
-        Pointer arrays.
-        """
         cdef int64 i
         cdef int64 kmer
         cdef uint32* kmer_ptr
@@ -825,8 +827,8 @@ cdef class KmerTable:
             _deallocate_ptrs(self._ptr_array)
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _count_kmers(self, int64[:] kmers, uint8[:] mask):
         """
         Repurpose the pointer array as count array and add the
@@ -849,8 +851,8 @@ cdef class KmerTable:
                 count_array[kmer] += 1
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _count_table_entries(self, KmerTable table):
         """
         Repurpose the pointer array as count array and add the
@@ -876,8 +878,8 @@ cdef class KmerTable:
                 count_array[kmer] += <ptr>kmer_ptr[0]
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _init_c_arrays(self):
         """
         Convert the count array into a pointer array, where each pointer
@@ -908,8 +910,8 @@ cdef class KmerTable:
                 ptr_array[kmer] = <ptr>kmer_ptr
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _add_kmers(self, int64[:] kmers, uint32 ref_id, uint8[:] mask):
         """
         Add the k-mer reference IDs and positions to the C-arrays
@@ -942,8 +944,8 @@ cdef class KmerTable:
                 (<int64*> kmer_ptr)[0] = current_size + 2
     
 
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _append_entries(self, KmerTable table):
         """
         Append the C-arrays from the given table to the C-arrays of this
