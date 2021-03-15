@@ -199,17 +199,14 @@ compl_reads = list(itertools.chain(
 
 K = 12
 
-alphabet = seq.NucleotideSequence.unambiguous_alphabet()
-
-genome_table = align.KmerTable(alphabet, K)
-genome_table.add(orig_genome, 0)
+genome_table = align.KmerTable.from_sequences(K, [orig_genome])
 
 all_matches = []
 for i, read in enumerate(compl_reads):
     all_matches.append(genome_table.match(read))
 
 # k-mer tables use quite a large amount of RAM
-# and we do not need those objects anymore
+# and we do not need this object anymore
 del genome_table
 
 ########################################################################

@@ -489,18 +489,24 @@ reference = seq.ProteinSequence(
 # indexed into a :class:`KmerTable`.
 # The *k-mers* (also called *words* or *k-tuples*) of a sequence are all
 # overlapping subsequences with a given length *k*.
-# Indexing means creating a table that maps each *k-mer* to the index
-# where this *k-mer* appears in the sequence.
+# Indexing means creating a table that maps each *k-mer* to the position
+# where this *k-mer* appears in the sequence - similar to the index of a
+# book.
 # Here the first decision needs to be made:
 # Which *k* is desired?
 # A small *k* improves the sensitivity, a large *k* decreases the
 # computation time in the later steps.
 # In this case we choose 3-mers.
 
-# Create a k-mer index table...
-kmer_table = align.KmerTable(seq.ProteinSequence.alphabet, k=3)
-# ...and add the k-mers of the reference sequence to it
-kmer_table.add(reference, ref_id=0)
+# Create a k-mer index table from the k-mers of the reference sequence
+kmer_table = align.KmerTable.from_sequences(
+    # Use 3-mers
+    k=3,
+    # Add only the reference sequence to the table
+    sequences=[reference],
+    # The purpose of the reference ID is to identify the sequence
+    ref_ids=[0]
+)
 
 ########################################################################
 # The purpose of the reference ID is to identify not only the
@@ -509,7 +515,7 @@ kmer_table.add(reference, ref_id=0)
 # there is only a single sequence in the table, so the reference ID
 # is arbitrary.
 #
-# Let's have a depper look under the hood:
+# Let's have a deeper look under the hood:
 # The :class:`KmerTable` creates a :class:`KmerAlphabet` that encodes a
 # *k-mer* symbol, i.e. a tuple of *k* symbols from the base alphabet,
 # into a *k-mer* code.
