@@ -31,49 +31,49 @@ cdef class KmerTable:
     positions, where the *k-mer* appears.
     It is primarily used to find *k-mer* matches between two sequences.
     A match is defined as a *k-mer* that appears in both sequences.
+    Instances of this class are immutable.
 
-    A sequence can be indexed via the :meth:`add()` method, which takes
-    a :class:`Sequence` and a reference ID.
-    The reference ID is a unique integer, that identifies to which
-    sequence a match position refers to, in case multiple sequences
-    are added to the :class:`KmerTable`.
-    This method iterates through all overlapping *k-mers* in the
-    sequence and, for each *k-mer*, appends the zero-based sequence
-    position of the first symbol in the *k-mer* along with the
-    reference ID to the table entry of the *k-mer*.
+    There are multiple ways to create a :class:`KmerTable`:
 
-    After adding at least one sequence, the :meth:`match()` method
-    iterates through all overlapping *k-mers* in another sequence and,
-    for each *k-mer*, looks up the reference IDs and positions of this
-    *k-mer* in the previously added sequences.
+        - :meth:`from_sequences()` iterates through all overlapping
+          *k-mers* in a sequence and, stores the sequence position of
+          each *kmer* in the table.
+        - :meth:`from_kmers()` is similar to :meth:`from_sequences()`
+          but directly accepts *k-mers* as input instead of sequences.
+        - :meth:`from_tables()` merges the entries from multiple
+          :class:`KmerTable` objects into a new table.
+        - :meth:`from_positions()` let's the user provide manual
+          *k-mer* positions, which can be useful forloading a
+          :class:`KmerTable` from file.
+    
+    The standard constructor merely returns an empty table and is
+    reserved for internal use.
+        
+    Each indexed *k-mer* position is represented by a tuple of
+
+        1. a unique reference ID that identifies to which sequence a
+           position refers to and
+        2. the position of the zero-based sequence position of the first
+           symbol in the *k-mer*.
+
+    The :meth:`match()` method iterates through all overlapping *k-mers*
+    in another sequence and, for each *k-mer*, looks up the reference
+    IDs and positions of this *k-mer* in the table.
     For each matching position, it adds the *k-mer* position in this
     sequence, the matching reference ID and the matching sequence
     position to the array of matches.
     Finally these matches are returned to the user.
+    Optionally, a :class:`SimilarityRule` can be supplied, to find
+    also matches for similar *k-mers.
+    This is especially useful for protein sequences to match two
+    *k-mers* with a high substitution probability.
 
-    :class:`KmerTable` objects can be handled similar to a fixed-sized
-    list for accessing and editing purposes:
-    Indexing a table with a *k-mer* code returns an array
-    of all reference IDs and positions, where this *k-mer* appears.
-    Conversely, setting the table at a given *k-mer* code overwrites
-    the reference IDs and positions for this *k-mer* with new ones.
-    The :meth:`update()` method manually appends new reference IDs and
-    positions to the existing ones, instead of overwriting them.
+    The positions for a given *k-mer* code can be obtained via indexing.
+    Iteration over a :class:`KmerTable` yields the *k-mers* that have at
+    least one associated position.
     The *k-mer* code for a *k-mer* can be calculated with
     ``table.kmer_alphabet.encode()`` (see :class:`KmerAlphabet`).
 
-    ITERATION
-
-    Parameters
-    ----------
-    alphabet : Alphabet
-        The base alphabet that defines the kind of sequences that are
-        added to / matched by this table.
-        It must be equal to or extend the alphabet of all
-        sequences that are added to the table or are matched.
-    k : int
-        An integer greater than 1 that defines the *k-mer* length.
-    
     Attributes
     ----------
     kmer_alphabet : KmerAlphabet
@@ -88,16 +88,19 @@ cdef class KmerTable:
     Notes
     -----
 
+    The design of the :class:`KmerTable` is inspired by the *MMseqs2*
+    software [1]_.
+
     **Memory consumption**
 
     For efficient mapping, a :class:`KmerTable` contains a pointer
     array, that contains one 64-bit pointer for each possible *k-mer*.
-    If there is at least one match for a *k-mer*, the corresponding
+    If there is at least one position for a *k-mer*, the corresponding
     pointer points to a C-array that contains
 
         1. The length of the C-array *(int64)*
-        2. The reference ID for each match of this *k-mer* *(uint32)*
-        3. The sequence position for each match of this *k-mer* *(uint32)*
+        2. The reference ID for each position of this *k-mer* *(uint32)*
+        3. The sequence position for each position of this *k-mer* *(uint32)*
     
     Hence, the memory requirements can be quite large for long *k-mers*
     or large alphabets.
@@ -114,10 +117,10 @@ cdef class KmerTable:
 
     :class:`KmerTable` objects can be used in multi-processed setups:
     Adding a large database of sequences to a table can be sped up by
-    splitting the database into smaller chunks and adding each chunk
-    to a separate table in separate processes.
+    splitting the database into smaller chunks and create a separate
+    table for each chunk in separate processes.
     Eventually, the tables can be merged to one large table using
-    :meth:`merge()`.
+    :meth:`from_tables()`.
 
     Since :class:`KmerTable` supports the *pickle* protocol,
     the matching step can also be divided into multiple processes, if
@@ -128,23 +131,29 @@ cdef class KmerTable:
     The most time efficient way to read/write a :class:`KmerTable` is
     the *pickle* format.
     If a custom format is desired, the user needs to extract the
-    reference IDs and position for each *k-mer*. To restrict this task
-    to all *k-mer* that have at least one match :meth:`get_kmers()` can
-    be used.
+    reference IDs and position for each *k-mer*.
+    To restrict this task to all *k-mer* that have at least one match
+    :meth:`get_kmers()` can be used.
     Conversely, the reference IDs and position can be restored via
-    :meth:`update()`, which is slightly faster than indexing.
+    :meth:`from_positions()`.
+
+    References
+    ----------
+    .. [1] M Steinegger, J Söding,
+       "MMseqs2 enables sensitive protein sequence searching for the
+       analysis of massive data sets."
+       Nat Biotechnology, 35, 1026-1028 (2017).
 
     Examples
     --------
 
-    Create a *k-mer* index table for unambiguous nucleotide sequences:
+    Create a *2-mer* index table for some nucleotide sequences:
 
-    >>> table = KmerTable(NucleotideSequence.unambiguous_alphabet(), k=2)
-
-    Add some sequences to the table:
-
-    >>> table.add(NucleotideSequence("TTATA"), ref_id=0)
-    >>> table.add(NucleotideSequence("CTAG"),  ref_id=1)
+    >>> table = KmerTable.from_sequences(
+    ...     k = 2,
+    ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
+    ...     ref_ids = [0, 1]
+    ... )
 
     Display the contents of the table as
     (reference ID, sequence position) tuples:
@@ -189,17 +198,6 @@ cdef class KmerTable:
     [[0 1]
      [0 3]
      [1 1]]
-
-    Edit the table manually:
-
-    >>> table.update(table.kmer_alphabet.encode("TA"), [[2, 42]])
-    >>> table[table.kmer_alphabet.encode("CT")] = [[3, 100], [4, 200]]
-    >>> print(table)
-    TA: (0, 1), (0, 3), (1, 1), (2, 42)
-    AG: (1, 2)
-    AT: (0, 2)
-    CT: (3, 100), (4, 200)
-    TT: (0, 0)
     """
 
     cdef object _kmer_alph
@@ -245,6 +243,82 @@ cdef class KmerTable:
     @staticmethod
     def from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
                        alphabet=None):
+        """
+        from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
+                       alphabet=None)
+        
+        Create a :class:`KmerTable` by storing the positions of all
+        overlapping *k-mers* from the input `sequences`.
+
+        Parameters
+        ----------
+        k : int
+            The length of the *k-mers*.
+        sequences : iterable object of Sequence
+            The sequences to get the *k-mer* positions from.
+            These sequences must have equal alphabets, or one of these
+            sequences must have an alphabet that extends the alphabets
+            of all other sequences.
+        ref_ids : iterable object of int, optional
+            The reference IDs for the given sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *n* for *n*
+            input `sequences`.
+        ignore_masks : iterable object of (ndarray, dtype=bool), optional
+            Sequence positions to ignore.
+            *k-mers* that involve these sequence positions are not added
+            to the table.
+            This is used e.g. to skip repeat regions.
+            If provided, the list must contain one boolean mask
+            (or ``None``) for each sequence, and each bolean mask must
+            have the same length as the sequence.
+            By default, no sequence positions are ignored.
+        alphabet : Alphabet, optional
+            The alphabet to use for this table.
+            It must extend the alphabets of the input `sequences`.
+            By default, an appropriate alphabet is inferred from the
+            input `sequences`.
+            This option is usually used to be compatible with another
+            sequence/table in the matching step.
+        
+        Returns
+        -------
+        table : KmerTable
+            The newly created table.
+        
+        Examples
+        --------
+
+        >>> sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")]
+        >>> table = KmerTable.from_sequences(
+        ...     2, sequences, ref_ids=[100, 101]
+        ... )
+        >>> print(table)
+        TA: (100, 1), (100, 3), (101, 1)
+        AG: (101, 2)
+        AT: (100, 2)
+        CT: (101, 0)
+        TT: (100, 0)
+
+        Give an explicit compatible alphabet:
+
+        >>> table = KmerTable.from_sequences(
+        ...     2, sequences, ref_ids=[100, 101],
+        ...     alphabet=NucleotideSequence.ambiguous_alphabet()
+        ... )
+
+        Ignore all ``N`` in a sequence:
+
+        >>> sequence = NucleotideSequence("ACCNTANNG")
+        >>> table = KmerTable.from_sequences(
+        ...     2, [sequence], ignore_masks=[sequence.symbols == "N"]
+        ... )
+        >>> print(table)
+        TA: (0, 4)
+        AC: (0, 0)
+        CC: (0, 1)
+        """
         # Check length of input lists
         if ref_ids is not None and len(ref_ids) != len(sequences):
             raise IndexError(
@@ -308,6 +382,61 @@ cdef class KmerTable:
 
     @staticmethod
     def from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None):
+        """
+        from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None)
+        
+        Create a :class:`KmerTable` by storing the positions of all
+        input *k-mers*.
+
+        Parameters
+        ----------
+        kmer_alphabet : KmerAlphabet
+            The :class:`KmerAlphabet` to use for the new table.
+            Should be the same alphabet that was used to calculate the
+            input *kmers*.
+        kmers : iterable object of (ndarray, dtype=np.int64)
+            Arrays containing the symbol codes for *k-mers* from a
+            sequence.
+            For each array the index of the *k-mer* code in the array,
+            is stored in the table.
+        ref_ids : iterable object of int, optional
+            The reference IDs for the sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *n* for *n*
+            input `kmers`.
+        masks : iterable object of (ndarray, dtype=bool), optional
+            A *k-mer* code at a position, where the corresponding mask
+            is false, is not added to the table.
+            By default, all positions are added.
+        
+        Returns
+        -------
+        table : KmerTable
+            The newly created table.
+        
+        Examples
+        --------
+
+        >>> sequences = [ProteinSequence("BIQTITE"), ProteinSequence("NIQBITE")]
+        >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, 3)
+        >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
+        >>> print(kmer_codes)
+        [array([7676, 9535, 4429, 9400, 2119]), array([ 7667, 11839,  4525,  9404,  2119])]
+        >>> table = KmerTable.from_kmers(
+        ...     kmer_alphabet, kmer_codes
+        ... )
+        >>> print(table)
+        ITE: (0, 4), (1, 4)
+        QTI: (0, 2)
+        QBI: (1, 2)
+        NIQ: (1, 0)
+        BIQ: (0, 0)
+        TIT: (0, 3)
+        BIT: (1, 3)
+        IQT: (0, 1)
+        IQB: (1, 1)
+        """
         if not isinstance(kmer_alphabet, KmerAlphabet):
             raise TypeError(
                 f"Got {type(kmer_alphabet).__name__}, "
@@ -366,6 +495,41 @@ cdef class KmerTable:
 
     @staticmethod
     def from_tables(tables):
+        """
+        from_tables(tables)
+        
+        Create a :class:`KmerTable` by merging the *k-mer* positions
+        from existing `tables`.
+
+        Parameters
+        ----------
+        tables : iterable object of KmerTable
+            The tables to be merged.
+            All tables must have equal :class:`KmerAlphabet` objects,
+            i.e. the same *k* and equal base alphabets.
+        
+        Returns
+        -------
+        table : KmerTable
+            The newly created table.
+        
+        Examples
+        --------
+
+        >>> table1 = KmerTable.from_sequences(
+        ...     2, [NucleotideSequence("TTATA")], ref_ids=[100]
+        ... )
+        >>> table2 = KmerTable.from_sequences(
+        ...     2, [NucleotideSequence("CTAG")], ref_ids=[101]
+        ... )
+        >>> merged_table = KmerTable.from_tables([table1, table2])
+        >>> print(merged_table)
+        TA: (100, 1), (100, 3), (101, 1)
+        AG: (101, 2)
+        AT: (100, 2)
+        CT: (101, 0)
+        TT: (100, 0)
+        """
         # Check for alphabet compatibility
         kmer_alphabet = tables[0].kmer_alphabet
         for alph in (table.kmer_alphabet for table in tables):
@@ -394,7 +558,50 @@ cdef class KmerTable:
     @staticmethod
     def from_positions(kmer_alphabet, dict kmer_positions):
         """
-        Highest performance if position have dtype uint32
+        from_positions(kmer_alphabet kmer_positions)
+        
+        Create a :class:`KmerTable` from *k-mer* reference IDs and
+        positions.
+        This constructor is especially useful for restoring a table
+        from previously serialized data.
+
+        Parameters
+        ----------
+        kmer_alphabet : KmerAlphabet
+            The :class:`KmerAlphabet` to use for the new table
+        kmer_positions : dict of (int -> ndarray, shape=(n,2), dtype=int)
+            A dictionary representing the *k-mer* reference IDs and
+            positions to be stored in the newly created table.
+            It maps a *k-mer* code to a :class:`ndarray`.
+            To achieve a high performance the data type ``uint32``
+            is preferred for the arrays.
+        
+        Returns
+        -------
+        table : KmerTable
+            The newly created table.
+        
+        Examples
+        --------
+
+        >>> sequence = ProteinSequence("BIQTITE")
+        >>> table = KmerTable.from_sequences(3, [sequence], ref_ids=[100])
+        >>> print(table)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        BIQ: (100, 0)
+        TIT: (100, 3)
+        IQT: (100, 1)
+        >>> data = {kmer: table[kmer] for kmer in table}
+        >>> print(data)
+        {2119: array([[100,   4]], dtype=uint32), 4429: array([[100,   2]], dtype=uint32), 7676: array([[100,   0]], dtype=uint32), 9400: array([[100,   3]], dtype=uint32), 9535: array([[100,   1]], dtype=uint32)}
+        >>> restored_table = KmerTable.from_positions(table.kmer_alphabet, data)
+        >>> print(restored_table)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        BIQ: (100, 0)
+        TIT: (100, 3)
+        IQT: (100, 1)
         """
         cdef int64 length
         cdef uint32* kmer_ptr
@@ -447,14 +654,66 @@ cdef class KmerTable:
     @cython.wraparound(False)
     def match_table(self, KmerTable table, similarity_rule=None):
         """
-        For each equal (or similar, if `similarity_rule` is given,)
-        k-mer the cartesian product of the entries is calculated.
+        match_table(table, similarity_rule=None)
+
+        Find matches between the *k-mers* in this table with the
+        *k-mers* in another `table`.
+
+        This means that for each *k-mer* the cartesian product between
+        the positions in both tables is added to the matches.
+
+        Parameters
+        ----------
+        table : KmerTable
+            The table to be matched.
+            Both tables must have equal :class:`KmerAlphabet` objects,
+            i.e. the same *k* and equal base alphabets.
+        similarity_rule : SimilarityRule, optional
+            If this parameter is given, not only exact *k-mer* matches
+            are considered, but also similar ones according to the given
+            :class:`SimilarityRule`.
+        
+        Returns
+        -------
+        matches : ndarray, shape=(n,4), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one match. Each match has the following
+            columns:
+
+                0. The reference ID of the other table
+                1. The sequence position of the other table
+                2. The reference ID of this table
+                3. The sequence position of this table
 
         Notes
         -----
 
-        There is no guaranteed order of the sequence indices or
+        There is no guaranteed order of the reference IDs or
         sequence positions in the returned matches.
+
+        Examples
+        --------
+
+        >>> sequence1 = ProteinSequence("BIQTITE")
+        >>> table1 = KmerTable.from_sequences(3, [sequence1], ref_ids=[100])
+        >>> print(table1)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        BIQ: (100, 0)
+        TIT: (100, 3)
+        IQT: (100, 1)
+        >>> sequence2 = ProteinSequence("TITANITE")
+        >>> table2 = KmerTable.from_sequences(3, [sequence2], ref_ids=[101])
+        >>> print(table2)
+        ITA: (101, 1)
+        ITE: (101, 5)
+        ANI: (101, 3)
+        TAN: (101, 2)
+        NIT: (101, 4)
+        TIT: (101, 0)
+        >>> print(table1.match_table(table2))
+        [[101   5 100   4]
+         [101   0 100   3]]
         """
         cdef int INIT_SIZE = 1
         
@@ -549,8 +808,57 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match(self, sequence, similarity_rule=None,
-                       ignore_mask=None):
+    def match(self, sequence, similarity_rule=None, ignore_mask=None):
+        """
+        match(self, sequence, similarity_rule=None, ignore_mask=None)
+
+        Find matches between the *k-mers* in this table with all
+        overlapping *k-mers* in the given `sequence`.
+        *k* is determined by the table.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to be matched.
+            The table's base alphabet must extend the alphabet of the
+            sequence.
+        similarity_rule : SimilarityRule, optional
+            If this parameter is given, not only exact *k-mer* matches
+            are considered, but also similar ones according to the given
+            :class:`SimilarityRule`.
+        
+        Returns
+        -------
+        matches : ndarray, shape=(n,3), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one match. Each match has the following
+            columns:
+
+                0. The sequence position in the sequence
+                1. The reference ID of the table
+                2. The sequence position of the table
+
+        Notes
+        -----
+
+        The matches are ordered by the first column.
+
+        Examples
+        --------
+
+        >>> sequence1 = ProteinSequence("BIQTITE")
+        >>> table = KmerTable.from_sequences(3, [sequence1], ref_ids=[100])
+        >>> print(table)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        BIQ: (100, 0)
+        TIT: (100, 3)
+        IQT: (100, 1)
+        >>> sequence2 = ProteinSequence("TITANITE")
+        >>> print(table.match(sequence2))
+        [[  0 100   3]
+         [  5 100   4]]
+        """
         cdef int INIT_SIZE = 1
         
         cdef int64 kmer, sim_kmer
@@ -642,6 +950,37 @@ cdef class KmerTable:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def get_kmers(self):
+        """
+        Get the *k-mer* codes for all *k-mers* that have at least one
+        position in the table.
+        
+        Returns
+        -------
+        kmers : ndarray, shape=(n,), dtype=np.int64
+            The *k-mer* codes.
+
+        Examples
+        --------
+
+        >>> sequence = ProteinSequence("BIQTITE")
+        >>> table = KmerTable.from_sequences(3, [sequence], ref_ids=[100])
+        >>> print(table)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        BIQ: (100, 0)
+        TIT: (100, 3)
+        IQT: (100, 1)
+        >>> kmer_codes = table.get_kmers()
+        >>> print(kmer_codes)
+        [2119 4429 7676 9400 9535]
+        >>> for code in kmer_codes:
+        ...     print(table[code])
+        [[100   4]]
+        [[100   2]]
+        [[100   0]]
+        [[100   3]]
+        [[100   1]]
+        """
         cdef int64 kmer
         cdef ptr[:] ptr_array = self._ptr_array
         
@@ -688,23 +1027,21 @@ cdef class KmerTable:
             return np.asarray(positions)
 
 
-    def __contains__(self, kmer):
-        return (kmer >= 0) & (kmer < len(self))
-
-    
     def __len__(self):
         return len(self._kmer_alph)
+
+
+    def __contains__(self, kmer):
+        return kmer in self.get_kmers()
     
 
     def __iter__(self):
-        for i in self.get_kmers():
-            yield self[i]
+        return iter(self.get_kmers())
 
 
     def __reversed__(self):
-        for i in reversed(self.get_kmers()):
-            yield self[i]
-       
+        return reversed(self.get_kmers())
+
 
     def __eq__(self, item):
         if item is self:

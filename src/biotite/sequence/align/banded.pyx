@@ -58,7 +58,18 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                  max_number=1000)
 
-    Perform a local or semi-global alignment within a defined band.
+    Perform a local or semi-global alignment within a defined diagonal
+    band. [1]_
+
+    The function requires two diagonals that defines the lower
+    and upper limit of the alignment band.
+    A diagonal is an integer defined as :math:`D = j - i`, where *i* and
+    *j* are sequence positions in the first and second sequence,
+    respectively.
+    This means that two symbols at position *i* and *j* can only be
+    aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
+    With increasing width of the diagonal band, the probability to find
+    the optimal alignment, but also the computation time increases.
     
     Parameters
     ----------
@@ -69,11 +80,11 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     band : tuple(int, int)
         The diagonals that represent the lower and upper limit of the
         search space.
-        A diagonal :math:`d` is defined as :math:`d = j-i`, where
+        A diagonal :math:`D` is defined as :math:`D = j-i`, where
         :math:`i` and :math:`j` are positions in `seq1` and `seq2`,
         respectively.
-        An alignment of sequence positions where :math:`d` is lower than
-        the lower limit or higher than the upper limit are ignored.
+        An alignment of sequence positions where :math:`D` is lower than
+        the lower limit or greater than the upper limit are ignored.
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
@@ -82,37 +93,42 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         the second integer is the gap extension penalty.
         The values need to be negative. (Default: *-10*)
     local : bool, optional
-        If false, a global alignment is performed, otherwise a local
-        alignment is performed. (Default: False)
+        If set to true, a local alignment is performed.
+        Otherwise (default) a semi-global alignment is performed.
     max_number : int, optional
         The maximum number of alignments returned.
         When the number of branches exceeds this value in the traceback
         step, no further branches are created.
-        (Default: 1000)
     
     Returns
     -------
     alignments : list, type=Alignment
-        A list of alignments.
-        Each alignment in the list has the same maximum similarity
-        score.
+        The generated alignments.
+        Each alignment in the list has the same similarity score,
+        which is the maximum score possible within the defined band.
     
     See also
     --------
     align_optimal
+        Guarantees to find the optimal alignment at the cost of greater
+        compuation time and memory requirements.
 
     Notes
     -----
-    The band with is equal to the maximum difference between the
-    number of gaps in the sequences.
-    This means for any poistion in the alignment, the alogrithm
-    will not consider inserting a gap into a seqeunce, if this
-    sequence has already `band_width` more gaps than the other
-    sequence, even if inserting another gap would yield a more optimal
-    alignment.
-    The limited band width is the central difference between the banded
-    alignment heuristic [1]_ and the optimal alignment algorithms
-    [2]_[3]_.
+    The diagonals give the maximum difference between the
+    number of gaps inserted gaps.
+    This means for any position in the alignment, the algorithm
+    will not consider inserting a gap into a sequence, if the first
+    sequence has already ``-band[0]`` more gaps than the second
+    sequence or if the second sequence has already ``band[1]`` more gaps
+    than the first sequence, even if inserting additional gaps would
+    yield a more optimal alignment.
+    Considerations on how to find a suitable band width are discussed in
+    [2]_.
+    
+    The restriction to a limited band is the central difference between
+    the banded alignment heuristic and the optimal alignment
+    algorithms [3]_ [4]_.
     
     References
     ----------
@@ -120,16 +136,42 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     .. [1] WR Pearson, DJ Lipman,
        "Improved tools for biological sequence comparison."
        Proc Natl Acad Sci USA, 85, 2444–2448 (1988).
-    .. [2] SB Needleman, CD Wunsch,
+    .. [2] JF Gibrat,
+       "A short note on dynamic programming in a band."
+       BMC Bioinformatics, 19 (2018).
+    .. [3] SB Needleman, CD Wunsch,
        "A general method applicable to the search for similarities
        in the amino acid sequence of two proteins."
        J Mol Biol, 48, 443-453 (1970).
-    .. [3] TF Smith, MS Waterman,
+    .. [4] TF Smith, MS Waterman,
        "Identification of common molecular subsequences."
        J Mol Biol, 147, 195-197 (1981).
-    .. [4] O Gotoh,
-       "An improved algorithm for matching biological sequences."
-       J Mol Biol, 162, 705-708 (1982).
+    
+    Examples
+    --------
+
+    Find a matching diagonal for two sequences:
+
+    >>> sequence1 = NucleotideSequence("GCGCGCTATATTATGCGCGC")
+    >>> sequence2 = NucleotideSequence("TATAAT")
+    >>> table = KmerTable.from_sequences(k=4, sequences=[sequence1])
+    >>> match = table.match(sequence2)[0]
+    >>> diagonal = match[0] - match[2]
+    >>> print(diagonal)
+    -6
+
+    Align the sequences centered on the diagonal with buffer in both
+    directions:
+
+    >>> BUFFER = 5
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> alignment = align_banded(
+    ...     sequence1, sequence2, matrix,
+    ...     band=(diagonal - BUFFER, diagonal + BUFFER), gap_penalty=(-6, -1)
+    ... )[0]
+    >>> print(alignment)
+    TATATTAT
+    TATA--AT
     """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
