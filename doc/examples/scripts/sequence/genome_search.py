@@ -12,7 +12,7 @@ Specifically we take the gene coding for the *M1* RNA from
 and try to find the counterpart in the genome of *Salmonella enterica*.
 
 This approach has a high performance compared to :func:`align_optimal()`
-and is similar the method used by software like *BLAST*.
+and is similar to the method used by software like *BLAST*.
 
 At first the sequences for the *M1* coding gene and the *S. enterica*
 genome are downloaded from *NCBI Entrez*. 
