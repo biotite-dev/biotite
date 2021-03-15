@@ -146,8 +146,8 @@ ax.set_ylabel("Number of Mb")
 fig.tight_layout()
 
 ########################################################################
-# Optionally, you could exclude reads with exceptionally low Phred
-# scores [?]_.
+# Optionally, you could exclude or trim reads with exceptionally low
+# Phred scores [3]_.
 # But instead we rely on a high sequencing depth to filter out
 # erroneous base calls.
 #
@@ -773,7 +773,11 @@ plt.show()
 #    "The Sanger FASTQ file format for sequences with quality scores, 
 #    and the Solexa/Illumina FASTQ variants."
 #    Nucleic Acids Res, 38, 1767-1771 (2010).
-# .. [?]
+# .. [3] S Pabinger, A Dander, M Fischer, R Snajder, M Sperk,
+#    M Efremova, B Krabichler, MR Speicher, J Zschocke, Z Trajanoski,
+#    "A survey of tools for variant analysis of next-generation genome
+#    sequencing data."
+#    Brief Bioinformatics, 15, 256-278 (2014).
 # .. [4] SB Needleman, CD Wunsch,
 #    "A general method applicable to the search for similarities
 #    in the amino acid sequence of two proteins."
