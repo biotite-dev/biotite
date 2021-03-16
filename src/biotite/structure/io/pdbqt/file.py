@@ -13,7 +13,7 @@ from ....file import TextFile
 from ...error import BadStructureError
 from ...atoms import AtomArray, AtomArrayStack
 from ...charges import partial_charges
-from ...bonds import BondList, BondType, find_connected
+from ...bonds import BondList, BondType, find_connected, find_rotatable_bonds
 
 
 PARAMETRIZED_ELEMENTS = [
@@ -205,6 +205,7 @@ class PDBQTFile(TextFile):
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
             use_root = False
         elif rotatable_bonds == "rigid":
+            # No rotatable bonds -> the BondList contains no bonds
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
             use_root = True
         elif rotatable_bonds == "all":
@@ -406,31 +407,3 @@ def convert_atoms(atoms, charges):
     
     mask = ~hydrogen_removal_mask
     return atoms[mask], charges[mask], atom_types[mask], mask
-
-
-def find_rotatable_bonds(bonds):
-    bond_graph = bonds.as_graph()
-    cycles = nx.algorithms.cycles.cycle_basis(bond_graph)
-
-    number_of_partners = np.count_nonzero(
-        bonds.get_all_bonds()[0] != -1,
-        axis=1
-    )
-
-    rotatable_bonds = []
-    for i, j, bond_type in bonds.as_array():
-        # Can only rotate about single bonds
-        # Furthermore, it makes no sense to rotate about a bond,
-        # that leads to a single atom
-        if bond_type == BondType.SINGLE \
-            and number_of_partners[i] > 1 \
-            and number_of_partners[j] > 1:
-                # Cannot rotate about a bond, if the two connected atoms
-                # are in a cycle
-                in_same_cycle = False
-                for cycle in cycles:
-                    if i in cycle and j in cycle:
-                        in_same_cycle = True
-                if not in_same_cycle:
-                    rotatable_bonds.append((i,j, bond_type))
-    return BondList(bonds.get_atom_count(), np.array(rotatable_bonds))
