@@ -7,43 +7,46 @@ matrix:
   include:
   - os: linux
     dist: trusty
-    sudo: false
     env:
-      - PY_VERSION='3.6'
+      - PY_VERSION='3.7'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: linux
     dist: trusty
-    sudo: false
-    env:
-      - PY_VERSION='3.7.3'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: linux
-    dist: trusty
-    sudo: false
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.16'
       - COMPLETE=true
+      - BIN=true
+      - SRC=true
+  - os: linux
+    dist: trusty
+    env:
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
+      - COMPLETE=false
       - BIN=true
       - SRC=true
   - os: osx
     env:
-      - PY_VERSION='3.6'
-      - COMPLETE=false
-      - BIN=true
-      - SRC=false
-  - os: osx
-    env:
       - PY_VERSION='3.7'
+      - NUMPY_VERSION='1.15'
       - COMPLETE=false
       - BIN=true
       - SRC=false
   - os: osx
     env:
       - PY_VERSION='3.8'
+      - NUMPY_VERSION='1.16'
+      - COMPLETE=false
+      - BIN=true
+      - SRC=false
+  - os: osx
+    env:
+      - PY_VERSION='3.9'
+      - NUMPY_VERSION='1.19'
       - COMPLETE=false
       - BIN=true
       - SRC=false
@@ -60,8 +63,9 @@ install:
 
   - if [ $COMPLETE == true ];  then conda env create -q -f environment.yml; fi
   - if [ $COMPLETE == true ];  then conda install -n biotite-dev python=$PY_VERSION; fi
+  - if [ $COMPLETE == true ];  then conda install -n biotite-dev numpy=$NUMPY_VERSION; fi
   - if [ $COMPLETE == false ]; then conda create -q -n biotite-dev python=$PY_VERSION; fi
-  - if [ $COMPLETE == false ]; then conda install -n biotite-dev "cython>=0.29" "numpy>=1.13" "requests>=2.12" "msgpack-python>=0.5.6" "pytest>=3.2"; fi
+  - if [ $COMPLETE == false ]; then conda install -n biotite-dev -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2"; fi
   - source activate biotite-dev
   - python setup.py bdist_wheel
   - pip install ./dist/*.whl
@@ -80,8 +84,8 @@ before_deploy:
 
 deploy:
   provider: releases
-  api-key:
-    secure: ncH32tO1V1vJMgpHY/JJ+TDpFkj0uFzNVeD2tBFq+uCDSRzQo8hiC+kFveciQNr9UuKFyqBySFpjP+g93f9xWcjruzTbT42vhoM6YzddMcQI/yiINWoco1Lk8RZpv6HsWeLXPFzP6BWWwBH+1rF09AXX4hk5nHGOlawM+f1nwCoqZrvPc5mhfN/JytRgUjjVZ1yI9VL77wMakGYsuuBpgjpk1AC5bG2X0aCYSRub7kAl3CYPvrknx38pbtL8d9mMyFwLe1UVxuyhY5PZ1hzk+6Dkjwx0mWQ95TCoTOwPU2ECF81gORVd/HZeQ/xRPYb8mlufy+v7pjUgMRQVMwjRR+e3JYHxoAjbN41WUYZohyIeVGnQ9hlaa59EHoDyGL6hJFqJ2o7E5DoKCGE+ssQ/pAmczPMCf3lG4nhgA80WXo9fcchMqPqB1uX43gv+qWvLy3N8V+pzK9nQpUsjKXKROp5fABIaz56APUaq1UrzaAvPHUlNiixjWd7FCU9nDGig8vGSfGNumBUFOQHnS12eQ0ICzTK7z9SuigkEAkB236AiopD5d0fZyyz9hWvWua22wqBD4kwtIQczFos5JHibv1taWdtnxs+/XAJpcV6EWYdTpNEItejRjtPRv20Ddx+G3176aYKbXWrANk/F4sp/HgGaLR7xUiH1wabd6QS5OUE=
+  token:
+    secure: "ul7wlOwxIEW/SoW3gWQXjdmUL0RQ8zc7QJh1uxOt+iM+BQZFENF2IioJ61THPrS8UU8rVupDa+I4JnLLWO6/7WUopqLek+jt0I7BvL1qlRR8fAbFJpvPu7gul4v51OFSIYflIjM90LB87rnHLh4LEXFSNh7adOYV4jotHf2g5OW7ME5IowDBQpo9Q+/yB73BK4PqrPxJMj1ABXc+swZkF/nDOLjgg6a9h+X57JKzZtmkovwgRrytI4snUowMP/eI1RDhovpT3jaG6jcYS90hXxgBOnjGZj97x7yGo48f/bavvzeMJNX3O083aDn3hi3nsmOnXIWAYW/Yv3k/SHLciOAQAqXhK9FHxwF8BjPMeTr0dJlhaMbzh4z91oMbVqoSUSqs3o0szOm1jrly6C+aLFYJeyo8cppig/PPqM5gM9FfDNsxKxtIQGVdWRTdJMnfDiCbc6voNP4qQ4buPBgjIf5XAMhaliyHrTYPhCL4oOILb2BgvqOgOBDCTZbh3QqltTUi4PMpJ8xqNka0uwChqhzoHWyLOTlage1P22rNebq9NwKFQ70bt+kJ0PoGP/9CacGqAKxh6c6yuLY0qspjbYwbRP8ie/Lk20FTecLrRzkboUN2CJgVre0FzWNIRtjpMDttpEYPcPH82y3Phb7PV9Kma8iRX1Rv2/eswYI3wjA="
   file:
     - dist/*
     - doc/_build/doc.zip

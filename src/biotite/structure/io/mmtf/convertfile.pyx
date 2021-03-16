@@ -144,7 +144,7 @@ def get_structure(file, model=None, altloc="first",
     cdef int32 max_atoms_per_res = np.max(atoms_per_res)
     #Create the arrays
     cdef np.ndarray res_names = np.zeros(len(group_list), dtype="U3")
-    cdef np.ndarray hetero_res = np.zeros(len(group_list), dtype=np.bool)
+    cdef np.ndarray hetero_res = np.zeros(len(group_list), dtype=bool)
     cdef np.ndarray atom_names = np.zeros((len(group_list), max_atoms_per_res),
                                           dtype="U6")
     cdef np.ndarray elements = np.zeros((len(group_list), max_atoms_per_res),

@@ -248,7 +248,7 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def draw(self, axes, feature, bbox, location, style_param):
         """
-        Draw aa feature onto an axes.
+        Draw a feature onto an axes.
 
         Parameters
         ----------

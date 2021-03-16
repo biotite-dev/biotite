@@ -66,6 +66,7 @@ class MuscleApp(MSAApp):
     
     def run(self):
         args = [
+            "-quiet",
             "-in",    self.get_input_file_path(),
             "-out",   self.get_output_file_path(),
             "-tree1", self._out_tree1_file.name,

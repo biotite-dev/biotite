@@ -18,14 +18,15 @@ class PDBxFile(TextFile, MutableMapping):
     This class represents a PDBx/mmCIF file.
     
     The categories of the file can be accessed using the
-    `get_category()`/`set_category()` methods. The content of each
-    category is represented by a dictionary. The dictionary contains
-    the entry (e.g. *label_entity_id* in *atom_site*) as key. The
-    corresponding values are either strings in *non-looped* categories,
-    or 1-D numpy arrays of string objects in case of *looped*
-    categories.
+    :meth:`get_category()`/:meth:`set_category()` methods.
+    The content of each category is represented by a dictionary.
+    The dictionary contains the entry
+    (e.g. *label_entity_id* in *atom_site*) as key.
+    The corresponding values are either strings in *non-looped*
+    categories, or 1-D numpy arrays of string objects in case of
+    *looped* categories.
     
-    A category can be changed or added using `set_category()`:
+    A category can be changed or added using :meth:`set_category()`:
     If a string-valued dictionary is provided, a *non-looped* category
     will be created; if an array-valued dictionary is given, a
     *looped* category will be created. In case of arrays, it is
@@ -45,7 +46,7 @@ class PDBxFile(TextFile, MutableMapping):
     This class uses a lazy category dictionary creation: When reading
     the file only the line positions of all categories are checked. The
     time consuming task of dictionary creation is done when
-    `get_category()` is called.
+    :meth:`get_category()` is called.
     
     Examples
     --------

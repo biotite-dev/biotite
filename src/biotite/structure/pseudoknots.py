@@ -416,30 +416,86 @@ def _conflict_cliques(regions):
     regions : list [set {_region, ...}, ...]
         The separated mutually conflicting regions.
     """
-    # Get a region array and an array where each region start is +1 and
-    # each stop is -1
-    region_array, start_stops = _get_region_array_for(
-        regions, content=[lambda a : [1, -1]], dtype=['int32']
+    # Get a region array and an array where each region start is denoted
+    # as ``True`` and each stop is denoted as ``False``
+    region_array, (start_stops,) = _get_region_array_for(
+        regions, content=[lambda a : [True, False]], dtype=['bool']
     )
-    start_stops = start_stops[0]
+    starts = np.nonzero(start_stops)[0]
 
-    # Iterate through the array and add up the values of the
-    # corresponding ``start_stops`` array. Separation points for two
-    # conflicts are marked by zero sums.
-    total = 0
-    start = 0
+    # Mutually conflicting regions
     cliques = []
-    for i in range(len(start_stops)):
-        total += start_stops[i]
-        if total == 0:
-            cliques.append(set(region_array[start:i+1]))
-            start = i+1
-    if len(region_array[start:]) > 0:
-        cliques.append(set(region_array[start:]))
+    # All regions that have been assigned a clique
+    seen = set()
+
+    # Iterate region starting points from left to right
+    for start_index in starts:
+        # Skip if the current region has already been assigned a clique
+        if region_array[start_index] in seen:
+            continue
+        # Members of the current clique that have not been assigned yet
+        queue = set([start_index])
+        # The current clíque
+        clique = set()
+        
+        # Execute until all regions belonging to the current region have
+        # been assigned.
+        while queue != set():
+            # Assign new region of the queue to the current clique
+            current_index = queue.pop()
+            clique.add(region_array[current_index])
+            seen.add(region_array[current_index])
+
+            # Get regions conflicting with current region
+            mutually_conflicting = _conflicting_regions(
+                region_array, current_index
+            )
+            # Add conflicting regions to queue, if they are not part of
+            # the clique yet
+            for region_index in mutually_conflicting:
+                if region_array[region_index] not in clique:
+                    queue.add(_get_first_occurrence_for(
+                        region_array, region_array[region_index])
+                    )
+        # Once all regions conflicting with the current region have
+        # been found, add clique to list of cliques
+        cliques.append(clique)
 
     # Return the conflict cliques as list of sets
     return cliques
 
+def _conflicting_regions(region_array, start_index):
+    """
+    Get regions conflicting with a specific region in a ``region_array``
+    as returned by :func:`get_region_array_for()`.
+
+    Parameters
+    ----------
+    region_array : ndarray, dtype=object
+        The array of ordered region objects.
+    start_index : int
+        The start index of the region to find conflicts with
+
+    Returns
+    -------
+    conflicting_regions : ndarray, dtype=int
+        Start indices of the conflicting regions 
+    """
+    # Get the current regions start and stop indices in the region array
+    stop_index = _get_first_occurrence_for(
+        region_array[start_index+1:], region_array[start_index]
+    )
+    stop_index = start_index + 1 + stop_index
+    # Count the occurrence of each individual region between the start 
+    # and stop indices of the regions
+    _, index, counts = np.unique(
+        region_array[start_index+1:stop_index], 
+        return_counts=True, return_index=True
+    )
+    
+    # Conflicting regions only have either their starting or stoping 
+    # point within the starting and stoping points of the given region.
+    return index[counts==1] + start_index + 1
 
 def _remove_pseudoknots(regions):
     """
