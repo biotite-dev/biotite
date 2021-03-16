@@ -130,6 +130,41 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     The restriction to a limited band is the central difference between
     the banded alignment heuristic and the optimal alignment
     algorithms [3]_ [4]_.
+    Those classical algorithms require :math:`O(m \cdot n)`
+    memory space and computation time for aligning two sequences with
+    lengths :math:`m` and :math:`n`, respectively.
+    The banded alignment algorithm reduces both requirements to
+    :math:`O(\min(m,n) \cdot (D_U - D_L))`.
+
+    *Implementation details*
+
+    The implementation is very similar to :func:`align_optimal()`.
+    The most significant difference is that not the complete alignment
+    table is filled, but only the cells that lie within the diagonal
+    band.
+    Furthermore, to reduce also the space requirements the diagnoal band
+    is 'straightened', i.e. the table's rows are indented to the left.
+    Hence, this table
+
+    = = = = = = = = = =
+    . . x x x . . . . .
+    . . . x x x . . . .
+    . . . . x x x . . .
+    . . . . . x x x . .
+    . . . . . . x x x .
+    = = = = = = = = = =
+
+    is transformed into this table:
+
+    = = =
+    x x x
+    x x x
+    x x x
+    = = =
+
+    Filled cells, i.e. cells within the band, are indicated by ``x``.
+    The shorter sequence is always represented by the first dimension
+    of the table in this implementation.
     
     References
     ----------
