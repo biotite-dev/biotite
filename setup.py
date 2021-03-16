@@ -110,8 +110,9 @@ setup(
     },
     
     install_requires = ["requests >= 2.12",
-                        "numpy >= 1.13",
-                        "msgpack >= 0.5.6"],
+                        "numpy >= 1.15",
+                        "msgpack >= 0.5.6",
+                        "networkx >= 2.0"],
     python_requires = ">=3.6",
     
     tests_require = ["pytest"],

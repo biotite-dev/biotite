@@ -81,6 +81,8 @@ atom3 = struc.Atom([0,0,2], chain_id="A", res_id=1, res_name="GLY",
 # Then we can access the annotations and coordinates of the atom array
 # simply by specifying the attribute.
 
+import numpy as np
+
 array = struc.array([atom1, atom2, atom3])
 print("Chain ID:", array.chain_id)
 print("Residue ID:", array.res_id)
@@ -99,9 +101,29 @@ print(array)
 # annotation arrays and coordinates with the type respective *zero*
 # value.
 # In our example all annotation arrays have a length of 3, since we used
-# 3 atoms to create it. A structure containing *n* atoms,
-# is represented by annotation arrays of length *n* and coordinates of
-# shape *(n,3)*.
+# 3 atoms to create it.
+# A structure containing *n* atoms is represented by annotation arrays
+# of length *n* and coordinates of shape *(n,3)*.
+# As the annotations and coordinates are simply :class:`ndarray`
+# objects, they can be edited in the same manner.
+
+array.chain_id[:] = "B"
+array.coord[array.element == "C", 0] = 42
+# It is also possible to replace an entire annotation with another array
+array.res_id = np.array([1,2,3])
+print(array)
+
+########################################################################
+# Apart from the structure manipulation functions we see later on, this
+# is the usual way to edit structures in *Biotite*.
+#
+# .. warning:: For editing an annotation, the index must be applied to
+#    the annotation and not to the :class:`AtomArray`, e.g.
+#    ``array.chain_id[...] = "B"`` instead of
+#    ``array[...].chain_id = "B"``.
+#    The latter example is incorrect, as it creates a subarray of the
+#    initial :class:`AtomArray` (discussed later) and then tries to
+#    replace the annotation array with the new value.
 # 
 # If you want to add further annotation categories to an array, you have
 # to call the :func:`add_annotation()` or :func:`set_annotation()`
@@ -509,12 +531,10 @@ print(backbone.atom_name)
 # If you would like to know which atoms are in proximity to specific
 # coordinates, have a look at the :class:`CellList` class.
 # 
-# .. warning:: Creating a subarray or substack by indexing does not
-#    necessarily copy the coordinates and annotation arrays.
-#    If possible, only *array views* are created.
-#    Look into the `NumPy` documentation for further details.
-#    If you want to ensure, that you are working with a copy,
-#    use the :func:`copy()` method after indexing.
+# .. warning:: For annotation editing Since :class:`AnnotatedSequence` objects use base position
+#    indices and :class:`Sequence` objects use array position indices,
+#    you will get different results for ``annot_seq[n:m].sequence`` and
+#    ``annot_seq.sequence[n:m]``.
 #
 # Representing bonds
 # ------------------

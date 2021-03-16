@@ -11,7 +11,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BondList", "BondType",
            "connect_via_distances", "connect_via_residue_names",
-           "find_connected"]
+           "find_connected", "find_rotatable_bonds"]
 
 cimport cython
 cimport numpy as np
@@ -21,6 +21,7 @@ import numbers
 import itertools
 from enum import IntEnum
 import numpy as np
+import networkx as nx
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -330,7 +331,7 @@ class BondList(Copyable):
         """
         as_set()
         
-        Obtain a set represetion of the :class:`BondList`.
+        Obtain a set representation of the :class:`BondList`.
 
         Returns
         -------
@@ -349,6 +350,49 @@ class BondList(Copyable):
                 (all_bonds_v[i,0], all_bonds_v[i,1], all_bonds_v[i,2])
             )
         return bond_set
+    
+    def as_graph(self):
+        """
+        as_graph()
+        
+        Obtain a graph representation of the :class:`BondList`.
+
+        Returns
+        -------
+        bond_set : Graph
+            A *NetworkX* :class:`Graph`.
+            The atom indices are nodes, the bonds are edges.
+            Each edge has a ``"bond_type"`` attribute containing the
+            :class:`BondType`.
+        
+        Examples
+        --------
+
+        >>> bond_list = BondList(5, np.array([(1,0,2), (1,3,1), (1,4,1)]))
+        >>> graph = bond_list.as_graph()
+        >>> print(graph.nodes)
+        [0, 1, 3, 4]
+        >>> print(graph.edges)
+        [(0, 1), (1, 3), (1, 4)]
+        >>> for i, j in graph.edges:
+        ...     print(i, j, graph.get_edge_data(i, j))
+        0 1 {'bond_type': <BondType.DOUBLE: 2>}
+        1 3 {'bond_type': <BondType.SINGLE: 1>}
+        1 4 {'bond_type': <BondType.SINGLE: 1>}
+        """
+        cdef int i
+
+        cdef uint32[:,:] all_bonds_v = self._bonds
+
+        g = nx.Graph()
+        cdef list edges = [None] * all_bonds_v.shape[0]
+        for i in range(all_bonds_v.shape[0]):
+            edges[i] = (
+                all_bonds_v[i,0], all_bonds_v[i,1],
+                {"bond_type": BondType(all_bonds_v[i,2])}
+            )
+        g.add_edges_from(edges)
+        return g
     
     def get_atom_count(self):
         """
@@ -685,7 +729,7 @@ class BondList(Copyable):
 
         Parameters
         ----------
-        index1, index2 : int
+        atom_index1, atom_index2 : int
             The indices of the atoms to create a bond for.
         bond_type : BondType or int, optional
             The type of the bond. Default is :attr:`BondType.ANY`.
@@ -729,7 +773,7 @@ class BondList(Copyable):
 
         Parameters
         ----------
-        index1, index2 : int
+        atom_index1, atom_index2 : int
             The indices of the atoms whose bond should be removed.
         """
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
@@ -749,6 +793,35 @@ class BondList(Copyable):
         # Since this value is only used for pessimistic array allocation
         # in 'get_bonds()', the slightly larger memory usage is a better
         # option than the repetitive call of _get_max_bonds_per_atom()
+    
+    def remove_bonds_to(self, int32 atom_index):
+        """
+        remove_bonds_to(self, atom_index)
+
+        Remove all bonds from the :class:`BondList` where the given atom
+        is involved.
+
+        Parameters
+        ----------
+        atom_index : int
+            The index of the atom whose bonds should be removed.
+
+        """
+        cdef uint32 index = _to_positive_index(atom_index, self._atom_count)
+        
+        cdef np.ndarray mask = np.ones(len(self._bonds), dtype=np.uint8)
+        cdef uint8[:] mask_v = mask
+
+        # Find the bond in bond list
+        cdef int i
+        cdef uint32[:,:] all_bonds_v = self._bonds
+        for i in range(all_bonds_v.shape[0]):
+            if (all_bonds_v[i,0] == index or all_bonds_v[i,1] == index):
+                mask_v[i] = False
+        # Remove the bonds
+        self._bonds = self._bonds[mask.astype(bool, copy=False)]
+        # The maximum bonds per atom is not recalculated
+        # (see 'remove_bond()')
 
     def remove_bonds(self, bond_list):
         """
@@ -781,7 +854,7 @@ class BondList(Copyable):
                         mask_v[i] = False
         
         # Remove the bonds
-        self._bonds = self._bonds[mask.astype(np.bool, copy=False)]
+        self._bonds = self._bonds[mask.astype(bool, copy=False)]
         # The maximum bonds per atom is not recalculated
         # (see 'remove_bond()')
 
@@ -1057,7 +1130,7 @@ class BondList(Copyable):
                 free(<int*>ptrs_v[i])
         
         # Eventually remove redundant bonds
-        self._bonds = self._bonds[redundancy_filter.astype(np.bool,copy=False)]
+        self._bonds = self._bonds[redundancy_filter.astype(bool, copy=False)]
 
 
 cdef uint32 _to_positive_index(int32 index, uint32 array_length) except -1:
@@ -1160,7 +1233,7 @@ def _to_bool_mask(object index, uint32 length):
     Convert an index of arbitrary type into a boolean mask
     with given length.
     """
-    if isinstance(index, np.ndarray) and index.dtype == np.bool:
+    if isinstance(index, np.ndarray) and index.dtype == bool:
         # Index is already boolean mask -> simply return as uint8
         if len(index) != length:
             raise IndexError(
@@ -1624,4 +1697,74 @@ cdef _find_connected(bond_list,
             bond_list, connected_index, is_connected_mask, all_bonds
         )
 
+
+def find_rotatable_bonds(bonds):
+    """
+    find_rotatable_bonds(bonds)
+
+    Find all rotatable bonds in a given :class:`BondList`.
+
+    The following conditions must be true for a bond to be counted as
+    rotatable:
+
+        1. The bond must be a single bond (``BondType.SINGLE``)
+        2. The connected atoms must not be within the same cycle/ring
+        3. Both connected atoms must not be terminal, e.g. not a *C-H*
+           bond, as rotation about such bonds would not change any
+           coordinates
+
+    Parameters
+    ----------
+    bonds : BondList
+        The bonds to find the rotatable bonds in.
     
+    Returns
+    -------
+    rotatable_bonds : BondList
+        The subset of the input `bonds` that contains only rotatable
+        bonds.
+    
+    Examples
+    --------
+
+    >>> molecule = residue("TYR")
+    >>> for i, j, _ in find_rotatable_bonds(molecule.bonds).as_array():
+    ...     print(molecule.atom_name[i], molecule.atom_name[j])
+    N CA
+    CA C
+    CA CB
+    C OXT
+    CB CG
+    CZ OH
+    """
+    cdef uint32 i, j
+    cdef uint32 bond_type
+    cdef uint32 SINGLE = int(BondType.SINGLE)
+    cdef bint in_same_cycle
+
+    bond_graph = bonds.as_graph()
+    cycles = nx.algorithms.cycles.cycle_basis(bond_graph)
+
+    cdef int64[:] number_of_partners_v = np.count_nonzero(
+        bonds.get_all_bonds()[0] != -1,
+        axis=1
+    ).astype(np.int64, copy=False)
+
+    rotatable_bonds = []
+    cdef uint32[:,:] bonds_v = bonds.as_array()
+    for i, j, bond_type in bonds_v:
+        # Can only rotate about single bonds
+        # Furthermore, it makes no sense to rotate about a bond,
+        # that leads to a single atom
+        if bond_type == BondType.SINGLE \
+            and number_of_partners_v[i] > 1 \
+            and number_of_partners_v[j] > 1:
+                # Cannot rotate about a bond, if the two connected atoms
+                # are in a cycle
+                in_same_cycle = False
+                for cycle in cycles:
+                    if i in cycle and j in cycle:
+                        in_same_cycle = True
+                if not in_same_cycle:
+                    rotatable_bonds.append((i,j, bond_type))
+    return BondList(bonds.get_atom_count(), np.array(rotatable_bonds))
