@@ -14,6 +14,10 @@ and analyze where the differences to the reference genome are
 (variant calling).
 At last, we will focus on the mutations in the *spike protein* sequence.
 
+.. note:: As the methods shown here are focused on simplicity, the
+   accuracy of the assembled genome may be lower than the output from
+   more sophisticated assembly software/pipelines.
+
 To begin with, we download the relevant sequencing data from the *NCBI*
 *sequence read archive* (SRA) using *Biotite's* interface to the
 *SRA Toolkit*.
