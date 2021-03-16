@@ -84,7 +84,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         :math:`i` and :math:`j` are positions in `seq1` and `seq2`,
         respectively.
         An alignment of sequence positions where :math:`D` is lower than
-        the lower limit or greater than the upper limit are ignored.
+        the lower limit or greater than the upper limit is not explored
+        by the algorithm.
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
@@ -102,7 +103,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     
     Returns
     -------
-    alignments : list, type=Alignment
+    alignments : list of Alignment
         The generated alignments.
         Each alignment in the list has the same similarity score,
         which is the maximum score possible within the defined band.
@@ -116,7 +117,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     Notes
     -----
     The diagonals give the maximum difference between the
-    number of gaps inserted gaps.
+    number of inserted gaps.
     This means for any position in the alignment, the algorithm
     will not consider inserting a gap into a sequence, if the first
     sequence has already ``-band[0]`` more gaps than the second

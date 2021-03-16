@@ -58,8 +58,8 @@ class ScoreThresholdRule(SimilarityRule):
     """
     __init__(matrix, threshold)
 
-    This similarity rule gives all *k-mers* that have a greater or equal
-    similarity score with a given *k-mer* than a defined threshold 
+    This similarity rule calculates all *k-mers* that have a greater or
+    equal similarity score with a given *k-mer* than a defined threshold 
     score.
 
     The similarity score :math:`S` of two *k-mers* :math:`a` and

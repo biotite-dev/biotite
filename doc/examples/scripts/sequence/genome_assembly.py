@@ -5,9 +5,9 @@ Comparative genome assembly of SARS-CoV-2 B.1.1.7 variant
 .. currentmodule:: biotite.sequence.align
 
 In the following script we will perform a comparative genome assembly of
-the emerging SARS-CoV-2 B.1.1.7 variant in a simple manner.
+the emerging SARS-CoV-2 B.1.1.7 variant in a simplified manner.
 We will use publicly available sequencing data of the virus variant
-produced from a *Oxford Nanopore MinION*, map these sequence snippets
+produced from a *Oxford Nanopore MinION* and map these sequence snippets
 (reads) to the reference SARS-CoV-2 genome.
 Then we will create a single consensus sequence from the mapped reads
 and analyze where the differences to the reference genome are
@@ -29,7 +29,7 @@ sequence, so we expect only a single FASTQ file.
 A FASTQ file provides for each read it contains
 
     1. the sead sequence,
-    2. associated *Phred* quality scores
+    2. associated *Phred* quality scores.
 
 Phred scores :math:`Q` describe the accuracy of each base in the read in
 terms of base-call error probability :math:`P` [2]_:
@@ -111,7 +111,7 @@ fig.tight_layout()
 
 ########################################################################
 # We can see the reads in the dataset are rather long, with most reads
-# longer than 1000 bases.
+# longer than 1 kb.
 # This is one of the big advantages of the employed sequencing
 # technology.
 # Especially for *de novo* genome assembly (which we will not do here),
@@ -309,11 +309,11 @@ del matches
 #
 # where :math:`N` is the read length.
 # We choose :math:`3 \sigma` as the deviation from the center of the
-# band, resulting in a :math:`< 0.3%` chance that the optimal alignment
+# band, resulting in a :math:`< 0.3\%` chance that the optimal alignment
 # path would leave the band.
 #
 # Although, the computation time is massively reduced by using
-# :func:`align_banded()`, the following step is still the most
+# :func:`align_banded()`, the gapped alignment step is still the most
 # time-consuming one.
 # Therefore, we use multiprocessing to spread the task to multiple cores
 # on multi-core architectures.
@@ -339,8 +339,8 @@ with ProcessPoolExecutor() as executor:
     ))
 
 ########################################################################
-# Now we have to select for each read, whether original or complementary
-# strand is the one homologous to the reference genome.
+# Now we have to select for each read, whether the original or
+# complementary strand is the one homologous to the reference genome.
 # We simply select the one with the higher score.
 
 for_alignments = [alignments[i] for i in range(0, len(alignments), 2)]
@@ -406,11 +406,12 @@ fig.tight_layout()
 # Sophisticated variant calling methods may take a lot of factors into
 # account, e.g. expected GC content, error rates, etc., to tackle the
 # problem of erroneous base calls from the sequencer.
-# in this script we take a rather simple approach.
+# In this script we take a rather simple approach.
 #
-# Considering a single locus, we are interested in finding the most
-# probable base from the sequencing data, or in other words the base
-# that is least the result of a sequencing error.
+# Considering a single sequence location on the genome, we are
+# interested in finding the most probable base from the sequencing data,
+# or in other words the base that is least the result of a sequencing
+# error.
 # For a symbol (base) :math:`s \in \{ A, C, G, T\}` the probability
 # :math:`P` of having a genotype :math:`G \neq s` dependent on all base
 # calls :math:`c_i` is proportional to the product of the error
@@ -439,8 +440,8 @@ fig.tight_layout()
 #
 #   s_G = {\arg\min}_s \left( \prod_{i: c_i = s} 10^{-\frac{Q_i}{10}} \right)
 #
-# To simplify this equation we can take the logarithm of product on the
-# right expression, as the logarithm is a monotonic function.
+# To simplify this equation we can take the logarithm of the product on
+# the right expression, as the logarithm is a monotonic function.
 #
 # .. math::
 #
@@ -647,7 +648,7 @@ feature_ax.set_frame_on(False)
 # --------------------------------
 #
 # For the investigation of the spike protein differences between the
-# original and the varaint SARS-CoV-2, we need to acquire the
+# original and the variant SARS-CoV-2, we need to acquire the
 # corresponding protein sequences.
 # The location of the spike protein is annotated in the *GenBank* file
 # for the reference genome.

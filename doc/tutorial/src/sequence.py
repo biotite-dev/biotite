@@ -457,10 +457,10 @@ print(align.get_codes(alignment))
 # *Biotite* provides a modular system to build such an alignment search
 # method yourself. At least four steps are necessary:
 #
-#    #. Creating a table mapping *k-mers* to their index in the
-#       reference sequence
-#    #. Matching this *k-mer* index table to the *k-mers* of the query
-#       sequence
+#    #. Creating an index table mapping *k-mers* to their position in
+#       the reference sequence
+#    #. Find match positions between this *k-mer* index table and the
+#       *k-mers* of the query sequence
 #    #. Perform gapped alignments restricted to the match positions
 #    #. Evaluate the significance of the created alignments 
 #
@@ -542,14 +542,13 @@ kmer_codes = kmer_alphabet.create_kmers(seq.ProteinSequence("BIQTITE").code)
 print("k-mer codes:", kmer_codes)
 print("k-mers:")
 for kmer in kmer_alphabet.decode_multiple(kmer_codes):
-    print(kmer)
+    print("".join(kmer))
 
 ########################################################################
 # Now we get back to the :class:`KmerTable`.
-# When a sequence is added, the table uses
-# :meth:`KmerAlphabet.create_kmers()` to get all *k-mers* in the
-# sequence and stores for each *k-mer* the position(s) where the
-# respective *k-mer* appears.
+# When the table is created, it uses :meth:`KmerAlphabet.create_kmers()`
+# to get all *k-mers* in the sequence and stores for each *k-mer* the
+# position(s) where the respective *k-mer* appears.
 
 # Get all positions for the 'ITE' k-mer
 for ref_id, position in kmer_table[kmer_alphabet.encode("ITE")]:
@@ -566,7 +565,7 @@ for ref_id, position in kmer_table[kmer_alphabet.encode("ITE")]:
 # overlapping *k-mers* in the query and checks whether the
 # :class:`KmerTable` has at least one position for this k-mer.
 # If it does, it adds the position in the query and all corresponding
-# positions saved in the :class:`KmerTable` to the matches
+# positions saved in the :class:`KmerTable` to the matches.
 
 matches = kmer_table.match(query)
 # Filter out the reference ID, because we have only one sequence

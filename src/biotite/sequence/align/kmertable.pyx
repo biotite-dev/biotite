@@ -36,14 +36,14 @@ cdef class KmerTable:
     There are multiple ways to create a :class:`KmerTable`:
 
         - :meth:`from_sequences()` iterates through all overlapping
-          *k-mers* in a sequence and, stores the sequence position of
+          *k-mers* in a sequence and stores the sequence position of
           each *kmer* in the table.
         - :meth:`from_kmers()` is similar to :meth:`from_sequences()`
           but directly accepts *k-mers* as input instead of sequences.
         - :meth:`from_tables()` merges the entries from multiple
           :class:`KmerTable` objects into a new table.
         - :meth:`from_positions()` let's the user provide manual
-          *k-mer* positions, which can be useful forloading a
+          *k-mer* positions, which can be useful for loading a
           :class:`KmerTable` from file.
     
     The standard constructor merely returns an empty table and is
@@ -53,8 +53,8 @@ cdef class KmerTable:
 
         1. a unique reference ID that identifies to which sequence a
            position refers to and
-        2. the position of the zero-based sequence position of the first
-           symbol in the *k-mer*.
+        2. the zero-based sequence position of the first symbol in the
+           *k-mer*.
 
     The :meth:`match()` method iterates through all overlapping *k-mers*
     in another sequence and, for each *k-mer*, looks up the reference
@@ -64,7 +64,7 @@ cdef class KmerTable:
     position to the array of matches.
     Finally these matches are returned to the user.
     Optionally, a :class:`SimilarityRule` can be supplied, to find
-    also matches for similar *k-mers.
+    also matches for similar *k-mers*.
     This is especially useful for protein sequences to match two
     *k-mers* with a high substitution probability.
 
@@ -91,7 +91,7 @@ cdef class KmerTable:
     The design of the :class:`KmerTable` is inspired by the *MMseqs2*
     software [1]_.
 
-    **Memory consumption**
+    *Memory consumption*
 
     For efficient mapping, a :class:`KmerTable` contains a pointer
     array, that contains one 64-bit pointer for each possible *k-mer*.
@@ -113,7 +113,7 @@ cdef class KmerTable:
     where :math:`n` is the number of symbols in the alphabet and
     :math:`L` is the summed length of all sequences added to the table.
 
-    **Multiprocessing**
+    *Multiprocessing*
 
     :class:`KmerTable` objects can be used in multi-processed setups:
     Adding a large database of sequences to a table can be sped up by
@@ -126,7 +126,7 @@ cdef class KmerTable:
     the matching step can also be divided into multiple processes, if
     multiple sequences need to be matched.
 
-    **Storage on hard drive**
+    *Storage on hard drive*
 
     The most time efficient way to read/write a :class:`KmerTable` is
     the *pickle* format.
@@ -134,7 +134,7 @@ cdef class KmerTable:
     reference IDs and position for each *k-mer*.
     To restrict this task to all *k-mer* that have at least one match
     :meth:`get_kmers()` can be used.
-    Conversely, the reference IDs and position can be restored via
+    Conversely, the reference IDs and positions can be restored via
     :meth:`from_positions()`.
 
     References
@@ -273,13 +273,13 @@ cdef class KmerTable:
             If provided, the list must contain one boolean mask
             (or ``None``) for each sequence, and each bolean mask must
             have the same length as the sequence.
-            By default, no sequence positions are ignored.
+            By default, no sequence position is ignored.
         alphabet : Alphabet, optional
             The alphabet to use for this table.
             It must extend the alphabets of the input `sequences`.
             By default, an appropriate alphabet is inferred from the
             input `sequences`.
-            This option is usually used to be compatible with another
+            This option is usually used for compatibility with another
             sequence/table in the matching step.
         
         Returns

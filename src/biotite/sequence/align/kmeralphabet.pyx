@@ -140,7 +140,7 @@ class KmerAlphabet(Alphabet):
         -----
         In contrast the base :class:`Alphabet` and
         :class:`LetterAlphabet` class, :class:`KmerAlphabet` does not
-        use a list of its symbols internally for performance reasons.
+        hold a list of its symbols internally for performance reasons.
         Hence calling :meth:`get_symbols()` may be quite time consuming
         for large base alphabets or large *k* values, as the list needs
         to be created first.
