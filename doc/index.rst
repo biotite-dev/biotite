@@ -89,7 +89,7 @@ accessible surface area calculation, structure superimposition and more.
 
 .. image:: /examples/gallery/structure/images/sphx_glr_sheet_arrangement_001.png
    :width: 48 %
-   :target: examples/gallery/structure/adjacency_matrix.html
+   :target: examples/gallery/structure/sheet_arrangement.html
 
 ----
 
