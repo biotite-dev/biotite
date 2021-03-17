@@ -189,7 +189,8 @@ class PDBQTFile(TextFile):
     
 
     def set_structure(self, atoms, charges=None, atom_types=None,
-                      rotatable_bonds=None):
+                      rotatable_bonds=None, rigid_root=None,
+                      include_torsdof=True):
         if charges is None:
             charges = partial_charges(atoms)
             charges[np.isnan(charges)] = 0
@@ -197,36 +198,61 @@ class PDBQTFile(TextFile):
             if np.isnan(charges).any():
                 raise ValueError("Input charges contain NaN values")
         
+        # Get AutoDock atom types and remove unpolar hydrogen atoms
         atoms, charges, types, mask = convert_atoms(atoms, charges)
+        # Overwrite calculated atom types with input atom types
         if atom_types is not None:
             types = atom_types[mask]
         
         if rotatable_bonds is None:
+            # No rotatable bonds -> the BondList contains no bonds
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
             use_root = False
         elif rotatable_bonds == "rigid":
-            # No rotatable bonds -> the BondList contains no bonds
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
             use_root = True
         elif rotatable_bonds == "all":
             rotatable_bonds = find_rotatable_bonds(atoms.bonds)
             use_root = True
         else:
-            rotatable_bonds = BondList(
-                atoms.bonds.get_atom_count(), np.asarray(rotatable_bonds)
-            )
             if rotatable_bonds.ndim != 2 or rotatable_bonds.shape[1] != 2:
                 raise ValueError(
                     "An (nx2) array is expected for rotatable bonds"
                 )
+            rotatable_bonds = BondList(
+                len(mask), np.asarray(rotatable_bonds)
+            )[mask]
             use_root = True
+        
+        if rigid_root is None:
+            root_index = 0
+        else:
+            # Find new index of root atom, since the index might have
+            # been shifted due to removed atoms
+            original_indices = np.arange(len(mask))
+            new_indices = original_indices[mask]
+            try:
+                root_index = np.where(new_indices == rigid_root)[0][0]
+            except IndexError:
+                raise ValueError(
+                    "The given root atom index points to an unpolar hydrogen "
+                    "atom, that has been removed"
+                )
+            # Add bonds of the rigid root to rotatable bonds,
+            # as they probably have been filtered out,
+            # as the root is probably a terminal atom
+            for atom, bond_type in zip(*atoms.bonds.get_bonds(root_index)):
+                rotatable_bonds.add_bond(root_index, atom, bond_type)
         
         # Break rotatable bonds
         # for simple branch determination in '_write_atoms()'
         atoms.bonds.remove_bonds(rotatable_bonds)
 
         hetero = ["ATOM" if e == False else "HETATM" for e in atoms.hetero]
-        atom_id = np.arange(1, atoms.array_length()+1)
+        if "atom_id" in atoms.get_annotation_categories():
+            atom_id = atoms.atom_id
+        else:
+            atom_id = np.arange(1, atoms.array_length()+1)
         occupancy = np.ones(atoms.array_length())
         b_factor = np.zeros(atoms.array_length())
 
@@ -238,10 +264,10 @@ class PDBQTFile(TextFile):
         self._write_atoms(
             atoms, charges, types,
             atom_id, hetero, occupancy, b_factor,
-            0, rotatable_bonds, np.zeros(len(rotatable_bonds), dtype=bool),
-            use_root
+            root_index, rotatable_bonds,
+            np.zeros(len(rotatable_bonds), dtype=bool), use_root
         )
-        if use_root:
+        if include_torsdof:
             self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
 
         return mask
