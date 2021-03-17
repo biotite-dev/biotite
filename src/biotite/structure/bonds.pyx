@@ -1610,6 +1610,8 @@ def _connect_inter_residue(atoms, residue_starts):
 
 def find_connected(bond_list, uint32 root, bint as_mask=False):
     """
+    find_connected(bond_list, root, as_mask=False)
+
     Get indices to all atoms that are directly or inderectly connected
     to the root atom indicated by the given index.
 
