@@ -1671,7 +1671,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
         bond_list.get_atom_count(), dtype=np.uint8
     )
     # Find connections in a recursive way,
-    # by visiting all atoms that are reachable by a bonds
+    # by visiting all atoms that are reachable by a bond
     _find_connected(bond_list, root, is_connected_mask, all_bonds)
     if as_mask:
         return is_connected_mask
