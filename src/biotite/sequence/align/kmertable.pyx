@@ -421,8 +421,10 @@ cdef class KmerTable:
         >>> sequences = [ProteinSequence("BIQTITE"), ProteinSequence("NIQBITE")]
         >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, 3)
         >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
-        >>> print(kmer_codes)
-        [array([7676, 9535, 4429, 9400, 2119]), array([ 7667, 11839,  4525,  9404,  2119])]
+        >>> for code in kmer_codes:
+        ...     print(code)
+        [7676 9535 4429 9400 2119]
+        [ 7667 11839  4525  9404  2119]
         >>> table = KmerTable.from_kmers(
         ...     kmer_alphabet, kmer_codes
         ... )
