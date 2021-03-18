@@ -53,6 +53,11 @@ def test_concatenation():
     assert str1 + str3 == str(concat_seq)
     concat_seq = seq.NucleotideSequence(str3) + seq.NucleotideSequence(str1)
     assert str3 + str1 == str(concat_seq)
+
+def test_frequency():
+    string = "ACGCGAGAAAGCGGG"
+    dna = seq.NucleotideSequence(string)
+    assert dna.get_symbol_frequency() == {"A": 5, "C": 3, "G": 7, "T": 0}
     
 def test_alph_error():
     string = "AATGCGTUTA"

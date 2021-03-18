@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann", "Thomas Nevolianis"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
 from .sequence import Sequence
-from .alphabet import LetterAlphabet, AlphabetError
+from .alphabet import LetterAlphabet, AlphabetError, AlphabetMapper
 import numpy as np
 import copy
 
@@ -117,13 +117,12 @@ class NucleotideSequence(Sequence):
                          "D" : "H",
                          "B" : "V",
                          "N" : "N"}
-    _compl_dict = {}
-    for _key, _value in compl_symbol_dict.items():
-        _key_code = alphabet_amb.encode(_key)
-        _val_code = alphabet_amb.encode(_value)
-        _compl_dict[_key_code] = _val_code
-    # Vectorized function that returns a complement code
-    _complement_func = np.vectorize(_compl_dict.__getitem__)
+    # List comprehension does not work in this scope
+    _compl_symbols = []
+    for _symbol in alphabet_amb.get_symbols():
+        _compl_symbols.append(compl_symbol_dict[_symbol])
+    _compl_alphabet_unamb = LetterAlphabet(_compl_symbols)
+    _compl_mapper = AlphabetMapper(_compl_alphabet_unamb, alphabet_amb)
     
     def __init__(self, sequence=[], ambiguous=None):
         if isinstance(sequence, str):
@@ -175,7 +174,12 @@ class NucleotideSequence(Sequence):
         AAGCGT
         
         """
-        compl_code = NucleotideSequence._complement_func(self.code)
+        # Interpreting the sequence code of this object in the
+        # complementary alphabet gives the complementary symbols
+        # In order to get the complementary symbols in the original
+        # alphabet, the sequence code is mapped from the complementary
+        # alphabet into the original alphabet
+        compl_code = NucleotideSequence._compl_mapper[self.code]
         return self.copy(compl_code)
     
     def translate(self, complete=False, codon_table=None, met_start=False):

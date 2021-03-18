@@ -31,7 +31,7 @@ be collected after :class:`Application` has finished.
 The execution of an :class:`Application` can run in parallel:
 In the time between starting the run and collecting the results can be
 used to run other code, similar to the *Python* :class:`Thread` or
-class:`Process` classes.
+:class:`Process` classes.
 """
 
 __name__ = "biotite.application"

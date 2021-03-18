@@ -86,7 +86,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     matrix : SubstitutionMatrix
         The substitution matrix used for scoring.
         Must be symmetric.
-    gap_penalty : int or (tuple, dtype=int), optional
+    gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         general gap penalty. If a tuple is provided, an affine gap
         penalty is used. The first integer in the tuple is the gap

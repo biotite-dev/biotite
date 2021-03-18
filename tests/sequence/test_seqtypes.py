@@ -19,9 +19,9 @@ def test_nucleotide_construction():
 
 
 def test_reverse_complement():
-    string = "AATGCGTTA"
+    string = "AATGCGTTANY"
     dna = seq.NucleotideSequence(string)
-    assert "TAACGCATT" == str(dna.reverse().complement())
+    assert str(dna.reverse().complement()) == "RNTAACGCATT"
 
 def test_stop_removal():
     string = "LYG*GR*"
