@@ -59,7 +59,8 @@ class BlastWebApp(WebApp):
     _request_delay = 60
     
     def __init__(self, program, query, database="nr",
-                 app_url=_ncbi_url, obey_rules=True, mail=None):
+                 app_url=_ncbi_url, obey_rules=True,
+                 mail="padix.key@gmail.com"):
         super().__init__(app_url, obey_rules)
         
         # 'megablast' is somehow not working
@@ -241,9 +242,8 @@ class BlastWebApp(WebApp):
     
     def run(self):
         param_dict = {}
-        param_dict["tool"] = "BiotiteClient"
-        if self._mail is not None:
-            param_dict["email"] = self._mail
+        param_dict["tool"] = "Biotite"
+        param_dict["email"] = self._mail
         param_dict["CMD"] = "Put"
         param_dict["PROGRAM"] = self._program
         param_dict["QUERY"] = str(self._query)
