@@ -18,6 +18,50 @@ from ...structure.error import BadStructureError
 
 
 class VinaApp(LocalApp):
+    """
+    Dock a ligand to a receptor molecule using *AutoDock Vina*.
+
+    Parameters
+    ----------
+    ligand : AtomArray
+        The structure of the receptor molecule.
+        Must have an associated :class:`BondList`.
+        An associated ``charges``annotation is recommended for proper
+        calculation of partial charges.
+    receptor : AtomArray, shape=(n,)
+        The structure of the receptor molecule.
+        Must have an associated :class:`BondList`.
+        An associated ``charges``annotation is recommended for proper
+        calculation of partial charges.
+    center : ndarray, shape=(3,), dtype=float
+        The *xyz* coordinates for the center of the search space.
+    size : ndarray, shape=(3,), dtype=float
+        The size of the search space in *xyz* directions.
+    flexible : ndarray, shape=(n,), dtype=bool, optional
+        A boolean mask that indicates flexible amino acid side chains
+        in `receptor`.
+        Each residue, where at least one atom index is ``True`` in
+        `flexible`, is considered flexible.
+        By default, the receptor has no flexibility.
+    bin_path : str, optional
+        Path to the *Vina* binary.
+
+    Examples
+    --------
+
+    >>> # A dummy receptor and ligand
+    >>> ligand = residue("ASP")
+    >>> receptor = atom_array
+    >>> app = VinaApp(
+    ...     ligand, receptor,
+    ...     # Binding pocket is in the center of the receptor
+    ...     center=centroid(receptor),
+    ...     # 20 Å x 20 Å x 20 Å search space
+    ...     size=[20, 20, 20],
+    ...     # Handle residues 2 and 5 as flexible
+    ...     flexible=(receptor.res_id == 2) | (receptor.res_id == 5)
+    ... )
+    """
     def __init__(self, ligand, receptor, center, size, flexible=None,
                  bin_path="vina"):
         super().__init__(bin_path)
@@ -58,18 +102,65 @@ class VinaApp(LocalApp):
     
     @requires_state(AppState.CREATED)
     def set_seed(self, seed):
+        """
+        Fix the seed for the random number generator to get
+        reproducible results.
+
+        By default, the seed is chosen randomly.
+
+        Parameters
+        ----------
+        seed : int
+            The seed for the random number generator.
+        """
         self._seed = seed
     
     @requires_state(AppState.CREATED)
     def set_exhaustiveness(self, exhaustiveness):
+        """
+        Set the *exhaustiveness* parameter for *Vina*.
+
+        A higher exhaustiveness may lead to better docking results, but
+        also increases the computation time.
+        By default, the exhaustiveness is ``8``.
+
+        Parameters
+        ----------
+        exhaustiveness : int
+            The value for the exhaustiveness parameter.
+            Must be greater than 0.
+        """
         self._exhaustiveness = exhaustiveness
     
     @requires_state(AppState.CREATED)
-    def set_number_of_models(self, number):
+    def set_max_number_of_models(self, number):
+        """
+        Set the maximum number of binding modes to generate.
+
+        *Vina* may generate less modes, if the docking process does
+        not find enough distinct conformations.
+        By default, the maximum number is ``9``.
+
+        Parameters
+        ----------
+        number : int
+            The maximum number of generated modes/models.
+        """
         self._number = number
     
     @requires_state(AppState.CREATED)
     def set_energy_range(self, energy_range):
+        """
+        Set the maximum energy range of the generated models.
+
+        *Vina* will ignore binding modes if the difference between this
+        mode and the best mode is greater than this vale.
+
+        Parameters
+        ----------
+        number : float
+            The energy range (kcal/mol).
+        """
         self._energy_range = energy_range
 
     def run(self):
@@ -195,14 +286,56 @@ class VinaApp(LocalApp):
     
     @requires_state(AppState.JOINED)
     def get_energies(self):
+        """
+        Get the predicted binding energy for each generated binding
+        mode.
+
+        Returns
+        -------
+        energies : ndarray, dtype=float
+            The predicted binding energies (kcal/mol).
+            The energies are sorted from best to worst.
+        """
         return self._energies
 
     @requires_state(AppState.JOINED)
     def get_ligand_models(self):
+        """
+        Get the ligand structure with the conformations for each 
+        generated binding mode.
+
+        Returns
+        -------
+        ligand : AtomArrayStack
+            The docked ligand.
+            Each model corresponds to one binding mode.
+            The models are sorted from best to worst predicted binding
+            affinity.
+        
+        Notes
+        -----
+        The returned structure may contain less atoms than the input
+        structure, as *Vina* removes unpolar hydrogen atoms.
+        Furthermore, the returned structure contains *AutoDock* atom
+        types as ``element`` annotation.
+        """
         return self._ligand_models
 
     @requires_state(AppState.JOINED)
     def get_ligand_coord(self):
+        """
+        Get the ligand coordinates for each generated binding mode.
+
+        Returns
+        -------
+        coord : ndarray, shape=(m,n,3), dtype=float
+            The coordinates for *m* binding modes and *n* atoms
+            of the input ligand.
+            The models are sorted from best to worst predicted binding
+            affinity.
+            Missing coordinates due to the removed unpolar hydrogen
+            atoms are set to *NaN*.
+        """
         coord = np.full(
             (self._n_models, self._ligand.array_length(), 3),
             np.nan, dtype=np.float32
@@ -212,10 +345,53 @@ class VinaApp(LocalApp):
     
     @requires_state(AppState.JOINED)
     def get_flexible_residue_models(self):
+        """
+        Get the structure for the flexible side chains with the
+        conformations for each generated binding mode.
+
+        If no flexible side chains were defined, the returned
+        :class:`AtomArrayStack` contains no atoms.
+
+        Returns
+        -------
+        side_chains : AtomArrayStack
+            The docked side chains.
+            Each model corresponds to one binding mode.
+            The models are sorted from best to worst predicted binding
+            affinity.
+        
+        Notes
+        -----
+        The returned structure may contain less atoms than the input
+        structure, as *Vina* removes unpolar hydrogen atoms.
+        Furthermore, the returned structure contains *AutoDock* atom
+        types as ``element`` annotation.
+        """
         return self._flex_models
 
     @requires_state(AppState.JOINED)
     def get_receptor_coord(self):
+        """
+        Get the get_receptor_coord coordinates for each generated
+        binding mode.
+
+        Returns
+        -------
+        coord : ndarray, shape=(m,n,3), dtype=float
+            The coordinates for *m* binding modes and *n* atoms
+            of the input receptor.
+            The models are sorted from best to worst predicted binding
+            affinity.
+            Missing coordinates due to the removed unpolar hydrogen
+            atoms from flexible side chains are set to *NaN*.
+        
+        Notes
+        -----
+        The output is only meaningful, if flexible side chains were
+        defined.
+        Otherwise, the returned coordinates are simply *m* repetitions
+        of the input receptor coordinates.
+        """
         coord = np.repeat(
             self._receptor.coord[np.newaxis, ...],
             repeats=self._n_models, axis=0
@@ -278,8 +454,51 @@ class VinaApp(LocalApp):
     
 
     @staticmethod
-    def dock(ligand, receptor, center, size, bin_path="vina"):
-        app = VinaApp(ligand, receptor, center, size, bin_path)
+    def dock(ligand, receptor, center, size, flexible=None, bin_path="vina"):
+        """
+        Dock a ligand to a receptor molecule using *AutoDock Vina*.
+
+        This is a convenience function, that wraps the :class:`VinaApp`
+        execution.
+
+        Parameters
+        ----------
+        ligand : AtomArray
+            The structure of the receptor molecule.
+            Must have an associated :class:`BondList`.
+            An associated ``charges``annotation is recommended for proper
+            calculation of partial charges.
+        receptor : AtomArray, shape=(n,)
+            The structure of the receptor molecule.
+            Must have an associated :class:`BondList`.
+            An associated ``charges``annotation is recommended for proper
+            calculation of partial charges.
+        center : ndarray, shape=(3,), dtype=float
+            The *xyz* coordinates for the center of the search space.
+        size : ndarray, shape=(3,), dtype=float
+            The size of the search space in *xyz* directions.
+        flexible : ndarray, shape=(n,), dtype=bool, optional
+            A boolean mask that indicates flexible amino acid side chains
+            in `receptor`.
+            Each residue, where at least one atom index is ``True`` in
+            `flexible`, is considered flexible.
+            By default, the receptor has no flexibility.
+        bin_path : str, optional
+            Path to the *Vina* binary.
+
+        Returns
+        -------
+        coord : ndarray, shape=(m,n,3), dtype=float
+            The docked ligand coordinates for *m* binding modes and
+            *n* atoms of the input ligand.
+            The models are sorted from best to worst predicted binding
+            affinity.
+            Missing coordinates due to the removed unpolar hydrogen
+            atoms are set to *NaN*.
+        energies : ndarray, shape=(m,), dtype=float
+            The corresponding predicted binding energies (kcal/mol).
+        """
+        app = VinaApp(ligand, receptor, center, size, flexible, bin_path)
         app.start()
         app.join()
         return app.get_ligand_coord(), app.get_energies()

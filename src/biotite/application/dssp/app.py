@@ -17,7 +17,7 @@ import numpy as np
 class DsspApp(LocalApp):
     r"""
     Annotate the secondary structure of a protein structure using the
-    DSSP software.
+    *DSSP* software.
     
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
@@ -39,7 +39,7 @@ class DsspApp(LocalApp):
     atom_array : AtomArray
         The atom array to be annotated.
     bin_path : str, optional
-        Path of the DDSP binary.
+        Path of the *DDSP* binary.
     
     Examples
     --------
