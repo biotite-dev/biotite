@@ -12,9 +12,13 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
 
-def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
-    raise NotImplementedError()
+def get_structure(pdbqt_file, model=None):
+    return pdbqt_file.get_structure(model)
 
 
-def set_structure(pdb_file, array, hybrid36=False):
-    raise NotImplementedError()
+def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
+                  rotatable_bonds=None, rigid_root=None, include_torsdof=True):
+    return pdbqt_file.set_structure(
+        atoms, charges, atom_types, rotatable_bonds, rigid_root,
+        include_torsdof
+    )
