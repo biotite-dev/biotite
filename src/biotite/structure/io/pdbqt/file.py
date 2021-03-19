@@ -9,7 +9,7 @@ __all__ = ["PDBQTFile"]
 import warnings
 import numpy as np
 import networkx as nx
-from ....file import TextFile
+from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
 from ...atoms import AtomArray, AtomArrayStack
 from ...charges import partial_charges
@@ -39,7 +39,7 @@ class PDBQTFile(TextFile):
     >>> ligand = residue("BTN")
     >>> file = PDBQTFile()
     >>> mask = file.set_structure(ligand, rotatable_bonds="all")
-    >>> # Print removed unpolar hydrogen atoms
+    >>> # Print removed nonpolar hydrogen atoms
     >>> print(ligand[~mask])
     HET         0  BTN H101   H         3.745    1.171    0.974
     HET         0  BTN H102   H         4.071    1.343   -0.767
@@ -93,6 +93,32 @@ class PDBQTFile(TextFile):
     """
 
     def get_remarks(self, model=None):
+        """
+        Get the content of ``REMARKS`` lines.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return a
+            strong from the remarks corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
+            If this parameter is omitted, an list of strings
+            containing all models will be returned, even if the
+            structure contains only one model.
+
+        Returns
+        -------
+        lines : str or list of str
+            The content of ``REMARKS`` lines, without the leading
+            ``'REMARKS'``.
+        
+        Returns
+        -------
+        array : AtomArray or AtomArrayStack
+            The return type depends on the `model` parameter.
+        """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
                                   if self.lines[i].startswith(("MODEL"))],
@@ -146,6 +172,27 @@ class PDBQTFile(TextFile):
 
 
     def get_structure(self, model=None):
+        """
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
+        PDBQT file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return an
+            :class:`AtomArray` from the atoms corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
+        
+        Returns
+        -------
+        array : AtomArray or AtomArrayStack
+            The return type depends on the `model` parameter.
+        """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
                                   if self.lines[i].startswith(("MODEL"))],
@@ -256,8 +303,60 @@ class PDBQTFile(TextFile):
     
 
     def set_structure(self, atoms, charges=None, atom_types=None,
-                      rotatable_bonds=None, rigid_root=None,
-                      include_torsdof=True):
+                      rotatable_bonds=None, root=None, include_torsdof=True):
+        """
+        Write an :class:`AtomArray` into the PDBQT file.
+        
+        Parameters
+        ----------
+        atoms : AtomArray, shape=(n,)
+            The atoms to be written into this file.
+            Must have an associated :class:`BondList`.
+        charges : ndarray, shape=(n,), dtype=float, optional
+            Partial charges for each atom in `atoms`.
+            By default, the charges are calculated using the PEOE method
+            (:func:`partial_charges()`).
+        atom_types : ndarray, shape=(n,), dtype="U1", optional
+            Custom *AutoDock* atom types for each atom in `atoms`.
+        rotatable_bonds : None or 'rigid' or 'all' or BondList, optional
+            This parameter describes, how rotatable bonds are handled,
+            with respect to ``ROOT``, ``BRANCH`` and ``ENDBRANCH``
+            lines.
+
+                - ``None`` - The molecule is handled as rigid receptor:
+                  No ``ROOT``, ``BRANCH`` and ``ENDBRANCH`` lines will
+                  be written.
+                - ``'rigid'`` - The molecule is handled as rigid ligand:
+                  Only a ``ROOT`` line will be written.
+                - ``'all'`` - The molecule is handled as flexible 
+                  ligand:
+                  A ``ROOT`` line will be written and all rotatable
+                  bonds are included using ``BRANCH`` and ``ENDBRANCH``
+                  lines.
+                - :class:`BondList` - The molecule is handled as
+                  flexible ligand:
+                  A ``ROOT`` line will be written and all bonds in the
+                  given :class:`BondList` are considered flexible via
+                  ``BRANCH`` and ``ENDBRANCH`` lines.
+        root : int, optional
+            Specifies the index of the atom following the ``ROOT`` line.
+            Setting the root atom is useful for specifying the *anchor*
+            in flexible side chains.
+            This parameter has no effect, if `rotatable_bonds` is
+            ``None``.
+            By default, the first atom is also the root atom.
+        include_torsdof : bool, optional
+            By default, a ``TORSDOF`` (torsional degrees of freedom)
+            record is written at the end of the file.
+            By setting this parameter to false, the record is omitted.
+        
+        Returns
+        -------
+        mask : ndarray, shape=(n,), dtype=bool
+            A boolean mask, that is ``False`` for each atom of the input
+            ``atoms``, that was removed due to being a nonpolar
+            hydrogen.
+        """
         if charges is None:
             charges = partial_charges(atoms)
             charges[np.isnan(charges)] = 0
@@ -265,7 +364,7 @@ class PDBQTFile(TextFile):
             if np.isnan(charges).any():
                 raise ValueError("Input charges contain NaN values")
         
-        # Get AutoDock atom types and remove unpolar hydrogen atoms
+        # Get AutoDock atom types and remove nonpolar hydrogen atoms
         atoms, charges, types, mask = convert_atoms(atoms, charges)
         # Overwrite calculated atom types with input atom types
         if atom_types is not None:
@@ -291,7 +390,7 @@ class PDBQTFile(TextFile):
             )[mask]
             use_root = True
         
-        if rigid_root is None:
+        if root is None:
             root_index = 0
         else:
             # Find new index of root atom, since the index might have
@@ -299,10 +398,10 @@ class PDBQTFile(TextFile):
             original_indices = np.arange(len(mask))
             new_indices = original_indices[mask]
             try:
-                root_index = np.where(new_indices == rigid_root)[0][0]
+                root_index = np.where(new_indices == root)[0][0]
             except IndexError:
                 raise ValueError(
-                    "The given root atom index points to an unpolar hydrogen "
+                    "The given root atom index points to an nonpolar hydrogen "
                     "atom, that has been removed"
                 )
             # Add bonds of the rigid root to rotatable bonds,
@@ -451,6 +550,29 @@ class PDBQTFile(TextFile):
 
 
 def convert_atoms(atoms, charges):
+    """
+    Convert atoms into *AutoDock* compatible atoms.
+
+    Parameters
+    ----------
+    atoms : AtomArray
+        The atoms to be converted.
+    charges : ndarray, dtype=float
+        Partial charges for the atoms.
+    
+    Returns
+    -------
+    converted_atoms : AtomArray
+        The input `atoms`, but with deleted nonpolar hydrogen atoms.
+    charges : ndarray, dtype=float
+        The input `charges`, but with deleted entries for nonpolar
+        hydrogen atoms.
+    atom_types : ndarray, dtype="U1"
+        The *AutoDock* atom types.
+    mask : ndarray, shape=(n,), dtype=bool
+        A boolean mask, that is ``False`` for each atom of the input
+        ``atoms``, that was removed due to being a nonpolar hydrogen.
+    """
     charges = charges.copy()
     all_bonds, all_bond_types = atoms.bonds.get_all_bonds()
 
