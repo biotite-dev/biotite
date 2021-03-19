@@ -42,7 +42,7 @@ import biotite.application.autodock as autodock
 
 
 # Get the receptor structure
-# and the original 'correct' confromation of the ligand
+# and the original 'correct' conformation of the ligand
 mmtf_file = mmtf.MMTFFile.read(rcsb.fetch("2RTG", "mmtf"))
 structure = mmtf.get_structure(
     # Include formal charge for accurate partial charge calculation
@@ -69,18 +69,18 @@ app.set_seed(0)
 # This is the maximum number:
 # Vina may find less interesting binding modes
 # and thus output less models
-app.set_number_of_models(100)
+app.set_max_number_of_models(100)
 # Effectively no limit
 app.set_energy_range(100.0)
 # Start docking run
 app.start()
 app.join()
-docked_coord = app.get_coord()
+docked_coord = app.get_ligand_coord()
 energies = app.get_energies()
 
-# Create an AtomArrayStack for alle docked binding modes
+# Create an AtomArrayStack for all docked binding modes
 docked_ligand = struc.from_template(ligand, docked_coord)
-# As Vina discards all non-polar hydrogen atoms, their respective
+# As Vina discards all nonpolar hydrogen atoms, their respective
 # coordinates are NaN -> remove these atoms
 docked_ligand = docked_ligand[
     ..., ~np.isnan(docked_ligand.coord[0]).any(axis=-1)
@@ -91,7 +91,7 @@ docked_ligand = docked_ligand[
 # reference conformation, the atom order of both must be exactly the
 # same
 # Therefore, all atoms, that are additional in one of both models,
-# e.g. carboxy or non-polar hydrogen atoms, are removed...
+# e.g. carboxy or nonpolar hydrogen atoms, are removed...
 docked_ligand = docked_ligand[
     ..., np.isin(docked_ligand.atom_name, ref_ligand.atom_name)
 ]
@@ -123,9 +123,9 @@ plt.show()
 # A high correlation is desireable to ensure that docking results with
 # good binding energies correspond to the correct binding mode for cases
 # in which the correct binding conformation is unknown.
-# However, the calculated model with the lowest energy is also
-# the conformation with the lowest deviation from the experimental
-# result in this instance.
+# However, at least the calculated model with highest predicted affinity
+# is also the conformation with the lowest deviation from the
+# experimental result in this instance.
 # Hence, *AutoDock Vina* was able to predict an almost correct
 # binding mode as its best *guess*.
 #

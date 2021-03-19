@@ -26,12 +26,12 @@ class VinaApp(LocalApp):
     ligand : AtomArray
         The structure of the receptor molecule.
         Must have an associated :class:`BondList`.
-        An associated ``charges``annotation is recommended for proper
+        An associated ``charges`` annotation is recommended for proper
         calculation of partial charges.
     receptor : AtomArray, shape=(n,)
         The structure of the receptor molecule.
         Must have an associated :class:`BondList`.
-        An associated ``charges``annotation is recommended for proper
+        An associated ``charges`` annotation is recommended for proper
         calculation of partial charges.
     center : ndarray, shape=(3,), dtype=float
         The *xyz* coordinates for the center of the search space.
@@ -154,7 +154,8 @@ class VinaApp(LocalApp):
         Set the maximum energy range of the generated models.
 
         *Vina* will ignore binding modes if the difference between this
-        mode and the best mode is greater than this vale.
+        mode and the best mode is greater than this value.
+        By default, the range is ``3.0``.
 
         Parameters
         ----------
@@ -315,7 +316,7 @@ class VinaApp(LocalApp):
         Notes
         -----
         The returned structure may contain less atoms than the input
-        structure, as *Vina* removes unpolar hydrogen atoms.
+        structure, as *Vina* removes nonpolar hydrogen atoms.
         Furthermore, the returned structure contains *AutoDock* atom
         types as ``element`` annotation.
         """
@@ -333,7 +334,7 @@ class VinaApp(LocalApp):
             of the input ligand.
             The models are sorted from best to worst predicted binding
             affinity.
-            Missing coordinates due to the removed unpolar hydrogen
+            Missing coordinates due to the removed nonpolar hydrogen
             atoms are set to *NaN*.
         """
         coord = np.full(
@@ -363,7 +364,7 @@ class VinaApp(LocalApp):
         Notes
         -----
         The returned structure may contain less atoms than the input
-        structure, as *Vina* removes unpolar hydrogen atoms.
+        structure, as *Vina* removes nonpolar hydrogen atoms.
         Furthermore, the returned structure contains *AutoDock* atom
         types as ``element`` annotation.
         """
@@ -382,7 +383,7 @@ class VinaApp(LocalApp):
             of the input receptor.
             The models are sorted from best to worst predicted binding
             affinity.
-            Missing coordinates due to the removed unpolar hydrogen
+            Missing coordinates due to the removed nonpolar hydrogen
             atoms from flexible side chains are set to *NaN*.
         
         Notes
@@ -466,12 +467,12 @@ class VinaApp(LocalApp):
         ligand : AtomArray
             The structure of the receptor molecule.
             Must have an associated :class:`BondList`.
-            An associated ``charges``annotation is recommended for proper
+            An associated ``charges`` annotation is recommended for proper
             calculation of partial charges.
         receptor : AtomArray, shape=(n,)
             The structure of the receptor molecule.
             Must have an associated :class:`BondList`.
-            An associated ``charges``annotation is recommended for proper
+            An associated ``charges`` annotation is recommended for proper
             calculation of partial charges.
         center : ndarray, shape=(3,), dtype=float
             The *xyz* coordinates for the center of the search space.
@@ -493,7 +494,7 @@ class VinaApp(LocalApp):
             *n* atoms of the input ligand.
             The models are sorted from best to worst predicted binding
             affinity.
-            Missing coordinates due to the removed unpolar hydrogen
+            Missing coordinates due to the removed nonpolar hydrogen
             atoms are set to *NaN*.
         energies : ndarray, shape=(m,), dtype=float
             The corresponding predicted binding energies (kcal/mol).
