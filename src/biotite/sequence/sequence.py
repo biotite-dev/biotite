@@ -145,7 +145,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=()):
         self.symbols = sequence
-        
+
+    def __repr__(self):
+        """Represent Sequence as a string for debugging."""
+        return '<"%s">' % self.symbols
     
     def copy(self, new_seq_code=None):
         """
