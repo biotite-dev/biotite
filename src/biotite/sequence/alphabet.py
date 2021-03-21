@@ -106,7 +106,7 @@ class Alphabet(object):
 
     def __repr__(self):
         """Represent Alphabet as a string for debugging."""
-        return 'Alphabet(%s)' % self._symbols
+        return f'Alphabet({self._symbols})'
 
     def get_symbols(self):
         """
@@ -317,7 +317,7 @@ class LetterAlphabet(Alphabet):
 
     def __repr__(self):
         """Represent LetterAlphabet as a string for debugging."""
-        return 'LetterAlphabet(%s)' % self._symbols
+        return f'LetterAlphabet({self.get_symbols()})'
 
     def get_symbols(self):
         """

@@ -34,7 +34,7 @@ class GeneralSequence(Sequence):
 
     def __repr__(self):
         """Represent GeneralSequence as a string for debugging."""
-        return 'GeneralSequence(alphabet=%s, "%s")' % (self._alphabet, ''.join(self.symbols))
+        return f"GeneralSequence(Alphabet({self._alphabet}),'{''.join(self.symbols)}')"
 
     def __copy_create__(self):
         return GeneralSequence(self._alphabet)
@@ -155,7 +155,7 @@ class NucleotideSequence(Sequence):
             ambiguous = True
         else:
             ambiguous = False
-        return 'NucleotideSequence("%s", ambiguous=%s)' % (''.join(self.symbols), ambiguous)
+        return f'NucleotideSequence("{"".join(self.symbols)}", ambiguous={ambiguous})'
 
     def __copy_create__(self):
         if self._alphabet == NucleotideSequence.alphabet_amb:
@@ -473,7 +473,7 @@ class ProteinSequence(Sequence):
 
     def __repr__(self):
         """Represent ProteinSequence as a string for debugging."""
-        return 'ProteinSequence("%s")' % ''.join(self.symbols)
+        return f'ProteinSequence("{"".join(self.symbols)}")'
 
     def get_alphabet(self):
         return ProteinSequence.alphabet
