@@ -206,7 +206,7 @@ class VinaApp(LocalApp):
                 self._receptor_mask[flex_mask] |= flex_file.set_structure(
                     self._receptor[flex_mask],
                     rotatable_bonds="all",
-                    rigid_root=root_in_flex_residue,
+                    root=root_in_flex_residue,
                     include_torsdof=False
                 )
                 # Enclose each flexible residue
