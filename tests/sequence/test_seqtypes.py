@@ -89,20 +89,3 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     assert mol_weight_protein == \
            pytest.approx(expected_mol_weight_protein, abs=1e-2)
 
-
-def test_github_issue_290_sequence():
-    dna = seq.NucleotideSequence("AACTGCTA")
-    assert eval("seq." + repr(dna)) == dna
-
-    prot_seq = seq.ProteinSequence("BIQTITE")
-    assert eval("seq." + repr(prot_seq)) == prot_seq
-
-    alphabet = seq.Alphabet(["X", "Y", "Z"])
-    assert eval("seq." + repr(alphabet)) == alphabet
-
-    gen_seq = seq.GeneralSequence(alphabet, "XYZ")
-    assert eval("seq." + repr(gen_seq)[:16] + "seq." + repr(gen_seq)[16:]) == gen_seq
-
-    letter_alphabet = seq.LetterAlphabet(["X", "Y", "Z"])
-    assert eval("seq." + repr(letter_alphabet)) == letter_alphabet
-
