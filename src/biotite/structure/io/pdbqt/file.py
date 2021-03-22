@@ -29,6 +29,8 @@ class PDBQTFile(TextFile):
     
     This class only provides rudimentary support for reading/writing
     the pure atom information.
+
+    EXPERIMENTAL: Future API changes are probable.
     
     Examples
     --------

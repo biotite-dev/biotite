@@ -16,6 +16,8 @@ def get_structure(pdbqt_file, model=None):
     """
     Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
     PDBQT file.
+
+    EXPERIMENTAL: Future API changes are probable.
     
     Parameters
     ----------
@@ -43,6 +45,8 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
                   rotatable_bonds=None, root=None, include_torsdof=True):
     """
     Write an :class:`AtomArray` into a PDBQT file.
+
+    EXPERIMENTAL: Future API changes are probable.
     
     Parameters
     ----------
