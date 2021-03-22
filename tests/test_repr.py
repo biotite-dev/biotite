@@ -14,6 +14,7 @@ __author__ = "Maximilian Greil"
 
 @pytest.mark.parametrize("repr_object",
                          [NucleotideSequence("AACTGCTA"),
+                          NucleotideSequence("AACTGCTA", ambiguous=True),
                           ProteinSequence("BIQTITE"),
                           Alphabet(["X", "Y", "Z"]),
                           GeneralSequence(Alphabet(["X", "Y", "Z"]), "XYZ"),
