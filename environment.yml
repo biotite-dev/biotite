@@ -33,4 +33,5 @@ dependencies:
   - mafft
   - muscle
   - sra-tools
+  - autodock-vina
   - viennarna

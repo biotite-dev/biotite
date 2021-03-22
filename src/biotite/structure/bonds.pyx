@@ -1305,8 +1305,9 @@ def connect_via_distances(atoms, dict distance_range=None):
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
 
-    A bond is created for two atoms within the same residue, if the
-    distance between them is within the expected bond distance range.
+    A :attr:`BondType.ANY`, bond is created for two atoms within the
+    same residue, if the distance between them is within the expected 
+    bond distance range.
     Bonds between two adjacent residues are created for the atoms
     expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
     peptides and ``"O3'"`` and ``'P'`` for nucleotides.
@@ -1609,6 +1610,8 @@ def _connect_inter_residue(atoms, residue_starts):
 
 def find_connected(bond_list, uint32 root, bint as_mask=False):
     """
+    find_connected(bond_list, root, as_mask=False)
+
     Get indices to all atoms that are directly or inderectly connected
     to the root atom indicated by the given index.
 
@@ -1668,7 +1671,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
         bond_list.get_atom_count(), dtype=np.uint8
     )
     # Find connections in a recursive way,
-    # by visiting all atoms that are reachable by a bonds
+    # by visiting all atoms that are reachable by a bond
     _find_connected(bond_list, root, is_connected_mask, all_bonds)
     if as_mask:
         return is_connected_mask

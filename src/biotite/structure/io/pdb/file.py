@@ -149,7 +149,7 @@ class PDBFile(TextFile):
         The newly created :class:`AtomArrayStack` should now be equal to
         the :class:`AtomArrayStack` the PDB files were created from.
 
-        >>> print(new_stack == atom_array_stack)
+        >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
         True
         """
         # Line indices where a new model starts

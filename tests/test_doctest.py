@@ -49,6 +49,8 @@ RCSB_URL = "https://www.rcsb.org/"
     pytest.param("biotite.structure.io.pdb",    ["biotite.structure",
                                                  "biotite"]                  ),
     pytest.param("biotite.structure.io.pdbx",   ["biotite.structure"]        ),
+    pytest.param("biotite.structure.io.pdbqt",  ["biotite.structure",
+                                                 "biotite.structure.info"]   ),
     pytest.param("biotite.structure.io.npz",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.mmtf",   ["biotite.structure"]        ),
     pytest.param("biotite.structure.info",      ["biotite.structure"]        ),
@@ -77,6 +79,10 @@ RCSB_URL = "https://www.rcsb.org/"
     pytest.param("biotite.application.dssp",    ["biotite.structure"],
                  marks=pytest.mark.skipif(is_not_installed("mkdssp"),
                                           reason="Software is not installed")),
+    pytest.param("biotite.application.autodock",["biotite.structure",
+                                                 "biotite.structure.info"],
+                 marks=pytest.mark.skipif(is_not_installed("vina"),
+                                          reason="Software is not installed")),
 ])
 def test_doctest(package_name, context_package_names):
     """
@@ -102,7 +108,8 @@ def test_doctest(package_name, context_package_names):
     globs["np"] = np
     # Add frequently used objects
     globs["atom_array_stack"] = strucio.load_structure(
-        join(".", "tests", "structure", "data", "1l2y.mmtf")
+        join(".", "tests", "structure", "data", "1l2y.mmtf"),
+        include_bonds=True
     )
     globs["atom_array"] = globs["atom_array_stack"][0]
     
