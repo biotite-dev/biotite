@@ -52,7 +52,7 @@ matrix:
       - SRC=false
 
 before_install:
-  - if [ $TRAVIS_OS_NAME == "linux" ]; sudo apt-get -y install rename; fi
+  - if [ $TRAVIS_OS_NAME == "linux" ]; then sudo apt-get -y install rename; fi
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh;  fi
