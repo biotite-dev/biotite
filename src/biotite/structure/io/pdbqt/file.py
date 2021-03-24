@@ -102,11 +102,11 @@ class PDBQTFile(TextFile):
         ----------
         model : int, optional
             If this parameter is given, the function will return a
-            strong from the remarks corresponding to the given
+            string from the remarks corresponding to the given
             model number (starting at 1).
             Negative values are used to index models starting from the
             last model insted of the first model.
-            If this parameter is omitted, an list of strings
+            If this parameter is omitted, a list of strings
             containing all models will be returned, even if the
             structure contains only one model.
 
@@ -115,11 +115,6 @@ class PDBQTFile(TextFile):
         lines : str or list of str
             The content of ``REMARKS`` lines, without the leading
             ``'REMARKS'``.
-        
-        Returns
-        -------
-        array : AtomArray or AtomArrayStack
-            The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
         model_start_i = np.array([i for i in range(len(self.lines))
