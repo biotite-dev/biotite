@@ -88,3 +88,4 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
         monoisotopic=monoisotopic)
     assert mol_weight_protein == \
            pytest.approx(expected_mol_weight_protein, abs=1e-2)
+

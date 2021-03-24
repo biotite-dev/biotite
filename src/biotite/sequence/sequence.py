@@ -145,8 +145,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     
     def __init__(self, sequence=()):
         self.symbols = sequence
-        
-    
+
     def copy(self, new_seq_code=None):
         """
         Copy the object.
