@@ -81,6 +81,7 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
             A ``ROOT`` line will be written and all bonds in the
             given :class:`BondList` are considered flexible via
             ``BRANCH`` and ``ENDBRANCH`` lines.
+        
     root : int, optional
         Specifies the index of the atom following the ``ROOT`` line.
         Setting the root atom is useful for specifying the *anchor*
