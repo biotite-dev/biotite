@@ -154,7 +154,11 @@ class SubstitutionMatrix(object):
         # This class is immutable and has a getter function for the
         # score matrix -> make the score matrix read-only
         self._matrix.setflags(write=False)
-    
+
+    def __repr__(self):
+        """Represent SubstitutionMatrix as a string for debugging."""
+        return f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, {np.array_repr(self._matrix)})"
+
     def _fill_with_matrix_dict(self, matrix_dict):
         self._matrix = np.zeros(( len(self._alph1), len(self._alph2) ),
                                 dtype=np.int32)

@@ -87,13 +87,22 @@ class Alignment(object):
      [2]
      [3]]
     """
-    
-    
+
     def __init__(self, sequences, trace, score=None):
         self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
-    
+
+    def __repr__(self):
+        """Represent Alignment a string for debugging."""
+        sequences = ""
+        for seq in self.sequences:
+            if len(sequences) == 0:
+                sequences = seq.__repr__()
+            else:
+                sequences = sequences + ", " + seq.__repr__()
+        return f"Alignment([{sequences}], {np.array_repr(self.trace)}, score={self.score})"
+
     def _gapped_str(self, seq_index):
         seq_str = ""
         for i in range(len(self.trace)):

@@ -7,6 +7,13 @@ from biotite.sequence import ProteinSequence
 from biotite.sequence import Alphabet
 from biotite.sequence import GeneralSequence
 from biotite.sequence import LetterAlphabet
+from biotite.sequence import Location
+from biotite.sequence import Feature
+from biotite.sequence import Annotation
+from biotite.sequence import AnnotatedSequence
+from biotite.sequence.align import Alignment
+from biotite.structure import Atom
+from numpy import array, float32
 import pytest
 
 __author__ = "Maximilian Greil"
@@ -18,6 +25,14 @@ __author__ = "Maximilian Greil"
                           ProteinSequence("BIQTITE"),
                           Alphabet(["X", "Y", "Z"]),
                           GeneralSequence(Alphabet(["X", "Y", "Z"]), "XYZ"),
-                          LetterAlphabet(["X", "Y", "Z"])])
+                          LetterAlphabet(["X", "Y", "Z"]),
+                          Location(98, 178),
+                          Feature("CDS", [Location(98, 178)], qual={"gene": "test1"}),
+                          Annotation([Feature("CDS", [Location(98, 178)], qual={"gene": "test1"})]),
+                          AnnotatedSequence(Annotation([Feature("CDS", [Location(98, 178)], qual={"gene": "test1"})]),
+                                            NucleotideSequence("AACTGCTA")),
+                          Alignment([NucleotideSequence("CGTCAT", ambiguous=False), NucleotideSequence("TCATGC", ambiguous=False)],
+                                    array([[0, -1], [1, -1], [2,  0], [3,  1], [4,  2], [5,  3], [-1,  4], [-1,  5]]), score=-20),
+                          Atom([1, 2, 3], chain_id="A")])
 def test_repr(repr_object):
     assert eval(repr(repr_object)) == repr_object

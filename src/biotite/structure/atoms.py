@@ -491,7 +491,20 @@ class Atom(Copyable):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
-    
+
+    def __repr__(self):
+        """Represent Atom as a string for debugging."""
+        annot = ""
+        for name, annotation in self._annot.items():
+            if len(annot) == 0:
+                annot = name + "='" + str(annotation) + "'"
+            else:
+                if type(annotation).__name__ == 'str':
+                    annot = annot + ", " + name + "='" + annotation + "'"
+                else:
+                    annot = annot + ", " + name + "=" + str(annotation)
+        return f"Atom({np.array_repr(self.coord)}, {annot})"
+
     @property
     def shape(self):
         return ()
@@ -660,7 +673,7 @@ class AtomArray(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
-    
+
     @property
     def shape(self):
         """
@@ -909,7 +922,7 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
-    
+
     def get_array(self, index):
         """
         Obtain the atom array instance of the stack at the specified
