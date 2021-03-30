@@ -101,7 +101,7 @@ class Alignment(object):
                 sequences = seq.__repr__()
             else:
                 sequences = sequences + ", " + seq.__repr__()
-        return f"Alignment([{sequences}], {np.array_repr(self.trace)}, score={self.score})"
+        return f"Alignment([{sequences}], np.{np.array_repr(self.trace)}, score={self.score})"
 
     def _gapped_str(self, seq_index):
         seq_str = ""

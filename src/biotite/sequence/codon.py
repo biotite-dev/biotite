@@ -111,6 +111,18 @@ class CodonTable(object):
         """Represent CodonTable as a string for debugging."""
         return f"CodonTable({self.codon_dict()}, {self.start_codons()})"
 
+    def __eq__(self, item):
+        if not isinstance(item, CodonTable):
+            return False
+        if self.codon_dict() != item.codon_dict():
+            return False
+        if self.start_codons() != item.start_codons():
+            return False
+        return True
+
+    def __ne__(self, item):
+        return not self == item
+
     def __getitem__(self, item):
         if isinstance(item, str):
             if len(item) == 1:

@@ -494,16 +494,16 @@ class Atom(Copyable):
 
     def __repr__(self):
         """Represent Atom as a string for debugging."""
-        annot = ""
+        annot = ''
         for name, annotation in self._annot.items():
             if len(annot) == 0:
-                annot = name + "='" + str(annotation) + "'"
+                annot = name + '="' + annotation + '"'
             else:
                 if type(annotation).__name__ == 'str':
-                    annot = annot + ", " + name + "='" + annotation + "'"
+                    annot = annot + ', ' + name + '="' + annotation + '"'
                 else:
-                    annot = annot + ", " + name + "=" + str(annotation)
-        return f"Atom({np.array_repr(self.coord)}, {annot})"
+                    annot = annot + ', ' + name + '=' + str(annotation)
+        return f'Atom(np.{np.array_repr(self.coord)}, {annot})'
 
     @property
     def shape(self):
@@ -673,6 +673,16 @@ class AtomArray(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
+
+    def __repr__(self):
+        """Represent AtomArray as a string for debugging."""
+        atoms = ''
+        for i in range(0, self.array_length()):
+            if len(atoms) == 0:
+                atoms = self.get_atom(i).__repr__()
+            else:
+                atoms = atoms + ',\n' + self.get_atom(i).__repr__()
+        return f'array([{atoms}])'
 
     @property
     def shape(self):
@@ -922,6 +932,16 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
+
+    def __repr__(self):
+        """Represent AtomArray as a string for debugging."""
+        arrays = ''
+        for i in range(0, self.stack_depth()):
+            if len(arrays) == 0:
+                arrays = self.get_array(i).__repr__()
+            else:
+                arrays = arrays + ',\n' + self.get_array(i).__repr__()
+        return f'stack([{arrays}])'
 
     def get_array(self, index):
         """
