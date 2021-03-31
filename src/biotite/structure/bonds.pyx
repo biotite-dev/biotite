@@ -48,7 +48,15 @@ ctypedef fused IndexType:
 
 class BondType(IntEnum):
     """
-    This enum type represents the type of a chemical bond. 
+    This enum type represents the type of a chemical bond.
+
+        - `ANY` - Used if the actual type is unknown
+        - `SINGLE` - Single bond
+        - `DOUBLE` - Double bond
+        - `TRIPLE` - Triple bond
+        - `QUADRUPLE` - A quadruple bond
+        - `AROMATIC_SINGLE` - Aromatic bond with a single formal bond
+        - `AROMATIC_DOUBLE` - Aromatic bond with a double formal bond
     """
     ANY = 0
     SINGLE = 1
