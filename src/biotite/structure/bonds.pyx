@@ -55,7 +55,8 @@ class BondType(IntEnum):
     DOUBLE = 2
     TRIPLE = 3
     QUADRUPLE = 4
-    AROMATIC = 5
+    AROMATIC_SINGLE = 5
+    AROMATIC_DOUBLE = 6
 
 
 @cython.boundscheck(False)
@@ -155,12 +156,12 @@ class BondList(Copyable):
     ...     benzene.array_length(),
     ...     np.array([
     ...         # Bonds between carbon atoms in the ring
-    ...         (0,  1, BondType.AROMATIC),
-    ...         (1,  2, BondType.AROMATIC),
-    ...         (2,  3, BondType.AROMATIC),
-    ...         (3,  4, BondType.AROMATIC),
-    ...         (4,  5, BondType.AROMATIC),
-    ...         (5,  0, BondType.AROMATIC),
+    ...         (0,  1, BondType.AROMATIC_SINGLE),
+    ...         (1,  2, BondType.AROMATIC_DOUBLE),
+    ...         (2,  3, BondType.AROMATIC_SINGLE),
+    ...         (3,  4, BondType.AROMATIC_DOUBLE),
+    ...         (4,  5, BondType.AROMATIC_SINGLE),
+    ...         (5,  0, BondType.AROMATIC_DOUBLE),
     ...         # Bonds between carbon and hydrogen
     ...         (0,  6, BondType.SINGLE),
     ...         (1,  7, BondType.SINGLE),
@@ -175,12 +176,12 @@ class BondList(Copyable):
     ...         f"{str(BondType(bond_type))} bond between "
     ...         f"{benzene.atom_name[i]} and {benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC bond between C1 and C2
-    BondType.AROMATIC bond between C2 and C3
-    BondType.AROMATIC bond between C3 and C4
-    BondType.AROMATIC bond between C4 and C5
-    BondType.AROMATIC bond between C5 and C6
-    BondType.AROMATIC bond between C1 and C6
+    BondType.AROMATIC_SINGLE bond between C1 and C2
+    BondType.AROMATIC_DOUBLE bond between C2 and C3
+    BondType.AROMATIC_SINGLE bond between C3 and C4
+    BondType.AROMATIC_DOUBLE bond between C4 and C5
+    BondType.AROMATIC_SINGLE bond between C5 and C6
+    BondType.AROMATIC_DOUBLE bond between C1 and C6
     BondType.SINGLE bond between C1 and H1
     BondType.SINGLE bond between C2 and H2
     BondType.SINGLE bond between C3 and H3
@@ -211,8 +212,8 @@ class BondList(Copyable):
     ...         f"{str(BondType(bond_type))} bond between "
     ...         f"{half_benzene.atom_name[i]} and {half_benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC bond between C4 and C5
-    BondType.AROMATIC bond between C5 and C6
+    BondType.AROMATIC_DOUBLE bond between C4 and C5
+    BondType.AROMATIC_SINGLE bond between C5 and C6
     BondType.SINGLE bond between C4 and H4
     BondType.SINGLE bond between C5 and H5
     BondType.SINGLE bond between C6 and H6
@@ -521,12 +522,12 @@ class BondList(Copyable):
         ...     12,
         ...     np.array([
         ...         # Bonds between the carbon atoms in the ring
-        ...         (0,  1, BondType.AROMATIC),
-        ...         (1,  2, BondType.AROMATIC),
-        ...         (2,  3, BondType.AROMATIC),
-        ...         (3,  4, BondType.AROMATIC),
-        ...         (4,  5, BondType.AROMATIC),
-        ...         (5,  0, BondType.AROMATIC),
+        ...         (0,  1, BondType.AROMATIC_SINGLE),
+        ...         (1,  2, BondType.AROMATIC_DOUBLE),
+        ...         (2,  3, BondType.AROMATIC_SINGLE),
+        ...         (3,  4, BondType.AROMATIC_DOUBLE),
+        ...         (4,  5, BondType.AROMATIC_SINGLE),
+        ...         (5,  0, BondType.AROMATIC_DOUBLE),
         ...         # Bonds between carbon and hydrogen
         ...         (0,  6, BondType.SINGLE),
         ...         (1,  7, BondType.SINGLE),
