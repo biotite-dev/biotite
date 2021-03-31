@@ -195,7 +195,7 @@ class BondList(Copyable):
     >>> print(bonds)
     [1 5 6]
     >>> print(types)
-    [5 5 1]
+    [5 6 1]
     >>> print(f"C1 is bonded to {', '.join(benzene.atom_name[bonds])}")
     C1 is bonded to C2, C6, H1
 
@@ -552,12 +552,12 @@ class BondList(Copyable):
          [ 4 -1 -1]
          [ 5 -1 -1]]
         >>> print(types)
-        [[ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
+        [[ 5  6  1]
+         [ 5  6  1]
+         [ 6  5  1]
+         [ 5  6  1]
+         [ 6  5  1]
+         [ 5  6  1]
          [ 1 -1 -1]
          [ 1 -1 -1]
          [ 1 -1 -1]
