@@ -46,7 +46,7 @@ def _init_dataset():
 def bond_dataset():
     """
     Get a copy of the complete bond dataset extracted from the chemical 
-    compound dictionary.
+    components dictionary.
 
     This dataset does only contain intra-residue bonds.
 
@@ -68,7 +68,7 @@ def bond_dataset():
 def bond_order(res_name, atom_name1, atom_name2):
     """
     Get the bond order for two atoms of the same residue, based
-    on the PDB chemical compound dictionary.
+    on the PDB chemical components dictionary.
 
     Parameters
     ----------
@@ -84,7 +84,7 @@ def bond_order(res_name, atom_name1, atom_name2):
         The order of the bond between `atom_name1` and `atom_name2`.
         If the atoms form no bond, if any of the two atoms does not
         exist in the context of the residue or if the residue is unknown
-        to the chemical compound dictionary, `None` is returned.
+        to the chemical components dictionary, `None` is returned.
     
     Examples
     --------
@@ -121,7 +121,7 @@ def bonds_in_residue(res_name):
     bonds : dict
         A dictionary that maps sets of two atom names to their
         respective bond orders. `None` if the residue is unknown to the
-        chemical compound dictionary.
+        chemical components dictionary.
     
     Examples
     --------
