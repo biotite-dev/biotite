@@ -403,6 +403,30 @@ class BondList(Copyable):
         g.add_edges_from(edges)
         return g
     
+    def remove_aromaticity(self):
+        """
+        Remove aromaticity from the bond types.
+        
+        :attr:`BondType.AROMATIC_SINGLE` is converted into
+        :attr:`BondType.SINGLE` and :attr:`BondType.AROMATIC_DOUBLE` is
+        converted into :attr:`BondType.DOUBLE`.
+
+        Examples
+        --------
+
+        >>> bond_list = BondList(3)
+        >>> bond_list.add_bond(0, 1, BondType.AROMATIC_SINGLE)
+        >>> bond_list.add_bond(1, 2, BondType.AROMATIC_DOUBLE)
+        >>> bond_list.remove_aromaticity()
+        >>> for i, j, bond_type in bond_list.as_array():
+        ...     print(i, j, BondType(bond_type))
+        0 1 BondType.SINGLE
+        1 2 BondType.DOUBLE
+        """
+        bonds = self._bonds
+        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+        bonds[bonds[:, 2] >= BondType.AROMATIC_SINGLE, 2] -= difference
+    
     def get_atom_count(self):
         """
         get_atom_count()

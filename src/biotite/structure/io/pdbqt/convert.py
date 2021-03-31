@@ -67,20 +67,20 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
         lines.
 
             - ``None`` - The molecule is handled as rigid receptor:
-            No ``ROOT``, ``BRANCH`` and ``ENDBRANCH`` lines will
-            be written.
+              No ``ROOT``, ``BRANCH`` and ``ENDBRANCH`` lines will
+              be written.
             - ``'rigid'`` - The molecule is handled as rigid ligand:
-            Only a ``ROOT`` line will be written.
+              Only a ``ROOT`` line will be written.
             - ``'all'`` - The molecule is handled as flexible 
-            ligand:
-            A ``ROOT`` line will be written and all rotatable
-            bonds are included using ``BRANCH`` and ``ENDBRANCH``
-            lines.
+              ligand:
+              A ``ROOT`` line will be written and all rotatable
+              bonds are included using ``BRANCH`` and ``ENDBRANCH``
+              lines.
             - :class:`BondList` - The molecule is handled as
-            flexible ligand:
-            A ``ROOT`` line will be written and all bonds in the
-            given :class:`BondList` are considered flexible via
-            ``BRANCH`` and ``ENDBRANCH`` lines.
+              flexible ligand:
+              A ``ROOT`` line will be written and all bonds in the
+              given :class:`BondList` are considered flexible via
+              ``BRANCH`` and ``ENDBRANCH`` lines.
         
     root : int, optional
         Specifies the index of the atom following the ``ROOT`` line.
