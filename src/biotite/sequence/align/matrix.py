@@ -157,7 +157,8 @@ class SubstitutionMatrix(object):
 
     def __repr__(self):
         """Represent SubstitutionMatrix as a string for debugging."""
-        return f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, np.{np.array_repr(self._matrix)})"
+        return f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, " \
+               f"np.{np.array_repr(self._matrix)})"
 
     def __eq__(self, item):
         if not isinstance(item, SubstitutionMatrix):

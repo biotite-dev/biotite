@@ -494,15 +494,13 @@ class Atom(Copyable):
 
     def __repr__(self):
         """Represent Atom as a string for debugging."""
-        annot = ''
-        for name, annotation in self._annot.items():
-            if len(annot) == 0:
-                annot = name + '="' + annotation + '"'
-            else:
-                if type(annotation).__name__ == 'str':
-                    annot = annot + ', ' + name + '="' + annotation + '"'
-                else:
-                    annot = annot + ', ' + name + '=' + str(annotation)
+        annot = 'chain_id="' + self._annot["chain_id"] + '"'
+        annot = annot + ', res_id=' + str(self._annot["res_id"])
+        annot = annot + ', ins_code="' + self._annot["ins_code"] + '"'
+        annot = annot + ', res_name="' + self._annot["res_name"] + '"'
+        annot = annot + ', hetero=' + str(self._annot["hetero"])
+        annot = annot + ', atom_name="' + self._annot["atom_name"] + '"'
+        annot = annot + ', element="' + self._annot["element"] + '"'
         return f'Atom(np.{np.array_repr(self.coord)}, {annot})'
 
     @property
@@ -679,10 +677,10 @@ class AtomArray(_AtomArrayBase):
         atoms = ''
         for i in range(0, self.array_length()):
             if len(atoms) == 0:
-                atoms = self.get_atom(i).__repr__()
+                atoms = '\n\t' + self.get_atom(i).__repr__()
             else:
-                atoms = atoms + ',\n' + self.get_atom(i).__repr__()
-        return f'array([{atoms}])'
+                atoms = atoms + ',\n\t' + self.get_atom(i).__repr__()
+        return f'array([{atoms}\n])'
 
     @property
     def shape(self):
@@ -934,14 +932,14 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
 
     def __repr__(self):
-        """Represent AtomArray as a string for debugging."""
+        """Represent AtomArrayStack as a string for debugging."""
         arrays = ''
         for i in range(0, self.stack_depth()):
             if len(arrays) == 0:
-                arrays = self.get_array(i).__repr__()
+                arrays = '\n\t' + self.get_array(i).__repr__()
             else:
-                arrays = arrays + ',\n' + self.get_array(i).__repr__()
-        return f'stack([{arrays}])'
+                arrays = arrays + ',\n\t' + self.get_array(i).__repr__()
+        return f'stack([{arrays}\n])'
 
     def get_array(self, index):
         """

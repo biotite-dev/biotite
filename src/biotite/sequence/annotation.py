@@ -184,13 +184,7 @@ class Feature(Copyable):
 
     def __repr__(self):
         """Represent Feature as a string for debugging."""
-        locs = ""
-        for loc in self._locs:
-            if len(locs) == 0:
-                locs = loc.__repr__()
-            else:
-                locs = locs + ", " + loc.__repr__()
-        return f'Feature("{self._key}", [{locs}], qual={self._qual})'
+        return f'Feature("{self._key}", [{", ".join([loc.__repr__() for loc in self.locs])}], qual={self._qual})'
 
     def get_location_range(self):
         """
@@ -356,13 +350,7 @@ class Annotation(Copyable):
 
     def __repr__(self):
         """Represent Annotation as a string for debugging."""
-        features = ""
-        for feat in self._features:
-            if len(features) == 0:
-                features = feat.__repr__()
-            else:
-                features = features + ", " + feat.__repr__()
-        return f'Annotation([{features}])'
+        return f'Annotation([{", ".join([feat.__repr__() for feat in self._features])}])'
 
     def __copy_create__(self):
         return Annotation(self._features)

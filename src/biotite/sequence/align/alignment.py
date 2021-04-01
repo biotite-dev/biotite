@@ -95,13 +95,8 @@ class Alignment(object):
 
     def __repr__(self):
         """Represent Alignment a string for debugging."""
-        sequences = ""
-        for seq in self.sequences:
-            if len(sequences) == 0:
-                sequences = seq.__repr__()
-            else:
-                sequences = sequences + ", " + seq.__repr__()
-        return f"Alignment([{sequences}], np.{np.array_repr(self.trace)}, score={self.score})"
+        return f"Alignment([{', '.join([seq.__repr__() for seq in self.sequences])}], " \
+               f"np.{np.array_repr(self.trace)}, score={self.score})"
 
     def _gapped_str(self, seq_index):
         seq_str = ""
