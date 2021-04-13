@@ -598,7 +598,10 @@ def convert_atoms(atoms, charges):
                     "Structure contains hydrogen with multiple bonds"
                 )
         elif element == "C":
-            if (all_bond_types[i] == BondType.AROMATIC).any():
+            if np.isin(
+                all_bond_types[i],
+                [BondType.AROMATIC_SINGLE, BondType.AROMATIC_DOUBLE]
+            ).any():
                 # Aromatic carbon
                 atom_types[i] = "A"
             else:

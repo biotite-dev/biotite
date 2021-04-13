@@ -48,14 +48,23 @@ ctypedef fused IndexType:
 
 class BondType(IntEnum):
     """
-    This enum type represents the type of a chemical bond. 
+    This enum type represents the type of a chemical bond.
+
+        - `ANY` - Used if the actual type is unknown
+        - `SINGLE` - Single bond
+        - `DOUBLE` - Double bond
+        - `TRIPLE` - Triple bond
+        - `QUADRUPLE` - A quadruple bond
+        - `AROMATIC_SINGLE` - Aromatic bond with a single formal bond
+        - `AROMATIC_DOUBLE` - Aromatic bond with a double formal bond
     """
     ANY = 0
     SINGLE = 1
     DOUBLE = 2
     TRIPLE = 3
     QUADRUPLE = 4
-    AROMATIC = 5
+    AROMATIC_SINGLE = 5
+    AROMATIC_DOUBLE = 6
 
 
 @cython.boundscheck(False)
@@ -155,12 +164,12 @@ class BondList(Copyable):
     ...     benzene.array_length(),
     ...     np.array([
     ...         # Bonds between carbon atoms in the ring
-    ...         (0,  1, BondType.AROMATIC),
-    ...         (1,  2, BondType.AROMATIC),
-    ...         (2,  3, BondType.AROMATIC),
-    ...         (3,  4, BondType.AROMATIC),
-    ...         (4,  5, BondType.AROMATIC),
-    ...         (5,  0, BondType.AROMATIC),
+    ...         (0,  1, BondType.AROMATIC_SINGLE),
+    ...         (1,  2, BondType.AROMATIC_DOUBLE),
+    ...         (2,  3, BondType.AROMATIC_SINGLE),
+    ...         (3,  4, BondType.AROMATIC_DOUBLE),
+    ...         (4,  5, BondType.AROMATIC_SINGLE),
+    ...         (5,  0, BondType.AROMATIC_DOUBLE),
     ...         # Bonds between carbon and hydrogen
     ...         (0,  6, BondType.SINGLE),
     ...         (1,  7, BondType.SINGLE),
@@ -175,12 +184,12 @@ class BondList(Copyable):
     ...         f"{str(BondType(bond_type))} bond between "
     ...         f"{benzene.atom_name[i]} and {benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC bond between C1 and C2
-    BondType.AROMATIC bond between C2 and C3
-    BondType.AROMATIC bond between C3 and C4
-    BondType.AROMATIC bond between C4 and C5
-    BondType.AROMATIC bond between C5 and C6
-    BondType.AROMATIC bond between C1 and C6
+    BondType.AROMATIC_SINGLE bond between C1 and C2
+    BondType.AROMATIC_DOUBLE bond between C2 and C3
+    BondType.AROMATIC_SINGLE bond between C3 and C4
+    BondType.AROMATIC_DOUBLE bond between C4 and C5
+    BondType.AROMATIC_SINGLE bond between C5 and C6
+    BondType.AROMATIC_DOUBLE bond between C1 and C6
     BondType.SINGLE bond between C1 and H1
     BondType.SINGLE bond between C2 and H2
     BondType.SINGLE bond between C3 and H3
@@ -194,7 +203,7 @@ class BondList(Copyable):
     >>> print(bonds)
     [1 5 6]
     >>> print(types)
-    [5 5 1]
+    [5 6 1]
     >>> print(f"C1 is bonded to {', '.join(benzene.atom_name[bonds])}")
     C1 is bonded to C2, C6, H1
 
@@ -211,8 +220,8 @@ class BondList(Copyable):
     ...         f"{str(BondType(bond_type))} bond between "
     ...         f"{half_benzene.atom_name[i]} and {half_benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC bond between C4 and C5
-    BondType.AROMATIC bond between C5 and C6
+    BondType.AROMATIC_DOUBLE bond between C4 and C5
+    BondType.AROMATIC_SINGLE bond between C5 and C6
     BondType.SINGLE bond between C4 and H4
     BondType.SINGLE bond between C5 and H5
     BondType.SINGLE bond between C6 and H6
@@ -394,6 +403,30 @@ class BondList(Copyable):
         g.add_edges_from(edges)
         return g
     
+    def remove_aromaticity(self):
+        """
+        Remove aromaticity from the bond types.
+        
+        :attr:`BondType.AROMATIC_SINGLE` is converted into
+        :attr:`BondType.SINGLE` and :attr:`BondType.AROMATIC_DOUBLE` is
+        converted into :attr:`BondType.DOUBLE`.
+
+        Examples
+        --------
+
+        >>> bond_list = BondList(3)
+        >>> bond_list.add_bond(0, 1, BondType.AROMATIC_SINGLE)
+        >>> bond_list.add_bond(1, 2, BondType.AROMATIC_DOUBLE)
+        >>> bond_list.remove_aromaticity()
+        >>> for i, j, bond_type in bond_list.as_array():
+        ...     print(i, j, BondType(bond_type))
+        0 1 BondType.SINGLE
+        1 2 BondType.DOUBLE
+        """
+        bonds = self._bonds
+        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+        bonds[bonds[:, 2] >= BondType.AROMATIC_SINGLE, 2] -= difference
+    
     def get_atom_count(self):
         """
         get_atom_count()
@@ -521,12 +554,12 @@ class BondList(Copyable):
         ...     12,
         ...     np.array([
         ...         # Bonds between the carbon atoms in the ring
-        ...         (0,  1, BondType.AROMATIC),
-        ...         (1,  2, BondType.AROMATIC),
-        ...         (2,  3, BondType.AROMATIC),
-        ...         (3,  4, BondType.AROMATIC),
-        ...         (4,  5, BondType.AROMATIC),
-        ...         (5,  0, BondType.AROMATIC),
+        ...         (0,  1, BondType.AROMATIC_SINGLE),
+        ...         (1,  2, BondType.AROMATIC_DOUBLE),
+        ...         (2,  3, BondType.AROMATIC_SINGLE),
+        ...         (3,  4, BondType.AROMATIC_DOUBLE),
+        ...         (4,  5, BondType.AROMATIC_SINGLE),
+        ...         (5,  0, BondType.AROMATIC_DOUBLE),
         ...         # Bonds between carbon and hydrogen
         ...         (0,  6, BondType.SINGLE),
         ...         (1,  7, BondType.SINGLE),
@@ -551,12 +584,12 @@ class BondList(Copyable):
          [ 4 -1 -1]
          [ 5 -1 -1]]
         >>> print(types)
-        [[ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
-         [ 5  5  1]
+        [[ 5  6  1]
+         [ 5  6  1]
+         [ 6  5  1]
+         [ 5  6  1]
+         [ 6  5  1]
+         [ 5  6  1]
          [ 1 -1 -1]
          [ 1 -1 -1]
          [ 1 -1 -1]
