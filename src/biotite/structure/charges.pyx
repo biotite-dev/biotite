@@ -59,27 +59,30 @@ cdef dict EN_PARAM_BTYPE = {
         int(BondType.SINGLE):   (7.98, 9.18, 1.88),
         int(BondType.DOUBLE):   (8.79, 9.18, 1.88),
         int(BondType.TRIPLE):   (10.39, 9.45, 0.73),
-        int(BondType.AROMATIC): (8.79, 9.18, 1.88)
+        int(BondType.AROMATIC_SINGLE): (7.98, 9.18, 1.88),
+        int(BondType.AROMATIC_DOUBLE): (8.79, 9.18, 1.88)
     },
 
     "N": {
         int(BondType.SINGLE):   (11.54, 10.82, 1.36),
         int(BondType.DOUBLE):   (12.87, 11.15, 0.85),
-        int(BondType.TRIPLE):   (15.68, 11.7, -0.27)
+        int(BondType.TRIPLE):   (15.68, 11.7, -0.27),
+        int(BondType.AROMATIC_SINGLE): (11.54, 10.82, 1.36),
+        int(BondType.AROMATIC_DOUBLE): (12.87, 11.15, 0.85)
     },
 
     # As oxygen and sulfur are exclusively involved in aromatic
     # systems having single bonds on either side, the values for a
-    # sp3 hybridisation are taken for BondType.AROMATIC
+    # sp3 hybridisation are taken for BondType.AROMATIC_SINGLE
     "O": {
         int(BondType.SINGLE):   (14.18, 12.92, 1.39),
         int(BondType.DOUBLE):   (17.07, 13.79, 0.47),
-        int(BondType.AROMATIC): (14.18, 12.92, 1.39)
+        int(BondType.AROMATIC_SINGLE): (14.18, 12.92, 1.39)
     },
 
     "S": {
         int(BondType.SINGLE):   (10.14, 9.13, 1.38),
-        int(BondType.AROMATIC): (10.14, 9.13, 1.38)
+        int(BondType.AROMATIC_SINGLE): (10.14, 9.13, 1.38)
     },
 
     "F": {
@@ -153,80 +156,6 @@ cdef dict EN_PARAM_BPARTNERS = {
 EN_POS_HYDROGEN = 20.02
 
 
-def _determine_aromatic_nitrogen_hybridisation(
-    elements, types, bond_types, charges
-):
-    """
-    Determine whether a nitrogen atom involved in an aromatic system
-    possesses exclusively single bonds or one double bond as well.
-
-    The need to determine this arises from the fact that the assignment
-    of parameters for electronegativity computation is based on the
-    hybridisation state, i. e. no special parameters for the involvement
-    in aromatic systems are available. This poses no problem in the case
-    of the elements oxygen and sulfur as they are exclusively involved
-    in aromatic systems having single bonds on either side, enabling the
-    the assignment of aromaticity to a distinct hybridisation state.
-    Nitrogen, however, can be involved in aromatic systems having both
-    exclusively single bonds as well as one double bond, making the
-    assignment of aromaticity to a distinct hybridisation state
-    impossible. Examples for nitrogen atoms involved in an aromatic
-    system having exclusively single bonds as well as one double bond
-    within one and the same molecule are the aromatic compounds
-    'imidazole' and 'pyrazole'.
-
-    Parameters
-    ----------
-    elements: ndarray, dtype=str
-        The array comprising the elements of the inserted `atom_array`.
-    types: ndarray, shape=(n,m), dtype=int
-        The array containing the bond types of each bond of every atom.
-    bond_types: ndarray, dtype=int
-        The array containing information about the highest bond type of
-        the respective atom (except for BondType.AROMATIC).
-    charges: ndarray, dtype=int
-        Array that comprises the formal charges of the atoms comprised
-        in the `atom_array` inserted into the `partial_charges`
-        function.
-
-    Returns
-    -------
-    bond_types: ndarray, dtype=int
-        The inserted array in which the BondType.AROMATIC is replaced by
-        the a BondType revealing the bond order in case of nitrogen
-        atoms.
-    """
-
-    aromatic_nitrogen_indices = np.where(
-        (elements == "N") & (bond_types == BondType.AROMATIC)
-    )[0]
-    for i in aromatic_nitrogen_indices:
-        considered_row = types[i]
-        # Aromaticity implies molecular cyclicality, i. e.
-        # an atom involved in an aromatic system has at
-        # least two bonds with the aromatic bond type
-        # Nitrogen has at most three bonds if involved in an
-        # aromatic system, where the third bond type is
-        # BondType.SINGLE
-        # Therefore, the presence of a third bond type
-        # indicates a sp3 hybridisation, whereas the absence
-        # of a third bond type can be either due to sp2
-        # hybridisation or deprotonation
-        # In order to account for this ambiguity, the charge
-        # is considered in case that a third bond type is
-        # not present
-        if considered_row.shape[0] >= 3:
-            bond_types[i] = BondType.SINGLE
-        else:
-            nitrogen_charge = charges[i]
-            if nitrogen_charge == -1:
-                bond_types[i] = BondType.SINGLE
-            else:
-                bond_types[i] =  BondType.DOUBLE
-    
-    return bond_types
-
-
 def _get_parameters(elements, bond_types, amount_of_binding_partners):
     """
     Gather the parameters required for electronegativity computation of
@@ -243,7 +172,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         parameters for.
     bond_types: ndarray, dtype=int
         The array containing information about the highest bond type of
-        the respective atom (except for BondType.AROMATIC).
+        the respective atom (except for the aromatic bond types).
     amount_of_binding_partners: ndarray, dtype=int
         The array containing information about the amount of binding
         partners of the respective atom.
@@ -535,9 +464,6 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
         return charges
     bond_types = np.amax(types, axis=1)
     bond_types[np.any(types == BondType.ANY, axis=1)] = BondType.ANY
-    bond_types = _determine_aromatic_nitrogen_hybridisation(
-        elements, types, bond_types, charges
-    )
     parameters = _get_parameters(
         elements, bond_types, amount_of_binding_partners
     )

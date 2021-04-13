@@ -102,8 +102,8 @@ def test_invalid_creation():
         struc.BondList(
             5,
             np.array([
-                # BondType '6' does not exist
-                [1,2,6]
+                # BondType '7' does not exist
+                [1,2,7]
             ])
         )
 
