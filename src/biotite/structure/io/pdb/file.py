@@ -364,7 +364,6 @@ class PDBFile(TextFile):
                     dtype=int
                 ))
             elif field == "charge":
-                print(charge_raw)
                 array.set_annotation("charge", np.array(
                     [0 if raw_number == " " else
                      (-float(raw_number) if sign == "-" else float(raw_number))
@@ -489,8 +488,8 @@ class PDBFile(TextFile):
         else:
             occupancy = np.ones(array.array_length())
         if "charge" in annot_categories:
-            charge = [ "+"+str(np.abs(charge)) if charge > 0 else
-                      ("-"+str(np.abs(charge)) if charge < 0 else
+            charge = [ str(np.abs(charge)) + "+" if charge > 0 else
+                      (str(np.abs(charge)) + "-" if charge < 0 else
                        "")
                       for charge in array.get_annotation("charge")]
         else:
