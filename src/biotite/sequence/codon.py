@@ -106,7 +106,23 @@ class CodonTable(object):
             raise ValueError(
                 f"Codon dictionary does not contain codon '{codon_str}'"
             )
-    
+
+    def __repr__(self):
+        """Represent CodonTable as a string for debugging."""
+        return f"CodonTable({self.codon_dict()}, {self.start_codons()})"
+
+    def __eq__(self, item):
+        if not isinstance(item, CodonTable):
+            return False
+        if self.codon_dict() != item.codon_dict():
+            return False
+        if self.start_codons() != item.start_codons():
+            return False
+        return True
+
+    def __ne__(self, item):
+        return not self == item
+
     def __getitem__(self, item):
         if isinstance(item, str):
             if len(item) == 1:
@@ -296,7 +312,6 @@ class CodonTable(object):
             new_table._codons[codon_number] = aa_code
         return new_table
 
-    
     def __str__(self):
         string = ""
         # ['A', 'C', 'G', 'T']
@@ -447,6 +462,5 @@ class CodonTable(object):
         """
         return _default_table
 
+
 _default_table = CodonTable.load("Standard").with_start_codons(["ATG"])
-    
-    
