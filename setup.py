@@ -2,15 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import sys
 import re
-import shlex
-import glob
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
 from setuptools import setup, find_packages, Extension
-from setuptools.command.test import test as TestCommand
 import numpy
 from Cython.Build import cythonize
 
