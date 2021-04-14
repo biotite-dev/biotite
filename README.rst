@@ -53,6 +53,7 @@ Installation
    - **numpy**
    - **requests**
    - **msgpack**
+   - **networkx**
 
 Some functions require some extra packages:
 
