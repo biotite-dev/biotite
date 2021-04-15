@@ -35,3 +35,4 @@ dependencies:
   - sra-tools
   - autodock-vina
   - viennarna
+  - tantan
