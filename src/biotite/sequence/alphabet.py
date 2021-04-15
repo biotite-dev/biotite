@@ -352,7 +352,7 @@ class LetterAlphabet(Alphabet):
         
         Parameters
         ----------
-        symbols : iterable object of str or iterable object of bytes
+        symbols : iterable object or str or bytes
             The symbols to encode. The method is fastest when a
             :class:`ndarray`, :class:`str` or :class:`bytes` object
             containing the symbols is provided, instead of e.g. a list.
