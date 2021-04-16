@@ -1,5 +1,6 @@
 HEADER    IMMUNOGLOBULIN                          09-OCT-97   1IGY              
 TITLE     STRUCTURE OF IMMUNOGLOBULIN                                           
+CAVEAT     1IGY    FUC F 9 HAS WRONG CHIRALITY AT ATOM C1                       
 COMPND    MOL_ID: 1;                                                            
 COMPND   2 MOLECULE: IGG1 INTACT ANTIBODY MAB61.1.3;                            
 COMPND   3 CHAIN: A, C;                                                         
@@ -22,6 +23,8 @@ KEYWDS    INTACT IMMUNOGLOBULIN, V REGION, C REGION, HINGE REGION,
 KEYWDS   2 IMMUNOGLOBULIN                                                       
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    L.J.HARRIS,A.MCPHERSON                                                
+REVDAT   4   29-JUL-20 1IGY    1       CAVEAT COMPND REMARK SEQADV              
+REVDAT   4 2                   1       HETNAM LINK   SITE   ATOM                
 REVDAT   3   13-JUL-11 1IGY    1       VERSN                                    
 REVDAT   2   24-FEB-09 1IGY    1       VERSN                                    
 REVDAT   1   15-APR-98 1IGY    0                                                
@@ -103,9 +106,9 @@ REMARK   3   ESD FROM C-V SIGMAA          (A) : 0.88
 REMARK   3                                                                      
 REMARK   3  RMS DEVIATIONS FROM IDEAL VALUES.                                   
 REMARK   3   BOND LENGTHS                 (A) : 0.009                           
-REMARK   3   BOND ANGLES            (DEGREES) : 1.60                            
+REMARK   3   BOND ANGLES            (DEGREES) : 1.600                           
 REMARK   3   DIHEDRAL ANGLES        (DEGREES) : 26.20                           
-REMARK   3   IMPROPER ANGLES        (DEGREES) : 1.35                            
+REMARK   3   IMPROPER ANGLES        (DEGREES) : 1.350                           
 REMARK   3                                                                      
 REMARK   3  ISOTROPIC THERMAL MODEL : GROUP                                     
 REMARK   3                                                                      
@@ -128,15 +131,15 @@ REMARK   3  TOPOLOGY FILE  1   : TOPHCSDX.PRO
 REMARK   3  TOPOLOGY FILE  2   : TOPH3.CHO                                      
 REMARK   3  TOPOLOGY FILE  3   : NULL                                           
 REMARK   3                                                                      
-REMARK   3  OTHER REFINEMENT REMARKS:                                           
-REMARK   3  BULK SOLVENT MODEL USED.                                            
+REMARK   3  OTHER REFINEMENT REMARKS: BULK SOLVENT MODEL USED.                  
 REMARK   3                                                                      
 REMARK   3  THE LOWER HINGE REGION OF CHAIN B WAS DISORDERED BUT                
 REMARK   3  MODELED STEREOCHEMICALLY.                                           
 REMARK   4                                                                      
-REMARK   4 1IGY COMPLIES WITH FORMAT V. 3.15, 01-DEC-08                         
+REMARK   4 1IGY COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY BNL.                                
+REMARK 100 THE DEPOSITION ID IS D_1000174158.                                   
 REMARK 200                                                                      
 REMARK 200 EXPERIMENTAL DETAILS                                                 
 REMARK 200  EXPERIMENT TYPE                : X-RAY DIFFRACTION                  
@@ -242,7 +245,7 @@ REMARK 350 SOFTWARE USED: PISA
 REMARK 350 TOTAL BURIED SURFACE AREA: 16030 ANGSTROM**2                         
 REMARK 350 SURFACE AREA OF THE COMPLEX: 61430 ANGSTROM**2                       
 REMARK 350 CHANGE IN SOLVENT FREE ENERGY: -2.0 KCAL/MOL                         
-REMARK 350 APPLY THE FOLLOWING TO CHAINS: A, B, C, D                            
+REMARK 350 APPLY THE FOLLOWING TO CHAINS: A, B, C, D, E, F                      
 REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
 REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
 REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
@@ -252,11 +255,11 @@ REMARK 475 THE FOLLOWING RESIDUES WERE MODELED WITH ZERO OCCUPANCY.
 REMARK 475 THE LOCATION AND PROPERTIES OF THESE RESIDUES MAY NOT                
 REMARK 475 BE RELIABLE. (M=MODEL NUMBER; RES=RESIDUE NAME;                      
 REMARK 475 C=CHAIN IDENTIFIER; SSEQ=SEQUENCE NUMBER; I=INSERTION CODE)          
-REMARK 475   M RES C SSEQI                                                      
-REMARK 475     VAL B  244                                                       
-REMARK 475     PRO B  245                                                       
-REMARK 475     GLU B  249                                                       
-REMARK 475     VAL B  250                                                       
+REMARK 475   M RES C  SSEQI                                                     
+REMARK 475     VAL B   244                                                      
+REMARK 475     PRO B   245                                                      
+REMARK 475     GLU B   249                                                      
+REMARK 475     VAL B   250                                                      
 REMARK 500                                                                      
 REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
 REMARK 500 SUBTOPIC: CLOSE CONTACTS IN SAME ASYMMETRIC UNIT                     
@@ -272,32 +275,7 @@ REMARK 500   HG1  THR C     6     H    GLY C   101              1.28
 REMARK 500   HD1  HIS A   198     HG1  THR A   200              1.29            
 REMARK 500   HD1  HIS C   198     HG1  THR C   200              1.31            
 REMARK 500   HG   SER D   251     H    SER D   252              1.33            
-REMARK 500   H    SER D   317     H    THR D   318              1.36            
-REMARK 500   H    SER B   317     H    THR B   318              1.38            
-REMARK 500   HG   SER B   251     H    SER B   252              1.39            
-REMARK 500   HG1  THR B    70     H    ARG B    71              1.40            
-REMARK 500   HG   SER B   203     H    GLU B   204              1.46            
-REMARK 500   HD1  HIS A   198     H    THR A   200              1.48            
-REMARK 500   HD1  HIS C   198     H    THR C   200              1.48            
-REMARK 500   HB   NDG D   477     O5   BMA D   478              1.48            
-REMARK 500   H    SER D   163    HD21  ASN D   209              1.49            
-REMARK 500   H    SER D    54     H    VAL D    55              1.50            
-REMARK 500   HH   TYR D    59     H    LEU D    69              1.51            
-REMARK 500   H    SER B    54     H    VAL B    55              1.53            
-REMARK 500   HG   SER D   344     H    ALA D   345              1.53            
-REMARK 500   H    SER B   163    HD21  ASN B   209              1.53            
-REMARK 500   HH   TYR B    59     H    LEU B    69              1.53            
-REMARK 500   HG   SER B   112     H    ALA B   114              1.54            
-REMARK 500  HE21  GLN A   124     H    SER A   131              1.56            
-REMARK 500   H    GLU D    97     H    VAL D    98              1.56            
-REMARK 500   HO3  NAG B   480     H1   GAL B   481              1.57            
-REMARK 500   H    MET D   381     H    ALA D   382              1.57            
-REMARK 500   H    MET B   381     H    ALA B   382              1.57            
-REMARK 500   HG   SER B   344     H    ALA B   345              1.57            
-REMARK 500  HE21  GLN C   124     H    SER C   131              1.58            
-REMARK 500   HG   SER D   357     H    LYS D   358              1.60            
-REMARK 500   H    GLU B    97     H    VAL B    98              1.60            
-REMARK 500   H    ALA B   304     H    GLN B   305              1.60            
+REMARK 500   HO3  NDG F     2     O5   BMA F     3              1.48            
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
@@ -338,7 +316,7 @@ REMARK 500
 REMARK 500  M RES CSSEQI ATM1   ATM2   ATM3                                     
 REMARK 500    GLY B  96   N   -  CA  -  C   ANGL. DEV. = -17.7 DEGREES          
 REMARK 500    PRO C  59   C   -  N   -  CA  ANGL. DEV. =   9.9 DEGREES          
-REMARK 500    GLY D  96   N   -  CA  -  C   ANGL. DEV. = -18.0 DEGREES          
+REMARK 500    GLY D  96   N   -  CA  -  C   ANGL. DEV. = -17.9 DEGREES          
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
@@ -410,100 +388,16 @@ REMARK 500
 REMARK 500 THIS ENTRY HAS     245 RAMACHANDRAN OUTLIERS.                        
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
-REMARK 500                                                                      
-REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
-REMARK 500 SUBTOPIC: CHIRAL CENTERS                                             
-REMARK 500                                                                      
-REMARK 500 UNEXPECTED CONFIGURATION OF THE FOLLOWING CHIRAL                     
-REMARK 500 CENTER(S) USING IMPROPER CA--C--CB--N CHIRALITY                      
-REMARK 500 FOR AMINO ACIDS AND C1'--O4'--N1(N9)--C2' FOR                        
-REMARK 500 NUCLEIC ACIDS OR EQUIVALENT ANGLE                                    
-REMARK 500 M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN                            
-REMARK 500 IDENTIFIER; SSEQ=SEQUENCE NUMBER; I=INSERTION CODE                   
-REMARK 500                                                                      
-REMARK 500 STANDARD TABLE:                                                      
-REMARK 500 FORMAT: (10X,I3,1X,A3,1X,A1,I4,A1,6X,F5.1,6X,A1,10X,A1,3X,A16)       
-REMARK 500                                                                      
-REMARK 500  M RES CSSEQI    IMPROPER   EXPECTED   FOUND DETAILS                 
-REMARK 500    CYS B 240        23.8      L          L   OUTSIDE RANGE           
-REMARK 500    ARG B 309        25.0      L          L   OUTSIDE RANGE           
-REMARK 500    GLU B 310        24.4      L          L   OUTSIDE RANGE           
-REMARK 500    VAL D 250        23.6      L          L   OUTSIDE RANGE           
-REMARK 500    ARG D 309        24.7      L          L   OUTSIDE RANGE           
-REMARK 500    GLU D 310        24.5      L          L   OUTSIDE RANGE           
-REMARK 500                                                                      
-REMARK 500 REMARK: NULL                                                         
 REMARK 615                                                                      
 REMARK 615 ZERO OCCUPANCY ATOM                                                  
 REMARK 615 THE FOLLOWING RESIDUES HAVE ATOMS MODELED WITH ZERO                  
 REMARK 615 OCCUPANCY. THE LOCATION AND PROPERTIES OF THESE ATOMS                
 REMARK 615 MAY NOT BE RELIABLE. (M=MODEL NUMBER; RES=RESIDUE NAME;              
 REMARK 615 C=CHAIN IDENTIFIER; SSEQ=SEQUENCE NUMBER; I=INSERTION CODE):         
-REMARK 615   M RES C SSEQI                                                      
-REMARK 615     FUL B  476                                                       
-REMARK 615     NAG B  483                                                       
-REMARK 615     NAG D  483                                                       
-REMARK 800                                                                      
-REMARK 800 SITE                                                                 
-REMARK 800 SITE_IDENTIFIER: AC1                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NAG B 475                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC2                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NDG B 477                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC3                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE BMA B 478                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC4                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE MAN B 479                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC5                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NAG B 480                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC6                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE GAL B 481                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC7                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE MAN B 482                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC8                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NAG D 475                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: AC9                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE FUC D 476                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC1                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NDG D 477                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC2                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE BMA D 478                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC3                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE MAN D 479                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC4                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NAG D 480                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC5                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE GAL D 481                 
-REMARK 800                                                                      
-REMARK 800 SITE_IDENTIFIER: BC6                                                 
-REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
-REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE MAN D 482                 
+REMARK 615   M RES C  SSEQI                                                     
+REMARK 615     NAG E     8                                                      
+REMARK 615     FUL E     9                                                      
+REMARK 615     NAG F     8                                                      
 REMARK 999                                                                      
 REMARK 999 SEQUENCE                                                             
 REMARK 999 THE INTACT ANTIBODY IS NUMBERED ACCORDING TO THE CONVENTION          
@@ -750,38 +644,38 @@ SEQRES  33 D  434  SER VAL LEU HIS GLU GLY LEU HIS ASN HIS HIS THR GLU
 SEQRES  34 D  434  LYS SER LEU SER HIS                                          
 MODRES 1IGY ASN B  314  ASN  GLYCOSYLATION SITE                                 
 MODRES 1IGY ASN D  314  ASN  GLYCOSYLATION SITE                                 
-HET    NAG  B 475      26                                                       
-HET    FUL  B 476      21                                                       
-HET    NDG  B 477      27                                                       
-HET    BMA  B 478      20                                                       
-HET    MAN  B 479      21                                                       
-HET    NAG  B 480      27                                                       
-HET    GAL  B 481      22                                                       
-HET    MAN  B 482      21                                                       
-HET    NAG  B 483      28                                                       
-HET    NAG  D 475      26                                                       
-HET    FUC  D 476      21                                                       
-HET    NDG  D 477      27                                                       
-HET    BMA  D 478      20                                                       
-HET    MAN  D 479      21                                                       
-HET    NAG  D 480      27                                                       
-HET    GAL  D 481      22                                                       
-HET    MAN  D 482      21                                                       
-HET    NAG  D 483      28                                                       
-HETNAM     NAG N-ACETYL-D-GLUCOSAMINE                                           
-HETNAM     FUL BETA-L-FUCOSE                                                    
-HETNAM     NDG 2-(ACETYLAMINO)-2-DEOXY-A-D-GLUCOPYRANOSE                        
-HETNAM     BMA BETA-D-MANNOSE                                                   
-HETNAM     MAN ALPHA-D-MANNOSE                                                  
-HETNAM     GAL BETA-D-GALACTOSE                                                 
-HETNAM     FUC ALPHA-L-FUCOSE                                                   
+HET    NAG  E   1      26                                                       
+HET    NDG  E   2      27                                                       
+HET    BMA  E   3      20                                                       
+HET    MAN  E   4      21                                                       
+HET    NAG  E   5      27                                                       
+HET    GAL  E   6      22                                                       
+HET    MAN  E   7      21                                                       
+HET    NAG  E   8      28                                                       
+HET    FUL  E   9      21                                                       
+HET    NAG  F   1      26                                                       
+HET    NDG  F   2      27                                                       
+HET    BMA  F   3      20                                                       
+HET    MAN  F   4      21                                                       
+HET    NAG  F   5      27                                                       
+HET    GAL  F   6      22                                                       
+HET    MAN  F   7      21                                                       
+HET    NAG  F   8      28                                                       
+HET    FUC  F   9      21                                                       
+HETNAM     NAG 2-ACETAMIDO-2-DEOXY-BETA-D-GLUCOPYRANOSE                         
+HETNAM     NDG 2-ACETAMIDO-2-DEOXY-ALPHA-D-GLUCOPYRANOSE                        
+HETNAM     BMA BETA-D-MANNOPYRANOSE                                             
+HETNAM     MAN ALPHA-D-MANNOPYRANOSE                                            
+HETNAM     GAL BETA-D-GALACTOPYRANOSE                                           
+HETNAM     FUL BETA-L-FUCOPYRANOSE                                              
+HETNAM     FUC ALPHA-L-FUCOPYRANOSE                                             
 HETSYN     FUL 6-DEOXY-BETA-L-GALACTOSE                                         
 FORMUL   5  NAG    6(C8 H15 N O6)                                               
-FORMUL   5  FUL    C6 H12 O5                                                    
 FORMUL   5  NDG    2(C8 H15 N O6)                                               
 FORMUL   5  BMA    2(C6 H12 O6)                                                 
 FORMUL   5  MAN    4(C6 H12 O6)                                                 
 FORMUL   5  GAL    2(C6 H12 O6)                                                 
+FORMUL   5  FUL    C6 H12 O5                                                    
 FORMUL   6  FUC    C6 H12 O5                                                    
 HELIX    1   1 ALA A   80  ASP A   82  5                                   3    
 HELIX    2   2 SER A  122  SER A  127  1                                   6    
@@ -913,24 +807,24 @@ SSBOND  15 CYS D  142    CYS D  208                          1555   1555  2.04
 SSBOND  16 CYS D  240    CYS D  242                          1555   1555  2.99  
 SSBOND  17 CYS D  274    CYS D  340                          1555   1555  2.03  
 SSBOND  18 CYS D  390    CYS D  456                          1555   1555  2.04  
-LINK         C1  NAG B 475                 ND2 ASN B 314     1555   1555  1.46  
-LINK         O4  NAG B 475                 C1  NDG B 477     1555   1555  1.40  
-LINK         O6  NAG B 475                 C1  FUL B 476     1555   1555  1.39  
-LINK         O4  NDG B 477                 C1  BMA B 478     1555   1555  1.39  
-LINK         O3  BMA B 478                 C1  MAN B 482     1555   1555  1.41  
-LINK         O6  BMA B 478                 C1  MAN B 479     1555   1555  1.40  
-LINK         O2  MAN B 479                 C1  NAG B 480     1555   1555  1.38  
-LINK         O4  NAG B 480                 C1  GAL B 481     1555   1555  1.39  
-LINK         O2  MAN B 482                 C1  NAG B 483     1555   1555  1.39  
-LINK         C1  NAG D 475                 ND2 ASN D 314     1555   1555  1.46  
-LINK         O4  NAG D 475                 C1  NDG D 477     1555   1555  1.39  
-LINK         O6  NAG D 475                 C1  FUC D 476     1555   1555  1.40  
-LINK         O4  NDG D 477                 C1  BMA D 478     1555   1555  1.39  
-LINK         O3  BMA D 478                 C1  MAN D 482     1555   1555  1.41  
-LINK         O6  BMA D 478                 C1  MAN D 479     1555   1555  1.40  
-LINK         O2  MAN D 479                 C1  NAG D 480     1555   1555  1.38  
-LINK         O4  NAG D 480                 C1  GAL D 481     1555   1555  1.39  
-LINK         O2  MAN D 482                 C1  NAG D 483     1555   1555  1.40  
+LINK         ND2 ASN B 314                 C1  NAG E   1     1555   1555  1.46  
+LINK         ND2 ASN D 314                 C1  NAG F   1     1555   1555  1.46  
+LINK         O4  NAG E   1                 C1  NDG E   2     1555   1555  1.40  
+LINK         O6  NAG E   1                 C1  FUL E   9     1555   1555  1.39  
+LINK         O4  NDG E   2                 C1  BMA E   3     1555   1555  1.39  
+LINK         O6  BMA E   3                 C1  MAN E   4     1555   1555  1.40  
+LINK         O3  BMA E   3                 C1  MAN E   7     1555   1555  1.41  
+LINK         O2  MAN E   4                 C1  NAG E   5     1555   1555  1.38  
+LINK         O4  NAG E   5                 C1  GAL E   6     1555   1555  1.39  
+LINK         O2  MAN E   7                 C1  NAG E   8     1555   1555  1.39  
+LINK         O4  NAG F   1                 C1  NDG F   2     1555   1555  1.39  
+LINK         O6  NAG F   1                 C1  FUC F   9     1555   1555  1.40  
+LINK         O4  NDG F   2                 C1  BMA F   3     1555   1555  1.39  
+LINK         O6  BMA F   3                 C1  MAN F   4     1555   1555  1.40  
+LINK         O3  BMA F   3                 C1  MAN F   7     1555   1555  1.41  
+LINK         O2  MAN F   4                 C1  NAG F   5     1555   1555  1.38  
+LINK         O4  NAG F   5                 C1  GAL F   6     1555   1555  1.39  
+LINK         O2  MAN F   7                 C1  NAG F   8     1555   1555  1.40  
 CISPEP   1 TYR A   94    PRO A   95          0        -0.03                     
 CISPEP   2 TYR A  140    PRO A  141          0         0.06                     
 CISPEP   3 PHE B  148    PRO B  149          0        -0.23                     
@@ -941,27 +835,6 @@ CISPEP   7 TYR C  140    PRO C  141          0         0.26
 CISPEP   8 PHE D  148    PRO D  149          0        -0.31                     
 CISPEP   9 GLU D  150    PRO D  151          0        -0.21                     
 CISPEP  10 PHE D  396    PRO D  397          0        -0.27                     
-SITE     1 AC1  6 VAL B 277  ASP B 278  PHE B 313  ASN B 314                    
-SITE     2 AC1  6 THR B 318  NDG B 477                                          
-SITE     1 AC2  6 PHE B 254  VAL B 277  ARG B 320  NAG B 475                    
-SITE     2 AC2  6 BMA B 478  MAN B 479                                          
-SITE     1 AC3  3 NDG B 477  MAN B 479  MAN B 482                               
-SITE     1 AC4  3 NDG B 477  BMA B 478  NAG B 480                               
-SITE     1 AC5  4 PHE B 256  ARG B 320  MAN B 479  GAL B 481                    
-SITE     1 AC6  5 PHE B 256  PRO B 257  LYS B 271  THR B 273                    
-SITE     2 AC6  5 NAG B 480                                                     
-SITE     1 AC7  1 BMA B 478                                                     
-SITE     1 AC8  7 VAL D 277  ASP D 278  PHE D 313  ASN D 314                    
-SITE     2 AC8  7 THR D 318  FUC D 476  NDG D 477                               
-SITE     1 AC9  3 ILE B 241  NAG D 475  NDG D 477                               
-SITE     1 BC1  6 VAL D 277  ARG D 320  NAG D 475  FUC D 476                    
-SITE     2 BC1  6 BMA D 478  MAN D 479                                          
-SITE     1 BC2  3 NDG D 477  MAN D 479  MAN D 482                               
-SITE     1 BC3  3 NDG D 477  BMA D 478  NAG D 480                               
-SITE     1 BC4  4 PHE D 256  ARG D 320  MAN D 479  GAL D 481                    
-SITE     1 BC5  5 PHE D 256  PRO D 257  LYS D 271  THR D 273                    
-SITE     2 BC5  5 NAG D 480                                                     
-SITE     1 BC6  1 BMA D 478                                                     
 CRYST1   66.650  190.660   73.100  90.00 109.66  90.00 P 1 21 1      4          
 ORIGX1      1.000000  0.000000  0.000000        0.00000                         
 ORIGX2      0.000000  1.000000  0.000000        0.00000                         
@@ -13297,432 +13170,432 @@ ATOM  12325  H   HIS D 474      37.858  18.078   9.737  1.00 15.00           H
 ATOM  12326  HD1 HIS D 474      42.041  19.388  11.490  1.00 15.00           H  
 ATOM  12327  HE2 HIS D 474      44.253  16.189  12.372  1.00 15.00           H  
 TER   12328      HIS D 474                                                      
-HETATM12329  C1  NAG B 475       0.924  29.195  47.741  1.00100.00           C  
-HETATM12330  C2  NAG B 475       0.488  28.178  46.650  1.00100.00           C  
-HETATM12331  C3  NAG B 475       1.629  27.220  46.287  1.00100.00           C  
-HETATM12332  C4  NAG B 475       2.956  27.994  46.269  1.00100.00           C  
-HETATM12333  C5  NAG B 475       3.298  28.446  47.710  1.00100.00           C  
-HETATM12334  C6  NAG B 475       4.302  29.596  47.859  1.00100.00           C  
-HETATM12335  C7  NAG B 475      -1.541  26.930  46.218  1.00100.00           C  
-HETATM12336  C8  NAG B 475      -2.714  26.140  46.780  1.00100.00           C  
-HETATM12337  N2  NAG B 475      -0.668  27.413  47.099  1.00100.00           N  
-HETATM12338  O3  NAG B 475       1.380  26.629  45.015  1.00100.00           O  
-HETATM12339  O4  NAG B 475       4.029  27.162  45.725  1.00100.00           O  
-HETATM12340  O5  NAG B 475       2.098  28.774  48.494  1.00100.00           O  
-HETATM12341  O6  NAG B 475       3.895  30.731  47.070  1.00100.00           O  
-HETATM12342  O7  NAG B 475      -1.426  27.111  45.007  1.00100.00           O  
-HETATM12343  H1  NAG B 475       0.182  29.169  48.551  1.00 15.00           H  
-HETATM12344  H2  NAG B 475       0.229  28.729  45.735  1.00 15.00           H  
-HETATM12345  H3  NAG B 475       1.693  26.436  47.055  1.00 15.00           H  
-HETATM12346  H4  NAG B 475       2.833  28.891  45.646  1.00 15.00           H  
-HETATM12347  H5  NAG B 475       3.823  27.630  48.225  1.00 15.00           H  
-HETATM12348  H61 NAG B 475       5.289  29.248  47.522  1.00 15.00           H  
-HETATM12349  H62 NAG B 475       4.354  29.883  48.918  1.00 15.00           H  
-HETATM12350  H81 NAG B 475      -3.480  26.835  47.152  1.00 15.00           H  
-HETATM12351  H82 NAG B 475      -2.375  25.511  47.615  1.00 15.00           H  
-HETATM12352  H83 NAG B 475      -3.158  25.517  45.991  1.00 15.00           H  
-HETATM12353  HN2 NAG B 475      -0.804  27.253  48.056  1.00 15.00           H  
-HETATM12354  HO3 NAG B 475       2.096  26.028  44.798  1.00 15.00           H  
-HETATM12355  C1  FUL B 476       4.719  30.935  45.965  0.00  0.00           C  
-HETATM12356  C2  FUL B 476       4.018  31.901  45.012  0.00  0.00           C  
-HETATM12357  O2  FUL B 476       3.851  33.157  45.654  0.00  0.00           O  
-HETATM12358  C3  FUL B 476       4.823  32.086  43.726  0.00  0.00           C  
-HETATM12359  O3  FUL B 476       4.074  32.865  42.803  0.00  0.00           O  
-HETATM12360  C4  FUL B 476       5.145  30.723  43.114  0.00  0.00           C  
-HETATM12361  O4  FUL B 476       3.942  30.080  42.716  0.00  0.00           O  
-HETATM12362  C5  FUL B 476       5.865  29.862  44.144  0.00  0.00           C  
-HETATM12363  C6  FUL B 476       6.188  28.465  43.639  0.00  0.00           C  
-HETATM12364  O5  FUL B 476       5.034  29.713  45.306  0.00  0.00           O  
-HETATM12365  H1  FUL B 476       5.677  31.370  46.283  0.00  0.00           H  
-HETATM12366  H2  FUL B 476       3.037  31.487  44.740  0.00  0.00           H  
-HETATM12367  HO2 FUL B 476       4.712  33.511  45.888  0.00  0.00           H  
-HETATM12368  H3  FUL B 476       5.766  32.596  43.966  0.00  0.00           H  
-HETATM12369  HO3 FUL B 476       4.585  32.983  41.999  0.00  0.00           H  
-HETATM12370  H4  FUL B 476       5.796  30.869  42.241  0.00  0.00           H  
-HETATM12371  HO4 FUL B 476       3.379  29.956  43.483  0.00  0.00           H  
-HETATM12372  H5  FUL B 476       6.802  30.351  44.444  0.00  0.00           H  
-HETATM12373  H61 FUL B 476       5.260  27.953  43.348  0.00  0.00           H  
-HETATM12374  H62 FUL B 476       6.879  28.530  42.787  0.00  0.00           H  
-HETATM12375  H63 FUL B 476       6.670  27.900  44.449  0.00  0.00           H  
-HETATM12376  C1  NDG B 477       4.403  26.019  46.445  1.00100.00           C  
-HETATM12377  C2  NDG B 477       5.903  25.741  46.546  1.00100.00           C  
-HETATM12378  C3  NDG B 477       6.391  24.795  45.433  1.00100.00           C  
-HETATM12379  C4  NDG B 477       5.491  23.550  45.387  1.00100.00           C  
-HETATM12380  C5  NDG B 477       4.033  23.972  45.150  1.00100.00           C  
-HETATM12381  C6  NDG B 477       3.079  22.786  45.157  1.00100.00           C  
-HETATM12382  C7  NDG B 477       7.832  27.086  47.123  1.00100.00           C  
-HETATM12383  C8  NDG B 477       8.500  28.453  47.046  1.00100.00           C  
-HETATM12384  O   NDG B 477       3.561  24.873  46.189  1.00100.00           O  
-HETATM12385  O3  NDG B 477       7.728  24.409  45.716  1.00100.00           O  
-HETATM12386  O4  NDG B 477       5.894  22.643  44.323  1.00100.00           O  
-HETATM12387  O6  NDG B 477       3.425  21.830  44.166  1.00100.00           O  
-HETATM12388  O7  NDG B 477       8.380  26.132  47.689  1.00100.00           O  
-HETATM12389  N2  NDG B 477       6.644  26.992  46.530  1.00100.00           N  
-HETATM12390  H1  NDG B 477       4.022  26.121  47.470  1.00 15.00           H  
-HETATM12391  H2  NDG B 477       6.104  25.207  47.485  1.00 15.00           H  
-HETATM12392  H3  NDG B 477       6.346  25.319  44.468  1.00 15.00           H  
-HETATM12393  H4  NDG B 477       5.562  23.033  46.354  1.00 15.00           H  
-HETATM12394  H5  NDG B 477       3.962  24.497  44.187  1.00 15.00           H  
-HETATM12395 H6C1 NDG B 477       2.062  23.157  44.966  1.00 15.00           H  
-HETATM12396 H6C2 NDG B 477       3.119  22.313  46.148  1.00 15.00           H  
-HETATM12397 H8C1 NDG B 477       7.730  29.238  47.041  1.00 15.00           H  
-HETATM12398 H8C2 NDG B 477       9.087  28.531  46.120  1.00 15.00           H  
-HETATM12399 H8C3 NDG B 477       9.148  28.602  47.921  1.00 15.00           H  
-HETATM12400  HB  NDG B 477       7.755  23.952  46.560  1.00 15.00           H  
-HETATM12401  H6  NDG B 477       4.377  21.829  44.043  1.00 15.00           H  
-HETATM12402  HA  NDG B 477       6.265  27.774  46.078  1.00 15.00           H  
-HETATM12403  C1  BMA B 478       7.120  21.989  44.400  1.00100.00           C  
-HETATM12404  C2  BMA B 478       7.108  20.693  43.553  1.00100.00           C  
-HETATM12405  C3  BMA B 478       8.492  20.028  43.648  1.00100.00           C  
-HETATM12406  C4  BMA B 478       9.557  21.021  43.194  1.00100.00           C  
-HETATM12407  C5  BMA B 478       9.443  22.337  43.986  1.00100.00           C  
-HETATM12408  C6  BMA B 478      10.382  23.412  43.475  1.00100.00           C  
-HETATM12409  O2  BMA B 478       6.816  21.002  42.191  1.00100.00           O  
-HETATM12410  O3  BMA B 478       8.572  18.830  42.831  1.00100.00           O  
-HETATM12411  O4  BMA B 478      10.844  20.450  43.391  1.00100.00           O  
-HETATM12412  O5  BMA B 478       8.110  22.878  43.885  1.00100.00           O  
-HETATM12413  O6  BMA B 478      10.551  24.436  44.479  1.00100.00           O  
-HETATM12414  H1  BMA B 478       7.329  21.723  45.446  1.00 15.00           H  
-HETATM12415  H2  BMA B 478       6.341  20.015  43.952  1.00 15.00           H  
-HETATM12416  H3  BMA B 478       8.679  19.764  44.698  1.00 15.00           H  
-HETATM12417  H4  BMA B 478       9.406  21.247  42.129  1.00 15.00           H  
-HETATM12418  H5  BMA B 478       9.656  22.144  45.046  1.00 15.00           H  
-HETATM12419  H61 BMA B 478       9.955  23.853  42.563  1.00 15.00           H  
-HETATM12420  H62 BMA B 478      11.354  22.954  43.244  1.00 15.00           H  
-HETATM12421  HO2 BMA B 478       5.957  21.427  42.138  1.00 15.00           H  
-HETATM12422  HO4 BMA B 478      11.516  21.071  43.100  1.00 15.00           H  
-HETATM12423  C1  MAN B 479      11.895  24.812  44.584  1.00100.00           C  
-HETATM12424  C2  MAN B 479      12.073  25.905  45.634  1.00100.00           C  
-HETATM12425  C3  MAN B 479      11.450  27.228  45.153  1.00100.00           C  
-HETATM12426  C4  MAN B 479      12.001  27.601  43.774  1.00100.00           C  
-HETATM12427  C5  MAN B 479      11.820  26.430  42.800  1.00100.00           C  
-HETATM12428  C6  MAN B 479      12.467  26.676  41.451  1.00100.00           C  
-HETATM12429  O2  MAN B 479      13.484  26.090  45.835  1.00100.00           O  
-HETATM12430  O3  MAN B 479      11.750  28.269  46.079  1.00100.00           O  
-HETATM12431  O4  MAN B 479      11.320  28.751  43.283  1.00100.00           O  
-HETATM12432  O5  MAN B 479      12.429  25.237  43.337  1.00100.00           O  
-HETATM12433  O6  MAN B 479      13.885  26.640  41.545  1.00100.00           O  
-HETATM12434  H1  MAN B 479      12.498  23.941  44.877  1.00 15.00           H  
-HETATM12435  H2  MAN B 479      11.592  25.594  46.572  1.00 15.00           H  
-HETATM12436  H3  MAN B 479      10.361  27.101  45.076  1.00 15.00           H  
-HETATM12437  H4  MAN B 479      13.075  27.814  43.864  1.00 15.00           H  
-HETATM12438  H5  MAN B 479      10.748  26.236  42.655  1.00 15.00           H  
-HETATM12439  H61 MAN B 479      12.150  27.663  41.086  1.00 15.00           H  
-HETATM12440  H62 MAN B 479      12.127  25.898  40.753  1.00 15.00           H  
-HETATM12441  HO3 MAN B 479      11.355  29.089  45.775  1.00 15.00           H  
-HETATM12442  HO4 MAN B 479      11.449  29.482  43.892  1.00 15.00           H  
-HETATM12443  HO6 MAN B 479      14.139  26.404  42.440  1.00 15.00           H  
-HETATM12444  C1  NAG B 480      13.987  25.946  47.111  1.00 96.95           C  
-HETATM12445  C2  NAG B 480      15.422  25.439  46.985  1.00 96.95           C  
-HETATM12446  C3  NAG B 480      16.165  25.500  48.311  1.00 96.95           C  
-HETATM12447  C4  NAG B 480      16.059  26.917  48.881  1.00 96.95           C  
-HETATM12448  C5  NAG B 480      14.567  27.271  49.021  1.00 96.95           C  
-HETATM12449  C6  NAG B 480      14.305  28.655  49.599  1.00 96.95           C  
-HETATM12450  C7  NAG B 480      15.908  23.745  45.330  1.00 96.95           C  
-HETATM12451  C8  NAG B 480      15.840  22.263  44.968  1.00 96.95           C  
-HETATM12452  N2  NAG B 480      15.409  24.064  46.520  1.00 96.95           N  
-HETATM12453  O3  NAG B 480      17.524  25.151  48.086  1.00 96.95           O  
-HETATM12454  O4  NAG B 480      16.731  27.013  50.162  1.00 96.95           O  
-HETATM12455  O5  NAG B 480      13.942  27.239  47.725  1.00 96.95           O  
-HETATM12456  O6  NAG B 480      13.023  29.137  49.218  1.00 96.95           O  
-HETATM12457  O7  NAG B 480      16.391  24.579  44.555  1.00 96.95           O  
-HETATM12458  H1  NAG B 480      13.390  25.218  47.677  1.00 15.00           H  
-HETATM12459  H2  NAG B 480      15.964  26.068  46.265  1.00 15.00           H  
-HETATM12460  H3  NAG B 480      15.706  24.793  49.016  1.00 15.00           H  
-HETATM12461  H4  NAG B 480      16.522  27.616  48.171  1.00 15.00           H  
-HETATM12462  H5  NAG B 480      14.071  26.533  49.666  1.00 15.00           H  
-HETATM12463  H61 NAG B 480      15.079  29.341  49.228  1.00 15.00           H  
-HETATM12464  H62 NAG B 480      14.362  28.593  50.695  1.00 15.00           H  
-HETATM12465  H81 NAG B 480      14.878  22.048  44.483  1.00 15.00           H  
-HETATM12466  H82 NAG B 480      15.920  21.652  45.878  1.00 15.00           H  
-HETATM12467  H83 NAG B 480      16.650  22.012  44.269  1.00 15.00           H  
-HETATM12468  HN2 NAG B 480      15.028  23.363  47.090  1.00 15.00           H  
-HETATM12469  HO3 NAG B 480      18.002  25.179  48.918  1.00 15.00           H  
-HETATM12470  HO6 NAG B 480      12.618  29.588  49.963  1.00 15.00           H  
-HETATM12471  C1  GAL B 481      18.058  26.596  50.202  1.00100.00           C  
-HETATM12472  C2  GAL B 481      18.877  27.496  51.126  1.00100.00           C  
-HETATM12473  C3  GAL B 481      20.336  26.984  51.117  1.00100.00           C  
-HETATM12474  C4  GAL B 481      20.358  25.520  51.578  1.00100.00           C  
-HETATM12475  C5  GAL B 481      19.432  24.678  50.685  1.00100.00           C  
-HETATM12476  C6  GAL B 481      19.311  23.227  51.155  1.00100.00           C  
-HETATM12477  O2  GAL B 481      18.807  28.843  50.666  1.00100.00           O  
-HETATM12478  O3  GAL B 481      21.166  27.779  51.957  1.00100.00           O  
-HETATM12479  O4  GAL B 481      19.933  25.433  52.936  1.00100.00           O  
-HETATM12480  O5  GAL B 481      18.094  25.241  50.676  1.00100.00           O  
-HETATM12481  O6  GAL B 481      18.443  22.472  50.316  1.00100.00           O  
-HETATM12482  H1  GAL B 481      18.489  26.642  49.192  1.00 15.00           H  
-HETATM12483  H2  GAL B 481      18.469  27.428  52.144  1.00 15.00           H  
-HETATM12484  H3  GAL B 481      20.714  27.024  50.086  1.00 15.00           H  
-HETATM12485  H4  GAL B 481      21.382  25.133  51.483  1.00 15.00           H  
-HETATM12486  H5  GAL B 481      19.815  24.680  49.655  1.00 15.00           H  
-HETATM12487  H61 GAL B 481      18.917  23.226  52.181  1.00 15.00           H  
-HETATM12488  H62 GAL B 481      20.312  22.774  51.144  1.00 15.00           H  
-HETATM12489  HO2 GAL B 481      17.891  29.130  50.662  1.00 15.00           H  
-HETATM12490  HO3 GAL B 481      22.064  27.439  51.931  1.00 15.00           H  
-HETATM12491  HO4 GAL B 481      19.954  24.515  53.218  1.00 15.00           H  
-HETATM12492  HO6 GAL B 481      18.501  22.804  49.417  1.00 15.00           H  
-HETATM12493  C1  MAN B 482       8.699  17.607  43.522  1.00100.00           C  
-HETATM12494  C2  MAN B 482       9.661  16.651  42.772  1.00100.00           C  
-HETATM12495  C3  MAN B 482       8.994  16.117  41.494  1.00100.00           C  
-HETATM12496  C4  MAN B 482       7.648  15.493  41.843  1.00100.00           C  
-HETATM12497  C5  MAN B 482       6.783  16.556  42.514  1.00100.00           C  
-HETATM12498  C6  MAN B 482       5.386  16.065  42.877  1.00100.00           C  
-HETATM12499  O2  MAN B 482      10.015  15.541  43.634  1.00100.00           O  
-HETATM12500  O3  MAN B 482       9.818  15.142  40.870  1.00100.00           O  
-HETATM12501  O4  MAN B 482       7.017  15.008  40.667  1.00100.00           O  
-HETATM12502  O5  MAN B 482       7.431  16.993  43.730  1.00100.00           O  
-HETATM12503  O6  MAN B 482       4.553  17.131  43.316  1.00100.00           O  
-HETATM12504  H1  MAN B 482       9.101  17.793  44.528  1.00 15.00           H  
-HETATM12505  H2  MAN B 482      10.566  17.206  42.488  1.00 15.00           H  
-HETATM12506  H3  MAN B 482       8.830  16.957  40.804  1.00 15.00           H  
-HETATM12507  H4  MAN B 482       7.813  14.663  42.545  1.00 15.00           H  
-HETATM12508  H5  MAN B 482       6.672  17.420  41.845  1.00 15.00           H  
-HETATM12509  H61 MAN B 482       5.477  15.320  43.680  1.00 15.00           H  
-HETATM12510  H62 MAN B 482       4.940  15.597  41.988  1.00 15.00           H  
-HETATM12511  HO3 MAN B 482       9.386  14.823  40.074  1.00 15.00           H  
-HETATM12512  HO4 MAN B 482       7.578  14.348  40.254  1.00 15.00           H  
-HETATM12513  HO6 MAN B 482       4.160  16.900  44.161  1.00 15.00           H  
-HETATM12514  C1  NAG B 483      11.322  15.066  43.613  0.00  0.00           C  
-HETATM12515  C2  NAG B 483      11.406  13.807  44.480  0.00  0.00           C  
-HETATM12516  C3  NAG B 483      12.795  13.174  44.385  0.00  0.00           C  
-HETATM12517  C4  NAG B 483      13.118  12.906  42.919  0.00  0.00           C  
-HETATM12518  C5  NAG B 483      12.989  14.201  42.116  0.00  0.00           C  
-HETATM12519  C6  NAG B 483      13.224  13.986  40.631  0.00  0.00           C  
-HETATM12520  C7  NAG B 483      11.757  14.975  46.584  0.00  0.00           C  
-HETATM12521  C8  NAG B 483      11.273  15.170  48.010  0.00  0.00           C  
-HETATM12522  N2  NAG B 483      11.064  14.098  45.863  0.00  0.00           N  
-HETATM12523  O3  NAG B 483      12.817  11.953  45.113  0.00  0.00           O  
-HETATM12524  O4  NAG B 483      14.439  12.394  42.803  0.00  0.00           O  
-HETATM12525  O5  NAG B 483      11.661  14.746  42.258  0.00  0.00           O  
-HETATM12526  O6  NAG B 483      13.022  15.184  39.896  0.00  0.00           O  
-HETATM12527  O7  NAG B 483      12.733  15.589  46.151  0.00  0.00           O  
-HETATM12528  H1  NAG B 483      12.005  15.827  44.016  0.00  0.00           H  
-HETATM12529  H2  NAG B 483      10.705  13.059  44.083  0.00  0.00           H  
-HETATM12530  H3  NAG B 483      13.534  13.871  44.805  0.00  0.00           H  
-HETATM12531  H4  NAG B 483      12.399  12.174  42.524  0.00  0.00           H  
-HETATM12532  H5  NAG B 483      13.709  14.940  42.495  0.00  0.00           H  
-HETATM12533  H61 NAG B 483      12.524  13.217  40.275  0.00  0.00           H  
-HETATM12534  H62 NAG B 483      14.257  13.640  40.488  0.00  0.00           H  
-HETATM12535  H81 NAG B 483      10.724  14.276  48.337  0.00  0.00           H  
-HETATM12536  H82 NAG B 483      10.597  16.035  48.060  0.00  0.00           H  
-HETATM12537  H83 NAG B 483      12.132  15.319  48.679  0.00  0.00           H  
-HETATM12538  HN2 NAG B 483      10.304  13.636  46.274  0.00  0.00           H  
-HETATM12539  HO3 NAG B 483      13.692  11.563  45.054  0.00  0.00           H  
-HETATM12540  HO4 NAG B 483      14.509  11.577  43.303  0.00  0.00           H  
-HETATM12541  HO6 NAG B 483      12.151  15.167  39.492  0.00  0.00           H  
-HETATM12542  C1  NAG D 475      -3.609  10.834  37.491  1.00 89.19           C  
-HETATM12543  C2  NAG D 475      -3.312  11.933  38.524  1.00 89.19           C  
-HETATM12544  C3  NAG D 475      -2.701  13.171  37.862  1.00 89.19           C  
-HETATM12545  C4  NAG D 475      -1.716  12.725  36.787  1.00 89.19           C  
-HETATM12546  C5  NAG D 475      -2.494  12.068  35.646  1.00 89.19           C  
-HETATM12547  C6  NAG D 475      -1.698  11.163  34.711  1.00 89.19           C  
-HETATM12548  C7  NAG D 475      -4.492  12.760  40.469  1.00 89.19           C  
-HETATM12549  C8  NAG D 475      -5.826  13.142  41.104  1.00 89.19           C  
-HETATM12550  N2  NAG D 475      -4.534  12.308  39.215  1.00 89.19           N  
-HETATM12551  O3  NAG D 475      -2.038  13.963  38.835  1.00 89.19           O  
-HETATM12552  O4  NAG D 475      -0.946  13.856  36.291  1.00 89.19           O  
-HETATM12553  O5  NAG D 475      -3.658  11.320  36.125  1.00 89.19           O  
-HETATM12554  O6  NAG D 475      -0.990  10.164  35.471  1.00 89.19           O  
-HETATM12555  O7  NAG D 475      -3.439  12.864  41.102  1.00 89.19           O  
-HETATM12556  H1  NAG D 475      -4.659  10.531  37.602  1.00 15.00           H  
-HETATM12557  H2  NAG D 475      -2.581  11.552  39.251  1.00 15.00           H  
-HETATM12558  H3  NAG D 475      -3.504  13.756  37.392  1.00 15.00           H  
-HETATM12559  H4  NAG D 475      -1.036  11.979  37.221  1.00 15.00           H  
-HETATM12560  H5  NAG D 475      -2.854  12.850  34.963  1.00 15.00           H  
-HETATM12561  H61 NAG D 475      -0.981  11.777  34.148  1.00 15.00           H  
-HETATM12562  H62 NAG D 475      -2.393  10.675  34.014  1.00 15.00           H  
-HETATM12563  H81 NAG D 475      -6.638  12.971  40.383  1.00 15.00           H  
-HETATM12564  H82 NAG D 475      -5.818  14.206  41.379  1.00 15.00           H  
-HETATM12565  H83 NAG D 475      -6.008  12.521  41.992  1.00 15.00           H  
-HETATM12566  HN2 NAG D 475      -5.396  12.228  38.756  1.00 15.00           H  
-HETATM12567  HO3 NAG D 475      -2.668  14.236  39.506  1.00 15.00           H  
-HETATM12568  C1  FUC D 476       0.392  10.362  35.453  1.00100.00           C  
-HETATM12569  C2  FUC D 476       1.024   9.484  36.535  1.00100.00           C  
-HETATM12570  C3  FUC D 476       2.527   9.746  36.660  1.00100.00           C  
-HETATM12571  C4  FUC D 476       2.777  11.246  36.834  1.00100.00           C  
-HETATM12572  C5  FUC D 476       2.133  12.009  35.675  1.00100.00           C  
-HETATM12573  C6  FUC D 476       2.297  13.518  35.777  1.00100.00           C  
-HETATM12574  O2  FUC D 476       0.805   8.118  36.208  1.00100.00           O  
-HETATM12575  O3  FUC D 476       3.056   9.035  37.777  1.00100.00           O  
-HETATM12576  O4  FUC D 476       2.221  11.689  38.066  1.00100.00           O  
-HETATM12577  O5  FUC D 476       0.724  11.733  35.646  1.00100.00           O  
-HETATM12578  H1  FUC D 476       0.801  10.079  34.473  1.00 15.00           H  
-HETATM12579  H2  FUC D 476       0.561   9.717  37.504  1.00 15.00           H  
-HETATM12580  H3  FUC D 476       3.023   9.411  35.738  1.00 15.00           H  
-HETATM12581  H4  FUC D 476       3.861  11.429  36.828  1.00 15.00           H  
-HETATM12582  H5  FUC D 476       2.574  11.678  34.724  1.00 15.00           H  
-HETATM12583  H61 FUC D 476       1.778  13.987  34.930  1.00 15.00           H  
-HETATM12584  H62 FUC D 476       3.364  13.778  35.732  1.00 15.00           H  
-HETATM12585  H63 FUC D 476       1.849  13.876  36.714  1.00 15.00           H  
-HETATM12586  HO2 FUC D 476      -0.139   7.951  36.156  1.00 15.00           H  
-HETATM12587  HO3 FUC D 476       2.904   8.095  37.656  1.00 15.00           H  
-HETATM12588  HO4 FUC D 476       1.275  11.526  38.065  1.00 15.00           H  
-HETATM12589  C1  NDG D 477      -1.623  14.870  35.621  1.00 41.09           C  
-HETATM12590  C2  NDG D 477      -0.922  15.436  34.389  1.00 41.09           C  
-HETATM12591  C3  NDG D 477      -0.052  16.662  34.713  1.00 41.09           C  
-HETATM12592  C4  NDG D 477      -0.887  17.668  35.509  1.00 41.09           C  
-HETATM12593  C5  NDG D 477      -1.411  17.005  36.792  1.00 41.09           C  
-HETATM12594  C6  NDG D 477      -2.299  17.936  37.602  1.00 41.09           C  
-HETATM12595  C7  NDG D 477       0.132  14.459  32.449  1.00 41.09           C  
-HETATM12596  C8  NDG D 477       0.969  13.315  31.885  1.00 41.09           C  
-HETATM12597  O   NDG D 477      -2.221  15.832  36.508  1.00 41.09           O  
-HETATM12598  O3  NDG D 477       0.388  17.246  33.497  1.00 41.09           O  
-HETATM12599  O4  NDG D 477      -0.101  18.836  35.870  1.00 41.09           O  
-HETATM12600  O6  NDG D 477      -1.619  19.134  37.959  1.00 41.09           O  
-HETATM12601  O7  NDG D 477      -0.265  15.378  31.731  1.00 41.09           O  
-HETATM12602  N2  NDG D 477      -0.127  14.403  33.753  1.00 41.09           N  
-HETATM12603  H1  NDG D 477      -2.595  14.477  35.293  1.00 15.00           H  
-HETATM12604  H2  NDG D 477      -1.681  15.803  33.684  1.00 15.00           H  
-HETATM12605  H3  NDG D 477       0.813  16.342  35.311  1.00 15.00           H  
-HETATM12606  H4  NDG D 477      -1.741  17.979  34.892  1.00 15.00           H  
-HETATM12607  H5  NDG D 477      -0.557  16.685  37.405  1.00 15.00           H  
-HETATM12608 H6C1 NDG D 477      -2.612  17.410  38.515  1.00 15.00           H  
-HETATM12609 H6C2 NDG D 477      -3.182  18.186  36.998  1.00 15.00           H  
-HETATM12610 H8C1 NDG D 477       0.704  12.380  32.398  1.00 15.00           H  
-HETATM12611 H8C2 NDG D 477       2.037  13.516  32.050  1.00 15.00           H  
-HETATM12612 H8C3 NDG D 477       0.766  13.197  30.812  1.00 15.00           H  
-HETATM12613  HB  NDG D 477       0.938  18.009  33.691  1.00 15.00           H  
-HETATM12614  H6  NDG D 477      -2.249  19.858  37.997  1.00 15.00           H  
-HETATM12615  HA  NDG D 477       0.222  13.659  34.287  1.00 15.00           H  
-HETATM12616  C1  BMA D 478       0.335  19.710  34.878  1.00 69.97           C  
-HETATM12617  C2  BMA D 478       0.584  21.126  35.455  1.00 69.97           C  
-HETATM12618  C3  BMA D 478       1.102  22.043  34.329  1.00 69.97           C  
-HETATM12619  C4  BMA D 478       2.349  21.410  33.696  1.00 69.97           C  
-HETATM12620  C5  BMA D 478       2.065  19.966  33.252  1.00 69.97           C  
-HETATM12621  C6  BMA D 478       3.307  19.253  32.760  1.00 69.97           C  
-HETATM12622  O2  BMA D 478       1.542  21.063  36.505  1.00 69.97           O  
-HETATM12623  O3  BMA D 478       1.420  23.376  34.829  1.00 69.97           O  
-HETATM12624  O4  BMA D 478       2.759  22.180  32.573  1.00 69.97           O  
-HETATM12625  O5  BMA D 478       1.552  19.185  34.350  1.00 69.97           O  
-HETATM12626  O6  BMA D 478       2.932  18.092  31.987  1.00 69.97           O  
-HETATM12627  H1  BMA D 478      -0.429  19.782  34.091  1.00 15.00           H  
-HETATM12628  H2  BMA D 478      -0.365  21.524  35.842  1.00 15.00           H  
-HETATM12629  H3  BMA D 478       0.324  22.119  33.557  1.00 15.00           H  
-HETATM12630  H4  BMA D 478       3.154  21.383  34.444  1.00 15.00           H  
-HETATM12631  H5  BMA D 478       1.311  19.973  32.453  1.00 15.00           H  
-HETATM12632  H61 BMA D 478       3.907  18.944  33.627  1.00 15.00           H  
-HETATM12633  H62 BMA D 478       3.890  19.944  32.135  1.00 15.00           H  
-HETATM12634  HO2 BMA D 478       1.215  20.487  37.200  1.00 15.00           H  
-HETATM12635  HO4 BMA D 478       2.051  22.199  31.925  1.00 15.00           H  
-HETATM12636  C1  MAN D 479       3.714  18.006  30.833  1.00100.00           C  
-HETATM12637  C2  MAN D 479       3.335  16.784  30.011  1.00100.00           C  
-HETATM12638  C3  MAN D 479       3.739  15.498  30.734  1.00100.00           C  
-HETATM12639  C4  MAN D 479       5.219  15.551  31.097  1.00100.00           C  
-HETATM12640  C5  MAN D 479       5.515  16.827  31.889  1.00100.00           C  
-HETATM12641  C6  MAN D 479       6.987  17.014  32.180  1.00100.00           C  
-HETATM12642  O2  MAN D 479       4.040  16.866  28.762  1.00100.00           O  
-HETATM12643  O3  MAN D 479       3.501  14.380  29.889  1.00100.00           O  
-HETATM12644  O4  MAN D 479       5.560  14.409  31.868  1.00100.00           O  
-HETATM12645  O5  MAN D 479       5.098  17.980  31.135  1.00100.00           O  
-HETATM12646  O6  MAN D 479       7.696  17.328  30.989  1.00100.00           O  
-HETATM12647  H1  MAN D 479       3.561  18.904  30.218  1.00 15.00           H  
-HETATM12648  H2  MAN D 479       2.250  16.781  29.837  1.00 15.00           H  
-HETATM12649  H3  MAN D 479       3.144  15.404  31.653  1.00 15.00           H  
-HETATM12650  H4  MAN D 479       5.813  15.568  30.173  1.00 15.00           H  
-HETATM12651  H5  MAN D 479       4.957  16.810  32.835  1.00 15.00           H  
-HETATM12652  H61 MAN D 479       7.382  16.083  32.610  1.00 15.00           H  
-HETATM12653  H62 MAN D 479       7.102  17.833  32.904  1.00 15.00           H  
-HETATM12654  HO3 MAN D 479       4.023  14.469  29.089  1.00 15.00           H  
-HETATM12655  HO4 MAN D 479       6.493  14.443  32.091  1.00 15.00           H  
-HETATM12656  HO6 MAN D 479       7.268  18.066  30.549  1.00 15.00           H  
-HETATM12657  C1  NAG D 480       3.301  16.847  27.596  1.00 93.71           C  
-HETATM12658  C2  NAG D 480       4.051  17.667  26.544  1.00 93.71           C  
-HETATM12659  C3  NAG D 480       3.460  17.492  25.156  1.00 93.71           C  
-HETATM12660  C4  NAG D 480       3.383  15.997  24.835  1.00 93.71           C  
-HETATM12661  C5  NAG D 480       2.545  15.311  25.926  1.00 93.71           C  
-HETATM12662  C6  NAG D 480       2.358  13.810  25.725  1.00 93.71           C  
-HETATM12663  C7  NAG D 480       5.099  19.740  27.219  1.00 93.71           C  
-HETATM12664  C8  NAG D 480       4.902  21.212  27.558  1.00 93.71           C  
-HETATM12665  N2  NAG D 480       3.996  19.073  26.892  1.00 93.71           N  
-HETATM12666  O3  NAG D 480       4.285  18.171  24.220  1.00 93.71           O  
-HETATM12667  O4  NAG D 480       2.796  15.776  23.529  1.00 93.71           O  
-HETATM12668  O5  NAG D 480       3.188  15.480  27.203  1.00 93.71           O  
-HETATM12669  O6  NAG D 480       2.054  13.156  26.955  1.00 93.71           O  
-HETATM12670  O7  NAG D 480       6.213  19.214  27.264  1.00 93.71           O  
-HETATM12671  H1  NAG D 480       2.311  17.293  27.767  1.00 15.00           H  
-HETATM12672  H2  NAG D 480       5.098  17.336  26.511  1.00 15.00           H  
-HETATM12673  H3  NAG D 480       2.445  17.914  25.140  1.00 15.00           H  
-HETATM12674  H4  NAG D 480       4.400  15.581  24.855  1.00 15.00           H  
-HETATM12675  H5  NAG D 480       1.549  15.773  25.972  1.00 15.00           H  
-HETATM12676  H61 NAG D 480       3.287  13.395  25.311  1.00 15.00           H  
-HETATM12677  H62 NAG D 480       1.534  13.653  25.015  1.00 15.00           H  
-HETATM12678  H81 NAG D 480       5.031  21.360  28.639  1.00 15.00           H  
-HETATM12679  H82 NAG D 480       3.887  21.527  27.279  1.00 15.00           H  
-HETATM12680  H83 NAG D 480       5.648  21.821  27.029  1.00 15.00           H  
-HETATM12681  HN2 NAG D 480       3.134  19.539  26.886  1.00 15.00           H  
-HETATM12682  HO3 NAG D 480       5.168  17.795  24.242  1.00 15.00           H  
-HETATM12683  HO6 NAG D 480       1.123  13.276  27.158  1.00 15.00           H  
-HETATM12684  C1  GAL D 481       3.389  16.441  22.463  1.00100.00           C  
-HETATM12685  C2  GAL D 481       3.411  15.553  21.212  1.00100.00           C  
-HETATM12686  C3  GAL D 481       4.079  16.350  20.079  1.00100.00           C  
-HETATM12687  C4  GAL D 481       3.302  17.662  19.854  1.00100.00           C  
-HETATM12688  C5  GAL D 481       3.221  18.462  21.171  1.00100.00           C  
-HETATM12689  C6  GAL D 481       2.365  19.724  21.058  1.00100.00           C  
-HETATM12690  O2  GAL D 481       4.141  14.358  21.477  1.00100.00           O  
-HETATM12691  O3  GAL D 481       4.125  15.584  18.879  1.00100.00           O  
-HETATM12692  O4  GAL D 481       1.986  17.374  19.390  1.00100.00           O  
-HETATM12693  O5  GAL D 481       2.639  17.644  22.214  1.00100.00           O  
-HETATM12694  O6  GAL D 481       2.319  20.432  22.291  1.00100.00           O  
-HETATM12695  H1  GAL D 481       4.423  16.706  22.724  1.00 15.00           H  
-HETATM12696  H2  GAL D 481       2.377  15.303  20.935  1.00 15.00           H  
-HETATM12697  H3  GAL D 481       5.101  16.610  20.388  1.00 15.00           H  
-HETATM12698  H4  GAL D 481       3.835  18.267  19.107  1.00 15.00           H  
-HETATM12699  H5  GAL D 481       4.232  18.756  21.485  1.00 15.00           H  
-HETATM12700  H61 GAL D 481       1.347  19.430  20.768  1.00 15.00           H  
-HETATM12701  H62 GAL D 481       2.798  20.371  20.282  1.00 15.00           H  
-HETATM12702  HO2 GAL D 481       3.723  13.884  22.200  1.00 15.00           H  
-HETATM12703  HO3 GAL D 481       3.231  15.358  18.611  1.00 15.00           H  
-HETATM12704  HO4 GAL D 481       2.039  16.887  18.564  1.00 15.00           H  
-HETATM12705  HO6 GAL D 481       1.430  20.765  22.434  1.00 15.00           H  
-HETATM12706  C1  MAN D 482       0.600  24.431  34.374  1.00100.00           C  
-HETATM12707  C2  MAN D 482       1.441  25.705  34.099  1.00100.00           C  
-HETATM12708  C3  MAN D 482       1.888  26.338  35.424  1.00100.00           C  
-HETATM12709  C4  MAN D 482       0.671  26.571  36.310  1.00100.00           C  
-HETATM12710  C5  MAN D 482      -0.002  25.236  36.550  1.00100.00           C  
-HETATM12711  C6  MAN D 482      -1.202  25.321  37.464  1.00100.00           C  
-HETATM12712  O2  MAN D 482       0.653  26.664  33.344  1.00100.00           O  
-HETATM12713  O3  MAN D 482       2.547  27.574  35.185  1.00100.00           O  
-HETATM12714  O4  MAN D 482       1.067  27.146  37.542  1.00100.00           O  
-HETATM12715  O5  MAN D 482      -0.451  24.702  35.294  1.00100.00           O  
-HETATM12716  O6  MAN D 482      -1.681  24.025  37.793  1.00100.00           O  
-HETATM12717  H1  MAN D 482       0.100  24.132  33.442  1.00 15.00           H  
-HETATM12718  H2  MAN D 482       2.335  25.424  33.524  1.00 15.00           H  
-HETATM12719  H3  MAN D 482       2.574  25.646  35.933  1.00 15.00           H  
-HETATM12720  H4  MAN D 482      -0.021  27.248  35.791  1.00 15.00           H  
-HETATM12721  H5  MAN D 482       0.716  24.533  36.993  1.00 15.00           H  
-HETATM12722  H61 MAN D 482      -1.994  25.886  36.952  1.00 15.00           H  
-HETATM12723  H62 MAN D 482      -0.907  25.848  38.382  1.00 15.00           H  
-HETATM12724  HO3 MAN D 482       1.944  28.175  34.741  1.00 15.00           H  
-HETATM12725  HO4 MAN D 482       1.505  27.984  37.376  1.00 15.00           H  
-HETATM12726  HO6 MAN D 482      -0.987  23.380  37.637  1.00 15.00           H  
-HETATM12727  C1  NAG D 483       1.266  27.391  32.324  0.00  0.00           C  
-HETATM12728  C2  NAG D 483       0.274  28.428  31.784  0.00  0.00           C  
-HETATM12729  C3  NAG D 483       0.945  29.347  30.762  0.00  0.00           C  
-HETATM12730  C4  NAG D 483       2.177  29.980  31.397  0.00  0.00           C  
-HETATM12731  C5  NAG D 483       3.106  28.885  31.925  0.00  0.00           C  
-HETATM12732  C6  NAG D 483       4.319  29.455  32.641  0.00  0.00           C  
-HETATM12733  C7  NAG D 483      -0.803  26.947  30.183  0.00  0.00           C  
-HETATM12734  C8  NAG D 483      -2.117  26.358  29.703  0.00  0.00           C  
-HETATM12735  N2  NAG D 483      -0.898  27.788  31.211  0.00  0.00           N  
-HETATM12736  O3  NAG D 483       0.037  30.363  30.360  0.00  0.00           O  
-HETATM12737  O4  NAG D 483       2.860  30.774  30.437  0.00  0.00           O  
-HETATM12738  O5  NAG D 483       2.410  28.054  32.877  0.00  0.00           O  
-HETATM12739  O6  NAG D 483       5.126  28.424  33.188  0.00  0.00           O  
-HETATM12740  O7  NAG D 483       0.264  26.660  29.638  0.00  0.00           O  
-HETATM12741  H1  NAG D 483       1.562  26.717  31.508  0.00  0.00           H  
-HETATM12742  H2  NAG D 483      -0.038  29.080  32.612  0.00  0.00           H  
-HETATM12743  H3  NAG D 483       1.246  28.750  29.890  0.00  0.00           H  
-HETATM12744  H4  NAG D 483       1.859  30.608  32.241  0.00  0.00           H  
-HETATM12745  H5  NAG D 483       3.437  28.252  31.090  0.00  0.00           H  
-HETATM12746  H61 NAG D 483       3.970  30.113  33.449  0.00  0.00           H  
-HETATM12747  H62 NAG D 483       4.909  30.037  31.919  0.00  0.00           H  
-HETATM12748  H81 NAG D 483      -2.896  27.133  29.723  0.00  0.00           H  
-HETATM12749  H82 NAG D 483      -2.422  25.536  30.366  0.00  0.00           H  
-HETATM12750  H83 NAG D 483      -2.009  25.995  28.671  0.00  0.00           H  
-HETATM12751  HN2 NAG D 483      -1.781  27.980  31.591  0.00  0.00           H  
-HETATM12752  HO3 NAG D 483       0.463  30.933  29.715  0.00  0.00           H  
-HETATM12753  HO4 NAG D 483       3.134  30.220  29.703  0.00  0.00           H  
-HETATM12754  HO6 NAG D 483       4.679  28.038  33.945  0.00  0.00           H  
+HETATM12329  C1  NAG E   1       0.924  29.195  47.741  1.00100.00           C  
+HETATM12330  C2  NAG E   1       0.488  28.178  46.650  1.00100.00           C  
+HETATM12331  C3  NAG E   1       1.629  27.220  46.287  1.00100.00           C  
+HETATM12332  C4  NAG E   1       2.956  27.994  46.269  1.00100.00           C  
+HETATM12333  C5  NAG E   1       3.298  28.446  47.710  1.00100.00           C  
+HETATM12334  C6  NAG E   1       4.302  29.596  47.859  1.00100.00           C  
+HETATM12335  C7  NAG E   1      -1.541  26.930  46.218  1.00100.00           C  
+HETATM12336  C8  NAG E   1      -2.714  26.140  46.780  1.00100.00           C  
+HETATM12337  N2  NAG E   1      -0.668  27.413  47.099  1.00100.00           N  
+HETATM12338  O3  NAG E   1       1.380  26.629  45.015  1.00100.00           O  
+HETATM12339  O4  NAG E   1       4.029  27.162  45.725  1.00100.00           O  
+HETATM12340  O5  NAG E   1       2.098  28.774  48.494  1.00100.00           O  
+HETATM12341  O6  NAG E   1       3.895  30.731  47.070  1.00100.00           O  
+HETATM12342  O7  NAG E   1      -1.426  27.111  45.007  1.00100.00           O  
+HETATM12343  H1  NAG E   1       0.182  29.169  48.551  1.00 15.00           H  
+HETATM12344  H2  NAG E   1       0.229  28.729  45.735  1.00 15.00           H  
+HETATM12345  H3  NAG E   1       1.693  26.436  47.055  1.00 15.00           H  
+HETATM12346  H4  NAG E   1       2.833  28.891  45.646  1.00 15.00           H  
+HETATM12347  H5  NAG E   1       3.823  27.630  48.225  1.00 15.00           H  
+HETATM12348  H61 NAG E   1       5.289  29.248  47.522  1.00 15.00           H  
+HETATM12349  H62 NAG E   1       4.354  29.883  48.918  1.00 15.00           H  
+HETATM12350  H81 NAG E   1      -3.480  26.835  47.152  1.00 15.00           H  
+HETATM12351  H82 NAG E   1      -2.375  25.511  47.615  1.00 15.00           H  
+HETATM12352  H83 NAG E   1      -3.158  25.517  45.991  1.00 15.00           H  
+HETATM12353  HN2 NAG E   1      -0.804  27.253  48.056  1.00 15.00           H  
+HETATM12354  HO3 NAG E   1       2.096  26.028  44.798  1.00 15.00           H  
+HETATM12355  C1  NDG E   2       4.403  26.019  46.445  1.00100.00           C  
+HETATM12356  C2  NDG E   2       5.903  25.741  46.546  1.00100.00           C  
+HETATM12357  C3  NDG E   2       6.391  24.795  45.433  1.00100.00           C  
+HETATM12358  C4  NDG E   2       5.491  23.550  45.387  1.00100.00           C  
+HETATM12359  C5  NDG E   2       4.033  23.972  45.150  1.00100.00           C  
+HETATM12360  C6  NDG E   2       3.079  22.786  45.157  1.00100.00           C  
+HETATM12361  C7  NDG E   2       7.832  27.086  47.123  1.00100.00           C  
+HETATM12362  C8  NDG E   2       8.500  28.453  47.046  1.00100.00           C  
+HETATM12363  O5  NDG E   2       3.561  24.873  46.189  1.00100.00           O  
+HETATM12364  O3  NDG E   2       7.728  24.409  45.716  1.00100.00           O  
+HETATM12365  O4  NDG E   2       5.894  22.643  44.323  1.00100.00           O  
+HETATM12366  O6  NDG E   2       3.425  21.830  44.166  1.00100.00           O  
+HETATM12367  O7  NDG E   2       8.380  26.132  47.689  1.00100.00           O  
+HETATM12368  N2  NDG E   2       6.644  26.992  46.530  1.00100.00           N  
+HETATM12369  H1  NDG E   2       4.022  26.121  47.470  1.00 15.00           H  
+HETATM12370  H2  NDG E   2       6.104  25.207  47.485  1.00 15.00           H  
+HETATM12371  H3  NDG E   2       6.346  25.319  44.468  1.00 15.00           H  
+HETATM12372  H4  NDG E   2       5.562  23.033  46.354  1.00 15.00           H  
+HETATM12373  H5  NDG E   2       3.962  24.497  44.187  1.00 15.00           H  
+HETATM12374  H61 NDG E   2       2.062  23.157  44.966  1.00 15.00           H  
+HETATM12375  H62 NDG E   2       3.119  22.313  46.148  1.00 15.00           H  
+HETATM12376  H81 NDG E   2       7.730  29.238  47.041  1.00 15.00           H  
+HETATM12377  H82 NDG E   2       9.087  28.531  46.120  1.00 15.00           H  
+HETATM12378  H83 NDG E   2       9.148  28.602  47.921  1.00 15.00           H  
+HETATM12379  HO3 NDG E   2       7.755  23.952  46.560  1.00 15.00           H  
+HETATM12380  HO6 NDG E   2       4.377  21.829  44.043  1.00 15.00           H  
+HETATM12381  HN2 NDG E   2       6.265  27.774  46.078  1.00 15.00           H  
+HETATM12382  C1  BMA E   3       7.120  21.989  44.400  1.00100.00           C  
+HETATM12383  C2  BMA E   3       7.108  20.693  43.553  1.00100.00           C  
+HETATM12384  C3  BMA E   3       8.492  20.028  43.648  1.00100.00           C  
+HETATM12385  C4  BMA E   3       9.557  21.021  43.194  1.00100.00           C  
+HETATM12386  C5  BMA E   3       9.443  22.337  43.986  1.00100.00           C  
+HETATM12387  C6  BMA E   3      10.382  23.412  43.475  1.00100.00           C  
+HETATM12388  O2  BMA E   3       6.816  21.002  42.191  1.00100.00           O  
+HETATM12389  O3  BMA E   3       8.572  18.830  42.831  1.00100.00           O  
+HETATM12390  O4  BMA E   3      10.844  20.450  43.391  1.00100.00           O  
+HETATM12391  O5  BMA E   3       8.110  22.878  43.885  1.00100.00           O  
+HETATM12392  O6  BMA E   3      10.551  24.436  44.479  1.00100.00           O  
+HETATM12393  H1  BMA E   3       7.329  21.723  45.446  1.00 15.00           H  
+HETATM12394  H2  BMA E   3       6.341  20.015  43.952  1.00 15.00           H  
+HETATM12395  H3  BMA E   3       8.679  19.764  44.698  1.00 15.00           H  
+HETATM12396  H4  BMA E   3       9.406  21.247  42.129  1.00 15.00           H  
+HETATM12397  H5  BMA E   3       9.656  22.144  45.046  1.00 15.00           H  
+HETATM12398  H61 BMA E   3       9.955  23.853  42.563  1.00 15.00           H  
+HETATM12399  H62 BMA E   3      11.354  22.954  43.244  1.00 15.00           H  
+HETATM12400  HO2 BMA E   3       5.957  21.427  42.138  1.00 15.00           H  
+HETATM12401  HO4 BMA E   3      11.516  21.071  43.100  1.00 15.00           H  
+HETATM12402  C1  MAN E   4      11.895  24.812  44.584  1.00100.00           C  
+HETATM12403  C2  MAN E   4      12.073  25.905  45.634  1.00100.00           C  
+HETATM12404  C3  MAN E   4      11.450  27.228  45.153  1.00100.00           C  
+HETATM12405  C4  MAN E   4      12.001  27.601  43.774  1.00100.00           C  
+HETATM12406  C5  MAN E   4      11.820  26.430  42.800  1.00100.00           C  
+HETATM12407  C6  MAN E   4      12.467  26.676  41.451  1.00100.00           C  
+HETATM12408  O2  MAN E   4      13.484  26.090  45.835  1.00100.00           O  
+HETATM12409  O3  MAN E   4      11.750  28.269  46.079  1.00100.00           O  
+HETATM12410  O4  MAN E   4      11.320  28.751  43.283  1.00100.00           O  
+HETATM12411  O5  MAN E   4      12.429  25.237  43.337  1.00100.00           O  
+HETATM12412  O6  MAN E   4      13.885  26.640  41.545  1.00100.00           O  
+HETATM12413  H1  MAN E   4      12.498  23.941  44.877  1.00 15.00           H  
+HETATM12414  H2  MAN E   4      11.592  25.594  46.572  1.00 15.00           H  
+HETATM12415  H3  MAN E   4      10.361  27.101  45.076  1.00 15.00           H  
+HETATM12416  H4  MAN E   4      13.075  27.814  43.864  1.00 15.00           H  
+HETATM12417  H5  MAN E   4      10.748  26.236  42.655  1.00 15.00           H  
+HETATM12418  H61 MAN E   4      12.150  27.663  41.086  1.00 15.00           H  
+HETATM12419  H62 MAN E   4      12.127  25.898  40.753  1.00 15.00           H  
+HETATM12420  HO3 MAN E   4      11.355  29.089  45.775  1.00 15.00           H  
+HETATM12421  HO4 MAN E   4      11.449  29.482  43.892  1.00 15.00           H  
+HETATM12422  HO6 MAN E   4      14.139  26.404  42.440  1.00 15.00           H  
+HETATM12423  C1  NAG E   5      13.987  25.946  47.111  1.00 96.95           C  
+HETATM12424  C2  NAG E   5      15.422  25.439  46.985  1.00 96.95           C  
+HETATM12425  C3  NAG E   5      16.165  25.500  48.311  1.00 96.95           C  
+HETATM12426  C4  NAG E   5      16.059  26.917  48.881  1.00 96.95           C  
+HETATM12427  C5  NAG E   5      14.567  27.271  49.021  1.00 96.95           C  
+HETATM12428  C6  NAG E   5      14.305  28.655  49.599  1.00 96.95           C  
+HETATM12429  C7  NAG E   5      15.908  23.745  45.330  1.00 96.95           C  
+HETATM12430  C8  NAG E   5      15.840  22.263  44.968  1.00 96.95           C  
+HETATM12431  N2  NAG E   5      15.409  24.064  46.520  1.00 96.95           N  
+HETATM12432  O3  NAG E   5      17.524  25.151  48.086  1.00 96.95           O  
+HETATM12433  O4  NAG E   5      16.731  27.013  50.162  1.00 96.95           O  
+HETATM12434  O5  NAG E   5      13.942  27.239  47.725  1.00 96.95           O  
+HETATM12435  O6  NAG E   5      13.023  29.137  49.218  1.00 96.95           O  
+HETATM12436  O7  NAG E   5      16.391  24.579  44.555  1.00 96.95           O  
+HETATM12437  H1  NAG E   5      13.390  25.218  47.677  1.00 15.00           H  
+HETATM12438  H2  NAG E   5      15.964  26.068  46.265  1.00 15.00           H  
+HETATM12439  H3  NAG E   5      15.706  24.793  49.016  1.00 15.00           H  
+HETATM12440  H4  NAG E   5      16.522  27.616  48.171  1.00 15.00           H  
+HETATM12441  H5  NAG E   5      14.071  26.533  49.666  1.00 15.00           H  
+HETATM12442  H61 NAG E   5      15.079  29.341  49.228  1.00 15.00           H  
+HETATM12443  H62 NAG E   5      14.362  28.593  50.695  1.00 15.00           H  
+HETATM12444  H81 NAG E   5      14.878  22.048  44.483  1.00 15.00           H  
+HETATM12445  H82 NAG E   5      15.920  21.652  45.878  1.00 15.00           H  
+HETATM12446  H83 NAG E   5      16.650  22.012  44.269  1.00 15.00           H  
+HETATM12447  HN2 NAG E   5      15.028  23.363  47.090  1.00 15.00           H  
+HETATM12448  HO3 NAG E   5      18.002  25.179  48.918  1.00 15.00           H  
+HETATM12449  HO6 NAG E   5      12.618  29.588  49.963  1.00 15.00           H  
+HETATM12450  C1  GAL E   6      18.058  26.596  50.202  1.00100.00           C  
+HETATM12451  C2  GAL E   6      18.877  27.496  51.126  1.00100.00           C  
+HETATM12452  C3  GAL E   6      20.336  26.984  51.117  1.00100.00           C  
+HETATM12453  C4  GAL E   6      20.358  25.520  51.578  1.00100.00           C  
+HETATM12454  C5  GAL E   6      19.432  24.678  50.685  1.00100.00           C  
+HETATM12455  C6  GAL E   6      19.311  23.227  51.155  1.00100.00           C  
+HETATM12456  O2  GAL E   6      18.807  28.843  50.666  1.00100.00           O  
+HETATM12457  O3  GAL E   6      21.166  27.779  51.957  1.00100.00           O  
+HETATM12458  O4  GAL E   6      19.933  25.433  52.936  1.00100.00           O  
+HETATM12459  O5  GAL E   6      18.094  25.241  50.676  1.00100.00           O  
+HETATM12460  O6  GAL E   6      18.443  22.472  50.316  1.00100.00           O  
+HETATM12461  H1  GAL E   6      18.489  26.642  49.192  1.00 15.00           H  
+HETATM12462  H2  GAL E   6      18.469  27.428  52.144  1.00 15.00           H  
+HETATM12463  H3  GAL E   6      20.714  27.024  50.086  1.00 15.00           H  
+HETATM12464  H4  GAL E   6      21.382  25.133  51.483  1.00 15.00           H  
+HETATM12465  H5  GAL E   6      19.815  24.680  49.655  1.00 15.00           H  
+HETATM12466  H61 GAL E   6      18.917  23.226  52.181  1.00 15.00           H  
+HETATM12467  H62 GAL E   6      20.312  22.774  51.144  1.00 15.00           H  
+HETATM12468  HO2 GAL E   6      17.891  29.130  50.662  1.00 15.00           H  
+HETATM12469  HO3 GAL E   6      22.064  27.439  51.931  1.00 15.00           H  
+HETATM12470  HO4 GAL E   6      19.954  24.515  53.218  1.00 15.00           H  
+HETATM12471  HO6 GAL E   6      18.501  22.804  49.417  1.00 15.00           H  
+HETATM12472  C1  MAN E   7       8.699  17.607  43.522  1.00100.00           C  
+HETATM12473  C2  MAN E   7       9.661  16.651  42.772  1.00100.00           C  
+HETATM12474  C3  MAN E   7       8.994  16.117  41.494  1.00100.00           C  
+HETATM12475  C4  MAN E   7       7.648  15.493  41.843  1.00100.00           C  
+HETATM12476  C5  MAN E   7       6.783  16.556  42.514  1.00100.00           C  
+HETATM12477  C6  MAN E   7       5.386  16.065  42.877  1.00100.00           C  
+HETATM12478  O2  MAN E   7      10.015  15.541  43.634  1.00100.00           O  
+HETATM12479  O3  MAN E   7       9.818  15.142  40.870  1.00100.00           O  
+HETATM12480  O4  MAN E   7       7.017  15.008  40.667  1.00100.00           O  
+HETATM12481  O5  MAN E   7       7.431  16.993  43.730  1.00100.00           O  
+HETATM12482  O6  MAN E   7       4.553  17.131  43.316  1.00100.00           O  
+HETATM12483  H1  MAN E   7       9.101  17.793  44.528  1.00 15.00           H  
+HETATM12484  H2  MAN E   7      10.566  17.206  42.488  1.00 15.00           H  
+HETATM12485  H3  MAN E   7       8.830  16.957  40.804  1.00 15.00           H  
+HETATM12486  H4  MAN E   7       7.813  14.663  42.545  1.00 15.00           H  
+HETATM12487  H5  MAN E   7       6.672  17.420  41.845  1.00 15.00           H  
+HETATM12488  H61 MAN E   7       5.477  15.320  43.680  1.00 15.00           H  
+HETATM12489  H62 MAN E   7       4.940  15.597  41.988  1.00 15.00           H  
+HETATM12490  HO3 MAN E   7       9.386  14.823  40.074  1.00 15.00           H  
+HETATM12491  HO4 MAN E   7       7.578  14.348  40.254  1.00 15.00           H  
+HETATM12492  HO6 MAN E   7       4.160  16.900  44.161  1.00 15.00           H  
+HETATM12493  C1  NAG E   8      11.322  15.066  43.613  0.00  0.00           C  
+HETATM12494  C2  NAG E   8      11.406  13.807  44.480  0.00  0.00           C  
+HETATM12495  C3  NAG E   8      12.795  13.174  44.385  0.00  0.00           C  
+HETATM12496  C4  NAG E   8      13.118  12.906  42.919  0.00  0.00           C  
+HETATM12497  C5  NAG E   8      12.989  14.201  42.116  0.00  0.00           C  
+HETATM12498  C6  NAG E   8      13.224  13.986  40.631  0.00  0.00           C  
+HETATM12499  C7  NAG E   8      11.757  14.975  46.584  0.00  0.00           C  
+HETATM12500  C8  NAG E   8      11.273  15.170  48.010  0.00  0.00           C  
+HETATM12501  N2  NAG E   8      11.064  14.098  45.863  0.00  0.00           N  
+HETATM12502  O3  NAG E   8      12.817  11.953  45.113  0.00  0.00           O  
+HETATM12503  O4  NAG E   8      14.439  12.394  42.803  0.00  0.00           O  
+HETATM12504  O5  NAG E   8      11.661  14.746  42.258  0.00  0.00           O  
+HETATM12505  O6  NAG E   8      13.022  15.184  39.896  0.00  0.00           O  
+HETATM12506  O7  NAG E   8      12.733  15.589  46.151  0.00  0.00           O  
+HETATM12507  H1  NAG E   8      12.005  15.827  44.016  0.00  0.00           H  
+HETATM12508  H2  NAG E   8      10.705  13.059  44.083  0.00  0.00           H  
+HETATM12509  H3  NAG E   8      13.534  13.871  44.805  0.00  0.00           H  
+HETATM12510  H4  NAG E   8      12.399  12.174  42.524  0.00  0.00           H  
+HETATM12511  H5  NAG E   8      13.709  14.940  42.495  0.00  0.00           H  
+HETATM12512  H61 NAG E   8      12.524  13.217  40.275  0.00  0.00           H  
+HETATM12513  H62 NAG E   8      14.257  13.640  40.488  0.00  0.00           H  
+HETATM12514  H81 NAG E   8      10.724  14.276  48.337  0.00  0.00           H  
+HETATM12515  H82 NAG E   8      10.597  16.035  48.060  0.00  0.00           H  
+HETATM12516  H83 NAG E   8      12.132  15.319  48.679  0.00  0.00           H  
+HETATM12517  HN2 NAG E   8      10.304  13.636  46.274  0.00  0.00           H  
+HETATM12518  HO3 NAG E   8      13.692  11.563  45.054  0.00  0.00           H  
+HETATM12519  HO4 NAG E   8      14.509  11.577  43.303  0.00  0.00           H  
+HETATM12520  HO6 NAG E   8      12.151  15.167  39.492  0.00  0.00           H  
+HETATM12521  C1  FUL E   9       4.719  30.935  45.965  0.00  0.00           C  
+HETATM12522  C2  FUL E   9       4.018  31.901  45.012  0.00  0.00           C  
+HETATM12523  O2  FUL E   9       3.851  33.157  45.654  0.00  0.00           O  
+HETATM12524  C3  FUL E   9       4.823  32.086  43.726  0.00  0.00           C  
+HETATM12525  O3  FUL E   9       4.074  32.865  42.803  0.00  0.00           O  
+HETATM12526  C4  FUL E   9       5.145  30.723  43.114  0.00  0.00           C  
+HETATM12527  O4  FUL E   9       3.942  30.080  42.716  0.00  0.00           O  
+HETATM12528  C5  FUL E   9       5.865  29.862  44.144  0.00  0.00           C  
+HETATM12529  C6  FUL E   9       6.188  28.465  43.639  0.00  0.00           C  
+HETATM12530  O5  FUL E   9       5.034  29.713  45.306  0.00  0.00           O  
+HETATM12531  H1  FUL E   9       5.677  31.370  46.283  0.00  0.00           H  
+HETATM12532  H2  FUL E   9       3.037  31.487  44.740  0.00  0.00           H  
+HETATM12533  HO2 FUL E   9       4.712  33.511  45.888  0.00  0.00           H  
+HETATM12534  H3  FUL E   9       5.766  32.596  43.966  0.00  0.00           H  
+HETATM12535  HO3 FUL E   9       4.585  32.983  41.999  0.00  0.00           H  
+HETATM12536  H4  FUL E   9       5.796  30.869  42.241  0.00  0.00           H  
+HETATM12537  HO4 FUL E   9       3.379  29.956  43.483  0.00  0.00           H  
+HETATM12538  H5  FUL E   9       6.802  30.351  44.444  0.00  0.00           H  
+HETATM12539  H61 FUL E   9       5.260  27.953  43.348  0.00  0.00           H  
+HETATM12540  H62 FUL E   9       6.879  28.530  42.787  0.00  0.00           H  
+HETATM12541  H63 FUL E   9       6.670  27.900  44.449  0.00  0.00           H  
+HETATM12542  C1  NAG F   1      -3.609  10.834  37.491  1.00 89.19           C  
+HETATM12543  C2  NAG F   1      -3.312  11.933  38.524  1.00 89.19           C  
+HETATM12544  C3  NAG F   1      -2.701  13.171  37.862  1.00 89.19           C  
+HETATM12545  C4  NAG F   1      -1.716  12.725  36.787  1.00 89.19           C  
+HETATM12546  C5  NAG F   1      -2.494  12.068  35.646  1.00 89.19           C  
+HETATM12547  C6  NAG F   1      -1.698  11.163  34.711  1.00 89.19           C  
+HETATM12548  C7  NAG F   1      -4.492  12.760  40.469  1.00 89.19           C  
+HETATM12549  C8  NAG F   1      -5.826  13.142  41.104  1.00 89.19           C  
+HETATM12550  N2  NAG F   1      -4.534  12.308  39.215  1.00 89.19           N  
+HETATM12551  O3  NAG F   1      -2.038  13.963  38.835  1.00 89.19           O  
+HETATM12552  O4  NAG F   1      -0.946  13.856  36.291  1.00 89.19           O  
+HETATM12553  O5  NAG F   1      -3.658  11.320  36.125  1.00 89.19           O  
+HETATM12554  O6  NAG F   1      -0.990  10.164  35.471  1.00 89.19           O  
+HETATM12555  O7  NAG F   1      -3.439  12.864  41.102  1.00 89.19           O  
+HETATM12556  H1  NAG F   1      -4.659  10.531  37.602  1.00 15.00           H  
+HETATM12557  H2  NAG F   1      -2.581  11.552  39.251  1.00 15.00           H  
+HETATM12558  H3  NAG F   1      -3.504  13.756  37.392  1.00 15.00           H  
+HETATM12559  H4  NAG F   1      -1.036  11.979  37.221  1.00 15.00           H  
+HETATM12560  H5  NAG F   1      -2.854  12.850  34.963  1.00 15.00           H  
+HETATM12561  H61 NAG F   1      -0.981  11.777  34.148  1.00 15.00           H  
+HETATM12562  H62 NAG F   1      -2.393  10.675  34.014  1.00 15.00           H  
+HETATM12563  H81 NAG F   1      -6.638  12.971  40.383  1.00 15.00           H  
+HETATM12564  H82 NAG F   1      -5.818  14.206  41.379  1.00 15.00           H  
+HETATM12565  H83 NAG F   1      -6.008  12.521  41.992  1.00 15.00           H  
+HETATM12566  HN2 NAG F   1      -5.396  12.228  38.756  1.00 15.00           H  
+HETATM12567  HO3 NAG F   1      -2.668  14.236  39.506  1.00 15.00           H  
+HETATM12568  C1  NDG F   2      -1.623  14.870  35.621  1.00 41.09           C  
+HETATM12569  C2  NDG F   2      -0.922  15.436  34.389  1.00 41.09           C  
+HETATM12570  C3  NDG F   2      -0.052  16.662  34.713  1.00 41.09           C  
+HETATM12571  C4  NDG F   2      -0.887  17.668  35.509  1.00 41.09           C  
+HETATM12572  C5  NDG F   2      -1.411  17.005  36.792  1.00 41.09           C  
+HETATM12573  C6  NDG F   2      -2.299  17.936  37.602  1.00 41.09           C  
+HETATM12574  C7  NDG F   2       0.132  14.459  32.449  1.00 41.09           C  
+HETATM12575  C8  NDG F   2       0.969  13.315  31.885  1.00 41.09           C  
+HETATM12576  O5  NDG F   2      -2.221  15.832  36.508  1.00 41.09           O  
+HETATM12577  O3  NDG F   2       0.388  17.246  33.497  1.00 41.09           O  
+HETATM12578  O4  NDG F   2      -0.101  18.836  35.870  1.00 41.09           O  
+HETATM12579  O6  NDG F   2      -1.619  19.134  37.959  1.00 41.09           O  
+HETATM12580  O7  NDG F   2      -0.265  15.378  31.731  1.00 41.09           O  
+HETATM12581  N2  NDG F   2      -0.127  14.403  33.753  1.00 41.09           N  
+HETATM12582  H1  NDG F   2      -2.595  14.477  35.293  1.00 15.00           H  
+HETATM12583  H2  NDG F   2      -1.681  15.803  33.684  1.00 15.00           H  
+HETATM12584  H3  NDG F   2       0.813  16.342  35.311  1.00 15.00           H  
+HETATM12585  H4  NDG F   2      -1.741  17.979  34.892  1.00 15.00           H  
+HETATM12586  H5  NDG F   2      -0.557  16.685  37.405  1.00 15.00           H  
+HETATM12587  H61 NDG F   2      -2.612  17.410  38.515  1.00 15.00           H  
+HETATM12588  H62 NDG F   2      -3.182  18.186  36.998  1.00 15.00           H  
+HETATM12589  H81 NDG F   2       0.704  12.380  32.398  1.00 15.00           H  
+HETATM12590  H82 NDG F   2       2.037  13.516  32.050  1.00 15.00           H  
+HETATM12591  H83 NDG F   2       0.766  13.197  30.812  1.00 15.00           H  
+HETATM12592  HO3 NDG F   2       0.938  18.009  33.691  1.00 15.00           H  
+HETATM12593  HO6 NDG F   2      -2.249  19.858  37.997  1.00 15.00           H  
+HETATM12594  HN2 NDG F   2       0.222  13.659  34.287  1.00 15.00           H  
+HETATM12595  C1  BMA F   3       0.335  19.710  34.878  1.00 69.97           C  
+HETATM12596  C2  BMA F   3       0.584  21.126  35.455  1.00 69.97           C  
+HETATM12597  C3  BMA F   3       1.102  22.043  34.329  1.00 69.97           C  
+HETATM12598  C4  BMA F   3       2.349  21.410  33.696  1.00 69.97           C  
+HETATM12599  C5  BMA F   3       2.065  19.966  33.252  1.00 69.97           C  
+HETATM12600  C6  BMA F   3       3.307  19.253  32.760  1.00 69.97           C  
+HETATM12601  O2  BMA F   3       1.542  21.063  36.505  1.00 69.97           O  
+HETATM12602  O3  BMA F   3       1.420  23.376  34.829  1.00 69.97           O  
+HETATM12603  O4  BMA F   3       2.759  22.180  32.573  1.00 69.97           O  
+HETATM12604  O5  BMA F   3       1.552  19.185  34.350  1.00 69.97           O  
+HETATM12605  O6  BMA F   3       2.932  18.092  31.987  1.00 69.97           O  
+HETATM12606  H1  BMA F   3      -0.429  19.782  34.091  1.00 15.00           H  
+HETATM12607  H2  BMA F   3      -0.365  21.524  35.842  1.00 15.00           H  
+HETATM12608  H3  BMA F   3       0.324  22.119  33.557  1.00 15.00           H  
+HETATM12609  H4  BMA F   3       3.154  21.383  34.444  1.00 15.00           H  
+HETATM12610  H5  BMA F   3       1.311  19.973  32.453  1.00 15.00           H  
+HETATM12611  H61 BMA F   3       3.907  18.944  33.627  1.00 15.00           H  
+HETATM12612  H62 BMA F   3       3.890  19.944  32.135  1.00 15.00           H  
+HETATM12613  HO2 BMA F   3       1.215  20.487  37.200  1.00 15.00           H  
+HETATM12614  HO4 BMA F   3       2.051  22.199  31.925  1.00 15.00           H  
+HETATM12615  C1  MAN F   4       3.714  18.006  30.833  1.00100.00           C  
+HETATM12616  C2  MAN F   4       3.335  16.784  30.011  1.00100.00           C  
+HETATM12617  C3  MAN F   4       3.739  15.498  30.734  1.00100.00           C  
+HETATM12618  C4  MAN F   4       5.219  15.551  31.097  1.00100.00           C  
+HETATM12619  C5  MAN F   4       5.515  16.827  31.889  1.00100.00           C  
+HETATM12620  C6  MAN F   4       6.987  17.014  32.180  1.00100.00           C  
+HETATM12621  O2  MAN F   4       4.040  16.866  28.762  1.00100.00           O  
+HETATM12622  O3  MAN F   4       3.501  14.380  29.889  1.00100.00           O  
+HETATM12623  O4  MAN F   4       5.560  14.409  31.868  1.00100.00           O  
+HETATM12624  O5  MAN F   4       5.098  17.980  31.135  1.00100.00           O  
+HETATM12625  O6  MAN F   4       7.696  17.328  30.989  1.00100.00           O  
+HETATM12626  H1  MAN F   4       3.561  18.904  30.218  1.00 15.00           H  
+HETATM12627  H2  MAN F   4       2.250  16.781  29.837  1.00 15.00           H  
+HETATM12628  H3  MAN F   4       3.144  15.404  31.653  1.00 15.00           H  
+HETATM12629  H4  MAN F   4       5.813  15.568  30.173  1.00 15.00           H  
+HETATM12630  H5  MAN F   4       4.957  16.810  32.835  1.00 15.00           H  
+HETATM12631  H61 MAN F   4       7.382  16.083  32.610  1.00 15.00           H  
+HETATM12632  H62 MAN F   4       7.102  17.833  32.904  1.00 15.00           H  
+HETATM12633  HO3 MAN F   4       4.023  14.469  29.089  1.00 15.00           H  
+HETATM12634  HO4 MAN F   4       6.493  14.443  32.091  1.00 15.00           H  
+HETATM12635  HO6 MAN F   4       7.268  18.066  30.549  1.00 15.00           H  
+HETATM12636  C1  NAG F   5       3.301  16.847  27.596  1.00 93.71           C  
+HETATM12637  C2  NAG F   5       4.051  17.667  26.544  1.00 93.71           C  
+HETATM12638  C3  NAG F   5       3.460  17.492  25.156  1.00 93.71           C  
+HETATM12639  C4  NAG F   5       3.383  15.997  24.835  1.00 93.71           C  
+HETATM12640  C5  NAG F   5       2.545  15.311  25.926  1.00 93.71           C  
+HETATM12641  C6  NAG F   5       2.358  13.810  25.725  1.00 93.71           C  
+HETATM12642  C7  NAG F   5       5.099  19.740  27.219  1.00 93.71           C  
+HETATM12643  C8  NAG F   5       4.902  21.212  27.558  1.00 93.71           C  
+HETATM12644  N2  NAG F   5       3.996  19.073  26.892  1.00 93.71           N  
+HETATM12645  O3  NAG F   5       4.285  18.171  24.220  1.00 93.71           O  
+HETATM12646  O4  NAG F   5       2.796  15.776  23.529  1.00 93.71           O  
+HETATM12647  O5  NAG F   5       3.188  15.480  27.203  1.00 93.71           O  
+HETATM12648  O6  NAG F   5       2.054  13.156  26.955  1.00 93.71           O  
+HETATM12649  O7  NAG F   5       6.213  19.214  27.264  1.00 93.71           O  
+HETATM12650  H1  NAG F   5       2.311  17.293  27.767  1.00 15.00           H  
+HETATM12651  H2  NAG F   5       5.098  17.336  26.511  1.00 15.00           H  
+HETATM12652  H3  NAG F   5       2.445  17.914  25.140  1.00 15.00           H  
+HETATM12653  H4  NAG F   5       4.400  15.581  24.855  1.00 15.00           H  
+HETATM12654  H5  NAG F   5       1.549  15.773  25.972  1.00 15.00           H  
+HETATM12655  H61 NAG F   5       3.287  13.395  25.311  1.00 15.00           H  
+HETATM12656  H62 NAG F   5       1.534  13.653  25.015  1.00 15.00           H  
+HETATM12657  H81 NAG F   5       5.031  21.360  28.639  1.00 15.00           H  
+HETATM12658  H82 NAG F   5       3.887  21.527  27.279  1.00 15.00           H  
+HETATM12659  H83 NAG F   5       5.648  21.821  27.029  1.00 15.00           H  
+HETATM12660  HN2 NAG F   5       3.134  19.539  26.886  1.00 15.00           H  
+HETATM12661  HO3 NAG F   5       5.168  17.795  24.242  1.00 15.00           H  
+HETATM12662  HO6 NAG F   5       1.123  13.276  27.158  1.00 15.00           H  
+HETATM12663  C1  GAL F   6       3.389  16.441  22.463  1.00100.00           C  
+HETATM12664  C2  GAL F   6       3.411  15.553  21.212  1.00100.00           C  
+HETATM12665  C3  GAL F   6       4.079  16.350  20.079  1.00100.00           C  
+HETATM12666  C4  GAL F   6       3.302  17.662  19.854  1.00100.00           C  
+HETATM12667  C5  GAL F   6       3.221  18.462  21.171  1.00100.00           C  
+HETATM12668  C6  GAL F   6       2.365  19.724  21.058  1.00100.00           C  
+HETATM12669  O2  GAL F   6       4.141  14.358  21.477  1.00100.00           O  
+HETATM12670  O3  GAL F   6       4.125  15.584  18.879  1.00100.00           O  
+HETATM12671  O4  GAL F   6       1.986  17.374  19.390  1.00100.00           O  
+HETATM12672  O5  GAL F   6       2.639  17.644  22.214  1.00100.00           O  
+HETATM12673  O6  GAL F   6       2.319  20.432  22.291  1.00100.00           O  
+HETATM12674  H1  GAL F   6       4.423  16.706  22.724  1.00 15.00           H  
+HETATM12675  H2  GAL F   6       2.377  15.303  20.935  1.00 15.00           H  
+HETATM12676  H3  GAL F   6       5.101  16.610  20.388  1.00 15.00           H  
+HETATM12677  H4  GAL F   6       3.835  18.267  19.107  1.00 15.00           H  
+HETATM12678  H5  GAL F   6       4.232  18.756  21.485  1.00 15.00           H  
+HETATM12679  H61 GAL F   6       1.347  19.430  20.768  1.00 15.00           H  
+HETATM12680  H62 GAL F   6       2.798  20.371  20.282  1.00 15.00           H  
+HETATM12681  HO2 GAL F   6       3.723  13.884  22.200  1.00 15.00           H  
+HETATM12682  HO3 GAL F   6       3.231  15.358  18.611  1.00 15.00           H  
+HETATM12683  HO4 GAL F   6       2.039  16.887  18.564  1.00 15.00           H  
+HETATM12684  HO6 GAL F   6       1.430  20.765  22.434  1.00 15.00           H  
+HETATM12685  C1  MAN F   7       0.600  24.431  34.374  1.00100.00           C  
+HETATM12686  C2  MAN F   7       1.441  25.705  34.099  1.00100.00           C  
+HETATM12687  C3  MAN F   7       1.888  26.338  35.424  1.00100.00           C  
+HETATM12688  C4  MAN F   7       0.671  26.571  36.310  1.00100.00           C  
+HETATM12689  C5  MAN F   7      -0.002  25.236  36.550  1.00100.00           C  
+HETATM12690  C6  MAN F   7      -1.202  25.321  37.464  1.00100.00           C  
+HETATM12691  O2  MAN F   7       0.653  26.664  33.344  1.00100.00           O  
+HETATM12692  O3  MAN F   7       2.547  27.574  35.185  1.00100.00           O  
+HETATM12693  O4  MAN F   7       1.067  27.146  37.542  1.00100.00           O  
+HETATM12694  O5  MAN F   7      -0.451  24.702  35.294  1.00100.00           O  
+HETATM12695  O6  MAN F   7      -1.681  24.025  37.793  1.00100.00           O  
+HETATM12696  H1  MAN F   7       0.100  24.132  33.442  1.00 15.00           H  
+HETATM12697  H2  MAN F   7       2.335  25.424  33.524  1.00 15.00           H  
+HETATM12698  H3  MAN F   7       2.574  25.646  35.933  1.00 15.00           H  
+HETATM12699  H4  MAN F   7      -0.021  27.248  35.791  1.00 15.00           H  
+HETATM12700  H5  MAN F   7       0.716  24.533  36.993  1.00 15.00           H  
+HETATM12701  H61 MAN F   7      -1.994  25.886  36.952  1.00 15.00           H  
+HETATM12702  H62 MAN F   7      -0.907  25.848  38.382  1.00 15.00           H  
+HETATM12703  HO3 MAN F   7       1.944  28.175  34.741  1.00 15.00           H  
+HETATM12704  HO4 MAN F   7       1.505  27.984  37.376  1.00 15.00           H  
+HETATM12705  HO6 MAN F   7      -0.987  23.380  37.637  1.00 15.00           H  
+HETATM12706  C1  NAG F   8       1.266  27.391  32.324  0.00  0.00           C  
+HETATM12707  C2  NAG F   8       0.274  28.428  31.784  0.00  0.00           C  
+HETATM12708  C3  NAG F   8       0.945  29.347  30.762  0.00  0.00           C  
+HETATM12709  C4  NAG F   8       2.177  29.980  31.397  0.00  0.00           C  
+HETATM12710  C5  NAG F   8       3.106  28.885  31.925  0.00  0.00           C  
+HETATM12711  C6  NAG F   8       4.319  29.455  32.641  0.00  0.00           C  
+HETATM12712  C7  NAG F   8      -0.803  26.947  30.183  0.00  0.00           C  
+HETATM12713  C8  NAG F   8      -2.117  26.358  29.703  0.00  0.00           C  
+HETATM12714  N2  NAG F   8      -0.898  27.788  31.211  0.00  0.00           N  
+HETATM12715  O3  NAG F   8       0.037  30.363  30.360  0.00  0.00           O  
+HETATM12716  O4  NAG F   8       2.860  30.774  30.437  0.00  0.00           O  
+HETATM12717  O5  NAG F   8       2.410  28.054  32.877  0.00  0.00           O  
+HETATM12718  O6  NAG F   8       5.126  28.424  33.188  0.00  0.00           O  
+HETATM12719  O7  NAG F   8       0.264  26.660  29.638  0.00  0.00           O  
+HETATM12720  H1  NAG F   8       1.562  26.717  31.508  0.00  0.00           H  
+HETATM12721  H2  NAG F   8      -0.038  29.080  32.612  0.00  0.00           H  
+HETATM12722  H3  NAG F   8       1.246  28.750  29.890  0.00  0.00           H  
+HETATM12723  H4  NAG F   8       1.859  30.608  32.241  0.00  0.00           H  
+HETATM12724  H5  NAG F   8       3.437  28.252  31.090  0.00  0.00           H  
+HETATM12725  H61 NAG F   8       3.970  30.113  33.449  0.00  0.00           H  
+HETATM12726  H62 NAG F   8       4.909  30.037  31.919  0.00  0.00           H  
+HETATM12727  H81 NAG F   8      -2.896  27.133  29.723  0.00  0.00           H  
+HETATM12728  H82 NAG F   8      -2.422  25.536  30.366  0.00  0.00           H  
+HETATM12729  H83 NAG F   8      -2.009  25.995  28.671  0.00  0.00           H  
+HETATM12730  HN2 NAG F   8      -1.781  27.980  31.591  0.00  0.00           H  
+HETATM12731  HO3 NAG F   8       0.463  30.933  29.715  0.00  0.00           H  
+HETATM12732  HO4 NAG F   8       3.134  30.220  29.703  0.00  0.00           H  
+HETATM12733  HO6 NAG F   8       4.679  28.038  33.945  0.00  0.00           H  
+HETATM12734  C1  FUC F   9       0.392  10.362  35.453  1.00100.00           C  
+HETATM12735  C2  FUC F   9       1.024   9.484  36.535  1.00100.00           C  
+HETATM12736  C3  FUC F   9       2.527   9.746  36.660  1.00100.00           C  
+HETATM12737  C4  FUC F   9       2.777  11.246  36.834  1.00100.00           C  
+HETATM12738  C5  FUC F   9       2.133  12.009  35.675  1.00100.00           C  
+HETATM12739  C6  FUC F   9       2.297  13.518  35.777  1.00100.00           C  
+HETATM12740  O2  FUC F   9       0.805   8.118  36.208  1.00100.00           O  
+HETATM12741  O3  FUC F   9       3.056   9.035  37.777  1.00100.00           O  
+HETATM12742  O4  FUC F   9       2.221  11.689  38.066  1.00100.00           O  
+HETATM12743  O5  FUC F   9       0.724  11.733  35.646  1.00100.00           O  
+HETATM12744  H1  FUC F   9       0.801  10.079  34.473  1.00 15.00           H  
+HETATM12745  H2  FUC F   9       0.561   9.717  37.504  1.00 15.00           H  
+HETATM12746  H3  FUC F   9       3.023   9.411  35.738  1.00 15.00           H  
+HETATM12747  H4  FUC F   9       3.861  11.429  36.828  1.00 15.00           H  
+HETATM12748  H5  FUC F   9       2.574  11.678  34.724  1.00 15.00           H  
+HETATM12749  H61 FUC F   9       1.778  13.987  34.930  1.00 15.00           H  
+HETATM12750  H62 FUC F   9       3.364  13.778  35.732  1.00 15.00           H  
+HETATM12751  H63 FUC F   9       1.849  13.876  36.714  1.00 15.00           H  
+HETATM12752  HO2 FUC F   9      -0.139   7.951  36.156  1.00 15.00           H  
+HETATM12753  HO3 FUC F   9       2.904   8.095  37.656  1.00 15.00           H  
+HETATM12754  HO4 FUC F   9       1.275  11.526  38.065  1.00 15.00           H  
 CONECT  202  824                                                                
 CONECT  824  202                                                                
 CONECT 1224 1843                                                                
@@ -13769,9 +13642,9 @@ CONECT12335123361233712342
 CONECT1233612335123501235112352                                                 
 CONECT12337123301233512353                                                      
 CONECT123381233112354                                                           
-CONECT123391233212376                                                           
+CONECT123391233212355                                                           
 CONECT123401232912333                                                           
-CONECT123411233412355                                                           
+CONECT123411233412521                                                           
 CONECT1234212335                                                                
 CONECT1234312329                                                                
 CONECT1234412330                                                                
@@ -13785,193 +13658,193 @@ CONECT1235112336
 CONECT1235212336                                                                
 CONECT1235312337                                                                
 CONECT1235412338                                                                
-CONECT1235512341123561236412365                                                 
-CONECT1235612355123571235812366                                                 
-CONECT123571235612367                                                           
-CONECT1235812356123591236012368                                                 
-CONECT123591235812369                                                           
-CONECT1236012358123611236212370                                                 
-CONECT123611236012371                                                           
-CONECT1236212360123631236412372                                                 
-CONECT1236312362123731237412375                                                 
-CONECT123641235512362                                                           
-CONECT1236512355                                                                
-CONECT1236612356                                                                
-CONECT1236712357                                                                
-CONECT1236812358                                                                
-CONECT1236912359                                                                
-CONECT1237012360                                                                
-CONECT1237112361                                                                
-CONECT1237212362                                                                
-CONECT1237312363                                                                
-CONECT1237412363                                                                
-CONECT1237512363                                                                
-CONECT1237612339123771238412390                                                 
-CONECT1237712376123781238912391                                                 
-CONECT1237812377123791238512392                                                 
-CONECT1237912378123801238612393                                                 
-CONECT1238012379123811238412394                                                 
-CONECT1238112380123871239512396                                                 
-CONECT12382123831238812389                                                      
-CONECT1238312382123971239812399                                                 
-CONECT123841237612380                                                           
-CONECT123851237812400                                                           
-CONECT123861237912403                                                           
-CONECT123871238112401                                                           
-CONECT1238812382                                                                
-CONECT12389123771238212402                                                      
-CONECT1239012376                                                                
-CONECT1239112377                                                                
-CONECT1239212378                                                                
-CONECT1239312379                                                                
-CONECT1239412380                                                                
-CONECT1239512381                                                                
-CONECT1239612381                                                                
-CONECT1239712383                                                                
-CONECT1239812383                                                                
-CONECT1239912383                                                                
-CONECT1240012385                                                                
-CONECT1240112387                                                                
-CONECT1240212389                                                                
-CONECT1240312386124041241212414                                                 
+CONECT1235512339123561236312369                                                 
+CONECT1235612355123571236812370                                                 
+CONECT1235712356123581236412371                                                 
+CONECT1235812357123591236512372                                                 
+CONECT1235912358123601236312373                                                 
+CONECT1236012359123661237412375                                                 
+CONECT12361123621236712368                                                      
+CONECT1236212361123761237712378                                                 
+CONECT123631235512359                                                           
+CONECT123641235712379                                                           
+CONECT123651235812382                                                           
+CONECT123661236012380                                                           
+CONECT1236712361                                                                
+CONECT12368123561236112381                                                      
+CONECT1236912355                                                                
+CONECT1237012356                                                                
+CONECT1237112357                                                                
+CONECT1237212358                                                                
+CONECT1237312359                                                                
+CONECT1237412360                                                                
+CONECT1237512360                                                                
+CONECT1237612362                                                                
+CONECT1237712362                                                                
+CONECT1237812362                                                                
+CONECT1237912364                                                                
+CONECT1238012366                                                                
+CONECT1238112368                                                                
+CONECT1238212365123831239112393                                                 
+CONECT1238312382123841238812394                                                 
+CONECT1238412383123851238912395                                                 
+CONECT1238512384123861239012396                                                 
+CONECT1238612385123871239112397                                                 
+CONECT1238712386123921239812399                                                 
+CONECT123881238312400                                                           
+CONECT123891238412472                                                           
+CONECT123901238512401                                                           
+CONECT123911238212386                                                           
+CONECT123921238712402                                                           
+CONECT1239312382                                                                
+CONECT1239412383                                                                
+CONECT1239512384                                                                
+CONECT1239612385                                                                
+CONECT1239712386                                                                
+CONECT1239812387                                                                
+CONECT1239912387                                                                
+CONECT1240012388                                                                
+CONECT1240112390                                                                
+CONECT1240212392124031241112413                                                 
+CONECT1240312402124041240812414                                                 
 CONECT1240412403124051240912415                                                 
 CONECT1240512404124061241012416                                                 
 CONECT1240612405124071241112417                                                 
-CONECT1240712406124081241212418                                                 
-CONECT1240812407124131241912420                                                 
-CONECT124091240412421                                                           
-CONECT124101240512493                                                           
-CONECT124111240612422                                                           
-CONECT124121240312407                                                           
-CONECT124131240812423                                                           
+CONECT1240712406124121241812419                                                 
+CONECT124081240312423                                                           
+CONECT124091240412420                                                           
+CONECT124101240512421                                                           
+CONECT124111240212406                                                           
+CONECT124121240712422                                                           
+CONECT1241312402                                                                
 CONECT1241412403                                                                
 CONECT1241512404                                                                
 CONECT1241612405                                                                
 CONECT1241712406                                                                
 CONECT1241812407                                                                
-CONECT1241912408                                                                
-CONECT1242012408                                                                
-CONECT1242112409                                                                
-CONECT1242212411                                                                
-CONECT1242312413124241243212434                                                 
-CONECT1242412423124251242912435                                                 
-CONECT1242512424124261243012436                                                 
-CONECT1242612425124271243112437                                                 
-CONECT1242712426124281243212438                                                 
-CONECT1242812427124331243912440                                                 
-CONECT124291242412444                                                           
-CONECT124301242512441                                                           
-CONECT124311242612442                                                           
-CONECT124321242312427                                                           
-CONECT124331242812443                                                           
-CONECT1243412423                                                                
-CONECT1243512424                                                                
-CONECT1243612425                                                                
-CONECT1243712426                                                                
-CONECT1243812427                                                                
-CONECT1243912428                                                                
-CONECT1244012428                                                                
-CONECT1244112430                                                                
-CONECT1244212431                                                                
-CONECT1244312433                                                                
-CONECT1244412429124451245512458                                                 
-CONECT1244512444124461245212459                                                 
-CONECT1244612445124471245312460                                                 
-CONECT1244712446124481245412461                                                 
-CONECT1244812447124491245512462                                                 
-CONECT1244912448124561246312464                                                 
-CONECT12450124511245212457                                                      
-CONECT1245112450124651246612467                                                 
-CONECT12452124451245012468                                                      
-CONECT124531244612469                                                           
-CONECT124541244712471                                                           
-CONECT124551244412448                                                           
-CONECT124561244912470                                                           
-CONECT1245712450                                                                
-CONECT1245812444                                                                
-CONECT1245912445                                                                
-CONECT1246012446                                                                
-CONECT1246112447                                                                
-CONECT1246212448                                                                
-CONECT1246312449                                                                
-CONECT1246412449                                                                
-CONECT1246512451                                                                
-CONECT1246612451                                                                
-CONECT1246712451                                                                
-CONECT1246812452                                                                
-CONECT1246912453                                                                
-CONECT1247012456                                                                
-CONECT1247112454124721248012482                                                 
-CONECT1247212471124731247712483                                                 
+CONECT1241912407                                                                
+CONECT1242012409                                                                
+CONECT1242112410                                                                
+CONECT1242212412                                                                
+CONECT1242312408124241243412437                                                 
+CONECT1242412423124251243112438                                                 
+CONECT1242512424124261243212439                                                 
+CONECT1242612425124271243312440                                                 
+CONECT1242712426124281243412441                                                 
+CONECT1242812427124351244212443                                                 
+CONECT12429124301243112436                                                      
+CONECT1243012429124441244512446                                                 
+CONECT12431124241242912447                                                      
+CONECT124321242512448                                                           
+CONECT124331242612450                                                           
+CONECT124341242312427                                                           
+CONECT124351242812449                                                           
+CONECT1243612429                                                                
+CONECT1243712423                                                                
+CONECT1243812424                                                                
+CONECT1243912425                                                                
+CONECT1244012426                                                                
+CONECT1244112427                                                                
+CONECT1244212428                                                                
+CONECT1244312428                                                                
+CONECT1244412430                                                                
+CONECT1244512430                                                                
+CONECT1244612430                                                                
+CONECT1244712431                                                                
+CONECT1244812432                                                                
+CONECT1244912435                                                                
+CONECT1245012433124511245912461                                                 
+CONECT1245112450124521245612462                                                 
+CONECT1245212451124531245712463                                                 
+CONECT1245312452124541245812464                                                 
+CONECT1245412453124551245912465                                                 
+CONECT1245512454124601246612467                                                 
+CONECT124561245112468                                                           
+CONECT124571245212469                                                           
+CONECT124581245312470                                                           
+CONECT124591245012454                                                           
+CONECT124601245512471                                                           
+CONECT1246112450                                                                
+CONECT1246212451                                                                
+CONECT1246312452                                                                
+CONECT1246412453                                                                
+CONECT1246512454                                                                
+CONECT1246612455                                                                
+CONECT1246712455                                                                
+CONECT1246812456                                                                
+CONECT1246912457                                                                
+CONECT1247012458                                                                
+CONECT1247112460                                                                
+CONECT1247212389124731248112483                                                 
 CONECT1247312472124741247812484                                                 
 CONECT1247412473124751247912485                                                 
 CONECT1247512474124761248012486                                                 
-CONECT1247612475124811248712488                                                 
-CONECT124771247212489                                                           
-CONECT124781247312490                                                           
-CONECT124791247412491                                                           
-CONECT124801247112475                                                           
-CONECT124811247612492                                                           
-CONECT1248212471                                                                
+CONECT1247612475124771248112487                                                 
+CONECT1247712476124821248812489                                                 
+CONECT124781247312493                                                           
+CONECT124791247412490                                                           
+CONECT124801247512491                                                           
+CONECT124811247212476                                                           
+CONECT124821247712492                                                           
 CONECT1248312472                                                                
 CONECT1248412473                                                                
 CONECT1248512474                                                                
 CONECT1248612475                                                                
 CONECT1248712476                                                                
-CONECT1248812476                                                                
+CONECT1248812477                                                                
 CONECT1248912477                                                                
-CONECT1249012478                                                                
-CONECT1249112479                                                                
-CONECT1249212481                                                                
-CONECT1249312410124941250212504                                                 
-CONECT1249412493124951249912505                                                 
-CONECT1249512494124961250012506                                                 
-CONECT1249612495124971250112507                                                 
-CONECT1249712496124981250212508                                                 
-CONECT1249812497125031250912510                                                 
-CONECT124991249412514                                                           
-CONECT125001249512511                                                           
-CONECT125011249612512                                                           
-CONECT125021249312497                                                           
-CONECT125031249812513                                                           
-CONECT1250412493                                                                
-CONECT1250512494                                                                
-CONECT1250612495                                                                
-CONECT1250712496                                                                
-CONECT1250812497                                                                
-CONECT1250912498                                                                
-CONECT1251012498                                                                
-CONECT1251112500                                                                
-CONECT1251212501                                                                
-CONECT1251312503                                                                
-CONECT1251412499125151252512528                                                 
-CONECT1251512514125161252212529                                                 
-CONECT1251612515125171252312530                                                 
-CONECT1251712516125181252412531                                                 
-CONECT1251812517125191252512532                                                 
-CONECT1251912518125261253312534                                                 
-CONECT12520125211252212527                                                      
-CONECT1252112520125351253612537                                                 
-CONECT12522125151252012538                                                      
-CONECT125231251612539                                                           
-CONECT125241251712540                                                           
-CONECT125251251412518                                                           
-CONECT125261251912541                                                           
-CONECT1252712520                                                                
-CONECT1252812514                                                                
-CONECT1252912515                                                                
-CONECT1253012516                                                                
-CONECT1253112517                                                                
-CONECT1253212518                                                                
-CONECT1253312519                                                                
-CONECT1253412519                                                                
-CONECT1253512521                                                                
-CONECT1253612521                                                                
-CONECT1253712521                                                                
-CONECT1253812522                                                                
-CONECT1253912523                                                                
-CONECT1254012524                                                                
-CONECT1254112526                                                                
+CONECT1249012479                                                                
+CONECT1249112480                                                                
+CONECT1249212482                                                                
+CONECT1249312478124941250412507                                                 
+CONECT1249412493124951250112508                                                 
+CONECT1249512494124961250212509                                                 
+CONECT1249612495124971250312510                                                 
+CONECT1249712496124981250412511                                                 
+CONECT1249812497125051251212513                                                 
+CONECT12499125001250112506                                                      
+CONECT1250012499125141251512516                                                 
+CONECT12501124941249912517                                                      
+CONECT125021249512518                                                           
+CONECT125031249612519                                                           
+CONECT125041249312497                                                           
+CONECT125051249812520                                                           
+CONECT1250612499                                                                
+CONECT1250712493                                                                
+CONECT1250812494                                                                
+CONECT1250912495                                                                
+CONECT1251012496                                                                
+CONECT1251112497                                                                
+CONECT1251212498                                                                
+CONECT1251312498                                                                
+CONECT1251412500                                                                
+CONECT1251512500                                                                
+CONECT1251612500                                                                
+CONECT1251712501                                                                
+CONECT1251812502                                                                
+CONECT1251912503                                                                
+CONECT1252012505                                                                
+CONECT1252112341125221253012531                                                 
+CONECT1252212521125231252412532                                                 
+CONECT125231252212533                                                           
+CONECT1252412522125251252612534                                                 
+CONECT125251252412535                                                           
+CONECT1252612524125271252812536                                                 
+CONECT125271252612537                                                           
+CONECT1252812526125291253012538                                                 
+CONECT1252912528125391254012541                                                 
+CONECT125301252112528                                                           
+CONECT1253112521                                                                
+CONECT1253212522                                                                
+CONECT1253312523                                                                
+CONECT1253412524                                                                
+CONECT1253512525                                                                
+CONECT1253612526                                                                
+CONECT1253712527                                                                
+CONECT1253812528                                                                
+CONECT1253912529                                                                
+CONECT1254012529                                                                
+CONECT1254112529                                                                
 CONECT1254210899125431255312556                                                 
 CONECT1254312542125441255012557                                                 
 CONECT1254412543125451255112558                                                 
@@ -13982,9 +13855,9 @@ CONECT12548125491255012555
 CONECT1254912548125631256412565                                                 
 CONECT12550125431254812566                                                      
 CONECT125511254412567                                                           
-CONECT125521254512589                                                           
+CONECT125521254512568                                                           
 CONECT125531254212546                                                           
-CONECT125541254712568                                                           
+CONECT125541254712734                                                           
 CONECT1255512548                                                                
 CONECT1255612542                                                                
 CONECT1255712543                                                                
@@ -13998,192 +13871,192 @@ CONECT1256412549
 CONECT1256512549                                                                
 CONECT1256612550                                                                
 CONECT1256712551                                                                
-CONECT1256812554125691257712578                                                 
-CONECT1256912568125701257412579                                                 
-CONECT1257012569125711257512580                                                 
-CONECT1257112570125721257612581                                                 
-CONECT1257212571125731257712582                                                 
-CONECT1257312572125831258412585                                                 
-CONECT125741256912586                                                           
-CONECT125751257012587                                                           
-CONECT125761257112588                                                           
-CONECT125771256812572                                                           
-CONECT1257812568                                                                
-CONECT1257912569                                                                
-CONECT1258012570                                                                
-CONECT1258112571                                                                
-CONECT1258212572                                                                
-CONECT1258312573                                                                
-CONECT1258412573                                                                
-CONECT1258512573                                                                
-CONECT1258612574                                                                
-CONECT1258712575                                                                
-CONECT1258812576                                                                
-CONECT1258912552125901259712603                                                 
-CONECT1259012589125911260212604                                                 
-CONECT1259112590125921259812605                                                 
-CONECT1259212591125931259912606                                                 
-CONECT1259312592125941259712607                                                 
-CONECT1259412593126001260812609                                                 
-CONECT12595125961260112602                                                      
-CONECT1259612595126101261112612                                                 
-CONECT125971258912593                                                           
-CONECT125981259112613                                                           
-CONECT125991259212616                                                           
-CONECT126001259412614                                                           
-CONECT1260112595                                                                
-CONECT12602125901259512615                                                      
-CONECT1260312589                                                                
-CONECT1260412590                                                                
-CONECT1260512591                                                                
-CONECT1260612592                                                                
-CONECT1260712593                                                                
-CONECT1260812594                                                                
-CONECT1260912594                                                                
-CONECT1261012596                                                                
-CONECT1261112596                                                                
-CONECT1261212596                                                                
-CONECT1261312598                                                                
-CONECT1261412600                                                                
-CONECT1261512602                                                                
-CONECT1261612599126171262512627                                                 
+CONECT1256812552125691257612582                                                 
+CONECT1256912568125701258112583                                                 
+CONECT1257012569125711257712584                                                 
+CONECT1257112570125721257812585                                                 
+CONECT1257212571125731257612586                                                 
+CONECT1257312572125791258712588                                                 
+CONECT12574125751258012581                                                      
+CONECT1257512574125891259012591                                                 
+CONECT125761256812572                                                           
+CONECT125771257012592                                                           
+CONECT125781257112595                                                           
+CONECT125791257312593                                                           
+CONECT1258012574                                                                
+CONECT12581125691257412594                                                      
+CONECT1258212568                                                                
+CONECT1258312569                                                                
+CONECT1258412570                                                                
+CONECT1258512571                                                                
+CONECT1258612572                                                                
+CONECT1258712573                                                                
+CONECT1258812573                                                                
+CONECT1258912575                                                                
+CONECT1259012575                                                                
+CONECT1259112575                                                                
+CONECT1259212577                                                                
+CONECT1259312579                                                                
+CONECT1259412581                                                                
+CONECT1259512578125961260412606                                                 
+CONECT1259612595125971260112607                                                 
+CONECT1259712596125981260212608                                                 
+CONECT1259812597125991260312609                                                 
+CONECT1259912598126001260412610                                                 
+CONECT1260012599126051261112612                                                 
+CONECT126011259612613                                                           
+CONECT126021259712685                                                           
+CONECT126031259812614                                                           
+CONECT126041259512599                                                           
+CONECT126051260012615                                                           
+CONECT1260612595                                                                
+CONECT1260712596                                                                
+CONECT1260812597                                                                
+CONECT1260912598                                                                
+CONECT1261012599                                                                
+CONECT1261112600                                                                
+CONECT1261212600                                                                
+CONECT1261312601                                                                
+CONECT1261412603                                                                
+CONECT1261512605126161262412626                                                 
+CONECT1261612615126171262112627                                                 
 CONECT1261712616126181262212628                                                 
 CONECT1261812617126191262312629                                                 
 CONECT1261912618126201262412630                                                 
-CONECT1262012619126211262512631                                                 
-CONECT1262112620126261263212633                                                 
-CONECT126221261712634                                                           
-CONECT126231261812706                                                           
-CONECT126241261912635                                                           
-CONECT126251261612620                                                           
-CONECT126261262112636                                                           
+CONECT1262012619126251263112632                                                 
+CONECT126211261612636                                                           
+CONECT126221261712633                                                           
+CONECT126231261812634                                                           
+CONECT126241261512619                                                           
+CONECT126251262012635                                                           
+CONECT1262612615                                                                
 CONECT1262712616                                                                
 CONECT1262812617                                                                
 CONECT1262912618                                                                
 CONECT1263012619                                                                
 CONECT1263112620                                                                
-CONECT1263212621                                                                
-CONECT1263312621                                                                
-CONECT1263412622                                                                
-CONECT1263512624                                                                
-CONECT1263612626126371264512647                                                 
-CONECT1263712636126381264212648                                                 
-CONECT1263812637126391264312649                                                 
-CONECT1263912638126401264412650                                                 
-CONECT1264012639126411264512651                                                 
-CONECT1264112640126461265212653                                                 
-CONECT126421263712657                                                           
-CONECT126431263812654                                                           
-CONECT126441263912655                                                           
-CONECT126451263612640                                                           
-CONECT126461264112656                                                           
-CONECT1264712636                                                                
-CONECT1264812637                                                                
-CONECT1264912638                                                                
-CONECT1265012639                                                                
-CONECT1265112640                                                                
-CONECT1265212641                                                                
-CONECT1265312641                                                                
-CONECT1265412643                                                                
-CONECT1265512644                                                                
-CONECT1265612646                                                                
-CONECT1265712642126581266812671                                                 
-CONECT1265812657126591266512672                                                 
-CONECT1265912658126601266612673                                                 
-CONECT1266012659126611266712674                                                 
-CONECT1266112660126621266812675                                                 
-CONECT1266212661126691267612677                                                 
-CONECT12663126641266512670                                                      
-CONECT1266412663126781267912680                                                 
-CONECT12665126581266312681                                                      
-CONECT126661265912682                                                           
-CONECT126671266012684                                                           
-CONECT126681265712661                                                           
-CONECT126691266212683                                                           
-CONECT1267012663                                                                
-CONECT1267112657                                                                
-CONECT1267212658                                                                
-CONECT1267312659                                                                
-CONECT1267412660                                                                
-CONECT1267512661                                                                
-CONECT1267612662                                                                
-CONECT1267712662                                                                
-CONECT1267812664                                                                
-CONECT1267912664                                                                
-CONECT1268012664                                                                
-CONECT1268112665                                                                
-CONECT1268212666                                                                
-CONECT1268312669                                                                
-CONECT1268412667126851269312695                                                 
-CONECT1268512684126861269012696                                                 
+CONECT1263212620                                                                
+CONECT1263312622                                                                
+CONECT1263412623                                                                
+CONECT1263512625                                                                
+CONECT1263612621126371264712650                                                 
+CONECT1263712636126381264412651                                                 
+CONECT1263812637126391264512652                                                 
+CONECT1263912638126401264612653                                                 
+CONECT1264012639126411264712654                                                 
+CONECT1264112640126481265512656                                                 
+CONECT12642126431264412649                                                      
+CONECT1264312642126571265812659                                                 
+CONECT12644126371264212660                                                      
+CONECT126451263812661                                                           
+CONECT126461263912663                                                           
+CONECT126471263612640                                                           
+CONECT126481264112662                                                           
+CONECT1264912642                                                                
+CONECT1265012636                                                                
+CONECT1265112637                                                                
+CONECT1265212638                                                                
+CONECT1265312639                                                                
+CONECT1265412640                                                                
+CONECT1265512641                                                                
+CONECT1265612641                                                                
+CONECT1265712643                                                                
+CONECT1265812643                                                                
+CONECT1265912643                                                                
+CONECT1266012644                                                                
+CONECT1266112645                                                                
+CONECT1266212648                                                                
+CONECT1266312646126641267212674                                                 
+CONECT1266412663126651266912675                                                 
+CONECT1266512664126661267012676                                                 
+CONECT1266612665126671267112677                                                 
+CONECT1266712666126681267212678                                                 
+CONECT1266812667126731267912680                                                 
+CONECT126691266412681                                                           
+CONECT126701266512682                                                           
+CONECT126711266612683                                                           
+CONECT126721266312667                                                           
+CONECT126731266812684                                                           
+CONECT1267412663                                                                
+CONECT1267512664                                                                
+CONECT1267612665                                                                
+CONECT1267712666                                                                
+CONECT1267812667                                                                
+CONECT1267912668                                                                
+CONECT1268012668                                                                
+CONECT1268112669                                                                
+CONECT1268212670                                                                
+CONECT1268312671                                                                
+CONECT1268412673                                                                
+CONECT1268512602126861269412696                                                 
 CONECT1268612685126871269112697                                                 
 CONECT1268712686126881269212698                                                 
 CONECT1268812687126891269312699                                                 
-CONECT1268912688126941270012701                                                 
-CONECT126901268512702                                                           
-CONECT126911268612703                                                           
-CONECT126921268712704                                                           
-CONECT126931268412688                                                           
-CONECT126941268912705                                                           
-CONECT1269512684                                                                
+CONECT1268912688126901269412700                                                 
+CONECT1269012689126951270112702                                                 
+CONECT126911268612706                                                           
+CONECT126921268712703                                                           
+CONECT126931268812704                                                           
+CONECT126941268512689                                                           
+CONECT126951269012705                                                           
 CONECT1269612685                                                                
 CONECT1269712686                                                                
 CONECT1269812687                                                                
 CONECT1269912688                                                                
 CONECT1270012689                                                                
-CONECT1270112689                                                                
+CONECT1270112690                                                                
 CONECT1270212690                                                                
-CONECT1270312691                                                                
-CONECT1270412692                                                                
-CONECT1270512694                                                                
-CONECT1270612623127071271512717                                                 
-CONECT1270712706127081271212718                                                 
-CONECT1270812707127091271312719                                                 
-CONECT1270912708127101271412720                                                 
-CONECT1271012709127111271512721                                                 
-CONECT1271112710127161272212723                                                 
-CONECT127121270712727                                                           
-CONECT127131270812724                                                           
-CONECT127141270912725                                                           
-CONECT127151270612710                                                           
-CONECT127161271112726                                                           
-CONECT1271712706                                                                
-CONECT1271812707                                                                
-CONECT1271912708                                                                
-CONECT1272012709                                                                
-CONECT1272112710                                                                
-CONECT1272212711                                                                
-CONECT1272312711                                                                
-CONECT1272412713                                                                
-CONECT1272512714                                                                
-CONECT1272612716                                                                
-CONECT1272712712127281273812741                                                 
-CONECT1272812727127291273512742                                                 
-CONECT1272912728127301273612743                                                 
-CONECT1273012729127311273712744                                                 
-CONECT1273112730127321273812745                                                 
-CONECT1273212731127391274612747                                                 
-CONECT12733127341273512740                                                      
-CONECT1273412733127481274912750                                                 
-CONECT12735127281273312751                                                      
-CONECT127361272912752                                                           
-CONECT127371273012753                                                           
-CONECT127381272712731                                                           
-CONECT127391273212754                                                           
-CONECT1274012733                                                                
-CONECT1274112727                                                                
-CONECT1274212728                                                                
-CONECT1274312729                                                                
-CONECT1274412730                                                                
-CONECT1274512731                                                                
-CONECT1274612732                                                                
-CONECT1274712732                                                                
-CONECT1274812734                                                                
-CONECT1274912734                                                                
-CONECT1275012734                                                                
-CONECT1275112735                                                                
-CONECT1275212736                                                                
-CONECT1275312737                                                                
-CONECT1275412739                                                                
-MASTER      478    0   18   20   92    0   21    610252    4  462  102          
+CONECT1270312692                                                                
+CONECT1270412693                                                                
+CONECT1270512695                                                                
+CONECT1270612691127071271712720                                                 
+CONECT1270712706127081271412721                                                 
+CONECT1270812707127091271512722                                                 
+CONECT1270912708127101271612723                                                 
+CONECT1271012709127111271712724                                                 
+CONECT1271112710127181272512726                                                 
+CONECT12712127131271412719                                                      
+CONECT1271312712127271272812729                                                 
+CONECT12714127071271212730                                                      
+CONECT127151270812731                                                           
+CONECT127161270912732                                                           
+CONECT127171270612710                                                           
+CONECT127181271112733                                                           
+CONECT1271912712                                                                
+CONECT1272012706                                                                
+CONECT1272112707                                                                
+CONECT1272212708                                                                
+CONECT1272312709                                                                
+CONECT1272412710                                                                
+CONECT1272512711                                                                
+CONECT1272612711                                                                
+CONECT1272712713                                                                
+CONECT1272812713                                                                
+CONECT1272912713                                                                
+CONECT1273012714                                                                
+CONECT1273112715                                                                
+CONECT1273212716                                                                
+CONECT1273312718                                                                
+CONECT1273412554127351274312744                                                 
+CONECT1273512734127361274012745                                                 
+CONECT1273612735127371274112746                                                 
+CONECT1273712736127381274212747                                                 
+CONECT1273812737127391274312748                                                 
+CONECT1273912738127491275012751                                                 
+CONECT127401273512752                                                           
+CONECT127411273612753                                                           
+CONECT127421273712754                                                           
+CONECT127431273412738                                                           
+CONECT1274412734                                                                
+CONECT1274512735                                                                
+CONECT1274612736                                                                
+CONECT1274712737                                                                
+CONECT1274812738                                                                
+CONECT1274912739                                                                
+CONECT1275012739                                                                
+CONECT1275112739                                                                
+CONECT1275212740                                                                
+CONECT1275312741                                                                
+CONECT1275412742                                                                
+MASTER      369    0   18   20   92    0    0    610252    4  462  102          
 END                                                                             
