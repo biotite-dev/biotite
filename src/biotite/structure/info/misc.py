@@ -34,7 +34,7 @@ def all_residues():
     --------
 
     >>> print(all_residues()[1000 : 1010])
-    ['0YQ', '0YR', '0YS', '0YT', '0YU', '0YV', '0YW', '0YX', '0YY', '0YZ']
+    ['0YL', '0YN', '0YO', '0YP', '0YQ', '0YR', '0YS', '0YT', '0YU', '0YV']
     """
     return list(_res_names.keys()) 
 
@@ -58,7 +58,7 @@ def full_name(res_name):
     --------
 
     >>> print(full_name("MAN"))
-    ALPHA-D-MANNOSE
+    alpha-D-mannopyranose
     """
     return _res_names.get(res_name.upper())
 
@@ -82,7 +82,7 @@ def link_type(res_name):
     --------
 
     >>> print(link_type("MAN"))
-    D-SACCHARIDE
+    D-saccharide, alpha linking
     >>> print(link_type("TRP"))
     L-PEPTIDE LINKING
     >>> print(link_type("HOH"))
