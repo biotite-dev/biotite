@@ -107,6 +107,9 @@ def load_structure(file_path, template=None, **kwargs):
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
             raise TypeError("Template must be specified for trajectory files")
+        # filter template for atom ids if it is an unfiltered template
+        if "atom_i" in kwargs and template.shape[-1] != len(kwargs["atom_i"]):
+            template = template[..., kwargs["atom_i"]]
         from .trr import TRRFile
         from .xtc import XTCFile
         from .tng import TNGFile
