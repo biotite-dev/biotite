@@ -63,6 +63,9 @@ def test_loading_with_extra_args():
     with pytest.raises(TypeError):
         strucio.load_structure(template, start=2)
     
+    # test if atom_i argument is passed to templates
+    stack = strucio.load_structure(trajectory, template, atom_i=[1, 2])
+    assert stack.shape[1] == 2
 
 @pytest.mark.skipif(
     cannot_import("mdtraj"),
