@@ -37,8 +37,9 @@ def load_structure(file_path, template=None, **kwargs):
         Additional parameters will be passed to either the
         :func:`get_structure()` or :func:`read()` method of the file
         object.
-        This does not affect files given via the `template` parameter,
-        except for `atom_i`, which is applied to the template as well.
+        This does not affect files given via the `template` parameter.
+        The only exception is the `atom_i`, which is applied to the template
+        as well if number of atoms do not match.
     
     Returns
     -------
