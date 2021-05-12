@@ -38,6 +38,8 @@ def load_structure(file_path, template=None, **kwargs):
         :func:`get_structure()` or :func:`read()` method of the file
         object.
         This does not affect files given via the `template` parameter.
+        The only exception is the `atom_i`, which is applied to the template
+        as well if number of atoms do not match.
     
     Returns
     -------
@@ -116,6 +118,9 @@ def load_structure(file_path, template=None, **kwargs):
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
             raise TypeError("Template must be specified for trajectory files")
+        # filter template for atom ids if it is an unfiltered template
+        if "atom_i" in kwargs and template.shape[-1] != len(kwargs["atom_i"]):
+            template = template[..., kwargs["atom_i"]]
         from .trr import TRRFile
         from .xtc import XTCFile
         from .tng import TNGFile
