@@ -8,11 +8,9 @@ __all__ = ["LocalApp"]
 
 import abc
 import copy
-import time
-import io
-from os import chdir, getcwd
-from .application import Application, AppState, requires_state
-from subprocess import Popen, PIPE, SubprocessError
+from os import chdir, getcwd, remove
+from .application import Application, AppState, AppStateError, requires_state
+from subprocess import Popen, PIPE, SubprocessError, TimeoutExpired
 
 class LocalApp(Application, metaclass=abc.ABCMeta):
     """
@@ -35,8 +33,6 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._options = []
         self._exec_dir = getcwd()
         self._process = None
-        self._stdout_file_path = None
-        self._stdout_file = None
         self._command = None
     
     @requires_state(AppState.CREATED)
@@ -176,7 +172,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         code : int
             The exit code.
         """
-        return self._code
+        return self._process.returncode
     
     @requires_state(AppState.FINISHED | AppState.JOINED)
     def get_stdout(self):
@@ -220,12 +216,40 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         if code == None:
             return False
         else:
-            self._code = code
             self._stdout, self._stderr = self._process.communicate()
             return True
     
+    @requires_state(AppState.RUNNING | AppState.FINISHED)
+    def join(self, timeout=None):
+        # Override method as repetitive calls of 'is_finished()'
+        # are not necessary as 'communicate()' already waits for the
+        # finished application
+        try:
+            self._stdout, self._stderr = self._process.communicate(
+                timeout=timeout
+            )
+        except TimeoutExpired:
+            self.cancel()
+            raise TimeoutError(
+                f"The application expired its timeout ({timeout:.1f} s)"
+            )
+        self._state = AppState.FINISHED
+        
+        try:
+            self.evaluate()
+        except AppStateError:
+            raise
+        except:
+            self._state = AppState.CANCELLED
+            raise
+        else:
+            self._state = AppState.JOINED
+        self.clean_up()
+    
+    
     def wait_interval(self):
-        return 0.01
+        # Not used in this implementation of 'join()'
+        raise NotImplementedError()
     
     def evaluate(self):
         super().evaluate()
@@ -241,3 +265,24 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:
             self._process.kill()
+
+
+def cleanup_tempfile(temp_file):
+    """
+    Close a :class:`NamedTemporaryFile` and delete it manually,
+    if `delete` is set to ``False``.
+    This function is a small helper function intended for usage in
+    `LocalApp` subclasses. 
+
+    The manual deletion is necessary, as Windows does not allow to open
+    a :class:`NamedTemporaryFile` as second time
+    (e.g. by the file name), if `delete` is set to ``True``.
+
+    Parameters
+    ----------
+    temp_file : NamedTemporaryFile
+        The temporary file to be closed and deleted.
+    """
+    temp_file.close()
+    if not temp_file.delete:
+        remove(temp_file.name)

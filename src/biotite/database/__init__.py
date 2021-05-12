@@ -13,8 +13,8 @@ All subpackages provide at least two functions:
 given search parameters.
 The search parameters are usually abstracted by the respective
 :class:`Query` objects.
-Then IDs can be given to the :func:`fetch()` function to download the
-associated files.
+Then the obtained IDs can be given to the :func:`fetch()` function to
+download the associated files.
 """
 
 __name__ = "biotite.database"

@@ -3,11 +3,11 @@
 # information.
 
 __name__ = "biotite.sequence"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann", "Thomas Nevolianis"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
 from .sequence import Sequence
-from .alphabet import LetterAlphabet, AlphabetError
+from .alphabet import LetterAlphabet, AlphabetError, AlphabetMapper
 import numpy as np
 import copy
 
@@ -31,12 +31,51 @@ class GeneralSequence(Sequence):
     def __init__(self, alphabet, sequence=()):
         self._alphabet = alphabet
         super().__init__(sequence)
-    
+
+    def __repr__(self):
+        """Represent GeneralSequence as a string for debugging."""
+        return f"GeneralSequence(Alphabet({self._alphabet}),'{''.join(self.symbols)}')"
+
     def __copy_create__(self):
         return GeneralSequence(self._alphabet)
     
     def get_alphabet(self):
         return self._alphabet
+    
+    def as_type(self, sequence):
+        """
+        Convert the :class:`GeneralSequence` into a sequence of another
+        :class:`Sequence` type.
+
+        This function simply replaces the sequence code of the given
+        sequence with the sequence code of this object.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The `Sequence` whose sequence code is replaced with the one
+            of this object.
+            The alphabet must equal or extend the alphabet of this
+            object.
+        
+        Returns
+        -------
+        sequence : Sequence
+            The input `sequence` with replaced sequence code.
+        
+        Raises
+        ------
+        AlphabetError
+            If the the :class:`Alphabet` of the input `sequence` does
+            not extend the :class:`Alphabet` of this sequence.
+        """
+        if not sequence.get_alphabet().extends(self._alphabet):
+            raise AlphabetError(
+                f"The alphabet of '{type(sequence).__name__}' "
+                f"is not compatible with the alphabet of this sequence"
+            )
+        sequence.code = self.code
+        return sequence
 
 class NucleotideSequence(Sequence):
     """
@@ -61,9 +100,11 @@ class NucleotideSequence(Sequence):
         is used.
     """
     
-    alphabet     = LetterAlphabet(["A","C","G","T"])
-    alphabet_amb = LetterAlphabet(["A","C","G","T","R","Y","W","S",
-                                   "M","K","H","B","V","D","N"])
+    alphabet_unamb = LetterAlphabet(["A","C","G","T"])
+    alphabet_amb   = LetterAlphabet(
+        ["A","C","G","T","R","Y","W","S",
+         "M","K","H","B","V","D","N"]
+    )
     
     compl_symbol_dict = {"A" : "T",
                          "C" : "G",
@@ -80,32 +121,42 @@ class NucleotideSequence(Sequence):
                          "D" : "H",
                          "B" : "V",
                          "N" : "N"}
-    _compl_dict = {}
-    for _key, _value in compl_symbol_dict.items():
-        _key_code = alphabet_amb.encode(_key)
-        _val_code = alphabet_amb.encode(_value)
-        _compl_dict[_key_code] = _val_code
-    # Vectorized function that returns a complement code
-    _complement_func = np.vectorize(_compl_dict.__getitem__)
+    # List comprehension does not work in this scope
+    _compl_symbols = []
+    for _symbol in alphabet_amb.get_symbols():
+        _compl_symbols.append(compl_symbol_dict[_symbol])
+    _compl_alphabet_unamb = LetterAlphabet(_compl_symbols)
+    _compl_mapper = AlphabetMapper(_compl_alphabet_unamb, alphabet_amb)
     
-    def __init__(self, sequence=[], ambiguous=False):
+    def __init__(self, sequence=[], ambiguous=None):
         if isinstance(sequence, str):
             sequence = sequence.upper()
         else:
             sequence = [symbol.upper() for symbol in sequence]
-        if ambiguous == False:
+        if ambiguous is None:
             try:
-                self._alphabet = NucleotideSequence.alphabet
+                self._alphabet = NucleotideSequence.alphabet_unamb
                 seq_code = self._alphabet.encode_multiple(sequence)
             except AlphabetError:
                 self._alphabet = NucleotideSequence.alphabet_amb
                 seq_code = self._alphabet.encode_multiple(sequence)
+        elif not ambiguous:
+            self._alphabet = NucleotideSequence.alphabet_unamb
+            seq_code = self._alphabet.encode_multiple(sequence)
         else:
             self._alphabet = NucleotideSequence.alphabet_amb
             seq_code = self._alphabet.encode_multiple(sequence)
         super().__init__()
         self.code = seq_code
-        
+
+    def __repr__(self):
+        """Represent NucleotideSequence as a string for debugging."""
+        if self._alphabet == NucleotideSequence.alphabet_amb:
+            ambiguous = True
+        else:
+            ambiguous = False
+        return f'NucleotideSequence("{"".join(self.symbols)}", ambiguous={ambiguous})'
+
     def __copy_create__(self):
         if self._alphabet == NucleotideSequence.alphabet_amb:
             seq_copy = NucleotideSequence(ambiguous=True)
@@ -135,7 +186,12 @@ class NucleotideSequence(Sequence):
         AAGCGT
         
         """
-        compl_code = NucleotideSequence._complement_func(self.code)
+        # Interpreting the sequence code of this object in the
+        # complementary alphabet gives the complementary symbols
+        # In order to get the complementary symbols in the original
+        # alphabet, the sequence code is mapped from the complementary
+        # alphabet into the original alphabet
+        compl_code = NucleotideSequence._compl_mapper[self.code]
         return self.copy(compl_code)
     
     def translate(self, complete=False, codon_table=None, met_start=False):
@@ -262,10 +318,29 @@ class NucleotideSequence(Sequence):
     
     @staticmethod
     def unambiguous_alphabet():
-        return NucleotideSequence.alphabet
+        """
+        Get the unambiguous nucleotide alphabet containing the symbols
+        ``A``,  ``C``,  ``G`` and  ``T``.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The unambiguous nucleotide alphabet.
+        """
+        return NucleotideSequence.alphabet_unamb
     
     @staticmethod
     def ambiguous_alphabet():
+        """
+        Get the ambiguous nucleotide alphabet containing the symbols
+        ``A``,  ``C``,  ``G`` and  ``T`` and symbols describing
+        ambiguous combinations of these.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The ambiguous nucleotide alphabet.
+        """
         return NucleotideSequence.alphabet_amb
 
 
@@ -283,14 +358,79 @@ class ProteinSequence(Sequence):
         string. May take upper or lower case letters. If a list is
         given, the list elements can be 1-letter or 3-letter amino acid
         representations. By default the sequence is empty.
-    """
     
+    Notes
+    -----
+    The :class:`Alphabet` of this :class:`Sequence` class does not
+    support selenocysteine.
+    Please convert selenocysteine (``U``) into cysteine (``C``)
+    or use a custom :class:`Sequence` class, if the differentiation is
+    necessary.
+    """
+
     _codon_table = None
     
     alphabet = LetterAlphabet(["A","C","D","E","F","G","H","I","K","L",
                                "M","N","P","Q","R","S","T","V","W","Y",
                                "B","Z","X","*"])
-    
+
+    # Masses are taken from
+    # https://web.expasy.org/findmod/findmod_masses.html#AA
+
+    _mol_weight_average = np.array([
+         71.0788,  # A
+        103.1388,  # C
+        115.0886,  # D
+        129.1155,  # E
+        147.1766,  # F
+         57.0519,  # G
+        137.1411,  # H
+        113.1594,  # I
+        128.1741,  # K
+        113.1594,  # L
+        131.1926,  # M
+        114.1038,  # N
+         97.1167,  # P
+        128.1307,  # Q
+        156.1875,  # R
+         87.0782,  # S
+        101.1051,  # T
+         99.1326,  # V
+        186.2132,  # W
+        163.1760,  # Y
+          np.nan,  # B
+          np.nan,  # Z
+          np.nan,  # X
+          np.nan,  # *
+    ])
+
+    _mol_weight_monoisotopic = np.array([
+         71.03711,  # A
+        103.00919,  # C
+        115.02694,  # D
+        129.04259,  # E
+        147.06841,  # F
+         57.02146,  # G
+        137.05891,  # H
+        113.08406,  # I
+        128.09496,  # K
+        113.08406,  # L
+        131.04049,  # M
+        114.04293,  # N
+         97.05276,  # P
+        128.05858,  # Q
+        156.10111,  # R
+         87.03203,  # S
+        101.04768,  # T
+         99.06841,  # V
+        186.07931,  # W
+        163.06333,  # Y
+        np.nan,  # B
+        np.nan,  # Z
+        np.nan,  # X
+        np.nan,  # *
+    ])
+
     _dict_1to3 = {"A" : "ALA",
                   "C" : "CYS",
                   "D" : "ASP",
@@ -330,7 +470,11 @@ class ProteinSequence(Sequence):
         sequence = [dict_3to1[symbol.upper()] if len(symbol) == 3
                     else symbol.upper() for symbol in sequence]
         super().__init__(sequence)
-    
+
+    def __repr__(self):
+        """Represent ProteinSequence as a string for debugging."""
+        return f'ProteinSequence("{"".join(self.symbols)}")'
+
     def get_alphabet(self):
         return ProteinSequence.alphabet
     
@@ -382,4 +526,30 @@ class ProteinSequence(Sequence):
             3-letter amino acid representation.
         """
         return ProteinSequence._dict_1to3[symbol.upper()]
-    
+
+    def get_molecular_weight(self, monoisotopic=False):
+        """
+        Calculate the molecular weight of this protein.
+        
+        Average protein molecular weight is calculated by the addition
+        of average isotopic masses of the amino acids
+        in the protein and the average isotopic mass of one water
+        molecule.
+
+        Returns
+        -------
+        weight : float
+            Molecular weight of the protein represented by the sequence.
+            Molecular weight values are given in Dalton (Da).
+        """
+        if monoisotopic:
+            weight = np.sum(self._mol_weight_monoisotopic[self.code]) + 18.015
+        else:
+            weight = np.sum(self._mol_weight_average[self.code]) + 18.015
+
+        if np.isnan(weight):
+            raise ValueError(
+                "Sequence contains ambiguous amino acids, "
+                "cannot calculate weight"
+            )
+        return weight

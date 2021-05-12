@@ -11,6 +11,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["vector_dot", "norm_vector", "distance", "matrix_rotate"]
 
 import numpy as np
+from .atoms import Atom, array
 
 
 def vector_dot(v1,v2):
@@ -94,3 +95,4 @@ def matrix_rotate(v, matrix):
     if orig_ndim > 2:
         v = v.reshape(*orig_shape)
     return v
+

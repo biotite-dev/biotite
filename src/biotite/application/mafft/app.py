@@ -59,6 +59,7 @@ class MafftApp(MSAApp):
     
     def run(self):
         args = [
+            "--quiet",
             "--auto",
             "--treeout",
             # Get the reordered alignment in order for

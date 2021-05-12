@@ -8,14 +8,23 @@ Contributing
 As the aim of *Biotite* is to create a comprehensive library, we welcome
 developers who would like to extend the package with new functionalities or
 improve existing code.
+
 The complete development workflow is hosted on
 `GitHub <https://github.com/biotite-dev/biotite>`_.
 This is also the place where you would post feature propositions,
 questions, bug reports, etc.
 
+If you are interested in improving *Biotite*, you feel free join our chat on
+`Discord <https://discord.gg/cUjDguF>`_.
+We are happy to answer questions, discuss ideas and provide mentoring for
+newcomers.
+Alternatively, you can also contact `<padix.key@gmail.com>`_.
+A good place to find projects to start with are the
+`Open Issues <https://github.com/biotite-dev/biotite/issues>`_ and
+the `Project Boards <https://github.com/biotite-dev/biotite/projects>`_.
+
 The following page explains the development guidelines in order to keep
 *Biotite*'s source code consistent.
-
 
 
 Writing code
@@ -168,25 +177,61 @@ Please refer to its
 for further information on script formatting.
 The example scripts are placed in ``doc/examples/scripts``.
 
-Normally, *sphinx-gallery* only creates plots for *Matplotlib* and
-*Mayavi* outputs. However, the *Biotite* documentation implements
-a custom image scraper, that allows using static images, e.g. created by
-*PyMOL*, to be included.
-You have to do two things to achieve that:
+Static images and molecular visualizations
+""""""""""""""""""""""""""""""""""""""""""
 
-   - Put the image in the same directory as the example script
-   - In the respective code block of the example script, add the following
-     comment line:
-     ``# biotite_static_image = <some_image.png>``
+In addition to *Matplotlib* plots, the *Biotite* example gallery can also
+show molecular visualizations, via the *PyMOL* software, and static images.
 
-An example of this can be seen in the ``structure/ku_superimposition.py``
-example.
+Static images can be included by adding the following comment in the
+corresponding code block:
+
+.. code-block:: python
+
+   # biotite_static_image = <name_of_the_image>.png
+
+The image file must be stored in the same directory as the example script.
+
+|
+
+To visualize images using *PyMOL*, the
+`Ammolite <https://ammolite.biotite-python.org/>`_ package is required.
+Please make sure to use open-source *PyMOL* to avoid licensing issues.
+
+Let's assume you have an example script `<example_name>.py`.
+The visualization is initiated by adding the comment line
+
+.. code-block:: python
+
+   # Visualization with PyMOL..
+
+in the code block where you want show the visualization.
+Then the visualization script ``<example_name>_pymol.py`` is executed, which
+can use the global variables from the example script and the special
+``__image_destination__`` variable.
+``__image_destination__`` is a string representing the path to the output image
+file.
+The PyMOL visualization can be saved to this file with e.g.
+
+```python
+ammolite.cmd.png(__image_destination__)
+```
+
+The rendered image is saved in the directory of the example script as
+``<example_name>.png`` and is added to version control.
+The visualization script is only executed, if the rendered image does not
+exist, yet.
+The traceback of errors in the visualization script are printed, if
+``sphinx-build`` is run in verbose (``-v``) mode.
+An example of this can be seen in the
+``doc/examples/structure/contact_sites.py`` example.
+
 
 Updating the tutorial
 ^^^^^^^^^^^^^^^^^^^^^
 
 When adding new content for broad audience, it is appreciated to update the
-tutorial pages (``doc/tutorial_src``) as well.
+tutorial pages (``doc/tutorial/src``) as well.
 The tutorial uses functionality from ``sphinx-gallery`` to generate
 the tutorial from example scripts.
 This has the advantage that the output of code snippets is not static but
@@ -247,13 +292,13 @@ Unit tests
 
 In order to check if your new awesome code breaks anything in *Biotite*,
 you should run unit tests before you open a pull request.
-To achieve that, run the following command in the top-level directory.
+To achieve that, install the package and run ``pytest`` in the top-level
+directory.
 
 .. code-block:: console
 
-   $ python setup.py test
-
-Running unit test requires the `pytest` framework.
+   $ pip install .
+   $ pytest
 
 Adding your own unit tests for your new module (if possible), is appreciated.
 The unit tests are found in the ``tests`` folder (big surprise!).
@@ -281,10 +326,19 @@ The Sphinx documentation is created using
 
 .. code-block:: console
 
-   $ python setup.py build_sphinx
+   $ pip install -e .
+   $ sphinx-build doc doc/_build/doc
 
-in the top-level directory. The HTML output can be found under
-``doc/_build/html``.
+in the top-level directory.
+The building process can take a while, since the code from the tutorial
+and the example gallery is executed.
+In order to omit building the tutorial and gallery, type
+
+.. code-block:: console
+
+   $ sphinx-build -D plot_gallery=0 doc doc/_build/doc
+
+instead.
 
 
 
@@ -345,7 +399,7 @@ If your code fulfills the following conditions
 
    - extends *Biotite* functionality
    - is documented
-   - is unit tested
+   - is well tested
 
 you can contact the *Biotite* maintainer or open an issue
 to ask for official acceptance as extension package.

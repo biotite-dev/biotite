@@ -6,3 +6,7 @@ A
 
 >third dna sequence
 ACGT
+>rna sequence
+ACGU
+>ambiguous rna sequence
+ACGUNN

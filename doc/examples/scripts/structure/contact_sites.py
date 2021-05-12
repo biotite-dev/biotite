@@ -78,4 +78,3 @@ for res_id in common_ids:
     print(res_name.capitalize() + str(res_id))
 
 # Visualization with PyMOL...
-# biotite_static_image = contact_sites.png

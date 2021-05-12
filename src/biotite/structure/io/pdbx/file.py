@@ -18,14 +18,15 @@ class PDBxFile(TextFile, MutableMapping):
     This class represents a PDBx/mmCIF file.
     
     The categories of the file can be accessed using the
-    `get_category()`/`set_category()` methods. The content of each
-    category is represented by a dictionary. The dictionary contains
-    the entry (e.g. *label_entity_id* in *atom_site*) as key. The
-    corresponding values are either strings in *non-looped* categories,
-    or 1-D numpy arrays of string objects in case of *looped*
-    categories.
+    :meth:`get_category()`/:meth:`set_category()` methods.
+    The content of each category is represented by a dictionary.
+    The dictionary contains the entry
+    (e.g. *label_entity_id* in *atom_site*) as key.
+    The corresponding values are either strings in *non-looped*
+    categories, or 1-D numpy arrays of string objects in case of
+    *looped* categories.
     
-    A category can be changed or added using `set_category()`:
+    A category can be changed or added using :meth:`set_category()`:
     If a string-valued dictionary is provided, a *non-looped* category
     will be created; if an array-valued dictionary is given, a
     *looped* category will be created. In case of arrays, it is
@@ -45,7 +46,7 @@ class PDBxFile(TextFile, MutableMapping):
     This class uses a lazy category dictionary creation: When reading
     the file only the line positions of all categories are checked. The
     time consuming task of dictionary creation is done when
-    `get_category()` is called.
+    :meth:`get_category()` is called.
     
     Examples
     --------
@@ -258,10 +259,9 @@ class PDBxFile(TextFile, MutableMapping):
         else:
             category_dict = _process_singlevalued(lines)
         
-        if expect_looped:
-            if not is_loop:
-                for key, val in category_dict:
-                    category_dict[key] = np.array([val], dtype=object)
+        if expect_looped and not is_loop:
+            category_dict = {key: np.array([val], dtype=object)
+                             for key, val in category_dict.items()}
 
         return category_dict
             
@@ -329,7 +329,7 @@ class PDBxFile(TextFile, MutableMapping):
 
         
         # Value arrays (looped categories) can be modified (e.g. quoted)
-        # Hence make a copy to avoid unwaned side effects
+        # Hence make a copy to avoid unwanted side effects
         # due to modification of input values
         if is_looped:
             category_dict = {key : val.copy() for key, val
@@ -344,7 +344,7 @@ class PDBxFile(TextFile, MutableMapping):
                 category_dict[key] = _quote(value)
         
         if is_looped:
-            keylines = ["_" + category + "." + key
+            keylines = ["_" + category + "." + key + " "
                          for key in category_dict.keys()]
             value_arr = list(category_dict.values())
             # Array containing the number of characters + whitespace
@@ -514,11 +514,19 @@ class PDBxFile(TextFile, MutableMapping):
     
 def _process_singlevalued(lines):
     category_dict = {}
-    for line in lines:
-        parts = shlex.split(line)
+    i = 0
+    while i < len(lines):
+        parts = shlex.split(lines[i])
         key = parts[0].split(".")[1]
-        value = parts[1]
+        if len(parts) > 1:
+            value = parts[1]
+        else:
+            # The value is not in the same line,
+            # but in the following one
+            i += 1
+            value = shlex.split(lines[i])[0]
         category_dict[key] = value
+        i += 1
     return category_dict
 
 

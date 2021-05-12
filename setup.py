@@ -2,40 +2,34 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import sys
-import shlex
-import glob
+import re
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
 from setuptools import setup, find_packages, Extension
-from setuptools.command.test import test as TestCommand
 import numpy
 from Cython.Build import cythonize
-from src.biotite import __version__
-
-long_description = """
-The Biotite package bundles popular tools in computational biology into an
-unifying framework. It offers file I/O operations, analyses and manipulations
-for biological sequence and structure data. Furthermore, the package provides
-interfaces for popular biological databases and external software.
-
-The internal structure and sequence representations are based on *NumPy*
-`ndarrays`, taking the advantage of C-accelerated operations. Time consuming
-operations that could not be vectorised are mostly implemented in *Cython* in
-order to achieve C-accelerations in those places, too.
-
-Additionally the package aims for simple usability and extensibility: The
-objects representing structures and sequences can be indexed and scliced like
-an `ndarray`. Even the actual internal `ndarrays` are easily accessible
-allowing advanced users to implement their own algorithms upon the existing
-types.
-"""
 
 original_wd = os.getcwd()
 # Change directory to setup directory to ensure correct file identification
 os.chdir(dirname(abspath(__file__)))
 
+# Simply import long description from README file
+with open("README.rst") as readme:
+    long_description = readme.read()
+
+# Parse the top level package for the version
+# Do not use an import to prevent side effects
+# e.g. required runtime dependencies
+with open(join("src", "biotite", "__init__.py")) as init_file:
+    for line in init_file.read().splitlines():
+        if line.lstrip().startswith("__version__"):
+            version_match = re.search('".*"', line)
+            if version_match:
+                # Remove quotes
+                version = version_match.group(0)[1 : -1]
+            else:
+                raise ValueError("No version is specified in '__init__.py'")
 
 # Compile Cython into C
 try:
@@ -66,28 +60,13 @@ def get_extensions():
     return ext_modules
 
 
-class PyTestCommand(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.pytest_args = ''
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
-
-
 setup(
     name="biotite",
-    version = __version__,
+    version = version,
     description = ("A comprehensive library for "
                    "computational molecular biology"),
     long_description = long_description,
     author = "The Biotite contributors",
-    url = "https://github.com/biotite-dev/biotite",
     license = "BSD 3-Clause",
     classifiers = [
         "Development Status :: 4 - Beta",
@@ -98,11 +77,15 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
+    url = "https://www.biotite-python.org",
+    project_urls = {
+        "Documentation": "https://biotite.biotite-python.org",
+        "Repository": "https://github.com/biotite-dev/biotite",
+    },
     
     zip_safe = False,
     packages = find_packages("src"),
@@ -123,21 +106,15 @@ setup(
     },
     
     install_requires = ["requests >= 2.12",
-                        "numpy >= 1.13",
-                        "msgpack >= 0.5.6"],
+                        "numpy >= 1.19",
+                        "msgpack >= 0.5.6",
+                        "networkx >= 2.0"],
     python_requires = ">=3.6",
     
-    cmdclass = {"test": PyTestCommand},
     tests_require = ["pytest"],
-    
-    command_options = {
-        'build_sphinx':
-            {"source_dir" : ("setup.py", "./doc"),
-             "build_dir"  : ("setup.py", "./doc/_build"),
-             "release"    : ("setup.py", __version__)}
-    }
 )
 
 
 # Return to original directory
 os.chdir(original_wd)
+

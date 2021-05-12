@@ -6,13 +6,14 @@ COMPND   3 CHAIN: A;
 COMPND   4 ENGINEERED: YES                                                      
 SOURCE    MOL_ID: 1;                                                            
 SOURCE   2 SYNTHETIC: YES;                                                      
-SOURCE   3 OTHER_DETAILS: THE PROTEIN WAS SYNTHESIZED USING STANDARD            
-SOURCE   4 FMOC SOLID-PHASE SYNTHESIS METHODS ON AN APPLIED                     
-SOURCE   5 BIOSYSTEMS 433A PEPTIDE SYNTHESIZER.                                 
+SOURCE   3 OTHER_DETAILS: THE PROTEIN WAS SYNTHESIZED USING STANDARD FMOC       
+SOURCE   4 SOLID-PHASE SYNTHESIS METHODS ON AN APPLIED BIOSYSTEMS 433A PEPTIDE  
+SOURCE   5 SYNTHESIZER.                                                         
 KEYWDS    MINIPROTEIN, TWO-STATE FOLDING, TRP-CAGE, DE NOVO PROTEIN             
 EXPDTA    SOLUTION NMR                                                          
 NUMMDL    38                                                                    
 AUTHOR    J.W.NEIDIGH,R.M.FESINMEYER,N.H.ANDERSEN                               
+REVDAT   3   05-FEB-20 1L2Y    1       REMARK                                   
 REVDAT   2   24-FEB-09 1L2Y    1       VERSN                                    
 REVDAT   1   29-MAY-02 1L2Y    0                                                
 JRNL        AUTH   J.W.NEIDIGH,R.M.FESINMEYER,N.H.ANDERSEN                      
@@ -21,13 +22,12 @@ JRNL        REF    NAT.STRUCT.BIOL.              V.   9   425 2002
 JRNL        REFN                   ISSN 1072-8368                               
 JRNL        PMID   11979279                                                     
 JRNL        DOI    10.1038/NSB798                                               
-REMARK   1                                                                      
 REMARK   2                                                                      
 REMARK   2 RESOLUTION. NOT APPLICABLE.                                          
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
-REMARK   3   PROGRAM     : AMBER 6.0                                            
-REMARK   3   AUTHORS     : KOLLMAN                                              
+REMARK   3   PROGRAM     : XWINNMR 2.6, AMBER 6.0                               
+REMARK   3   AUTHORS     : BRUKER (XWINNMR), KOLLMAN (AMBER)                    
 REMARK   3                                                                      
 REMARK   3  OTHER REFINEMENT REMARKS: 169 NOE DISTANCE CONSTRAINTS WERE         
 REMARK   3  EMPLOYED. CNS WAS EMPLOYED FOR S.A., FOLLOWED BY MINIMIZATION       
@@ -36,7 +36,7 @@ REMARK   4
 REMARK   4 1L2Y COMPLIES WITH FORMAT V. 3.15, 01-DEC-08                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY RCSB ON 28-FEB-02.                  
-REMARK 100 THE RCSB ID CODE IS RCSB015598.                                      
+REMARK 100 THE DEPOSITION ID IS D_1000015598.                                   
 REMARK 210                                                                      
 REMARK 210 EXPERIMENTAL DETAILS                                                 
 REMARK 210  EXPERIMENT TYPE                : NMR                                
@@ -52,11 +52,10 @@ REMARK 210  SPECTROMETER MODEL             : DRX
 REMARK 210  SPECTROMETER MANUFACTURER      : BRUKER                             
 REMARK 210                                                                      
 REMARK 210  STRUCTURE DETERMINATION.                                            
-REMARK 210   SOFTWARE USED                 : XWINNMR 2.6, FELIX 95, CNS         
-REMARK 210                                   1.0, AMBER 6.0                     
-REMARK 210   METHOD USED                   : SIMULATED ANNEALING FROM           
-REMARK 210                                   RANDOM STRUCTURES FOLLOWED BY      
-REMARK 210                                   STEEPEST DESCENT MINIMIZATION      
+REMARK 210   SOFTWARE USED                 : FELIX 95, CNS 1.0, AMBER 6.0       
+REMARK 210   METHOD USED                   : SIMULATED ANNEALING FROM RANDOM    
+REMARK 210                                   STRUCTURES FOLLOWED BY STEEPEST    
+REMARK 210                                   DESCENT MINIMIZATION               
 REMARK 210                                                                      
 REMARK 210 CONFORMERS, NUMBER CALCULATED   : 50                                 
 REMARK 210 CONFORMERS, NUMBER SUBMITTED    : 38                                 
@@ -75,6 +74,35 @@ REMARK 215 THE COORDINATES IN THIS ENTRY WERE GENERATED FROM SOLUTION
 REMARK 215 NMR DATA.  PROTEIN DATA BANK CONVENTIONS REQUIRE THAT                
 REMARK 215 CRYST1 AND SCALE RECORDS BE INCLUDED, BUT THE VALUES ON              
 REMARK 215 THESE RECORDS ARE MEANINGLESS.                                       
+REMARK 300                                                                      
+REMARK 300 BIOMOLECULE: 1                                                       
+REMARK 300 SEE REMARK 350 FOR THE AUTHOR PROVIDED AND/OR PROGRAM                
+REMARK 300 GENERATED ASSEMBLY INFORMATION FOR THE STRUCTURE IN                  
+REMARK 300 THIS ENTRY. THE REMARK MAY ALSO PROVIDE INFORMATION ON               
+REMARK 300 BURIED SURFACE AREA.                                                 
+REMARK 350                                                                      
+REMARK 350 COORDINATES FOR A COMPLETE MULTIMER REPRESENTING THE KNOWN           
+REMARK 350 BIOLOGICALLY SIGNIFICANT OLIGOMERIZATION STATE OF THE                
+REMARK 350 MOLECULE CAN BE GENERATED BY APPLYING BIOMT TRANSFORMATIONS          
+REMARK 350 GIVEN BELOW.  BOTH NON-CRYSTALLOGRAPHIC AND                          
+REMARK 350 CRYSTALLOGRAPHIC OPERATIONS ARE GIVEN.                               
+REMARK 350                                                                      
+REMARK 350 BIOMOLECULE: 1                                                       
+REMARK 350 AUTHOR DETERMINED BIOLOGICAL UNIT: MONOMERIC                         
+REMARK 350 APPLY THE FOLLOWING TO CHAINS: A                                     
+REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
+REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
+REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
+REMARK 500                                                                      
+REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
+REMARK 500 SUBTOPIC: CLOSE CONTACTS                                             
+REMARK 500                                                                      
+REMARK 500 THE FOLLOWING ATOMS ARE IN CLOSE CONTACT.                            
+REMARK 500                                                                      
+REMARK 500  ATM1  RES C  SSEQI   ATM2  RES C  SSEQI           DISTANCE          
+REMARK 500   O    ASP A     9     HG   SER A    14              1.55            
+REMARK 500                                                                      
+REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
 REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
 REMARK 500 SUBTOPIC: COVALENT BOND ANGLES                                       
@@ -11808,5 +11836,5 @@ ATOM    303  HB3 SER A  20       0.461   9.076   3.584  1.00  0.00           H
 ATOM    304  HG  SER A  20       2.347   9.513   2.048  1.00  0.00           H  
 TER     305      SER A  20                                                      
 ENDMDL                                                                          
-MASTER      109    0    0    2    0    0    0    611552   38    0    2          
+MASTER      136    0    0    2    0    0    0    6  154    1    0    2          
 END                                                                             

@@ -105,7 +105,7 @@ class SubstitutionMatrix(object):
 
     Creating an identity substitution matrix via the score matrix:
 
-    >>> alph = NucleotideSequence.alphabet
+    >>> alph = NucleotideSequence.alphabet_unamb
     >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph)))
     >>> print(matrix)
         A   C   G   T
@@ -154,7 +154,26 @@ class SubstitutionMatrix(object):
         # This class is immutable and has a getter function for the
         # score matrix -> make the score matrix read-only
         self._matrix.setflags(write=False)
-    
+
+    def __repr__(self):
+        """Represent SubstitutionMatrix as a string for debugging."""
+        return f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, " \
+               f"np.{np.array_repr(self._matrix)})"
+
+    def __eq__(self, item):
+        if not isinstance(item, SubstitutionMatrix):
+            return False
+        if self._alph1 != item.get_alphabet1():
+            return False
+        if self._alph2 != item.get_alphabet2():
+            return False
+        if not np.array_equal(self.score_matrix(), item.score_matrix()):
+            return False
+        return True
+
+    def __ne__(self, item):
+        return not self == item
+
     def _fill_with_matrix_dict(self, matrix_dict):
         self._matrix = np.zeros(( len(self._alph1), len(self._alph2) ),
                                 dtype=np.int32)
@@ -382,7 +401,7 @@ class SubstitutionMatrix(object):
 _matrix_blosum62 = SubstitutionMatrix(ProteinSequence.alphabet,
                                       ProteinSequence.alphabet,
                                       "BLOSUM62")
-_matrix_nuc = SubstitutionMatrix(NucleotideSequence.alphabet,
-                                 NucleotideSequence.alphabet,
+_matrix_nuc = SubstitutionMatrix(NucleotideSequence.alphabet_amb,
+                                 NucleotideSequence.alphabet_amb,
                                  "NUC")
 

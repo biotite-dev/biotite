@@ -106,6 +106,7 @@ def test_conversion(path, model):
     
     array2 = pdbx.get_structure(pdbx_file, model=model)
     
+    assert array1.array_length() > 0
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -244,26 +245,26 @@ def test_get_sequence():
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "5ugo.cif"))
     sequences = pdbx.get_sequence(file)
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "4gxy.cif"))
-    sequences.append(pdbx.get_sequence(file))
-    assert (sequences[0] == "CCGACGGCGCATCAGC")
+    sequences += pdbx.get_sequence(file)
+    assert (str(sequences[0]) == "CCGACGGCGCATCAGC")
     assert (type(sequences[0]) is seq.NucleotideSequence)
-    assert (sequences[1] == "GCTGATGCGCC")
+    assert (str(sequences[1]) == "GCTGATGCGCC")
     assert (type(sequences[1]) is seq.NucleotideSequence)
-    assert (sequences[2] == "GTCGG")
+    assert (str(sequences[2]) == "GTCGG")
     assert (type(sequences[2]) is seq.NucleotideSequence)
-    assert (sequences[3] == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYNAYRKAAS"
-                "VIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQDDTSSSINFL"
-                "TRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGDFEKRIPREEML"
-                "QMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPSFTSESTKQPKLLH"
-                "QVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHRRIDIRLIPKDQYYCG"
-                "VLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVAGEPLPVDSEKDIFDYIQ"
-                "WKYREPKDRSE"
+    assert (str(sequences[3]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+                "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
+                "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
+                "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
+                "FTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHR"
+                "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
+                "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
     assert (type(sequences[3]) is seq.ProteinSequence)
-    assert (sequences[4] == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAAAAGGGAA"
-                "GCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCCCCTCGGGAT"
-                "GTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGATCCGGAGTCAGG"
-                "AAACCTGCCTGCCGTC"
+    assert (str(sequences[4]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
+                "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
+                "CCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGAT"
+                "CCGGAGTCAGGAAACCTGCCTGCCGTC"
     )
     assert (type(sequences[4]) is seq.NucleotideSequence)
         

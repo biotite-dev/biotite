@@ -1,4 +1,4 @@
-{   
+{
     "biotite" : {
         "File classes" : [
             "File",
@@ -13,7 +13,7 @@
             "AdaptiveFancyArrow"
         ]
     },
-    
+
     "biotite.application" : {
         "Application classes" : [
             "Application",
@@ -36,37 +36,20 @@
             "fetch_single_file"
         ]
     },
-    
+
     "biotite.database.rcsb" : {
         "Queries" : [
             "Query",
+            "SingleQuery",
             "CompositeQuery",
-            "SimpleQuery",
-            "RangeQuery",
-            "ResolutionQuery",
-            "BFactorQuery",
-            "MolecularWeightQuery",
-            "ChainCountQuery",
-            "EntityCountQuery",
-            "ModelCountQuery",
-            "ChainLengthQuery",
-            "MoleculeTypeQuery",
-            "MethodQuery",
-            "SoftwareQuery",
-            "PubMedIDQuery",
-            "UniProtIDQuery",
-            "PfamIDQuery",
-            "SequenceClusterQuery",
-            "TextSearchQuery",
-            "KeywordQuery",
-            "TitleQuery",
-            "DecriptionQuery",
-            "MacromoleculeNameQuery",
-            "ExpressionOrganismQuery",
-            "AuthorQuery",
-            "DateQuery"
+            "BasicQuery",
+            "FieldQuery",
+            "SequenceQuery",
+            "MotifQuery",
+            "StructureQuery"
         ],
         "Search and fetch" : [
+            "count",
             "search",
             "fetch"
         ]
@@ -104,9 +87,10 @@
             "SubstitutionMatrix"
         ],
         "Aligners" : [
+            "align_ungapped",
             "align_optimal",
-            "align_multiple",
-            "align_ungapped"
+            "align_banded",
+            "align_multiple"
         ],
         "Alignments" : [
             "Alignment",
@@ -115,6 +99,12 @@
             "get_sequence_identity",
             "get_pairwise_sequence_identity",
             "score"
+        ],
+        "K-mers" : [
+            "KmerAlphabet",
+            "KmerTable",
+            "SimilarityRule",
+            "ScoreThresholdRule"
         ]
     },
 
@@ -200,7 +190,6 @@
             "index_angle",
             "dihedral",
             "index_dihedral",
-            "dihedral_backbone",
             "centroid",
             "mass_center",
             "gyration_radius",
@@ -228,6 +217,8 @@
         "Checks" : [
             "check_bond_continuity",
             "check_id_continuity",
+            "check_atom_id_continuity",
+            "check_res_id_continuity",
             "check_duplicate_atoms"
         ],
         "Residue level utility" : [
@@ -236,6 +227,8 @@
             "apply_residue_wise",
             "spread_residue_wise",
             "get_residue_masks",
+            "get_residue_starts_for",
+            "get_residue_positions",
             "get_residue_count",
             "residue_iter"
         ],
@@ -245,16 +238,39 @@
             "get_chain_count",
             "chain_iter"
         ],
+        "Molecule level utility" : [
+            "get_molecule_indices",
+            "get_molecule_masks",
+            "molecule_iter"
+        ],
         "Structure comparison" : [
             "average",
             "rmsd",
             "rmsf"
         ],
-        "Advanced analysis" : [
+        "General analysis" : [
             "sasa",
-            "annotate_sse",
             "hbond",
-            "hbond_frequency"
+            "hbond_frequency",
+            "partial_charges",
+            "density"
+        ],
+        "Proteins" : [
+            "dihedral_backbone",
+            "annotate_sse"
+        ],
+        "Nucleic acids" : [
+            "Edge",
+            "GlycosidicBond",
+            "map_nucleotide",
+            "base_pairs",
+            "base_stacking",
+            "pseudoknots",
+            "base_pairs_edge",
+            "base_pairs_glycosidic_bond",
+            "dot_bracket",
+            "dot_bracket_from_structure",
+            "base_pairs_from_dot_bracket"
         ]
     }
 }

@@ -15,14 +15,7 @@ from .check import check_for_errors
 from ..error import RequestError
 
 
-_base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-
-_fetch_url = ("efetch.fcgi?db={:}"
-              "&id={:}"
-              "&rettype={:}"
-              "&retmode={:}"
-              "&tool={:}"
-              "&mail={:}")
+_fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 
 _databases = {"BioProject"        : "bioproject",
@@ -87,7 +80,7 @@ def get_database_name(database):
 
 
 def fetch(uids, target_path, suffix, db_name, ret_type,
-          ret_mode="text", overwrite=False, verbose=False, mail=""):
+          ret_mode="text", overwrite=False, verbose=False):
     """
     Download files from the NCBI Entrez database in various formats.
     
@@ -103,7 +96,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     ----------
     uids : str or iterable object of str
         A single *unique identifier* (UID) or a list of UIDs of the
-        file(s) to be downloaded .
+        file(s) to be downloaded.
     target_path : str or None
         The target directory of the downloaded files.
         If ``None``, the file content is stored in a file-like object
@@ -125,10 +118,6 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     verbose: bool, optional
         If true, the function will output the download progress.
         (Default: False)
-    mail : str, optional
-        A mail address that is appended to to HTTP request. This address
-        is contacted in case you contact the NCBI server too often.
-        This does only work if the mail address is registered.
     
     Returns
     -------
@@ -185,12 +174,15 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
            or not isfile(file) \
            or getsize(file) == 0 \
            or overwrite:
-                r = requests.get(
-                    (_base_url + _fetch_url).format(
-                        _sanitize_db_name(db_name), id, ret_type, ret_mode,
-                        "BiotiteClient", mail
-                    )
-                )
+                param_dict = {
+                    "db" : _sanitize_db_name(db_name),
+                    "id" : id,
+                    "rettype" : ret_type,
+                    "retmode" : ret_mode,
+                    "tool" : "Biotite",
+                    "mail" : "padix.key@gmail.com"
+                }
+                r = requests.get(_fetch_url, params=param_dict)
                 content = r.text
                 check_for_errors(content)
                 if content.startswith(" Error"):
@@ -211,7 +203,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
 
 
 def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
-                      overwrite=False, mail=None):
+                      overwrite=False):
     """
     Almost the same as :func:`fetch()`, but the data for the given UIDs
     will be stored in a single file.
@@ -232,10 +224,6 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     overwrite : bool, optional
         If false, the file is only downloaded, if no file with the same
         name already exists.
-    mail : str, optional
-        A mail address that is appended to to HTML request. This address
-        is contacted in case you contact the NCBI server too often.
-        This does only work if the mail address is registered.
     
     Returns
     -------
@@ -267,11 +255,15 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
         uid_list_str += id + ","
     # Remove terminal comma
     uid_list_str = uid_list_str[:-1]
-    r = requests.get(
-        (_base_url + _fetch_url).format(
-            _sanitize_db_name(db_name), uid_list_str, ret_type, ret_mode,
-            "BiotiteClient", mail)
-    )
+    param_dict = {
+        "db" : _sanitize_db_name(db_name),
+        "id" : uid_list_str,
+        "rettype" : ret_type,
+        "retmode" : ret_mode,
+        "tool" : "Biotite",
+        "mail" : "padix.key@gmail.com"
+    }
+    r = requests.get(_fetch_url, params=param_dict)
     content = r.text
     check_for_errors(content)
     if content.startswith(" Error"):

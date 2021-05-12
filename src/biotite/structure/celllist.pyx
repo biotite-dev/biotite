@@ -731,7 +731,7 @@ cdef class CellList:
     
     cdef inline bint _has_initialized_cells(self):
         # Memoryviews are not initialized on class creation
-        # This method checks if a the _cells memoryview was initialized
+        # This method checks if the _cells memoryview was initialized
         # and is not None
         try:
             if self._cells is not None:

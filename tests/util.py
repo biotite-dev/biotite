@@ -3,7 +3,8 @@
 # information.
 
 from os.path import join, dirname, realpath
-import urllib
+import urllib.error
+import urllib.request
 import importlib
 import shutil
 

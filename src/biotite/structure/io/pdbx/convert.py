@@ -57,7 +57,7 @@ def get_sequence(pdbx_file, data_block=None):
     if isinstance(seq_string, np.ndarray):
         for string, stype in zip(seq_string, seq_type):
             sequence = _convert_string_to_sequence(string, stype)
-            if(issubclass(sequence, Sequence)):
+            if sequence is not None:
                 sequences.append(sequence) 
     else:
         sequences.append(_convert_string_to_sequence(seq_string, seq_type))
@@ -82,7 +82,7 @@ def get_model_count(file, data_block=None):
         The number of models.
     """
     atom_site_dict = file.get_category("atom_site", data_block)
-    return int(atom_site_dict["pdbx_PDB_model_num"][-1])
+    return len(_get_model_starts(atom_site_dict["pdbx_PDB_model_num"]))
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
@@ -159,11 +159,14 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
     models = atom_site_dict["pdbx_PDB_model_num"]
-    model_count = int(models[-1])
+    model_starts = _get_model_starts(models)
+    model_count = len(model_starts)
+    atom_count = len(models)
     
     if model is None:
-        # For a stack, the annotation are derived from the first model
-        model_dict = _get_model_dict(atom_site_dict, 1)
+        # For a stack, the annotations are derived from the first model
+        model_dict = _get_model_dict(atom_site_dict, model_starts, 1)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         stack = AtomArrayStack(model_count, model_length)
         
@@ -171,7 +174,6 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         
         # Check if each model has the same amount of atoms
         # If not, raise exception
-        atom_count = len(models)
         if model_length * model_count != atom_count:
             raise InvalidFileError("The models in the file have unequal "
                                    "amount of atoms, give an explicit model "
@@ -205,19 +207,26 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 f"the given model {model} does not exist"
             )
 
-        model_dict = _get_model_dict(atom_site_dict, model)
+        model_dict = _get_model_dict(atom_site_dict, model_starts, model)
+        # Any field of the category would work here to get the length
         model_length = len(model_dict["group_PDB"])
         array = AtomArray(model_length)
         
         _fill_annotations(array, model_dict, extra_fields, use_author_fields)
         
-        model_filter = (models == str(model))
+        # Append exclusive stop
+        model_starts = np.append(
+            model_starts, [len(atom_site_dict["group_PDB"])]
+        )
+        # Indexing starts at 0, but model number starts at 1
+        model_index = model - 1
+        start, stop = model_starts[model_index], model_starts[model_index+1]
         array.coord = np.zeros((model_length, 3), dtype=np.float32)
-        array.coord[:,0] = atom_site_dict["Cartn_x"][model_filter] \
+        array.coord[:,0] = atom_site_dict["Cartn_x"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,1] = atom_site_dict["Cartn_y"][model_filter] \
+        array.coord[:,1] = atom_site_dict["Cartn_y"][start : stop] \
                            .astype(np.float32)
-        array.coord[:,2] = atom_site_dict["Cartn_z"][model_filter] \
+        array.coord[:,2] = atom_site_dict["Cartn_z"][start : stop] \
                            .astype(np.float32)
         
         array = _filter_altloc(array, model_dict, altloc)
@@ -230,7 +239,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
 def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     prefix = "auth" if use_author_fields else "label"
     array.set_annotation(
-        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U3")
+        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U4")
     )
     array.set_annotation(
         "res_id", np.array(
@@ -303,11 +312,33 @@ def _filter_altloc(array, model_dict, altloc):
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
-def _get_model_dict(atom_site_dict, model):
+
+def _get_model_starts(model_array):
+    """
+    Get the start index for each model in the arrays of the
+    ``atom_site`` category.
+    """
+    models, indices = np.unique(model_array, return_index=True)
+    indices.sort()
+    return indices
+
+
+def _get_model_dict(atom_site_dict, model_starts, model):
+    """
+    Reduce the ``atom_site`` dictionary to the values for the given
+    model.
+    """
+    # Append exclusive stop
+    model_starts = np.append(
+        model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])]
+    )
     model_dict = {}
-    models = atom_site_dict["pdbx_PDB_model_num"]
+    # Indexing starts at 0, but model number starts at 1
+    model_index = model - 1
     for key in atom_site_dict.keys():
-        model_dict[key] = atom_site_dict[key][models == str(model)]
+        model_dict[key] = atom_site_dict[key][
+            model_starts[model_index] : model_starts[model_index+1]
+        ]
     return model_dict
 
 
@@ -377,9 +408,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["label_comp_id"] = np.copy(array.res_name)
     atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
     atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
-    atom_site_dict["label_seq_id"] = np.array(
-        ["." if e == -1 else str(e) for e in array.res_id]
-    )
+    atom_site_dict["label_seq_id"] = np.array([str(e) for e in array.res_id])
     atom_site_dict["pdbx_PDB_ins_code"] = array.ins_code
     atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
     atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
@@ -387,7 +416,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
     
     if "atom_id" in annot_categories:
-        atom_site_dict["id"] = array.atom_id.astype("U6")
+        atom_site_dict["id"] = np.array([str(e) for e in array.atom_id])
     else:
         atom_site_dict["id"] = None
     if "b_factor" in annot_categories:
@@ -733,4 +762,4 @@ def _convert_string_to_sequence(string, stype):
         return None
     else:
         raise InvalidFileError("mmCIF _entity_poly.type unsupported"
-                                    " type: " + stype)
+                               " type: " + stype)

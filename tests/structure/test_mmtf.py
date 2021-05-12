@@ -176,7 +176,7 @@ def test_numpy_objects():
     mmtf_file = mmtf.MMTFFile()
     mmtf_file["A float"] = np.float32(42.0)
     mmtf_file["A list"] = [np.int64(1), np.int64(2), np.int64(3)]
-    mmtf_file["A dictionary"] = {"a": np.bool(True), "b": np.bool(False)}
+    mmtf_file["A dictionary"] = {"a": np.int64(1), "b": np.int64(2)}
     temp = TemporaryFile("w+b")
     mmtf_file.write(temp)
     temp.close()

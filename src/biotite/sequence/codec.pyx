@@ -4,7 +4,7 @@
 
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
-__all__ = ["encode_chars", "decode_to_chars"]
+__all__ = ["encode_chars", "decode_to_chars", "map_sequence_code"]
 
 cimport cython
 cimport numpy as np
@@ -12,17 +12,35 @@ cimport numpy as np
 import numpy as np
 
 
+ctypedef np.int64_t int64
 ctypedef np.uint8_t uint8
+ctypedef np.uint16_t uint16
+ctypedef np.uint32_t uint32
+ctypedef np.uint64_t uint64
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def encode_chars(const unsigned char[:] alphabet,
-                 const unsigned char[:] symbols):
+def encode_chars(const unsigned char[:] alphabet not None,
+                 const unsigned char[:] symbols not None):
     """
     Encode an array of symbols into an array of symbol codes.
 
-    Only works for ASCII characters.
+    Only works for symbols that are printable ASCII characters.
+
+    Parameters
+    ----------
+    alphabet : ndarray, shape=(n,), dtype="|S1"
+        The alphabet as array.
+        It is indexed via ASCII values and the corresponding values are
+        the symbol codes.
+    symbols : ndarray, dtype="|S1"
+        The symbols (ASCII characters) to be encoded.
+    
+    Returns
+    -------
+    code : ndarray, shape=(n,), dtype="|S1"
+        The encoded symbols.
     """
     cdef int i
     # The last symbol code of the alphabet + 1 is always illegal
@@ -63,11 +81,26 @@ def encode_chars(const unsigned char[:] alphabet,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def decode_to_chars(const unsigned char[:] alphabet, const uint8[:] code):
+def decode_to_chars(const unsigned char[:] alphabet not None,
+                    const uint8[:] code not None):
     """
-    Encode an array of symbol codes into an array of symbols.
+    Decode an array of symbol codes into an array of symbols.
 
-    Only works for ASCII characters.
+    Only works for symbols that are printable ASCII characters.
+
+    Parameters
+    ----------
+    alphabet : ndarray, shape=(n,), dtype="|S1"
+        The alphabet as array.
+        It is indexed via ASCII values and the corresponding values are
+        the symbol codes.
+    code : ndarray, shape=(n,), dtype="|S1"
+        The code to be decoded.
+    
+    Returns
+    -------
+    symbols : ndarray, dtype="|S1"
+        The resulting symbols (ASCII characters).
     """
     cdef int i
     cdef int alphabet_length = alphabet.shape[0]
@@ -83,3 +116,40 @@ def decode_to_chars(const unsigned char[:] alphabet, const uint8[:] code):
             raise AlphabetError(f"'{symbol_code:d}' is not a valid code")
         symbols_view[i] = alphabet[symbol_code]
     return symbols
+
+
+ctypedef fused CodeType1:
+    uint8
+    uint16
+    uint32
+    uint64
+ctypedef fused CodeType2:
+    uint8
+    uint16
+    uint32
+    uint64
+def map_sequence_code(CodeType2[:] mapping,
+                      CodeType1[:] in_code, CodeType2[:] out_code):
+    """
+    Efficiently maps a sequence code into another alphabet using a
+    mapping.
+
+    Parameters
+    ----------
+    mapping : ndarray, dtype=int
+        Maps the input codes to output codes.
+    in_code : ndarray, shape=(n,), dtype=int
+        The symbol codes to be mapped.
+    out_code : ndarray, shape=(n,), dtype=int
+        An empty array, where the mapped symbols are stored.
+        This is a parameter instead of the return value in order to
+        choose the correct integer type.
+    """
+    cdef int64 i
+    if in_code.shape[0] != out_code.shape[0]:
+        raise ValueError(
+            f"Input sequence code has length {in_code.shape[0]}, "
+            f"but output sequence code has length {out_code.shape[0]}"
+        )
+    for i in range(in_code.shape[0]):
+        out_code[i] = mapping[in_code[i]]

@@ -7,9 +7,10 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
 
 import copy
+from numbers import Integral
 import string
 import numpy as np
-from .codec import encode_chars, decode_to_chars
+from .codec import encode_chars, decode_to_chars, map_sequence_code
 
 
 class Alphabet(object):
@@ -72,7 +73,27 @@ class Alphabet(object):
     2
     >>> print(alph.decode(4))
     3.141
-        
+
+    On the subject of alphabet extension:
+    An alphabet always extends itself.
+    
+    >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","G","T"]))
+    True
+
+    An alphabet extends an alphabet when it contains additional symbols...
+    
+    >>> Alphabet(["A","C","G","T","U"]).extends(Alphabet(["A","C","G","T"]))
+    True
+    
+    ...but not vice versa
+    
+    >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","G","T","U"]))
+    False
+    
+    Two alphabets with same symbols but different symbol-code-mappings
+    
+    >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","T","G"]))    
+    False
     """
     
     def __init__(self, symbols):
@@ -82,7 +103,11 @@ class Alphabet(object):
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
-    
+
+    def __repr__(self):
+        """Represent Alphabet as a string for debugging."""
+        return f'Alphabet({self._symbols})'
+
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
@@ -199,6 +224,28 @@ class Alphabet(object):
         """
         return [self.decode(c) for c in code]
     
+    def is_letter_alphabet(self):
+        """
+        Check whether the symbols in this alphabet are single printable
+        letters.
+        If so, the alphabet could be expressed by a `LetterAlphabet`.
+
+        Returns
+        -------
+        is_letter_alphabet : bool
+            True, if all symbols in the alphabet are 'str' or 'bytes',
+            have length 1 and are printable.
+        """
+        for symbol in self:
+            if not isinstance(symbol, (str, bytes)) \
+                or len(symbol) > 1:
+                    return False
+            if isinstance(symbol, str):
+                symbol = symbol.encode("ASCII")
+            if symbol not in LetterAlphabet.PRINATBLES:
+                return False
+        return True
+    
     def __str__(self):
         return str(self.get_symbols())
     
@@ -213,6 +260,13 @@ class Alphabet(object):
     
     def __hash__(self):
         return hash(tuple(self._symbols))
+    
+    def __eq__(self, item):
+        if item is self:
+            return True
+        if not isinstance(item, Alphabet):
+            return False
+        return self.get_symbols() == item.get_symbols()
 
 
 class LetterAlphabet(Alphabet):
@@ -220,8 +274,9 @@ class LetterAlphabet(Alphabet):
     :class:`LetterAlphabet` is a an :class:`Alphabet` subclass
     specialized for letter based alphabets, like DNA or protein
     sequence alphabets.
-    The alphabet size is limited to a maximum of 128 symbols, the size
-    of the ASCII charcater set.
+    The alphabet size is limited to the 94 printable, non-whitespace
+    characters.
+    Internally the symbols are saved as `bytes` objects.
     The encoding and decoding process is a lot faster than for a
     normal :class:`Alphabet`.
 
@@ -259,14 +314,18 @@ class LetterAlphabet(Alphabet):
             np.array(self._symbols, dtype="|S1"),
             dtype=np.ubyte
         )
-    
+
+    def __repr__(self):
+        """Represent LetterAlphabet as a string for debugging."""
+        return f'LetterAlphabet({self.get_symbols()})'
+
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
         
         Returns
         -------
-        symbols : ndarray
+        symbols : list
             Copy of the internal list of symbols.
         """
         return [symbol.decode("ASCII") for symbol
@@ -289,13 +348,14 @@ class LetterAlphabet(Alphabet):
     
     def encode_multiple(self, symbols, dtype=None):
         """
-        Encode a list of symbols.
+        Encode multiple symbols.
         
         Parameters
         ----------
-        symbols : array-like
-            The symbols to encode. The method is faster when a
-            :class:`ndarray` is provided.
+        symbols : iterable object of str or iterable object of bytes
+            The symbols to encode. The method is fastest when a
+            :class:`ndarray`, :class:`str` or :class:`bytes` object
+            containing the symbols is provided, instead of e.g. a list.
         dtype : dtype, optional
             For compatibility with superclass. The value is ignored
             
@@ -325,13 +385,18 @@ class LetterAlphabet(Alphabet):
         
         Parameters
         ----------
-        code : array-like object of int
-            The sequence code to decode. Works fastest when `code` is
-            :class:`ndarray`. 
-        
+        code : ndarray, dtype=uint8
+            The sequence code to decode.
+            Works fastest if an :class:`ndarray` is provided.
+        as_bytes : bool, optional
+            If true, the output array will contain `bytes`
+            (dtype 'S1').
+            Otherwise, the the output array will contain `str`
+            (dtype 'U1').
+
         Returns
         -------
-        symbols : ndarray, dtype='U1'
+        symbols : ndarray, dtype='U1' or dtype='S1'
             The decoded list of symbols.
         """
         if not isinstance(code, np.ndarray):
@@ -373,6 +438,9 @@ class AlphabetMapper(object):
     source_alphabet, target_alphabet : Alphabet
         The codes are converted from the source alphabet into the
         target alphabet.
+        The target alphabet must contain at least all symbols of the
+        source alphabet, but it is not required that the shared symbols
+        are in the same order.
     
     Examples
     --------
@@ -397,20 +465,56 @@ class AlphabetMapper(object):
     [3 4 4 0 2 0]
     >>> print(out_sequence)
     GCCTAT
-
-
-        
     """
     
     def __init__(self, source_alphabet, target_alphabet):
-        self._mapper = np.zeros(len(source_alphabet), dtype=int)
-        for old_code in range(len(source_alphabet)):
-            symbol = source_alphabet.decode(old_code)
-            new_code = target_alphabet.encode(symbol)
-            self._mapper[old_code] = new_code
+        if target_alphabet.extends(source_alphabet):
+            self._necessary_mapping = False
+        else:
+            self._necessary_mapping = True
+            self._mapper = np.zeros(
+                len(source_alphabet),
+                dtype=AlphabetMapper._dtype(len(target_alphabet))
+            )
+            for old_code in range(len(source_alphabet)):
+                symbol = source_alphabet.decode(old_code)
+                new_code = target_alphabet.encode(symbol)
+                self._mapper[old_code] = new_code
         
     def __getitem__(self, code):
-        return self._mapper[code]
+        if isinstance(code, Integral):
+            if self._necessary_mapping:
+                return self._mapper[code]
+            else:
+                return code
+        if not isinstance(code, np.ndarray) \
+           or code.dtype not in (np.uint8, np.uint16, np.uint32, np.uint64):
+                code = np.array(code, dtype=np.uint64)
+        if self._necessary_mapping:
+            mapped_code = np.empty(len(code), dtype=self._mapper.dtype)
+            map_sequence_code(
+                self._mapper,
+                code,
+                mapped_code
+            )
+            return mapped_code
+        else:
+            return code
+
+
+    @staticmethod
+    def _dtype(alphabet_size):
+        _size_uint8  = np.iinfo(np.uint8 ).max +1
+        _size_uint16 = np.iinfo(np.uint16).max +1
+        _size_uint32 = np.iinfo(np.uint32).max +1
+        if alphabet_size <= _size_uint8:
+            return np.uint8
+        elif alphabet_size <= _size_uint16:
+            return np.uint16
+        elif alphabet_size <= _size_uint32:
+            return np.uint32
+        else:
+            return np.uint64
 
 
 class AlphabetError(Exception):

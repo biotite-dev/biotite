@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from os.path import join
 import datetime
 import itertools
 import tempfile
@@ -13,8 +14,9 @@ import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.mmtf as mmtf
 import biotite.sequence.io.fasta as fasta
+import biotite.sequence.align as align
 from biotite.database import RequestError
-from ..util import cannot_connect_to
+from ..util import cannot_connect_to, data_dir
 
 
 RCSB_URL = "https://www.rcsb.org/"
@@ -58,211 +60,178 @@ def test_fetch_invalid(format):
         )
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
-def test_search():
-    query1 = rcsb.ResolutionQuery(0.0, 0.8)
-    query2 = rcsb.MolecularWeightQuery(0, 1000)
-    ids_query1 = sorted(rcsb.search(query1))
-    ids_query2 = sorted(rcsb.search(query2))
-    ids_comp = sorted(rcsb.search(rcsb.CompositeQuery("or", [query1, query2])))
-    ids_comp2 = []
-    for id in ids_query1 + ids_query2:
-        if id not in ids_comp2:
-            ids_comp2.append(id)
-    assert ids_comp == sorted(ids_comp2)
+def test_search_basic():
+    query = rcsb.BasicQuery("tc5b")
+    assert rcsb.search(query) == ["1L2Y"]
+    assert rcsb.count(query) == 1
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
-def test_search_empty():
-    ids = rcsb.search(rcsb.MolecularWeightQuery(0, 1))
-    assert len(ids) == 0
-
-
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
-def test_search_invalid():
-    class InvalidQuery(rcsb.SimpleQuery):
-        def __init__(self):
-            super().__init__("InvalidQuery", "gibberish")
-            self.add_param("foo", "bar")
-    with pytest.raises(RequestError):
-        ids = rcsb.search(InvalidQuery())
-
-
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
 @pytest.mark.parametrize(
-    # IMPORTANT NOTE: Since the PDB continuously adds new structures,
-    # the expected IDs might need to be updated,
-    # if an 'AssertionError' occurs
-    "query_type, params, exp_ids",
+    "field, params, ref_ids",
     [
         (
-            rcsb.ResolutionQuery,
-            {"max": 0.6},
-            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3"]
+            "pdbx_serial_crystallography_sample_delivery_injection.preparation",
+            {},
+            ["6IG7", "6IG6", "7JRI"]
         ),
         (
-            rcsb.BFactorQuery,
-            {"min": 1.0, "max": 1.5},
-            ["1G2K", "2OL9", "3ECO", "3INZ", "3LN2", "4CA4", "6M9I"]
+            "audit_author.name",
+            {"is_in": ["Neidigh, J.W."]},
+            ["1JRJ", "1L2Y", "2O3P", "2O63", "2O64", "2O65"]
         ),
         (
-            rcsb.MolecularWeightQuery,
-            {"min": 50000000},
-            ["6CGV", "4F5X"]
-        ),
-        #(
-        #    rcsb.ChainCountQuery,
-        #    {"min": 100, "max": 101},
-        #    []
-        #),
-        (
-            rcsb.ChainCountQuery,
-            {"min": 100, "max": 101, "bio_assembly": True},
-            ["6NUT", "5HGE", "3J2W", "1Z8Y"]
+            "rcsb_entity_source_organism.rcsb_gene_name.value",
+            {"exact_match": "lacA"},
+            ["5JUV", "1KQA", "1KRV", "1KRU", "1KRR", "1TG7",
+             "1XC6", "4IUG", "4LFK", "4LFL", "4LFM", "4LFN",
+             "5IFP", "5IFT", "5IHR", "4DUW", "5MGD", "5MGC"]
         ),
         (
-            rcsb.EntityCountQuery,
-            {"min": 85, "max": 100, "entity_type": "protein"},
-            ["6HIX", "5LYB", "6XYW"]
+            "struct.title",
+            {"contains_words": "tc5b"},
+            ["1L2Y"]
         ),
         (
-            rcsb.ModelCountQuery,
-            {"min": 60, "max": 61},
+            "reflns.d_resolution_high",
+            {"less_or_equal": 0.6},
+            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "2GLT"]
+        ),
+        (
+            "rcsb_entry_info.deposited_model_count",
+            {"range_closed": (60, 61)},
             ["1BBO", "1GB1", "1O5P", "1XU6", "2LUM", "2NO8"]
-        ),
-        (
-            rcsb.ChainLengthQuery,
-            {"min": 1000, "max": 1000},
-            ["3DEC", "3W5B", "4NAB", "5UM6", "5ZMV", "5ZMW"]
-        ),
-        (
-            rcsb.MoleculeTypeQuery,
-            {"rna": False, "dna": False, "hybrid": True, "protein": False},
-            60
-        ),
-        (
-            rcsb.MethodQuery,
-            {"method": "fiber diffraction", "has_data": True},
-            ["1HGV", "1IFP", "1QL1", "2C0W", "2XKM",
-             "2ZWH", "3HQV", "3HR2", "3PDM", "4IFM"]
-        ),
-        (
-            rcsb.SoftwareQuery,
-            {"name": "Gromacs"},
-            ["3K2S"]
-        ),
-        (
-            rcsb.PubMedIDQuery,
-            {"ids": ["6726807", "10490104"]},
-            ["2HHB", "3HHB", "4HHB", "9GAA", "9GAC", "9GAF",]
-        ),
-        (
-            rcsb.UniProtIDQuery,
-            {"ids": ["P69905"]},
-            264
-        ),
-        (
-            rcsb.PfamIDQuery,
-            {"ids": ["PF07388"]},
-            ["5WC6", "5WC8", "5WCN", "5WD7"]
-        ),
-        (
-            rcsb.SequenceClusterQuery,
-            {"cluster_id": "5000"},
-            ["1WFD", "1XRI", "2Q47", "2RNO"]
-        ),
-        (
-            rcsb.TextSearchQuery,
-            {"text": "Miniprotein Construct TC5b"},
-            ["1L2Y"]
-        ),
-        (
-            rcsb.KeywordQuery,
-            {"keyword": "ION CHANNEL INHIBITOR"},
-            ["2CK4", "2CK5"]
-        ),
-        (
-            rcsb.TitleQuery,
-            {"text": "tc5b"},
-            ["1L2Y"]
-        ),
-        (
-            rcsb.DecriptionQuery,
-            {"text": "tc5b"},
-            ["1L2Y"]
-        ),
-        (
-            rcsb.MacromoleculeNameQuery,
-            {"name": "tc5b"},
-            ["1L2Y"]
-        ),
-        (
-            rcsb.ExpressionOrganismQuery,
-            {"name": "Bacillus subtilis"},
-            222
-        ),
-        (
-            rcsb.AuthorQuery,
-            {"name": "Neidigh, J.W."},
-            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
-        ),
-        (
-            rcsb.AuthorQuery,
-            {"name": "Neidigh, J.W.", "exact": True},
-            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
-        ),
-        (
-            rcsb.AuthorQuery,
-            {"name": "Neidigh, J.W.", "exact": True},
-            ["1JRJ", "1L2Y", "2JOF", "2O3P", "2O63", "2O64", "2O65"]
-        ),
-        (
-            rcsb.DateQuery,
-            {
-                "min_date": datetime.date(2008, 8, 1 ),
-                "max_date": datetime.date(2008, 8, 30),
-                "event": "deposition"
-            },
-            550
-        ),
-        (
-            rcsb.DateQuery,
-            {
-                "min_date": datetime.date(2008, 8, 1 ),
-                "max_date": datetime.date(2008, 8, 30),
-                "event": "release"
-            },
-            566
-        ),
-        (
-            rcsb.DateQuery,
-            {
-                "min_date": "2008-08-01",
-                "max_date": "2008-09-30",
-                "event": "revision"
-            },
-            2
         ),
     ]
 )
-def test_simple_query_types(query_type, params, exp_ids):
-    query = query_type(**params)
-    print("Query:")
-    print(query)
-    ids = rcsb.search(query)
-    if isinstance(exp_ids, int):
-        assert len(ids) == pytest.approx(exp_ids, rel=0.1)
-    else:
-        assert set(ids) == set(exp_ids)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_field(field, params, ref_ids):
+    query = rcsb.FieldQuery(
+        field, **params
+    )
+    test_ids = rcsb.search(query)
+    test_count = rcsb.count(query)
+
+    assert set(test_ids) == set(ref_ids)
+    assert test_count == len(ref_ids)
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_sequence():
+    IDENTIY_CUTOFF = 0.9
+    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
+    ref_sequence = pdbx.get_sequence(pdbx_file)[0]
+    query = rcsb.SequenceQuery(
+        ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
+    )
+    test_ids = rcsb.search(query)
+
+    for id in test_ids:
+        fasta_file = fasta.FastaFile.read(rcsb.fetch(id, "fasta"))
+        test_sequence = fasta.get_sequence(fasta_file)
+        matrix = align.SubstitutionMatrix.std_protein_matrix()
+        alignment = align.align_optimal(
+            ref_sequence, test_sequence, matrix, terminal_penalty=False
+        )[0]
+        identity = align.get_sequence_identity(alignment, mode="shortest")
+        assert identity >= IDENTIY_CUTOFF
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_structure():
+    query = rcsb.StructureQuery("1L2Y", chain="A")
+    test_ids = rcsb.search(query)
+    assert "1L2Y" in test_ids
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_motif():
+    # motif is taken from official RCSB search API tutorial
+    MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
+    query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
+    test_count = rcsb.count(query)
+    assert test_count == pytest.approx(456, rel=0.1)
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_composite():
+    query1 = rcsb.FieldQuery(
+        "rcsb_entity_host_organism.scientific_name",
+        exact_match="Homo sapiens"
+    )
+    query2 = rcsb.FieldQuery(
+        "exptl.method",
+        exact_match="SOLUTION NMR"
+    )
+    ids_1 = set(rcsb.search(query1))
+    ids_2 = set(rcsb.search(query2))
+    ids_or = set(rcsb.search(query1 | query2))
+    ids_and = set(rcsb.search(query1 & query2))
+
+    assert ids_or  == ids_1 | ids_2
+    assert ids_and == ids_1 & ids_2
+
+
+@pytest.mark.parametrize(
+    "return_type, expected",
+    [
+        ("entry",              ["1L2Y"]  ),
+        ("assembly",           ["1L2Y-1"]),
+        ("polymer_entity",     ["1L2Y_1"]),
+        ("non_polymer_entity", []        ),
+        ("polymer_instance",   ["1L2Y.A"]),
+    ]
+)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_return_type(return_type, expected):
+    query = rcsb.BasicQuery("tc5b")
+    assert rcsb.search(query, return_type) == expected
+    assert rcsb.count(query, return_type) == len(expected)
+
+
+def test_search_empty():
+    query = rcsb.BasicQuery("This will not match any ID")
+    assert rcsb.search(query) == []
+    assert rcsb.count(query) == 0
+
+
+@pytest.mark.parametrize(
+    "field, params",
+    [
+        (
+            "invalid.field",
+            {"exact_match": "Some Value"}
+        ),
+        (
+            "exptl.method",
+            {"less": 5}
+        )
+    ]
+)
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_invalid(field, params):
+    invalid_query = rcsb.FieldQuery(field, **params)
+    with pytest.raises(RequestError, match="400"):
+        rcsb.search(invalid_query)
+    with pytest.raises(RequestError, match="400"):
+        rcsb.count(invalid_query)

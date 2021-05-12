@@ -72,10 +72,19 @@ class PDBFile(TextFile):
             The number of models.
         """
         model_count = 0
-        for line in (self.lines):
+        for line in self.lines:
             if line.startswith("MODEL"):
                 model_count += 1
-        return model_count
+        
+        if model_count == 0:
+            # It could be an empty file or a file with a single model,
+            # where the 'MODEL' line is missing
+            for line in self.lines:
+                if line.startswith(("ATOM", "HETATM")):
+                    return 1
+            return 0
+        else:
+            return model_count
     
 
     def get_coord(self, model=None):
@@ -149,7 +158,7 @@ class PDBFile(TextFile):
         The newly created :class:`AtomArrayStack` should now be equal to
         the :class:`AtomArrayStack` the PDB files were created from.
 
-        >>> print(new_stack == atom_array_stack)
+        >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
         True
         """
         # Line indices where a new model starts
@@ -237,13 +246,13 @@ class PDBFile(TextFile):
         altloc : {'first', 'occupancy', 'all'}
             This parameter defines how *altloc* IDs are handled:
                 - ``'first'`` - Use atoms that have the first
-                *altloc* ID appearing in a residue.
+                  *altloc* ID appearing in a residue.
                 - ``'occupancy'`` - Use atoms that have the *altloc* ID
-                with the highest occupancy for a residue.
+                  with the highest occupancy for a residue.
                 - ``'all'`` - Use all atoms.
-                Note that this leads to duplicate atoms.
-                When this option is chosen, the ``altloc_id`` annotation
-                array is added to the returned structure.
+                  Note that this leads to duplicate atoms.
+                  When this option is chosen, the ``altloc_id``
+                  annotation array is added to the returned structure.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -479,8 +488,8 @@ class PDBFile(TextFile):
         else:
             occupancy = np.ones(array.array_length())
         if "charge" in annot_categories:
-            charge = [ "+"+str(np.abs(charge)) if charge > 0 else
-                      ("-"+str(np.abs(charge)) if charge < 0 else
+            charge = [ str(np.abs(charge)) + "+" if charge > 0 else
+                      (str(np.abs(charge)) + "-" if charge < 0 else
                        "")
                       for charge in array.get_annotation("charge")]
         else:
@@ -498,6 +507,12 @@ class PDBFile(TextFile):
             warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
             raise ValueError("Coordinates contain 'NaN' values")
+        if any([len(name) > 1 for name in array.chain_id]):
+            raise ValueError("Some chain IDs exceed 1 character")
+        if any([len(name) > 3 for name in array.res_name]):
+            raise ValueError("Some residue names exceed 3 characters")
+        if any([len(name) > 4 for name in array.atom_name]):
+            raise ValueError("Some atom names exceed 4 characters")
 
         if hybrid36:
             pdb_atom_id = [encode_hybrid36(i, 5).rjust(5) for i in atom_id]
@@ -538,7 +553,7 @@ class PDBFile(TextFile):
                                   "{:>8.3f}".format(array.coord[i,1]) +
                                   "{:>8.3f}".format(array.coord[i,2]) +
                                   "{:>6.2f}".format(occupancy[i]) +
-                                  "{:>6.3f}".format(b_factor[i]) +
+                                  "{:>6.2f}".format(b_factor[i]) +
                                   (" " * 10) + 
                                   "{:2}".format(array.element[i]) +
                                   "{:2}".format(charge[i])
