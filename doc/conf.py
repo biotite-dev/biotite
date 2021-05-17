@@ -134,7 +134,7 @@ sphinx_gallery_conf = {
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
     "backreferences_dir"        : None,
-    "download_section_examples" : False,
+    "download_all_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
