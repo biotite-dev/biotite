@@ -87,6 +87,10 @@ todo_include_todos = False
 # properly due to Biotite's import system
 numpydoc_show_class_members = False
 
+# Prevent autosummary from using sphinx-autogen, since it would
+# overwrite the document structure given by apidoc.json
+autosummary_generate = False
+
 autodoc_member_order = "bysource"
 
 
