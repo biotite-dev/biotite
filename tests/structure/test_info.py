@@ -44,11 +44,6 @@ def test_bonds(path):
     Test whether the bond data is consistent with the content of MMTF
     files.
     """
-    # Currently the file 1igy.mmtf uses outdated atom names, so this
-    # test would fail (see https://github.com/rcsb/mmtf/issues/47)
-    if "1igy.mmtf" in path:
-        pytest.skip("Temporarily disabled due to outdated atom names")
-
     bond_data = strucinfo.bond_dataset()
     mmtf_file = mmtf.MMTFFile.read(path)
     for group in mmtf_file["groupList"]:
