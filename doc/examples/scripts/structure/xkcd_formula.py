@@ -8,7 +8,7 @@ The layout of the diagram is computed via *NetworkX*' *Kamada–Kawai*
 implementation.
 The *Matplotlib* *xkcd* style distracts from the fact that used graph
 layout algorithm is poorly suitable for structural formulas, so the
-application of this example is probaby in rather non-serious contexts.
+application of this example is probably in rather non-serious contexts.
 """
 
 
