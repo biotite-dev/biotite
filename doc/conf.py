@@ -87,6 +87,10 @@ todo_include_todos = False
 # properly due to Biotite's import system
 numpydoc_show_class_members = False
 
+# Prevent autosummary from using sphinx-autogen, since it would
+# overwrite the document structure given by apidoc.json
+autosummary_generate = False
+
 autodoc_member_order = "bysource"
 
 
@@ -130,7 +134,7 @@ sphinx_gallery_conf = {
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
     "backreferences_dir"        : None,
-    "download_section_examples" : False,
+    "download_all_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
