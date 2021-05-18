@@ -15,19 +15,18 @@ UNIPROT_URL = "https://www.uniprot.org/"
 
 pytest.mark.skipif(
     cannot_connect_to(UNIPROT_URL),
-    reason="UniProtKB is not available"
+    reason="UniProt is not available"
 )
 
 
 @pytest.mark.parametrize(
-    "common_name, as_file_like",
-    itertools.product([False, True], [False, True])
+    "as_file_like",
+    itertools.product([False, True])
 )
-def test_fetch(common_name, as_file_like):
+def test_fetch(as_file_like):
     path = None if as_file_like else tempfile.gettempdir()
-    db_name = "UniProtKB" if common_name else "uniprot"
     file = uniprot.fetch(
-        "P12345", db_name, "fasta", path, overwrite=True
+        "P12345", "fasta", path, overwrite=True
     )
     fasta_file = fasta.FastaFile.read(file)
     prot_seq = fasta.get_sequence(fasta_file)

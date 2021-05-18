@@ -4,7 +4,7 @@
 
 __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
-__all__ = ["get_database_name", "fetch", "_assert_valid_file", "_sanitize_db_name"]
+__all__ = ["_get_database_name", "fetch", "_assert_valid_file"]
 
 from os.path import isdir, isfile, join, getsize
 import os
@@ -14,40 +14,35 @@ from ..error import RequestError
 
 fetch_url = "https://www.uniprot.org/"
 
-_databases = {"UniProtKB": "uniprot",
-              "UniRef": "uniref",
-              "UniParc": "uniparc"}
 
-
-def get_database_name(database):
+def _get_database_name(uid):
     """
-    Map a common UniProt database name to an E-utility database
-    name.
+    Get the correct UniProt database from the ID of the file to be downloaded.
 
     Parameters
     ----------
-    database : str
-    Uniprot database name.
+    uid: str
+        ID of the file to be downloaded.
 
     Returns
     -------
     name : str
-    E-utility database name.
-
-    Examples
-    --------
-
-    >>> print(get_database_name("UniProtKB"))
-    uniprot
+        E-utility UniProt database name.
     """
-    return _databases[database]
+    if uid[:3] == "UPI":
+        return "uniparc"
+    elif uid[:9] == "UniRef90_":
+        return "uniref"
+    return "uniprot"
 
 
-def fetch(uids, db_name, format, target_path=None,
+def fetch(uids, format, target_path=None,
           overwrite=False, verbose=False):
     """
-    Download structure files (or sequence files) from the RCSB PDB in
+    Download structure files (or sequence files) from the UniProt in
     various formats.
+
+    Available databases are UniProtKB, UniRef and UniParc
 
     This function requires an internet connection.
 
@@ -56,9 +51,7 @@ def fetch(uids, db_name, format, target_path=None,
     uids : str or iterable object of str
         A single ID or a list of IDs of the file(s)
         to be downloaded.
-    db_name : str:
-        E-utility or common database name.
-    format : {'fasta'}
+    format : {'fasta', 'gff', 'txt', 'xml', 'rdf', 'tab'}
         The format of the files to be downloaded.
     target_path : str, optional
         The target directory of the downloaded files.
@@ -114,6 +107,7 @@ def fetch(uids, db_name, format, target_path=None,
         os.makedirs(target_path)
     files = []
     for i, id in enumerate(uids):
+        db_name = _get_database_name(id)
         # Verbose output
         if verbose:
             print(f"Fetching file {i + 1:d} / {len(uids):d} ({id})...",
@@ -129,9 +123,29 @@ def fetch(uids, db_name, format, target_path=None,
                 or getsize(file) == 0 \
                 or overwrite:
             if format == "fasta":
-                r = requests.get(fetch_url + _sanitize_db_name(db_name) + "/" + id + ".fasta")
+                r = requests.get(fetch_url + db_name + "/" + id + ".fasta")
                 content = r.text
-                _assert_valid_file(content, id)
+                _assert_valid_file(r.status_code, id, format)
+            elif format == "gff":
+                r = requests.get(fetch_url + db_name + "/" + id + ".gff")
+                content = r.text
+                _assert_valid_file(r.status_code, id, format)
+            elif format == "txt":
+                r = requests.get(fetch_url + db_name + "/" + id + ".txt")
+                content = r.text
+                _assert_valid_file(r.status_code, id, format)
+            elif format == "xml":
+                r = requests.get(fetch_url + db_name + "/" + id + ".xml")
+                content = r.text
+                _assert_valid_file(r.status_code, id, format)
+            elif format == "rdf":
+                r = requests.get(fetch_url + db_name + "/" + id + ".rdf")
+                content = r.text
+                _assert_valid_file(r.status_code, id, format)
+            elif format == "tab":
+                r = requests.get(fetch_url + db_name + "/" + id + ".tab")
+                content = r.text
+                _assert_valid_file(r.status_code, id, format)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
             if file is None:
@@ -149,29 +163,28 @@ def fetch(uids, db_name, format, target_path=None,
         return files
 
 
-def _assert_valid_file(response_text, uid):
+def _assert_valid_file(response_status_code, uid, format):
     """
     Checks whether the response is an actual file
     or not.
+
+    Parameters
+    ----------
+    response_status_code: int
+        Status code of request.get.
+    uid:
+        ID of the file to be downloaded.
+    format:
+        Format of the file to be downloaded.
     """
-    # Structure file and FASTA file retrieval
-    # have different error messages
-    if any(err_msg in response_text for err_msg in [
-        "Bad request. There is a problem with your input.",
-        "Not found. The resource you requested doesn't exist.",
-        "Gone. The resource you requested was removed.",
-        "Internal server error. Most likely a temporary problem, but if the problem persists please contact us.",
-        "Service not available. The server is being updated, try again later."
-    ]):
-        raise RequestError("ID {:} is invalid".format(uid))
-
-
-def _sanitize_db_name(db_name):
-    if db_name in _databases.keys():
-        # Convert into E-utility database name
-        return _databases[db_name]
-    elif db_name in _databases.values():
-        # Is already E-utility database name
-        return db_name
-    else:
-        raise ValueError("Database '{db_name}' is not existing")
+    if response_status_code == 400:
+        raise RequestError("Bad request. There is a problem with your input {:}.".format(uid + "." + format))
+    elif response_status_code == 404:
+        raise RequestError("Not found. The resource {:} you requested doesn't exist.".format(uid + "." + format))
+    elif response_status_code == 410:
+        raise RequestError("Gone. The resource {:} you requested was removed.".format(uid + "." + format))
+    elif response_status_code == 500:
+        raise RequestError(
+            "Internal server error. Most likely a temporary problem, but if the problem persists please contact us.")
+    elif response_status_code == 503:
+        raise RequestError("Service not available. The server is being updated, try again later.")
