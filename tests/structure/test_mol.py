@@ -2,15 +2,14 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 import datetime
 from tempfile import TemporaryFile
 import glob
 from os.path import join, split, splitext
 import pytest
-import biotite
-import biotite.structure as struc
+import numpy as np
 import biotite.structure.info as info
-import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.mol as mol
 from ..util import data_dir
 
@@ -41,9 +40,13 @@ def test_header_conversion():
 
 
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+    "path, omit_charge",
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+        [False, True]
+    )
 )
-def test_structure_conversion(path):
+def test_structure_conversion(path, omit_charge):
     """
     After reading a MOL file, writing the structure back to a new file
     and reading it again should give the same structure.
@@ -53,6 +56,9 @@ def test_structure_conversion(path):
     """
     mol_file = mol.MOLFile.read(path)
     ref_atoms = mol.get_structure(mol_file)
+    print(ref_atoms.charge)
+    if omit_charge:
+        ref_atoms.del_annotation("charge")
 
     mol_file = mol.MOLFile()
     mol.set_structure(mol_file, ref_atoms)
@@ -62,6 +68,9 @@ def test_structure_conversion(path):
     temp.seek(0)
     mol_file = mol.MOLFile.read(temp)
     test_atoms = mol.get_structure(mol_file)
+    if omit_charge:
+        assert np.all(test_atoms.charge == 0)
+        test_atoms.del_annotation("charge") 
     temp.close()
 
     assert test_atoms == ref_atoms

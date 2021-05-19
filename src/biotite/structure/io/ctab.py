@@ -140,12 +140,17 @@ def write_structure_to_ctab(atoms):
     if atoms.bonds is None:
         raise BadStructureError("Input AtomArray has no associated BondList")
     
+    try:
+        charge = atoms.charge
+    except AttributeError:
+        charge = np.zeros(atoms.array_length(), dtype=int)
+    
     atom_lines = [
         f"{atoms.coord[i,0]:>10.5f}"
         f"{atoms.coord[i,1]:>10.5f}"
         f"{atoms.coord[i,2]:>10.5f}"
         f" {atoms.element[i]:>3}"
-        f"  {CHARGE_MAPPING_REV.get(atoms.charge[i], 0):>3d}" +
+        f"  {CHARGE_MAPPING_REV.get(charge[i], 0):>3d}" +
         f"{0:>3d}" * 10
         for i in range(atoms.array_length())
     ]
