@@ -591,7 +591,7 @@ print("Bonds of CA:", array.atom_name[ca_bonds])
 # Each bond is sorted so that the index with the lower index is the
 # first element.
 #
-# Although a :class:`BondList` uses an :class:`ndarray` under the hood,
+# Although a :class:`BondList` uses a :class:`ndarray` under the hood,
 # indexing works a little bit different:
 # The indexing operation is not applied to the internal
 # :class:`ndarray`, instead it behaves like the same indexing operation
