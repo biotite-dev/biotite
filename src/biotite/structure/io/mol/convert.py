@@ -9,7 +9,41 @@ __all__ = ["get_structure", "set_structure"]
 
 
 def get_structure(mol_file):
+    """
+    Get an :class:`AtomArray` from the MOL file.
+
+    Ths function is a thin wrapper around
+    :meth:`MOLFile.get_structure()`.
+
+    Parameters
+    ----------
+    mol_file : MOLFile
+        The MOL file.
+    
+    Returns
+    -------
+    array : AtomArray
+        This :class:`AtomArray` contains the optional ``charge``
+        annotation and has an associated :class:`BondList`.
+        All other annotation categories, except ``element`` are
+        empty.
+    """
     return mol_file.get_structure()
     
+
 def set_structure(mol_file, atoms):
+    """
+    Set the :class:`AtomArray` for the MOL file.
+
+    Ths function is a thin wrapper around
+    :meth:`MOLFile.set_structure()`.
+    
+    Parameters
+    ----------
+    mol_file : MOLFile
+        The MOL file.
+    array : AtomArray
+        The array to be saved into this file.
+        Must have an associated :class:`BondList`.
+    """
     mol_file.set_structure(atoms)
