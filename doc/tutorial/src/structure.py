@@ -612,7 +612,7 @@ print("Bonds (atoms names):")
 print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 
 ########################################################################
-# As you see, the the bonds involving the *C* (only a single one) is
+# As you see, the the bonds involving the *C* (only a single one) are
 # removed and the remaining indices are shifted.
 # 
 # Connecting atoms and bonds
@@ -670,7 +670,7 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # :func:`connect_via_residue_names()` is able to connect atoms in
 # all residues that appear in the
 # `Chemical Component Dictionary <https://www.wwpdb.org/data/ccd>`_,
-# comprising every molecule that appears in a PDB entry.
+# comprising every molecule that appears in any PDB entry.
 # In contrast, :func:`connect_via_distances()` uses only distances
 # between atoms to infer the bonds.
 # However, this function creates only ``BondType.ANY`` bonds and might
