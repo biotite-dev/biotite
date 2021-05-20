@@ -153,7 +153,7 @@ class BondList(Copyable):
     
     :class:`BondList` objects can be associated to an :class:`AtomArray`
     or :class:`AtomArrayStack`.
-    The following snipped shows this for a benzene molecule:
+    The following snippet shows this for a benzene molecule:
 
     >>> benzene = AtomArray(12)
     >>> # Omit filling most required annotation categories for brevity

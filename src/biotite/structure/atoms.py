@@ -1443,7 +1443,7 @@ def coord(item):
     item : Atom or AtomArray or AtomArrayStack or ndarray
         Returns the :attr:`coord` attribute, if `item` is an
         :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
-        Directly returns the input, if `item` is an :class:`ndarray`.
+        Directly returns the input, if `item` is a :class:`ndarray`.
     
     Returns
     -------
