@@ -10,3 +10,4 @@ __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
 
 from .download import *
+from .query import *

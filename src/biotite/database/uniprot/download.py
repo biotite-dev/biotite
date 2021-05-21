@@ -4,7 +4,7 @@
 
 __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
-__all__ = ["_get_database_name", "fetch", "_assert_valid_file"]
+__all__ = ["fetch"]
 
 from os.path import isdir, isfile, join, getsize
 import os
@@ -12,16 +12,16 @@ import io
 import requests
 from ..error import RequestError
 
-fetch_url = "https://www.uniprot.org/"
+_fetch_url = "https://www.uniprot.org/"
 
 
-def _get_database_name(uid):
+def _get_database_name(id):
     """
     Get the correct UniProt database from the ID of the file to be downloaded.
 
     Parameters
     ----------
-    uid: str
+    id: str
         ID of the file to be downloaded.
 
     Returns
@@ -29,26 +29,26 @@ def _get_database_name(uid):
     name : str
         E-utility UniProt database name.
     """
-    if uid[:3] == "UPI":
+    if id[:3] == "UPI":
         return "uniparc"
-    elif uid[:9] == "UniRef90_":
+    elif id[:6] == "UniRef":
         return "uniref"
     return "uniprot"
 
 
-def fetch(uids, format, target_path=None,
+def fetch(ids, format, target_path=None,
           overwrite=False, verbose=False):
     """
     Download structure files (or sequence files) from the UniProt in
     various formats.
 
-    Available databases are UniProtKB, UniRef and UniParc
+    Available databases are UniProtKB, UniRef and UniParc.
 
     This function requires an internet connection.
 
     Parameters
     ----------
-    uids : str or iterable object of str
+    ids : str or iterable object of str
         A single ID or a list of IDs of the file(s)
         to be downloaded.
     format : {'fasta', 'gff', 'txt', 'xml', 'rdf', 'tab'}
@@ -97,8 +97,8 @@ def fetch(uids, format, target_path=None,
     """
     # If only a single UID is present,
     # put it into a single element list
-    if isinstance(uids, str):
-        uids = [uids]
+    if isinstance(ids, str):
+        ids = [ids]
         single_element = True
     else:
         single_element = False
@@ -106,11 +106,11 @@ def fetch(uids, format, target_path=None,
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
-    for i, id in enumerate(uids):
+    for i, id in enumerate(ids):
         db_name = _get_database_name(id)
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(uids):d} ({id})...",
+            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...",
                   end="\r")
         # Fetch file from database
         if target_path is not None:
@@ -122,28 +122,8 @@ def fetch(uids, format, target_path=None,
                 or not isfile(file) \
                 or getsize(file) == 0 \
                 or overwrite:
-            if format == "fasta":
-                r = requests.get(fetch_url + db_name + "/" + id + ".fasta")
-                content = r.text
-                _assert_valid_file(r.status_code, id, format)
-            elif format == "gff":
-                r = requests.get(fetch_url + db_name + "/" + id + ".gff")
-                content = r.text
-                _assert_valid_file(r.status_code, id, format)
-            elif format == "txt":
-                r = requests.get(fetch_url + db_name + "/" + id + ".txt")
-                content = r.text
-                _assert_valid_file(r.status_code, id, format)
-            elif format == "xml":
-                r = requests.get(fetch_url + db_name + "/" + id + ".xml")
-                content = r.text
-                _assert_valid_file(r.status_code, id, format)
-            elif format == "rdf":
-                r = requests.get(fetch_url + db_name + "/" + id + ".rdf")
-                content = r.text
-                _assert_valid_file(r.status_code, id, format)
-            elif format == "tab":
-                r = requests.get(fetch_url + db_name + "/" + id + ".tab")
+            if format in ["fasta", "gff", "txt", "xml", "rdf", "tab"]:
+                r = requests.get(_fetch_url + db_name + "/" + id + "." + format)
                 content = r.text
                 _assert_valid_file(r.status_code, id, format)
             else:
@@ -163,7 +143,7 @@ def fetch(uids, format, target_path=None,
         return files
 
 
-def _assert_valid_file(response_status_code, uid, format):
+def _assert_valid_file(response_status_code, id, format):
     """
     Checks whether the response is an actual file
     or not.
@@ -172,19 +152,19 @@ def _assert_valid_file(response_status_code, uid, format):
     ----------
     response_status_code: int
         Status code of request.get.
-    uid:
+    id: str
         ID of the file to be downloaded.
-    format:
+    format: str
         Format of the file to be downloaded.
     """
     if response_status_code == 400:
-        raise RequestError("Bad request. There is a problem with your input {:}.".format(uid + "." + format))
+        raise RequestError("Bad request. There is a problem with your input {:}.".format(id + "." + format))
     elif response_status_code == 404:
-        raise RequestError("Not found. The resource {:} you requested doesn't exist.".format(uid + "." + format))
+        raise RequestError("Not found. The resource {:} you requested doesn't exist.".format(id + "." + format))
     elif response_status_code == 410:
-        raise RequestError("Gone. The resource {:} you requested was removed.".format(uid + "." + format))
+        raise RequestError("Gone. The resource {:} you requested was removed.".format(id + "." + format))
     elif response_status_code == 500:
         raise RequestError(
-            "Internal server error. Most likely a temporary problem, but if the problem persists please contact us.")
+            "Internal server error. Most likely a temporary problem, but if the problem persists please contact UniProt team.")
     elif response_status_code == 503:
         raise RequestError("Service not available. The server is being updated, try again later.")
