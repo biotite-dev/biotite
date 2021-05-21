@@ -2,8 +2,8 @@ from pymol import cmd
 from os.path import join, isdir
 
 
-INPUT_STRUCTURE = "glycosylase_oscillation.pdb"
-OUTPUT_DIR = "glycosylase_oscillation"
+INPUT_STRUCTURE = "normal_modes.pdb"
+OUTPUT_DIR = "normal_modes"
 
 
 # Load structure and remove water
@@ -37,4 +37,4 @@ cmd.mpng(join(OUTPUT_DIR, "img_"), mode=2, width=600, height=600)
 
 
 # Render animated GIF
-# convert -delay 3 -loop 0 -dispose 2 glycosylase_oscillation/*.png glycosylase_oscillation.gif
+# convert -delay 3 -loop 0 -dispose 2 normal_modes/*.png normal_modes.gif

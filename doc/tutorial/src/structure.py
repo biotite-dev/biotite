@@ -355,6 +355,9 @@ file.set_structure(array)
 reloaded_array = file.get_structure()
 
 ########################################################################
+# There are also some other supported file formats.
+# For a full list, have a look at :mod:`biotite.structure.io`.
+# 
 # .. currentmodule:: biotite.structure.io
 # 
 # Since programmers are usually lazy and do not want to write more code
@@ -551,7 +554,7 @@ print(backbone.atom_name)
 # containing pairs of integers, where each integer represents an index
 # in a corresponding atom array.
 # The pairs indicate which atoms share a bond.
-# Addtionally, it is required to specifiy the number of atoms in the
+# Additionally, it is required to specify the number of atoms in the
 # atom array. 
 
 from tempfile import gettempdir
@@ -578,19 +581,19 @@ print("Bonds of CA:", array.atom_name[ca_bonds])
 ########################################################################
 # When you look at the internal :class:`ndarray`
 # (as given by :func:`BondList.as_array()`), you see a third column
-# containging zeros.
+# containing zeros.
 # This column describes each bond with values from the :class:`BondType`
-# enum: *0* correponds to ``BondType.ANY``, which means that the type of
-# the bond is undefined.
+# enum: *0* corresponds to ``BondType.ANY``, which means that the type
+# of the bond is undefined.
 # This makes sense, since we did not define the bond types, when we
 # created the bond list.
 # The other thing that has changed is the index order:
 # Each bond is sorted so that the index with the lower index is the
 # first element.
 #
-# Although a :class:`BondList` uses an :class:`ndarray` under the hood,
+# Although a :class:`BondList` uses a :class:`ndarray` under the hood,
 # indexing works a little bit different:
-# The indexing operation is not applied on the internal
+# The indexing operation is not applied to the internal
 # :class:`ndarray`, instead it behaves like the same indexing operation
 # was applied to a corresponding atom array:
 # The bond list adjusts its indices so that they still point to the same
@@ -609,12 +612,17 @@ print("Bonds (atoms names):")
 print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 
 ########################################################################
-# As you see, the the bonds involving the *C* (only a single one) is
+# As you see, the the bonds involving the *C* (only a single one) are
 # removed and the remaining indices are shifted.
 # 
+# Connecting atoms and bonds
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 
 # We do not have to index the atom array and the bond list
-# separately, for convenience reasons you can associate a bond list to
-# an atom array via the `bonds` attribute.
+# separately.
+# For convenience reasons you can associate a :class:`BondList` to an
+# :class:`AtomArray` via the ``bonds`` attribute.
+# If no :class:`BondList` is associated, ``bonds`` is ``None``.
 # Every time the atom array is indexed, the index is also applied to the
 # associated bond list. 
 # The same behavior applies to concatenations, by the way.
@@ -625,8 +633,16 @@ print("Bonds (atoms names):")
 print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 
 ########################################################################
-# Let's scale things up a bit: Bond information can be loaded from and
-# saved to MMTF files.
+# Note, that some functionalities in *Biotite* even require that the
+# input structure has an associated :class:`BondList`. 
+#
+# Reading and writing bonds
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Up to now the bond information has been created manually, which is
+# infeasible for larger molecules.
+# Instead bond information can be loaded from and saved to some file
+# formats, including MMTF and MOL files.
 # We'll try that on the structure of *TC5b* and look at the bond
 # information of the third residue, a tyrosine.
 
@@ -647,8 +663,35 @@ print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 # Since we loaded the bond information from a MMTF file, the bond types
 # are also defined:
 # Here we have both, ``BondType.SINGLE`` and ``BondType.DOUBLE``
-# bonds (*1* and *2*, repectively).
+# bonds (*1* and *2*, respectively).
 #
+# Bond information can also be automatically inferred from an
+# :class:`AtomArray` or :class:`AtomArrayStack`:
+# :func:`connect_via_residue_names()` is able to connect atoms in
+# all residues that appear in the
+# `Chemical Component Dictionary <https://www.wwpdb.org/data/ccd>`_,
+# comprising every molecule that appears in any PDB entry.
+# In contrast, :func:`connect_via_distances()` uses only distances
+# between atoms to infer the bonds.
+# However, this function creates only ``BondType.ANY`` bonds and might
+# connect wrong atoms in rare cases.
+# Since both functions have the mentioned limitations it is usually
+# better to read bond information directly from file, if available.
+
+import biotite.structure.io.pdb as pdb
+
+file_path = rcsb.fetch("1l2y", "pdb", gettempdir())
+pdb_file = pdb.PDBFile.read(file_path)
+stack = pdb_file.get_structure()
+stack.bonds = struc.connect_via_residue_names(stack)
+tyrosine = stack[:, (stack.res_id == 3)]
+print("Bonds (indices):")
+print(tyrosine.bonds)
+print("Bonds (atoms names):")
+print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
+
+
+########################################################################
 # Simulation boxes and unit cells
 # -------------------------------
 #

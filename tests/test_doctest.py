@@ -53,6 +53,7 @@ RCSB_URL = "https://www.rcsb.org/"
                                                  "biotite.structure.info"]   ),
     pytest.param("biotite.structure.io.npz",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.mmtf",   ["biotite.structure"]        ),
+    pytest.param("biotite.structure.io.mol",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.info",      ["biotite.structure"]        ),
     pytest.param("biotite.database.entrez",     [],                           
                  marks=pytest.mark.skipif(

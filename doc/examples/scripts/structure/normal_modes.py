@@ -111,6 +111,6 @@ oscillating_structure = struc.from_template(protein_chain, oscillation)
 # Save as PDB for rendering a video with PyMOL
 temp = NamedTemporaryFile(suffix=".pdb")
 strucio.save_structure(temp.name, oscillating_structure)
-# biotite_static_image = glycosylase_oscillation.gif
+# biotite_static_image = normal_modes.gif
 
 temp.close()

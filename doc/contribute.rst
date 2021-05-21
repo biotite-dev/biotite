@@ -327,7 +327,7 @@ The Sphinx documentation is created using
 .. code-block:: console
 
    $ pip install -e .
-   $ sphinx-build doc doc/_build/doc
+   $ sphinx-build doc build/doc
 
 in the top-level directory.
 The building process can take a while, since the code from the tutorial
@@ -336,7 +336,7 @@ In order to omit building the tutorial and gallery, type
 
 .. code-block:: console
 
-   $ sphinx-build -D plot_gallery=0 doc doc/_build/doc
+   $ sphinx-build -D plot_gallery=0 doc build/doc
 
 instead.
 

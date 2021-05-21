@@ -17,8 +17,8 @@ def create_tutorial(src_dir, target_dir):
     logger = getLogger('sphinx-gallery')
     logger.info("generating tutorial...", color="white")
     with open(os.path.join(src_dir, "scripts"), "r") as file:
-        scripts = [line.strip() for line in file.read().split("\n")
-                          if line[0] != "#" and line.strip() != ""]
+        scripts = [line.strip() for line in file.read().splitlines()
+                   if line[0] != "#" and line.strip() != ""]
     iterator = status_iterator(
         scripts, "generating tutorial...", length=len(scripts)
     )
@@ -61,8 +61,11 @@ def _create_tutorial_section(fname, src_dir, target_dir):
 
     # Remove *.py suffix
     base_image_name = os.path.splitext(fname)[0]
-    image_path_template = os.path.join(target_dir,
-                                       base_image_name+"_{0:02}.png")
+    # Locate file in tutorial target directory
+    abs_base_image_name = os.path.join(
+        os.getcwd(), "tutorial", "target", base_image_name
+    )
+    image_path_template = abs_base_image_name + "_{0:02}.png"
 
     fake_main = module_from_spec(spec_from_loader('__main__', None))
     script_vars = {
@@ -79,7 +82,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
     gallery_conf = copy.deepcopy(DEFAULT_GALLERY_CONF)
     gallery_conf.update({
         "abort_on_example_error": True,
-        "src_dir": ".",
+        "src_dir": os.getcwd(),
         "execute_script": True,
         "inspect_global_variables": False,
         "call_memory": (lambda func: (0., func())),
@@ -105,7 +108,7 @@ def _create_tutorial_section(fname, src_dir, target_dir):
 
         else:
             content_rst += block_content + "\n\n"
-
+    
     with open(os.path.join(target_dir, f"{base_image_name}.rst"), "w") as file:
         file.write(content_rst)
     
