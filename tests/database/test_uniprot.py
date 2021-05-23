@@ -66,6 +66,16 @@ def test_fetch_invalid(format):
     cannot_connect_to(UNIPROT_URL),
     reason="UniProt is not available"
 )
-def test_search_basic():
+def test_search_simple():
     query = uniprot.SimpleQuery("accession", "P62988")
     assert uniprot.search(query) == ['P62979', 'P0CG47', 'P62987', 'P0CG48', 'P62988']
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(UNIPROT_URL),
+    reason="UniProt is not available"
+)
+def test_search_composite():
+    query = uniprot.SimpleQuery("accession", "P62988") & uniprot.SimpleQuery("reviewed", "yes")
+    assert uniprot.search(query) == ['P62979', 'P0CG47', 'P62987', 'P0CG48']
+

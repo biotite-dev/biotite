@@ -4,16 +4,14 @@
 
 __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
-__all__ = ["SimpleQuery", "CompositeQuery", "search"]
+__all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
 import requests
 import abc
+from .check import assert_valid_response
+
 
 _base_url = "https://www.uniprot.org/uniprot/"
-
-_search_url = ("?query={:}"
-               "&format=list"
-               "&limit={:}")
 
 
 class Query(metaclass=abc.ABCMeta):
@@ -30,18 +28,12 @@ class Query(metaclass=abc.ABCMeta):
         pass
 
     def __or__(self, operand):
-        if not isinstance(operand, Query):
-            operand = SimpleQuery(operand)
         return CompositeQuery("OR", self, operand)
 
     def __and__(self, operand):
-        if not isinstance(operand, Query):
-            operand = SimpleQuery(operand)
         return CompositeQuery("AND", self, operand)
 
     def __xor__(self, operand):
-        if not isinstance(operand, Query):
-            operand = SimpleQuery(operand)
         return CompositeQuery("NOT", self, operand)
 
 
@@ -72,12 +64,12 @@ class CompositeQuery(Query):
         self._q2 = query2
 
     def __str__(self):
-        return "{:}+{:}+{:}".format(str(self._q1), self._op, str(self._q2))
+        return "{:} {:} {:}".format(str(self._q1), self._op, str(self._q2))
 
 
 def _check_brackets(term):
     """
-    Check if term contains correct number of round - and square brackets.
+    Check if term contains correct number of round brackets and square brackets.
 
     Parameters
     ----------
@@ -87,7 +79,7 @@ def _check_brackets(term):
     Returns
     -------
     bool
-        True if term contains correct number of round - and square brackets, otherwise False.
+        True if term contains correct number of round brackets and square brackets, otherwise False.
     """
     square_count = 0
     round_count = 0
@@ -119,7 +111,7 @@ class SimpleQuery(Query):
     Parameters
     ----------
     field : str
-        The field to search the term in.
+       The field to search the term in.
        The list of possible fields and the required search term
        formatting can be found
        `here <https://www.uniprot.org/help/query-fields>`_.
@@ -192,10 +184,22 @@ def search(query, number=10):
     -----
     A list of available search fields with description can be found
     `here <https://www.uniprot.org/help/query-fields>`_.
+
+    Examples
+    --------
+    >>> query = SimpleQuery("accession", "P62988") & \
+    ...         SimpleQuery("reviewed", "yes")
+    >>> ids = search(query)
+    >>> print(ids)
+    ['P62979', 'P0CG47', 'P62987', 'P0CG48']
     """
 
-    r = requests.get(
-        (_base_url + _search_url).format(str(query), str(number))
-    )
+    params = {
+        'query': str(query),
+        'format': 'list',
+        'limit': str(number)
+    }
+    r = requests.get(_base_url, params=params)
     content = r.text
+    assert_valid_response(r.status_code)
     return content.split('\n')[:-1]

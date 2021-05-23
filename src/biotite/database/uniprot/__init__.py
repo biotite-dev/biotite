@@ -3,7 +3,7 @@
 # information.
 
 """
-A subpackage for downloading files from the UniProt
+A subpackage for downloading files from the UniProt.
 """
 
 __name__ = "biotite.database.uniprot"

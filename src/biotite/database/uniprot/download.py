@@ -10,7 +10,7 @@ from os.path import isdir, isfile, join, getsize
 import os
 import io
 import requests
-from ..error import RequestError
+from .check import assert_valid_response
 
 _fetch_url = "https://www.uniprot.org/"
 
@@ -39,8 +39,7 @@ def _get_database_name(id):
 def fetch(ids, format, target_path=None,
           overwrite=False, verbose=False):
     """
-    Download structure files (or sequence files) from the UniProt in
-    various formats.
+    Download files from the UniProt in various formats.
 
     Available databases are UniProtKB, UniRef and UniParc.
 
@@ -95,7 +94,7 @@ def fetch(ids, format, target_path=None,
     >>> print([os.path.basename(file) for file in files])
     ['P12345.fasta', 'Q8K9I1.fasta']
     """
-    # If only a single UID is present,
+    # If only a single ID is present,
     # put it into a single element list
     if isinstance(ids, str):
         ids = [ids]
@@ -125,7 +124,7 @@ def fetch(ids, format, target_path=None,
             if format in ["fasta", "gff", "txt", "xml", "rdf", "tab"]:
                 r = requests.get(_fetch_url + db_name + "/" + id + "." + format)
                 content = r.text
-                _assert_valid_file(r.status_code, id, format)
+                assert_valid_response(r.status_code)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
             if file is None:
@@ -141,30 +140,3 @@ def fetch(ids, format, target_path=None,
         return files[0]
     else:
         return files
-
-
-def _assert_valid_file(response_status_code, id, format):
-    """
-    Checks whether the response is an actual file
-    or not.
-
-    Parameters
-    ----------
-    response_status_code: int
-        Status code of request.get.
-    id: str
-        ID of the file to be downloaded.
-    format: str
-        Format of the file to be downloaded.
-    """
-    if response_status_code == 400:
-        raise RequestError("Bad request. There is a problem with your input {:}.".format(id + "." + format))
-    elif response_status_code == 404:
-        raise RequestError("Not found. The resource {:} you requested doesn't exist.".format(id + "." + format))
-    elif response_status_code == 410:
-        raise RequestError("Gone. The resource {:} you requested was removed.".format(id + "." + format))
-    elif response_status_code == 500:
-        raise RequestError(
-            "Internal server error. Most likely a temporary problem, but if the problem persists please contact UniProt team.")
-    elif response_status_code == 503:
-        raise RequestError("Service not available. The server is being updated, try again later.")
