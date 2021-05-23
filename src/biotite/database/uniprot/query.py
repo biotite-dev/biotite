@@ -188,7 +188,7 @@ def search(query, number=10):
     Examples
     --------
     >>> query = SimpleQuery("accession", "P62988") & \
-    ...         SimpleQuery("reviewed", "yes")
+                SimpleQuery("reviewed", "yes")
     >>> ids = search(query)
     >>> print(ids)
     ['P62979', 'P0CG47', 'P62987', 'P0CG48']
