@@ -217,8 +217,9 @@ def _find_regions(base_pairs, scores):
 
     Returns
     -------
-    regions : set {_region, ...}
-        The regions representing the consecutively nested base pairs.
+    regions : Graph
+        The ``_Region`` objects as graph, where the edges represent
+        conflicts.
     """
     # Make sure the lower residue is on the left for each row
     sorted_base_pairs = np.sort(base_pairs, axis=1)
@@ -273,6 +274,22 @@ def _find_regions(base_pairs, scores):
 
 
 def _generate_graphical_representation(regions):
+    """
+    Find the conflicting regions and represent them graphically using
+    the ``Graph`` class from ``Networkx``.
+
+    Parameters
+    ----------
+    regions : set {_region, ...}
+        The regions representing the consecutively nested base pairs.
+
+    Returns
+    -------
+    regions : Graph
+        The ``_Region`` objects as graph, where the edges represent
+        conflicts.
+    """
+
     # Create a graph
     region_graph = nx.Graph()
 
