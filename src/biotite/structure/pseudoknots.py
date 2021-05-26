@@ -11,6 +11,7 @@ __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
 import numpy as np
+import networkx as nx
 from itertools import chain, product
 
 def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
@@ -437,7 +438,7 @@ def _conflict_cliques(regions):
         queue = set([start_index])
         # The current clíque
         clique = set()
-        
+
         # Execute until all regions belonging to the current region have
         # been assigned.
         while queue != set():
@@ -479,21 +480,21 @@ def _conflicting_regions(region_array, start_index):
     Returns
     -------
     conflicting_regions : ndarray, dtype=int
-        Start indices of the conflicting regions 
+        Start indices of the conflicting regions
     """
     # Get the current regions start and stop indices in the region array
     stop_index = _get_first_occurrence_for(
         region_array[start_index+1:], region_array[start_index]
     )
     stop_index = start_index + 1 + stop_index
-    # Count the occurrence of each individual region between the start 
+    # Count the occurrence of each individual region between the start
     # and stop indices of the regions
     _, index, counts = np.unique(
-        region_array[start_index+1:stop_index], 
+        region_array[start_index+1:stop_index],
         return_counts=True, return_index=True
     )
-    
-    # Conflicting regions only have either their starting or stoping 
+
+    # Conflicting regions only have either their starting or stoping
     # point within the starting and stoping points of the given region.
     return index[counts==1] + start_index + 1
 
