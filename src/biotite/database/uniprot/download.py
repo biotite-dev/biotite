@@ -69,19 +69,11 @@ def fetch(ids, format, target_path=None,
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
-        If a single string (a single ID) was given in `pdb_ids`,
+        If a single string (a single ID) was given in `ids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
         If no `target_path` was given, the file contents are stored in
         either `StringIO` or `BytesIO` objects.
-
-    Warnings
-    --------
-    Even if you give valid input to this function, in rare cases the
-    database might return no or malformed data to you.
-    In these cases the request should be retried.
-    When the issue occurs repeatedly, the error is probably in your
-    input.
 
     Examples
     --------

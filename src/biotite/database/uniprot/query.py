@@ -172,14 +172,6 @@ def search(query, number=10):
         A list of strings containing all UniProt IDs
         that meet the query requirements.
 
-    Warnings
-    --------
-    Even if you give valid input to this function, in rare cases the
-    database might return no or malformed data to you.
-    In these cases the request should be retried.
-    When the issue occurs repeatedly, the error is probably in your
-    input.
-
     Notes
     -----
     A list of available search fields with description can be found
