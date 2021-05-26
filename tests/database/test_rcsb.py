@@ -161,7 +161,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query)
-    assert test_count == pytest.approx(456, rel=0.1)
+    assert test_count == pytest.approx(503, rel=0.1)
 
 
 @pytest.mark.skipif(
