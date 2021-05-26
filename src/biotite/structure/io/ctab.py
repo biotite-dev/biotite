@@ -27,6 +27,14 @@ BOND_TYPE_MAPPING = {
     7 : BondType.DOUBLE,
     8 : BondType.ANY,
 }
+BOND_TYPE_MAPPING_REV = {
+    BondType.SINGLE          : 1,
+    BondType.DOUBLE          : 2,
+    BondType.TRIPLE          : 3,
+    BondType.AROMATIC_SINGLE : 1,
+    BondType.AROMATIC_DOUBLE : 2,
+    BondType.ANY             : 8,
+}
 
 CHARGE_MAPPING = {
     0:  0,
@@ -37,8 +45,6 @@ CHARGE_MAPPING = {
     6: -2,
     7: -3
 }
-
-BOND_TYPE_MAPPING_REV = {val: key for key, val in BOND_TYPE_MAPPING.items()}
 CHARGE_MAPPING_REV    = {val: key for key, val in    CHARGE_MAPPING.items()}
 
 
@@ -90,14 +96,13 @@ def read_structure_from_ctab(ctab_lines):
     
     bond_array = np.zeros((n_bonds, 3), dtype=np.uint32)
     for i, line in enumerate(bond_lines):
-        bond_type = BOND_TYPE_MAPPING.get(
-            int(line[6 : 9]), BondType.ANY
-        )
-        if bond_type == BondType.ANY:
+        bond_type = BOND_TYPE_MAPPING.get(int(line[6 : 9]))
+        if bond_type is None:
             warnings.warn(
                 f"Cannot handle MDL bond type {int(line[6 : 9])}, "
                 f"BondType.ANY is used instead"
             )
+            bond_type = BondType.ANY
         bond_array[i, 0] = int(line[0 : 3]) - 1
         bond_array[i, 1] = int(line[3 : 6]) - 1
         bond_array[i, 2] = bond_type
@@ -156,7 +161,7 @@ def write_structure_to_ctab(atoms):
     ]
 
     bond_lines = [
-        f"{i+1:>3d}{j+1:>3d}{BOND_TYPE_MAPPING_REV.get(bond_type, 0):>3d}" +
+        f"{i+1:>3d}{j+1:>3d}{BOND_TYPE_MAPPING_REV.get(bond_type, 8):>3d}" +
         f"{0:>3d}" * 4
         for i, j, bond_type in atoms.bonds.as_array()
     ]
