@@ -87,9 +87,10 @@
             "SubstitutionMatrix"
         ],
         "Aligners" : [
+            "align_ungapped",
             "align_optimal",
-            "align_multiple",
-            "align_ungapped"
+            "align_banded",
+            "align_multiple"
         ],
         "Alignments" : [
             "Alignment",
@@ -98,6 +99,12 @@
             "get_sequence_identity",
             "get_pairwise_sequence_identity",
             "score"
+        ],
+        "K-mers" : [
+            "KmerAlphabet",
+            "KmerTable",
+            "SimilarityRule",
+            "ScoreThresholdRule"
         ]
     },
 

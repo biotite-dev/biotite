@@ -51,6 +51,9 @@ matrix:
       - BIN=true
       - SRC=false
 
+before_install:
+  - if [ $TRAVIS_OS_NAME == "linux" ]; then sudo apt-get -y install rename; fi
+
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh;  fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ];   then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
@@ -77,10 +80,6 @@ script:
 before_deploy:
   - if [ $SRC == true ]; then python setup.py sdist; fi
   - if [ $BIN == true ] && [ $TRAVIS_OS_NAME == "linux" ]; then rename 's/linux/manylinux1/g' dist/*.whl; fi
-  - if [ $COMPLETE == true ]; then sphinx-build ./doc ./doc/_build/doc; fi
-  - if [ $COMPLETE == true ]; then cd doc/_build; fi
-  - if [ $COMPLETE == true ]; then zip -r doc.zip doc; fi
-  - if [ $COMPLETE == true ]; then cd ../..; fi
 
 deploy:
   provider: releases
@@ -88,7 +87,6 @@ deploy:
     secure: "ul7wlOwxIEW/SoW3gWQXjdmUL0RQ8zc7QJh1uxOt+iM+BQZFENF2IioJ61THPrS8UU8rVupDa+I4JnLLWO6/7WUopqLek+jt0I7BvL1qlRR8fAbFJpvPu7gul4v51OFSIYflIjM90LB87rnHLh4LEXFSNh7adOYV4jotHf2g5OW7ME5IowDBQpo9Q+/yB73BK4PqrPxJMj1ABXc+swZkF/nDOLjgg6a9h+X57JKzZtmkovwgRrytI4snUowMP/eI1RDhovpT3jaG6jcYS90hXxgBOnjGZj97x7yGo48f/bavvzeMJNX3O083aDn3hi3nsmOnXIWAYW/Yv3k/SHLciOAQAqXhK9FHxwF8BjPMeTr0dJlhaMbzh4z91oMbVqoSUSqs3o0szOm1jrly6C+aLFYJeyo8cppig/PPqM5gM9FfDNsxKxtIQGVdWRTdJMnfDiCbc6voNP4qQ4buPBgjIf5XAMhaliyHrTYPhCL4oOILb2BgvqOgOBDCTZbh3QqltTUi4PMpJ8xqNka0uwChqhzoHWyLOTlage1P22rNebq9NwKFQ70bt+kJ0PoGP/9CacGqAKxh6c6yuLY0qspjbYwbRP8ie/Lk20FTecLrRzkboUN2CJgVre0FzWNIRtjpMDttpEYPcPH82y3Phb7PV9Kma8iRX1Rv2/eswYI3wjA="
   file:
     - dist/*
-    - doc/_build/doc.zip
   file_glob: true
   on:
     repo: biotite-dev/biotite

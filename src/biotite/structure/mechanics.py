@@ -39,8 +39,8 @@ def gyration_radius(array, masses=None):
     masses : float or ndarray, dtype=float
         If `array` is an :class:`AtomArray`, the radius of gyration is
         returned as single float.
-        If `array` is an :class:`AtomArrayStack`, an :class:`ndarray` containing the
-        radii of gyration for every model is returned.
+        If `array` is an :class:`AtomArrayStack`, a :class:`ndarray`
+        containing the radii of gyration for every model is returned.
     """
     if masses is None:
         masses = np.array([mass(element) for element in array.element])

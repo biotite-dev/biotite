@@ -1,0 +1,374 @@
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+__author__ = "Patrick Kunzmann"
+__all__ = ["KmerAlphabet"]
+
+cimport cython
+cimport numpy as np
+
+import numpy as np
+from ..alphabet import Alphabet, LetterAlphabet, AlphabetError
+
+
+ctypedef np.uint8_t uint8
+ctypedef np.uint16_t uint16
+ctypedef np.uint32_t uint32
+ctypedef np.uint64_t uint64
+ctypedef np.int64_t int64
+
+
+ctypedef fused CodeType:
+    uint8
+    uint16
+    uint32
+    uint64
+
+
+class KmerAlphabet(Alphabet):
+    """
+    __init__(base_alphabet, k)
+
+    This type of alphabet uses *k-mers* as symbols, i.e. all
+    combinations of *k* symbols from its *base alphabet*.
+    
+    It's primary use is its :meth:`create_kmers()` method, that iterates
+    over all overlapping *k-mers* in a :class:`Sequence` and encodes
+    each one into its corresponding *k-mer* symbol code.
+    This functionality is prominently used by a :class:`KmerTable` to
+    find *k-mer* matches between two sequences.
+
+    A :class:`KmerAlphabet` has :math:`n^k` different symbols, where
+    :math:`n` is the number of symbols in the base alphabet.
+
+    Parameters
+    ----------
+    base_alphabet : Alphabet
+        The base alphabet.
+        The created :class:`KmerAlphabet` contains all combinations of
+        *k* symbols from this alphabet.
+    k : int
+        An integer greater than 1 that defines the length of the
+        *k-mers*.
+    
+    Attributes
+    ----------
+    base_alphabet : Alphabet
+        The base alphabet, from which the :class:`KmerAlphabet` was
+        created.
+    k : int
+        The length of the *k-mers*.
+
+    Examples
+    --------
+    Create an alphabet of nucleobase *2-mers*:
+
+    >>> base_alphabet = NucleotideSequence.unambiguous_alphabet()
+    >>> print(base_alphabet.get_symbols())
+    ['A', 'C', 'G', 'T']
+    >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
+    >>> print(kmer_alphabet.get_symbols())
+    ['AA', 'CA', 'GA', 'TA', 'AC', 'CC', 'GC', 'TC', 'AG', 'CG', 'GG', 'TG', 'AT', 'CT', 'GT', 'TT']
+    
+    Encode and decode *k-mers*:
+
+    >>> print(kmer_alphabet.encode("TC"))
+    7
+    >>> print(kmer_alphabet.decode(7))
+    ['T' 'C']
+
+    Fuse symbol codes from the base alphabet into a *k-mer* code
+    and split the *k-mer* code back into the original symbol codes:
+
+    >>> symbol_codes = base_alphabet.encode_multiple("TC")
+    >>> print(symbol_codes)
+    [3 1]
+    >>> print(kmer_alphabet.fuse(symbol_codes))
+    7
+    >>> print(kmer_alphabet.split(7))
+    [3 1]
+
+    Encode all overalapping k-mers of a sequence:
+    
+    >>> sequence = NucleotideSequence("ATTGCT")
+    >>> kmer_codes = kmer_alphabet.create_kmers(sequence.code)
+    >>> print(kmer_codes)
+    [12 15 11 6 13]
+    >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
+    ['AT', 'TT', 'TG', 'GC', 'CT']
+    """
+    
+    def __init__(self, base_alphabet, k):
+        if not isinstance(base_alphabet, Alphabet):
+            raise TypeError(
+                f"Got {type(base_alphabet).__name__}, "
+                f"but Alphabet was expected"
+            )
+        if k < 2:
+            raise ValueError("k must be at least 2")
+        self._base_alph = base_alphabet
+        self._k = k
+        base_alph_len = len(self._base_alph)
+        self._radix_multiplier = np.array(
+            [base_alph_len**n for n in range(self._k)],
+            dtype=np.int64
+        )
+    
+    @property
+    def base_alphabet(self):
+        return self._base_alph
+
+    @property
+    def k(self):
+        return self._k
+    
+
+    def get_symbols(self):
+        """
+        get_symbols()
+
+        Get the symbols in the alphabet.
+
+        Returns
+        -------
+        symbols : list
+            A list of all *k-mer* symbols, i.e. all possible
+            combinations of *k* symbols from its *base alphabet*.
+        
+        Notes
+        -----
+        In contrast the base :class:`Alphabet` and
+        :class:`LetterAlphabet` class, :class:`KmerAlphabet` does not
+        hold a list of its symbols internally for performance reasons.
+        Hence calling :meth:`get_symbols()` may be quite time consuming
+        for large base alphabets or large *k* values, as the list needs
+        to be created first.
+        """
+        if isinstance(self._base_alph, LetterAlphabet):
+            return ["".join(self.decode(code)) for code in range(len(self))]
+        else:
+            return [list(self.decode(code)) for code in range(len(self))]
+    
+
+    def extends(self, alphabet):
+        # A KmerAlphabet cannot really extend another KmerAlphabet:
+        # If k is not equal, all symbols are not equal
+        # If the base alphabet has additional symbols, the correct
+        # order is not preserved
+        # A KmerAlphabet can only 'extend' another KmerAlphabet,
+        # if the two alphabets are equal
+        return alphabet == self
+    
+
+    def encode(self, symbol):
+        return self.fuse(self._base_alph.encode_multiple(symbol))
+    
+
+    def decode(self, code):
+        return self._base_alph.decode_multiple(self.split(code))
+    
+
+    def fuse(self, codes):
+        """
+        fuse(codes)
+
+        Get the *k-mer* code for *k* symbol codes from the base
+        alphabet.
+
+        This method can be used in a vectorized manner to obtain
+        *n* *k-mer* codes from an *(n,k)* integer array.
+
+        Parameters
+        ----------
+        codes : ndarray, dtype=int, shape=(k,) or shape=(n,k)
+            The symbol codes from the base alphabet to be fused.
+        
+        Returns
+        -------
+        kmer_codes : int or ndarray, dtype=np.int64, shape=(n,)
+            The fused *k-mer* code(s).
+
+        See also
+        --------
+        split
+            The reverse operation.
+
+        Examples
+        --------
+
+        >>> base_alphabet = NucleotideSequence.unambiguous_alphabet()
+        >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
+        >>> symbol_codes = base_alphabet.encode_multiple("TC")
+        >>> print(symbol_codes)
+        [3 1]
+        >>> print(kmer_alphabet.fuse(symbol_codes))
+        7
+        >>> print(kmer_alphabet.split(7))
+        [3 1]
+        """
+        if codes.shape[-1] != self._k:
+            raise AlphabetError(
+                f"Given k-mer(s) has {codes.shape[-1]} symbols, "
+                f"but alphabet expects {self._k}-mers"
+            )
+        if np.any(codes > len(self._base_alph)):
+            raise AlphabetError("Given k-mer(s) contains invalid symbol code")
+        
+        orig_shape = codes.shape
+        codes = np.atleast_2d(codes)
+        kmer_code = np.sum(self._radix_multiplier * codes, axis=-1)
+        # The last dimension is removed since it collpased in np.sum
+        return kmer_code.reshape(orig_shape[:-1])
+    
+    def split(self, kmer_code):
+        """
+        split(kmer_code)
+
+        Convert a *k-mer* code back into *k* symbol codes from the base
+        alphabet.
+
+        This method can be used in a vectorized manner to split
+        *n* *k-mer* codes into an *(n,k)* integer array.
+
+        Parameters
+        ----------
+        kmer_code : int or ndarray, dtype=int, shape=(n,)
+            The *k-mer* code(s).
+        
+        Returns
+        -------
+        codes : ndarray, dtype=np.int64, shape=(k,) or shape=(n,k)
+            The split symbol codes from the base alphabet.
+
+        See also
+        --------
+        fuse
+            The reverse operation.
+
+        Examples
+        --------
+
+        >>> base_alphabet = NucleotideSequence.unambiguous_alphabet()
+        >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
+        >>> symbol_codes = base_alphabet.encode_multiple("TC")
+        >>> print(symbol_codes)
+        [3 1]
+        >>> print(kmer_alphabet.fuse(symbol_codes))
+        7
+        >>> print(kmer_alphabet.split(7))
+        [3 1]
+        """
+        if np.any(kmer_code >= len(self)) or np.any(kmer_code < 0):
+            raise AlphabetError(
+                f"Given k-mer symbol code is invalid for this alphabet"
+            )
+        
+        orig_shape = np.shape(kmer_code)
+        split_codes = self._split(
+            np.atleast_1d(kmer_code).astype(np.int64, copy=False)
+        )
+        return split_codes.reshape(orig_shape + (self._k,))
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    def _split(self, int64[:] codes not None):
+        cdef int i, n
+        cdef int64 code, val, symbol_code
+
+        cdef int64[:] radix_multiplier = self._radix_multiplier
+
+        cdef int64[:,:] split_codes = np.empty(
+            (codes.shape[0], self._k), dtype=np.int64
+        )
+        
+        cdef int k = self._k
+        for i in range(codes.shape[0]):
+            code = codes[i]
+            for n in reversed(range(k)):
+                val = radix_multiplier[n]
+                symbol_code = code // val
+                split_codes[i,n] = symbol_code
+                code -= symbol_code * val
+        
+        return np.asarray(split_codes)
+    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def create_kmers(self, CodeType[:] seq_code not None):
+        """
+        create_kmers(seq_code)
+
+        Create *k-mer* codes for all overlapping *k-mers* in the given
+        sequence code.
+
+        Parameters
+        ----------
+        seq_code : ndarray, dtype={np.uint8, np.uint16, np.uint32, np.uint64}
+            The sequence code to be converted into *k-mers*.
+
+        Returns
+        -------
+        kmer_codes : ndarray, dtype=int64
+            The symbol codes for the *k-mers*.
+        
+        Examples
+        --------
+
+        >>> base_alphabet = NucleotideSequence.unambiguous_alphabet()
+        >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
+        >>> sequence = NucleotideSequence("ATTGCT")
+        >>> kmer_codes = kmer_alphabet.create_kmers(sequence.code)
+        >>> print(kmer_codes)
+        [12 15 11 6 13]
+        >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
+        ['AT', 'TT', 'TG', 'GC', 'CT']
+        """
+        cdef int64 i
+        cdef int j
+
+        cdef int k = self._k
+        cdef uint64 alphabet_length = len(self._base_alph)
+        cdef int64[:] radix_multiplier = self._radix_multiplier
+
+        if len(seq_code) < k:
+            raise ValueError(
+                "The length of the sequence code is shorter than k"
+            )
+
+        cdef int64[:] kmers = np.empty(len(seq_code) - k + 1, dtype=np.int64)
+        
+        cdef CodeType code
+        cdef int64 kmer
+        for i in range(kmers.shape[0]):
+            kmer = 0
+            for j in range(k):
+                code = seq_code[i+j]
+                if code >= alphabet_length:
+                    raise AlphabetError(f"Symbol code {code} is out of range")
+                kmer += radix_multiplier[j] * code
+            kmers[i] = kmer
+        
+        return np.asarray(kmers)
+    
+
+    def __str__(self):
+        return str(self.get_symbols())
+    
+
+    def __eq__(self, item):
+        if item is self:
+            return True
+        if not isinstance(item, KmerAlphabet):
+            return False
+        if self._base_alph != item._base_alph:
+            return False
+        if self._k != item._k:
+            return False
+        return True
+    
+
+    def __len__(self):
+        return int(len(self._base_alph) ** self._k)

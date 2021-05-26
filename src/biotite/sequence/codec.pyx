@@ -21,8 +21,8 @@ ctypedef np.uint64_t uint64
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def encode_chars(const unsigned char[:] alphabet,
-                 const unsigned char[:] symbols):
+def encode_chars(const unsigned char[:] alphabet not None,
+                 const unsigned char[:] symbols not None):
     """
     Encode an array of symbols into an array of symbol codes.
 
@@ -81,7 +81,8 @@ def encode_chars(const unsigned char[:] alphabet,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def decode_to_chars(const unsigned char[:] alphabet, const uint8[:] code):
+def decode_to_chars(const unsigned char[:] alphabet not None,
+                    const uint8[:] code not None):
     """
     Decode an array of symbol codes into an array of symbols.
 

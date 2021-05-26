@@ -103,7 +103,11 @@ class Alphabet(object):
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
-    
+
+    def __repr__(self):
+        """Represent Alphabet as a string for debugging."""
+        return f'Alphabet({self._symbols})'
+
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
@@ -310,7 +314,11 @@ class LetterAlphabet(Alphabet):
             np.array(self._symbols, dtype="|S1"),
             dtype=np.ubyte
         )
-    
+
+    def __repr__(self):
+        """Represent LetterAlphabet as a string for debugging."""
+        return f'LetterAlphabet({self.get_symbols()})'
+
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
@@ -379,7 +387,7 @@ class LetterAlphabet(Alphabet):
         ----------
         code : ndarray, dtype=uint8
             The sequence code to decode.
-            Works fastest if an :class:`ndarray` is provided.
+            Works fastest if a :class:`ndarray` is provided.
         as_bytes : bool, optional
             If true, the output array will contain `bytes`
             (dtype 'S1').
