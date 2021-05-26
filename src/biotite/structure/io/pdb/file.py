@@ -72,10 +72,19 @@ class PDBFile(TextFile):
             The number of models.
         """
         model_count = 0
-        for line in (self.lines):
+        for line in self.lines:
             if line.startswith("MODEL"):
                 model_count += 1
-        return model_count
+        
+        if model_count == 0:
+            # It could be an empty file or a file with a single model,
+            # where the 'MODEL' line is missing
+            for line in self.lines:
+                if line.startswith(("ATOM", "HETATM")):
+                    return 1
+            return 0
+        else:
+            return model_count
     
 
     def get_coord(self, model=None):
@@ -149,7 +158,7 @@ class PDBFile(TextFile):
         The newly created :class:`AtomArrayStack` should now be equal to
         the :class:`AtomArrayStack` the PDB files were created from.
 
-        >>> print(new_stack == atom_array_stack)
+        >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
         True
         """
         # Line indices where a new model starts
@@ -479,8 +488,8 @@ class PDBFile(TextFile):
         else:
             occupancy = np.ones(array.array_length())
         if "charge" in annot_categories:
-            charge = [ "+"+str(np.abs(charge)) if charge > 0 else
-                      ("-"+str(np.abs(charge)) if charge < 0 else
+            charge = [ str(np.abs(charge)) + "+" if charge > 0 else
+                      (str(np.abs(charge)) + "-" if charge < 0 else
                        "")
                       for charge in array.get_annotation("charge")]
         else:

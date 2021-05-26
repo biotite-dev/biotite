@@ -19,9 +19,9 @@ def test_nucleotide_construction():
 
 
 def test_reverse_complement():
-    string = "AATGCGTTA"
+    string = "AATGCGTTANY"
     dna = seq.NucleotideSequence(string)
-    assert "TAACGCATT" == str(dna.reverse().complement())
+    assert str(dna.reverse().complement()) == "RNTAACGCATT"
 
 def test_stop_removal():
     string = "LYG*GR*"
@@ -88,3 +88,4 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
         monoisotopic=monoisotopic)
     assert mol_weight_protein == \
            pytest.approx(expected_mol_weight_protein, abs=1e-2)
+

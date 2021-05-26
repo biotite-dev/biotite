@@ -192,20 +192,33 @@ corresponding code block:
 
 The image file must be stored in the same directory as the example script.
 
-To visualize images using *PyMOL* the
+|
+
+To visualize images using *PyMOL*, the
 `Ammolite <https://ammolite.biotite-python.org/>`_ package is required.
 Please make sure to use open-source *PyMOL* to avoid licensing issues.
-The visualization is initiated by adding the comment
+
+Let's assume you have an example script `<example_name>.py`.
+The visualization is initiated by adding the comment line
 
 .. code-block:: python
 
    # Visualization with PyMOL..
 
-anywhere to the example script.
-Then the visualization script ``<name_of_the_script>_pymol.py`` is executed,
-which can use the global variables from the example script.
-The rendered image is created in the directory of the example script and is
-added to version control.
+in the code block where you want show the visualization.
+Then the visualization script ``<example_name>_pymol.py`` is executed, which
+can use the global variables from the example script and the special
+``__image_destination__`` variable.
+``__image_destination__`` is a string representing the path to the output image
+file.
+The PyMOL visualization can be saved to this file with e.g.
+
+```python
+ammolite.cmd.png(__image_destination__)
+```
+
+The rendered image is saved in the directory of the example script as
+``<example_name>.png`` and is added to version control.
 The visualization script is only executed, if the rendered image does not
 exist, yet.
 The traceback of errors in the visualization script are printed, if
@@ -314,7 +327,7 @@ The Sphinx documentation is created using
 .. code-block:: console
 
    $ pip install -e .
-   $ sphinx-build doc doc/_build/doc
+   $ sphinx-build doc build/doc
 
 in the top-level directory.
 The building process can take a while, since the code from the tutorial
@@ -323,7 +336,7 @@ In order to omit building the tutorial and gallery, type
 
 .. code-block:: console
 
-   $ sphinx-build -D plot_gallery=0 doc doc/_build/doc
+   $ sphinx-build -D plot_gallery=0 doc build/doc
 
 instead.
 
@@ -386,7 +399,7 @@ If your code fulfills the following conditions
 
    - extends *Biotite* functionality
    - is documented
-   - is unit tested
+   - is well tested
 
 you can contact the *Biotite* maintainer or open an issue
 to ask for official acceptance as extension package.

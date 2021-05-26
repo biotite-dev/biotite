@@ -31,13 +31,14 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     center : Atom or AtomArray or AtomArrayStack or ndarray, dtype=float
         Coordinates or atoms(s) to use as origin(s) for RDF calculation.
 
-        - If a single :class:`Atom` or an :class:`ndarray` with shape *(3,)* is given,
-          the RDF is only calculated for this position.
-        - If an :class:`AtomArray` or an :class:`ndarray` with shape *(n,3)* is given,
-          the calculated RDF histogram is an average over *n*
-          postions.
-        - If an :class:`AtomArrayStack` or an :class:`ndarray` with shape *(m,n,3)* is
-          given, different centers are used for each model *m*.
+        - If a single :class:`Atom` or a :class:`ndarray` with shape
+          *(3,)* is given, the RDF is only calculated for this position.
+        - If an :class:`AtomArray` or a :class:`ndarray` with shape
+          *(n,3)* is given, the calculated RDF histogram is an average
+          over *n* postions.
+        - If an :class:`AtomArrayStack` or a :class:`ndarray` with shape
+          *(m,n,3)* is given, different centers are used for each model
+          *m*.
           The calculated RDF histogram is an average over *m*
           models and *n* positions.
           This requires `atoms` to be an :class:`AtomArrayStack`.

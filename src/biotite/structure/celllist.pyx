@@ -416,16 +416,16 @@ cdef class CellList:
             = _prepare_vectorization(coord, radius, np.float32)
         if is_multi_radius:
             sq_radii = radius * radius
-            cell_radii = np.floor_divide(
-                radius, self._cellsize
-            ).astype(np.int32) + 1
+            cell_radii = np.ceil(radius / self._cellsize).astype(np.int32)
         else:
             # All radii are equal
             sq_radii = np.full(
                 len(coord), radius[0]*radius[0], dtype=np.float32
             )
             cell_radii = np.full(
-                len(coord), int(radius[0]/self._cellsize)+1, dtype=np.int32
+                len(coord),
+                int(np.ceil(radius[0] / self._cellsize)),
+                dtype=np.int32
             )
 
         # Get indices for adjacent atoms, based on a cell radius
@@ -731,7 +731,7 @@ cdef class CellList:
     
     cdef inline bint _has_initialized_cells(self):
         # Memoryviews are not initialized on class creation
-        # This method checks if a the _cells memoryview was initialized
+        # This method checks if the _cells memoryview was initialized
         # and is not None
         try:
             if self._cells is not None:

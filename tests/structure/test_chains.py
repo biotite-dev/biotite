@@ -21,7 +21,7 @@ def test_get_chain_starts(array):
     assert set(ref_starts).issubset(set(test_starts))
 
 def test_get_chains(array):
-    assert struc.get_chains(array).tolist() == ["A", "B", "C", "D", "B", "D"]
+    assert struc.get_chains(array).tolist() == ["A", "B", "C", "D", "E", "F"]
 
 def test_get_chain_count(array):
     assert struc.get_chain_count(array) == 6

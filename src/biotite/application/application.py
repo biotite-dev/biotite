@@ -111,6 +111,7 @@ class Application(metaclass=abc.ABCMeta):
         This can only be done from the *CREATED* state.
         """
         self.run()
+        self._start_time = time.time()
         self._state = AppState.RUNNING
     
     @requires_state(AppState.RUNNING | AppState.FINISHED)
@@ -137,7 +138,6 @@ class Application(metaclass=abc.ABCMeta):
         TimeoutError
             If the joining process exceeds the `timeout` value.
         """
-        start_time = time.time()
         time.sleep(self.wait_interval())
         while self.get_app_state() != AppState.FINISHED:
             if timeout is not None and time.time()-self._start_time > timeout:

@@ -141,15 +141,16 @@ using a *GCC* installed via *Conda*:
 ValueError when importing Biotite
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When importing one of *Biotite*'s subpackages the following error might
-occur:
+When importing one of *Biotite*'s subpackages one of the following
+errors might occur:
 
 .. code-block::
 
    ValueError: numpy.ufunc size changed, may indicate binary incompatibility.
+   ValueError: numpy.ndarray size changed, may indicate binary incompatibility.
 
 The reason for this error is, that *Biotite* was built against a *NumPy*
 version other than the one installed.
 This happens for example when *NumPy* is updated, but *Biotite* is already
 installed.
-Simply reinstall *Biotite* to solve this issue.
+Try updating *NumPy* and *Biotite* to solve this issue.

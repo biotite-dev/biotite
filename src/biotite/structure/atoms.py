@@ -146,7 +146,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = np.asarray(array)
+        if category in self._annot:
+            # Keep the dtype if the annotation already exists
+            self._annot[category] = np.asarray(
+                array, dtype=self._annot[category].dtype
+            )
+        else:
+            self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -491,7 +497,18 @@ class Atom(Copyable):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
-    
+
+    def __repr__(self):
+        """Represent Atom as a string for debugging."""
+        annot = 'chain_id="' + self._annot["chain_id"] + '"'
+        annot = annot + ', res_id=' + str(self._annot["res_id"])
+        annot = annot + ', ins_code="' + self._annot["ins_code"] + '"'
+        annot = annot + ', res_name="' + self._annot["res_name"] + '"'
+        annot = annot + ', hetero=' + str(self._annot["hetero"])
+        annot = annot + ', atom_name="' + self._annot["atom_name"] + '"'
+        annot = annot + ', element="' + self._annot["element"] + '"'
+        return f'Atom(np.{np.array_repr(self.coord)}, {annot})'
+
     @property
     def shape(self):
         return ()
@@ -660,7 +677,17 @@ class AtomArray(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
-    
+
+    def __repr__(self):
+        """Represent AtomArray as a string for debugging."""
+        atoms = ''
+        for i in range(0, self.array_length()):
+            if len(atoms) == 0:
+                atoms = '\n\t' + self.get_atom(i).__repr__()
+            else:
+                atoms = atoms + ',\n\t' + self.get_atom(i).__repr__()
+        return f'array([{atoms}\n])'
+
     @property
     def shape(self):
         """
@@ -909,7 +936,17 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
-    
+
+    def __repr__(self):
+        """Represent AtomArrayStack as a string for debugging."""
+        arrays = ''
+        for i in range(0, self.stack_depth()):
+            if len(arrays) == 0:
+                arrays = '\n\t' + self.get_array(i).__repr__()
+            else:
+                arrays = arrays + ',\n\t' + self.get_array(i).__repr__()
+        return f'stack([{arrays}\n])'
+
     def get_array(self, index):
         """
         Obtain the atom array instance of the stack at the specified
@@ -1406,7 +1443,7 @@ def coord(item):
     item : Atom or AtomArray or AtomArrayStack or ndarray
         Returns the :attr:`coord` attribute, if `item` is an
         :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
-        Directly returns the input, if `item` is an :class:`ndarray`.
+        Directly returns the input, if `item` is a :class:`ndarray`.
     
     Returns
     -------
