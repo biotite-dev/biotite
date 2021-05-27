@@ -338,8 +338,10 @@ class PDBxFile(TextFile, MutableMapping):
         # Enclose values with quotes if required
         for key, value in category_dict.items():
             if is_looped:
-                for i in range(len(value)):
-                    value[i] = _quote(value[i])
+                list_value = value.tolist()
+                for i in range(len(list_value)):
+                    list_value[i] = _quote(list_value[i])
+                category_dict[key] = np.asarray(list_value)
             else:
                 category_dict[key] = _quote(value)
         
