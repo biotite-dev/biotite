@@ -333,7 +333,7 @@ class KmerAlphabet(Alphabet):
         cdef uint64 alphabet_length = len(self._base_alph)
         cdef int64[:] radix_multiplier = self._radix_multiplier
 
-        if len(seq_code) < k:
+        if len(seq_code) < <unsigned int>k:
             raise ValueError(
                 "The length of the sequence code is shorter than k"
             )
