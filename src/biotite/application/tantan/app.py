@@ -48,7 +48,7 @@ class TantanApp(LocalApp):
             self._matrix = None
             self._matrix_file = None
         else:
-            if not matrix.get_alphabet1().extends(sequence):
+            if not matrix.get_alphabet1().extends(sequence.alphabet):
                 raise ValueError(
                     "The sequence's alphabet does not fit the matrix"
                 )
@@ -104,9 +104,9 @@ class TantanApp(LocalApp):
         return self._mask
 
 
-@staticmethod
-def mask_repeats(sequence, matrix=None, bin_path="tantan"):
-    app = TantanApp(sequence, matrix, bin_path)
-    app.start()
-    app.join()
-    return app.get_mask()
+    @staticmethod
+    def mask_repeats(sequence, matrix=None, bin_path="tantan"):
+        app = TantanApp(sequence, matrix, bin_path)
+        app.start()
+        app.join()
+        return app.get_mask()
