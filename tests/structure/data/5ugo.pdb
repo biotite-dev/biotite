@@ -40,6 +40,7 @@ SOURCE  19 EXPRESSION_SYSTEM_TAXID: 83333
 KEYWDS    TRANSFERASE, LYASE, DNA DOMAIN, TRANSFERASE-DNA COMPLEX               
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    B.D.FREUDENTHAL,S.H.WILSON,W.A.BEARD                                  
+REVDAT   5   18-DEC-19 5UGO    1       REMARK                                   
 REVDAT   4   04-OCT-17 5UGO    1       JRNL                                     
 REVDAT   3   16-AUG-17 5UGO    1       JRNL                                     
 REVDAT   2   02-AUG-17 5UGO    1       REVDAT                                   

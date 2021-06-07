@@ -42,7 +42,7 @@ def rmsd(reference, subject):
     rmsd : float or ndarray, dtype=float, shape=(m,)
         RMSD between subject and reference.
         If subject is an :class:`AtomArray` a float is returned.
-        If subject is an :class:`AtomArrayStack` an :class:`ndarray`
+        If subject is an :class:`AtomArrayStack` a :class:`ndarray`
         containing the RMSD for each model is returned.
     
     See Also
@@ -147,7 +147,7 @@ def average(atoms):
     -------
     average : AtomArray or ndarray, dtype=float, shape=(n,3)
         Structure with averaged atom coordinates.
-        If `atoms` is an :class:`ndarray` and :class:`ndarray` is also
+        If `atoms` is a :class:`ndarray` and :class:`ndarray` is also
         returned.
     
     See Also

@@ -17,6 +17,7 @@ from .util import is_not_installed, cannot_import, cannot_connect_to
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 RCSB_URL = "https://www.rcsb.org/"
+UNIPROT_URL = "https://www.uniprot.org/"
 
 
 @pytest.mark.parametrize("package_name, context_package_names", [
@@ -53,6 +54,7 @@ RCSB_URL = "https://www.rcsb.org/"
                                                  "biotite.structure.info"]   ),
     pytest.param("biotite.structure.io.npz",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.io.mmtf",   ["biotite.structure"]        ),
+    pytest.param("biotite.structure.io.mol",    ["biotite.structure"]        ),
     pytest.param("biotite.structure.info",      ["biotite.structure"]        ),
     pytest.param("biotite.database.entrez",     [],                           
                  marks=pytest.mark.skipif(
@@ -62,6 +64,10 @@ RCSB_URL = "https://www.rcsb.org/"
                  marks=pytest.mark.skipif(
                     cannot_connect_to(RCSB_URL),
                     reason="RCSB PDB is not available")                      ),
+    pytest.param("biotite.database.uniprot",     [],
+                 marks=pytest.mark.skipif(
+                    cannot_connect_to(UNIPROT_URL),
+                    reason="UniProt is not available")                      ),
     pytest.param("biotite.application",      ["biotite.application.clustalo",
                                               "biotite.sequence"],            
                  marks=pytest.mark.skipif(is_not_installed("clustalo"),

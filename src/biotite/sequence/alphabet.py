@@ -387,7 +387,7 @@ class LetterAlphabet(Alphabet):
         ----------
         code : ndarray, dtype=uint8
             The sequence code to decode.
-            Works fastest if an :class:`ndarray` is provided.
+            Works fastest if a :class:`ndarray` is provided.
         as_bytes : bool, optional
             If true, the output array will contain `bytes`
             (dtype 'S1').
