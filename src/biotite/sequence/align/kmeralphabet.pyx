@@ -116,7 +116,7 @@ class KmerAlphabet(Alphabet):
     >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
     ['AT', 'TT', 'TG', 'GC', 'CT']
 
-    Encode all overlapping spaced k-mers of a sequence:
+    Encode all overlapping k-mers using spacing:
 
     >>> base_alphabet = ProteinSequence.alphabet
     >>> kmer_alphabet = KmerAlphabet(base_alphabet, 3, spacing="1101")
@@ -150,7 +150,8 @@ class KmerAlphabet(Alphabet):
         elif isinstance(spacing, str):
             self._spacing = _to_array_form(spacing)
         else:
-            self._spacing = np.array(spacing, dtype=np.int64).sort()
+            self._spacing = np.array(spacing, dtype=np.int64)
+            self._spacing.sort()
             if (self._spacing < 0).any():
                 raise ValueError(
                     "Only non-negative integers are allowed for spacing"
@@ -416,8 +417,8 @@ class KmerAlphabet(Alphabet):
         
         return np.asarray(kmers)
     
-    #@cython.boundscheck(False)
-    #@cython.wraparound(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _create_spaced_kmers(self, CodeType[:] seq_code not None):
         cdef int64 i, j
 
