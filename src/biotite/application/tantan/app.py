@@ -27,13 +27,8 @@ class TantanApp(LocalApp):
 
     Parameters
     ----------
-    sequence : Sequence
+    sequence : NucleotideSequence or ProteinSequence
         The sequence to be masked.
-        if this object is not a :class:`NucleotideSequence` or
-        :class:`ProteinSequence`, the matrix parameter must be provided.
-        In this case the number of symbols in the :class:`Alphabet` of
-        the sequence must not exceed 24
-        (number of symbols in :class:`ProteinSequence` alphabet).
     matrix : SubstitutionMatrix, optional
         The substitution matrix to use for repeat identification.
         A sequence segment is considered to be a repeat of another
@@ -89,12 +84,12 @@ class TantanApp(LocalApp):
             self._matrix = matrix
         elif isinstance(sequence, ProteinSequence):
             self._is_protein=True
-            self._sequence = sequence
-            self._matrix = matrix
         else:
-            self._is_protein=True
-            self._sequence = map_sequence(sequence)
-            self._matrix = map_matrix(matrix)
+            raise TypeError(
+                "A NucleotideSequence or ProteinSequence is required"
+            )
+        self._sequence = sequence
+        self._matrix = matrix
         
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
@@ -158,18 +153,15 @@ class TantanApp(LocalApp):
 
         Parameters
         ----------
-        sequence : Sequence
-            The sequence to be masked.
-            if this object is not a :class:`NucleotideSequence` or
-            :class:`ProteinSequence`, the matrix parameter must be
-            provided.
-        matrix : SubstitutionMatrix, optional
-            The substitution matrix to use for repeat identification.
-            A sequence segment is considered to be a repeat of another
-            segment, if the substitution score between these segments is
-            greater than a threshold value.
-        bin_path : str, optional
-            Path of the *tantan* binary.
+        sequence : NucleotideSequence or ProteinSequence
+        The sequence to be masked.
+    matrix : SubstitutionMatrix, optional
+        The substitution matrix to use for repeat identification.
+        A sequence segment is considered to be a repeat of another
+        segment, if the substitution score between these segments is
+        greater than a threshold value.
+    bin_path : str, optional
+        Path of the *tantan* binary.
 
         Returns
         -------

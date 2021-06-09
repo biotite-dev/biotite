@@ -68,30 +68,3 @@ def test_protein(use_custom_matrix):
 
     assert len(test_mask) == len(ref_mask)
     assert np.all(test_mask.tolist() == ref_mask)
-
-@pytest.mark.skipif(
-    is_not_installed("tantan"), reason="tantan is not installed"
-)
-def test_custom():
-    """
-    Test masking a sequence with a custom alphabet based on a known
-    example.
-    """
-    # An alphabet containing 3 non-string symbols
-    alphabet = seq.Alphabet([False, True, None])
-    sequence = seq.GeneralSequence(
-        alphabet,
-        [False, True, True, None, False, None, None, None, None, None, None, False, True, None]
-    )
-    matrix = align.SubstitutionMatrix(
-        alph, alph, np.array(
-            [[ 1, -1, -1, -1],
-             [-1,  1, -1, -1],
-             [-1, -1,  1, -1],
-             [-1, -1, -1,  1]]
-        )
-    )
-
-    test_mask = TantanApp.mask_repeats(sequence, matrix)
-    print(test_mask)
-    raise
