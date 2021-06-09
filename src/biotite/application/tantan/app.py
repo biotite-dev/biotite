@@ -15,14 +15,53 @@ from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.io.fasta.convert import set_sequence
+from ..util import map_sequence, map_matrix
 
 
 MASKING_LETTER = "!"
 
 
 class TantanApp(LocalApp):
-    """
-    Mask sequence reapeat regions.
+    r"""
+    Mask sequence reapeat regions using *tantan* [1]_.
+
+    Parameters
+    ----------
+    sequence : Sequence
+        The sequence to be masked.
+        if this object is not a :class:`NucleotideSequence` or
+        :class:`ProteinSequence`, the matrix parameter must be provided.
+        In this case the number of symbols in the :class:`Alphabet` of
+        the sequence must not exceed 24
+        (number of symbols in :class:`ProteinSequence` alphabet).
+    matrix : SubstitutionMatrix, optional
+        The substitution matrix to use for repeat identification.
+        A sequence segment is considered to be a repeat of another
+        segment, if the substitution score between these segments is
+        greater than a threshold value.
+    bin_path : str, optional
+        Path of the *tantan* binary.
+
+    References
+    ----------
+
+    .. [1] Lorem ipsum.
+
+    Examples
+    --------
+
+    >>> sequence = NucleotideSequence("GGCATCGATATATATATATAGTCAA")
+    >>> app = TantanApp(sequence)
+    >>> app.start()
+    >>> app.join()
+    >>> repeat_mask = app.get_mask()
+    >>> print(repeat_mask)
+    [False False False False False False False False False  True  True  True
+      True  True  True  True  True  True  True  True False False False False
+     False]
+    >>> print(sequence, "\n" + "".join(["^" if e else " " for e in repeat_mask]))
+    GGCATCGATATATATATATAGTCAA 
+             ^^^^^^^^^^^         
     """
     
     def __init__(self, sequence, matrix=None, bin_path="tantan"):
@@ -30,22 +69,8 @@ class TantanApp(LocalApp):
 
         if not isinstance(sequence, Sequence):
             raise TypeError("A 'Sequence' object is expected")
-        if isinstance(sequence, NucleotideSequence):
-            self._is_protein=False
-            self._matrix = None
-        elif isinstance(sequence, ProteinSequence):
-            self._is_protein=True
-            self._matrix = None
-        else:
-            if matrix is None:
-                raise ValueError(
-                    "A substitution matrix must be provided, "
-                    "if neither a protein or nucleotide sequence is handled"
-                )
-        self._sequence = sequence
         
         if matrix is None:
-            self._matrix = None
             self._matrix_file = None
         else:
             if not matrix.get_alphabet1().extends(sequence.alphabet):
@@ -54,10 +79,22 @@ class TantanApp(LocalApp):
                 )
             if not matrix.is_symmetric():
                 raise ValueError("A symmetric matrix is required")
-            self._matrix = matrix
             self._matrix_file = NamedTemporaryFile(
                 "w", suffix=".mat", delete=False
             )
+        
+        if isinstance(sequence, NucleotideSequence):
+            self._is_protein=False
+            self._sequence = sequence
+            self._matrix = matrix
+        elif isinstance(sequence, ProteinSequence):
+            self._is_protein=True
+            self._sequence = sequence
+            self._matrix = matrix
+        else:
+            self._is_protein=True
+            self._sequence = map_sequence(sequence)
+            self._matrix = map_matrix(matrix)
         
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
@@ -89,7 +126,7 @@ class TantanApp(LocalApp):
         masked_file = FastaFile.read(io.StringIO(self.get_stdout()))
         masked_sequence = masked_file["sequence"]
         array = np.frombuffer(masked_sequence.encode("ASCII"), dtype=np.ubyte)
-        self._mask = (array != MASKING_LETTER.encode("ASCII")[0])
+        self._mask = (array == MASKING_LETTER.encode("ASCII")[0])
     
 
     def clean_up(self):
@@ -101,11 +138,45 @@ class TantanApp(LocalApp):
 
     @requires_state(AppState.JOINED)
     def get_mask(self):
+        """
+        Get a boolean mask covering identified repeat regions of the
+        input sequence.
+
+        Returns
+        -------
+        repeat_mask : ndarray, shape=(n,), dtype=bool
+            A boolean mask that is true for each sequence position that
+            is identified as repeat.
+        """
         return self._mask
 
 
     @staticmethod
     def mask_repeats(sequence, matrix=None, bin_path="tantan"):
+        """
+        Mask repeat regions of the given input sequence.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to be masked.
+            if this object is not a :class:`NucleotideSequence` or
+            :class:`ProteinSequence`, the matrix parameter must be
+            provided.
+        matrix : SubstitutionMatrix, optional
+            The substitution matrix to use for repeat identification.
+            A sequence segment is considered to be a repeat of another
+            segment, if the substitution score between these segments is
+            greater than a threshold value.
+        bin_path : str, optional
+            Path of the *tantan* binary.
+
+        Returns
+        -------
+        repeat_mask : ndarray, shape=(n,), dtype=bool
+            A boolean mask that is true for each sequence position that
+            is identified as repeat.
+        """
         app = TantanApp(sequence, matrix, bin_path)
         app.start()
         app.join()
