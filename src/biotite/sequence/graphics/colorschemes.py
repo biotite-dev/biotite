@@ -43,7 +43,7 @@ def load_color_scheme(file_name):
         alphabet = Alphabet(scheme["alphabet"])
         # Store alphabet as 'Alphabet' object
         scheme["alphabet"] = alphabet
-        colors = [None] * len(scheme["colors"])
+        colors = [None] * len(alphabet)
         for key, value in scheme["colors"].items():
             index = alphabet.encode(key)
             colors[index] = value
