@@ -40,7 +40,10 @@ class TantanApp(LocalApp):
     References
     ----------
 
-    .. [1] Lorem ipsum.
+    .. [1] MC Frith,
+       "A new repeat-masking method enables specific detection of
+       homologous sequences."
+       Nucleic Acids Res, 39, (2011).
 
     Examples
     --------
