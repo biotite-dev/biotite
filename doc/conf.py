@@ -65,6 +65,7 @@ extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.doctest",
               "sphinx.ext.mathjax",
               "sphinx.ext.viewcode",
+              "sphinxcontrib.bibtex",
               "sphinx_gallery.gen_gallery",
               "numpydoc"]
 
@@ -92,6 +93,10 @@ numpydoc_show_class_members = False
 autosummary_generate = False
 
 autodoc_member_order = "bysource"
+
+bibtex_bibfiles = ["references.bib"]
+bibtex_default_style = "alpha"
+bibtex_reference_style = "author_year"
 
 
 #### HTML ####
