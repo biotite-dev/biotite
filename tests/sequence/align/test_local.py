@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from biotite.sequence.seqtypes import NucleotideSequence
 
 
 @pytest.mark.parametrize(
@@ -16,16 +15,16 @@ from biotite.sequence.seqtypes import NucleotideSequence
     [list(itertools.chain(*e)) for e in itertools.product(
         [
             (
-                NucleotideSequence,  # seq_type
-                "TTTAAAAAAATTTTT",   # seq1
-                "CCCCCAAAAAAACCC",   # seq1
-                (5, 7),              # seed
-                0,                   # threshold
-                (3, 10),             # ref_range1
-                (5, 12),             # ref_range2
+                seq.NucleotideSequence,  # seq_type
+                "TTTAAAAAAATTTTT",       # seq1
+                "CCCCCAAAAAAACCC",       # seq1
+                (5, 7),                  # seed
+                0,                       # threshold
+                (3, 10),                 # ref_range1
+                (5, 12),                 # ref_range2
             ),
             (
-                NucleotideSequence,
+                seq.NucleotideSequence,
                 "TTTAAAAAAATTTTT",
                 "CCCCCAAAAAAACCC",
                 (3, 5),
@@ -33,11 +32,41 @@ from biotite.sequence.seqtypes import NucleotideSequence
                 (3, 10),
                 (5, 12),
             ),
+            # Mismatch should lead to alignment termination
+            (
+                seq.ProteinSequence,
+                "NLYIQWLKDGGPSSGRPPPS",
+                  "YIQWLKDGGPSLGRPPPS",
+                (8, 6),
+                0,
+                (2, 13),
+                (0, 11),
+            ),
+            # Mismatch should not terminate alignment
+            (
+                seq.ProteinSequence,
+                "NLYIQWLKDGGPSSGRPPPS",
+                  "YIQWLKDGGPSLGRPPPS",
+                (8, 6),
+                2,
+                (2, 20),
+                (0, 18),
+            ),
+            # Mismatch should terminate alignment
+            (
+                seq.ProteinSequence,
+                "NLYIQWLKDGGPSSGRPPPS",
+                  "YIQWLKDWWPSSGRPPPS",
+                (6, 4),
+                3,
+                (2, 9),
+                (0, 7),
+            ),
         ],
 
-        [["both"], ["upstream"], ["downstream"]],
+        [["both"], ["upstream"], ["downstream"]],  # direction
         
-        [[False], [True]]
+        [[False], [True]]  # score_only
     )]
 )
 def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
@@ -60,7 +89,7 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
     seq1 = seq_type(seq1)
     seq2 = seq_type(seq2)
     
-    if seq_type == NucleotideSequence:
+    if seq_type == seq.NucleotideSequence:
         matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     else:
         matrix = align.SubstitutionMatrix.std_protein_matrix()
@@ -81,4 +110,7 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
     if score_only:
         assert test_result == ref_score
     else:
+        print(test_result.trace)
+        print()
+        print(test_result.trace)
         assert test_result == ref_alignment
