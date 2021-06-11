@@ -189,11 +189,10 @@ def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
 
     for i in range(min_length):
         score += matrix[code1[i], code2[i]]
-        print(score, threshold)
         if score >= max_score:
             max_score = score
             i_max_score = i
-        elif i_max_score - score > threshold:
+        elif max_score - score > threshold:
             break
 
     return max_score, i_max_score + 1
