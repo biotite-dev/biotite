@@ -89,6 +89,7 @@
         "Aligners" : [
             "align_ungapped",
             "align_optimal",
+            "align_local_ungapped",
             "align_banded",
             "align_multiple"
         ],

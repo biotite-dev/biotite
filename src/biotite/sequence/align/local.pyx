@@ -39,6 +39,60 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     """
     align_local_ungapped(seq1, seq2, matrix, seed, threshold,
                          direction="both", score_only=False)
+    
+    Perform a local alignment starting at the given `seed` position
+    without introducing gaps.
+
+    The alignment extends into one or both directions (controlled by
+    `direction`) until the total alignment score falls more than
+    `threshold` below the maximum score found.
+    The returned alignment contains the range that yielded the maximum
+    score.
+    
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The sequences to be aligned.
+        The sequences do not need to have the same alphabets, as long as
+        the two alphabets of `matrix` extend the alphabets of the two
+        sequences.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    seed : tuple(int, int)
+        The indices in `seq1` and `seq2` where the local alignment
+        starts.
+        The indices must be non-negative.
+    threshold : int
+        If the current score falls this value below the maximum score
+        found, the alignment terminates.
+    direction : {'both', 'upstream', 'downstream'}, optional
+        Controls in which direction the alignment extends starting
+        from the seed.
+        If ``'upstream'``, the alignment starts before the `seed` and
+        ends at the `seed`.
+        If ``'downstream'``, the alignment starts at the `seed` and
+        ends behind the `seed`.
+        If ``'both'`` (default) the alignment starts before the `seed`
+        and ends behind the `seed`.
+        The `seed` position itself is always included in the alignment.
+    score_only : bool, optional
+        If set to ``True``, only the similarity score is returned
+        instead of the :class:`Alignment`, decreasing the runtime
+        substantially.
+    
+    Returns
+    -------
+    alignment : Alignment
+        The resulting ungapped alignment.
+        Only returned, if `score_only` is ``False``.
+    score : int
+        The alignment similarity score.
+        Only returned, if `score_only` is ``True``.
+    
+    Examples
+    --------
+
+    >>> TODO
     """
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
@@ -65,6 +119,15 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     cdef int seq1_start, seq2_start
     seq1_start, seq2_start = seed
 
+    cdef np.ndarray code1 = seq1.code
+    cdef np.ndarray code2 = seq2.code
+    # For faster dispatch of the '_seed_extend()' function
+    # specialization for the common case
+    # This gives significant performance increase since the
+    # seed extend itself runs fast
+    cdef bint both_uint8 = (code1.dtype == np.uint8) \
+                         & (code2.dtype == np.uint8)
+
     cdef int32 length
     cdef int start_offset = 0
     cdef int stop_offset = 1
@@ -73,20 +136,32 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
 
     # Range check to avoid negative indices
     if upstream and seq1_start > 0 and seq2_start > 0:
-        score, length = _seed_extend(
-            seq1.code[seq1_start-1::-1], seq2.code[seq2_start-1::-1],
-            score_matrix, threshold
-        )
+        if both_uint8:
+            score, length = _seed_extend[np.uint8, np.uint8](
+                code1[seq1_start-1::-1], code2[seq2_start-1::-1],
+                score_matrix, threshold
+            )
+        else:
+            score, length = _seed_extend(
+                code1[seq1_start-1::-1], code2[seq2_start-1::-1],
+                score_matrix, threshold
+            )
         total_score += score
         start_offset -= length
     if downstream:
-        score, length = _seed_extend(
-            seq1.code[seq1_start+1:], seq2.code[seq2_start+1:],
-            score_matrix, threshold
-        )
+        if both_uint8:
+            score, length = _seed_extend[np.uint8, np.uint8](
+                code1[seq1_start+1:], code2[seq2_start+1:],
+                score_matrix, threshold
+            )
+        else:
+            score, length = _seed_extend(
+                code1[seq1_start+1:], code2[seq2_start+1:],
+                score_matrix, threshold
+            )
         total_score += score
         stop_offset += length
-    total_score += score_matrix[seq1.code[seq1_start], seq2.code[seq2_start]]
+    total_score += score_matrix[code1[seq1_start], code2[seq2_start]]
     
     if score_only:
         return total_score
@@ -114,6 +189,7 @@ def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
 
     for i in range(min_length):
         score += matrix[code1[i], code2[i]]
+        print(score, threshold)
         if score >= max_score:
             max_score = score
             i_max_score = i
