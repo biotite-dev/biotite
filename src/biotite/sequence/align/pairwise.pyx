@@ -459,7 +459,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
     for i in range(1, score_table.shape[0]):
         for j in range(1, score_table.shape[1]):
             # Evaluate score from diagonal direction
-            # -1 is in sequence index is necessary
+            # -1 in sequence index is necessary
             # due to the shift of the sequences
             # to the bottom/right in the table
             from_diag = score_table[i-1, j-1] + matrix[code1[i-1], code2[j-1]]
