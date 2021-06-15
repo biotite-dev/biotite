@@ -114,3 +114,6 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
         print()
         print(test_result.trace)
         assert test_result == ref_alignment
+
+
+def test_algin_local_ungapped_large_alpahbet()

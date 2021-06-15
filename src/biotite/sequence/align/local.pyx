@@ -57,7 +57,7 @@ DEF INIT_SIZE = 100
 
 
 def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
-                         str direction="both", bint score_only=False):
+                         str direction="both", bint score_only=False, bint check_matrix=True):
     """
     align_local_ungapped(seq1, seq2, matrix, seed, threshold,
                          direction="both", score_only=False)
@@ -133,9 +133,12 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     >>> print(score)
     24
     """
-    if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
-        or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
-            raise ValueError("The sequences' alphabets do not fit the matrix")
+    if check_matrix:
+        if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
+            or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
+                raise ValueError(
+                    "The sequences' alphabets do not fit the matrix"
+                )
     cdef const int32[:,:] score_matrix = matrix.score_matrix()
     
     cdef bint upstream
@@ -230,16 +233,10 @@ def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
     cdef int32 score = 0, max_score = 0
     cdef int i_max_score = -1
 
+    # Iterate over the symbols in both sequences
     # The alignment automatically terminates,
     # if the the end of either sequence is reached
-    cdef int min_length
-    if code1.shape[0] < code2.shape[0]:
-        min_length = code1.shape[0]
-    else:
-        min_length = code2.shape[0]
-
-    # Iterate over the symbols in both sequences
-    for i in range(min_length):
+    for i in range(_min(code1.shape[0], code2.shape[0])):
         score += matrix[code1[i], code2[i]]
         if score >= max_score:
             max_score = score
@@ -256,12 +253,12 @@ def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
 
 
 def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
-                       direction="both" gap_penalty=-10,
-                       max_number=1, direction="both", score_only=False):
+                       gap_penalty=-10, max_number=1,
+                       direction="both", score_only=False):
     """
-    align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
-                       direction="both" gap_penalty=-10,
-                       max_number=1, direction="both", score_only=False)
+    align_local_gapped(seq1, seq2, matrix, seed, threshold,
+                       gap_penalty=-10, max_number=1,
+                       direction="both", score_only=False)
     """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
@@ -371,8 +368,8 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
     
     
     init_size = (
-        min(len(code1)+1, max(n_possible_gaps + 1, INIT_SIZE)),
-        min(len(code2)+1, max(n_possible_gaps + 1, INIT_SIZE))
+        _min(len(code1)+1, INIT_SIZE),
+        _min(len(code2)+1, INIT_SIZE)
     )
     trace_table = np.zeros(init_size, dtype=np.uint8)
     
@@ -487,32 +484,37 @@ def _fill_align_table(CodeType1[:] code1 not None,
     """
     
     cdef int i, j, k
-    # The range for i in the current antidiagonal
+    # The range for i in the next, current and previous antidiagonal
     # that may contain valid cells
-    cdef int i_min=0, i_max=1
-    # The same thing, but for the next antidiagonal
-    cdef int i_min_next, i_max_next
+    cdef int i_min_curr=0, i_max_curr=1
+    cdef int i_min_next=1, i_max_next=0
+    cdef int i_min_prev=1, i_max_prev=0
+
+    cdef int j_max_curr
+    cdef int j_max_next
 
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
     cdef int32 score
 
-    # Instead of iteration over row and column
+    # Instead of iteration over row and column,
     # iterate over antidiagonal and diagonal to achieve symmetric
     # treatment of both sequences
-    for k in range(1, code1.shape[0]+1 + code2.shape[0]+1):
-        for i in range(i_min, i_max+1):
+    for k in range(1, _max(code1.shape[0], code2.shape[0])):
+        for i in range(i_min_curr, i_max_curr+1):
             j = k - i
             # Evaluate score from diagonal direction
-            # -1 in sequence index is necessary
-            # due to the shift of the sequences
-            # to the bottom/right in the table
             if i != 0 and j != 0:
-                    from_diag = score_table[i-1, j-1]
-                    if from_diag != 0:
-                        from_diag += matrix[code1[i-1], code2[j-1]]
+                from_diag = score_table[i-1, j-1]
+                if from_diag != 0:
+                    # -1 in sequence index is necessary
+                    # due to the shift of the sequences
+                    # to the bottom/right in the table
+                    from_diag += matrix[code1[i-1], code2[j-1]]
                 else:
                     from_diag = 0
+            else:
+                from_diag = 0
             # Evaluate score through gap insertion
             if i != 0:
                 from_top = score_table[i-1, j] + gap_penalty
@@ -526,27 +528,51 @@ def _fill_align_table(CodeType1[:] code1 not None,
             trace = get_trace_linear(from_diag, from_left, from_top, &score)
             
             if score > 0:
-                if i_min_next == -1:
-                    i_min_next = i
-                i_max_next = i
+                if i_min_curr == k:
+                    i_min_curr = i
+                i_max_curr = i
                 score_table[i,j] = score
                 trace_table[i,j] = trace
-            
-            
         
 
+        # Prune index range for next antidiagonal
+        # to range where valid cells exist
+        i_min_next = _min(i_min_curr,     i_min_prev + 1)
+        i_max_next = _max(i_max_curr + 1, i_max_prev + 1)
+        # The algorithm has finished,
+        # if the next antidiagonal has no range of valid cells
+        if i_min_next > i_max_next:
+            break
+
+        # Expand ndarrays
+        # if their size would be exceeded in the next iteration
         if i_max_next >= score_table.shape[0]:
             score_table = _extend_table(score_table, 0)
             trace_table = _extend_table(trace_table, 0)
-        if k + 1 >= score_table.shape[1]:
+        j_max_next = k + 1 - i_min_next
+        if j_max_next >= score_table.shape[1]:
             score_table = _extend_table(score_table, 1)
             trace_table = _extend_table(score_table, 1)
-        
-        if i_min_next == -1 or i_max_next == -1:
-            break
-        i_min = i_min_next
-        i_max = i_max_next
-        i_min_next = -1
-        i_max_next = -1
+
+        # Prepare values for next iteration
+        i_min_prev = i_min_curr
+        i_max_prev = i_max_curr
+        i_min_curr = i_min_next
+        i_max_curr = i_max_next
+        # Reset values for next iteration to most 'restrictive' values
+        # These restrictive values are overwritten in the next itaterion
+        # if valid cells are present
+        i_min_next = k+1
+        i_max_next = 0
     
-    return trace_table, score_table
+    j_max_curr = k - i_min_curr
+    filled_range = (i_max_curr + 1, j_max_curr + 1)
+    return np.asarray(trace_table)[filled_range], \
+           np.asarray(score_table)[filled_range]
+
+
+cdef inline int _min(int a, int b):
+    return a if a < b else b
+
+cdef inline int _max(int a, int b):
+    return a if a > b else b
