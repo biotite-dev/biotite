@@ -4,7 +4,7 @@
 
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
-__all__ = ["align_local_ungapped"]
+__all__ = ["align_local_ungapped", "align_local_gapped"]
 
 cimport cython
 cimport numpy as np
@@ -26,14 +26,14 @@ ctypedef np.uint64_t uint64
 
 ctypedef fused CodeType1:
     uint8
-    uint16
-    uint32
-    uint64
+    #uint16
+    #uint32
+    #uint64
 ctypedef fused CodeType2:
     uint8
-    uint16
-    uint32
-    uint64
+    #uint16
+    #uint32
+    #uint64
 
 
 # See tracetable.pyx for more information
@@ -57,10 +57,11 @@ DEF INIT_SIZE = 100
 
 
 def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
-                         str direction="both", bint score_only=False, bint check_matrix=True):
+                         str direction="both", bint score_only=False,
+                         bint check_matrix=True):
     """
     align_local_ungapped(seq1, seq2, matrix, seed, threshold,
-                         direction="both", score_only=False)
+                         direction="both", score_only=False, check_matrix=True)
     
     Perform a local alignment starting at the given `seed` position
     without introducing gaps.
@@ -101,6 +102,14 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         If set to ``True``, only the similarity score is returned
         instead of the :class:`Alignment`, decreasing the runtime
         substantially.
+    check_matrix : bool, optional
+        If set to False, the `matrix` is not checked for compatibility
+        with the alphabets of the sequences.
+        Due to the small overall runtime of the function, this can increase
+        performance substantially.
+        However, unexpected results or crashes may occur, if an
+        incompatible `matrix` is given.
+
     
     Returns
     -------
@@ -315,20 +324,28 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     if upstream and seq1_start > 0 and seq2_start > 0:
         # For the upstream region the respective part of the sequence
         # must be reversed
-        score, traces = _align_region(
+        score, upstream_traces = _align_region(
             code1[seq1_start-1::-1], code2[seq2_start-1::-1],
-            score_matrix, threshold, gap_penalty, max_number, score_only
+            score_matrix, threshold, gap_penalty,
+            max_number, score_only
         )
         total_score += score
-        # Undo the sequence reversing
-        upstream_traces = [trace[::-1] for trace in traces]
+        # Undo the sequence reversing and add seed offset
+        [print(trace) for trace in upstream_traces]
+        print("BLA")
+        upstream_traces = [-trace[::-1] + seed-1 for trace in upstream_traces]
+        [print(trace) for trace in upstream_traces]
+    
     if downstream:
-        score, traces = _align_region(
-            code1[seq1_start+1], code2[seq2_start+1],
-            score_matrix, threshold, gap_penalty, max_number, score_only
+        score, downstream_traces = _align_region(
+            code1[seq1_start+1:], code2[seq2_start+1:],
+            score_matrix, threshold, gap_penalty,
+            max_number, score_only
         )
         total_score += score
-        downstream_traces = traces
+        # Add seed offset
+        downstream_traces = [trace + seed+1 for trace in downstream_traces]
+    
     total_score += score_matrix[code1[seq1_start], code2[seq2_start]]
     
 
@@ -389,8 +406,8 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         raise NotImplementedError()
     else:
         trace_table, score_table = _fill_align_table(
-            code1, code2, matrix, trace_table, score_table, gap_penalty,
-            score_only
+            code1, code2, matrix, trace_table, score_table, threshold,
+            gap_penalty, score_only
         )
     
     
@@ -460,17 +477,6 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         return max_score - init_score, trace_list
 
 
-def _extend_table(table, int dimension):
-    if dimension == 0:
-        new_shape = (table.shape[0] * 2, table.shape[1])
-    else:
-        new_shape = (table.shape[0], table.shape[1] * 2)
-    new_table = np.zeros(new_shape, dtype=table.dtype)
-    # Fill in exiisting data
-    new_table[:table.shape[0], :table.shape[1]] = table
-    return new_table
-
-
 #@cython.boundscheck(False)
 #@cython.wraparound(False)
 def _fill_align_table(CodeType1[:] code1 not None,
@@ -478,30 +484,70 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       const int32[:,:] matrix not None,
                       uint8[:,:] trace_table not None,
                       int32[:,:] score_table not None,
-                      int gap_penalty,
+                      int32 threshold,
+                      int32 gap_penalty,
                       bint score_only):
     """
     """
     
-    cdef int i, j, k
+    cdef int i, j, k=0
     # The range for i in the next, current and previous antidiagonal
     # that may contain valid cells
-    cdef int i_min_curr=0, i_max_curr=1
-    cdef int i_min_next=1, i_max_next=0
-    cdef int i_min_prev=1, i_max_prev=0
+    cdef int i_min_k_0=0, i_max_k_0=0
+    cdef int i_min_k_1=0, i_max_k_1=0
+    cdef int i_min_k_2=0, i_max_k_2=0
+    cdef int i_min=0,     i_max=0
 
-    cdef int j_max_curr
-    cdef int j_max_next
+    cdef int j_max
 
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
     cdef int32 score
+    cdef int32 max_score = score_table[0, 0]
+    cdef int32 req_score = max_score - threshold
 
     # Instead of iteration over row and column,
-    # iterate over antidiagonal and diagonal to achieve symmetric
+    # iterate over antidiagonals and diagonals to achieve symmetric
     # treatment of both sequences
-    for k in range(1, _max(code1.shape[0], code2.shape[0])):
-        for i in range(i_min_curr, i_max_curr+1):
+    for k in range(1, code1.shape[0] + code2.shape[0] + 1):
+        # Prepare values for iteration
+        i_min_k_2 = i_min_k_1
+        i_max_k_2 = i_max_k_1
+        i_min_k_1 = i_min_k_0
+        i_max_k_1 = i_max_k_0
+        # Reset values for iteration to most 'restrictive' values
+        # These restrictive values are overwritten in the next iteration
+        # if valid cells are present
+        i_min_k_0 = k
+        i_max_k_0 = 0
+
+        # Prune index range for antidiagonal
+        # to range where valid cells exist
+        i_min = _min(i_min_k_1,     i_min_k_2 + 1)
+        i_max = _max(i_max_k_1 + 1, i_max_k_2 + 1)
+        print(f"{k}A", i_min_k_1, i_max_k_1)
+        print(f"{k}B", i_min_k_2, i_max_k_2)
+        print(f"{k}C", i_min, i_max)
+        print()
+        # The index must also not be out of sequence range
+        i_min = _max(i_min, k - code2.shape[0])
+        i_max = _min(i_max, code1.shape[0])
+        # The algorithm has finished,
+        # if the calculated antidiagonal has no range of valid cells
+        if i_min > i_max:
+            break
+        
+        # Expand ndarrays
+        # if their size would be exceeded in the following iteration
+        if i_max >= score_table.shape[0]:
+            score_table = _extend_table(np.asarray(score_table), 0)
+            trace_table = _extend_table(np.asarray(trace_table), 0)
+        j_max = k - i_min
+        if j_max >= score_table.shape[1]:
+            score_table = _extend_table(np.asarray(score_table), 1)
+            trace_table = _extend_table(np.asarray(trace_table), 1)
+
+        for i in range(i_min, i_max+1):
             j = k - i
             # Evaluate score from diagonal direction
             if i != 0 and j != 0:
@@ -527,48 +573,42 @@ def _fill_align_table(CodeType1[:] code1 not None,
             
             trace = get_trace_linear(from_diag, from_left, from_top, &score)
             
-            if score > 0:
-                if i_min_curr == k:
-                    i_min_curr = i
-                i_max_curr = i
+            if score > max_score:
+                max_score = score
+                req_score = max_score - threshold
+                if i_min_k_0 == k:
+                    # 'i_min_k_0 == k'
+                    # -> i_min_k_0 has not been set in this iteration, yet
+                    i_min_k_0 = i
+                i_max_k_0 = i
                 score_table[i,j] = score
                 trace_table[i,j] = trace
-        
-
-        # Prune index range for next antidiagonal
-        # to range where valid cells exist
-        i_min_next = _min(i_min_curr,     i_min_prev + 1)
-        i_max_next = _max(i_max_curr + 1, i_max_prev + 1)
-        # The algorithm has finished,
-        # if the next antidiagonal has no range of valid cells
-        if i_min_next > i_max_next:
-            break
-
-        # Expand ndarrays
-        # if their size would be exceeded in the next iteration
-        if i_max_next >= score_table.shape[0]:
-            score_table = _extend_table(score_table, 0)
-            trace_table = _extend_table(trace_table, 0)
-        j_max_next = k + 1 - i_min_next
-        if j_max_next >= score_table.shape[1]:
-            score_table = _extend_table(score_table, 1)
-            trace_table = _extend_table(score_table, 1)
-
-        # Prepare values for next iteration
-        i_min_prev = i_min_curr
-        i_max_prev = i_max_curr
-        i_min_curr = i_min_next
-        i_max_curr = i_max_next
-        # Reset values for next iteration to most 'restrictive' values
-        # These restrictive values are overwritten in the next itaterion
-        # if valid cells are present
-        i_min_next = k+1
-        i_max_next = 0
+            elif score >= req_score:
+                if i_min_k_0 == k:
+                    i_min_k_0 = i
+                i_max_k_0 = i
+                score_table[i,j] = score
+                trace_table[i,j] = trace
     
-    j_max_curr = k - i_min_curr
-    filled_range = (i_max_curr + 1, j_max_curr + 1)
-    return np.asarray(trace_table)[filled_range], \
-           np.asarray(score_table)[filled_range]
+    j_max = k - i_min
+    print(np.asarray(trace_table))
+    print(np.asarray(score_table))
+    print()
+    #return np.asarray(trace_table)[:i_max+1, :j_max+1], \
+    #       np.asarray(score_table)[:i_max+1, :j_max+1]
+    return np.asarray(trace_table), \
+           np.asarray(score_table)
+
+
+def _extend_table(table, int dimension):
+    if dimension == 0:
+        new_shape = (table.shape[0] * 2, table.shape[1])
+    else:
+        new_shape = (table.shape[0], table.shape[1] * 2)
+    new_table = np.zeros(new_shape, dtype=table.dtype)
+    # Fill in exiisting data
+    new_table[:table.shape[0], :table.shape[1]] = table
+    return new_table
 
 
 cdef inline int _min(int a, int b):
