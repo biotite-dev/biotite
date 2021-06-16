@@ -98,6 +98,8 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
     if not uint8_code:
         # Adjust sequences, so that they
         # use 'uint16' as dtype for the code
+        # This is a necessary test,
+        # since 'uint8' uses a separate implementation
         new_alph = seq.Alphabet(np.arange(500))
         code = seq1.code
         seq1 = seq.GeneralSequence(new_alph)
