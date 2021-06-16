@@ -11,7 +11,7 @@ import biotite.sequence.align as align
 
 @pytest.mark.parametrize(
     "seq_type, seq1, seq2, seed, threshold, ref_range1, ref_range2,"
-    "direction, score_only",
+    "direction, score_only, uint8_code",
     [list(itertools.chain(*e)) for e in itertools.product(
         [
             (
@@ -66,12 +66,14 @@ import biotite.sequence.align as align
 
         [["both"], ["upstream"], ["downstream"]],  # direction
         
-        [[False], [True]]  # score_only
+        [[False], [True]],  # score_only
+
+        [[False], [True]],  # uint8_code
     )]
 )
 def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
                               ref_range1, ref_range2,
-                              direction, score_only):
+                              direction, score_only, uint8_code):
     """
     Check if `algin_local_ungapped()` produces correct alignments based on
     known examples.
@@ -85,7 +87,6 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
         ref_range1 = (seed[0], ref_range1[1])
         ref_range2 = (seed[1], ref_range2[1])
 
-
     seq1 = seq_type(seq1)
     seq2 = seq_type(seq2)
     
@@ -93,6 +94,23 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
         matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     else:
         matrix = align.SubstitutionMatrix.std_protein_matrix()
+    
+    if not uint8_code:
+        # Adjust sequences, so that they
+        # use 'uint16' as dtype for the code
+        new_alph = seq.Alphabet(np.arange(500))
+        code = seq1.code
+        seq1 = seq.GeneralSequence(new_alph)
+        seq1.code = code
+        code = seq2.code
+        seq2 = seq.GeneralSequence(new_alph)
+        seq2.code = code
+        # Adjust the substitution matrix as well,
+        # so that it is compatible with the new alphabet
+        score_matrix = np.zeros((len(new_alph), len(new_alph)), dtype=np.int32)
+        orig_len = len(matrix.score_matrix())
+        score_matrix[:orig_len, :orig_len] = matrix.score_matrix()
+        matrix = align.SubstitutionMatrix(new_alph, new_alph, score_matrix)
     
     ref_alignment = align.Alignment(
         [seq1, seq2],
@@ -110,10 +128,4 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
     if score_only:
         assert test_result == ref_score
     else:
-        print(test_result.trace)
-        print()
-        print(test_result.trace)
         assert test_result == ref_alignment
-
-
-def test_algin_local_ungapped_large_alpahbet()

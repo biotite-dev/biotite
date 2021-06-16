@@ -26,14 +26,14 @@ ctypedef np.uint64_t uint64
 
 ctypedef fused CodeType1:
     uint8
-    #uint16
-    #uint32
-    #uint64
+    uint16
+    uint32
+    uint64
 ctypedef fused CodeType2:
     uint8
-    #uint16
-    #uint32
-    #uint64
+    uint16
+    uint32
+    uint64
 
 
 # See tracetable.pyx for more information
@@ -192,12 +192,12 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         # For the upstream region the respective part of the sequence
         # must be reversed
         if both_uint8:
-            score, length = _seed_extend[np.uint8, np.uint8](
+            length = _seed_extend_uint8(
                 code1[seq1_start-1::-1], code2[seq2_start-1::-1],
-                score_matrix, threshold
+                score_matrix, threshold, &score
             )
         else:
-            score, length = _seed_extend(
+            score, length = _seed_extend_generic(
                 code1[seq1_start-1::-1], code2[seq2_start-1::-1],
                 score_matrix, threshold
             )
@@ -205,12 +205,12 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         start_offset -= length
     if downstream:
         if both_uint8:
-            score, length = _seed_extend[np.uint8, np.uint8](
+            length = _seed_extend_uint8(
                 code1[seq1_start+1:], code2[seq2_start+1:],
-                score_matrix, threshold
+                score_matrix, threshold, &score
             )
         else:
-            score, length = _seed_extend(
+            score, length = _seed_extend_generic(
                 code1[seq1_start+1:], code2[seq2_start+1:],
                 score_matrix, threshold
             )
@@ -230,8 +230,10 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
-                 const int32[:,:] matrix not None, int32 threshold):
+def _seed_extend_generic(CodeType1[:] code1 not None,
+                         CodeType2[:] code2 not None,
+                         const int32[:,:] matrix not None,
+                         int32 threshold):
     """
     Align two sequences without introduction of gaps beginning from
     start of the given sequences.
@@ -239,24 +241,55 @@ def _seed_extend(CodeType1[:] code1 not None, CodeType2[:] code2 not None,
     Return the similarity score and the number of aligned symbols.
     """
     cdef int i
-    cdef int32 score = 0, max_score = 0
+    cdef int32 total_score = 0, max_score = 0
     cdef int i_max_score = -1
 
     # Iterate over the symbols in both sequences
     # The alignment automatically terminates,
     # if the the end of either sequence is reached
     for i in range(_min(code1.shape[0], code2.shape[0])):
-        score += matrix[code1[i], code2[i]]
-        if score >= max_score:
-            max_score = score
+        total_score += matrix[code1[i], code2[i]]
+        if total_score >= max_score:
+            max_score = total_score
             i_max_score = i
-        elif max_score - score > threshold:
+        elif max_score - total_score > threshold:
             # Score drops too low -> terminate alignment
             break
 
     # Return the total score and the number of aligned symbols at the
     # point with maximum total score
     return max_score, i_max_score + 1
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef int _seed_extend_uint8(uint8[:] code1, uint8[:] code2,
+                            const int32[:,:] matrix,
+                            int32 threshold, int32* score):
+    """
+    The same functionality as :func:`_seed_extend_generic()` but as
+    C-function tailored for the common ``uint8`` sequence code *dtype*.
+    This increases the performance for this common case.
+    """
+    cdef int i
+    cdef int32 total_score = 0, max_score = 0
+    cdef int i_max_score = -1
+
+    # Iterate over the symbols in both sequences
+    # The alignment automatically terminates,
+    # if the the end of either sequence is reached
+    for i in range(_min(code1.shape[0], code2.shape[0])):
+        total_score += matrix[code1[i], code2[i]]
+        if total_score >= max_score:
+            max_score = total_score
+            i_max_score = i
+        elif max_score - total_score > threshold:
+            # Score drops too low -> terminate alignment
+            break
+
+    # Return the total score and the number of aligned symbols at the
+    # point with maximum total score
+    score[0] = max_score
+    return i_max_score + 1
 
 
 
@@ -331,10 +364,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         )
         total_score += score
         # Undo the sequence reversing and add seed offset
-        [print(trace) for trace in upstream_traces]
-        print("BLA")
         upstream_traces = [-trace[::-1] + seed-1 for trace in upstream_traces]
-        [print(trace) for trace in upstream_traces]
     
     if downstream:
         score, downstream_traces = _align_region(
