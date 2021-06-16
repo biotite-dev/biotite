@@ -37,7 +37,8 @@ from .banded import *
 from .kmeralphabet import *
 from .kmertable import *
 from .kmersimilarity import *
-from .local import *
+from .localgapped import *
+from .localungapped import *
 from .matrix import *
 from .multiple import *
 from .pairwise import *
