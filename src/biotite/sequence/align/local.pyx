@@ -172,8 +172,8 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
 
     cdef np.ndarray code1 = seq1.code
     cdef np.ndarray code2 = seq2.code
-    # For faster dispatch of the '_seed_extend()' function
-    # specialization for the common case
+    # For C- function call of the '_seed_extend_uint8()' function
+    # for the common case
     # This gives significant performance increase since the
     # seed extend itself runs fast
     cdef bint both_uint8 = (code1.dtype == np.uint8) \
@@ -182,7 +182,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     cdef int32 length
     cdef int start_offset = 0
     cdef int stop_offset = 1
-    cdef int32 score
+    cdef int32 score = 0
     cdef int32 total_score = 0
 
     # Separate alignment into two parts:
