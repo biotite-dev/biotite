@@ -84,6 +84,11 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             "Maximum number of returned alignments must be at least 1"
         )
     
+    cdef int seq1_start, seq2_start
+    seq1_start, seq2_start = seed
+    if seq1_start < 0 or seq2_start < 0:
+        raise IndexError("Seed must contain positive indices")
+    
     cdef bint upstream
     cdef bint downstream
     if direction == "both":
@@ -97,6 +102,9 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         downstream = True
     else:
         raise ValueError(f"Direction '{direction}' is invalid")
+    # Range check to avoid negative indices
+    if seq1_start == 0 or seq2_start == 0:
+        upstream = False
     
     if threshold < 0:
         raise ValueError("The threshold value must be a non-negative integer")
@@ -105,16 +113,12 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     code1 = seq1.code
     code2 = seq2.code
 
-    cdef int seq1_start, seq2_start
-    seq1_start, seq2_start = seed
-
 
     cdef int32 score
     cdef int32 total_score = 0
     # Separate alignment into two parts:
     # the regions upstream and downstream from the seed position
-    # Range check to avoid negative indices
-    if upstream and seq1_start > 0 and seq2_start > 0:
+    if upstream:
         # For the upstream region the respective part of the sequence
         # must be reversed
         score, upstream_traces = _align_region(
@@ -123,8 +127,19 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             max_number, score_only
         )
         total_score += score
-        # Undo the sequence reversing and add seed offset
-        upstream_traces = [-trace[::-1] + seed-1 for trace in upstream_traces]
+        if upstream_traces is not None:
+            # Undo the sequence reversing
+            upstream_traces = [trace[::-1] for trace in upstream_traces]
+            offset = np.array(seed) - 1
+            for trace in upstream_traces:
+                # Gap values (-1) are not transformed,
+                # as gaps are not indices
+                non_gap_mask = (trace != -1)
+                # Second part of sequence reversing
+                trace[non_gap_mask] *= -1
+                # Add seed offset to trace indices
+                trace[non_gap_mask[:, 0], 0] += offset[0]
+                trace[non_gap_mask[:, 1], 1] += offset[1]
     
     if downstream:
         score, downstream_traces = _align_region(
@@ -133,8 +148,11 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             max_number, score_only
         )
         total_score += score
-        # Add seed offset
-        downstream_traces = [trace + seed+1 for trace in downstream_traces]
+        if downstream_traces is not None:
+            offset = np.array(seed) + 1
+            for trace in downstream_traces:
+                trace[trace[:, 0] != -1, 0] += offset[0]
+                trace[trace[:, 1] != -1, 1] += offset[1]
     
     total_score += score_matrix[code1[seq1_start], code2[seq2_start]]
     
@@ -147,7 +165,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             # Only consider max_number alignments
             traces = [
                 np.concatenate([upstream_trace, [seed], downstream_trace])
-                for i, (upstream_trace, downstream_trace) in zip(
+                for _, (upstream_trace, downstream_trace) in zip(
                     range(max_number),
                     itertools.product(upstream_traces, downstream_traces)
                 )
@@ -156,10 +174,15 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             traces = [
                 np.concatenate([trace, [seed]]) for trace in upstream_traces
             ]
-        else: # downstream
+        elif downstream:
             traces = [
                 np.concatenate([[seed], trace]) for trace in downstream_traces
             ]
+        else:
+            # 'direction == "upstream"', but the start index is 0 so no
+            # upstream alignment is performed
+            # -> the trace includes only the seed
+            traces = [np.array(seed)[np.newaxis, :]]
         
         return [Alignment([seq1, seq2], trace, total_score)
                 for trace in traces]
@@ -199,6 +222,13 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
             code1, code2, matrix, trace_table, score_table, threshold,
             gap_penalty, score_only
         )
+    
+    # If only the score is desired, the traceback is not necessary
+    if score_only:
+        max_score = np.max(score_table)
+        # The initial score needs to be subtracted again,
+        # since it was artificially added for convenience resaons
+        return max_score - init_score, None
     
     
     # Traceback
@@ -259,12 +289,8 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
     # are used, the number of created traces are the number of
     # starts times `max_number`
     trace_list = trace_list[:max_number]
-    if score_only:
-        # The initial score needs to be subtracted again,
-        # since it was artificially added for convenience resaons
-        return max_score - init_score
-    else:
-        return max_score - init_score, trace_list
+
+    return max_score - init_score, trace_list
 
 
 #@cython.boundscheck(False)
@@ -319,10 +345,10 @@ def _fill_align_table(CodeType1[:] code1 not None,
         # to range where valid cells exist
         i_min = _min(i_min_k_1,     i_min_k_2 + 1)
         i_max = _max(i_max_k_1 + 1, i_max_k_2 + 1)
-        print(f"{k}A", i_min_k_1, i_max_k_1)
-        print(f"{k}B", i_min_k_2, i_max_k_2)
-        print(f"{k}C", i_min, i_max)
-        print()
+        #print(f"{k}A", i_min_k_1, i_max_k_1)
+        #print(f"{k}B", i_min_k_2, i_max_k_2)
+        #print(f"{k}C", i_min, i_max)
+        #print()
         # The index must also not be out of sequence range
         i_min = _max(i_min, k - code2.shape[0])
         i_max = _min(i_max, code1.shape[0])
@@ -344,8 +370,6 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 trace_table = _extend_table(np.asarray(trace_table), 1)
         i_max_total = _max(i_max_total, i_max)
         j_max_total = _max(j_max_total, j_max)
-        print(k, i_max_total, j_max_total)
-        print()
 
         for i in range(i_min, i_max+1):
             j = k - i
@@ -397,9 +421,18 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 if not score_only:
                     trace_table[i,j] = trace
     
+    #!#
+    from ..seqtypes import ProteinSequence
+    a = ProteinSequence()
+    b = ProteinSequence()
+    a.code = np.asarray(code1)
+    b.code = np.asarray(code2)
+    #print(a)
+    #print(b)
     print(np.asarray(trace_table))
     print(np.asarray(score_table))
     print()
+    #!#
     return np.asarray(trace_table)[:i_max_total+1, :j_max_total+1], \
            np.asarray(score_table)[:i_max_total+1, :j_max_total+1]
 

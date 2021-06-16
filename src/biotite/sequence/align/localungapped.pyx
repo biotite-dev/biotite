@@ -145,6 +145,8 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     
     cdef int seq1_start, seq2_start
     seq1_start, seq2_start = seed
+    if seq1_start < 0 or seq2_start < 0:
+        raise IndexError("Seed must contain positive indices")
 
     cdef np.ndarray code1 = seq1.code
     cdef np.ndarray code2 = seq2.code
