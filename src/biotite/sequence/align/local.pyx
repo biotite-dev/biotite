@@ -26,14 +26,14 @@ ctypedef np.uint64_t uint64
 
 ctypedef fused CodeType1:
     uint8
-    uint16
-    uint32
-    uint64
+    #uint16
+    #uint32
+    #uint64
 ctypedef fused CodeType2:
     uint8
-    uint16
-    uint32
-    uint64
+    #uint16
+    #uint32
+    #uint64
 
 
 # See tracetable.pyx for more information
@@ -521,18 +521,22 @@ def _fill_align_table(CodeType1[:] code1 not None,
     """
     
     cdef int i, j, k=0
-    # The range for i in the next, current and previous antidiagonal
-    # that may contain valid cells
+    # The ranges for i in the current (k=0) 
+    # and previous (k=1, k=2) antidiagonals, that point to valid cells
     cdef int i_min_k_0=0, i_max_k_0=0
     cdef int i_min_k_1=0, i_max_k_1=0
     cdef int i_min_k_2=0, i_max_k_2=0
-    cdef int i_min=0,     i_max=0
-
+    # The pruned range for i and j in the current antidiagonal,
+    # calculated from the previous antidiagonals
+    cdef int i_min, i_max
     cdef int j_max
+    # The maximum values for i and j ever encountered while iterating
+    # over the antidiagonals -> used for final trimming of tables
+    cdef int i_max_total=0, j_max_total=0
 
     cdef int32 from_diag, from_left, from_top
-    cdef uint8 trace
-    cdef int32 score
+    cdef uint8 trace = 0
+    cdef int32 score = 0
     cdef int32 max_score = score_table[0, 0]
     cdef int32 req_score = max_score - threshold
 
@@ -567,15 +571,21 @@ def _fill_align_table(CodeType1[:] code1 not None,
         if i_min > i_max:
             break
         
+        j_max = k - i_min
         # Expand ndarrays
         # if their size would be exceeded in the following iteration
         if i_max >= score_table.shape[0]:
             score_table = _extend_table(np.asarray(score_table), 0)
-            trace_table = _extend_table(np.asarray(trace_table), 0)
-        j_max = k - i_min
+            if not score_only:
+                trace_table = _extend_table(np.asarray(trace_table), 0)
         if j_max >= score_table.shape[1]:
             score_table = _extend_table(np.asarray(score_table), 1)
-            trace_table = _extend_table(np.asarray(trace_table), 1)
+            if not score_only:
+                trace_table = _extend_table(np.asarray(trace_table), 1)
+        i_max_total = _max(i_max_total, i_max)
+        j_max_total = _max(j_max_total, j_max)
+        print(k, i_max_total, j_max_total)
+        print()
 
         for i in range(i_min, i_max+1):
             j = k - i
@@ -601,7 +611,12 @@ def _fill_align_table(CodeType1[:] code1 not None,
             else:
                 from_left = 0
             
-            trace = get_trace_linear(from_diag, from_left, from_top, &score)
+            if score_only:
+                score = _max(from_diag, _max(from_left, from_top))
+            else:
+                trace = get_trace_linear(
+                    from_diag, from_left, from_top, &score
+                )
             
             if score > max_score:
                 max_score = score
@@ -612,22 +627,21 @@ def _fill_align_table(CodeType1[:] code1 not None,
                     i_min_k_0 = i
                 i_max_k_0 = i
                 score_table[i,j] = score
-                trace_table[i,j] = trace
+                if not score_only:
+                    trace_table[i,j] = trace
             elif score >= req_score:
                 if i_min_k_0 == k:
                     i_min_k_0 = i
                 i_max_k_0 = i
                 score_table[i,j] = score
-                trace_table[i,j] = trace
+                if not score_only:
+                    trace_table[i,j] = trace
     
-    j_max = k - i_min
     print(np.asarray(trace_table))
     print(np.asarray(score_table))
     print()
-    #return np.asarray(trace_table)[:i_max+1, :j_max+1], \
-    #       np.asarray(score_table)[:i_max+1, :j_max+1]
-    return np.asarray(trace_table), \
-           np.asarray(score_table)
+    return np.asarray(trace_table)[:i_max_total+1, :j_max_total+1], \
+           np.asarray(score_table)[:i_max_total+1, :j_max_total+1]
 
 
 def _extend_table(table, int dimension):
