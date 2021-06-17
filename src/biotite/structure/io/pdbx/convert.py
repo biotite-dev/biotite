@@ -238,30 +238,82 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
 
 def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     prefix = "auth" if use_author_fields else "label"
-    array.set_annotation(
-        "chain_id", model_dict[f"{prefix}_asym_id"].astype("U4")
-    )
-    array.set_annotation(
-        "res_id", np.array(
-            [-1 if e in [".","?"] else int(e)
-             for e in model_dict[f"{prefix}_seq_id"]]
+    if f"{prefix}_asym_id" in model_dict.keys:
+        array.set_annotation(
+            "chain_id", model_dict[f"{prefix}_asym_id"].astype("U4")
         )
-    )
+    else:
+        if use_author_fields:
+            array.set_annotation(
+                "chain_id", model_dict["label_asym_id"].astype("U4")
+            )
+        else:
+            array.set_annotation(
+                "chain_id", model_dict["auth_asym_id"].astype("U4")
+            )
+
+    if f"{prefix}_seq_id" in model_dict.keys:
+        array.set_annotation(
+            "res_id", np.array(
+                [-1 if e in [".","?"] else int(e)
+                for e in model_dict["label_seq_id"]]
+            )
+        )
+    else:
+        if use_author_fields:
+            array.set_annotation(
+                "res_id", np.array(
+                    [-1 if e in [".","?"] else int(e)
+                    for e in model_dict["label_seq_id"]]
+                )
+            )
+        else:
+            array.set_annotation(
+                "res_id", np.array(
+                    [-1 if e in [".","?"] else int(e)
+                    for e in model_dict["auth_seq_id"]]
+                )
+            )
+
     array.set_annotation(
         "ins_code", np.array(
             ["" if e in [".","?"] else e
              for e in model_dict["pdbx_PDB_ins_code"].astype("U1")]
         )
     )
-    array.set_annotation(
-        "res_name", model_dict[f"{prefix}_comp_id"].astype("U3")
-    )
+
+    if f"{prefix}_comp_id" in model_dict.keys:
+        array.set_annotation(
+            "res_name", model_dict[f"{prefix}_comp_id"].astype("U3")
+        )
+    else:
+        if use_author_fields:
+            array.set_annotation(
+                "res_name", model_dict["label_comp_id"].astype("U3")
+            )
+        else:
+            array.set_annotation(
+                "res_name", model_dict["auth_comp_id"].astype("U3")
+            )
+
     array.set_annotation(
         "hetero", (model_dict["group_PDB"] == "HETATM")
     )
-    array.set_annotation(
-        "atom_name", model_dict[f"{prefix}_atom_id"].astype("U6")
-    )
+
+    if f"{prefix}_atom_id" in model_dict.keys:
+        array.set_annotation(
+            "atom_name", model_dict[f"{prefix}_atom_id"].astype("U6")
+        )
+    else:
+        if use_author_fields:
+            array.set_annotation(
+                "atom_name", model_dict["label_atom_id"].astype("U6")
+            )
+        else:
+            array.set_annotation(
+                "atom_name", model_dict["auth_atom_id"].astype("U6")
+            )
+
     array.set_annotation("element", model_dict["type_symbol"].astype("U2"))
     
     for field in extra_fields:
