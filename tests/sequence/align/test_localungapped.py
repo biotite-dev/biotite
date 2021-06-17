@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
+from biotite.sequence.seqtypes import ProteinSequence
 
 
 @pytest.mark.parametrize(
@@ -71,12 +72,12 @@ import biotite.sequence.align as align
         [[False], [True]],  # uint8_code
     )]
 )
-def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
-                              ref_range1, ref_range2,
-                              direction, score_only, uint8_code):
+def test_simple_alignments(seq_type, seq1, seq2, seed, threshold,
+                           ref_range1, ref_range2,
+                           direction, score_only, uint8_code):
     """
     Check if `algin_local_ungapped()` produces correct alignments based on
-    known examples.
+    simple known examples.
     """
     # Limit start or stop reference alignment range to seed
     # if the alignment does not extend in both directions
@@ -96,23 +97,8 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
         matrix = align.SubstitutionMatrix.std_protein_matrix()
     
     if not uint8_code:
-        # Adjust sequences, so that they
-        # use 'uint16' as dtype for the code
-        # This is a necessary test,
-        # since 'uint8' uses a separate implementation
-        new_alph = seq.Alphabet(np.arange(500))
-        code = seq1.code
-        seq1 = seq.GeneralSequence(new_alph)
-        seq1.code = code
-        code = seq2.code
-        seq2 = seq.GeneralSequence(new_alph)
-        seq2.code = code
-        # Adjust the substitution matrix as well,
-        # so that it is compatible with the new alphabet
-        score_matrix = np.zeros((len(new_alph), len(new_alph)), dtype=np.int32)
-        orig_len = len(matrix.score_matrix())
-        score_matrix[:orig_len, :orig_len] = matrix.score_matrix()
-        matrix = align.SubstitutionMatrix(new_alph, new_alph, score_matrix)
+        seq1, seq2, matrix = _convert_to_uint16_code(seq1, seq2, matrix)
+
     
     ref_alignment = align.Alignment(
         [seq1, seq2],
@@ -131,3 +117,101 @@ def test_algin_local_ungapped(seq_type, seq1, seq2, seed, threshold,
         assert test_result == ref_score
     else:
         assert test_result == ref_alignment
+
+
+@pytest.mark.parametrize(
+    "seed, uint8_code", itertools.product(
+        range(100),
+        [False, True]
+    )
+)
+def test_random_alignment(seed, uint8_code):
+    MIN_SIZE = 200
+    MAX_SIZE = 1000
+    MIN_CONSERVED_SIZE = 20
+    MAX_CONSERVED_SIZE = 100
+    CONSERVED_ENDS = 5
+    MUTATION_PROB = 0.1
+    THRESHOLD = 100
+    
+    np.random.seed(seed)
+
+    conserved1 = ProteinSequence()
+    conserved_len = np.random.randint(MIN_CONSERVED_SIZE, MAX_CONSERVED_SIZE+1)
+    conserved1.code = np.random.randint(
+        # Do not include stop symbol for aesthetic reasons -> -1
+        len(conserved1.alphabet)-1,
+        size=conserved_len
+    )
+    conserved2 = ProteinSequence()
+    conserved2.code = conserved1.code.copy()
+    mutation_mask = np.random.choice(
+        [False, True],
+        size=conserved_len,
+        p = [1 - MUTATION_PROB, MUTATION_PROB]
+    )
+    conserved2.code[mutation_mask] = np.random.randint(
+        len(conserved2.alphabet)-1,
+        size=np.count_nonzero(mutation_mask)
+    )
+    conserved2.code[:CONSERVED_ENDS] = conserved1.code[:CONSERVED_ENDS]
+    conserved2.code[-CONSERVED_ENDS:] = conserved1.code[-CONSERVED_ENDS:]
+
+
+    seq1 = ProteinSequence()
+    seq2 = ProteinSequence()
+    offset = []
+    for sequence, conserved in zip(
+        (seq1, seq2), (conserved1, conserved2)
+    ):
+        sequence.code = np.random.randint(
+            len(sequence.alphabet)-1,
+            size=np.random.randint(MIN_SIZE, MAX_SIZE+1)
+        )
+        conserved_pos = np.random.randint(0, len(sequence) - len(conserved))
+        sequence.code[conserved_pos : conserved_pos + len(conserved)] \
+            = conserved.code
+        offset.append(conserved_pos)
+    seed = np.array(offset) + np.random.randint(len(conserved))
+
+    matrix = align.SubstitutionMatrix.std_protein_matrix()
+    if not uint8_code:
+        seq1, seq2, matrix = _convert_to_uint16_code(seq1, seq2, matrix)
+    
+    ref_score = align.align_optimal(
+        seq1, seq2, matrix, local=True, max_number=1,
+        # High gap penalty to prevent introduction of gaps, 
+        # since 'align_local_ungapped()' is also no able to place gaps
+        gap_penalty=-1000
+    )[0].score
+
+    test_alignment = align.align_local_ungapped(
+        seq1, seq2, matrix, seed, THRESHOLD
+    )
+
+    assert test_alignment.score == ref_score
+    # Test if the score is also correctly calculated
+    assert align.score(test_alignment, matrix) == ref_score
+
+
+def _convert_to_uint16_code(seq1, seq2, matrix):
+        """
+        Adjust sequences, so that they use 'uint16' as dtype for the
+        code.
+        This is a necessary test, since 'uint8' uses a separate
+        implementation.
+        """
+        new_alph = seq.Alphabet(np.arange(500))
+        code = seq1.code
+        seq1 = seq.GeneralSequence(new_alph)
+        seq1.code = code
+        code = seq2.code
+        seq2 = seq.GeneralSequence(new_alph)
+        seq2.code = code
+        # Adjust the substitution matrix as well,
+        # so that it is compatible with the new alphabet
+        score_matrix = np.zeros((len(new_alph), len(new_alph)), dtype=np.int32)
+        orig_len = len(matrix.score_matrix())
+        score_matrix[:orig_len, :orig_len] = matrix.score_matrix()
+        matrix = align.SubstitutionMatrix(new_alph, new_alph, score_matrix)
+        return seq1, seq2, matrix
