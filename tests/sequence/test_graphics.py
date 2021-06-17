@@ -6,7 +6,6 @@ from os.path import dirname, abspath, join
 import glob
 import pytest
 import biotite.sequence as seq
-import biotite.sequence.graphics as graphics
 from ..util import cannot_import
 
 
@@ -20,6 +19,7 @@ from ..util import cannot_import
 )
 def test_load_color_scheme(scheme_path):
     from matplotlib.colors import to_rgb
+    import biotite.sequence.graphics as graphics
 
     supported_alphabets = [
         seq.NucleotideSequence.alphabet_amb,
