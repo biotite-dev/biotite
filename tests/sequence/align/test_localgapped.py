@@ -86,7 +86,9 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
     if gap_penalty == (-10,-1):
         pytest.skip()
     MAX_NUMBER = 100
-    THRESHOLD = 1000
+    # The linear gap penalty for longer gaps easily exceeds
+    # a small threshold -> increase threshold for linear penalty
+    THRESHOLD = 200 if isinstance(gap_penalty, int) else 50
     
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     index1, index2 = seq_indices
@@ -115,6 +117,9 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
         try:
             test_alignments = test_result
             assert test_alignments[0].score == ref_alignments[0].score
+            # Test if the score is also correctly calculated
+            assert align.score(test_alignments[0], matrix, gap_penalty) \
+                == ref_alignments[0].score
             if len(ref_alignments) < MAX_NUMBER \
                and len(test_alignments) < MAX_NUMBER:
                     # Only test if the exact same alignments were created,
@@ -130,104 +135,3 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
             print()
             print(ref_alignments[0])
             raise
-
-
-#@pytest.mark.parametrize(
-#    "gap_penalty, local, seed", itertools.product(
-#    [-10, (-10, -1)],
-#    [False, True],
-#    range(100)
-#))
-#def test_swapping(gap_penalty, local, seed):
-#    """
-#    Check if `align_banded()` returns a 'swapped' alignment, if
-#    the order of input sequences is swapped.
-#    """
-#    np.random.seed(seed)
-#    band = (
-#        np.random.randint(-30, -10),
-#        np.random.randint( 10,  30)
-#    )
-#
-#    seq1, seq2 = _create_random_pair(seed)
-#    matrix = align.SubstitutionMatrix.std_protein_matrix()
-#    ref_alignments = align.align_banded(
-#        seq1, seq2, matrix, band=band, local=local, gap_penalty=gap_penalty
-#    )
-#
-#    test_alignments = align.align_banded(
-#        seq2, seq1, matrix, band=band, local=local, gap_penalty=gap_penalty
-#    )
-#
-#    if len(ref_alignments) != 1 or  len(test_alignments) != 1:
-#        # If multiple optimal alignments exist,
-#        # it is not easy to assign a swapped one to an original one
-#        # therefore, simply return in this case
-#        # the number of tested seeds should be large enough to generate
-#        # a reasonable number of suitable test cases
-#        return
-#    ref_alignment = ref_alignments[0]
-#    test_alignment = test_alignments[0]
-#    
-#    assert test_alignment.sequences[0] == ref_alignment.sequences[1]
-#    assert test_alignment.sequences[1] == ref_alignment.sequences[0]
-#    assert np.array_equal(test_alignment.trace, ref_alignment.trace[:, ::-1])
-#
-#
-#
-#def _create_random_pair(seed, length=100, max_subsitutions=5,
-#                        max_insertions=5, max_deletions=5,
-#                        max_truncations=5):
-#    """
-#    generate a pair of protein sequences.
-#    Each pair contains
-#
-#        1. a randomly generated sequence
-#        2. a sequence created by randomly introducing
-#           deletions/insertions/substitutions into the first sequence.
-#    """
-#    np.random.seed(seed)
-#
-#    original = seq.ProteinSequence()
-#    original.code = np.random.randint(len(original.alphabet), size=length)
-#
-#    mutant = original.copy()
-#
-#    # Random Substitutions
-#    n_subsitutions = np.random.randint(max_subsitutions)
-#    subsitution_indices = np.random.choice(
-#        np.arange(len(mutant)), size=n_subsitutions, replace=False
-#    )
-#    subsitution_values = np.random.randint(
-#        len(original.alphabet), size=n_subsitutions
-#    )
-#    mutant.code[subsitution_indices] = subsitution_values
-#
-#    # Random insertions
-#    n_insertions = np.random.randint(max_insertions)
-#    insertion_indices = np.random.choice(
-#        np.arange(len(mutant)), size=n_insertions, replace=False
-#    )
-#    insertion_values = np.random.randint(
-#        len(original.alphabet), size=n_insertions
-#    )
-#    mutant.code = np.insert(mutant.code, insertion_indices, insertion_values)
-#
-#    # Random deletions
-#    n_deletions = np.random.randint(max_deletions)
-#    deletion_indices = np.random.choice(
-#        np.arange(len(mutant)), size=n_deletions, replace=False
-#    )
-#    mutant.code = np.delete(mutant.code, deletion_indices)
-#
-#    # Truncate at both ends of original and mutant
-#    original = original[
-#        np.random.randint(max_truncations) :
-#        -(1 + np.random.randint(max_truncations))
-#    ]
-#    mutant = mutant[
-#        np.random.randint(max_truncations) :
-#        -(1 + np.random.randint(max_truncations))
-#    ]
-#
-#    return original, mutant
