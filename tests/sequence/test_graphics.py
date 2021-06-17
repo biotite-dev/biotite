@@ -14,7 +14,10 @@ from ..util import cannot_import
 )
 @pytest.mark.parametrize(
     "scheme_path", glob.glob(
-        join(dirname(abspath(graphics.__file__)), "color_schemes", "*.json")
+        join(
+            dirname(abspath(seq.__file__)),
+            "graphics", "color_schemes", "*.json"
+        )
     )
 )
 def test_load_color_scheme(scheme_path):
