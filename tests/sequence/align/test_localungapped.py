@@ -126,6 +126,14 @@ def test_simple_alignments(seq_type, seq1, seq2, seed, threshold,
     )
 )
 def test_random_alignment(seed, uint8_code):
+    """
+    Create two randomized sequences and place a conserved region into
+    each sequence, where both conserved regions are similar to each
+    other.
+    The conserved regions only contain point mutations and no indels.
+    Expect that the alignment score found by `align_local_ungapped()` is
+    equal to the alignment score found by `align_optimal()`.
+    """
     MIN_SIZE = 200
     MAX_SIZE = 1000
     MIN_CONSERVED_SIZE = 20
@@ -136,6 +144,7 @@ def test_random_alignment(seed, uint8_code):
     
     np.random.seed(seed)
 
+    # Create conserved regions
     conserved1 = ProteinSequence()
     conserved_len = np.random.randint(MIN_CONSERVED_SIZE, MAX_CONSERVED_SIZE+1)
     conserved1.code = np.random.randint(
@@ -144,6 +153,8 @@ def test_random_alignment(seed, uint8_code):
         size=conserved_len
     )
     conserved2 = ProteinSequence()
+    # The second conserved regions is equal to the first one,
+    # except a few point mutations
     conserved2.code = conserved1.code.copy()
     mutation_mask = np.random.choice(
         [False, True],
@@ -154,10 +165,12 @@ def test_random_alignment(seed, uint8_code):
         len(conserved2.alphabet)-1,
         size=np.count_nonzero(mutation_mask)
     )
+    # Flank the conserved regions with equal termini to ensure
+    # that the alignment extends from start to end of the region
     conserved2.code[:CONSERVED_ENDS] = conserved1.code[:CONSERVED_ENDS]
     conserved2.code[-CONSERVED_ENDS:] = conserved1.code[-CONSERVED_ENDS:]
 
-
+    # Create randomized sequences
     seq1 = ProteinSequence()
     seq2 = ProteinSequence()
     offset = []
@@ -168,11 +181,14 @@ def test_random_alignment(seed, uint8_code):
             len(sequence.alphabet)-1,
             size=np.random.randint(MIN_SIZE, MAX_SIZE+1)
         )
+        # Place conserved region randomly within the sequence
         conserved_pos = np.random.randint(0, len(sequence) - len(conserved))
         sequence.code[conserved_pos : conserved_pos + len(conserved)] \
             = conserved.code
         offset.append(conserved_pos)
+    # The seed is placed somewhere in the conserved region
     seed = np.array(offset) + np.random.randint(len(conserved))
+
 
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     if not uint8_code:
