@@ -27,8 +27,6 @@ def test_simple_alignment(gap_penalty, seed, threshold,
     `align_optimal()`.
     This test uses a pair of highly similar short sequences.
     """
-    if gap_penalty == (-10,-1):
-        pytest.skip()
     # Cyclotide C, Uniprot: P86843
     seq1 = seq.ProteinSequence("gvpcaescvwipctvtallgcsckdkvcyld")
     # Cyclotide F, Uniprot: P86846
@@ -83,8 +81,6 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
     The threshold should be chosen sufficiently large so
     `align_local_gapped()` can return the optimal alignment(s).
     """
-    if gap_penalty == (-10,-1):
-        pytest.skip()
     MAX_NUMBER = 100
     # The linear gap penalty for longer gaps easily exceeds
     # a small threshold -> increase threshold for linear penalty
