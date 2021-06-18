@@ -206,8 +206,6 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         # row/column to avoid issues with premature pruning in the table
         # filling process
         m_table[0,0]  = init_score
-        g1_table[0,0] = init_score
-        g2_table[0,0] = init_score
         trace_table, m_table, g1_table, g2_table = _fill_align_table_affine(
             code1, code2, matrix, trace_table, m_table, g1_table, g2_table,
             threshold, gap_penalty[0], gap_penalty[1], score_only
@@ -555,8 +553,8 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             
             
             if score_only:
-                m_score = _max(mm_score, _max(g1m_score, g2m_score))
-                g1_score = _max(mg1_score, mg1_score)
+                m_score  = _max(mm_score, _max(g1m_score, g2m_score))
+                g1_score = _max(mg1_score, g1g1_score)
                 g2_score = _max(mg2_score, g2g2_score)
             else:
                 trace = get_trace_affine(
