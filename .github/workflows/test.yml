@@ -62,7 +62,6 @@ jobs:
           activate-environment: biotite-dev
           environment-file: environment.yml
           auto-update-conda: true
-      - run: conda install numpy=1.19
       - run: python setup.py bdist_wheel
       - run: pip install ./dist/*.whl
       - run: pytest --ignore=tests/application/test_blast.py --ignore=tests/application/test_sra.py --ignore=tests/database/test_entrez.py
