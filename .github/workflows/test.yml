@@ -14,6 +14,9 @@ jobs:
           - os: ubuntu-latest
             python: '3.8'
             numpy: '1.16'
+          - os: ubuntu-latest
+            python: '3.9'
+            numpy: '1.19'
           - os: macos-latest
             python: '3.7'
             numpy: '1.15'
@@ -59,7 +62,6 @@ jobs:
           activate-environment: biotite-dev
           environment-file: environment.yml
           auto-update-conda: true
-          python-version: '3.9'
       - run: conda install numpy=1.19
       - run: python setup.py bdist_wheel
       - run: pip install ./dist/*.whl
