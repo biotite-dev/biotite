@@ -1,0 +1,37 @@
+name: Testing Biotite
+
+on: [push, pull_request]
+
+jobs:
+  test-simple:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.7'
+            numpy: '1.15'
+          #- os: ubuntu-latest
+          #  python: '3.8'
+          #  numpy: '1.16'
+          #- os: ubuntu-latest
+          #  python: '3.9'
+          #  numpy: '1.19'
+          #- os: macos-latest
+          #  python: '3.9'
+          #  numpy: '1.19'
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: biotite-dev
+          auto-update-conda: true
+          python-version: ${{ matrix.python }}
+      - run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
+        env:
+          NUMPY_VERSION: ${{ matrix.numpy }}
+      - run: python setup.py bdist_wheel
+      - run: pip install ./dist/*.whl
+      - run: pytest --ignore=tests/structure/test_trajectory.py --ignore=tests/application/ --ignore=tests/database/ --ignore=tests/test_doctest.py
