@@ -39,12 +39,12 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     align_local_ungapped(seq1, seq2, matrix, seed, threshold,
                          direction="both", score_only=False, check_matrix=True)
     
-    Perform a local alignment starting at the given `seed` position
+    Perform a local alignment extending from given `seed` position
     without introducing gaps.
 
     The alignment extends into one or both directions (controlled by
     `direction`) until the total alignment score falls more than
-    `threshold` below the maximum score found.
+    `threshold` below the maximum score found (*X-Drop*).
     The returned alignment contains the range that yielded the maximum
     score.
     
@@ -95,6 +95,11 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     score : int
         The alignment similarity score.
         Only returned, if `score_only` is ``True``.
+    
+    See also
+    --------
+    align_gapped
+        For gapped local alignments with the same *X-Drop* technique.
     
     Examples
     --------

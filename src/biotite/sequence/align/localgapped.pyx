@@ -44,6 +44,113 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     align_local_gapped(seq1, seq2, matrix, seed, threshold,
                        gap_penalty=-10, max_number=1,
                        direction="both", score_only=False)
+    
+    Perform a local gapped alignment extending from a given `seed`
+    position.
+
+    The alignment extends into one or both directions (controlled by
+    `direction`) until the total alignment score falls more than
+    `threshold` below the maximum score found (*X-Drop*) [1]_.
+    The returned alignment contains the range that yielded the maximum
+    score.
+
+    Parameters
+    ----------
+    seq1, seq2 : Sequence
+        The sequences to be aligned.
+    matrix : SubstitutionMatrix
+        The substitution matrix used for scoring.
+    seed : tuple(int, int)
+        The indices in `seq1` and `seq2` where the local alignment
+        starts.
+        The indices must be non-negative.
+    threshold : int
+        If the current score falls this value below the maximum score
+        found, the alignment terminates.
+    gap_penalty : int or tuple(int, int), optional
+        If an integer is provided, the value will be interpreted as
+        linear gap penalty.
+        If a tuple is provided, an affine gap penalty is used [2]_.
+        The first integer in the tuple is the gap opening penalty,
+        the second integer is the gap extension penalty.
+        threshold : int
+        If the current score falls this value below the maximum score
+        found, the alignment terminates.
+    max_number : int, optional
+        The maximum number of alignments returned.
+        When the number of branches exceeds this value in the traceback
+        step, no further branches are created.
+        By default, only a single alignment is returned.
+    direction : {'both', 'upstream', 'downstream'}, optional
+        Controls in which direction the alignment extends starting
+        from the seed.
+        If ``'upstream'``, the alignment starts before the `seed` and
+        ends at the `seed`.
+        If ``'downstream'``, the alignment starts at the `seed` and
+        ends behind the `seed`.
+        If ``'both'`` (default) the alignment starts before the `seed`
+        and ends behind the `seed`.
+        The `seed` position itself is always included in the alignment.
+    score_only : bool, optional
+        If set to ``True``, only the similarity score is returned
+        instead of the :class:`Alignment`, decreasing the runtime
+        substantially.
+    
+    Returns
+    -------
+    alignments : list of Alignment
+        A list of found alignments.
+        Each alignment in the list has the same similarity
+        score.
+        Only returned, if `score_only` is ``False``.
+    score : int
+        The alignment similarity score.
+        Only returned, if `score_only` is ``True``.
+    
+    See also
+    --------
+    align_ungapped
+        For ungapped local alignments with the same *X-Drop* technique.
+    
+    References
+    ----------
+
+    .. [1] Z Zhang, S Schwartz, L Wagner, W, Miller,
+       "A greedy algorithm for aligning DNA sequences."
+       J Comput Biol, 7, 203-214 (2000).
+    .. [2] O Gotoh,
+       "An improved algorithm for matching biological sequences."
+       J Mol Biol, 162, 705-708 (1982).
+    
+    Examples
+    --------
+
+    >>> seq1 = NucleotideSequence("CGTAGCTATCGCCTGTACGGTT")
+    >>> seq2 = NucleotideSequence("TATATGCCTTACGGAATTGCTTTTT")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> alignment = align_local_gapped(
+    ...     seq1, seq2, matrix, seed=(16, 10), threshold=20
+    ... )[0]
+    >>> print(alignment)
+    TATCGCCTGTACGG
+    TAT-GCCT-TACGG
+    >>> alignment = align_local_gapped(
+    ...     seq1, seq2, matrix, seed=(16, 10), threshold=20, direction="upstream"
+    ... )[0]
+    >>> print(alignment)
+    TATCGCCTGTA
+    TAT-GCCT-TA
+    >>> alignment = align_local_gapped(
+    ...     seq1, seq2, matrix, seed=(16, 10), threshold=20, direction="downstream"
+    ... )[0]
+    >>> print(alignment)
+    ACGG
+    ACGG
+    >>> score = align_local_gapped(
+    ...     seq1, seq2, matrix, seed=(16, 10), threshold=20, score_only=True
+    ... )
+    >>> print(score)
+    40
     """
     # Check matrix alphabets
     if     not matrix.get_alphabet1().extends(seq1.get_alphabet()) \
@@ -179,6 +286,47 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
 
 def _align_region(code1, code2, matrix, threshold, gap_penalty,
                   max_number, score_only):
+    """
+    Perfrom a local *X-Drop* alignment extending from the start of the
+    given sequences
+
+    Parameters
+    ----------
+    code1, code2 : ndarray, dtype={np.uint8, np.uint16, np.uint32, np.uint64}
+        The code of the sequences to be aligned.
+    matrix : ndarray, shape(k, k), dtype=np.int32
+        The score matrix.
+    threshold : int
+        If the current score falls this value below the maximum score
+        found, the alignment terminates.
+    gap_penalty : int or tuple(int, int)
+        If an integer is provided, the value will be interpreted as
+        linear gap penalty.
+        If a tuple is provided, an affine gap penalty is used [2]_.
+        The first integer in the tuple is the gap opening penalty,
+        the second integer is the gap extension penalty.
+        threshold : int
+        If the current score falls this value below the maximum score
+        found, the alignment terminates.
+    max_number : int
+        The maximum number of alignments returned.
+        When the number of branches exceeds this value in the traceback
+        step, no further branches are created.
+    score_only : bool
+        If set to ``True``, only the similarity score is calculated and
+        the traceback is not conducted.
+    
+    Returns
+    -------
+    score : int or None
+        The alignment similarity score.
+    trace : list of (ndarray, shape=(n,2), dtype=int) or None
+        A list of alignment traces, where each trace corresponds to an
+        alignment with the maximum similarity score found.
+        This list has only multiple elements if there are multiple
+        traces, that correspond to the same maximum similarity score.
+        ``None``, if `score_only` is ``False``.
+    """
     if type(gap_penalty) == int:
         affine_penalty = False
     else:
@@ -310,6 +458,36 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       int32 gap_penalty,
                       bint score_only):
     """
+    Fill an alignment table with linear gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    code1, code2
+        The sequence code of each sequence to be aligned.
+    matrix
+        The score matrix obtained from the :class:`SubstitutionMatrix`
+        object.
+    trace_table
+        The initial matrix containing values indicating the direction
+        for the traceback step.
+    score_table
+        The initial score table.
+    threshold
+        An alignment cell is invalidated if the total similarity score
+        is this threshold below the maximum similarity score found so
+        far.
+    gap_penalty
+        The linear gap penalty.
+    score_only
+        If true, the trace table is not filled.
+    
+    Returns
+    -------
+    trace_table
+        The filled trace table.
+    score_table
+        The filled score table.
     """
     cdef int i, j, k=0
     # The ranges for i in the current (k=0) 
@@ -439,6 +617,41 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                              int32 gap_ext,
                              bint score_only):
     """
+    Fill an alignment table with affines gap penalty using dynamic
+    programming.
+
+    Parameters
+    ----------
+    code1, code2
+        The sequence code of each sequence to be aligned.
+    matrix
+        The score matrix obtained from the :class:`SubstitutionMatrix`
+        object.
+    trace_table
+        The initial matrix containing values indicating the direction
+        for the traceback step.
+    m_table, g1_table, g2_table
+        The alignment tables containing the scores.
+        `m_table` contains values for matches.
+        `g1_table` contains values for gaps in the first sequence.
+        `g2_table` contains values for gaps in the second sequence.
+    threshold
+        An alignment cell is invalidated if the total similarity score
+        is this threshold below the maximum similarity score found so
+        far.
+    gap_open
+        The gap opening penalty.
+    gap_ext
+        The gap extension penalty.
+    score_only
+        If true, the trace table is not filled.
+    
+    Returns
+    -------
+    trace_table
+        The filled trace table.
+    m_table, g1_table, g2_table
+        The filled score tables.
     """
     cdef int i, j, k=0
     # The ranges for i in the current (k=0) 
