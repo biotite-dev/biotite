@@ -82,9 +82,9 @@ def test_search_basic():
         (
             "rcsb_entity_source_organism.rcsb_gene_name.value",
             {"exact_match": "lacA"},
-            ["5JUV", "1KQA", "1KRV", "1KRU", "1KRR", "1TG7",
-             "1XC6", "4IUG", "4LFK", "4LFL", "4LFM", "4LFN",
-             "5IFP", "5IFT", "5IHR", "4DUW", "5MGD", "5MGC"]
+            ["5JUV", "1KQA", "1KRV", "1KRU", "1KRR", "1TG7", "1XC6", "3U7V",
+             "4IUG", "4LFK", "4LFL", "4LFM", "4LFN", "5IFP", "5IFT", "5IHR",
+             "4DUW", "5MGD", "5MGC"]
         ),
         (
             "struct.title",
