@@ -469,6 +469,8 @@ class KmerAlphabet(Alphabet):
             return False
         if self._k != item._k:
             return False
+        if self._spacing != item._spacing:
+            return False
         return True
     
 
