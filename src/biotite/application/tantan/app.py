@@ -157,14 +157,14 @@ class TantanApp(LocalApp):
         Parameters
         ----------
         sequence : NucleotideSequence or ProteinSequence
-        The sequence to be masked.
-    matrix : SubstitutionMatrix, optional
-        The substitution matrix to use for repeat identification.
-        A sequence segment is considered to be a repeat of another
-        segment, if the substitution score between these segments is
-        greater than a threshold value.
-    bin_path : str, optional
-        Path of the *tantan* binary.
+            The sequence to be masked.
+        matrix : SubstitutionMatrix, optional
+            The substitution matrix to use for repeat identification.
+            A sequence segment is considered to be a repeat of another
+            segment, if the substitution score between these segments is
+            greater than a threshold value.
+        bin_path : str, optional
+            Path of the *tantan* binary.
 
         Returns
         -------
