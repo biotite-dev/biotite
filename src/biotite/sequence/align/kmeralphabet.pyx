@@ -178,7 +178,7 @@ class KmerAlphabet(Alphabet):
     
     @property
     def spacing(self):
-        return self._spacing.copy()
+        return None if self._spacing is None else self._spacing.copy()
     
 
     def get_symbols(self):
@@ -352,6 +352,35 @@ class KmerAlphabet(Alphabet):
         return np.asarray(split_codes)
     
 
+    def kmer_array_length(self, int64 length):
+        """
+        kmer_array_length(length)
+
+        Get the length of the *k-mer* array, created by
+        :meth:`create_kmers()`, if a sequence of size `length` would be
+        given given.
+
+        Parameters
+        ----------
+        length : int
+            The length of the hypothetical sequence
+        
+        Returns
+        -------
+        kmer_length : int
+            The length of created *k-mer* array.
+        """
+        cdef int64 max_offset
+        cdef int64[:] spacing
+
+        if self._spacing is None:
+            return length - self._k + 1
+        else:
+            spacing = self._spacing
+            max_offset = self._spacing[len(spacing)-1] + 1
+            return length - max_offset + 1
+    
+
     def create_kmers(self, seq_code):
         """
         create_kmers(seq_code)
@@ -401,7 +430,7 @@ class KmerAlphabet(Alphabet):
             )
 
         cdef int64[:] kmers = np.empty(
-            len(seq_code) - k + 1, dtype=np.int64
+            self.kmer_array_length(len(seq_code)), dtype=np.int64
         )
         
         cdef CodeType code
@@ -437,7 +466,7 @@ class KmerAlphabet(Alphabet):
             )
 
         cdef int64[:] kmers = np.empty(
-            len(seq_code) - max_offset + 1, dtype=np.int64
+            self.kmer_array_length(len(seq_code)), dtype=np.int64
         )
         
         cdef CodeType code
@@ -460,6 +489,11 @@ class KmerAlphabet(Alphabet):
         return str(self.get_symbols())
     
 
+    def __repr__(self):
+        return f"KmerAlphabet({repr(self._base_alph)}, " \
+               f"{self._k}, {repr(self._spacing)})"
+    
+
     def __eq__(self, item):
         if item is self:
             return True
@@ -469,8 +503,13 @@ class KmerAlphabet(Alphabet):
             return False
         if self._k != item._k:
             return False
-        if self._spacing != item._spacing:
+        
+        if self._spacing is None:
+            if item._spacing is not None:
+                return False
+        elif np.any(self._spacing != item._spacing):
             return False
+        
         return True
     
 
