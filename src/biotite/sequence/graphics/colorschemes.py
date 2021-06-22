@@ -101,7 +101,9 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
             # Replace None values with default color
             colors = [color if color is not None else default
                       for color in colors]
-            return colors
+            # Only return colors that are in scope of this alphabet
+            # and not the extended alphabet
+            return colors[:len(alphabet)]
     raise ValueError(f"Unkown scheme '{name}' for given alphabet")
 
 
