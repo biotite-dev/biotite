@@ -310,10 +310,11 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # alignment, but are quite slow.
 # 
 # The :mod:`biotite.sequence.align` package provides the function
-# :func:`align_optimal()`, which either performs an optimal global
-# alignment, using the *Needleman-Wunsch* algorithm, or an optimal local
+# :func:`align_optimal()`, which fits into the latter category.
+# It either performs an optimal global alignment, using the
+# *Needleman-Wunsch* algorithm, or an optimal local
 # alignment, using the *Smith-Waterman* algorithm.
-# By default it uses a general gap penalty, but an affine gap penalty
+# By default it uses a linear gap penalty, but an affine gap penalty
 # can be used, too.
 # 
 # Most functions in :mod:`biotite.sequence.align` can align any two
@@ -586,15 +587,34 @@ for query_pos, ref_pos in matches:
 # """"""""""""""""""""""""""""""""""""
 # Now that we have found the match positions, we can perform an
 # alignment restricted to each match position.
-# Currently *Biotite* offers :func:`align_banded()` for this purpose.
-# While :func:`align_optimal()` explores all possible alignments,
-# :func:`align_banded()` restricts the alignment space to a defined
+# Currently *Biotite* offers three functions for this purpose:
+# :func:`align_local_ungapped()`, :func:`align_local_gapped()` and
+# :func:`align_banded()`.
+#
+# :func:`align_local_ungapped()` and :func:`align_local_gapped()`
+# perform fast local alignments expanding from a given *seed* position,
+# which is typically set to a match position from the previous step.
+# The alignment stops, if the current similarity score drops a given
+# threshold below the maximum score already found, a technique that is
+# also called *X-Drop*.
+# While :func:`align_local_ungapped()` is much faster than
+# :func:`align_local_gapped()`, it does not introduce gaps into the
+# alignment.
+# In contrast :func:`align_banded()` performs a local or global
+# alignment, where the alignment space is restricted to a defined
 # diagonal band, allowing only a certain number of insertions/deletions
 # in each sequence.
-# In other words: :func:`align_banded()` can be much faster, but may
-# not find the optimal alignment if there were too many gaps.
 #
-# :func:`align_banded()` requires two diagonals that defines the lower
+# The presented methods have in common, that they ideally only traverse
+# through a small fraction of the possible alignment space, allowing
+# them to run much faster than :func:`align_optimal()`.
+# However they might not find the optimal alignment, if such an
+# alignment would have an intermediate low scoring region or too many
+# gaps in either sequence, respectively.
+# In this tutorial we will focus on using :func:`align_banded()` to
+# perform a global alignment of our two sequences.
+# 
+# :func:`align_banded()` requires two diagonals that define the lower
 # and upper limit of the alignment band.
 # A diagonal is an integer defined as :math:`D = j - i`, where *i* and
 # *j* are sequence positions in the first and second sequence,
