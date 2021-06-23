@@ -68,7 +68,8 @@ def test_fetch_invalid(format):
 )
 def test_search_simple():
     query = uniprot.SimpleQuery("accession", "P62988")
-    assert uniprot.search(query) == ['P62979', 'P0CG47', 'P62987', 'P0CG48', 'P62988']
+    assert set(uniprot.search(query)) \
+        == set(['P62979', 'P0CG47', 'P62987', 'P0CG48', 'P62988'])
 
 
 @pytest.mark.skipif(
@@ -77,5 +78,6 @@ def test_search_simple():
 )
 def test_search_composite():
     query = uniprot.SimpleQuery("accession", "P62988") & uniprot.SimpleQuery("reviewed", "yes")
-    assert uniprot.search(query) == ['P62979', 'P0CG47', 'P62987', 'P0CG48']
+    assert set(uniprot.search(query)) \
+        == set(['P62979', 'P0CG47', 'P62987', 'P0CG48'])
 
