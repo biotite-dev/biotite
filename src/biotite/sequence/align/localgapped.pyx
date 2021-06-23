@@ -24,14 +24,14 @@ ctypedef np.uint64_t uint64
 
 ctypedef fused CodeType1:
     uint8
-    #uint16
-    #uint32
-    #uint64
+    uint16
+    uint32
+    uint64
 ctypedef fused CodeType2:
     uint8
-    #uint16
-    #uint32
-    #uint64
+    uint16
+    uint32
+    uint64
 
 
 DEF INIT_SIZE = 100
