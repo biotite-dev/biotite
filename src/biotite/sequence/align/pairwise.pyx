@@ -136,12 +136,13 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     two sequences.
     
     This function can either perform a global alignment, based on the
-    Needleman-Wunsch algorithm [1]_ or a local alignment, based on the
-    Smith–Waterman algorithm [2]_.
+    Needleman-Wunsch algorithm :footcite:`Needleman1970` or a local
+    alignment, based on the Smith–Waterman algorithm
+    :footcite:`Smith1981`.
     
     Furthermore this function supports affine gap penalties using the
-    Gotoh algorithm [3]_, however, this requires approximately 4 times
-    the RAM space and execution time.
+    Gotoh algorithm :footcite:`Gotoh1982`, however, this requires
+    approximately 4 times the RAM space and execution time.
     
     Parameters
     ----------
@@ -183,16 +184,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     References
     ----------
     
-    .. [1] SB Needleman, CD Wunsch,
-       "A general method applicable to the search for similarities
-       in the amino acid sequence of two proteins."
-       J Mol Biol, 48, 443-453 (1970).
-    .. [2] TF Smith, MS Waterman,
-       "Identification of common molecular subsequences."
-       J Mol Biol, 147, 195-197 (1981).
-    .. [3] O Gotoh,
-       "An improved algorithm for matching biological sequences."
-       J Mol Biol, 162, 705-708 (1982).
+    .. footbibliography::
     
     Examples
     --------

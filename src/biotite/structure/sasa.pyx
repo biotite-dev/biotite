@@ -37,7 +37,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
     
     This function uses the Shrake-Rupley ("rolling probe")
-    algorithm [1]_:
+    algorithm :footcite:`Shrake1973`:
     Every atom is occupied by a evenly distributed point mesh. The
     points that can be reached by the "rolling probe", are surface
     accessible.
@@ -78,10 +78,12 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         built-in sets is used:
         
             - **ProtOr** - A set, which does not require hydrogen atoms
-              in the model. Suitable for crystal structures. [2]_
+              in the model. Suitable for crystal structures.
+              :footcite:`Tsai1999`
             - **Single** - A set, which uses a defined VdW radius for
               every single atom, therefore hydrogen atoms are required
-              in the model (e.g. NMR elucidated structures). [3]_
+              in the model (e.g. NMR elucidated structures).
+              :footcite:`Bondi1964`
               
         By default *ProtOr* is used.
               
@@ -96,18 +98,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     References
     ----------
     
-    .. [1] A Shrake and JA Rupley,
-       "Environment and exposure to solvent of protein atoms.
-       Lysozyme and insulin."
-       J Mol Biol, 79, 351-371 (1973).
-   
-    .. [2] J Tsai R Taylor, C Chotia and M Gerstein,
-       "The packing densitiy in proteins: standard radii and volumes."
-       J Mol Biol, 290, 253-299 (1999).
-       
-    .. [3] A Bondi,
-       "Van der Waals volumes and radii."
-       J Phys Chem, 86, 441-451 (1964).
+    .. footbibliography::
     
     """
     cdef int i=0, j=0, k=0, adj_atom_i=0, rel_atom_i=0

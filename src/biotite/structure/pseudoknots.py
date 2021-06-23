@@ -56,7 +56,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     Notes
     -----
     The dynamic programming approach by Smit *et al*
-    :footcite:`smit_knotted_2008` is applied to detect pseudoknots.
+    :footcite:`Smit2008` is applied to detect pseudoknots.
     The algorithm was originally developed to remove pseudoknots from a
     structure.
     However, if it is run iteratively on removed knotted pairs it can be
@@ -64,7 +64,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     The pseudoknot order is defined as the minimum number of base pair
     set decompositions resulting in a nested structure
-    :footcite:`antczak_new_2018`.
+    :footcite:`Antczak2018`.
     Therefore, there are no pseudoknots between base pairs with the same
     pseudoknot order.
 
@@ -111,8 +111,6 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     ----------
 
     .. footbibliography::
-
-    daasdsa
 
     """
     # List containing the results

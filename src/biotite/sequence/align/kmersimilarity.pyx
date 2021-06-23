@@ -90,15 +90,12 @@ class ScoreThresholdRule(SimilarityRule):
     Notes
     -----
     For efficient generation of similar *k-mers* an implementation of
-    the *branch-and-bound* algorithm [1]_ is used.
+    the *branch-and-bound* algorithm :footcite:`Hauser2013` is used.
 
     References
     ----------
     
-    .. [1] M Hauser, CE Mayer, J Söding,
-       "kClust: fast and sensitive clustering of large protein sequence
-       databases."
-       BMC Bioinformatics, 14 (2013).
+    .. footbibliography::
     
     Examples
     --------

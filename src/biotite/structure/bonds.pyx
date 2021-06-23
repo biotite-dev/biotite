@@ -1359,7 +1359,7 @@ def connect_via_distances(atoms, dict distance_range=None):
         This parameter updates the default dictionary.
         Hence, the default bond distances for missing element pairs are
         still taken from the default dictionary.
-        The default bond distances are taken from [1]_.
+        The default bond distances are taken from :footcite:`Allen1987`.
     
     Returns
     -------
@@ -1381,10 +1381,7 @@ def connect_via_distances(atoms, dict distance_range=None):
     References
     ----------
     
-    .. [1] FH Allen, O Kennard and DG Watson,
-       "Tables of bond lengths determined by X-ray and neutron
-       diffraction. Part I. Bond lengths in organic compounds."
-       J Chem Soc Perkin Trans (1987).
+    .. footbibliography::
     """
     from .residues import get_residue_starts
     from .geometry import distance
