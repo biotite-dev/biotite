@@ -242,7 +242,7 @@ cdef class KmerTable:
 
     @staticmethod
     def from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
-                       alphabet=None):
+                       alphabet=None, spacing=None):
         """
         from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
                        alphabet=None)
@@ -281,6 +281,13 @@ cdef class KmerTable:
             input `sequences`.
             This option is usually used for compatibility with another
             sequence/table in the matching step.
+        spacing : None or str or list or ndarray, dtype=int, shape=(k,)
+            If provided, spaced *k-mers* are used instead of continuous
+            ones.
+            The value contains the *informative* positions relative to
+            the start of the *k-mer*, also called the *model*.
+            The number of *informative* positions must equal *k*.
+            Refer to :class:`KmerAlphabet` for more details.
         
         Returns
         -------
@@ -344,7 +351,7 @@ cdef class KmerTable:
                         "alphabet of the given sequences"
                     )
         
-        table = KmerTable(KmerAlphabet(alphabet, k))
+        table = KmerTable(KmerAlphabet(alphabet, k, spacing))
 
         # Create reference IDs if no given
         if ref_ids is None:
@@ -1324,7 +1331,9 @@ cdef class KmerTable:
 
     def _prepare_mask(self, ignore_mask, seq_length):
         if ignore_mask is None:
-            kmer_mask = np.ones(seq_length - self._k + 1, dtype=np.uint8)
+            kmer_mask = np.ones(
+                self._kmer_alph.kmer_array_length(seq_length), dtype=np.uint8
+            )
         else:
             if not isinstance(ignore_mask, np.ndarray):
                 raise TypeError(
@@ -1342,7 +1351,7 @@ cdef class KmerTable:
                 np.frombuffer(
                     ignore_mask.astype(bool, copy=False), dtype=np.uint8
                 ),
-                self._k
+                self._kmer_alph
             )
         return kmer_mask
     
@@ -1375,32 +1384,52 @@ cdef np.ndarray expand(np.ndarray array):
     return new_array
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _to_kmer_mask(uint8[:] mask not None, int64 k):
+#@cython.boundscheck(False)
+#@cython.wraparound(False)
+def _to_kmer_mask(uint8[:] mask not None, kmer_alphabet):
     """
     Transform a sequence ignore mask into a *k-mer* mask.
 
     The difference between those masks is that
 
         1. the *k-mer* mask is shorter and
-        2. a position *i* in the *k-mer* mask is false, if any position
-           between *i* and exclusively *i + k* is true in the ignore
+        2. a position *i* in the *k-mer* mask is false, if any
+           informative position of *k-mer[i]* is true in the ignore
            mask.
     """
     cdef int64 i, j
     cdef bint is_retained
     
-    cdef uint8[:] kmer_mask = np.empty(mask.shape[0] - k + 1, dtype=np.uint8)
+    cdef uint8[:] kmer_mask = np.empty(
+        kmer_alphabet.kmer_array_length(mask.shape[0]), dtype=np.uint8
+    )
+    cdef int64 offset
+    cdef int64 k = kmer_alphabet.k
+    cdef int64[:] spacing
+
+    if kmer_alphabet.spacing is None:
+        # Continuous k-mers
+        for i in range(kmer_mask.shape[0]):
+            is_retained = True
+            # If any sequence position of this k-mer is removed,
+            # discard this k-mer position
+            for j in range(i, i + k):
+                if mask[j]:
+                    is_retained = False
+            kmer_mask[i] = is_retained
     
-    for i in range(kmer_mask.shape[0]):
-        is_retained = True
-        # If any sequence position of this k-mer is removed,
-        # discard this k-mer position
-        for j in range(i, i + k):
-            if mask[j]:
-                is_retained = False
-        kmer_mask[i] = is_retained
+    else:
+        # Spaced k-mers
+        spacing = kmer_alphabet.spacing
+        for i in range(kmer_mask.shape[0]):
+            is_retained = True
+            # If any sequence position of this k-mer is removed,
+            # discard this k-mer position
+            for j in range(spacing.shape[0]):
+                offset = spacing[j]
+                if mask[j + offset]:
+                    is_retained = False
+            kmer_mask[i] = is_retained
     
     return np.asarray(kmer_mask)
     

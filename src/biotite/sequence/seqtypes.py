@@ -34,7 +34,8 @@ class GeneralSequence(Sequence):
 
     def __repr__(self):
         """Represent GeneralSequence as a string for debugging."""
-        return f"GeneralSequence(Alphabet({self._alphabet}),'{''.join(self.symbols)}')"
+        return f"GeneralSequence(Alphabet({self._alphabet}), " \
+               f"[{', '.join([repr(symbol) for symbol in self.symbols])}])"
 
     def __copy_create__(self):
         return GeneralSequence(self._alphabet)

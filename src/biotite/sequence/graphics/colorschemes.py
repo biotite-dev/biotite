@@ -43,7 +43,7 @@ def load_color_scheme(file_name):
         alphabet = Alphabet(scheme["alphabet"])
         # Store alphabet as 'Alphabet' object
         scheme["alphabet"] = alphabet
-        colors = [None] * len(scheme["colors"])
+        colors = [None] * len(alphabet)
         for key, value in scheme["colors"].items():
             index = alphabet.encode(key)
             colors[index] = value
@@ -101,7 +101,9 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
             # Replace None values with default color
             colors = [color if color is not None else default
                       for color in colors]
-            return colors
+            # Only return colors that are in scope of this alphabet
+            # and not the extended alphabet
+            return colors[:len(alphabet)]
     raise ValueError(f"Unkown scheme '{name}' for given alphabet")
 
 

@@ -38,9 +38,9 @@ class RNAfoldApp(LocalApp):
     >>> app.start()
     >>> app.join()
     >>> print(app.get_mfe())
-    >>> print(app.get_dot_bracket())
     -1.3
-    '(((.((((.......)).)))))....'
+    >>> print(app.get_dot_bracket())
+    (((.((((.......)).)))))....
     """
 
     def __init__(self, sequence, temperature=37, bin_path="RNAfold"):
@@ -127,7 +127,7 @@ class RNAfoldApp(LocalApp):
         >>> app.start()
         >>> app.join()
         >>> print(app.get_dot_bracket())
-        '(((.((((.......)).)))))....'
+        (((.((((.......)).)))))....
         """
         return self._dotbracket
 
@@ -151,19 +151,19 @@ class RNAfoldApp(LocalApp):
         >>> app.start()
         >>> app.join()
         >>> print(app.get_base_pairs())
-        array([[ 0, 22],
-               [ 1, 21],
-               [ 2, 20],
-               [ 4, 19],
-               [ 5, 18],
-               [ 6, 16],
-               [ 7, 15]])
+            [[ 0 22]
+             [ 1 21]
+             [ 2 20]
+             [ 4 19]
+             [ 5 18]
+             [ 6 16]
+             [ 7 15]]
 
         For reference, the corresponding dot bracket notation can be
         displayed as below.
 
         >>> print(app.get_dot_bracket())
-        '(((.((((.......)).)))))....'
+        (((.((((.......)).)))))....
         """
         return base_pairs_from_dot_bracket(self._dotbracket)
 
