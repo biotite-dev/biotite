@@ -138,8 +138,8 @@ class Alphabet(object):
         elif len(alphabet) > len(self):
             return False
         else:
-            return list(alphabet.get_symbols()) \
-                == list(self.get_symbols()[:len(alphabet)])
+            return alphabet.get_symbols() \
+                == self.get_symbols()[:len(alphabet)]
     
     def encode(self, symbol):
         """
@@ -318,6 +318,16 @@ class LetterAlphabet(Alphabet):
     def __repr__(self):
         """Represent LetterAlphabet as a string for debugging."""
         return f'LetterAlphabet({self.get_symbols()})'
+    
+    def extends(self, alphabet):
+        if alphabet is self:
+            return True
+        elif type(alphabet) == LetterAlphabet:
+            return np.all(
+                alphabet._symbols == self._symbols[:len(alphabet._symbols)]
+            )
+        else:
+            return super().extends(alphabet)
 
     def get_symbols(self):
         """
@@ -352,7 +362,7 @@ class LetterAlphabet(Alphabet):
         
         Parameters
         ----------
-        symbols : iterable object of str or iterable object of bytes
+        symbols : iterable object or str or bytes
             The symbols to encode. The method is fastest when a
             :class:`ndarray`, :class:`str` or :class:`bytes` object
             containing the symbols is provided, instead of e.g. a list.
