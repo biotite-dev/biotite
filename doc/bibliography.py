@@ -31,16 +31,8 @@ class IEEEStyle(BaseStyle):
         in_protected = False
         for char in entry.fields["title"]:
             if char == "{":
-                if in_protected:
-                    raise ValueError(
-                        f"Title '{entry.fields['title']}' has invalid braces"
-                    )
                 in_protected = True
             elif char == "}":
-                if not in_protected:
-                    raise ValueError(
-                        f"Title '{entry.fields['title']}' has invalid braces"
-                    )
                 in_protected = False
             else:
                 if in_protected:
