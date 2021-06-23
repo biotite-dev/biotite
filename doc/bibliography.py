@@ -47,7 +47,10 @@ class IEEEStyle(BaseStyle):
         
         journal = Text(Tag("em", entry.fields["journal"]), ", ")
         
-        volume = Text("vol. ", entry.fields["volume"], ", ")
+        if "volume" in entry.fields:
+            volume = Text("vol. ", entry.fields["volume"], ", ")
+        else:
+            volume = Text()
         
         if "pages" in entry.fields:
             pages = Text("pp. ", entry.fields["pages"], ", ")
