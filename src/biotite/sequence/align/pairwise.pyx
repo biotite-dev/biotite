@@ -320,22 +320,14 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         # Multiple starting points possible,
         # when duplicates of maximal score exist 
         if affine_penalty:
-            max_score = np.max([m_table, g1_table, g2_table])
-            # Start indices in m_table
-            i_list_new, j_list_new = np.where((m_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 1))
-            # Start indices in g1_table
-            i_list_new, j_list_new = np.where((g1_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 2))
-            # Start indices in g2_table
-            i_list_new, j_list_new = np.where((g2_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 3))
+            # The maximum score in the gap score tables do not need to
+            # be considered, as these starting positions would indicate
+            # that the local alignment starts with a gap
+            # Hence the maximum score value in these tables is always
+            # less than in the match table
+            max_score = np.max(m_table)
+            i_list, j_list = np.where((m_table == max_score))
+            state_list = np.append(state_list, np.full(len(i_list), 1))
         else:
             max_score = np.max(score_table)
             i_list, j_list = np.where((score_table == max_score))
@@ -459,7 +451,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
     for i in range(1, score_table.shape[0]):
         for j in range(1, score_table.shape[1]):
             # Evaluate score from diagonal direction
-            # -1 is in sequence index is necessary
+            # -1 in sequence index is necessary
             # due to the shift of the sequences
             # to the bottom/right in the table
             from_diag = score_table[i-1, j-1] + matrix[code1[i-1], code2[j-1]]
@@ -536,9 +528,9 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 mm_score, g1m_score, g2m_score
     cdef int32 mg1_score, g1g1_score
     cdef int32 mg2_score, g2g2_score
-    cdef uint8 trace
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity_score
+    cdef uint8 trace
     
     # For local alignments terminal gaps on the right and the bottom are
     # ignored anyway, as the alignment should stop before

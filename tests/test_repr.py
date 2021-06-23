@@ -27,7 +27,7 @@ __author__ = "Maximilian Greil"
                           NucleotideSequence("AACTGCTA", ambiguous=True),
                           ProteinSequence("BIQTITE"),
                           Alphabet(["X", "Y", "Z"]),
-                          GeneralSequence(Alphabet(["X", "Y", "Z"]), "XYZ"),
+                          GeneralSequence(Alphabet(["X", 42, False]), ["X", 42, "X"]),
                           LetterAlphabet(["X", "Y", "Z"]),
                           Location(98, 178),
                           Feature("CDS", [Location(98, 178)], qual={"gene": "test1"}),

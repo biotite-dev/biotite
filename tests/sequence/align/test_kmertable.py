@@ -33,19 +33,27 @@ def random_sequences(k, alphabet):
 
 
 
-def test_from_sequences(k, random_sequences):
+@pytest.mark.parametrize("spacing", [None, "10111011011", "1001111010101"])
+def test_from_sequences(k, random_sequences, spacing):
     """
-    Test the :meth:`from_sequences()` constructor, by checking for
+    Test the :meth:`from_sequences()` constructor, by checking for each
     sequence position, if the position is in the C-array of the
     corresponding k-mer.
     """
-    table = align.KmerTable.from_sequences(k, random_sequences)
-    kmer_alph = table.kmer_alphabet
+    table = align.KmerTable.from_sequences(
+        k, random_sequences, spacing=spacing
+    )
+    kmer_alph = align.KmerAlphabet(random_sequences[0].alphabet, k, spacing)
+    assert kmer_alph == table.kmer_alphabet
 
     for i, sequence in enumerate(random_sequences):
-        for j in range(len(sequence) - k + 1):
-            kmer = kmer_alph.fuse(sequence.code[j : j+k])
+        for j in range(kmer_alph.kmer_array_length(len(sequence))):
+            if spacing is None:
+                kmer = kmer_alph.fuse(sequence.code[j : j+k])
+            else:
+                kmer = kmer_alph.fuse(sequence.code[kmer_alph.spacing + j])
             assert np.array([i,j]) in table[kmer]
+
 
 
 def test_from_kmers(k, random_sequences):

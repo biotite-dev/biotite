@@ -21,74 +21,182 @@ UNIPROT_URL = "https://www.uniprot.org/"
 
 
 @pytest.mark.parametrize("package_name, context_package_names", [
-    pytest.param("biotite",                     []                           ),
-    pytest.param("biotite.sequence",            []                           ),
-    pytest.param("biotite.sequence.align",      ["biotite.sequence"]         ),
-    pytest.param("biotite.sequence.phylo",      ["biotite.sequence"]         ),
-    pytest.param("biotite.sequence.graphics",   ["biotite.sequence"],
-                 marks=pytest.mark.skipif(
-                    cannot_import("matplotlib"),
-                    reason="Matplotlib is not installed")                    ),
-    pytest.param("biotite.sequence.io",         ["biotite.sequence"]         ),
-    pytest.param("biotite.sequence.io.fasta",   ["biotite.sequence"]         ),
-    pytest.param("biotite.sequence.io.fastq",   ["biotite.sequence"]         ),
-    pytest.param("biotite.sequence.io.genbank", ["biotite.sequence",
-                                                 "biotite.database.entrez"],
-                 marks=pytest.mark.skipif(
-                    cannot_connect_to(NCBI_URL),
-                    reason="NCBI Entrez is not available")                   ),
-    pytest.param("biotite.sequence.io.gff",     ["biotite.sequence",
-                                                 "biotite.sequence.io.fasta"],
-                 marks=pytest.mark.filterwarnings("ignore:")                 ),
-    pytest.param("biotite.structure",           ["biotite.structure.io",
-                                                 "biotite.structure.info"]   ),
-    pytest.param("biotite.structure.graphics",  ["biotite.structure"],    
-                 marks=pytest.mark.skipif(
-                    cannot_import("matplotlib"),
-                    reason="Matplotlib is not installed"),                   ),
-    pytest.param("biotite.structure.io",        ["biotite.structure"]        ),
-    pytest.param("biotite.structure.io.pdb",    ["biotite.structure",
-                                                 "biotite"]                  ),
-    pytest.param("biotite.structure.io.pdbx",   ["biotite.structure"]        ),
-    pytest.param("biotite.structure.io.pdbqt",  ["biotite.structure",
-                                                 "biotite.structure.info"]   ),
-    pytest.param("biotite.structure.io.npz",    ["biotite.structure"]        ),
-    pytest.param("biotite.structure.io.mmtf",   ["biotite.structure"]        ),
-    pytest.param("biotite.structure.io.mol",    ["biotite.structure"]        ),
-    pytest.param("biotite.structure.info",      ["biotite.structure"]        ),
-    pytest.param("biotite.database.entrez",     [],                           
-                 marks=pytest.mark.skipif(
-                    cannot_connect_to(NCBI_URL),
-                    reason="NCBI Entrez is not available")                   ),
-    pytest.param("biotite.database.rcsb",       [],
-                 marks=pytest.mark.skipif(
-                    cannot_connect_to(RCSB_URL),
-                    reason="RCSB PDB is not available")                      ),
-    pytest.param("biotite.database.uniprot",     [],
-                 marks=pytest.mark.skipif(
-                    cannot_connect_to(UNIPROT_URL),
-                    reason="UniProt is not available")                      ),
-    pytest.param("biotite.application",      ["biotite.application.clustalo",
-                                              "biotite.sequence"],            
-                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
-                                          reason="Software is not installed")),
-    pytest.param("biotite.application.blast",   [],                          ),
-    pytest.param("biotite.application.muscle",  ["biotite.sequence"],
-                 marks=pytest.mark.skipif(is_not_installed("muscle"),
-                                          reason="Software is not installed")),
-    pytest.param("biotite.application.clustalo",["biotite.sequence"],
-                 marks=pytest.mark.skipif(is_not_installed("clustalo"),
-                                          reason="Software is not installed")),
-    pytest.param("biotite.application.mafft",   ["biotite.sequence"],
-                 marks=pytest.mark.skipif(is_not_installed("mafft"),
-                                          reason="Software is not installed")),
-    pytest.param("biotite.application.dssp",    ["biotite.structure"],
-                 marks=pytest.mark.skipif(is_not_installed("mkdssp"),
-                                          reason="Software is not installed")),
-    pytest.param("biotite.application.autodock",["biotite.structure",
-                                                 "biotite.structure.info"],
-                 marks=pytest.mark.skipif(is_not_installed("vina"),
-                                          reason="Software is not installed")),
+    pytest.param(
+        "biotite",
+        []
+    ),
+    pytest.param(
+        "biotite.sequence",
+        []
+    ),
+    pytest.param(
+        "biotite.sequence.align",
+        ["biotite.sequence"]
+    ),
+    pytest.param(
+        "biotite.sequence.phylo",
+        ["biotite.sequence"]
+    ),
+    pytest.param(
+        "biotite.sequence.graphics",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            cannot_import("matplotlib"), reason="Matplotlib is not installed"
+        )
+    ),
+    pytest.param(
+        "biotite.sequence.io",
+        ["biotite.sequence"]
+    ),
+    pytest.param(
+        "biotite.sequence.io.fasta",
+        ["biotite.sequence"]
+    ),
+    pytest.param(
+        "biotite.sequence.io.fastq",
+        ["biotite.sequence"]
+    ),
+    pytest.param(
+        "biotite.sequence.io.genbank",
+        ["biotite.sequence", "biotite.database.entrez"],
+        marks = pytest.mark.skipif(
+            cannot_connect_to(NCBI_URL), reason="NCBI Entrez is not available"
+        )
+    ),
+    pytest.param(
+        "biotite.sequence.io.gff",
+        ["biotite.sequence", "biotite.sequence.io.fasta"],
+        marks = pytest.mark.filterwarnings("ignore:")
+    ),
+    pytest.param(
+        "biotite.structure",
+        ["biotite.structure.io", "biotite.structure.info"]
+    ),
+    pytest.param(
+        "biotite.structure.graphics",
+        ["biotite.structure"],    
+        marks = pytest.mark.skipif(
+            cannot_import("matplotlib"), reason="Matplotlib is not installed"
+        ),
+    ),
+    pytest.param(
+        "biotite.structure.io",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.structure.io.pdb",
+        ["biotite.structure", "biotite"]
+    ),
+    pytest.param(
+        "biotite.structure.io.pdbx",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.structure.io.pdbqt",
+        ["biotite.structure", "biotite.structure.info"]
+    ),
+    pytest.param(
+        "biotite.structure.io.npz",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.structure.io.mmtf",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.structure.io.mol",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.structure.info",
+        ["biotite.structure"]
+    ),
+    pytest.param(
+        "biotite.database.entrez",
+        [],                           
+        marks = pytest.mark.skipif(
+            cannot_connect_to(NCBI_URL), reason="NCBI Entrez is not available"
+        )
+    ),
+    pytest.param(
+        "biotite.database.rcsb",
+        [],
+        marks = pytest.mark.skipif(
+            cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available"
+        )
+    ),
+    pytest.param(
+        "biotite.database.uniprot",
+        [],
+        marks = pytest.mark.skipif(
+            cannot_connect_to(UNIPROT_URL), reason="UniProt is not available"
+        )
+    ),
+    pytest.param(
+        "biotite.application",
+        ["biotite.application.clustalo", "biotite.sequence"],            
+        marks = pytest.mark.skipif(
+            is_not_installed("clustalo"), reason="Software is not installed"
+        )
+    ),
+    pytest.param(
+        "biotite.application.blast",
+        [],
+    ),
+    pytest.param(
+        "biotite.application.muscle",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("muscle"), reason="Software is not installed")
+        ),
+    pytest.param(
+        "biotite.application.clustalo",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("clustalo"), reason="Software is not installed"
+        )
+    ),
+    pytest.param(
+        "biotite.application.mafft",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("mafft"), reason="Software is not installed")
+        ),
+    pytest.param(
+        "biotite.application.sra", ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("fasterq-dump"),
+            reason="Software is not installed"
+        )
+    ),
+    pytest.param(
+        "biotite.application.tantan",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("tantan"), reason="Software is not installed")
+        ),
+    pytest.param(
+        "biotite.application.viennarna",
+        ["biotite.sequence"],
+        marks = pytest.mark.skipif(
+            is_not_installed("RNAfold") | is_not_installed("RNAplot"),
+            reason="Software is not installed"
+        )
+    ),                                      
+    pytest.param(
+        "biotite.application.dssp",
+        ["biotite.structure"],
+        marks = pytest.mark.skipif(
+            is_not_installed("mkdssp"), reason="Software is not installed"
+        )
+    ),
+    pytest.param(
+        "biotite.application.autodock",
+        ["biotite.structure", "biotite.structure.info"],
+        marks = pytest.mark.skipif(
+            is_not_installed("vina"), reason="Software is not installed"
+        )
+    ),
 ])
 def test_doctest(package_name, context_package_names):
     """
