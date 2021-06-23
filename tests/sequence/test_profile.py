@@ -18,23 +18,33 @@ def test_from_alignment():
     alignment = align.Alignment([seq1, seq2], trace, None)
 
     profile = prof.SequenceProfile.from_alignment(alignment)
-    position_frequency_matrix = np.array([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 2], [0, 2, 0, 0],
-                                          [2, 0, 0, 0], [0, 0, 0, 2], [0, 0, 1, 0], [0, 1, 0, 0]])
-    position_gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
+    symbols = np.array([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 2], [0, 2, 0, 0],
+                        [2, 0, 0, 0], [0, 0, 0, 2], [0, 0, 1, 0], [0, 1, 0, 0]])
+    gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
     alphabet = seq.Alphabet(["A", "C", "G", "T"])
-    assert np.array_equal(position_frequency_matrix, profile.position_frequency_matrix)
-    assert np.array_equal(position_gaps, profile.position_gaps)
+    assert np.array_equal(symbols, profile.symbols)
+    assert np.array_equal(gaps, profile.gaps)
     assert (alphabet == profile.alphabet)
 
 
 def test_to_consensus_nuc():
-    position_frequency_matrix = np.array([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 2], [0, 2, 0, 0],
-                                          [2, 0, 0, 0], [0, 0, 0, 2], [0, 0, 1, 0], [0, 1, 0, 0]])
-    position_gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
+    symbols = np.array([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 2], [0, 2, 0, 0],
+                        [2, 0, 0, 0], [0, 0, 0, 2], [0, 0, 1, 0], [0, 1, 0, 0]])
+    gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
     alphabet = seq.Alphabet(["A", "C", "G", "T"])
-    profile = prof.SequenceProfile(position_frequency_matrix, position_gaps, alphabet)
+    profile = prof.SequenceProfile(symbols, gaps, alphabet)
 
-    assert "CGTCATGC" == profile.to_consensus()
+    assert seq.NucleotideSequence("CGTCATGC") == profile.to_consensus()
+
+
+def test_to_consensus_nuc_ambiguous():
+    symbols = np.array([[1, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 2], [0, 2, 0, 0],
+                        [2, 0, 0, 0], [0, 0, 0, 2], [0, 0, 1, 0], [0, 1, 0, 0]])
+    gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
+    alphabet = seq.Alphabet(["A", "C", "G", "T"])
+    profile = prof.SequenceProfile(symbols, gaps, alphabet)
+
+    assert seq.NucleotideSequence("MGTCATGC") == profile.to_consensus()
 
 
 def test_to_consensus_prot():
@@ -49,8 +59,6 @@ def test_to_consensus_prot():
     alignment = align.align_optimal(seq1, seq2, matrix)[0]
 
     profile = prof.SequenceProfile.from_alignment(alignment)
-    assert "MRHIATAAIALSLLLLSITALASADPGKDSKAQLSAAEAGITGKWTNDLGSNFIIGAVGADGAFTGTYESAVGNAESNEIKEGPLDGAPATDGKGTALGWTFA" \
-           "FKNNWKFAESATTFSGQCFGGADARINGKELLTKGTMEANAWKSTLLGHDSFSKVKDIAADIDAAKKAGINIFNPLDAQKE" == profile.to_consensus()
-
-
-
+    assert seq.ProteinSequence("MRHIATAAIALSLLLLSITALASADPGKDSKAQLSAAEAGITGKWTNDLGSNFIIGAVGADGAFTGTYESAVGNAESNEIKEGPLD"
+                               "GAPATDGKGTALGWTFAFKNNWKFAESATTFSGQCFGGADARINGKELLTKGTMEANAWKSTLLGHDSFSKVKDIAADIDAAKKAG"
+                               "INIFNPLDAQKE") == profile.to_consensus()
