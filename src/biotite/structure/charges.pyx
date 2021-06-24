@@ -362,9 +362,8 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
         The number of iteration steps is an optional argument and can be 
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
-        '6' will be used.
-        Gasteiger and Marsili described this number as sufficient
-        :footcite:`Gasteiger1980`.
+        ``6`` will be used.
+        Gasteiger and Marsili described this number as sufficient.
     charges: ndarray, dtype=int, optional
         The array comprising the formal charges of the atoms in the
         input `atom_array`.
