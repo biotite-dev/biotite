@@ -8,7 +8,7 @@ __all__ = ["plot_nucleotide_secondary_structure"]
 
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
+from itertools import repeat
 from .. import pseudoknots
 from ...application.viennarna import RNAplotApp
 
@@ -19,7 +19,7 @@ def plot_nucleotide_secondary_structure(
     pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
     bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
     backbone_color='grey', base_text=None, base_box=None, 
-    annotation_positions=None, annotation_offset=8.5, annotation_font=None, 
+    annotation_positions=None, annotation_offset=8.5, annotation_text=None, 
     border=0.03, bin_path="RNAplot"
     ):
     """
@@ -90,8 +90,11 @@ def plot_nucleotide_secondary_structure(
         graph counted from one.
     annotation_offset : int or float, optional (default: 8.5)
         The offset of the annotations from the base labels.
-    annotation_font : dict, optional (default: {'size': 'smaller'})
-        The *Matplotlib* compatible font of the annotations.
+    annotation_text : dict or iterable, optional (default: {'size': 'smaller'})
+        The *Matplotlib* attributes of the annotation `Text` objects. 
+        Provide a single value to set the attributes for all annotations
+        or an iterable to set the linewidth for each individual 
+        attribute.
     border : float, optional (default: 0.03)
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
@@ -149,14 +152,16 @@ def plot_nucleotide_secondary_structure(
     elif isinstance(base_text, dict):
         base_text = np.full(length, base_text)
 
-    # Set the default font properties of the base annotations
-    if annotation_font is None:
-        annotation_font={'size': 'smaller'}
-
     # If no specific annotation positions are given, annotate every
     # second base pair
     if annotation_positions is None:
         annotation_positions = range(0, length, 2)
+
+    # Set the default font properties of the base annotations
+    if annotation_text is None:
+        annotation_text = repeat({'size': 'small'})
+    elif isinstance(annotation_text, dict):
+        annotation_text = repeat(annotation_text)
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
@@ -226,7 +231,7 @@ def plot_nucleotide_secondary_structure(
         axes.plot(x, y, color=color, linestyle=style, linewidth=width)
 
     # Draw annotations
-    for i in annotation_positions:
+    for i, text in zip(annotation_positions, annotation_text):
         if (i > 0) and ((i+1) < length):
             # Get the average of the direction vectors to the next and
             # previous base
@@ -268,5 +273,5 @@ def plot_nucleotide_secondary_structure(
         x, y = coordinates[i] + (annotation_offset*vector)
         axes.text(
             x=x, y=y, s=i+1,
-            ha='center', va='center', font=annotation_font
+            ha='center', va='center', **text
         )
