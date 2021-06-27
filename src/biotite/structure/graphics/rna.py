@@ -18,7 +18,7 @@ def plot_nucleotide_secondary_structure(
     layout_type=RNAplotApp.Layout.NAVIEW, draw_pseudoknots=True, 
     pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
     bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
-    backbone_color='grey', base_font=None, base_box=None, 
+    backbone_color='grey', base_text=None, base_box=None, 
     annotation_positions=None, annotation_offset=8.5, annotation_font=None, 
     border=0.03, bin_path="RNAplot"
     ):
@@ -73,9 +73,11 @@ def plot_nucleotide_secondary_structure(
         The *Matplotlib* compatible linestyle of the backbone.
     backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
-    base_font : dict, optional (default: {'size': 'smaller'})
-        The *Matplotlib* compatible font of the labels denoting the type
-        of each base.
+    base_text : dict or iterable, optional (default: {'size': 'smaller'})
+        The *Matplotlib* attributes of the labels denoting the type of 
+        each base. Provide a single value to set the attributes for all 
+        labels or an iterable to set the linewidth for each individual 
+        label.
     base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
@@ -141,9 +143,11 @@ def plot_nucleotide_secondary_structure(
     if not draw_pseudoknots:
         bond_linestyle[pseudoknot_order != 0] = 'None'
 
-    # Set the default font properties of the base labels
-    if base_font is None:
-        base_font={'size': 'small'}
+    # Set the default properties of the base labels
+    if base_text is None:
+        base_text = np.full(length, {'size': 'small'})
+    elif isinstance(base_text, dict):
+        base_text = np.full(length, base_text)
 
     # Set the default font properties of the base annotations
     if annotation_font is None:
@@ -202,10 +206,12 @@ def plot_nucleotide_secondary_structure(
               linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
     # Draw base labels
-    for coords, label, box in zip(coordinates, base_labels, base_box):
+    for coords, label, box, text in zip(
+        coordinates, base_labels, base_box, base_text
+    ):
         t = axes.text(
                     x=coords[0], y=coords[1], s=label,
-                    font=base_font, ha='center', va='center'
+                    ha='center', va='center', **text
         )
         t.set_bbox(box)
 
