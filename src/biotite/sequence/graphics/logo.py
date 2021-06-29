@@ -14,7 +14,7 @@ from .colorschemes import get_color_scheme
 
 def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
     """
-    Create a sequence logo. [1]_
+    Create a sequence logo. :footcite:`Schneider1990`
 
     A sequence logo is visualizes the positional composition and
     conservation of an alignment encoded in the size of the letters.
@@ -43,9 +43,7 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
     References
     ----------
     
-    .. [1] TD Schneider and RM Stephens,
-       "Sequence logos: a new way to display consensus sequences"
-       Nucleic Acids Res, 18, 6097-6100 (1990).
+    .. footbibliography::
     """
     from matplotlib.text import Text
 

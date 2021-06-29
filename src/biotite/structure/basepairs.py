@@ -303,8 +303,8 @@ class GlycosidicBond(IntEnum):
 def base_pairs_edge(atom_array, base_pairs):
     """
     Get the interacting edges for given base pairs in an
-    :class:`AtomArray` according to the Leontis-Westhof nomenclature
-    [1]_.
+    :class:`AtomArray` according to the Leontis-Westhof nomenclature.
+    :footcite:`Leontis2001`
 
     The :class:`AtomArray` must contain hydrogens as it relies on
     :func:`hbond()`.
@@ -386,10 +386,8 @@ def base_pairs_edge(atom_array, base_pairs):
 
     References
     ----------
-
-    .. [1] NB Leontis and E Westhof,
-       "Geometric nomenclature and classification of RNA base pairs.",
-       RNA, 7(4), 499-512 (2001).
+    
+    .. footbibliography::
     """
     # Result-``ndarray`` matches the dimensions of the input array
     results = np.zeros_like(base_pairs, dtype='uint8')
@@ -471,8 +469,8 @@ def _get_edge_matrix(atom_array, base_masks):
 def base_pairs_glycosidic_bond(atom_array, base_pairs):
     """
     Calculate the glycosidic bond orientation for given base pairs in an
-    :class:`AtomArray` according to the Leontis-Westhof nomenclature
-    [1]_.
+    :class:`AtomArray` according to the Leontis-Westhof nomenclature.
+    :footcite:`Leontis2001`
 
     Parameters
     ----------
@@ -503,7 +501,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     Notes
     -----
     The orientation is found using the geometric centers of the bases
-    and the glycosidic bonds as described in [2]_.
+    and the glycosidic bonds as described in :footcite:`Yang2003`.
 
     Examples
     --------
@@ -539,15 +537,8 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     References
     ----------
-
-    .. [1] NB Leontis and E Westhof,
-       "Geometric nomenclature and classification of RNA base pairs.",
-       RNA, 7(4), 499-512 (2001).
-
-    .. [2] H Yang, F Jossinet and NB Leontis et al.,
-        "Tools for the automatic identification and classification of
-        RNA base pairs.",
-        Nucleic Acids Research, 31(13), 3450-3460 (2003).
+    
+    .. footbibliography::
     """
     results = np.zeros(len(base_pairs), dtype='uint8')
 
@@ -625,7 +616,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     in nucleic acids.
 
     The presence of base stacking is assumed if the following criteria
-    are met [1]_:
+    are met :footcite:`Gabb1996`:
 
     (i) Distance between aromatic ring centers <=4.5 Å
 
@@ -688,9 +679,8 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
     References
     ----------
-    .. [1] HA Gabb, SR Sanghani and CH Robert et al.,
-       "Finding and visualizing nucleic acid base stacking"
-       J Mol Biol Graph, 14(1), 6-11 (1996).
+    
+    .. footbibliography::
     """
     # Get the stacking candidates according to a cutoff distance, where
     # each base is identified as the first index of its respective
@@ -763,9 +753,9 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     Cytosine, and Uracil bound to Deoxyribose and Ribose.
     Each Base is mapped to the 5 common bases Adenine, Guanine, Thymine,
     Cytosine, and Uracil in a standard reference frame described in
-    [1]_ using :func:`map_nucleotide()`.
+    :footcite:`Olson2001` using :func:`map_nucleotide()`.
 
-    The DSSR Criteria are as follows [2]_ :
+    The DSSR Criteria are as follows :footcite:`Lu2015`:
 
     (i) Distance between base origins <=15 Å
 
@@ -797,18 +787,20 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     Notes
     -----
-    The bases from the standard reference frame described in [1]_ were
-    modified such that only the base atoms are implemented. Sugar atoms
-    (specifically C1') were disregarded, as nucleosides such as PSU do
-    not posess the usual N-glycosidic linkage, thus leading to
+    The bases from the standard reference frame described in
+    :footcite:`Olson2001` were modified such that only the base atoms
+    are implemented.
+    Sugar atoms (specifically C1') were disregarded, as nucleosides such
+    as PSU do not posess the usual N-glycosidic linkage, thus leading to
     inaccurate results.
 
     The vertical separation is implemented as the scalar
     projection of the distance vectors between the base origins
-    according to [3]_ onto the averaged base normal vectors.
+    according to :footcite:`Lu1997` onto the averaged base normal
+    vectors.
 
     The presence of base stacking is assumed if the following criteria
-    are met [4]_:
+    are met :footcite:`Gabb1996`:
 
     (i) Distance between aromatic ring centers <=4.5 Å
 
@@ -854,25 +846,8 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     References
     ----------
-
-    .. [1] WK Olson, M Bansal and SK Burley et al.,
-       "A standard reference frame for the description of nucleic acid
-       base-pair geometry.",
-       J Mol Biol, 313(1), 229-237 (2001).
-
-    .. [2] XJ Lu, HJ Bussemaker and WK Olson,
-       "DSSR: an integrated software tool for dissecting the spatial
-       structure of RNA.",
-       Nucleic Acids Res, 43(21), e142 (2015).
-
-    .. [3] XJ Lu, MA El Hassan and CA Hunter,
-        "Structure and conformation of helical nucleic acids: analysis
-        program (SCHNAaP).",
-        J Mol Biol, 273, 668-680 (1997).
-
-    .. [4] HA Gabb, SR Sanghani and CH Robert et al.,
-       "Finding and visualizing nucleic acid base stacking.",
-       J Mol Biol Graph, 14(1), 6-11 (1996).
+    
+    .. footbibliography::
     """
 
     # Get the nucleotides for the given atom_array
@@ -1273,17 +1248,15 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     Notes
     -----
-    The default RMSD cutoff was chosen according to [1]_, where the same
-    cutoff is used to detect if a given base is a nucleotide, by
-    superimposing the base ring atoms onto a reference structure.
+    The default RMSD cutoff was chosen according to :footcite:`Lu2015`,
+    where the same cutoff is used to detect if a given base is a
+    nucleotide, by superimposing the base ring atoms onto a reference
+    structure.
 
     References
     ----------
-
-    .. [1] XJ Lu, HJ Bussemaker and WK Olson,
-       "DSSR: an integrated software tool for dissecting the spatial
-       structure of RNA."
-       Nucleic Acids Res, 43(21), e142 (2015).
+    
+    .. footbibliography::
     """
     # Check if the residue is a 'standard' nucleotide
     if residue.res_name[0] in _REFERENCE_NUCLEOTIDE_NAMES:
