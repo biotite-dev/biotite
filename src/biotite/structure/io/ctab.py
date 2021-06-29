@@ -50,8 +50,8 @@ CHARGE_MAPPING_REV    = {val: key for key, val in    CHARGE_MAPPING.items()}
 
 def read_structure_from_ctab(ctab_lines):
     """
-    Parse a *MDL* connection table (Ctab) :footcite:`Dalby1992` to
-    obtain an :class:`AtomArray`.
+    Parse a *MDL* connection table (Ctab) to obtain an
+    :class:`AtomArray`. :footcite:`Dalby1992` 
 
     Parameters
     ----------
@@ -110,7 +110,7 @@ def read_structure_from_ctab(ctab_lines):
 def write_structure_to_ctab(atoms):
     """
     Convert an :class:`AtomArray` into a
-    *MDL* connection table (Ctab) :footcite:`Dalby1992` .
+    *MDL* connection table (Ctab). :footcite:`Dalby1992` 
 
     Parameters
     ----------

@@ -22,8 +22,8 @@ DATE_FORMAT = "%d%m%y%H%M"
 
 class MOLFile(TextFile):
     """
-    This class represents a file in MOL format :footcite:`Dalby1992`,
-    that is used to store structure information for small molecules.
+    This class represents a file in MOL format, that is used to store
+    structure information for small molecules. :footcite:`Dalby1992`
 
     Since its use is intended for single small molecules, it stores
     less atom annotation information than the macromolecular structure
