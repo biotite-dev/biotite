@@ -23,7 +23,7 @@ MASKING_LETTER = "!"
 
 class TantanApp(LocalApp):
     r"""
-    Mask sequence reapeat regions using *tantan* :footcite:`Frith2011`.
+    Mask sequence reapeat regions using *tantan*. :footcite:`Frith2011`
 
     Parameters
     ----------
