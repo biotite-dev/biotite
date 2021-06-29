@@ -253,6 +253,17 @@ Classes/functions that are not assigned to any category are placed in
 the 'Miscellaneous' category or, if no class/function is assigned,
 in the 'Content' category.
 
+Citing articles
+^^^^^^^^^^^^^^^
+
+*Biotite* uses
+`sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io>`_ for
+creating references in docstrings, examples, etc.
+The references are stored in ``doc/references.bib`` with citation keys
+in ``[Author][year]`` format.
+References are cited with the ``:footcite:`` role and the bibliography
+is rendered where the ``.. footbibliography::`` directive is placed.
+
 
 
 Code testing
@@ -345,7 +356,8 @@ instead.
 Required packages
 -----------------
 
-The following packages are required for the complete build process:
+The following packages are required for the complete build process
+including the creation of the entire documentation:
    
    - *numpy*
    - *scipy*
@@ -359,6 +371,7 @@ The following packages are required for the complete build process:
    - *sphinx*
    - *numpydoc*
    - *sphinx-gallery*
+   - *sphinxcontrib-bibtex*
 
 Furthermore, the following software must be installed:
 
@@ -366,6 +379,8 @@ Furthermore, the following software must be installed:
    - *MAFFT*
    - *Clustal Omega*
    - *DSSP*
+   - *NCBI sra-tools*
+   - *Autodock Vina*
 
 If you use the *Conda* package manager, there is a shortcut:
 Cou can download a *Conda* environment from
