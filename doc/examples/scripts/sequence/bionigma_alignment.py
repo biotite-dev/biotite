@@ -3,13 +3,10 @@ Bionigma style multiple sequence alignment
 ==========================================
 
 This example shows an alignment visualization used by the serious game
-*Bionigma* [1]_.
+*Bionigma* :footcite:`Hess2014`.
 This visualization distinguishes amino acids by color and shape.
 
-.. [1] M Heß, J Wiemeyer, K Hamacher, Michael Goesele,
-   "Serious games for solving protein sequence alignments
-   - Combining citizen science and gaming."
-   Proceedings of GameDays 2014, 175-185 (2014).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann
