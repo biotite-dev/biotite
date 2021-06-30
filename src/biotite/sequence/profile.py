@@ -17,17 +17,45 @@ _NUC_RNA_ALPH = LetterAlphabet(["A", "C", "G", "U"])
 _PROT_ALPH = ProteinSequence.alphabet
 
 
+def _determine_common_alphabet(alphabets):
+    """
+    Determine the common alphabet from a list of alphabets, that
+    extends all alphabets.
+    """
+    common_alphabet = alphabets[0]
+    for alphabet in alphabets[1:]:
+        if not common_alphabet.extends(alphabet):
+            if alphabet.extends(common_alphabet):
+                common_alphabet = alphabet
+            else:
+                raise ValueError(
+                    "There is no common alphabet that extends all alphabets"
+                )
+    return common_alphabet
+
+
+def _codes_to_iupac(frequency, codes, maxes):
+    """
+    Returns IUPAC code for a row of 'symbols' with none, one or
+    multiple maximum positions.
+    """
+    if np.sum(frequency) == 0:
+        return "-"
+    key = ''.join(np.where(frequency == maxes)[0].astype(str))
+    return codes[key]
+
+
 class SequenceProfile(object):
     """
     A :class:`SequenceProfile` object stores information about a sequence
     profile of aligned sequences. It is possible to calculate and return
     its consensus sequence.
 
-    This class saves the position frequency matrix (symbols) of the occurrences of
+    This class saves the position frequency matrix 'symbols' of the occurrences of
     each alphabet symbol at each position. It also saves the number of gaps
-    at each position (gaps).
+    at each position in array 'gaps'.
 
-    With method from_alignment() a :class:`SequenceProfile` object can be
+    With :meth:`from_alignment()` a :class:`SequenceProfile` object can be
     created from an indefinite number of aligned sequences.
 
     All attributes of this class are publicly accessible.
@@ -71,13 +99,13 @@ class SequenceProfile(object):
     @symbols.setter
     def symbols(self, new_symbols):
         if not new_symbols.shape == self.symbols.shape:
-            raise IndexError(f"New symbols ndarray must be of same shape {self.symbols.shape} as old one")
+            raise ValueError(f"New ndarray 'symbols' must be of same shape {self.symbols.shape} as old one")
         self._symbols = new_symbols
 
     @gaps.setter
     def gaps(self, new_gaps):
         if not new_gaps.shape == self.gaps.shape:
-            raise IndexError(f"New gaps ndarray must be of same shape {self.gaps.shape} as old one")
+            raise ValueError(f"New ndarray 'gaps' must be of same shape {self.gaps.shape} as old one")
         self._gaps = new_gaps
 
     def __repr__(self):
@@ -97,32 +125,50 @@ class SequenceProfile(object):
         return True
 
     @staticmethod
-    def from_alignment(alignment):
+    def from_alignment(alignment, alphabet=None):
         """
         Get an object of :class:`SequenceProfile` from an object of :class:`Alignment`.
 
         Based on the sequences of the alignment, the SequenceProfile parameters symbols
         and gaps are calculated.
+
+        Parameters
+        ----------
+        alignment : Alignment
+            An Alignment object to create the SequenceProfile object from.
+        alphabet : bool
+            This alphabet will be used when creating the SequenceProfile
+            object. If no alphabet is selected, the alphabet for this SequenceProfile
+            object will be calculated from the sequences of object Alignment
+            (Default: None).
+
+        Returns
+        -------
+        profile: SequenceProfile
+            The created SequenceProfile object
         """
         sequences = get_codes(alignment)
-        for i in range(1, len(sequences)):
-            if not set(alignment.sequences[i-1].get_alphabet().get_symbols()) == \
-                   set(alignment.sequences[i].get_alphabet().get_symbols()):
-                raise TypeError("Alignment contains sequences with different alphabets")
-        alphabet = alignment.sequences[0].get_alphabet().get_symbols()
+        if alphabet is None:
+            alphabet = _determine_common_alphabet(
+                [seq.alphabet for seq in alignment.sequences]
+            )
+        else:
+            for alph in (seq.alphabet for seq in alignment.sequences):
+                if not alphabet.extends(alph):
+                    raise ValueError(
+                        "The given alphabet is incompatible with a least one "
+                        "alphabet of the given sequences"
+                    )
+            alphabet = alphabet
         symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
         gaps = np.zeros(len(sequences[0]), dtype=int)
         sequences = np.transpose(sequences)
         for i in range(len(sequences)):
             row = np.where(sequences[i, ] == -1, len(alphabet), sequences[i, ])
-            if len(np.bincount(row)) < len(alphabet):
-                symbols[i, 0:len(np.bincount(row))] = np.bincount(row)
-            elif len(np.bincount(row)) > len(alphabet):
-                symbols[i, ] = np.bincount(row)[0:len(alphabet)]
-                gaps[i] = np.bincount(row)[-1]
-            else:
-                symbols[i, ] = np.bincount(row)
-        return SequenceProfile(symbols, gaps, alignment.sequences[0].get_alphabet())
+            count = np.bincount(row, minlength=len(alphabet) + 1)
+            symbols[i, ] = count[0:len(alphabet)]
+            gaps[i] = count[-1]
+        return SequenceProfile(symbols, gaps, alphabet)
 
     def to_consensus(self, as_general=False):
         """
@@ -148,64 +194,51 @@ class SequenceProfile(object):
         elif set(self.alphabet.get_symbols()) == set(_NUC_RNA_ALPH.get_symbols()):
             return NucleotideSequence(self._rna_to_consensus())
         elif set(self.alphabet.get_symbols()) == set(_PROT_ALPH.get_symbols()):
-            return ProteinSequence(self._prot_to_consensus())
-        return GeneralSequence(self.alphabet, self._custom_to_consensus())
-
-    def _codes_to_iupac(self, frequency, codes):
-        if np.sum(frequency) == 0:
-            return "-"
-        position_max = np.where(frequency == np.amax(frequency))[0].tolist()
-        key = "".join(["".join(self.alphabet.get_symbols()[i]) for i in position_max])
-        return codes[key]
+            return self._prot_to_consensus()
+        return self._custom_to_consensus()
 
     def _dna_to_consensus(self):
         codes = {
-            'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T',
-            'AG': 'R', 'CT': 'Y', 'CG': 'S', 'AT': 'W', 'GT': 'K', 'AC': 'M',
-            'CGT': 'B', 'AGT': 'D', 'ACT': 'H', 'ACG': 'V',
-            'ACGT': 'N'
+            '0': 'A', '1': 'C', '2': 'G', '3': 'T',
+            '02': 'R', '13': 'Y', '12': 'S', '03': 'W', '23': 'K', '01': 'M',
+            '123': 'B', '023': 'D', '013': 'H', '012': 'V',
+            '0123': 'N'
         }
         consensus = ""
+        maxes = np.max(self.symbols, axis=1)
         for i in range(len(self.symbols)):
-            consensus += self._codes_to_iupac(self.symbols[i, :], codes)
+            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i])
         return consensus
 
     def _rna_to_consensus(self):
         codes = {
-            'A': 'A', 'C': 'C', 'G': 'G', 'U': 'U',
-            'AG': 'R', 'CU': 'Y', 'CG': 'S', 'AU': 'W', 'GU': 'K', 'AC': 'M',
-            'CGU': 'B', 'AGU': 'D', 'ACU': 'H', 'ACG': 'V',
-            'ACGU': 'N'
+            '0': 'A', '1': 'C', '2': 'G', '3': 'U',
+            '02': 'R', '13': 'Y', '12': 'S', '03': 'W', '23': 'K', '01': 'M',
+            '123': 'B', '023': 'D', '013': 'H', '012': 'V',
+            '0123': 'N'
         }
         consensus = ""
+        maxes = np.max(self.symbols, axis=1)
         for i in range(len(self.symbols)):
-            consensus += self._codes_to_iupac(self.symbols[i, :], codes)
+            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i])
         return consensus
 
     def _prot_to_consensus(self):
-        # In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
-        # symbol will be taken for the consensus sequence
-        consensus = ""
-        for i in range(len(self.symbols)):
-            if np.sum(self.symbols[i, :]) == 0:
-                consensus += "-"
-            elif np.sum(self.symbols[i, :]) / len(self.symbols[i, :]) == 1:
-                consensus += "X"
-            else:
-                position_max = np.where(self.symbols[i, :] ==
-                                        np.amax(self.symbols[i, :]))[0].tolist()
-                consensus += self.alphabet.get_symbols()[position_max[0]]
+        """
+        In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
+        symbol will be taken for the consensus sequence.
+        """
+        consensus = ProteinSequence()
+        consensus.code = np.argmax(self.symbols, axis=1)
+        consensus.code = np.where(np.sum(self.symbols, axis=1) == 0, 23, consensus.code)  # _PROT_ALPH[23] = 'X'
         return consensus
 
     def _custom_to_consensus(self):
-        # In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
-        # symbol will be taken for the consensus sequence
-        consensus = ""
-        for i in range(len(self.symbols)):
-            if np.sum(self.symbols[i, :]) == 0:
-                consensus += "-"
-            else:
-                position_max = np.where(self.symbols[i, :] ==
-                                        np.amax(self.symbols[i, :]))[0].tolist()
-                consensus += self.alphabet.get_symbols()[position_max[0]]
+        """
+        In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
+        symbol will be taken for the consensus sequence. In case the sum of occurrences of all symbols at a
+        position is zero, the alphabetically sorted first symbol will be taken for the consensus sequence.
+        """
+        consensus = GeneralSequence(self.alphabet)
+        consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
