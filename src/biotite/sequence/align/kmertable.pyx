@@ -245,7 +245,7 @@ cdef class KmerTable:
                        alphabet=None, spacing=None):
         """
         from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
-                       alphabet=None)
+                       alphabet=None, spacing=None)
         
         Create a :class:`KmerTable` by storing the positions of all
         overlapping *k-mers* from the input `sequences`.
@@ -689,10 +689,14 @@ cdef class KmerTable:
             Each row contains one match. Each match has the following
             columns:
 
-                0. The reference ID of the other table
-                1. The sequence position of the other table
-                2. The reference ID of this table
-                3. The sequence position of this table
+                0. The reference ID of the matched sequence in the other
+                   table
+                1. The sequence position of the matched sequence in the
+                   other table
+                2. The reference ID of the matched sequence in this
+                   table
+                3. The sequence position of the matched sequence in this
+                   table
 
         Notes
         -----
@@ -835,6 +839,12 @@ cdef class KmerTable:
             If this parameter is given, not only exact *k-mer* matches
             are considered, but also similar ones according to the given
             :class:`SimilarityRule`.
+        ignore_mask : ndarray, dtype=bool, optional
+            Boolean mask of sequence positions to ignore.
+            *k-mers* that involve these sequence positions are not added
+            to the table.
+            This is used e.g. to skip repeat regions.
+            By default, no sequence position is ignored.
         
         Returns
         -------
@@ -843,9 +853,10 @@ cdef class KmerTable:
             Each row contains one match. Each match has the following
             columns:
 
-                0. The sequence position in the sequence
-                1. The reference ID of the table
-                2. The sequence position of the table
+                0. The sequence position in the input sequence
+                1. The reference ID of the matched sequence in the table
+                2. The sequence position of the matched sequence in the
+                   table
 
         Notes
         -----
