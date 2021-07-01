@@ -39,11 +39,13 @@ DEF INIT_SIZE = 100
 
 def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
                        gap_penalty=-10, max_number=1,
-                       direction="both", score_only=False):
+                       direction="both", score_only=False,
+                       max_table_size=None):
     """
     align_local_gapped(seq1, seq2, matrix, seed, threshold,
                        gap_penalty=-10, max_number=1,
-                       direction="both", score_only=False)
+                       direction="both", score_only=False,
+                       max_table_size=None)
     
     Perform a local gapped alignment extending from a given `seed`
     position.
@@ -95,6 +97,11 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         If set to ``True``, only the similarity score is returned
         instead of the :class:`Alignment`, decreasing the runtime
         substantially.
+    max_table_size : int, optional
+        A :class:`MemoryError` is raised, if the number of cells
+        in the internal dynamic programming table, i.e. approximately
+        the product of the lengths of the aligned regions, would exceed
+        the given value.
     
     Returns
     -------
@@ -111,6 +118,21 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     --------
     align_ungapped
         For ungapped local alignments with the same *X-Drop* technique.
+    
+    Notes
+    -----
+    Unilke :func:`align_optimal()`, this function does not allocate
+    memory proportional to the length of both sequences, but only
+    approximately proportional to lengths of the aligned regions.
+    In principle, this makes this function viable for local alignments
+    of sequences of any length.
+    However, if the product of the lengths of the homologous regions
+    is too large to fit into memory, a :class:`MemoryError` or even a
+    crash may occur.
+    This may also happen in spurious long alignments due to poor choice
+    of substitution matrix or gap penalty.
+    You may set `max_table_size` to avoid excessive memory use and
+    crashes.
     
     References
     ----------
@@ -174,6 +196,12 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             "Maximum number of returned alignments must be at least 1"
         )
     
+    # Check maximum table size
+    if max_table_size is None:
+        max_table_size = np.iinfo(np.int64).max
+    elif max_table_size <= 0:
+        raise ValueError("Maximum table size must be a positve value")
+    
 
     code1 = seq1.code
     code2 = seq2.code
@@ -220,7 +248,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         score, upstream_traces = _align_region(
             code1[seq1_start-1::-1], code2[seq2_start-1::-1],
             score_matrix, threshold, gap_penalty,
-            max_number, score_only
+            max_number, score_only, max_table_size
         )
         total_score += score
         if upstream_traces is not None:
@@ -241,7 +269,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         score, downstream_traces = _align_region(
             code1[seq1_start+1:], code2[seq2_start+1:],
             score_matrix, threshold, gap_penalty,
-            max_number, score_only
+            max_number, score_only, max_table_size
         )
         total_score += score
         if downstream_traces is not None:
@@ -285,7 +313,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
 
 
 def _align_region(code1, code2, matrix, threshold, gap_penalty,
-                  max_number, score_only):
+                  max_number, score_only, max_table_size):
     """
     Perfrom a local *X-Drop* alignment extending from the start of the
     given sequences
@@ -315,6 +343,9 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
     score_only : bool
         If set to ``True``, only the similarity score is calculated and
         the traceback is not conducted.
+    max_table_size : int
+        Raise a :class:`MemoryError`, if a dynamic programming table
+        exceeds this size.
     
     Returns
     -------
@@ -356,14 +387,15 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         m_table[0,0]  = init_score
         trace_table, m_table, g1_table, g2_table = _fill_align_table_affine(
             code1, code2, matrix, trace_table, m_table, g1_table, g2_table,
-            threshold, gap_penalty[0], gap_penalty[1], score_only
+            threshold, gap_penalty[0], gap_penalty[1], score_only,
+            max_table_size
         )
     else:
         score_table = np.zeros(init_size, dtype=np.int32)
         score_table[0,0] = init_score
         trace_table, score_table = _fill_align_table(
             code1, code2, matrix, trace_table, score_table, threshold,
-            gap_penalty, score_only
+            gap_penalty, score_only, max_table_size
         )
     
     # If only the score is desired, the traceback is not necessary
@@ -456,7 +488,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
                       int32[:,:] score_table not None,
                       int32 threshold,
                       int32 gap_penalty,
-                      bint score_only):
+                      bint score_only,
+                      int64 max_table_size):
     """
     Fill an alignment table with linear gap penalty using dynamic
     programming.
@@ -481,6 +514,9 @@ def _fill_align_table(CodeType1[:] code1 not None,
         The linear gap penalty.
     score_only
         If true, the trace table is not filled.
+    max_table_size : int64
+        Raise a :class:`MemoryError`, if a dynamic programming table
+        exceeds this size.
     
     Returns
     -------
@@ -540,13 +576,21 @@ def _fill_align_table(CodeType1[:] code1 not None,
         # Expand ndarrays
         # if their size would be exceeded in the following iteration
         if i_max >= score_table.shape[0]:
-            score_table = _extend_table(np.asarray(score_table), 0)
+            score_table = _extend_table(
+                np.asarray(score_table), 0, max_table_size
+            )
             if not score_only:
-                trace_table = _extend_table(np.asarray(trace_table), 0)
+                trace_table = _extend_table(
+                    np.asarray(trace_table), 0, max_table_size
+                )
         if j_max >= score_table.shape[1]:
-            score_table = _extend_table(np.asarray(score_table), 1)
+            score_table = _extend_table(
+                np.asarray(score_table), 1, max_table_size
+            )
             if not score_only:
-                trace_table = _extend_table(np.asarray(trace_table), 1)
+                trace_table = _extend_table(
+                    np.asarray(trace_table), 1, max_table_size
+                )
         i_max_total = _max(i_max_total, i_max)
         j_max_total = _max(j_max_total, j_max)
 
@@ -615,7 +659,8 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                              int32 threshold,
                              int32 gap_open,
                              int32 gap_ext,
-                             bint score_only):
+                             bint score_only,
+                             int64 max_table_size):
     """
     Fill an alignment table with affines gap penalty using dynamic
     programming.
@@ -645,6 +690,9 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
         The gap extension penalty.
     score_only
         If true, the trace table is not filled.
+    max_table_size : int64
+        Raise a :class:`MemoryError`, if a dynamic programming table
+        exceeds this size.
     
     Returns
     -------
@@ -709,17 +757,21 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
         # Expand ndarrays
         # if their size would be exceeded in the following iteration
         if i_max >= m_table.shape[0]:
-            m_table  = _extend_table(np.asarray(m_table),  0)
-            g1_table = _extend_table(np.asarray(g1_table), 0)
-            g2_table = _extend_table(np.asarray(g2_table), 0)
+            m_table  = _extend_table(np.asarray(m_table),  0, max_table_size)
+            g1_table = _extend_table(np.asarray(g1_table), 0, max_table_size)
+            g2_table = _extend_table(np.asarray(g2_table), 0, max_table_size)
             if not score_only:
-                trace_table = _extend_table(np.asarray(trace_table), 0)
+                trace_table = _extend_table(
+                    np.asarray(trace_table), 0, max_table_size
+                )
         if j_max >= m_table.shape[1]:
-            m_table  = _extend_table(np.asarray(m_table),  1)
-            g1_table = _extend_table(np.asarray(g1_table), 1)
-            g2_table = _extend_table(np.asarray(g2_table), 1)
+            m_table  = _extend_table(np.asarray(m_table),  1, max_table_size)
+            g1_table = _extend_table(np.asarray(g1_table), 1, max_table_size)
+            g2_table = _extend_table(np.asarray(g2_table), 1, max_table_size)
             if not score_only:
-                trace_table = _extend_table(np.asarray(trace_table), 1)
+                trace_table = _extend_table(
+                    np.asarray(trace_table), 1, max_table_size
+                )
         i_max_total = _max(i_max_total, i_max)
         j_max_total = _max(j_max_total, j_max)
 
@@ -823,11 +875,13 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
            np.asarray(g2_table   )[:i_max_total+1, :j_max_total+1]
 
 
-def _extend_table(table, int dimension):
+def _extend_table(table, int dimension, int64 max_size):
     if dimension == 0:
         new_shape = (table.shape[0] * 2, table.shape[1])
     else:
         new_shape = (table.shape[0], table.shape[1] * 2)
+    if new_shape[0] * new_shape[1] > max_size:
+        raise MemoryError("Maximum table size exceeded")
     new_table = np.zeros(new_shape, dtype=table.dtype)
     # Fill in exiisting data
     new_table[:table.shape[0], :table.shape[1]] = table
