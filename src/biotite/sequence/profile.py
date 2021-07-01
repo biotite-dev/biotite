@@ -9,7 +9,7 @@ from .align.alignment import get_codes
 
 __name__ = "biotite.sequence"
 __author__ = "Maximilian Greil"
-_all__ = ["SequenceProfile"]
+__all__ = ["SequenceProfile"]
 
 # Abbreviations
 _NUC_DNA_ALPH = NucleotideSequence.alphabet_unamb
@@ -139,7 +139,7 @@ class SequenceProfile(object):
         alphabet : bool
             This alphabet will be used when creating the SequenceProfile
             object. If no alphabet is selected, the alphabet for this SequenceProfile
-            object will be calculated from the sequences of object Alignment
+            object will be calculated from the sequences of object Alignment.
             (Default: None).
 
         Returns
@@ -188,14 +188,14 @@ class SequenceProfile(object):
         """
         # https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes
         if as_general:
-            return GeneralSequence(self.alphabet, self._custom_to_consensus())
-        elif set(self.alphabet.get_symbols()) == set(_NUC_DNA_ALPH.get_symbols()):
+            return self._general_to_consensus()
+        elif self.alphabet == _NUC_DNA_ALPH:
             return NucleotideSequence(self._dna_to_consensus())
-        elif set(self.alphabet.get_symbols()) == set(_NUC_RNA_ALPH.get_symbols()):
+        elif self.alphabet == _NUC_RNA_ALPH:
             return NucleotideSequence(self._rna_to_consensus())
-        elif set(self.alphabet.get_symbols()) == set(_PROT_ALPH.get_symbols()):
+        elif self.alphabet == _PROT_ALPH:
             return self._prot_to_consensus()
-        return self._custom_to_consensus()
+        return self._general_to_consensus()
 
     def _dna_to_consensus(self):
         codes = {
@@ -233,7 +233,7 @@ class SequenceProfile(object):
         consensus.code = np.where(np.sum(self.symbols, axis=1) == 0, 23, consensus.code)  # _PROT_ALPH[23] = 'X'
         return consensus
 
-    def _custom_to_consensus(self):
+    def _general_to_consensus(self):
         """
         In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
         symbol will be taken for the consensus sequence. In case the sum of occurrences of all symbols at a
