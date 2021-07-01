@@ -146,7 +146,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = np.asarray(array)
+        if category in self._annot:
+            # Keep the dtype if the annotation already exists
+            self._annot[category] = np.asarray(
+                array, dtype=self._annot[category].dtype
+            )
+        else:
+            self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -1437,7 +1443,7 @@ def coord(item):
     item : Atom or AtomArray or AtomArrayStack or ndarray
         Returns the :attr:`coord` attribute, if `item` is an
         :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
-        Directly returns the input, if `item` is an :class:`ndarray`.
+        Directly returns the input, if `item` is a :class:`ndarray`.
     
     Returns
     -------

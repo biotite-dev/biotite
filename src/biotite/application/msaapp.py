@@ -12,11 +12,10 @@ from collections import OrderedDict
 import numpy as np
 from .localapp import LocalApp, cleanup_tempfile
 from .application import AppState, requires_state
-from ..sequence.sequence import Sequence
 from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ..sequence.io.fasta.file import FastaFile
 from ..sequence.align.alignment import Alignment
-from ..sequence.align.matrix import SubstitutionMatrix
+from .util import map_sequence, map_matrix
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
@@ -67,8 +66,14 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         for seq in sequences:
             if seq.get_alphabet() != alphabet:
                 raise ValueError("Alphabets of the sequences are not equal")
+        # Check matrix symmetry
+        if matrix is not None and not matrix.is_symmetric():
+            raise ValueError(
+                "A symmetric matrix is required for "
+                "multiple sequence alignments"
+            )
+
         
-        self._matrix = None
         # Check whether the program supports the alignment for the given
         # sequence type
         if ProteinSequence.alphabet.extends(alphabet) \
@@ -82,6 +87,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
                             "substitution matrices for protein sequences"
                         )
                     self._matrix = matrix
+                else:
+                    self._matrix = None
+
         elif NucleotideSequence.alphabet_amb.extends(alphabet) \
             and self.supports_nucleotide():
                 self._is_mapped = False
@@ -93,6 +101,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
                             "substitution matrices for nucleotide sequences"
                         )
                     self._matrix = matrix
+                else:
+                    self._matrix = None
+
         else:
             # For all other sequence types, try to map the sequence into
             # a protein sequence
@@ -116,8 +127,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             self._sequences = sequences
             # Sequence masquerades as protein
             self._seqtype = "protein"
-            self._mapped_sequences = MSAApp._map_sequences(sequences, alphabet)
-            self._matrix = MSAApp._map_matrix(matrix)
+            self._mapped_sequences = [
+                map_sequence(sequence) for sequence in sequences
+            ]
+            self._matrix = map_matrix(matrix)
+
 
         self._sequences = sequences
         self._in_file = NamedTemporaryFile(
@@ -328,50 +342,6 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         PROTECTED: Override when inheriting.
         """
         pass
-    
-    @staticmethod
-    def _map_sequences(sequences, alphabet):
-        if len(alphabet) > len(ProteinSequence.alphabet):
-            # Cannot map into a protein sequence if the alphabet
-            # has more symbols
-            raise TypeError(
-                f"The software cannot align sequences of type "
-                f"{type(sequences[0]).__name__}: "
-                f"Alphabet is too large to be converted into amino "
-                f"acid alphabet"
-            )
-        mapped_sequences = []
-        for seq in sequences:
-            # Mapping is done by simply taking over the sequence
-            # code of the original sequence
-            prot_seq = ProteinSequence()
-            prot_seq.code = seq.code
-            mapped_sequences.append(prot_seq)
-        return mapped_sequences
-    
-    @staticmethod
-    def _map_matrix(matrix):
-        if matrix is None:
-            raise TypeError(
-                "A substitution matrix must be provided for custom "
-                "sequence types"
-            )
-        if not matrix.is_symmetric():
-            raise ValueError(
-                "A symmetric matrix is required for "
-                "multiple sequence alignments"
-            )
-        # Create a protein substitution matrix with the values taken
-        # from the original matrix
-        # All trailing symbols are filled with zeros
-        old_length = len(matrix.get_alphabet1())
-        new_length = len(ProteinSequence.alphabet)
-        new_score_matrix = np.zeros((new_length, new_length))
-        new_score_matrix[:old_length, :old_length] = matrix.score_matrix()
-        return SubstitutionMatrix(
-            ProteinSequence.alphabet, ProteinSequence.alphabet,
-            new_score_matrix
-        )
     
     @classmethod
     def align(cls, sequences, bin_path=None, matrix=None):

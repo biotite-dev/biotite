@@ -1,0 +1,66 @@
+name: Building and deploying Biotite
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  test-simple:
+    name: Testing Biotite without database accesses and external applications runs
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.7'
+            numpy: '1.15'
+            source: false
+          - os: ubuntu-latest
+            python: '3.8'
+            numpy: '1.16'
+            source: false
+          - os: ubuntu-latest
+            python: '3.9'
+            numpy: '1.19'
+            source: true
+          - os: macos-latest
+            python: '3.7'
+            numpy: '1.15'
+            source: false
+          - os: macos-latest
+            python: '3.8'
+            numpy: '1.16'
+            source: false
+          - os: macos-latest
+            python: '3.9'
+            numpy: '1.19'
+            source: false
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: biotite-dev
+          auto-update-conda: true
+          python-version: ${{ matrix.python }}
+      - name: Installing dependencies
+        run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
+        env:
+          NUMPY_VERSION: ${{ matrix.numpy }}
+      - name: Building wheel distribution
+        run: python setup.py bdist_wheel
+      - if: ${{ python setup.py sdist }}
+        name: Building source distribution
+        run: python setup.py sdist
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: Correct distribution file name
+        run: rename 's/linux/manylinux1/g' dist/*.whl
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Biotite distribution
+          path: dist/*
+          if-no-files-found: error

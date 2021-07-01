@@ -5,13 +5,15 @@
 """
 A subpackage for reading and writing structure related data.
 
-Macromolecular structure files (PDB, PDBx/mmCIF, MMTF, etc.) can be used
+Macromolecular structure files (PDB, PDBx/mmCIF, MMTF, etc.) and
+small molecule files (MOL, SDF, etc.) can be used
 to load an :class:`AtomArray` or :class:`AtomArrayStack`.
 
-Since the data model for the :class:`AtomArray` and :class:`AtomArrayStack`
-class does not support dublicate atoms, only one *altloc* can
-be chosen for each atom. Hence, the amount of atoms may be lower
-in the atom array (stack) than in respective structure file.
+Since the data model for the :class:`AtomArray` and
+:class:`AtomArrayStack` class does not support duplicate atoms,
+only one *altloc* can be chosen for each atom. Hence, the amount of
+atoms may be lower in the atom array (stack) than in respective
+structure file.
 
 The recommended format for reading structure files is MMTF.
 It has by far the shortest parsing time and file size.
@@ -25,5 +27,6 @@ loaded, if `mdtraj` is installed.
 __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 
-from .trajfile import *
+from .ctab import *
 from .general import *
+from .trajfile import *

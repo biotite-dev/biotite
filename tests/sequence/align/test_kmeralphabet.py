@@ -15,6 +15,10 @@ K = 3
 def kmer_alphabet():
     return align.KmerAlphabet(seq.ProteinSequence.alphabet, K)
 
+@pytest.fixture
+def spaced_kmer_alphabet():
+    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K, spacing=[0,1,2])
+
 
 
 np.random.seed(0)
@@ -58,7 +62,7 @@ def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     assert test_kmer_symbol.tolist() == ref_kmer_symbol.tolist()
 
 
-def test_create_kmers(kmer_alphabet):
+def test_create_continuous_kmers(kmer_alphabet):
     """
     Test :meth:`create_kmers()` against repetitive use of
     :meth:`fuse()`, which rely on two different implementations.
@@ -79,3 +83,46 @@ def test_create_kmers(kmer_alphabet):
     test_kmers = kmer_alphabet.create_kmers(seq_code)
 
     assert test_kmers.tolist() == ref_kmers
+
+
+N = 50
+@pytest.mark.parametrize("seed", range(N))
+def test_create_spaced_kmers(kmer_alphabet, spaced_kmer_alphabet, seed):
+    """
+    Test :meth:`create_kmers()` for creating spaced *k-mers*.
+    Compare results from random sequences to corresponding results from
+    :meth:`create_kmers()` without spacing, by using a spacing model
+    that is equivalent to non-spaced *k-mers*.
+    """
+    MIN_LENGTH = 10
+    MAX_LENGTH = 1000
+    np.random.seed(seed)
+    sequence = seq.ProteinSequence()
+    sequence.code = np.random.randint(
+        len(sequence.alphabet),
+        size=np.random.randint(MIN_LENGTH, MAX_LENGTH)
+    )
+
+    ref_kmers = kmer_alphabet.create_kmers(sequence.code)
+    test_kmers = spaced_kmer_alphabet.create_kmers(sequence.code)
+
+    assert len(test_kmers) == len(ref_kmers)
+    assert test_kmers.tolist() == ref_kmers.tolist()
+
+
+def test_invalid_spacing():
+    """
+    Check if expected exceptions are raised if an invalid spacing is
+    given.
+    """
+    alphabet = seq.ProteinSequence.alphabet
+
+    with pytest.raises(ValueError):
+        # Not enough informative positions for given k
+        align.KmerAlphabet(alphabet, 5, spacing=[0, 1, 3, 4])
+    with pytest.raises(ValueError):
+        # Duplicate positions
+        align.KmerAlphabet(alphabet, 5, spacing=[0, 1, 1, 3, 4])
+    with pytest.raises(ValueError):
+        # Negative values
+        align.KmerAlphabet(alphabet, 5, spacing=[-1, 1, 2, 3, 4])

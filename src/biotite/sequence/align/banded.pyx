@@ -344,22 +344,14 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         # Multiple starting points possible,
         # when duplicates of maximum score exist
         if affine_penalty:
-            max_score = np.max([m_table, g1_table, g2_table])
-            # Start indices in m_table
-            i_list_new, j_list_new = np.where((m_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 1))
-            # Start indices in g1_table
-            i_list_new, j_list_new = np.where((g1_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 2))
-            # Start indices in g2_table
-            i_list_new, j_list_new = np.where((g2_table == max_score))
-            i_list = np.append(i_list, i_list_new)
-            j_list = np.append(j_list, j_list_new)
-            state_list = np.append(state_list, np.full(len(i_list_new), 3))
+            # The maximum score in the gap score tables do not need to
+            # be considered, as these starting positions would indicate
+            # that the local alignment starts with a gap
+            # Hence the maximum score value in these tables is always
+            # less than in the match table
+            max_score = np.max(m_table)
+            i_list, j_list = np.where((m_table == max_score))
+            state_list = np.append(state_list, np.full(len(i_list), 1))
         else:
             max_score = np.max(score_table)
             i_list, j_list = np.where((score_table == max_score))
