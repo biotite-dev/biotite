@@ -153,7 +153,7 @@ def write_structure_to_ctab(atoms):
     ]
 
     bond_lines = [
-        f"{i+1:>3d}{j+1:>3d}{BOND_TYPE_MAPPING_REV.get(bond_type, 8):>3d}" +
+        f"{i+1:>3d}{j+1:>3d}{BOND_TYPE_MAPPING_REV.get(bond_type, 1):>3d}" +
         f"{0:>3d}" * 4
         for i, j, bond_type in atoms.bonds.as_array()
     ]
