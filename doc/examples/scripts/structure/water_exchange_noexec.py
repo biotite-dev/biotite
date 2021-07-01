@@ -17,7 +17,7 @@ HCN4 channel.
 The trajectories and template structure are not included in this
 example.
 However, the trajectories are based of publicly accessible structures
-of the open (PDB: ????) and closed (PDB: ????) state.
+of the open (PDB: 7NP3) and closed (PDB: 7NP4) state.
 
 .. image:: ../../scripts/structure/water_exchange.png
 """
