@@ -27,7 +27,7 @@ def dot_bracket_from_structure(
     nucleic_acid_strand, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
-    (DBL-notation) [1]_.
+    (DBL-notation). :footcite:`Antczak2018`
 
     Parameters
     ----------
@@ -53,11 +53,8 @@ def dot_bracket_from_structure(
 
     References
     ----------
-
-    .. [1] M Antczak, M Popenda and T Zok et al.,
-       "New algorithms to represent complex pseudoknotted RNA structures
-       in dot-bracket notation.",
-       Bioinformatics, 34(8), 1304-1312 (2018).
+    
+    .. footbibliography::
     """
     basepairs = base_pairs(nucleic_acid_strand)
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
@@ -68,7 +65,7 @@ def dot_bracket_from_structure(
 def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     """
     Represent a nucleic acid strand in dot-bracket-letter-notation
-    (DBL-notation) [1]_.
+    (DBL-notation). :footcite:`Antczak2018`
 
     The nucleic acid strand is represented as nucleotide sequence,
     where the nucleotides are counted continiously from zero.
@@ -116,11 +113,8 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 
     References
     ----------
-
-    .. [1] M Antczak, M Popenda and T Zok et al.,
-       "New algorithms to represent complex pseudoknotted RNA structures
-       in dot-bracket notation.",
-       Bioinformatics, 34(8), 1304-1312 (2018).
+    
+    .. footbibliography::
     """
     # Make sure the lower residue is on the left for each row
     basepairs = np.sort(basepairs, axis=1)
@@ -145,7 +139,7 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 def base_pairs_from_dot_bracket(dot_bracket_notation):
     """
     Extract the base pairs from a nucleic-acid-strand in
-    dot-bracket-letter-notation (DBL-notation) [1]_.
+    dot-bracket-letter-notation (DBL-notation). :footcite:`Antczak2018`
 
     The nucleic acid strand is represented as nucleotide sequence,
     where the nucleotides are counted continiously from zero.
@@ -176,12 +170,8 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     References
     ----------
-
-    .. [1] M Antczak, M Popenda and T Zok et al.,
-       "New algorithms to represent complex pseudoknotted RNA structures
-       in dot-bracket notation.",
-       Bioinformatics, 34(8), 1304-1312 (2018).
     
+    .. footbibliography::
     """
     basepairs = []
     opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]

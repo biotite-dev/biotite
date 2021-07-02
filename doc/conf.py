@@ -15,8 +15,8 @@ pyximport.install(
 
 from os.path import realpath, dirname, join, basename
 import sys
-import types
 import warnings
+import pybtex
 from sphinx_gallery.sorting import FileNameSortKey
 import matplotlib
 
@@ -32,6 +32,7 @@ import apidoc
 import viewcode
 import tutorial
 import scraper
+import bibliography
 
 
 #Reset matplotlib params
@@ -46,6 +47,12 @@ if not "plot_gallery=0" in sys.argv:
         join("tutorial", "src"),
         join("tutorial", "target")
     )
+
+
+# Use custom citation sytle
+pybtex.plugin.register_plugin(
+    "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
+)
 
 
 #### General ####
@@ -65,6 +72,7 @@ extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.doctest",
               "sphinx.ext.mathjax",
               "sphinx.ext.viewcode",
+              "sphinxcontrib.bibtex",
               "sphinx_gallery.gen_gallery",
               "numpydoc"]
 
@@ -92,6 +100,9 @@ numpydoc_show_class_members = False
 autosummary_generate = False
 
 autodoc_member_order = "bysource"
+
+bibtex_bibfiles = ["references.bib"]
+bibtex_default_style = "ieee"
 
 
 #### HTML ####

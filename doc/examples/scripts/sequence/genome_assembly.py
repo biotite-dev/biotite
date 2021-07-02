@@ -24,9 +24,9 @@ To begin with, we download the relevant sequencing data from the *NCBI*
 The software stores the downloaded sequence reads in one or multiple
 FASTQ files, one for each read per *spot*:
 A spot is a 'location' on the sequencing device.
-One spot may produce more than one read, e.g. *Illumina* sequencers
-use paired-end sequencing to produce a read starting from both ends
-of the original sequence [1]_.
+One spot may produce more than one read, e.g. *Illumina* sequencers use
+`paired-end sequencing <https://www.illumina.com/science/technology/next-generation-sequencing/plan-experiments/paired-end-vs-single-read.html>`_
+to produce a read starting from both ends of the original sequence.
 However, the *MinION* technology only creates one read per input
 sequence, so we expect only a single FASTQ file.
 
@@ -36,7 +36,7 @@ A FASTQ file provides for each read it contains
     2. associated *Phred* quality scores.
 
 Phred scores :math:`Q` describe the accuracy of each base in the read in
-terms of base-call error probability :math:`P` [2]_:
+terms of base-call error probability :math:`P` :footcite:`Cock2010`:
 
 .. math::
 
@@ -151,7 +151,7 @@ fig.tight_layout()
 
 ########################################################################
 # Optionally, you could exclude or trim reads with exceptionally low
-# Phred scores [3]_.
+# Phred scores :footcite:`Pabinger2014`.
 # But instead we rely on a high sequencing depth to filter out
 # erroneous base calls.
 #
@@ -183,11 +183,12 @@ compl_reads = list(itertools.chain(
 # To map the reads to their corresponding positions in the reference
 # genome, we need to align them to it.
 # Although we could use :func:`align_optimal()`
-# (Needleman-Wunsch algorithm [4]_) for this purpose, aligning this
-# large number of reads to even a small virus genome would take hours.
+# (Needleman-Wunsch algorithm :footcite:`Needleman1970`) for this
+# purpose, aligning this large number of reads to even a small virus
+# genome would take hours.
 #
 # Instead we choose an heuristic alignment approach, similar to the
-# method used by software like *BLAST* [5]_:
+# method used by software like *BLAST* :footcite:`Altschul1990`:
 # First we scan each read for *k-mer* matches with the reference
 # genome.
 # A *k-mer* match is a subsequence of length *k* that appears in both
@@ -280,7 +281,8 @@ del matches
 # computation time.
 # Hence, we use :func:`align_banded()` to align the sequences.
 # This function aligns two sequences within a diagonal band, defined by
-# a lower diagonal :math:`D_L` and an upper diagonal :math:`D_U` [6]_.
+# a lower diagonal :math:`D_L` and an upper diagonal :math:`D_U`
+# :footcite:`Chao1992`.
 # Two symbols at position *i* and *j* can only be
 # aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
 # This also means, that the algorithm does not find an alignment,
@@ -299,11 +301,11 @@ del matches
 # original SARS-CoV-2 and the B.1.1.7 variant can be ignored compared to
 # the larger number of indels introduced by sequencing errors.
 # The indel error rates are approximately known for the
-# *MinION* [7]_:
+# *MinION* :footcite:`Tyler2018`:
 # insertion rate :math:`p_i = 0.03`, deletion rate :math:`p_d = 0.05`.
 # Based on these probabilities we can define a band that will most
 # probably be broad enough to cover the number of appearing read
-# indels [8]_.
+# indels :footcite:`Gibrat2018`.
 # :math:`\sigma` gives the standard deviation from the correct diagonal
 # and can be calculated as
 #
@@ -662,7 +664,7 @@ feature_ax.set_frame_on(False)
 # and compare them with each other - again by aligning them.
 # To add meaning to the location of mutations we look at them in the
 # context of the spike protein features/domains, which are well
-# known [9]_.
+# known :footcite:`Xia2021`.
 
 SYMBOLS_PER_LINE = 75
 SPACING = 3
@@ -761,9 +763,9 @@ plt.show()
 ########################################################################
 # The most relevant mutations displayed here are the Δ69/70 deletion and
 # the N501Y and D614G substitutions. Δ69/70 might allosterically change
-# the protein conformation [10]_.
-# D614G [11]_ and N501Y [12]_ increase the efficiency of host cell
-# infection.
+# the protein conformation :footcite:`Xie2021`.
+# D614G :footcite:`Daniloski2021` and N501Y :footcite:`Tian2021`
+# increase the efficiency of host cell infection.
 # For N501Y the reason is apparent:
 # Being located in the RBD, this residue interacts directly with the
 # human host cell receptor *angiotensin-converting enzyme 2* (ACE2).
@@ -773,51 +775,4 @@ plt.show()
 # References
 # ----------
 #
-# .. [1] https://www.illumina.com/science/technology/next-generation-sequencing/plan-experiments/paired-end-vs-single-read.html
-# .. [2] PJA Cock, CJ Fields, N Goto, ML Heuer, PM Rice,
-#    "The Sanger FASTQ file format for sequences with quality scores, 
-#    and the Solexa/Illumina FASTQ variants."
-#    Nucleic Acids Res, 38, 1767-1771 (2010).
-# .. [3] S Pabinger, A Dander, M Fischer, R Snajder, M Sperk,
-#    M Efremova, B Krabichler, MR Speicher, J Zschocke, Z Trajanoski,
-#    "A survey of tools for variant analysis of next-generation genome
-#    sequencing data."
-#    Brief Bioinformatics, 15, 256-278 (2014).
-# .. [4] SB Needleman, CD Wunsch,
-#    "A general method applicable to the search for similarities
-#    in the amino acid sequence of two proteins."
-#    J Mol Biol, 48, 443-453 (1970).
-# .. [5] SF Altschul, W Gish, W Miller, EW Myers, DJ Lipman,
-#    "Basic local alignment search tool."
-#    J Mol Biol, 215, 403-410 (1990).
-# .. [6] KM Chao, W Pearson, W Miller,
-#    "Aligning two sequences within a specified diagonal band."
-#    Bioinformatics, 8, 481-487 (1992).
-# .. [7] AD Tyler, L Mataseje, CJ Urfano, L Schmidt, KS Antonation,
-#    MR Mulvey, CR Corbett,
-#    "Evaluation of Oxford Nanopore’s MinION sequencing device for 
-#    microbial whole genome sequencing applications."
-#    Sci Rep, 8 (2018). 
-# .. [8] JF Gibrat,
-#    "A short note on dynamic programming in a band."
-#    BMC Bioinformatics, 19 (2018).
-# .. [9] X Xia,
-#    "Domains and functions of spike protein in SARS-Cov-2 in the
-#    context of vaccine design."
-#    Viruses, 13, 109 (2021).
-# .. [10] X Xie, Y Liu, X Zhang, J Zou, CR Fontes-Garfias, H Xia,
-#    KA Swanson, M Cutler, D Cooper, VD Menachery, SC Weaver,
-#    PR Dormitzer, PY Shi,
-#    "Neutralization of SARS-CoV-2 spike 69/70 deletion, E484K and N501Y
-#    variants by BNT162b2 accine-elicited sera."
-#    Nat Med (2021).
-# .. [11] Z Daniloski, TX Jordan, JK Ilmain, X Guo, G Bhabha,
-#    BR Tenoever, NE Sanjana,
-#    "The Spike D614G mutation increases SARS-CoV-2 infection of
-#    multiple human cell types."
-#    eLife, 10, e65365 (2021).
-# .. [12] F Tian, B Tong, L Sun, S Shi, B Zheng, Z Wang, X Dong,
-#    P Zheng,
-#    "Mutation N501Y in RBD of Spike Protein Strengthens the Interaction
-#    between COVID-19 and its Receptor ACE2."
-#    BioRxiv (2021).
+# .. footbibliography::

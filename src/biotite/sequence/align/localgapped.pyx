@@ -52,7 +52,8 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
 
     The alignment extends into one or both directions (controlled by
     `direction`) until the total alignment score falls more than
-    `threshold` below the maximum score found (*X-Drop*) [1]_.
+    `threshold` below the maximum score found (*X-Drop*).
+    :footcite:`Zhang2000`
     The returned alignment contains the range that yielded the maximum
     score.
 
@@ -72,7 +73,8 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
-        If a tuple is provided, an affine gap penalty is used [2]_.
+        If a tuple is provided, an affine gap penalty is used
+        :footcite:`Gotoh1982`.
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
         threshold : int
@@ -137,12 +139,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     References
     ----------
 
-    .. [1] Z Zhang, S Schwartz, L Wagner, W, Miller,
-       "A greedy algorithm for aligning DNA sequences."
-       J Comput Biol, 7, 203-214 (2000).
-    .. [2] O Gotoh,
-       "An improved algorithm for matching biological sequences."
-       J Mol Biol, 162, 705-708 (1982).
+    .. footbibliography::
     
     Examples
     --------

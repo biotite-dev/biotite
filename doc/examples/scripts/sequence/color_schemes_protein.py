@@ -7,7 +7,8 @@ in the different color schemes available in *Biotite*.
 
     - **rainbow** - Default color scheme in *Biotite*
     - **clustalx** - Default color scheme of the *ClustalX* software
-    - Color schemes generated with the software *Gecos* [1]_:
+    - Color schemes generated with the software *Gecos*
+      :footcite:`Kunzmann2020`:
         - **flower** - Light color scheme, based on *BLOSUM62*
         - **blossom** - Light color scheme with high contrast, based on
           *BLOSUM62*, depicts symbol similarity worse than *flower*
@@ -19,7 +20,7 @@ in the different color schemes available in *Biotite*.
           scheme, based on *BLOSUM62*
         - **ocean** - Blue shifted, light color scheme,
           based on *BLOSUM62*
-    - Color schemes adapted from *JalView* [2]_:
+    - Color schemes adapted from *JalView* :footcite:`Clamp2004`:
         - **zappo** - Color scheme that depicts physicochemical properties
         - **taylor** - Color scheme invented by Willie Taylor
         - **buried** - Color scheme depicting the *buried index* 
@@ -31,14 +32,7 @@ in the different color schemes available in *Biotite*.
         - **propturn** - Color scheme depicting secondary structure
           propensities
 
-.. [1] P Kunzmann, B Mayer,
-   "Substitution matrix based color schemes for sequence alignment
-   visualizations."
-   Unpublished
-
-.. [2] M Clamp, J Cuff, SM Searle, GJ Barton,
-   "The Jalview Java alignment editor."
-   Bioinformatics, 20, 426-427 (2004).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann

@@ -42,8 +42,9 @@ small analysis scripts to entire bioinformatics software packages.
 
 If you use *Biotite* in a scientific publication, please cite:
 
-| Kunzmann, P. & Hamacher, K. BMC Bioinformatics (2018) 19:346.
-| `<https://doi.org/10.1186/s12859-018-2367-z>`_
+.. bibliography::
+
+   Kunzmann2018
 
 ----
 

@@ -21,8 +21,8 @@ def superimpose(fixed, mobile, atom_mask=None):
     Superimpose structures onto a fixed structure.
     
     The superimposition is performed using the Kabsch algorithm
-    [1]_ [2]_, so that the RMSD between the superimposed and the fixed
-    structure is minimized.
+    :footcite:`Kabsch1976, Kabsch1978`, so that the RMSD between the
+    superimposed and the fixed structure is minimized.
     
     Parameters
     ----------
@@ -75,14 +75,7 @@ def superimpose(fixed, mobile, atom_mask=None):
     References
     ----------
     
-    .. [1] W Kabsch,
-       "A solution for the best rotation to relate two sets of vectors."
-       Acta Cryst, 32, 922-923 (1976).
-       
-    .. [2] W Kabsch,
-       "A discussion of the solution for the best rotation to relate
-       two sets of vectors."
-       Acta Cryst, 34, 827-828 (1978).
+    .. footbibliography::
     
     Examples
     --------

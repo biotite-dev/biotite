@@ -3,7 +3,7 @@ Mutual information as measure for coevolution of residues
 =========================================================
 
 Mutual information (MI) is a broadly used measure for the coevolution
-between two residues of a sequence [1]_ originated in
+between two residues of a sequence :footcite:`Martin2005` originated in
 information theory.
 Basically, the mutual information is a statement about how much
 knowledge one already has about a distribution :math:`Y`, knowing
@@ -36,10 +36,7 @@ At first, sequences of homologous proteins are searched in the
 curated *SwissProt* database via *NCBI BLAST*.
 Afterwards these sequences are aligned with *Clustal Omega*.
 
-.. [1] LC Martin, GB Gloor, SD Dunn and LM Wahl,
-   "Using information theory to search for co-evolving residues in
-   proteins."
-   Bioinformatics, 21, 4116-4124 (2005).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann

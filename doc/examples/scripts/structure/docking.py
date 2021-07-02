@@ -2,8 +2,9 @@
 Docking biotin to streptavidin
 ==============================
 
-This example shows how to use *AutoDock Vina* [1]_ from within *Biotite*
-for docking a ligand molecule to a known receptor structure.
+This example shows how to use *AutoDock Vina* :footcite:`Trott2010`
+from within *Biotite* for docking a ligand molecule to a known receptor
+structure.
 As example, we examine the famous streptavidin-biotin interaction.
 
 At first we download a high resolution structure of the complex.
@@ -21,10 +22,7 @@ docked into the binding cavity of streptavidin.
 Finally, the docked model is compared to the reference model, with
 respect to their RMSD.
 
-.. [1] O Trott and AJ Olson,
-   "AutoDock Vina: improving the speed and accuracy of docking with a
-   new scoring function, efficient optimization and multithreading."
-   J Comput Chem, 31, 455-461 (2010).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann

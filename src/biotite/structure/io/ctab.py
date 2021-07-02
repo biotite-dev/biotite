@@ -50,8 +50,8 @@ CHARGE_MAPPING_REV    = {val: key for key, val in    CHARGE_MAPPING.items()}
 
 def read_structure_from_ctab(ctab_lines):
     """
-    Parse a *MDL* connection table (Ctab) [1]_ to obtain an
-    :class:`AtomArray`.
+    Parse a *MDL* connection table (Ctab) to obtain an
+    :class:`AtomArray`. :footcite:`Dalby1992` 
 
     Parameters
     ----------
@@ -67,12 +67,8 @@ def read_structure_from_ctab(ctab_lines):
     
     References
     ----------
-
-    .. [1] A Dalby, JG Nourse, D Hounshell, AKI Gushurst, DL Grier,
-       BA Leland and J Laufer,
-       "Description of several chemical structure file formats used by
-       computer programs developed at Molecular Design Limited."
-       J Chem Inf Comput Sci, 32, 244-255 (1992).
+    
+    .. footbibliography::
     """
     n_atoms, n_bonds = _get_counts(ctab_lines[0])
     atom_lines = ctab_lines[1 : 1 + n_atoms]
@@ -114,7 +110,7 @@ def read_structure_from_ctab(ctab_lines):
 def write_structure_to_ctab(atoms):
     """
     Convert an :class:`AtomArray` into a
-    *MDL* connection table (Ctab)[1]_.
+    *MDL* connection table (Ctab). :footcite:`Dalby1992` 
 
     Parameters
     ----------
@@ -130,12 +126,8 @@ def write_structure_to_ctab(atoms):
     
     References
     ----------
-
-    .. [1] A Dalby, JG Nourse, D Hounshell, AKI Gushurst, DL Grier,
-       BA Leland and J Laufer,
-       "Description of several chemical structure file formats used by
-       computer programs developed at Molecular Design Limited."
-       J Chem Inf Comput Sci, 32, 244-255 (1992).
+    
+    .. footbibliography::
     """
     if isinstance(atoms, AtomArrayStack):
         raise TypeError(
