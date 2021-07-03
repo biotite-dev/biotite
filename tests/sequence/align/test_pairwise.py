@@ -3,6 +3,7 @@
 # information.
 
 import itertools
+import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -117,6 +118,56 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
         print()
         print(ref_alignment)
         raise
+
+
+@pytest.mark.parametrize(
+    "local, term, gap_penalty, seed", itertools.product(
+        [True, False], [True, False], [-5, -8, -10, -15], range(10)
+    )
+)
+def test_affine_gap_penalty(local, term, gap_penalty, seed):
+    """
+    Expect the same alignment results for a linear gap penalty and an
+    affine gap penalty with the same gap open and extension penalty.
+    """
+    LENGTH_RANGE = (10, 100)
+    MAX_NUMBER = 1000
+
+    np.random.seed(seed)
+    sequences = []
+    for _ in range(2):
+        sequence = seq.NucleotideSequence()
+        length = np.random.randint(*LENGTH_RANGE)
+        sequence.code = np.random.randint(
+            len(sequence.alphabet), size=length
+        )
+        sequences.append(sequence)
+    
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+
+    ref_alignments = align.align_optimal(
+        *sequences, matrix, gap_penalty, term, local, MAX_NUMBER
+    )
+
+    test_alignments = align.align_optimal(
+        *sequences, matrix, (gap_penalty, gap_penalty), term, local, MAX_NUMBER
+    )
+
+    assert test_alignments[0].score == ref_alignments[0].score
+    assert len(test_alignments) == len(ref_alignments)
+    # We can only expect to get the same alignments in the test and
+    # reference, if we get all optimal alignments
+    if len(test_alignments) < MAX_NUMBER:
+        for alignment in test_alignments:
+            try:
+                assert alignment in ref_alignments
+            except:
+                print("Test alignment:")
+                print(alignment)
+                print()
+                print("First reference alignment")
+                print(ref_alignments[0])
+                raise
 
 
 @pytest.mark.parametrize(
