@@ -40,8 +40,8 @@ def _codes_to_iupac(frequency, codes, maxes):
     multiple maximum positions.
     """
     if np.sum(frequency) == 0:
-        return "-"
-    key = ''.join(np.where(frequency == maxes)[0].astype(str))
+        return codes[(-1,)]
+    key = tuple(np.where(frequency == maxes)[0])
     return codes[key]
 
 
@@ -159,7 +159,6 @@ class SequenceProfile(object):
                         "The given alphabet is incompatible with a least one "
                         "alphabet of the given sequences"
                     )
-            alphabet = alphabet
         symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
         gaps = np.zeros(len(sequences[0]), dtype=int)
         sequences = np.transpose(sequences)
@@ -199,10 +198,10 @@ class SequenceProfile(object):
 
     def _dna_to_consensus(self):
         codes = {
-            '0': 'A', '1': 'C', '2': 'G', '3': 'T',
-            '02': 'R', '13': 'Y', '12': 'S', '03': 'W', '23': 'K', '01': 'M',
-            '123': 'B', '023': 'D', '013': 'H', '012': 'V',
-            '0123': 'N'
+            (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'T',
+            (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
+            (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
+            (0, 1, 2, 3): 'N', (-1,): '-'
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
@@ -212,10 +211,10 @@ class SequenceProfile(object):
 
     def _rna_to_consensus(self):
         codes = {
-            '0': 'A', '1': 'C', '2': 'G', '3': 'U',
-            '02': 'R', '13': 'Y', '12': 'S', '03': 'W', '23': 'K', '01': 'M',
-            '123': 'B', '023': 'D', '013': 'H', '012': 'V',
-            '0123': 'N'
+            (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'U',
+            (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
+            (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
+            (0, 1, 2, 3): 'N', (-1,): '-'
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
