@@ -270,7 +270,7 @@ fig.tight_layout()
 #
 # .. math::
 #
-#    u = \ln K / \lambda + \frac{1}{\lambda} (\ln mn)
+#    u = \ln K / \lambda + \frac{1}{\lambda} \ln mn
 
 LENGTH_RANGE = (10, 2000)
 LENGTH_SAMPLE_SIZE = 20
@@ -307,9 +307,9 @@ for i, length in enumerate(length_samples):
 ln_mn = np.log(length_samples**2)
 
 ########################################################################
-# Now we use a linear fit of :math:`u` to check if there a linear 
+# Now we use a linear fit of :math:`u` to check if there is a linear 
 # relation.
-# Furthermore, if there is a linear relation, the slope and intercept of
+# Furthermore, if this is true, the slope and intercept of
 # the fit should give us a more precise estimation of :math:`\lambda`
 # and :math:`K`.
 
@@ -389,8 +389,9 @@ plt.show()
 # :math:`\lambda` from the fit is significantly underestimated.
 # There is the possibility to mitigate this error via edge correction
 # :footcite:`Altschul1996`, but keep in mind that the estimated
-# :math:`\lambda` is valid for the asymptotic case very large sequences)
-# and gets inaccurate for alignments of short sequences.
+# :math:`\lambda` is valid for the asymptotic case
+# (very large sequences) and gets inaccurate for alignments of short
+# sequences.
 #
 # E-value calculation
 # -------------------
