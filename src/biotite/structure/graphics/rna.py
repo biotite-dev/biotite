@@ -73,11 +73,11 @@ def plot_nucleotide_secondary_structure(
         The *Matplotlib* compatible linestyle of the backbone.
     backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
-    base_text : dict or iterable, optional (default: {'size': 'smaller'})
-        The *Matplotlib* attributes of the labels denoting the type of 
-        each base. Provide a single value to set the attributes for all 
-        labels or an iterable to set the linewidth for each individual 
-        label.
+    base_text : dict or iterable, optional (default: {'size': 'small'})
+        The keyword parameters for the *Matplotlib* ``Text`` objects 
+        denoting the type of each base. Provide a single value to set 
+        the parameters for all labels or an iterable to set the 
+        parameters for each individual label.
     base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
@@ -90,11 +90,11 @@ def plot_nucleotide_secondary_structure(
         graph counted from one.
     annotation_offset : int or float, optional (default: 8.5)
         The offset of the annotations from the base labels.
-    annotation_text : dict or iterable, optional (default: {'size': 'smaller'})
-        The *Matplotlib* attributes of the annotation `Text` objects. 
-        Provide a single value to set the attributes for all annotations
-        or an iterable to set the linewidth for each individual 
-        attribute.
+    annotation_text : dict or iterable, optional (default: {'size': 'small'})
+        The keyword parameters for the *Matplotlib* ``Text`` objects 
+        annotating the sequence. Provide a single value to set the 
+        parameters for all annotations or an iterable to set the 
+        parameters for each individual annotation.
     border : float, optional (default: 0.03)
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
