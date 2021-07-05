@@ -8,7 +8,7 @@ __all__ = ["plot_nucleotide_secondary_structure"]
 
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
+from itertools import repeat
 from .. import pseudoknots
 from ...application.viennarna import RNAplotApp
 
@@ -18,8 +18,8 @@ def plot_nucleotide_secondary_structure(
     layout_type=RNAplotApp.Layout.NAVIEW, draw_pseudoknots=True, 
     pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
     bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
-    backbone_color='grey', base_font=None, base_box=None, 
-    annotation_positions=None, annotation_offset=8.5, annotation_font=None, 
+    backbone_color='grey', base_text=None, base_box=None, 
+    annotation_positions=None, annotation_offset=8.5, annotation_text=None, 
     border=0.03, bin_path="RNAplot"
     ):
     """
@@ -73,9 +73,11 @@ def plot_nucleotide_secondary_structure(
         The *Matplotlib* compatible linestyle of the backbone.
     backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
-    base_font : dict, optional (default: {'size': 'smaller'})
-        The *Matplotlib* compatible font of the labels denoting the type
-        of each base.
+    base_text : dict or iterable, optional (default: {'size': 'small'})
+        The keyword parameters for the *Matplotlib* ``Text`` objects 
+        denoting the type of each base. Provide a single value to set 
+        the parameters for all labels or an iterable to set the 
+        parameters for each individual label.
     base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
@@ -88,8 +90,11 @@ def plot_nucleotide_secondary_structure(
         graph counted from one.
     annotation_offset : int or float, optional (default: 8.5)
         The offset of the annotations from the base labels.
-    annotation_font : dict, optional (default: {'size': 'smaller'})
-        The *Matplotlib* compatible font of the annotations.
+    annotation_text : dict or iterable, optional (default: {'size': 'small'})
+        The keyword parameters for the *Matplotlib* ``Text`` objects 
+        annotating the sequence. Provide a single value to set the 
+        parameters for all annotations or an iterable to set the 
+        parameters for each individual annotation.
     border : float, optional (default: 0.03)
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
@@ -141,18 +146,22 @@ def plot_nucleotide_secondary_structure(
     if not draw_pseudoknots:
         bond_linestyle[pseudoknot_order != 0] = 'None'
 
-    # Set the default font properties of the base labels
-    if base_font is None:
-        base_font={'size': 'small'}
-
-    # Set the default font properties of the base annotations
-    if annotation_font is None:
-        annotation_font={'size': 'smaller'}
+    # Set the default properties of the base labels
+    if base_text is None:
+        base_text = np.full(length, {'size': 'small'})
+    elif isinstance(base_text, dict):
+        base_text = np.full(length, base_text)
 
     # If no specific annotation positions are given, annotate every
     # second base pair
     if annotation_positions is None:
         annotation_positions = range(0, length, 2)
+
+    # Set the default font properties of the base annotations
+    if annotation_text is None:
+        annotation_text = repeat({'size': 'small'})
+    elif isinstance(annotation_text, dict):
+        annotation_text = repeat(annotation_text)
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
@@ -202,10 +211,12 @@ def plot_nucleotide_secondary_structure(
               linestyle=backbone_linestyle, linewidth=backbone_linewidth)
 
     # Draw base labels
-    for coords, label, box in zip(coordinates, base_labels, base_box):
+    for coords, label, box, text in zip(
+        coordinates, base_labels, base_box, base_text
+    ):
         t = axes.text(
                     x=coords[0], y=coords[1], s=label,
-                    font=base_font, ha='center', va='center'
+                    ha='center', va='center', **text
         )
         t.set_bbox(box)
 
@@ -220,7 +231,7 @@ def plot_nucleotide_secondary_structure(
         axes.plot(x, y, color=color, linestyle=style, linewidth=width)
 
     # Draw annotations
-    for i in annotation_positions:
+    for i, text in zip(annotation_positions, annotation_text):
         if (i > 0) and ((i+1) < length):
             # Get the average of the direction vectors to the next and
             # previous base
@@ -262,5 +273,5 @@ def plot_nucleotide_secondary_structure(
         x, y = coordinates[i] + (annotation_offset*vector)
         axes.text(
             x=x, y=y, s=i+1,
-            ha='center', va='center', font=annotation_font
+            ha='center', va='center', **text
         )
