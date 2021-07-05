@@ -42,3 +42,4 @@ from .localungapped import *
 from .matrix import *
 from .multiple import *
 from .pairwise import *
+from .statistics import *
