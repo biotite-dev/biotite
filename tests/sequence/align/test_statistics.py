@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import biotite.sequence as seq
 import biotite.sequence.align as align
+from biotite.sequence.align.statistics import EValueEstimator
 from .util import sequences
 
 
@@ -171,3 +172,19 @@ def test_score_scaling(sequences):
     # Due to relatively low sample size, expect rather large deviation
     assert std_log_evalues.tolist() \
         == pytest.approx(scaled_log_evalues.tolist(), rel=0.2)
+
+
+def test_invalid_scoring_scheme():
+    """
+    Check if `from_samples()` raises an exception when the expected
+    similarity score between to random symbols is positive.
+    """
+    alph = seq.ProteinSequence.alphabet
+    matrix = align.SubstitutionMatrix(
+        alph, alph, np.ones((len(alph), len(alph)), dtype=int)
+    )
+    # Uniform background frequencies
+    freq = np.ones(len(alph))
+    
+    with pytest.raises(ValueError):
+        estimator = EValueEstimator.from_samples(alph, matrix, -10, freq)
