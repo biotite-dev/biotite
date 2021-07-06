@@ -30,12 +30,11 @@ class EValueEstimator:
     :footcite:`Altschul1986`, which may be time consuming.
     If these parameters are known, the constructor can be used instead.
     
-    Based on the sampled parameters, the logarithm of the E-value can
-    be quickly calculated via :meth:`log_evalue()`.
+    Based on the sampled parameters, the decadic logarithm of the
+    E-value can be quickly calculated via :meth:`log_evalue()`.
 
     Parameters
     ----------
-
     lam : float
         The :math:`\lambda` parameter.
     k : float
@@ -43,7 +42,6 @@ class EValueEstimator:
     
     Notes
     -----
-
     The calculated E-value is a rough estimation that gets more
     accurate the more sequences are used in the sampling process.
     Note that the accuracy for alignment of short sequences, where the
@@ -53,7 +51,7 @@ class EValueEstimator:
     References
     ----------
 
-    .. footbibliography
+    .. footbibliography::
 
     Examples
     --------
@@ -104,14 +102,88 @@ class EValueEstimator:
         self._k = k
 
     @staticmethod
-    def from_samples(alphabet, matrix, gap_penalty, background_frequencies,
+    def from_samples(alphabet, matrix, gap_penalty, frequencies,
                      sample_length=1000, sample_size=1000):
+        r"""
+        Create an :class:`EValueEstimator` with :math:`\lambda` and
+        :math:`K` estimated via sampling alignments of random sequences
+        based on a given scoring scheme.
+
+        The parameters are estimated from the sampled alignment scores
+        using the method of moments :footcite:`Altschul1986`.
+
+        Parameters
+        ----------
+        alphabet : Alphabet, length=k
+            The alphabet for the sampled sequences.
+        matrix : SubstitutionMatrix
+            The substitution matrix.
+            It must be compatible with the given `alphabet` and the
+            expected similarity score between two random symbols must be
+            negative.
+        gap_penalty : int or tuple(int,int)
+            Either a linear (``int``) or affine (``tuple``) gap penalty.
+            Integers must be negative.
+        frequencies : ndarray, shape=k, dtype=float
+            The background frequencies for each symbol in the
+            `alphabet`.
+            The random sequences are created based on these frequencies.
+        sample_length : int
+            The length of the sampled sequences.
+            It should be much larger than the average length of a local
+            alignment of two sequences.
+            The runtime scales quadratically with this parameter.
+        sample_size : int
+            The number of sampled sequences.
+            The accuracy of the estimated parameters and E-values,
+            but also the runtime increases with the sample size.
+        
+        Returns
+        -------
+        estimator : EValueEstimator
+            A :class:`EValueEstimator` with sampled :math:`\lambda` and
+            :math:`K` parameters.
+        
+        Notes
+        -----
+        The sampling process generates random sequences based on
+        ``numpy.random``.
+        To ensure reproducible results you could call
+        :func:`numpy.random.seed()` before running
+        :meth:`from_samples()`.
+        """
+        if np.any(frequencies < 0):
+            raise ValueError("Background frequencies must be positive")
+        # Normalize background frequencies
+        frequencies = frequencies / np.sum(frequencies)
+
+        # Check matrix
+        if not matrix.is_symmetric():
+            raise ValueError("A symmetric substitution matrix is required")
+        if not matrix.get_alphabet1().extends(alphabet):
+            raise ValueError(
+                "The substitution matrix is not compatible "
+                "with the given alphabet"
+            )
+        score_matrix = matrix.score_matrix()[:len(alphabet), :len(alphabet)]
+        if np.sum(
+            score_matrix \
+            * frequencies[np.newaxis, :] \
+            * frequencies[:, np.newaxis]
+        ) >= 0:
+            raise ValueError(
+                "Invalid substitution matrix, the expected similarity "
+                "score between two random symbols is not negative"
+            )
+
+        # Generate the sequence code for the random sequences
         random_sequence_code = np.random.choice(
             len(alphabet),
             size=(sample_size, 2, sample_length),
-            p=background_frequencies
+            p=frequencies
         )
 
+        # Sample the alignments of random sequences
         sample_scores = np.zeros(sample_size, dtype=int)
         for i in range(sample_size):
             seq1 = GeneralSequence(alphabet)
@@ -123,6 +195,7 @@ class EValueEstimator:
                 local=True, gap_penalty=gap_penalty, max_number=1
             )[0].score
         
+        # Use method of moments to estimate parameters
         lam = np.pi / np.sqrt(6 * np.var(sample_scores))
         u = np.mean(sample_scores) - np.euler_gamma / lam
         k = np.exp(lam * u) / sample_length**2
@@ -138,12 +211,46 @@ class EValueEstimator:
         return self._k
     
     def log_evalue(self, score, seq1_length, seq2_length):
-        """
+        r"""
+        Calculate the decadic logarithm of the E-value for a given
+        score.
+
+        The E-value and the logarithm of the E-value is calculated as
+
+        .. math::
+        
+            E = Kmn e^{-\lambda s}
+
+            \log_{10} E = (\log_{10} Kmn) - \frac{\lambda s}{\ln 10},
+        
+        where :math:`s` is the similarity score and :math:`m` and
+        :math:`n` are the lengths of the aligned sequences.
+
         Parameters
         ----------
+        score : int
+            The score to evaluate.
         seq1_length : int
-            In the context of an homology search in a sequence database,
+            The length of the first sequence.
+            In the context of a homology search in a sequence database,
             this is usually the length of the query sequence.
+        seq2_length : int
+            The length of the second sequence.
+            In the context of a homology search in a sequence database,
+            this is usually either the combined length of all sequences
+            in the database or the length of the hit sequence multiplied
+            by the number of sequences in the database.
+        
+        Returns
+        -------
+        log_e : float
+            The decadic logarithm of the E-value.
+        
+        Notes
+        -----
+        This method returns the logarithm of the E-value instead of
+        the E-value, as low E-values indicating a highly significant
+        homology cannot be accurately represented by a ``float``.
         """
         score = np.asarray(score)
         seq1_length = np.asarray(seq1_length)
