@@ -648,22 +648,46 @@ for alignment in alignments:
 # """"""""""""""""""""""""""
 # We have obtained two alignments, but which one of them is the
 # 'correct' one?
-# To answer this question we have to evaluate the alignments.
-# For the sake of simplicity we select the one with the highest score.
+# in this simple example we could simply select the one with the highest
+# similarity score, but this approach is not sound in general:
+# A reference sequence might contain multiple regions, that are
+# homologous to the query, or none at all.
+# A better approach is a statistical measure, like the
+# `BLAST E-value <https://www.ncbi.nlm.nih.gov/BLAST/tutorial/Altschul-1.html>`_.
+# It gives the number of alignments expected by chance with a score at
+# least as high as the score obtained from the alignment of interest.
+# Hence, a value close to zero means a very significant homology.
+# We can calculate the E-value using the :class:`EValueEstimator`, that
+# needs to be initialized with the same scoring scheme used for our
+# alignments.
+# For the sake of simplicity we choose uniform background frequencies
+# for each symbol, but usually you would choose values that reflect
+# the amino acid/nucleotide composition in your sequence database.
 
-correct_alignment = max(alignments, key=lambda alignment: alignment.score)
-print(correct_alignment)
+estimator = align.EValueEstimator.from_samples(
+    seq.ProteinSequence.alphabet, matrix, gap_penalty=-5,
+    frequencies=np.ones(len(seq.ProteinSequence.alphabet)),
+    # Trade accuracy for a lower runtime
+    sample_length=200
+)
 
 ########################################################################
-# Finally the expected alignment of ``BIQTITE`` to ``NIQBITE`` is
-# obtained and the unspecific match is discarded.
-# 
-# In a real application simply accepting the highest-scoring alignment
-# might be insufficient, because a reference sequence might contain
-# multiple regions, that are homologous to the query, or none at all.
-# A better approach would be a score threshold or, even better, a
-# statistical measure, like the
-# `BLAST E-value <https://www.ncbi.nlm.nih.gov/BLAST/tutorial/Altschul-1.html>`_.
+# Now we can calculate the E-value for the alignments.
+# Since we have aligned the query only to the reference sequence shown
+# above, we use its length to calculate the E-value.
+# If you have an entire sequence database you align against, you would
+# take the total sequence length of the database instead.
+
+scores = [alignment.score for alignment in alignments]
+evalues = 10 ** estimator.log_evalue(scores, len(query), len(reference))
+for alignment, evalue in zip(alignments, evalues):
+    print(f"E-value = {evalue:.2e}")
+    print(alignment)
+    print("\n")
+
+########################################################################
+# Finally, we can see that the expected alignment of ``BIQTITE`` to
+# ``NIQBITE`` is more significant than the unspecific match.
 #
 # |
 #
