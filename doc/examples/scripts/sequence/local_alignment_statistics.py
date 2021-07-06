@@ -2,10 +2,14 @@
 Statistics of local alignments and the E-value
 ==============================================
 
+.. currentmodule:: biotite.sequence.align
+
 This example shows how to evaluate the significance of a local alignment
 of two sequences.
 The methods shown here are based on the approach presented by
 *Altschul & Gish* :footcite:`Altschul1996`.
+The presented technique is also implemented in the
+:class:`EValueEstimator`.
 
 Let's assume you have a query sequence (avidin) and you want to check,
 if there are homologous sequences in a hypothetical database.
