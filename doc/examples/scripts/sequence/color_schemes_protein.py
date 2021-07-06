@@ -33,6 +33,7 @@ in the different color schemes available in *Biotite*.
           propensities
 
 .. footbibliography::
+
 """
 
 # Code source: Patrick Kunzmann

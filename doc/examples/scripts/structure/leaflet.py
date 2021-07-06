@@ -14,6 +14,7 @@ A graph is created from the matrix.
 Each leaflet is a connected subgraph.
 
 .. footbibliography::
+
 """
 
 # Code source: Patrick Kunzmann
