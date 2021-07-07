@@ -89,7 +89,7 @@ cdef class KmerTable:
     -----
 
     The design of the :class:`KmerTable` is inspired by the *MMseqs2*
-    software [1]_.
+    software :footcite:`Steinegger2017`.
 
     *Memory consumption*
 
@@ -139,10 +139,8 @@ cdef class KmerTable:
 
     References
     ----------
-    .. [1] M Steinegger, J Söding,
-       "MMseqs2 enables sensitive protein sequence searching for the
-       analysis of massive data sets."
-       Nat Biotechnology, 35, 1026-1028 (2017).
+
+    .. footbibliography::
 
     Examples
     --------

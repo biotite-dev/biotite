@@ -4,12 +4,10 @@ Partial charge distribution
 
 This examples shows how partial charges are distributed in a
 small molecule.
-The charges are calculated using the PEOE method [1]_.
+The charges are calculated using the PEOE method
+:footcite:`Gasteiger1980`.
 
-.. [1] J Gasteiger and M Marsili,
-    "Iterative partial equalization of orbital electronegativity - a
-    rapid access to atomic charges"
-    Tetrahedron, 36, 3219 - 3288 (1980).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann

@@ -54,8 +54,8 @@ class SubstitutionMatrix(object):
             - **GONNET** - Not usable with default protein alphabet
             - **DAYHOFF**
         
-        - Corrected protein substitution matrices [1]_, **<BLOCKS>**
-          is the BLOCKS version, the matrix is based on
+        - Corrected protein substitution matrices :footcite:`Hess2016`,
+          **<BLOCKS>** is the BLOCKS version, the matrix is based on
             
             - **BLOSUM<n>_<BLOCKS>**
             - **RBLOSUM<n>_<BLOCKS>**
@@ -88,10 +88,7 @@ class SubstitutionMatrix(object):
     References
     ----------
     
-    .. [1] M Hess, F Keul, M Goesele and K Hamacher,
-       "Addressing inaccuracies in BLOSUM computation improves homology
-       search performance."
-       BMC Bioinformatics, 17 (2016).
+    .. footbibliography::
     
     Examples
     --------

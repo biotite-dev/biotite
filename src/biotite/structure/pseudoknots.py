@@ -55,15 +55,16 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     Notes
     -----
-    The dynamic programming approach by Smit *et al* [1]_ is applied to
-    detect pseudoknots.
+    The dynamic programming approach by Smit *et al*
+    :footcite:`Smit2008` is applied to detect pseudoknots.
     The algorithm was originally developed to remove pseudoknots from a
     structure.
     However, if it is run iteratively on removed knotted pairs it can be
     used to identify the pseudoknot order.
 
     The pseudoknot order is defined as the minimum number of base pair
-    set decompositions resulting in a nested structure [2]_.
+    set decompositions resulting in a nested structure
+    :footcite:`Antczak2018`.
     Therefore, there are no pseudoknots between base pairs with the same
     pseudoknot order.
 
@@ -109,15 +110,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     References
     ----------
 
-    .. [1] S Smit, K Rother and J Heringa et al.,
-       "From knotted to nested RNA structures: A variety of
-       computational methods for pseudoknot removal.",
-       RNA, 14, 410-416 (2008).
-
-    .. [2] M Antczak, M Popenda and T Zok et al.,
-       "New algorithms to represent complex pseudoknotted RNA structures
-       in dot-bracket notation.",
-       Bioinformatics, 34(8), 1304-1312 (2018).
+    .. footbibliography::
 
     """
     # List containing the results

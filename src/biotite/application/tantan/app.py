@@ -23,7 +23,7 @@ MASKING_LETTER = "!"
 
 class TantanApp(LocalApp):
     r"""
-    Mask sequence reapeat regions using *tantan* [1]_.
+    Mask sequence reapeat regions using *tantan*. :footcite:`Frith2011`
 
     Parameters
     ----------
@@ -39,11 +39,8 @@ class TantanApp(LocalApp):
 
     References
     ----------
-
-    .. [1] MC Frith,
-       "A new repeat-masking method enables specific detection of
-       homologous sequences."
-       Nucleic Acids Res, 39, (2011).
+    
+    .. footbibliography::
 
     Examples
     --------

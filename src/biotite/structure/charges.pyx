@@ -163,7 +163,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
 
     By doing so, the function accesses the nested dictionary
     ``EN_PARAMETERS``. The values originate from a publication of Johann
-    Gasteiger and Mario Marsili. [1]_
+    Gasteiger and Mario Marsili.
 
     Parameters
     ----------
@@ -183,13 +183,6 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
         The array containing all three parameters required for the
         computation of the electronegativities of all atoms comprised
         in the `elements` array.
-    
-    References
-    ----------
-    .. [1] J Gasteiger and M Marsili,
-       "Iterative partial equalization of orbital electronegativity - a
-       rapid access to atomic charges"
-       Tetrahedron, 36, 3219 - 3288 (1980).
     """
     cdef int i
     cdef float32 a, b, c
@@ -358,7 +351,7 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
 
     This function implements the
     *partial equalization of orbital electronegativity* (PEOE)
-    algorithm [1]_.
+    algorithm :footcite:`Gasteiger1980`.
 
     Parameters
     ----------
@@ -369,8 +362,8 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
         The number of iteration steps is an optional argument and can be 
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
-        '6' will be used.
-        Gasteiger and Marsili described this number as sufficient [1]_.
+        ``6`` will be used.
+        Gasteiger and Marsili described this number as sufficient.
     charges: ndarray, dtype=int, optional
         The array comprising the formal charges of the atoms in the
         input `atom_array`.
@@ -406,17 +399,11 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
 
     References
     ----------
-    .. [1] J Gasteiger and M Marsili,
-       "Iterative partial equalization of orbital electronegativity- a
-       rapid access to atomic charges"
-       Tetrahedron, 36, 3219 - 3288 (1980).
+    
+    .. footbibliography::
 
     Examples
     --------
-    The molecule fluoromethane is taken as example since detailed
-    information is given about the charges of this molecule in each
-    iteration step in the respective publication of Gasteiger and
-    Marsili. [1]_
 
     >>> fluoromethane = residue("CF0")
     >>> print(fluoromethane.atom_name)

@@ -27,7 +27,7 @@ def neighbor_joining(np.ndarray distances):
     neighbor_join(distances)
     
     Perform hierarchical clustering using the
-    *neighbor joining* algorithm [1,2]_.
+    *neighbor joining* algorithm. :footcite:`Saitou1987, Studier1988`
 
     In contrast to UPGMA this algorithm does not assume a constant
     evolution rate. The resulting tree is considered to be unrooted.
@@ -57,13 +57,7 @@ def neighbor_joining(np.ndarray distances):
     References
     ----------
     
-    .. [1] N Saitou, M Nei,
-       "The neighbor-joining method: a new method for reconstructing
-       phylogenetic trees."
-       Mol Biol Evol, 4, 406-425 (1987).
-    .. [2] JA Studier, KJ Keppler,
-       "A note on the neighbor-joining algorithm of Saitou and Neil."
-       Mol Biol Evol, 5, 729-731 (1988).
+    .. footbibliography::
 
     Examples
     --------

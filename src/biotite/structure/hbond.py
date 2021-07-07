@@ -23,7 +23,7 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
           periodic=False):
     r"""
     Find hydrogen bonds in a structure using the Baker-Hubbard
-    algorithm. [1]_
+    algorithm. :footcite:`Baker1984`
 
     This function identifies hydrogen bonds based on the bond angle
     :math:`\theta` and the bond distance :math:`d_{H,A}`.
@@ -123,10 +123,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
 
     References
     ----------
-    
-    .. [1] EN Baker and RE Hubbard,
-       "Hydrogen bonding in globular proteins"
-       Prog Biophys Mol Biol, 44, 97-179 (1984).
+
+    .. footbibliography::
     """
     if not (atoms.element == "H").any():
         warnings.warn(

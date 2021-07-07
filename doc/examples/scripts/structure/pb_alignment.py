@@ -12,7 +12,7 @@ Then the sequences can be aligned with the standard sequence alignment
 techniques, using the substitution matrix of the structural alphabet.
 
 In this example, the structural alphabet we will use is called
-*protein blocks* (PBs) [1]_ [2]_:
+*protein blocks* (PBs) :footcite:`Brevern2000, Barnoud2017`:
 There are 16 different PBs, represented by the symbols ``a`` to ``p``.
 Each one depicts a different set of the backbone dihedral angles of a
 peptide 5-mer.
@@ -20,16 +20,7 @@ To assign a PB to an amino acid, the 5-mer centered on the respective
 residue is taken, its backbone dihedral angles are calculated and the
 PB with the least deviation to this set of angles is chosen.
 
-.. [1] AG de Brevern, C Etchebest and S Hazout,
-   "Bayesian probabilistic approach for predicting backbone structures
-   in terms of protein blocks."
-   Proteins, 41, 271-288 (2000).
-
-.. [2] J Barnoud, H Santuz, P Craveur, AP Joseph,
-   V Jallu, AG de Brevern, P Poulain,
-   "PBxplore: a tool to analyze local protein structure and deformability
-   with Protein Blocks."
-   PeerJ, 5, (2017).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann
