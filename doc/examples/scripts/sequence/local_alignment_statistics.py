@@ -91,7 +91,7 @@ fig.tight_layout()
 # The case of the ungapped local alignment
 # ----------------------------------------
 #
-# If no gaps can be introduced into an alignment, i.e. the gap penalty
+# If no gaps can be inserted into an alignment, i.e. the gap penalty
 # is infinite, the statistics can be solved analytically:
 # The similarity score obtained by aligning two random sequences
 # follows an extreme value distribution (:math:`f(x)`), based on the two

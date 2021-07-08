@@ -228,13 +228,13 @@ class EValueEstimator:
 
         Parameters
         ----------
-        score : int
+        score : int or ndarray, dtype=int
             The score to evaluate.
-        seq1_length : int
+        seq1_length : int or ndarray, dtype=int
             The length of the first sequence.
             In the context of a homology search in a sequence database,
             this is usually the length of the query sequence.
-        seq2_length : int
+        seq2_length : int or ndarray, dtype=int
             The length of the second sequence.
             In the context of a homology search in a sequence database,
             this is usually either the combined length of all sequences

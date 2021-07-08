@@ -598,7 +598,7 @@ for query_pos, ref_pos in matches:
 # threshold below the maximum score already found, a technique that is
 # also called *X-Drop*.
 # While :func:`align_local_ungapped()` is much faster than
-# :func:`align_local_gapped()`, it does not introduce gaps into the
+# :func:`align_local_gapped()`, it does not insert gaps into the
 # alignment.
 # In contrast :func:`align_banded()` performs a local or global
 # alignment, where the alignment space is restricted to a defined

@@ -56,7 +56,7 @@ def align_ungapped(seq1, seq2, matrix, score_only=False):
     """
     align_ungapped(seq1, seq2, matrix, score_only=False)
     
-    Align two sequences without introduction of gaps.
+    Align two sequences without insertion of gaps.
     
     Both sequences need to have the same length.
     
