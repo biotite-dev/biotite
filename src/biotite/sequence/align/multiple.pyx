@@ -468,7 +468,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     Then the sub-MSAs are combined to one MSA by aligning the two
     sequences from both sub-MSAs with the lowest distance to each other,
     taken from the pairwise distance matrix.
-    The gaps introduced in this pairwise alignment are also introduced
+    The gaps inserted in this pairwise alignment are also inserted
     into all other sequences in the respective sub-MSA at the same
     position.
     
