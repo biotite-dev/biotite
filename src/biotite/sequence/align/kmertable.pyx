@@ -355,18 +355,18 @@ cdef class KmerTable:
         if ref_ids is None:
             ref_ids = np.arange(len(sequences))
 
+        # Calculate k-mers
+        kmers_list = [
+            table._kmer_alph.create_kmers(sequence.code)
+            for sequence in sequences
+        ]
+
         # Create k-mer masks
         if ignore_masks is None:
             ignore_masks = [None] * len(sequences)
         masks = [
             table._prepare_mask(ignore_mask, len(sequence))
             for sequence, ignore_mask in zip(sequences, ignore_masks)
-        ]
-
-        # Calculate k-mers
-        kmers_list = [
-            table._kmer_alph.create_kmers(sequence.code)
-            for sequence in sequences
         ]
 
         # Count the number of appearances of each k-mer and store the
