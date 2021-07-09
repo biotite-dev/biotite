@@ -152,6 +152,11 @@ class EValueEstimator:
         :func:`numpy.random.seed()` before running
         :meth:`from_samples()`.
         """
+        if len(frequencies) != len(alphabet):
+            raise IndexError(
+                f"Background frequencies for {len(frequencies)} symbols were "
+                f"given, but the alphabet has {len(alphabet)} symbols"
+            )
         if np.any(frequencies < 0):
             raise ValueError("Background frequencies must be positive")
         # Normalize background frequencies
