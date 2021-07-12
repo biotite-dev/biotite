@@ -47,23 +47,25 @@ def _codes_to_iupac(frequency, codes, maxes):
 
 class SequenceProfile(object):
     """
-    A :class:`SequenceProfile` object stores information about a sequence
-    profile of aligned sequences. It is possible to calculate and return
-    its consensus sequence.
+    A :class:`SequenceProfile` object stores information about a
+    sequence profile of aligned sequences.
+    It is possible to calculate and return its consensus sequence.
 
-    This class saves the position frequency matrix 'symbols' of the occurrences of
-    each alphabet symbol at each position. It also saves the number of gaps
-    at each position in array 'gaps'.
+    This class saves the position frequency matrix 'symbols' of the
+    occurrences of each alphabet symbol at each position.
+    It also saves the number of gaps at each position in the array
+    'gaps'.
 
-    With :meth:`from_alignment()` a :class:`SequenceProfile` object can be
-    created from an indefinite number of aligned sequences.
+    With :meth:`from_alignment()` a :class:`SequenceProfile` object can
+    be created from an indefinite number of aligned sequences.
 
     All attributes of this class are publicly accessible.
 
     Parameters
     ----------
     symbols : ndarray, dtype=int, shape=(n,k)
-        This matrix simply saves for each position how often absolutely each symbol is present.
+        This matrix simply saves for each position how often absolutely
+        each symbol is present.
     gaps : ndarray, dtype=int, shape=n
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
@@ -72,7 +74,8 @@ class SequenceProfile(object):
     Attributes
     ----------
     symbols : ndarray, dtype=int, shape=(n,k)
-        This matrix simply saves for each position how often absolutely each symbol is present.
+        This matrix simply saves for each position how often absolutely
+        each symbol is present.
     gaps : ndarray, dtype=int, shape=n
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
@@ -99,13 +102,19 @@ class SequenceProfile(object):
     @symbols.setter
     def symbols(self, new_symbols):
         if not new_symbols.shape == self.symbols.shape:
-            raise ValueError(f"New ndarray 'symbols' must be of same shape {self.symbols.shape} as old one")
+            raise ValueError(
+                f"New ndarray 'symbols' must be of same shape "
+                f"{self.symbols.shape} as old one"
+            )
         self._symbols = new_symbols
 
     @gaps.setter
     def gaps(self, new_gaps):
         if not new_gaps.shape == self.gaps.shape:
-            raise ValueError(f"New ndarray 'gaps' must be of same shape {self.gaps.shape} as old one")
+            raise ValueError(
+                f"New ndarray 'gaps' must be of same shape "
+                f"{self.gaps.shape} as old one"
+            )
         self._gaps = new_gaps
 
     def __repr__(self):
@@ -127,19 +136,23 @@ class SequenceProfile(object):
     @staticmethod
     def from_alignment(alignment, alphabet=None):
         """
-        Get an object of :class:`SequenceProfile` from an object of :class:`Alignment`.
+        Get an object of :class:`SequenceProfile` from an object of
+        :class:`Alignment`.
 
-        Based on the sequences of the alignment, the SequenceProfile parameters symbols
-        and gaps are calculated.
+        Based on the sequences of the alignment, the SequenceProfile
+        parameters symbols and gaps are calculated.
 
         Parameters
         ----------
         alignment : Alignment
-            An Alignment object to create the SequenceProfile object from.
+            An Alignment object to create the SequenceProfile object
+            from.
         alphabet : bool
             This alphabet will be used when creating the SequenceProfile
-            object. If no alphabet is selected, the alphabet for this SequenceProfile
-            object will be calculated from the sequences of object Alignment.
+            object. If no alphabet is selected, the alphabet for this
+            SequenceProfile
+            object will be calculated from the sequences of object
+            Alignment.
             (Default: None).
 
         Returns
@@ -176,9 +189,11 @@ class SequenceProfile(object):
         Parameters
         ----------
         as_general : bool
-            If true, returns consensus sequence as GeneralSequence object.
-            Otherwise, the consensus sequence object type is chosen based
-            on the alphabet of this SequenceProfile object.(Default: False).
+            If true, returns consensus sequence as GeneralSequence
+            object.
+            Otherwise, the consensus sequence object type is chosen
+            based on the alphabet of this SequenceProfile object
+            (Default: False).
 
         Returns
         -------
@@ -224,19 +239,25 @@ class SequenceProfile(object):
 
     def _prot_to_consensus(self):
         """
-        In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
-        symbol will be taken for the consensus sequence.
+        In case there is more than one symbol with the same maximal
+        occurrences, the alphabetically sorted first symbol will be
+        taken for the consensus sequence.
         """
         consensus = ProteinSequence()
         consensus.code = np.argmax(self.symbols, axis=1)
-        consensus.code = np.where(np.sum(self.symbols, axis=1) == 0, 23, consensus.code)  # _PROT_ALPH[23] = 'X'
+        consensus.code = np.where(
+            np.sum(self.symbols, axis=1) == 0, 23, consensus.code
+        )  # _PROT_ALPH[23] = 'X'
         return consensus
 
     def _general_to_consensus(self):
         """
-        In case there is more than one symbol with the same maximal occurrences, the alphabetically sorted first
-        symbol will be taken for the consensus sequence. In case the sum of occurrences of all symbols at a
-        position is zero, the alphabetically sorted first symbol will be taken for the consensus sequence.
+        In case there is more than one symbol with the same maximal
+        occurrences, the alphabetically sorted first symbol will be
+        taken for the consensus sequence.
+        In case the sum of occurrences of all symbols at a position is
+        zero, the alphabetically sorted first symbol will be taken for
+        the consensus sequence.
         """
         consensus = GeneralSequence(self.alphabet)
         consensus.code = np.argmax(self.symbols, axis=1)
