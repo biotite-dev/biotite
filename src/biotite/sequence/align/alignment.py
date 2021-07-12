@@ -266,17 +266,16 @@ def get_codes(alignment):
      [-1 -1  3  1  0  3  2  1]]
     """
     trace = alignment.trace
-    # -1 is code value for gaps
-    codes = np.full(trace.shape, -1, dtype=int)
-    for i in range(trace.shape[0]):
-        for j in range(trace.shape[1]):
-            # Get symbol code for each index in trace
-            index = trace[i,j]
-            # Code is set to -1 for gaps
-            if index != -1:
-                codes[i,j] = alignment.sequences[j].code[index]
-    # Transpose to have the number of sequences as first dimension
-    return codes.transpose()
+    sequences = alignment.sequences
+    
+    # The number of sequences is the first dimension
+    codes = np.zeros((trace.shape[1], trace.shape[0]), dtype=int)
+    for i in range(len(sequences)):
+        codes[i] = np.where(
+            trace[:,i] != -1, sequences[i].code[trace[:,i]], -1
+        )
+    
+    return np.stack(codes)
 
 
 def get_symbols(alignment):
