@@ -104,7 +104,7 @@ class SequenceProfile(object):
         if not new_symbols.shape == self.symbols.shape:
             raise ValueError(
                 f"New ndarray 'symbols' must be of same shape "
-                f"{self.symbols.shape} as old one"
+                f"{self.symbols.shape} as the old one"
             )
         self._symbols = new_symbols
 
@@ -113,7 +113,7 @@ class SequenceProfile(object):
         if not new_gaps.shape == self.gaps.shape:
             raise ValueError(
                 f"New ndarray 'gaps' must be of same shape "
-                f"{self.gaps.shape} as old one"
+                f"{self.gaps.shape} as the old one"
             )
         self._gaps = new_gaps
 
