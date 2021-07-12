@@ -297,20 +297,31 @@ def get_symbols(alignment):
     See Also
     --------
     get_codes
+
+    Examples
+    --------
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
+    >>> print(ali)
+    CGTCAT--
+    --TCATGC
+    >>> print(get_symbols(ali))
+    [['C', 'G', 'T', 'C', 'A', 'T', None, None], [None, None, 'T', 'C', 'A', 'T', 'G', 'C']]
     """
     codes = get_codes(alignment)
     symbols = [None] * codes.shape[0]
     for i in range(codes.shape[0]):
-        symbols_for_seq = [None] * codes.shape[1]
         alphabet = alignment.sequences[i].get_alphabet()
-        for j in range(codes.shape[1]):
-            code = codes[i,j]
-            # Store symbol in the list
-            # For gaps (-1) this condition fails
-            # and the list keeps a 'None'
-            if code != -1:
-                symbols_for_seq[j] = alphabet.decode(code)
-        symbols[i] = symbols_for_seq
+        codes_wo_gaps = codes[i, codes[i] != -1]
+        symbols_wo_gaps = alphabet.decode_multiple(codes_wo_gaps)
+        if not isinstance(symbols_wo_gaps, list):
+            symbols_wo_gaps = list(symbols_wo_gaps)
+        symbols_for_seq = np.full(len(codes[i]), None, dtype=object)
+        symbols_for_seq[codes[i] != -1] = symbols_wo_gaps
+        symbols[i] = symbols_for_seq.tolist()
     return symbols
 
 
