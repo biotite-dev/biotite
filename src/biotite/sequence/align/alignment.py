@@ -266,17 +266,16 @@ def get_codes(alignment):
      [-1 -1  3  1  0  3  2  1]]
     """
     trace = alignment.trace
-    # -1 is code value for gaps
-    codes = np.full(trace.shape, -1, dtype=int)
-    for i in range(trace.shape[0]):
-        for j in range(trace.shape[1]):
-            # Get symbol code for each index in trace
-            index = trace[i,j]
-            # Code is set to -1 for gaps
-            if index != -1:
-                codes[i,j] = alignment.sequences[j].code[index]
-    # Transpose to have the number of sequences as first dimension
-    return codes.transpose()
+    sequences = alignment.sequences
+    
+    # The number of sequences is the first dimension
+    codes = np.zeros((trace.shape[1], trace.shape[0]), dtype=int)
+    for i in range(len(sequences)):
+        codes[i] = np.where(
+            trace[:,i] != -1, sequences[i].code[trace[:,i]], -1
+        )
+    
+    return np.stack(codes)
 
 
 def get_symbols(alignment):
@@ -298,20 +297,31 @@ def get_symbols(alignment):
     See Also
     --------
     get_codes
+
+    Examples
+    --------
+    
+    >>> seq1 = NucleotideSequence("CGTCAT")
+    >>> seq2 = NucleotideSequence("TCATGC")
+    >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
+    >>> ali = align_optimal(seq1, seq2, matrix)[0]
+    >>> print(ali)
+    CGTCAT--
+    --TCATGC
+    >>> print(get_symbols(ali))
+    [['C', 'G', 'T', 'C', 'A', 'T', None, None], [None, None, 'T', 'C', 'A', 'T', 'G', 'C']]
     """
     codes = get_codes(alignment)
     symbols = [None] * codes.shape[0]
     for i in range(codes.shape[0]):
-        symbols_for_seq = [None] * codes.shape[1]
         alphabet = alignment.sequences[i].get_alphabet()
-        for j in range(codes.shape[1]):
-            code = codes[i,j]
-            # Store symbol in the list
-            # For gaps (-1) this condition fails
-            # and the list keeps a 'None'
-            if code != -1:
-                symbols_for_seq[j] = alphabet.decode(code)
-        symbols[i] = symbols_for_seq
+        codes_wo_gaps = codes[i, codes[i] != -1]
+        symbols_wo_gaps = alphabet.decode_multiple(codes_wo_gaps)
+        if not isinstance(symbols_wo_gaps, list):
+            symbols_wo_gaps = list(symbols_wo_gaps)
+        symbols_for_seq = np.full(len(codes[i]), None, dtype=object)
+        symbols_for_seq[codes[i] != -1] = symbols_wo_gaps
+        symbols[i] = symbols_for_seq.tolist()
     return symbols
 
 
