@@ -40,7 +40,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
                          direction="both", score_only=False, check_matrix=True)
     
     Perform a local alignment extending from given `seed` position
-    without introducing gaps.
+    without inserting gaps.
 
     The alignment extends into one or both directions (controlled by
     `direction`) until the total alignment score falls more than
@@ -218,7 +218,7 @@ def _seed_extend_generic(CodeType1[:] code1 not None,
                          const int32[:,:] matrix not None,
                          int32 threshold):
     """
-    Align two sequences without introduction of gaps beginning from
+    Align two sequences without insertion of gaps beginning from
     start of the given sequences.
     If the score drops too low, terminate the alignment.
     Return the similarity score and the number of aligned symbols.

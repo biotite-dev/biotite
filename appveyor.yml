@@ -36,7 +36,7 @@ install:
 build: false
 
 test_script:
-  - pytest --ignore=tests//structure//test_trajectory.py --ignore=tests//application --ignore=tests//database
+  - pytest --ignore=tests//structure//test_trajectory.py --ignore=tests//sequence//align//test_statistics.py --ignore=tests//application --ignore=tests//database
 
 artifacts:
   - path: dist\*
