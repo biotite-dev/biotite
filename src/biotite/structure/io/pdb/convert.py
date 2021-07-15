@@ -29,7 +29,8 @@ def get_model_count(pdb_file):
     return pdb_file.get_model_count()
 
 
-def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
+def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
+                  include_bonds=False):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
     :class:`PDBFile`.
@@ -66,6 +67,10 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
         that should be stored in the output array or stack.
         These are valid values:
         ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
         
     Returns
     -------
@@ -73,7 +78,7 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[]):
         The return type depends on the `model` parameter.
     
     """
-    return pdb_file.get_structure(model, altloc, extra_fields)
+    return pdb_file.get_structure(model, altloc, extra_fields, include_bonds)
 
 
 def set_structure(pdb_file, array, hybrid36=False):
@@ -98,5 +103,11 @@ def set_structure(pdb_file, array, hybrid36=False):
         the stack will be in a separate model.
     hybrid36: boolean, optional
         Defines wether the file should be written in hybrid-36 format.
+
+    Notes
+    -----
+    If `array` has an associated :class:`BondList`, ``CONECT``
+    records are also written for all non-water hetero residues
+    and all inter-residue connections.
     """
     pdb_file.set_structure(array, hybrid36)
