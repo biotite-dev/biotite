@@ -8,11 +8,13 @@ __all__ = ["PDBFile"]
 
 import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
+from ...bonds import BondList, connect_via_residue_names
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
 from ..general import _guess_element as guess_element
 from ...error import BadStructureError
-from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
+from ...filter import filter_first_altloc, filter_highest_occupancy_altloc, \
+                      filter_solvent
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 import copy
 from warnings import warn
@@ -225,7 +227,8 @@ class PDBFile(TextFile):
             return coord
 
 
-    def get_structure(self, model=None, altloc="first", extra_fields=[]):
+    def get_structure(self, model=None, altloc="first", extra_fields=[],
+                      include_bonds=False):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
         
@@ -259,6 +262,10 @@ class PDBFile(TextFile):
             These are valid values:
             ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
             ``'charge'``.
+        include_bonds : bool, optional
+            If set to true, a :class:`BondList` will be created for the
+            resulting :class:`AtomArray` containing the bond information
+            from the file.
         
         Returns
         -------
@@ -348,6 +355,17 @@ class PDBFile(TextFile):
             occupancy[i] = float(line[54:60].strip())
             b_factor[i] = float(line[60:66].strip())
         
+        if include_bonds or \
+            (extra_fields is not None and "atom_id" in extra_fields):
+                # The atom IDs are only required in these two cases
+                atom_id = np.array(
+                    [decode_hybrid36(raw_id.item()) for raw_id in atom_id_raw],
+                    dtype=int
+                )
+        else:
+            atom_id = None
+
+        
         # Add annotation arrays to atom array (stack)
         array.chain_id = chain_id
         array.res_id = res_id
@@ -359,10 +377,9 @@ class PDBFile(TextFile):
 
         for field in (extra_fields if extra_fields is not None else []):
             if field == "atom_id":
-                array.set_annotation("atom_id", np.array(
-                    [decode_hybrid36(raw_id.item()) for raw_id in atom_id_raw],
-                    dtype=int
-                ))
+                # Copy is necessary to avoid double masking in 
+                # later altloc ID filtering
+                array.set_annotation("atom_id", atom_id.copy())
             elif field == "charge":
                 array.set_annotation("charge", np.array(
                     [0 if raw_number == " " else
@@ -430,23 +447,38 @@ class PDBFile(TextFile):
                     array.box = np.repeat(
                         box[np.newaxis, ...], array.stack_depth(), axis=0
                     )
-                break
+                break  
 
-        # Filter altloc IDs and return
-        if altloc_id is None:
-            return array
-        elif altloc == "occupancy":
-            return array[
-                ...,
-                filter_highest_occupancy_altloc(array, altloc_id, occupancy)
-            ]
+        # Filter altloc IDs
+        if altloc == "occupancy":
+            filter = filter_highest_occupancy_altloc(
+                array, altloc_id, occupancy
+            )
+            array = array[..., filter]
+            atom_id = atom_id[filter] if atom_id is not None else None
         elif altloc == "first":
-            return array[..., filter_first_altloc(array, altloc_id)]
+            filter = filter_first_altloc(array, altloc_id)
+            array = array[..., filter]
+            atom_id = atom_id[filter] if atom_id is not None else None
         elif altloc == "all":
             array.set_annotation("altloc_id", altloc_id)
-            return array
         else:
             raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
+        
+        # Read bonds
+        if include_bonds:
+            bond_list = self._get_bonds(atom_id)
+            bond_list = bond_list.merge(connect_via_residue_names(
+                array,
+                # The information for non-hetero residues and water
+                # are not part of CONECT records
+                (~array.hetero) | filter_solvent(array)
+            ))
+            # Remove bond order from inter residue bonds for consistency
+            bond_list.remove_bond_order()
+            array.bonds = bond_list  
+        
+        return array
 
 
 
@@ -471,6 +503,12 @@ class PDBFile(TextFile):
         hybrid36: bool, optional
             Defines wether the file should be written in hybrid-36
             format.
+        
+        Notes
+        -----
+        If `array` has an associated :class:`BondList`, ``CONECT``
+        records are also written for all non-water hetero residues
+        and all inter-residue connections.
         """
         annot_categories = array.get_annotation_categories()
         hetero = ["ATOM" if e == False else "HETATM" for e in array.hetero]
@@ -601,7 +639,7 @@ class PDBFile(TextFile):
                 self.lines.extend(modellines)
                 self.lines.append("ENDMDL")
 
-        # prepend a single CRYST1 record if we have box information
+        # Prepend a single CRYST1 record if we have box information
         if array.box is not None:
             box = array.box
             if len(box.shape) == 3:
@@ -615,6 +653,23 @@ class PDBFile(TextFile):
                               "{:>7.2f}".format(np.rad2deg(unitcell[4])) +
                               "{:>7.2f}".format(np.rad2deg(unitcell[5])) +
                               " P 1           1")
+        
+        # Add CONECT records if bonds are present
+        if array.bonds is not None:
+            # Only non-water hetero records and connections between
+            # residues are added to the records
+            hetero_indices = np.where(array.hetero & ~filter_solvent(array))[0]
+            bond_array = array.bonds.as_array()
+            bond_array = bond_array[
+                np.isin(bond_array[:,0], hetero_indices) |
+                np.isin(bond_array[:,1], hetero_indices) |
+                (array.res_id  [bond_array[:,0]] != array.res_id  [bond_array[:,1]]) |
+                (array.chain_id[bond_array[:,0]] != array.chain_id[bond_array[:,1]])
+            ]
+            self._set_bonds(
+                BondList(array.array_length(), bond_array), atom_id
+            )
+
 
     def _get_model_length(self, model_start_i, atom_line_i):
         """
@@ -638,3 +693,51 @@ class PDBFile(TextFile):
                     f"but model 1 has {length} atoms, must be equal"
                 )
         return length
+    
+
+    def _get_bonds(self, atom_ids):
+        conect_lines = [line for line in self.lines
+                        if line.startswith("CONECT")]
+        
+        # Mapping from atom ids to indices in an AtomArray
+        atom_id_to_index = np.zeros(atom_ids[-1]+1, dtype=int)
+        for i, id in enumerate(atom_ids):
+           atom_id_to_index[id] = i
+
+        bonds = []
+        for line in conect_lines:
+            center_id = atom_id_to_index[int(line[6 : 11])]
+            for i in range(11, 31, 5):
+                id_string = line[i : i+5]
+                try:
+                    id = atom_id_to_index[int(id_string)]
+                except ValueError:
+                    # String is empty -> no further IDs
+                    break
+                bonds.append((center_id, id))
+        
+        # The length of the 'atom_ids' array
+        # is equal to the length of the AtomArray
+        return BondList(len(atom_ids), np.array(bonds, dtype=np.uint32))
+
+
+    def _set_bonds(self, bond_list, atom_ids):
+        bonds, _ = bond_list.get_all_bonds()
+
+        for center_i, bonded_indices in enumerate(bonds):
+            # remove padding values
+            bonded_indices = bonded_indices[bonded_indices != -1]
+            if len(bonded_indices) >= 1:
+                line = f"CONECT{atom_ids[center_i]:>5d}"
+                n_added = 0
+                for bonded_i in bonded_indices:
+                    line += f"{atom_ids[bonded_i]:>5d}"
+                    n_added += 1
+                    if n_added == 4:
+                        # Only a maximum of 4 bond partners can be put
+                        # into a single line
+                        # If there are more, use a extra record
+                        n_added = 0
+                        self.lines.append(line)
+                        line = f"CONECT{atom_ids[center_i]:>5d}"
+                self.lines.append(line)

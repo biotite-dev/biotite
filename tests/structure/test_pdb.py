@@ -28,19 +28,22 @@ def test_get_model_count():
 
 
 @pytest.mark.parametrize(
-    "path, model, hybrid36",
+    "path, model, hybrid36, include_bonds",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
         [None, 1, -1],
+        [False, True],
         [False, True]
     )
 )
-def test_array_conversion(path, model, hybrid36):
+def test_array_conversion(path, model, hybrid36, include_bonds):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     try:
-        array1 = pdb.get_structure(pdb_file, model=model)
+        array1 = pdb.get_structure(
+            pdb_file, model=model, include_bonds=include_bonds
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -63,7 +66,9 @@ def test_array_conversion(path, model, hybrid36):
         pdb_file = pdb.PDBFile()
         pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
     
-    array2 = pdb.get_structure(pdb_file, model=model)
+    array2 = pdb.get_structure(
+        pdb_file, model=model, include_bonds=include_bonds
+    )
     
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
