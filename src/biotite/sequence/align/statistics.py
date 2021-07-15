@@ -80,7 +80,7 @@ class EValueEstimator:
     >>> background = np.array([0.2, 0.3, 0.3, 0.2])
     >>> estimator = EValueEstimator.from_samples(
     ...     query.alphabet, matrix, gap_penalty, background, sample_length=100
-    >>> )
+    ... )
 
     Approach 1: Calculate E-value based on number of sequences in the
     hypothetical database (*100*).
