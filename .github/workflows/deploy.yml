@@ -52,6 +52,9 @@ jobs:
         run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION 
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: Installing 'rename'
+        run: sudo apt install rename
       - name: Building wheel distribution
         run: python setup.py bdist_wheel
       - if: ${{ matrix.source }}
