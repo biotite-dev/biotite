@@ -3,6 +3,7 @@ name: Building and deploying Biotite
 on:
   release:
     types: [published]
+  workflow_dispatch: {}
 
 jobs:
   build:
