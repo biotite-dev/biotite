@@ -5,8 +5,8 @@ on:
     types: [published]
 
 jobs:
-  test-simple:
-    name: Testing Biotite without database accesses and external applications runs
+  build:
+    name: Building distribution
     strategy:
       matrix:
         include:
@@ -48,12 +48,12 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python }}
       - name: Installing dependencies
-        run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
+        run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION 
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building wheel distribution
         run: python setup.py bdist_wheel
-      - if: ${{ python setup.py sdist }}
+      - if: ${{ matrix.source }}
         name: Building source distribution
         run: python setup.py sdist
       - if: ${{ matrix.os == 'ubuntu-latest' }}
