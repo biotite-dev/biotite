@@ -1,5 +1,4 @@
-name: Building and deploying Biotite
-
+name: Builds
 on:
   release:
     types: [published]
