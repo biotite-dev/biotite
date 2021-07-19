@@ -1,4 +1,4 @@
-name: Testing Biotite
+name: Tests
 
 on: [push, pull_request]
 
