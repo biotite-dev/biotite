@@ -34,13 +34,17 @@ def _determine_common_alphabet(alphabets):
     return common_alphabet
 
 
-def _codes_to_iupac(frequency, codes, maxes):
+def _codes_to_iupac(frequency, codes, maxes, row):
     """
     Returns IUPAC code for a row of 'symbols' with none, one or
     multiple maximum positions.
     """
     if np.sum(frequency) == 0:
-        return codes[(-1,)]
+        raise ValueError(
+            f"There is an empty column in the 'symbols' frequency table. "
+            f"This doesn't make sense in context of an alignment. "
+            f"Please check the 'symbols' frequency table in row {row}."
+        )
     key = tuple(np.where(frequency == maxes)[0])
     return codes[key]
 
@@ -230,12 +234,12 @@ class SequenceProfile(object):
             (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'T',
             (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
             (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
-            (0, 1, 2, 3): 'N', (-1,): '-'
+            (0, 1, 2, 3): 'N'
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
         for i in range(len(self.symbols)):
-            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i])
+            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
         return consensus
 
     def _rna_to_consensus(self):
@@ -243,12 +247,12 @@ class SequenceProfile(object):
             (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'U',
             (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
             (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
-            (0, 1, 2, 3): 'N', (-1,): '-'
+            (0, 1, 2, 3): 'N'
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
         for i in range(len(self.symbols)):
-            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i])
+            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
         return consensus
 
     def _prot_to_consensus(self):
