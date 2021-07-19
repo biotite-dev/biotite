@@ -87,6 +87,20 @@ class SequenceProfile(object):
         self._gaps = gaps
         self._alphabet = alphabet
 
+        if len(alphabet) != symbols.shape[1]:
+            raise ValueError(
+                f"The given alphabet doesn't have the same length "
+                f"({len(alphabet)}) as the number of columns "
+                f"({symbols.shape[1]}) in the 'symbols' frequency table."
+            )
+
+        if gaps.shape[0] != symbols.shape[0]:
+            raise ValueError(
+                f"The given 'gaps' position matrix doesn't have the same "
+                f"length ({gaps.shape[0]}) as the 'symbols' "
+                f"frequency table ({symbols.shape[0]})"
+            )
+
     @property
     def symbols(self):
         return self._symbols
