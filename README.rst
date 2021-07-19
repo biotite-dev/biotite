@@ -3,9 +3,9 @@
    :alt: Biotite at PyPI
 .. image:: https://img.shields.io/pypi/pyversions/biotite.svg
    :alt: Python version
-.. image:: https://img.shields.io/travis/biotite-dev/biotite.svg
-   :target: https://travis-ci.org/biotite-dev/biotite
-   :alt: Travis CI status
+.. image:: https://github.com/biotite-dev/biotite/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/biotite-dev/biotite/actions/workflows/test.yml
+   :alt: Test status
 
 .. image:: https://www.biotite-python.org/_static/assets/general/biotite_logo_m.png
    :alt: The Biotite Project
