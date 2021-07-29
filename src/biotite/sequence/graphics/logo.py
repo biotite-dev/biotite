@@ -10,16 +10,19 @@ import numpy as np
 from ...visualize import set_font_size_in_coord
 from ..alphabet import LetterAlphabet
 from .colorschemes import get_color_scheme
+import warnings
+from ..align import Alignment
+import biotite.sequence as seq
 
 
-def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
+def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
     """
     Create a sequence logo. :footcite:`Schneider1990`
 
     A sequence logo is visualizes the positional composition and
-    conservation of an alignment encoded in the size of the letters.
-    Each position displays all symbols that are occuring at this
-    positionstacked on each other, with their relative heights depicting
+    conservation of a profile encoded in the size of the letters.
+    Each position displays all symbols that are occurring at this
+    position stacked on each other, with their relative heights depicting
     their relative frequency.
     The height of such a stack depicts its conservation.
     It is the maximum possible Shannon entropy of the alphabet
@@ -29,8 +32,8 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
     ----------
     axes : Axes
         The axes to draw the logo one.
-    alignment : Alignment
-        The logo is created based on this alignment.
+    profile: class SequenceProfile
+        The logo is created based on this profile.
     scheme : str or list of (tuple or str)
         Either a valid color scheme name
         (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
@@ -47,12 +50,11 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
     """
     from matplotlib.text import Text
 
-    sequences = alignment.sequences
-    alphabet = sequences[0].get_alphabet()
-    for seq in sequences:
-        if seq.get_alphabet() != alphabet:
-            raise ValueError("Alphabets of the sequences in the alignment "
-                             "are not equal")
+    if isinstance(profile, Alignment):
+        warnings.warn("Using an alignment for this method is deprecated; use a profile instead", DeprecationWarning)
+        profile = seq.SequenceProfile.from_alignment(profile)
+
+    alphabet = profile.alphabet
     if not isinstance(alphabet, LetterAlphabet):
         raise TypeError("The sequences' alphabet must be a letter alphabet")
 
@@ -67,7 +69,7 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
     kwargs.pop("color", None)
     kwargs.pop("size",  None)
     
-    frequencies, entropies, max_entropy = _get_entropy(alignment)
+    frequencies, entropies, max_entropy = _get_entropy(profile)
     stack_heights = (max_entropy - entropies)
     symbols_heights = stack_heights[:, np.newaxis] * frequencies
     index_order = np.argsort(symbols_heights, axis=1)
@@ -90,22 +92,13 @@ def plot_sequence_logo(axes, alignment, scheme=None, **kwargs):
                 text.set_clip_on(True)
                 set_font_size_in_coord(text, width=1, height=height)
                 start_height += height
-    
-    axes.set_xlim(0.5, len(alignment)+0.5)
+
+    axes.set_xlim(0.5, len(profile.symbols)+0.5)
     axes.set_ylim(0, max_entropy)
 
 
-def _get_entropy(alignment):
-    alphabet = alignment.sequences[0].get_alphabet()
-    trace = alignment.trace
-    sequences = alignment.sequences
-    freq = np.zeros((len(trace), len(alphabet)))
-    for i in range(trace.shape[0]):
-        for j in range(trace.shape[1]):
-            index = trace[i,j]
-            if index != -1:
-                code = sequences[j].code[index]
-                freq[i, code] += 1
+def _get_entropy(profile):
+    freq = profile.symbols
     freq = freq / np.sum(freq, axis=1)[:, np.newaxis]
     # 0 * log2(0) = 0 -> Convert NaN to 0
     no_zeros = freq != 0
@@ -113,5 +106,5 @@ def _get_entropy(alignment):
     pre_entropies[no_zeros] \
         = freq[no_zeros] * np.log2(freq[no_zeros])
     entropies = -np.sum(pre_entropies, axis=1)
-    max_entropy = np.log2(len(alphabet))
+    max_entropy = np.log2(len(profile.alphabet))
     return freq, entropies, max_entropy
