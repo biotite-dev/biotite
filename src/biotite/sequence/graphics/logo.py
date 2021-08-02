@@ -12,7 +12,7 @@ from ..alphabet import LetterAlphabet
 from .colorschemes import get_color_scheme
 import warnings
 from ..align import Alignment
-import biotite.sequence as seq
+from .. import SequenceProfile
 
 
 def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
@@ -32,7 +32,7 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
     ----------
     axes : Axes
         The axes to draw the logo one.
-    profile: class SequenceProfile
+    profile: SequenceProfile
         The logo is created based on this profile.
     scheme : str or list of (tuple or str)
         Either a valid color scheme name
@@ -52,7 +52,7 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
 
     if isinstance(profile, Alignment):
         warnings.warn("Using an alignment for this method is deprecated; use a profile instead", DeprecationWarning)
-        profile = seq.SequenceProfile.from_alignment(profile)
+        profile = SequenceProfile.from_alignment(profile)
 
     alphabet = profile.alphabet
     if not isinstance(alphabet, LetterAlphabet):
