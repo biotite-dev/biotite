@@ -60,8 +60,19 @@ class SequenceProfile(object):
     It also saves the number of gaps at each position in the array
     'gaps'.
 
+    Additionally, you can get the position probability matrix ('ppm') and the
+    position weight matrix ('pmw') of an instance of object SequenceProfile.
+
+    Matrix 'ppm' is calculated based on 'symbols' and parameter 'pseudocount'.
+    Matrix 'pwm' is calculated based on 'ppm' and parameter
+    'background_frequencies'.
+
     With :meth:`from_alignment()` a :class:`SequenceProfile` object can
     be created from an indefinite number of aligned sequences.
+
+    With :meth:`sequence_probability_from_matrix()` the probability of a sequence
+    can be calculated based on the 'ppm' or 'pmw' of this instance of
+    object SequenceProfile.
 
     All attributes of this class are publicly accessible.
 
@@ -86,14 +97,15 @@ class SequenceProfile(object):
         Alphabet of sequences of sequence profile
     ppm : ndarray, dtype=float, shape=(n,k)
         This matrix is the position probability matrix calculated based
-        on symbols and pseudocount
+        on symbols and pseudocount.
     pseudocount : int
-        bla
+        Amount added to the number of observed cases in order to change
+        the expected probability.
     pwm : ndarray, dtype=float, shape=(n,k)
         This matrix is the position weight matrix calculated based
-        on ppm and background_frequencies
+        on ppm and background_frequencies.
     background_frequencies : None
-        To be implemented
+        To be implemented.
     """
 
     def __init__(self, symbols, gaps, alphabet):
@@ -152,7 +164,7 @@ class SequenceProfile(object):
     @property
     def ppm(self):
         if self._ppm is None:
-            self._ppm = self._probability_matrix(self.pseudocount)
+            self._ppm = self._probability_matrix()
         return self._ppm
 
     @property
@@ -166,13 +178,13 @@ class SequenceProfile(object):
                 f"Pseudocount can not be smaller than zero."
             )
         self._pseudocount = new_pseudocount
-        self._ppm = self._probability_matrix(self.pseudocount)
-        self._pwm = self._log_odds_matrix(self.background_frequencies)  # pwm dependent on ppm
+        self._ppm = self._probability_matrix()
+        self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
 
     @property
     def pwm(self):
         if self._pwm is None:
-            self._pwm = self._log_odds_matrix(self.background_frequencies)
+            self._pwm = self._log_odds_matrix()
         return self._pwm
 
     @property
@@ -182,7 +194,7 @@ class SequenceProfile(object):
     @background_frequencies.setter
     def background_frequencies(self, new_background_frequencies):
         self._background_frequencies = new_background_frequencies
-        self._pwm = self._log_odds_matrix(self.background_frequencies)
+        self._pwm = self._log_odds_matrix()
 
     def __repr__(self):
         """Represent SequenceProfile as a string for debugging."""
@@ -330,12 +342,12 @@ class SequenceProfile(object):
         consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
 
-    def _probability_matrix(self, pseudocount):
-        return (self.symbols + pseudocount / len(self.symbols)) / \
-               (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
+    def _probability_matrix(self):
+        return (self.symbols + self.pseudocount / len(self.symbols)) / \
+               (np.sum(self.symbols, axis=1)[:, np.newaxis] + self.pseudocount)
 
-    def _log_odds_matrix(self, background_frequencies):
-        return np.log2(self.ppm / background_frequencies)
+    def _log_odds_matrix(self):
+        return np.log2(self.ppm / self.background_frequencies)
 
     def sequence_probability_from_matrix(self, sequence, matrix="ppm"):
         """
@@ -347,8 +359,8 @@ class SequenceProfile(object):
         sequence : Sequence
            The input sequence.
         matrix : string
-            Which matrix to use too calculate the probability of the
-            input sequence (either ppm or pwm).
+            The chosen position matrix to use to calculate the probability
+            of the input sequence (either ppm or pwm).
             (Default: ppm).
 
         Returns
@@ -370,7 +382,7 @@ class SequenceProfile(object):
             if len(sequence) != len(self.ppm):
                 raise ValueError(
                     f"The given sequence has a different length ({len(sequence)}) than "
-                    f"position probability matrix {len(matrix)}."
+                    f"position probability matrix {len(self.ppm)}."
                 )
             else:
                 for i in range(len(codes)):
@@ -379,7 +391,7 @@ class SequenceProfile(object):
             if len(sequence) != len(self.pwm):
                 raise ValueError(
                     f"The given sequence has a different length ({len(sequence)}) than "
-                    f"position weight matrix ({len(matrix)})."
+                    f"position weight matrix ({len(self.pwm)})."
                 )
             else:
                 for i in range(len(codes)):
