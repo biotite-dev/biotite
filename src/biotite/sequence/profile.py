@@ -55,8 +55,8 @@ class SequenceProfile(object):
     sequence profile of aligned sequences.
     It is possible to calculate and return its consensus sequence.
 
-    This class saves the position frequency matrix 'symbols' of the
-    occurrences of each alphabet symbol at each position.
+    This class saves the position frequency matrix (position count matrix)
+    'symbols' of the occurrences of each alphabet symbol at each position.
     It also saves the number of gaps at each position in the array
     'gaps'.
 
@@ -84,12 +84,26 @@ class SequenceProfile(object):
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
         Alphabet of sequences of sequence profile
+    ppm : ndarray, dtype=float, shape=(n,k)
+        This matrix is the position probability matrix calculated based
+        on symbols and pseudocount
+    pseudocount : int
+        bla
+    pwm : ndarray, dtype=float, shape=(n,k)
+        This matrix is the position weight matrix calculated based
+        on ppm and background_frequencies
+    background_frequencies : None
+        To be implemented
     """
 
     def __init__(self, symbols, gaps, alphabet):
         self._symbols = symbols
         self._gaps = gaps
         self._alphabet = alphabet
+        self._ppm = None
+        self._pseudocount = 0
+        self._pwm = None
+        self._background_frequencies = 1 / len(self.alphabet)  # uniform distribution
 
         if len(alphabet) != symbols.shape[1]:
             raise ValueError(
@@ -134,6 +148,41 @@ class SequenceProfile(object):
                 f"{self.gaps.shape} as the old one"
             )
         self._gaps = new_gaps
+
+    @property
+    def ppm(self):
+        if self._ppm is None:
+            self._ppm = self._probability_matrix(self.pseudocount)
+        return self._ppm
+
+    @property
+    def pseudocount(self):
+        return self._pseudocount
+
+    @pseudocount.setter
+    def pseudocount(self, new_pseudocount):
+        if new_pseudocount < 0:
+            raise ValueError(
+                f"Pseudocount can not be smaller than zero."
+            )
+        self._pseudocount = new_pseudocount
+        self._ppm = self._probability_matrix(self.pseudocount)
+        self._pwm = self._log_odds_matrix(self.background_frequencies)  # pwm dependent on ppm
+
+    @property
+    def pwm(self):
+        if self._pwm is None:
+            self._pwm = self._log_odds_matrix(self.background_frequencies)
+        return self._pwm
+
+    @property
+    def background_frequencies(self):
+        return self._background_frequencies
+
+    @background_frequencies.setter
+    def background_frequencies(self, new_background_frequencies):
+        self._background_frequencies = new_background_frequencies
+        self._pwm = self._log_odds_matrix(self.background_frequencies)
 
     def __repr__(self):
         """Represent SequenceProfile as a string for debugging."""
@@ -187,7 +236,7 @@ class SequenceProfile(object):
             for alph in (seq.alphabet for seq in alignment.sequences):
                 if not alphabet.extends(alph):
                     raise ValueError(
-                        "The given alphabet is incompatible with a least one "
+                        f"The given alphabet is incompatible with a least one "
                         "alphabet of the given sequences"
                     )
         symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
@@ -215,7 +264,7 @@ class SequenceProfile(object):
 
         Returns
         -------
-        consensus: either NucleotideSequence, ProteinSequence or GeneralSequence
+        consensus: Sequence
             The calculated consensus sequence
         """
         # https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes
@@ -280,3 +329,59 @@ class SequenceProfile(object):
         consensus = GeneralSequence(self.alphabet)
         consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
+
+    def _probability_matrix(self, pseudocount):
+        return (self.symbols + pseudocount / len(self.symbols)) / \
+               (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
+
+    def _log_odds_matrix(self, background_frequencies):
+        return np.log2(self.ppm / background_frequencies)
+
+    def sequence_probability_from_matrix(self, sequence, matrix="ppm"):
+        """
+        Calculate probability of a sequence based on either the
+        position probability matrix (ppm) or the position weight matrix (pwm).
+
+        Parameters
+        ----------
+        sequence : Sequence
+           The input sequence.
+        matrix : string
+            Which matrix to use too calculate the probability of the
+            input sequence (either ppm or pwm).
+            (Default: ppm).
+
+        Returns
+        -------
+        probability: float
+           The calculated probability for the input sequence based on
+           the chosen position matrix.
+        """
+        if matrix != "ppm" and matrix != "pwm":
+            raise ValueError(
+                f'Input parameter matrix must be either "ppm" (position probability matrix) '
+                f'or "pwm" (position weight matrix).'
+            )
+
+        probability = 1
+        codes = sequence.code
+
+        if matrix == "ppm":
+            if len(sequence) != len(self.ppm):
+                raise ValueError(
+                    f"The given sequence has a different length ({len(sequence)}) than "
+                    f"position probability matrix {len(matrix)}."
+                )
+            else:
+                for i in range(len(codes)):
+                    probability = probability * self.ppm[i, codes[i]]
+        else:
+            if len(sequence) != len(self.pwm):
+                raise ValueError(
+                    f"The given sequence has a different length ({len(sequence)}) than "
+                    f"position weight matrix ({len(matrix)})."
+                )
+            else:
+                for i in range(len(codes)):
+                    probability = probability * self.pwm[i, codes[i]]
+        return probability

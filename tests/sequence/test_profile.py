@@ -61,3 +61,60 @@ def test_to_consensus_prot():
     assert seq.ProteinSequence("MRHIATAAIALSLLLLSITALASADPGKDSKAQLSAAEAGITGKWTNDLGSNFIIGAVGADGAFTGTYESAVGNAESNEIKEGPLD"
                                "GAPATDGKGTALGWTFAFKNNWKFAESATTFSGQCFGGADARINGKELLTKGTMEANAWKSTLLGHDSFSKVKDIAADIDAAKKAG"
                                "INIFNPLDAQKE") == profile.to_consensus()
+
+
+def test_new_position_matrices():
+    seqs = [seq.NucleotideSequence("AAGAAT"),
+            seq.NucleotideSequence("ATCATA"),
+            seq.NucleotideSequence("AAGTAA"),
+            seq.NucleotideSequence("AACAAA"),
+            seq.NucleotideSequence("ATTAAA"),
+            seq.NucleotideSequence("AAGAAT")]
+
+    alignment = align.Alignment(
+        sequences=seqs,
+        trace=np.tile(np.arange(len(seqs[0])), len(seqs)) \
+            .reshape(len(seqs), len(seqs[0])) \
+            .transpose(),
+        score=0
+    )
+
+    profile = seq.SequenceProfile.from_alignment(alignment)
+
+    probability_matrix = np.array([[1., 0., 0., 0., ],
+                                   [0.66666667, 0., 0., 0.33333333],
+                                   [0., 0.33333333, 0.5, 0.16666667],
+                                   [0.83333333, 0., 0., 0.16666667],
+                                   [0.83333333, 0., 0., 0.16666667],
+                                   [0.66666667, 0., 0., 0.33333333]])
+
+    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(profile.ppm, decimals=3))
+
+    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"))
+
+    assert probability == 0.0
+
+    # Set pseudocount for position probability matrix to 1
+    profile.pseudocount = 1
+
+    probability_matrix = np.array([[0.88095238, 0.02380952, 0.02380952, 0.02380952],
+                                   [0.5952381, 0.02380952, 0.02380952, 0.30952381],
+                                   [0.02380952, 0.30952381, 0.45238095, 0.16666667],
+                                   [0.73809524, 0.02380952, 0.02380952, 0.16666667],
+                                   [0.73809524, 0.02380952, 0.02380952, 0.16666667],
+                                   [0.5952381, 0.02380952, 0.02380952, 0.30952381]])
+
+    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(profile.ppm, decimals=3))
+
+    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"))
+
+    assert np.around(probability, decimals=3) == np.around(0.004048642098725673, decimals=3)
+
+    log_odds_matrix = np.array([[1.81713594, -3.39231742, -3.39231742, -3.39231742],
+                                [1.25153877, -3.39231742, -3.39231742, 0.3081223],
+                                [-3.39231742, 0.3081223, 0.85561009, -0.5849625],
+                                [1.56187889, -3.39231742, -3.39231742, -0.5849625],
+                                [1.56187889, -3.39231742, -3.39231742, -0.5849625],
+                                [1.25153877, -3.39231742, -3.39231742, 0.3081223]])
+
+    assert np.array_equal(np.around(log_odds_matrix, decimals=3), np.around(profile.pwm, decimals=3))
