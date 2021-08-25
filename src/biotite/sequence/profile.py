@@ -151,6 +151,8 @@ class SequenceProfile(object):
                 f"{self.symbols.shape} as the old one"
             )
         self._symbols = new_symbols
+        if self._ppm is not None:
+            self._ppm = self._probability_matrix()  # ppm dependent on symbols
 
     @gaps.setter
     def gaps(self, new_gaps):
@@ -177,9 +179,12 @@ class SequenceProfile(object):
             raise ValueError(
                 f"Pseudocount can not be smaller than zero."
             )
-        self._pseudocount = new_pseudocount
-        self._ppm = self._probability_matrix()
-        self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
+        if self._pseudocount != new_pseudocount:
+            self._pseudocount = new_pseudocount
+            if self._ppm is not None:
+                self._ppm = self._probability_matrix()
+            if self._pwm is not None:
+                self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
 
     @property
     def pwm(self):
@@ -193,8 +198,10 @@ class SequenceProfile(object):
 
     @background_frequencies.setter
     def background_frequencies(self, new_background_frequencies):
-        self._background_frequencies = new_background_frequencies
-        self._pwm = self._log_odds_matrix()
+        if self._background_frequencies != new_background_frequencies:
+            self._background_frequencies = new_background_frequencies
+            if self._pwm is not None:
+                self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
 
     def __repr__(self):
         """Represent SequenceProfile as a string for debugging."""
