@@ -103,6 +103,16 @@ class CompositeQuery(Query):
         self._operator = operator
     
     def get_content(self):
+        """
+        A dictionary representation of the query.
+        This dictionary is the content of the ``'query'`` key in the 
+        JSON query.
+
+        Returns
+        -------
+        content : dict
+            The dictionary representation of the query.
+        """
         content = {
             "type": "group",
             "logical_operator": self._operator,
@@ -139,7 +149,7 @@ class BasicQuery(SingleQuery):
     def get_content(self):
         content = super().get_content()
         content["type"] = "terminal"
-        content["service"] = "text"
+        content["service"] = "full_text"
         content["parameters"]["value"] = f'"{self._term}"'
         return content
 
@@ -161,6 +171,12 @@ class FieldQuery(SingleQuery):
     ----------
     field : str
         The field to search in.
+    molecular_definition : bool, optional
+        If set true, this query searches in fields
+        associated with
+        `molecular definitions <https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If false (default), this query searches in fields
+        associated with `PDB structures <https://search.rcsb.org/structure-search-attributes.html>`_.
     exact_match : str, optional
         Operator for returning results whose field exactly matches the
         given value.
@@ -184,7 +200,9 @@ class FieldQuery(SingleQuery):
     -----
     A complete list of the available fields and its supported operators
     is documented at
-    `<https://search.rcsb.org/search-attributes.html>`_.
+    `<https://search.rcsb.org/structure-search-attributes.html>`_
+    and
+    `<https://search.rcsb.org/chemical-search-attributes.html>`_.
 
     Examples
     --------
@@ -193,10 +211,11 @@ class FieldQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
     """
-    def __init__(self, field, **kwargs):
+    def __init__(self, field, molecular_definition=False, **kwargs):
         super().__init__()
         self._negation = False
         self._field = field
+        self._mol_definition = molecular_definition
         
         if len(kwargs) > 1:
             raise TypeError("Only one operator must be given")
@@ -235,7 +254,10 @@ class FieldQuery(SingleQuery):
     def get_content(self):
         content = super().get_content()
         content["type"] = "terminal"
-        content["service"] = "text"
+        if self._mol_definition:
+            content["service"] = "text_chem"
+        else:
+            content["service"] = "text"
         content["parameters"]["attribute"] = self._field
         content["parameters"]["operator"] = self._operator
         content["parameters"]["negation"] = self._negation
@@ -511,7 +533,9 @@ def search(query, return_type="entry", range=None, sort_by=None):
         If specified, the returned PDB IDs are sorted by the values
         of the given field name in descending order.
         A complete list of the available fields is documented at
-        `<https://search.rcsb.org/search-attributes.html>`_.
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
 
     Returns
     -------
