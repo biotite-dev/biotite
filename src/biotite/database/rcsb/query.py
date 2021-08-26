@@ -44,6 +44,13 @@ class Query(metaclass=abc.ABCMeta):
         """
         pass
 
+    def __and__(self, query):
+        return CompositeQuery([self, query], "and")
+
+    def __or__(self, query):
+        return CompositeQuery([self, query], "or")
+
+
 
 class SingleQuery(Query, metaclass=abc.ABCMeta):
     """
@@ -68,12 +75,6 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
             "node_id": self._node_id,
             "parameters": {}
         }
-    
-    def __and__(self, query):
-        return CompositeQuery([self, query], "and")
-    
-    def __or__(self, query):
-        return CompositeQuery([self, query], "or") 
 
 
 class CompositeQuery(Query):
