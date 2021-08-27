@@ -44,6 +44,13 @@ class Query(metaclass=abc.ABCMeta):
         """
         pass
 
+    def __and__(self, query):
+        return CompositeQuery([self, query], "and")
+
+    def __or__(self, query):
+        return CompositeQuery([self, query], "or")
+
+
 
 class SingleQuery(Query, metaclass=abc.ABCMeta):
     """
@@ -68,12 +75,6 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
             "node_id": self._node_id,
             "parameters": {}
         }
-    
-    def __and__(self, query):
-        return CompositeQuery([self, query], "and")
-    
-    def __or__(self, query):
-        return CompositeQuery([self, query], "or") 
 
 
 class CompositeQuery(Query):
@@ -102,6 +103,16 @@ class CompositeQuery(Query):
         self._operator = operator
     
     def get_content(self):
+        """
+        A dictionary representation of the query.
+        This dictionary is the content of the ``'query'`` key in the 
+        JSON query.
+
+        Returns
+        -------
+        content : dict
+            The dictionary representation of the query.
+        """
         content = {
             "type": "group",
             "logical_operator": self._operator,
@@ -138,7 +149,7 @@ class BasicQuery(SingleQuery):
     def get_content(self):
         content = super().get_content()
         content["type"] = "terminal"
-        content["service"] = "text"
+        content["service"] = "full_text"
         content["parameters"]["value"] = f'"{self._term}"'
         return content
 
@@ -160,6 +171,12 @@ class FieldQuery(SingleQuery):
     ----------
     field : str
         The field to search in.
+    molecular_definition : bool, optional
+        If set true, this query searches in fields
+        associated with
+        `molecular definitions <https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If false (default), this query searches in fields
+        associated with `PDB structures <https://search.rcsb.org/structure-search-attributes.html>`_.
     exact_match : str, optional
         Operator for returning results whose field exactly matches the
         given value.
@@ -183,19 +200,22 @@ class FieldQuery(SingleQuery):
     -----
     A complete list of the available fields and its supported operators
     is documented at
-    `<https://search.rcsb.org/search-attributes.html>`_.
+    `<https://search.rcsb.org/structure-search-attributes.html>`_
+    and
+    `<https://search.rcsb.org/chemical-search-attributes.html>`_.
 
     Examples
     --------
     
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(sorted(search(query)))
-    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG']
     """
-    def __init__(self, field, **kwargs):
+    def __init__(self, field, molecular_definition=False, **kwargs):
         super().__init__()
         self._negation = False
         self._field = field
+        self._mol_definition = molecular_definition
         
         if len(kwargs) > 1:
             raise TypeError("Only one operator must be given")
@@ -234,7 +254,10 @@ class FieldQuery(SingleQuery):
     def get_content(self):
         content = super().get_content()
         content["type"] = "terminal"
-        content["service"] = "text"
+        if self._mol_definition:
+            content["service"] = "text_chem"
+        else:
+            content["service"] = "text"
         content["parameters"]["attribute"] = self._field
         content["parameters"]["operator"] = self._operator
         content["parameters"]["negation"] = self._negation
@@ -440,10 +463,10 @@ def count(query, return_type="entry"):
     
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(count(query))
-    8
+    9
     >>> ids = search(query)
     >>> print(sorted(ids))
-    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
@@ -510,7 +533,9 @@ def search(query, return_type="entry", range=None, sort_by=None):
         If specified, the returned PDB IDs are sorted by the values
         of the given field name in descending order.
         A complete list of the available fields is documented at
-        `<https://search.rcsb.org/search-attributes.html>`_.
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
 
     Returns
     -------
@@ -523,15 +548,15 @@ def search(query, return_type="entry", range=None, sort_by=None):
     
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(sorted(search(query)))
-    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3']
+    ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG']
     >>> print(search(query, sort_by="rcsb_accession_info.initial_release_date"))
-    ['5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG', '2GLT']
+    ['7ATG', '5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG', '2GLT']
     >>> print(search(
     ...     query, range=(1,4), sort_by="rcsb_accession_info.initial_release_date"
     ... ))
-    ['5D8V', '4JLJ', '3P4J']
+    ['5NW3', '5D8V', '4JLJ']
     >>> print(sorted(search(query, return_type="polymer_instance")))
-    ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A']
+    ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A', '7ATG.A', '7ATG.B']
     """
     if return_type not in [
         "entry", "polymer_instance", "assembly",
