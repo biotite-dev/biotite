@@ -2,9 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
+import pickle
 import numpy as np
 import pytest
+import biotite.structure as struc
 
 
 @pytest.fixture
@@ -177,3 +178,19 @@ def test_array_from_atoms(atom_list):
     array = struc.array(atom_list)
     assert np.all(array.some_annotation == np.full(array.array_length(), 42))
     assert np.issubdtype(array.some_annotation.dtype, np.integer)
+
+
+def test_pickle(atom, array, stack):
+    """
+    Check if pickling and unpickling works.
+    This test is necessary since the classes implement the
+    :meth:`__getattr__()` and :meth:`__setattr__()` methods.
+    """
+    test_atom = pickle.loads(pickle.dumps(atom))
+    assert test_atom == atom
+
+    test_array = pickle.loads(pickle.dumps(array))
+    assert test_array == array
+
+    test_stack = pickle.loads(pickle.dumps(stack))
+    assert test_stack == stack
