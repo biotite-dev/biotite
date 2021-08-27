@@ -303,7 +303,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 )
             if value.shape[-1] != 3:
                 raise TypeError("Expected 3 coordinates for each atom")
-            self._coord = value.astype(np.float32, copy=False)
+            super().__setattr__("_coord", value.astype(np.float32, copy=False))
         
         elif attr == "bonds":
             if isinstance(value, BondList):
@@ -312,41 +312,37 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                         f"Array length is {self._array_length}, "
                         f"but bond list has {value.get_atom_count()} atoms"
                     )
-                self._bonds = value
+                super().__setattr__("_bonds", value)
             elif value is None:
                 # Remove bond list
-                self._bonds = None
+                super().__setattr__("_bonds", None)
             else:
                 raise TypeError("Value must be 'BondList'")
         
         elif attr == "box":
-            if value is None:
-                self._box = None
-            elif isinstance(self, AtomArray):
-                if value.ndim != 2:
-                    raise ValueError(
-                        "A 2-dimensional ndarray is expected "
-                        "for an AtomArray"
-                )
-            elif isinstance(self, AtomArrayStack):
-                if value.ndim != 3:
-                    raise ValueError(
-                        "A 3-dimensional ndarray is expected "
-                        "for an AtomArrayStack"
-                )
             if isinstance(value, np.ndarray):
+                if isinstance(self, AtomArray):
+                    if value.ndim != 2:
+                        raise ValueError(
+                            "A 2-dimensional ndarray is expected "
+                            "for an AtomArray"
+                    )
+                else:   # AtomArrayStack
+                    if value.ndim != 3:
+                        raise ValueError(
+                            "A 3-dimensional ndarray is expected "
+                            "for an AtomArrayStack"
+                    )
                 if value.shape[-2:] != (3,3):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
-                self._box = value.astype(np.float32, copy=False)
+                box = value.astype(np.float32, copy=False)
+                super().__setattr__("_box", box)
             elif value is None:
                 # Remove box
-                self._box = None
+                super().__setattr__("_box", None)
             else:
                 raise TypeError("Box must be ndarray of floats or None")
         
-        # This condition is required, since otherwise 
-        # call of the next one would result
-        # in infinite calls of __setattr__
         elif attr == "_annot":
             super().__setattr__(attr, value)
         elif attr in self._annot:
@@ -516,7 +512,7 @@ class Atom(Copyable):
         return ()
         
     def __getattr__(self, attr):
-        if attr in self._annot:
+        if attr in super().__getattribute__("_annot"):
             return self._annot[attr]
         else:
             raise AttributeError(
@@ -524,8 +520,6 @@ class Atom(Copyable):
             )
         
     def __setattr__(self, attr, value):
-        # First condition is required, to avoid indefinite calls of
-        # __getattr__()
         if attr == "_annot":
             super().__setattr__(attr, value)
         elif attr == "coord":
