@@ -265,7 +265,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             return self._bonds
         if attr == "box":
             return self._box
-        elif attr in self._annot:
+        # Call method of 'object' superclass to avoid infinite recursive
+        # calls of '__getattr__()'
+        elif attr in super().__getattribute__("_annot"):
             return self._annot[attr]
         else:
             raise AttributeError(
@@ -344,7 +346,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         
         # This condition is required, since otherwise 
         # call of the next one would result
-        # in indefinite calls of __setattr__
+        # in infinite calls of __setattr__
         elif attr == "_annot":
             super().__setattr__(attr, value)
         elif attr in self._annot:
