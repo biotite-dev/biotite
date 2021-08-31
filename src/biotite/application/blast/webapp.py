@@ -339,11 +339,15 @@ class BlastWebApp(WebApp):
             if self._program in ["blastn", "megablast"]:
                 # NucleotideSequence/ProteinSequence do ignore gaps
                 # Gaps are represented by the trace
-                seq1 = NucleotideSequence(seq1_str.replace("-", ""))
-                seq2 = NucleotideSequence(seq2_str.replace("-", ""))
+                seq1, seq2 = [
+                    NucleotideSequence(s.replace("-", ""))
+                    for s in (seq1_str, seq2_str)
+                ]
             else:
-                seq1 = ProteinSequence(seq1_str.replace("-", ""))
-                seq2 = ProteinSequence(seq2_str.replace("-", ""))
+                seq1, seq2 = [
+                    ProteinSequence(s.replace("-", "").replace("U", "C"))
+                    for s in (seq1_str, seq2_str)
+                ]
             trace = Alignment.trace_from_strings([seq1_str, seq2_str])
             
             alignment = BlastAlignment( [seq1 ,seq2], trace, score, e_value,

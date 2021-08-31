@@ -3,6 +3,7 @@
 # information.
 
 import biotite.sequence as seq
+import biotite.sequence.io as seqio
 import biotite.application.blast as blast
 import numpy as np
 from requests.exceptions import ConnectionError
@@ -131,5 +132,18 @@ def test_invalid_input():
         app.join(timeout=300)
 
 
-
-
+@pytest.mark.skipif(
+    cannot_connect_to(BLAST_URL),
+    reason="NCBI BLAST is not available"
+)
+def test_hit_with_selenocysteine():
+    # Sequence is taken from issue #344
+    query = seqio.load_sequence(
+        os.path.join(data_dir("sequence"), "selenocysteine.fasta")
+    )
+    
+    # Expect hit containing selenocysteine when searching Swiss-Prot
+    blast_app = blast.BlastWebApp("blastp", query, "swissprot")
+    blast_app.start()
+    # No AlphabetError should be raised here
+    blast_app.join()

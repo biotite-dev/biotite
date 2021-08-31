@@ -67,20 +67,23 @@ def test_search_basic():
 
 
 @pytest.mark.parametrize(
-    "field, params, ref_ids",
+    "field, molecular_definition, params, ref_ids",
     [
         (
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
+            False,
             {},
             ["6IG7", "6IG6", "7JRI"]
         ),
         (
             "audit_author.name",
+            False,
             {"is_in": ["Neidigh, J.W."]},
             ["1JRJ", "1L2Y", "2O3P", "2O63", "2O64", "2O65"]
         ),
         (
             "rcsb_entity_source_organism.rcsb_gene_name.value",
+            False,
             {"exact_match": "lacA"},
             ["5JUV", "1KQA", "1KRV", "1KRU", "1KRR", "1TG7", "1XC6", "3U7V",
              "4IUG", "4LFK", "4LFL", "4LFM", "4LFN", "5IFP", "5IFT", "5IHR",
@@ -88,18 +91,28 @@ def test_search_basic():
         ),
         (
             "struct.title",
+            False,
             {"contains_words": "tc5b"},
             ["1L2Y"]
         ),
         (
             "reflns.d_resolution_high",
+            False,
             {"less_or_equal": 0.6},
-            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "2GLT"]
+            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "2GLT",
+             "7ATG"]
         ),
         (
             "rcsb_entry_info.deposited_model_count",
+            False,
             {"range_closed": (60, 61)},
             ["1BBO", "1GB1", "1O5P", "1XU6", "2LUM", "2NO8"]
+        ),
+        (
+            "rcsb_id",
+            True,
+            {"exact_match": "AIN"},
+            ["1OXR", "1TGM", "3IAZ", "3GCL", "6MQF", "2QQT", "4NSB"]
         ),
     ]
 )
@@ -107,9 +120,9 @@ def test_search_basic():
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-def test_search_field(field, params, ref_ids):
+def test_search_field(field, molecular_definition, params, ref_ids):
     query = rcsb.FieldQuery(
-        field, **params
+        field, molecular_definition, **params
     )
     test_ids = rcsb.search(query)
     test_count = rcsb.count(query)
