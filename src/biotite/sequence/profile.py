@@ -60,19 +60,19 @@ class SequenceProfile(object):
     It also saves the number of gaps at each position in the array
     'gaps'.
 
-    Additionally, you can get the position probability matrix ('ppm') and the
-    position weight matrix ('pmw') of an instance of object SequenceProfile.
+    With :meth:`probability_matrix()` the position probability matrix can
+    be created based on 'symbols' and a pseudocount.
 
-    Matrix 'ppm' is calculated based on 'symbols' and parameter 'pseudocount'.
-    Matrix 'pwm' is calculated based on 'ppm' and parameter
-    'background_frequencies'.
+    With :meth:`log_odds_matrix()` the position weight matrix can
+    be created based on the before calculated position probability matrix
+    and the background frequencies.
 
     With :meth:`from_alignment()` a :class:`SequenceProfile` object can
     be created from an indefinite number of aligned sequences.
 
     With :meth:`sequence_probability_from_matrix()` the probability of a sequence
-    can be calculated based on the 'ppm' or 'pmw' of this instance of
-    object SequenceProfile.
+    can be calculated based on the before calculated position probability matrix
+    or position weight matrix of this instance of object SequenceProfile.
 
     All attributes of this class are publicly accessible.
 
@@ -95,27 +95,12 @@ class SequenceProfile(object):
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
         Alphabet of sequences of sequence profile
-    ppm : ndarray, dtype=float, shape=(n,k)
-        This matrix is the position probability matrix calculated based
-        on symbols and pseudocount.
-    pseudocount : int
-        Amount added to the number of observed cases in order to change
-        the expected probability.
-    pwm : ndarray, dtype=float, shape=(n,k)
-        This matrix is the position weight matrix calculated based
-        on ppm and background_frequencies.
-    background_frequencies : None
-        To be implemented.
     """
 
     def __init__(self, symbols, gaps, alphabet):
         self._symbols = symbols
         self._gaps = gaps
         self._alphabet = alphabet
-        self._ppm = None
-        self._pseudocount = 0
-        self._pwm = None
-        self._background_frequencies = 1 / len(self.alphabet)  # uniform distribution
 
         if len(alphabet) != symbols.shape[1]:
             raise ValueError(
@@ -151,8 +136,6 @@ class SequenceProfile(object):
                 f"{self.symbols.shape} as the old one"
             )
         self._symbols = new_symbols
-        if self._ppm is not None:
-            self._ppm = self._probability_matrix()  # ppm dependent on symbols
 
     @gaps.setter
     def gaps(self, new_gaps):
@@ -162,46 +145,6 @@ class SequenceProfile(object):
                 f"{self.gaps.shape} as the old one"
             )
         self._gaps = new_gaps
-
-    @property
-    def ppm(self):
-        if self._ppm is None:
-            self._ppm = self._probability_matrix()
-        return self._ppm
-
-    @property
-    def pseudocount(self):
-        return self._pseudocount
-
-    @pseudocount.setter
-    def pseudocount(self, new_pseudocount):
-        if new_pseudocount < 0:
-            raise ValueError(
-                f"Pseudocount can not be smaller than zero."
-            )
-        if self._pseudocount != new_pseudocount:
-            self._pseudocount = new_pseudocount
-            if self._ppm is not None:
-                self._ppm = self._probability_matrix()
-            if self._pwm is not None:
-                self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
-
-    @property
-    def pwm(self):
-        if self._pwm is None:
-            self._pwm = self._log_odds_matrix()
-        return self._pwm
-
-    @property
-    def background_frequencies(self):
-        return self._background_frequencies
-
-    @background_frequencies.setter
-    def background_frequencies(self, new_background_frequencies):
-        if self._background_frequencies != new_background_frequencies:
-            self._background_frequencies = new_background_frequencies
-            if self._pwm is not None:
-                self._pwm = self._log_odds_matrix()  # pwm dependent on ppm
 
     def __repr__(self):
         """Represent SequenceProfile as a string for debugging."""
@@ -349,14 +292,57 @@ class SequenceProfile(object):
         consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
 
-    def _probability_matrix(self):
-        return (self.symbols + self.pseudocount / len(self.symbols)) / \
-               (np.sum(self.symbols, axis=1)[:, np.newaxis] + self.pseudocount)
+    def probability_matrix(self, pseudocount=0):
+        """
+        Calculate the position probability matrix (ppm) based on 'symbols'
+        and the given pseudocount.
+        This new matrix has the same shape as 'symbols'.
 
-    def _log_odds_matrix(self):
-        return np.log2(self.ppm / self.background_frequencies)
+        Parameters
+        ----------
+        pseudocount: int
+            Amount added to the number of observed cases in order to change
+            the expected probability.
+            (Default: 0)
 
-    def sequence_probability_from_matrix(self, sequence, matrix="ppm"):
+        Returns
+        -------
+        ppm: ndarray, dtype=float, shape=(n,k)
+            Calculated the position probability matrix.
+        """
+        if pseudocount < 0:
+            raise ValueError(
+                f"Pseudocount can not be smaller than zero."
+            )
+        return (self.symbols + pseudocount / len(self.symbols)) / \
+               (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
+
+    def log_odds_matrix(self, background_frequencies=None, pseudocount=0):
+        """
+        Calculate the position weight matrix (pwm) based on the
+        position probability matrix (ppm) (with given pseudocount) and
+        background_frequencies.
+        This new matrix has the same shape as 'symbols'.
+
+        Parameters
+        ----------
+        pseudocount: int
+            Amount added to the number of observed cases in order to change
+            the expected probability.
+            (Default: 0)
+        background_frequencies: float
+            (Default: 1/len(alphabet))
+        Returns
+        -------
+        pwm: ndarray, dtype=float, shape=(n,k)
+            Calculated the position weight matrix.
+        """
+        if background_frequencies is None:
+            background_frequencies = 1 / len(self.alphabet)
+        ppm = self.probability_matrix(pseudocount)
+        return np.log2(ppm / background_frequencies)
+
+    def sequence_probability_from_matrix(self, sequence, matrix):
         """
         Calculate probability of a sequence based on either the
         position probability matrix (ppm) or the position weight matrix (pwm).
@@ -365,10 +351,9 @@ class SequenceProfile(object):
         ----------
         sequence : Sequence
            The input sequence.
-        matrix : string
+        matrix : ndarray, dtype=float, shape=(n,k)
             The chosen position matrix to use to calculate the probability
             of the input sequence (either ppm or pwm).
-            (Default: ppm).
 
         Returns
         -------
@@ -376,31 +361,18 @@ class SequenceProfile(object):
            The calculated probability for the input sequence based on
            the chosen position matrix.
         """
-        if matrix != "ppm" and matrix != "pwm":
+        if len(sequence) != len(matrix):
             raise ValueError(
-                f'Input parameter matrix must be either "ppm" (position probability matrix) '
-                f'or "pwm" (position weight matrix).'
+                f"The given sequence has a different length ({len(sequence)}) than "
+                f"the matrix ({len(matrix)})."
             )
-
+        if not matrix.shape == self.symbols.shape:
+            raise ValueError(
+                f"Matrix {matrix.shape} must be of same shape "
+                f"as 'symbols' {self.symbols.shape}"
+            )
         probability = 1
         codes = sequence.code
-
-        if matrix == "ppm":
-            if len(sequence) != len(self.ppm):
-                raise ValueError(
-                    f"The given sequence has a different length ({len(sequence)}) than "
-                    f"position probability matrix {len(self.ppm)}."
-                )
-            else:
-                for i in range(len(codes)):
-                    probability = probability * self.ppm[i, codes[i]]
-        else:
-            if len(sequence) != len(self.pwm):
-                raise ValueError(
-                    f"The given sequence has a different length ({len(sequence)}) than "
-                    f"position weight matrix ({len(self.pwm)})."
-                )
-            else:
-                for i in range(len(codes)):
-                    probability = probability * self.pwm[i, codes[i]]
+        for i in range(len(codes)):
+            probability = probability * matrix[i, codes[i]]
         return probability

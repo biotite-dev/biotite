@@ -88,14 +88,16 @@ def test_new_position_matrices():
                                    [0.83333333, 0., 0., 0.16666667],
                                    [0.66666667, 0., 0., 0.33333333]])
 
-    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(profile.ppm, decimals=3))
+    ppm = profile.probability_matrix()
 
-    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"))
+    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
+
+    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"), ppm)
 
     assert probability == 0.0
 
     # Set pseudocount for position probability matrix to 1
-    profile.pseudocount = 1
+    ppm = profile.probability_matrix(pseudocount=1)
 
     probability_matrix = np.array([[0.88095238, 0.02380952, 0.02380952, 0.02380952],
                                    [0.5952381, 0.02380952, 0.02380952, 0.30952381],
@@ -104,9 +106,9 @@ def test_new_position_matrices():
                                    [0.73809524, 0.02380952, 0.02380952, 0.16666667],
                                    [0.5952381, 0.02380952, 0.02380952, 0.30952381]])
 
-    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(profile.ppm, decimals=3))
+    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
 
-    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"))
+    probability = profile.sequence_probability_from_matrix(seq.NucleotideSequence("AAAAAA"), ppm)
 
     assert np.around(probability, decimals=3) == np.around(0.004048642098725673, decimals=3)
 
@@ -117,4 +119,6 @@ def test_new_position_matrices():
                                 [1.56187889, -3.39231742, -3.39231742, -0.5849625],
                                 [1.25153877, -3.39231742, -3.39231742, 0.3081223]])
 
-    assert np.array_equal(np.around(log_odds_matrix, decimals=3), np.around(profile.pwm, decimals=3))
+    pwm = profile.log_odds_matrix(pseudocount=1)
+
+    assert np.array_equal(np.around(log_odds_matrix, decimals=3), np.around(pwm, decimals=3))
