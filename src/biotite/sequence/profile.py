@@ -306,7 +306,7 @@ class SequenceProfile(object):
         ----------
         pseudocount: int, optional
             Amount added to the number of observed cases in order to change
-            the expected probability.
+            the expected probability of the PPM.
             (Default: 0)
 
         Returns
@@ -332,7 +332,7 @@ class SequenceProfile(object):
         ----------
         pseudocount: int, optional
             Amount added to the number of observed cases in order to change
-            the expected probability.
+            the expected probability of the PPM.
             (Default: 0)
         background_frequencies: float, optional
             (Default: 1/len(alphabet))
@@ -346,7 +346,7 @@ class SequenceProfile(object):
         ppm = self.probability_matrix(pseudocount)
         return np.log2(ppm / background_frequencies)
 
-    def sequence_probability(self, sequence, matrix):
+    def sequence_probability(self, sequence, pseudocount=0):
         """
         Calculate probability of a sequence based on the
         position probability matrix (PPM).
@@ -355,9 +355,10 @@ class SequenceProfile(object):
         ----------
         sequence : Sequence
            The input sequence.
-        matrix : ndarray, dtype=float, shape=(n,k)
-            The PPM to use to calculate the probability
-            of the input sequence.
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
+            (Default: 0)
 
         Returns
         -------
@@ -365,19 +366,20 @@ class SequenceProfile(object):
            The calculated probability for the input sequence based on
            the PPM.
         """
-        if len(sequence) != len(matrix):
+        ppm = self.probability_matrix(pseudocount=pseudocount)
+        if len(sequence) != len(ppm):
             raise ValueError(
                 f"The given sequence has a different length ({len(sequence)}) than "
-                f"the position probability matrix ({len(matrix)})."
+                f"the position probability matrix ({len(ppm)})."
             )
-        if not matrix.shape == self.symbols.shape:
+        if not ppm.shape == self.symbols.shape:
             raise ValueError(
-                f"Position probability matrix {matrix.shape} must be of same shape "
+                f"Position probability matrix {ppm.shape} must be of same shape "
                 f"as 'symbols' {self.symbols.shape}"
             )
-        return np.prod(matrix[np.arange(len(sequence)), sequence.code])
+        return np.prod(ppm[np.arange(len(sequence)), sequence.code])
 
-    def sequence_score(self, sequence, matrix):
+    def sequence_score(self, sequence, background_frequencies=None, pseudocount=0):
         """
         Calculate score of a sequence based on the
         position weight matrix (PWM).
@@ -386,9 +388,12 @@ class SequenceProfile(object):
         ----------
         sequence : Sequence
            The input sequence.
-        matrix : ndarray, dtype=float, shape=(n,k)
-            The PWM to use to calculate the score
-            of the input sequence.
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
+            (Default: 0)
+        background_frequencies: float, optional
+            (Default: 1/len(alphabet))
 
         Returns
         -------
@@ -396,14 +401,17 @@ class SequenceProfile(object):
            The calculated score for the input sequence based on
            the PWM.
         """
-        if len(sequence) != len(matrix):
+        if background_frequencies is None:
+            background_frequencies = 1 / len(self.alphabet)
+        pwm = self.log_odds_matrix(background_frequencies=background_frequencies, pseudocount=pseudocount)
+        if len(sequence) != len(pwm):
             raise ValueError(
                 f"The given sequence has a different length ({len(sequence)}) than "
-                f"the position weight matrix ({len(matrix)})."
+                f"the position weight matrix ({len(pwm)})."
             )
-        if not matrix.shape == self.symbols.shape:
+        if not pwm.shape == self.symbols.shape:
             raise ValueError(
-                f"Position weight matrix {matrix.shape} must be of same shape "
+                f"Position weight matrix {pwm.shape} must be of same shape "
                 f"as 'symbols' {self.symbols.shape}"
             )
-        return np.sum(matrix[np.arange(len(sequence)), sequence.code])
+        return np.sum(pwm[np.arange(len(sequence)), sequence.code])

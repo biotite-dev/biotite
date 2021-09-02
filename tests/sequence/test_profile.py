@@ -92,7 +92,7 @@ def test_new_position_matrices():
 
     assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
 
-    probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"), ppm)
+    probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"))
 
     assert probability == 0.0
 
@@ -107,7 +107,7 @@ def test_new_position_matrices():
 
     assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
 
-    probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"), ppm)
+    probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"), pseudocount=1)
 
     assert np.around(probability, decimals=3) == np.around(0.006611930087723863, decimals=3)
 
@@ -122,6 +122,6 @@ def test_new_position_matrices():
 
     assert np.array_equal(np.around(log_odds_matrix, decimals=3), np.around(pwm, decimals=3))
 
-    score = profile.sequence_score(seq.NucleotideSequence("AAAAAA"), pwm)
+    score = profile.sequence_score(seq.NucleotideSequence("AAAAAA"), pseudocount=1)
 
     assert np.around(score, decimals=3) == np.around(4.759287185487299, decimals=3)
