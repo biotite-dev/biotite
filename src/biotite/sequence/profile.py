@@ -343,7 +343,7 @@ class SequenceProfile(object):
         """
         if background_frequencies is None:
             background_frequencies = 1 / len(self.alphabet)
-        ppm = self.probability_matrix(pseudocount)
+        ppm = self.probability_matrix(pseudocount=pseudocount)
         return np.log2(ppm / background_frequencies)
 
     def sequence_probability(self, sequence, pseudocount=0):
