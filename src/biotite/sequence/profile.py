@@ -55,28 +55,29 @@ class SequenceProfile(object):
     sequence profile of aligned sequences.
     It is possible to calculate and return its consensus sequence.
 
-    This class saves the position frequency matrix (position count matrix)
-    'symbols' of the occurrences of each alphabet symbol at each position.
+    This class saves the position frequency matrix
+    (position count matrix) 'symbols' of the occurrences of each
+    alphabet symbol at each position.
     It also saves the number of gaps at each position in the array
     'gaps'.
 
-    With :meth:`probability_matrix()` the position probability matrix can
-    be created based on 'symbols' and a pseudocount.
+    With :meth:`probability_matrix()` the position probability matrix
+    can be created based on 'symbols' and a pseudocount.
 
     With :meth:`log_odds_matrix()` the position weight matrix can
-    be created based on the before calculated position probability matrix
-    and the background frequencies.
+    be created based on the before calculated position probability
+    matrix and the background frequencies.
 
     With :meth:`from_alignment()` a :class:`SequenceProfile` object can
     be created from an indefinite number of aligned sequences.
 
-    With :meth:`sequence_probability_from_matrix()` the probability of a sequence
-    can be calculated based on the before calculated position probability matrix
-   of this instance of object SequenceProfile.
+    With :meth:`sequence_probability_from_matrix()` the probability of a
+    sequence can be calculated based on the before calculated position 
+    probability matrix of this instance of object SequenceProfile.
 
     With :meth:`sequence_score_from_matrix()` the score of a sequence
-    can be calculated based on the before calculated position weight matrix
-    of this instance of object SequenceProfile.
+    can be calculated based on the before calculated position weight
+    matrix of this instance of object SequenceProfile.
 
     All attributes of this class are publicly accessible.
 
@@ -297,21 +298,34 @@ class SequenceProfile(object):
         return consensus
 
     def probability_matrix(self, pseudocount=0):
-        """
-        Calculate the position probability matrix (PPM) based on 'symbols'
-        and the given pseudocount.
+        r"""
+        Calculate the position probability matrix (PPM) based on
+        'symbols' and the given pseudocount.
         This new matrix has the same shape as 'symbols'.
+
+        .. math::
+
+            P(S) = \frac {C_S + \frac{c_p}{k}} {\sum_{S} C_S + c_p}
+        
+        :math:`S`: The symbol.
+
+        :math:`C_S`: The count of symbol :math:`S` at the sequence
+        position.
+
+        :math:`c_p`: The pseudocount.
+
+        :math:`k`: Length of the alphabet.
 
         Parameters
         ----------
         pseudocount: int, optional
-            Amount added to the number of observed cases in order to change
-            the expected probability of the PPM.
+            Amount added to the number of observed cases in order to
+            change the expected probability of the PPM.
             (Default: 0)
 
         Returns
         -------
-        PPM: ndarray, dtype=float, shape=(n,k)
+        ppm: ndarray, dtype=float, shape=(n,k)
             The calculated the position probability matrix.
         """
         if pseudocount < 0:
@@ -322,11 +336,22 @@ class SequenceProfile(object):
                (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
 
     def log_odds_matrix(self, background_frequencies=None, pseudocount=0):
-        """
+        r"""
         Calculate the position weight matrix (PWM) based on the
         position probability matrix (PPM) (with given pseudocount) and
         background_frequencies.
         This new matrix has the same shape as 'symbols'.
+
+        .. math::
+
+            W(S) = \log_2 \left( \frac{P(S)}{B_S} \right)
+        
+        :math:`S`: The symbol.
+
+        :math:`P(S)`: The probability of symbol :math:`S` at the
+        sequence position.
+
+        :math:`c_p`: The background frequency of symbol :math:`S`.
 
         Parameters
         ----------
@@ -334,11 +359,13 @@ class SequenceProfile(object):
             Amount added to the number of observed cases in order to change
             the expected probability of the PPM.
             (Default: 0)
-        background_frequencies: float, optional
-            (Default: 1/len(alphabet))
+        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+            The background frequencies for each symbol in the alphabet.
+            By default, a uniform distribution is assumed.
+            
         Returns
         -------
-        PWM: ndarray, dtype=float, shape=(n,k)
+        pwm: ndarray, dtype=float, shape=(n,k)
             The calculated the position weight matrix.
         """
         if background_frequencies is None:
@@ -347,9 +374,12 @@ class SequenceProfile(object):
         return np.log2(ppm / background_frequencies)
 
     def sequence_probability(self, sequence, pseudocount=0):
-        """
+        r"""
         Calculate probability of a sequence based on the
         position probability matrix (PPM).
+
+        The sequence probability is the product of the probability of 
+        the respective symbol over all sequence positions.
 
         Parameters
         ----------
@@ -383,6 +413,9 @@ class SequenceProfile(object):
         """
         Calculate score of a sequence based on the
         position weight matrix (PWM).
+
+        The score is the sum of weights (log-odds scores) of 
+        the respective symbol over all sequence positions.
 
         Parameters
         ----------
