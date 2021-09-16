@@ -305,7 +305,7 @@ class SequenceProfile(object):
 
         .. math::
 
-            P(S) = \frac {C_S + \frac{c_p}{k}} {\sum_{S} C_S + c_p}
+            P(S) = \frac {C_S + \frac{c_p}{k}} {\sum_{i} C_i + c_p}
         
         :math:`S`: The symbol.
 
