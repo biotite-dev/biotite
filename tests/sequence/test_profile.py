@@ -90,7 +90,7 @@ def test_new_position_matrices():
 
     ppm = profile.probability_matrix()
 
-    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
+    assert np.allclose(probability_matrix, ppm, atol=1e-3)
 
     probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"))
 
@@ -105,11 +105,11 @@ def test_new_position_matrices():
                                    [0.75, 0.03571429, 0.03571429, 0.17857143],
                                    [0.60714286, 0.03571429, 0.03571429, 0.32142857]])
 
-    assert np.array_equal(np.around(probability_matrix, decimals=3), np.around(ppm, decimals=3))
+    assert np.allclose(probability_matrix, ppm, atol=1e-3)
 
     probability = profile.sequence_probability(seq.NucleotideSequence("AAAAAA"), pseudocount=1)
 
-    assert np.around(probability, decimals=3) == np.around(0.006611930087723863, decimals=3)
+    assert probability == pytest.approx(0.0066, abs=1e-3)
 
     log_odds_matrix = np.array([[1.83650127, -2.80735492, -2.80735492, -2.80735492],
                                 [1.28010792, -2.80735492, -2.80735492, 0.36257008],
@@ -120,8 +120,8 @@ def test_new_position_matrices():
 
     pwm = profile.log_odds_matrix(pseudocount=1)
 
-    assert np.array_equal(np.around(log_odds_matrix, decimals=3), np.around(pwm, decimals=3))
+    assert np.allclose(log_odds_matrix, pwm, atol=1e-3)
 
     score = profile.sequence_score(seq.NucleotideSequence("AAAAAA"), pseudocount=1)
 
-    assert np.around(score, decimals=3) == np.around(4.759287185487299, decimals=3)
+    assert score == pytest.approx(4.7593, abs=1e-3)
