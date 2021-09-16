@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import warnings
 import numpy as np
 from .seqtypes import NucleotideSequence, ProteinSequence, GeneralSequence
 from .alphabet import LetterAlphabet
@@ -371,7 +372,11 @@ class SequenceProfile(object):
         if background_frequencies is None:
             background_frequencies = 1 / len(self.alphabet)
         ppm = self.probability_matrix(pseudocount=pseudocount)
-        return np.log2(ppm / background_frequencies)
+        # Catch warning that appears, if a symbol is missing at any
+        # position in the profile
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            return np.log2(ppm / background_frequencies)
 
     def sequence_probability(self, sequence, pseudocount=0):
         r"""
