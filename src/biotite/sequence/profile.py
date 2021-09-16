@@ -425,8 +425,9 @@ class SequenceProfile(object):
             Amount added to the number of observed cases in order to change
             the expected probability of the PPM.
             (Default: 0)
-        background_frequencies: float, optional
-            (Default: 1/len(alphabet))
+        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+            The background frequencies for each symbol in the alphabet.
+            By default a uniform distribution is assumed.
 
         Returns
         -------
