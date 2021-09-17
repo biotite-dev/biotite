@@ -69,6 +69,32 @@ class BondType(IntEnum):
     AROMATIC_TRIPLE = 7
 
 
+    def without_aromaticity(self):
+        """
+        Remove aromaticity from the bond type.
+        
+        :attr:`BondType.AROMATIC_<ORDER>` is converted into
+        :attr:`BondType.<ORDER>`.
+
+        Returns
+        -------
+        new_bond_type : BondType
+            The :class:`BondType` without aromaticity.
+
+        Examples
+        --------
+
+        >>> print(BondType.AROMATIC_DOUBLE.without_aromaticity())
+        BondType.DOUBLE
+        """
+        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+        if self >= BondType.AROMATIC_SINGLE:
+            difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+            return BondType(self - difference)
+        else:
+            return self
+
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 class BondList(Copyable):
