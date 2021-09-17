@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import warnings
 import numpy as np
 from .seqtypes import NucleotideSequence, ProteinSequence, GeneralSequence
 from .alphabet import LetterAlphabet
@@ -55,13 +56,29 @@ class SequenceProfile(object):
     sequence profile of aligned sequences.
     It is possible to calculate and return its consensus sequence.
 
-    This class saves the position frequency matrix 'symbols' of the
-    occurrences of each alphabet symbol at each position.
+    This class saves the position frequency matrix
+    (position count matrix) 'symbols' of the occurrences of each
+    alphabet symbol at each position.
     It also saves the number of gaps at each position in the array
     'gaps'.
 
+    With :meth:`probability_matrix()` the position probability matrix
+    can be created based on 'symbols' and a pseudocount.
+
+    With :meth:`log_odds_matrix()` the position weight matrix can
+    be created based on the before calculated position probability
+    matrix and the background frequencies.
+
     With :meth:`from_alignment()` a :class:`SequenceProfile` object can
     be created from an indefinite number of aligned sequences.
+
+    With :meth:`sequence_probability_from_matrix()` the probability of a
+    sequence can be calculated based on the before calculated position 
+    probability matrix of this instance of object SequenceProfile.
+
+    With :meth:`sequence_score_from_matrix()` the score of a sequence
+    can be calculated based on the before calculated position weight
+    matrix of this instance of object SequenceProfile.
 
     All attributes of this class are publicly accessible.
 
@@ -187,7 +204,7 @@ class SequenceProfile(object):
             for alph in (seq.alphabet for seq in alignment.sequences):
                 if not alphabet.extends(alph):
                     raise ValueError(
-                        "The given alphabet is incompatible with a least one "
+                        f"The given alphabet is incompatible with a least one "
                         "alphabet of the given sequences"
                     )
         symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
@@ -215,7 +232,7 @@ class SequenceProfile(object):
 
         Returns
         -------
-        consensus: either NucleotideSequence, ProteinSequence or GeneralSequence
+        consensus: Sequence
             The calculated consensus sequence
         """
         # https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes
@@ -280,3 +297,160 @@ class SequenceProfile(object):
         consensus = GeneralSequence(self.alphabet)
         consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
+
+    def probability_matrix(self, pseudocount=0):
+        r"""
+        Calculate the position probability matrix (PPM) based on
+        'symbols' and the given pseudocount.
+        This new matrix has the same shape as 'symbols'.
+
+        .. math::
+
+            P(S) = \frac {C_S + \frac{c_p}{k}} {\sum_{i} C_i + c_p}
+        
+        :math:`S`: The symbol.
+
+        :math:`C_S`: The count of symbol :math:`S` at the sequence
+        position.
+
+        :math:`c_p`: The pseudocount.
+
+        :math:`k`: Length of the alphabet.
+
+        Parameters
+        ----------
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to
+            change the expected probability of the PPM.
+            (Default: 0)
+
+        Returns
+        -------
+        ppm: ndarray, dtype=float, shape=(n,k)
+            The calculated the position probability matrix.
+        """
+        if pseudocount < 0:
+            raise ValueError(
+                f"Pseudocount can not be smaller than zero."
+            )
+        return (self.symbols + pseudocount / self.symbols.shape[1]) / \
+               (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
+
+    def log_odds_matrix(self, background_frequencies=None, pseudocount=0):
+        r"""
+        Calculate the position weight matrix (PWM) based on the
+        position probability matrix (PPM) (with given pseudocount) and
+        background_frequencies.
+        This new matrix has the same shape as 'symbols'.
+
+        .. math::
+
+            W(S) = \log_2 \left( \frac{P(S)}{B_S} \right)
+        
+        :math:`S`: The symbol.
+
+        :math:`P(S)`: The probability of symbol :math:`S` at the
+        sequence position.
+
+        :math:`c_p`: The background frequency of symbol :math:`S`.
+
+        Parameters
+        ----------
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
+            (Default: 0)
+        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+            The background frequencies for each symbol in the alphabet.
+            By default, a uniform distribution is assumed.
+            
+        Returns
+        -------
+        pwm: ndarray, dtype=float, shape=(n,k)
+            The calculated the position weight matrix.
+        """
+        if background_frequencies is None:
+            background_frequencies = 1 / len(self.alphabet)
+        ppm = self.probability_matrix(pseudocount=pseudocount)
+        # Catch warning that appears, if a symbol is missing at any
+        # position in the profile
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            return np.log2(ppm / background_frequencies)
+
+    def sequence_probability(self, sequence, pseudocount=0):
+        r"""
+        Calculate probability of a sequence based on the
+        position probability matrix (PPM).
+
+        The sequence probability is the product of the probability of 
+        the respective symbol over all sequence positions.
+
+        Parameters
+        ----------
+        sequence : Sequence
+           The input sequence.
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
+            (Default: 0)
+
+        Returns
+        -------
+        probability: float
+           The calculated probability for the input sequence based on
+           the PPM.
+        """
+        ppm = self.probability_matrix(pseudocount=pseudocount)
+        if len(sequence) != len(ppm):
+            raise ValueError(
+                f"The given sequence has a different length ({len(sequence)}) than "
+                f"the position probability matrix ({len(ppm)})."
+            )
+        if not ppm.shape == self.symbols.shape:
+            raise ValueError(
+                f"Position probability matrix {ppm.shape} must be of same shape "
+                f"as 'symbols' {self.symbols.shape}"
+            )
+        return np.prod(ppm[np.arange(len(sequence)), sequence.code])
+
+    def sequence_score(self, sequence, background_frequencies=None, pseudocount=0):
+        """
+        Calculate score of a sequence based on the
+        position weight matrix (PWM).
+
+        The score is the sum of weights (log-odds scores) of 
+        the respective symbol over all sequence positions.
+
+        Parameters
+        ----------
+        sequence : Sequence
+           The input sequence.
+        pseudocount: int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
+            (Default: 0)
+        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+            The background frequencies for each symbol in the alphabet.
+            By default a uniform distribution is assumed.
+
+        Returns
+        -------
+        score: float
+           The calculated score for the input sequence based on
+           the PWM.
+        """
+        if background_frequencies is None:
+            background_frequencies = 1 / len(self.alphabet)
+        pwm = self.log_odds_matrix(background_frequencies=background_frequencies, pseudocount=pseudocount)
+        if len(sequence) != len(pwm):
+            raise ValueError(
+                f"The given sequence has a different length ({len(sequence)}) than "
+                f"the position weight matrix ({len(pwm)})."
+            )
+        if not pwm.shape == self.symbols.shape:
+            raise ValueError(
+                f"Position weight matrix {pwm.shape} must be of same shape "
+                f"as 'symbols' {self.symbols.shape}"
+            )
+        return np.sum(pwm[np.arange(len(sequence)), sequence.code])
