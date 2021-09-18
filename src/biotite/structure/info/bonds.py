@@ -4,11 +4,13 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
-__all__ = ["bond_dataset", "bond_order", "bonds_in_residue"]
+__all__ = ["bond_dataset", "bond_order", "bond_type", "bonds_in_residue"]
 
-import msgpack
+import warnings
 import copy
 from os.path import join, dirname, realpath
+import msgpack
+from ..bonds import BondType
 
 
 _intra_bonds = None
@@ -31,16 +33,9 @@ def _init_dataset():
     # (2019/01/27)
     _info_dir = dirname(realpath(__file__))
     with open(join(_info_dir, "intra_bonds.msgpack"), "rb") as file:
-        _intra_bonds_raw = msgpack.unpack(
+        _intra_bonds= msgpack.unpack(
             file, use_list=False, raw=False, strict_map_key=False
         )
-        _intra_bonds = {}
-        for group, group_bonds_raw in _intra_bonds_raw.items():
-            group_bonds = {
-                frozenset(bond_raw) : count
-                for bond_raw, count in group_bonds_raw.items()
-            }
-            _intra_bonds[group] = group_bonds
 
 
 def bond_dataset():
@@ -52,14 +47,15 @@ def bond_dataset():
 
     Returns
     -------
-    bonds : dict
+    bonds : dict (str -> dict ((str, str) -> int))
         The bonds as nested dictionary.
         It maps residue names (up to 3-letters, upper case) to
         inner dictionaries.
         Each of these dictionary contains the bond information for the
         given residue.
         Specifically, it uses a set of two atom names, that are bonded,
-        as keys and the respective bond order as values.
+        as keys and the respective :class:`BondType`
+        (represented by an integer) as values.
     """
     _init_dataset()
     return copy.copy(_intra_bonds)
@@ -68,6 +64,55 @@ def bond_dataset():
 def bond_order(res_name, atom_name1, atom_name2):
     """
     Get the bond order for two atoms of the same residue, based
+    on the PDB chemical components dictionary.
+
+    DEPRECATED: Please use :func:`bond_type()` instead.
+
+    Parameters
+    ----------
+    res_name : str
+        The up to 3-letter name of the residue
+        `atom_name1` and `atom_name2` belong to.
+    atom_name1, atom_name2 : str
+        The names of the two atoms to get the bond order from.
+    
+    Returns
+    -------
+    order : int or None
+        The order of the bond between `atom_name1` and `atom_name2`.
+        If the atoms form no bond, if any of the two atoms does not
+        exist in the context of the residue or if the residue is unknown
+        to the chemical components dictionary, `None` is returned.
+    
+    Examples
+    --------
+
+    >>> print(bond_order("PHE", "CA", "CB"))
+    1
+    >>> print(bond_order("PHE", "CG", "CD1"))
+    2
+    >>> print(bond_order("PHE", "CA", "CG"))
+    None
+    >>> print(bond_order("PHE", "FOO", "BAR"))
+    None
+    """
+    warnings.warn("Please use `bond_type()` instead", DeprecationWarning)
+
+    _init_dataset()
+    btype = bond_type(res_name, atom_name1, atom_name2)
+    if btype is None:
+        return None
+    elif btype == BondType.AROMATIC_SINGLE:
+        return 1
+    elif btype == BondType.AROMATIC_DOUBLE:
+        return 2
+    else:
+        return int(btype)
+
+
+def bond_type(res_name, atom_name1, atom_name2):
+    """
+    Get the :class:`BondType` for two atoms of the same residue, based
     on the PDB chemical components dictionary.
 
     Parameters
@@ -89,21 +134,28 @@ def bond_order(res_name, atom_name1, atom_name2):
     Examples
     --------
 
-    >>> print(bond_order("ALA", "CA", "CB"))
-    1
-    >>> print(bond_order("ALA", "C", "O"))
-    2
-    >>> print(bond_order("ALA", "C", "CB"))
+    >>> print(bond_type("PHE", "CA", "CB"))
+    BondType.SINGLE
+    >>> print(bond_type("PHE", "CG", "CD1"))
+    BondType.AROMATIC_DOUBLE
+    >>> print(bond_type("PHE", "CA", "CG"))
     None
-    >>> print(bond_order("ALA", "FOO", "BAR"))
+    >>> print(bond_type("PHE", "FOO", "BAR"))
     None
     """
     _init_dataset()
     group_bonds = _intra_bonds.get(res_name.upper())
     if group_bonds is None:
         return None
+    # Try both atom aroders
+    bond_type_int = group_bonds.get(
+        (atom_name1, atom_name2),
+        group_bonds.get((atom_name2, atom_name1))
+    )
+    if bond_type_int is not None:
+        return BondType(bond_type_int)
     else:
-        return group_bonds.get(frozenset((atom_name1, atom_name2)))
+        return None
 
 
 def bonds_in_residue(res_name):
@@ -118,41 +170,41 @@ def bonds_in_residue(res_name):
     
     Returns
     -------
-    bonds : dict
-        A dictionary that maps sets of two atom names to their
-        respective bond orders. `None` if the residue is unknown to the
+    bonds : dict (str -> int)
+        A dictionary that maps tuples of two atom names to their
+        respective bond types (represented as integer).
+        `None` if the residue is unknown to the
         chemical components dictionary.
     
     Examples
     --------
-    >>> bonds = bonds_in_residue("MAN")
-    >>> for atoms, order in sorted(bonds.items()):
+    >>> bonds = bonds_in_residue("PHE")
+    >>> for atoms, bond_type_int in sorted(bonds.items()):
     ...     atom1, atom2 = sorted(atoms)
-    ...     print(f"{atom1:3} + {atom2:3} -> {order}")
-    C1  + C2  -> 1
-    C1  + O1  -> 1
-    C1  + O5  -> 1
-    C1  + H1  -> 1
-    C2  + C3  -> 1
-    C2  + O2  -> 1
-    C2  + H2  -> 1
-    C3  + C4  -> 1
-    C3  + O3  -> 1
-    C3  + H3  -> 1
-    C4  + C5  -> 1
-    C4  + O4  -> 1
-    C4  + H4  -> 1
-    C5  + C6  -> 1
-    C5  + O5  -> 1
-    C5  + H5  -> 1
-    C6  + O6  -> 1
-    C6  + H61 -> 1
-    C6  + H62 -> 1
-    HO1 + O1  -> 1
-    HO2 + O2  -> 1
-    HO3 + O3  -> 1
-    HO4 + O4  -> 1
-    HO6 + O6  -> 1
+    ...     print(f"{atom1:3} + {atom2:3} -> {str(BondType(bond_type_int))}")
+    C   + O   -> BondType.DOUBLE
+    C   + OXT -> BondType.SINGLE
+    C   + CA  -> BondType.SINGLE
+    CA  + CB  -> BondType.SINGLE
+    CA  + HA  -> BondType.SINGLE
+    CB  + CG  -> BondType.SINGLE
+    CB  + HB2 -> BondType.SINGLE
+    CB  + HB3 -> BondType.SINGLE
+    CD1 + CE1 -> BondType.AROMATIC_SINGLE
+    CD1 + HD1 -> BondType.SINGLE
+    CD2 + CE2 -> BondType.AROMATIC_DOUBLE
+    CD2 + HD2 -> BondType.SINGLE
+    CE1 + CZ  -> BondType.AROMATIC_DOUBLE
+    CE1 + HE1 -> BondType.SINGLE
+    CE2 + CZ  -> BondType.AROMATIC_SINGLE
+    CE2 + HE2 -> BondType.SINGLE
+    CD1 + CG  -> BondType.AROMATIC_DOUBLE
+    CD2 + CG  -> BondType.AROMATIC_SINGLE
+    CZ  + HZ  -> BondType.SINGLE
+    CA  + N   -> BondType.SINGLE
+    H   + N   -> BondType.SINGLE
+    H2  + N   -> BondType.SINGLE
+    HXT + OXT -> BondType.SINGLE
     """
     _init_dataset()
     return copy.copy(_intra_bonds.get(res_name.upper()))

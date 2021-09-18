@@ -57,6 +57,7 @@ class BondType(IntEnum):
         - `QUADRUPLE` - A quadruple bond
         - `AROMATIC_SINGLE` - Aromatic bond with a single formal bond
         - `AROMATIC_DOUBLE` - Aromatic bond with a double formal bond
+        - `AROMATIC_TRIPLE` - Aromatic bond with a triple formal bond
     """
     ANY = 0
     SINGLE = 1
@@ -65,6 +66,33 @@ class BondType(IntEnum):
     QUADRUPLE = 4
     AROMATIC_SINGLE = 5
     AROMATIC_DOUBLE = 6
+    AROMATIC_TRIPLE = 7
+
+
+    def without_aromaticity(self):
+        """
+        Remove aromaticity from the bond type.
+        
+        :attr:`BondType.AROMATIC_<ORDER>` is converted into
+        :attr:`BondType.<ORDER>`.
+
+        Returns
+        -------
+        new_bond_type : BondType
+            The :class:`BondType` without aromaticity.
+
+        Examples
+        --------
+
+        >>> print(BondType.AROMATIC_DOUBLE.without_aromaticity())
+        BondType.DOUBLE
+        """
+        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+        if self >= BondType.AROMATIC_SINGLE:
+            difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
+            return BondType(self - difference)
+        else:
+            return self
 
 
 @cython.boundscheck(False)
@@ -407,9 +435,8 @@ class BondList(Copyable):
         """
         Remove aromaticity from the bond types.
         
-        :attr:`BondType.AROMATIC_SINGLE` is converted into
-        :attr:`BondType.SINGLE` and :attr:`BondType.AROMATIC_DOUBLE` is
-        converted into :attr:`BondType.DOUBLE`.
+        :attr:`BondType.AROMATIC_<ORDER>` is converted into
+        :attr:`BondType.<ORDER>`.
 
         Examples
         --------
@@ -1553,7 +1580,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
             # Residue is not in dataset -> skip this residue
             continue
         atom_names_in_res = atom_names[curr_start_i : next_start_i]
-        for (atom_name1, atom_name2), bond_order in bond_dict_for_res.items():
+        for (atom_name1, atom_name2), bond_type in bond_dict_for_res.items():
             atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
             atom_indices2 = np.where(atom_names_in_res == atom_name2)[0]
             if len(atom_indices1) == 0 or len(atom_indices2) == 0:
@@ -1564,7 +1591,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
             bonds.append((
                 curr_start_i + atom_indices1[0],
                 curr_start_i + atom_indices2[0],
-                bond_order
+                bond_type
             ))
              
     bond_list = BondList(atoms.array_length(), np.array(bonds))

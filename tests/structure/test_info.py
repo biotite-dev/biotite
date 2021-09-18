@@ -55,11 +55,17 @@ def test_bonds(path):
             atom1 = atom_names[bond_indices[i]]
             atom2 = atom_names[bond_indices[i+1]]
             order = bond_orders[i//2]
-            assert strucinfo.bond_order(group_name, atom1, atom2) == order
-            assert frozenset((atom1, atom2)) \
-                   in strucinfo.bonds_in_residue(group_name)
-            assert frozenset((atom1, atom2)) \
-                   in bond_data[group_name]
+            ref_order = strucinfo.bond_type(group_name, atom1, atom2)
+            # MMTF does not support aromaticity
+            assert order == ref_order.without_aromaticity()
+            assert any((
+                (atom1, atom2) in strucinfo.bonds_in_residue(group_name),
+                (atom2, atom1) in strucinfo.bonds_in_residue(group_name)
+            ))
+            assert any((
+                (atom1, atom2) in bond_data[group_name],
+                (atom2, atom1) in bond_data[group_name]
+            ))
 
 
 def test_protOr_radii():

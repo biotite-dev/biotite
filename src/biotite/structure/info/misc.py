@@ -34,7 +34,7 @@ def all_residues():
     --------
 
     >>> print(all_residues()[1000 : 1010])
-    ['0YL', '0YN', '0YO', '0YP', '0YQ', '0YR', '0YS', '0YT', '0YU', '0YV']
+    ['0Y4', '0Y5', '0Y7', '0Y8', '0Y9', '0YA', '0YB', '0YC', '0YD', '0YE']
     """
     return list(_res_names.keys()) 
 

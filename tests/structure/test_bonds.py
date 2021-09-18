@@ -102,8 +102,8 @@ def test_invalid_creation():
         struc.BondList(
             5,
             np.array([
-                # BondType '7' does not exist
-                [1,2,7]
+                # BondType '8' does not exist
+                [1,2,8]
             ])
         )
 
@@ -430,6 +430,8 @@ def test_connect_via_residue_names(single_model):
     ref_bonds = atoms.bonds
 
     test_bonds = struc.connect_via_residue_names(atoms)
+    # MMTF format does not represent aromaticity
+    test_bonds.remove_aromaticity()
 
     assert test_bonds == ref_bonds
 
