@@ -314,3 +314,21 @@ def test_hybrid36_codec(number, length):
 def test_max_hybrid36_number():
     assert hybrid36.max_hybrid36_number(4) == 2436111
     assert hybrid36.max_hybrid36_number(5) == 87440031
+
+
+def test_bond_parsing():
+    """
+    Compare parsing of bonds from PDB with output from
+    :func:`connect_via_residue_names()`.
+    """
+    # Choose a structure with CONECT records to test these as well
+    path = join(data_dir("structure"), "3o5r.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    atoms = pdb.get_structure(pdb_file, model=1, include_bonds=True)
+    
+    test_bonds = atoms.bonds
+
+    ref_bonds = struc.connect_via_residue_names(atoms)
+    ref_bonds.remove_bond_order()
+
+    assert test_bonds.as_set() == ref_bonds.as_set()
