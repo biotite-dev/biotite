@@ -266,6 +266,8 @@ class PDBFile(TextFile):
             If set to true, a :class:`BondList` will be created for the
             resulting :class:`AtomArray` containing the bond information
             from the file.
+            All bonds have :attr:`BondType.ANY`, since the PDB format
+            does not support bond orders.
         
         Returns
         -------
@@ -722,6 +724,7 @@ class PDBFile(TextFile):
 
 
     def _set_bonds(self, bond_list, atom_ids):
+        # Bond type is unused since PDB does not support bond orders
         bonds, _ = bond_list.get_all_bonds()
 
         for center_i, bonded_indices in enumerate(bonds):
