@@ -1,2 +1,2 @@
 # fastpdb
-A high performance replacement for Biotite's PDBFile
+A high performance replacement for *Biotite*'s `PDBFile`
