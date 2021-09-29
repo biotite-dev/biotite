@@ -1,0 +1,9 @@
+[package]
+name = "fastpdb-cargo"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+pyo3 = "0.14"
+numpy = "0.14"
+ndarray = "0.15"
