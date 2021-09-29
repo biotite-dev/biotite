@@ -73,7 +73,8 @@ impl PDBFile {
         match model {
             Some(_) => CoordArray::Single(coord),
             None => {
-                let depth = coord.shape()[0] / model_start_i.len();
+                // Check whether all models have the same length
+                let depth = self.get_model_length(&model_start_i, &atom_line_i);
                 CoordArray::Multi(coord.into_shape((depth, model_start_i.len(), 3)).unwrap())
             }
         }
@@ -93,6 +94,32 @@ impl PDBFile {
             .filter(|(_i, line)| line.starts_with("MODEL"))
             .map(|(i, _line)| i)
             .collect()
+    }
+
+    fn get_model_length(&self, model_start_i: &Vec<usize>, atom_line_i: &Vec<usize>) -> usize {
+        let n_models = model_start_i.len();
+        let mut length: isize = -1;
+        for model_i in 0..n_models {
+            let model_start: usize = model_start_i[model_i];
+            let model_stop: usize = if model_i+1 < n_models { model_start_i[model_i+1] }
+                                    else { self.lines.len() };
+            let l: usize = atom_line_i[0];
+            let model_length = atom_line_i.iter()
+                .filter(|&line_i| *line_i >= model_start && *line_i < model_stop)
+                .count();
+            println!("{:?}", model_length);
+            if length == -1 {
+                length = model_length as isize;
+            }
+            else if model_length != length as usize {
+                panic!("Inconsistent number of models");
+            }
+        }
+
+        if length == -1 {
+            panic!("File contains no model");
+        }
+        length as usize
     }
 }
 
