@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBFile"]
 
+import warnings
 import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...bonds import BondList, connect_via_residue_names
@@ -266,6 +267,8 @@ class PDBFile(TextFile):
             If set to true, a :class:`BondList` will be created for the
             resulting :class:`AtomArray` containing the bond information
             from the file.
+            All bonds have :attr:`BondType.ANY`, since the PDB format
+            does not support bond orders.
         
         Returns
         -------
@@ -431,15 +434,22 @@ class PDBFile(TextFile):
         # record so we can extract it directly
         for line in self.lines:
             if line.startswith("CRYST1"):
-                len_a = float(line[6:15])
-                len_b = float(line[15:24])
-                len_c = float(line[24:33])
-                alpha = np.deg2rad(float(line[33:40]))
-                beta = np.deg2rad(float(line[40:47]))
-                gamma = np.deg2rad(float(line[47:54]))
-                box = vectors_from_unitcell(
-                    len_a, len_b, len_c, alpha, beta, gamma
-                )
+                try:
+                    len_a = float(line[6:15])
+                    len_b = float(line[15:24])
+                    len_c = float(line[24:33])
+                    alpha = np.deg2rad(float(line[33:40]))
+                    beta = np.deg2rad(float(line[40:47]))
+                    gamma = np.deg2rad(float(line[47:54]))
+                    box = vectors_from_unitcell(
+                        len_a, len_b, len_c, alpha, beta, gamma
+                    )
+                except ValueError:
+                    # File contains invalid 'CRYST1' record
+                    warnings.warn(
+                        "File contains invalid 'CRYST1' record, box is ignored"
+                    )
+                    box = None
 
                 if isinstance(array, AtomArray):
                     array.box = box
@@ -722,6 +732,7 @@ class PDBFile(TextFile):
 
 
     def _set_bonds(self, bond_list, atom_ids):
+        # Bond type is unused since PDB does not support bond orders
         bonds, _ = bond_list.get_all_bonds()
 
         for center_i, bonded_indices in enumerate(bonds):

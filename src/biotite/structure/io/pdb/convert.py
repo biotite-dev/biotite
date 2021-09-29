@@ -71,6 +71,8 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
+        All bonds have :attr:`BondType.ANY`, since the PDB format
+        does not support bond orders.
         
     Returns
     -------
