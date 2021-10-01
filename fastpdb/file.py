@@ -1,15 +1,25 @@
 import numpy as np
 import biotite
 import biotite.structure as struc
-from .fastpdb import *
+from .fastpdb import PDBFile as RustPDBFile
 
 class PDBFile(biotite.TextFile):
 
+    def __init__(self):
+        super().__init__()
+        self._pdb_file = RustPDBFile([])
+    
+    @classmethod
+    def read(cls, file):
+        file = super().read(file)
+        file._pdb_file = RustPDBFile(file.lines)
+        return file
+
     def get_coord(self, model=None):
         if model is None:
-            coord = parse_coord_multi_model(self.lines)
+            coord = self._pdb_file.parse_coord_multi_model()
         else:
-            coord = parse_coord_single_model(self.lines, model)
+            coord = self._pdb_file.parse_coord_single_model(model)
         return coord
     
     def get_structure(self, model=None, altloc="first", extra_fields=None):
@@ -25,16 +35,16 @@ class PDBFile(biotite.TextFile):
             include_charge    = False
         
         if model is None:
-            coord = parse_coord_multi_model(self.lines)
-            annotations = parse_annotations(
-                self.lines, 1,
+            coord = self._pdb_file.parse_coord_multi_model()
+            annotations = self._pdb_file.parse_annotations(
+                1,
                 include_atom_id, include_b_factor,
                 include_occupancy, include_charge
             )
         else:
-            coord = parse_coord_single_model(self.lines, model)
-            annotations = parse_annotations(
-                self.lines, model,
+            coord = self._pdb_file.parse_coord_single_model(model)
+            annotations = self._pdb_file.parse_annotations(
+                model,
                 include_atom_id, include_b_factor,
                 include_occupancy, include_charge
             )
