@@ -1,8 +1,9 @@
+use std::str::FromStr;
+use std::collections::HashMap;
 use ndarray::{Array, Ix1, Ix2, Ix3};
 use pyo3::prelude::*;
 use pyo3::exceptions;
 use pyo3::create_exception;
-
 use numpy::PyArray;
 
 
@@ -29,6 +30,32 @@ impl PDBFile {
     #[new]
     fn new(lines: Vec<String>) -> Self {
         PDBFile { lines }
+    }
+
+
+    fn get_model_count(&self) -> usize {
+        return self.get_model_start_indices().len()
+    }
+
+
+    fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
+        for line in self.lines.iter() {
+            if line.starts_with("CRYST1") {
+                if line.len() < 80 {
+                    return Err(BadStructureError::new_err("Line is too short"))
+                }
+                let len_a = parse_number(&line[ 6..15])?;
+                let len_b = parse_number(&line[15..24])?;
+                let len_c = parse_number(&line[24..33])?;
+                // Angles given in degrees, needs to be converted into rad later on
+                let alpha = parse_number(&line[33..40])?;
+                let beta  = parse_number(&line[40..47])?;
+                let gamma = parse_number(&line[47..54])?;
+                return Ok(Some((len_a, len_b, len_c, alpha, beta, gamma)));
+            }
+        }
+        // File has no 'CRYST1' record
+        Ok(None)
     }
 
 
@@ -118,40 +145,27 @@ impl PDBFile {
         // Iterate over ATOM and HETATM records to write annotation arrays
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
+            if line.len() < 80 {
+                return Err(BadStructureError::new_err("Line is too short"))
+            }
             write_string_to_array(&mut chain_id,  atom_i, line[21..22].trim());
-            res_id[atom_i] = line[22..26].trim().parse().or_else(|_|
-                return Err(BadStructureError::new_err(format!(
-                    "'{}' cannot be parsed into an integer", line[22..26].trim()
-                )))
-            )?;
+            res_id[atom_i] = parse_number(&line[22..26])?;
             write_string_to_array(&mut ins_code,  atom_i, line[26..27].trim());
             write_string_to_array(&mut res_name,  atom_i, line[17..20].trim());
             hetero[atom_i] = if &line[0..4] == "ATOM" { false } else { true };
             write_string_to_array(&mut atom_name, atom_i, line[12..16].trim());
             write_string_to_array(&mut element,   atom_i, line[76..78].trim());
-            write_string_to_array(&mut altloc_id, atom_i, line[16..17].trim());
+            write_string_to_array(&mut altloc_id, atom_i, &line[16..17]);
 
             // Set optional annotation arrays
             if include_atom_id {
-                atom_id[atom_i] = line[6..11].trim().parse().or_else(|_|
-                    Err(BadStructureError::new_err(format!(
-                        "'{}' cannot be parsed into an integer", line[6..11].trim()
-                    )))
-                )?;
+                atom_id[atom_i] = parse_number(&line[6..11])?;
             }
             if include_b_factor {
-                b_factor[atom_i] = line[60..66].trim().parse().or_else(|_|
-                    Err(BadStructureError::new_err(format!(
-                        "'{}' cannot be parsed into a float", line[60..66].trim()
-                    )))
-                )?;
+                b_factor[atom_i] = parse_number(&line[60..66])?;
             }
             if include_occupancy {
-                occupancy[atom_i] = line[54..60].trim().parse().or_else(|_|
-                    Err(BadStructureError::new_err(format!(
-                        "'{}' cannot be parsed into a float", line[54..60].trim()
-                    )))
-                )?;
+                occupancy[atom_i] = parse_number(&line[54..60])?;
             }
             if include_charge {
                 let mut charge_raw = line[78..80].chars();
@@ -164,7 +178,7 @@ impl PDBFile {
                 else {
                     number = raw_number.to_digit(10).ok_or(
                         BadStructureError::new_err(format!(
-                            "'{}' cannot be parsed into an integer", raw_number
+                            "'{}' cannot be parsed into a number", raw_number
                         ))
                     )?;
                 }
@@ -190,6 +204,52 @@ impl PDBFile {
             ))
         })
     }
+
+
+    fn parse_bonds(&self, atom_ids: Py<PyArray<i32, Ix1>>) -> PyResult<Py<PyArray<u32, Ix2>>> {
+        // Mapping from atom ids to indices in an AtomArray
+        let mut atom_id_to_index: HashMap<i32, u32> = HashMap::new();
+        Python::with_gil(|py| {
+            for (i, id) in atom_ids.as_ref(py).to_owned_array().iter().enumerate() {
+                atom_id_to_index.insert(*id, i as u32);
+            }
+        });
+        
+        // Cannot preemptively determine number of bonds
+        // -> Memory allocation for all bonds is not possible
+        // -> No benefit in finding 'CONECT' record lines prior to iteration
+        let mut bonds: Vec<(u32, u32)> = Vec::new();
+        for line in self.lines.iter() {
+            if line.starts_with("CONECT") {
+                // Extract ID of center atom
+                let center_index = *atom_id_to_index.get(&parse_number(&line[6..11])?).unwrap();
+                // Iterate over atom IDs bonded to center atom
+                for i in (11..31).step_by(5) {
+                    match &parse_number(&line[i..i+5]) {
+                        Ok(bonded_id) => bonds.push(
+                            (center_index, *atom_id_to_index.get(bonded_id).unwrap())
+                        ),
+                        // String is empty -> no further IDs
+                        Err(_) => break
+                    };
+                }
+            }
+        }
+
+        Python::with_gil(|py| {
+            let bond_array: &PyArray<u32, Ix2> = PyArray::zeros(py, (bonds.len(), 2), false);
+            unsafe {
+                // There are only unsafe ways to get a mutable version
+                // of a PyArray
+                let mut array_view = bond_array.as_array_mut();
+                for (i, (center_id, bonded_id)) in bonds.iter().enumerate() {
+                    array_view[[i, 0]] = *center_id;
+                    array_view[[i, 1]] = *bonded_id;
+                }
+                Ok(bond_array.to_owned())
+            }
+        })
+    }
 }
 
 
@@ -208,6 +268,9 @@ impl PDBFile {
         let mut coord = Array::zeros((atom_line_i.len(), 3));
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
+            if line.len() < 80 {
+                return Err(BadStructureError::new_err("Line is too short"))
+            }
             coord[[atom_i, 0]] = line[30..38].trim().parse().or_else(|_|
                 Err(BadStructureError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[30..38].trim()
@@ -245,6 +308,7 @@ impl PDBFile {
             .map(|(i, _line)| i + model_start)
             .collect()
     }
+
     
     fn get_model_start_indices(&self) -> Vec<usize> {
         let mut model_start_i: Vec<usize> = self.lines.iter().enumerate()
@@ -323,6 +387,15 @@ fn write_string_to_array(array: &mut Array<u32, Ix2>, index: usize, string: &str
     }
 }
 
+
+#[inline(always)]
+fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
+    string.trim().parse().or_else(|_|
+        Err(BadStructureError::new_err(format!(
+            "'{}' cannot be parsed into a number", string.trim()
+        )))
+    )
+}
 
 
 #[pymodule]
