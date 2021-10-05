@@ -20,6 +20,7 @@ enum CoordArray {
 
 #[pyclass]
 struct PDBFile {
+    #[pyo3(get)]
     lines: Vec<String>
 }
 
@@ -236,19 +237,28 @@ impl PDBFile {
             }
         }
 
+        let bond_array: Array<u32, Ix2> = Array::zeros((bonds.len(), 2));
+        for (i, (center_id, bonded_id)) in bonds.iter().enumerate() {
+            array_view[[i, 0]] = *center_id;
+            array_view[[i, 1]] = *bonded_id;
+        }
         Python::with_gil(|py| {
-            let bond_array: &PyArray<u32, Ix2> = PyArray::zeros(py, (bonds.len(), 2), false);
-            unsafe {
-                // There are only unsafe ways to get a mutable version
-                // of a PyArray
-                let mut array_view = bond_array.as_array_mut();
-                for (i, (center_id, bonded_id)) in bonds.iter().enumerate() {
-                    array_view[[i, 0]] = *center_id;
-                    array_view[[i, 1]] = *bonded_id;
-                }
-                Ok(bond_array.to_owned())
-            }
+            Ok(PyArray::from_array(py, &bond_array).to_owned())
         })
+    }
+
+
+
+
+    fn write_box(&mut self,
+                 len_a: f32, len_b: f32, len_c: f32,
+                 alpha: f32, beta: f32, gamma: f32) {
+        self.lines.push(
+            format!(
+                "CRYST1{:>9.3}{:>9.3}{:>9.3}{:>7.2}{:>7.2}{:>7.2} P 1           1",
+                len_a, len_b, len_c, alpha, beta, gamma
+            )
+        );
     }
 }
 

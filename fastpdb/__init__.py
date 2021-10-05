@@ -159,6 +159,29 @@ class PDBFile(biotite.TextFile):
 
 
         return atoms
+    
+
+    def set_structure(self, atoms):
+        # Write 'CRYST1' record
+        if atoms.box is not None:
+            box = atoms.box
+            if box.ndim == 3:
+                box = box[0]
+            len_a, len_b, len_c, alpha, beta, gamma \
+                = struc.unitcell_from_vectors(box)
+            self._pdb_file.write_box(
+                len_a, len_b, len_c,
+                np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
+            )
+        
+
+        # Write 'ATOM' and 'MODEL' records
+
+
+        # Write 'CONECT' records
+
+
+        self.lines = self._pdb_file.lines
 
 
 # Copy docstrings
