@@ -603,7 +603,7 @@ class PDBFile(TextFile):
                                   "{:>6.2f}".format(occupancy[i]) +
                                   "{:>6.2f}".format(b_factor[i]) +
                                   (" " * 10) + 
-                                  "{:2}".format(array.element[i]) +
+                                  "{:>2}".format(array.element[i]) +
                                   "{:2}".format(charge[i])
                                  )
         
@@ -628,14 +628,14 @@ class PDBFile(TextFile):
                                  "{:1}".format(array.ins_code[i]) +
                                  (" " * 27) +
                                  "{:>6.2f}".format(occupancy[i]) +
-                                 "{:>6.3f}".format(b_factor[i]) +
+                                 "{:>6.2f}".format(b_factor[i]) +
                                  (" " * 10) +
-                                 "{:2}".format(array.element[i]) +
+                                 "{:>2}".format(array.element[i]) +
                                  "{:2}".format(charge[i])
                                 )
             for i in range(array.stack_depth()):
                 #Fill in coordinates for each model
-                self.lines.append("{:5}{:>9d}".format("MODEL", i+1))
+                self.lines.append("MODEL {:>8d}".format(i+1))
                 modellines = copy.copy(templines)
                 for j, line in enumerate(modellines):
                     # Insert coordinates
@@ -736,19 +736,21 @@ class PDBFile(TextFile):
         bonds, _ = bond_list.get_all_bonds()
 
         for center_i, bonded_indices in enumerate(bonds):
-            # remove padding values
-            bonded_indices = bonded_indices[bonded_indices != -1]
-            if len(bonded_indices) >= 1:
-                line = f"CONECT{atom_ids[center_i]:>5d}"
-                n_added = 0
-                for bonded_i in bonded_indices:
-                    line += f"{atom_ids[bonded_i]:>5d}"
-                    n_added += 1
-                    if n_added == 4:
-                        # Only a maximum of 4 bond partners can be put
-                        # into a single line
-                        # If there are more, use a extra record
-                        n_added = 0
-                        self.lines.append(line)
-                        line = f"CONECT{atom_ids[center_i]:>5d}"
+            n_added = 0
+            for bonded_i in bonded_indices:
+                if bonded_i == -1:
+                    # Reached padding values
+                    break
+                if n_added == 0:
+                    # Add new record
+                    line = f"CONECT{atom_ids[center_i]:>5d}"
+                line += f"{atom_ids[bonded_i]:>5d}"
+                n_added += 1
+                if n_added == 4:
+                    # Only a maximum of 4 bond partners can be put
+                    # into a single line
+                    # If there are more, use an extra record
+                    n_added = 0
+                    self.lines.append(line)
+            if n_added > 0:
                 self.lines.append(line)
