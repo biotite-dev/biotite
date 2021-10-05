@@ -72,6 +72,7 @@ class PDBFile(biotite.TextFile):
             hetero, atom_name, element, altloc_id,
             atom_id, b_factor, occupancy, charge
         ) = annotations
+        # Interpret uint32 arrays as unicode arrays
         chain_id  = np.frombuffer(chain_id,  dtype="U4")
         ins_code  = np.frombuffer(ins_code,  dtype="U1")
         res_name  = np.frombuffer(res_name,  dtype="U3")
@@ -162,6 +163,10 @@ class PDBFile(biotite.TextFile):
     
 
     def set_structure(self, atoms):
+        # Reset lines of text
+        self._pdb_file = RustPDBFile([])
+
+
         # Write 'CRYST1' record
         if atoms.box is not None:
             box = atoms.box
@@ -174,13 +179,56 @@ class PDBFile(biotite.TextFile):
                 np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
             )
         
-
+        
         # Write 'ATOM' and 'MODEL' records
+        # Convert Unicode arrays into uint32 arrays for usage in Rust
+        chain_id  = np.frombuffer(atoms.chain_id,  dtype=np.uint32).reshape(-1, 4)
+        ins_code  = np.frombuffer(atoms.ins_code,  dtype=np.uint32).reshape(-1, 1)
+        res_name  = np.frombuffer(atoms.res_name,  dtype=np.uint32).reshape(-1, 3)
+        atom_name = np.frombuffer(atoms.atom_name, dtype=np.uint32).reshape(-1, 6)
+        element   = np.frombuffer(atoms.element,   dtype=np.uint32).reshape(-1, 2)
+        
+        categories = atoms.get_annotation_categories()
+        atom_id   = atoms.atom_id   if "atom_id"   in categories else None
+        b_factor  = atoms.b_factor  if "b_factor"  in categories else None
+        occupancy = atoms.occupancy if "occupancy" in categories else None
+        charge    = atoms.charge    if "charge"    in categories else None
+        
+        if isinstance(atoms, struc.AtomArray):
+            self._pdb_file.write_single_model(
+                atoms.coord, chain_id, atoms.res_id, ins_code,
+                res_name, atoms.hetero, atom_name, element,
+                atom_id, b_factor, occupancy, charge
+            )
+        else:
+            raise TypeError(
+                f"Expected AtomArray or AtomArrayStack, "
+                f"but got {type(atoms).__name__}"
+            )
 
-
+       
         # Write 'CONECT' records
+        if atoms.bonds is not None:
+            # Only non-water hetero records and connections between
+            # residues are added to the records
+            hetero_indices = np.where(atoms.hetero & ~struc.filter_solvent(atoms))[0]
+            bond_array = atoms.bonds.as_array()
+            bond_array = bond_array[
+                np.isin(bond_array[:,0], hetero_indices) |
+                np.isin(bond_array[:,1], hetero_indices) |
+                (atoms.res_id  [bond_array[:,0]] != atoms.res_id  [bond_array[:,1]]) |
+                (atoms.chain_id[bond_array[:,0]] != atoms.chain_id[bond_array[:,1]])
+            ]
+            # Bond type is unused since PDB does not support bond orders
+            bonds, _ = struc.BondList(
+                atoms.array_length(), bond_array
+            ).get_all_bonds()
+            atom_id = np.arange(1, atoms.array_length()+1) if atom_id is None else atom_id
+            self._pdb_file.write_bonds(
+                bonds, atom_id
+            )
 
-
+            
         self.lines = self._pdb_file.lines
 
 
