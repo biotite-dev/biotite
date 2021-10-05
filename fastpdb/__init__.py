@@ -200,6 +200,12 @@ class PDBFile(biotite.TextFile):
                 res_name, atoms.hetero, atom_name, element,
                 atom_id, b_factor, occupancy, charge
             )
+        elif isinstance(atoms, struc.AtomArrayStack):
+            self._pdb_file.write_multi_model(
+                atoms.coord, chain_id, atoms.res_id, ins_code,
+                res_name, atoms.hetero, atom_name, element,
+                atom_id, b_factor, occupancy, charge
+            )
         else:
             raise TypeError(
                 f"Expected AtomArray or AtomArrayStack, "
