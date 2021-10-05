@@ -10,6 +10,7 @@ All functionalities are tested against equivalent calls in
 from tempfile import TemporaryFile
 import itertools
 import glob
+from io import StringIO
 from os.path import join, dirname, realpath
 import pytest
 import biotite
@@ -63,7 +64,6 @@ def test_get_coord(path, model):
     "path, model, altloc, extra_fields, include_bonds",
     itertools.product(
         TEST_STRUCTURES,
-        #["tests/data/1l2y.pdb"],
         [None, 1, -1],
         ["occupancy", "first", "all"],
         [False, True],
@@ -113,3 +113,48 @@ def test_get_structure(path, model, altloc, extra_fields, include_bonds):
                 ==  ref_atoms.get_annotation(category).tolist()
     
     assert np.allclose(test_atoms.coord, ref_atoms.coord)
+
+
+@pytest.mark.parametrize(
+    "path, model, altloc, extra_fields, include_bonds",
+    itertools.product(
+        TEST_STRUCTURES,
+        [None, 1, -1],
+        ["occupancy", "first", "all"],
+        [False, True],
+        [False, True],
+    )
+)
+def test_set_structure(path, model, altloc, extra_fields, include_bonds):
+    if extra_fields:
+        extra_fields = ["atom_id", "b_factor", "occupancy", "charge"]
+    else:
+        extra_fields = None
+    
+    
+    input_file = pdb.PDBFile.read(path)
+    try:
+        atoms = input_file.get_structure(
+            model, altloc, extra_fields, include_bonds
+        )
+    except biotite.InvalidFileError:
+        if model is None:
+            # Cannot create an AtomArrayStack
+            # due to different number of atoms per model
+            return
+        else:
+            raise
+
+    
+    ref_file = pdb.PDBFile()
+    ref_file.set_structure(atoms)
+    ref_file_content = StringIO()
+    ref_file.write(ref_file_content)
+
+    test_file = fastpdb.PDBFile()
+    test_file.set_structure(atoms)
+    test_file_content = StringIO()
+    test_file.write(test_file_content)
+
+
+    assert test_file_content.getvalue() == ref_file_content.getvalue()
