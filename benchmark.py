@@ -81,7 +81,7 @@ fastpdb_speedup = np.array(list(biotite_runtimes.values())) / \
 
 bars = ax.bar(
     np.arange(len(fastpdb_speedup)) - WIDTH/2, fastpdb_speedup,
-    WIDTH, color="#0a6efd", linewidth=0.5, edgecolor="black", label="fastpdb"
+    WIDTH, color="#0a6efd", linewidth=1.0, edgecolor="black", label="fastpdb"
 )
 ax.bar_label(bars, padding=3, fmt="%.1f×")
 ax.bar(
