@@ -12,7 +12,7 @@ import fastpdb
 
 REPEATS = 1000
 PDB_ID = "1AKI"
-WIDTH = 0.3
+WIDTH = 0.25
 
 
 # Call this function before the benchmark
@@ -73,7 +73,7 @@ biotite_runtimes["Write model"] = (time.time_ns() - now) * 1e-6 / REPEATS
 
 
 matplotlib.rc("font", size=12)
-fig, ax = plt.subplots(figsize=(8.0, 8.0))
+fig, ax = plt.subplots(figsize=(8.0, 4.0))
 
 labels = list(fastpdb_runtimes.keys())
 fastpdb_speedup = np.array(list(biotite_runtimes.values())) / \
