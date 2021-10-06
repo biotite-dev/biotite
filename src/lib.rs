@@ -212,7 +212,7 @@ impl PDBFile {
         // Mapping from atom ids to indices in an AtomArray
         let mut atom_id_to_index: HashMap<i64, u32> = HashMap::new();
         Python::with_gil(|py| {
-            for (i, id) in atom_ids.as_ref(py).readonly().iter().unwrap().enumerate() {
+            for (i, id) in atom_ids.as_ref(py).to_owned_array().iter().enumerate() {
                 atom_id_to_index.insert(*id, i as u32);
             }
         });
