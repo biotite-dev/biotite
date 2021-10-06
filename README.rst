@@ -20,13 +20,6 @@ Installation
 
     $ pip install fastpdb
 
-or
-
-.. code-block:: console
-
-    $ conda install -c conda-forge fastpdb
-
-
 Usage
 -----
 
@@ -37,18 +30,20 @@ You can simply replace ``biotite.structure.io.pdb.PDBFile`` by
 
     import fastpdb
 
-    in_file = fastpdb.PDBFile.read("1AKI.pdb")
+    in_file = fastpdb.PDBFile.read("path/to/file.pdb")
     atom_array = in_file.get_structure(model=1)
 
     out_file = fastpdb.PDBFile()
     out_file.set_structure(atom_array)
-    out_file.write("test.pdb")
+    out_file.write("path/to/another_file.pdb")
+
+Note that ``fastpdb`` does not yet support the *hybrid-36* PDB format.
 
 
 Performance
 -----------
 
-``fastpdb`` is multiple times faster compared to ``biotite``.
+``fastpdb`` is multiple times faster than ``biotite``.
 
 .. raw:: html
 
