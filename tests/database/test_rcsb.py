@@ -73,7 +73,7 @@ def test_search_basic():
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
             False,
             {},
-            ["6IG7", "6IG6", "7JRI"]
+            ["6IG7", "6IG6", "7JRI", "7JR5"]
         ),
         (
             "audit_author.name",
