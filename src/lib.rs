@@ -1,3 +1,5 @@
+//! Low-level PDB file parsing and writing.
+
 use std::str::FromStr;
 use std::convert::TryInto;
 use std::collections::HashMap;
@@ -12,6 +14,8 @@ create_exception!(fastpdb, InvalidFileError, exceptions::PyException);
 create_exception!(fastpdb, BadStructureError, exceptions::PyException);
 
 
+/// Used to allow a function to process both, `AtomArray` and `AtomArrayStack` objects,
+/// since they differ only in the shape of the objects.
 #[derive(Debug)]
 enum CoordArray {
     Single(Array<f32, Ix2>),
@@ -19,8 +23,12 @@ enum CoordArray {
 }
 
 
+/// This is a low-level abstraction of a PDB file.
+/// While the actual file input and output is managed in Python, this struct is able to parse
+/// coordinates, models, bonds etc. from lines of text and vice versa.
 #[pyclass]
 struct PDBFile {
+    /// Lines of text from the PDB file.
     #[pyo3(get)]
     lines: Vec<String>
 }
@@ -29,17 +37,23 @@ struct PDBFile {
 #[pymethods]
 impl PDBFile {
     
+    /// Create an new [`PDBFile`].
+    /// The lines of text are given to `lines`.
+    /// An empty `Vec` represents and empty PDB file.
     #[new]
     fn new(lines: Vec<String>) -> Self {
         PDBFile { lines }
     }
 
-
+    
+    /// Get the number of models contained in the file.
     fn get_model_count(&self) -> usize {
         return self.get_model_start_indices().len()
     }
 
 
+    /// Parse the `CRYST1` record of the PDB file to obtain the unit cell lengths
+    /// and angles (in degrees).
     fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
         for line in self.lines.iter() {
             if line.starts_with("CRYST1") {
@@ -49,7 +63,6 @@ impl PDBFile {
                 let len_a = parse_number(&line[ 6..15])?;
                 let len_b = parse_number(&line[15..24])?;
                 let len_c = parse_number(&line[24..33])?;
-                // Angles given in degrees, needs to be converted into rad later on
                 let alpha = parse_number(&line[33..40])?;
                 let beta  = parse_number(&line[40..47])?;
                 let gamma = parse_number(&line[47..54])?;
@@ -61,6 +74,8 @@ impl PDBFile {
     }
 
 
+    /// Get a 2D coordinate *NumPy* array for a single model in the file.
+    /// `model` is the 1-based number of the requested model.
     fn parse_coord_single_model(&self, model: isize) -> PyResult<Py<PyArray<f32, Ix2>>> {
         let array = self.parse_coord(Some(model))?;
         Python::with_gil(|py| {
@@ -72,6 +87,8 @@ impl PDBFile {
     }
 
 
+    /// Get a 3D coordinate *NumPy* array for all models in the file.
+    /// A `PyErr` is returned if the number of atoms per model differ from each other.
     fn parse_coord_multi_model(&self) -> PyResult<Py<PyArray<f32, Ix3>>> {
         let array = self.parse_coord(None)?;
         Python::with_gil(|py| {
@@ -83,6 +100,25 @@ impl PDBFile {
     }
 
 
+    /// Parse the annotation arrays from a given `model` (1-based) in the file.
+    /// The optional annotation categories for an `AtomArray` or `AtomArrayStack` are only parsed
+    /// if the respective `include_<annotation>` parameter is set to true.
+    /// Unicode *NumPy* arrays are represented by 2D *NumPy* arrays with
+    /// `uint32` *dtype*.
+    /// The returned tuple contains the following annotations in the given order:
+    /// 
+    /// - `chain_id`
+    /// - `res_id`
+    /// - `ins_code`
+    /// - `res_name`
+    /// - `hetero`
+    /// - `atom_name`
+    /// - `element`
+    /// - `altloc_id`
+    /// - `atom_id`
+    /// - `b_factor`
+    /// - `occupancy`
+    /// - `charge`
     fn parse_annotations(&self,
                         model: isize,
                         include_atom_id: bool,
@@ -208,11 +244,16 @@ impl PDBFile {
     }
 
 
-    fn parse_bonds(&self, atom_ids: Py<PyArray<i64, Ix1>>) -> PyResult<Py<PyArray<u32, Ix2>>> {
+    /// Parse the `CONECT` records of the PDB file to obtain a 2D *NumPy* array
+    /// of indices.
+    /// Each index points to the respective atom in the `AtomArray`.
+    /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
+    /// to atom indices.
+    fn parse_bonds(&self, atom_id: Py<PyArray<i64, Ix1>>) -> PyResult<Py<PyArray<u32, Ix2>>> {
         // Mapping from atom ids to indices in an AtomArray
         let mut atom_id_to_index: HashMap<i64, u32> = HashMap::new();
         Python::with_gil(|py| {
-            for (i, id) in atom_ids.as_ref(py).to_owned_array().iter().enumerate() {
+            for (i, id) in atom_id.as_ref(py).to_owned_array().iter().enumerate() {
                 atom_id_to_index.insert(*id, i as u32);
             }
         });
@@ -251,6 +292,7 @@ impl PDBFile {
 
 
 
+    /// Write the `CRYST1` record to this [`PDBFile`] based on the given unit cell parameters.
     fn write_box(&mut self,
                  len_a: f32, len_b: f32, len_c: f32,
                  alpha: f32, beta: f32, gamma: f32) {
@@ -263,6 +305,8 @@ impl PDBFile {
     }
 
 
+    /// Write a single model to this [`PDBFile`] based on the given coordinates and annotation
+    /// arrays.
     fn write_single_model(&mut self,
                           coord:     Py<PyArray<f32,  Ix2>>,
                           chain_id:  Py<PyArray<u32,  Ix2>>,
@@ -325,6 +369,8 @@ impl PDBFile {
     }
 
 
+    /// Write a multiple models to this [`PDBFile`] based on the given coordinates and annotation
+    /// arrays.
     fn write_multi_model(&mut self,
         coord:     Py<PyArray<f32,  Ix3>>,
         chain_id:  Py<PyArray<u32,  Ix2>>,
@@ -407,6 +453,10 @@ impl PDBFile {
     }
 
 
+    /// Write `CONECT` records to this [`PDBFile`] based on the given `bonds`
+    /// array containing indices pointing to bonded atoms in the `AtomArray`.
+    /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
+    /// to atom indices.
     fn write_bonds(&mut self, 
                    bonds: Py<PyArray<i32, Ix2>>,
                    atom_id: Py<PyArray<i64, Ix1>>) -> PyResult<()> {
@@ -449,6 +499,10 @@ impl PDBFile {
 
 impl PDBFile {
 
+    /// Get a *NumPy* array containing coordinates for a single model (2D) or
+    /// multiple models (3D) in the file.
+    /// The number of returned dimensions is based on whether a `model` is
+    /// given.
     fn parse_coord(&self, model: Option<isize>) -> PyResult<CoordArray> {
         let model_start_i = self.get_model_start_indices();
         
@@ -496,6 +550,9 @@ impl PDBFile {
     }
 
 
+    /// Get indices to lines of text containing `ATOM` and `HETATM` records.
+    /// The indices are limited to the range of a model given by the `model_start`
+    /// and the exclusive `model_stop`.
     fn get_atom_indices(&self, model_start: usize, model_stop: usize) -> Vec<usize> {
         self.lines[model_start..model_stop].iter().enumerate()
             .filter(|(_i, line)| line.starts_with("ATOM") || line.starts_with("HETATM"))
@@ -504,6 +561,9 @@ impl PDBFile {
     }
 
     
+    /// Get indices to lines of text containing `MODEL` records.
+    /// If no `MODEL` records is found, which occurs frequently in PDB files containing only one
+    /// model, a single start at the beginning of the file is returned.
     fn get_model_start_indices(&self) -> Vec<usize> {
         let mut model_start_i: Vec<usize> = self.lines.iter().enumerate()
             .filter(|(_i, line)| line.starts_with("MODEL"))
@@ -517,6 +577,9 @@ impl PDBFile {
         model_start_i
     }
     
+
+    /// Find the model start and stop index for the given `model` number (1-based).
+    /// `model_start_i` is the return value of [`get_model_start_indices()`].
     fn get_model_boundaries(&self,
                             model: isize,
                             model_start_i: &Vec<usize>) -> PyResult<(usize, usize)> {
@@ -547,6 +610,9 @@ impl PDBFile {
         }
     }
     
+
+    /// Get the number of atoms in each model of the PDB file.
+    /// A `PyErr` is returned if the number of atoms per model differ from each other.
     fn get_model_length(&self,
                         model_start_i: &Vec<usize>,
                         atom_line_i: &Vec<usize>) -> PyResult<usize> {
@@ -574,6 +640,9 @@ impl PDBFile {
     }
 }
 
+
+/// Write the characters of a `String` into the 2nd dimension of a 2D *Numpy* array.
+/// This function is the reverse of [`parse_string_from_array()`].
 #[inline(always)]
 fn write_string_to_array(array: &mut Array<u32, Ix2>, index: usize, string: &str) {
     for (i, char) in string.chars().enumerate() {
@@ -582,6 +651,9 @@ fn write_string_to_array(array: &mut Array<u32, Ix2>, index: usize, string: &str
 }
 
 
+/// Create a `String` from a row in a 2D *Numpy* array.
+/// Each `uint32` value in the array is interpreted a an UTF-32 character.
+/// This function is the reverse of [`write_string_to_array()`].
 #[inline(always)]
 fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<String> {
     let mut out_string: String = String::new();
@@ -598,6 +670,8 @@ fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<St
 }
 
 
+/// Parse a string into a number.
+/// Returns a ``PyErr`` if the parsing fails.
 #[inline(always)]
 fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
     string.trim().parse().or_else(|_|
@@ -608,6 +682,10 @@ fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
 }
 
 
+/// If a given `id` exceeds `max_id` the returned ID restarts counting at 1.
+/// Otherwise, `id` is returned.
+/// This function is necessary, because there is a maximum number for atom and residue IDs in
+/// PDB files.
 #[inline(always)]
 fn truncate_id(id: i64, max_id: i64) -> i64 {
     if id < 0 {

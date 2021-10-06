@@ -11,6 +11,30 @@ from .fastpdb import PDBFile as RustPDBFile
 
 
 class PDBFile(biotite.TextFile):
+    r"""
+    This class represents a PDB file.
+    
+    This class only provides support for reading/writing the pure atom
+    information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
+    records cannot be written.
+    
+    See also
+    --------
+    PDBxFile
+    
+    Examples
+    --------
+    Load a `\\*.pdb` file, modify the structure and save the new
+    structure into a new file:
+    
+    >>> import os.path
+    >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
+    >>> array_stack = file.get_structure()
+    >>> array_stack_mod = rotate(array_stack, [1,2,3])
+    >>> file = PDBFile()
+    >>> file.set_structure(array_stack_mod)
+    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
+    """
 
     def __init__(self):
         super().__init__()
@@ -23,9 +47,90 @@ class PDBFile(biotite.TextFile):
         return file
     
     def get_model_count(self):
+        """
+        Get the number of models contained in the PDB file.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
         return self._pdb_file.get_model_count()
 
     def get_coord(self, model=None):
+        """
+        Get only the coordinates of the PDB file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return a
+            2D coordinate array from the atoms corresponding to the
+            given model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
+            If this parameter is omitted, an 2D coordinate array
+            containing all models will be returned, even if
+            the structure contains only one model.
+        
+        Returns
+        -------
+        coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
+            The coordinates read from the ATOM and HETATM records of the
+            file.
+        
+        Notes
+        -----
+        Note that :func:`get_coord()` may output more coordinates than
+        the atom array (stack) from the corresponding
+        :func:`get_structure()` call has.
+        The reason for this is, that :func:`get_structure()` filters
+        *altloc* IDs, while `get_coord()` does not.
+        
+        Examples
+        --------
+        Read an :class:`AtomArrayStack` from multiple PDB files, where
+        each PDB file contains the same atoms but different positions.
+        This is an efficient approach when a trajectory is spread into
+        multiple PDB files, as done e.g. by the *Rosetta* modeling
+        software. 
+
+        For the purpose of this example, the PDB files are created from
+        an existing :class:`AtomArrayStack`.
+        
+        >>> import os.path
+        >>> from tempfile import gettempdir
+        >>> file_names = []
+        >>> for i in range(atom_array_stack.stack_depth()):
+        ...     pdb_file = PDBFile()
+        ...     pdb_file.set_structure(atom_array_stack[i])
+        ...     file_name = os.path.join(gettempdir(), f"model_{i+1}.pdb")
+        ...     pdb_file.write(file_name)
+        ...     file_names.append(file_name)
+        >>> print(file_names)
+        ['...model_1.pdb', '...model_2.pdb', ..., '...model_38.pdb']
+
+        Now the PDB files are used to create an :class:`AtomArrayStack`,
+        where each model represents a different model.
+
+        Construct a new :class:`AtomArrayStack` with annotations taken
+        from one of the created files used as template and coordinates
+        from all of the PDB files.
+
+        >>> template_file = PDBFile.read(file_names[0])
+        >>> template = template_file.get_structure()
+        >>> coord = []
+        >>> for i, file_name in enumerate(file_names):
+        ...     pdb_file = PDBFile.read(file_name)
+        ...     coord.append(pdb_file.get_coord(model=1))
+        >>> new_stack = from_template(template, np.array(coord))
+
+        The newly created :class:`AtomArrayStack` should now be equal to
+        the :class:`AtomArrayStack` the PDB files were created from.
+
+        >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
+        True
+        """
         if model is None:
             coord = self._pdb_file.parse_coord_multi_model()
         else:
@@ -33,6 +138,48 @@ class PDBFile(biotite.TextFile):
         return coord
     
     def get_structure(self, model=None, altloc="first", extra_fields=None, include_bonds=False):
+        """
+        Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return an
+            :class:`AtomArray` from the atoms corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model insted of the first model.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
+        altloc : {'first', 'occupancy', 'all'}
+            This parameter defines how *altloc* IDs are handled:
+                - ``'first'`` - Use atoms that have the first
+                  *altloc* ID appearing in a residue.
+                - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                  with the highest occupancy for a residue.
+                - ``'all'`` - Use all atoms.
+                  Note that this leads to duplicate atoms.
+                  When this option is chosen, the ``altloc_id``
+                  annotation array is added to the returned structure.
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the output array or stack.
+            These are valid values:
+            ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+            ``'charge'``.
+        include_bonds : bool, optional
+            If set to true, a :class:`BondList` will be created for the
+            resulting :class:`AtomArray` containing the bond information
+            from the file.
+            All bonds have :attr:`BondType.ANY`, since the PDB format
+            does not support bond orders.
+        
+        Returns
+        -------
+        array : AtomArray or AtomArrayStack
+            The return type depends on the `model` parameter.
+        """
         if extra_fields is not None:
             include_atom_id   = "atom_id"   in extra_fields
             include_b_factor  = "b_factor"  in extra_fields
@@ -160,6 +307,29 @@ class PDBFile(biotite.TextFile):
     
 
     def set_structure(self, atoms):
+        """
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
+        file.
+        
+        This makes also use of the optional annotation arrays
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        If the atom array (stack) contains the annotation ``'atom_id'``,
+        these values will be used for atom numbering instead of
+        continuous numbering.
+        
+        Parameters
+        ----------
+        array : AtomArray or AtomArrayStack
+            The array or stack to be saved into this file. If a stack
+            is given, each array in the stack is saved as separate
+            model.
+        
+        Notes
+        -----
+        If `array` has an associated :class:`BondList`, ``CONECT``
+        records are also written for all non-water hetero residues
+        and all inter-residue connections.
+        """
         # Reset lines of text
         self._pdb_file = RustPDBFile([])
 
@@ -233,9 +403,3 @@ class PDBFile(biotite.TextFile):
 
             
         self.lines = self._pdb_file.lines
-
-
-# Copy docstrings
-PDBFile.get_model_count.__doc__ = pdb.PDBFile.get_model_count.__doc__
-PDBFile.get_coord.__doc__       = pdb.PDBFile.get_coord.__doc__
-PDBFile.get_structure.__doc__   = pdb.PDBFile.get_structure.__doc__
