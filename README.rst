@@ -1,8 +1,7 @@
-.. raw:: html
-
-    <p align="center">
-       <img width="300px" src="logo.svg" alt="fastpdb">
-    </p>
+.. image:: https://raw.githubusercontent.com/biotite-dev/fastpdb/main/logo.svg
+    :width: 300
+    :align: center
+    :alt: fastpdb
 
 
 |
@@ -45,8 +44,6 @@ Performance
 
 ``fastpdb`` is multiple times faster than ``biotite``.
 
-.. raw:: html
-
-    <p align="center">
-       <img width="800px" src="benchmark.svg">
-    </p>
+.. image:: https://raw.githubusercontent.com/biotite-dev/fastpdb/main/benchmark.svg
+    :width: 800
+    :align: center
