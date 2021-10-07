@@ -3,6 +3,7 @@
 use std::str::FromStr;
 use std::convert::TryInto;
 use std::collections::HashMap;
+use std::cmp::Ordering;
 use ndarray::{Array, Ix1, Ix2, Ix3};
 use pyo3::prelude::*;
 use pyo3::exceptions;
@@ -48,7 +49,7 @@ impl PDBFile {
     
     /// Get the number of models contained in the file.
     fn get_model_count(&self) -> usize {
-        return self.get_model_start_indices().len()
+        self.get_model_start_indices().len()
     }
 
 
@@ -190,7 +191,7 @@ impl PDBFile {
             res_id[atom_i] = parse_number(&line[22..26])?;
             write_string_to_array(&mut ins_code,  atom_i, line[26..27].trim());
             write_string_to_array(&mut res_name,  atom_i, line[17..20].trim());
-            hetero[atom_i] = if &line[0..4] == "ATOM" { false } else { true };
+            hetero[atom_i] = !(&line[0..4] == "ATOM");
             write_string_to_array(&mut atom_name, atom_i, line[12..16].trim());
             write_string_to_array(&mut element,   atom_i, line[76..78].trim());
             write_string_to_array(&mut altloc_id, atom_i, &line[16..17]);
@@ -214,7 +215,7 @@ impl PDBFile {
                     number = 0;
                 }
                 else {
-                    number = raw_number.to_digit(10).ok_or(
+                    number = raw_number.to_digit(10).ok_or_else( ||
                         BadStructureError::new_err(format!(
                             "'{}' cannot be parsed into a number", raw_number
                         ))
@@ -352,14 +353,10 @@ impl PDBFile {
                     parse_string_from_array(&element, i)?,
                     charge.as_ref().map_or(String::from("  "), |arr| {
                         let c = arr[i];
-                        if c > 0 {
-                            format!("{:1}+", c)
-                        }
-                        else if c < 0 {
-                            format!("{:1}-", -c)
-                        }
-                        else {
-                            String::from("  ")
+                        match c.cmp(&0) {
+                            Ordering::Greater => format!("{:1}+", c),
+                            Ordering::Less => format!("{:1}-", -c),
+                            Ordering::Equal => String::from("  ")
                         }
                     }),
                 ));
@@ -422,14 +419,10 @@ impl PDBFile {
                     parse_string_from_array(&element, i)?,
                     charge.as_ref().map_or(String::from("  "), |arr| {
                         let c = arr[i];
-                        if c > 0 {
-                            format!("{:1}+", c)
-                        }
-                        else if c < 0 {
-                            format!("{:1}-", -c)
-                        }
-                        else {
-                            String::from("  ")
+                        match c.cmp(&0) {
+                            Ordering::Greater => format!("{:1}+", c),
+                            Ordering::Less => format!("{:1}-", -c),
+                            Ordering::Equal => String::from("  ")
                         }
                     }),
                 ));
@@ -519,20 +512,20 @@ impl PDBFile {
             if line.len() < 80 {
                 return Err(BadStructureError::new_err("Line is too short"))
             }
-            coord[[atom_i, 0]] = line[30..38].trim().parse().or_else(|_|
-                Err(BadStructureError::new_err(format!(
+            coord[[atom_i, 0]] = line[30..38].trim().parse().map_err(|_|
+                BadStructureError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[30..38].trim()
-                )))
+                ))
             )?;
-            coord[[atom_i, 1]] = line[38..46].trim().parse().or_else(|_|
-                Err(BadStructureError::new_err(format!(
+            coord[[atom_i, 1]] = line[38..46].trim().parse().map_err(|_|
+                BadStructureError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[38..46].trim()
-                )))
+                ))
             )?;
-            coord[[atom_i, 2]] = line[46..54].trim().parse().or_else(|_|
-                Err(BadStructureError::new_err(format!(
+            coord[[atom_i, 2]] = line[46..54].trim().parse().map_err(|_|
+                BadStructureError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[46..54].trim()
-                )))
+                ))
             )?;
         }
         
@@ -571,7 +564,7 @@ impl PDBFile {
             .collect();
         // Structures containing only one model may omit MODEL record
         // In these cases model starting index is set to 0
-        if model_start_i.len() == 0 {
+        if model_start_i.is_empty() {
             model_start_i = vec![0]
         }
         model_start_i
@@ -582,17 +575,15 @@ impl PDBFile {
     /// `model_start_i` is the return value of [`get_model_start_indices()`].
     fn get_model_boundaries(&self,
                             model: isize,
-                            model_start_i: &Vec<usize>) -> PyResult<(usize, usize)> {
+                            model_start_i: &[usize]) -> PyResult<(usize, usize)> {
         let model_i: isize;
-        if model > 0 {
-            model_i = model - 1;
-        }
-        else if model < 0 {
-            model_i = model_start_i.len() as isize + model;
-        }
-        else {
-            return Err(exceptions::PyValueError::new_err("Model index must not be 0"));
-        }
+        match model.cmp(&0) {
+            Ordering::Greater => model_i = model - 1,
+            Ordering::Less => model_i = model_start_i.len() as isize + model,
+            Ordering::Equal => return Err(exceptions::PyValueError::new_err(
+                "Model index must not be 0"
+            )),
+        };
     
         if model_i >= model_start_i.len() as isize || model_i < 0 {
             return Err(exceptions::PyValueError::new_err(format!(
@@ -614,8 +605,8 @@ impl PDBFile {
     /// Get the number of atoms in each model of the PDB file.
     /// A `PyErr` is returned if the number of atoms per model differ from each other.
     fn get_model_length(&self,
-                        model_start_i: &Vec<usize>,
-                        atom_line_i: &Vec<usize>) -> PyResult<usize> {
+                        model_start_i: &[usize],
+                        atom_line_i: &[usize]) -> PyResult<usize> {
         let n_models = model_start_i.len();
         let mut length: Option<usize> = None;
         for model_i in 0..n_models {
@@ -674,10 +665,10 @@ fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<St
 /// Returns a ``PyErr`` if the parsing fails.
 #[inline(always)]
 fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
-    string.trim().parse().or_else(|_|
-        Err(BadStructureError::new_err(format!(
+    string.trim().parse().map_err(|_|
+        BadStructureError::new_err(format!(
             "'{}' cannot be parsed into a number", string.trim()
-        )))
+        ))
     )
 }
 
