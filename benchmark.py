@@ -20,9 +20,7 @@ WIDTH = 0.25
 info.bond_dataset()
 
 
-
-pdb_file_path = rcsb.fetch(PDB_ID, "pdb", ".")
-#pdb_file_path = rcsb.fetch(PDB_ID, "pdb", tempfile.gettempdir())
+pdb_file_path = rcsb.fetch(PDB_ID, "pdb", tempfile.gettempdir())
 
 fastpdb_runtimes = {}
 biotite_runtimes = {}
