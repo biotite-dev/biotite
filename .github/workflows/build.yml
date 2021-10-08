@@ -65,10 +65,10 @@ jobs:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - if: ${{ !matrix.source }}
         name: Building distribution
-        run: maturin build --no-sdist
+        run: maturin build --release --no-sdist -o dist
       - if: ${{ matrix.source }}
         name: Building distribution
-        run: maturin build
+        run: maturin build --release -o dist
       - uses: actions/upload-artifact@v2
         with:
           name: fastpdb distribution
