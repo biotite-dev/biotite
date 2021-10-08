@@ -3,6 +3,9 @@ name = "fastpdb"
 version = "1.0.0"
 edition = "2018"
 
+[package.metadata.maturin]
+python-source = "python-src"
+
 [dependencies]
 numpy = "0.14"
 ndarray = "0.15"
