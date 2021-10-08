@@ -53,7 +53,7 @@ jobs:
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building distribution
-        run: maturin build --release -o dist
+        run: maturin build --release -i python${{ matrix.python }} -o dist
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
