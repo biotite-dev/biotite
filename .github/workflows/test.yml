@@ -49,7 +49,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python }}
       - name: Installing dependencies
-        run: conda install -c conda-forge numpy=$NUMPY_VERSION "biotite>=0.29" maturin
+        run: conda install -c conda-forge numpy=$NUMPY_VERSION "biotite>=0.29" maturin pytest
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building distribution
