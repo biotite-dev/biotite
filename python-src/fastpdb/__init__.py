@@ -368,9 +368,9 @@ class PDBFile(biotite.TextFile):
         if atom_id is not None:
             atom_id = atom_id.astype(np.int64, copy=False)
         if b_factor is not None:
-            b_factor = b_factor.astype(np.int64, copy=False)
+            b_factor = b_factor.astype(np.float64, copy=False)
         if occupancy is not None:
-            occupancy = occupancy.astype(np.int64, copy=False)
+            occupancy = occupancy.astype(np.float64, copy=False)
         if charge is not None:
             charge = charge.astype(np.int64, copy=False)
         
