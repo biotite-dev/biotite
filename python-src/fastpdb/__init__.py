@@ -360,17 +360,30 @@ class PDBFile(biotite.TextFile):
         b_factor  = atoms.b_factor  if "b_factor"  in categories else None
         occupancy = atoms.occupancy if "occupancy" in categories else None
         charge    = atoms.charge    if "charge"    in categories else None
+
+        # Convert to correct dtype for Rust function call, if necessary
+        coord = atoms.coord.astype(np.float32, copy=False)
+        res_id = atoms.res_id.astype(np.int64, copy=False)
+        hetero = atoms.hetero.astype(bool, copy=False)
+        if atom_id is not None:
+            atom_id = atom_id.astype(np.int64, copy=False)
+        if b_factor is not None:
+            b_factor = b_factor.astype(np.int64, copy=False)
+        if occupancy is not None:
+            occupancy = occupancy.astype(np.int64, copy=False)
+        if charge is not None:
+            charge = charge.astype(np.int64, copy=False)
         
         if isinstance(atoms, struc.AtomArray):
             self._pdb_file.write_single_model(
-                atoms.coord, chain_id, atoms.res_id, ins_code,
-                res_name, atoms.hetero, atom_name, element,
+                coord, chain_id, res_id, ins_code,
+                res_name, hetero, atom_name, element,
                 atom_id, b_factor, occupancy, charge
             )
         elif isinstance(atoms, struc.AtomArrayStack):
             self._pdb_file.write_multi_model(
-                atoms.coord, chain_id, atoms.res_id, ins_code,
-                res_name, atoms.hetero, atom_name, element,
+                coord, chain_id, res_id, ins_code,
+                res_name, hetero, atom_name, element,
                 atom_id, b_factor, occupancy, charge
             )
         else:
@@ -396,9 +409,10 @@ class PDBFile(biotite.TextFile):
             bonds, _ = struc.BondList(
                 atoms.array_length(), bond_array
             ).get_all_bonds()
-            atom_id = np.arange(1, atoms.array_length()+1) if atom_id is None else atom_id
+            atom_id = np.arange(1, atoms.array_length()+1, dtype=np.int64) \
+                      if atom_id is None else atom_id
             self._pdb_file.write_bonds(
-                bonds, atom_id
+                bonds.astype(np.int32, copy=False), atom_id
             )
 
             
