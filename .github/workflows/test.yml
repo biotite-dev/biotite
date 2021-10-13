@@ -1,6 +1,6 @@
 name: Tests
 
-on: [push, pull_request, workflow_dispatch]
+on: [push, pull_request]
 
 jobs:
   test-simple:
@@ -57,4 +57,4 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest
+        run: pytest --assert=plain
