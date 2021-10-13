@@ -68,7 +68,7 @@ jobs:
         run: maturin build --release --no-sdist -i python -o dist
       - if: ${{ matrix.source }}
         name: Building distribution
-        run: maturin build --release -i python+ -o dist
+        run: maturin build --release -i python -o dist
       - uses: actions/upload-artifact@v2
         with:
           name: fastpdb distribution
