@@ -73,7 +73,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         Notes
         -----
         In order to see which options the command line execution used,
-        try the `get_command()` method.
+        try the :meth:`get_command()` method.
 
         Examples
         --------

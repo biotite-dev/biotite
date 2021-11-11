@@ -35,6 +35,7 @@ is described as 3 integers instead of 3 letters.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import tempfile
 import itertools
 import numpy as np
 import biotite.sequence as seq
@@ -45,7 +46,7 @@ import biotite.database.entrez as entrez
 
 # Get the E. coli K-12 genome as annotated sequence
 gb_file = gb.GenBankFile.read(
-    entrez.fetch("U00096", None, "gb", "nuccore", "gb")
+    entrez.fetch("U00096", tempfile.gettempdir(), "gb", "nuccore", "gb")
 )
 # We are only interested in CDS features
 k12_genome = gb.get_annotated_sequence(gb_file, include_only=["CDS"])
