@@ -39,7 +39,7 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
         or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
-        length of the alphabet used by the sequences.
+        length of the alphabet used by the `profile`.
     **kwargs
         Additional `text parameters <https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
     
