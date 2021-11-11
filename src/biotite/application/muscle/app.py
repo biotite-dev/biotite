@@ -75,7 +75,7 @@ class MuscleApp(MSAApp):
         if self.get_seqtype() == "protein":
             args += ["-seqtype", "protein"]
         else:
-            args += ["-seqtype", "nucleo"]
+            args += ["-seqtype", "dna"]
         if self.get_matrix_file_path() is not None:
             args += ["-matrix", self.get_matrix_file_path()]
         if self._gap_open is not None and self._gap_ext is not None:
