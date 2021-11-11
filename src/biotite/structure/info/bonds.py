@@ -125,8 +125,9 @@ def bond_type(res_name, atom_name1, atom_name2):
     
     Returns
     -------
-    order : int or None
-        The order of the bond between `atom_name1` and `atom_name2`.
+    order : BondType or None
+        The :class:`BondType` of the bond between `atom_name1` and
+        `atom_name2`.
         If the atoms form no bond, if any of the two atoms does not
         exist in the context of the residue or if the residue is unknown
         to the chemical components dictionary, `None` is returned.
