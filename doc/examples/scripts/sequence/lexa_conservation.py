@@ -5,8 +5,11 @@ Conservation of *LexA* DNA-binding site
 The web page on sequence logos on
 `Wikipedia <https://en.wikipedia.org/wiki/Sequence_logo#Consensus_logo>`_
 shows the sequence logo of the *LexA*-binding motif of Gram-positive
-bacteria. In this example we look at the other side: What is the
-amino acid sequence logo of the DNA-binding site of the LexA repressor?
+bacteria.
+In this example we look at the other side:
+What is the amino acid sequence logo of the DNA-binding site of the LexA
+repressor?
+What is the consensus sequence?
 
 We start by searching the NCBI Entrez database for *lexA* gene
 entries in the UniProtKB database and downloading them afterwards as
@@ -132,12 +135,16 @@ ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle":"italic"})
 fig.tight_layout()
 
 ########################################################################
-# Finally we can generate our sequence logo.
+# Finally we can generate our sequence logo and the consensus sequence.
+
+profile = seq.SequenceProfile.from_alignment(alignment)
+
+print("Consensus sequence:")
+print(profile.to_consensus())
 
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)
-profile = seq.SequenceProfile.from_alignment(alignment)
-graphics.plot_sequence_logo(ax, profile)
+graphics.plot_sequence_logo(ax, profile, scheme="flower")
 ax.set_xticks([5,10,15,20])
 ax.set_xlabel("Residue position")
 ax.set_ylabel("Bits")
