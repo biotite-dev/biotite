@@ -50,3 +50,45 @@ Python packages that are developed independently.
 .. raw:: html
 
     </div>
+
+
+
+.. raw:: html
+
+    <div
+        class="sphx-glr-thumbcontainer"
+        tooltip="Adding hydrogen atoms to molecular models"
+    >
+
+.. only:: html
+
+    .. figure:: https://raw.githubusercontent.com/biotite-dev/hydride/master/doc/static/assets/hydride_icon.svg
+        :target: https://hydride.biotite-python.org/
+        :alt: Hydride logo
+
+        `Hydride - Predict hydrogen positions <https://hydride.biotite-python.org/>`_
+
+.. raw:: html
+
+    </div>
+
+
+
+.. raw:: html
+
+    <div
+        class="sphx-glr-thumbcontainer"
+        tooltip="A high performance drop-in replacement for Biotite's PDBFile"
+    >
+
+.. only:: html
+
+    .. figure:: https://raw.githubusercontent.com/biotite-dev/fastpdb/main/icon.svg
+        :target: https://github.com/biotite-dev/fastpdb
+        :alt: fastpdb logo
+
+        `fastpdb - A high performance PDB parser <https://github.com/biotite-dev/fastpdb>`_
+
+.. raw:: html
+
+    </div>
