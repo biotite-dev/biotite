@@ -15,8 +15,9 @@ class PDBFile(biotite.TextFile):
     This class represents a PDB file.
     
     This class only provides support for reading/writing the pure atom
-    information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
-    records cannot be written.
+    information (``ATOM``, ``HETATM``, ``MODEL`` and ``ENDMDL``
+    records).
+    ``TER`` records cannot be written.
     
     See also
     --------
@@ -24,7 +25,7 @@ class PDBFile(biotite.TextFile):
     
     Examples
     --------
-    Load a `\\*.pdb` file, modify the structure and save the new
+    Load a ``\\*.pdb`` file, modify the structure and save the new
     structure into a new file:
     
     >>> import os.path
@@ -76,8 +77,8 @@ class PDBFile(biotite.TextFile):
         Returns
         -------
         coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
-            The coordinates read from the ATOM and HETATM records of the
-            file.
+            The coordinates read from the ``ATOM`` and ``HETATM``
+            records of the file.
         
         Notes
         -----
