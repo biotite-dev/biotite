@@ -2,7 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 import glob
+import io
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 import numpy as np
@@ -112,3 +114,51 @@ def test_read_iter(file_name):
     test_dict = dict(fasta.FastaFile.read_iter(file_name))
 
     assert test_dict == ref_dict
+
+
+@pytest.mark.parametrize(
+    "chars_per_line, n_sequences", itertools.product(
+        [80, 200],
+        [1, 10]
+    )
+)
+def test_write_iter(chars_per_line, n_sequences):
+    """
+    Test whether :class:`FastaFile.write()` and
+    :class:`FastaFile.write_iter()` produce the same output file for
+    random sequences.
+    """
+    LENGTH_RANGE = (50, 150)
+    SCORE_RANGE = (10, 60)
+
+    # Generate random sequences and scores
+    np.random.seed(0)
+    sequences = []
+    for i in range(n_sequences):
+        seq_length = np.random.randint(*LENGTH_RANGE)
+        code = np.random.randint(
+            len(seq.NucleotideSequence.alphabet_unamb),
+            size=seq_length
+        )
+        sequence = seq.NucleotideSequence()
+        sequence.code = code
+        sequences.append(sequence)
+    
+    fasta_file = fasta.FastaFile(chars_per_line)
+    for i, sequence in enumerate(sequences):
+        header = f"seq_{i}"
+        fasta_file[header] = str(sequence)
+    ref_file = io.StringIO()
+    fasta_file.write(ref_file)
+    
+    test_file = io.StringIO()
+    fasta.FastaFile.write_iter(
+        test_file,
+        (
+            (f"seq_{i}", str(sequence))
+            for i, sequence in enumerate(sequences)
+        ),
+        chars_per_line
+    )
+
+    assert test_file.getvalue() == ref_file.getvalue()
