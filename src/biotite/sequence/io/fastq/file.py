@@ -51,7 +51,7 @@ class FastqFile(TextFile, MutableMapping):
     Parameters
     ----------
     offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
-        This value that is added to the quality score to obtain the
+        This value is added to the quality score to obtain the
         ASCII code.
         Can either be directly the value, or a string that indicates
         the score format.
@@ -219,7 +219,7 @@ class FastqFile(TextFile, MutableMapping):
             )
         if not isinstance(identifier, str):
             raise IndexError(
-                "'FastqFile' only supports header strings as keys"
+                "'FastqFile' only supports strings as identifier"
             )
         # Delete lines of entry corresponding to the identifier,
         # if already existing
@@ -459,6 +459,17 @@ class FastqFile(TextFile, MutableMapping):
             The entries to be written into the file.
             Each entry consists of an identifier string and a tuple
             containing a sequence (as string) and a score array.
+        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+            This value is added to the quality score to obtain the
+            ASCII code.
+            Can either be directly the value, or a string that indicates
+            the score format.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            By default each sequence (and score string)
+            is put into one line.
 
         Notes
         -----
@@ -477,10 +488,10 @@ class FastqFile(TextFile, MutableMapping):
                     )
                 if not isinstance(identifier, str):
                     raise IndexError(
-                        "'FastqFile' only supports header strings as keys"
+                        "'FastqFile' only supports strings as identifier"
                     )
                 
-                # Yield identifier lines
+                # Yield identifier line
                 yield "@" + identifier.replace("\n","").strip()
 
                 # Yield sequence line(s)
