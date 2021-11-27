@@ -11,8 +11,7 @@ __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
 
 import abc
 import numpy as np
-from ...visualize import set_font_size_in_coord, colors
-from ..seqtypes import ProteinSequence
+from ...visualize import colors
 from .colorschemes import get_color_scheme
 
 
@@ -22,7 +21,7 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
     an alignment are drawn onto an :class:`Axes` object.
 
     Subclasses must override the :func:`plot_symbol()` method.
-    
+
     Parameters
     ----------
     axes : Axes
@@ -31,7 +30,7 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
 
     def __init__(self, axes):
         self._axes = axes
-    
+
     @property
     def axes(self):
         return self._axes
@@ -66,7 +65,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
     as colored character, if `color_symbols` is set to true.
 
     Subclasses must override the :class:`get_color()` method.
-    
+
     Parameters
     ----------
     axes : Axes
@@ -82,7 +81,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
         :class:`matplotlib.Text` instance of each symbol.
     """
 
-    def __init__(self, axes, color_symbols=False, 
+    def __init__(self, axes, color_symbols=False,
                  font_size=None, font_param=None):
         super().__init__(axes)
         self._color_symbols = color_symbols
@@ -91,14 +90,14 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
 
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
         from matplotlib.patches import Rectangle
-        
+
         trace = alignment.trace
-        if trace[column_i,seq_i] != -1:
-            symbol = alignment.sequences[seq_i][trace[column_i,seq_i]]
+        if trace[column_i, seq_i] != -1:
+            symbol = alignment.sequences[seq_i][trace[column_i, seq_i]]
         else:
             symbol = "-"
         color = self.get_color(alignment, column_i, seq_i)
-        
+
         box = Rectangle(bbox.p0, bbox.width, bbox.height)
         self.axes.add_patch(box)
         text = self.axes.text(
@@ -106,13 +105,13 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
             symbol, color="black", ha="center", va="center",
             size=self._font_size, **self._font_param)
         text.set_clip_on(True)
-        
+
         if self._color_symbols:
             box.set_color("None")
             text.set_color(color)
         else:
             box.set_color(color)
-    
+
     @abc.abstractmethod
     def get_color(self, alignment, column_i, seq_i):
         """
@@ -122,7 +121,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
         The symbol is specified as position in the alignment's trace
         (``trace[pos_i, seq_i]``).
 
-        PROTECTED: Override when inheriting. 
+        PROTECTED: Override when inheriting.
 
         Parameters
         ----------
@@ -132,7 +131,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
             The position index in the trace.
         seq_i : int
             The sequence index in the trace.
-        
+
         Returns
         -------
         color : object
@@ -168,7 +167,7 @@ class LetterSimilarityPlotter(LetterPlotter):
     font_param : dict, optional
         Additional parameters that is given to the
         :class:`matplotlib.Text` instance of each symbol.
-    
+
     Notes
     -----
     For determination of the color, this a measure called
@@ -199,7 +198,6 @@ class LetterSimilarityPlotter(LetterPlotter):
 
     def __init__(self, axes, matrix=None, color_symbols=False,
                  font_size=None, font_param=None):
-        from matplotlib import cm
 
         super().__init__(axes, color_symbols, font_size, font_param)
         if matrix is not None:
@@ -209,7 +207,7 @@ class LetterSimilarityPlotter(LetterPlotter):
         # Default colormap
         self._cmap = self._generate_colormap(colors["dimgreen"],
                                              self._color_symbols)
-    
+
     def set_color(self, color=None, cmap=None):
         """
         Set the alignemnt colors used for plotting.
@@ -246,7 +244,7 @@ class LetterSimilarityPlotter(LetterPlotter):
                 self._cmap = cmap
 
     def get_color(self, alignment, column_i, seq_i):
-        # Calculate average normalize similarity 
+        # Calculate average normalize similarity
         index1 = alignment.trace[column_i, seq_i]
         if index1 == -1:
             similarity = 0
@@ -265,7 +263,7 @@ class LetterSimilarityPlotter(LetterPlotter):
             similarities = np.delete(similarities, seq_i)
             similarity = np.average(similarities)
         return self._cmap(similarity)
-    
+
     def _get_similarity(self, matrix, code1, code2):
         if matrix is None:
             return 1 if code1 == code2 else 0
@@ -276,7 +274,7 @@ class LetterSimilarityPlotter(LetterPlotter):
             max_sim = np.max(matrix[code1])
             sim = (sim - min_sim) / (max_sim - min_sim)
             return sim
-    
+
     @staticmethod
     def _generate_colormap(color, to_black):
         from matplotlib.colors import ListedColormap, to_rgb
@@ -330,14 +328,14 @@ class LetterTypePlotter(LetterPlotter):
     def __init__(self, axes, alphabet, color_scheme=None, color_symbols=False,
                  font_size=None, font_param=None):
         super().__init__(axes, color_symbols, font_size, font_param)
-        
+
         if color_scheme is None:
             self._colors = get_color_scheme("rainbow", alphabet)
         elif isinstance(color_scheme, str):
             self._colors = get_color_scheme(color_scheme, alphabet)
         else:
             self._colors = color_scheme
-    
+
     def get_color(self, alignment, column_i, seq_i):
         index = alignment.trace[column_i, seq_i]
         if index == -1:
@@ -347,12 +345,11 @@ class LetterTypePlotter(LetterPlotter):
         return self._colors[code]
 
 
-
 def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
                    show_numbers=False, number_size=None, number_functions=None,
                    labels=None, label_size=None,
                    show_line_position=False,
-                   spacing=1):
+                   spacing=1, symbol_spacing=None):
     """
     Plot a pairwise or multiple sequence alignment.
 
@@ -408,7 +405,10 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     spacing : float, optional
         The spacing between the alignment lines. 1.0 means that the size
         is equal to the size of a symbol box.
-    
+    symbol_spacing : int, optional
+        А space is placed between each number of elements desired
+        by variable (github issue #360)
+
     See also
     --------
     plot_alignment_similarity_based
@@ -445,6 +445,11 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     if seq_len % symbols_per_line != 0:
         line_count += 1
 
+    if symbol_spacing:
+        spacing_ratio = symbols_per_line / symbol_spacing
+        symbols_to_print = round(spacing_ratio) + symbols_per_line - 1
+    else:
+        symbols_to_print = symbols_per_line
 
     ### Draw symbols ###
     x = 0
@@ -454,17 +459,21 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     for i in range(seq_len):
         y = y_start
         for j in range(seq_num):
-            bbox = Bbox([[x,y],[x+1,y+1]])
+            bbox = Bbox([[x, y], [x+1, y+1]])
             symbol_plotter.plot_symbol(bbox, alignment, i, j)
             y += 1
         line_pos += 1
-        if line_pos >= symbols_per_line:
+        if line_pos >= symbols_to_print:
             line_pos = 0
             x = 0
             y_start += seq_num + spacing
         else:
             x += 1
-    
+            if (symbol_spacing
+               and (i + 1) % symbol_spacing == 0):
+                line_pos += 1
+                x += 1
+
     ### Draw labels ###
     ticks = []
     tick_labels = []
@@ -479,7 +488,7 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
             y += spacing
     axes.set_yticks(ticks)
     axes.set_yticklabels(tick_labels)
-    
+
     ### Draw numbers  ###
     # Create twin to allow different tick labels on right side
     number_axes = axes.twinx()
@@ -492,9 +501,9 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
             for j in range(seq_num):
                 if i == line_count-1:
                     # Last line -> get number of last column in trace
-                    trace_pos = len(alignment.trace) -1
+                    trace_pos = len(alignment.trace) - 1
                 else:
-                    trace_pos = (i+1) * symbols_per_line -1
+                    trace_pos = (i+1) * symbols_per_line - 1
                 seq_index = _get_last_valid_index(
                     alignment, trace_pos, j
                 )
@@ -511,8 +520,9 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     number_axes.set_yticks(ticks)
     number_axes.set_yticklabels(tick_labels)
 
-
-    axes.set_xlim(0, symbols_per_line)
+    if symbol_spacing and spacing_ratio % 1 != 0:
+        symbols_to_print += 1
+    axes.set_xlim(0, symbols_to_print)
     # Y-axis starts from top
     lim = seq_num*line_count + spacing*(line_count-1)
     axes.set_ylim(lim, 0)
@@ -526,7 +536,7 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     number_axes.yaxis.set_tick_params(
         left=False, right=False, labelsize=number_size
     )
-    
+
     if show_line_position:
         axes.xaxis.set_tick_params(
             top=False, bottom=True, labeltop=False, labelbottom=True
@@ -544,7 +554,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
                                     show_line_position=False,
                                     spacing=1,
                                     color=None, cmap=None, matrix=None,
-                                    color_symbols=False,
+                                    color_symbols=False, symbol_spacing=None,
                                     symbol_size=None, symbol_param=None):
     r"""
     Plot a pairwise or multiple sequence alignment highlighting
@@ -629,7 +639,10 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
     symbol_param : dict
         Additional parameters that is given to the
         :class:`matplotlib.Text` instance of each symbol.
-    
+    symbol_spacing : int, optional
+        А space is placed between each number of elements desired
+        by variable (github issue #360)
+
     See also
     --------
     plot_alignment
@@ -675,7 +688,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
         number_functions=number_functions,
         labels=labels, label_size=label_size,
         show_line_position=show_line_position,
-        spacing=spacing
+        spacing=spacing, symbol_spacing=symbol_spacing
     )
 
 
@@ -686,7 +699,8 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
                               show_line_position=False,
                               spacing=1,
                               color_scheme=None, color_symbols=False,
-                              symbol_size=None, symbol_param=None):
+                              symbol_size=None, symbol_param=None,
+                              symbol_spacing=None):
     """
     Plot a pairwise or multiple sequence alignment coloring each symbol
     based on the symbol type.
@@ -760,7 +774,10 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
     symbol_param : dict
         Additional parameters that is given to the
         :class:`matplotlib.Text` instance of each symbol.
-    
+    symbol_spacing : int, optional
+        А space is placed between each number of elements desired
+        by variable (github issue #360)
+
     See also
     --------
     plot_alignment
@@ -778,7 +795,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         number_functions=number_functions,
         labels=labels, label_size=label_size,
         show_line_position=show_line_position,
-        spacing=spacing
+        spacing=spacing, symbol_spacing=symbol_spacing
     )
 
 
