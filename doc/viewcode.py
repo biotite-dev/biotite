@@ -12,6 +12,25 @@ import biotite
 
 
 def _index_attributes(package_name, src_path):
+    """
+    Assign a Python module to each combination of (sub)package and
+    attribute (e.g. function, class, etc.) in a given (sub)package.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the (sub)package.
+    src_path : str
+        File path to `package_name`.
+    
+    Parameters
+    ----------
+    attribute_index : dict( tuple(str, str) -> str)
+        Maps the combintation of (sub)package name and attribute to
+        the name of a Python module.
+    file_index : dict( str -> str )
+        Maps a Python module to its file path.
+    """
     attribute_index = {}
     file_index = {}
     
