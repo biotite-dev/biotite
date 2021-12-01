@@ -8,7 +8,7 @@ charges of the individual atoms of a given AtomArray according to the
 PEOE algorithm of Gasteiger-Marsili.
 """
 
-__name__ = "biotite.charges"
+__name__ = "biotite.structure"
 __author__ = "Jacob Marcel Anter, Patrick Kunzmann"
 __all__ = ["partial_charges"]
 
