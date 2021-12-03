@@ -7,6 +7,7 @@ This module contains a convenience function for loading sequences from
 general sequence files.
 """
 
+__name__ = "biotite.sequence.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_sequence", "save_sequence",
            "load_sequences", "save_sequences"]
