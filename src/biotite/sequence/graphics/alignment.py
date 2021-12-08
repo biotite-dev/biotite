@@ -407,7 +407,7 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
         is equal to the size of a symbol box.
     symbol_spacing : int, optional
         А space is placed between each number of elements desired
-        by variable (github issue #360)
+        by variable.
 
     See also
     --------
@@ -447,7 +447,11 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
 
     if symbol_spacing:
         spacing_ratio = symbols_per_line / symbol_spacing
-        symbols_to_print = round(spacing_ratio) + symbols_per_line - 1
+        if spacing_ratio % 1 != 0:
+            raise ValueError("symbols_per_line not multiple of symbol_spacing")
+        # Initializing symbols_to_print to print symbols_per_line
+        # symbols on one line + spacing between symbols
+        symbols_to_print = int(spacing_ratio) + symbols_per_line - 1
     else:
         symbols_to_print = symbols_per_line
 
@@ -520,8 +524,6 @@ def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
     number_axes.set_yticks(ticks)
     number_axes.set_yticklabels(tick_labels)
 
-    if symbol_spacing and spacing_ratio % 1 != 0:
-        symbols_to_print += 1
     axes.set_xlim(0, symbols_to_print)
     # Y-axis starts from top
     lim = seq_num*line_count + spacing*(line_count-1)
@@ -641,7 +643,7 @@ def plot_alignment_similarity_based(axes, alignment, symbols_per_line=50,
         :class:`matplotlib.Text` instance of each symbol.
     symbol_spacing : int, optional
         А space is placed between each number of elements desired
-        by variable (github issue #360)
+        by variable.
 
     See also
     --------
@@ -776,7 +778,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         :class:`matplotlib.Text` instance of each symbol.
     symbol_spacing : int, optional
         А space is placed between each number of elements desired
-        by variable (github issue #360)
+        by variable.
 
     See also
     --------
