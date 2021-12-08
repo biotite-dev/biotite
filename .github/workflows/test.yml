@@ -57,7 +57,7 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest --ignore=tests//structure//test_trajectory.py --ignore=tests//sequence//align//test_statistics.py --ignore=tests//application --ignore=tests//database --ignore=tests//test_doctest.py
+        run: pytest --ignore=tests//structure//test_trajectory.py --ignore=tests//sequence//align//test_statistics.py --ignore=tests//application --ignore=tests//database --ignore=tests//test_doctest.py  --ignore=tests//test_modname.py
   
 
   test-thorough:

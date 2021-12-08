@@ -90,6 +90,7 @@
             "align_ungapped",
             "align_optimal",
             "align_local_ungapped",
+            "align_local_gapped",
             "align_banded",
             "align_multiple"
         ],

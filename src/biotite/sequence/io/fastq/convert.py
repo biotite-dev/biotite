@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from collections import OrderedDict
