@@ -383,7 +383,7 @@ Furthermore, the following software must be installed:
    - *Autodock Vina*
 
 If you use the *Conda* package manager, there is a shortcut:
-Cou can download a *Conda* environment from
+You can download a *Conda* environment from
 `here <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_,
 that contains all of these requirements.
 How to create and activate the environment from the ``environment.yml`` file,
