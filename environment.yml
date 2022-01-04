@@ -10,14 +10,14 @@ channels:
   - bioconda
 
 dependencies:
-  - python =3.10
+  - python =3.9
   - setuptools >=30.0
   - pip >=10.0
   - wheel >=0.30
   - requests >=2.12
   - numpy >=1.15
   - scipy >=0.14
-  - scikit-learn >= 0.18.0
+  - scikit-learn >=0.18
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
