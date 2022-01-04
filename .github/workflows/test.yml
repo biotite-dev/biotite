@@ -48,6 +48,8 @@ jobs:
           activate-environment: biotite-dev
           auto-update-conda: true
           python-version: ${{ matrix.python }}
+          mamba-version: "*"
+          channels: conda-forge,defaults
       - name: Installing dependencies
         run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
         env:
@@ -75,6 +77,8 @@ jobs:
           activate-environment: biotite-dev
           environment-file: environment.yml
           auto-update-conda: true
+          mamba-version: "*"
+          channels: conda-forge,defaults
       - name: Building distribution
         run: python setup.py bdist_wheel
       - name: Installing distribution

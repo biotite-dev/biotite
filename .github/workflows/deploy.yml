@@ -58,6 +58,8 @@ jobs:
           activate-environment: biotite-dev
           auto-update-conda: true
           python-version: ${{ matrix.python }}
+          mamba-version: "*"
+          channels: conda-forge,defaults
       - name: Installing dependencies
         run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION 
         env:
