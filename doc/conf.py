@@ -54,6 +54,9 @@ pybtex.plugin.register_plugin(
     "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
 )
 
+#### Source code link ###
+
+linkcode_resolve = viewcode.linkcode_resolve
 
 #### General ####
 
@@ -71,7 +74,7 @@ extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
               "sphinx.ext.doctest",
               "sphinx.ext.mathjax",
-              "sphinx.ext.viewcode",
+              "sphinx.ext.linkcode",
               "sphinxcontrib.bibtex",
               "sphinx_gallery.gen_gallery",
               "numpydoc"]
@@ -166,5 +169,3 @@ sphinx_gallery_conf = {
 
 def setup(app):
     app.connect("autodoc-skip-member", apidoc.skip_non_methods)
-    app.connect("viewcode-follow-imported", viewcode.find_actual_module)
-    app.connect("viewcode-find-source", viewcode.index_source)
