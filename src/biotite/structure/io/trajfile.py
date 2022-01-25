@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TrajectoryFile"]
 
+import itertools
 import abc
 import numpy as np
 from ..atoms import AtomArray, AtomArrayStack, stack, from_template
@@ -325,6 +326,58 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             f.write(**param)
     
 
+    @classmethod
+    def write_iter(cls, file_name, coord, box=None, time=None):
+        """
+        Iterate over the given `coord` and write each item into
+        the file specified by `file_name`.
+
+        In contrast to :meth:`write()`, the data is not stored in an
+        intermediate :class:`TrajectoryFile`, but is directly written
+        to the file.
+        Hence, this class method may save a large amount of memory if
+        a large file should be written, if `coord` are provided as
+        generator.
+        
+        Parameters
+        ----------
+        file_name : str
+            The path of the file to be written to.
+            A file-like-object cannot be used.
+        coord : generator or array-like of ndarray, shape=(n,3), dtype=float
+            The atom coordinates for each frame.
+        box : generator or array-like of ndarray, shape=(3,3), dtype=float, optional
+            The three box vectors for each frame.
+        time : generator or array-like of float, optional
+            The simulation time in *ps* for each frame.
+
+        Notes
+        -----
+        The `time` parameter has no effect for *TNG* and *DCD* files.
+        """
+        if box is None:
+            box = itertools.repeat(None)
+        if time is None:
+            time = itertools.repeat(None)
+
+        traj_type = cls.traj_type()
+        with traj_type(file_name, 'w') as f:
+            for c, b, t in zip(coord, box, time):
+                if c.ndim != 2:
+                    raise IndexError(
+                        f"Expected ndarray with 2 dimensions, got {c.ndim}"
+                    )
+                # Add new dimension of length one
+                # for compatibility with 'prepare_write_values()'
+                c = c[np.newaxis, :]
+                if b is not None:
+                    b = np.expand_dims(b, axis=0)
+                if t is not None:
+                    t = np.expand_dims(t, axis=0)
+                param = cls.prepare_write_values(c, b, t)
+                f.write(**param)
+    
+
     def get_coord(self):
         """
         Extract only the atom coordinates from the trajectory file.
@@ -345,7 +398,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         -------
         time : ndarray, dtype=float, shape=(m,)
             A one dimensional array containing the time values for the
-            frames, that were read fro the file.
+            frames, that were read from the file.
         """
         return self._time
     
@@ -383,7 +436,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Parameters
         ----------
         time : ndarray, dtype=float, shape=(m,)
-            The simulation time to be set.
+            The simulation time in *ps* to be set.
         """
         self._check_model_count(time)
         self._time = time

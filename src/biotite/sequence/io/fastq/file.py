@@ -51,7 +51,7 @@ class FastqFile(TextFile, MutableMapping):
     Parameters
     ----------
     offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
-        This value that is added to the quality score to obtain the
+        This value is added to the quality score to obtain the
         ASCII code.
         Can either be directly the value, or a string that indicates
         the score format.
@@ -219,7 +219,7 @@ class FastqFile(TextFile, MutableMapping):
             )
         if not isinstance(identifier, str):
             raise IndexError(
-                "'FastqFile' only supports header strings as keys"
+                "'FastqFile' only supports strings as identifier"
             )
         # Delete lines of entry corresponding to the identifier,
         # if already existing
@@ -227,7 +227,7 @@ class FastqFile(TextFile, MutableMapping):
             del self[identifier]
         
         # Create new lines
-        # Star with identifier line
+        # Start with identifier line
         new_lines = ["@" + identifier.replace("\n","").strip()]
         # Append new lines with sequence string (with line breaks)
         seq_start_i = len(new_lines)
@@ -239,12 +239,7 @@ class FastqFile(TextFile, MutableMapping):
         # Append sequence-score separator
         new_lines += ["+"]
         # Append scores
-        if not isinstance(scores, np.ndarray):
-            scores = np.array(scores)
-        scores = scores + self._offset
-        score_chars = scores.astype(np.int8, copy=False) \
-                            .tobytes() \
-                            .decode("ascii")
+        score_chars = _scores_to_score_str(scores, self._offset)
         score_start_i = len(new_lines)
         if self._chars_per_line is None:
             new_lines.append(score_chars)
@@ -440,6 +435,84 @@ class FastqFile(TextFile, MutableMapping):
             
             else:
                 raise InvalidFileError(f"FASTQ file is invalid")
+    
+
+    @staticmethod
+    def write_iter(file, items, offset, chars_per_line=None):
+        """
+        Iterate over the given `items` and write each item into
+        the specified `file`.
+
+        In contrast to :meth:`write()`, the lines of text are not stored
+        in an intermediate :class:`TextFile`, but are directly written
+        to the file.
+        Hence, this static method may save a large amount of memory if
+        a large file should be written, especially if the `items`
+        are provided as generator.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be written to.
+            Alternatively a file path can be supplied.
+        items : generator or array-like of tuple(str, tuple(str, ndarray))
+            The entries to be written into the file.
+            Each entry consists of an identifier string and a tuple
+            containing a sequence (as string) and a score array.
+        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+            This value is added to the quality score to obtain the
+            ASCII code.
+            Can either be directly the value, or a string that indicates
+            the score format.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            By default each sequence (and score string)
+            is put into one line.
+
+        Notes
+        -----
+        This method does not test, whether the given identifiers are
+        unambiguous.
+        """
+        offset = _convert_offset(offset)
+
+        def line_generator():
+            for item in items:
+                identifier, (sequence, scores) = item
+                if len(sequence) != len(scores):
+                    raise ValueError(
+                        f"Sequence has length {len(sequence)}, "
+                        f"but score length is {len(scores)}"
+                    )
+                if not isinstance(identifier, str):
+                    raise IndexError(
+                        "'FastqFile' only supports strings as identifier"
+                    )
+                
+                # Yield identifier line
+                yield "@" + identifier.replace("\n","").strip()
+
+                # Yield sequence line(s)
+                if chars_per_line is None:
+                    yield str(sequence)
+                else:
+                    for line in wrap_string(sequence, width=chars_per_line):
+                        yield line
+                
+                # Yield separator
+                yield "+"
+                
+                # Yield scores
+                score_chars = _scores_to_score_str(scores, offset)
+                if chars_per_line is None:
+                    yield score_chars
+                else:
+                    for line in wrap_string(score_chars, width=chars_per_line):
+                        yield line
+    
+        TextFile.write_iter(file, line_generator())
 
 
 def _score_str_to_scores(score_str, offset):
@@ -454,6 +527,13 @@ def _score_str_to_scores(score_str, offset):
     )
     scores -= offset
     return scores
+
+def _scores_to_score_str(scores, offset):
+    """
+    Convert score values into an ASCII string.
+    """
+    scores = np.asarray(scores) + offset
+    return scores.astype(np.int8, copy=False).tobytes().decode("ascii")
 
 def _convert_offset(offset_val_or_string):
     """
