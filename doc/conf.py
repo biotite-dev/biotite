@@ -35,7 +35,7 @@ import scraper
 import bibliography
 
 
-#Reset matplotlib params
+# Reset matplotlib params
 matplotlib.rcdefaults()
 
 # Creation of API documentation
