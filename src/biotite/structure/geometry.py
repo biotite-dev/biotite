@@ -30,7 +30,7 @@ def displacement(atoms1, atoms2, box=None):
     
     Parameters
     ----------
-    atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
+    atoms1, atoms2 : ndarray, shape=(m,n,3) or ndarray, shape=(n,3) or ndarray, shape=(3,) or Atom or AtomArray or AtomArrayStack
         The atoms to measure the displacement between.
         The vector from `atoms1` to `atoms2` is measured.
         The dimensions may vary.
@@ -46,10 +46,9 @@ def displacement(atoms1, atoms2, box=None):
     
     Returns
     -------
-    disp : ndarray
+    disp : ndarray, shape=(m,n,3) or ndarray, shape=(n,3) or ndarray, shape=(3,)
         The displacement vector(s). The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the last
-        axis.
+        the input `atoms` with the highest dimensionality.
     
     See also
     --------
