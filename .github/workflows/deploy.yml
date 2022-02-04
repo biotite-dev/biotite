@@ -16,7 +16,7 @@ jobs:
           - os: ubuntu-latest
             python: '3.9'
             numpy: '1.19'
-            source: true
+            source: false
           - os: ubuntu-latest
             python: '3.10'
             numpy: '1.21'
