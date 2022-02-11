@@ -16,6 +16,14 @@ import shutil
 from ..util import is_not_installed
 
 
+BIN_PATH = {
+    MuscleApp : "muscle",
+    Muscle5App : "muscle",
+    MafftApp : "mafft",
+    ClustalOmegaApp: "clustalo"
+}
+
+
 @pytest.fixture
 def sequences():
     return [seq.ProteinSequence(string) for string in [
@@ -26,42 +34,39 @@ def sequences():
 ]]
 
 
-@pytest.mark.parametrize("app_cls, bin_path, exp_ali, exp_order",
+@pytest.mark.parametrize("app_cls, exp_ali, exp_order",
     [(MuscleApp,
-      "muscle",
       "BIQT-ITE\n"
       "TITANITE\n"
       "BISM-ITE\n"
       "-IQL-ITE",
       [1, 2, 0, 3]),
      (Muscle5App,
-      "muscle",
       "BI-QTITE\n"
       "TITANITE\n"
       "BI-SMITE\n"
       "-I-QLITE",
       [0, 3, 1, 2]),
      (MafftApp,
-      "mafft",
       "-BIQTITE\n"
       "TITANITE\n"
       "-BISMITE\n"
       "--IQLITE",
       [0, 3, 2, 1]),
      (ClustalOmegaApp,
-      "clustalo",
       "-BIQTITE\n"
       "TITANITE\n"
       "-BISMITE\n"
       "--IQLITE",
      [1, 2, 0, 3])]
 )
-def test_msa(sequences, app_cls, bin_path, exp_ali, exp_order):
+def test_msa(sequences, app_cls, exp_ali, exp_order):
+    bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
 
     try:
-        app = app_cls(sequences, bin_path)
+        app = app_cls(sequences)
     except VersionError:
         pytest.skip(f"Invalid software version")
     app.start()
@@ -74,6 +79,10 @@ def test_msa(sequences, app_cls, bin_path, exp_ali, exp_order):
 
 
 def test_additional_options(sequences):
+    bin_path = BIN_PATH[ClustalOmegaApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+
     app1 = ClustalOmegaApp(sequences)
     app1.start()
     
@@ -90,6 +99,10 @@ def test_additional_options(sequences):
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
 def test_custom_substitution_matrix(sequences, app_cls):
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     alph = seq.ProteinSequence.alphabet
     # Strong identity matrix
     score_matrix = np.identity(len(alph)) * 1000
@@ -114,6 +127,10 @@ def test_custom_substitution_matrix(sequences, app_cls):
 @pytest.mark.filterwarnings("ignore")
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
 def test_custom_sequence_type(app_cls):
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
         ["foo", "bar", 42, "foo",        "foo", 42, 42],
@@ -151,6 +168,10 @@ def test_invalid_sequence_type_no_matrix(app_cls):
     A custom substitution matrix is required for normally unsupported
     sequence types.
     """
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
         ["foo", "bar", 42, "foo",        "foo", 42, 42],
@@ -169,6 +190,10 @@ def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
     The alphabet of the custom sequence type cannot be longer than the
     amino acid alphabet.
     """
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     alph = seq.Alphabet(range(50))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
         [1,2,3],
@@ -186,6 +211,10 @@ def test_invalid_muscle_version(sequences):
     One of `MuscleApp` and `Muscle5App` should raise an error, since one
     is incompatible with the installed version
     """
+    bin_path = BIN_PATH[MuscleApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     if is_not_installed("muscle"):
         pytest.skip(f"'muscle' is not installed")
 
@@ -195,6 +224,10 @@ def test_invalid_muscle_version(sequences):
 
 
 def test_clustalo_matrix(sequences):
+    bin_path = BIN_PATH[ClustalOmegaApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     ref_matrix = [
         [0, 1, 2, 3],
         [1, 0, 1, 2],
@@ -211,6 +244,10 @@ def test_clustalo_matrix(sequences):
 
 
 def test_clustalo_tree(sequences):
+    bin_path = BIN_PATH[ClustalOmegaApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     leaves = [phylo.TreeNode(index=i) for i in range(len(sequences))]
     inter1 = phylo.TreeNode([leaves[0], leaves[1]], [1.0, 1.0])
     inter2 = phylo.TreeNode([leaves[2], leaves[3]], [2.5, 2.5])
@@ -230,6 +267,10 @@ def test_clustalo_tree(sequences):
 
 
 def test_mafft_tree(sequences):
+    bin_path = BIN_PATH[MafftApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     app = MafftApp(sequences)
     app.start()
     app.join()
@@ -238,6 +279,10 @@ def test_mafft_tree(sequences):
 
 
 def test_muscle_tree(sequences):
+    bin_path = BIN_PATH[MuscleApp]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
     try:
         app = MuscleApp(sequences)
     except VersionError:
@@ -251,7 +296,14 @@ def test_muscle_tree(sequences):
 
 
 def test_muscle5_options(sequences):
-    app = Muscle5App(sequences)
+    bin_path = BIN_PATH[Muscle5App]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    
+    try:
+        app = Muscle5App(sequences)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
     app.use_super5()
     app.set_iterations(2, 100)
     app.set_thread_number(2)

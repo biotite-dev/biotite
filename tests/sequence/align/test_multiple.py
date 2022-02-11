@@ -5,6 +5,7 @@
 import pytest
 import biotite.sequence.align as align
 import biotite.application.muscle as muscle
+from biotite.application import VersionError
 from ...util import is_not_installed
 from .util import sequences
 
@@ -25,14 +26,22 @@ def test_align_multiple(sequences, gap_penalty):
     score of the MUSCLE alignment.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
-    alignment, order, tree, distances = align.align_multiple(
+    
+    test_alignment, order, tree, distances = align.align_multiple(
         sequences, matrix, gap_penalty=gap_penalty, terminal_penalty=True
     )
-    ref_alignment = muscle.MuscleApp.align(
-        sequences, matrix=matrix, gap_penalty=gap_penalty
+    test_score = align.score(
+        test_alignment, matrix, gap_penalty, terminal_penalty=True
     )
-    score = align.score(alignment, matrix, gap_penalty, terminal_penalty=True)
+    
+    try:
+        ref_alignment = muscle.MuscleApp.align(
+            sequences, matrix=matrix, gap_penalty=gap_penalty
+        )
+    except VersionError:
+        pytest.skip(f"Invalid Muscle software version")
     ref_score = align.score(
         ref_alignment, matrix, gap_penalty, terminal_penalty=True
     )
-    assert score >= ref_score * 0.5
+    
+    assert test_score >= ref_score * 0.5
