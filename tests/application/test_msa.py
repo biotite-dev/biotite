@@ -2,10 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from distutils.version import Version
 import biotite.sequence as seq
 import biotite.sequence.phylo as phylo
 import biotite.sequence.align as align
-from biotite.application.muscle import MuscleApp
+from biotite.application import VersionError
+from biotite.application.muscle import MuscleApp, Muscle5App
 from biotite.application.mafft import MafftApp
 from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
@@ -24,35 +26,48 @@ def sequences():
 ]]
 
 
-@pytest.mark.skipif(is_not_installed("muscle") or
-                    is_not_installed("mafft") or
-                    is_not_installed("clustalo"),
-                    reason="At least one MSA application is not installed")
-@pytest.mark.parametrize("app_cls, exp_ali, exp_order",
+@pytest.mark.parametrize("app_cls, bin_path, exp_ali, exp_order",
     [(MuscleApp,
+      "muscle",
       "BIQT-ITE\n"
       "TITANITE\n"
       "BISM-ITE\n"
       "-IQL-ITE",
-      [1,2,0,3]),                
+      [1, 2, 0, 3]),
+     (Muscle5App,
+      "muscle",
+      "BI-QTITE\n"
+      "TITANITE\n"
+      "BI-SMITE\n"
+      "-I-QLITE",
+      [0, 3, 1, 2]),
      (MafftApp,
+      "mafft",
       "-BIQTITE\n"
       "TITANITE\n"
       "-BISMITE\n"
       "--IQLITE",
-      [0,3,2,1]),
-     (ClustalOmegaApp, 
+      [0, 3, 2, 1]),
+     (ClustalOmegaApp,
+      "clustalo",
       "-BIQTITE\n"
       "TITANITE\n"
       "-BISMITE\n"
       "--IQLITE",
-     [1,2,0,3])]
+     [1, 2, 0, 3])]
 )
-def test_msa(sequences, app_cls, exp_ali, exp_order):
-    app = app_cls(sequences)
+def test_msa(sequences, app_cls, bin_path, exp_ali, exp_order):
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+
+    try:
+        app = app_cls(sequences, bin_path)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
+    print(alignment)
     order = app.get_alignment_order()
     assert str(alignment) == exp_ali
     assert order.tolist() == exp_order
@@ -85,7 +100,10 @@ def test_custom_substitution_matrix(sequences, app_cls):
         "BI-SMITE\n"
         "-I-QLITE"
     )
-    app = app_cls(sequences, matrix=matrix)
+    try:
+        app = app_cls(sequences, matrix=matrix)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -116,7 +134,10 @@ def test_custom_sequence_type(app_cls):
     score_matrix[score_matrix == 0] = -1000
     score_matrix[score_matrix == 1] = 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
-    app = app_cls(sequences, matrix=matrix)
+    try:
+        app = app_cls(sequences, matrix=matrix)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -136,7 +157,10 @@ def test_invalid_sequence_type_no_matrix(app_cls):
         ["foo",        42, "foo", "bar", "foo", 42, 42],
     ]]
     with pytest.raises(TypeError):
-        app = app_cls(sequences)
+        try:
+            app_cls(sequences)
+        except VersionError:
+            pytest.skip(f"Invalid software version")
 
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
@@ -151,7 +175,23 @@ def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
         [1,2,3],
     ]]
     with pytest.raises(TypeError):
-        pp = app_cls(sequences)
+        try:
+            app_cls(sequences)
+        except VersionError:
+            pytest.skip(f"Invalid software version")
+
+
+def test_invalid_muscle_version(sequences):
+    """
+    One of `MuscleApp` and `Muscle5App` should raise an error, since one
+    is incompatible with the installed version
+    """
+    if is_not_installed("muscle"):
+        pytest.skip(f"'muscle' is not installed")
+
+    with pytest.raises(VersionError):
+        MuscleApp(sequences)
+        Muscle5App(sequences)
 
 
 def test_clustalo_matrix(sequences):
@@ -198,10 +238,32 @@ def test_mafft_tree(sequences):
 
 
 def test_muscle_tree(sequences):
-    app = MuscleApp(sequences)
+    try:
+        app = MuscleApp(sequences)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
     app.start()
     app.join()
     tree1 = app.get_guide_tree(iteration="kmer")
     tree2 = app.get_guide_tree(iteration="identity")
     assert tree1 is not None
     assert tree2 is not None
+
+
+def test_muscle5_options(sequences):
+    app = Muscle5App(sequences)
+    app.use_super5()
+    app.set_iterations(2, 100)
+    app.set_thread_number(2)
+    app.start()
+
+    assert "-super5" in app.get_command()
+    assert "-consiters" in app.get_command()
+    assert "-refineiters" in app.get_command()
+    assert "-threads" in app.get_command()
+
+    app.join()
+    assert str(app.get_alignment()) == "BI-QTITE\n" \
+                                       "TITANITE\n" \
+                                       "BI-SMITE\n" \
+                                       "-I-QLITE"
