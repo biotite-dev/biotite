@@ -4,8 +4,8 @@
 
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Application", "AppStateError", "TimeoutError", "AppState",
-           "requires_state"]
+__all__ = ["Application", "AppStateError", "TimeoutError", "VersionError",
+           "AppState", "requires_state"]
 
 import abc
 import time
@@ -249,5 +249,12 @@ class AppStateError(Exception):
 class TimeoutError(Exception):
     """
     Indicate that the application's timeout expired.
+    """
+    pass
+
+
+class VersionError(Exception):
+    """
+    Indicate that the application's version is invalid.
     """
     pass

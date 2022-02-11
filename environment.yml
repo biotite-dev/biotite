@@ -32,7 +32,7 @@ dependencies:
   - dssp
   - clustalo
   - mafft
-  - muscle
+  - muscle =3
   - sra-tools
   - autodock-vina
   - viennarna
