@@ -6,12 +6,14 @@ __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MuscleApp"]
 
+import re
 import numbers
 import warnings
+import subprocess
 from tempfile import NamedTemporaryFile
 from ..localapp import cleanup_tempfile
 from ..msaapp import MSAApp
-from ..application import AppState, requires_state
+from ..application import AppState, VersionError, requires_state
 from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...sequence.align.matrix import SubstitutionMatrix
@@ -21,7 +23,7 @@ from ...sequence.phylo.tree import Tree
 
 class MuscleApp(MSAApp):
     """
-    Perform a multiple sequence alignment using MUSCLE.
+    Perform a multiple sequence alignment using MUSCLE version 3.
     
     Parameters
     ----------
@@ -31,6 +33,10 @@ class MuscleApp(MSAApp):
         Path of the MUSCLE binary.
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
+    
+    See also
+    ---------
+    Muscle5App
     
     Examples
     --------
@@ -51,6 +57,12 @@ class MuscleApp(MSAApp):
     """
     
     def __init__(self, sequences, bin_path="muscle", matrix=None):
+        major_version = get_version(bin_path)[0]
+        if major_version != 3:
+            raise VersionError(
+                f"Muscle 3 is required, got version {major_version}"
+            )
+        
         super().__init__(sequences, bin_path, matrix)
         self._gap_open = None
         self._gap_ext = None
@@ -67,8 +79,8 @@ class MuscleApp(MSAApp):
     def run(self):
         args = [
             "-quiet",
-            "-in",    self.get_input_file_path(),
-            "-out",   self.get_output_file_path(),
+            "-in", self.get_input_file_path(),
+            "-out", self.get_output_file_path(),
             "-tree1", self._out_tree1_file.name,
             "-tree2", self._out_tree2_file.name,
         ]
@@ -191,7 +203,7 @@ class MuscleApp(MSAApp):
         """
         Perform a multiple sequence alignment.
         
-        This is a convenience function, that wraps the :class:`MSAApp`
+        This is a convenience function, that wraps the :class:`MuscleApp`
         execution.
         
         Parameters
@@ -225,3 +237,16 @@ class MuscleApp(MSAApp):
         app.start()
         app.join()
         return app.get_alignment()
+
+
+def get_version(bin_path="muscle"):
+    output = subprocess.run(
+        [bin_path, "-version"], capture_output=True, text=True
+    )
+    # Find matches for version string containing major and minor version
+    match = re.search("\d+\.\d+", output.stdout)
+    if match is None:
+        raise subprocess.SubprocessError("Application did not print version")
+    version_string = match.group(0)
+    splitted = version_string.split(".")
+    return int(splitted[0]), int(splitted[1])

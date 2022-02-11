@@ -143,12 +143,13 @@ UNIPROT_URL = "https://www.uniprot.org/"
         "biotite.application.blast",
         [],
     ),
-    pytest.param(
-        "biotite.application.muscle",
-        ["biotite.sequence"],
-        marks = pytest.mark.skipif(
-            is_not_installed("muscle"), reason="Software is not installed")
-        ),
+    # Do not test Muscle due to version clash
+    #pytest.param(
+    #    "biotite.application.muscle",
+    #    ["biotite.sequence"],
+    #    marks = pytest.mark.skipif(
+    #        is_not_installed("muscle"), reason="Software is not installed")
+    #    ),
     pytest.param(
         "biotite.application.clustalo",
         ["biotite.sequence"],
@@ -205,7 +206,6 @@ def test_doctest(package_name, context_package_names):
     # Collect all attributes of this package and its subpackages
     # as globals for the doctests
     globs = {}
-    mod_names = []
     #The package itself is also used as context
     for name in context_package_names + [package_name]:
         context_package = import_module(name)

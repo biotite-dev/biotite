@@ -556,7 +556,7 @@ def residue_iter(array):
         
     Yields
     ------
-    chain : AtomArray or AtomArrayStack
+    residue : AtomArray or AtomArrayStack
         A single residue of the input `array`.
     
     Examples
