@@ -88,7 +88,7 @@ jobs:
   
 
   test-muscle5:
-    name: Testing Biotite's interface for MUSCLE 5
+    name: Testing Biotite's interface for Muscle 5
 
     runs-on: ubuntu-latest
     defaults:
@@ -105,7 +105,7 @@ jobs:
           mamba-version: "*"
           channels: conda-forge,defaults
       - name: Installing dependencies
-        run: conda install -c conda-forge "cython>=0.29" "numpy=1.19" "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
+        run: conda install -c conda-forge -c bioconda "muscle=5" "cython>=0.29" "numpy=1.19" "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2"
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building distribution
