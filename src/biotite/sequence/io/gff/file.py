@@ -303,7 +303,7 @@ class GFFFile(TextFile):
         
         line_index = self._entries[index]
         # Columns are tab separated
-        s = self.lines[line_index].split("\t")
+        s = self.lines[line_index].strip().split("\t")
         if len(s) != 9:
             raise InvalidFileError(f"Expected 9 columns, but got {len(s)}")
         seqid, source, type, start, end, score, strand, phase, attrib = s
