@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.application.fold"
+__name__ = "biotite.application.foldX"
 __author__ = "Mojmir Mutny"
 __all__ = ["FoldXApp"]
 
@@ -27,18 +27,22 @@ class FoldXApp(LocalApp):
     Parameters
     ----------
     receptor : AtomArray, shape=(n,)
-        The structure of the receptor molecule.
-        Must have an associated :class:`BondList`.
-        An associated ``charges`` annotation is recommended for proper
-        calculation of partial charges.
-
+        The structure of the proiten molecule.
+        
+    mutation : str, in classical mutation format
+    subunit  : std, a subunit index in the pdb file
     bin_path : str, optional
         Path to the *FoldX* binary.
 
     Examples
     --------
-
+    >>> # simple protein
+    >>> >>> receptor = atom_array
+    >>> app = FoldXApp(receptor,
+    ... "A34G+E44G", subunit = "A"
+    ... )
     """
+
     def __init__(self, receptor, mutation, subunit = 'B', bin_path="foldx"):
 
         super().__init__(bin_path)
@@ -55,10 +59,13 @@ class FoldXApp(LocalApp):
             "w", suffix=".pdb", delete=False
         )
 
+        self._rotabase_file  = NamedTemporaryFile(
+            "w", suffix=".txt", delete=False
+        )
+
         self._folding_file  = NamedTemporaryFile(
             "w", suffix=".txt", delete=False, prefix = "individual_list"
         )
-        
 
     @requires_state(AppState.CREATED)
     def set_seed(self, seed):
@@ -77,6 +84,14 @@ class FoldXApp(LocalApp):
 
 
     def setup_folding_file(self, subunit, mutation):
+        """
+        Create a temporarily folding file for the mutation
+
+        Parameters
+        ----------
+        subnut: str
+        mutation :str
+        """
         entry = [elem[0]+subunit+elem[1:] for elem in mutation.split("+")]
         self._folding_file.write(";".join(entry)+";\n")
         self._folding_file.flush()
@@ -103,14 +118,18 @@ class FoldXApp(LocalApp):
 
         # set up rotabase - copy to tempfile
         rotabase_path = "/".join(os.path.realpath(__file__).split("/")[0:-1])+"/rotabase.txt"
-        os.popen('cp '+rotabase_path+' '+getcwd()+"/rotabase.txt") 
-        
+        #os.popen('cp '+rotabase_path+' '+getcwd()+"/rotabase.txt") 
+        os.popen('cp '+rotabase_path+' '+self._rotabase_file.name)
+
         arguments = [
             "--command", "BuildModel",
             "--pdb", self._receptor_file.name.split("/")[-1],
             "--pdb-dir", temp,
             "--mutant-file", self._folding_file.name,
             "--output-dir", temp,
+            "--rotabaseLocation", self._rotabase_file.name,
+            #"--output-file", self._mutated_receptor_file.name.split("/")[-1], 
+            "--clean-mode", "1"
         ]
         self._output_filename = temp+"/"+self._receptor_file.name.split("/")[-1][:-4]+"_1.pdb"
         self.set_arguments(arguments)
@@ -122,9 +141,10 @@ class FoldXApp(LocalApp):
         cleanup_tempfile(self._receptor_file)
         cleanup_tempfile(self._mutated_receptor_file)
         cleanup_tempfile(self._folding_file)
+        cleanup_tempfile(self._rotabase_file)
 
         # remove rotabase file
-        os.remove(getcwd()+"/rotabase.txt")
+        #os.remove(getcwd()+"/rotabase.txt")
         
         # remove output_file 
         os.remove(self._output_filename)
@@ -140,32 +160,22 @@ class FoldXApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_mutant(self):
         """
-        Get the ligand structure with the conformations for each 
-        generated binding mode.
+        Get the mutant protein structure
 
         Returns
         -------
         ligand : AtomArrayStack
-            The docked ligand.
-            Each model corresponds to one binding mode.
-            The models are sorted from best to worst predicted binding
-            affinity.
+            The mutated protein
         
-        Notes
-        -----
-        The returned structure may contain less atoms than the input
-        structure, as *Vina* removes nonpolar hydrogen atoms.
-        Furthermore, the returned structure contains *AutoDock* atom
-        types as ``element`` annotation.
         """
         return self.new_mutant
 
     @staticmethod
     def mutate(receptor, mutation, bin_path="vina"):
         """
-        Dock a ligand to a receptor molecule using *AutoDock Vina*.
+        Mutate the protein with *FoldX BuildModel*.
 
-        This is a convenience function, that wraps the :class:`VinaApp`
+        This is a convenience function, that wraps the :class:`FoldX`
         execution.
 
         Parameters

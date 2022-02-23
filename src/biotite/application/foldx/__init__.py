@@ -3,10 +3,10 @@
 # information.
 
 """
-A subpackage for static ligand docking with *Autodock*.
+A subpackage for static ligand docking with *FoldX*.
 """
 
-__name__ = "biotite.application.autodock"
-__author__ = "Patrick Kunzmann"
+__name__ = "biotite.application.foldX"
+__author__ = "Mojmir Mutny"
 
 from .app import *

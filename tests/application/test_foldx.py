@@ -37,5 +37,4 @@ def test_folding():
     app.join()
     arr = app.get_mutant()
     file = PDBFile()
-    file.set_structure(arr)
-    file.write("test.pdb")
+    assert (file is not None)
