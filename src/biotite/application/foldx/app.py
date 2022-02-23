@@ -6,7 +6,6 @@ __name__ = "biotite.application.foldX"
 __author__ = "Mojmir Mutny"
 __all__ = ["FoldXApp"]
 
-
 import copy
 from tempfile import NamedTemporaryFile
 import numpy as np
@@ -15,6 +14,7 @@ from os import chdir, getcwd, remove
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
 from ...structure.io.pdbqt import PDBQTFile
+from ...structure.io.pdb import PDBFile
 from ...structure.residues import get_residue_starts_for, get_residue_masks
 from ...structure.bonds import find_connected
 from ...structure.error import BadStructureError
@@ -101,12 +101,8 @@ class FoldXApp(LocalApp):
         # Use different atom ID ranges for atoms in ligand and receptor
         # for unambiguous assignment, if the receptor contains flexible
         # residues
-        receptor_file = PDBQTFile()
-        receptor_file.set_structure(
-                self._receptor,
-                rotatable_bonds=None,
-                include_torsdof=False
-            )
+        receptor_file = PDBFile()
+        receptor_file.set_structure(self._receptor)
         receptor_file.write(self._receptor_file)
         self._receptor_file.flush()
 
@@ -152,7 +148,7 @@ class FoldXApp(LocalApp):
     
     def evaluate(self):
         super().evaluate()
-        out_file = PDBQTFile.read(self._output_filename)
+        out_file = PDBFile.read(self._output_filename)
         models = out_file.get_structure()
         self.new_mutant = models
     
