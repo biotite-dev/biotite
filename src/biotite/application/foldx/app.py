@@ -153,7 +153,6 @@ class FoldXApp(LocalApp):
         super().evaluate()
         out_file = PDBFile.read(self._output_filename)
         models = out_file.get_structure(include_bonds = True, model=1)
-        print (models)
         self.new_mutant = models
     
 
