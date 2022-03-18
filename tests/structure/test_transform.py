@@ -244,6 +244,17 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
     )
 
 
+def test_orient_principal_components(input_atoms):
+    if struc.coord(input_atoms).ndim != 2:
+        with pytest.raises(ValueError):
+            struc.orient_principal_components(input_atoms)
+        return
+    result = struc.orient_principal_components(input_atoms)
+    variance = struc.coord(result).var(axis=0)
+    assert type(result) == type(input_atoms)
+    assert (variance.argsort() == np.array([2, 1, 0])).all()
+
+
 @pytest.mark.parametrize("as_list", [False, True])
 @pytest.mark.parametrize("use_support", [False, True])
 @pytest.mark.parametrize("random_seed", np.arange(5))

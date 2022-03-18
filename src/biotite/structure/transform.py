@@ -10,7 +10,7 @@ that can be applied on structures.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["translate", "rotate", "rotate_centered", "rotate_about_axis",
-           "align_vectors"]
+           "orient_principal_components", "align_vectors"]
 
 import numpy as np
 from .geometry import centroid
@@ -232,6 +232,78 @@ def rotate_about_axis(atoms, axis, angle, support=None):
         positions += np.asarray(support)
     
     return _put_back(atoms, positions)
+
+
+def orient_principal_components(atoms):
+    """
+    Translate and rotate the atoms to be centered at the origin with the
+    principal axes aligned to x, y, and z.
+
+    Parameters
+    ----------
+    atoms : AtomArray or ndarray, shape=(n,3)
+        The atoms of which the coordinates are transformed.
+        The coordinates can be directly provided as :class:`ndarray`.
+
+    Returns
+    -------
+    AtomArray or ndarray, shape=(n,3)
+        The atoms with coordinates centered at the orgin and aligned with
+        xyz axes.
+
+    See Also
+    --------
+    rotate_centered
+    rotate_about_axis
+
+    Examples
+    --------
+    Align principal components to xyz axes
+
+    >>> print("original variance =", molecule.coord.var(axis=0))
+    original variance = [ 4.8955374  2.3114026 16.263195 ]
+    >>> moved = orient_principal_components(molecule)
+    >>> print("moved variance =", moved.coord.var(axis=0))
+    moved variance = [21.425678   1.1962254  0.8482297]
+    """
+    # Check user input
+    X = coord(atoms)
+    if X.ndim != 2:
+        raise ValueError(f"Expected input shape of (n, 3), got {X.shape}.")
+    row, col = X.shape
+    if (row < 3) or (col != 3):
+        raise ValueError(
+            f"Expected at least 3 entries, {row} given,"
+            f" and 3 dimensions, {col} given."
+        )
+
+    # place centroid of the atoms at the origin
+    M = X - X.mean(axis=0)
+
+    # iterate a few times to ensure the ideal rotation has been applied
+    identity = np.eye(3)
+    MAX_ITER = 50
+    for _ in range(MAX_ITER):
+        # PCA, W is the component matrix, s ~ explained variance
+        _, s, W = np.linalg.svd(M)
+
+        # sort 1st, 2nd, 3rd pca compontents along x, y, z
+        idx = s.argsort()[::-1]
+        A = np.eye(3)[:, idx]
+
+        # Run the Kabsch algorithm to orient principal components
+        # along the x, y, z axes
+        V, _, Wt = np.linalg.svd(W.T @ A)
+
+        if np.linalg.det(V) * np.linalg.det(Wt) < -0:
+            V[:, -1] *= -1
+        # Calculate rotation matrix
+        U = V @ Wt
+        if np.isclose(U, identity, atol=1e-5).all():
+            break
+        # Apply rotation, keep molecule centered on the origin
+        M = M @ U
+    return _put_back(atoms, M)
 
 
 def align_vectors(atoms, origin_direction, target_direction,
