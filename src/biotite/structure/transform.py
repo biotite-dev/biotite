@@ -8,7 +8,7 @@ that can be applied on structures.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann", "Claude J. Rogers"
 __all__ = ["translate", "rotate", "rotate_centered", "rotate_about_axis",
            "orient_principal_components", "align_vectors"]
 
@@ -234,16 +234,27 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     return _put_back(atoms, positions)
 
 
-def orient_principal_components(atoms):
+def orient_principal_components(atoms, order=None):
     """
-    Translate and rotate the atoms to be centered at the origin with the
-    principal axes aligned to x, y, and z.
+    Translate and rotate the atoms to be centered at the origin with
+    the principal axes aligned to the Cartesian axes, as specified by
+    the order keyword. By default, x, y, z.
+
+    By default, the resulting coordinates have the highest variance in
+    the x-axis and the lowest variance on the z-axis. Setting the order
+    keyword argument will change the direction of the highest variance.
+    For example, order=(2, 1, 0) results in highest valianxe along the
+    z-axis and lowest along the x-axis.
 
     Parameters
     ----------
     atoms : AtomArray or ndarray, shape=(n,3)
         The atoms of which the coordinates are transformed.
         The coordinates can be directly provided as :class:`ndarray`.
+    order : array-like, length=3
+        The order of decreasing variance. Setting order to (2, 0, 1)
+        results in highest variance along the y-axis and lowest along
+        the x-axis. Default = (0, 1, 2)
 
     Returns
     -------
@@ -258,52 +269,68 @@ def orient_principal_components(atoms):
 
     Examples
     --------
-    Align principal components to xyz axes
+    Align principal components to xyz axes (default), or specify the order
+    of variance.
 
-    >>> print("original variance =", molecule.coord.var(axis=0))
-    original variance = [ 4.8955374  2.3114026 16.263195 ]
-    >>> moved = orient_principal_components(molecule)
+    >>> print("original variance =", atom_array.coord.var(axis=0))
+    original variance = [26.517471 20.008837  9.324988]
+    >>> moved = orient_principal_components(atom_array)
     >>> print("moved variance =", moved.coord.var(axis=0))
-    moved variance = [21.425678   1.1962254  0.8482297]
+    moved variance = [28.906227 18.495403  8.449674]
+    >>> # Note the increase in variance along the x-axis
+    >>> # Specifying the order keyword changes the orientation
+    >>> moved_z = orient_principal_components(atom_array, order=(2, 1, 0))
+    >>> print("moved (zyx) variance =", moved_z.coord.var(axis=0))
+    moved (zyx) variance = [ 8.449674 18.495403 28.906227]
     """
     # Check user input
-    X = coord(atoms)
-    if X.ndim != 2:
-        raise ValueError(f"Expected input shape of (n, 3), got {X.shape}.")
-    row, col = X.shape
+    coords = coord(atoms)
+    if coords.ndim != 2:
+        raise ValueError(f"Expected input shape of (n, 3), got {coords.shape}.")
+    row, col = coords.shape
     if (row < 3) or (col != 3):
         raise ValueError(
             f"Expected at least 3 entries, {row} given,"
             f" and 3 dimensions, {col} given."
         )
+    if order is None:
+        order = np.array([0, 1, 2])
+    else:
+        order = np.asarray(order, dtype=int)
+        if order.shape != (3,):
+            raise ValueError(
+                f"Expected order to have shape (3,), not {order.shape}"
+            )
+        if not (np.sort(order) == np.arange(3)).all():
+            raise ValueError("Expected order to contain [0, 1, 2].")
 
     # place centroid of the atoms at the origin
-    M = X - X.mean(axis=0)
+    centered = coords - coords.mean(axis=0)
 
     # iterate a few times to ensure the ideal rotation has been applied
     identity = np.eye(3)
     MAX_ITER = 50
     for _ in range(MAX_ITER):
         # PCA, W is the component matrix, s ~ explained variance
-        _, s, W = np.linalg.svd(M)
+        _, sigma, components = np.linalg.svd(centered)
 
         # sort 1st, 2nd, 3rd pca compontents along x, y, z
-        idx = s.argsort()[::-1]
-        A = np.eye(3)[:, idx]
+        idx = sigma.argsort()[::-1][order]
+        ident = np.eye(3)[:, idx]
 
         # Run the Kabsch algorithm to orient principal components
         # along the x, y, z axes
-        V, _, Wt = np.linalg.svd(W.T @ A)
+        v, _, wt = np.linalg.svd(components.T @ ident)
 
-        if np.linalg.det(V) * np.linalg.det(Wt) < -0:
-            V[:, -1] *= -1
+        if np.linalg.det(v) * np.linalg.det(wt) < -0:
+            v[:, -1] *= -1
         # Calculate rotation matrix
-        U = V @ Wt
-        if np.isclose(U, identity, atol=1e-5).all():
+        rotation = v @ wt
+        if np.isclose(rotation, identity, atol=1e-5).all():
             break
         # Apply rotation, keep molecule centered on the origin
-        M = M @ U
-    return _put_back(atoms, M)
+        centered = centered @ rotation
+    return _put_back(atoms, centered)
 
 
 def align_vectors(atoms, origin_direction, target_direction,
