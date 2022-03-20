@@ -273,15 +273,15 @@ def orient_principal_components(atoms, order=None):
     of variance.
 
     >>> print("original variance =", atom_array.coord.var(axis=0))
-    original variance = [26.517471 20.008837  9.324988]
+    original variance = [26.517 20.009  9.325]
     >>> moved = orient_principal_components(atom_array)
     >>> print("moved variance =", moved.coord.var(axis=0))
-    moved variance = [28.906227 18.495403  8.449674]
+    moved variance = [28.906 18.495  8.450]
     >>> # Note the increase in variance along the x-axis
     >>> # Specifying the order keyword changes the orientation
     >>> moved_z = orient_principal_components(atom_array, order=(2, 1, 0))
     >>> print("moved (zyx) variance =", moved_z.coord.var(axis=0))
-    moved (zyx) variance = [ 8.449674 18.495403 28.906227]
+    moved (zyx) variance = [ 8.450 18.495 28.906]
     """
     # Check user input
     coords = coord(atoms)
