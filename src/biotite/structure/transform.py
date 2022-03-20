@@ -238,12 +238,12 @@ def orient_principal_components(atoms, order=None):
     """
     Translate and rotate the atoms to be centered at the origin with
     the principal axes aligned to the Cartesian axes, as specified by
-    the order keyword. By default, x, y, z.
+    the `order` parameter. By default, x, y, z.
 
     By default, the resulting coordinates have the highest variance in
-    the x-axis and the lowest variance on the z-axis. Setting the order
-    keyword argument will change the direction of the highest variance.
-    For example, order=(2, 1, 0) results in highest valianxe along the
+    the x-axis and the lowest variance on the z-axis. Setting the `order`
+    parameter will change the direction of the highest variance.
+    For example, ``order=(2, 1, 0)`` results in highest variance along the
     z-axis and lowest along the x-axis.
 
     Parameters
@@ -252,9 +252,9 @@ def orient_principal_components(atoms, order=None):
         The atoms of which the coordinates are transformed.
         The coordinates can be directly provided as :class:`ndarray`.
     order : array-like, length=3
-        The order of decreasing variance. Setting order to (2, 0, 1)
+        The order of decreasing variance. Setting `order` to ``(2, 0, 1)``
         results in highest variance along the y-axis and lowest along
-        the x-axis. Default = (0, 1, 2)
+        the x-axis. Default = ``(0, 1, 2)``.
 
     Returns
     -------
