@@ -7,3 +7,4 @@ CONTRIBUTORS
 - Tom David Müller <https://github.com/tomtomhdx>
 - Thomas Nevolianis <https://github.com/thomasnevolianis>
 - Maximilian Greil <https://github.com/MaxGreil>
+- Claude J. Rogers <https://github.com/claudejrogers>
