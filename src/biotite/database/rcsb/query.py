@@ -397,7 +397,7 @@ class StructureQuery(SingleQuery):
 
     >>> query = StructureQuery("1L2Y", chain="A")
     >>> print(sorted(search(query)))
-    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D']
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D', '7MQS']
     """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
