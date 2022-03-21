@@ -245,6 +245,45 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
 
 
 @pytest.mark.parametrize("as_list", [False, True])
+@pytest.mark.parametrize("order", (
+    np.array([0, 1, 2]),
+    np.array([0, 2, 1]),
+    np.array([1, 0, 2]),
+    np.array([2, 0, 1]),
+    np.array([2, 1, 0]),
+    np.array([1, 2, 0]),
+))
+def test_orient_principal_components(input_atoms, as_list, order):
+    """
+    Orient atoms such that the variance in each axis is greatest
+    where the value for `order` is smallest.
+
+    The number of dimensions in input_atoms must be 2.
+    """
+    if struc.coord(input_atoms).ndim != 2:
+        with pytest.raises(ValueError):
+            struc.orient_principal_components(input_atoms)
+        return
+
+    if as_list:
+        order = order.tolist()
+
+    result = struc.orient_principal_components(input_atoms, order=order)
+    neg_variance = -struc.coord(result).var(axis=0)
+    assert type(result) == type(input_atoms)
+    assert (neg_variance.argsort() == np.argsort(order)).all()
+
+
+@pytest.mark.parametrize("bad_order", (np.array([2, 3, 4]), np.arange(4)))
+def test_orient_principal_components_bad_order(input_atoms, bad_order):
+    """
+    Ensure correct inputs for `order`.
+    """
+    with pytest.raises(ValueError):
+        struc.orient_principal_components(input_atoms, order=bad_order)
+
+
+@pytest.mark.parametrize("as_list", [False, True])
 @pytest.mark.parametrize("use_support", [False, True])
 @pytest.mark.parametrize("random_seed", np.arange(5))
 def test_align_vectors(input_atoms, as_list, use_support, random_seed):
