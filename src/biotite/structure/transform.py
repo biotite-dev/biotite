@@ -437,8 +437,8 @@ def align_vectors(atoms, origin_direction, target_direction,
     # check that original and target direction are vectors of shape (3,)
     if origin_direction.shape != (3,):
         raise ValueError(
-            f"Expexted orgin vector to have shape (3,) "
-            f"got {origin_direction.shape}."
+            f"Expected origin vector to have shape (3,), "
+            f"got {origin_direction.shape}"
         )
     if target_direction.shape != (3,):
         raise ValueError(
