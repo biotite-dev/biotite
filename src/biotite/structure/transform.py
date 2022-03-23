@@ -428,13 +428,23 @@ def align_vectors(atoms, origin_direction, target_direction,
         A       2  LEU HD22   H        -6.255    7.544   -2.657
         A       2  LEU HD23   H        -5.592    8.445   -1.281
     """
-    origin_direction = np.asarray(origin_direction, dtype=np.float32)
-    target_direction = np.asarray(target_direction, dtype=np.float32)
+    origin_direction = np.asarray(
+        origin_direction, dtype=np.float32
+    ).squeeze()
+    target_direction = np.asarray(
+        target_direction, dtype=np.float32
+    ).squeeze()
     # check that original and target direction are vectors of shape (3,)
     if origin_direction.shape != (3,):
-        raise ValueError("Expexted orgin vector to have shape (3,).")
+        raise ValueError(
+            f"Expexted orgin vector to have shape (3,) "
+            f"got {origin_direction.shape}."
+        )
     if target_direction.shape != (3,):
-        raise ValueError("Expexted target vector to have shape (3,).")
+        raise ValueError(
+            f"Expexted target vector to have shape (3,) "
+            f"got {target_direction.shape}."
+        )
     if np.linalg.norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")
     if np.linalg.norm(target_direction) == 0:
