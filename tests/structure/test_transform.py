@@ -330,14 +330,6 @@ def test_align_vectors_non_vector_inputs(input_atoms):
     """
     Enure input vectors to ``struct.align_vectors`` are the correct shape.
     """
-    source_direction = np.random.rand(1, 3)
-    target_direction = np.random.rand(1, 3)
-    with pytest.raises(ValueError):
-        struc.align_vectors(
-            input_atoms,
-            source_direction,
-            target_direction,
-        )
     source_direction = np.random.rand(2, 3)
     target_direction = np.random.rand(2, 3)
     with pytest.raises(ValueError):
