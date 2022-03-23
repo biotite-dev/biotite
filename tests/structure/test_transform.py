@@ -324,3 +324,25 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
     assert np.allclose(
         struc.coord(restored), struc.coord(input_atoms), atol=1e-5
     )
+
+
+def test_align_vectors_non_vector_inputs(input_atoms):
+    """
+    Ensure input vectors to ``struct.align_vectors`` have the correct shape.
+    """
+    source_direction = np.random.rand(2, 3)
+    target_direction = np.random.rand(2, 3)
+    with pytest.raises(ValueError):
+        struc.align_vectors(
+            input_atoms,
+            source_direction,
+            target_direction,
+        )
+    source_direction = np.random.rand(4)
+    target_direction = np.random.rand(4)
+    with pytest.raises(ValueError):
+        struc.align_vectors(
+            input_atoms,
+            source_direction,
+            target_direction,
+        )

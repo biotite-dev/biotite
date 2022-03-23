@@ -428,8 +428,23 @@ def align_vectors(atoms, origin_direction, target_direction,
         A       2  LEU HD22   H        -6.255    7.544   -2.657
         A       2  LEU HD23   H        -5.592    8.445   -1.281
     """
-    origin_direction = np.asarray(origin_direction, dtype=np.float32)
-    target_direction = np.asarray(target_direction, dtype=np.float32)
+    origin_direction = np.asarray(
+        origin_direction, dtype=np.float32
+    ).squeeze()
+    target_direction = np.asarray(
+        target_direction, dtype=np.float32
+    ).squeeze()
+    # check that original and target direction are vectors of shape (3,)
+    if origin_direction.shape != (3,):
+        raise ValueError(
+            f"Expected origin vector to have shape (3,), "
+            f"got {origin_direction.shape}"
+        )
+    if target_direction.shape != (3,):
+        raise ValueError(
+            f"Expected target vector to have shape (3,), "
+            f"got {target_direction.shape}"
+        )
     if np.linalg.norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")
     if np.linalg.norm(target_direction) == 0:
@@ -452,11 +467,11 @@ def align_vectors(atoms, origin_direction, target_direction,
     norm_vector(target_direction)
     # Formula is taken from
     # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/476311#476311
-    v = np.cross(origin_direction, target_direction)
+    vx, vy, vz = np.cross(origin_direction, target_direction)
     v_c = np.array([
-        [         0, -v[..., 2],  v[..., 1]],
-        [ v[..., 2],          0, -v[..., 0]],
-        [-v[..., 1],  v[..., 0],          0]
+        [  0, -vz,  vy],
+        [ vz,   0, -vx],
+        [-vy,  vx,   0]
     ], dtype=float)
     cos_a = vector_dot(origin_direction, target_direction)
     if np.all(cos_a == -1):
@@ -464,7 +479,7 @@ def align_vectors(atoms, origin_direction, target_direction,
             "Direction vectors are point into opposite directions, "
             "cannot calculate rotation matrix"
         )
-    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1+cos_a)
+    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
     
     positions = matrix_rotate(positions, rot_matrix)
     
