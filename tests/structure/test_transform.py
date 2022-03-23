@@ -328,7 +328,7 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
 
 def test_align_vectors_non_vector_inputs(input_atoms):
     """
-    Enure input vectors to ``struct.align_vectors`` are the correct shape.
+    Ensure input vectors to ``struct.align_vectors`` have the correct shape.
     """
     source_direction = np.random.rand(2, 3)
     target_direction = np.random.rand(2, 3)
