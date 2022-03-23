@@ -442,8 +442,8 @@ def align_vectors(atoms, origin_direction, target_direction,
         )
     if target_direction.shape != (3,):
         raise ValueError(
-            f"Expexted target vector to have shape (3,) "
-            f"got {target_direction.shape}."
+            f"Expected target vector to have shape (3,), "
+            f"got {target_direction.shape}"
         )
     if np.linalg.norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")
