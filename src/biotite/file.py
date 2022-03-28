@@ -135,20 +135,12 @@ class TextFile(File, metaclass=abc.ABCMeta):
         # File name
         if isinstance(file, str):
             with open(file, "r") as f:
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    yield line
+                yield from f
         # File object
         else:
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
-            while True:
-                line = file.readline()
-                if not line:
-                    break
-                yield line
+            yield from file
 
     def write(self, file):
         """
@@ -236,17 +228,11 @@ def is_binary(file):
     if isinstance(file, io.BufferedIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
-    elif hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase):
-        return True
-    else:
-        return False
+    return hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase)
 
 
 def is_text(file):
     if isinstance(file, io.TextIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
-    elif hasattr(file, "file") and isinstance(file.file, io.TextIOBase):
-        return True
-    else:
-        return False
+    return hasattr(file, "file") and isinstance(file.file, io.TextIOBase)
