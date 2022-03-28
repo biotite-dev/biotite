@@ -3,7 +3,7 @@
 # information.
 
 __name__ = "biotite.structure.io.pdb"
-__author__ = "Patrick Kunzmann, Daniel Bauer"
+__author__ = "Patrick Kunzmann, Daniel Bauer, Claude J. Rogers"
 __all__ = ["PDBFile"]
 
 import warnings
@@ -100,7 +100,6 @@ class PDBFile(TextFile):
         else:
             return model_count
     
-
     def get_coord(self, model=None):
         """
         Get only the coordinates of the PDB file.
@@ -238,7 +237,6 @@ class PDBFile(TextFile):
                 coord[i,2] = float(line[46:54])
             return coord
 
-
     def get_structure(self, model=None, altloc="first", extra_fields=[],
                       include_bonds=False):
         """
@@ -360,7 +358,7 @@ class PDBFile(TextFile):
             element[i] = line[_element].strip()
             altloc_id[i] = line[_alt_loc]
             atom_id_raw[i] = line[_atom_id]
-            charge_raw[i] = line[_charge][::-1]  # turn "1-" to "-1"
+            charge_raw[i] = line[_charge][::-1]  # turn "1-" into "-1"
             occupancy[i] = float(line[_occupancy].strip())
             b_factor[i] = float(line[_temp_f].strip())
         
@@ -522,27 +520,28 @@ class PDBFile(TextFile):
         """
         natoms = array.array_length()
         annot_categories = array.get_annotation_categories()
-        hetero = np.where(array.hetero, "HETATM", "ATOM")
+        record = np.char.array(np.where(array.hetero, "HETATM", "ATOM"))
         # Check for optional annotation categories
         if "atom_id" in annot_categories:
             atom_id = array.atom_id
         else:
             atom_id = np.arange(1, natoms + 1)
         if "b_factor" in annot_categories:
-            b_factor = array.b_factor
+            b_factor = np.char.array([f"{b:>6.2f}" for b in array.b_factor])
         else:
-            b_factor = np.zeros(natoms)
+            b_factor = np.char.array(np.full(natoms, "  0.00", dtype="U6"))
         if "occupancy" in annot_categories:
-            occupancy = array.occupancy
+            occupancy = np.char.array([f"{o:>6.2f}" for o in array.occupancy])
         else:
-            occupancy = np.ones(natoms)
+            occupancy = np.char.array(np.full(natoms, "  1.00", dtype="U6"))
         if "charge" in annot_categories:
-            charge = [ str(np.abs(charge)) + "+" if charge > 0 else
-                      (str(np.abs(charge)) + "-" if charge < 0 else
-                       "")
-                      for charge in array.get_annotation("charge")]
+            charge = np.char.array(
+                [str(np.abs(charge)) + "+" if charge > 0 else
+                 (str(np.abs(charge)) + "-" if charge < 0 else "")
+                 for charge in array.get_annotation("charge")]
+            )
         else:
-            charge = np.full(natoms, "  ", dtype="U2")
+            charge = np.char.array(np.full(natoms, "  ", dtype="U2"))
 
         # Do checks on atom array (stack)
         if hybrid36:
@@ -564,36 +563,64 @@ class PDBFile(TextFile):
             raise ValueError("Some atom names exceed 4 characters")
 
         if hybrid36:
-            pdb_atom_id = [encode_hybrid36(i, 5).rjust(5) for i in atom_id]
-            pdb_res_id = [encode_hybrid36(i, 4).rjust(4) for i in array.res_id]
+            pdb_atom_id = np.char.array(
+                [encode_hybrid36(i, 5) for i in atom_id]
+            )
+            pdb_res_id = np.char.array(
+                [encode_hybrid36(i, 4) for i in array.res_id]
+            )
         else:
             # Atom IDs are supported up to 99999,
             # but negative IDs are also possible
-            pdb_atom_id = np.where(
+            pdb_atom_id = np.char.array(np.where(
                 atom_id > 0,
                 ((atom_id - 1) % 99999) + 1,
                 atom_id
-            )
+            ).astype(str))
             # Residue IDs are supported up to 9999,
             # but negative IDs are also possible
-            pdb_res_id = np.where(
+            pdb_res_id = np.char.array(np.where(
                 array.res_id > 0,
                 ((array.res_id - 1) % 9999) + 1,
                 array.res_id
-            )
+            ).astype(str))
         
+        names = np.char.array(
+            [f" {atm}" if len(elem) == 1 and len(atm) < 4 else atm
+             for atm, elem in zip(array.atom_name, array.element)]
+        )
+        res_names = np.char.array(array.res_name)
+        chain_ids = np.char.array(array.chain_id)
+        ins_codes = np.char.array(array.ins_code)
+        spaces = np.char.array(np.full(natoms, " ", dtype="U1"))
+        elements = np.char.array(array.element)
+
+        first_half = (
+            record.ljust(6) +
+            pdb_atom_id.rjust(5) +
+            spaces +
+            names.ljust(4) +
+            spaces + res_names.rjust(3) + spaces + chain_ids +
+            pdb_res_id.rjust(4) + ins_codes.rjust(1)
+        )
+
+        second_half = (
+            occupancy + b_factor + 10 * spaces +
+            elements.rjust(2) + charge.rjust(2)
+        )
+
         coords = array.coord
         if coords.ndim == 2:
             coords = coords[np.newaxis, ...]
         
-        lines = []
+        self.lines = []
         # Prepend a single CRYST1 record if we have box information
         if array.box is not None:
             box = array.box
             if len(box.shape) == 3:
                 box = box[0]
             a, b, c, alpha, beta, gamma = unitcell_from_vectors(box)
-            lines.append(
+            self.lines.append(
                 f"CRYST1{a:>9.3f}{b:>9.3f}{c:>9.3f}"
                 f"{np.rad2deg(alpha):>7.2f}{np.rad2deg(beta):>7.2f}"
                 f"{np.rad2deg(gamma):>7.2f} P 1           1"
@@ -603,45 +630,15 @@ class PDBFile(TextFile):
             # for an ArrayStack, this is run once
             # only add model lines if is_stack
             if is_stack:
-                lines.append(f"MODEL     {model_num:4}")
+                self.lines.append(f"MODEL     {model_num:4}")
             # Bundle non-coordinate data to simplify iteration
-            metadata = zip(
-                hetero,
-                pdb_atom_id,
-                array.atom_name,
-                array.res_name,
-                array.chain_id,
-                pdb_res_id,
-                array.ins_code,
-                occupancy,
-                b_factor,
-                array.element,
-                charge
+            self.lines.extend(
+                [f"{start:27}   {x:>8.3f}{y:>8.3f}{z:>8.3f}{end:26}"
+                 for start, (x, y, z), end in
+                 zip(first_half, coord_i, second_half)]
             )
-            for meta, (x, y, z) in zip(metadata, coord_i):
-                (
-                    record,
-                    atm_id,
-                    atm,
-                    res,
-                    chain,
-                    res_id,
-                    icode,
-                    occu,
-                    tfact,
-                    elem,
-                    chrg
-                ) = meta
-                # alignment for C, O, N different than FE, CA, NA
-                name = f" {atm}" if len(elem) == 1 and len(atm) < 4 else atm
-                lines.append(
-                    f"{record:6}{atm_id:5} {name:4} {res:3} {chain:1}{res_id:4}"
-                    f"{icode:1}   {x:>8.3f}{y:>8.3f}{z:>8.3f}{occu:>6.2f}"
-                    f"{tfact:>6.2f}          {elem:>2}{chrg:2}"
-                )
             if is_stack:
-                lines.append("ENDMDL")
-        self.lines = lines
+                self.lines.append("ENDMDL")
         
         # Add CONECT records if bonds are present
         if array.bonds is not None:
