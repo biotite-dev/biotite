@@ -15,13 +15,15 @@ __all__ = ["BondList", "BondType",
 
 cimport cython
 cimport numpy as np
-from libc.stdlib cimport realloc, malloc, free
+from libc.stdlib cimport free, malloc, realloc
 
-import numbers
 import itertools
+import numbers
 from enum import IntEnum
-import numpy as np
+
 import networkx as nx
+import numpy as np
+
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -1364,8 +1366,8 @@ _DEFAULT_DISTANCE_RANGE = {
     ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
 }
 
-def connect_via_distances(atoms, dict distance_range=None,
-                          atom_mask=None, bint inter_residue=True):
+def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
+                          bint inter_residue=True, default_bond_type=BondType.Any):
     """
     connect_via_distances(atoms, distance_range=None, atom_mask=None, inter_residue=True)
 
@@ -1401,7 +1403,9 @@ def connect_via_distances(atoms, dict distance_range=None,
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
-    
+    default_bond_type : BondType or int, optional
+        The default type of the bond. Default is :attr:`BondType.ANY`.
+
     Returns
     -------
     BondList
@@ -1424,9 +1428,9 @@ def connect_via_distances(atoms, dict distance_range=None,
     
     .. footbibliography::
     """
-    from .residues import get_residue_starts
-    from .geometry import distance
     from .atoms import AtomArray
+    from .geometry import distance
+    from .residues import get_residue_starts
 
     cdef list bonds = []
     cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())
@@ -1492,7 +1496,7 @@ def connect_via_distances(atoms, dict distance_range=None,
                     bonds.append((
                         curr_start_i + atom_index1,
                         curr_start_i + atom_index2,
-                        BondType.SINGLE
+                        default_bond_type
                     ))
 
     bond_list = BondList(atoms.array_length(), np.array(bonds))
@@ -1552,8 +1556,8 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     Although this includes most molecules one encounters, this will fail
     for exotic molecules, e.g. specialized inhibitors.
     """
-    from .residues import get_residue_starts
     from .info.bonds import bond_dataset
+    from .residues import get_residue_starts
 
     cdef list bonds = []
     cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())
