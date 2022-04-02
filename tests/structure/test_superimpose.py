@@ -104,3 +104,13 @@ def test_masked_superimposition(seed):
     
     struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)
+
+
+def test_ndarray_inputs_for_superimpose_raise_value_error():
+    """
+    Check that using incorrect types as inputs fails.
+    """
+    fixed = np.random.rand(3, 3)
+    mobile = np.random.rand(3, 3)
+    with pytest.raises(ValueError):
+        struc.superimpose(fixed, mobile)
