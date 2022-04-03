@@ -7,13 +7,11 @@ This module provides functions for structure superimposition.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Claude J. Rogers"
 __all__ = ["superimpose", "superimpose_apply"]
 
 import numpy as np
 from .geometry import centroid
-from .atoms import Atom, AtomArray, AtomArrayStack, stack
-from .error import BadStructureError
 
 
 def superimpose(fixed, mobile, atom_mask=None):
@@ -120,8 +118,8 @@ def superimpose(fixed, mobile, atom_mask=None):
             "Expected mobile array to be an AtomArray or AtomArrayStack"
         )
     if mdim == 2:
-        # normalize inputs so fixed coords has shape (n, 3) and mobile
-        # has shape (m, n, 3)
+        # normalize inputs. Fixed coords has shape (n, 3)
+        # and mobile has shape (m, n, 3)
         m_coord = m_coord[np.newaxis, ...]
 
     nmodels = m_coord.shape[0]
@@ -146,8 +144,6 @@ def superimpose(fixed, mobile, atom_mask=None):
     fix_filtered -= fix_centroid
     
     superimposed = mobile.copy()
-    # superimposed.cood could be 2 or 3D, so squeeze extra centroid dimension
-    # if mobile was an AtomArray, not an AtomArrayStack
     s_coord = m_coord.copy() - mob_centroid[..., np.newaxis, :]
     # Perform Kabsch algorithm for every model
     transformations = [None] * nmodels
