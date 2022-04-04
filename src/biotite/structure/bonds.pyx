@@ -1502,7 +1502,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     
     if inter_residue:
         inter_bonds = _connect_inter_residue(atoms, residue_starts)
-        if default_bond_type == BondType.Any:
+        if default_bond_type == BondType.ANY:
             # As all bonds should be of type ANY, convert also
             # inter-residue bonds to ANY
             inter_bonds.remove_bond_order()
