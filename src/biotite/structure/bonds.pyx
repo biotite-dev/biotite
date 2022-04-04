@@ -1367,7 +1367,7 @@ _DEFAULT_DISTANCE_RANGE = {
 }
 
 def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
-                          bint inter_residue=True, default_bond_type=BondType.Any):
+                          bint inter_residue=True, default_bond_type=BondType.ANY):
     """
     connect_via_distances(atoms, distance_range=None, atom_mask=None, inter_residue=True)
 
