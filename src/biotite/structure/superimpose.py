@@ -152,7 +152,7 @@ def superimpose(fixed, mobile, atom_mask=None):
         s_coord[i] = np.dot(rotation, s_coord[i].T).T
         transformations[i] = (-mob_centroid[i], rotation, fix_centroid)
     s_coord += fix_centroid
-   superimposed.coord = s_coord.reshape(mobile.coord.shape)
+    superimposed.coord = s_coord.reshape(mobile.coord.shape)
     if mdim == 2:
         return superimposed, transformations[0]
     return superimposed, transformations
