@@ -114,3 +114,29 @@ def test_ndarray_inputs_for_superimpose_raise_value_error():
     mobile = np.random.rand(3, 3)
     with pytest.raises(ValueError):
         struc.superimpose(fixed, mobile)
+
+
+@pytest.mark.parametrize(
+    "single_model, single_atom", itertools.product([False, True], [False, True])
+)
+def test_input_shapes(single_model, single_atom):
+    """
+    Test whether :func:`superimpose()` infers the correct output shape,
+    even if the input :class:`AtomArrayStack` contains only a single
+    model or a single atom.
+    """
+    path = join(data_dir("structure"), "1l2y.mmtf")
+    stack = strucio.load_structure(path)
+    fixed = stack[0]
+    
+    mobile = stack
+    if single_model:
+        mobile = mobile[:1, :]
+    if single_atom:
+        mobile = mobile[:, :1]
+        fixed = fixed[:1]
+    
+    fitted, _ = struc.superimpose(fixed, mobile)
+
+    assert type(fitted) == type(mobile)
+    assert fitted.coord.shape == mobile.coord.shape
