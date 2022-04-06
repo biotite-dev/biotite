@@ -632,7 +632,7 @@ def _call_non_index_function(function, expected_amount,
     if indices.shape[-1] != expected_amount:
         raise ValueError(
             f"Expected length {expected_amount} in the last dimension "
-            f"of the indices, but got length {pairs.shape[-1]}"
+            f"of the indices, but got length {indices.shape[-1]}"
         )
     coord_list = []
     for i in range(expected_amount):
