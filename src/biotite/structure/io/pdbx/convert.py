@@ -259,12 +259,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         return array
 
 
-def _fill_annotations(
-    array,
-    model_dict,
-    extra_fields,
-    use_author_fields,
-):
+def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
     """Fill atom_site annotations in atom array or atom array stack.
 
     Parameters
