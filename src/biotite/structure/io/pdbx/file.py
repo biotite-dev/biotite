@@ -10,7 +10,6 @@ import copy
 import shlex
 from collections.abc import MutableMapping
 import numpy as np
-
 from ....file import TextFile
 
 
