@@ -202,7 +202,9 @@ def get_structure(
                 "instead"
             )
 
-        stack.coord = np.zeros((model_count, model_length, 3), dtype=np.float32)
+        stack.coord = np.zeros(
+            (model_count, model_length, 3), dtype=np.float32
+        )
         stack.coord[:, :, 0] = atom_site_dict["Cartn_x"].reshape(
             (model_count, model_length)
         )
@@ -241,14 +243,22 @@ def get_structure(
         _fill_annotations(array, model_dict, extra_fields, use_author_fields)
 
         # Append exclusive stop
-        model_starts = np.append(model_starts, [len(atom_site_dict["group_PDB"])])
+        model_starts = np.append(
+            model_starts, [len(atom_site_dict["group_PDB"])]
+        )
         # Indexing starts at 0, but model number starts at 1
         model_index = model - 1
         start, stop = model_starts[model_index], model_starts[model_index + 1]
         array.coord = np.zeros((model_length, 3), dtype=np.float32)
-        array.coord[:, 0] = atom_site_dict["Cartn_x"][start:stop].astype(np.float32)
-        array.coord[:, 1] = atom_site_dict["Cartn_y"][start:stop].astype(np.float32)
-        array.coord[:, 2] = atom_site_dict["Cartn_z"][start:stop].astype(np.float32)
+        array.coord[:, 0] = atom_site_dict["Cartn_x"][start:stop].astype(
+            np.float32
+        )
+        array.coord[:, 1] = atom_site_dict["Cartn_y"][start:stop].astype(
+            np.float32
+        )
+        array.coord[:, 2] = atom_site_dict["Cartn_z"][start:stop].astype(
+            np.float32
+        )
 
         array = _filter_altloc(array, model_dict, altloc)
 
@@ -293,7 +303,9 @@ def _fill_annotations(
     ):
         """Get and format annotation array from model dictionary."""
         array = (
-            get_or_fallback_from_dict(model_dict, annotation_name, annotation_fallback)
+            get_or_fallback_from_dict(
+                model_dict, annotation_name, annotation_fallback
+            )
             if annotation_fallback is not None
             else model_dict[annotation_name]
         )
@@ -301,7 +313,9 @@ def _fill_annotations(
             array = array.astype(as_type)
         return formatter(array) if formatter is not None else array
 
-    prefix, alt_prefix = ("auth", "label") if use_author_fields else ("label", "auth")
+    prefix, alt_prefix = (
+        ("auth", "label") if use_author_fields else ("label", "auth")
+    )
 
     annotation_data = {
         "chain_id": (f"{prefix}_asym_id", f"{alt_prefix}_asym_id", "U4", None),
@@ -317,11 +331,18 @@ def _fill_annotations(
             "pdbx_PDB_ins_code",
             None,
             "U1",
-            lambda annot: np.array(["" if elt in [".", "?"] else elt for elt in annot]),
+            lambda annot: np.array(
+                ["" if elt in [".", "?"] else elt for elt in annot]
+            ),
         ),
         "res_name": (f"{prefix}_comp_id", f"{alt_prefix}_comp_id", "U3", None),
         "hetero": ("group_PDB", None, None, lambda annot: annot == "HETATM"),
-        "atom_name": (f"{prefix}_atom_id", f"{alt_prefix}_atom_id", "U6", None),
+        "atom_name": (
+            f"{prefix}_atom_id",
+            f"{alt_prefix}_atom_id",
+            "U6",
+            None,
+        ),
         "element": ("type_symbol", None, "U2", None),
         "atom_id": ("id", None, int, None),
         "b_factor": ("B_iso_or_equiv", None, float, None),
@@ -331,7 +352,10 @@ def _fill_annotations(
             None,
             None,
             lambda annot: np.array(
-                [0 if charge in ["?", "."] else int(charge) for charge in annot],
+                [
+                    0 if charge in ["?", "."] else int(charge)
+                    for charge in annot
+                ],
                 dtype=int,
             ),
         ),
@@ -351,9 +375,13 @@ def _fill_annotations(
     for annotation_name in mandatory_annotations + extra_fields:
         array.set_annotation(
             annotation_name,
-            get_annotation_from_model(model_dict, *annotation_data[annotation_name])
+            get_annotation_from_model(
+                model_dict, *annotation_data[annotation_name]
+            )
             if annotation_name in annotation_data
-            else get_annotation_from_model(model_dict, annotation_name, as_type=str),
+            else get_annotation_from_model(
+                model_dict, annotation_name, as_type=str
+            ),
         )
 
 
@@ -367,7 +395,9 @@ def _filter_altloc(array, model_dict, altloc):
     elif altloc == "occupancy" and occupancy is not None:
         return array[
             ...,
-            filter_highest_occupancy_altloc(array, altloc_ids, occupancy.astype(float)),
+            filter_highest_occupancy_altloc(
+                array, altloc_ids, occupancy.astype(float)
+            ),
         ]
     # 'first' is also fallback if file has no occupancy information
     elif altloc == "first":
@@ -395,7 +425,9 @@ def _get_model_dict(atom_site_dict, model_starts, model):
     model.
     """
     # Append exclusive stop
-    model_starts = np.append(model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])])
+    model_starts = np.append(
+        model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])]
+    )
     model_dict = {}
     # Indexing starts at 0, but model number starts at 1
     model_index = model - 1
@@ -415,7 +447,8 @@ def _get_box(pdbx_file, data_block):
         return None
     try:
         len_a, len_b, len_c = [
-            float(cell_dict[length]) for length in ["length_a", "length_b", "length_c"]
+            float(cell_dict[length])
+            for length in ["length_a", "length_b", "length_c"]
         ]
     except ValueError:
         # 'cell_dict' has no proper unit cell values, e.g. '?'
@@ -515,13 +548,17 @@ def set_structure(pdbx_file, array, data_block=None):
         atom_site_dict["Cartn_z"] = np.array(
             [f"{c:.3f}" for c in np.ravel(array.coord[..., 2])]
         )
-        atom_site_dict["pdbx_PDB_model_num"] = np.full(array.array_length(), "1")
+        atom_site_dict["pdbx_PDB_model_num"] = np.full(
+            array.array_length(), "1"
+        )
     # In case of multiple models repeat annotations
     # and use model specific coordinates
     elif type(array) == AtomArrayStack:
         for key, value in atom_site_dict.items():
             atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
-        coord = np.reshape(array.coord, (array.stack_depth() * array.array_length(), 3))
+        coord = np.reshape(
+            array.coord, (array.stack_depth() * array.array_length(), 3)
+        )
         atom_site_dict["Cartn_x"] = np.array([f"{c:.3f}" for c in coord[:, 0]])
         atom_site_dict["Cartn_y"] = np.array([f"{c:.3f}" for c in coord[:, 1]])
         atom_site_dict["Cartn_z"] = np.array([f"{c:.3f}" for c in coord[:, 2]])
@@ -613,7 +650,9 @@ def list_assemblies(pdbx_file, data_block=None):
         raise InvalidFileError("File has no 'pdbx_struct_assembly' category")
     return {
         id: details
-        for id, details in zip(assembly_category["id"], assembly_category["details"])
+        for id, details in zip(
+            assembly_category["id"], assembly_category["details"]
+        )
     }
 
 
@@ -694,7 +733,9 @@ def get_assembly(
         "pdbx_struct_assembly_gen", data_block, expect_looped=True
     )
     if assembly_gen_category is None:
-        raise InvalidFileError("File has no 'pdbx_struct_assembly_gen' category")
+        raise InvalidFileError(
+            "File has no 'pdbx_struct_assembly_gen' category"
+        )
 
     struct_oper_category = pdbx_file.get_category(
         "pdbx_struct_oper_list", data_block, expect_looped=True
@@ -731,7 +772,12 @@ def get_assembly(
     else:
         extra_fields_and_asym = extra_fields + ["label_asym_id"]
     structure = get_structure(
-        pdbx_file, model, data_block, altloc, extra_fields_and_asym, use_author_fields
+        pdbx_file,
+        model,
+        data_block,
+        altloc,
+        extra_fields_and_asym,
+        use_author_fields,
     )
     # Filter asym IDs
     structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
@@ -744,11 +790,18 @@ def get_assembly(
     if model is None:
         # Coordinates for AtomArrayStack
         assembly_coord = np.zeros(
-            (len(operations), structure.stack_depth(), structure.array_length(), 3)
+            (
+                len(operations),
+                structure.stack_depth(),
+                structure.array_length(),
+                3,
+            )
         )
     else:
         # Coordinates for AtomArray
-        assembly_coord = np.zeros((len(operations), structure.array_length(), 3))
+        assembly_coord = np.zeros(
+            (len(operations), structure.array_length(), 3)
+        )
 
     ### Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
@@ -771,7 +824,10 @@ def _get_transformations(struct_oper):
     for index, id in enumerate(struct_oper["id"]):
         rotation_matrix = np.array(
             [
-                [float(struct_oper[f"matrix[{i}][{j}]"][index]) for j in (1, 2, 3)]
+                [
+                    float(struct_oper[f"matrix[{i}][{j}]"][index])
+                    for j in (1, 2, 3)
+                ]
                 for i in (1, 2, 3)
             ]
         )
@@ -796,7 +852,9 @@ def _parse_operation_expression(expression):
         if "-" in expr:
             # Range of operation IDs, they must be integers
             first, last = expr.split("-")
-            operations.append([str(id) for id in range(int(first), int(last) + 1)])
+            operations.append(
+                [str(id) for id in range(int(first), int(last) + 1)]
+            )
         elif "," in expr:
             # List of operation IDs
             operations.append(expr.split(","))
@@ -820,4 +878,6 @@ def _convert_string_to_sequence(string, stype):
     elif stype in _other_type_list:
         return None
     else:
-        raise InvalidFileError("mmCIF _entity_poly.type unsupported" " type: " + stype)
+        raise InvalidFileError(
+            "mmCIF _entity_poly.type unsupported" " type: " + stype
+        )

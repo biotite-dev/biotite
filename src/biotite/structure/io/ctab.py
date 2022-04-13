@@ -124,7 +124,8 @@ def write_structure_to_ctab(atoms, default_bond_type: int = 8):
     """
     if isinstance(atoms, AtomArrayStack):
         raise TypeError(
-            "An 'AtomArrayStack' was given, " "but only a single model can be written"
+            "An 'AtomArrayStack' was given, "
+            "but only a single model can be written"
         )
     if atoms.bonds is None:
         raise BadStructureError("Input AtomArray has no associated BondList")
@@ -150,7 +151,8 @@ def write_structure_to_ctab(atoms, default_bond_type: int = 8):
     ]
 
     counts_line = (
-        f"{len(atom_lines):>3d}{len(bond_lines):>3d}   " + f"  0  0  0  0  0  1 V2000"
+        f"{len(atom_lines):>3d}{len(bond_lines):>3d}   "
+        + f"  0  0  0  0  0  1 V2000"
     )
 
     return [counts_line] + atom_lines + bond_lines + ["M  END"]

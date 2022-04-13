@@ -148,7 +148,9 @@ class PDBxFile(TextFile, MutableMapping):
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is in the
                         # next line
-                        category_in_line = _get_category_name(file.lines[i + 1])
+                        category_in_line = _get_category_name(
+                            file.lines[i + 1]
+                        )
                     is_loop = is_loop_in_line
                     current_category = category_in_line
                     start = i
@@ -163,7 +165,12 @@ class PDBxFile(TextFile, MutableMapping):
         # this needs to be handled separately
         stop = len(file.lines)
         file._add_category(
-            data_block, current_category, start, stop, is_loop, has_multiline_values
+            data_block,
+            current_category,
+            start,
+            stop,
+            is_loop,
+            has_multiline_values,
         )
         return file
 
@@ -274,7 +281,8 @@ class PDBxFile(TextFile, MutableMapping):
 
         if expect_looped and not is_loop:
             category_dict = {
-                key: np.array([val], dtype=object) for key, val in category_dict.items()
+                key: np.array([val], dtype=object)
+                for key, val in category_dict.items()
             }
 
         return category_dict
@@ -342,7 +350,9 @@ class PDBxFile(TextFile, MutableMapping):
         # Hence make a copy to avoid unwanted side effects
         # due to modification of input values
         if is_looped:
-            category_dict = {key: val.copy() for key, val in category_dict.items()}
+            category_dict = {
+                key: val.copy() for key, val in category_dict.items()
+            }
 
         # Enclose values with quotes if required
         for key, value in category_dict.items():
@@ -357,7 +367,8 @@ class PDBxFile(TextFile, MutableMapping):
 
         if is_looped:
             keylines = [
-                "_" + category + "." + key + " " for key in category_dict.keys()
+                "_" + category + "." + key + " "
+                for key in category_dict.keys()
             ]
             value_arr = list(category_dict.values())
             # Array containing the number of characters + whitespace
@@ -512,9 +523,13 @@ class PDBxFile(TextFile, MutableMapping):
         elif isinstance(index, str):
             return self.get_block_names()[0], index
         else:
-            raise TypeError(f"'{type(index).__name__}' is an invalid index type")
+            raise TypeError(
+                f"'{type(index).__name__}' is an invalid index type"
+            )
 
-    def _add_category(self, block, category_name, start, stop, is_loop, is_multilined):
+    def _add_category(
+        self, block, category_name, start, stop, is_loop, is_multilined
+    ):
         # Before the first category starts,
         # the current_category is None
         # This is checked before adding an entry
