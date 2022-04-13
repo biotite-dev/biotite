@@ -98,14 +98,8 @@ def get_model_count(file, data_block=None):
     return len(_get_model_starts(atom_site_dict["pdbx_PDB_model_num"]))
 
 
-def get_structure(
-    pdbx_file,
-    model=None,
-    data_block=None,
-    altloc="first",
-    extra_fields=None,
-    use_author_fields=True,
-):
+def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
+                  extra_fields=None, use_author_fields=True):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a :class:`PDBxFile`.
