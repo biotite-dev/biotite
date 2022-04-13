@@ -113,6 +113,9 @@ def write_structure_to_ctab(atoms, default_bond_type=8):
         The lines containing the *ctab*.
         The lines begin with the *counts* line and end with the `M END`
         .line
+    default_bond_type : int
+        Bond type fallback in the *Bond block* if a bond has no bond_type
+        defined in *atoms* array.
 
     References
     ----------
@@ -142,7 +145,8 @@ def write_structure_to_ctab(atoms, default_bond_type=8):
     ]
 
     bond_lines = [
-        f"{i+1:>3d}{j+1:>3d}{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_type):>3d}"
+        f"{i+1:>3d}{j+1:>3d}"
+        f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_type):>3d}"
         + f"{0:>3d}" * 4
         for i, j, bond_type in atoms.bonds.as_array()
     ]
