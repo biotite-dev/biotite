@@ -15,9 +15,7 @@ __all__ = [
 
 import itertools
 from collections import OrderedDict
-
 import numpy as np
-
 from ....file import InvalidFileError
 from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...atoms import AtomArray, AtomArrayStack, repeat
@@ -284,14 +282,14 @@ def _fill_annotations(
     extra_fields : List[str]
         Entry names, that are additionally added as annotation arrays.
     use_author_fields : bool
-        Define if alternate fields prefixed with auth should be used instead of label
-        prefix
+        Define if alternate fields prefixed with auth should be used instead
+        of label prefix
     """
 
     def get_or_fallback_from_dict(input_dict, key, fallback_key):
         """
-        Return value related to key in input dict if it exists otherwise try to get the
-        value related to fallback key."""
+        Return value related to key in input dict if it exists otherwise try
+        to get the value related to fallback key."""
         return input_dict[key if key in input_dict else fallback_key]
 
     def get_annotation_from_model(
