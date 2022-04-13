@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 import itertools
+import warnings
 from collections import OrderedDict
 import numpy as np
 from ....file import InvalidFileError
@@ -275,11 +276,25 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         instead of ``label_``.
     """
 
-    def get_or_fallback_from_dict(input_dict, key, fallback_key):
+    def get_or_fallback_from_dict(input_dict, key, fallback_key,
+                                  dict_name="input"):
         """
-        Return value related to key in input dict if it exists otherwise try
-        to get the value related to fallback key."""
-        return input_dict[key if key in input_dict else fallback_key]
+        Return value related to key in input dict if it exists,
+        otherwise try to get the value related to fallback key."""
+        if key not in input_dict:
+            warnings.warn(
+                f"Key {key} not found within {dict_name} dictionnary. The "
+                f"fallback key {fallback_key} will be used instead",
+                UserWarning
+            )
+            try:
+                return input_dict[fallback_key]
+            except KeyError as key_exc:
+                raise InvalidFileError(
+                    f"Fallback key {fallback_key} not found in {dict_name}"
+                    "entry."
+                ) from key_exc
+        return input_dict[key]
 
     def get_annotation_from_model(
         model_dict,
@@ -291,7 +306,7 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         """Get and format annotation array from model dictionary."""
         array = (
             get_or_fallback_from_dict(
-                model_dict, annotation_name, annotation_fallback
+                model_dict, annotation_name, annotation_fallback, dict_name="atom_site"
             )
             if annotation_fallback is not None
             else model_dict[annotation_name]
