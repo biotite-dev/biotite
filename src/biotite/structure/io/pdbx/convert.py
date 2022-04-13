@@ -264,15 +264,15 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
 
     Parameters
     ----------
-    array : Union[AtomArrayStack, AtomArray]
-        Atom stack which will be annotated
-    model_dict : Dict[str, npt.NDArray[Any]]
+    array : AtomArray or AtomArrayStack
+        Atom array or stack which will be annotated.
+    model_dict : dict(str, ndarray)
         ``atom_site`` dictionary with values for one model.
-    extra_fields : List[str]
+    extra_fields : list of str
         Entry names, that are additionally added as annotation arrays.
     use_author_fields : bool
-        Define if alternate fields prefixed with auth should be used instead
-        of label prefix
+        Define if alternate fields prefixed with ``auth_`` should be used
+        instead of ``label_``.
     """
 
     def get_or_fallback_from_dict(input_dict, key, fallback_key):
