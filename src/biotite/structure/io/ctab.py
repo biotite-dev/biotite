@@ -97,7 +97,7 @@ def read_structure_from_ctab(ctab_lines):
     return atoms
 
 
-def write_structure_to_ctab(atoms, default_bond_type: int = 8):
+def write_structure_to_ctab(atoms, default_bond_type=8):
     """
     Convert an :class:`AtomArray` into a
     *MDL* connection table (Ctab). :footcite:`Dalby1992`
