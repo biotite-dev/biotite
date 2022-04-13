@@ -565,7 +565,7 @@ def set_structure(pdbx_file, array, data_block=None):
         data_blocks = pdbx_file.get_block_names()
         if len(data_blocks) == 0:
             raise TypeError(
-                "No data block is existent in PDBx file, " "must be specified"
+                "No data block is existent in PDBx file, must be specified"
             )
         else:
             data_block = data_blocks[0]
