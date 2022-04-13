@@ -15,10 +15,8 @@ __all__ = [
 
 import itertools
 from collections import OrderedDict
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from ....file import InvalidFileError
 from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -26,7 +24,6 @@ from ...atoms import AtomArray, AtomArrayStack, repeat
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...util import matrix_rotate
-from .file import PDBxFile
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -104,13 +101,13 @@ def get_model_count(file, data_block=None):
 
 
 def get_structure(
-    pdbx_file: PDBxFile,
-    model: Optional[int] = None,
-    data_block: Optional[str] = None,
-    altloc: Literal["first", "occupancy", "all"] = "first",
-    extra_fields: Optional[List[str]] = None,
-    use_author_fields: bool = True,
-) -> Union[AtomArray, AtomArrayStack]:
+    pdbx_file,
+    model=None,
+    data_block=None,
+    altloc="first",
+    extra_fields=None,
+    use_author_fields=True,
+):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a :class:`PDBxFile`.
@@ -261,11 +258,11 @@ def get_structure(
 
 
 def _fill_annotations(
-    array: Union[AtomArrayStack, AtomArray],
-    model_dict: Dict[str, npt.NDArray[Any]],
-    extra_fields: List[str],
-    use_author_fields: bool,
-) -> None:
+    array,
+    model_dict,
+    extra_fields,
+    use_author_fields,
+):
     """Fill atom_site annotations in atom array or atom array stack.
 
     Parameters
@@ -281,30 +278,21 @@ def _fill_annotations(
         prefix
     """
 
-    def get_or_fallback_from_dict(
-        input_dict: Dict[str, Any], key: str, fallback_key: str
-    ) -> Any:
+    def get_or_fallback_from_dict(input_dict, key, fallback_key):
         """
         Return value related to key in input dict if it exists otherwise try to get the
         value related to fallback key."""
         return input_dict[key if key in input_dict else fallback_key]
 
     def get_annotation_from_model(
-        model_dict: Dict[str, npt.NDArray[Any]],
-        annotation_name: str,
-        annotation_fallback: Optional[str] = None,
-        as_type: Optional[
-            Union[
-                Literal["U1", "U2", "U3", "U4", "U6"],
-                Type[str],
-                Type[int],
-                Type[float],
-            ]
-        ] = None,
-        formatter: Optional[Callable[[npt.NDArray[Any]], npt.NDArray[Any]]] = None,
-    ) -> npt.NDArray[Any]:
+        model_dict,
+        annotation_name,
+        annotation_fallback=None,
+        as_type=None,
+        formatter=None,
+    ):
         """Get and format annotation array from model dictionary."""
-        array: npt.NDArray[Any] = (
+        array = (
             get_or_fallback_from_dict(model_dict, annotation_name, annotation_fallback)
             if annotation_fallback is not None
             else model_dict[annotation_name]
@@ -315,22 +303,7 @@ def _fill_annotations(
 
     prefix, alt_prefix = ("auth", "label") if use_author_fields else ("label", "auth")
 
-    annotation_data: Dict[
-        str,
-        Tuple[
-            str,
-            Optional[str],
-            Optional[
-                Union[
-                    Literal["U1", "U2", "U3", "U4", "U6"],
-                    Type[str],
-                    Type[int],
-                    Type[float],
-                ]
-            ],
-            Optional[Callable[[npt.NDArray[Any]], npt.NDArray[Any]]],
-        ],
-    ] = {
+    annotation_data = {
         "chain_id": (f"{prefix}_asym_id", f"{alt_prefix}_asym_id", "U4", None),
         "res_id": (
             f"{prefix}_seq_id",
@@ -364,7 +337,7 @@ def _fill_annotations(
         ),
     }
 
-    mandatory_annotations: List[str] = [
+    mandatory_annotations = [
         "chain_id",
         "res_id",
         "ins_code",
@@ -382,6 +355,7 @@ def _fill_annotations(
             if annotation_name in annotation_data
             else get_annotation_from_model(model_dict, annotation_name, as_type=str),
         )
+
 
 def _filter_altloc(array, model_dict, altloc):
     altloc_ids = model_dict.get("label_alt_id")
