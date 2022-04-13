@@ -643,15 +643,8 @@ def list_assemblies(pdbx_file, data_block=None):
     }
 
 
-def get_assembly(
-    pdbx_file,
-    assembly_id=None,
-    model=None,
-    data_block=None,
-    altloc="first",
-    extra_fields=None,
-    use_author_fields=True,
-):
+def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
+                 altloc="first", extra_fields=None, use_author_fields=True):
     """
     Build the given biological assembly.
 
