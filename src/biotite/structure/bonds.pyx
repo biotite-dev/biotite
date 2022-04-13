@@ -1403,7 +1403,8 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
         If true, connections between consecutive amino acids and
         nucleotides are also added.
     default_bond_type : BondType or int, optional
-        The default type of the bond. Default is :attr:`BondType.ANY`.
+        By default, all created bonds have :attr:`BondType.ANY`.
+        An alternative :class:`BondType` can be given in this parameter.
 
     Returns
     -------
