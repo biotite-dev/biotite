@@ -12,11 +12,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 
 import warnings
-
 import numpy as np
-
 from biotite.structure.error import BadStructureError
-
 from ..atoms import AtomArray, AtomArrayStack
 from ..bonds import BondList, BondType
 
