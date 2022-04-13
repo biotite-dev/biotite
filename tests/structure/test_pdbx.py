@@ -5,16 +5,13 @@
 import glob
 import itertools
 from os.path import join
-
 import numpy as np
 import pytest
 from pytest import approx
-
 import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-
 from ..util import data_dir
 
 
@@ -53,7 +50,8 @@ def test_parsing(category, key, exp_value):
 
 
 @pytest.mark.parametrize(
-    "string, use_array", itertools.product(["", " ", "\n", "\t"], [False, True])
+    "string, use_array",
+    itertools.product(["", " ", "\n", "\t"], [False, True]),
 )
 def test_empty_values(string, use_array):
     """
@@ -64,7 +62,9 @@ def test_empty_values(string, use_array):
     ref_value = np.full(LENGTH, string, dtype="U1") if use_array else ""
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.set_category(
-        category="test_category", block="test", category_dict={"test_field": ref_value}
+        category="test_category",
+        block="test",
+        category_dict={"test_field": ref_value},
     )
 
     test_value = pdbx_file["test_category"]["test_field"]
@@ -77,7 +77,9 @@ def test_empty_values(string, use_array):
 
 @pytest.mark.parametrize(
     "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.cif")), [None, 1, -1]),
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "*.cif")), [None, 1, -1]
+    ),
 )
 def test_conversion(path, model):
     pdbx_file = pdbx.PDBxFile.read(path)
@@ -96,7 +98,8 @@ def test_conversion(path, model):
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_structure(pdbx_file, array1, data_block="test")
 
-    # Remove one optional auth section in label to test fallback to label fields
+    # Remove one optional auth section in label to test fallback to label
+    # fields
     atom_cat = pdbx_file.get_category("atom_site", "test")
     atom_cat.pop("auth_atom_id")
     pdbx_file.set_category("atom_site", atom_cat, "test")
@@ -152,11 +155,16 @@ def test_extra_fields():
 def test_unequal_lengths():
     valid_category_dict = {"foo1": ["1", "2", "3"], "foo2": ["1", "2", "3"]}
     # Arrays have unequal lengths -> invalid
-    invalid_category_dict = {"foo1": ["1", "2", "3"], "foo2": ["1", "2", "3", "4"]}
+    invalid_category_dict = {
+        "foo1": ["1", "2", "3"],
+        "foo2": ["1", "2", "3", "4"],
+    }
     pdbx_file = pdbx.PDBxFile()
     pdbx_file.set_category("test", valid_category_dict, block="test_block")
     with pytest.raises(ValueError):
-        pdbx_file.set_category("test", invalid_category_dict, block="test_block")
+        pdbx_file.set_category(
+            "test", invalid_category_dict, block="test_block"
+        )
 
 
 def test_list_assemblies():
@@ -200,7 +208,9 @@ def test_get_assembly(model):
     ):
         print("Assembly ID:", id)
         try:
-            assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
+            assembly = pdbx.get_assembly(
+                pdbx_file, assembly_id=id, model=model
+            )
         except biotite.InvalidFileError:
             if model is None:
                 # The file cannot be parsed into an AtomArrayStack,
