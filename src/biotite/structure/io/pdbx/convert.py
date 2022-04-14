@@ -291,8 +291,8 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
                 return input_dict[fallback_key]
             except KeyError as key_exc:
                 raise InvalidFileError(
-                    f"Fallback key {fallback_key} not found in {dict_name}"
-                    "entry."
+                    f"Fallback attribute '{fallback_key}' not found in "
+                    "'{dict_name}' category"
                 ) from key_exc
         return input_dict[key]
 
