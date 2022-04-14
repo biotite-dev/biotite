@@ -20,7 +20,6 @@ from libc.stdlib cimport free, malloc, realloc
 import itertools
 import numbers
 from enum import IntEnum
-
 import networkx as nx
 import numpy as np
 
