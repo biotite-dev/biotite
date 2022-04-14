@@ -22,7 +22,6 @@ import numbers
 from enum import IntEnum
 import networkx as nx
 import numpy as np
-
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
