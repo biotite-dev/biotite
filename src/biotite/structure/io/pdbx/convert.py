@@ -283,8 +283,8 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         otherwise try to get the value related to fallback key."""
         if key not in input_dict:
             warnings.warn(
-                f"Key {key} not found within {dict_name} dictionnary. The "
-                f"fallback key {fallback_key} will be used instead",
+                f"Attribute '{key}' not found within '{dict_name}' category. "
+                f"The fallback attribute '{fallback_key}' will be used instead",
                 UserWarning
             )
             try:
