@@ -355,8 +355,8 @@ class PDBxFile(TextFile, MutableMapping):
         # Enclose values with quotes if required
         for key, value in category_dict.items():
             if is_looped:
-                # Since value is a numpy string array with fixed size, we need to
-                # convert it as a list before using _quote
+                # Since value is a numpy string array with fixed size,
+                # we need to convert it as a list before using _quote
                 category_dict[key] = np.asarray(
                     [_quote(item) for item in value.tolist()]
                 )
