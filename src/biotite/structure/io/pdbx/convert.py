@@ -306,7 +306,8 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         """Get and format annotation array from model dictionary."""
         array = (
             get_or_fallback_from_dict(
-                model_dict, annotation_name, annotation_fallback, dict_name="atom_site"
+                model_dict, annotation_name, annotation_fallback,
+                dict_name="atom_site"
             )
             if annotation_fallback is not None
             else model_dict[annotation_name]
