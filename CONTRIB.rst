@@ -1,6 +1,7 @@
 CONTRIBUTORS
 ============
 
+- Fabrice Allain <https://github.com/f-allain>
 - Jacob Marcel Anter <https://github.com/jacob-no-cop>
 - Daniel Bauer <https://github.com/danijoo>
 - Patrick Kunzmann <https://github.com/padix-key>
