@@ -1,7 +1,7 @@
 __name__ = "fastpdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PDBFile"]
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 import numpy as np
 import biotite
