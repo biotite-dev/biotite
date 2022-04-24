@@ -306,76 +306,8 @@ impl PDBFile {
     }
 
 
-    /// Write a single model to this [`PDBFile`] based on the given coordinates and annotation
-    /// arrays.
-    fn write_single_model(&mut self,
-                          coord:     Py<PyArray<f32,  Ix2>>,
-                          chain_id:  Py<PyArray<u32,  Ix2>>,
-                          res_id:    Py<PyArray<i64,  Ix1>>,
-                          ins_code:  Py<PyArray<u32,  Ix2>>,
-                          res_name:  Py<PyArray<u32,  Ix2>>,
-                          hetero:    Py<PyArray<bool, Ix1>>,
-                          atom_name: Py<PyArray<u32,  Ix2>>,
-                          element:   Py<PyArray<u32,  Ix2>>,
-                          atom_id:   Option<Py<PyArray<i64,  Ix1>>>,
-                          b_factor:  Option<Py<PyArray<f64,  Ix1>>>,
-                          occupancy: Option<Py<PyArray<f64,  Ix1>>>,
-                          charge:    Option<Py<PyArray<i64,  Ix1>>>) -> PyResult<()> {
-        Python::with_gil(|py| {
-            let coord     = coord.as_ref(py).to_owned_array();
-            let chain_id  = chain_id.as_ref(py).to_owned_array();
-            let res_id    = res_id.as_ref(py).to_owned_array();
-            let ins_code  = ins_code.as_ref(py).to_owned_array();
-            let res_name  = res_name.as_ref(py).to_owned_array();
-            let hetero    = hetero.as_ref(py).to_owned_array();
-            let atom_name = atom_name.as_ref(py).to_owned_array();
-            let element   = element.as_ref(py).to_owned_array();
-            let atom_id   =   atom_id.map(|arr| arr.as_ref(py).to_owned_array());
-            let b_factor  =  b_factor.map(|arr| arr.as_ref(py).to_owned_array());
-            let occupancy = occupancy.map(|arr| arr.as_ref(py).to_owned_array());
-            let charge    =    charge.map(|arr| arr.as_ref(py).to_owned_array());
-
-            for i in 0..coord.shape()[0] {
-                let element_i = parse_string_from_array(&element, i)?;
-                let atom_name_i = parse_string_from_array(&atom_name, i)?;
-
-                self.lines.push(format!(
-                    "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   {:>8.3}{:>8.3}{:>8.3}{:>6.2}{:>6.2}          {:>2}{}",
-                    if hetero[i] { "HETATM" } else { "ATOM" },
-                    atom_id.as_ref().map_or((i+1) as i64, |arr| truncate_id(arr[i], 99999)),
-                    if element_i.len() == 1 && atom_name_i.len() < 4 {
-                        format!(" {}", atom_name_i)
-                    } else {
-                        atom_name_i
-                    },
-                    parse_string_from_array(&res_name, i)?,
-                    parse_string_from_array(&chain_id, i)?,
-                    truncate_id(res_id[i], 9999),
-                    parse_string_from_array(&ins_code, i)?,
-                    coord[[i,0]],
-                    coord[[i,1]],
-                    coord[[i,2]],
-                    occupancy.as_ref().map_or(1f64, |arr| arr[i]),
-                    b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                    element_i,
-                    charge.as_ref().map_or(String::from("  "), |arr| {
-                        let c = arr[i];
-                        match c.cmp(&0) {
-                            Ordering::Greater => format!("{:1}+", c),
-                            Ordering::Less => format!("{:1}-", -c),
-                            Ordering::Equal => String::from("  ")
-                        }
-                    }),
-                ));
-            }
-            Ok(())
-        })
-    }
-
-
-    /// Write a multiple models to this [`PDBFile`] based on the given coordinates and annotation
-    /// arrays.
-    fn write_multi_model(&mut self,
+    /// Write models to this [`PDBFile`] based on the given coordinates and annotation arrays.
+    fn write_models(&mut self,
         coord:     Py<PyArray<f32,  Ix3>>,
         chain_id:  Py<PyArray<u32,  Ix2>>,
         res_id:    Py<PyArray<i64,  Ix1>>,
@@ -401,6 +333,8 @@ impl PDBFile {
             let b_factor  =  b_factor.map(|arr| arr.as_ref(py).to_owned_array());
             let occupancy = occupancy.map(|arr| arr.as_ref(py).to_owned_array());
             let charge    =    charge.map(|arr| arr.as_ref(py).to_owned_array());
+
+            let is_multi_model = coord.shape()[0] > 1;
 
             // These will contain the ATOM records for each atom
             // These are reused in every model by adding the coordinates to the string
@@ -444,7 +378,9 @@ impl PDBFile {
             }
 
             for model_i in 0..coord.shape()[0] {
-                self.lines.push(format!("MODEL {:>8}", model_i+1));
+                if is_multi_model {
+                    self.lines.push(format!("MODEL {:>8}", model_i+1));
+                }
                 for atom_i in 0..coord.shape()[1] { 
                     let coord_string = format!(
                         "{:>8.3}{:>8.3}{:>8.3}",
@@ -454,7 +390,9 @@ impl PDBFile {
                     );
                     self.lines.push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
                 }
-                self.lines.push(String::from("ENDMDL"));
+                if is_multi_model {
+                    self.lines.push(String::from("ENDMDL"));
+                }
             }
             Ok(())
         })

@@ -375,24 +375,15 @@ class PDBFile(biotite.TextFile):
         if charge is not None:
             charge = charge.astype(np.int64, copy=False)
         
-        if isinstance(atoms, struc.AtomArray):
-            self._pdb_file.write_single_model(
-                coord, chain_id, res_id, ins_code,
-                res_name, hetero, atom_name, element,
-                atom_id, b_factor, occupancy, charge
-            )
-        elif isinstance(atoms, struc.AtomArrayStack):
-            self._pdb_file.write_multi_model(
-                coord, chain_id, res_id, ins_code,
-                res_name, hetero, atom_name, element,
-                atom_id, b_factor, occupancy, charge
-            )
-        else:
-            raise TypeError(
-                f"Expected AtomArray or AtomArrayStack, "
-                f"but got {type(atoms).__name__}"
-            )
-
+        # Treat a single model as multi-model structure
+        if coord.ndim == 2:
+            coord = coord[np.newaxis, :, :]
+        
+        self._pdb_file.write_models(
+            coord, chain_id, res_id, ins_code,
+            res_name, hetero, atom_name, element,
+            atom_id, b_factor, occupancy, charge
+        )
        
         # Write 'CONECT' records
         if atoms.bonds is not None:
