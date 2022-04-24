@@ -59,7 +59,7 @@ impl PDBFile {
         for line in self.lines.iter() {
             if line.starts_with("CRYST1") {
                 if line.len() < 80 {
-                    return Err(BadStructureError::new_err("Line is too short"))
+                    return Err(InvalidFileError::new_err("Line is too short"))
                 }
                 let len_a = parse_number(&line[ 6..15])?;
                 let len_b = parse_number(&line[15..24])?;
@@ -185,7 +185,7 @@ impl PDBFile {
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
             if line.len() < 80 {
-                return Err(BadStructureError::new_err("Line is too short"))
+                return Err(InvalidFileError::new_err("Line is too short"))
             }
             write_string_to_array(&mut chain_id,  atom_i, line[21..22].trim());
             res_id[atom_i] = parse_number(&line[22..26])?;
@@ -216,7 +216,7 @@ impl PDBFile {
                 }
                 else {
                     number = raw_number.to_digit(10).ok_or_else( ||
-                        BadStructureError::new_err(format!(
+                        InvalidFileError::new_err(format!(
                             "'{}' cannot be parsed into a number", raw_number
                         ))
                     )?;
@@ -336,11 +336,18 @@ impl PDBFile {
             let charge    =    charge.map(|arr| arr.as_ref(py).to_owned_array());
 
             for i in 0..coord.shape()[0] {
+                let element_i = parse_string_from_array(&element, i)?;
+                let atom_name_i = parse_string_from_array(&atom_name, i)?;
+
                 self.lines.push(format!(
-                    "{:6}{:>5} {:4} {:3} {:1}{:>4}{:1}   {:>8.3}{:>8.3}{:>8.3}{:>6.2}{:>6.2}          {:>2}{}",
+                    "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   {:>8.3}{:>8.3}{:>8.3}{:>6.2}{:>6.2}          {:>2}{}",
                     if hetero[i] { "HETATM" } else { "ATOM" },
                     atom_id.as_ref().map_or((i+1) as i64, |arr| truncate_id(arr[i], 99999)),
-                    parse_string_from_array(&atom_name, i)?,
+                    if element_i.len() == 1 && atom_name_i.len() < 4 {
+                        format!(" {}", atom_name_i)
+                    } else {
+                        atom_name_i
+                    },
                     parse_string_from_array(&res_name, i)?,
                     parse_string_from_array(&chain_id, i)?,
                     truncate_id(res_id[i], 9999),
@@ -350,7 +357,7 @@ impl PDBFile {
                     coord[[i,2]],
                     occupancy.as_ref().map_or(1f64, |arr| arr[i]),
                     b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                    parse_string_from_array(&element, i)?,
+                    element_i,
                     charge.as_ref().map_or(String::from("  "), |arr| {
                         let c = arr[i];
                         match c.cmp(&0) {
@@ -400,12 +407,20 @@ impl PDBFile {
             // This procedure aims to increase the performance is repetitive formatting is omitted
             let mut prefix: Vec<String> = Vec::new();
             let mut suffix: Vec<String> = Vec::new();
+            
             for i in 0..coord.shape()[1] {
+                let element_i = parse_string_from_array(&element, i)?;
+                let atom_name_i = parse_string_from_array(&atom_name, i)?;
+                
                 prefix.push(format!(
-                    "{:6}{:>5} {:4} {:3} {:1}{:>4}{:1}   ",
+                    "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
                     if hetero[i] { "HETATM" } else { "ATOM" },
                     atom_id.as_ref().map_or((i+1) as i64, |arr| truncate_id(arr[i], 99999)),
-                    parse_string_from_array(&atom_name, i)?,
+                    if element_i.len() == 1 && atom_name_i.len() < 4 {
+                        format!(" {}", atom_name_i)
+                    } else {
+                        atom_name_i
+                    },
                     parse_string_from_array(&res_name, i)?,
                     parse_string_from_array(&chain_id, i)?,
                     truncate_id(res_id[i], 9999),
@@ -416,7 +431,7 @@ impl PDBFile {
                     "{:>6.2}{:>6.2}          {:>2}{}",
                     occupancy.as_ref().map_or(1f64, |arr| arr[i]),
                     b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                    parse_string_from_array(&element, i)?,
+                    element_i,
                     charge.as_ref().map_or(String::from("  "), |arr| {
                         let c = arr[i];
                         match c.cmp(&0) {
@@ -510,20 +525,20 @@ impl PDBFile {
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
             if line.len() < 80 {
-                return Err(BadStructureError::new_err("Line is too short"))
+                return Err(InvalidFileError::new_err("Line is too short"))
             }
             coord[[atom_i, 0]] = line[30..38].trim().parse().map_err(|_|
-                BadStructureError::new_err(format!(
+                InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[30..38].trim()
                 ))
             )?;
             coord[[atom_i, 1]] = line[38..46].trim().parse().map_err(|_|
-                BadStructureError::new_err(format!(
+                InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[38..46].trim()
                 ))
             )?;
             coord[[atom_i, 2]] = line[46..54].trim().parse().map_err(|_|
-                BadStructureError::new_err(format!(
+                InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[46..54].trim()
                 ))
             )?;
@@ -618,7 +633,7 @@ impl PDBFile {
                 .count();
             match length {
                 None => length = Some(model_length),
-                Some(l) => if model_length != l { return Err(BadStructureError::new_err(
+                Some(l) => if model_length != l { return Err(InvalidFileError::new_err(
                     "Inconsistent number of models"
                 )); }
             };
@@ -666,7 +681,7 @@ fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<St
 #[inline(always)]
 fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
     string.trim().parse().map_err(|_|
-        BadStructureError::new_err(format!(
+        InvalidFileError::new_err(format!(
             "'{}' cannot be parsed into a number", string.trim()
         ))
     )
