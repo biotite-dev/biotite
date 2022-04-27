@@ -1367,7 +1367,8 @@ _DEFAULT_DISTANCE_RANGE = {
 def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
                           bint inter_residue=True, default_bond_type=BondType.ANY):
     """
-    connect_via_distances(atoms, distance_range=None, atom_mask=None, inter_residue=True)
+    connect_via_distances(atoms, distance_range=None, atom_mask=None, 
+                          inter_residue=True, default_bond_type=BondType.ANY)
 
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
