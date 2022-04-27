@@ -16,7 +16,7 @@ dependencies:
   - wheel >=0.30
   - requests >=2.12
   - numpy >=1.15
-  - scipy >=0.14
+  - scipy >=1.8.0
   - scikit-learn >=0.18
   - networkx >=2.0
   - pydot >=1.4
