@@ -96,8 +96,6 @@ ax.margins(y=0.1)
 ax.set_ylabel("Speedup")
 ax.yaxis.set_major_locator(ticker.IndexLocator(base=1, offset=1))
 ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d×"))
-#ax.grid(axis="y")
-#ax.set_ylim(0, 20)
 fig.tight_layout()
 
 plt.savefig("benchmark.svg")
