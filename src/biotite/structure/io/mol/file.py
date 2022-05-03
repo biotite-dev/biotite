@@ -195,7 +195,7 @@ class MOLFile(TextFile):
         """
         self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(
             atoms,
-            default_bond_type=default_bond_type
+            default_bond_type
         )
 
 
