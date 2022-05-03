@@ -2,15 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import datetime
-from tempfile import TemporaryFile
 import glob
+import itertools
 from os.path import join, split, splitext
-import pytest
+from tempfile import TemporaryFile
 import numpy as np
+import pytest
 import biotite.structure.info as info
 import biotite.structure.io.mol as mol
+from biotite.structure.bonds import BondType
+from biotite.structure.io.ctab import BOND_TYPE_MAPPING_REV
 from ..util import data_dir
 
 
@@ -70,10 +72,38 @@ def test_structure_conversion(path, omit_charge):
     test_atoms = mol.get_structure(mol_file)
     if omit_charge:
         assert np.all(test_atoms.charge == 0)
-        test_atoms.del_annotation("charge") 
+        test_atoms.del_annotation("charge")
     temp.close()
 
     assert test_atoms == ref_atoms
+
+    # Check bond type fallback in MolFile.set_structure
+    # Update last bond type in ref_atoms with a quadruple bond type
+    ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)
+    updated_bond = ref_atoms.bonds.as_array()[
+        np.all(ref_atoms.bonds.as_array()[:,[0,1]] == [0,1], axis=1)
+    ]
+    assert updated_bond.tolist()[0][2] == BondType.QUADRUPLE
+    test_mol_file = mol.MOLFile()
+    mol.set_structure(test_mol_file, ref_atoms)
+    # test bond type fallback to BondType.ANY value (8) in
+    # MolFile.set_structure to format mol_file.lines
+    updated_line = [
+        mol_line
+        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+    ].pop()
+    assert int(updated_line[8]) == \
+        BOND_TYPE_MAPPING_REV[BondType.ANY]
+    # test bond type fallback to BondType.SINGLE value (1) in
+    # MolFile.set_structure to format mol_file.lines
+    mol.set_structure(test_mol_file, ref_atoms,
+                      default_bond_type=BondType.SINGLE)
+    updated_line = [
+        mol_line
+        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+    ].pop()
+    assert int(updated_line[8]) == \
+        BOND_TYPE_MAPPING_REV[BondType.SINGLE]
 
 
 @pytest.mark.parametrize(
