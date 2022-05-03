@@ -78,7 +78,9 @@ def test_structure_conversion(path, omit_charge):
     assert test_atoms == ref_atoms
 
     # Check bond type fallback in MolFile.set_structure
-    # Update last bond type in ref_atoms with a quadruple bond type
+    # Update last bond type in ref_atoms with a quadruple bond type,
+    # which is not supported by MOL files
+    # and thus translates to the default bond type
     ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)
     updated_bond = ref_atoms.bonds.as_array()[
         np.all(ref_atoms.bonds.as_array()[:,[0,1]] == [0,1], axis=1)
