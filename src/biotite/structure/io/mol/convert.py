@@ -48,4 +48,4 @@ def set_structure(mol_file, atoms, default_bond_type=BondType.ANY):
         Must have an associated :class:`BondList`.
 
     """
-    mol_file.set_structure(atoms, default_bond_type=default_bond_type)
+    mol_file.set_structure(atoms, default_bond_type)
