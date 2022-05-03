@@ -77,35 +77,6 @@ def test_structure_conversion(path, omit_charge):
 
     assert test_atoms == ref_atoms
 
-    # Check bond type fallback in MolFile.set_structure
-    # Update last bond type in ref_atoms with a quadruple bond type,
-    # which is not supported by MOL files
-    # and thus translates to the default bond type
-    ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)
-    updated_bond = ref_atoms.bonds.as_array()[
-        np.all(ref_atoms.bonds.as_array()[:,[0,1]] == [0,1], axis=1)
-    ]
-    assert updated_bond.tolist()[0][2] == BondType.QUADRUPLE
-    test_mol_file = mol.MOLFile()
-    mol.set_structure(test_mol_file, ref_atoms)
-    # test bond type fallback to BondType.ANY value (8) in
-    # MolFile.set_structure to format mol_file.lines
-    updated_line = [
-        mol_line
-        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
-    ].pop()
-    assert int(updated_line[8]) == \
-        BOND_TYPE_MAPPING_REV[BondType.ANY]
-    # test bond type fallback to BondType.SINGLE value (1) in
-    # MolFile.set_structure to format mol_file.lines
-    mol.set_structure(test_mol_file, ref_atoms,
-                      default_bond_type=BondType.SINGLE)
-    updated_line = [
-        mol_line
-        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
-    ].pop()
-    assert int(updated_line[8]) == \
-        BOND_TYPE_MAPPING_REV[BondType.SINGLE]
 
 
 @pytest.mark.parametrize(
@@ -136,3 +107,43 @@ def test_pdbx_consistency(path):
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
         == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
+
+@pytest.mark.parametrize(
+    "path", glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+)
+def test_structure_bond_type_fallback(path):
+    """
+    Check if a bond with a type not supported by MOL files will be translated
+    thanks to the bond type fallback in `MolFile.set_structure`
+    """
+    # Extract original list of bonds from an SDF file
+    mol_file = mol.MOLFile.read(path)
+    ref_atoms = mol.get_structure(mol_file)
+    # Update one bond in `ref_atoms` with with a quadruple bond type,
+    # which is not supported by MOL files and thus translates to
+    # the default bond type
+    ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)
+    updated_bond = ref_atoms.bonds.as_array()[
+        np.all(ref_atoms.bonds.as_array()[:,[0,1]] == [0,1], axis=1)
+    ]
+    assert updated_bond.tolist()[0][2] == BondType.QUADRUPLE
+    test_mol_file = mol.MOLFile()
+    mol.set_structure(test_mol_file, ref_atoms)
+    # Test bond type fallback to BondType.ANY value (8) in
+    # MolFile.set_structure during mol_file.lines formatting
+    updated_line = [
+        mol_line
+        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+    ].pop()
+    assert int(updated_line[8]) == \
+        BOND_TYPE_MAPPING_REV[BondType.ANY]
+    # Test bond type fallback to BondType.SINGLE value (1) in
+    # MolFile.set_structure during mol_file.lines formatting
+    mol.set_structure(test_mol_file, ref_atoms,
+                      default_bond_type=BondType.SINGLE)
+    updated_line = [
+        mol_line
+        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+    ].pop()
+    assert int(updated_line[8]) == \
+        BOND_TYPE_MAPPING_REV[BondType.SINGLE]
