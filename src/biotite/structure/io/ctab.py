@@ -97,7 +97,7 @@ def read_structure_from_ctab(ctab_lines):
     return atoms
 
 
-def write_structure_to_ctab(atoms, default_bond_type=8):
+def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY):
     """
     Convert an :class:`AtomArray` into a
     *MDL* connection table (Ctab). :footcite:`Dalby1992`
@@ -113,9 +113,10 @@ def write_structure_to_ctab(atoms, default_bond_type=8):
         The lines containing the *ctab*.
         The lines begin with the *counts* line and end with the `M END`
         .line
-    default_bond_type : int
+    default_bond_type : BondType
         Bond type fallback in the *Bond block* if a bond has no bond_type
-        defined in *atoms* array.
+        defined in *atoms* array. By default, each bond is treated as
+        :attr:`BondType.ANY`.
 
     References
     ----------
@@ -144,9 +145,11 @@ def write_structure_to_ctab(atoms, default_bond_type=8):
         for i in range(atoms.array_length())
     ]
 
+    default_bond_value = BOND_TYPE_MAPPING_REV[default_bond_type]
+
     bond_lines = [
         f"{i+1:>3d}{j+1:>3d}"
-        f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_type):>3d}"
+        f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"
         + f"{0:>3d}" * 4
         for i, j, bond_type in atoms.bonds.as_array()
     ]

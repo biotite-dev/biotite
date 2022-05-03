@@ -13,6 +13,7 @@ from ...atoms import AtomArray
 from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
 from ..ctab import read_structure_from_ctab, write_structure_to_ctab
+from ...bonds import BondType
 
 
 # Number of header lines
@@ -33,12 +34,12 @@ class MOLFile(TextFile):
 
     This class can also be used to parse the first structure from an SDF
     file, as the SDF format extends the MOL format.
-    
+
     References
     ----------
-    
+
     .. footbibliography::
-    
+
     Examples
     --------
 
@@ -71,16 +72,16 @@ class MOLFile(TextFile):
                 0             H        -0.123   -0.399   -5.059
                 0             H        -1.333   -0.030    4.784
     """
-    
+
     def __init__(self):
         super().__init__()
         # empty header lines
         self.lines = [""] * N_HEADER
-    
+
     def get_header(self):
         """
         Get the header from the MOL file.
-        
+
         Returns
         -------
         mol_name : str
@@ -121,7 +122,7 @@ class MOLFile(TextFile):
                    registry_number="", comments=""):
         """
         Set the header for the MOL file.
-        
+
         Parameters
         ----------
         mol_name : str
@@ -163,7 +164,7 @@ class MOLFile(TextFile):
     def get_structure(self):
         """
         Get an :class:`AtomArray` from the MOL file.
-        
+
         Returns
         -------
         array : AtomArray
@@ -174,21 +175,28 @@ class MOLFile(TextFile):
         """
         ctab_lines = _get_ctab_lines(self.lines)
         if len(ctab_lines) == 0:
-            raise InvalidFileError("File does not contain structure data") 
+            raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
-    
 
-    def set_structure(self, atoms):
+
+    def set_structure(self, atoms, default_bond_type=BondType.ANY):
         """
         Set the :class:`AtomArray` for the file.
-        
+
         Parameters
         ----------
         array : AtomArray
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
+        default_bond_type : BondType
+            Bond type fallback in the *Bond block* if a bond has no bond_type
+            defined in *atoms* array. By default, each bond is treated as
+            :attr:`BondType.ANY`.
         """
-        self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(atoms)
+        self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(
+            atoms,
+            default_bond_type
+        )
 
 
 def _get_ctab_lines(lines):
