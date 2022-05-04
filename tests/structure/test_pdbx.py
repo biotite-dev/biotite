@@ -186,8 +186,11 @@ def test_list_assemblies():
     }
 
 
-@pytest.mark.parametrize("model", [None, 1, -1])
-def test_get_assembly(model):
+@pytest.mark.parametrize("pdb_id, model", itertools.product(
+    ["1f2n", "5zng"],
+    [None, 1, -1]
+))
+def test_get_assembly(pdb_id, model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
@@ -196,7 +199,7 @@ def test_get_assembly(model):
     is a multiple of the numbers of atoms in a monomer.
     """
 
-    path = join(data_dir("structure"), "1f2n.cif")
+    path = join(data_dir("structure"), f"{pdb_id}.cif")
     pdbx_file = pdbx.PDBxFile.read(path)
 
     assembly_category = pdbx_file.get_category(
