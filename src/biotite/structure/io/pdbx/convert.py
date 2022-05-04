@@ -744,22 +744,10 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     elif assembly_id not in assembly_gen_category["assembly_id"]:
         raise KeyError(f"File has no Assembly ID '{assembly_id}'")
 
+    ### Calculate all possible transformations
     transformations = _get_transformations(struct_oper_category)
 
-    ### Get transformations to apply and the affected asym IDs
-    # Find the operation expression for given assembly ID
-    # We already asserted that the ID is actually present
-    for id, op_expr, asym_id_expr in zip(
-        assembly_gen_category["assembly_id"],
-        assembly_gen_category["oper_expression"],
-        assembly_gen_category["asym_id_list"],
-    ):
-        if id == assembly_id:
-            operations = _parse_operation_expression(op_expr)
-            asym_ids = asym_id_expr.split(",")
-            break
-
-    ### Get structure containing the affected asym IDs
+    ### Get structure according to additional parameters
     # Include 'label_asym_id' as annotation array
     # for correct asym ID filtering
     extra_fields = [] if extra_fields is None else extra_fields
@@ -775,37 +763,57 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         extra_fields_and_asym,
         use_author_fields,
     )
-    # Filter asym IDs
-    structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
+
+    ### Get transformations and apply them to the affected asym IDs
+    assembly = None
+    for id, op_expr, asym_id_expr in zip(
+        assembly_gen_category["assembly_id"],
+        assembly_gen_category["oper_expression"],
+        assembly_gen_category["asym_id_list"],
+    ):
+        # Find the operation expressions for given assembly ID
+        # We already asserted that the ID is actually present
+        if id == assembly_id:
+            operations = _parse_operation_expression(op_expr)
+            asym_ids = asym_id_expr.split(",")
+            # Filter affected asym IDs
+            sub_structure = structure
+            sub_structure = structure[
+                ..., np.isin(structure.label_asym_id, asym_ids)
+            ]
+            sub_assembly = _apply_transformations(
+                sub_structure, transformations, operations
+            )
+            # Merge the chains with asym IDs for this operation
+            # with chains from other operations
+            if assembly is None:
+                assembly = sub_assembly
+            else:
+                assembly += sub_assembly
+    
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
     if "label_asym_id" not in extra_fields:
-        structure.del_annotation("label_asym_id")
+        assembly.del_annotation("label_asym_id")
+    
+    return assembly
 
-    ### Prepare coordinates
-    if model is None:
-        # Coordinates for AtomArrayStack
-        assembly_coord = np.zeros(
-            (
-                len(operations),
-                structure.stack_depth(),
-                structure.array_length(),
-                3,
-            )
-        )
-    else:
-        # Coordinates for AtomArray
-        assembly_coord = np.zeros(
-            (len(operations), structure.array_length(), 3)
-        )
 
-    ### Apply corresponding transformation for each copy in the assembly
+def _apply_transformations(structure, transformation_dict, operations):
+    """
+    Get subassembly by applying the given operations to the input
+    structure containing affected asym IDs.
+    """
+    # Additional first dimesion for 'structure.repeat()'
+    assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
+
+    # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
         # Execute for each transformation step
         # in the operation expression
         for op_step in operation:
-            rotation_matrix, translation_vector = transformations[op_step]
+            rotation_matrix, translation_vector = transformation_dict[op_step]
             # Rotate
             coord = matrix_rotate(coord, rotation_matrix)
             # Translate
@@ -816,6 +824,10 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
 
 
 def _get_transformations(struct_oper):
+    """
+    Get transformation operation in terms of rotation matrix and
+    translation for each operation ID in ``pdbx_struct_oper_list``.
+    """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"]):
         rotation_matrix = np.array(
@@ -835,6 +847,11 @@ def _get_transformations(struct_oper):
 
 
 def _parse_operation_expression(expression):
+    """
+    Get successive operation steps (IDs) for the given
+    ``oper_expression``.
+    Form the cartesian product, if necessary.
+    """
     # Split groups by parentheses:
     # use the opening parenthesis as delimiter
     # and just remove the closing parenthesis
@@ -863,9 +880,11 @@ def _parse_operation_expression(expression):
 
 
 def _convert_string_to_sequence(string, stype):
-    # Convert strings to ProteinSequence-Object if stype is
-    # contained in _proteinseq_type_list or to NucleotideSequence-
-    # Object if stype is contained in _nucleotideseq_type_list
+    """
+    Convert strings to `ProteinSequence` if `stype` is contained in
+    ``proteinseq_type_list`` or to ``NucleotideSequence`` if `stype` is
+    contained in ``_nucleotideseq_type_list``.
+    """
     if stype in _proteinseq_type_list:
         return ProteinSequence(string)
     elif stype in _nucleotideseq_type_list:

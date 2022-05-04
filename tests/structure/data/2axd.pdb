@@ -1,6 +1,6 @@
 HEADER    TRANSFERASE                             05-SEP-05   2AXD              
-TITLE     SOLUTION STRUCTURE OF THE THETA SUBUNIT OF ESCHERICHIA COLI           
-TITLE    2 DNA POLYMERASE III IN COMPLEX WITH THE EPSILON SUBUNIT               
+TITLE     SOLUTION STRUCTURE OF THE THETA SUBUNIT OF ESCHERICHIA COLI DNA       
+TITLE    2 POLYMERASE III IN COMPLEX WITH THE EPSILON SUBUNIT                   
 COMPND    MOL_ID: 1;                                                            
 COMPND   2 MOLECULE: DNA POLYMERASE III, THETA SUBUNIT;                         
 COMPND   3 CHAIN: S;                                                            
@@ -18,41 +18,41 @@ SOURCE   9 EXPRESSION_SYSTEM_PLASMID: PCM869
 KEYWDS    THETA SUBUNIT, DNA POLYMERASE III, TRANSFERASE                        
 EXPDTA    SOLUTION NMR                                                          
 NUMMDL    12                                                                    
-AUTHOR    M.A.KENIRY,A.Y.PARK,E.A.OWEN,S.M.HAMDAN,G.PINTACUDA,                  
-AUTHOR   2 G.OTTING,N.E.DIXON                                                   
+AUTHOR    M.A.KENIRY,A.Y.PARK,E.A.OWEN,S.M.HAMDAN,G.PINTACUDA,G.OTTING,         
+AUTHOR   2 N.E.DIXON                                                            
+REVDAT   3   09-MAR-22 2AXD    1       REMARK                                   
 REVDAT   2   24-FEB-09 2AXD    1       VERSN                                    
 REVDAT   1   04-JUL-06 2AXD    0                                                
-JRNL        AUTH   M.A.KENIRY,A.Y.PARK,E.A.OWEN,S.M.HAMDAN,                     
-JRNL        AUTH 2 G.PINTACUDA,G.OTTING,N.E.DIXON                               
-JRNL        TITL   STRUCTURE OF THE THETA SUBUNIT OF ESCHERICHIA COLI           
-JRNL        TITL 2 DNA POLYMERASE III IN COMPLEX WITH THE EPSILON               
-JRNL        TITL 3 SUBUNIT                                                      
+JRNL        AUTH   M.A.KENIRY,A.Y.PARK,E.A.OWEN,S.M.HAMDAN,G.PINTACUDA,         
+JRNL        AUTH 2 G.OTTING,N.E.DIXON                                           
+JRNL        TITL   STRUCTURE OF THE THETA SUBUNIT OF ESCHERICHIA COLI DNA       
+JRNL        TITL 2 POLYMERASE III IN COMPLEX WITH THE EPSILON SUBUNIT           
 JRNL        REF    J.BACTERIOL.                  V. 188  4464 2006              
 JRNL        REFN                   ISSN 0021-9193                               
 JRNL        PMID   16740953                                                     
 JRNL        DOI    10.1128/JB.01992-05                                          
-REMARK   1                                                                      
 REMARK   2                                                                      
 REMARK   2 RESOLUTION. NOT APPLICABLE.                                          
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
-REMARK   3   PROGRAM     : DYANA 1.5, XPLOR-NIH 2.9.7                           
-REMARK   3   AUTHORS     : P.GUENTERT (DYANA), C.SCHWIETERS, N.TJANDRA,         
-REMARK   3                 J.KUSZEWSKI, G.CLORE (XPLOR-NIH)                     
+REMARK   3   PROGRAM     : VNMR 6.1, DYANA 1.5, XPLOR-NIH 2.9.7                 
+REMARK   3   AUTHORS     : VARIAN ASSOCIATES (VNMR), P.GUENTERT (DYANA),        
+REMARK   3                 C.SCHWIETERS, N.TJANDRA, J.KUSZEWSKI, G.CLORE        
+REMARK   3                 (XPLOR-NIH)                                          
 REMARK   3                                                                      
 REMARK   3  OTHER REFINEMENT REMARKS: THE STRUCTURES ARE BASED ON 632           
 REMARK   3  DISTANCE RESTRAINTS, 111 DIHEDRAL ANGLE RESTRAINTS AND 162          
-REMARK   3  PSEUDO-CONTACT SHIFT RESTRAINTS. THE PSEUDO-CONTACT SHIFTS          
-REMARK   3  WERE CALCULATED FROM THE CHANGE IN CHEMICAL SHIFT OF THE AMIDE      
-REMARK   3  PROTONS INDUCED BY INSERTING A LANTHANIDE ION (EITHER               
-REMARK   3  YSPROSIUM, ERBIUM OR HOLMIUM) AT THE METAL BINDING SITE OF          
-REMARK   3  EPSILON-186 WHICH IS COMPLEXED TO THE THETA SUBUNIT. XPLOR-NIH      
-REMARK   3  2.9.7 WAS USED TO REFINE THE STRUCTURE USING THIS DATA              
+REMARK   3  PSEUDO-CONTACT SHIFT RESTRAINTS. THE PSEUDO-CONTACT SHIFTS WERE     
+REMARK   3  CALCULATED FROM THE CHANGE IN CHEMICAL SHIFT OF THE AMIDE           
+REMARK   3  PROTONS INDUCED BY INSERTING A LANTHANIDE ION (EITHER YSPROSIUM,    
+REMARK   3  ERBIUM OR HOLMIUM) AT THE METAL BINDING SITE OF EPSILON-186         
+REMARK   3  WHICH IS COMPLEXED TO THE THETA SUBUNIT. XPLOR-NIH 2.9.7 WAS        
+REMARK   3  USED TO REFINE THE STRUCTURE USING THIS DATA                        
 REMARK   4                                                                      
 REMARK   4 2AXD COMPLIES WITH FORMAT V. 3.15, 01-DEC-08                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY PDBJ ON 09-SEP-05.                  
-REMARK 100 THE RCSB ID CODE IS RCSB034427.                                      
+REMARK 100 THE DEPOSITION ID IS D_1000034427.                                   
 REMARK 210                                                                      
 REMARK 210 EXPERIMENTAL DETAILS                                                 
 REMARK 210  EXPERIMENT TYPE                : NMR                                
@@ -60,25 +60,24 @@ REMARK 210  TEMPERATURE           (KELVIN) : 298
 REMARK 210  PH                             : 7.0                                
 REMARK 210  IONIC STRENGTH                 : 100MM NACL                         
 REMARK 210  PRESSURE                       : AMBIENT                            
-REMARK 210  SAMPLE CONTENTS                : 1MM THETA-EPSILON186 U15N,         
+REMARK 210  SAMPLE CONTENTS                : 1MM THETA-EPSILON186               
+REMARK 210                                   U15N,13C(THETA); 100MM NACL,       
+REMARK 210                                   0.1MM DITHIOTHREITOL; 20MM         
+REMARK 210                                   PHOSPHATE BUFFER NA; 90% H20, 10%  
+REMARK 210                                   D2O; 1MM THETA-EPSILON186 U15N,    
 REMARK 210                                   13C(THETA); 100MM NACL, 0.1MM      
-REMARK 210                                   DITHIOTHREITOL; 20MM PHOSPHATE     
-REMARK 210                                   BUFFER NA; 90% H20, 10% D2O;       
-REMARK 210                                   1MM THETA-EPSILON186 U15N,         
-REMARK 210                                   13C(THETA); 100MM NACL, 0.1MM      
-REMARK 210                                   DITHIOTHREITOL; 20MM TRIS          
-REMARK 210                                   BUFFER; 90% H20, 10% D2O           
+REMARK 210                                   DITHIOTHREITOL; 20MM TRIS BUFFER;  
+REMARK 210                                   90% H20, 10% D2O                   
 REMARK 210                                                                      
-REMARK 210  NMR EXPERIMENTS CONDUCTED      : 3D_15N-SEPARATED_NOESY, 3D_        
-REMARK 210                                   13C-SEPARATED_NOESY, HNHA, 2D_     
-REMARK 210                                   15N-HSQC                           
-REMARK 210  SPECTROMETER FIELD STRENGTH    : 600 MHZ, 800 MHZ                   
-REMARK 210  SPECTROMETER MODEL             : INOVA, AVANCE                      
-REMARK 210  SPECTROMETER MANUFACTURER      : VARIAN, BRUKER                     
+REMARK 210  NMR EXPERIMENTS CONDUCTED      : 3D_15N-SEPARATED_NOESY; 3D_13C     
+REMARK 210                                   -SEPARATED_NOESY; HNHA; 2D_15N-    
+REMARK 210                                   HSQC                               
+REMARK 210  SPECTROMETER FIELD STRENGTH    : 600 MHZ; 800 MHZ                   
+REMARK 210  SPECTROMETER MODEL             : INOVA; AVANCE                      
+REMARK 210  SPECTROMETER MANUFACTURER      : VARIAN; BRUKER                     
 REMARK 210                                                                      
 REMARK 210  STRUCTURE DETERMINATION.                                            
-REMARK 210   SOFTWARE USED                 : VNMR 6.1, XEASY 1.4, SPARKY        
-REMARK 210                                   3.110                              
+REMARK 210   SOFTWARE USED                 : XEASY 1.4, SPARKY 3.110            
 REMARK 210   METHOD USED                   : TORSION ANGLE DYNAMICS             
 REMARK 210                                                                      
 REMARK 210 CONFORMERS, NUMBER CALCULATED   : 200                                
@@ -90,14 +89,42 @@ REMARK 210 BEST REPRESENTATIVE CONFORMER IN THIS ENSEMBLE : 1
 REMARK 210                                                                      
 REMARK 210 REMARK: THE STRUCTURE WAS DETERMINED USING DISTANCE AND ANGULAR      
 REMARK 210  RESTRAINTS AND SUPPLEMENTED WITH RESTRAINTS CALCULATED FROM         
-REMARK 210  PSEUDO-CONTACT SHIFTS INDUCED BY INSERTING A LANTHANIDE ION         
-REMARK 210  INTO THE EPSILON186 BINDING POCKET                                  
+REMARK 210  PSEUDO-CONTACT SHIFTS INDUCED BY INSERTING A LANTHANIDE ION INTO    
+REMARK 210  THE EPSILON186 BINDING POCKET                                       
 REMARK 215                                                                      
 REMARK 215 NMR STUDY                                                            
 REMARK 215 THE COORDINATES IN THIS ENTRY WERE GENERATED FROM SOLUTION           
 REMARK 215 NMR DATA.  PROTEIN DATA BANK CONVENTIONS REQUIRE THAT                
 REMARK 215 CRYST1 AND SCALE RECORDS BE INCLUDED, BUT THE VALUES ON              
 REMARK 215 THESE RECORDS ARE MEANINGLESS.                                       
+REMARK 300                                                                      
+REMARK 300 BIOMOLECULE: 1                                                       
+REMARK 300 SEE REMARK 350 FOR THE AUTHOR PROVIDED AND/OR PROGRAM                
+REMARK 300 GENERATED ASSEMBLY INFORMATION FOR THE STRUCTURE IN                  
+REMARK 300 THIS ENTRY. THE REMARK MAY ALSO PROVIDE INFORMATION ON               
+REMARK 300 BURIED SURFACE AREA.                                                 
+REMARK 350                                                                      
+REMARK 350 COORDINATES FOR A COMPLETE MULTIMER REPRESENTING THE KNOWN           
+REMARK 350 BIOLOGICALLY SIGNIFICANT OLIGOMERIZATION STATE OF THE                
+REMARK 350 MOLECULE CAN BE GENERATED BY APPLYING BIOMT TRANSFORMATIONS          
+REMARK 350 GIVEN BELOW.  BOTH NON-CRYSTALLOGRAPHIC AND                          
+REMARK 350 CRYSTALLOGRAPHIC OPERATIONS ARE GIVEN.                               
+REMARK 350                                                                      
+REMARK 350 BIOMOLECULE: 1                                                       
+REMARK 350 AUTHOR DETERMINED BIOLOGICAL UNIT: MONOMERIC                         
+REMARK 350 APPLY THE FOLLOWING TO CHAINS: S                                     
+REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
+REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
+REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
+REMARK 500                                                                      
+REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
+REMARK 500 SUBTOPIC: CLOSE CONTACTS                                             
+REMARK 500                                                                      
+REMARK 500 THE FOLLOWING ATOMS ARE IN CLOSE CONTACT.                            
+REMARK 500                                                                      
+REMARK 500  ATM1  RES C  SSEQI   ATM2  RES C  SSEQI           DISTANCE          
+REMARK 500                                                                      
+REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
 REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
 REMARK 500 SUBTOPIC: COVALENT BOND LENGTHS                                      
@@ -197,7 +224,7 @@ REMARK 500  2 ASP S  14   CB  -  CG  -  OD2 ANGL. DEV. =  -6.8 DEGREES
 REMARK 500  2 ASP S  19   CB  -  CG  -  OD1 ANGL. DEV. =   6.5 DEGREES          
 REMARK 500  2 ASP S  19   CB  -  CG  -  OD2 ANGL. DEV. =  -6.8 DEGREES          
 REMARK 500  3 ASP S   9   CB  -  CG  -  OD1 ANGL. DEV. =   6.1 DEGREES          
-REMARK 500  3 ASP S   9   CB  -  CG  -  OD2 ANGL. DEV. =  -6.4 DEGREES          
+REMARK 500  3 ASP S   9   CB  -  CG  -  OD2 ANGL. DEV. =  -6.5 DEGREES          
 REMARK 500  3 ASP S  14   CB  -  CG  -  OD1 ANGL. DEV. =   6.2 DEGREES          
 REMARK 500  3 ASP S  14   CB  -  CG  -  OD2 ANGL. DEV. =  -6.6 DEGREES          
 REMARK 500  3 ASP S  19   CB  -  CG  -  OD1 ANGL. DEV. =   6.0 DEGREES          
@@ -217,7 +244,7 @@ REMARK 500  6 ASP S  14   CB  -  CG  -  OD1 ANGL. DEV. =   6.5 DEGREES
 REMARK 500  6 ASP S  14   CB  -  CG  -  OD2 ANGL. DEV. =  -6.8 DEGREES          
 REMARK 500  6 ASP S  19   CB  -  CG  -  OD1 ANGL. DEV. =   7.1 DEGREES          
 REMARK 500  6 ASP S  19   CB  -  CG  -  OD2 ANGL. DEV. =  -6.2 DEGREES          
-REMARK 500  7 ASP S   9   CB  -  CG  -  OD1 ANGL. DEV. =   6.4 DEGREES          
+REMARK 500  7 ASP S   9   CB  -  CG  -  OD1 ANGL. DEV. =   6.5 DEGREES          
 REMARK 500  7 ASP S   9   CB  -  CG  -  OD2 ANGL. DEV. =  -6.6 DEGREES          
 REMARK 500  7 ASP S  14   CB  -  CG  -  OD1 ANGL. DEV. =   6.6 DEGREES          
 REMARK 500  7 ASP S  14   CB  -  CG  -  OD2 ANGL. DEV. =  -6.4 DEGREES          
@@ -303,83 +330,8 @@ REMARK 500  6 ASP S   9      140.55   -175.56
 REMARK 500  6 TYR S  31        1.60    -64.13                                   
 REMARK 500  6 LEU S  48       46.52   -141.66                                   
 REMARK 500  6 SER S  67     -106.24   -167.29                                   
-REMARK 500  6 LEU S  69      -21.91    123.86                                   
-REMARK 500  6 PRO S  70     -159.56    -79.07                                   
-REMARK 500  6 GLU S  72      102.73    -56.49                                   
-REMARK 500  6 LYS S  74     -176.86   -170.35                                   
-REMARK 500  7 LEU S   2     -110.09    -16.72                                   
-REMARK 500  7 LYS S   3      136.35     97.17                                   
-REMARK 500  7 LYS S   7      -72.68    -88.34                                   
-REMARK 500  7 PHE S  27       -5.12    -59.08                                   
-REMARK 500  7 MET S  33      151.27    152.28                                   
-REMARK 500  7 LEU S  48       30.01   -150.54                                   
-REMARK 500  7 ARG S  68       31.31    -76.03                                   
-REMARK 500  7 LEU S  69       64.31     20.81                                   
-REMARK 500  7 TYR S  71      153.35     79.26                                   
-REMARK 500  7 PRO S  73     -140.47    -63.48                                   
-REMARK 500  7 LYS S  74      145.46     78.09                                   
-REMARK 500  7 LEU S  75      -66.37     76.17                                   
-REMARK 500  8 LEU S   2       28.20    -67.09                                   
-REMARK 500  8 LYS S   3      -85.90    -80.55                                   
-REMARK 500  8 ASN S   4      -59.97     74.17                                   
-REMARK 500  8 ALA S   6       -7.17    -56.44                                   
-REMARK 500  8 ASP S   9      142.18    166.36                                   
-REMARK 500  8 ARG S  30       45.16    -80.40                                   
-REMARK 500  8 SER S  67       72.56   -112.33                                   
-REMARK 500  8 ARG S  68      -88.74    -66.91                                   
-REMARK 500  8 LEU S  69      -56.18    172.59                                   
-REMARK 500  8 PRO S  70     -168.76    -72.63                                   
-REMARK 500  8 GLU S  72      107.65     68.26                                   
-REMARK 500  8 LYS S  74       52.04   -155.07                                   
-REMARK 500  9 LEU S   2      -82.28   -146.06                                   
-REMARK 500  9 ASN S   4      -61.96   -157.94                                   
-REMARK 500  9 LEU S   5      -76.26    -27.06                                   
-REMARK 500  9 ASP S   9     -104.81   -141.81                                   
-REMARK 500  9 TYR S  31      -17.26    -44.52                                   
-REMARK 500  9 LEU S  48       59.99   -143.28                                   
-REMARK 500  9 LEU S  66       -6.27    140.80                                   
-REMARK 500  9 SER S  67       52.43     78.45                                   
-REMARK 500  9 ARG S  68       43.89    -85.42                                   
-REMARK 500  9 LEU S  69       63.30     27.87                                   
-REMARK 500  9 GLU S  72      -52.42   -141.75                                   
-REMARK 500  9 PRO S  73     -155.54    -59.59                                   
-REMARK 500  9 LYS S  74      107.35    -49.42                                   
-REMARK 500 10 LEU S   2      -78.51     72.76                                   
-REMARK 500 10 LYS S   3      121.38     77.85                                   
-REMARK 500 10 ASN S   4     -143.53    -81.38                                   
-REMARK 500 10 LEU S   8       -5.23     75.32                                   
-REMARK 500 10 PHE S  27        0.70    -61.36                                   
-REMARK 500 10 LEU S  48       42.62   -146.92                                   
-REMARK 500 10 LEU S  66      -81.87     -8.31                                   
-REMARK 500 10 SER S  67      -66.91     52.35                                   
-REMARK 500 10 PRO S  70     -150.19    -59.22                                   
-REMARK 500 10 PRO S  73      -85.50    -47.22                                   
-REMARK 500 10 LYS S  74      122.30    162.26                                   
-REMARK 500 11 LYS S   3       -8.94     73.83                                   
-REMARK 500 11 LEU S   8      102.87    135.07                                   
-REMARK 500 11 ASP S   9      -81.88   -148.34                                   
-REMARK 500 11 PHE S  27       33.06    -79.72                                   
-REMARK 500 11 ARG S  30       15.61    -64.09                                   
-REMARK 500 11 LEU S  66      -68.18    -13.75                                   
-REMARK 500 11 SER S  67       31.38   -141.45                                   
-REMARK 500 11 PRO S  70     -149.24    -76.23                                   
-REMARK 500 11 TYR S  71      -86.98   -100.29                                   
-REMARK 500 11 GLU S  72      155.97     62.61                                   
-REMARK 500 11 PRO S  73     -144.75    -76.97                                   
-REMARK 500 11 LYS S  74      121.03   -173.64                                   
-REMARK 500 11 LEU S  75      146.00     73.69                                   
-REMARK 500 12 LEU S   2      -28.80   -171.80                                   
-REMARK 500 12 ASN S   4       95.07   -161.91                                   
-REMARK 500 12 LEU S   5       23.34    -78.48                                   
-REMARK 500 12 LEU S   8       83.34     74.94                                   
-REMARK 500 12 ASP S   9     -108.52   -160.61                                   
-REMARK 500 12 TYR S  31       10.64    -67.06                                   
-REMARK 500 12 LEU S  48       58.23   -146.72                                   
-REMARK 500 12 LEU S  66      -75.98     43.29                                   
-REMARK 500 12 LEU S  69       85.84     46.87                                   
-REMARK 500 12 PRO S  70     -166.64    -75.34                                   
-REMARK 500 12 LYS S  74     -174.15     59.88                                   
-REMARK 500 12 LEU S  75     -161.49   -160.81                                   
+REMARK 500                                                                      
+REMARK 500 THIS ENTRY HAS     127 RAMACHANDRAN OUTLIERS.                        
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
@@ -395,7 +347,7 @@ REMARK 500 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;
 REMARK 500 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE).                             
 REMARK 500                                                                      
 REMARK 500  M RES CSSEQI        RMS     TYPE                                    
-REMARK 500  3 ARG S  30         0.08    SIDE_CHAIN                              
+REMARK 500  3 ARG S  30         0.08    SIDE CHAIN                              
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 900                                                                      
@@ -15781,5 +15733,5 @@ ATOM   1276  HZ2 LYS S  76     -27.521 -13.043  -3.895  1.00  0.00           H
 ATOM   1277  HZ3 LYS S  76     -29.198 -12.914  -3.656  1.00  0.00           H  
 TER    1278      LYS S  76                                                      
 ENDMDL                                                                          
-MASTER      371    0    0    6    0    0    0    615323   12    0    6          
+MASTER      323    0    0    6    0    0    0    6  621    1    0    6          
 END                                                                             
