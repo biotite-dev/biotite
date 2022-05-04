@@ -816,6 +816,10 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
 
 
 def _get_transformations(struct_oper):
+    """
+    Get transformation operation in terms of rotation matrix and
+    translation for each operation ID in ``pdbx_struct_oper_list``
+    """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"]):
         rotation_matrix = np.array(
@@ -835,6 +839,10 @@ def _get_transformations(struct_oper):
 
 
 def _parse_operation_expression(expression):
+    """
+    Get successive operation steps (IDs) for the given ``oper_expression``.
+    Form the cartesian product, if necessary.
+    """
     # Split groups by parentheses:
     # use the opening parenthesis as delimiter
     # and just remove the closing parenthesis
@@ -863,9 +871,11 @@ def _parse_operation_expression(expression):
 
 
 def _convert_string_to_sequence(string, stype):
-    # Convert strings to ProteinSequence-Object if stype is
-    # contained in _proteinseq_type_list or to NucleotideSequence-
-    # Object if stype is contained in _nucleotideseq_type_list
+    """
+    Convert strings to `ProteinSequence` if `stype` is contained in
+    ``proteinseq_type_list`` or to ``NucleotideSequence`` if `stype` is
+    contained in ``_nucleotideseq_type_list``
+    """
     if stype in _proteinseq_type_list:
         return ProteinSequence(string)
     elif stype in _nucleotideseq_type_list:
