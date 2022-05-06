@@ -181,7 +181,8 @@
             "BondType",
             "connect_via_residue_names",
             "connect_via_distances",
-            "find_connected"
+            "find_connected",
+            "find_rotatable_bonds"
         ],
         "Geometry" : [
             "displacement",
@@ -203,6 +204,7 @@
             "rotate_centered",
             "rotate_about_axis",
             "align_vectors",
+            "orient_principal_components",
             "superimpose",
             "superimpose_apply"
         ],
@@ -236,6 +238,12 @@
         ],
         "Chain level utility" : [
             "get_chain_starts",
+            "apply_chain_wise",
+            "spread_chain_wise",
+            "get_chain_masks",
+            "get_chain_starts_for",
+            "get_chain_positions",
+            "chain_iter",
             "get_chains",
             "get_chain_count",
             "chain_iter"

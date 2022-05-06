@@ -16,6 +16,7 @@ __all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
 
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
+from .resutil import *
 
 
 def get_residue_starts(array, add_exclusive_stop=False):
@@ -163,31 +164,7 @@ def apply_residue_wise(array, data, function, axis=None):
      [ 1.194 10.416  1.130]]
     """
     starts = get_residue_starts(array, add_exclusive_stop=True)
-    # The result array
-    processed_data = None
-    for i in range(len(starts)-1):
-        interval = data[starts[i]:starts[i+1]]
-        if axis == None:
-            value = function(interval)
-        else:
-            value = function(interval, axis=axis)
-        value = function(interval, axis=axis)
-        # Identify the shape of the resulting array by evaluation
-        # of the function return value for the first interval
-        if processed_data is None:
-            if isinstance(value, np.ndarray):
-                # Maximum length of the processed data
-                # is length of interval of size 1 -> length of all IDs
-                # (equal to atom array length)
-                processed_data = np.zeros((len(starts)-1,) + value.shape,
-                                          dtype=value.dtype)
-            else:
-                # Scalar value -> one dimensional result array
-                processed_data = np.zeros(len(starts)-1,
-                                          dtype=type(value))
-        # Write values into result arrays
-        processed_data[i] = value
-    return processed_data
+    return apply_segment_wise(starts, data, function, axis)
 
 
 def spread_residue_wise(array, input_data):
@@ -248,12 +225,8 @@ def spread_residue_wise(array, input_data):
          'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
          'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c']
     """
-    starts = get_residue_starts(array)
-    output_data = np.zeros(array.array_length(), dtype=input_data.dtype)
-    for i in range(len(starts)-1):
-        output_data[starts[i]:starts[i+1]] = input_data[i]
-    output_data[starts[-1]:] = input_data[-1]
-    return output_data
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    return spread_segment_wise(starts, input_data)
 
 
 def get_residue_masks(array, indices):
@@ -331,24 +304,8 @@ def get_residue_masks(array, indices):
         A       3  TYR HE2    H         0.033    4.952    4.233
         A       3  TYR HH     H         1.187    3.395    5.567
     """
-    indices = np.asarray(indices)
     starts = get_residue_starts(array, add_exclusive_stop=True)
-    masks = np.zeros((len(indices), array.array_length()), dtype=bool)
-
-    if (indices < 0).any():
-        raise ValueError("This function does not support negative indices")
-    if (indices >= array.array_length()).any():
-        index = np.min(np.where(indices >= array.array_length())[0])
-        raise ValueError(
-            f"Index {index} is out of range for "
-            f"an atom array with length {array.array_length()}"
-        )
-    
-    insertion_points = np.searchsorted(starts, indices, side="right") - 1
-    for i, point in enumerate(insertion_points):
-        masks[i, starts[point] : starts[point+1]] = True
-    
-    return masks
+    return get_segment_masks(starts, indices)
 
 
 def get_residue_starts_for(array, indices):
@@ -392,20 +349,8 @@ def get_residue_starts_for(array, indices):
     >>> print(atom_array[residue_starts[1]])
         A       3  TYR N      N        -4.354    3.455   -0.111
     """
-    indices = np.asarray(indices)
-    starts = get_residue_starts(array)
-
-    if (indices < 0).any():
-        raise ValueError("This function does not support negative indices")
-    if (indices >= array.array_length()).any():
-        index = np.min(np.where(indices >= array.array_length())[0])
-        raise ValueError(
-            f"Index {index} is out of range for "
-            f"an atom array with length {array.array_length()}"
-        )
-    
-    insertion_points = np.searchsorted(starts, indices, side="right") - 1
-    return starts[insertion_points]
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    return get_segment_starts_for(starts, indices)
 
 
 def get_residue_positions(array, indices):
@@ -450,19 +395,8 @@ def get_residue_positions(array, indices):
     >>> print(residues[residue_index])
     ['ASN' 'TYR']
     """
-    indices = np.asarray(indices)
-    starts = get_residue_starts(array)
-
-    if (indices < 0).any():
-        raise ValueError("This function does not support negative indices")
-    if (indices >= array.array_length()).any():
-        index = np.min(np.where(indices >= array.array_length())[0])
-        raise ValueError(
-            f"Index {index} is out of range for "
-            f"an atom array with length {array.array_length()}"
-        )
-    
-    return np.searchsorted(starts, indices, side="right") - 1
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    return get_segment_positions(starts, indices)
 
 
 def get_residues(array):
@@ -624,6 +558,5 @@ def residue_iter(array):
     <BLANKLINE>
     """
     # The exclusive stop is appended to the residue starts
-    starts = np.append(get_residue_starts(array), [array.array_length()])
-    for i in range(len(starts)-1):
-        yield array[..., starts[i] : starts[i+1]]
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    return segment_iter(array, starts)
