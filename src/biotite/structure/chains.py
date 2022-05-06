@@ -12,6 +12,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_chain_starts", "get_chains", "get_chain_count", "chain_iter"]
 
 import numpy as np
+from .resutil import *
 
 
 def get_chain_starts(array, add_exclusive_stop=False):
@@ -124,6 +125,5 @@ def chain_iter(array):
     residue_iter
     """
     # The exclusive stop is appended to the chain starts
-    starts = np.append(get_chain_starts(array), [array.array_length()])
-    for i in range(len(starts)-1):
-        yield array[..., starts[i] : starts[i+1]]
+    starts = get_chain_starts(array, add_exclusive_stop=True)
+    return segment_iter(array, starts)
