@@ -685,8 +685,13 @@ class PDBFile(TextFile):
         
         # Mapping from atom ids to indices in an AtomArray
         atom_id_to_index = np.zeros(atom_ids[-1]+1, dtype=int)
-        for i, id in enumerate(atom_ids):
-           atom_id_to_index[id] = i
+        try:
+            for i, id in enumerate(atom_ids):
+                atom_id_to_index[id] = i
+        except IndexError as e:
+            raise InvalidFileError(
+                "Atom IDs are not strictly increasing"
+            ) from e
 
         bonds = []
         for line in conect_lines:
