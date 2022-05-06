@@ -31,8 +31,8 @@ def test_get_chain_starts_same_id(array):
     """
     # Concatenate two chains with same ID
     array = array[array.chain_id == "A"]
-    array = array + array
-    assert len(struc.get_chain_starts(array)) == 2
+    merged = array + array
+    assert struc.get_chain_starts(merged).tolist() == [0, array.array_length()]
 
 def test_get_chains(array):
     assert struc.get_chains(array).tolist() == ["A", "B", "C", "D", "E", "F"]
