@@ -4,7 +4,7 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord"]
+__all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
 import abc
 from collections import OrderedDict
@@ -147,6 +147,7 @@ try:
     from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
     from matplotlib.patheffects import AbstractPathEffect
+    import matplotlib.pyplot as plt
 
     class AdaptiveFancyArrow(FancyArrow):
         """
@@ -181,7 +182,6 @@ try:
         def __init__(self, x, y, dx, dy,
                      tail_width, head_width, head_ratio, draw_head=True,
                      shape="full", **kwargs):
-            import matplotlib.pyplot as plt
             self._x = x
             self._y = y
             self._dx = dx
@@ -243,8 +243,11 @@ try:
             """
             """
             return super().set_in_layout(in_layout)
-    
-    __all__.append("AdaptiveFancyArrow")
 
 except ImportError:
-    pass
+    
+    # Dummy class that propagates a meaningful error,
+    # i.e. that Matplotlib is not installed
+    class AdaptiveFancyArrow():
+        def __init__(*args, **kwargs):
+            raise ModuleNotFoundError(f"No module named 'matplotlib'")
