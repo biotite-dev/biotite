@@ -689,7 +689,9 @@ class PDBFile(TextFile):
             for i, id in enumerate(atom_ids):
                 atom_id_to_index[id] = i
         except IndexError as e:
-            raise InvalidFileError("Atom IDs are not strictly increasing")
+            raise InvalidFileError(
+                "Atom IDs are not strictly increasing"
+            ) from e
 
         bonds = []
         for line in conect_lines:
