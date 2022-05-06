@@ -20,10 +20,8 @@ def get_chain_starts(array, add_exclusive_stop=False):
     Get the indices in an atom array, which indicates the beginning of
     a new chain.
     
-    A new chain starts, when the chain ID changes.
-
-    This method is internally used by all other chain-related
-    functions.
+    A new chain starts, when the chain ID changes or when the residue ID
+    decreases.
     
     Parameters
     ----------
@@ -39,17 +37,24 @@ def get_chain_starts(array, add_exclusive_stop=False):
     starts : ndarray, dtype=int
         The start indices of new chains in `array`.
     
+    Notes
+    -----
+    This method is internally used by all other chain-related
+    functions.
+    
     See also
     --------
     get_residue_starts
     """
+    diff = np.diff(array.res_id)
+    res_id_decrement = diff < 0
     # This mask is 'true' at indices where the value changes
     chain_id_changes = (array.chain_id[1:] != array.chain_id[:-1])
     
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a chain
     # to the start of a new chain
-    chain_starts = np.where(chain_id_changes)[0] +1
+    chain_starts = np.where(res_id_decrement | chain_id_changes)[0] + 1
     
     # The first chain is not included yet -> Insert '[0]'
     if add_exclusive_stop:
@@ -124,6 +129,5 @@ def chain_iter(array):
     --------
     residue_iter
     """
-    # The exclusive stop is appended to the chain starts
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return segment_iter(array, starts)

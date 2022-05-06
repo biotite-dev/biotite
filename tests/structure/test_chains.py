@@ -15,10 +15,24 @@ def array():
     return strucio.load_structure(join(data_dir("structure"), "1igy.mmtf"))
 
 def test_get_chain_starts(array):
+    """
+    Compare :func:`test_get_chain_starts()` with :func:`np.unique` in a
+    case where chain ID unambiguously identify chains.
+    """
     _, ref_starts = np.unique(array.chain_id, return_index=True)
     test_starts = struc.get_chain_starts(array)
     # All first occurences of a chain id are automatically chain starts
     assert set(ref_starts).issubset(set(test_starts))
+
+def test_get_chain_starts_same_id(array):
+    """
+    Expect correct number of chains in a case where two successive
+    chains have the same chain ID (as possible in an assembly).
+    """
+    # Concatenate two chains with same ID
+    array = array[array.chain_id == "A"]
+    array = array + array
+    assert len(struc.get_chain_starts(array)) == 2
 
 def test_get_chains(array):
     assert struc.get_chains(array).tolist() == ["A", "B", "C", "D", "E", "F"]
