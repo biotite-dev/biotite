@@ -84,7 +84,7 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest -v --ignore=tests//application//test_blast.py --ignore=tests//application//test_sra.py --ignore=tests//database//test_entrez.py
+        run: pytest -v --ignore=tests//application//test_blast.py --ignore=tests//application//test_sra.py --ignore=tests//database//test_entrez.py --ignore="ore=tests//application//test_sra.py --ignore=tests//database//test_entrez.py --ignore="tests/test_doctest.py::test_doctest[biotite.structure-context_package_names10]"
   
 
   test-muscle5:
