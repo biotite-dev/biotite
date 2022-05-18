@@ -420,6 +420,9 @@ class GFFFile(TextFile):
         """
         Parse the *attributes* string into a dictionary.
         """
+        if attributes == ".":
+            return {}
+
         attrib_dict = {}
         attrib_entries = attributes.split(";")
         for entry in attrib_entries:
