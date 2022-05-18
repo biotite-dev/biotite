@@ -187,10 +187,6 @@ def test_error():
     with pytest.raises(ValueError):
         # String fields must not be empty
         file.append("xyz", "ab", "", 1, 2, None, None, None, {"Id":"foo"})
-    with pytest.raises(ValueError):
-        # Attributes not be empty
-        file.append("xyz", "ab", "cd", 1, 2, None, None, None, {})
-
 
 def test_feature_without_id():
     """
