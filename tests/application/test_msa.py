@@ -91,6 +91,10 @@ def test_large_sequence_number(app_cls):
     SEQ_LENGTH = 50
     SEQ_NUMBER = 100
 
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+
     # Create random sequence
     sequence = seq.ProteinSequence()
     sequence.code = np.random.randint(20, size=SEQ_LENGTH)
