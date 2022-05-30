@@ -333,7 +333,7 @@ class SubstitutionMatrix(object):
         matrix_dict = {}
         for i in range(len(symbols1)):
             for j in range(len(symbols2)):
-                matrix_dict[(symbols1[i], symbols1[j])] = scores[i,j]
+                matrix_dict[(symbols1[i], symbols2[j])] = scores[i,j]
         return matrix_dict
     
     @staticmethod
