@@ -61,4 +61,4 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest ${{ matrix.test }}
+        run: pytest --ignore ${{ matrix.test }} "tests/test_doctest.py"
