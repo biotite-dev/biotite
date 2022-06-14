@@ -154,7 +154,7 @@ class GFFFile(TextFile):
         return file
     
     def insert(self, index, seqid, source, type, start, end,
-               score, strand, phase, attributes):
+               score, strand, phase, attributes=None):
         """
         Insert an entry at the given index.
         
@@ -180,7 +180,7 @@ class GFFFile(TextFile):
             Strand of the feature, ``None`` if feature is not stranded.
         phase : int or None
             Reading frame shift, ``None`` for non-CDS features.
-        attributes : dict
+        attributes : dict, optional
             Additional properties of the feature.
         """
         if index == len(self):
@@ -196,7 +196,7 @@ class GFFFile(TextFile):
             self._index_entries()
     
     def append(self, seqid, source, type, start, end,
-               score, strand, phase, attributes):
+               score, strand, phase, attributes=None):
         """
         Append an entry to the end of the file.
         
@@ -218,7 +218,7 @@ class GFFFile(TextFile):
             Strand of the feature, ``None`` if feature is not stranded.
         phase : int or None
             Reading frame shift, ``None`` for non-CDS features.
-        attributes : dict
+        attributes : dict, optional
             Additional properties of the feature.
         """
         if self._has_fasta:
@@ -392,8 +392,6 @@ class GFFFile(TextFile):
             raise ValueError("'source' must not be empty")
         if len(type) == 0:
             raise ValueError("'type' must not be empty")
-        if len(attributes) == 0:
-            raise ValueError("'attributes' must not be empty")
         if seqid[0] == ">":
             raise ValueError("'seqid' must not start with '>'")
         
@@ -408,7 +406,7 @@ class GFFFile(TextFile):
         attributes = ";".join(
             [quote(key, safe=_NOT_QUOTED) + "=" + quote(val, safe=_NOT_QUOTED)
              for key, val in attributes.items()]
-        )
+        ) if attributes is not None and len(attributes) > 0 else "."
 
         return "\t".join(
             [seqid, source, type, str(start), str(end),
@@ -420,6 +418,9 @@ class GFFFile(TextFile):
         """
         Parse the *attributes* string into a dictionary.
         """
+        if attributes == ".":
+            return {}
+
         attrib_dict = {}
         attrib_entries = attributes.split(";")
         for entry in attrib_entries:
