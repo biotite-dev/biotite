@@ -22,6 +22,7 @@ import numbers
 from enum import IntEnum
 import networkx as nx
 import numpy as np
+from .error import BadStructureError
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -1365,10 +1366,12 @@ _DEFAULT_DISTANCE_RANGE = {
 }
 
 def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
-                          bint inter_residue=True, default_bond_type=BondType.ANY):
+                          bint inter_residue=True,
+                          default_bond_type=BondType.ANY, bint periodic=False):
     """
     connect_via_distances(atoms, distance_range=None, atom_mask=None, 
-                          inter_residue=True, default_bond_type=BondType.ANY)
+                          inter_residue=True, default_bond_type=BondType.ANY,
+                          periodic=False)
 
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
@@ -1404,6 +1407,10 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     default_bond_type : BondType or int, optional
         By default, all created bonds have :attr:`BondType.ANY`.
         An alternative :class:`BondType` can be given in this parameter.
+    periodic : bool, optional
+        If set to true, bonds can also be detected in periodic
+        boundary conditions.
+        The `box` attribute of `atoms` is required in this case.
 
     Returns
     -------
@@ -1449,6 +1456,12 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
 
     if not isinstance(atoms, AtomArray):
         raise TypeError(f"Expected 'AtomArray', not '{type(atoms).__name__}'")
+    if periodic:
+        if atoms.box is None:
+            raise BadStructureError("Atom array has no box")
+        box = atoms.box
+    else:
+        box = None
 
     # Prepare distance dictionary...
     if distance_range is None:
@@ -1473,7 +1486,8 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
         # Matrix containing all pairwise atom distances in the residue
         distances = distance(
             coord_in_res[:, np.newaxis, :],
-            coord_in_res[np.newaxis, :, :]
+            coord_in_res[np.newaxis, :, :],
+            box
         )
         for atom_index1 in range(len(elements_in_res)):
             for atom_index2 in range(atom_index1):
