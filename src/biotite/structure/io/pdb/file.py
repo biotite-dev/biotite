@@ -6,22 +6,21 @@ __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann, Daniel Bauer, Claude J. Rogers"
 __all__ = ["PDBFile"]
 
-import warnings
+from warnings import warn
+
 import numpy as np
+
+from ....file import InvalidFileError, TextFile
 from ...atoms import AtomArray, AtomArrayStack
 from ...bonds import BondList, connect_via_residue_names
-from ...box import vectors_from_unitcell, unitcell_from_vectors
-from ....file import TextFile, InvalidFileError
-from ..general import _guess_element as guess_element
-from ...error import BadStructureError
+from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...filter import (
     filter_first_altloc,
     filter_highest_occupancy_altloc,
     filter_solvent,
 )
-from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
-import copy
-from warnings import warn
+from ..general import _guess_element as guess_element
+from .hybrid36 import decode_hybrid36, encode_hybrid36, max_hybrid36_number
 
 # slice objects for readability
 # ATOM/HETATM
@@ -52,22 +51,22 @@ _gamma = slice(47, 54)
 class PDBFile(TextFile):
     r"""
     This class represents a PDB file.
-    
+
     The usage of PDBxFile is encouraged in favor of this class.
-    
+
     This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
-    
+
     See also
     --------
     PDBxFile
-    
+
     Examples
     --------
     Load a `\\*.pdb` file, modify the structure and save the new
     structure into a new file:
-    
+
     >>> import os.path
     >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
     >>> array_stack = file.get_structure()
@@ -76,6 +75,7 @@ class PDBFile(TextFile):
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
+
     def get_model_count(self):
         """
         Get the number of models contained in the PDB file.
@@ -89,7 +89,7 @@ class PDBFile(TextFile):
         for line in self.lines:
             if line.startswith("MODEL"):
                 model_count += 1
-        
+
         if model_count == 0:
             # It could be an empty file or a file with a single model,
             # where the 'MODEL' line is missing
@@ -99,11 +99,11 @@ class PDBFile(TextFile):
             return 0
         else:
             return model_count
-    
+
     def get_coord(self, model=None):
         """
         Get only the coordinates of the PDB file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -115,13 +115,13 @@ class PDBFile(TextFile):
             If this parameter is omitted, an 2D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
-        
+
         Returns
         -------
         coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
             The coordinates read from the ATOM and HETATM records of the
             file.
-        
+
         Notes
         -----
         Note that :func:`get_coord()` may output more coordinates than
@@ -129,18 +129,18 @@ class PDBFile(TextFile):
         :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
         *altloc* IDs, while `get_coord()` does not.
-        
+
         Examples
         --------
         Read an :class:`AtomArrayStack` from multiple PDB files, where
         each PDB file contains the same atoms but different positions.
         This is an efficient approach when a trajectory is spread into
         multiple PDB files, as done e.g. by the *Rosetta* modeling
-        software. 
+        software.
 
         For the purpose of this example, the PDB files are created from
         an existing :class:`AtomArrayStack`.
-        
+
         >>> import os.path
         >>> from tempfile import gettempdir
         >>> file_names = []
@@ -175,23 +175,29 @@ class PDBFile(TextFile):
         True
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith("MODEL")],
-                                 dtype=int)
+        model_start_i = np.array(
+            [i for i in range(len(self.lines)) if self.lines[i].startswith("MODEL")],
+            dtype=int,
+        )
         # Line indices with ATOM or HETATM records
-        atom_line_i = np.array([i for i in range(len(self.lines)) if
-                                self.lines[i].startswith(("ATOM", "HETATM"))],
-                                dtype=int)
+        atom_line_i = np.array(
+            [
+                i
+                for i in range(len(self.lines))
+                if self.lines[i].startswith(("ATOM", "HETATM"))
+            ],
+            dtype=int,
+        )
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
             model_start_i = np.array([0])
-        
+
         if model is None:
             depth = len(model_start_i)
             length = self._get_model_length(model_start_i, atom_line_i)
             coord_i = atom_line_i
-        
+
         else:
             last_model = len(model_start_i)
             if model == 0:
@@ -200,10 +206,11 @@ class PDBFile(TextFile):
             model = last_model + model + 1 if model < 0 else model
 
             if model < last_model:
-                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
-                                ( atom_line_i <  model_start_i[model  ] ) )
+                line_filter = (atom_line_i >= model_start_i[model - 1]) & (
+                    atom_line_i < model_start_i[model]
+                )
             elif model == last_model:
-                line_filter = (atom_line_i >= model_start_i[model-1])
+                line_filter = atom_line_i >= model_start_i[model - 1]
             else:
                 raise ValueError(
                     f"The file has {last_model} models, "
@@ -211,40 +218,41 @@ class PDBFile(TextFile):
                 )
             coord_i = atom_line_i[line_filter]
             length = len(coord_i)
-        
+
         # Fill in coordinates
         if model is None:
             coord = np.zeros((depth, length, 3), dtype=np.float32)
             m = 0
             i = 0
             for line_i in atom_line_i:
-                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+                if m < len(model_start_i) - 1 and line_i > model_start_i[m + 1]:
                     m += 1
                     i = 0
                 line = self.lines[line_i]
-                coord[m,i,0] = float(line[30:38])
-                coord[m,i,1] = float(line[38:46])
-                coord[m,i,2] = float(line[46:54])
+                coord[m, i, 0] = float(line[30:38])
+                coord[m, i, 1] = float(line[38:46])
+                coord[m, i, 2] = float(line[46:54])
                 i += 1
             return coord
-        
+
         else:
             coord = np.zeros((length, 3), dtype=np.float32)
             for i, line_i in enumerate(coord_i):
                 line = self.lines[line_i]
-                coord[i,0] = float(line[30:38])
-                coord[i,1] = float(line[38:46])
-                coord[i,2] = float(line[46:54])
+                coord[i, 0] = float(line[30:38])
+                coord[i, 1] = float(line[38:46])
+                coord[i, 2] = float(line[46:54])
             return coord
 
-    def get_structure(self, model=None, altloc="first", extra_fields=[],
-                      include_bonds=False):
+    def get_structure(
+        self, model=None, altloc="first", extra_fields=[], include_bonds=False
+    ):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
-        
+
         This function parses standard base-10 PDB files as well as
         hybrid-36 PDB.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -278,25 +286,31 @@ class PDBFile(TextFile):
             from the file.
             All bonds have :attr:`BondType.ANY`, since the PDB format
             does not support bond orders.
-        
+
         Returns
         -------
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
-                                 dtype=int)
+        model_start_i = np.array(
+            [i for i in range(len(self.lines)) if self.lines[i].startswith(("MODEL"))],
+            dtype=int,
+        )
         # Line indices with ATOM or HETATM records
-        atom_line_i = np.array([i for i in range(len(self.lines)) if
-                                self.lines[i].startswith(("ATOM", "HETATM"))],
-                               dtype=int)
+        atom_line_i = np.array(
+            [
+                i
+                for i in range(len(self.lines))
+                if self.lines[i].startswith(("ATOM", "HETATM"))
+            ],
+            dtype=int,
+        )
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
             model_start_i = np.array([0])
-        
+
         if model is None:
             depth = len(model_start_i)
             length = self._get_model_length(model_start_i, atom_line_i)
@@ -310,7 +324,7 @@ class PDBFile(TextFile):
                 annot_i = atom_line_i[atom_line_i < model_start_i[1]]
             # Line indices for coordinate determination
             coord_i = atom_line_i
-        
+
         else:
             last_model = len(model_start_i)
             if model == 0:
@@ -319,10 +333,11 @@ class PDBFile(TextFile):
             model = last_model + model + 1 if model < 0 else model
 
             if model < last_model:
-                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
-                                ( atom_line_i <  model_start_i[model  ] ) )
+                line_filter = (atom_line_i >= model_start_i[model - 1]) & (
+                    atom_line_i < model_start_i[model]
+                )
             elif model == last_model:
-                line_filter = (atom_line_i >= model_start_i[model-1])
+                line_filter = atom_line_i >= model_start_i[model - 1]
             else:
                 raise ValueError(
                     f"The file has {last_model} models, "
@@ -330,19 +345,19 @@ class PDBFile(TextFile):
                 )
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
-        
+
         # Create mandatory and optional annotation arrays
-        chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
-        res_id    = np.zeros(array.array_length(), array.res_id.dtype)
-        ins_code  = np.zeros(array.array_length(), array.ins_code.dtype)
-        res_name  = np.zeros(array.array_length(), array.res_name.dtype)
-        hetero    = np.zeros(array.array_length(), array.hetero.dtype)
+        chain_id = np.zeros(array.array_length(), array.chain_id.dtype)
+        res_id = np.zeros(array.array_length(), array.res_id.dtype)
+        ins_code = np.zeros(array.array_length(), array.ins_code.dtype)
+        res_name = np.zeros(array.array_length(), array.res_name.dtype)
+        hetero = np.zeros(array.array_length(), array.hetero.dtype)
         atom_name = np.zeros(array.array_length(), array.atom_name.dtype)
-        element   = np.zeros(array.array_length(), array.element.dtype)
+        element = np.zeros(array.array_length(), array.element.dtype)
         atom_id_raw = np.zeros(array.array_length(), "U5")
-        charge_raw  = np.zeros(array.array_length(), "U2")
+        charge_raw = np.zeros(array.array_length(), "U2")
         occupancy = np.zeros(array.array_length(), float)
-        b_factor  = np.zeros(array.array_length(), float)
+        b_factor = np.zeros(array.array_length(), float)
         altloc_id = np.zeros(array.array_length(), dtype="U1")
 
         # Fill annotation array
@@ -361,17 +376,15 @@ class PDBFile(TextFile):
             charge_raw[i] = line[_charge][::-1]  # turn "1-" into "-1"
             occupancy[i] = float(line[_occupancy].strip())
             b_factor[i] = float(line[_temp_f].strip())
-        
-        if include_bonds or \
-            (extra_fields is not None and "atom_id" in extra_fields):
-                # The atom IDs are only required in these two cases
-                atom_id = np.array(
-                    [decode_hybrid36(raw_id.item()) for raw_id in atom_id_raw],
-                    dtype=int
-                )
+
+        if include_bonds or (extra_fields is not None and "atom_id" in extra_fields):
+            # The atom IDs are only required in these two cases
+            atom_id = np.array(
+                [decode_hybrid36(raw_id.item()) for raw_id in atom_id_raw], dtype=int
+            )
         else:
             atom_id = None
-        
+
         # Add annotation arrays to atom array (stack)
         array.chain_id = chain_id
         array.res_id = res_id
@@ -381,16 +394,17 @@ class PDBFile(TextFile):
         array.atom_name = atom_name
         array.element = element
 
-        for field in (extra_fields if extra_fields is not None else []):
+        for field in extra_fields if extra_fields is not None else []:
             if field == "atom_id":
-                # Copy is necessary to avoid double masking in 
+                # Copy is necessary to avoid double masking in
                 # later altloc ID filtering
                 array.set_annotation("atom_id", atom_id.copy())
             elif field == "charge":
                 charge = np.array(charge_raw)
-                array.set_annotation("charge", np.where(
-                    charge == "  ", "0", charge
-                ).astype(int))
+                array.set_annotation(
+                    "charge",
+                    np.where(np.isin(charge, ("", "  ")), "0", charge).astype(int),
+                )
             elif field == "occupancy":
                 array.set_annotation("occupancy", occupancy)
             elif field == "b_factor":
@@ -408,7 +422,7 @@ class PDBFile(TextFile):
                     array.element[idx] = guess_element(atom_name)
                     rep_num += 1
             warn("{} elements were guessed from atom_name.".format(rep_num))
-        
+
         # Fill in coordinates
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
@@ -416,12 +430,12 @@ class PDBFile(TextFile):
                 array.coord[i, 0] = float(line[_coord_x])
                 array.coord[i, 1] = float(line[_coord_y])
                 array.coord[i, 2] = float(line[_coord_z])
-                
+
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
             for line_i in atom_line_i:
-                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+                if m < len(model_start_i) - 1 and line_i > model_start_i[m + 1]:
                     m += 1
                     i = 0
                 line = self.lines[line_i]
@@ -442,14 +456,10 @@ class PDBFile(TextFile):
                     alpha = np.deg2rad(float(line[_alpha]))
                     beta = np.deg2rad(float(line[_beta]))
                     gamma = np.deg2rad(float(line[_gamma]))
-                    box = vectors_from_unitcell(
-                        len_a, len_b, len_c, alpha, beta, gamma
-                    )
+                    box = vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
                 except ValueError:
                     # File contains invalid 'CRYST1' record
-                    warnings.warn(
-                        "File contains invalid 'CRYST1' record, box is ignored"
-                    )
+                    warn("File contains invalid 'CRYST1' record, box is ignored")
                     box = None
 
                 if isinstance(array, AtomArray):
@@ -458,13 +468,11 @@ class PDBFile(TextFile):
                     array.box = np.repeat(
                         box[np.newaxis, ...], array.stack_depth(), axis=0
                     )
-                break  
+                break
 
         # Filter altloc IDs
         if altloc == "occupancy":
-            filter = filter_highest_occupancy_altloc(
-                array, altloc_id, occupancy
-            )
+            filter = filter_highest_occupancy_altloc(array, altloc_id, occupancy)
             array = array[..., filter]
             atom_id = atom_id[filter] if atom_id is not None else None
         elif altloc == "first":
@@ -475,33 +483,35 @@ class PDBFile(TextFile):
             array.set_annotation("altloc_id", altloc_id)
         else:
             raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
-        
+
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
-            bond_list = bond_list.merge(connect_via_residue_names(
-                array,
-                # The information for non-hetero residues and water
-                # are not part of CONECT records
-                (~array.hetero) | filter_solvent(array)
-            ))
+            bond_list = bond_list.merge(
+                connect_via_residue_names(
+                    array,
+                    # The information for non-hetero residues and water
+                    # are not part of CONECT records
+                    (~array.hetero) | filter_solvent(array),
+                )
+            )
             # Remove bond order from inter residue bonds for consistency
             bond_list.remove_bond_order()
-            array.bonds = bond_list  
-        
+            array.bonds = bond_list
+
         return array
 
     def set_structure(self, array, hybrid36=False):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
         file.
-        
+
         This makes also use of the optional annotation arrays
         ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         If the atom array (stack) contains the annotation ``'atom_id'``,
         these values will be used for atom numbering instead of
         continuous numbering.
-        
+
         Parameters
         ----------
         array : AtomArray or AtomArrayStack
@@ -511,7 +521,7 @@ class PDBFile(TextFile):
         hybrid36: bool, optional
             Defines wether the file should be written in hybrid-36
             format.
-        
+
         Notes
         -----
         If `array` has an associated :class:`BondList`, ``CONECT``
@@ -536,9 +546,12 @@ class PDBFile(TextFile):
             occupancy = np.char.array(np.full(natoms, "  1.00", dtype="U6"))
         if "charge" in annot_categories:
             charge = np.char.array(
-                [str(np.abs(charge)) + "+" if charge > 0 else
-                 (str(np.abs(charge)) + "-" if charge < 0 else "")
-                 for charge in array.get_annotation("charge")]
+                [
+                    str(np.abs(charge)) + "+"
+                    if charge > 0
+                    else (str(np.abs(charge)) + "-" if charge < 0 else "")
+                    for charge in array.get_annotation("charge")
+                ]
             )
         else:
             charge = np.char.array(np.full(natoms, "  ", dtype="U2"))
@@ -563,31 +576,27 @@ class PDBFile(TextFile):
             raise ValueError("Some atom names exceed 4 characters")
 
         if hybrid36:
-            pdb_atom_id = np.char.array(
-                [encode_hybrid36(i, 5) for i in atom_id]
-            )
-            pdb_res_id = np.char.array(
-                [encode_hybrid36(i, 4) for i in array.res_id]
-            )
+            pdb_atom_id = np.char.array([encode_hybrid36(i, 5) for i in atom_id])
+            pdb_res_id = np.char.array([encode_hybrid36(i, 4) for i in array.res_id])
         else:
             # Atom IDs are supported up to 99999,
             # but negative IDs are also possible
-            pdb_atom_id = np.char.array(np.where(
-                atom_id > 0,
-                ((atom_id - 1) % 99999) + 1,
-                atom_id
-            ).astype(str))
+            pdb_atom_id = np.char.array(
+                np.where(atom_id > 0, ((atom_id - 1) % 99999) + 1, atom_id).astype(str)
+            )
             # Residue IDs are supported up to 9999,
             # but negative IDs are also possible
-            pdb_res_id = np.char.array(np.where(
-                array.res_id > 0,
-                ((array.res_id - 1) % 9999) + 1,
-                array.res_id
-            ).astype(str))
-        
+            pdb_res_id = np.char.array(
+                np.where(
+                    array.res_id > 0, ((array.res_id - 1) % 9999) + 1, array.res_id
+                ).astype(str)
+            )
+
         names = np.char.array(
-            [f" {atm}" if len(elem) == 1 and len(atm) < 4 else atm
-             for atm, elem in zip(array.atom_name, array.element)]
+            [
+                f" {atm}" if len(elem) == 1 and len(atm) < 4 else atm
+                for atm, elem in zip(array.atom_name, array.element)
+            ]
         )
         res_names = np.char.array(array.res_name)
         chain_ids = np.char.array(array.chain_id)
@@ -596,23 +605,26 @@ class PDBFile(TextFile):
         elements = np.char.array(array.element)
 
         first_half = (
-            record.ljust(6) +
-            pdb_atom_id.rjust(5) +
-            spaces +
-            names.ljust(4) +
-            spaces + res_names.rjust(3) + spaces + chain_ids +
-            pdb_res_id.rjust(4) + ins_codes.rjust(1)
+            record.ljust(6)
+            + pdb_atom_id.rjust(5)
+            + spaces
+            + names.ljust(4)
+            + spaces
+            + res_names.rjust(3)
+            + spaces
+            + chain_ids
+            + pdb_res_id.rjust(4)
+            + ins_codes.rjust(1)
         )
 
         second_half = (
-            occupancy + b_factor + 10 * spaces +
-            elements.rjust(2) + charge.rjust(2)
+            occupancy + b_factor + 10 * spaces + elements.rjust(2) + charge.rjust(2)
         )
 
         coords = array.coord
         if coords.ndim == 2:
             coords = coords[np.newaxis, ...]
-        
+
         self.lines = []
         # Prepend a single CRYST1 record if we have box information
         if array.box is not None:
@@ -633,13 +645,14 @@ class PDBFile(TextFile):
                 self.lines.append(f"MODEL     {model_num:4}")
             # Bundle non-coordinate data to simplify iteration
             self.lines.extend(
-                [f"{start:27}   {x:>8.3f}{y:>8.3f}{z:>8.3f}{end:26}"
-                 for start, (x, y, z), end in
-                 zip(first_half, coord_i, second_half)]
+                [
+                    f"{start:27}   {x:>8.3f}{y:>8.3f}{z:>8.3f}{end:26}"
+                    for start, (x, y, z), end in zip(first_half, coord_i, second_half)
+                ]
             )
             if is_stack:
                 self.lines.append("ENDMDL")
-        
+
         # Add CONECT records if bonds are present
         if array.bonds is not None:
             # Only non-water hetero records and connections between
@@ -647,14 +660,12 @@ class PDBFile(TextFile):
             hetero_indices = np.where(array.hetero & ~filter_solvent(array))[0]
             bond_array = array.bonds.as_array()
             bond_array = bond_array[
-                np.isin(bond_array[:,0], hetero_indices) |
-                np.isin(bond_array[:,1], hetero_indices) |
-                (array.res_id  [bond_array[:,0]] != array.res_id  [bond_array[:,1]]) |
-                (array.chain_id[bond_array[:,0]] != array.chain_id[bond_array[:,1]])
+                np.isin(bond_array[:, 0], hetero_indices)
+                | np.isin(bond_array[:, 1], hetero_indices)
+                | (array.res_id[bond_array[:, 0]] != array.res_id[bond_array[:, 1]])
+                | (array.chain_id[bond_array[:, 0]] != array.chain_id[bond_array[:, 1]])
             ]
-            self._set_bonds(
-                BondList(array.array_length(), bond_array), atom_id
-            )
+            self._set_bonds(BondList(array.array_length(), bond_array), atom_id)
 
     def _get_model_length(self, model_start_i, atom_line_i):
         """
@@ -665,8 +676,11 @@ class PDBFile(TextFile):
         length = None
         for model_i in range(len(model_start_i)):
             model_start = model_start_i[model_i]
-            model_stop = model_start_i[model_i+1] if model_i+1 < n_models \
-                            else len(self.lines)
+            model_stop = (
+                model_start_i[model_i + 1]
+                if model_i + 1 < n_models
+                else len(self.lines)
+            )
             model_length = np.count_nonzero(
                 (atom_line_i >= model_start) & (atom_line_i < model_stop)
             )
@@ -680,31 +694,28 @@ class PDBFile(TextFile):
         return length
 
     def _get_bonds(self, atom_ids):
-        conect_lines = [line for line in self.lines
-                        if line.startswith("CONECT")]
-        
+        conect_lines = [line for line in self.lines if line.startswith("CONECT")]
+
         # Mapping from atom ids to indices in an AtomArray
-        atom_id_to_index = np.zeros(atom_ids[-1]+1, dtype=int)
+        atom_id_to_index = np.zeros(atom_ids[-1] + 1, dtype=int)
         try:
             for i, id in enumerate(atom_ids):
                 atom_id_to_index[id] = i
         except IndexError as e:
-            raise InvalidFileError(
-                "Atom IDs are not strictly increasing"
-            ) from e
+            raise InvalidFileError("Atom IDs are not strictly increasing") from e
 
         bonds = []
         for line in conect_lines:
-            center_id = atom_id_to_index[int(line[6 : 11])]
+            center_id = atom_id_to_index[int(line[6:11])]
             for i in range(11, 31, 5):
-                id_string = line[i : i+5]
+                id_string = line[i : i + 5]
                 try:
                     id = atom_id_to_index[int(id_string)]
                 except ValueError:
                     # String is empty -> no further IDs
                     break
                 bonds.append((center_id, id))
-        
+
         # The length of the 'atom_ids' array
         # is equal to the length of the AtomArray
         return BondList(len(atom_ids), np.array(bonds, dtype=np.uint32))
