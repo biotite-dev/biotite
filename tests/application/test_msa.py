@@ -61,6 +61,10 @@ def sequences():
      [1, 2, 0, 3])]
 )
 def test_msa(sequences, app_cls, exp_ali, exp_order):
+    """
+    Test MSA software on short toy sequences with known alignment
+    result.
+    """
     bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
@@ -72,11 +76,42 @@ def test_msa(sequences, app_cls, exp_ali, exp_order):
     app.start()
     app.join()
     alignment = app.get_alignment()
-    print(alignment)
     order = app.get_alignment_order()
     assert str(alignment) == exp_ali
     assert order.tolist() == exp_order
 
+
+@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
+def test_large_sequence_number(app_cls):
+    """
+    Test MSA software on large number of sequences.
+    The quality of the MSA is not evaluated here, therefore identical
+    sequences are used
+    """
+    SEQ_LENGTH = 50
+    SEQ_NUMBER = 100
+
+    bin_path = BIN_PATH[app_cls]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+
+    # Create random sequence
+    sequence = seq.ProteinSequence()
+    sequence.code = np.random.randint(20, size=SEQ_LENGTH)
+    # Use identical sequences
+    sequences = [sequence] * SEQ_NUMBER
+
+    try:
+        app = app_cls(sequences)
+    except VersionError:
+        pytest.skip(f"Invalid software version")
+    app.start()
+    app.join()
+    alignment = app.get_alignment()
+    # Expect completely matching sequences
+    assert alignment.trace.tolist() == [
+        [i]*SEQ_NUMBER for i in range(SEQ_LENGTH)
+    ]
 
 def test_additional_options(sequences):
     bin_path = BIN_PATH[ClustalOmegaApp]
