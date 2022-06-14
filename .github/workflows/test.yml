@@ -103,7 +103,6 @@ jobs:
           --ignore=tests//application//test_blast.py
           --ignore=tests//application//test_sra.py
           --ignore=tests//database//test_entrez.py
-          --ignore=tests//application
   
 
   test-muscle5:
