@@ -76,36 +76,6 @@ jobs:
           --ignore=tests//test_modname.py
   
 
-  test-thorough:
-    name: Testing Biotite thoroughly
-
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: biotite-dev
-          environment-file: environment.yml
-          auto-update-conda: true
-          mamba-version: "*"
-          channels: conda-forge,defaults
-      - name: Building distribution
-        run: python setup.py bdist_wheel
-      - name: Installing distribution
-        run: pip install .//dist//*.whl
-      - name: Testing code
-        run: >
-          pytest -v 
-          --ignore=tests//application//test_blast.py
-          --ignore=tests//application//test_sra.py
-          --ignore=tests//database//test_entrez.py
-          --ignore=tests//test_doctest.py
-  
-
   test-muscle5:
     name: Testing Biotite's interface for Muscle 5
 
