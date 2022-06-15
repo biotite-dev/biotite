@@ -65,6 +65,15 @@ class PDBFile(TextFile):
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
+    @classmethod
+    def read(cls, file):
+        file = super().read(file)
+        # Pad lines with whitespace if lines are shorter
+        # than the required 80 characters
+        file.lines = [line.ljust(80) for line in file.lines]
+        return file
+
+
     def get_model_count(self):
         """
         Get the number of models contained in the PDB file.
