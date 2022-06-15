@@ -88,7 +88,8 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
     # Plot computed line coordinates and colors
     # Use 'Line3DCollection' for higher efficiency
     lines = Line3DCollection(
-        line_coord, color=line_colors, linewidths=line_width
+        line_coord, color=line_colors, linewidths=line_width,
+        capstyle="round", joinstyle="round"
     )
     axes.add_collection(lines)
     
@@ -175,7 +176,8 @@ def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
     # Plot sticks
     # Use 'Line3DCollection' for higher efficiency
     sticks = Line3DCollection(
-        line_coord, color=line_color, linewidths=line_width
+        line_coord, color=line_color, linewidths=line_width,
+        capstyle="round", joinstyle="round"
     )
     axes.add_collection(sticks)
 
