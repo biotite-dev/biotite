@@ -308,8 +308,6 @@ for i, length in enumerate(length_samples):
     l_series[i] = np.pi / np.sqrt(6 * np.var(scores))
     u_series[i] = np.mean(scores) - np.euler_gamma / l_series[i]
 
-ln_mn = np.log(length_samples**2)
-
 ########################################################################
 # Now we use a linear fit of :math:`u` to check if there is a linear 
 # relation.
@@ -324,7 +322,7 @@ slope, intercept, r, _, _ = linregress(ln_mn, u_series)
 l = 1/slope
 k = np.exp(intercept * l)
 
-# Coordaintes for git
+# Coordinates for fit
 x_fit = np.linspace(0, 16, 100)
 y_fit = slope * x_fit + intercept
 
