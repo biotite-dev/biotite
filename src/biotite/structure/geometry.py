@@ -296,6 +296,12 @@ def angle(atoms1, atoms2, atoms3, box=None):
     atoms1, atoms2, atoms3 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the angle between. Alternatively an
         ndarray containing the coordinates can be provided.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     Returns
     -------
@@ -303,12 +309,6 @@ def angle(atoms1, atoms2, atoms3, box=None):
         The angle(s) between the atoms. The shape is equal to the shape
         of the input `atoms` with the highest dimensionality minus the
         last axis.
-    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
-        If this parameter is set, periodic boundary conditions are
-        taken into account (minimum-image convention), based on
-        the box vectors given with this parameter.
-        The shape *(m,3,3)* is only allowed, when the input coordinates
-        comprise multiple models.
     
     See also
     --------
@@ -386,6 +386,12 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
         The atoms to measure the dihedral angle between.
         Alternatively an ndarray containing the coordinates can be
         provided.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     Returns
     -------
@@ -393,12 +399,6 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
         The dihedral angle(s) between the atoms. The shape is equal to
         the shape of the input `atoms` with the highest dimensionality
         minus the last axis.
-    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
-        If this parameter is set, periodic boundary conditions are
-        taken into account (minimum-image convention), based on
-        the box vectors given with this parameter.
-        The shape *(m,3,3)* is only allowed, when the input coordinates
-        comprise multiple models.
     
     See Also
     --------
