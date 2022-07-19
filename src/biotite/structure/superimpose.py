@@ -113,6 +113,7 @@ def superimpose(fixed, mobile, atom_mask=None):
 
     m_coord = coord(mobile)
     f_coord = coord(fixed)
+    mshape = m_coord.shape
     mdim = m_coord.ndim
     if f_coord.ndim != 2:
         raise ValueError("Expected fixed array to be an AtomArray")
@@ -156,10 +157,10 @@ def superimpose(fixed, mobile, atom_mask=None):
     s_coord += fix_centroid
     
     if isinstance(mobile, np.ndarray):
-        superimposed = s_coord.reshape(m_coord.shape)
+        superimposed = s_coord.reshape(mshape)
     else:
         superimposed = mobile.copy()
-        superimposed.coord = s_coord.reshape(m_coord.shape)
+        superimposed.coord = s_coord.reshape(mshape)
 
     if mdim == 2:
         return superimposed, transformations[0]
