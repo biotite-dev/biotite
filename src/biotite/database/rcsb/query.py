@@ -600,8 +600,8 @@ def search(query, return_type="entry", range=None, sort_by=None):
         raise ValueError("Range stop must be greater than range start")
     else:
         request_options["paginate"] = {
-            "start": range[0],
-            "rows": range[1] - range[0]
+            "start": int(range[0]),
+            "rows": int(range[1]) - int(range[0])
         }
 
     query_dict = {
