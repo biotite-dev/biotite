@@ -134,8 +134,8 @@ class BasicQuery(SingleQuery):
         If the term contains multiple words, the query will return
         results where the entire term is present.
         The matching is not case-sensitive.
-        Logic combinations of terms is describes
-        `here <https://search.rcsb.org/#basic-queries>`_
+        Logic combinations of terms is described
+        `here <https://search.rcsb.org/#basic-queries>`_.
     
     Examples
     --------
