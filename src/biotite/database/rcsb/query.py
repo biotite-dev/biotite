@@ -592,7 +592,7 @@ def search(query, return_type="entry", range=None, sort_by=None):
     request_options = {}
 
     if sort_by is not None:
-        request_options["sort"] = {"sort_by": sort_by}
+        request_options["sort"] = [{"sort_by": sort_by}]
 
     if range is None:
         request_options["return_all_hits"] = True
@@ -609,6 +609,7 @@ def search(query, return_type="entry", range=None, sort_by=None):
         "return_type": return_type,
         "request_options": request_options
     }
+
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
