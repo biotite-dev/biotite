@@ -168,7 +168,6 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     304
 
     """
-    altloc = [] if altloc is None else altloc
     extra_fields = [] if extra_fields is None else extra_fields
 
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
