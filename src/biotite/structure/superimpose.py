@@ -11,6 +11,7 @@ __author__ = "Patrick Kunzmann, Claude J. Rogers"
 __all__ = ["superimpose", "superimpose_apply"]
 
 import numpy as np
+from .atoms import coord
 from .geometry import centroid
 
 
@@ -24,12 +25,15 @@ def superimpose(fixed, mobile, atom_mask=None):
     
     Parameters
     ----------
-    fixed : AtomArray
+    fixed : AtomArray, shape(n,) or ndarray, shape(n,), dtype=float
         The fixed structure.
-    mobile: AtomArray or AtomArrayStack
+        Alternatively coordinates can be given.
+    mobile: AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         The structure(s) which is/are superimposed on the `fixed`
-        structure. Both, `fixed` and `mobile` should have equal
-        annotation arrays and must have equal sizes.
+        structure.
+        Each atom at index *i* in `mobile` must correspond the
+        atom at index *i* in `fixed` to obtain correct results.
+        Alternatively coordinates can be given.
     atom_mask: ndarray, dtype=bool, optional
         If given, only the atoms covered by this boolean mask will be
         considered for superimposition.
@@ -40,9 +44,11 @@ def superimpose(fixed, mobile, atom_mask=None):
     
     Returns
     -------
-    fitted : AtomArray or AtomArrayStack
+    fitted : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         A copy of the `mobile` structure(s),
         superimposed on the fixed structure.
+        Only coordinates are returned, if coordinates were given in
+        `mobile`.
     transformation : tuple or tuple list
         The tuple contains the transformations that were applied on
         `mobile`. This can be used in `apply_superimposition()` in order
@@ -105,11 +111,9 @@ def superimpose(fixed, mobile, atom_mask=None):
     1.928
     """
 
-    try:
-        m_coord = mobile.coord
-        f_coord = fixed.coord
-    except AttributeError:  # e.g., user passed ndarray
-        raise ValueError("Expected AtomArray or AtomArrayStack inputs")
+    m_coord = coord(mobile)
+    f_coord = coord(fixed)
+    mshape = m_coord.shape
     mdim = m_coord.ndim
     if f_coord.ndim != 2:
         raise ValueError("Expected fixed array to be an AtomArray")
@@ -143,7 +147,6 @@ def superimpose(fixed, mobile, atom_mask=None):
     mob_filtered -= mob_centroid[..., np.newaxis, :]
     fix_filtered -= fix_centroid
     
-    superimposed = mobile.copy()
     s_coord = m_coord.copy() - mob_centroid[..., np.newaxis, :]
     # Perform Kabsch algorithm for every model
     transformations = [None] * nmodels
@@ -152,10 +155,17 @@ def superimpose(fixed, mobile, atom_mask=None):
         s_coord[i] = np.dot(rotation, s_coord[i].T).T
         transformations[i] = (-mob_centroid[i], rotation, fix_centroid)
     s_coord += fix_centroid
-    superimposed.coord = s_coord.reshape(mobile.coord.shape)
+    
+    if isinstance(mobile, np.ndarray):
+        superimposed = s_coord.reshape(mshape)
+    else:
+        superimposed = mobile.copy()
+        superimposed.coord = s_coord.reshape(mshape)
+
     if mdim == 2:
         return superimposed, transformations[0]
-    return superimposed, transformations
+    else:
+        return superimposed, transformations
 
 
 def _superimpose(fix_centered, mob_centered):
@@ -183,8 +193,9 @@ def superimpose_apply(atoms, transformation):
     
     Parameters
     ----------
-    atoms : AtomArray
+    atoms : AtomArray or ndarray, shape(n,), dtype=float
         The structure to apply the transformation on.
+        Alternatively coordinates can be given.
     transformation: tuple, size=3
         The transformation tuple, obtained by :func:`superimpose()`.
     
@@ -193,14 +204,22 @@ def superimpose_apply(atoms, transformation):
     fitted : AtomArray or AtomArrayStack
         A copy of the `atoms` structure,
         with transformations applied.
+        Only coordinates are returned, if coordinates were given in
+        `atoms`.
     
     See Also
     --------
     superimpose
     """
     trans1, rot, trans2 = transformation
-    transformed = atoms.copy()
-    transformed.coord += trans1
-    transformed.coord = np.dot(rot, transformed.coord.T).T
-    transformed.coord += trans2
-    return transformed
+    s_coord = coord(atoms).copy()
+    s_coord += trans1
+    s_coord = np.dot(rot, s_coord.T).T
+    s_coord += trans2
+
+    if isinstance(atoms, np.ndarray):
+        return s_coord
+    else:
+        transformed = atoms.copy()
+        transformed.coord = s_coord
+        return transformed

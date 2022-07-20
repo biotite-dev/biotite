@@ -15,9 +15,12 @@ from ..util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
+    "path, coord_only", itertools.product(
+        glob.glob(join(data_dir("structure"), "*.mmtf")),
+        [False, True]
+    )
 )
-def test_superimposition_array(path):
+def test_superimposition_array(path, coord_only):
     """
     Take a structure and rotate and translate a copy of it, so that they
     are not superimposed anymore.
@@ -30,14 +33,22 @@ def test_superimposition_array(path):
     mobile = struc.rotate(mobile, (1,2,3))
     mobile = struc.translate(mobile, (1,2,3))
     
+    if coord_only:
+        fixed = fixed.coord
+        mobile = mobile.coord
+
     fitted, transformation = struc.superimpose(
         fixed, mobile
     )
     
+    if coord_only:
+        assert isinstance(fitted, np.ndarray)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
     
     fitted = struc.superimpose_apply(mobile, transformation)
     
+    if coord_only:
+        assert isinstance(fitted, np.ndarray)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
 
 
@@ -57,7 +68,7 @@ def test_superimposition_stack(ca_only):
     else:
         mask = None
     
-    fitted, transformation = struc.superimpose(fixed, mobile, mask)
+    fitted, _ = struc.superimpose(fixed, mobile, mask)
     
     if ca_only:
         # The superimpositions are better for most cases than the
@@ -69,6 +80,7 @@ def test_superimposition_stack(ca_only):
         # The superimpositions are better than the superimpositions
         # in the structure file
         assert (struc.rmsd(fixed, fitted) < struc.rmsd(fixed, mobile)).all()
+
 
 
 @pytest.mark.parametrize("seed", range(5))
@@ -105,16 +117,6 @@ def test_masked_superimposition(seed):
     
     struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)
-
-
-def test_ndarray_inputs_for_superimpose_raise_value_error():
-    """
-    Check that using incorrect types as inputs fails.
-    """
-    fixed = np.random.rand(3, 3)
-    mobile = np.random.rand(3, 3)
-    with pytest.raises(ValueError):
-        struc.superimpose(fixed, mobile)
 
 
 @pytest.mark.parametrize(
