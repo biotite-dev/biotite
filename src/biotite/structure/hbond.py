@@ -92,8 +92,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets, mask = hbond(atom_array_stack)
     >>> hbonds_per_model = np.count_nonzero(mask, axis=1)
     >>> print(hbonds_per_model)
-    [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
-     14 12 15 12 12 13 13 13 12 12 11 15 10 11]
+    [14 14 14 12 11 12  9 13  9 14 13 13 14 11 11 12 11 14 14 13 14 13 15 17
+     14 12 15 12 12 13 13 13 12 12 11 14 10 11]
     
     Get hydrogen bond donors of third model:
     
@@ -101,7 +101,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
     >>> print(atom_array_stack[2, triplets[:,0]])
-        A       1  ASN N      N        -6.589    7.754   -0.571
         A       5  GLN N      N        -5.009   -0.575   -1.365
         A       6  TRP N      N        -2.154   -0.497   -1.588
         A       7  LEU N      N        -1.520   -1.904    0.893
@@ -402,9 +401,9 @@ def hbond_frequency(mask):
     >>> triplets, mask = hbond(atom_array_stack)
     >>> freq = hbond_frequency(mask)
     >>> print(freq)
-    [0.263 0.289 0.105 0.105 0.237 0.237 0.026 0.053 0.395 1.000 1.000 1.000
-     0.026 0.421 0.026 0.026 0.316 0.816 0.026 0.921 0.026 0.342 0.026 0.105
-     0.026 0.132 0.053 0.026 0.158 0.026 0.868 0.211 0.026 0.921 0.316 0.079
-     0.237 0.105 0.421 0.079 0.026 1.000 0.053 0.132 0.026 0.184]
+    [0.263 0.289 0.105 0.105 0.237 0.026 0.053 0.395 1.000 1.000 1.000 0.026
+     0.421 0.026 0.026 0.316 0.816 0.026 0.921 0.026 0.342 0.026 0.105 0.026
+     0.132 0.053 0.026 0.158 0.026 0.868 0.211 0.026 0.921 0.316 0.079 0.237
+     0.105 0.421 0.079 0.026 1.000 0.053 0.132 0.026 0.184]
     """
     return mask.sum(axis=0)/len(mask)

@@ -3,12 +3,10 @@
 # information.
 
 from os.path import join
-import datetime
 import itertools
 import tempfile
-import numpy as np
-from requests.exceptions import ConnectionError
 import pytest
+import numpy as np
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
@@ -219,6 +217,51 @@ def test_search_return_type(return_type, expected):
     assert rcsb.count(query, return_type) == len(expected)
 
 
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+@pytest.mark.parametrize("seed", np.arange(5))
+def test_search_range(seed):
+    query = rcsb.FieldQuery(
+        "rcsb_entity_host_organism.scientific_name",
+        exact_match="Homo sapiens"
+    )
+    count = rcsb.count(query)
+    ref_entries = rcsb.search(query)
+    assert len(ref_entries) == count
+
+    np.random.seed(seed)
+    range = sorted(np.random.choice(count, 2, replace=False))
+    test_entries = rcsb.search(query, range=range)
+
+    assert test_entries == ref_entries[range[0] : range[1]]
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_sort():
+    query = rcsb.FieldQuery(
+        "rcsb_entity_host_organism.scientific_name",
+        exact_match="Homo sapiens"
+    )
+    entries = rcsb.search(query, sort_by="reflns.d_resolution_high")
+    
+    resolutions = []
+    for pdb_id in entries[:5]:
+        pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
+        resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
+    
+    # Check if values are sorted in descending order
+    assert resolutions == list(reversed(sorted(resolutions)))
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 def test_search_empty():
     query = rcsb.BasicQuery("This will not match any ID")
     assert rcsb.search(query) == []
