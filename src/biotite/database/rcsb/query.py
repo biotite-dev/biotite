@@ -62,19 +62,10 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     This is the abstract base class for all queries that are
     terminal nodes.
     """
-    # The node ID is incremented for every created 'SingleQuery' object
-    _node_id = 0
-
-    def __init__(self):
-        self._node_id = SingleQuery._node_id
-        SingleQuery._node_id += 1
 
     @abc.abstractmethod
     def get_content(self):
-        return {
-            "node_id": self._node_id,
-            "parameters": {}
-        }
+        return {"parameters": {}}
 
 
 class CompositeQuery(Query):
@@ -295,7 +286,7 @@ class FieldQuery(SingleQuery):
 
     def __invert__(self):
         clone = copy.deepcopy(self)
-        clone._negation = ~clone._negation
+        clone._negation = not clone._negation
         return clone
 
 
