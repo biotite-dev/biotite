@@ -286,7 +286,7 @@ class FieldQuery(SingleQuery):
 
     def __invert__(self):
         clone = copy.deepcopy(self)
-        clone._negation = ~clone._negation
+        clone._negation = not clone._negation
         return clone
 
 
