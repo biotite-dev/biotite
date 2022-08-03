@@ -11,7 +11,7 @@ import abc
 from .check import assert_valid_response
 
 
-_base_url = "https://www.uniprot.org/uniprot/"
+_base_url = "https://www.uniprot.org/uniprotkb/"
 
 
 class Query(metaclass=abc.ABCMeta):
@@ -165,6 +165,7 @@ def search(query, number=10):
         The search query.
     number : int
         The maximum number of IDs that are obtained.
+        (Default: 10)
 
     Returns
     -------
@@ -189,7 +190,7 @@ def search(query, number=10):
     params = {
         'query': str(query),
         'format': 'list',
-        'limit': str(number)
+        'size': str(number)
     }
     r = requests.get(_base_url, params=params)
     content = r.text

@@ -33,7 +33,7 @@ def _get_database_name(id):
         return "uniparc"
     elif id[:6] == "UniRef":
         return "uniref"
-    return "uniprot"
+    return "uniprotkb"
 
 
 def fetch(ids, format, target_path=None,
