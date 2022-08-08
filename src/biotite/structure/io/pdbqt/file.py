@@ -255,7 +255,7 @@ class PDBQTFile(TextFile):
             line = self.lines[line_i]
             
             atom_id[i] = int(line[6:11])
-            chain_id[i] = line[21].upper().strip()
+            chain_id[i] = line[21].strip()
             res_id[i] = int(line[22:26])
             ins_code[i] = line[26].strip()
             res_name[i] = line[17:20].strip()

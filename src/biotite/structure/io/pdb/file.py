@@ -358,7 +358,7 @@ class PDBFile(TextFile):
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
-            chain_id[i] = line[_chain_id].upper().strip()
+            chain_id[i] = line[_chain_id].strip()
             res_id[i] = decode_hybrid36(line[_res_id])
             ins_code[i] = line[_ins_code].strip()
             res_name[i] = line[_res_name].strip()
