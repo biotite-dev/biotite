@@ -11,7 +11,7 @@ import abc
 from .check import assert_valid_response
 
 
-_base_url = "https://www.uniprot.org/uniprotkb/"
+_base_url = "https://rest.uniprot.org/uniprotkb/search/"
 
 
 class Query(metaclass=abc.ABCMeta):
@@ -152,7 +152,7 @@ class SimpleQuery(Query):
         return f"{self._field}:{self._term}"
 
 
-def search(query, number=10):
+def search(query, number=500):
     """
     Get all UniProt IDs that meet the given query requirements,
     via the UniProt search service.
@@ -165,7 +165,7 @@ def search(query, number=10):
         The search query.
     number : int
         The maximum number of IDs that are obtained.
-        (Default: 10)
+        (Default: 500)
 
     Returns
     -------
@@ -180,11 +180,11 @@ def search(query, number=10):
 
     Examples
     --------
-    >>> query = SimpleQuery("accession", "P62988") & \
-                SimpleQuery("reviewed", "yes")
+    >>> query = SimpleQuery("accession", "P12345") & \
+                SimpleQuery("reviewed", "true")
     >>> ids = search(query)
     >>> print(sorted(ids))
-    ['P0CG47', 'P0CG48', 'P62979', 'P62987']
+    ['P12345']
     """
 
     params = {
