@@ -84,7 +84,7 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
         in the annotation. By default all features are included.
     
     Returns
-    ----------
+    -------
     annot_seq : AnnotatedSequence
         The annotated sequence.
     """
