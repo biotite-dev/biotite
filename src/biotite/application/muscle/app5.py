@@ -32,7 +32,7 @@ class Muscle5App(MSAApp):
         Path of the MUSCLE binary.
     
     See also
-    ---------
+    --------
     MuscleApp
 
     Notes

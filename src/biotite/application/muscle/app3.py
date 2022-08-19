@@ -35,7 +35,7 @@ class MuscleApp(MSAApp):
         A custom substitution matrix.
     
     See also
-    ---------
+    --------
     Muscle5App
     
     Examples
