@@ -55,3 +55,4 @@ biotite.egg-info
 
 # Ignore fuse_hidden files on Linux systems
 *.fuse_hidden*
+

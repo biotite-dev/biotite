@@ -79,6 +79,34 @@ def load_structure(file_path, template=None, **kwargs):
             return array[0]
         else:
             return array
+    elif suffix == ".xyz":
+        from .xyz import XYZFile
+        file = XYZFile.read(file_path)
+        array = file.get_structure(**kwargs)
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
+    elif suffix == ".mol2":
+        from .mol2 import MOL2File
+        file = MOL2File.read(file_path)
+        array = file.get_structure(**kwargs)
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array
+    elif suffix == ".sdf":
+        from .sdf import SDFFile
+        file = SDFFile.read(file_path)
+        array = file.get_structure(**kwargs)
+        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
+            # Stack containing only one model -> return as atom array
+            return array[0]
+        else:
+            return array                        
+                                
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, get_structure
         file = PDBxFile.read(file_path)
