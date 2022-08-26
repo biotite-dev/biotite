@@ -8,7 +8,7 @@ __all__ = ["get_structure", "set_structure"]
 
 
 
-def get_structure(xyz_file):
+def get_structure(xyz_file, model=None):
     """
     Get an :class:`AtomArray` from the XYZ File.
 
@@ -28,7 +28,7 @@ def get_structure(xyz_file):
         All other annotation categories, except ``element`` are
         empty.
     """
-    return xyz_file.get_structure()
+    return xyz_file.get_structure(model)
     
 
 def set_structure(xyz_file, atoms):

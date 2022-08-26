@@ -1,9 +1,0 @@
-import biotite.structure.io as strucio
-from biotite.structure.io.xyz import XYZFile
-from biotite.structure.io.mol import MOLFile
-benz_mol = MOLFile.read("/home/mayer/Downloads/benzene-3D-structure-CT1001419667.sdf")
-benz_xyz = XYZFile()
-benz_struct=benz_mol.get_structure()
-benz_xyz.set_structure(benz_struct)
-print(benz_xyz)
-benz_xyz_example = strucio.load_structure("/home/mayer/Dev/biotite/tests/structure/data/molecules/BENZ.xyz")
