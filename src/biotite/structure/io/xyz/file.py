@@ -302,26 +302,47 @@ class XYZFile(TextFile):
         
         Parameters
         ----------
-        array : AtomArray
+        atoms : AtomArray
             The array to be saved into this file.
-            Must have an associated :class:`BondList`.
         """
         
-        n_atoms = atoms.shape[0]
-        self.lines += [""] * n_atoms
+        if isinstance(atoms, AtomArray):
         
-#        print(" trying atoms :: ")
-#        print(atoms)
-#        print()
-        
-        
-        for i, atom in enumerate(atoms):
-            line = "  " + str(atom.element)            
-            #print(atom.coord)
-            line += "       " + "{: .{}f}".format(atom.coord[0], 5)
-            line += "       " + "{: .{}f}".format(atom.coord[1], 5)
-            line += "       " + "{: .{}f}".format(atom.coord[2], 5)
-            line += " "
-            self.lines[i+2] = line
+            n_atoms = atoms.shape[0]
+            self.lines[0] = str(n_atoms)
+            if len(self.lines[1]) == 0:
+                self.lines[1] = str("[MOLNAME]")
+            self.lines += [""] * n_atoms
+            
+            
+            for i, atom in enumerate(atoms):
+                line = "  " + str(atom.element)            
+                #print(atom.coord)
+                line += "       " + "{: .{}f}".format(atom.coord[0], 5)
+                line += "       " + "{: .{}f}".format(atom.coord[1], 5)
+                line += "       " + "{: .{}f}".format(atom.coord[2], 5)
+                line += " "
+                self.lines[i+2] = line
+                
+        elif isinstance(atoms, AtomArrayStack):
+            n_lines_per_model = atoms[0].shape[0]+2
+            
+            
+            self.lines += [""] * n_lines_per_model*atoms.shape[0]
+            
+            for i, atoms_i in enumerate(atoms):
+            
+                self.lines[i*n_lines_per_model] = str(atoms[0].shape[0])
+                self.lines[i*n_lines_per_model+1] = " " + str(i)
+                    
+                for j, atom in enumerate(atoms_i):
+                    line = "  " + str(atom.element)            
+                    #print(atom.coord)
+                    line += "       " + "{: .{}f}".format(atom.coord[0], 5)
+                    line += "       " + "{: .{}f}".format(atom.coord[1], 5)
+                    line += "       " + "{: .{}f}".format(atom.coord[2], 5)
+                    line += " "
+                    self.lines[i*n_lines_per_model+j+2] = line                
+                
 
 

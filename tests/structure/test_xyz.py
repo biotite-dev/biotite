@@ -10,7 +10,7 @@ from os.path import join, split, splitext
 import pytest
 import numpy as np
 import biotite.structure as struc
-from biotite.structure import Atom
+from biotite.structure import Atom, AtomArray, AtomArrayStack
 import biotite.structure.info as info
 import biotite.structure.io.xyz as xyz
 from ..util import data_dir
@@ -66,7 +66,8 @@ def test_header_conversion():
 
 @pytest.mark.parametrize(
     "path",
-    [x for x in glob.glob(join(data_dir("structure"), "molecules", "*.xyz")) if "CO" not in x],
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
+#    [x for x in glob.glob(join(data_dir("structure"), "molecules", "*.xyz")) if "CO" not in x],
 )
 def test_structure_conversion(path):
     """
@@ -84,55 +85,28 @@ def test_structure_conversion(path):
     
 
     xyz_file = xyz.XYZFile()
-    xyz.set_structure(xyz_file, ref_atoms[0])
+    xyz.set_structure(xyz_file, ref_atoms)
     temp = TemporaryFile("w+")
     xyz_file.write(temp)
+    
 
     temp.seek(0)
-    xyz_file = xyz.XYZFile.read(temp)
+    xyz_file = xyz.XYZFile.read(temp) 
     test_atoms = xyz.get_structure(xyz_file)
     temp.close()
     
-    print("test_atoms ::")
-    print(test_atoms)    
-    print("")
-    print("")
-    print("")
-    
-    print("ref_atoms ::")
-    print(ref_atoms)
-    print("")
-    print("")
-    print("")    
 
-    assert test_atoms == ref_atoms
+    instance_cond = isinstance(ref_atoms, AtomArray)
+    instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
+    assert instance_cond
 
+    if isinstance(ref_atoms, AtomArray):
+        # actually no idea why we can assume that this works
+        # since floating point comparison is not safe!    
+        assert test_atoms == ref_atoms
+    elif isinstance(ref_atoms, AtomArrayStack):
+        for i in range(ref_atoms.shape[0]):
+            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
+            assert np.all(ref_atoms[i].element == test_atoms[i].element)
+            
 
-#@pytest.mark.parametrize(
-#    "path", glob.glob(join(data_dir("structure"), "xyzecules", "*.sdf")),
-#)
-#def test_pdbx_consistency(path):
-#    """
-#    Check if the structure parsed from a xyz file is equal to the same
-#    structure read from the *Chemical Component Dictionary* in PDBx
-#    format.
-
-#    In this case an SDF file is used, but it is compatible with the
-#    xyz format.
-#    """
-#    xyz_name = split(splitext(path)[0])[1]
-#    ref_atoms = info.residue(xyz_name)
-#    # The CCD contains information about aromatic bond types,
-#    # but the SDF test files do not
-#    ref_atoms.bonds.remove_aromaticity()
-
-#    xyz_file = xyz.XYZFile.read(path)
-#    test_atoms = xyz_file.get_structure()
-
-#    assert test_atoms.coord.shape == ref_atoms.coord.shape
-#    assert test_atoms.coord.flatten().tolist() \
-#        == ref_atoms.coord.flatten().tolist()
-#    assert test_atoms.element.tolist() == ref_atoms.element.tolist()
-#    assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
-#    assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
-#        == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())

@@ -33,7 +33,8 @@ def get_structure(xyz_file, model=None):
 
 def set_structure(xyz_file, atoms):
     """
-    Set the :class:`AtomArray` for the XYZ File.
+    Set the :class:`AtomArray` for the XYZ File
+    or :class:`AtomArrayStack for a XYZ File with multiple states.
 
     Ths function is a thin wrapper around
     :meth:`XYZFile.set_structure()`.
@@ -42,8 +43,9 @@ def set_structure(xyz_file, atoms):
     ----------
     xyz_file : XYZFile
         The XYZ File.
-    array : AtomArray
-        The array to be saved into this file.
-        Must have an associated :class:`BondList`.
+    array : AtomArray or AtomArrayStack
+        The array to be saved into this file. If a stack is given, each array in
+        the stack will be in a separate model and the names of the 
+        model will be set to an index enumerating them.
     """
     xyz_file.set_structure(atoms)
