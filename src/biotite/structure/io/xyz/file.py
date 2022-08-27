@@ -186,17 +186,14 @@ class XYZFile(TextFile):
             ) 
             
         atom_number, names = self.get_header()
-#        print("atom_numbers :: " + str(atom_number) + " :: " +str(len(atom_number)))
-#        print("names        :: " + str(names)+ " :: " +str(len(names)))
-#        
+
+        
         # set a default head if non present since
         # the number of lines will be calculated from the number
         # of atoms field in the file (counts how many lines with numbers
         # there are within the file which are not name lines)
         if len(names) == 0 or len(atom_number) == 0:
-#            print("self.set_header('[MOLNAME]')")
             self.set_header("[MOLNAME]")  
-#            print(self.lines)
            
         self.update_start_lines()
                 
@@ -218,29 +215,13 @@ class XYZFile(TextFile):
 
         # parse all coordinates        
         if self.structures is None:                                   
-            
-          
-            
+                                 
             array_stack = []
-            
-#            print("|model_start_inds| :: " + str(self.model_start_inds))
-#            print(self.atom_numbers)
-#            print("")
         
             for i, ind in enumerate(self.model_start_inds):
                 ind_end = ind+2 + self.atom_numbers[i]
-#                print("self.lines ::")
-#                print(self.lines)      
-#                print("")
-#                print("ind     :: " +str(ind))            
-#                print("ind_end :: " +str(ind_end))                    
                 lines_cut = self.lines[ind:ind_end]  
-#                print("lines_cut ::")  
-#                print("")                                      
-#                print(lines_cut)                 
                 array = AtomArray(self.atom_numbers[i])
-#                print("empty array ::")
-#                print(array)
                 
                 if self.atom_numbers[i]+2 != len(lines_cut):
                     raise ValueError(
@@ -254,11 +235,10 @@ class XYZFile(TextFile):
                     )                         
                 
                 for j, line in enumerate(lines_cut[2:]):
-#                        print(line)
+
                     line_parsed = [
                         x for x in line.strip().split(" ") if x!= ''
-                    ]
-                    
+                    ]                    
                     x = float(line_parsed[1])
                     y = float(line_parsed[2])
                     z = float(line_parsed[3])
@@ -276,10 +256,6 @@ class XYZFile(TextFile):
                     atom.element = line_parsed[0]                
                     array[j] = atom
                                                             
-                    
-
-#                print("filled array ::")
-#                print(array)    
                 
                 array_stack.append(array)
             self.structures = struc.stack(array_stack)
@@ -317,7 +293,6 @@ class XYZFile(TextFile):
             
             for i, atom in enumerate(atoms):
                 line = "  " + str(atom.element)            
-                #print(atom.coord)
                 line += "       " + "{: .{}f}".format(atom.coord[0], 5)
                 line += "       " + "{: .{}f}".format(atom.coord[1], 5)
                 line += "       " + "{: .{}f}".format(atom.coord[2], 5)
@@ -337,7 +312,6 @@ class XYZFile(TextFile):
                     
                 for j, atom in enumerate(atoms_i):
                     line = "  " + str(atom.element)            
-                    #print(atom.coord)
                     line += "       " + "{: .{}f}".format(atom.coord[0], 5)
                     line += "       " + "{: .{}f}".format(atom.coord[1], 5)
                     line += "       " + "{: .{}f}".format(atom.coord[2], 5)
