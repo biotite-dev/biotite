@@ -4,11 +4,12 @@
 
 __name__ = "biotite.structure.io.mol2"
 __author__ = "Benjamin E. Mayer"
-__all__ = ["MOL2File"]
+__all__ = ["MOL2File","supported_charge_types", "supported_mol_types"]
 
 import numpy as np
 import biotite.structure as struc
-from ...atoms import AtomArray, Atom, BondList
+from biotite.structure.error import BadStructureError
+from ...atoms import AtomArray,AtomArrayStack, Atom, BondList
 from ....file import TextFile
 
 
@@ -26,19 +27,102 @@ sybyl_to_biotite_bonds = {
     "un": struc.BondType.ANY,
     "nc": None,
 }
+biotite_bonds_to_sybyl = {
+    1: "1",
+    2: "2",           
+    3: "3",
+    5: "ar",
+    0: "un",                    
+}
+
+supported_charge_types = [
+    "NO_CHARGES", "DEL_RE", "GASTEIGER", 
+    "GAST_HUCK", "HUCKEL", "PULLMAN", 
+    "GAUSS80_CHARGES", "AMPAC_CHARGES", 
+    "MULLIKEN_CHARGES", "DICT_CHARGES", 
+    "MMFF94_CHARGES", "USER_CHARGES"
+]
     
     
+supported_mol_types = [
+    "SMALL", "BIOPOLYMER", "PROTEIN", "NUCLEIC_ACID", "SACCHARIDE"
+]    
     
+sybyl_status_bit_types = [
+    "system", "invalid_charges", "analyzed", "substituted", "altered", "ref_angle"
+]
+    
+def get_sybyl_atom_type(atom, bonds, atom_id):
+    """
+    This function is meant to translate all occuring atoms into sybyl atom
+    types based on their element and bonds. This does however not work yet,
+    therefore which is why currently the sybyl column is simply filled with
+    a static content in order to not mess up rereading from a file written
+    from the MOL2File class.
+    
+    Parameters
+    ----------
+        atom : Atom
+            The Atom object which is to be translated 
+            into sybyl atom_type notation
+        
+        bonds: BondList
+            The BondList object of the respective bonds in the AtomArray.
+            Necessary as the sybyl atom types depend on the hybridiziation 
+            heuristic.
+            
+        atom_id: int
+            The id of the current atom that is used in the bond list.                    
+            
+    Returns
+    -------     
+        sybyl_atom_type : str
+            The name of the atom based on hybridization and element according
+            to the sybyl atom types.       
+        
+    """
+    
+    if atom.element == "C":    
+        atom_bonds, types = bonds.get_bonds(atom_id)
+        
+
+        
+        if 5 in types:
+            return "C.ar"
+        else:
+            if len(atom_bonds) == 2:
+                return "C.1"
+            elif len(atom_bonds) == 3:
+                return "C.2"
+            elif len(atom_bonds) == 4:
+                return "C.3"                         
+            else:
+                msg = "No supported sybyl Atom type for Atom " + str(atom)
+                raise ValueError(msg)                                                              
+        
+            
 
 
 class MOL2File(TextFile):
     """
-    This class represents a file in MOL2 format, 
+    This class represents a file in MOL2 format. 
+    
+    Notes: 
+        - For multiple models the same header for all models is assumed.
+        - As biotites charge field in the AtomArray and AtomArrayStack class
+          is typed as int this class adds a field charges containing the 
+          real valued charges contained in MOL2 files.
+        - The heuristic function for deriving sybyl atom types doesn't work
+          yet, for now we only write C.ar in the according column as the
+          sybyl atom type is one of the necessary fields for a complete 
+          MOL2File.                   
     
     References
     ----------
     
     .. footbibliography::
+    
+    
     
     Examples
     --------
@@ -46,7 +130,29 @@ class MOL2File(TextFile):
     >>> from os.path import join
     >>> mol_file = MOL2File.read(join(path_to_structures, "molecules", "nu7026.mol2"))
     >>> atom_array = mol2_file.get_structure()
-    >>> print(atom_array)    
+    >>> print(atom_array)   
+            1  UNL        O         0.867    0.134    0.211
+            1  UNL        C         2.090    0.096    0.147
+            1  UNL        C         2.835   -1.164    0.071
+            1  UNL        C         2.156   -2.382    0.096
+            1  UNL        C         2.879   -3.572    0.063
+            1  UNL        C         4.282   -3.558    0.021
+            1  UNL        C         4.974   -2.321   -0.013
+            1  UNL        C         6.385   -2.347   -0.040
+            1  UNL        C         7.089   -3.553   -0.030
+            1  UNL        C         6.399   -4.759   -0.002
+            1  UNL        C         5.004   -4.762    0.020
+            1  UNL        C         4.225   -1.121   -0.006
+            1  UNL        O         4.909    0.073   -0.087
+            1  UNL        C         4.218    1.277    0.018
+            1  UNL        C         2.884    1.328    0.147
+            1  UNL        N         5.001    2.423   -0.069
+            1  UNL        C         4.820    3.609    0.790
+            1  UNL        C         4.974    4.886   -0.048
+            1  UNL        O         6.238    4.918   -0.733
+            1  UNL        C         6.369    3.772   -1.593
+            1  UNL        C         6.282    2.457   -0.799
+     
 
 
 
@@ -76,45 +182,58 @@ class MOL2File(TextFile):
         self.ind_molecule = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>MOLECULE" in x
         ]
-        if len(self.ind_molecule) != 1:
+        if len(self.ind_molecule) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a MOLECULE section, therefore"
                 "it is not possibe to parse this file"
             )
-        else:
-            self.ind_molecule = self.ind_molecule[0] 
             
         
         self.ind_atoms = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>ATOM" in x
         ]
-        if len(self.ind_atoms) != 1:
+        if len(self.ind_atoms) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a ATOM section, therefore"
                 "it is not possibe to parse this file"
             )
-        else:
-            self.ind_atoms = self.ind_atoms[0]    
+ 
             
         self.ind_bonds = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>BOND" in x
         ]
-        if len(self.ind_bonds) != 1:
+        if len(self.ind_bonds) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a BOND section, therefore"
                 "it is not possibe to parse this file"
             )
-        else:
-            self.ind_bonds = self.ind_bonds[0]    
             
-#        print(self.ind_molecule)
-#        print(self.ind_atoms)
-#        print(self.ind_bonds)                                      
+        if len(self.ind_molecule) != len(self.ind_atoms):
+            raise ValueError(
+                "Mol2 File doesn't contain as many MOLECULE sections as it does"
+                "contain ATOM sections"
+                
+            )   
+        if len(self.ind_molecule) != len(self.ind_bonds):
+            raise ValueError(
+                "Mol2 File doesn't contain as many MOLECULE sections as it does"
+                "contain BOND sections"
+                
+            ) 
+        if len(self.ind_bonds) != len(self.ind_atoms):
+            raise ValueError(
+                "Mol2 File doesn't contain as many BOND sections as it does"
+                "contain ATOM sections"
+                
+            )                                              
+                                      
        
     
     def get_header(self):
         """
-        Get the header from the MOL2 file.
+        Get the header from the MOL2 file, if the file contains multiple
+        models the assumption is made that those all have the same header
+        as a AtomArrayStack of different molecules can't be buil anyways.
         
         Returns
         -------
@@ -136,38 +255,31 @@ class MOL2File(TextFile):
             MDL registry number.
         comments : str
             Additional comments.
-        """
-        
-#        if self.record_inds is None:
-
-#            self.record_inds = [
-#                i for i, x in enumerate(self.lines) if "@" in x
-#            ]
-#            #print(self.record_inds)
-#            
+        """        
                     
-        self.check_valid_mol2()
-                                    
-        
-        #print(ind_molecule)
-        self.mol_name = self.lines[self.ind_molecule+1]
-        
-        numbers_line = self.lines[self.ind_molecule+2]
+        self.check_valid_mol2()                                                    
+        self.mol_name = self.lines[self.ind_molecule[0]+1]
+                
+        numbers_line = self.lines[self.ind_molecule[0]+2]
         numbers_parsed = [int(x) for x in numbers_line.strip().split(" ")]
 
         self.num_atoms = numbers_parsed[0]
-        self.num_bonds = numbers_parsed[1]
-        self.num_subst = numbers_parsed[2]
-        self.num_feat  = numbers_parsed[3]
-        self.num_sets  = numbers_parsed[4]
+        if len(numbers_parsed) > 1:
+            self.num_bonds = numbers_parsed[1]
+        if len(numbers_parsed) > 2:            
+            self.num_subst = numbers_parsed[2]
+        if len(numbers_parsed) > 3:            
+            self.num_feat  = numbers_parsed[3]
+        if len(numbers_parsed) > 4:            
+            self.num_sets  = numbers_parsed[4]
         
 
-        self.mol_type    = self.lines[self.ind_molecule+3]
-        self.charge_type = self.lines[self.ind_molecule+4]
-        self.status_bits = self.lines[self.ind_molecule+5]
+        self.mol_type    = self.lines[self.ind_molecule[0]+3]
+        self.charge_type = self.lines[self.ind_molecule[0]+4]
+        self.status_bits = self.lines[self.ind_molecule[0]+5]
         
-        if "@" not in self.lines[self.ind_molecule+6]:
-            self.mol_comment = self.lines[self.ind_molecule+6]
+        if "@" not in self.lines[self.ind_molecule[0]+6]:
+            self.mol_comment = self.lines[self.ind_molecule[0]+6]
         
         return (
             self.mol_name, 
@@ -180,7 +292,7 @@ class MOL2File(TextFile):
            
 
 
-    def set_header(self, mol_name, num_atoms, mol_type, charge_type
+    def set_header(self, mol_name, num_atoms, mol_type, charge_type,
             num_bonds=-1, num_subst=-1, num_feat=-1, num_sets=-1, 
             status_bits="", mol_comment=""):
         """
@@ -209,7 +321,7 @@ class MOL2File(TextFile):
             are given. May be either NO_CHARGES, DEL_RE, GASTEIGER, 
             GAST_HUCK, HUCKEL, PULLMAN, GAUSS80_CHARGES, AMPAC_CHARGES, 
             MULLIKEN_CHARGES, DICT_CHARGES, MMFF94_CHARGES or USER_CHARGES.
-            If charget_type is NO_CHARGES the according charge column 
+            If charge_type is NO_CHARGES the according charge column 
             will be ignored even if charges are given.
         num_bonds: int, optional
             Number of bonds given as integer, if any.
@@ -232,34 +344,66 @@ class MOL2File(TextFile):
         self.num_subst      = num_subst
         self.num_feat       = num_feat
         self.num_sets       = num_sets
+        
+        if mol_type != "":
+            cond = mol_type in supported_mol_types
+            if not cond:
+                msg  = "The specified molecule type ["+str(charge_type) +"] \n"
+                msg += " is not among the supported molecule types: \n"
+                msg += "" + str(supported_mol_types) + "\n"            
+                raise ValueError(msg)
+
         self.mol_type       = mol_type
+        
+        if charge_type != "":            
+            cond = charge_type in supported_charge_types
+            if not cond:
+                msg  = "The specified charge type ["+str(charge_type) +"] "
+                msg += " is not among the supported charge types: \n"
+                msg += str(supported_charge_types) + "\n"
+                raise ValueError(msg)                          
+                
         self.charge_type    = charge_type
+        
         self.status_bits    = status_bits
         self.mol_comment    = mol_comment
         
-        if len(self.lines)==0:
-            if self.mol_comment == "":
-                self.lines = [""]*5
-                self.lines[4] = self.status_bits
-            else:
-                self.lines = [""]*6  
-                self.lines[4] = self.status_bits
-                self.lines[5] = self.mol_comment                                             
-        
-        
-        
-        if(len(self.lines) > 2):
-            
-            self.lines[1] = str(mol_name) + "\n"
-            self.lines[0] = str(len(self.lines)-2)+ "\n"
-        
+        #if len(self.lines)==0:
+        if self.status_bits != "":
+            self.lines = [""]*5
+            self.lines[4] = self.status_bits
         else:
-            raise ValueError(
-                    "Can not set header of an empty MOL2File"
-                    "Use set_structure first, so that number of atoms"
-                    "can be derived from set structure"
-                )
+            self.lines = [""]*6  
+            self.lines[4] = self.status_bits
+            self.lines[5] = self.mol_comment
+            
+        self.lines[0] = "@<TRIPOS>MOLECULE"
+        self.ind_molecule = [0]
+        self.lines[1] = self.mol_name
 
+        line = str(self.num_atoms)
+        if self.num_bonds >= 0:
+            line += " " + str(self.num_bonds)
+            
+            if self.num_subst >= 0:
+                line += " " + str(self.num_subst)
+        
+                if self.num_feat >= 0:
+                    line += " " + str(self.num_feat)
+                    
+                    if self.num_sets >= 0:
+                        line += " " + str(self.num_sets)
+    
+        self.lines[2] = line      
+        self.lines[3] = self.mol_type
+        self.lines[4] = self.charge_type
+        
+        self.lines[5] = self.status_bits                                  
+        if self.status_bits != "":
+            self.lines[6] = self.mol_comment
+                                                     
+        self.ind_atoms = [len(self.lines)]                                                       
+        
 
     def get_structure(self):
         """
@@ -267,136 +411,242 @@ class MOL2File(TextFile):
         
         Returns
         -------
-        array : AtomArray
+        array : AtomArray or AtomArrayStack
             This :class:`AtomArray` contains the optional ``charge``
             annotation and has an associated :class:`BondList`.
             All other annotation categories, except ``element`` are
             empty.
         """
-        
-#        self.check_valid_mol2()        
+            
         self.get_header()        
-        
+        atom_array_stack = []
         # instantiate atom array and bonds based on number of atoms information
-        atoms = AtomArray(self.num_atoms)
-        bonds = BondList(self.num_atoms)
         
-        # 
-        #   Iterate through all the atom lines by stating from line after
-        #   @<TRIPOS>ATOM until line starting with @ is reached.
-        #   All lines in between are assumed to be atom lines and are parsed
-        #   into atoms accodringly.
-        #
-        index = self.ind_atoms+1
-        i = 0
-#        print(" start index :: " +str(index))
-        while "@" not in self.lines[index]:
+        for i in range(len(self.ind_atoms)):
         
-        
-            line = [x for x in self.lines[index].strip().split(" ") if x != ''] 
-             
+            atoms = AtomArray(self.num_atoms)    
             
-            atom_id         = int(line[0])
-            atom_name       = line[1]
-            x_coord         = float(line[2])
-            y_coord         = float(line[3])
-            z_coord         = float(line[4])                        
-            atom_type_sybl  = line[5]
-            subst_id        = -1
-            subst_name      = ""
-            charge          = 0.0
-            status_bits     = ""
-            
-            if len(line) > 6:
-                subst_id        = int(line[6])                
-            if len(line) > 7:                
-                subst_name      = line[7]
-            if len(line) > 8:                
-                charge          = float(line[8])
-            if len(line) > 9:
-                status_bits     = line[9]
-                
-            atom_i = Atom(
-                [x_coord, y_coord, z_coord],
-                
-            )     
-            atom_i.atom_id  = atom_id
             if self.charge_type != "NO_CHARGES":
-                atom_i.charge = charge
-            atom_i.element  = atom_name                        
-            atom_i.res_id   = subst_id
-            atom_i.res_name = subst_name
-            
-            atoms[i] = atom_i                          
-            index += 1   
-            i += 1
-            
-
-        # 
-        #   Iterate through all the bond lines by stating from line after
-        #   @<TRIPOS>BOND until line starting with @ is reached.
-        #   All lines in between are assumed to be atom lines and are parsed
-        #   into atoms accodringly.
-        #
-        index = self.ind_bonds +1
-        while index < len(self.lines) and "@" not in self.lines[index]:  
-        
-            line = [x for x in self.lines[index].strip().split(" ") if x != '']
-            
-            bond_id             = int(line[0])
-            origin_atom_id      = int(line[1])
-            target_atom_id      = int(line[2])
-            bond_typ            = sybyl_to_biotite_bonds[str(line[3])]
-            status_bits         = ""
-            
-            if len(line) > 4:
-                status_bits     = str(line[4])
-            
-            if bond_typ is not None:
-#                print(
-#                    " adding bond ( " 
-#                    + str(origin_atom_id-1) + ", " 
-#                    + str(target_atom_id-1) + ", "
-#                    + str(bond_typ) 
-#                    + ")"
-#                )                    
-                    
-                bonds.add_bond(
-                    origin_atom_id-1,
-                    target_atom_id-1,
-                    bond_typ
-                )                
+                atoms.add_annotation("charges", float)
                 
-            index += 1                                  
-                                                
+            bonds = BondList(self.num_atoms)
+            
+            # 
+            #   Iterate through all the atom lines by stating from line after
+            #   @<TRIPOS>ATOM until line starting with @ is reached.
+            #   All lines in between are assumed to be atom lines and are parsed
+            #   into atoms accodringly.
+            #
+            index = self.ind_atoms[i]+1
+            j = 0
+            while "@" not in self.lines[index]:
+            
+            
+                line = [x for x in self.lines[index].strip().split(" ") if x != ''] 
+                 
+                
+                atom_id         = int(line[0])
+                atom_name       = line[1]
+                x_coord         = float(line[2])
+                y_coord         = float(line[3])
+                z_coord         = float(line[4])                        
+                atom_type_sybl  = line[5]
+                subst_id        = -1
+                subst_name      = ""
+                charge          = 0.0
+                status_bits     = ""
+                
+                if len(line) > 6:
+                    subst_id        = int(line[6])                
+                if len(line) > 7:                
+                    subst_name      = line[7]
+                if len(line) > 8:                
+                    charge          = float(line[8])
+                if len(line) > 9:
+                    status_bits     = line[9]
+                  
+                if self.charge_type != "NO_CHARGES":                                    
+                    atom_i = Atom(
+                        [x_coord, y_coord, z_coord],
+                        charges=charge                      
+                    )     
+                else:
+                    atom_i = Atom(
+                        [x_coord, y_coord, z_coord],                               
+                    )                                    
+                
+                atom_i.atom_id  = atom_id                
+                atom_i.element  = atom_name                        
+                atom_i.res_id   = subst_id
+                atom_i.res_name = subst_name
+                
+                atoms[j] = atom_i   
+                index += 1   
+                j += 1
+                
 
-        atoms.bond_list = bonds
-        return atoms            
+            # 
+            #   Iterate through all the bond lines by stating from line after
+            #   @<TRIPOS>BOND until line starting with @ is reached.
+            #   All lines in between are assumed to be atom lines and are parsed
+            #   into atoms accodringly.
+            #
+            index = self.ind_bonds[i] +1
+            while index < len(self.lines) and "@" not in self.lines[index]:  
+            
+                line = [x for x in self.lines[index].strip().split(" ") if x != '']
+                
+                bond_id             = int(line[0])
+                origin_atom_id      = int(line[1])
+                target_atom_id      = int(line[2])
+                bond_typ            = sybyl_to_biotite_bonds[str(line[3])]
+                status_bits         = ""
+                
+                if len(line) > 4:
+                    status_bits     = str(line[4])
+                
+                if bond_typ is not None:                                      
+                    bonds.add_bond(
+                        origin_atom_id-1,
+                        target_atom_id-1,
+                        bond_typ
+                    )                
+                    
+                index += 1                                  
+                                                                     
+            atoms.bonds = bonds
+            atom_array_stack.append(atoms)
+            
+        if len(atom_array_stack) == 1:
+            return atom_array_stack[0]
+        else:
+            return struc.stack(atom_array_stack)                        
              
             
+    def append_atom_array(self, atoms):
+            
+        n_atoms = atoms.shape[0]                 
         
-
+        self.lines.append("@<TRIPOS>ATOM")    
+        atoms_has_atom_ids = hasattr(atoms, "atom_id")
+            
+        for i, atom in enumerate(atoms):
+            
+            atom_id = i+1
+            if atoms_has_atom_ids:
+                atom_id = atom.atom_id
+                
+            line  = "{:>7}".format(atom_id)
+            line += "  " + atom.element
+            line += "{:>16.4f}".format(atom.coord[0])
+            line += "{:>10.4f}".format(atom.coord[1])
+            line += "{:>10.4f}".format(atom.coord[2])                                            
+            line += " {:<8}".format(
+                #get_sybyl_atom_type(
+                #    atom, atoms.bonds, atom_id
+                #)
+                "C.ar"
+            )
+            if atom.res_id != 0:                                          
+                line += str(atom.res_id)
+                
+                if atom.res_name != "":
+                    line += "  " + str(atom.res_name)
+                    
+                    if self.charge_type != "NO_CHARGES":
+                        line += "       " + " {: .{}f}".format(atom.charges, 4)
+                        
+            self.lines.append(line)                                                                                                                                
+        
+            
+        self.lines.append("@<TRIPOS>BOND")                
+        for i, bond in enumerate(atoms.bonds.as_array()):
+            line  = "{:>6}".format(i+1)
+            line += "{:>6}".format(bond[0]+1)
+            line += "{:>6}".format(bond[1]+1)
+            line += "{:>5}".format(biotite_bonds_to_sybyl[bond[2]])
+            self.lines.append(line)
+            
+            
+    
     def set_structure(self, atoms):
         """
         Set the :class:`AtomArray` for the file.
         
         Parameters
         ----------
-        array : AtomArray
+        array : AtomArray or 
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
-        """
+        """     
         
-        n_atoms = atoms.shape[0]
-        self.lines += [""] * n_atoms
+        if len(self.lines) < 5:
+            msg  = "Header not valid, less then the minimum amount of lines in"
+            msg += "header :: " +str(self.lines)            
+            raise ValueError(msg)
+                        
+        header_lines = self.lines[:self.ind_atoms[0]]
+
+        # since setting new structure delete all previously stored
+        # structure information if any
+        self.lines = self.lines[:self.ind_atoms[0]]        
         
+        if isinstance(atoms, AtomArray):
+
+            
+            if atoms.bonds is None:
+                raise BadStructureError(
+                    "Input AtomArrayStack has no associated BondList"
+                )
+                
+            if self.charge_type != "NO_CHARGES" and atoms.charges is None:
+
+                msg  = "Specified charge type " + str(self.charge_type) + ".\n"
+                msg += "but given AtomArray has no charges"
+                raise ValueError(msg)     
+                
+            if self.num_atoms != atoms.shape[0]:
+                msg  = "Mismatch between number of atoms in header ["
+                msg += str(self.num_atoms) + "] and number of atoms in given"
+                msg += "AtomArray [" + str(atoms.shape[0]) + "]"
+                raise ValueError(msg)                                   
+
+            
+            self.append_atom_array(atoms)                
+                            
         
-        for i, atom in enumerate(atoms):
-            line = "  " + atom.element 
-            line += "       " + "{: .{}f}".format(atom.coord[0], 5)
-            line += "       " + "{: .{}f}".format(atom.coord[1], 5)
-            line += "       " + "{: .{}f}".format(atom.coord[2], 5)
-            line += " "
-            self.lines[i+2] = line
+        elif isinstance(atoms, AtomArrayStack):      
+        
+            if atoms.bonds is None:
+                raise BadStructureError(
+                    "Input AtomArrayStack has no associated BondList"
+                )
+            if self.charge_type != "NO_CHARGES" and atoms.charges is None:
+
+                msg  = "Specified charge type " + str(self.charge_type) + ".\n"
+                msg += "but one of given AtomArrays has no charges"
+                raise ValueError(msg)                   
+                
+            if self.num_atoms != atoms.shape[1]:
+                msg  = "Mismatch between number of atoms in header ["
+                msg += str(self.num_atoms) + "] and number of atoms in given"
+                msg += "AtomArrayStack [" + str(atoms.shape[1]) + "]"
+                raise ValueError(msg)                
+                    
+            n_models    = atoms.shape[0]
+            n_atoms     = atoms[0].shape[0]   
+            n_bonds     = atoms[0].bonds.as_array().shape[0]         
+
+            
+            for i, atoms_i in enumerate(atoms):                          
+                                  
+            
+                if i > 0:          
+                    for l in header_lines:
+                        self.lines.append(l)
+
+                self.append_atom_array(atoms_i)
+            
+            
 
 
