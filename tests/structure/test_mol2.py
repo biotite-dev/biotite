@@ -15,7 +15,7 @@ import biotite.structure.info as info
 import biotite.structure.io.mol2 as mol2
 from ..util import data_dir
 
-def draw_random_struct(N_atoms, charges=False):
+def draw_random_struct(N_atoms, charge=False):
 
     arr= struc.array(
         [
@@ -24,7 +24,7 @@ def draw_random_struct(N_atoms, charges=False):
                     float(np.random.rand()) for _ in range(3)
                 ],
                 element="C",
-                charges=np.random.rand()
+                charge=int(np.random.randint(-5,5))
             ) for _ in range(N_atoms)
         ]
     )
@@ -72,15 +72,16 @@ def test_header_conversion():
     for i, name in enumerate(ref_names):
         mol2_file = mol2.MOL2File()        
         mol2_file.set_header(
-            mol_name = name,
-            num_atoms = ref_nums[i],
-            mol_type = ref_mol_type[i],
-            charge_type = ref_charge_type[i]            
+            name, 
+            ref_nums[i], 
+            ref_mol_type[i], 
+            ref_charge_type[i]
+       
         )               
         # need to set some structure for file writing
         rand_struct = draw_random_struct(
             ref_nums[i],
-            charges = (ref_charge_type[i] != "NO_CHARGES"),
+            charge = (ref_charge_type[i] != "NO_CHARGES"),
         )
         mol2_file.set_structure(rand_struct)  
 
@@ -96,8 +97,8 @@ def test_header_conversion():
         assert len(test_header) > 0
         assert test_header[0] == name        
         assert test_header[1] == ref_nums[i]
-        assert test_header[6] == ref_mol_type[i]
-        assert test_header[7] == ref_charge_type[i]
+        assert test_header[2] == ref_mol_type[i]
+        assert test_header[3] == ref_charge_type[i]
 
 
 @pytest.mark.parametrize(
@@ -117,7 +118,7 @@ def test_structure_conversion(path):
 
     mol2_file = mol2.MOL2File()
     mol2_file.set_header(
-        ref_header[0], ref_header[1], ref_header[6], ref_header[7]
+        ref_header[0], ref_header[1], ref_header[2], ref_header[3]
     )
     mol2.set_structure(mol2_file, ref_atoms)
     temp = TemporaryFile("w+")
@@ -145,4 +146,54 @@ def test_structure_conversion(path):
             assert np.all(ref_atoms[i].element == test_atoms[i].element)
             assert np.all(ref_atoms.bonds == test_atoms.bonds)
             
+#@pytest.mark.parametrize(
+#    "path",
+#    glob.glob(join(data_dir("structure"), "molecules", "*.mol2"))
+#)
+#def test_charge_rounding(path):
+#    """
+#    After reading a mol2 file, writing the structure back to a new file
+#    and reading it again should give us a file where the partial_charges are
+#    identical to the rounded charges as without changing them manually this
+#    is what will be written to the charge column.
+#    """
+#    mol2_file = mol2.MOL2File.read(path)
+#        
+#    ref_header = mol2_file.get_header()
+#    ref_atoms = mol2.get_structure(mol2_file)
+#    
+
+#    mol2_file = mol2.MOL2File()
+#    mol2_file.set_header(
+#        ref_header[0], ref_header[1], ref_header[2], ref_header[3]
+#    )
+#    mol2.set_structure(mol2_file, ref_atoms)
+#    
+#    ref_charges = ref_atoms.charge
+#    
+#    temp = TemporaryFile("w+")
+#    mol2_file.write(temp)
+#    
+
+#    temp.seek(0)
+#    mol2_file = mol2.MOL2File.read(temp) 
+#    test_atoms = mol2.get_structure(mol2_file)
+#    temp.close()
+#    
+
+#    instance_cond = isinstance(ref_atoms, AtomArray)
+#    instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
+#    assert instance_cond
+
+#    if isinstance(ref_atoms, AtomArray):
+#        # actually no idea why we can assume that this works
+#        # since floating point comparison is not safe!    
+#        assert test_atoms == ref_atoms
+#        assert test_atoms.bonds == ref_atoms.bonds
+#    elif isinstance(ref_atoms, AtomArrayStack):
+#        for i in range(ref_atoms.shape[0]):
+#            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
+#            assert np.all(ref_atoms[i].element == test_atoms[i].element)
+#            assert np.all(ref_atoms.bonds == test_atoms.bonds)            
+#            
 
