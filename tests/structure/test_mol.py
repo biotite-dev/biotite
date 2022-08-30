@@ -42,7 +42,7 @@ def test_header_conversion():
 @pytest.mark.parametrize(
     "path, omit_charge",
     itertools.product(
-        glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+        glob.glob(join(data_dir("structure"), "molecules", "*.mol")),
         [False, True]
     )
 )
@@ -77,7 +77,14 @@ def test_structure_conversion(path, omit_charge):
 
 
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+    "path", 
+    [
+        x for x in glob.glob(
+            join(
+                data_dir("structure"), "molecules", "*.mol"
+            ) 
+        ) if x.split(".")[0].upper() in info.all_residues()
+    ],
 )
 def test_pdbx_consistency(path):
     """
@@ -89,6 +96,7 @@ def test_pdbx_consistency(path):
     MOL format.
     """
     mol_name = split(splitext(path)[0])[1]
+    
     ref_atoms = info.residue(mol_name)
     # The CCD contains information about aromatic bond types,
     # but the SDF test files do not
@@ -104,3 +112,12 @@ def test_pdbx_consistency(path):
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
         == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
+        
+    #header = mol_file.get_header()
+    
+    try:
+        header = mol_file.get_header()                
+    except:
+        assert False, "Could not get_header for SDFile [" +str(path)
+        
+                
