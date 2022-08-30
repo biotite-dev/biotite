@@ -146,54 +146,89 @@ def test_structure_conversion(path):
             assert np.all(ref_atoms[i].element == test_atoms[i].element)
             assert np.all(ref_atoms.bonds == test_atoms.bonds)
             
-#@pytest.mark.parametrize(
-#    "path",
-#    glob.glob(join(data_dir("structure"), "molecules", "*.mol2"))
-#)
-#def test_charge_rounding(path):
-#    """
-#    After reading a mol2 file, writing the structure back to a new file
-#    and reading it again should give us a file where the partial_charges are
-#    identical to the rounded charges as without changing them manually this
-#    is what will be written to the charge column.
-#    """
-#    mol2_file = mol2.MOL2File.read(path)
-#        
-#    ref_header = mol2_file.get_header()
-#    ref_atoms = mol2.get_structure(mol2_file)
-#    
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "molecules", "*.mol2"))
+)
+def test_charge_rounding(path):
+    """
+    After reading a mol2 file, writing the structure back to a new file
+    and reading it again should give us a file where the partial_charges are
+    identical to the rounded charges as without changing them manually this
+    is what will be written to the charge column. Also setting the charges 
+    specifically before setting the structure will lead to the partial_charges
+    being used in the set_structure function.
+    """
+    mol2_file = mol2.MOL2File.read(path)
+        
+    ref_header = mol2_file.get_header()
+    ref_atoms = mol2.get_structure(mol2_file)
+    ref_partial_charges = mol2.get_charges(mol2_file)
+    ref_charges = ref_atoms.charge
+    
 
-#    mol2_file = mol2.MOL2File()
-#    mol2_file.set_header(
-#        ref_header[0], ref_header[1], ref_header[2], ref_header[3]
-#    )
-#    mol2.set_structure(mol2_file, ref_atoms)
-#    
-#    ref_charges = ref_atoms.charge
-#    
-#    temp = TemporaryFile("w+")
-#    mol2_file.write(temp)
-#    
+    mol2_file = mol2.MOL2File()
+    mol2_file.set_header(
+        ref_header[0], ref_header[1], ref_header[2], ref_header[3]
+    )
+    mol2.set_structure(mol2_file, ref_atoms)       
+    temp = TemporaryFile("w+")
+    mol2_file.write(temp)
+    
 
-#    temp.seek(0)
-#    mol2_file = mol2.MOL2File.read(temp) 
-#    test_atoms = mol2.get_structure(mol2_file)
-#    temp.close()
-#    
+    temp.seek(0)
+    mol2_file = mol2.MOL2File.read(temp) 
+    test_atoms = mol2.get_structure(mol2_file)
+    test_charges = mol2.get_charges(mol2_file)
+    temp.close()
+    
+    mol2_file = mol2.MOL2File()
+    mol2_file.set_header(
+        ref_header[0], ref_header[1], ref_header[2], ref_header[3]
+    )
+    mol2.set_charges(mol2_file, ref_partial_charges)
+    mol2.set_structure(mol2_file, ref_atoms)           
+    temp = TemporaryFile("w+")    
+    mol2_file.write(temp)    
+    
+    temp.seek(0)
+    mol2_file = mol2.MOL2File.read(temp) 
+    test2_atoms = mol2.get_structure(mol2_file)
+    test2_charges = mol2.get_charges(mol2_file)
+    temp.close()    
+    
 
-#    instance_cond = isinstance(ref_atoms, AtomArray)
-#    instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
-#    assert instance_cond
+    instance_cond = isinstance(ref_atoms, AtomArray)
+    instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
+    assert instance_cond
 
-#    if isinstance(ref_atoms, AtomArray):
-#        # actually no idea why we can assume that this works
-#        # since floating point comparison is not safe!    
-#        assert test_atoms == ref_atoms
-#        assert test_atoms.bonds == ref_atoms.bonds
-#    elif isinstance(ref_atoms, AtomArrayStack):
-#        for i in range(ref_atoms.shape[0]):
-#            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
-#            assert np.all(ref_atoms[i].element == test_atoms[i].element)
-#            assert np.all(ref_atoms.bonds == test_atoms.bonds)            
-#            
+    if isinstance(ref_atoms, AtomArray):
+        # actually no idea why we can assume that this works
+        # since floating point comparison is not safe!   
+        print(ref_partial_charges)
+        print(np.rint(ref_partial_charges)) 
+        assert test_atoms == ref_atoms
+        assert test2_atoms == ref_atoms
+                
+        assert test_atoms.bonds == ref_atoms.bonds
+        assert test2_atoms.bonds == ref_atoms.bonds        
+        
+        assert np.all(np.rint(ref_partial_charges) == test_charges)        
+        assert np.all(ref_partial_charges == test2_charges)
+        
+    elif isinstance(ref_atoms, AtomArrayStack):
+        for i in range(ref_atoms.shape[0]):
+            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
+            assert np.all(np.isclose(ref_atoms[i].coord, test2_atoms[i].coord))            
+            assert np.all(ref_atoms[i].element == test_atoms[i].element)
+            assert np.all(ref_atoms[i].element == test2_atoms[i].element)            
+            assert np.all(ref_atoms.bonds == test_atoms.bonds)
+            assert np.all(ref_atoms.bonds == test2_atoms.bonds)            
+            assert np.all(
+                np.isclose(np.rint(ref_partial_charges[i]), test_charges[i])
+            )                      
+            assert np.all(
+                np.isclose(ref_partial_charges[i], test2_charges[i])
+            )                            
+            
 
