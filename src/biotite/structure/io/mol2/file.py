@@ -81,32 +81,37 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
             to the sybyl atom types.       
         
     """
-    if atom.element == "C":    
-        atom_bonds, types = bonds.get_bonds(atom_id)
-                       
+    atom_bonds, types = bonds.get_bonds(atom_id)    
+    
+    if atom.element == "C":                          
         if 5 in types:
             return "C.ar"
         else:
-#            if len(atom_bonds) == 2:
-#                return "C.1"
-#            elif len(atom_bonds) == 3:
-#                return "C.2"
-#            elif len(atom_bonds) == 4:
-#                return "C.3"                         
+            if len(atom_bonds) == 3:
+                return "C.1"
+            elif len(atom_bonds) == 2:
+                return "C.2"
+            elif len(atom_bonds) == 1:
+                return "C.3"                         
 #            else:
 #                msg = "No supported sybyl Atom type for Atom " + str(atom)
 #                raise ValueError(msg)                  
             return "C.3"
-    if atom.element == "N":     
-        atom_bonds, types = bonds.get_bonds(atom_id)
-                       
+    if atom.element == "N":                                   
         if 5 in types:
             return "N.ar"
         else:       
-            return "N.3"       
-            
+            if len(atom_bonds) == 3:
+                return "N.1"
+            elif len(atom_bonds) == 2:
+                return "N.2"
+            elif len(atom_bonds) == 1:
+                return "N.3"               
     if atom.element == "O":
-        return "O.3"
+        if len(atom_bonds) == 2:
+            return "O.3"
+        elif len(atom_bonds) == 1:
+            return "O.2"   
     
     if atom.element == "S":
         return "S.3"
@@ -139,7 +144,27 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
     if atom.element == "Co":
         return "Co.oh"
     if atom.element == "Cu":
-        return "Cu"                                
+        return "Cu"     
+    if atom.element == "Cl":
+        return "Cl"
+    if atom.element == "Br":
+        return "Br"
+    if atom.element == "I":
+        return "I"
+    if atom.element == "Zn":
+        return "Zn"
+    if atom.element == "Se":
+        return "Se"
+    if atom.element == "Mo":
+        return "Mo"
+    if atom.element == "Sn":
+        return "Sn"
+        
+        
+        
+        
+        
+                                               
 
                                                             
         
@@ -218,6 +243,7 @@ class MOL2File(TextFile):
         self.ind_molecule = -1
         self.ind_atoms = -1
         self.ind_bonds = -1
+        self.sybyl_atom_types = None
         
 
     def check_valid_mol2(self):
@@ -439,7 +465,7 @@ class MOL2File(TextFile):
         self.ind_molecule = [0]
         self.lines[1] = self.mol_name
 
-        line = str(self.num_atoms)
+        line = " " + str(self.num_atoms)
         if self.num_bonds >= 0:
             line += " " + str(self.num_bonds)
             
@@ -480,6 +506,7 @@ class MOL2File(TextFile):
         atom_array_stack = []
         # instantiate atom array and bonds based on number of atoms information
         
+        self.sybyl_atom_types = []
         for i in range(len(self.ind_atoms)):
         
             atoms = AtomArray(self.num_atoms)    
@@ -511,6 +538,7 @@ class MOL2File(TextFile):
             #
             index = self.ind_atoms[i]+1
             j = 0
+            atom_type_sybl_row = [""]*self.num_atoms
             while "@" not in self.lines[index]:
             
             
@@ -534,8 +562,12 @@ class MOL2File(TextFile):
                     subst_name      = line[7]
                 if len(line) > 8:                
                     charge          = float(line[8])
+#                    print(line)
+#                    print(charge)                       
                 if len(line) > 9:
                     status_bits     = line[9]
+                    
+                    
                   
                 if self.charge_type != "NO_CHARGES": 
                     self.charges[i][j] = charge                                
@@ -553,7 +585,8 @@ class MOL2File(TextFile):
                 atom_i.res_id   = subst_id
                 atom_i.res_name = subst_name
                 
-                atoms[j] = atom_i   
+                atoms[j] = atom_i  
+                atom_type_sybl_row[j] = atom_type_sybl 
                 index += 1   
                 j += 1
                 
@@ -589,6 +622,7 @@ class MOL2File(TextFile):
                                                                      
             atoms.bonds = bonds
             atom_array_stack.append(atoms)
+            self.sybyl_atom_types.append(atom_type_sybl_row)
             
         if len(atom_array_stack) == 1:
             return atom_array_stack[0]
@@ -596,12 +630,15 @@ class MOL2File(TextFile):
             return struc.stack(atom_array_stack)                        
              
             
-    def append_atom_array(self, atoms):
+    def append_atom_array(self, atoms, charges=None):
             
         n_atoms = atoms.shape[0]                 
         
         self.lines.append("@<TRIPOS>ATOM")    
         atoms_has_atom_ids = hasattr(atoms, "atom_id")
+        
+        if charges is not None:
+            assert len(charges) == len(atoms)
             
         for i, atom in enumerate(atoms):
             
@@ -627,12 +664,13 @@ class MOL2File(TextFile):
                     line += "  " + str(atom.res_name)
                     
                     if self.charge_type != "NO_CHARGES":
-                        line += "       "                    
-                        cond = not self.charges is None
-                        cond = cond and len(self.charges) != 0
-                        cond = cond and len(self.charges[i]) !=0
-                        if cond:                                                                                    
-                            line += " {: .{}f}".format(self.charges[i][j], 4)
+                        line += "       "        
+#                        print("charged")            
+                        if charges is not None:  
+#                            print(
+#                                " using user defined charges " +str(charges[i])
+#                            )                                                                                  
+                            line += " {: .{}f}".format(charges[i], 4)
                         else:
                             line += " {: .{}f}".format(atom.charge, 4)                        
                                                         
@@ -648,36 +686,6 @@ class MOL2File(TextFile):
             line += "{:>5}".format(biotite_bonds_to_sybyl[bond[2]])
             self.lines.append(line)
 
-    def set_charges(self, charges):            
-        """
-        Set a partial charges array that will be used for writing the mol2 file.
-                              
-        """
-        
-#        if not self.charges is None and self.charges.shape != charges.shape:
-#            msg  = "Can only assign charges of same shape as already within"
-#            msg += "Mol2 file 
-#            raise ValueError(msg)
-#            
-#        
-#        if self.num_atoms != -1:
-
-        self.charges = charges
-            
-
-    def get_charges(self):
-        
-        if self.charge_type == "NO_CHARGES":
-            raise ValueError(
-                "Can not get charges from mol2 file where NO_CHARGES set."
-            )
-        
-        if self.charges is None:
-            _ = self.get_structure()
-        
-        return self.charges            
-            
-    
     def set_structure(self, atoms):
         """
         Set the :class:`AtomArray` for the file.
@@ -719,9 +727,14 @@ class MOL2File(TextFile):
                 msg += str(self.num_atoms) + "] and number of atoms in given"
                 msg += "AtomArray [" + str(atoms.shape[0]) + "]"
                 raise ValueError(msg)                                   
-
-            
-            self.append_atom_array(atoms)                
+        
+#            print(" charges ::")
+#            print(self.charges)
+#            print("")
+            if self.charges is not None:                                            
+                self.append_atom_array(atoms, self.charges)                
+            else:
+                self.append_atom_array(atoms)                
                             
         
         elif isinstance(atoms, AtomArrayStack):      
@@ -754,8 +767,52 @@ class MOL2File(TextFile):
                     for l in header_lines:
                         self.lines.append(l)
 
-                self.append_atom_array(atoms_i)
+#                print(" charges ::")
+#                print(self.charges)
+#                print("")
+                if self.charges is not None:
+                    self.append_atom_array(atoms_i, self.charges[i])                
+                else:
+                    self.append_atom_array(atoms_i)               
+
+    def set_charges(self, charges):            
+        """
+        Set a partial charges array that will be used for writing the mol2 file.
+                              
+        """
+        
+#        if not self.charges is None and self.charges.shape != charges.shape:
+#            msg  = "Can only assign charges of same shape as already within"
+#            msg += "Mol2 file 
+#            raise ValueError(msg)
+#            
+#        
+#        if self.num_atoms != -1:
+
+#        print("setting self.charges :: " + str(self.charges))
+#        print("to                   :: " + str(charges))
+
+        self.charges = charges
             
+
+    def get_charges(self):
+        
+        if self.charge_type == "NO_CHARGES":
+            raise ValueError(
+                "Can not get charges from mol2 file where NO_CHARGES set."
+            )
+        
+        if self.charges is None:
+            _ = self.get_structure()
+            
+            
+        if len(self.charges) == 1:
+            return self.charges[0]
+        else:                               
+            return self.charges            
+            
+    
+     
             
 
 
