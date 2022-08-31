@@ -11,6 +11,8 @@ __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 
+import traceback
+
 import warnings
 import numpy as np
 
@@ -71,6 +73,8 @@ def read_structure_from_ctab(ctab_lines):
     .. footbibliography::
     """
     n_atoms, n_bonds = _get_counts(ctab_lines[0])
+ 
+                   
     atom_lines = ctab_lines[1 : 1 + n_atoms]
     bond_lines = ctab_lines[1 + n_atoms : 1 + n_atoms + n_bonds]
     
@@ -165,5 +169,5 @@ def write_structure_to_ctab(atoms):
 
 
 def _get_counts(counts_line):
-    elements = counts_line.split()
+    elements = counts_line.strip().split()
     return int(elements[0]), int(elements[1])

@@ -90,7 +90,8 @@ class MOLFile(TextFile):
         program : str
             The program name.
         time : datetime
-            The time of file creation.
+            The time of file creation. Returns None in this field if not
+            able to parse according entry in MOLFile as datetime string.
         dimensions : str
             Dimensional codes.
         scaling_factors : str
@@ -105,8 +106,18 @@ class MOLFile(TextFile):
         mol_name        = self.lines[0].strip()
         initials        = self.lines[1][0:2].strip()
         program         = self.lines[1][2:10].strip()
-        time            = datetime.datetime.strptime(self.lines[1][10:20],
-                                                     DATE_FORMAT)
+
+        time = None       
+        try:
+            time        = datetime.datetime.strptime(
+                self.lines[1][10:20],
+                DATE_FORMAT
+            )
+        except:
+            line = format(self.lines[1][10:20])
+            warn("{} could not be interpreted as datetime".format(line))
+
+                        
         dimensions      = self.lines[1][20:22].strip()
         scaling_factors = self.lines[1][22:34].strip()
         energy          = self.lines[1][34:46].strip()

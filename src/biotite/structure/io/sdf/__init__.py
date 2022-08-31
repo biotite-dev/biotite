@@ -3,12 +3,11 @@
 # information.
 
 """
-The MOL format is used to depict atom positions and bonds for small
-molecules.
-This subpackage is used for reading and writing an :class:`AtomArray`
-in this format.
-Additionally, reading data from the SDF format, which is a wrapper
-around MOL, is also supported.
+The SDF format is used to depict atom positions and bonds for small
+molecules as well as multiple meta informations. 
+Also there can be multiple models within one file.
+This subpackage leans on the ctab modle implemented for the MOL file
+but also produces a dict containing the meta information.
 """
 
 __name__ = "biotite.structure.io.sdf"

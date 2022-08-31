@@ -133,7 +133,7 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
         return "Si"        
     if atom.element == "K":
         return "K"        
-    if atom.element == "Ca":
+    if atom.element == "CA":
         return "Ca"        
     if atom.element == "Cr":
         return "Cr.th"
@@ -145,7 +145,7 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
         return "Co.oh"
     if atom.element == "Cu":
         return "Cu"     
-    if atom.element == "Cl":
+    if atom.element == "CL":
         return "Cl"
     if atom.element == "Br":
         return "Br"
@@ -159,12 +159,44 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
         return "Mo"
     if atom.element == "Sn":
         return "Sn"
+    else:
+        msg  = "sybyl_atom_type not implemented for element ["+str(atom.element)
+        msg += "] " + str(atom)
+        raise ValueError(msg)
         
         
         
+def atom_name_to_element(atom_name, sybyl_atom_type):
+
+    if len(atom_name) == 1:
+        return atom_name
+    else:
+    
+        if atom_name == "CA":
+            if sybyl_atom_type == "Ca":
+                return atom_name
+            elif sybyl_atom_type in ["C.ar", "C.1", "C.2", "C.3"]:
+                return "C"                
+            
+                       
+                        
         
         
-                                               
+
+
+def filter_atom_name(atom_name, sybyl_name):
+    """
+    Used to filter if any of the atom_names needs special handling or 
+    if we are simply seeing element names and not specific
+    atom names
+    """
+                                 
+    element = atom_name_to_element(atom_name, sybyl_name)      
+    
+    cond = len(atom_name) > 2
+    cond = cond or len(element) != len(atom_name)
+    
+    return cond                                                   
 
                                                             
         
@@ -539,6 +571,7 @@ class MOL2File(TextFile):
             index = self.ind_atoms[i]+1
             j = 0
             atom_type_sybl_row = [""]*self.num_atoms
+            atom_names = []
             while "@" not in self.lines[index]:
             
             
@@ -580,8 +613,10 @@ class MOL2File(TextFile):
                         [x_coord, y_coord, z_coord],                               
                     )                                    
                 
-                atom_i.atom_id  = atom_id                
+                atom_i.atom_id  = atom_id   
+                #if len(atom_name)             
                 atom_i.element  = atom_name                        
+                #atom_names.append(atom_name)
                 atom_i.res_id   = subst_id
                 atom_i.res_name = subst_name
                 
@@ -589,7 +624,43 @@ class MOL2File(TextFile):
                 atom_type_sybl_row[j] = atom_type_sybl 
                 index += 1   
                 j += 1
+            
+            print(j)
+            print(atom_names)
+            print(atom_type_sybl_row)
                 
+#            filtered = np.array(
+#                [
+#                    filter_atom_name(
+#                      atom_names[k], atom_type_sybl_row[k]
+#                    ) for k in range(len(atom_names))
+#                ] 
+#            )    
+#                                              
+
+#            index = self.ind_atoms[i]+1
+#            j = 0
+#            while "@" not in self.lines[index]:
+#                print("["+str(j)+ "]")
+#                print("   "+str(atoms[j]))
+#                print("   "+str(atom_names[j]))
+#                print("   "+str(atom_type_sybl_row[j]))                              
+#                
+#            
+#                if np.any(np.array(filtered)):
+#                
+#                    atoms[j].atom_name = atom_names[j]
+#                    atoms[j].element = atom_name_to_element(
+#                        atom_names[j], 
+#                        atom_type_sybl_row[j]
+#                    )
+#                else:
+#                    atoms[j].element = atom_names[j]                                            
+#                
+#                index += 1 
+#                j += 1
+                                   
+                       
 
             # 
             #   Iterate through all the bond lines by stating from line after
