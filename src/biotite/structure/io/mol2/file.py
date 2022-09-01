@@ -51,6 +51,20 @@ supported_mol_types = [
 sybyl_status_bit_types = [
     "system", "invalid_charges", "analyzed", "substituted", "altered", "ref_angle"
 ]
+
+        
+# field that contains all accepted two letter elements
+# this is used for deriving if sperate atom_name and element 
+# columns should be generated. If only two letter atom_name entries in the 
+# mol2 file are found that are contained here, the atom_name entry will be
+# assumed to only contain element names.        
+elements_twoLetters = [
+    "LI", "NA", "MG", "AL",
+    "SI", "CA", "CR", "MN",
+    "FE", "CO", "CU", "CL",
+    "BR", "ZN", "SE", "MO",
+    "SN", "AR"
+]    
     
 def get_sybyl_atom_type(atom, bonds, atom_id):
     """
@@ -121,62 +135,94 @@ def get_sybyl_atom_type(atom, bonds, atom_id):
         return "F"
     if atom.element == "H":
         return "H"
-    if atom.element == "Li":
+    if atom.element == "LI":
         return "Li"                                                        
-    if atom.element == "Na":
+    if atom.element == "NA":
         return "Na"                 
-    if atom.element == "Mg":
+    if atom.element == "MG":
         return "Mg"            
-    if atom.element == "Al":
+    if atom.element == "AL":
         return "Al"        
-    if atom.element == "Si":
+    if atom.element == "SI":
         return "Si"        
     if atom.element == "K":
         return "K"        
     if atom.element == "CA":
         return "Ca"        
-    if atom.element == "Cr":
+    if atom.element == "CR":
         return "Cr.th"
-    if atom.element == "Mn":
+    if atom.element == "MN":
         return "Mn"
-    if atom.element == "Fe":
+    if atom.element == "FE":
         return "Fe"
-    if atom.element == "Co":
+    if atom.element == "CO":
         return "Co.oh"
-    if atom.element == "Cu":
+    if atom.element == "CU":
         return "Cu"     
     if atom.element == "CL":
         return "Cl"
-    if atom.element == "Br":
+    if atom.element == "BR":
         return "Br"
     if atom.element == "I":
         return "I"
-    if atom.element == "Zn":
+    if atom.element == "ZN":
         return "Zn"
-    if atom.element == "Se":
+    if atom.element == "SE":
         return "Se"
-    if atom.element == "Mo":
+    if atom.element == "MO":
         return "Mo"
-    if atom.element == "Sn":
+    if atom.element == "SN":
         return "Sn"
+    if atom.element == "AR":
+        return "Ar"       
     else:
         msg  = "sybyl_atom_type not implemented for element ["+str(atom.element)
         msg += "] " + str(atom)
         raise ValueError(msg)
         
-        
-        
-def atom_name_to_element(atom_name, sybyl_atom_type):
 
+def get_error_msg(atom_name, sybyl_atom_type):
+    msg = "Not implemented for given atom_name :: " +str(atom_name)+". "
+    msg += "And given sybyl_atom_type          :: " 
+    msg += str(sybyl_atom_type) + "."        
+    return msg               
+
+def atom_name_to_element(atom_name, sybyl_atom_type):
+    """
+    This function gets a recorded atom name and sybyl_atom_type and returns
+    you the according element that this pair should have. 
+    For example it is not possible to arrive from 'CA' if this should be 
+    calcium or the c-alpha Atom of a protein backbone. However together
+    with the sybyl_atom_type it can be distinguished.            
+    """
+
+
+    carbon_types = ["C.ar", "C.1", "C.2", "C.3"]
+    
     if len(atom_name) == 1:
         return atom_name
     else:
-    
-        if atom_name == "CA":
+        if atom_name in elements_twoLetters:
+            return atom_name
+        elif atom_name == "CA":
             if sybyl_atom_type == "Ca":
                 return atom_name
-            elif sybyl_atom_type in ["C.ar", "C.1", "C.2", "C.3"]:
-                return "C"                
+            elif sybyl_atom_type in carbon_types:
+                return "C"     
+            else:     
+                raise ValueError(
+                    get_error_msg(atom_name, sybyl_atom_type)
+                )                            
+        elif atom_name[:2] in ["CB","CG","CD","CE", "CZ"]:
+            return "C"
+        elif atom_name[0]=="H" and len(atom_name) > 1:
+            return sybyl_atom_type       
+        elif atom_name[0]=="O":
+            return "O"                                               
+        else:        
+            raise ValueError(
+                get_error_msg(atom_name, sybyl_atom_type)
+            )                            
             
                        
                         
@@ -184,19 +230,19 @@ def atom_name_to_element(atom_name, sybyl_atom_type):
         
 
 
-def filter_atom_name(atom_name, sybyl_name):
-    """
-    Used to filter if any of the atom_names needs special handling or 
-    if we are simply seeing element names and not specific
-    atom names
-    """
-                                 
-    element = atom_name_to_element(atom_name, sybyl_name)      
-    
-    cond = len(atom_name) > 2
-    cond = cond or len(element) != len(atom_name)
-    
-    return cond                                                   
+#def filter_atom_name(atom_name, sybyl_name):
+#    """
+#    Used to filter if any of the atom_names needs special handling or 
+#    if we are simply seeing element names and not specific
+#    atom names
+#    """
+#                                 
+#    element = atom_name_to_element(atom_name, sybyl_name)      
+#    
+#    cond = len(atom_name) > 2
+#    cond = cond or len(element) != len(atom_name)
+#    
+#    return cond                                                   
 
                                                             
         
@@ -518,7 +564,8 @@ class MOL2File(TextFile):
         if self.status_bits != "":
             self.lines[6] = self.mol_comment
                                                      
-        self.ind_atoms = [len(self.lines)]                                                       
+        self.ind_atoms = [len(self.lines)] 
+                                                                              
         
 
     def get_structure(self):
@@ -616,7 +663,7 @@ class MOL2File(TextFile):
                 atom_i.atom_id  = atom_id   
                 #if len(atom_name)             
                 atom_i.element  = atom_name                        
-                #atom_names.append(atom_name)
+                atom_names.append(atom_name)
                 atom_i.res_id   = subst_id
                 atom_i.res_name = subst_name
                 
@@ -625,42 +672,144 @@ class MOL2File(TextFile):
                 index += 1   
                 j += 1
             
-            print(j)
-            print(atom_names)
-            print(atom_type_sybl_row)
+            print(atoms.element)
+            
+            filter_func = lambda e: len(e)==1 or e in elements_twoLetters
+            is_atom_names_only_element_names = np.all(
+                [filter_func(e) for e in atoms.element]
+            )     
+            print("is_atom_names_only_element_names :: " + str(is_atom_names_only_element_names))    
+                        
+            # after first teration over structure we need a second pass
+            # to correctly infer atom_names and element if necessary from
+            # the atom_name and sybyl_atom_type columns
+#            print("###AT#SECOND#PASS#NOW######################################")     
+#            
+#                                                     
+#            print(atom_names)
+#            print(atom_type_sybl_row)
+            if not is_atom_names_only_element_names:   
+                filtered = np.array(
+                    [len(x) > 1 for x in atom_names]
+    #                [
+    #                    filter_atom_name(
+    #                      atom_names[k], atom_type_sybl_row[k]
+    #                    ) for k in range(len(atom_names))
+    #                ] 
+                )    
+                is_atom_name_NOTEQUAL_element = np.any(filtered)
+            
+                index = self.ind_atoms[i]+1
+                j = 0
+                while "@" not in self.lines[index]:
+    #                print("["+str(j)+ "]")
+                    atom_j = atoms[j]
+    #                print("   atom_j.element :: "+str(atom_j.element))
+    #                print("   atom_j.atom_name :: "+str(atom_j.atom_name))                
+    #                print("   "+str(atom_names[j]))
+    #                print("   "+str(atom_type_sybl_row[j]))                              
+                    
                 
-#            filtered = np.array(
-#                [
-#                    filter_atom_name(
-#                      atom_names[k], atom_type_sybl_row[k]
-#                    ) for k in range(len(atom_names))
-#                ] 
-#            )    
-#                                              
+                    if is_atom_name_NOTEQUAL_element:
+    #                    print(
+    #                        "setting atoms["
+    #                        +str(j)+"].atom_name="
+    #                         +str(atom_names[j])
+    #                    )
+                        atom_name = atom_names[j]
+                        
+                        element = atom_name_to_element(
+                            atom_names[j],
+                            atom_type_sybl_row[j]
+                        )
+    #                    print(
+    #                        "setting atoms["
+    #                        +str(j)+"].element="  
+    #                        +element
+    #                    )                                                                                             
 
+                        if self.charge_type != "NO_CHARGES": 
+                            atoms[j] = Atom(
+                                [   
+                                    atoms[j].coord[0],
+                                    atoms[j].coord[1],
+                                    atoms[j].coord[2],                                                        
+                                ],
+                                charge=atoms[j].charge,
+                                element=element,
+                                atom_name=atom_name,  
+                                res_name=atoms[j].res_name,  
+                                res_id=atoms[j].res_id                                                                                                                                  
+                            )                      
+                        else:
+                            atoms[j] = Atom(
+                                [   
+                                    atoms[j].coord[0],
+                                    atoms[j].coord[1],
+                                    atoms[j].coord[2],                                                        
+                                ],
+                                element=element,
+                                atom_name=atom_name,     
+                                res_name=atoms[j].res_name,
+                                res_id=atoms[j].res_id                                                       
+                            )                                          
+                        
+                    else:
+                        assert len(atom_names[j]) <= 2
+                        atoms[j].element = atom_names[j]                                            
+                    
+                    index += 1 
+                    j += 1
+            
+#            is_atom_name_column_unecessary = np.any(
+#                [len(x) >= 1 for x in atoms.atom_name]
+#            )       
+            
+#            print(
+#                "is_atom_name_column_unecessary :: " 
+#                + str(is_atom_name_column_unecessary)
+#            )
+
+#            # the added atom_name column seperate to the elements has
+#            # to be removed sometimes for example if one of the actual
+#            # two letter elements was contained            
 #            index = self.ind_atoms[i]+1
 #            j = 0
 #            while "@" not in self.lines[index]:
-#                print("["+str(j)+ "]")
-#                print("   "+str(atoms[j]))
-#                print("   "+str(atom_names[j]))
-#                print("   "+str(atom_type_sybl_row[j]))                              
-#                
 #            
-#                if np.any(np.array(filtered)):
-#                
-#                    atoms[j].atom_name = atom_names[j]
-#                    atoms[j].element = atom_name_to_element(
-#                        atom_names[j], 
-#                        atom_type_sybl_row[j]
-#                    )
+#                if self.charge_type != "NO_CHARGES": 
+#                    atoms[j] = Atom(
+#                        [   
+#                            atoms[j].coord[0],
+#                            atoms[j].coord[1],
+#                            atoms[j].coord[2],                                                        
+#                        ],
+#                        charge=atoms[j].charge,
+#                        element=atoms[j].element,                                                                                                  
+#                    )                      
 #                else:
-#                    atoms[j].element = atom_names[j]                                            
-#                
+#                    atoms[j] = Atom(
+#                        [   
+#                            atoms[j].coord[0],
+#                            atoms[j].coord[1],
+#                            atoms[j].coord[2],                                                        
+#                        ],
+#                        element=atoms[j].element,                
+#                    )       
 #                index += 1 
-#                j += 1
-                                   
-                       
+#                j += 1                                             
+                
+#            print("###AFTER#SECOND#PASS#NOW###################################")                                      
+#            print(atoms.element)
+#            print(atoms.atom_name)      
+#            
+#            for atom in atoms:
+#                print(atom)
+#                
+#            print("")                                             
+#            print("")
+#            print("")                        
+#                       
 
             # 
             #   Iterate through all the bond lines by stating from line after
@@ -689,7 +838,8 @@ class MOL2File(TextFile):
                         bond_typ
                     )                
                     
-                index += 1                                  
+                index += 1           
+
                                                                      
             atoms.bonds = bonds
             atom_array_stack.append(atoms)
@@ -718,8 +868,14 @@ class MOL2File(TextFile):
                 atom_id = atom.atom_id
                 
             line  = "{:>7}".format(atom_id)
-            line += "  " + atom.element
-            line += "{:>16.4f}".format(atom.coord[0])
+            
+            if (atoms.atom_name is not None) and (len(atom.atom_name)!=0):
+                line += " {:<7}".format(atom.atom_name)
+            else:
+                print(" writing atom["+str(i)+"]:: " +str(atom.element))
+                line += " {:<7}".format(atom.element)
+                #line += "  " + atom.element
+            line += "{:>11.4f}".format(atom.coord[0])
             line += "{:>10.4f}".format(atom.coord[1])
             line += "{:>10.4f}".format(atom.coord[2])                                          
             line += " {:<8}".format(
