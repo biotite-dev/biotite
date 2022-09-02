@@ -1292,7 +1292,7 @@ def repeat(atoms, coord):
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The atoms to be repeated.
     coord : ndarray, dtype=float, shape=(k,n,3) or shape=(k,m,n,3)
-        The coordinates to be used fr the repeated atoms.
+        The coordinates to be used for the repeated atoms.
         The length of first dimension determines the number of repeats.
         If `atoms` is an :class:`AtomArray` 3 dimensions, otherwise
         4 dimensions are required.

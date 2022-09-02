@@ -2,6 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+"""
+Links source code in API reference to corresponding source files and
+lines at GitHub.
+"""
+
 __author__ = "Patrick Kunzmann"
 __all__ = ["linkcode_resolve"]
 
@@ -56,6 +61,9 @@ def _index_attributes(package_name, src_path):
         attribute_index.update(sub_attribute_index)
         cython_line_index.update(sub_cython_line_index)
     
+    # Import package
+    package = import_module(package_name)
+    
     # Import all modules in directory and index attributes
     source_files = [
         file_name for file_name in directory_content
@@ -69,6 +77,17 @@ def _index_attributes(package_name, src_path):
     for source_file in source_files:
         module_name = f"{package_name}.{splitext(source_file)[0]}"
         module = import_module(module_name)
+        
+        # Only index attributes from modules that are available
+        # via respective Biotite (sub-)package
+        # If a the attribute is vailable, the module was imported in the
+        # '__init__.py' -> Expect that all attributes from module are
+        # available in package
+        # For example 'biotite.structure.util' is only used for internal
+        # purposes and is not imported in the '__init__.py'
+        if not all([hasattr(package, attr) for attr in module.__all__]):
+            continue
+        
         is_cython = source_file.endswith(".pyx")
         for attribute in module.__all__:
             attribute_index[(package_name, attribute)] \

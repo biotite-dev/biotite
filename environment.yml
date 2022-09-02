@@ -16,8 +16,8 @@ dependencies:
   - wheel >=0.30
   - requests >=2.12
   - numpy >=1.15
-  - scipy >=0.14
-  - scikit-learn >= 0.18.0
+  - scipy >=1.8.0
+  - scikit-learn >=0.18
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
@@ -32,7 +32,7 @@ dependencies:
   - dssp
   - clustalo
   - mafft
-  - muscle
+  - muscle =3
   - sra-tools
   - autodock-vina
   - viennarna

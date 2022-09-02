@@ -17,7 +17,7 @@ from ...sequence.align.alignment import Alignment
 from ...sequence.phylo.tree import Tree
 
 
-_prefix_pattern = re.compile("._")
+_prefix_pattern = re.compile(r"\d*_")
 
 
 

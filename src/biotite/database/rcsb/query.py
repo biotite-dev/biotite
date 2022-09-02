@@ -19,7 +19,7 @@ from ...sequence.seqtypes import ProteinSequence, NucleotideSequence
 from ..error import RequestError
 
 
-_search_url = "http://search.rcsb.org/rcsbsearch/v1/query"
+_search_url = "https://search.rcsb.org/rcsbsearch/v2/query"
 _scope_to_target = {
     "protein": "pdb_protein_sequence",
     "rna":     "pdb_rna_sequence",
@@ -62,19 +62,10 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     This is the abstract base class for all queries that are
     terminal nodes.
     """
-    # The node ID is incremented for every created 'SingleQuery' object
-    _node_id = 0
-
-    def __init__(self):
-        self._node_id = SingleQuery._node_id
-        SingleQuery._node_id += 1
 
     @abc.abstractmethod
     def get_content(self):
-        return {
-            "node_id": self._node_id,
-            "parameters": {}
-        }
+        return {"parameters": {}}
 
 
 class CompositeQuery(Query):
@@ -134,6 +125,8 @@ class BasicQuery(SingleQuery):
         If the term contains multiple words, the query will return
         results where the entire term is present.
         The matching is not case-sensitive.
+        Logic combinations of terms is described
+        `here <https://search.rcsb.org/#basic-queries>`_.
     
     Examples
     --------
@@ -177,21 +170,23 @@ class FieldQuery(SingleQuery):
         `molecular definitions <https://search.rcsb.org/chemical-search-attributes.html>`_.
         If false (default), this query searches in fields
         associated with `PDB structures <https://search.rcsb.org/structure-search-attributes.html>`_.
+    case_sensitive : bool, optional
+        If set to true, searches are case sensitive.
+        By default matching is case-insensitive.
     exact_match : str, optional
         Operator for returning results whose field exactly matches the
         given value.
-        The matching is not case-sensitive.
     contains_words, contains_phrase : str, optional
         Operator for returning results whose field matches
         individual words from the given value or the value as exact
         phrase, respectively.
-        The matching is not case-sensitive.
     greater, less, greater_or_equal, less_or_equal, equals : int or float or datetime, optional
         Operator for returning results whose field values are larger,
         smaller or equal to the given value.
     range, range_closed : tuple(int, int) or tuple(float, float) or tuple(datetime, datetime), optional
         Operator for returning results whose field matches values within
-        the given range. `range_closed` includes the interval limits.
+        the given range.
+        `range_closed` includes the interval limits.
     is_in : tuple of str or list of str, optional
         Operator for returning results whose field matches any of the
         values in the given list.
@@ -211,19 +206,18 @@ class FieldQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG']
     """
-    def __init__(self, field, molecular_definition=False, **kwargs):
+    def __init__(self, field, molecular_definition=False, case_sensitive=False, **kwargs):
         super().__init__()
         self._negation = False
         self._field = field
         self._mol_definition = molecular_definition
+        self._case_sensitive = case_sensitive
         
         if len(kwargs) > 1:
             raise TypeError("Only one operator must be given")
         elif len(kwargs) == 1:
             self._operator = list(kwargs.keys())[0]
             self._value = list(kwargs.values())[0]
-            if self._operator == "is_in":
-                self._operator = "in"
         else:
             # No operator is given
             self._operator = "exists"
@@ -234,7 +228,7 @@ class FieldQuery(SingleQuery):
             "contains_words", "contains_phrase",
             "greater", "less", "greater_or_equal", "less_or_equal", "equals",
             "range", "range_closed",
-            "in",
+            "is_in",
             "exists"
         ]:
             raise TypeError(
@@ -250,6 +244,30 @@ class FieldQuery(SingleQuery):
                 _to_isoformat(val) if isinstance(val, datetime) else val
                 for val in self._value
             ]
+        
+        # Create dictionary for 'range' operator
+        if self._operator == "range":
+            self._value = {
+                "from": self._value[0],
+                "include_lower": False,
+                "to": self._value[1],
+                "include_upper": False
+            }
+        elif self._operator == "range_closed":
+            self._value = {
+                "from": self._value[0],
+                "include_lower": True,
+                "to": self._value[1],
+                "include_upper": True
+            }
+        
+        # Rename operators to names used in API
+        if self._operator == "is_in":
+            # 'in' is not an available parameter name in Python
+            self._operator = "in"
+        elif self._operator == "range_closed":
+            # For backwards compatibility
+            self._operator = "range"
 
     def get_content(self):
         content = super().get_content()
@@ -261,13 +279,14 @@ class FieldQuery(SingleQuery):
         content["parameters"]["attribute"] = self._field
         content["parameters"]["operator"] = self._operator
         content["parameters"]["negation"] = self._negation
+        content["parameters"]["case_sensitive"] = self._case_sensitive
         if self._value is not None:
             content["parameters"]["value"] = self._value
         return content
 
     def __invert__(self):
         clone = copy.deepcopy(self)
-        clone._negation = True
+        clone._negation = not clone._negation
         return clone
 
 
@@ -397,7 +416,7 @@ class StructureQuery(SingleQuery):
 
     >>> query = StructureQuery("1L2Y", chain="A")
     >>> print(sorted(search(query)))
-    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D']
+    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D', '7MQS']
     """
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
@@ -478,12 +497,7 @@ def count(query, return_type="entry"):
         "query": query.get_content(),
         "return_type": return_type,
         "request_options": {
-            # Do not return any IDs,
-            # as we are only interested in the 'total_count' attribute
-            "pager": {
-                "start": 0,
-                "rows": 0
-            }
+            "return_counts": True
         }
     }
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
@@ -527,8 +541,10 @@ def search(query, return_type="entry", range=None, sort_by=None):
           (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
     
     range : tuple(int, int), optional
-        If this parameter is specified, the PDB IDs in this range are
-        selected from all matching PDB IDs and returned (pagination).
+        If this parameter is specified, the only PDB IDs in this range
+        are selected from all matching PDB IDs and returned
+        (pagination).
+        The range is zero-indexed and the stop value is exclusive.
     sort_by : str, optional
         If specified, the returned PDB IDs are sorted by the values
         of the given field name in descending order.
@@ -564,33 +580,27 @@ def search(query, return_type="entry", range=None, sort_by=None):
     ]:
         raise ValueError(f"'{return_type}' is an invalid return type")
     
-    if sort_by is None:
-        sort_by = "score"
+    request_options = {}
+
+    if sort_by is not None:
+        request_options["sort"] = [{"sort_by": sort_by}]
 
     if range is None:
-        start = 0
-        rows = count(query, return_type=return_type)
+        request_options["return_all_hits"] = True
     elif range[1] <= range[0]:
         raise ValueError("Range stop must be greater than range start")
     else:
-        start = range[0]
-        rows = range[1] - start
+        request_options["paginate"] = {
+            "start": int(range[0]),
+            "rows": int(range[1]) - int(range[0])
+        }
 
     query_dict = {
         "query": query.get_content(),
         "return_type": return_type,
-        "request_options": {
-            "pager": {
-                "start": start,
-                "rows": rows
-            },
-            "sort": [
-                {
-                    "sort_by": sort_by,
-                }
-            ]
-        }
+        "request_options": request_options
     }
+
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:

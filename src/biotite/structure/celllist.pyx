@@ -462,7 +462,7 @@ cdef class CellList:
             if array_i > max_array_length:
                 max_array_length = array_i
         
-        return self.post_process(
+        return self._post_process(
             np.asarray(indices)[:, :max_array_length],
             as_mask, is_multi_coord
         )
@@ -553,7 +553,7 @@ cdef class CellList:
         array_indices = self._get_atoms_in_cells(
             coord, cell_radius, is_multi_radius
         )
-        return self.post_process(array_indices, as_mask, is_multi_coord)
+        return self._post_process(array_indices, as_mask, is_multi_coord)
     
     
     @cython.boundscheck(False)
@@ -658,7 +658,7 @@ cdef class CellList:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def post_process(self,
+    def _post_process(self,
                      np.ndarray indices,
                      bint as_mask,
                      bint is_multi_coord):

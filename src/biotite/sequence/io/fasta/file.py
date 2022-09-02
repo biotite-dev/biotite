@@ -221,3 +221,58 @@ class FastaFile(TextFile, MutableMapping):
         # Yield final entry
         if header is not None:
             yield header, "".join(seq_str_list)
+    
+
+    @staticmethod
+    def write_iter(file, items, chars_per_line=80):
+        """
+        Iterate over the given `items` and write each item into
+        the specified `file`.
+
+        In contrast to :meth:`write()`, the lines of text are not stored
+        in an intermediate :class:`TextFile`, but are directly written
+        to the file.
+        Hence, this static method may save a large amount of memory if
+        a large file should be written, especially if the `items`
+        are provided as generator.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be written to.
+            Alternatively a file path can be supplied.
+        items : generator or array-like of tuple(str, str)
+            The entries to be written into the file.
+            Each entry consists of an header string and a sequence
+            string.
+        chars_per_line : int, optional
+            The number characters in a line containing sequence data
+            after which a line break is inserted.
+            Only relevant, when adding sequences to a file.
+            Default is 80.
+
+        Notes
+        -----
+        This method does not test, whether the given identifiers are
+        unambiguous.
+        """
+        def line_generator():
+            for item in items:
+                header, seq_str = item
+                if not isinstance(header, str):
+                    raise IndexError(
+                        "'FastaFile' only supports header strings"
+                    )
+                if not isinstance(seq_str, str):
+                    raise TypeError(
+                        "'FastaFile' only supports sequence strings"
+                    )
+                
+                # Yield header line
+                yield ">" + header.replace("\n","").strip()
+
+                # Yield sequence line(s)
+                for line in wrap_string(seq_str, width=chars_per_line):
+                    yield line
+    
+        TextFile.write_iter(file, line_generator())

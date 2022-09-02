@@ -35,7 +35,7 @@ import scraper
 import bibliography
 
 
-#Reset matplotlib params
+# Reset matplotlib params
 matplotlib.rcdefaults()
 
 # Creation of API documentation
@@ -114,8 +114,7 @@ html_theme = "alabaster"
 html_static_path = ["static"]
 html_css_files = [
     "biotite.css",
-    "https://fonts.googleapis.com/css?" \
-        "family=Crete+Round|Fira+Sans|&display=swap",
+    "fonts.css"
 ]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"

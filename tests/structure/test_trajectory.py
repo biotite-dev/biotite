@@ -241,3 +241,77 @@ def test_read_iter_structure(format, start, stop, step):
     )
     
     assert test_traj == ref_traj
+
+
+@pytest.mark.skipif(
+    cannot_import("mdtraj"),
+    reason="MDTraj is not installed"
+)
+@pytest.mark.parametrize(
+    "format, n_models, n_atoms, include_box, include_time",
+    itertools.product(
+        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        [1, 100],
+        [1, 1000],
+        [False, True],
+        [False, True],
+    )
+)
+def test_write_iter(format, n_models, n_atoms, include_box, include_time):
+    """
+    Expect that `write_iter()` and `write()` create files with equal content.
+    """
+    if format == "trr":
+        traj_file_cls = trr.TRRFile
+    if format == "xtc":
+        traj_file_cls = xtc.XTCFile
+    if format == "tng":
+        # TNG files do only write time when more than one frame is
+        # written to file; 'write_iter()' writes only one frame per
+        # 'write()' call, hence time is not written
+        traj_file_cls = tng.TNGFile
+        include_time = False
+    if format == "dcd":
+        traj_file_cls = dcd.DCDFile
+        # DCD format does not support simulation time
+        include_time = False
+    if format == "netcdf":
+        traj_file_cls = netcdf.NetCDFFile
+
+    # Generate random coordinate dataset content
+    np.random.seed(0)
+    coord = np.random.rand(n_models, n_atoms, 3) * 100
+    box = np.random.rand(n_models, 3, 3) * 100 if include_box else None
+    # time is evenly spaced for TNG compatibility
+    time = np.linspace(0, 10, n_models) if include_time else None
+
+
+    ref_file = NamedTemporaryFile("w+b")
+    traj_file = traj_file_cls()
+    traj_file.set_coord(coord)
+    traj_file.set_box(box)
+    traj_file.set_time(time)
+    traj_file.write(ref_file.name)
+    
+    traj_file = traj_file_cls.read(ref_file.name)
+    ref_coord = traj_file.get_coord()
+    ref_box = traj_file.get_box()
+    ref_time = traj_file.get_time()
+    ref_file.close()
+
+
+    test_file = NamedTemporaryFile("w+b")
+    traj_file_cls.write_iter(test_file.name, coord, box, time)
+
+    traj_file = traj_file_cls.read(test_file.name)
+    test_coord = traj_file.get_coord()
+    test_box = traj_file.get_box()
+    test_time = traj_file.get_time()
+    test_file.close()
+
+
+    assert np.allclose(test_coord, ref_coord, atol=1e-2)
+    if include_box:
+        assert np.allclose(test_box, ref_box, atol=1e-2)
+    if include_time:
+        assert np.allclose(test_time, ref_time, atol=1e-2)

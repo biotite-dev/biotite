@@ -3,6 +3,6 @@
 requires = [
     "setuptools >= 0.30",
     "wheel >= 0.30",
-    "numpy >= 1.19",
+    "numpy >= 1.14, <= 1.21",
     "cython >= 0.29"
 ]

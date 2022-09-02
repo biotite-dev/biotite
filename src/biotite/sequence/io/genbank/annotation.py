@@ -35,7 +35,7 @@ def get_annotation(gb_file, include_only=None):
         in the annotation. By default all features are included.
     
     Returns
-    ----------
+    -------
     annotation : Annotation
         Sequence annotation from the file.
     """

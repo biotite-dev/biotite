@@ -436,7 +436,8 @@ def test_connect_via_residue_names(single_model):
     assert test_bonds == ref_bonds
 
 
-def test_connect_via_distances():
+@pytest.mark.parametrize("periodic", [False, True])
+def test_connect_via_distances(periodic):
     """
     Test whether the created bond list is equal to the bonds deposited
     in the MMTF file.
@@ -446,6 +447,11 @@ def test_connect_via_distances():
     # Remove termini to solve the issue that the reference bonds do not
     # contain proper bonds for the protonated/deprotonated termini
     atoms = atoms[(atoms.res_id > 1) & (atoms.res_id < 20)]
+
+    if periodic:
+        # Add large dummy box to test parameter
+        # No actual bonds over the periodic boundary are expected
+        atoms.box = np.identity(3) * 100
     
     ref_bonds = atoms.bonds
     # Convert all bonds to BondType.ANY
@@ -453,7 +459,7 @@ def test_connect_via_distances():
         ref_bonds.get_atom_count(), ref_bonds.as_array()[:, :2]
     )
 
-    test_bonds = struc.connect_via_distances(atoms)
+    test_bonds = struc.connect_via_distances(atoms, periodic=periodic)
 
     assert test_bonds == ref_bonds
 

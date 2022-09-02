@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
+from ...bonds import BondType
 
 
 def get_structure(mol_file):
@@ -19,7 +20,7 @@ def get_structure(mol_file):
     ----------
     mol_file : MOLFile
         The MOL file.
-    
+
     Returns
     -------
     array : AtomArray
@@ -29,15 +30,15 @@ def get_structure(mol_file):
         empty.
     """
     return mol_file.get_structure()
-    
 
-def set_structure(mol_file, atoms):
+
+def set_structure(mol_file, atoms, default_bond_type=BondType.ANY):
     """
     Set the :class:`AtomArray` for the MOL file.
 
     Ths function is a thin wrapper around
     :meth:`MOLFile.set_structure()`.
-    
+
     Parameters
     ----------
     mol_file : MOLFile
@@ -45,5 +46,6 @@ def set_structure(mol_file, atoms):
     array : AtomArray
         The array to be saved into this file.
         Must have an associated :class:`BondList`.
+
     """
-    mol_file.set_structure(atoms)
+    mol_file.set_structure(atoms, default_bond_type)

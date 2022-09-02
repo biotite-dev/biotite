@@ -92,3 +92,24 @@ Python packages that are developed independently.
 .. raw:: html
 
     </div>
+
+
+
+.. raw:: html
+
+    <div
+        class="sphx-glr-thumbcontainer"
+        tooltip="An extension to compute elastic network models"
+    >
+
+.. only:: html
+
+    .. figure:: https://springcraft.biotite-python.org/_static/assets/springcraft_logo.svg
+        :target: https://springcraft.biotite-python.org/
+        :alt: Springcraft logo
+
+        `Springcraft - Investigate molecular dynamics with elastic network models <https://github.com/biotite-dev/springcraft>`_
+
+.. raw:: html
+
+    </div>

@@ -11,7 +11,7 @@ import abc
 from .check import assert_valid_response
 
 
-_base_url = "https://www.uniprot.org/uniprot/"
+_base_url = "https://rest.uniprot.org/uniprotkb/search/"
 
 
 class Query(metaclass=abc.ABCMeta):
@@ -122,11 +122,22 @@ class SimpleQuery(Query):
     # Field identifiers are taken from
     # https://www.uniprot.org/help/query-fields
     _fields = [
-        "accession", "active", "annotation", "author", "cdantigen", "chebi", "citation", "cluster", "count", "created",
-        "database", "ec", "evidence", "existence", "family", "fragment", "gene", "gene_exact", "goa", "host", "id",
-        "inchikey", "inn", "interactor", "keyword", "length", "lineage", "mass", "method", "mnemonic", "modified",
-        "name", "organelle", "organism", "plasmid", "proteome", "proteomecomponent", "replaces", "reviewed", "scope",
-        "sequence", "sequence_modified", "strain", "taxonomy", "tissue", "web"
+        "accession", "active", "ft_init_met", "ft_signal", "ft_transit", "ft_propep", "ft_chain", "ft_peptide",
+        "ft_topo_dom", "ft_transmem", "ft_intramem", "ft_domain", "ft_repeat", "ft_zn_fing", "ft_dna_bind",
+        "ft_region", "ft_coiled", "ft_motif", "ft_compbias", "ft_act_site", "ft_binding", "ft_site", "ft_non_std",
+        "ft_mod_res", "ft_lipid", "ft_carbohyd", "ft_disulfid", "ft_crosslnk", "ft_var_seq", "ft_variant",
+        "ft_mutagen", "ft_unsure", "ft_conflict", "ft_non_cons", "ft_non_ter", "ft_helix", "ft_turn", "ft_strand",
+        "lit_author", "protein_name", "chebi", "citation", "uniref_cluster_90", "xrefcount_pdb", "date_created",
+        "database", "xref", "ec", "cc_function", "cc_catalytic_activity", "cc_cofactor", "cc_activity_regulation",
+        "cc_biophysicochemical_properties", "cc_subunit", "cc_pathway", "cc_scl_term", "cc_tissue_specificity",
+        "cc_developmental_stage", "cc_induction", "cc_domain", "cc_ptm cc_rna_editing", "cc_mass_spectrometry",
+        "cc_polymorphism", "cc_disease", "cc_disruption_phenotype", "cc_allergen", "cc_toxic_dose", "cc_biotechnology",
+        "cc_pharmaceutical", "cc_miscellaneous", "cc_similarity", "cc_caution", "cc_sequence_caution",
+        "existence", "family", "fragment", "gene", "gene_exact", "go", "virus_host_name", "virus_host_id",
+        "accession_id", "inchikey", "protein_name", "interactor", "keyword", "length", "lineage", "mass",
+        "cc_mass_spectrometry", "date_modified", "protein_name", "organelle", "organism_name", "organism_id",
+        "plasmid", "proteome", "proteomecomponent", "sec_acc", "reviewed", "scope", "sequence",
+        "date_sequence_modified", "strain", "taxonomy_name", "taxonomy_id", "tissue", "cc_webresource"
     ]
 
     def __init__(self, field, term):
@@ -152,7 +163,7 @@ class SimpleQuery(Query):
         return f"{self._field}:{self._term}"
 
 
-def search(query, number=10):
+def search(query, number=500):
     """
     Get all UniProt IDs that meet the given query requirements,
     via the UniProt search service.
@@ -165,6 +176,7 @@ def search(query, number=10):
         The search query.
     number : int
         The maximum number of IDs that are obtained.
+        (Default: 500)
 
     Returns
     -------
@@ -179,17 +191,17 @@ def search(query, number=10):
 
     Examples
     --------
-    >>> query = SimpleQuery("accession", "P62988") & \
-                SimpleQuery("reviewed", "yes")
+    >>> query = SimpleQuery("accession", "P12345") & \
+                SimpleQuery("reviewed", "true")
     >>> ids = search(query)
     >>> print(sorted(ids))
-    ['P0CG47', 'P0CG48', 'P62979', 'P62987']
+    ['P12345']
     """
 
     params = {
         'query': str(query),
         'format': 'list',
-        'limit': str(number)
+        'size': str(number)
     }
     r = requests.get(_base_url, params=params)
     content = r.text

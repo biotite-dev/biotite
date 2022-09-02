@@ -15,13 +15,14 @@ __all__ = ["BondList", "BondType",
 
 cimport cython
 cimport numpy as np
-from libc.stdlib cimport realloc, malloc, free
+from libc.stdlib cimport free, malloc, realloc
 
-import numbers
 import itertools
+import numbers
 from enum import IntEnum
-import numpy as np
 import networkx as nx
+import numpy as np
+from .error import BadStructureError
 from ..copyable import Copyable
 
 ctypedef np.uint64_t ptr
@@ -1364,10 +1365,13 @@ _DEFAULT_DISTANCE_RANGE = {
     ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
 }
 
-def connect_via_distances(atoms, dict distance_range=None,
-                          atom_mask=None, bint inter_residue=True):
+def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
+                          bint inter_residue=True,
+                          default_bond_type=BondType.ANY, bint periodic=False):
     """
-    connect_via_distances(atoms, distance_range=None, atom_mask=None, inter_residue=True)
+    connect_via_distances(atoms, distance_range=None, atom_mask=None, 
+                          inter_residue=True, default_bond_type=BondType.ANY,
+                          periodic=False)
 
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
@@ -1400,7 +1404,14 @@ def connect_via_distances(atoms, dict distance_range=None,
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
-    
+    default_bond_type : BondType or int, optional
+        By default, all created bonds have :attr:`BondType.ANY`.
+        An alternative :class:`BondType` can be given in this parameter.
+    periodic : bool, optional
+        If set to true, bonds can also be detected in periodic
+        boundary conditions.
+        The `box` attribute of `atoms` is required in this case.
+
     Returns
     -------
     BondList
@@ -1423,9 +1434,9 @@ def connect_via_distances(atoms, dict distance_range=None,
     
     .. footbibliography::
     """
-    from .residues import get_residue_starts
-    from .geometry import distance
     from .atoms import AtomArray
+    from .geometry import distance
+    from .residues import get_residue_starts
 
     cdef list bonds = []
     cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())
@@ -1445,6 +1456,12 @@ def connect_via_distances(atoms, dict distance_range=None,
 
     if not isinstance(atoms, AtomArray):
         raise TypeError(f"Expected 'AtomArray', not '{type(atoms).__name__}'")
+    if periodic:
+        if atoms.box is None:
+            raise BadStructureError("Atom array has no box")
+        box = atoms.box
+    else:
+        box = None
 
     # Prepare distance dictionary...
     if distance_range is None:
@@ -1469,7 +1486,8 @@ def connect_via_distances(atoms, dict distance_range=None,
         # Matrix containing all pairwise atom distances in the residue
         distances = distance(
             coord_in_res[:, np.newaxis, :],
-            coord_in_res[np.newaxis, :, :]
+            coord_in_res[np.newaxis, :, :],
+            box
         )
         for atom_index1 in range(len(elements_in_res)):
             for atom_index2 in range(atom_index1):
@@ -1491,16 +1509,17 @@ def connect_via_distances(atoms, dict distance_range=None,
                     bonds.append((
                         curr_start_i + atom_index1,
                         curr_start_i + atom_index2,
-                        BondType.ANY
+                        default_bond_type
                     ))
 
     bond_list = BondList(atoms.array_length(), np.array(bonds))
     
     if inter_residue:
         inter_bonds = _connect_inter_residue(atoms, residue_starts)
-        # As all bonds should be of type ANY, convert also
-        # inter-residue bonds to ANY
-        inter_bonds.remove_bond_order()
+        if default_bond_type == BondType.ANY:
+            # As all bonds should be of type ANY, convert also
+            # inter-residue bonds to ANY
+            inter_bonds.remove_bond_order()
         return bond_list.merge(inter_bonds)
     else:
         return bond_list
@@ -1551,8 +1570,8 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     Although this includes most molecules one encounters, this will fail
     for exotic molecules, e.g. specialized inhibitors.
     """
-    from .residues import get_residue_starts
     from .info.bonds import bond_dataset
+    from .residues import get_residue_starts
 
     cdef list bonds = []
     cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())

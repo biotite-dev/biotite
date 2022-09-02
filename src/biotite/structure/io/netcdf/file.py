@@ -37,7 +37,7 @@ class NetCDFFile(TrajectoryFile):
                 in zip(cell_lengths, np.deg2rad(cell_angles))],
                 axis=0
             )
-        return coord, box, None
+        return coord, box, time
     
     @classmethod
     def prepare_write_values(cls, coord, box, time):

@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 from tempfile import NamedTemporaryFile
 from os.path import join
 import numpy as np
@@ -11,17 +12,46 @@ from biotite.structure.io import load_structure, save_structure
 from ..util import data_dir, cannot_import
 
 
+@pytest.fixture()
+def stack(request):
+    stack = load_structure(
+        join(data_dir("structure"), "1l2y.mmtf")
+    )
+    if request.param:
+        # Use connect_via_distances, since 1l2y has invalidly bonded
+        # N-terminal hydrogen atoms
+        stack.bonds = struc.connect_via_distances(stack[0])
+    return stack
+
+
 # Ignore warning about dummy unit cell vector
 @pytest.mark.filterwarnings("ignore")
 @pytest.mark.skipif(
     cannot_import("mdtraj"),
     reason="MDTraj is not installed"
 )
-@pytest.mark.parametrize("pdb_id", ["1l2y", "1gya", "1igy"])
-def test_hbond_structure(pdb_id):
+@pytest.mark.parametrize(
+    "pdb_id, use_bond_list", itertools.product(
+        ["1l2y", "1gya", "1igy"],
+        [False, True]
+    )
+)
+def test_hbond_structure(pdb_id, use_bond_list):
+    """
+    Compare hydrogen bond detection with MDTraj
+    """
     file_name = join(data_dir("structure"), pdb_id+".mmtf")
     
     array = load_structure(file_name)
+    if use_bond_list:
+        if isinstance(array, struc.AtomArrayStack):
+            ref_model = array[0]
+        else:
+            ref_model = array
+        bonds = struc.connect_via_distances(ref_model)
+        bonds = bonds.merge(struc.connect_via_residue_names(ref_model))
+        array.bonds = bonds
+    
     # Only consider amino acids for consistency
     # with bonded hydrogen detection in MDTraj
     array = array[..., struc.filter_amino_acids(array)]
@@ -52,13 +82,15 @@ def test_hbond_structure(pdb_id):
     assert triplets_set == triplets_ref_set
 
 
-def test_hbond_same_res():
+# Ignore warning about missing BondList, as this is intended
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("stack", [False, True], indirect=["stack"])
+def test_hbond_same_res(stack):
     """
     Check if hydrogen bonds in the same residue are detected.
     At least one of such bonds is present in 1L2Y (1ASN with N-terminus)
     (model 2).
     """
-    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection = stack.res_id == 1
     # Focus on second model
     array = stack[1]
@@ -66,26 +98,30 @@ def test_hbond_same_res():
     assert len(triplets) == 1
 
 
-def test_hbond_total_count():
+# Ignore warning about missing BondList, as this is intended
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("stack", [False, True], indirect=["stack"])
+def test_hbond_total_count(stack):
     """
     With the standart Baker & Hubbard criterion,
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
     (comparision with MDTraj results)
     """
-    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     triplets, mask = struc.hbond(stack)
     freq = struc.hbond_frequency(mask)
 
     assert len(freq[freq >= 0.1]) == 28
 
 
-def test_hbond_with_selections():
+# Ignore warning about missing BondList, as this is intended
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("stack", [False, True], indirect=["stack"])
+def test_hbond_with_selections(stack):
     """
     When selection1 and selection2 is defined, no hydrogen bonds outside
     of this boundary should be found. Also, hbond should respect the
     selection type.
     """
-    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
     selection2 = stack.res_id == 7
 
@@ -111,12 +147,14 @@ def test_hbond_with_selections():
     assert len(triplets) == 0
 
 
-def test_hbond_single_selection():
+# Ignore warning about missing BondList, as this is intended
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("stack", [False, True], indirect=["stack"])
+def test_hbond_single_selection(stack):
     """
     If only selection1 or selection2 is defined, hbond should run
     against all other atoms as the other selection.
     """
-    stack = load_structure(join(data_dir("structure"), "1l2y.mmtf"))
     selection = (stack.res_id == 2) & (stack.atom_name == "O")  # 2LEU BB Ox
     triplets, mask = struc.hbond(stack, selection1=selection)
     assert len(triplets) == 2
@@ -135,6 +173,8 @@ def test_hbond_frequency():
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
 
 
+# Ignore warning about missing BondList
+@pytest.mark.filterwarnings("ignore")
 @pytest.mark.parametrize("translation_vector", [(10,20,30), (-5, 3, 18)])
 def test_hbond_periodicity(translation_vector):
     """

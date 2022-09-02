@@ -18,8 +18,8 @@ from ...bonds import BondList, BondType, find_connected, find_rotatable_bonds
 
 PARAMETRIZED_ELEMENTS = [
     "H", "C", "N", "O", "P", "S",
-    "F", "CL", "BR", "I",
-    "MG", "CA", "MN", "FE", "ZN"
+    "F", "Cl", "Br", "I",
+    "Mg", "Ca", "Mn", "Fe", "Zn"
 ]
 
 
@@ -255,7 +255,7 @@ class PDBQTFile(TextFile):
             line = self.lines[line_i]
             
             atom_id[i] = int(line[6:11])
-            chain_id[i] = line[21].upper().strip()
+            chain_id[i] = line[21].strip()
             res_id[i] = int(line[22:26])
             ins_code[i] = line[26].strip()
             res_name[i] = line[17:20].strip()
@@ -613,8 +613,8 @@ def convert_atoms(atoms, charges):
             atom_types[i] = "OA"
         elif element == "S":
             atom_types[i] = "SA"
-        elif element in PARAMETRIZED_ELEMENTS:
-            atom_types[i] = element
+        elif element.capitalize() in PARAMETRIZED_ELEMENTS:
+            atom_types[i] = element.capitalize()
         else:
             warnings.warn(
                 f"Element {element} is not paramtrized, "

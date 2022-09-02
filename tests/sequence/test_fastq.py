@@ -3,6 +3,8 @@
 # information.
 
 import glob
+import io
+import itertools
 from tempfile import TemporaryFile
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
@@ -84,3 +86,54 @@ def test_read_iter(file_name):
             assert test_id == ref_id
             assert test_seq == ref_seq
             assert (test_sc == ref_sc).all()
+
+@pytest.mark.parametrize(
+    "offset, chars_per_line, n_sequences", itertools.product(
+        [33, 42, "Solexa"],
+        [None, 80],
+        [1, 10]
+    )
+)
+def test_write_iter(offset, chars_per_line, n_sequences):
+    """
+    Test whether :class:`FastqFile.write()` and
+    :class:`FastqFile.write_iter()` produce the same output file for
+    random sequences and scores.
+    """
+    LENGTH_RANGE = (50, 150)
+    SCORE_RANGE = (10, 60)
+
+    # Generate random sequences and scores
+    np.random.seed(0)
+    sequences = []
+    scores = []
+    for i in range(n_sequences):
+        seq_length = np.random.randint(*LENGTH_RANGE)
+        code = np.random.randint(
+            len(seq.NucleotideSequence.alphabet_unamb),
+            size=seq_length
+        )
+        sequence = seq.NucleotideSequence()
+        sequence.code = code
+        sequences.append(sequence)
+        score = np.random.randint(*SCORE_RANGE, size=seq_length)
+        scores.append(score)
+    
+    fastq_file = fastq.FastqFile(offset, chars_per_line)
+    for i, (sequence, score) in enumerate(zip(sequences, scores)):
+        identifier = f"seq_{i}"
+        fastq_file[identifier] = (str(sequence), score)
+    ref_file = io.StringIO()
+    fastq_file.write(ref_file)
+    
+    test_file = io.StringIO()
+    fastq.FastqFile.write_iter(
+        test_file,
+        (
+            (f"seq_{i}", (str(sequence), score))
+            for i, (sequence, score) in enumerate(zip(sequences, scores))
+        ),
+        offset, chars_per_line
+    )
+
+    assert test_file.getvalue() == ref_file.getvalue()

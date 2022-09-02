@@ -9,32 +9,32 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.7'
-            numpy: '1.15'
-          - os: ubuntu-latest
             python: '3.8'
             numpy: '1.16'
           - os: ubuntu-latest
             python: '3.9'
             numpy: '1.19'
-          - os: macos-latest
-            python: '3.7'
-            numpy: '1.15'
+          - os: ubuntu-latest
+            python: '3.10'
+            numpy: '1.21'
           - os: macos-latest
             python: '3.8'
             numpy: '1.16'
           - os: macos-latest
             python: '3.9'
             numpy: '1.19'
-          - os: windows-latest
-            python: '3.7'
-            numpy: '1.15'
+          - os: macos-latest
+            python: '3.10'
+            numpy: '1.21'
           - os: windows-latest
             python: '3.8'
             numpy: '1.16'
           - os: windows-latest
             python: '3.9'
             numpy: '1.19'
+          - os: windows-latest
+            python: '3.10'
+            numpy: '1.21'
 
     runs-on: ${{ matrix.os }}
     defaults:
@@ -48,8 +48,17 @@ jobs:
           activate-environment: biotite-dev
           auto-update-conda: true
           python-version: ${{ matrix.python }}
+          mamba-version: "*"
+          channels: conda-forge,defaults
       - name: Installing dependencies
-        run: conda install -c conda-forge "cython>=0.29" numpy=$NUMPY_VERSION "requests>=2.12" "msgpack-python>=0.5.6" "networkx>=2.0" "pytest>=3.2" 
+        run: >
+          conda install -c conda-forge
+          "cython>=0.29"
+          numpy=$NUMPY_VERSION
+          "requests>=2.12"
+          "msgpack-python>=0.5.6"
+          "networkx>=2.0"
+          "pytest>=3.2" 
         env:
           NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building distribution
@@ -57,11 +66,18 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest --ignore=tests//structure//test_trajectory.py --ignore=tests//sequence//align//test_statistics.py --ignore=tests//application --ignore=tests//database --ignore=tests//test_doctest.py  --ignore=tests//test_modname.py
+        run: >
+          pytest
+          --ignore=tests//structure//test_trajectory.py
+          --ignore=tests//sequence//align//test_statistics.py
+          --ignore=tests//application
+          --ignore=tests//database 
+          --ignore=tests//test_doctest.py
+          --ignore=tests//test_modname.py
   
 
-  test-thorough:
-    name: Testing Biotite thoroughly
+  test-muscle5:
+    name: Testing Biotite's interface for Muscle 5
 
     runs-on: ubuntu-latest
     defaults:
@@ -73,11 +89,25 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: biotite-dev
-          environment-file: environment.yml
           auto-update-conda: true
+          python-version: 3.9
+          mamba-version: "*"
+          channels: conda-forge,defaults
+      - name: Installing dependencies
+        run: >
+          conda install -c conda-forge -c bioconda
+          "muscle=5"
+          "cython>=0.29" 
+          "numpy=1.19"
+          "requests>=2.12"
+          "msgpack-python>=0.5.6"
+          "networkx>=2.0"
+          "pytest>=3.2"
+        env:
+          NUMPY_VERSION: ${{ matrix.numpy }}
       - name: Building distribution
         run: python setup.py bdist_wheel
       - name: Installing distribution
         run: pip install .//dist//*.whl
       - name: Testing code
-        run: pytest --ignore=tests//application//test_blast.py --ignore=tests//application//test_sra.py --ignore=tests//database//test_entrez.py
+        run: pytest tests//application//test_msa.py

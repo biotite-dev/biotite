@@ -92,8 +92,8 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets, mask = hbond(atom_array_stack)
     >>> hbonds_per_model = np.count_nonzero(mask, axis=1)
     >>> print(hbonds_per_model)
-    [14 15 15 13 11 13  9 14  9 15 13 13 15 11 11 13 11 14 14 13 14 13 15 17
-     14 12 15 12 12 13 13 13 12 12 11 15 10 11]
+    [14 14 14 12 11 12  9 13  9 14 13 13 14 11 11 12 11 14 14 13 14 13 15 17
+     14 12 15 12 12 13 13 13 12 12 11 14 10 11]
     
     Get hydrogen bond donors of third model:
     
@@ -101,7 +101,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
     >>> triplets = triplets[mask[2,:]]
     >>> # First column contains donors
     >>> print(atom_array_stack[2, triplets[:,0]])
-        A       1  ASN N      N        -6.589    7.754   -0.571
         A       5  GLN N      N        -5.009   -0.575   -1.365
         A       6  TRP N      N        -2.154   -0.497   -1.588
         A       7  LEU N      N        -1.520   -1.904    0.893
@@ -192,7 +191,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
                         atoms, donor_mask, acceptor_mask,
                         donor_element_mask, acceptor_element_mask,
                         cutoff_dist, cutoff_angle,
-                        donor_elements, acceptor_elements,
                         box
                     )
                     all_comb_triplets.append(triplets)
@@ -206,7 +204,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection1, selection2,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements,
             box
         )
     
@@ -215,7 +212,6 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
             atoms, selection2, selection1,
             donor_element_mask, acceptor_element_mask,
             cutoff_dist, cutoff_angle,
-            donor_elements, acceptor_elements,
             box
         )
     
@@ -234,46 +230,25 @@ def hbond(atoms, selection1=None, selection2=None, selection1_type='both',
 
 def _hbond(atoms, donor_mask, acceptor_mask,
            donor_element_mask, acceptor_element_mask,
-           cutoff_dist, cutoff_angle, donor_elements, acceptor_elements,
-           box):
+           cutoff_dist, cutoff_angle, box):
     
     # Filter donor/acceptor elements
     donor_mask    &= donor_element_mask
     acceptor_mask &= acceptor_element_mask
-    
-    def _get_bonded_hydrogens(array, donor_mask, box, cutoff=1.5):
-        """
-        Helper function to find indices of associated hydrogens in atoms
-        for all donors in atoms[donor_mask].
-        The criterium is that the hydrogen must be in the same residue
-        and the distance must be smaller than the cutoff.
 
-        """
-        coord = array.coord
-        res_id = array.res_id
-        hydrogen_mask = (array.element == "H")
-        
-        donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
-        associated_donor_indices = np.full(len(array), -1, dtype=int)
-
-        donor_indices = np.where(donor_mask)[0]
-        for donor_i in donor_indices:
-            candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
-            distances = distance(
-                coord[donor_i], coord[candidate_mask], box=box
-            )
-            donor_h_indices = np.where(candidate_mask)[0][distances <= cutoff]
-            for i in donor_h_indices:
-                associated_donor_indices[i] = donor_i
-                donor_hydrogen_mask[i] = True
-        
-        return donor_hydrogen_mask, associated_donor_indices
-            
-
-    # TODO use BondList if available
     first_model_box = box[0] if box is not None else None
-    donor_h_mask, associated_donor_indices \
-        = _get_bonded_hydrogens(atoms[0], donor_mask, first_model_box)
+    if atoms.bonds is not None:
+        donor_h_mask, associated_donor_indices = _get_bonded_h(
+            atoms[0], donor_mask, atoms.bonds
+        )
+    else:
+        warnings.warn(
+            "Input structure has no associated 'BondList', "
+            "Hydrogen atoms bonded to donors are detected by distance"
+        )
+        donor_h_mask, associated_donor_indices = _get_bonded_h_via_distance(
+            atoms[0], donor_mask, first_model_box
+        )
     donor_h_i = np.where(donor_h_mask)[0]
     acceptor_i = np.where(acceptor_mask)[0]
     if len(donor_h_i) == 0 or len(acceptor_i) == 0:
@@ -314,14 +289,6 @@ def _hbond(atoms, donor_mask, acceptor_mask,
     triplets = np.stack((donor_i, donor_h_i, acceptor_i), axis=1)
     # Remove entries where donor and acceptor are the same
     triplets = triplets[donor_i != acceptor_i]
-
-     # Filter triplets that meet distance and angle condition
-    def _is_hbond(donor, donor_h, acceptor, box,
-                  cutoff_dist=2.5, cutoff_angle=120):
-        cutoff_angle_rad = np.deg2rad(cutoff_angle)
-        theta = angle(donor, donor_h, acceptor, box=box)
-        dist = distance(donor_h, acceptor, box=box)
-        return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
     
     hbond_mask = _is_hbond(
         coord[:, triplets[:,0]],  # donors
@@ -336,6 +303,72 @@ def _hbond(atoms, donor_mask, acceptor_mask,
     hbond_mask = hbond_mask[:, is_counted]
 
     return triplets, hbond_mask
+
+
+def _get_bonded_h(array, donor_mask, bonds):
+    """
+    Helper function to find indices of associated hydrogens in atoms for
+    all donors in atoms[donor_mask].
+    A `BondsList` is used for detecting bonded hydrogen atoms.
+    """
+    hydrogen_mask = (array.element == "H")
+    
+    donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
+    associated_donor_indices = np.full(len(array), -1, dtype=int)
+
+    all_bond_indices, _ = bonds.get_all_bonds()
+    donor_indices = np.where(donor_mask)[0]
+    
+    for donor_i in donor_indices:
+        bonded_indices = all_bond_indices[donor_i]
+        # Remove padding values
+        bonded_indices = bonded_indices[bonded_indices != -1]
+        # Filter hydrogen atoms
+        bonded_indices = bonded_indices[hydrogen_mask[bonded_indices]]
+        donor_hydrogen_mask[bonded_indices] = True
+        associated_donor_indices[bonded_indices] = donor_i
+    
+    return donor_hydrogen_mask, associated_donor_indices
+
+
+def _get_bonded_h_via_distance(array, donor_mask, box):
+    """
+    Helper function to find indices of associated hydrogens in atoms for
+    all donors in atoms[donor_mask].
+    The criterium is that the hydrogen must be in the same residue and
+    the distance must be smaller than the cutoff.
+    """
+    CUTOFF = 1.5
+
+    coord = array.coord
+    res_id = array.res_id
+    hydrogen_mask = (array.element == "H")
+    
+    donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
+    associated_donor_indices = np.full(len(array), -1, dtype=int)
+
+    donor_indices = np.where(donor_mask)[0]
+    for donor_i in donor_indices:
+        candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
+        distances = distance(
+            coord[donor_i], coord[candidate_mask], box=box
+        )
+        donor_h_indices = np.where(candidate_mask)[0][distances <= CUTOFF]
+        for i in donor_h_indices:
+            associated_donor_indices[i] = donor_i
+            donor_hydrogen_mask[i] = True
+    
+    return donor_hydrogen_mask, associated_donor_indices
+
+
+def _is_hbond(donor, donor_h, acceptor, box, cutoff_dist, cutoff_angle):
+    """
+    Filter triplets that meet distance and angle condition.
+    """
+    cutoff_angle_rad = np.deg2rad(cutoff_angle)
+    theta = angle(donor, donor_h, acceptor, box=box)
+    dist = distance(donor_h, acceptor, box=box)
+    return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
 
 
 def hbond_frequency(mask):
@@ -368,9 +401,9 @@ def hbond_frequency(mask):
     >>> triplets, mask = hbond(atom_array_stack)
     >>> freq = hbond_frequency(mask)
     >>> print(freq)
-    [0.263 0.289 0.105 0.105 0.237 0.237 0.026 0.053 0.395 1.000 1.000 1.000
-     0.026 0.421 0.026 0.026 0.316 0.816 0.026 0.921 0.026 0.342 0.026 0.105
-     0.026 0.132 0.053 0.026 0.158 0.026 0.868 0.211 0.026 0.921 0.316 0.079
-     0.237 0.105 0.421 0.079 0.026 1.000 0.053 0.132 0.026 0.184]
+    [0.263 0.289 0.105 0.105 0.237 0.026 0.053 0.395 1.000 1.000 1.000 0.026
+     0.421 0.026 0.026 0.316 0.816 0.026 0.921 0.026 0.342 0.026 0.105 0.026
+     0.132 0.053 0.026 0.158 0.026 0.868 0.211 0.026 0.921 0.316 0.079 0.237
+     0.105 0.421 0.079 0.026 1.000 0.053 0.132 0.026 0.184]
     """
     return mask.sum(axis=0)/len(mask)

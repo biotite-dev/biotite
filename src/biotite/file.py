@@ -135,20 +135,12 @@ class TextFile(File, metaclass=abc.ABCMeta):
         # File name
         if isinstance(file, str):
             with open(file, "r") as f:
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    yield line
+                yield from f
         # File object
         else:
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
-            while True:
-                line = file.readline()
-                if not line:
-                    break
-                yield line
+            yield from file
 
     def write(self, file):
         """
@@ -157,7 +149,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         
         Parameters
         ----------
-        file_name : file-like object or str
+        file : file-like object or str
             The file to be written to.
             Alternatively a file path can be supplied.
         """
@@ -168,6 +160,38 @@ class TextFile(File, metaclass=abc.ABCMeta):
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
             file.write("\n".join(self.lines) + "\n")
+    
+    @staticmethod
+    def write_iter(file, lines):
+        """
+        Iterate over the given `lines` of text and write each line into
+        the specified `file`.
+
+        In contrast to :meth:`write()`, each line of text is not stored
+        in an intermediate :class:`TextFile`, but is directly written
+        to the file.
+        Hence, this static method may save a large amount of memory if
+        a large file should be written, especially if the `lines`
+        are provided as generator.
+        
+        Parameters
+        ----------
+        file : file-like object or str
+            The file to be written to.
+            Alternatively a file path can be supplied.
+        lines : generator or array-like of str
+            The lines of text to be written.
+            Must not include line break characters.
+        """
+        if isinstance(file, str):
+            with open(file, "w") as f:
+                for line in lines:
+                    f.write(line + "\n")
+        else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            for line in lines:
+                file.write(line + "\n")
     
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
@@ -204,17 +228,11 @@ def is_binary(file):
     if isinstance(file, io.BufferedIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
-    elif hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase):
-        return True
-    else:
-        return False
+    return hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase)
 
 
 def is_text(file):
     if isinstance(file, io.TextIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
-    elif hasattr(file, "file") and isinstance(file.file, io.TextIOBase):
-        return True
-    else:
-        return False
+    return hasattr(file, "file") and isinstance(file.file, io.TextIOBase)

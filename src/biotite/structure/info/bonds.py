@@ -83,18 +83,6 @@ def bond_order(res_name, atom_name1, atom_name2):
         If the atoms form no bond, if any of the two atoms does not
         exist in the context of the residue or if the residue is unknown
         to the chemical components dictionary, `None` is returned.
-    
-    Examples
-    --------
-
-    >>> print(bond_order("PHE", "CA", "CB"))
-    1
-    >>> print(bond_order("PHE", "CG", "CD1"))
-    2
-    >>> print(bond_order("PHE", "CA", "CG"))
-    None
-    >>> print(bond_order("PHE", "FOO", "BAR"))
-    None
     """
     warnings.warn("Please use `bond_type()` instead", DeprecationWarning)
 

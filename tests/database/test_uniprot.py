@@ -67,9 +67,9 @@ def test_fetch_invalid(format):
     reason="UniProt is not available"
 )
 def test_search_simple():
-    query = uniprot.SimpleQuery("accession", "P62988")
-    assert set(uniprot.search(query)) \
-        == set(['P62979', 'P0CG47', 'P62987', 'P0CG48', 'P62988'])
+    query = uniprot.SimpleQuery("accession", "P12345")
+    assert uniprot.search(query) \
+        == ['P12345']
 
 
 @pytest.mark.skipif(
@@ -77,7 +77,7 @@ def test_search_simple():
     reason="UniProt is not available"
 )
 def test_search_composite():
-    query = uniprot.SimpleQuery("accession", "P62988") & uniprot.SimpleQuery("reviewed", "yes")
-    assert set(uniprot.search(query)) \
-        == set(['P62979', 'P0CG47', 'P62987', 'P0CG48'])
+    query = uniprot.SimpleQuery("accession", "P12345") & uniprot.SimpleQuery("reviewed", "true")
+    assert uniprot.search(query) \
+        == ['P12345']
 

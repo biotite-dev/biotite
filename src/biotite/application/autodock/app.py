@@ -26,12 +26,12 @@ class VinaApp(LocalApp):
     ligand : AtomArray
         The structure of the receptor molecule.
         Must have an associated :class:`BondList`.
-        An associated ``charges`` annotation is recommended for proper
+        An associated ``charge`` annotation is recommended for proper
         calculation of partial charges.
     receptor : AtomArray, shape=(n,)
         The structure of the receptor molecule.
         Must have an associated :class:`BondList`.
-        An associated ``charges`` annotation is recommended for proper
+        An associated ``charge`` annotation is recommended for proper
         calculation of partial charges.
     center : ndarray, shape=(3,), dtype=float
         The *xyz* coordinates for the center of the search space.
@@ -467,12 +467,12 @@ class VinaApp(LocalApp):
         ligand : AtomArray
             The structure of the receptor molecule.
             Must have an associated :class:`BondList`.
-            An associated ``charges`` annotation is recommended for proper
+            An associated ``charge`` annotation is recommended for proper
             calculation of partial charges.
         receptor : AtomArray, shape=(n,)
             The structure of the receptor molecule.
             Must have an associated :class:`BondList`.
-            An associated ``charges`` annotation is recommended for proper
+            An associated ``charge`` annotation is recommended for proper
             calculation of partial charges.
         center : ndarray, shape=(3,), dtype=float
             The *xyz* coordinates for the center of the search space.

@@ -30,7 +30,7 @@ def displacement(atoms1, atoms2, box=None):
     
     Parameters
     ----------
-    atoms1, atoms2 : ndarray or Atom or AtomArray or AtomArrayStack
+    atoms1, atoms2 : ndarray, shape=(m,n,3) or ndarray, shape=(n,3) or ndarray, shape=(3,) or Atom or AtomArray or AtomArrayStack
         The atoms to measure the displacement between.
         The vector from `atoms1` to `atoms2` is measured.
         The dimensions may vary.
@@ -46,10 +46,9 @@ def displacement(atoms1, atoms2, box=None):
     
     Returns
     -------
-    disp : ndarray
+    disp : ndarray, shape=(m,n,3) or ndarray, shape=(n,3) or ndarray, shape=(3,)
         The displacement vector(s). The shape is equal to the shape of
-        the input `atoms` with the highest dimensionality minus the last
-        axis.
+        the input `atoms` with the highest dimensionality.
     
     See also
     --------
@@ -74,7 +73,7 @@ def displacement(atoms1, atoms2, box=None):
         fractions = fractions % 1
         # Check for each model if the box vectors are orthogonal
         orthogonality = is_orthogonal(box)
-        disp = np.zeros(fractions.shape, dtype=np.float64)
+        disp = np.zeros(fractions.shape, dtype=diff.dtype)
         if fractions.ndim == 1:
             # Single atom
             # Transform into two dimensions
@@ -87,8 +86,8 @@ def displacement(atoms1, atoms2, box=None):
                 )
             else:
                 _displacement_triclinic_box(
-                    fractions.astype(np.float64, copy=False),
-                    box.astype(np.float64, copy=False),
+                    fractions.astype(diff.dtype, copy=False),
+                    box.astype(diff.dtype, copy=False),
                     disp
                 )
             # Transform back
@@ -101,8 +100,8 @@ def displacement(atoms1, atoms2, box=None):
                 )
             else:
                 _displacement_triclinic_box(
-                    fractions.astype(np.float64, copy=False),
-                    box.astype(np.float64, copy=False),
+                    fractions.astype(diff.dtype, copy=False),
+                    box.astype(diff.dtype, copy=False),
                     disp
                 )
         elif fractions.ndim == 3:
@@ -123,8 +122,8 @@ def displacement(atoms1, atoms2, box=None):
                     )
                 else:
                     _displacement_triclinic_box(
-                        fractions[i].astype(np.float64, copy=False),
-                        box_for_model.astype(np.float64, copy=False),
+                        fractions[i].astype(diff.dtype, copy=False),
+                        box_for_model.astype(diff.dtype, copy=False),
                         disp[i]
                     )
         else:
@@ -297,6 +296,12 @@ def angle(atoms1, atoms2, atoms3, box=None):
     atoms1, atoms2, atoms3 : ndarray or Atom or AtomArray or AtomArrayStack
         The atoms to measure the angle between. Alternatively an
         ndarray containing the coordinates can be provided.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     Returns
     -------
@@ -304,12 +309,6 @@ def angle(atoms1, atoms2, atoms3, box=None):
         The angle(s) between the atoms. The shape is equal to the shape
         of the input `atoms` with the highest dimensionality minus the
         last axis.
-    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
-        If this parameter is set, periodic boundary conditions are
-        taken into account (minimum-image convention), based on
-        the box vectors given with this parameter.
-        The shape *(m,3,3)* is only allowed, when the input coordinates
-        comprise multiple models.
     
     See also
     --------
@@ -387,6 +386,12 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
         The atoms to measure the dihedral angle between.
         Alternatively an ndarray containing the coordinates can be
         provided.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, periodic boundary conditions are
+        taken into account (minimum-image convention), based on
+        the box vectors given with this parameter.
+        The shape *(m,3,3)* is only allowed, when the input coordinates
+        comprise multiple models.
     
     Returns
     -------
@@ -394,12 +399,6 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
         The dihedral angle(s) between the atoms. The shape is equal to
         the shape of the input `atoms` with the highest dimensionality
         minus the last axis.
-    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
-        If this parameter is set, periodic boundary conditions are
-        taken into account (minimum-image convention), based on
-        the box vectors given with this parameter.
-        The shape *(m,3,3)* is only allowed, when the input coordinates
-        comprise multiple models.
     
     See Also
     --------
@@ -633,7 +632,7 @@ def _call_non_index_function(function, expected_amount,
     if indices.shape[-1] != expected_amount:
         raise ValueError(
             f"Expected length {expected_amount} in the last dimension "
-            f"of the indices, but got length {pairs.shape[-1]}"
+            f"of the indices, but got length {indices.shape[-1]}"
         )
     coord_list = []
     for i in range(expected_amount):
