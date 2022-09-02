@@ -78,34 +78,7 @@ def load_structure(file_path, template=None, **kwargs):
             # Stack containing only one model -> return as atom array
             return array[0]
         else:
-            return array
-    elif suffix == ".xyz":
-        from .xyz import XYZFile
-        file = XYZFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
-    elif suffix == ".mol2":
-        from .mol2 import MOL2File
-        file = MOL2File.read(file_path)
-        array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
-    elif suffix == ".sdf":
-        from .sdf import SDFFile
-        file = SDFFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array                        
+            return array                    
                                 
     elif suffix == ".cif" or suffix == ".pdbx":
         from .pdbx import PDBxFile, get_structure
@@ -143,12 +116,33 @@ def load_structure(file_path, template=None, **kwargs):
             return array[0]
         else:
             return array
-    elif suffix == ".mol" or suffix == ".sdf":
+    elif suffix == ".mol":
         from .mol import MOLFile
         file = MOLFile.read(file_path)
         array = file.get_structure(**kwargs)
         # MOL files only contain a single model
         return array
+    elif suffix == ".sdf":
+        from .sdf import SDFile
+        file = SDFile.read(file_path)
+        array = file.get_structure(**kwargs)
+        #  SDFile automaticall detects if to return        
+        #  AomArray or AtomArrayStack
+        return array          
+    elif suffix == ".xyz":
+        from .xyz import XYZFile
+        file = XYZFile.read(file_path)
+        array = file.get_structure(**kwargs)
+        # XYZFile automaticall detects if to return
+        #  AomArray or AtomArrayStack
+        return array
+    elif suffix == ".mol2":
+        from .mol2 import MOL2File
+        file = MOL2File.read(file_path)
+        array = file.get_structure(**kwargs)
+        # MOL2File automaticall detects if to return        
+        #  AomArray or AtomArrayStack
+        return array        
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
             raise TypeError("Template must be specified for trajectory files")
@@ -232,11 +226,26 @@ def save_structure(file_path, array, **kwargs):
         file = NpzFile()
         file.set_structure(array, **kwargs)
         file.write(file_path)
-    elif suffix == ".mol" or suffix == ".sdf":
+    elif suffix == ".mol":
         from .mol import MOLFile
         file = MOLFile()
         file.set_structure(array, **kwargs)
         file.write(file_path)
+    elif suffix == ".sdf":
+        from .sdf import SDFile
+        file = SDFile()
+        file.set_structure(array, **kwargs)
+        file.write(file_path)  
+    elif suffix == ".xyz":
+        from .xyz import XYZFile
+        file = XYZFile()
+        file.set_structure(array, **kwargs)
+        file.write(file_path) 
+    elif suffix == ".mol2":
+        from .mol2 import MOL2File
+        file = MOL2File()
+        file.set_structure(array, **kwargs)
+        file.write(file_path)                      
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         from .trr import TRRFile
         from .xtc import XTCFile

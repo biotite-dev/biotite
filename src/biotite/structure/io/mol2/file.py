@@ -850,10 +850,16 @@ class MOL2File(TextFile):
         """     
         
         if len(self.lines) < 5:
-            msg  = "Header not valid, less then the minimum amount of lines in"
-            msg += "header :: " +str(self.lines)            
-            raise ValueError(msg)
-                        
+        
+            isArrayStack = lambda x: isinstance(x, AtomArrayStack)
+            # set skeleton header for file where set_header was not invoked            
+            self.set_header(
+                "", 
+                 atoms.shape[1] if isArrayStack(atoms) else atoms.shape[0],
+                "SMALL", 
+                "NO_CHARGES" if atoms.charge is None else "USER_CHARGES"
+            )
+        
         header_lines = self.lines[:self.ind_atoms[0]]
 
         # since setting new structure delete all previously stored

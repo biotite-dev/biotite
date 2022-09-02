@@ -41,7 +41,7 @@ def test_header_conversion():
         "3D", "Lorem", "Ipsum", "123", "Lorem ipsum dolor sit amet"
     )
     
-    # draw this many random Atoms for structure
+    # draw this many random atoms for structure
     # necessary as header should only exist for a non empty XYZFile
     N_sample = 10
     
@@ -60,8 +60,8 @@ def test_header_conversion():
         
         temp.close()
 
-        assert mol_names[0] == name
-        assert atom_numbers[0] == N_sample
+        assert mol_names == name
+        assert atom_numbers == N_sample
 
 
 @pytest.mark.parametrize(
@@ -98,15 +98,8 @@ def test_structure_conversion(path):
 
     instance_cond = isinstance(ref_atoms, AtomArray)
     instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
-    assert instance_cond
+    assert instance_cond     
+    assert test_atoms == ref_atoms
 
-    if isinstance(ref_atoms, AtomArray):
-        # actually no idea why we can assume that this works
-        # since floating point comparison is not safe!    
-        assert test_atoms == ref_atoms
-    elif isinstance(ref_atoms, AtomArrayStack):
-        for i in range(ref_atoms.shape[0]):
-            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
-            assert np.all(ref_atoms[i].element == test_atoms[i].element)
             
 

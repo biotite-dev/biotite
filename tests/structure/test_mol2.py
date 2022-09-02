@@ -134,17 +134,9 @@ def test_structure_conversion(path):
     instance_cond = isinstance(ref_atoms, AtomArray)
     instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
     assert instance_cond
+    assert test_atoms == ref_atoms
+    assert test_atoms.bonds == ref_atoms.bonds
 
-    if isinstance(ref_atoms, AtomArray):
-        # actually no idea why we can assume that this works
-        # since floating point comparison is not safe!    
-        assert test_atoms == ref_atoms
-        assert test_atoms.bonds == ref_atoms.bonds
-    elif isinstance(ref_atoms, AtomArrayStack):
-        for i in range(ref_atoms.shape[0]):
-            assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
-            assert np.all(ref_atoms[i].element == test_atoms[i].element)
-            assert np.all(ref_atoms.bonds == test_atoms.bonds)
             
 @pytest.mark.parametrize(
     "path",
@@ -207,31 +199,12 @@ def test_charge_rounding(path):
         instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
         assert instance_cond
 
-        if isinstance(ref_atoms, AtomArray):
-            # actually no idea why we can assume that this works
-            # since floating point comparison is not safe!   
-            assert test_atoms == ref_atoms
-            assert test2_atoms == ref_atoms
-                    
-            assert test_atoms.bonds == ref_atoms.bonds
-            assert test2_atoms.bonds == ref_atoms.bonds        
-            
-            assert np.all(np.rint(ref_partial_charges) == test_charges)        
-            assert np.all(ref_partial_charges == test2_charges)
-            
-        elif isinstance(ref_atoms, AtomArrayStack):
-            for i in range(ref_atoms.shape[0]):
-                assert np.all(np.isclose(ref_atoms[i].coord, test_atoms[i].coord))
-                assert np.all(np.isclose(ref_atoms[i].coord, test2_atoms[i].coord))            
-                assert np.all(ref_atoms[i].element == test_atoms[i].element)
-                assert np.all(ref_atoms[i].element == test2_atoms[i].element)            
-                assert np.all(ref_atoms.bonds == test_atoms.bonds)
-                assert np.all(ref_atoms.bonds == test2_atoms.bonds)            
-                assert np.all(
-                    np.isclose(np.rint(ref_partial_charges[i]), test_charges[i])
-                )                      
-                assert np.all(
-                    np.isclose(ref_partial_charges[i], test2_charges[i])
-                )                            
+        assert test_atoms == ref_atoms
+        assert test2_atoms == ref_atoms
                 
-
+        assert test_atoms.bonds == ref_atoms.bonds
+        assert test2_atoms.bonds == ref_atoms.bonds        
+        
+        assert np.all(np.rint(ref_partial_charges) == test_charges)        
+        assert np.all(ref_partial_charges == test2_charges)
+  

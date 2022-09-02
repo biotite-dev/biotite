@@ -134,35 +134,41 @@ class XYZFile(TextFile):
                 self.lines[i+1].strip() for i in self._model_start_inds
             ]        
         
-        
-        return self._atom_numbers, self._mol_names
+        if len(self._atom_numbers) == 1:
+            return self._atom_numbers[0], self._mol_names[0]
+        else:            
+            return self._atom_numbers, self._mol_names
 
     def __get_number_of_atoms(self):
         """
         This calculates the number of atoms from the previously read 
         file.
         """
-        lines_parsed = [x.split() for x in self.lines]
-        inds=np.array(
-            [
-                i for i in range(
-                    len(lines_parsed)
-                ) if len(lines_parsed[i]) != 4
-            ]
-        )       
-        if inds.shape[0] == 2:
-            return int(len(self.lines[2:]))
-        else:             
-            inds=inds[np.where(inds[1:]-inds[:-1]!=1)[0]]
-            line_lengths=np.unique(inds[1:]-inds[:-1])
-        
-            if line_lengths.shape[0] > 1:
-                msg  = "File contains different molecules."
-                msg += "Currently only multiple models of the same molecule"
-                msg += "are supported within one file"
-                raise BadStructureError(msg)
-        
-            return np.unique(inds[1:]-inds[:-1])[0]        
+        if len(self.lines) > N_HEADER:
+            print(self.lines)
+            lines_parsed = [x.split() for x in self.lines]
+            inds=np.array(
+                [
+                    i for i in range(
+                        len(lines_parsed)
+                    ) if len(lines_parsed[i]) != 4
+                ]
+            )       
+            if inds.shape[0] == 2:
+                return int(len(self.lines[2:]))
+            else:             
+                inds=inds[np.where(inds[1:]-inds[:-1]!=1)[0]]
+                line_lengths=np.unique(inds[1:]-inds[:-1])
+            
+                if line_lengths.shape[0] > 1:
+                    msg  = "File contains different molecules."
+                    msg += "Currently only multiple models of the same molecule"
+                    msg += "are supported within one file"
+                    raise BadStructureError(msg)
+            
+                return np.unique(inds[1:]-inds[:-1])[0]  
+        else:
+            return self._atom_numbers                      
 
     def set_header(self, mol_name):
         """
@@ -231,7 +237,7 @@ class XYZFile(TextFile):
         # the number of lines will be calculated from the number
         # of atoms field in the file (counts how many lines with numbers
         # there are within the file which are not name lines)
-        if len(names) == 0 or len(atom_number) == 0:
+        if names is None or atom_number is None:
             self.set_header("[MOLNAME]")  
            
         self.__update_start_lines()
@@ -335,9 +341,9 @@ class XYZFile(TextFile):
             
             for i, atom in enumerate(atoms):
                 line = "  " + str(atom.element)            
-                line += "       " + "{: .{}f}".format(atom.coord[0], 5)
-                line += "       " + "{: .{}f}".format(atom.coord[1], 5)
-                line += "       " + "{: .{}f}".format(atom.coord[2], 5)
+                line += " {:<11.{}f}".format(atom.coord[0], 6)
+                line += "    {:<11.{}f}".format(atom.coord[1], 6)
+                line += "    {:<11.{}f}".format(atom.coord[2], 6)
                 line += " "
                 self.lines[i+2] = line
                 
@@ -353,10 +359,11 @@ class XYZFile(TextFile):
                 self.lines[i*n_lines_per_model+1] = " " + str(i)
                     
                 for j, atom in enumerate(atoms_i):
-                    line = "  " + str(atom.element)            
-                    line += "       " + "{: .{}f}".format(atom.coord[0], 5)
-                    line += "       " + "{: .{}f}".format(atom.coord[1], 5)
-                    line += "       " + "{: .{}f}".format(atom.coord[2], 5)
+                    line = "  " + str(atom.element)       
+                    print(atom.coord)     
+                    line += " {:>11.{}f}".format(atom.coord[0], 6)
+                    line += "    {:>11.{}f}".format(atom.coord[1], 6)
+                    line += "    {:>11.{}f}".format(atom.coord[2], 6)
                     line += " "
                     self.lines[i*n_lines_per_model+j+2] = line                
                 
