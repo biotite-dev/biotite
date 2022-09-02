@@ -44,8 +44,8 @@ from ..util import data_dir
     itertools.product(    
         glob.glob(
             join(data_dir("structure"), "molecules", "*.mol")
-        ) 
-        + 
+        )
+        +
         glob.glob(
             join(data_dir("structure"), "molecules", "*.sdf")
         ),
@@ -65,16 +65,19 @@ def test_structure_conversion(path, omit_charge):
     SD format.
     """
     sdf_file = sdf.SDFile.read(path)
+    ref_header = sdf.get_header(sdf_file)
+    ref_header_line = sdf_file.lines[1]
     ref_atoms = sdf.get_structure(sdf_file)
-    #ref_annotations = sdf.get_metainformation(sdf_file)
+    ref_meta_information = sdf.get_metainformation(sdf_file)
 #    print(ref_atoms)    
 #    print(ref_atoms.charge)
     if omit_charge:
         ref_atoms.del_annotation("charge")
 
     sdf_file = sdf.SDFile()
+    sdf.set_header(sdf_file, *ref_header)    
     sdf.set_structure(sdf_file, ref_atoms)
-    #sdf.set_metainformation(sdf_file, ref_annotations)
+    sdf.set_metainformation(sdf_file, ref_meta_information)
     temp = TemporaryFile("w+")
     
 
@@ -87,6 +90,8 @@ def test_structure_conversion(path, omit_charge):
     sdf_file = sdf.SDFile.read(temp)
 #    try:
     test_atoms = sdf.get_structure(sdf_file)
+    test_meta_information = sdf.get_metainformation(sdf_file)
+    test_header = sdf.get_header(sdf_file)
 #    except:
 #        print("#######TEST#ON#"+str(path)+"###################")
 #        print("")
@@ -105,10 +110,21 @@ def test_structure_conversion(path, omit_charge):
         assert np.all(test_atoms.charge == 0)
         test_atoms.del_annotation("charge") 
     temp.close()
+    
 
-    cond = test_atoms == ref_atoms
-    assert cond        
-    #assert test_annotation == ref_annotations
+#    cond_header   = test_header == ref_header
+#    print("############TEST ["+str(path) + "]#################################")
+#    print("ref_header      :: " + str(ref_header))
+#    print("ref_header_line :: " +str(ref_header_line))
+#    print("test_header     :: " + str(test_header))
+#    assert cond_header        
+
+    cond_atoms  = test_atoms == ref_atoms
+    assert cond_atoms
+        
+    cond_meta   = test_meta_information == ref_meta_information
+    assert cond_meta    
+
 
 
 #@pytest.mark.parametrize(
