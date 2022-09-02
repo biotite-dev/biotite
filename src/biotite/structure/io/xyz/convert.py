@@ -13,7 +13,7 @@ def get_structure(xyz_file, model=None):
     Get an :class:`AtomArray` from the XYZ File.
 
     Ths function is a thin wrapper around
-    :meth:`XYZFile.get_structure()`.
+    :meth:`XYZFile.get_structure(xyz_file, model)`.
 
     Parameters
     ----------
@@ -22,11 +22,18 @@ def get_structure(xyz_file, model=None):
     
     Returns
     -------
-    array : AtomArray
-        This :class:`AtomArray` contains the optional ``charge``
-        annotation and has an associated :class:`BondList`.
-        All other annotation categories, except ``element`` are
-        empty.
+    array : AtomArray, AtomArrayStack
+        The return type depends on the `model` parameter.
+        In either case if only a single model is contained in the ``xyz_file``,
+        or the model parameter has been given, a class:`AtomArray` object 
+        will be returned. This :class:`AtomArray` only contains the ``element``
+        annotation category, all other annotations are empty, as only
+        element type and coordinates are contained for the atoms in an 
+        *.xyz file.
+        Respectively if no model parameter has been specified and the 
+        ``xyz_file`` contains multiple models a class:`AtomArrayStack` 
+        object will be returned. Of course this class:`AtomArrayStack` 
+        object also will only contain the ``element`` category.
     """
     return xyz_file.get_structure(model)
     

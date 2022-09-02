@@ -18,7 +18,10 @@ N_HEADER = 2
 
 class XYZFile(TextFile):
     """
-    This class represents a file in XYZ format, 
+    This class represents a file in XYZ format, which is a very simple 
+    file format where only a molecule_name in form of a string and the
+    number of atoms is contained in the header. 
+    Followed by as many lines containing atom element and 3D coordinates.
     
     References
     ----------
@@ -51,48 +54,54 @@ class XYZFile(TextFile):
         super().__init__()
         # empty header lines
         self.lines = [""] * N_HEADER
-        self.mol_names = None
-        self.atom_numbers = None
-        self.model_start_inds = None
-        self.structures = None
+        self._mol_names = None
+        self._atom_numbers = None
+        self._model_start_inds = None
+        self._structures = None
+        self._model_start_inds = None
         
-    def update_start_lines(self):
+    def __update_start_lines(self):
+        """            
+        Internal function that is used to update the _model_start_inds
+        private member variable where the indices of where a new 
+        model within the xyz file read starts is stored.
+        """
 
         # Line indices where a new model starts -> where number of atoms
         # is written down as number
     
-        self.model_start_inds = np.array(
+        self._model_start_inds = np.array(
             [i for i in range(len(self.lines))
              if self.lines[i].strip().isdigit()],
              dtype=int
          )
 #         
 #        print(" ... pre processing ... ")                            
-#        print("|model_start_inds| :: " + str(self.model_start_inds))
+#        print("|model_start_inds| :: " + str(self._model_start_inds))
                      
-        if self.model_start_inds.shape[0] > 1:             
+        if self._model_start_inds.shape[0] > 1:             
             # if the mol name line only contains an integer
             # these lines will appear in model_start_inds 
             # if calculated as above, therfore we purge all 
             # indices that have a distance of 1 to their previous index
             # (this will not work with a file containing multiple models
             #  with solely one coordinate / atom per model )                                                     
-            self.model_start_inds = self.model_start_inds[
+            self._model_start_inds = self._model_start_inds[
                 np.concatenate(
                     (
                         np.array([0],dtype=int), 
                         np.where(
-                            self.model_start_inds[:-1]
+                            self._model_start_inds[:-1]
                                 -
-                            self.model_start_inds[1:] 
+                            self._model_start_inds[1:] 
                                 != 
                             -1
                         )[0]+1
                     )
                 )
             ] 
-        elif self.model_start_inds.shape[0] == 2:                            
-            self.model_start_inds = self.model_start_inds[:1]            
+        elif self._model_start_inds.shape[0] == 2:                            
+            self._model_start_inds = self._model_start_inds[:1]            
     
     def get_header(self, model=None):
     
@@ -109,29 +118,59 @@ class XYZFile(TextFile):
         
         # Line indices where a new model starts -> where number of atoms
         # is written down as number 
-        self.update_start_lines()
+        self.__update_start_lines()
                         
         # parse all atom_numbers into integers
-        if self.atom_numbers is None:
-            self.atom_numbers = [
+        if self._atom_numbers is None:
+            self._atom_numbers = [
                 int(
                     self.lines[i].strip().strip(" ")
-                ) for i in self.model_start_inds
+                ) for i in self._model_start_inds
             ]
           
         # parse all lines containing names             
-        if self.mol_names is None:
-            self.mol_names = [
-                self.lines[i+1].strip() for i in self.model_start_inds
+        if self._mol_names is None:
+            self._mol_names = [
+                self.lines[i+1].strip() for i in self._model_start_inds
             ]        
         
         
-        return self.atom_numbers, self.mol_names
+        return self._atom_numbers, self._mol_names
 
+    def __get_number_of_atoms(self):
+        """
+        This calculates the number of atoms from the previously read 
+        file.
+        """
+        lines_parsed = [x.split() for x in self.lines]
+        inds=np.array(
+            [
+                i for i in range(
+                    len(lines_parsed)
+                ) if len(lines_parsed[i]) != 4
+            ]
+        )       
+        if inds.shape[0] == 2:
+            return int(len(self.lines[2:]))
+        else:             
+            inds=inds[np.where(inds[1:]-inds[:-1]!=1)[0]]
+            line_lengths=np.unique(inds[1:]-inds[:-1])
+        
+            if line_lengths.shape[0] > 1:
+                msg  = "File contains different molecules."
+                msg += "Currently only multiple models of the same molecule"
+                msg += "are supported within one file"
+                raise BadStructureError(msg)
+        
+            return np.unique(inds[1:]-inds[:-1])[0]        
 
     def set_header(self, mol_name):
         """
         Set the header for the XYZ file.
+        As the header consist only out of the mol_name and the number 
+        of atoms in the structure / structures this can only be 
+        used after setting a structure. Since the second line 
+        is calculated by counting the 
         
         Parameters
         ----------
@@ -142,13 +181,13 @@ class XYZFile(TextFile):
         
         if(len(self.lines) > 2):
             
-            self.lines[1] = str(mol_name)
-            self.lines[0] = str(len(self.lines)-2)
+            self.lines[1] = str(mol_name)    
+            self.lines[0] = str(self.__get_number_of_atoms())
             
-            self.mol_names = [mol_name]
-            self.atom_numbers = [int(self.lines[0])]
+            self._mol_names = [mol_name]
+            self._atom_numbers = [int(self.lines[0])]
             
-            self.update_start_lines()
+            self.__update_start_lines()
         
         else:
             raise ValueError(
@@ -195,39 +234,39 @@ class XYZFile(TextFile):
         if len(names) == 0 or len(atom_number) == 0:
             self.set_header("[MOLNAME]")  
            
-        self.update_start_lines()
+        self.__update_start_lines()
                 
                             
         # parse all atom_numbers into integers
-        if self.atom_numbers is None:
-            self.atom_numbers = [
+        if self._atom_numbers is None:
+            self._atom_numbers = [
                 int(
                     self.lines[i].strip().strip(" ")
-                ) for i in self.model_start_inds
+                ) for i in self._model_start_inds
             ]
           
         # parse all lines containing names             
-        if self.mol_names is None:
-            self.mol_names = [
-                self.lines[i+1].strip() for i in self.model_start_inds
+        if self._mol_names is None:
+            self._mol_names = [
+                self.lines[i+1].strip() for i in self._model_start_inds
             ]
             
 
         # parse all coordinates        
-        if self.structures is None:                                   
+        if self._structures is None:                                   
                                  
             array_stack = []
         
-            for i, ind in enumerate(self.model_start_inds):
-                ind_end = ind+2 + self.atom_numbers[i]
+            for i, ind in enumerate(self._model_start_inds):
+                ind_end = ind+2 + self._atom_numbers[i]
                 lines_cut = self.lines[ind:ind_end]  
-                array = AtomArray(self.atom_numbers[i])
+                array = AtomArray(self._atom_numbers[i])
                 
-                if self.atom_numbers[i]+2 != len(lines_cut):
+                if self._atom_numbers[i]+2 != len(lines_cut):
                     raise ValueError(
                         "Number of Atoms not matching with coordinate lines"
                         + ""
-                        + " atom_number :: " + str(self.atom_numbers[i])
+                        + " atom_number :: " + str(self._atom_numbers[i])
                         + ""
                         + ""
                         + " |lines_cut| :: " + str(len(lines_cut))
@@ -258,7 +297,7 @@ class XYZFile(TextFile):
                                                             
                 
                 array_stack.append(array)
-            self.structures = struc.stack(array_stack)
+            self._structures = struc.stack(array_stack)
                                         
                 
    
@@ -266,19 +305,22 @@ class XYZFile(TextFile):
                     
         
         if model is None:            
-            return self.structures
+            return self._structures
         else:
-            return self.structures[model]                          
+            return self._structures[model]                          
         
         
 
     def set_structure(self, atoms):
         """
-        Set the :class:`AtomArray` for the file.
+        Set the :class:`AtomArray` :class:`AtomArrayStack` or for the file.
+        Based upon the given type of the atoms parameter either a single 
+        model or multiple model XYZFile will be contained within the 
+        lines member variable of this XYZFile instance.
         
         Parameters
         ----------
-        atoms : AtomArray
+        atoms : AtomArray, AtomArrayStack
             The array to be saved into this file.
         """
         

@@ -107,6 +107,9 @@ class MOLFile(TextFile):
         initials        = self.lines[1][0:2].strip()
         program         = self.lines[1][2:10].strip()
 
+
+        # sometimes the string can not be interpreted as datetime
+        # in those cases instead of failing simply warn the user
         time = None       
         try:
             time        = datetime.datetime.strptime(
@@ -142,7 +145,7 @@ class MOLFile(TextFile):
         program : str, optional
             The program name. Maximum length is 8.
         time : datetime or date, optional
-            The time of file creation.
+            The time of file creation, if none uses current time.
         dimensions : str, optional
             Dimensional codes. Maximum length is 2.
         scaling_factors : str, optional
