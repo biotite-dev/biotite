@@ -109,41 +109,34 @@ def test_pdbx_consistency(path):
     """
 #    print(path)    
     mol_name = split(splitext(path)[0])[1]
-#    print(mol_name)
-    
-    if mol_name in info.all_residues():
 
+    ref_atoms = info.residue(mol_name)
+    # The CCD contains information about aromatic bond types,
+    # but the SDF test files do not
+    ref_atoms.bonds.remove_aromaticity()
+
+    mol_file = mol.MOLFile.read(path)
+    test_atoms = mol_file.get_structure()
+
+    assert test_atoms.coord.shape == ref_atoms.coord.shape
+    assert test_atoms.coord.flatten().tolist() \
+        == ref_atoms.coord.flatten().tolist()
+    assert test_atoms.element.tolist() == ref_atoms.element.tolist()
+    assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
+    assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
+        == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
         
-        ref_atoms = info.residue(mol_name)
-        # The CCD contains information about aromatic bond types,
-        # but the SDF test files do not
-        ref_atoms.bonds.remove_aromaticity()
-
-        mol_file = mol.MOLFile.read(path)
-        test_atoms = mol_file.get_structure()
-
-        assert test_atoms.coord.shape == ref_atoms.coord.shape
-        assert test_atoms.coord.flatten().tolist() \
-            == ref_atoms.coord.flatten().tolist()
-        assert test_atoms.element.tolist() == ref_atoms.element.tolist()
-        assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
-        assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
-            == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
+    header = mol_file.get_header()
+    
+    try:
+        header = mol_file.get_header()      
+    except RuntimeWarning as w:
+        if "could not be interpreted as datetime" in w.message:
+            assert True
+        else:
+            assert False, "Runtime Warning :: " + str(w.message)                        
+    except:
+        assert False, "Could not get_header for SDFile [" +str(path)
             
-        header = mol_file.get_header()
-        
-        try:
-            header = mol_file.get_header()      
-        except RuntimeWarning as w:
-            if "could not be interpreted as datetime" in w.message:
-                assert True
-            else:
-                assert False, "Runtime Warning :: " + str(w.message)                        
-        except:
-            assert False, "Could not get_header for SDFile [" +str(path)
-                
-    
-    else:
-        pytest.skip("Skipped as not an amino acid based on name")            
 
                 
