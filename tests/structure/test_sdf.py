@@ -65,17 +65,15 @@ def test_structure_conversion(path, omit_charge):
     SD format.
     """
     sdf_file = sdf.SDFile.read(path)
-    ref_header = sdf.get_header(sdf_file)
+#    ref_header = sdf.get_header(sdf_file)
     ref_header_line = sdf_file.lines[1]
     ref_atoms = sdf.get_structure(sdf_file)
     ref_meta_information = sdf.get_metainformation(sdf_file)
-#    print(ref_atoms)    
-#    print(ref_atoms.charge)
     if omit_charge:
         ref_atoms.del_annotation("charge")
 
     sdf_file = sdf.SDFile()
-    sdf.set_header(sdf_file, *ref_header)    
+#    sdf.set_header(sdf_file, *ref_header)    
     sdf.set_structure(sdf_file, ref_atoms)
     sdf.set_metainformation(sdf_file, ref_meta_information)
     temp = TemporaryFile("w+")
@@ -88,24 +86,10 @@ def test_structure_conversion(path, omit_charge):
 
     temp.seek(0)
     sdf_file = sdf.SDFile.read(temp)
-#    try:
     test_atoms = sdf.get_structure(sdf_file)
     test_meta_information = sdf.get_metainformation(sdf_file)
     test_header = sdf.get_header(sdf_file)
-#    except:
-#        print("#######TEST#ON#"+str(path)+"###################")
-#        print("")
-#        print("")        
-#        print("")    
-#        print(sdf_file.lines)
-#        for l in sdf_file.lines:
-#            print(l)
-#        print("")
-#        print("")
-#        print("")                
-#        print(lines_to_be_written)
-                
-    #test_annotation = sdf.get_metainformation(sdf_file)
+
     if omit_charge:
         assert np.all(test_atoms.charge == 0)
         test_atoms.del_annotation("charge") 
