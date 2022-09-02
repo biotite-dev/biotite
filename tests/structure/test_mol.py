@@ -56,7 +56,7 @@ def test_structure_conversion(path, omit_charge):
     """
     mol_file = mol.MOLFile.read(path)
     ref_atoms = mol.get_structure(mol_file)
-    print(ref_atoms.charge)
+#    print(ref_atoms.charge)
     if omit_charge:
         ref_atoms.del_annotation("charge")
 
@@ -75,16 +75,28 @@ def test_structure_conversion(path, omit_charge):
 
     assert test_atoms == ref_atoms
 
+def cond(x):
+    """
+    This is used for filtering out only the amino acids from the
+    mol files since for all other molecules this test doesn't make sense.
+    """
+    ignore_list=["CO2"]
 
+    mol_name = split(splitext(x)[0])[1]
+    
+    if mol_name in ignore_list:
+        return True
+    
+    cond = len(x.split()) < 1
+    cond = cond or mol_name not in info.all_residues()
+    return cond
+    
 @pytest.mark.parametrize(
     "path", 
-    [
-        x for x in glob.glob(
-            join(
-                data_dir("structure"), "molecules", "*.mol"
-            ) 
-        ) if x.split(".")[0].upper() in info.all_residues()
-    ],
+    itertools.filterfalse(
+        lambda x: cond(x),
+        glob.glob(join(data_dir("structure"), "molecules", "*.mol")),
+    )
 )
 def test_pdbx_consistency(path):
     """
@@ -95,29 +107,43 @@ def test_pdbx_consistency(path):
     In this case an SDF file is used, but it is compatible with the
     MOL format.
     """
+#    print(path)    
     mol_name = split(splitext(path)[0])[1]
+#    print(mol_name)
     
-    ref_atoms = info.residue(mol_name)
-    # The CCD contains information about aromatic bond types,
-    # but the SDF test files do not
-    ref_atoms.bonds.remove_aromaticity()
+    if mol_name in info.all_residues():
 
-    mol_file = mol.MOLFile.read(path)
-    test_atoms = mol_file.get_structure()
-
-    assert test_atoms.coord.shape == ref_atoms.coord.shape
-    assert test_atoms.coord.flatten().tolist() \
-        == ref_atoms.coord.flatten().tolist()
-    assert test_atoms.element.tolist() == ref_atoms.element.tolist()
-    assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
-    assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
-        == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
         
-    #header = mol_file.get_header()
+        ref_atoms = info.residue(mol_name)
+        # The CCD contains information about aromatic bond types,
+        # but the SDF test files do not
+        ref_atoms.bonds.remove_aromaticity()
+
+        mol_file = mol.MOLFile.read(path)
+        test_atoms = mol_file.get_structure()
+
+        assert test_atoms.coord.shape == ref_atoms.coord.shape
+        assert test_atoms.coord.flatten().tolist() \
+            == ref_atoms.coord.flatten().tolist()
+        assert test_atoms.element.tolist() == ref_atoms.element.tolist()
+        assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
+        assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
+            == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
+            
+        header = mol_file.get_header()
+        
+        try:
+            header = mol_file.get_header()      
+        except RuntimeWarning as w:
+            if "could not be interpreted as datetime" in w.message:
+                assert True
+            else:
+                assert False, "Runtime Warning :: " + str(w.message)                        
+        except:
+            assert False, "Could not get_header for SDFile [" +str(path)
+                
     
-    try:
-        header = mol_file.get_header()                
-    except:
-        assert False, "Could not get_header for SDFile [" +str(path)
-        
+    else:
+        pytest.skip("Skipped as not an amino acid based on name")            
+
                 
