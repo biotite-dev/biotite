@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.mol2"
 __author__ = "Benjamin E. Mayer"
-__all__ = ["MOL2File","supported_charge_types", "supported_mol_types"]
+__all__ = ["MOL2File"]
 
 import numpy as np
 import biotite.structure as struc
@@ -14,239 +14,6 @@ from ....file import TextFile
 
 
 
-
-
-sybyl_to_biotite_bonds = {
-
-    "1": struc.BondType.SINGLE,
-    "2": struc.BondType.DOUBLE,
-    "3": struc.BondType.TRIPLE,
-    "am": None,             # amide not really supported in biotite yet
-    "ar": struc.BondType.AROMATIC_SINGLE,  # questionable if this is okay since we have up to 3 formats for aromatic bonds
-    "du": None,             # no idea what dummy is
-    "un": struc.BondType.ANY,
-    "nc": None,
-}
-biotite_bonds_to_sybyl = {
-    1: "1",
-    2: "2",           
-    3: "3",
-    5: "ar",
-    0: "un",                    
-}
-
-supported_charge_types = [
-    "NO_CHARGES", "DEL_RE", "GASTEIGER", 
-    "GAST_HUCK", "HUCKEL", "PULLMAN", 
-    "GAUSS80_CHARGES", "AMPAC_CHARGES", 
-    "MULLIKEN_CHARGES", "DICT_CHARGES", 
-    "MMFF94_CHARGES", "USER_CHARGES"
-]
-    
-    
-supported_mol_types = [
-    "SMALL", "BIOPOLYMER", "PROTEIN", "NUCLEIC_ACID", "SACCHARIDE"
-]    
-    
-sybyl_status_bit_types = [
-    "system", "invalid_charges", "analyzed", "substituted", "altered", "ref_angle"
-]
-
-        
-# field that contains all accepted two letter elements
-# this is used for deriving if sperate atom_name and element 
-# columns should be generated. If only two letter atom_name entries in the 
-# mol2 file are found that are contained here, the atom_name entry will be
-# assumed to only contain element names.        
-elements_twoLetters = [
-    "LI", "NA", "MG", "AL",
-    "SI", "CA", "CR", "MN",
-    "FE", "CO", "CU", "CL",
-    "BR", "ZN", "SE", "MO",
-    "SN", "AR"
-]    
-    
-def get_sybyl_atom_type(atom, bonds, atom_id):
-    """
-    This function is meant to translate all occuring atoms into sybyl atom
-    types based on their element and bonds. This does however not work yet,
-    therefore which is why currently the sybyl column is simply filled with
-    a static content in order to not mess up rereading from a file written
-    from the MOL2File class.
-    
-    Parameters
-    ----------
-        atom : Atom
-            The Atom object which is to be translated 
-            into sybyl atom_type notation
-        
-        bonds: BondList
-            The BondList object of the respective bonds in the AtomArray.
-            Necessary as the sybyl atom types depend on the hybridiziation 
-            heuristic.
-            
-        atom_id: int
-            The id of the current atom that is used in the bond list.                    
-            
-    Returns
-    -------     
-        sybyl_atom_type : str
-            The name of the atom based on hybridization and element according
-            to the sybyl atom types.       
-        
-    """
-    atom_bonds, types = bonds.get_bonds(atom_id)    
-    
-    if atom.element == "C":                          
-        if 5 in types:
-            return "C.ar"
-        else:
-            if len(atom_bonds) == 3:
-                return "C.1"
-            elif len(atom_bonds) == 2:
-                return "C.2"
-            elif len(atom_bonds) == 1:
-                return "C.3"                         
-#            else:
-#                msg = "No supported sybyl Atom type for Atom " + str(atom)
-#                raise ValueError(msg)                  
-            return "C.3"
-    if atom.element == "N":                                   
-        if 5 in types:
-            return "N.ar"
-        else:       
-            if len(atom_bonds) == 3:
-                return "N.1"
-            elif len(atom_bonds) == 2:
-                return "N.2"
-            elif len(atom_bonds) == 1:
-                return "N.3"               
-    if atom.element == "O":
-        if len(atom_bonds) == 2:
-            return "O.3"
-        elif len(atom_bonds) == 1:
-            return "O.2"   
-    
-    if atom.element == "S":
-        return "S.3"
-    if atom.element == "P":
-        return "P.3"
-    if atom.element == "F":
-        return "F"
-    if atom.element == "H":
-        return "H"
-    if atom.element == "LI":
-        return "Li"                                                        
-    if atom.element == "NA":
-        return "Na"                 
-    if atom.element == "MG":
-        return "Mg"            
-    if atom.element == "AL":
-        return "Al"        
-    if atom.element == "SI":
-        return "Si"        
-    if atom.element == "K":
-        return "K"        
-    if atom.element == "CA":
-        return "Ca"        
-    if atom.element == "CR":
-        return "Cr.th"
-    if atom.element == "MN":
-        return "Mn"
-    if atom.element == "FE":
-        return "Fe"
-    if atom.element == "CO":
-        return "Co.oh"
-    if atom.element == "CU":
-        return "Cu"     
-    if atom.element == "CL":
-        return "Cl"
-    if atom.element == "BR":
-        return "Br"
-    if atom.element == "I":
-        return "I"
-    if atom.element == "ZN":
-        return "Zn"
-    if atom.element == "SE":
-        return "Se"
-    if atom.element == "MO":
-        return "Mo"
-    if atom.element == "SN":
-        return "Sn"
-    if atom.element == "AR":
-        return "Ar"       
-    else:
-        msg  = "sybyl_atom_type not implemented for element ["+str(atom.element)
-        msg += "] " + str(atom)
-        raise ValueError(msg)
-        
-
-def get_error_msg(atom_name, sybyl_atom_type):
-    msg = "Not implemented for given atom_name :: " +str(atom_name)+". "
-    msg += "And given sybyl_atom_type          :: " 
-    msg += str(sybyl_atom_type) + "."        
-    return msg               
-
-def atom_name_to_element(atom_name, sybyl_atom_type):
-    """
-    This function gets a recorded atom name and sybyl_atom_type and returns
-    you the according element that this pair should have. 
-    For example it is not possible to arrive from 'CA' if this should be 
-    calcium or the c-alpha Atom of a protein backbone. However together
-    with the sybyl_atom_type it can be distinguished.            
-    """
-
-
-    carbon_types = ["C.ar", "C.1", "C.2", "C.3"]
-    
-    if len(atom_name) == 1:
-        return atom_name
-    else:
-        if atom_name in elements_twoLetters:
-            return atom_name
-        elif atom_name == "CA":
-            if sybyl_atom_type == "Ca":
-                return atom_name
-            elif sybyl_atom_type in carbon_types:
-                return "C"     
-            else:     
-                raise ValueError(
-                    get_error_msg(atom_name, sybyl_atom_type)
-                )                            
-        elif atom_name[:2] in ["CB","CG","CD","CE", "CZ"]:
-            return "C"
-        elif atom_name[0]=="H" and len(atom_name) > 1:
-            return sybyl_atom_type       
-        elif atom_name[0]=="O":
-            return "O"                                               
-        else:        
-            raise ValueError(
-                get_error_msg(atom_name, sybyl_atom_type)
-            )                            
-            
-                       
-                        
-        
-        
-
-
-#def filter_atom_name(atom_name, sybyl_name):
-#    """
-#    Used to filter if any of the atom_names needs special handling or 
-#    if we are simply seeing element names and not specific
-#    atom names
-#    """
-#                                 
-#    element = atom_name_to_element(atom_name, sybyl_name)      
-#    
-#    cond = len(atom_name) > 2
-#    cond = cond or len(element) != len(atom_name)
-#    
-#    return cond                                                   
-
-                                                            
-        
-            
 
 
 class MOL2File(TextFile):
@@ -303,7 +70,221 @@ class MOL2File(TextFile):
 
 
     """
+
+
+    sybyl_to_biotite_bonds = {
+
+        "1": struc.BondType.SINGLE,
+        "2": struc.BondType.DOUBLE,
+        "3": struc.BondType.TRIPLE,
+        "am": None,             # amide not really supported in biotite yet
+        "ar": struc.BondType.AROMATIC_SINGLE,  # questionable if this is okay since we have up to 3 formats for aromatic bonds
+        "du": None,             # no idea what dummy is
+        "un": struc.BondType.ANY,
+        "nc": None,
+    }
+    biotite_bonds_to_sybyl = {
+        1: "1",
+        2: "2",           
+        3: "3",
+        5: "ar",
+        0: "un",                    
+    }
+
+    supported_charge_types = [
+        "NO_CHARGES", "DEL_RE", "GASTEIGER", 
+        "GAST_HUCK", "HUCKEL", "PULLMAN", 
+        "GAUSS80_CHARGES", "AMPAC_CHARGES", 
+        "MULLIKEN_CHARGES", "DICT_CHARGES", 
+        "MMFF94_CHARGES", "USER_CHARGES"
+    ]
+        
+        
+    supported_mol_types = [
+        "SMALL", "BIOPOLYMER", "PROTEIN", "NUCLEIC_ACID", "SACCHARIDE"
+    ]    
+        
+    sybyl_status_bit_types = [
+        "system", "invalid_charges", "analyzed", "substituted", "altered", "ref_angle"
+    ]
+
+            
+    # field that contains all accepted two letter elements
+    # this is used for deriving if sperate atom_name and element 
+    # columns should be generated. If only two letter atom_name entries in the 
+    # mol2 file are found that are contained here, the atom_name entry will be
+    # assumed to only contain element names.        
+    elements_twoLetters = [
+        "LI", "NA", "MG", "AL",
+        "SI", "CA", "CR", "MN",
+        "FE", "CO", "CU", "CL",
+        "BR", "ZN", "SE", "MO",
+        "SN", "AR"
+    ]    
     
+    @staticmethod        
+    def get_sybyl_atom_type(atom, bonds, atom_id):
+        """
+        This (horible horribel) function is meant to translate all occuring 
+        atoms into sybyl atom types based on their element and bonds. This
+        mostly works now but some of the special cases are not implemented.
+        Also it is not clear if there is some further special handling for
+        the two letter element atoms or if their sybyl_atom_type is simply
+        the same string with the second letter to lower case.
+        
+        Parameters
+        ----------
+            atom : Atom
+                The Atom object which is to be translated 
+                into sybyl atom_type notation
+            
+            bonds: BondList
+                The BondList object of the respective bonds in the AtomArray.
+                Necessary as the sybyl atom types depend on the hybridiziation 
+                heuristic.
+                
+            atom_id: int
+                The id of the current atom that is used in the bond list.                    
+                
+        Returns
+        -------     
+            sybyl_atom_type : str
+                The name of the atom based on hybridization and element according
+                to the sybyl atom types.       
+            
+        """
+        atom_bonds, types = bonds.get_bonds(atom_id)    
+        
+        if atom.element == "C":                          
+            if 5 in types:
+                return "C.ar"
+            else:
+                if len(atom_bonds) == 3:
+                    return "C.1"
+                elif len(atom_bonds) == 2:
+                    return "C.2"
+                elif len(atom_bonds) == 1:
+                    return "C.3"                         
+    #            else:
+    #                msg = "No supported sybyl Atom type for Atom " + str(atom)
+    #                raise ValueError(msg)                  
+                return "C.3"
+        if atom.element == "N":                                   
+            if 5 in types:
+                return "N.ar"
+            else:       
+                if len(atom_bonds) == 3:
+                    return "N.1"
+                elif len(atom_bonds) == 2:
+                    return "N.2"
+                elif len(atom_bonds) == 1:
+                    return "N.3"               
+        if atom.element == "O":
+            if len(atom_bonds) == 2:
+                return "O.3"
+            elif len(atom_bonds) == 1:
+                return "O.2"   
+        
+        if atom.element == "S":
+            return "S.3"
+        if atom.element == "P":
+            return "P.3"
+        if atom.element == "F":
+            return "F"
+        if atom.element == "H":
+            return "H"
+        if atom.element == "LI":
+            return "Li"                                                        
+        if atom.element == "NA":
+            return "Na"                 
+        if atom.element == "MG":
+            return "Mg"            
+        if atom.element == "AL":
+            return "Al"        
+        if atom.element == "SI":
+            return "Si"        
+        if atom.element == "K":
+            return "K"        
+        if atom.element == "CA":
+            return "Ca"        
+        if atom.element == "CR":
+            return "Cr.th"
+        if atom.element == "MN":
+            return "Mn"
+        if atom.element == "FE":
+            return "Fe"
+        if atom.element == "CO":
+            return "Co.oh"
+        if atom.element == "CU":
+            return "Cu"     
+        if atom.element == "CL":
+            return "Cl"
+        if atom.element == "BR":
+            return "Br"
+        if atom.element == "I":
+            return "I"
+        if atom.element == "ZN":
+            return "Zn"
+        if atom.element == "SE":
+            return "Se"
+        if atom.element == "MO":
+            return "Mo"
+        if atom.element == "SN":
+            return "Sn"
+        if atom.element == "AR":
+            return "Ar"       
+        else:
+            msg  = "sybyl_atom_type not implemented for element ["+str(atom.element)
+            msg += "] " + str(atom)
+            raise ValueError(msg)
+                             
+
+    @staticmethod
+    def atom_name_to_element(atom_name, sybyl_atom_type):
+        """
+        This function gets a recorded atom name and sybyl_atom_type and returns
+        you the according element that this pair should have. 
+        For example it is not possible to arrive from 'CA' if this should be 
+        calcium or the c-alpha Atom of a protein backbone. However together
+        with the sybyl_atom_type it can be distinguished.            
+        """
+        
+        
+        # a local function for generating error messages
+        def get_error_msg(atom_name, sybyl_atom_type):
+            msg = "Not implemented for given atom_name :: " +str(atom_name)+". "
+            msg += "And given sybyl_atom_type          :: " 
+            msg += str(sybyl_atom_type) + "."        
+            return msg 
+
+        carbon_types = ["C.ar", "C.1", "C.2", "C.3"]
+        
+        if len(atom_name) == 1:
+            return atom_name
+        else:
+            if atom_name in MOL2File.elements_twoLetters:
+                return atom_name
+            elif atom_name == "CA":
+                if sybyl_atom_type == "Ca":
+                    return atom_name
+                elif sybyl_atom_type in carbon_types:
+                    return "C"     
+                else:     
+                    raise ValueError(
+                        get_error_msg(atom_name, sybyl_atom_type)
+                    )                            
+            elif atom_name[:2] in ["CB","CG","CD","CE", "CZ"]:
+                return "C"
+            elif atom_name[0]=="H" and len(atom_name) > 1:
+                return sybyl_atom_type       
+            elif atom_name[0]=="O":
+                return "O"                                               
+            else:        
+                raise ValueError(
+                    get_error_msg(atom_name, sybyl_atom_type)
+                )                                                
+                    
+        
     def __init__(self):
         super().__init__()
         self.mol_name = ""
@@ -452,7 +433,8 @@ class MOL2File(TextFile):
         [status_bits
         [mol_comment]]
         
-        taken from https://chemicbook.com/2021/02/20/mol2-file-format-explained-for-beginners-part-2.html
+        taken from 
+        https://chemicbook.com/2021/02/20/mol2-file-format-explained-for-beginners-part-2.html
         
         Parameters
         ----------
@@ -507,23 +489,23 @@ class MOL2File(TextFile):
         print(header)
         
         if mol_type != "":
-            cond = mol_type in supported_mol_types
+            cond = mol_type in MOL2File.supported_mol_types
             if not cond:
                 msg  = "The specified molecule type ["+str(charge_type) +"] \n"
                 msg += " is not among the supported molecule types: \n"
-                msg += "" + str(supported_mol_types) + "\n"  
+                msg += "" + str(MOL2File.supported_mol_types) + "\n"  
                 msg += "header :: " + str(header) + " \n"       
                 raise ValueError(msg)
 
         self.mol_type       = mol_type
         
         if charge_type != "":            
-            cond = charge_type in supported_charge_types
+            cond = charge_type in MOL2File.supported_charge_types
             if not cond:
                 msg  = "The specified charge type ["+str(charge_type) +"] "
                 msg += " is not among the supported charge types: \n"
-                msg += str(supported_charge_types) + "\n"
-                raise ValueError(msg)                          
+                msg += str(MOL2File.supported_charge_types) + "\n"
+                raise ValueError(msg)                                     
                 
         self.charge_type    = charge_type
         
@@ -575,10 +557,15 @@ class MOL2File(TextFile):
         Returns
         -------
         array : AtomArray or AtomArrayStack
-            This :class:`AtomArray` contains the optional ``charge``
-            annotation and has an associated :class:`BondList`.
-            All other annotation categories, except ``element`` are
-            empty.
+            This :class:`AtomArray` contains the optional ``charge`` annotation 
+            and has an associated :class:`BondList`. Furthermore the optional 
+            ``atom_id`` will be set based upon the first column of the MOL2File.
+            If the atom_name column contains only element names, only the 
+            ``element`` category will be filled. However, if the atom_name 
+            column contains actual atom_names like, e.g., `CA` for a backbone 
+            C-alpha atom, this will be used to set the ``atom_name`` category, 
+            and according elements will be derived from the atom_name and 
+            sybyl_atom_type.
         """
             
         self.get_header()        
@@ -641,9 +628,7 @@ class MOL2File(TextFile):
                 if len(line) > 7:                
                     subst_name      = line[7]
                 if len(line) > 8:                
-                    charge          = float(line[8])
-#                    print(line)
-#                    print(charge)                       
+                    charge          = float(line[8])                      
                 if len(line) > 9:
                     status_bits     = line[9]
                     
@@ -670,63 +655,38 @@ class MOL2File(TextFile):
                 atoms[j] = atom_i  
                 atom_type_sybl_row[j] = atom_type_sybl 
                 index += 1   
-                j += 1
-            
-            print(atoms.element)
-            
-            filter_func = lambda e: len(e)==1 or e in elements_twoLetters
-            is_atom_names_only_element_names = np.all(
-                [filter_func(e) for e in atoms.element]
-            )     
-            print("is_atom_names_only_element_names :: " + str(is_atom_names_only_element_names))    
+                j += 1            
                         
             # after first teration over structure we need a second pass
             # to correctly infer atom_names and element if necessary from
-            # the atom_name and sybyl_atom_type columns
-#            print("###AT#SECOND#PASS#NOW######################################")     
-#            
-#                                                     
-#            print(atom_names)
-#            print(atom_type_sybl_row)
+            # the atom_name and sybyl_atom_type columns            
+            def filter_func(e):
+                cond = len(e)==1
+                cond = cond or e in MOL2File.elements_twoLetters
+            is_atom_names_only_element_names = np.all(
+                [filter_func(e) for e in atoms.element]
+            )    
+                        
             if not is_atom_names_only_element_names:   
                 filtered = np.array(
                     [len(x) > 1 for x in atom_names]
-    #                [
-    #                    filter_atom_name(
-    #                      atom_names[k], atom_type_sybl_row[k]
-    #                    ) for k in range(len(atom_names))
-    #                ] 
                 )    
                 is_atom_name_NOTEQUAL_element = np.any(filtered)
             
                 index = self.ind_atoms[i]+1
                 j = 0
                 while "@" not in self.lines[index]:
-    #                print("["+str(j)+ "]")
+                
                     atom_j = atoms[j]
-    #                print("   atom_j.element :: "+str(atom_j.element))
-    #                print("   atom_j.atom_name :: "+str(atom_j.atom_name))                
-    #                print("   "+str(atom_names[j]))
-    #                print("   "+str(atom_type_sybl_row[j]))                              
-                    
                 
                     if is_atom_name_NOTEQUAL_element:
-    #                    print(
-    #                        "setting atoms["
-    #                        +str(j)+"].atom_name="
-    #                         +str(atom_names[j])
-    #                    )
                         atom_name = atom_names[j]
                         
-                        element = atom_name_to_element(
+                        element = MOL2File.atom_name_to_element(
                             atom_names[j],
                             atom_type_sybl_row[j]
                         )
-    #                    print(
-    #                        "setting atoms["
-    #                        +str(j)+"].element="  
-    #                        +element
-    #                    )                                                                                             
+                                                                                      
 
                         if self.charge_type != "NO_CHARGES": 
                             atoms[j] = Atom(
@@ -761,55 +721,6 @@ class MOL2File(TextFile):
                     index += 1 
                     j += 1
             
-#            is_atom_name_column_unecessary = np.any(
-#                [len(x) >= 1 for x in atoms.atom_name]
-#            )       
-            
-#            print(
-#                "is_atom_name_column_unecessary :: " 
-#                + str(is_atom_name_column_unecessary)
-#            )
-
-#            # the added atom_name column seperate to the elements has
-#            # to be removed sometimes for example if one of the actual
-#            # two letter elements was contained            
-#            index = self.ind_atoms[i]+1
-#            j = 0
-#            while "@" not in self.lines[index]:
-#            
-#                if self.charge_type != "NO_CHARGES": 
-#                    atoms[j] = Atom(
-#                        [   
-#                            atoms[j].coord[0],
-#                            atoms[j].coord[1],
-#                            atoms[j].coord[2],                                                        
-#                        ],
-#                        charge=atoms[j].charge,
-#                        element=atoms[j].element,                                                                                                  
-#                    )                      
-#                else:
-#                    atoms[j] = Atom(
-#                        [   
-#                            atoms[j].coord[0],
-#                            atoms[j].coord[1],
-#                            atoms[j].coord[2],                                                        
-#                        ],
-#                        element=atoms[j].element,                
-#                    )       
-#                index += 1 
-#                j += 1                                             
-                
-#            print("###AFTER#SECOND#PASS#NOW###################################")                                      
-#            print(atoms.element)
-#            print(atoms.atom_name)      
-#            
-#            for atom in atoms:
-#                print(atom)
-#                
-#            print("")                                             
-#            print("")
-#            print("")                        
-#                       
 
             # 
             #   Iterate through all the bond lines by stating from line after
@@ -820,13 +731,15 @@ class MOL2File(TextFile):
             index = self.ind_bonds[i] +1
             while index < len(self.lines) and "@" not in self.lines[index]:  
             
-                line = [x for x in self.lines[index].strip().split(" ") if x != '']
+                line = [
+                    x for x in self.lines[index].strip().split(" ") if x != ''
+                ]
                 
-                bond_id             = int(line[0])
-                origin_atom_id      = int(line[1])
-                target_atom_id      = int(line[2])
-                bond_typ            = sybyl_to_biotite_bonds[str(line[3])]
-                status_bits         = ""
+                bond_id         = int(line[0])
+                origin_atom_id  = int(line[1])
+                target_atom_id  = int(line[2])
+                bond_typ        = MOL2File.sybyl_to_biotite_bonds[str(line[3])]
+                status_bits     = ""
                 
                 if len(line) > 4:
                     status_bits     = str(line[4])
@@ -851,7 +764,11 @@ class MOL2File(TextFile):
             return struc.stack(atom_array_stack)                        
              
             
-    def append_atom_array(self, atoms, charges=None):
+    def __append_atom_array(self, atoms, charges=None):
+        """
+        Internal function that is used to write a single atom
+        to the lines member variable.
+        """
             
         n_atoms = atoms.shape[0]                 
         
@@ -879,10 +796,9 @@ class MOL2File(TextFile):
             line += "{:>10.4f}".format(atom.coord[1])
             line += "{:>10.4f}".format(atom.coord[2])                                          
             line += " {:<8}".format(
-                get_sybyl_atom_type(
+                MOL2File.get_sybyl_atom_type(
                     atom, atoms.bonds, i
                 )
-#                "C.ar"
             )
             if atom.res_id != 0:                                          
                 line += str(atom.res_id)
@@ -892,11 +808,7 @@ class MOL2File(TextFile):
                     
                     if self.charge_type != "NO_CHARGES":
                         line += "       "        
-#                        print("charged")            
                         if charges is not None:  
-#                            print(
-#                                " using user defined charges " +str(charges[i])
-#                            )                                                                                  
                             line += " {: .{}f}".format(charges[i], 4)
                         else:
                             line += " {: .{}f}".format(atom.charge, 4)                        
@@ -910,18 +822,31 @@ class MOL2File(TextFile):
             line  = "{:>6}".format(i+1)
             line += "{:>6}".format(bond[0]+1)
             line += "{:>6}".format(bond[1]+1)
-            line += "{:>5}".format(biotite_bonds_to_sybyl[bond[2]])
+            line += "{:>5}".format(MOL2File.biotite_bonds_to_sybyl[bond[2]])
             self.lines.append(line)
 
     def set_structure(self, atoms):
         """
-        Set the :class:`AtomArray` for the file.
+        Set the :class:`AtomArray` or :class:`AtomArrayStack` for the file.
+        As a remark the heuristic for deriving the sybyl_atom_type is 
+        currently not complete. It will mostly get it right regarding 
+        hybridization and aromatic bonds. However, some special cases are
+        not covered yet and some two letter elements might produce an 
+        error as they might not yet be added to the static
+        MOL2File.elements_twoLetters array.
         
         Parameters
         ----------
-        array : AtomArray or 
-            The array to be saved into this file.
+        array : AtomArray, AtomArrayStack 
+            The array or stack of arrays to be saved into this file.
             Must have an associated :class:`BondList`.
+            Also if the header of this MOL2File has it's charge_type field
+            set to something other then 'NO_CHARGES' the AtomArray or 
+            AtomArrayStack must have an associated charge category.
+            Furthermore, if patial_charges have been given via the 
+            set_charges member function, the charge field will be ignored and
+            the set partial_charges will instead be written to the charge
+            column of the MOl2File.            
         """     
         
         if len(self.lines) < 5:
@@ -954,14 +879,11 @@ class MOL2File(TextFile):
                 msg += str(self.num_atoms) + "] and number of atoms in given"
                 msg += "AtomArray [" + str(atoms.shape[0]) + "]"
                 raise ValueError(msg)                                   
-        
-#            print(" charges ::")
-#            print(self.charges)
-#            print("")
+
             if self.charges is not None:                                            
-                self.append_atom_array(atoms, self.charges)                
+                self.__append_atom_array(atoms, self.charges)                
             else:
-                self.append_atom_array(atoms)                
+                self.__append_atom_array(atoms)                
                             
         
         elif isinstance(atoms, AtomArrayStack):      
@@ -994,40 +916,57 @@ class MOL2File(TextFile):
                     for l in header_lines:
                         self.lines.append(l)
 
-#                print(" charges ::")
-#                print(self.charges)
-#                print("")
                 if self.charges is not None:
-                    self.append_atom_array(atoms_i, self.charges[i])                
+                    self.__append_atom_array(atoms_i, self.charges[i])                
                 else:
-                    self.append_atom_array(atoms_i)               
+                    self.__append_atom_array(atoms_i)               
 
     def set_charges(self, charges):            
         """
-        Set a partial charges array that will be used for writing the mol2 file.
-                              
+        Set the partial charges. This function specifically does not check
+        if the ndarray dimension fit with a struture already contained as
+        this might make the process of setting charges to a new empty 
+        MOL2File not containing a structure yet overly complicated.
+        It is left to the user to get this right, otherwise latest at the stage
+        of writing the file an error will occur.
+
+        Parameters
+        ----------
+        charges: ndarray
+            A ndarray containing data with `float` type to be written as 
+            partial charges.  
+            If ndarray has any other type an according error will be raised.    
         """
         
-#        if not self.charges is None and self.charges.shape != charges.shape:
-#            msg  = "Can only assign charges of same shape as already within"
-#            msg += "Mol2 file 
-#            raise ValueError(msg)
-#            
-#        
-#        if self.num_atoms != -1:
-
-#        print("setting self.charges :: " + str(self.charges))
-#        print("to                   :: " + str(charges))
-
-        self.charges = charges
+        if np.issubdtype(charges.dtype, np.floating):          
+            self.charges = charges
+        else:
+            raise ValueError("Non floating type provided for charges")            
             
 
     def get_charges(self):
+        """
+
+        The getter function for retrieving the partial charges from the read
+        MOL2File if it has any. If file with no charges was read and this
+        functoin is called a warning will be given.
+        Also if the charges member variable is still None this will invoke 
+        the get_structure function, which in turn might raise a BadStructureError
+        if there is no structure contained.
+
+        Returns
+        -------
+        charges : ndarray, None
+            Either ndarray of type `float` or None if no partial_charges
+            where contained.             
+        """    
         
         if self.charge_type == "NO_CHARGES":
-            raise ValueError(
-                "Can not get charges from mol2 file where NO_CHARGES set."
-            )
+            msg  = "The read MOl2File had NO_CHARGES set, therefore"
+            msg += "no partial charges where contained in the file."
+            warning.warn(msg)
+            
+            return None
         
         if self.charges is None:
             _ = self.get_structure()

@@ -58,10 +58,10 @@ def set_structure(mol2_file, atoms):
 
 def get_charges(mol2_file):
     """
-    Get an :class:`AtomArray` from the XYZ File.
+    Get an ndarray containing the partial charges from the MOL2File
 
     Ths function is a thin wrapper around
-    :meth:`XYZFile.get_structure()`.
+    :meth:`MOL2File.get_charges()`.
 
     Parameters
     ----------
@@ -81,22 +81,19 @@ def get_charges(mol2_file):
 
 def set_charges(mol2_file, charges):
     """
-    Get an :class:`AtomArray` from the XYZ File.
+    Set the partial charges in the MOL2File to an ndarray
+    specified as parameter here.
 
     Ths function is a thin wrapper around
-    :meth:`XYZFile.get_structure()`.
+    :meth:`MOL2File.set_charges(charges)`.
 
     Parameters
     ----------
-    xyz_file : XYZFile
-        The XYZ File.
+    mol2_file: MOL2File
+        The MOL2File
+    charges: ndarray
+        A ndarray containing data with `float` type to be written as 
+        partial charges.           
     
-    Returns
-    -------
-    array : AtomArray
-        This :class:`AtomArray` contains the optional ``charge``
-        annotation and has an associated :class:`BondList`.
-        All other annotation categories, except ``element`` are
-        empty.
     """
     return mol2_file.set_charges(charges)    

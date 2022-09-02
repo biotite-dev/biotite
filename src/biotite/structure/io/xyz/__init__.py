@@ -3,12 +3,10 @@
 # information.
 
 """
-The MOL format is used to depict atom positions and bonds for small
+The XYZ format is used to depict only atom positions for small
 molecules.
-This subpackage is used for reading and writing an :class:`AtomArray`
-in this format.
-Additionally, reading data from the SDF format, which is a wrapper
-around MOL, is also supported.
+This subpackage is used for reading and writing an :class:`AtomArray` or
+an :class:`AtomArrayStack` for a file containing multiple models in this format.
 """
 
 __name__ = "biotite.structure.io.xyz"
