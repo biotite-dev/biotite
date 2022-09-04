@@ -140,8 +140,8 @@ def load_structure(file_path, template=None, **kwargs):
         from .mol2 import MOL2File
         file = MOL2File.read(file_path)
         array = file.get_structure(**kwargs)
-        # MOL2File automaticall detects if to return        
-        #  AomArray or AtomArrayStack
+        # MOL2File automatically detects if to return        
+        # AtomArray or AtomArrayStack
         return array        
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
