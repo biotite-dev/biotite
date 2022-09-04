@@ -11,8 +11,6 @@ __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 
-import traceback
-
 import warnings
 import numpy as np
 from biotite.structure.error import BadStructureError
