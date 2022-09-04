@@ -126,8 +126,8 @@ def load_structure(file_path, template=None, **kwargs):
         from .sdf import SDFile
         file = SDFile.read(file_path)
         array = file.get_structure(**kwargs)
-        #  SDFile automaticall detects if to return        
-        #  AomArray or AtomArrayStack
+        #  SDFile automatically detects if to return        
+        #  AtomArray or AtomArrayStack
         return array          
     elif suffix == ".xyz":
         from .xyz import XYZFile
