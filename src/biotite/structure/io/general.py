@@ -133,8 +133,8 @@ def load_structure(file_path, template=None, **kwargs):
         from .xyz import XYZFile
         file = XYZFile.read(file_path)
         array = file.get_structure(**kwargs)
-        # XYZFile automaticall detects if to return
-        #  AomArray or AtomArrayStack
+        # XYZFile automatically detects if to return
+        # AtomArray or AtomArrayStack
         return array
     elif suffix == ".mol2":
         from .mol2 import MOL2File
