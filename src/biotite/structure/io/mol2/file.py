@@ -165,9 +165,6 @@ class MOL2File(TextFile):
                     return "C.2"
                 elif len(atom_bonds) == 1:
                     return "C.3"                         
-    #            else:
-    #                msg = "No supported sybyl Atom type for Atom " + str(atom)
-    #                raise ValueError(msg)                  
                 return "C.3"
         if atom.element == "N":                                   
             if 5 in types:

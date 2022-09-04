@@ -126,22 +126,22 @@ def load_structure(file_path, template=None, **kwargs):
         from .sdf import SDFile
         file = SDFile.read(file_path)
         array = file.get_structure(**kwargs)
-        #  SDFile automaticall detects if to return        
-        #  AomArray or AtomArrayStack
+        #  SDFile automatically detects if to return        
+        #  AtomArray or AtomArrayStack
         return array          
     elif suffix == ".xyz":
         from .xyz import XYZFile
         file = XYZFile.read(file_path)
         array = file.get_structure(**kwargs)
-        # XYZFile automaticall detects if to return
-        #  AomArray or AtomArrayStack
+        # XYZFile automatically detects if to return
+        # AtomArray or AtomArrayStack
         return array
     elif suffix == ".mol2":
         from .mol2 import MOL2File
         file = MOL2File.read(file_path)
         array = file.get_structure(**kwargs)
-        # MOL2File automaticall detects if to return        
-        #  AomArray or AtomArrayStack
+        # MOL2File automatically detects if to return        
+        # AtomArray or AtomArrayStack
         return array        
     elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         if template is None:
