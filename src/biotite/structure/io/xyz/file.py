@@ -48,36 +48,32 @@ class XYZFile(TextFile):
             0             C         1.215    0.701    0.000
             0             H         2.157    1.245    0.000
 
-    """
-    
+    """    
     def __init__(self):
         super().__init__()
         # empty header lines
         self.lines = [""] * N_HEADER
+        # internal variables for storing and writing the header
         self._mol_names = None
-        self._atom_numbers = None
+        self._atom_numbers = [-1]
         self._model_start_inds = None
         self._structures = None
         self._model_start_inds = None
-        
+
+
     def __update_start_lines(self):
         """            
         Internal function that is used to update the _model_start_inds
         private member variable where the indices of where a new 
         model within the xyz file read starts is stored.
         """
-
         # Line indices where a new model starts -> where number of atoms
-        # is written down as number
-    
+        # is written down as number    
         self._model_start_inds = np.array(
             [i for i in range(len(self.lines))
              if self.lines[i].strip().isdigit()],
              dtype=int
          )
-#         
-#        print(" ... pre processing ... ")                            
-#        print("|model_start_inds| :: " + str(self._model_start_inds))
                      
         if self._model_start_inds.shape[0] > 1:             
             # if the mol name line only contains an integer
@@ -99,12 +95,59 @@ class XYZFile(TextFile):
                         )[0]+1
                     )
                 )
-            ] 
+            ]
         elif self._model_start_inds.shape[0] == 2:                            
             self._model_start_inds = self._model_start_inds[:1]            
-    
-    def get_header(self, model=None):
-    
+
+    def __get_number_of_atoms(self):
+        """
+        This calculates the number of atoms from the previously read 
+        file.
+        """
+        if len(self.lines) > N_HEADER:        
+            lines_parsed = [x.split() for x in self.lines]
+            # All lines containing less then 4 elements after split() have to be                 
+            # header lines based upon the structure of an xyz file.
+            inds=np.array(
+                [
+                    i for i in range(
+                        len(lines_parsed)
+                    ) if len(lines_parsed[i]) != 4
+                ]
+            )     
+            # If there is only one model contained we can simply count
+            # and return the number of lines after the header. 
+            if inds.shape[0] == 2:
+                return [int(len(self.lines[2:]))]
+            # otherwise if there are multiple models we can derive the 
+            # number of atoms per model by counting the lines between the 
+            # headers and subtracting 2.
+            else:    
+                # indices of second header lines         
+                inds=inds[np.where(inds[1:]-inds[:-1]!=1)[0]]
+                line_lengths = inds[1:]-inds[:-1]-2         
+                if np.unique(line_lengths.shape)[0] > 1:
+                    msg  = "File contains different molecules."
+                    msg += "Currently only multiple models of the same molecule"
+                    msg += "are supported within one file"
+                    raise BadStructureError(msg)            
+                return line_lengths
+        else:
+            return self._atom_numbers
+            
+    def get_model_count(self):
+        """
+        Get the number of models contained in the xyz file.
+        
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """    
+        return len(self.__get_number_of_atoms)            
+            
+        
+    def get_header(self, model=None):    
         """
         Get the header from the XYZ file.
         
@@ -114,12 +157,10 @@ class XYZFile(TextFile):
             The number of atoms per model
         mol_name : str
             The name of the molecule or the names of the multiple models                
-        """
-        
+        """        
         # Line indices where a new model starts -> where number of atoms
         # is written down as number 
         self.__update_start_lines()
-                        
         # parse all atom_numbers into integers
         if self._atom_numbers is None:
             self._atom_numbers = [
@@ -138,38 +179,8 @@ class XYZFile(TextFile):
             return self._atom_numbers[0], self._mol_names[0]
         else:            
             return self._atom_numbers, self._mol_names
-
-    def __get_number_of_atoms(self):
-        """
-        This calculates the number of atoms from the previously read 
-        file.
-        """
-        if len(self.lines) > N_HEADER:
-            print(self.lines)
-            lines_parsed = [x.split() for x in self.lines]
-            inds=np.array(
-                [
-                    i for i in range(
-                        len(lines_parsed)
-                    ) if len(lines_parsed[i]) != 4
-                ]
-            )       
-            if inds.shape[0] == 2:
-                return int(len(self.lines[2:]))
-            else:             
-                inds=inds[np.where(inds[1:]-inds[:-1]!=1)[0]]
-                line_lengths=np.unique(inds[1:]-inds[:-1])
             
-                if line_lengths.shape[0] > 1:
-                    msg  = "File contains different molecules."
-                    msg += "Currently only multiple models of the same molecule"
-                    msg += "are supported within one file"
-                    raise BadStructureError(msg)
-            
-                return np.unique(inds[1:]-inds[:-1])[0]  
-        else:
-            return self._atom_numbers                      
-
+                                                           
     def set_header(self, mol_name):
         """
         Set the header for the XYZ file.
@@ -188,7 +199,7 @@ class XYZFile(TextFile):
         if(len(self.lines) > 2):
             
             self.lines[1] = str(mol_name)    
-            self.lines[0] = str(self.__get_number_of_atoms())
+            self.lines[0] = str(self.__get_number_of_atoms()[0])
             
             self._mol_names = [mol_name]
             self._atom_numbers = [int(self.lines[0])]

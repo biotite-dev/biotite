@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.xyz"
 __author__ = "Benjamin E. Mayer"
-__all__ = ["get_structure", "set_structure"]
+__all__ = ["get_structure", "set_structure", "get_model_count"]
 
 
 
@@ -12,7 +12,7 @@ def get_structure(xyz_file, model=None):
     """
     Get an :class:`AtomArray` from the XYZ File.
 
-    Ths function is a thin wrapper around
+    This function is a thin wrapper around
     :meth:`XYZFile.get_structure(xyz_file, model)`.
 
     Parameters
@@ -43,7 +43,7 @@ def set_structure(xyz_file, atoms):
     Set the :class:`AtomArray` for the XYZ File
     or :class:`AtomArrayStack for a XYZ File with multiple states.
 
-    Ths function is a thin wrapper around
+    This function is a thin wrapper around
     :meth:`XYZFile.set_structure()`.
     
     Parameters
@@ -56,3 +56,19 @@ def set_structure(xyz_file, atoms):
         model will be set to an index enumerating them.
     """
     xyz_file.set_structure(atoms)
+    
+    
+def get_model_count(xyz_file):
+    """
+    Get the number of models contained in the xyz file.
+    
+    This function is a thin wrapper around
+    :meth:`XYZFile.get_model_count()`.    
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    return xyz_file.get_model_count()
+   
