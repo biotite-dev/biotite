@@ -150,7 +150,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
     @classmethod
     def read_iter(cls, file_name, start=None, stop=None, step=None,
-                  atom_i=None):
+                  atom_i=None, stack_size=None):
         """
         Create an iterator over each frame of the given trajectory file
         in the selected range.
@@ -174,15 +174,22 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         atom_i : ndarray, dtype=int, optional
             If this parameter is set, only the atoms at the given
             indices are read from each frame.
+        stack_size : int, optional
+            If this parameter is set, the given number of frames *m* are
+            read at once.
+            As result an additional dimension is added to the return
+            values.
+            If the number of frames is not a multiple of `stack_size`,
+            the final stack is smaller than `stack_size`.
         
         Yields
         ------
-        coord : ndarray, dtype=float32, shape=(n,3)
-            The atom coordinates in the current frame.
-        box : ndarray, dtype=float32, shape=(3,3)
-            The box vectors of the current frame.
-        time : float
-            the simlation time of the current frame in *ps*.
+        coord : ndarray, dtype=float32, shape=(n,3) or shape=(m,n,3)
+            The atom coordinates in the current frame or stack.
+        box : ndarray, dtype=float32, shape=(3,3) or shape=(m,3,3) or None
+            The box vectors of the current frame or stack.
+        time : float or ndarray, dtype=float32, shape=(n,) or None
+            The simulation time of the current frame or stack in *ps*.
         
         See also
         --------
@@ -215,32 +222,49 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 # and incremented afterwards again
                 n_frames = ((n_frames - 1) // step) + 1
             
+
             # Read frames
-            frame_i = 0
-            while True:
-                if n_frames is not None and frame_i >= n_frames:
-                    # Stop frame reached -> stop interation
-                    break
-                # Read one frame per 'yield'
-                result = f.read(1, stride=step, atom_indices=atom_i)
-                if len(result[0]) == 0:
-                    # Empty array was read
-                    # -> no frames left -> stop interation
-                    break
-                coord, box, time = cls.process_read_values(result)
-                # Only one frame
-                # -> only one element in first dimension
-                # -> remove first dimension
-                coord = coord[0]
-                box = box[0] if box is not None else None
-                time = float(time[0]) if time is not None else None
-                yield coord, box, time
-                frame_i += 1
+            if stack_size is None:
+                remaining_frames = n_frames
+                while remaining_frames is None or remaining_frames > 0:
+                    result = f.read(1, stride=step, atom_indices=atom_i)
+                    if len(result[0]) == 0:
+                        # Empty array was read
+                        # -> no frames left -> stop iteration
+                        break
+                    coord, box, time = cls.process_read_values(result)
+                    # Only one frame
+                    # -> only one element in first dimension
+                    # -> remove first dimension
+                    coord = coord[0]
+                    box = box[0] if box is not None else None
+                    time = float(time[0]) if time is not None else None
+                    yield coord, box, time
+                    if remaining_frames is not None:
+                        remaining_frames -= 1
+            
+            else:
+                remaining_frames = n_frames
+                while remaining_frames is None or remaining_frames > 0:
+                    n_frames = (
+                        min(remaining_frames, stack_size)
+                        if remaining_frames is not None
+                        else stack_size
+                    )
+                    result = f.read(n_frames, stride=step, atom_indices=atom_i)
+                    if len(result[0]) == 0:
+                        # Empty array was read
+                        # -> no frames left -> stop iteration
+                        break
+                    coord, box, time = cls.process_read_values(result)
+                    yield coord, box, time
+                    if remaining_frames is not None:
+                        remaining_frames -= stack_size
     
 
     @classmethod
     def read_iter_structure(cls, file_name, template, start=None, stop=None,
-                            step=None, atom_i=None):
+                            step=None, atom_i=None, stack_size=None):
         """
         Create an iterator over each frame of the given trajectory file
         in the selected range.
@@ -274,12 +298,21 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             frame from the file.
         atom_i : ndarray, dtype=int, optional
             If this parameter is set, only the atoms at the given
-            indices are read from each frame.
+            indices are read from each frame in the file.
+        stack_size : int, optional
+            If this parameter is set, multiple frames are combined into
+            an :class:`AtomArrayStack`.
+            The number of frames in the :class:`AtomArrayStack` is
+            determined by this parameter.
+            If the number of frames is not a multiple of `stack_size`,
+            the final stack is smaller than `stack_size`.
         
         Yields
         ------
-        structure : AtomArray
-            The structure of the current frame.
+        structure : AtomArray or AtomArrayStack
+            The structure of the current frame as :class:`AtomArray`.
+            If `stack_size` is set, multiple frames are returned as
+            :class:`AtomArrayStack`.
         
         See also
         --------
@@ -288,7 +321,8 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Notes
         -----
         This iterator creates a new copy of the given template for every
-        frame.
+        frame
+        (or stack of frames, if `stack_size` is set).
         If a higher efficiency is required, please use the
         :func:`read_iter()` function.
 
@@ -301,13 +335,17 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 f"An 'AtomArray' or 'AtomArrayStack' is expected as template, "
                 f"not '{type(template).__name__}'"
             )
+        
         for coord, box, _ in cls.read_iter(
-            file_name, start, stop, step, atom_i
+            file_name, start, stop, step, atom_i, stack_size
         ):
-            frame = template.copy()
-            frame.coord = coord
-            frame.box = box
-            yield frame
+            if stack_size is None:
+                frame = template.copy()
+                frame.coord = coord
+                frame.box = box
+                yield frame
+            else:
+                yield from_template(template, coord, box)
 
     
     def write(self, file_name):
@@ -621,7 +659,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         Similar to :func:`read()`, just for chunk-wise reading of the
         trajectory.
 
-        `n_frames` is already the actual number of frames in the outout
+        `n_frames` is already the actual number of frames in the output
         arrays, i.e. the original number was divided by `step`.
         """
         chunks = []
@@ -658,7 +696,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             # Assemble the chunks into contiguous arrays
             # for each value (coord, box, time)
             result = [None] * len(chunks[0])
-            # Iterate over all valuesin the result tuple
+            # Iterate over all values in the result tuple
             # and concatenate the corresponding value from each chunk,
             # if the value is not None
             # The amount of values is determined from the first chunk
