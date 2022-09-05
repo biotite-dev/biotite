@@ -129,15 +129,16 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
     reason="MDTraj is not installed"
 )
 @pytest.mark.parametrize(
-    "format, start, stop, step",
+    "format, start, stop, step, stack_size",
     itertools.product(
         ["trr", "xtc", "tng", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
-        [None, 2]
+        [None, 2],
+        [None, 2, 3]
     )
 )
-def test_read_iter(format, start, stop, step):
+def test_read_iter(format, start, stop, step, stack_size):
     """
     Compare aggregated yields of :func:`read_iter()` with the values
     from a corresponding :class:`TrajectoryFile` object.
@@ -169,24 +170,32 @@ def test_read_iter(format, start, stop, step):
     test_coord = []
     test_box = []
     test_time = []
-    for coord, box, time in traj_file.read_iter(file_name, start, stop, step):
+    for coord, box, time in traj_file.read_iter(
+        file_name, start, stop, step, stack_size=stack_size
+    ):
         test_coord.append(coord)
         test_box.append(box)
         test_time.append(time)
+    
     # Convert list to NumPy array
-    test_coord = np.stack(test_coord)
-    test_box = np.stack(test_box)
-    test_time = np.stack(test_time)
+    combination_func = np.stack if stack_size is None else np.concatenate
+    test_coord =combination_func(test_coord)
+    if test_box[0] is not None:
+        test_box = combination_func(test_box)
+    else:
+        test_box = None
+    if test_time[0] is not None:
+        test_time = combination_func(test_time)
+    else:
+        test_time = None
 
     assert test_coord.tolist() == ref_coord.tolist()
-    
     if ref_box is None:
-        assert (test_box == None).all()
+        assert test_box is None
     else:
         assert test_box.tolist() == ref_box.tolist()
-    
     if ref_time is None:
-        assert (test_time == None).all()
+        assert test_time is None
     else:
         assert test_time.tolist() == ref_time.tolist()
 
@@ -196,15 +205,16 @@ def test_read_iter(format, start, stop, step):
     reason="MDTraj is not installed"
 )
 @pytest.mark.parametrize(
-    "format, start, stop, step",
+    "format, start, stop, step, stack_size",
     itertools.product(
         ["trr", "xtc", "tng", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
-        [None, 2]
+        [None, 2],
+        [None, 2, 3]
     )
 )
-def test_read_iter_structure(format, start, stop, step):
+def test_read_iter_structure(format, start, stop, step, stack_size):
     """
     Compare aggregated yields of :func:`read_iter_structure()` with the
     return value of :func:`get_structure()` from a corresponding
@@ -234,11 +244,16 @@ def test_read_iter_structure(format, start, stop, step):
     traj_file = traj_file_cls.read(file_name, start, stop, step)
     ref_traj = traj_file.get_structure(template)
     
-    test_traj = struc.stack(
-        [frame for frame in traj_file_cls.read_iter_structure(
-            file_name, template, start, stop, step
-        )]
-    )
+    frames = [frame for frame in traj_file_cls.read_iter_structure(
+        file_name, template, start, stop, step, stack_size=stack_size
+    )]
+
+    if stack_size is None:
+        assert isinstance(frames[0], struc.AtomArray)
+        test_traj = struc.stack(frames)
+    else:
+        assert isinstance(frames[0], struc.AtomArrayStack)
+        test_traj = struc.stack(list(itertools.chain(*frames)))
     
     assert test_traj == ref_traj
 
