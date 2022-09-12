@@ -1,7 +1,6 @@
 # This source code is part of the Biotite package and is distributed
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
-
 import itertools
 import datetime
 from tempfile import TemporaryFile
@@ -17,7 +16,14 @@ from ..util import data_dir
 
 
 def draw_random_struct(N_atoms):
+    """
+    This function is used to draw a randoms AtomArray with given
+    number of N_atoms
 
+    Parameters
+    ---
+    N_atoms:
+    """
     return struc.array(
         [
             Atom(
@@ -40,26 +46,19 @@ def test_header_conversion():
         str(datetime.datetime.now().replace(second=0, microsecond=0)),
         "3D", "Lorem", "Ipsum", "123", "Lorem ipsum dolor sit amet"
     )
-    
     # draw this many random atoms for structure
     # necessary as header should only exist for a non empty XYZFile
     N_sample = 10
-    
     for name in ref_names:
-    
         xyz_file = xyz.XYZFile()
         xyz_file.set_structure(draw_random_struct(N_sample))
-        xyz_file.set_header(name)        
-        print(xyz_file)
+        xyz_file.set_header(name)
         temp = TemporaryFile("w+")
         xyz_file.write(temp)
-
         temp.seek(0)
         xyz_file = xyz.XYZFile.read(temp)
         atom_numbers, mol_names = xyz_file.get_header()
-        
         temp.close()
-
         assert mol_names == name
         assert atom_numbers == N_sample
 
@@ -67,7 +66,34 @@ def test_header_conversion():
 @pytest.mark.parametrize(
     "path",
     glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
-#    [x for x in glob.glob(join(data_dir("structure"), "molecules", "*.xyz")) if "CO" not in x],
+)
+def test_model_count(path):
+
+    model_counts = {
+        "10000_docked": 9,
+        "10000_docked_1": 1,
+        "10000_docked_2": 1,
+        "ADP": 1,
+        "aspirin_2d": 1,
+        "aspirin_3d": 1,
+        "BENZ": 1,
+        "CO2": 6,
+        "HArF": 1,
+        "HWB": 1,
+        "lorazepam": 1,
+        "nu7026_conformers": 6,
+        "TYR": 1,
+        "CYN": 1,
+        "zinc_33_conformers": 30,
+    }
+    name = path.split("/")[-1].split(".")[0]
+    xyz_file = xyz.XYZFile.read(path)
+    assert xyz.get_model_count(xyz_file) == model_counts[name]
+
+
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
 )
 def test_structure_conversion(path):
     """
@@ -78,28 +104,19 @@ def test_structure_conversion(path):
     xyz format.
     """
     xyz_file = xyz.XYZFile.read(path)
-    
-    
-    
     ref_atoms = xyz.get_structure(xyz_file)
-    
-
     xyz_file = xyz.XYZFile()
     xyz.set_structure(xyz_file, ref_atoms)
     temp = TemporaryFile("w+")
     xyz_file.write(temp)
-    
-
+    # read previously written XYZFile
     temp.seek(0)
-    xyz_file = xyz.XYZFile.read(temp) 
+    xyz_file = xyz.XYZFile.read(temp)
     test_atoms = xyz.get_structure(xyz_file)
     temp.close()
-    
-
+    # test if correct instance
     instance_cond = isinstance(ref_atoms, AtomArray)
     instance_cond = instance_cond | isinstance(ref_atoms, AtomArrayStack)
-    assert instance_cond     
+    assert instance_cond
+    # and if coordinates match
     assert test_atoms == ref_atoms
-
-            
-
