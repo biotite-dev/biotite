@@ -9,3 +9,4 @@ CONTRIBUTORS
 - Thomas Nevolianis <https://github.com/thomasnevolianis>
 - Maximilian Greil <https://github.com/MaxGreil>
 - Claude J. Rogers <https://github.com/claudejrogers>
+- Benjamin E. Mayer <https://github.com/entropybit>

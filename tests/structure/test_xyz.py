@@ -14,6 +14,26 @@ import biotite.structure.info as info
 import biotite.structure.io.xyz as xyz
 from ..util import data_dir
 
+# dictionary used for encoding prior knowledge regarding
+# model count in different test cases
+model_counts = {
+    "10000_docked": 9,
+    "10000_docked_1": 1,
+    "10000_docked_2": 1,
+    "ADP": 1,
+    "aspirin_2d": 1,
+    "aspirin_3d": 1,
+    "BENZ": 1,
+    "CO2": 6,
+    "HArF": 1,
+    "HWB": 1,
+    "lorazepam": 1,
+    "nu7026_conformers": 6,
+    "TYR": 1,
+    "CYN": 1,
+    "zinc_33_conformers": 30,
+}
+
 
 def draw_random_struct(N_atoms):
     """
@@ -68,27 +88,66 @@ def test_header_conversion():
     glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
 )
 def test_model_count(path):
-
-    model_counts = {
-        "10000_docked": 9,
-        "10000_docked_1": 1,
-        "10000_docked_2": 1,
-        "ADP": 1,
-        "aspirin_2d": 1,
-        "aspirin_3d": 1,
-        "BENZ": 1,
-        "CO2": 6,
-        "HArF": 1,
-        "HWB": 1,
-        "lorazepam": 1,
-        "nu7026_conformers": 6,
-        "TYR": 1,
-        "CYN": 1,
-        "zinc_33_conformers": 30,
-    }
+    """
+    Test the get_model_count function based on known number of models
+    from the test caes listed in the dictionary above.
+    """
     name = path.split("/")[-1].split(".")[0]
     xyz_file = xyz.XYZFile.read(path)
     assert xyz.get_model_count(xyz_file) == model_counts[name]
+
+
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
+)
+def test_get_header(path):
+    """
+    Test the get_model_count function based on known number of models
+    from the test caes listed in the dictionary above.
+    """
+    name = path.split("/")[-1].split(".")[0]
+    xyz_file = xyz.XYZFile.read(path)
+
+    if model_counts[name] > 1:
+        atom_number, mol_name = xyz.get_header(xyz_file)
+        assert type(atom_number) == list
+        assert type(mol_name) == list
+        assert len(atom_number) == len(mol_name)
+        assert len(mol_name) == model_counts[name]
+        # test if single header retrieve by model
+        # yields same result
+        for i in range(model_counts[name]):
+            a_number_i, m_name_i = xyz.get_header(xyz_file, model=i)
+            assert a_number_i == atom_number[i]
+            assert m_name_i == mol_name[i]
+    else:
+        atom_number, mol_name = xyz.get_header(xyz_file)
+        assert type(atom_number) == int
+        assert type(mol_name) == str
+
+
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
+)
+def test_set_header(path):
+    """
+    Test if set header works on files with multiple models, based
+    on model
+    """
+    name = path.split("/")[-1].split(".")[0]
+    xyz_file = xyz.XYZFile.read(path)
+
+    if model_counts[name] > 1:
+        atom_number, mol_name = xyz.get_header(xyz_file)
+        # test if single header retrieve by model
+        # yields same result
+        for i in range(model_counts[name]):
+            xyz.set_header(xyz_file, str(i), model=i)
+            atom_number_new, mol_name_new = xyz.get_header(xyz_file)
+            assert atom_number_new[i] == atom_number[i]
+            assert mol_name_new[i] == str(i)
 
 
 @pytest.mark.parametrize(
@@ -120,3 +179,27 @@ def test_structure_conversion(path):
     assert instance_cond
     # and if coordinates match
     assert test_atoms == ref_atoms
+
+
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))
+)
+def test_get_structure(path):
+    """
+    Test the get_structure function based on known number of models
+    from the test cases listed in the dictionary above.
+    """
+    name = path.split("/")[-1].split(".")[0]
+    xyz_file = xyz.XYZFile.read(path)
+
+    if model_counts[name] > 1:
+        struct = xyz.get_structure(xyz_file)
+        assert isinstance(struct, AtomArrayStack)
+        for i in range(model_counts[name]):
+            struct_i = xyz.get_structure(xyz_file, model=i)
+            assert type(struct_i) == AtomArray
+            assert np.all(struct[i].coord == struct_i.coord)
+    else:
+        struct = xyz.get_structure(xyz_file)
+        assert isinstance(struct, AtomArray)
