@@ -44,7 +44,7 @@ def retrieve_file_name_from_path(path):
     if "/" in path:
         name = path.split("/")[-1]
     elif "\\" in path:
-        name = path.splot("\\")[-1]
+        name = path.split("\\")[-1]
     else:
         raise ValueError(
             "Neither '/' nor '\\' used as path seperators"
