@@ -10,7 +10,6 @@ __all__ = [
 ]
 
 
-
 def get_structure(mol2_file):
     """
     Get an :class:`AtomArray` from the MOL2 File.
@@ -22,18 +21,18 @@ def get_structure(mol2_file):
     ----------
     mol2_file : MOL2File
         The MOL2File.
-    
+
     Returns
     -------
     array : AtomArray, AtomArrayStack
         Return an AtomArray or AtomArrayStack containing the structure or
-        structures depending on if file contains single or multiple models.        
+        structures depending on if file contains single or multiple models.
         If something other then `NO_CHARGE` is set in the charge_type field
-        of the according mol2 file, the AtomArray or AtomArrayStack will 
+        of the according mol2 file, the AtomArray or AtomArrayStack will
         contain the charge field.
     """
     return mol2_file.get_structure()
-    
+
 
 def set_structure(mol2_file, atoms):
     """
@@ -41,7 +40,7 @@ def set_structure(mol2_file, atoms):
 
     Ths function is a thin wrapper around
     :meth:`MOL2File.set_structure(atoms)`.
-    
+
     Parameters
     ----------
     mol2_file : MOL2File
@@ -53,21 +52,20 @@ def set_structure(mol2_file, atoms):
         MOL2 charge column.
     """
     mol2_file.set_structure(atoms)
-    
-    
+
 
 def get_charges(mol2_file):
     """
     Get an ndarray containing the partial charges from the MOL2File
 
-    Ths function is a thin wrapper around
+    This function is a thin wrapper around
     :meth:`MOL2File.get_charges()`.
 
     Parameters
     ----------
     xyz_file : XYZFile
         The XYZ File.
-    
+
     Returns
     -------
     array : AtomArray
@@ -76,8 +74,8 @@ def get_charges(mol2_file):
         All other annotation categories, except ``element`` are
         empty.
     """
-    return mol2_file.get_charges()    
-    
+    return mol2_file.get_charges()
+
 
 def set_charges(mol2_file, charges):
     """
@@ -92,8 +90,8 @@ def set_charges(mol2_file, charges):
     mol2_file: MOL2File
         The MOL2File
     charges: ndarray
-        A ndarray containing data with `float` type to be written as 
-        partial charges.           
-    
+        A ndarray containing data with `float` type to be written as
+        partial charges.
+
     """
-    return mol2_file.set_charges(charges)    
+    return mol2_file.set_charges(charges)

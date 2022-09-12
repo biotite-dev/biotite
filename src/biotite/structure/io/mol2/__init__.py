@@ -6,7 +6,8 @@
 The MOL format is used to depict atom positions and bonds for small
 molecules.
 This subpackage is used for reading and writing an :class:`AtomArray` or
-an :class:`AtomArrayStack` for a file containing multiple models in this format.
+an :class:`AtomArrayStack` for a file containing multiple models
+in this format.
 """
 
 __name__ = "biotite.structure.io.mol2"
