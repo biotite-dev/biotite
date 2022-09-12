@@ -35,6 +35,25 @@ model_counts = {
 }
 
 
+def retrieve_file_name_from_path(path):
+    """
+    Like the name says this function is a helper to get
+    the filename (without extension) from the absolute path.
+    In order to access the model_counts.
+    """
+    if "/" in path:
+        name = path.split("/")[-1]
+    elif "\\" in path:
+        name = path.splot("\\")[-1]
+    else:
+        raise ValueError(
+            "Neither '/' nor '\\' used as path seperators"
+        )
+        
+    name = name.split(".")[0]
+    return name
+
+
 def draw_random_struct(N_atoms):
     """
     This function is used to draw a randoms AtomArray with given
@@ -92,7 +111,7 @@ def test_model_count(path):
     Test the get_model_count function based on known number of models
     from the test caes listed in the dictionary above.
     """
-    name = path.split("/")[-1].split(".")[0]
+    name = retrieve_file_name_from_path(path)
     xyz_file = xyz.XYZFile.read(path)
     assert xyz.get_model_count(xyz_file) == model_counts[name]
 
@@ -106,7 +125,7 @@ def test_get_header(path):
     Test the get_model_count function based on known number of models
     from the test caes listed in the dictionary above.
     """
-    name = path.split("/")[-1].split(".")[0]
+    name = retrieve_file_name_from_path(path)
     xyz_file = xyz.XYZFile.read(path)
 
     if model_counts[name] > 1:
@@ -136,7 +155,7 @@ def test_set_header(path):
     Test if set header works on files with multiple models, based
     on model
     """
-    name = path.split("/")[-1].split(".")[0]
+    name = retrieve_file_name_from_path(path)
     xyz_file = xyz.XYZFile.read(path)
 
     if model_counts[name] > 1:
@@ -190,9 +209,8 @@ def test_get_structure(path):
     Test the get_structure function based on known number of models
     from the test cases listed in the dictionary above.
     """
-    name = path.split("/")[-1].split(".")[0]
+    name = retrieve_file_name_from_path(path)
     xyz_file = xyz.XYZFile.read(path)
-
     if model_counts[name] > 1:
         struct = xyz.get_structure(xyz_file)
         assert isinstance(struct, AtomArrayStack)
