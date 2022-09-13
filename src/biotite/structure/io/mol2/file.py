@@ -16,16 +16,21 @@ from ....file import TextFile
 class MOL2File(TextFile):
     """
     This class represents a file in MOL2 format.
+    If a completly new instance of this file is to be filled from an
+    AtomArray or an AtomArrayStack, use set_structure first and modify
+    the header afterwards with set_header. The reason for this is as
+    follows: set_structure will assume a skeleton header and automatically
+    generates as many lines as necessary for the structure as well as a
+    header (ignoring the molecule_comment line) to be written.
+
 
     Notes:
         - For multiple models the same header for all models is assumed.
         - As biotites charge field in the AtomArray and AtomArrayStack class
           is typed as int this class adds a field charges containing the
           real valued charges contained in MOL2 files.
-        - The heuristic function for deriving sybyl atom types doesn't work
-          yet, for now we only write C.ar in the according column as the
-          sybyl atom type is one of the necessary fields for a complete
-          MOL2File.
+        - The heuristic function for deriving sybyl might not fully work,
+          altough it does so for all the test cases.
 
     References
     ----------
@@ -114,7 +119,7 @@ class MOL2File(TextFile):
     ]
 
     @staticmethod
-    def get_sybyl_atom_type(atom, bonds, atom_id):
+    def transcribe_sybyl_atom_type(atom, atom_bonds, types, atom_id):
         """
         This function is meant to translate all occuring
         atoms into sybyl atom types based on their element and bonds. This
@@ -125,52 +130,61 @@ class MOL2File(TextFile):
 
         Parameters
         ----------
-            atom : Atom
-                The Atom object which is to be translated
-                into sybyl atom_type notation
+        atom : Atom
+            The Atom object which is to be translated
+            into sybyl atom_type notation
 
-            bonds: BondList
-                The BondList object of the respective bonds in the AtomArray.
-                Necessary as the sybyl atom types depend on the hybridiziation
-                heuristic.
+        bonds: BondList
+            The BondList object of the respective bonds in the AtomArray.
+            Necessary as the sybyl atom types depend on the hybridiziation
+            heuristic.
 
-            atom_id: int
-                The id of the current atom that is used in the bond list.
+        atom_id: int
+            The id of the current atom that is used in the bond list.
 
         Returns
         -------
-            sybyl_atom_type : str
-                The name of the atom based on hybridization and element
-                according to the sybyl atom types.
+        sybyl_atom_type : str
+            The name of the atom based on hybridization and element
+            according to the sybyl atom types.
 
         """
-        atom_bonds, types = bonds.get_bonds(atom_id)
+        N_bonds = np.where(atom_bonds != -1)[0].shape[0]
         if atom.element == "C":
             if 5 in types:
                 return "C.ar"
             else:
-                if len(atom_bonds) == 3:
+                if N_bonds == 3:
                     return "C.1"
-                elif len(atom_bonds) == 2:
+                elif N_bonds == 2:
                     return "C.2"
-                elif len(atom_bonds) == 1:
+                elif N_bonds == 1:
                     return "C.3"
                 return "C.3"
+
         if atom.element == "N":
             if 5 in types:
                 return "N.ar"
             else:
-                if len(atom_bonds) == 3:
+                if N_bonds == 3:
                     return "N.1"
-                elif len(atom_bonds) == 2:
+                elif N_bonds == 2:
                     return "N.2"
-                elif len(atom_bonds) == 1:
+                elif N_bonds == 1:
                     return "N.3"
+
         if atom.element == "O":
-            if len(atom_bonds) == 2:
+            if N_bonds == 2:
                 return "O.3"
-            elif len(atom_bonds) == 1:
+            elif N_bonds == 1:
                 return "O.2"
+            else:
+                msg = "Not implemented for element ["+str(atom.element) + "]"
+                msg += " and bonds :: ["+str(atom_bonds)+"]"
+                msg += " | types :: ["+str(types) + "]."
+                msg += " | len(bonds) :: " + str(N_bonds)
+                msg += " | 5 in types :: " + str(5 in types)
+                raise ValueError(msg)
 
         if atom.element == "S":
             return "S.3"
@@ -271,73 +285,103 @@ class MOL2File(TextFile):
 
     def __init__(self):
         super().__init__()
-        self.mol_name = ""
-        self.num_atoms = -1
-        self.num_bonds = -1
-        self.num_subst = -1
-        self.num_feat = -1
-        self.num_sets = -1
-        self.mol_type = ""
-        self.charge_type = ""
-        self.status_bits = ""
-        self.mol_comment = ""
-        self.charges = None
-        self.ind_molecule = -1
-        self.ind_atoms = -1
-        self.ind_bonds = -1
-        self.sybyl_atom_types = None
+        self._mol_name = None
+        self._num_atoms = None
+        self._num_bonds = None
+        self._num_subst = None
+        self._num_feat = None
+        self._num_sets = None
+        self._mol_type = None
+        self._charge_type = None
+        self._status_bits = None
+        self._mol_comment = None
+        self._charges = None
+        self._ind_molecule = None
+        self._ind_atoms = None
+        self._ind_bonds = None
+        self._sybyl_atom_types = None
+
+    def _get_number_of_molecules(self):
+        """
+        Calculates the number of molecules from the lines variable and updates
+        the according self._ind_molecule variable.
+        """
+        # check if MOL2File has previous content
+        if self._ind_molecule is None:
+            self._ind_molecule = [
+                    i for i, x in enumerate(
+                        self.lines
+                    ) if "@<TRIPOS>MOLECULE" in x
+            ]
+            if len(self._ind_molecule) == 0:
+                self._ind_molecule = [0]
+        # Only return 0 molecules if only @<TRIPOS>MOLECULE at index 0
+        # and also less then 6 lines => no coordinates contained
+        cond = self._ind_molecule == [0]
+        cond = cond and len(self.lines) <= 6
+        N_molecules = 0 if cond else len(self._ind_molecule)
+        return N_molecules
 
     def check_valid_mol2(self):
-        self.ind_molecule = [
+        self._ind_molecule = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>MOLECULE" in x
         ]
-        if len(self.ind_molecule) == 0:
+        if len(self._ind_molecule) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a MOLECULE section, therefore"
                 "it is not possibe to parse this file"
             )
 
-        self.ind_atoms = [
+        self._ind_atoms = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>ATOM" in x
         ]
-        if len(self.ind_atoms) == 0:
+        if len(self._ind_atoms) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a ATOM section, therefore"
                 "it is not possibe to parse this file"
             )
 
-        self.ind_bonds = [
+        self._ind_bonds = [
                 i for i, x in enumerate(self.lines) if "@<TRIPOS>BOND" in x
         ]
-        if len(self.ind_bonds) == 0:
+        if len(self._ind_bonds) == 0:
             raise ValueError(
                 "Mol2 File doesn't contain a BOND section, therefore"
                 "it is not possibe to parse this file"
             )
 
-        if len(self.ind_molecule) != len(self.ind_atoms):
+        if len(self._ind_molecule) != len(self._ind_atoms):
             raise ValueError(
                 "Mol2 File doesn't contain as many MOLECULE sections as "
                 "it does contain ATOM sections"
             )
 
-        if len(self.ind_molecule) != len(self.ind_bonds):
+        if len(self._ind_molecule) != len(self._ind_bonds):
             raise ValueError(
                 "Mol2 File doesn't contain as many MOLECULE sections as "
                 "it does contain BOND sections"
             )
 
-        if len(self.ind_bonds) != len(self.ind_atoms):
+        if len(self._ind_bonds) != len(self._ind_atoms):
             raise ValueError(
                 "Mol2 File doesn't contain as many BOND sections as it does"
                 "contain ATOM sections"
             )
 
-    def get_header(self):
+    def get_header(self, model=None):
         """
         Get the header from the MOL2 file, if the file contains multiple
-        models the assumption is made that those all have the same header
-        as a AtomArrayStack of different molecules can't be buil anyways.
+        models all headers are parsed and a list is returned for all
+        header fields. In this cases a single header can be retrieved by
+        specifying the model parameter.
+
+        Parameters
+        ----------
+        model: int, optional
+            Specifies for which of the models contained in this MOL2File
+            the according header should be returned.
+            If not specified this will return the header for all models,i.e.,
+            the according returns will be lists.
 
         Returns
         -------
@@ -361,37 +405,131 @@ class MOL2File(TextFile):
             Additional comments.
         """
         self.check_valid_mol2()
-        self.mol_name = self.lines[self.ind_molecule[0]+1]
-        numbers_line = self.lines[self.ind_molecule[0]+2]
-        numbers_parsed = [int(x) for x in numbers_line.strip().split(" ")]
-        self.num_atoms = numbers_parsed[0]
-        if len(numbers_parsed) > 1:
-            self.num_bonds = numbers_parsed[1]
-        if len(numbers_parsed) > 2:
-            self.num_subst = numbers_parsed[2]
-        if len(numbers_parsed) > 3:
-            self.num_feat = numbers_parsed[3]
-        if len(numbers_parsed) > 4:
-            self.num_sets = numbers_parsed[4]
+        # first set all according fields to empty lists
+        self._mol_name = []
+        self._num_atoms = []
+        self._num_bonds = []
+        self._num_subst = []
+        self._num_feat = []
+        self._num_sets = []
+        self._mol_type = []
+        self._charge_type = []
+        self._status_bits = []
+        self._mol_comment = []
+        # iterate through molecules and read headers based on
+        # index of @<TRIPOS>MOLECULE, which is used as offset
+        # within the self.lines variable for parsing.
+        for ind_mol in self._ind_molecule:
+            self._mol_name.append(self.lines[ind_mol+1])
+            numbers_line = self.lines[ind_mol+2]
+            numbers_parsed = [int(x) for x in numbers_line.strip().split(" ")]
+            self._num_atoms.append(numbers_parsed[0])
+            num_bonds = -1
+            num_subst = -1
+            num_feat = -1
+            num_sets = -1
+            mol_comment = ""
+            if len(numbers_parsed) > 1:
+                num_bonds = numbers_parsed[1]
 
-        self.mol_type = self.lines[self.ind_molecule[0]+3]
-        self.charge_type = self.lines[self.ind_molecule[0]+4]
-        self.status_bits = self.lines[self.ind_molecule[0]+5]
+            if len(numbers_parsed) > 2:
+                num_subst = numbers_parsed[2]
 
-        if "@" not in self.lines[self.ind_molecule[0]+6]:
-            self.mol_comment = self.lines[self.ind_molecule[0]+6]
+            if len(numbers_parsed) > 3:
+                num_feat = numbers_parsed[3]
 
-        return (
-            self.mol_name, self.num_atoms, self.mol_type,
-            self.charge_type, self.num_bonds, self.num_subst,
-            self.num_feat, self.num_sets, self.status_bits,
-            self.mol_comment
-        )
+            if len(numbers_parsed) > 4:
+                num_sets = numbers_parsed[4]
+
+            self._num_bonds.append(num_bonds)
+            self._num_subst.append(num_bonds)
+            self._num_feat.append(num_feat)
+            self._num_sets.append(num_sets)
+
+            self._mol_type.append(self.lines[ind_mol + 3])
+            self._charge_type.append(self.lines[ind_mol + 4])
+            self._status_bits.append(self.lines[ind_mol + 5])
+            if "@" not in self.lines[self._ind_molecule[0] + 6]:
+                mol_comment = self.lines[self._ind_molecule[0] + 6]
+            self._mol_comment.append(mol_comment)
+
+        # if there is only one model in file abuse possibly unset
+        # model parameter to get return only the header entries for this
+        # However, if model is specified and not 0 in this situation we want
+        # to raise the ValueError below.
+        if len(self._ind_molecule) == 1 and model is None or model == 0:
+            model = 0
+
+        if model is None:
+            return (
+                self._mol_name, self._num_atoms, self._mol_type,
+                self._charge_type, self._num_bonds, self._num_subst,
+                self._num_feat, self._num_sets, self._status_bits,
+                self._mol_comment
+            )
+        elif model < len(self._ind_molecule):
+            return (
+                self._mol_name[model], self._num_atoms[model],
+                self._mol_type[model], self._charge_type[model],
+                self._num_bonds[model], self._num_subst[model],
+                self._num_feat[model], self._num_sets[model],
+                self._status_bits[model], self._mol_comment[model]
+            )
+        else:
+            msg = "model = " + str(model) + " is not compatible with file"
+            msg += " that has " + str(len(self._ind_molecule)) + " many "
+            msg += " models."
+            raise ValueError(msg)
+
+    def _write_header(
+            self, mol_name, num_atoms, mol_type, charge_type,
+            num_bonds=-1, num_subst=-1, num_feat=-1, num_sets=-1,
+            status_bits="", mol_comment="", model=0
+    ):
+        """
+        Internal function used to write a single header after
+        self.lines has been either filled with as many empty lines
+        as needed before or is still filled from a loaded MOL2File.
+        """
+        N_molecules = len(self._ind_molecule)
+        if model >= N_molecules:
+            msg = "Can not write header of model = " + str(model)
+            msg += " with MOL2File containing " + str(N_molecules)
+            msg += " models."
+            raise ValueError(msg)
+        else:
+            mol_index = self._ind_molecule[model]
+            if mol_index > len(self.lines):
+                msg = "Can not write header to empty file."
+                msg += " Use set_structure before set_header."
+                msg += "In set_structure a skeleton header will be"
+                msg += "generated, which can then be overwritten."
+                raise ValueError(msg)
+
+            self.lines[mol_index] = "@<TRIPOS>MOLECULE"
+            self.lines[mol_index+1] = mol_name
+            line = " " + str(num_atoms)
+            if num_bonds >= 0:
+                line += " " + str(num_bonds)
+                if num_subst >= 0:
+                    line += " " + str(num_subst)
+                    if num_feat >= 0:
+                        line += " " + str(num_feat)
+                        if num_sets >= 0:
+                            line += " " + str(num_sets)
+
+            self.lines[mol_index+2] = line
+            self.lines[mol_index+3] = mol_type
+            self.lines[mol_index+4] = charge_type
+            self.lines[mol_index+5] = status_bits
+            if status_bits != "":
+                self.lines[mol_index+6] = mol_comment
 
     def set_header(
             self, mol_name, num_atoms, mol_type, charge_type,
             num_bonds=-1, num_subst=-1, num_feat=-1, num_sets=-1,
-            status_bits="", mol_comment=""
+            status_bits="", mol_comment="",
+            model=None,
     ):
         """
         Set the header for the MOL2 file according the following structure:
@@ -402,6 +540,13 @@ class MOL2File(TextFile):
         charge_type
         [status_bits
         [mol_comment]]
+
+        For a file containing multiple different structures, the model
+        parameter can be used to set the header of the according model. For a
+        file containing multiple models of the same Atom, i.e, in the case
+        where an AtomArrayStack can be used, the same header is assumed for
+        all models. This will be assumed if the MOL2File contains multiple
+        models and now model parameter was given.
 
         taken from
         https://chemicbook.com/2021/02/20/mol2-file-format-explained-for-beginners-part-2.html
@@ -433,27 +578,20 @@ class MOL2File(TextFile):
         status_bits: str, optional
 
         mol_comment: str, optional
+
+        model: int, optional
+            Specifies for which of the models contained in this MOL2File
+            the according header should be set.
+            If not specified the header of the first
+
         """
-        self.mol_name = mol_name
-        self.num_atoms = num_atoms
-
-        if num_bonds >= 0:
-            self.num_bonds = num_bonds
-        if num_subst >= 0:
-            self.num_subst = num_subst
-
-        if num_feat >= 0:
-            self.num_feat = num_feat
-
-        if num_sets >= 0:
-            self.num_sets = num_sets
-
+        # define header for potential output via Exceptions
         header = [
             mol_name, num_atoms, mol_type, charge_type,
             num_bonds, num_subst, num_feat, num_sets,
             status_bits, mol_comment
         ]
-
+        # check if mol_type is valid
         if mol_type != "":
             cond = mol_type in MOL2File.supported_mol_types
             if not cond:
@@ -464,7 +602,7 @@ class MOL2File(TextFile):
                 msg += "header :: " + str(header) + " \n"
                 raise ValueError(msg)
 
-        self.mol_type = mol_type
+        # check if charge_type is valid
         if charge_type != "":
             cond = charge_type in MOL2File.supported_charge_types
             if not cond:
@@ -474,46 +612,65 @@ class MOL2File(TextFile):
                 msg += str(MOL2File.supported_charge_types) + "\n"
                 raise ValueError(msg)
 
-        self.charge_type = charge_type
-        self.status_bits = status_bits
-        self.mol_comment = mol_comment
-        if self.status_bits != "":
-            self.lines = [""]*5
-            self.lines[4] = self.status_bits
+        N_molecules = self._get_number_of_molecules()
+        N_molecules = N_molecules if N_molecules != 0 else 1
+        # no model given so simply overwrite member variables with list
+        # containing of same data and write said data to all the headers
+        if model is None:
+            self._mol_name = [mol_name]*N_molecules
+            self._num_atoms = [num_atoms]*N_molecules
+            self._num_bonds = [num_bonds]*N_molecules
+            self._num_subst = [num_subst]*N_molecules
+            self._num_feat = [num_feat]*N_molecules
+            self._num_sets = [num_sets]*N_molecules
+            self._mol_type = [mol_type]*N_molecules
+            self._charge_type = [charge_type]*N_molecules
+            self._status_bits = [status_bits]*N_molecules
+            self._mol_comment = [mol_comment]*N_molecules
+            for model in range(N_molecules):
+                self._write_header(
+                    mol_name, num_atoms, mol_type,
+                    charge_type, num_bonds, num_subst,
+                    num_feat, num_sets, status_bits,
+                    mol_comment, model=model
+                )
+        elif model < N_molecules:
+            self._mol_name[model] = mol_name
+            self._num_atoms[model] = num_atoms
+            self._num_bonds[model] = num_bonds
+            self._num_subst[model] = num_subst
+            self._num_feat[model] = num_feat
+            self._num_sets[model] = num_sets
+            self._mol_type[model] = mol_type
+            self._charge_type[model] = charge_type
+            self._status_bits[model] = status_bits
+            self._mol_comment[model] = mol_comment
+            self._write_header(
+                mol_name, num_atoms, mol_type,
+                charge_type, num_bonds, num_subst,
+                num_feat, num_sets, status_bits,
+                mol_comment, model=model
+            )
         else:
-            self.lines = [""]*6
-            self.lines[4] = self.status_bits
-            self.lines[5] = self.mol_comment
+            msg = "Can not write header of model = " + str(model)
+            msg += " with MOL2File containing " + str(N_molecules)
+            msg += " models."
+            raise ValueError(msg)
 
-        self.lines[0] = "@<TRIPOS>MOLECULE"
-        self.ind_molecule = [0]
-        self.lines[1] = self.mol_name
-        line = " " + str(self.num_atoms)
-        if self.num_bonds >= 0:
-            line += " " + str(self.num_bonds)
-            if self.num_subst >= 0:
-                line += " " + str(self.num_subst)
-                if self.num_feat >= 0:
-                    line += " " + str(self.num_feat)
-                    if self.num_sets >= 0:
-                        line += " " + str(self.num_sets)
-
-        self.lines[2] = line
-        self.lines[3] = self.mol_type
-        self.lines[4] = self.charge_type
-        self.lines[5] = self.status_bits
-        if self.status_bits != "":
-            self.lines[6] = self.mol_comment
-
-        self.ind_atoms = [len(self.lines)]
-
-    def get_structure(self):
+    def get_structure(self, model=None):
         """
         Get an :class:`AtomArray` from the MOL2 file.
 
+        Parameters
+        ----------
+        model: int, optional
+            If this parameter is set, the according substructure will
+            be returned. This can be used to read single structures from
+            a multi model MOL2File, containing different molecules.
+
         Returns
         -------
-        array : AtomArray or AtomArrayStack
+        array: AtomArray or AtomArrayStack
             This :class:`AtomArray` contains the optional ``charge`` annotation
             and has an associated :class:`BondList`. Furthermore the optional
             ``atom_id`` will be set based upon the first column of the
@@ -524,37 +681,38 @@ class MOL2File(TextFile):
             ``atom_name`` category, and according elements will be derived
              from the atom_name and sybyl_atom_type.
         """
-
         self.get_header()
+        N_molecules = self._get_number_of_molecules()
         atom_array_stack = []
         # instantiate atom array and bonds based on number of atoms information
-        self.sybyl_atom_types = []
-        for i in range(len(self.ind_atoms)):
-            atoms = AtomArray(self.num_atoms)
-            if self.charge_type != "NO_CHARGES":
+        self._sybyl_atom_types = [[] for i in range(N_molecules)]
+        for i in range(N_molecules):
+            N_atoms = self._num_atoms[i]
+            atoms = AtomArray(N_atoms)
+            if self._charge_type != "NO_CHARGES":
                 atoms.add_annotation("charge", int)
-                if self.charges is None:
-                    self.charges = np.zeros(
-                        self.num_atoms
+                if self._charges is None:
+                    self._charges = np.zeros(
+                        N_atoms
                     ).reshape(
-                        (1, self.num_atoms)
+                        (1, N_atoms)
                     )
                 else:
-                    self.charges = np.vstack(
+                    self._charges = np.vstack(
                         (
-                            self.charges,
-                            np.zeros(self.num_atoms)
+                            self._charges,
+                            np.zeros(N_atoms)
                         )
                     )
 
-            bonds = BondList(self.num_atoms)
+            bonds = BondList(N_atoms)
             # Iterate through all the atom lines by stating from line after
             # @<TRIPOS>ATOM until line starting with @ is reached.
             # All lines in between are assumed to be atom lines and are parsed
             # into atoms accodringly.
-            index = self.ind_atoms[i]+1
+            index = self._ind_atoms[i]+1
             j = 0
-            atom_type_sybl_row = [""]*self.num_atoms
+            atom_type_sybl_row = [""]*N_atoms
             atom_names = []
             while "@" not in self.lines[index]:
                 line = [
@@ -582,8 +740,8 @@ class MOL2File(TextFile):
                 if len(line) > 9:
                     status_bits = line[9]
 
-                if self.charge_type != "NO_CHARGES":
-                    self.charges[i][j] = charge
+                if self._charge_type != "NO_CHARGES":
+                    self._charges[i][j] = charge
                     atom_i = Atom(
                         [x_coord, y_coord, z_coord],
                         charge=int(np.rint(charge))
@@ -620,7 +778,7 @@ class MOL2File(TextFile):
                 )
                 is_atom_name_NOTEQUAL_element = np.any(filtered)
 
-                index = self.ind_atoms[i]+1
+                index = self._ind_atoms[i]+1
                 j = 0
                 while "@" not in self.lines[index]:
                     atom_j = atoms[j]
@@ -630,7 +788,7 @@ class MOL2File(TextFile):
                             atom_names[j],
                             atom_type_sybl_row[j]
                         )
-                        if self.charge_type != "NO_CHARGES":
+                        if self._charge_type[i] != "NO_CHARGES":
                             atoms[j] = Atom(
                                 [
                                     atoms[j].coord[0],
@@ -667,7 +825,7 @@ class MOL2File(TextFile):
             # @<TRIPOS>BOND until line starting with @ is reached.
             # All lines in between are assumed to be atom lines and are parsed
             # into atoms accodringly.
-            index = self.ind_bonds[i] + 1
+            index = self._ind_bonds[i] + 1
             while index < len(self.lines) and "@" not in self.lines[index]:
                 line = [
                     x for x in self.lines[index].strip().split(" ") if x != ''
@@ -691,16 +849,24 @@ class MOL2File(TextFile):
 
             atoms.bonds = bonds
             atom_array_stack.append(atoms)
-            self.sybyl_atom_types.append(atom_type_sybl_row)
+            self._sybyl_atom_types[i].append(atom_type_sybl_row)
 
         if len(atom_array_stack) == 1:
             return atom_array_stack[0]
+        elif model is not None:
+            if model < len(atom_array_stack):
+                return atom_array_stack[model]
+            else:
+                msg = "Given model = " + str(model) + " value, incompatible"
+                msg += " with MOL2File containing only "
+                msg += str(len(atom_array_stack)) + " many models."
+                raise ValueError(msg)
         else:
             return struc.stack(atom_array_stack)
 
     def __append_atom_array(self, atoms, charges=None):
         """
-        Internal function that is used to write a single atom
+        Internal function that is used to append a single atom
         to the lines member variable.
         """
         n_atoms = atoms.shape[0]
@@ -709,6 +875,7 @@ class MOL2File(TextFile):
         if charges is not None:
             assert len(charges) == len(atoms)
 
+        bonds, types = atoms.bonds.get_all_bonds()
         for i, atom in enumerate(atoms):
             atom_id = i+1
             if atoms_has_atom_ids:
@@ -723,8 +890,8 @@ class MOL2File(TextFile):
             line += "{:>10.4f}".format(atom.coord[1])
             line += "{:>10.4f}".format(atom.coord[2])
             line += " {:<8}".format(
-                MOL2File.get_sybyl_atom_type(
-                    atom, atoms.bonds, i
+                MOL2File.transcribe_sybyl_atom_type(
+                    atom, bonds[i], types[i], i
                 )
             )
             if atom.res_id != 0:
@@ -733,7 +900,7 @@ class MOL2File(TextFile):
                 if atom.res_name != "":
                     line += "  " + str(atom.res_name)
 
-                    if self.charge_type != "NO_CHARGES":
+                    if self._charge_type != "NO_CHARGES":
                         line += "       "
                         if charges is not None:
                             line += " {: .{}f}".format(charges[i], 4)
@@ -759,6 +926,10 @@ class MOL2File(TextFile):
         not covered yet and some two letter elements might produce an
         error as they might not yet be added to the static
         MOL2File.elements_twoLetters array.
+        Also, this function doesn't support setting specific substructures in
+        an multi model MOL2File based on a model parameter yet.
+        This is reflected in self._charges which if previously read from
+        an MOL2File needs to be set self._charges[0,:].
 
         Parameters
         ----------
@@ -777,6 +948,7 @@ class MOL2File(TextFile):
             def isArrayStack(x):
                 return isinstance(x, AtomArrayStack)
             # set skeleton header for file where set_header was not invoked
+            self.lines = [""]*6
             self.set_header(
                 "",
                 atoms.shape[1] if isArrayStack(atoms) else atoms.shape[0],
@@ -784,59 +956,67 @@ class MOL2File(TextFile):
                 "NO_CHARGES" if atoms.charge is None else "USER_CHARGES"
             )
 
-        header_lines = self.lines[:self.ind_atoms[0]]
+        if self._ind_atoms is None:
+            # if _ind_atoms is None there was no content before
+            # this means a skeleton header has been written and we can set the
+            # maximum index consider to the number of lines
+            self._ind_atoms = [len(self.lines)]
+
+        # if _ind_atoms was not None this will consider mol_comments
+        header_lines = self.lines[:self._ind_atoms[0]]
         # since setting new structure delete all previously stored
         # structure information if any
-        self.lines = self.lines[:self.ind_atoms[0]]
+        self.lines = self.lines[:self._ind_atoms[0]]
+
+        # check if bonds given
+        if atoms.bonds is None:
+            raise BadStructureError(
+                "Input AtomArrayStack has no associated BondList"
+            )
+
+        # check charges type
+        if self._charge_type != "NO_CHARGES" and atoms.charge is None:
+            msg = "Specified charge type "
+            msg += str(self._charge_type) + ".\n"
+            msg += "but one of given AtomArrays has no charges"
+            raise ValueError(msg)
+
+        # if no partial charges set before set_structure
+        # use atoms.charge field instead
+        if self._charges is None and atoms.charge is not None:
+            self._charges = atoms.charge
+        elif self._charges is not None and len(self._charges.shape) == 2:
+            self._charges = self._charges[0, :]
+
+        # check if number of atoms match with header
+        cond1 = isinstance(atoms, AtomArray)
+        cond1 = cond1 and (int(self._num_atoms[0]) == int(atoms.shape[0]))
+        cond2 = isinstance(atoms, AtomArrayStack)
+        cond2 = cond2 and (int(self._num_atoms[0]) == int(atoms.shape[1]))
+        if (not cond1) and (not cond2):
+            msg = "Mismatch between number of atoms in header :: "
+            msg += str(self._num_atoms[0]) + " and number of atoms in given"
+            if isinstance(atoms, AtomArray):
+                msg += " AtomArray :: " + str(atoms.shape[0]) + " "
+            else:
+                msg += " AtomArrayStack :: " + str(atoms.shape[1]) + " "
+            raise ValueError(msg)
+
         if isinstance(atoms, AtomArray):
-            if atoms.bonds is None:
-                raise BadStructureError(
-                    "Input AtomArrayStack has no associated BondList"
-                )
-
-            if self.charge_type != "NO_CHARGES" and atoms.charge is None:
-                msg = "Specified charge type " + str(self.charge_type) + ".\n"
-                msg += "but given AtomArray has no charges"
-                raise ValueError
-            if self.num_atoms != atoms.shape[0]:
-                msg = "Mismatch between number of atoms in header ["
-                msg += str(self.num_atoms) + "] and number of atoms in given"
-                msg += "AtomArray [" + str(atoms.shape[0]) + "]"
-                raise ValueError(msg)
-
-            if self.charges is not None:
-                self.__append_atom_array(atoms, self.charges)
+            if self._charges is not None:
+                self.__append_atom_array(atoms, self._charges)
             else:
                 self.__append_atom_array(atoms)
-
         elif isinstance(atoms, AtomArrayStack):
-            if atoms.bonds is None:
-                raise BadStructureError(
-                    "Input AtomArrayStack has no associated BondList"
-                )
-
-            if self.charge_type != "NO_CHARGES" and atoms.charge is None:
-                msg = "Specified charge type "
-                msg += str(self.charge_type) + ".\n"
-                msg += "but one of given AtomArrays has no charges"
-                raise ValueError(msg)
-
-            if self.num_atoms != atoms.shape[1]:
-                msg = "Mismatch between number of atoms in header ["
-                msg += str(self.num_atoms) + "] and number of atoms in given"
-                msg += "AtomArrayStack [" + str(atoms.shape[1]) + "]"
-                raise ValueError(msg)
-
             n_models = atoms.shape[0]
-            n_atoms = atoms[0].shape[0]
-            n_bonds = atoms[0].bonds.as_array().shape[0]
             for i, atoms_i in enumerate(atoms):
+                # as mentioned the same header will be prepended to all
+                # the other models
                 if i > 0:
-                    for line in header_lines:
-                        self.lines.append(line)
+                    self.lines += header_lines
 
-                if self.charges is not None:
-                    self.__append_atom_array(atoms_i, self.charges[i])
+                if self._charges is not None:
+                    self.__append_atom_array(atoms_i, self._charges)
                 else:
                     self.__append_atom_array(atoms_i)
 
@@ -846,8 +1026,7 @@ class MOL2File(TextFile):
         if the ndarray dimension fit with a struture already contained as
         this might make the process of setting charges to a new empty
         MOL2File not containing a structure yet overly complicated.
-        It is left to the user to get this right, otherwise latest
-        at the stage of writing the file an error will occur.
+        It is left to the user to get this right.
 
         Parameters
         ----------
@@ -857,7 +1036,17 @@ class MOL2File(TextFile):
             If ndarray has any other type an according error will be raised.
         """
         if np.issubdtype(charges.dtype, np.floating):
-            self.charges = charges
+            struct = None
+            header = None
+            N_molecules = self._get_number_of_molecules()
+            if N_molecules != 0:
+                header = self.get_header(model=0)
+                struct = self.get_structure()
+
+            self._charges = charges
+            if N_molecules != 0:
+                self.set_structure(struct)
+                self.set_header(*header)
         else:
             raise ValueError("Non floating type provided for charges")
 
@@ -876,16 +1065,31 @@ class MOL2File(TextFile):
             Either ndarray of type `float` or None if no partial_charges
             where contained.
         """
-        if self.charge_type == "NO_CHARGES":
+        if self._charge_type == "NO_CHARGES":
             msg = "The read MOl2File had NO_CHARGES set, therefore"
             msg += "no partial charges where contained in the file."
             warning.warn(msg)
             return None
 
-        if self.charges is None:
-            _ = self.get_structure()
+        # If no charges read yet, call get_structure to read
+        # structure in, including charges.
+        if self._charges is None:
+            self.get_structure()
 
-        if len(self.charges) == 1:
-            return self.charges[0]
+        if len(self._charges) == 1:
+            return self._charges[0]
         else:
-            return self.charges
+            return self._charges
+
+    def get_model_count(self):
+        """
+        Get the number of models contained in the MOL2File.
+
+        Returns
+        -------
+        model_count : int
+            The number of models.
+        """
+        if self._ind_molecule is None:
+            self.check_valid_mol2()
+        return len(self._ind_molecule)

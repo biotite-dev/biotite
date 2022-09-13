@@ -6,11 +6,12 @@ __name__ = "biotite.structure.io.mol2"
 __author__ = "Benjamin E. Mayer"
 __all__ = [
     "get_structure", "set_structure",
-    "get_charges", "set_charges"
+    "get_charges", "set_charges",
+    "get_model_count"
 ]
 
 
-def get_structure(mol2_file):
+def get_structure(mol2_file, model=None):
     """
     Get an :class:`AtomArray` from the MOL2 File.
 
@@ -31,7 +32,7 @@ def get_structure(mol2_file):
         of the according mol2 file, the AtomArray or AtomArrayStack will
         contain the charge field.
     """
-    return mol2_file.get_structure()
+    return mol2_file.get_structure(model)
 
 
 def set_structure(mol2_file, atoms):
@@ -95,3 +96,18 @@ def set_charges(mol2_file, charges):
 
     """
     return mol2_file.set_charges(charges)
+
+
+def get_model_count(mol2_file):
+    """
+    Get the number of models contained in the xyz file.
+
+    This function is a thin wrapper around
+    :meth:`MOL2File.get_model_count()`.
+
+    Returns
+    -------
+    model_count : int
+        The number of models.
+    """
+    return mol2_file.get_model_count()
