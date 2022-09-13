@@ -48,11 +48,11 @@ def test_header_conversion():
         [False, True]
     )
 )
+@pytest.mark.filterwarnings("ignore:The line")
 def test_structure_conversion(path, omit_charge):
     """
     After reading a MOL file, writing the structure back to a new file
     and reading it again should give the same structure.
-
     In this case an SDF file is used, but it is compatible with the
     MOL format.
     """
@@ -101,6 +101,7 @@ def cond(x):
         glob.glob(join(data_dir("structure"), "molecules", "*.mol")),
     )
 )
+@pytest.mark.filterwarnings()
 def test_pdbx_consistency(path):
     """
     Check if the structure parsed from a MOL file is equal to the same

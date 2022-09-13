@@ -21,7 +21,7 @@ N_HEADER = 3
 DATE_FORMAT = "%d%m%y%H%M"
 
 
-class MOLFile(TextFile):
+class MOLFile(TextFile):  
     """
     This class represents a file in MOL format, that is used to store
     structure information for small molecules. :footcite:`Dalby1992`
@@ -107,8 +107,6 @@ class MOLFile(TextFile):
         mol_name        = self.lines[0].strip()
         initials        = self.lines[1][0:2].strip()
         program         = self.lines[1][2:10].strip()
-
-
         # sometimes the string can not be interpreted as datetime
         # in those cases instead of failing simply warn the user
         time = None       
@@ -119,7 +117,10 @@ class MOLFile(TextFile):
             )
         except:
             line = format(self.lines[1][10:20])
-            warn("{} could not be interpreted as datetime".format(line))
+            msg = "The line: " + str(line) + " could not be interpreted"
+            msg += " as datetime. Storing it as string"
+            msg += " in the time field instead."
+            warn(UserWarning(msg))
 
                         
         dimensions      = self.lines[1][20:22].strip()
