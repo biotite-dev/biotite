@@ -154,11 +154,11 @@ class MOL2File(TextFile):
             if 5 in types:
                 return "C.ar"
             else:
-                if N_bonds == 3:
+                if N_bonds == 2:
                     return "C.1"
-                elif N_bonds == 2:
+                elif N_bonds == 3:
                     return "C.2"
-                elif N_bonds == 1:
+                elif N_bonds == 4:
                     return "C.3"
                 return "C.3"
 
@@ -166,12 +166,16 @@ class MOL2File(TextFile):
             if 5 in types:
                 return "N.ar"
             else:
-                if N_bonds == 3:
+                if N_bonds == 1:
                     return "N.1"
                 elif N_bonds == 2:
                     return "N.2"
-                elif N_bonds == 1:
+                elif N_bonds == 3:
                     return "N.3"
+                else:
+                    msg = str(N_bonds) + " bonds with element :: " + str("N")
+                    msg += " not implemented."
+                    raise ValueError(msg)                                        
 
         if atom.element == "O":
             if N_bonds == 2:
@@ -898,10 +902,11 @@ class MOL2File(TextFile):
                 line += str(atom.res_id)
 
                 if atom.res_name != "":
-                    line += "  " + str(atom.res_name)
+                    line += "  " + str(atom.res_name)+str(atom.res_id)
+                    
 
                     if self._charge_type != "NO_CHARGES":
-                        line += "       "
+                        line += "      "
                         if charges is not None:
                             line += " {: .{}f}".format(charges[i], 4)
                         else:
