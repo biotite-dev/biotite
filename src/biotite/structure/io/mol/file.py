@@ -18,10 +18,10 @@ from ...bonds import BondType
 
 # Number of header lines
 N_HEADER = 3
-DATE_FORMAT = "%d%m%y%H%M"
+DATE_FORMATS = ["%d%m%y%H%M", "%m%d%y%H%M"]
 
 
-class MOLFile(TextFile):  
+class MOLFile(TextFile):
     """
     This class represents a file in MOL format, that is used to store
     structure information for small molecules. :footcite:`Dalby1992`
@@ -44,7 +44,9 @@ class MOLFile(TextFile):
     --------
 
     >>> from os.path import join
-    >>> mol_file = MOLFile.read(join(path_to_structures, "molecules", "TYR.sdf"))
+    >>> mol_file = MOLFile.read(
+    ...     join(path_to_structures, "molecules", "TYR.sdf")
+    ... )
     >>> atom_array = mol_file.get_structure()
     >>> print(atom_array)
                 0             N         1.320    0.952    1.428
@@ -104,33 +106,40 @@ class MOLFile(TextFile):
         comments : str
             Additional comments.
         """
-        mol_name        = self.lines[0].strip()
-        initials        = self.lines[1][0:2].strip()
-        program         = self.lines[1][2:10].strip()
+        mol_name = self.lines[0].strip()
+        initials = self.lines[1][0:2].strip()
+        program = self.lines[1][2:10].strip()
         # sometimes the string can not be interpreted as datetime
         # in those cases instead of failing simply warn the user
-        time = None       
-        try:
-            time        = datetime.datetime.strptime(
-                self.lines[1][10:20],
-                DATE_FORMAT
-            )
-        except:
-            line = format(self.lines[1][10:20])
-            msg = "The line: " + str(line) + " could not be interpreted"
-            msg += " as datetime. Storing it as string"
-            msg += " in the time field instead."
-            warn(UserWarning(msg))
+        time = None
+        if len(self.lines[1][10:20]) > 1:
+            time_parsing_succesfull = False
+            msg_last = ""
+            for format_i in DATE_FORMATS:
+                try:
+                    time = datetime.datetime.strptime(
+                        self.lines[1][10:20],
+                        format_i
+                    )
+                    time_parsing_succesfull = True
+                    break
+                except ValueError:
+                    msg_last = self.lines[1][10:20].strip()[:len(format_i)]
+                    msg_last += " could not be interpreted as datetime"
 
-                        
-        dimensions      = self.lines[1][20:22].strip()
+            if not time_parsing_succesfull:
+                warn(UserWarning(msg_last))
+                time = self.lines[1][10:20]
+
+        dimensions = self.lines[1][20:22].strip()
         scaling_factors = self.lines[1][22:34].strip()
-        energy          = self.lines[1][34:46].strip()
+        energy = self.lines[1][34:46].strip()
         registry_number = self.lines[1][46:52].strip()
-        comments        = self.lines[2].strip()
-        return mol_name, initials, program, time, dimensions, \
-               scaling_factors, energy, registry_number, comments
-
+        comments = self.lines[2].strip()
+        return (
+            mol_name, initials, program, time, dimensions,
+            scaling_factors, energy, registry_number, comments
+        )
 
     def set_header(self, mol_name, initials="", program="", time=None,
                    dimensions="", scaling_factors="", energy="",
@@ -159,9 +168,18 @@ class MOLFile(TextFile):
         comments : str, optional
             Additional comments.
         """
-        if time is None:
+        time_str = ""
+        if time is not None and type(time) is datetime.datetime:
+            for format_i in DATE_FORMATS:
+                try:
+                    time_str = time.strftime(format_i)
+                    break
+                except ValueError:
+                    time_str = time
+        # only fill with local time if nothing was provided via time
+        if len(time_str) == 0:
             time = datetime.datetime.now()
-        time_str = time.strftime(DATE_FORMAT)
+            time_str = time.strftime(DATE_FORMATS[0])
 
         self.lines[0] = str(mol_name)
         self.lines[1] = (
@@ -174,7 +192,6 @@ class MOLFile(TextFile):
             f"{registry_number:>6}"
         )
         self.lines[2] = str(comments)
-
 
     def get_structure(self):
         """
@@ -192,7 +209,6 @@ class MOLFile(TextFile):
         if len(ctab_lines) == 0:
             raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
-
 
     def set_structure(self, atoms, default_bond_type=BondType.ANY):
         """
