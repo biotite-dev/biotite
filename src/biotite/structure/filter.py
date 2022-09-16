@@ -25,7 +25,14 @@ _ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
 
 _nucleotide_list = nucleotide_names()
 
-_solvent_list = ["HOH","SOL"]
+_solvent_list = ('1PE', '2HT', '2PE', '7PE', 'ACT', 'BEN', 'BME', 'BOG', 'BTB',
+                 'BU3', 'BUD', 'CIT', 'COM', 'CXS', 'DIO', 'DMS', 'DTD', 'DTT',
+                 'DTV', 'DVT', 'EDO', 'EOH', 'EPE', 'FLC', 'GBL', 'GG5', 'GLC',
+                 'GOL', 'HC4', 'HOH', 'HSJ', 'IPH', 'MES', 'MG8', 'MLA', 'MLI',
+                 'MOH', 'MPD', 'MRD', 'MSE', 'MXE', 'MYR', 'OCT', 'P4C', 'P4G',
+                 'P6G', 'PEG', 'PG0', 'PG4', 'PGE', 'PGF', 'PHU', 'PTL', 'SGM',
+                 'SIN', 'SOL', 'SRT', 'TAM', 'TAR', 'TBR', 'TCE', 'TFA', 'TLA',
+                 'TMA', 'TRS')
 
 
 def filter_monoatomic_ions(array):
@@ -49,7 +56,7 @@ def filter_monoatomic_ions(array):
     return (array.res_name == array.element)
 
 
-def filter_solvent(array):
+def filter_solvent(array, solvents=_solvent_list):
     """
     Filter all atoms of one array that are part of the solvent.
 
@@ -57,6 +64,8 @@ def filter_solvent(array):
     ----------
     array : AtomArray or AtomArrayStack
         The array to be filtered.
+    solvents: list or tuple
+        The list of solvent PDB 3-letter codes.
 
     Returns
     -------
@@ -64,7 +73,7 @@ def filter_solvent(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
-    return np.in1d(array.res_name, _solvent_list)
+    return np.in1d(array.res_name, solvents)
 
 
 def filter_nucleotides(array):
