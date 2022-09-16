@@ -9,6 +9,8 @@ __all__ = ["File", "TextFile", "InvalidFileError"]
 import abc
 import io
 import warnings
+from pathlib import Path
+
 from .copyable import Copyable
 import copy
 
@@ -50,7 +52,6 @@ class File(Copyable, metaclass=abc.ABCMeta):
             representing the parsed file.
         """
         pass
-        
             
     def _deprecated_read(self, file, *args, **kwargs):
         """
@@ -104,7 +105,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
     @classmethod
     def read(cls, file, *args, **kwargs):
         # File name
-        if isinstance(file, str):
+        if isinstance(file, str) or isinstance(file, Path):
             with open(file, "r") as f:
                 lines = f.read().splitlines()
         # File object
@@ -133,7 +134,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The current line in the file.
         """
         # File name
-        if isinstance(file, str):
+        if isinstance(file, str) or isinstance(file, Path):
             with open(file, "r") as f:
                 yield from f
         # File object
@@ -153,7 +154,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The file to be written to.
             Alternatively a file path can be supplied.
         """
-        if isinstance(file, str):
+        if isinstance(file, str) or isinstance(file, Path):
             with open(file, "w") as f:
                 f.write("\n".join(self.lines) + "\n")
         else:
@@ -183,7 +184,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The lines of text to be written.
             Must not include line break characters.
         """
-        if isinstance(file, str):
+        if isinstance(file, str) or isinstance(file, Path):
             with open(file, "w") as f:
                 for line in lines:
                     f.write(line + "\n")
@@ -198,7 +199,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         clone.lines = copy.copy(self.lines)
     
     def __str__(self):
-        return("\n".join(self.lines))
+        return "\n".join(self.lines)
 
 
 class InvalidFileError(Exception):
