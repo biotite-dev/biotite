@@ -8,22 +8,29 @@ arrays and atom array stacks.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann, Tom Müller"
+__author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
-           "filter_amino_acids", "filter_backbone", "filter_intersection",
-           "filter_first_altloc", "filter_highest_occupancy_altloc"]
+           "filter_canonical_nucleotides", "filter_amino_acids", 
+           "filter_canonical_amino_acids", "filter_carbohydrates" 
+           "filter_backbone", "filter_intersection", "filter_first_altloc", 
+           "filter_highest_occupancy_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .residues import get_residue_starts
 from .info.nucleotides import nucleotide_names
+from .info.amino_acids import amino_acid_names
+from .info.carbohydrates import carbohydrate_names
 
 
-_ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
-                "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
-                "MSE", "ASX", "GLX", "SEC", "UNK"]
+_canonical_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
+                      "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
+                      "TRP","TYR","VAL", "SEC"]
+_canonical_nucleotide_list = ["A", "DA", "G", "DG", "C", "DC", "U", "DT"]
 
 _nucleotide_list = nucleotide_names()
+_amino_acid_list = amino_acid_names()
+_carbohydrate_list = carbohydrate_names()
 
 _solvent_list = ["HOH","SOL"]
 
