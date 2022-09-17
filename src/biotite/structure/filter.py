@@ -71,7 +71,25 @@ def filter_solvent(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
-    return np.in1d(array.res_name, _solvent_list)
+    return np.isin(array.res_name, _solvent_list)
+
+
+def filter_canonical_nucleotides(array):
+    """
+    Filter all atoms of one array that belong to canonical nucleotides.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a canonical nucleotide.
+    """
+    return np.isin(array.res_name, _canonical_nucleotide_list)
 
 
 def filter_nucleotides(array):
@@ -92,6 +110,25 @@ def filter_nucleotides(array):
     return np.isin(array.res_name, _nucleotide_list)
 
 
+def filter_canonical_amino_acids(array):
+    """
+    Filter all atoms of one array that belong to canonical amino acid 
+    residues.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a canonical amino acid residue.
+    """
+    return ( np.isin(array.res_name, _canonical_aa_list) & (array.res_id != -1) )
+
+
 def filter_amino_acids(array):
     """
     Filter all atoms of one array that belong to amino acid residues.
@@ -107,7 +144,25 @@ def filter_amino_acids(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
     """
-    return ( np.in1d(array.res_name, _ext_aa_list) & (array.res_id != -1) )
+    return ( np.isin(array.res_name, _amino_acid_list) & (array.res_id != -1) )
+
+
+def filter_carbohydrates(array):
+    """
+    Filter all atoms of one array that belong to carbohydrates.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a carbohydrate.
+    """
+    return np.isin(array.res_name, _carbohydrate_list)
 
 
 def filter_backbone(array):
