@@ -14,7 +14,7 @@ from os.path import join, dirname, realpath
 _info_dir = dirname(realpath(__file__))
 # Data is taken from
 # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
-# (2020/10/21)
+# (2022/09/17)
 # The json-file contains all three-letter-codes of the components where
 # the data item `_chem_comp.type` is equal to one of the following
 # values:
