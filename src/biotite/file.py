@@ -9,6 +9,8 @@ __all__ = ["File", "TextFile", "InvalidFileError"]
 import abc
 import io
 import warnings
+from os import PathLike
+
 from .copyable import Copyable
 import copy
 
@@ -23,14 +25,14 @@ class File(Copyable, metaclass=abc.ABCMeta):
     In order to write the instance content into a file the
     :func:`write()` method is used.
     """
-    
+
     def __init__(self):
         # Support for deprecated instance method 'read()':
         # When creating an instance, the 'read()' class method is
         # replaced by the instance method, so that subsequent
         # 'read()' calls are delegated to the instance method
         self.read = self._deprecated_read
-    
+
     @classmethod
     @abc.abstractmethod
     def read(cls, file):
@@ -50,8 +52,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
             representing the parsed file.
         """
         pass
-        
-            
+
     def _deprecated_read(self, file, *args, **kwargs):
         """
         Support for deprecated instance method :func:`read()`.
@@ -68,7 +69,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
         cls = type(self)
         new_file = cls.read(file, *args, **kwargs)
         self.__dict__.update(new_file.__dict__)
-    
+
     @abc.abstractmethod
     def write(self, file):
         """
@@ -81,7 +82,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
             Alternatively a file path can be supplied.
         """
         pass
-        
+
 
 class TextFile(File, metaclass=abc.ABCMeta):
     """
@@ -96,7 +97,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         List of string representing the lines in the text file.
         PROTECTED: Do not modify from outside.
     """
-    
+
     def __init__(self):
         super().__init__()
         self.lines = []
@@ -104,7 +105,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
     @classmethod
     def read(cls, file, *args, **kwargs):
         # File name
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "r") as f:
                 lines = f.read().splitlines()
         # File object
@@ -115,7 +116,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         file_object = cls(*args, **kwargs)
         file_object.lines = lines
         return file_object
-    
+
     @staticmethod
     def read_iter(file):
         """
@@ -133,7 +134,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The current line in the file.
         """
         # File name
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "r") as f:
                 yield from f
         # File object
@@ -153,14 +154,14 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The file to be written to.
             Alternatively a file path can be supplied.
         """
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "w") as f:
                 f.write("\n".join(self.lines) + "\n")
         else:
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
             file.write("\n".join(self.lines) + "\n")
-    
+
     @staticmethod
     def write_iter(file, lines):
         """
@@ -183,7 +184,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             The lines of text to be written.
             Must not include line break characters.
         """
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "w") as f:
                 for line in lines:
                     f.write(line + "\n")
@@ -192,13 +193,13 @@ class TextFile(File, metaclass=abc.ABCMeta):
                 raise TypeError("A file opened in 'text' mode is required")
             for line in lines:
                 file.write(line + "\n")
-    
+
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
         clone.lines = copy.copy(self.lines)
-    
+
     def __str__(self):
-        return("\n".join(self.lines))
+        return "\n".join(self.lines)
 
 
 class InvalidFileError(Exception):
@@ -236,3 +237,7 @@ def is_text(file):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
     return hasattr(file, "file") and isinstance(file.file, io.TextIOBase)
+
+
+def is_open_compatible(file):
+    return isinstance(file, (str, bytes, PathLike))
