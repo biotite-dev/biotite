@@ -33,7 +33,11 @@ def test_solvent_filter(sample_protein):
     assert len(sample_protein[struc.filter_solvent(sample_protein)]) == 287
 
 def test_amino_acid_filter(sample_protein):
-    assert len(sample_protein[struc.filter_amino_acids(sample_protein)]) == 982
+    assert (
+        len(sample_protein[
+            struc.filter_canonical_amino_acids(sample_protein)
+        ]) == 982
+    )
 
 def test_backbone_filter(sample_protein):
     assert len(sample_protein[struc.filter_backbone(sample_protein)]) == 384
@@ -45,9 +49,11 @@ def test_intersection_filter(sample_protein):
 
 def test_nucleotide_filter(sample_nucleotide):
 
-    assert len(
-        sample_nucleotide[struc.filter_nucleotides(sample_nucleotide)]
-    ) == 651
+    assert (
+        len(sample_nucleotide[
+            struc.filter_canonical_nucleotides(sample_nucleotide)
+        ]) == 651
+    )
 
 
 @pytest.mark.parametrize("filter_func", ["first", "occupancy"])
