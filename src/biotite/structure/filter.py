@@ -11,7 +11,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_nucleotides", "filter_amino_acids", 
-           "filter_canonical_amino_acids", "filter_carbohydrates" 
+           "filter_canonical_amino_acids", "filter_carbohydrates", 
            "filter_backbone", "filter_intersection", "filter_first_altloc", 
            "filter_highest_occupancy_altloc"]
 
