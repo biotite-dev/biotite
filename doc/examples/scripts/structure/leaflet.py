@@ -3,9 +3,10 @@ Identification of lipid bilayer leaflets
 ========================================
 
 This script implements the *LeafletFinder* algorithm
-:footcite:`Michaud-Agrawal2011` used by *MDAnalysis*. The algorithm detects which
-lipid molecules belong to the same membrane leaflet, i.e. the same sid
- of a lipid bilayer, irrespective of the shape of the bilayer.
+:footcite:`Michaud-Agrawal2011` used by *MDAnalysis*. The algorithm
+detects which lipid molecules belong to the same membrane leaflet, i.e.
+the same side of a lipid bilayer, irrespective of the shape of the
+bilayer.
 
 At first the algorithm creates an adjacency matrix of all lipid head
 groups, where the cutoff distance is smaller than the minimum distance
