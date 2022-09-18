@@ -92,14 +92,15 @@ def set_structure(file, array):
 
 
     ### Preparing the group list ###
-    # List of residues used for setting the file's 'groupList'
+    # List of 'groupType' dictsfor setting the file's 'groupList'
     cdef list residues
+    # Maps 'groupType' values (not the keys) to the index in 'residues'
+    # Necessary a 'groupType' are dictionaries, which are not hashable
+    cdef dict residue_dict
     # An entry in 'residues'
-    cdef dict curr_res
-    # Stores a tuple of residue name and length for fast lookup in dict
-    cdef tuple res_tuple
-    # Dictionary with indices to list of residues as values
-    cdef dict res_tuple_dict
+    cdef dict group_type
+    # An entry in 'residue_dict'
+    cdef tuple hashable_group_type
     # Index to list of residues
     cdef int residue_i
     # List of indices to list of residues
@@ -117,12 +118,9 @@ def set_structure(file, array):
         inter_bonds = array.bonds.copy()
     # 'len(starts)-1' since 'starts' has the end
     # of the atom array appended
-    residue_i_array = np.zeros(len(starts)-1, dtype=np.int32)
     res_types = np.zeros(len(starts)-1, dtype=np.int32)
     residues = []
-    # Dictionary maps (name, length) tuples to indices in residue list
-    # (later groupList)
-    res_tuple_dict = {}
+    residue_dict = {}
     for i in range(len(starts)-1):
         start = starts[i]
         stop = starts[i+1]
@@ -131,40 +129,50 @@ def set_structure(file, array):
         # Get intra-residue bonds of this residue
         if include_bonds:
             intra_bonds = array.bonds[start:stop]
-        # Check if the residue does already exist
-        # (same name and length)
-        res_tuple = (res_name, res_length)
-        residue_i = res_tuple_dict.get(res_tuple, -1)
+        
+        # Create 'groupType' dictionary for current residue
+        group_type = {}
+        group_type["atomNameList"] = tuple(
+            arr_atom_name[start:stop].tolist()
+        )
+        group_type["elementList"] = tuple(
+            [e.capitalize() for e in arr_element[start:stop]]
+        )
+        if arr_charge is not None:
+            group_type["formalChargeList"] = tuple(
+                arr_charge[start:stop].tolist()
+            )
+        else:
+            group_type["formalChargeList"] = (0,) * (stop-start)
+        group_type["groupName"] = res_name
+        link = link_type(res_name)
+        # Use 'NON-POLYMER' as default
+        if link is None:
+            link = "NON-POLYMER"
+        group_type["chemCompType"] = link
+        # Add intra-residue bonds
+        if include_bonds:
+            intra_bonds = array.bonds[start:stop]
+            bond_array = intra_bonds.as_array()
+            group_type["bondAtomList"] = tuple(
+                bond_array[:,:2].flatten().tolist()
+            )
+            group_type["bondOrderList"] = tuple(
+                bond_array[:,2].tolist()
+            )
+        else:
+            group_type["bondAtomList"] = ()
+            group_type["bondOrderList"] = ()
+        
+        # Find index of current residue in later 'groupList'
+        hashable_group_type = tuple(group_type.values())
+        residue_i = residue_dict.get(hashable_group_type, -1)
         if residue_i == -1:
-            # If it does not exist, create a new entry in dictionary
-            curr_res = {}
-            curr_res["atomNameList"] = arr_atom_name[start:stop].tolist()
-            curr_res["elementList"] = [e.capitalize() for e
-                                       in arr_element[start:stop]]
-            if arr_charge is not None:
-                curr_res["formalChargeList"] \
-                    = arr_charge[start:stop].tolist()
-            else:
-                curr_res["formalChargeList"] = [0] * (stop-start)
-            curr_res["groupName"] = res_name
-            link = link_type(res_name)
-            # Use 'NON-POLYMER' as default
-            if link is None:
-                link = "NON-POLYMER"
-            curr_res["chemCompType"] = link
-            # Add intra-residue bonds
-            if include_bonds:
-                intra_bonds = array.bonds[start:stop]
-                bond_array = intra_bonds.as_array()
-                curr_res["bondAtomList"] = bond_array[:,:2].flatten().tolist()
-                curr_res["bondOrderList"] = bond_array[:,2].tolist()
-            else:
-                curr_res["bondAtomList"] = []
-                curr_res["bondOrderList"] = []
-            # Add new residue to list
+            # Add new residue if not yet existing in 'groupList'
             residue_i = len(residues)
-            residues.append(curr_res)
-            res_tuple_dict[res_tuple] = residue_i
+            residues.append(group_type)
+            residue_dict[hashable_group_type] = residue_i
+
         # Remove intra-residue bonds from all bonds
         # to obtain inter-residue bonds
         # If the residue is already known is irrelevant for this case
