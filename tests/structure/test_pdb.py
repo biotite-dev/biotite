@@ -53,7 +53,7 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
         else:
             raise
     
-    if hybrid36 and (array1.res_id < 1).any():
+    if hybrid36 and (array1.res_id < 0).any():
         with pytest.raises(
             ValueError,
             match="Only positive integers can be converted "
