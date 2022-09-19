@@ -106,6 +106,18 @@ def filter_nucleotides(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to a nucleotide.
+
+    Notes
+    -----
+    Nucleotides are identified according to the PDB chemical component 
+    dictionary. A residue is considered a nucleotide if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``DNA LINKING``, ``DNA OH 3 PRIME TERMINUS``, 
+    ``DNA OH 5 PRIME TERMINUS``, ``L-DNA LINKING``, ``L-RNA LINKING``, 
+    ``RNA LINKING``, ``RNA OH 3 PRIME TERMINUS``,
+    ``RNA OH 5 PRIME TERMINUS``
     """
     return np.isin(array.res_name, _nucleotide_list)
 
@@ -143,6 +155,21 @@ def filter_amino_acids(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
+    
+    Notes
+    -----
+    Amino acids are identified according to the PDB chemical component 
+    dictionary. A residue is considered an amino acid if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``D-BETA-PEPTIDE``, ``C-GAMMA LINKING``, ``D-GAMMA-PEPTIDE``, 
+    ``C-DELTA LINKING``, ``D-PEPTIDE LINKING``, 
+    ``D-PEPTIDE NH3 AMINO TERMINUS``, 
+    ``L-BETA-PEPTIDE, C-GAMMA LINKING``, 
+    ``L-GAMMA-PEPTIDE, C-DELTA LINKING``, 
+    ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``, 
+    ``L-PEPTIDE NH3 AMINO TERMINUS``, ``PEPTIDE LINKING``
     """
     return ( np.isin(array.res_name, _amino_acid_list) & (array.res_id != -1) )
 
@@ -161,6 +188,18 @@ def filter_carbohydrates(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to a carbohydrate.
+    
+    Notes
+    -----
+    Carbohydrates are identified according to the PDB chemical component 
+    dictionary. A residue is considered a carbohydrate if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``D-SACCHARIDE``, ``D-SACCHARIDE,ALPHA LINKING``, 
+    ``D-SACCHARIDE, BETA LINKING``, ``L-SACCHARIDE``, 
+    ``L-SACCHARIDE, ALPHA LINKING``, ``L-SACCHARIDE, BETA LINKING``, 
+    ``SACCHARIDE``
     """
     return np.isin(array.res_name, _carbohydrate_list)
 
