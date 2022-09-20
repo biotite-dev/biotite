@@ -138,7 +138,7 @@ def filter_canonical_amino_acids(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to a canonical amino acid residue.
     """
-    return ( np.isin(array.res_name, _canonical_aa_list) & (array.res_id != -1) )
+    return np.isin(array.res_name, _canonical_aa_list)
 
 
 def filter_amino_acids(array):
@@ -171,7 +171,7 @@ def filter_amino_acids(array):
     ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``, 
     ``L-PEPTIDE NH3 AMINO TERMINUS``, ``PEPTIDE LINKING``
     """
-    return ( np.isin(array.res_name, _amino_acid_list) & (array.res_id != -1) )
+    return np.isin(array.res_name, _amino_acid_list)
 
 
 def filter_carbohydrates(array):
