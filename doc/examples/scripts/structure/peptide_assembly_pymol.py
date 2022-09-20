@@ -33,7 +33,7 @@ ammolite.cmd.set("depth_cue", 0)
 
 # Adjust camera
 pymol_obj.orient()
-pymol_obj.zoom(buffer=-8)
+pymol_obj.zoom(buffer=-7.5)
 
 # Save image
 ammolite.cmd.ray(*PNG_SIZE)
