@@ -12,7 +12,7 @@ import struct
 import copy
 import numpy as np
 import msgpack
-from ....file import File, is_binary
+from ....file import File, is_binary, is_open_compatible
 from ...error import BadStructureError
 from .decode import decode_array
 from .encode import encode_array
@@ -67,7 +67,7 @@ class MMTFFile(File, MutableMapping):
         """
         mmtf_file = MMTFFile()
         # File name
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "rb") as f:
                 mmtf_file._content = msgpack.unpackb(
                     f.read(), use_list=True, raw=False
@@ -94,7 +94,7 @@ class MMTFFile(File, MutableMapping):
         packed_bytes = msgpack.packb(
             self._content, use_bin_type=True, default=_encode_numpy
         )
-        if isinstance(file, str):
+        if is_open_compatible(file):
             with open(file, "wb") as f:
                 f.write(packed_bytes)
         else:

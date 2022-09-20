@@ -367,7 +367,11 @@ class PDBFile(TextFile):
             element[i] = line[_element].strip()
             altloc_id[i] = line[_alt_loc]
             atom_id_raw[i] = line[_atom_id]
-            charge_raw[i] = line[_charge][::-1]  # turn "1-" into "-1"
+            # turn "1-" into "-1", if necessary
+            if line[_charge][0] in "+-":
+                charge_raw[i] = line[_charge]
+            else:
+                charge_raw[i] = line[_charge][::-1] 
             occupancy[i] = float(line[_occupancy].strip())
             b_factor[i] = float(line[_temp_f].strip())
         
