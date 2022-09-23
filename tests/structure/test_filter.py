@@ -10,15 +10,33 @@ from ..util import data_dir
 import pytest
 
 @pytest.fixture
-def sample_protein():
+def canonical_sample_protein():
     return strucio.load_structure(
         join(data_dir("structure"), "3o5r.mmtf")
     )
 
 @pytest.fixture
-def sample_nucleotide():
+def sample_protein():
+    return strucio.load_structure(
+        join(data_dir("structure"), "5eil.mmtf")
+    )
+
+@pytest.fixture
+def canonical_sample_nucleotide():
     return strucio.load_structure(
         join(data_dir("structure"), "5ugo.mmtf")
+    )
+
+@pytest.fixture
+def sample_nucleotide():
+    return strucio.load_structure(
+        join(data_dir("structure"), "4p5j.mmtf")
+    )
+
+@pytest.fixture
+def sample_carbohydrate():
+    return strucio.load_structure(
+        join(data_dir("structure"), "2d0f.mmtf")
     )
 
 @pytest.fixture
@@ -29,26 +47,65 @@ def all_atloc_structure():
         altloc="all"
     )
 
-def test_solvent_filter(sample_protein):
-    assert len(sample_protein[struc.filter_solvent(sample_protein)]) == 287
+def test_solvent_filter(canonical_sample_protein):
+    assert len(canonical_sample_protein[struc.filter_solvent(canonical_sample_protein)]) == 287
+
+def test_canonical_amino_acid_filter(canonical_sample_protein):
+    assert (
+        len(canonical_sample_protein[
+            struc.filter_canonical_amino_acids(canonical_sample_protein)
+        ]) == 982
+    )
 
 def test_amino_acid_filter(sample_protein):
-    assert len(sample_protein[struc.filter_amino_acids(sample_protein)]) == 982
+    assert (
+        struc.get_residue_count((sample_protein[
+            struc.filter_amino_acids(sample_protein)
+        ])) ==
+        struc.get_residue_count((sample_protein[
+            struc.filter_canonical_amino_acids(sample_protein)
+        ])) + 3
+    )
 
-def test_backbone_filter(sample_protein):
-    assert len(sample_protein[struc.filter_backbone(sample_protein)]) == 384
-
-def test_intersection_filter(sample_protein):
-    assert len(sample_protein[:200][
-        struc.filter_intersection(sample_protein[:200],sample_protein[100:])
-    ]) == 100
+def test_canonical_nucleotide_filter(canonical_sample_nucleotide):
+    assert (
+        len(canonical_sample_nucleotide[
+            struc.filter_canonical_nucleotides(canonical_sample_nucleotide)
+        ]) == 651
+    )
 
 def test_nucleotide_filter(sample_nucleotide):
+    assert (
+        struc.get_residue_count((sample_nucleotide[
+            struc.filter_nucleotides(sample_nucleotide)
+        ])) ==
+        struc.get_residue_count((sample_nucleotide[
+            struc.filter_canonical_nucleotides(sample_nucleotide)
+        ])) + 1
+    )
 
-    assert len(
-        sample_nucleotide[struc.filter_nucleotides(sample_nucleotide)]
-    ) == 651
+def test_carbohydrate_filter(sample_carbohydrate):
+    assert (
+        struc.get_residue_count((sample_carbohydrate[
+            struc.filter_carbohydrates(sample_carbohydrate)
+        ])) == 8
+    )
 
+def test_backbone_filter(canonical_sample_protein):
+    assert (
+        len(canonical_sample_protein[
+            struc.filter_backbone(canonical_sample_protein)
+        ]) == 384
+    )
+
+def test_intersection_filter(canonical_sample_protein):
+    assert (
+        len(canonical_sample_protein[:200][
+            struc.filter_intersection(
+                canonical_sample_protein[:200],canonical_sample_protein[100:]
+            )
+        ]) == 100
+    )
 
 @pytest.mark.parametrize("filter_func", ["first", "occupancy"])
 def test_filter_altloc(all_atloc_structure, filter_func):

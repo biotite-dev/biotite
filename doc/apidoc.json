@@ -209,8 +209,11 @@
             "superimpose_apply"
         ],
         "Filters" : [
+            "filter_canonical_nucleotides",
             "filter_nucleotides",
+            "filter_canonical_amino_acids",
             "filter_amino_acids",
+            "filter_carbohydrates",
             "filter_backbone",
             "filter_solvent",
             "filter_monoatomic_ions",

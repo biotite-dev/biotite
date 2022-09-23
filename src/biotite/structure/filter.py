@@ -8,22 +8,29 @@ arrays and atom array stacks.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann, Tom Müller"
+__author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
-           "filter_amino_acids", "filter_backbone", "filter_intersection",
-           "filter_first_altloc", "filter_highest_occupancy_altloc"]
+           "filter_canonical_nucleotides", "filter_amino_acids", 
+           "filter_canonical_amino_acids", "filter_carbohydrates", 
+           "filter_backbone", "filter_intersection", "filter_first_altloc", 
+           "filter_highest_occupancy_altloc"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .residues import get_residue_starts
 from .info.nucleotides import nucleotide_names
+from .info.amino_acids import amino_acid_names
+from .info.carbohydrates import carbohydrate_names
 
 
-_ext_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE",
-                "LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL",
-                "MSE", "ASX", "GLX", "SEC", "UNK"]
+_canonical_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
+                      "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
+                      "TRP","TYR","VAL", "SEC"]
+_canonical_nucleotide_list = ["A", "DA", "G", "DG", "C", "DC", "U", "DT"]
 
 _nucleotide_list = nucleotide_names()
+_amino_acid_list = amino_acid_names()
+_carbohydrate_list = carbohydrate_names()
 
 _solvent_list = ["HOH","SOL"]
 
@@ -64,7 +71,25 @@ def filter_solvent(array):
         This array is `True` for all indices in `array`, where the atom
         belongs to the solvent.
     """
-    return np.in1d(array.res_name, _solvent_list)
+    return np.isin(array.res_name, _solvent_list)
+
+
+def filter_canonical_nucleotides(array):
+    """
+    Filter all atoms of one array that belong to canonical nucleotides.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a canonical nucleotide.
+    """
+    return np.isin(array.res_name, _canonical_nucleotide_list)
 
 
 def filter_nucleotides(array):
@@ -81,8 +106,39 @@ def filter_nucleotides(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to a nucleotide.
+
+    Notes
+    -----
+    Nucleotides are identified according to the PDB chemical component 
+    dictionary. A residue is considered a nucleotide if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``DNA LINKING``, ``DNA OH 3 PRIME TERMINUS``, 
+    ``DNA OH 5 PRIME TERMINUS``, ``L-DNA LINKING``, ``L-RNA LINKING``, 
+    ``RNA LINKING``, ``RNA OH 3 PRIME TERMINUS``,
+    ``RNA OH 5 PRIME TERMINUS``
     """
     return np.isin(array.res_name, _nucleotide_list)
+
+
+def filter_canonical_amino_acids(array):
+    """
+    Filter all atoms of one array that belong to canonical amino acid 
+    residues.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a canonical amino acid residue.
+    """
+    return np.isin(array.res_name, _canonical_aa_list)
 
 
 def filter_amino_acids(array):
@@ -99,8 +155,53 @@ def filter_amino_acids(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
+    
+    Notes
+    -----
+    Amino acids are identified according to the PDB chemical component 
+    dictionary. A residue is considered an amino acid if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``D-BETA-PEPTIDE``, ``C-GAMMA LINKING``, ``D-GAMMA-PEPTIDE``, 
+    ``C-DELTA LINKING``, ``D-PEPTIDE LINKING``, 
+    ``D-PEPTIDE NH3 AMINO TERMINUS``, 
+    ``L-BETA-PEPTIDE, C-GAMMA LINKING``, 
+    ``L-GAMMA-PEPTIDE, C-DELTA LINKING``, 
+    ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``, 
+    ``L-PEPTIDE NH3 AMINO TERMINUS``, ``PEPTIDE LINKING``
     """
-    return ( np.in1d(array.res_name, _ext_aa_list) & (array.res_id != -1) )
+    return np.isin(array.res_name, _amino_acid_list)
+
+
+def filter_carbohydrates(array):
+    """
+    Filter all atoms of one array that belong to carbohydrates.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        belongs to a carbohydrate.
+    
+    Notes
+    -----
+    Carbohydrates are identified according to the PDB chemical component 
+    dictionary. A residue is considered a carbohydrate if it its
+    ``_chem_comp.type`` property has one of the following values (case
+    insensitive):
+
+    ``D-SACCHARIDE``, ``D-SACCHARIDE,ALPHA LINKING``, 
+    ``D-SACCHARIDE, BETA LINKING``, ``L-SACCHARIDE``, 
+    ``L-SACCHARIDE, ALPHA LINKING``, ``L-SACCHARIDE, BETA LINKING``, 
+    ``SACCHARIDE``
+    """
+    return np.isin(array.res_name, _carbohydrate_list)
 
 
 def filter_backbone(array):

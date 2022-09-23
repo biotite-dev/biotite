@@ -266,6 +266,7 @@ print("Number of unique alignments:",  len(unique_alignments))
 N_COL = 4
 MAX_NAME_LENGTH = 30
 EXCERPT_SIZE = 3000
+MARGIN_SIZE = 250
 
 COLORS = {
     "CDS" : biotite.colors["dimgreen"],
@@ -306,25 +307,38 @@ def draw_arrow(ax, feature, loc):
             ha="center", va="center", size=8
         )
 
-n_rows = int(np.ceil(len(unique_alignments) / N_COL))
-fig, ax_array = plt.subplots(n_rows, N_COL, figsize=(8.0, 24.0), dpi=96)
 
-for (alignment, log_evalue), ax in zip(unique_alignments, ax_array.flatten()):
+# Fetch features of the chloroplast genome
+gb_file = gb.GenBankFile.read(
+    entrez.fetch("NC_000932", None, "gb", db_name="Nucleotide", ret_type="gb")
+)
+annotation = gb.get_annotation(gb_file, include_only=["CDS", "rRNA", "tRNA"])
+
+n_rows = int(np.ceil(len(unique_alignments) / N_COL))
+fig, axes = plt.subplots(
+    n_rows, N_COL,
+    figsize=(8.0, 24.0),
+    constrained_layout=True
+)
+
+for (alignment, log_evalue), ax in zip(
+    unique_alignments, axes.flatten()
+):
     # Transform 0-based sequence index to 1-based sequence position
     first = alignment.trace[0, 0] + 1
     last = alignment.trace[-1, 0] + 1
     center = (first + last) // 2
-    if last - first < EXCERPT_SIZE:
+    if last - first < EXCERPT_SIZE - MARGIN_SIZE * 2:
         excerpt_loc = (center - EXCERPT_SIZE//2, center + EXCERPT_SIZE//2)
     else:
         # Exceed excerpt size to show entire alignment range
-        excerpt_loc = (first, last)
+        excerpt_loc = (first - MARGIN_SIZE, last + MARGIN_SIZE)
     # Move excerpt into bounds of the sequence
     if excerpt_loc[0] < 1:
         offset = -excerpt_loc[0] + 1
         excerpt_loc = (excerpt_loc[0] + offset, excerpt_loc[1] + offset)
-    excerpt = annotation[first : last + 1]
-    
+    excerpt = annotation[excerpt_loc[0] : excerpt_loc[1] + 1]
+
     ax.axhline(0.5, color="lightgray", linewidth=2, zorder=-1)
     # Draw features
     for feature in excerpt:
@@ -336,28 +350,31 @@ for (alignment, log_evalue), ax in zip(unique_alignments, ax_array.flatten()):
         facecolor="None", edgecolor="black", alpha=0.2, linewidth=1,
         clip_on=False
     ))
-    
+
     ax.xaxis.set_major_locator(MultipleLocator(1000))
     ax.tick_params(labelsize=6)
     ax.set_xlim(excerpt_loc)
     ax.set_ylim([0, 1])
     ax.set_frame_on(False)
     ax.get_yaxis().set_tick_params(left=False, right=False, labelleft=False)
-    
-    exponent = int(log_evalue)
+
+    exponent = int(np.floor(log_evalue))
     mantissa = 10**(log_evalue-exponent)
-    if len(excerpt) > 0:
+    homolog_excerpt = annotation[first : last + 1]
+    if len(homolog_excerpt) > 0:
         # Select the longest feature in range for name display in title
         representative_feature = max(
-            excerpt,
+            homolog_excerpt,
             key=lambda feature: -np.subtract(*feature.get_location_range())
         )
         feature_name = representative_feature.qual["product"]
-        # Truncate feature name if it is too long
-        if len(feature_name) > MAX_NAME_LENGTH:
-            feature_name = feature_name[:MAX_NAME_LENGTH] + "..."
     else:
+        # No feature in homologous region -> no name
         feature_name = ""
+    # Truncate feature name if it is too long
+    if len(feature_name) > MAX_NAME_LENGTH:
+        feature_name = feature_name[:MAX_NAME_LENGTH] + "..."
+
     ax.set_title(
         f"{feature_name}\n"
         fr"E-Value: ${mantissa:.2f} \times 10^{{{exponent}}}$"
@@ -366,7 +383,7 @@ for (alignment, log_evalue), ax in zip(unique_alignments, ax_array.flatten()):
     )
 
 # Hide empty axes
-for ax in ax_array.flatten()[len(unique_alignments):]:
+for ax in axes.flatten()[len(unique_alignments):]:
     ax.axis('off')
 
 fig.tight_layout(h_pad=3.0, w_pad=0.5)

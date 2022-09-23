@@ -99,7 +99,8 @@ def _create_tutorial_section(fname, src_dir, target_dir):
                 block=(block_label, block_content, line_no),
                 example_globals=tutorial_globals,
                 script_vars=script_vars,
-                gallery_conf=gallery_conf
+                gallery_conf=gallery_conf,
+                file_conf=file_conf
             )
             content_rst += genrst.codestr2rst(
                 block_content, lineno=None

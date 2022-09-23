@@ -9,28 +9,31 @@ in the different color schemes available in *Biotite*.
     - **clustalx** - Default color scheme of the *ClustalX* software
     - Color schemes generated with the software *Gecos*
       :footcite:`Kunzmann2020`:
-        - **flower** - Light color scheme, based on *BLOSUM62*
-        - **blossom** - Light color scheme with high contrast, based on
-          *BLOSUM62*, depicts symbol similarity worse than *flower*
-        - **spring** - Light color scheme, based on *BLOSUM62*,
-          with alanine fixed to gray
-        - **wither** - Dark color scheme, analogous to *blossom*
-        - **autumn** - Dark color scheme, analogous to *spring*
-        - **sunset** - Red-green color vision deficiency adapated color
-          scheme, based on *BLOSUM62*
-        - **ocean** - Blue shifted, light color scheme,
-          based on *BLOSUM62*
+      
+      - **flower** - Light color scheme, based on *BLOSUM62*
+      - **blossom** - Light color scheme with high contrast, based on
+        *BLOSUM62*, depicts symbol similarity worse than *flower*
+      - **spring** - Light color scheme, based on *BLOSUM62*, with
+        alanine fixed to gray
+      - **wither** - Dark color scheme, analogous to *blossom*
+      - **autumn** - Dark color scheme, analogous to *spring*
+      - **sunset** - Red-green color vision deficiency adapated color
+        scheme, based on *BLOSUM62*
+      - **ocean** - Blue shifted, light color scheme, based on
+        *BLOSUM62*
+    
     - Color schemes adapted from *JalView* :footcite:`Clamp2004`:
-        - **zappo** - Color scheme that depicts physicochemical properties
-        - **taylor** - Color scheme invented by Willie Taylor
-        - **buried** - Color scheme depicting the *buried index* 
-        - **hydrophobicity** - Color scheme depicting hydrophobicity
-        - **prophelix** - Color scheme depicting secondary structure
-          propensities
-        - **propstrand** - Color scheme depicting secondary structure
-          propensities
-        - **propturn** - Color scheme depicting secondary structure
-          propensities
+      
+      - **zappo** - Color scheme that depicts physicochemical properties
+      - **taylor** - Color scheme invented by Willie Taylor
+      - **buried** - Color scheme depicting the *buried index* 
+      - **hydrophobicity** - Color scheme depicting hydrophobicity
+      - **prophelix** - Color scheme depicting secondary structure
+        propensities
+      - **propstrand** - Color scheme depicting secondary structure
+        propensities
+      - **propturn** - Color scheme depicting secondary structure
+        propensities
 
 .. footbibliography::
 

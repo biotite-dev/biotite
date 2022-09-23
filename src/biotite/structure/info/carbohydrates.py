@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Tom David Müller"
-__all__ = ["nucleotide_names"]
+__all__ = ["carbohydrate_names"]
 
 import json
 import numpy as np
@@ -18,22 +18,22 @@ _info_dir = dirname(realpath(__file__))
 # The json-file contains all three-letter-codes of the components where
 # the data item `_chem_comp.type` is equal to one of the following
 # values:
-# DNA LINKING; DNA OH 3 PRIME TERMINUS; DNA OH 3 prime terminus; 
-# DNA OH 5 prime terminus; DNA linking; L-DNA LINKING; L-DNA linking; 
-# L-RNA LINKING; L-RNA linking; RNA LINKING; RNA OH 3 prime terminus; 
-# RNA OH 5 prime terminus; RNA linking
-with open(join(_info_dir, "nucleotides.json"), "r") as file:
-    _nucleotides = json.load(file)
+# D-SACCHARIDE; D-saccharide; D-saccharide, alpha linking; 
+# D-saccharide, beta linking; L-SACCHARIDE; L-saccharide; 
+# L-saccharide, alpha linking; L-saccharide, beta linking; SACCHARIDE; 
+# saccharide
+with open(join(_info_dir, "carbohydrates.json"), "r") as file:
+    _carbohydrates = json.load(file)
 
-def nucleotide_names():
+def carbohydrate_names():
     """
-    Get a list of nucleotide three-letter codes according to the PDB
+    Get a list of carbohydrate three-letter codes according to the PDB
     chemical compound dictionary.
 
     Returns
     -------
-    nucleotide_names : list
+    carbohydrate_names : list
         A list of three-letter-codes containing residues that are
-        DNA/RNA monomers.
+        saccharide monomers.
     """
-    return _nucleotides
+    return _carbohydrates
