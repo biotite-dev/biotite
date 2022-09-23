@@ -42,7 +42,7 @@ def test_res_id_continuity_check(gapped_sample_array):
     assert discon_array.res_id.tolist() == [6]
 
 def test_bond_continuity_check(gapped_sample_array):
-    discon = struc.check_bond_continuity(gapped_sample_array)
+    discon = struc.check_backbone_bond_continuity(gapped_sample_array)
     discon_array = gapped_sample_array[discon]
     assert discon_array.res_id.tolist() == [6,9]
 

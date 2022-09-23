@@ -10,8 +10,8 @@ errors in the structure.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["check_id_continuity", "check_atom_id_continuity",
-           "check_res_id_continuity", "check_bond_continuity",
-           "check_duplicate_atoms",
+           "check_res_id_continuity", "check_backbone_bond_continuity",
+           "check_duplicate_atoms", "check_bond_continuity",
            "renumber_atom_ids", "renumber_res_ids"]
 
 import numpy as np
@@ -100,6 +100,31 @@ def check_res_id_continuity(array):
 
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
+    Check bond continuity of atoms in atom array.
+
+    Parameters
+    ----------
+    array : AtomArray
+        Arbitrary structure.
+    min_len : float, optional
+        Mininmum bond length.
+    max_len : float, optional
+        Maximum bond length.
+
+    Returns
+    -------
+    discontinuity : ndarray, dtype=int
+        Indices of `array` corresponding to atoms where the bond
+        with the next atom is beyond the provided bounds.
+    """
+    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
+    mask = (dist < min_len) | (dist > max_len)
+
+    return np.where(mask)[0] + 1
+
+
+def check_backbone_bond_continuity(array, min_len=1.2, max_len=1.8):
+    """
     Check if the peptide backbone atoms ("N","CA","C") have a
     non-reasonable distance to the next atom.
     
@@ -119,23 +144,10 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     discontinuity : ndarray, dtype=bool
          Contains the indices of atoms after a discontinuity.
     """
-    backbone_mask = filter_backbone(array)
-    backbone = array[backbone_mask]
-    diff = np.diff(backbone.coord, axis=0)
-    sq_distance = np.sum(diff**2, axis=1)
-    sq_min_len = min_len**2
-    sq_max_len = max_len**2
-    discon_mask = (sq_distance < sq_min_len) | (sq_distance > sq_max_len)
-    # discon_mask is shortened by 1 due to np.diff
-    # -> Lenthening by 1 to fit backbone
-    # and shifting by one to get position after discontinuity
-    discon_mask = np.concatenate(([False], discon_mask))
-    # discon_mask is true for discontinuity in backbone
-    # map it back to get discontinuity for original atom array
-    discon_mask_full = np.zeros(array.array_length(), dtype=bool)
-    discon_mask_full[backbone_mask] = discon_mask
-    discontinuity = np.where(discon_mask_full)
-    return discontinuity[0]
+    backbone_idx = np.where(filter_backbone(array))[0]
+    discont_idx = check_bond_continuity(array, min_len, max_len)
+
+    return discont_idx[np.isin(discont_idx, backbone_idx)]
 
 
 def check_duplicate_atoms(array):
