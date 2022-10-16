@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Tom David Müller"
-__all__ = ["nucleotide_names"]
+__all__ = ["amino_acid_names"]
 
 import json
 import numpy as np
@@ -18,22 +18,25 @@ _info_dir = dirname(realpath(__file__))
 # The json-file contains all three-letter-codes of the components where
 # the data item `_chem_comp.type` is equal to one of the following
 # values:
-# DNA LINKING; DNA OH 3 PRIME TERMINUS; DNA OH 3 prime terminus; 
-# DNA OH 5 prime terminus; DNA linking; L-DNA LINKING; L-DNA linking; 
-# L-RNA LINKING; L-RNA linking; RNA LINKING; RNA OH 3 prime terminus; 
-# RNA OH 5 prime terminus; RNA linking
-with open(join(_info_dir, "nucleotides.json"), "r") as file:
-    _nucleotides = json.load(file)
+# D-PEPTIDE LINKING; D-PEPTIDE NH3 AMINO TERMINUS; 
+# D-beta-peptide, C-gamma linking; D-gamma-peptide, C-delta linking; 
+# D-peptide NH3 amino terminus; D-peptide linking; 
+# L-PEPTIDE COOH CARBOXY TERMINUS; L-PEPTIDE LINKING; 
+# L-beta-peptide, C-gamma linking; L-gamma-peptide, C-delta linking; 
+# L-peptide COOH carboxy terminus; L-peptide NH3 amino terminus; 
+# L-peptide linking; PEPTIDE LINKING; peptide linking
+with open(join(_info_dir, "amino_acids.json"), "r") as file:
+    _amino_acids = json.load(file)
 
-def nucleotide_names():
+def amino_acid_names():
     """
-    Get a list of nucleotide three-letter codes according to the PDB
+    Get a list of amino acid three-letter codes according to the PDB
     chemical compound dictionary.
 
     Returns
     -------
-    nucleotide_names : list
+    amino_acid_names : list
         A list of three-letter-codes containing residues that are
-        DNA/RNA monomers.
+        peptide monomers.
     """
-    return _nucleotides
+    return _amino_acids
