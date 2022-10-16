@@ -246,7 +246,9 @@ def get_version(bin_path="muscle"):
     # Find matches for version string containing major and minor version
     match = re.search("\d+\.\d+", output.stdout)
     if match is None:
-        raise subprocess.SubprocessError("Application did not print version")
+        raise subprocess.SubprocessError(
+            "Could not determine Muscle version"
+        )
     version_string = match.group(0)
     splitted = version_string.split(".")
     return int(splitted[0]), int(splitted[1])
