@@ -1107,7 +1107,7 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
                 np.arccos(np.dot(normal_vector, normalized_dist_vector))
             )
             if ((dist_normal_vector_angle >= 40) and
-                (dist_normal_vector_angle <= 120)):
+                (dist_normal_vector_angle <= 140)):
                 return False
 
     return True
