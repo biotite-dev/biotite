@@ -37,11 +37,20 @@ class BaseFoldApp(LocalApp, metaclass=abc.ABCMeta):
         )
         fasta_file.write(self._in_file)
         self._in_file.flush()
-        self._in_file.seek(0)
-        self.set_stdin(self._in_file)
+        if self.accepts_stdin():
+            self._in_file.seek(0)
+            self.set_stdin(self._in_file)
 
-    def run(self):
-        super().run()
+    @staticmethod
+    @abc.abstractmethod
+    def accepts_stdin():
+        """
+        Indicate wether the input FASTA file should be given to the
+        standard input as opposed to the last command line argument.
+        
+        PROTECTED: Override when inheriting.
+        """
+        pass
     
     @requires_state(AppState.CREATED)
     def set_temperature(self, temperature):
@@ -58,8 +67,14 @@ class BaseFoldApp(LocalApp, metaclass=abc.ABCMeta):
 
     @requires_state(AppState.CREATED)
     def set_arguments(self, arguments):
-        base_arguments = ["-T", self._temperature]
-        super().set_arguments(base_arguments + arguments)
+        base_arguments = [
+            "-T", self._temperature
+        ]
+        if not self.accepts_stdin():
+            in_file_argument = [self._in_file.name]
+        else:
+            in_file_argument = []
+        super().set_arguments(base_arguments + arguments + in_file_argument)
     
     def clean_up(self):
         super().clean_up()
