@@ -2,9 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.structure as struc
+import pickle
 import numpy as np
 import pytest
+import biotite.structure as struc
 
 
 @pytest.fixture
@@ -164,3 +165,32 @@ def test_box(array, stack, array_box, stack_box):
     assert (stack[:2].box == np.array([array_box] * 2)).all()
     assert (stack[:2, 3].box == np.array([array_box] * 2)).all()
     assert (stack[[True, False, True]].box == np.array([array_box] * 2)).all()
+
+
+def test_array_from_atoms(atom_list):
+    """
+    Check whether custom annotations in :class:`Atom` objects are
+    properly carried over to the :class:`AtomArray` when using
+    :func:`array()`.
+    """
+    for atom in atom_list:
+        atom.some_annotation = 42
+    array = struc.array(atom_list)
+    assert np.all(array.some_annotation == np.full(array.array_length(), 42))
+    assert np.issubdtype(array.some_annotation.dtype, np.integer)
+
+
+def test_pickle(atom, array, stack):
+    """
+    Check if pickling and unpickling works.
+    This test is necessary since the classes implement the
+    :meth:`__getattr__()` and :meth:`__setattr__()` methods.
+    """
+    test_atom = pickle.loads(pickle.dumps(atom))
+    assert test_atom == atom
+
+    test_array = pickle.loads(pickle.dumps(array))
+    assert test_array == array
+
+    test_stack = pickle.loads(pickle.dumps(stack))
+    assert test_stack == stack

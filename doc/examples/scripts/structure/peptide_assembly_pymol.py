@@ -5,7 +5,7 @@ import biotite.structure as struc
 import ammolite
 
 
-PNG_SIZE = (1000, 300)
+PNG_SIZE = (1000, 400)
 
 
 # Define colors
@@ -16,24 +16,24 @@ for color_name, color_value in biotite.colors.items():
     )
 
 # Convert to PyMOL
-atom_array.bonds = struc.connect_via_distances(atom_array)
-pymol_obj = ammolite.PyMOLObject.from_structure(atom_array)
+chain.bonds = struc.connect_via_distances(chain)
+pymol_obj = ammolite.PyMOLObject.from_structure(chain)
 
 # Visualize as stick model
 pymol_obj.show_as("sticks")
 pymol_obj.color(
     "biotite_lightgreen",
-    (atom_array.res_id % 2 == 0) & (atom_array.element == "C")
+    (chain.res_id % 2 == 0) & (chain.element == "C")
 )
 pymol_obj.color(
     "biotite_dimgreen",
-    (atom_array.res_id % 2 != 0) & (atom_array.element == "C")
+    (chain.res_id % 2 != 0) & (chain.element == "C")
 )
 ammolite.cmd.set("depth_cue", 0)
 
 # Adjust camera
 pymol_obj.orient()
-pymol_obj.zoom(buffer=-9)
+pymol_obj.zoom(buffer=-7.5)
 
 # Save image
 ammolite.cmd.ray(*PNG_SIZE)

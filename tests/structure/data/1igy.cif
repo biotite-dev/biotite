@@ -3,7 +3,7 @@ data_1IGY
 _entry.id   1IGY 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.281 
+_audit_conform.dict_version    5.329 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
@@ -22,6 +22,8 @@ _pdbx_database_status.pdb_format_compatible           Y
 _pdbx_database_status.status_code_mr                  ? 
 _pdbx_database_status.status_code_sf                  ? 
 _pdbx_database_status.status_code_cs                  ? 
+_pdbx_database_status.status_code_nmr_data            ? 
+_pdbx_database_status.methods_development_category    ? 
 # 
 loop_
 _audit_author.name 
@@ -53,12 +55,13 @@ loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.ordinal 
-primary 'Harris, L.J.'  1 
-primary 'Skaletsky, E.' 2 
-primary 'McPherson, A.' 3 
-1       'Harris, L.J.'  4 
-1       'Skaletsky, E.' 5 
-1       'McPherson, A.' 6 
+_citation_author.identifier_ORCID 
+primary 'Harris, L.J.'  1 ? 
+primary 'Skaletsky, E.' 2 ? 
+primary 'McPherson, A.' 3 ? 
+1       'Harris, L.J.'  4 ? 
+1       'Skaletsky, E.' 5 ? 
+1       'McPherson, A.' 6 ? 
 # 
 _cell.entry_id           1IGY 
 _cell.length_a           66.650 
@@ -87,15 +90,16 @@ _entity.pdbx_ec
 _entity.pdbx_mutation 
 _entity.pdbx_fragment 
 _entity.details 
-1 polymer     nat 'IGG1 INTACT ANTIBODY MAB61.1.3'            23519.973 2 ? ? ? ? 
-2 polymer     nat 'IGG1 INTACT ANTIBODY MAB61.1.3'            47906.895 2 ? ? ? ? 
-3 non-polymer man N-ACETYL-D-GLUCOSAMINE                      221.208   6 ? ? ? ? 
-4 non-polymer man BETA-L-FUCOSE                               164.156   1 ? ? ? ? 
-5 non-polymer man '2-(ACETYLAMINO)-2-DEOXY-A-D-GLUCOPYRANOSE' 221.208   2 ? ? ? ? 
-6 non-polymer man BETA-D-MANNOSE                              180.156   2 ? ? ? ? 
-7 non-polymer man ALPHA-D-MANNOSE                             180.156   4 ? ? ? ? 
-8 non-polymer man BETA-D-GALACTOSE                            180.156   2 ? ? ? ? 
-9 non-polymer man ALPHA-L-FUCOSE                              164.156   1 ? ? ? ? 
+1 polymer  nat 'IGG1 INTACT ANTIBODY MAB61.1.3' 23519.973 2 ? ? ? ? 
+2 polymer  nat 'IGG1 INTACT ANTIBODY MAB61.1.3' 47906.895 2 ? ? ? ? 
+3 branched man 
+;beta-D-galactopyranose-(1-4)-2-acetamido-2-deoxy-beta-D-glucopyranose-(1-2)-alpha-D-mannopyranose-(1-6)-[2-acetamido-2-deoxy-beta-D-glucopyranose-(1-2)-alpha-D-mannopyranose-(1-3)]beta-D-mannopyranose-(1-4)-2-acetamido-2-deoxy-alpha-D-glucopyranose-(1-4)-[beta-L-fucopyranose-(1-6)]2-acetamido-2-deoxy-beta-D-glucopyranose
+;
+1625.490  1 ? ? ? ? 
+4 branched man 
+;beta-D-galactopyranose-(1-4)-2-acetamido-2-deoxy-beta-D-glucopyranose-(1-2)-alpha-D-mannopyranose-(1-6)-[2-acetamido-2-deoxy-beta-D-glucopyranose-(1-2)-alpha-D-mannopyranose-(1-3)]beta-D-mannopyranose-(1-4)-2-acetamido-2-deoxy-alpha-D-glucopyranose-(1-4)-[alpha-L-fucopyranose-(1-6)]2-acetamido-2-deoxy-beta-D-glucopyranose
+;
+1625.490  1 ? ? ? ? 
 # 
 loop_
 _entity_poly.entity_id 
@@ -878,138 +882,138 @@ _struct_ref_seq_dif.pdbx_seq_db_seq_num
 _struct_ref_seq_dif.details 
 _struct_ref_seq_dif.pdbx_auth_seq_num 
 _struct_ref_seq_dif.pdbx_ordinal 
-1 1IGY VAL A 6   ? GB 309359 GLN 35  CONFLICT 7   1   
-1 1IGY ?   A ?   ? GB 309359 PRO 37  DELETION ?   2   
-2 1IGY LYS B 2   ? GB 194362 GLN 22  CONFLICT 3   3   
-2 1IGY GLU B 5   ? GB 194362 GLN 25  CONFLICT 6   4   
-2 1IGY ALA B 8   ? GB 194362 PRO 28  CONFLICT 9   5   
-2 1IGY ALA B 11  ? GB 194362 GLU 31  CONFLICT 12  6   
-2 1IGY ARG B 12  ? GB 194362 LYS 32  CONFLICT 13  7   
-2 1IGY MET B 19  ? GB 194362 ILE 39  CONFLICT 20  8   
-2 1IGY TYR B 26  ? GB 194362 PHE 46  CONFLICT 27  9   
-2 1IGY THR B 27  ? GB 194362 SER 47  CONFLICT 28  10  
-2 1IGY PHE B 28  ? GB 194362 LEU 48  CONFLICT 29  11  
-2 1IGY THR B 29  ? GB 194362 PRO 49  CONFLICT 30  12  
-2 1IGY THR B 30  ? GB 194362 GLY 50  CONFLICT 31  13  
-2 1IGY TYR B 31  ? GB 194362 HIS 51  CONFLICT 32  14  
-2 1IGY THR B 32  ? GB 194362 ASN 52  CONFLICT 33  15  
-2 1IGY HIS B 34  ? GB 194362 ASN 54  CONFLICT 35  16  
-2 1IGY LYS B 37  ? GB 194362 VAL 57  CONFLICT 38  17  
-2 1IGY PRO B 40  ? GB 194362 ASN 60  CONFLICT 41  18  
-2 1IGY GLN B 42  ? GB 194362 LYS 62  CONFLICT 43  19  
-2 1IGY GLY B 43  ? GB 194362 SER 63  CONFLICT 44  20  
-2 1IGY TYR B 49  ? GB 194362 ASN 69  CONFLICT 50  21  
-2 1IGY ASN B 51  ? GB 194362 ASP 71  CONFLICT 52  22  
-2 1IGY SER B 53  ? GB 194362 TYR 73  CONFLICT 53  23  
-2 1IGY SER B 54  ? GB 194362 TYR 74  CONFLICT 54  24  
-2 1IGY VAL B 55  ? GB 194362 GLY 75  CONFLICT 55  25  
-2 1IGY TYR B 56  ? GB 194362 GLY 76  CONFLICT 56  26  
-2 1IGY TYR B 59  ? GB 194362 PHE 79  CONFLICT 59  27  
-2 1IGY GLN B 61  ? GB 194362 PRO 81  CONFLICT 61  28  
-2 1IGY ARG B 62  ? GB 194362 LYS 82  CONFLICT 62  29  
-2 1IGY ASP B 65  ? GB 194362 GLY 85  CONFLICT 65  30  
-2 1IGY ARG B 71  ? GB 194362 VAL 91  CONFLICT 71  31  
-2 1IGY ARG B 73  ? GB 194362 LYS 93  CONFLICT 73  32  
-2 1IGY ASN B 76  ? GB 194362 SER 96  CONFLICT 76  33  
-2 1IGY ALA B 78  ? GB 194362 LEU 98  CONFLICT 78  34  
-2 1IGY ASN B 79  ? GB 194362 TYR 99  CONFLICT 79  35  
-2 1IGY ILE B 80  ? GB 194362 MET 100 CONFLICT 80  36  
-2 1IGY SER B 83  A GB 194362 THR 103 CONFLICT 82  37  
-2 1IGY THR B 86  ? GB 194362 GLN 106 CONFLICT 83  38  
-2 1IGY ASP B 88  ? GB 194362 GLU 108 CONFLICT 85  39  
-2 1IGY ?   B ?   ? GB 194362 ALA 116 DELETION ?   40  
-2 1IGY ?   B ?   ? GB 194362 ARG 117 DELETION ?   41  
-2 1IGY VAL B 96  ? GB 194362 ARG 118 CONFLICT 93  42  
-2 1IGY GLU B 98  ? GB 194362 ASP 120 CONFLICT 95  43  
-2 1IGY ?   B ?   ? GB 194362 ASN 122 DELETION ?   44  
-2 1IGY ?   B ?   ? GB 194362 TYR 123 DELETION ?   45  
-2 1IGY GLU B 100 ? GB 194362 GLY 124 CONFLICT 97  46  
-2 1IGY VAL B 101 ? GB 194362 PHE 125 CONFLICT 98  47  
-2 1IGY PRO B 102 ? GB 194362 THR 126 CONFLICT 101 48  
-2 1IGY THR B 109 ? GB 194362 LEU 133 CONFLICT 108 49  
-2 1IGY SER B 114 ? GB 194362 ALA 138 CONFLICT 113 50  
-2 1IGY PRO B 188 ? GB 194362 THR 212 CONFLICT 199 51  
-2 1IGY ARG B 189 ? GB 194362 TRP 213 CONFLICT 200 52  
-2 1IGY THR B 241 ? GB 194362 VAL 265 CONFLICT 263 53  
-2 1IGY LEU B 243 ? GB 194362 THR 267 CONFLICT 265 54  
-2 1IGY VAL B 246 ? GB 194362 LEU 270 CONFLICT 268 55  
-2 1IGY ASN B 272 ? GB 194362 ASP 296 CONFLICT 296 56  
-2 1IGY VAL B 293 ? GB 194362 SER 317 CONFLICT 321 57  
-2 1IGY ALA B 296 ? GB 194362 GLU 320 CONFLICT 324 58  
-2 1IGY LYS B 333 ? GB 194362 ARG 357 CONFLICT 363 59  
-2 1IGY ARG B 335 ? GB 194362 LYS 359 CONFLICT 365 60  
-2 1IGY SER B 374 ? GB 194362 TRP 398 CONFLICT 408 61  
-2 1IGY ASP B 375 ? GB 194362 ASN 399 CONFLICT 410 62  
-2 1IGY ALA B 378 ? GB 194362 PRO 402 CONFLICT 415 63  
-2 1IGY PRO B 379 ? GB 194362 ALA 403 CONFLICT 416 64  
-2 1IGY ASP B 390 ? GB 194362 ASN 414 CONFLICT 427 65  
-2 1IGY ASP B 392 ? GB 194362 ASN 416 CONFLICT 430 66  
-3 1IGY VAL C 6   ? GB 309359 GLN 35  CONFLICT 7   67  
-3 1IGY ?   C ?   ? GB 309359 PRO 37  DELETION ?   68  
-4 1IGY LYS D 2   ? GB 194362 GLN 22  CONFLICT 3   69  
-4 1IGY GLU D 5   ? GB 194362 GLN 25  CONFLICT 6   70  
-4 1IGY ALA D 8   ? GB 194362 PRO 28  CONFLICT 9   71  
-4 1IGY ALA D 11  ? GB 194362 GLU 31  CONFLICT 12  72  
-4 1IGY ARG D 12  ? GB 194362 LYS 32  CONFLICT 13  73  
-4 1IGY MET D 19  ? GB 194362 ILE 39  CONFLICT 20  74  
-4 1IGY TYR D 26  ? GB 194362 PHE 46  CONFLICT 27  75  
-4 1IGY THR D 27  ? GB 194362 SER 47  CONFLICT 28  76  
-4 1IGY PHE D 28  ? GB 194362 LEU 48  CONFLICT 29  77  
-4 1IGY THR D 29  ? GB 194362 PRO 49  CONFLICT 30  78  
-4 1IGY THR D 30  ? GB 194362 GLY 50  CONFLICT 31  79  
-4 1IGY TYR D 31  ? GB 194362 HIS 51  CONFLICT 32  80  
-4 1IGY THR D 32  ? GB 194362 ASN 52  CONFLICT 33  81  
-4 1IGY HIS D 34  ? GB 194362 ASN 54  CONFLICT 35  82  
-4 1IGY LYS D 37  ? GB 194362 VAL 57  CONFLICT 38  83  
-4 1IGY PRO D 40  ? GB 194362 ASN 60  CONFLICT 41  84  
-4 1IGY GLN D 42  ? GB 194362 LYS 62  CONFLICT 43  85  
-4 1IGY GLY D 43  ? GB 194362 SER 63  CONFLICT 44  86  
-4 1IGY TYR D 49  ? GB 194362 ASN 69  CONFLICT 50  87  
-4 1IGY ASN D 51  ? GB 194362 ASP 71  CONFLICT 52  88  
-4 1IGY SER D 53  ? GB 194362 TYR 73  CONFLICT 53  89  
-4 1IGY SER D 54  ? GB 194362 TYR 74  CONFLICT 54  90  
-4 1IGY VAL D 55  ? GB 194362 GLY 75  CONFLICT 55  91  
-4 1IGY TYR D 56  ? GB 194362 GLY 76  CONFLICT 56  92  
-4 1IGY TYR D 59  ? GB 194362 PHE 79  CONFLICT 59  93  
-4 1IGY GLN D 61  ? GB 194362 PRO 81  CONFLICT 61  94  
-4 1IGY ARG D 62  ? GB 194362 LYS 82  CONFLICT 62  95  
-4 1IGY ASP D 65  ? GB 194362 GLY 85  CONFLICT 65  96  
-4 1IGY ARG D 71  ? GB 194362 VAL 91  CONFLICT 71  97  
-4 1IGY ARG D 73  ? GB 194362 LYS 93  CONFLICT 73  98  
-4 1IGY ASN D 76  ? GB 194362 SER 96  CONFLICT 76  99  
-4 1IGY ALA D 78  ? GB 194362 LEU 98  CONFLICT 78  100 
-4 1IGY ASN D 79  ? GB 194362 TYR 99  CONFLICT 79  101 
-4 1IGY ILE D 80  ? GB 194362 MET 100 CONFLICT 80  102 
-4 1IGY SER D 83  A GB 194362 THR 103 CONFLICT 82  103 
-4 1IGY THR D 86  ? GB 194362 GLN 106 CONFLICT 83  104 
-4 1IGY ASP D 88  ? GB 194362 GLU 108 CONFLICT 85  105 
-4 1IGY ?   D ?   ? GB 194362 ALA 116 DELETION ?   106 
-4 1IGY ?   D ?   ? GB 194362 ARG 117 DELETION ?   107 
-4 1IGY VAL D 96  ? GB 194362 ARG 118 CONFLICT 93  108 
-4 1IGY GLU D 98  ? GB 194362 ASP 120 CONFLICT 95  109 
-4 1IGY ?   D ?   ? GB 194362 ASN 122 DELETION ?   110 
-4 1IGY ?   D ?   ? GB 194362 TYR 123 DELETION ?   111 
-4 1IGY GLU D 100 ? GB 194362 GLY 124 CONFLICT 97  112 
-4 1IGY VAL D 101 ? GB 194362 PHE 125 CONFLICT 98  113 
-4 1IGY PRO D 102 ? GB 194362 THR 126 CONFLICT 101 114 
-4 1IGY THR D 109 ? GB 194362 LEU 133 CONFLICT 108 115 
-4 1IGY SER D 114 ? GB 194362 ALA 138 CONFLICT 113 116 
-4 1IGY PRO D 188 ? GB 194362 THR 212 CONFLICT 199 117 
-4 1IGY ARG D 189 ? GB 194362 TRP 213 CONFLICT 200 118 
-4 1IGY THR D 241 ? GB 194362 VAL 265 CONFLICT 263 119 
-4 1IGY LEU D 243 ? GB 194362 THR 267 CONFLICT 265 120 
-4 1IGY VAL D 246 ? GB 194362 LEU 270 CONFLICT 268 121 
-4 1IGY ASN D 272 ? GB 194362 ASP 296 CONFLICT 296 122 
-4 1IGY VAL D 293 ? GB 194362 SER 317 CONFLICT 321 123 
-4 1IGY ALA D 296 ? GB 194362 GLU 320 CONFLICT 324 124 
-4 1IGY LYS D 333 ? GB 194362 ARG 357 CONFLICT 363 125 
-4 1IGY ARG D 335 ? GB 194362 LYS 359 CONFLICT 365 126 
-4 1IGY SER D 374 ? GB 194362 TRP 398 CONFLICT 408 127 
-4 1IGY ASP D 375 ? GB 194362 ASN 399 CONFLICT 410 128 
-4 1IGY ALA D 378 ? GB 194362 PRO 402 CONFLICT 415 129 
-4 1IGY PRO D 379 ? GB 194362 ALA 403 CONFLICT 416 130 
-4 1IGY ASP D 390 ? GB 194362 ASN 414 CONFLICT 427 131 
-4 1IGY ASP D 392 ? GB 194362 ASN 416 CONFLICT 430 132 
+1 1IGY VAL A 6   ? GB 309359 GLN 35  conflict 7   1   
+1 1IGY ?   A ?   ? GB 309359 PRO 37  deletion ?   2   
+2 1IGY LYS B 2   ? GB 194362 GLN 22  conflict 3   3   
+2 1IGY GLU B 5   ? GB 194362 GLN 25  conflict 6   4   
+2 1IGY ALA B 8   ? GB 194362 PRO 28  conflict 9   5   
+2 1IGY ALA B 11  ? GB 194362 GLU 31  conflict 12  6   
+2 1IGY ARG B 12  ? GB 194362 LYS 32  conflict 13  7   
+2 1IGY MET B 19  ? GB 194362 ILE 39  conflict 20  8   
+2 1IGY TYR B 26  ? GB 194362 PHE 46  conflict 27  9   
+2 1IGY THR B 27  ? GB 194362 SER 47  conflict 28  10  
+2 1IGY PHE B 28  ? GB 194362 LEU 48  conflict 29  11  
+2 1IGY THR B 29  ? GB 194362 PRO 49  conflict 30  12  
+2 1IGY THR B 30  ? GB 194362 GLY 50  conflict 31  13  
+2 1IGY TYR B 31  ? GB 194362 HIS 51  conflict 32  14  
+2 1IGY THR B 32  ? GB 194362 ASN 52  conflict 33  15  
+2 1IGY HIS B 34  ? GB 194362 ASN 54  conflict 35  16  
+2 1IGY LYS B 37  ? GB 194362 VAL 57  conflict 38  17  
+2 1IGY PRO B 40  ? GB 194362 ASN 60  conflict 41  18  
+2 1IGY GLN B 42  ? GB 194362 LYS 62  conflict 43  19  
+2 1IGY GLY B 43  ? GB 194362 SER 63  conflict 44  20  
+2 1IGY TYR B 49  ? GB 194362 ASN 69  conflict 50  21  
+2 1IGY ASN B 51  ? GB 194362 ASP 71  conflict 52  22  
+2 1IGY SER B 53  ? GB 194362 TYR 73  conflict 53  23  
+2 1IGY SER B 54  ? GB 194362 TYR 74  conflict 54  24  
+2 1IGY VAL B 55  ? GB 194362 GLY 75  conflict 55  25  
+2 1IGY TYR B 56  ? GB 194362 GLY 76  conflict 56  26  
+2 1IGY TYR B 59  ? GB 194362 PHE 79  conflict 59  27  
+2 1IGY GLN B 61  ? GB 194362 PRO 81  conflict 61  28  
+2 1IGY ARG B 62  ? GB 194362 LYS 82  conflict 62  29  
+2 1IGY ASP B 65  ? GB 194362 GLY 85  conflict 65  30  
+2 1IGY ARG B 71  ? GB 194362 VAL 91  conflict 71  31  
+2 1IGY ARG B 73  ? GB 194362 LYS 93  conflict 73  32  
+2 1IGY ASN B 76  ? GB 194362 SER 96  conflict 76  33  
+2 1IGY ALA B 78  ? GB 194362 LEU 98  conflict 78  34  
+2 1IGY ASN B 79  ? GB 194362 TYR 99  conflict 79  35  
+2 1IGY ILE B 80  ? GB 194362 MET 100 conflict 80  36  
+2 1IGY SER B 83  A GB 194362 THR 103 conflict 82  37  
+2 1IGY THR B 86  ? GB 194362 GLN 106 conflict 83  38  
+2 1IGY ASP B 88  ? GB 194362 GLU 108 conflict 85  39  
+2 1IGY ?   B ?   ? GB 194362 ALA 116 deletion ?   40  
+2 1IGY ?   B ?   ? GB 194362 ARG 117 deletion ?   41  
+2 1IGY VAL B 96  ? GB 194362 ARG 118 conflict 93  42  
+2 1IGY GLU B 98  ? GB 194362 ASP 120 conflict 95  43  
+2 1IGY ?   B ?   ? GB 194362 ASN 122 deletion ?   44  
+2 1IGY ?   B ?   ? GB 194362 TYR 123 deletion ?   45  
+2 1IGY GLU B 100 ? GB 194362 GLY 124 conflict 97  46  
+2 1IGY VAL B 101 ? GB 194362 PHE 125 conflict 98  47  
+2 1IGY PRO B 102 ? GB 194362 THR 126 conflict 101 48  
+2 1IGY THR B 109 ? GB 194362 LEU 133 conflict 108 49  
+2 1IGY SER B 114 ? GB 194362 ALA 138 conflict 113 50  
+2 1IGY PRO B 188 ? GB 194362 THR 212 conflict 199 51  
+2 1IGY ARG B 189 ? GB 194362 TRP 213 conflict 200 52  
+2 1IGY THR B 241 ? GB 194362 VAL 265 conflict 263 53  
+2 1IGY LEU B 243 ? GB 194362 THR 267 conflict 265 54  
+2 1IGY VAL B 246 ? GB 194362 LEU 270 conflict 268 55  
+2 1IGY ASN B 272 ? GB 194362 ASP 296 conflict 296 56  
+2 1IGY VAL B 293 ? GB 194362 SER 317 conflict 321 57  
+2 1IGY ALA B 296 ? GB 194362 GLU 320 conflict 324 58  
+2 1IGY LYS B 333 ? GB 194362 ARG 357 conflict 363 59  
+2 1IGY ARG B 335 ? GB 194362 LYS 359 conflict 365 60  
+2 1IGY SER B 374 ? GB 194362 TRP 398 conflict 408 61  
+2 1IGY ASP B 375 ? GB 194362 ASN 399 conflict 410 62  
+2 1IGY ALA B 378 ? GB 194362 PRO 402 conflict 415 63  
+2 1IGY PRO B 379 ? GB 194362 ALA 403 conflict 416 64  
+2 1IGY ASP B 390 ? GB 194362 ASN 414 conflict 427 65  
+2 1IGY ASP B 392 ? GB 194362 ASN 416 conflict 430 66  
+3 1IGY VAL C 6   ? GB 309359 GLN 35  conflict 7   67  
+3 1IGY ?   C ?   ? GB 309359 PRO 37  deletion ?   68  
+4 1IGY LYS D 2   ? GB 194362 GLN 22  conflict 3   69  
+4 1IGY GLU D 5   ? GB 194362 GLN 25  conflict 6   70  
+4 1IGY ALA D 8   ? GB 194362 PRO 28  conflict 9   71  
+4 1IGY ALA D 11  ? GB 194362 GLU 31  conflict 12  72  
+4 1IGY ARG D 12  ? GB 194362 LYS 32  conflict 13  73  
+4 1IGY MET D 19  ? GB 194362 ILE 39  conflict 20  74  
+4 1IGY TYR D 26  ? GB 194362 PHE 46  conflict 27  75  
+4 1IGY THR D 27  ? GB 194362 SER 47  conflict 28  76  
+4 1IGY PHE D 28  ? GB 194362 LEU 48  conflict 29  77  
+4 1IGY THR D 29  ? GB 194362 PRO 49  conflict 30  78  
+4 1IGY THR D 30  ? GB 194362 GLY 50  conflict 31  79  
+4 1IGY TYR D 31  ? GB 194362 HIS 51  conflict 32  80  
+4 1IGY THR D 32  ? GB 194362 ASN 52  conflict 33  81  
+4 1IGY HIS D 34  ? GB 194362 ASN 54  conflict 35  82  
+4 1IGY LYS D 37  ? GB 194362 VAL 57  conflict 38  83  
+4 1IGY PRO D 40  ? GB 194362 ASN 60  conflict 41  84  
+4 1IGY GLN D 42  ? GB 194362 LYS 62  conflict 43  85  
+4 1IGY GLY D 43  ? GB 194362 SER 63  conflict 44  86  
+4 1IGY TYR D 49  ? GB 194362 ASN 69  conflict 50  87  
+4 1IGY ASN D 51  ? GB 194362 ASP 71  conflict 52  88  
+4 1IGY SER D 53  ? GB 194362 TYR 73  conflict 53  89  
+4 1IGY SER D 54  ? GB 194362 TYR 74  conflict 54  90  
+4 1IGY VAL D 55  ? GB 194362 GLY 75  conflict 55  91  
+4 1IGY TYR D 56  ? GB 194362 GLY 76  conflict 56  92  
+4 1IGY TYR D 59  ? GB 194362 PHE 79  conflict 59  93  
+4 1IGY GLN D 61  ? GB 194362 PRO 81  conflict 61  94  
+4 1IGY ARG D 62  ? GB 194362 LYS 82  conflict 62  95  
+4 1IGY ASP D 65  ? GB 194362 GLY 85  conflict 65  96  
+4 1IGY ARG D 71  ? GB 194362 VAL 91  conflict 71  97  
+4 1IGY ARG D 73  ? GB 194362 LYS 93  conflict 73  98  
+4 1IGY ASN D 76  ? GB 194362 SER 96  conflict 76  99  
+4 1IGY ALA D 78  ? GB 194362 LEU 98  conflict 78  100 
+4 1IGY ASN D 79  ? GB 194362 TYR 99  conflict 79  101 
+4 1IGY ILE D 80  ? GB 194362 MET 100 conflict 80  102 
+4 1IGY SER D 83  A GB 194362 THR 103 conflict 82  103 
+4 1IGY THR D 86  ? GB 194362 GLN 106 conflict 83  104 
+4 1IGY ASP D 88  ? GB 194362 GLU 108 conflict 85  105 
+4 1IGY ?   D ?   ? GB 194362 ALA 116 deletion ?   106 
+4 1IGY ?   D ?   ? GB 194362 ARG 117 deletion ?   107 
+4 1IGY VAL D 96  ? GB 194362 ARG 118 conflict 93  108 
+4 1IGY GLU D 98  ? GB 194362 ASP 120 conflict 95  109 
+4 1IGY ?   D ?   ? GB 194362 ASN 122 deletion ?   110 
+4 1IGY ?   D ?   ? GB 194362 TYR 123 deletion ?   111 
+4 1IGY GLU D 100 ? GB 194362 GLY 124 conflict 97  112 
+4 1IGY VAL D 101 ? GB 194362 PHE 125 conflict 98  113 
+4 1IGY PRO D 102 ? GB 194362 THR 126 conflict 101 114 
+4 1IGY THR D 109 ? GB 194362 LEU 133 conflict 108 115 
+4 1IGY SER D 114 ? GB 194362 ALA 138 conflict 113 116 
+4 1IGY PRO D 188 ? GB 194362 THR 212 conflict 199 117 
+4 1IGY ARG D 189 ? GB 194362 TRP 213 conflict 200 118 
+4 1IGY THR D 241 ? GB 194362 VAL 265 conflict 263 119 
+4 1IGY LEU D 243 ? GB 194362 THR 267 conflict 265 120 
+4 1IGY VAL D 246 ? GB 194362 LEU 270 conflict 268 121 
+4 1IGY ASN D 272 ? GB 194362 ASP 296 conflict 296 122 
+4 1IGY VAL D 293 ? GB 194362 SER 317 conflict 321 123 
+4 1IGY ALA D 296 ? GB 194362 GLU 320 conflict 324 124 
+4 1IGY LYS D 333 ? GB 194362 ARG 357 conflict 363 125 
+4 1IGY ARG D 335 ? GB 194362 LYS 359 conflict 365 126 
+4 1IGY SER D 374 ? GB 194362 TRP 398 conflict 408 127 
+4 1IGY ASP D 375 ? GB 194362 ASN 399 conflict 410 128 
+4 1IGY ALA D 378 ? GB 194362 PRO 402 conflict 415 129 
+4 1IGY PRO D 379 ? GB 194362 ALA 403 conflict 416 130 
+4 1IGY ASP D 390 ? GB 194362 ASN 414 conflict 427 131 
+4 1IGY ASP D 392 ? GB 194362 ASN 416 conflict 430 132 
 # 
 loop_
 _chem_comp.id 
@@ -1019,33 +1023,33 @@ _chem_comp.name
 _chem_comp.pdbx_synonyms 
 _chem_comp.formula 
 _chem_comp.formula_weight 
-ALA 'L-peptide linking' y ALANINE                                     ?                        'C3 H7 N O2'     89.093  
-ARG 'L-peptide linking' y ARGININE                                    ?                        'C6 H15 N4 O2 1' 175.209 
-ASN 'L-peptide linking' y ASPARAGINE                                  ?                        'C4 H8 N2 O3'    132.118 
-ASP 'L-peptide linking' y 'ASPARTIC ACID'                             ?                        'C4 H7 N O4'     133.103 
-BMA D-saccharide        . BETA-D-MANNOSE                              ?                        'C6 H12 O6'      180.156 
-CYS 'L-peptide linking' y CYSTEINE                                    ?                        'C3 H7 N O2 S'   121.158 
-FUC saccharide          . ALPHA-L-FUCOSE                              ?                        'C6 H12 O5'      164.156 
-FUL L-saccharide        . BETA-L-FUCOSE                               6-DEOXY-BETA-L-GALACTOSE 'C6 H12 O5'      164.156 
-GAL D-saccharide        . BETA-D-GALACTOSE                            ?                        'C6 H12 O6'      180.156 
-GLN 'L-peptide linking' y GLUTAMINE                                   ?                        'C5 H10 N2 O3'   146.144 
-GLU 'L-peptide linking' y 'GLUTAMIC ACID'                             ?                        'C5 H9 N O4'     147.129 
-GLY 'peptide linking'   y GLYCINE                                     ?                        'C2 H5 N O2'     75.067  
-HIS 'L-peptide linking' y HISTIDINE                                   ?                        'C6 H10 N3 O2 1' 156.162 
-ILE 'L-peptide linking' y ISOLEUCINE                                  ?                        'C6 H13 N O2'    131.173 
-LEU 'L-peptide linking' y LEUCINE                                     ?                        'C6 H13 N O2'    131.173 
-LYS 'L-peptide linking' y LYSINE                                      ?                        'C6 H15 N2 O2 1' 147.195 
-MAN D-saccharide        . ALPHA-D-MANNOSE                             ?                        'C6 H12 O6'      180.156 
-MET 'L-peptide linking' y METHIONINE                                  ?                        'C5 H11 N O2 S'  149.211 
-NAG D-saccharide        . N-ACETYL-D-GLUCOSAMINE                      ?                        'C8 H15 N O6'    221.208 
-NDG D-saccharide        . '2-(ACETYLAMINO)-2-DEOXY-A-D-GLUCOPYRANOSE' ?                        'C8 H15 N O6'    221.208 
-PHE 'L-peptide linking' y PHENYLALANINE                               ?                        'C9 H11 N O2'    165.189 
-PRO 'L-peptide linking' y PROLINE                                     ?                        'C5 H9 N O2'     115.130 
-SER 'L-peptide linking' y SERINE                                      ?                        'C3 H7 N O3'     105.093 
-THR 'L-peptide linking' y THREONINE                                   ?                        'C4 H9 N O3'     119.119 
-TRP 'L-peptide linking' y TRYPTOPHAN                                  ?                        'C11 H12 N2 O2'  204.225 
-TYR 'L-peptide linking' y TYROSINE                                    ?                        'C9 H11 N O3'    181.189 
-VAL 'L-peptide linking' y VALINE                                      ?                        'C5 H11 N O2'    117.146 
+ALA 'L-peptide linking'           y ALANINE                                   ?                        'C3 H7 N O2'     89.093  
+ARG 'L-peptide linking'           y ARGININE                                  ?                        'C6 H15 N4 O2 1' 175.209 
+ASN 'L-peptide linking'           y ASPARAGINE                                ?                        'C4 H8 N2 O3'    132.118 
+ASP 'L-peptide linking'           y 'ASPARTIC ACID'                           ?                        'C4 H7 N O4'     133.103 
+BMA 'D-saccharide, beta linking'  . beta-D-mannopyranose                      ?                        'C6 H12 O6'      180.156 
+CYS 'L-peptide linking'           y CYSTEINE                                  ?                        'C3 H7 N O2 S'   121.158 
+FUC 'L-saccharide, alpha linking' . alpha-L-fucopyranose                      ?                        'C6 H12 O5'      164.156 
+FUL 'L-saccharide, beta linking'  . beta-L-fucopyranose                       6-DEOXY-BETA-L-GALACTOSE 'C6 H12 O5'      164.156 
+GAL 'D-saccharide, beta linking'  . beta-D-galactopyranose                    ?                        'C6 H12 O6'      180.156 
+GLN 'L-peptide linking'           y GLUTAMINE                                 ?                        'C5 H10 N2 O3'   146.144 
+GLU 'L-peptide linking'           y 'GLUTAMIC ACID'                           ?                        'C5 H9 N O4'     147.129 
+GLY 'peptide linking'             y GLYCINE                                   ?                        'C2 H5 N O2'     75.067  
+HIS 'L-peptide linking'           y HISTIDINE                                 ?                        'C6 H10 N3 O2 1' 156.162 
+ILE 'L-peptide linking'           y ISOLEUCINE                                ?                        'C6 H13 N O2'    131.173 
+LEU 'L-peptide linking'           y LEUCINE                                   ?                        'C6 H13 N O2'    131.173 
+LYS 'L-peptide linking'           y LYSINE                                    ?                        'C6 H15 N2 O2 1' 147.195 
+MAN 'D-saccharide, alpha linking' . alpha-D-mannopyranose                     ?                        'C6 H12 O6'      180.156 
+MET 'L-peptide linking'           y METHIONINE                                ?                        'C5 H11 N O2 S'  149.211 
+NAG 'D-saccharide, beta linking'  . 2-acetamido-2-deoxy-beta-D-glucopyranose  ?                        'C8 H15 N O6'    221.208 
+NDG 'D-saccharide, alpha linking' . 2-acetamido-2-deoxy-alpha-D-glucopyranose ?                        'C8 H15 N O6'    221.208 
+PHE 'L-peptide linking'           y PHENYLALANINE                             ?                        'C9 H11 N O2'    165.189 
+PRO 'L-peptide linking'           y PROLINE                                   ?                        'C5 H9 N O2'     115.130 
+SER 'L-peptide linking'           y SERINE                                    ?                        'C3 H7 N O3'     105.093 
+THR 'L-peptide linking'           y THREONINE                                 ?                        'C4 H9 N O3'     119.119 
+TRP 'L-peptide linking'           y TRYPTOPHAN                                ?                        'C11 H12 N2 O2'  204.225 
+TYR 'L-peptide linking'           y TYROSINE                                  ?                        'C9 H11 N O3'    181.189 
+VAL 'L-peptide linking'           y VALINE                                    ?                        'C5 H11 N O2'    117.146 
 # 
 _exptl.entry_id          1IGY 
 _exptl.method            'X-RAY DIFFRACTION' 
@@ -1293,22 +1297,6 @@ C N N 1 ?
 D N N 2 ? 
 E N N 3 ? 
 F N N 4 ? 
-G N N 5 ? 
-H N N 6 ? 
-I N N 7 ? 
-J N N 3 ? 
-K N N 8 ? 
-L N N 7 ? 
-M N N 3 ? 
-N N N 3 ? 
-O N N 9 ? 
-P N N 5 ? 
-Q N N 6 ? 
-R N N 7 ? 
-S N N 3 ? 
-T N N 8 ? 
-U N N 7 ? 
-V N N 3 ? 
 # 
 _struct_biol.id                    1 
 _struct_biol.details               'THERE IS ONE ENTIRE ANTIBODY MOLECULE PER ASYMMETRIC UNIT.' 
@@ -1395,42 +1383,43 @@ _struct_conn.pdbx_ptnr3_PDB_ins_code
 _struct_conn.details 
 _struct_conn.pdbx_dist_value 
 _struct_conn.pdbx_value_order 
-disulf1  disulf ? ? A CYS 22  SG ? ? ? 1_555 A CYS 87  SG  ? ? A CYS 23  A CYS 88  1_555 ? ? ? ? ? ? ? 2.025 ? 
-disulf2  disulf ? ? A CYS 133 SG ? ? ? 1_555 A CYS 193 SG  ? ? A CYS 134 A CYS 194 1_555 ? ? ? ? ? ? ? 2.034 ? 
-disulf3  disulf ? ? A CYS 213 SG ? ? ? 1_555 B CYS 216 SG  ? ? A CYS 214 B CYS 235 1_555 ? ? ? ? ? ? ? 2.035 ? 
-disulf4  disulf ? ? B CYS 21  SG ? ? ? 1_555 B CYS 95  SG  ? ? B CYS 22  B CYS 92  1_555 ? ? ? ? ? ? ? 2.006 ? 
-disulf5  disulf ? ? B CYS 141 SG ? ? ? 1_555 B CYS 196 SG  ? ? B CYS 142 B CYS 208 1_555 ? ? ? ? ? ? ? 2.028 ? 
-disulf6  disulf ? ? B CYS 218 SG ? ? ? 1_555 D CYS 218 SG  ? ? B CYS 237 D CYS 237 1_555 ? ? ? ? ? ? ? 2.038 ? 
-disulf7  disulf ? ? B CYS 221 SG ? ? ? 1_555 D CYS 221 SG  ? ? B CYS 240 D CYS 240 1_555 ? ? ? ? ? ? ? 2.045 ? 
-disulf8  disulf ? ? B CYS 223 SG ? ? ? 1_555 D CYS 223 SG  ? ? B CYS 242 D CYS 242 1_555 ? ? ? ? ? ? ? 2.032 ? 
-disulf9  disulf ? ? B CYS 252 SG ? ? ? 1_555 B CYS 312 SG  ? ? B CYS 274 B CYS 340 1_555 ? ? ? ? ? ? ? 2.034 ? 
-disulf10 disulf ? ? B CYS 358 SG ? ? ? 1_555 B CYS 416 SG  ? ? B CYS 390 B CYS 456 1_555 ? ? ? ? ? ? ? 2.032 ? 
-disulf11 disulf ? ? C CYS 22  SG ? ? ? 1_555 C CYS 87  SG  ? ? C CYS 23  C CYS 88  1_555 ? ? ? ? ? ? ? 2.026 ? 
-disulf12 disulf ? ? C CYS 133 SG ? ? ? 1_555 C CYS 193 SG  ? ? C CYS 134 C CYS 194 1_555 ? ? ? ? ? ? ? 2.036 ? 
-disulf13 disulf ? ? C CYS 213 SG ? ? ? 1_555 D CYS 216 SG  ? ? C CYS 214 D CYS 235 1_555 ? ? ? ? ? ? ? 2.048 ? 
-disulf14 disulf ? ? D CYS 21  SG ? ? ? 1_555 D CYS 95  SG  ? ? D CYS 22  D CYS 92  1_555 ? ? ? ? ? ? ? 2.021 ? 
-disulf15 disulf ? ? D CYS 141 SG ? ? ? 1_555 D CYS 196 SG  ? ? D CYS 142 D CYS 208 1_555 ? ? ? ? ? ? ? 2.041 ? 
-disulf16 disulf ? ? D CYS 221 SG ? ? ? 1_555 D CYS 223 SG  ? ? D CYS 240 D CYS 242 1_555 ? ? ? ? ? ? ? 2.994 ? 
-disulf17 disulf ? ? D CYS 252 SG ? ? ? 1_555 D CYS 312 SG  ? ? D CYS 274 D CYS 340 1_555 ? ? ? ? ? ? ? 2.033 ? 
-disulf18 disulf ? ? D CYS 358 SG ? ? ? 1_555 D CYS 416 SG  ? ? D CYS 390 D CYS 456 1_555 ? ? ? ? ? ? ? 2.036 ? 
-covale1  covale ? ? E NAG .   C1 ? ? ? 1_555 B ASN 288 ND2 ? ? B NAG 475 B ASN 314 1_555 ? ? ? ? ? ? ? 1.463 ? 
-covale2  covale ? ? E NAG .   O4 ? ? ? 1_555 G NDG .   C1  ? ? B NAG 475 B NDG 477 1_555 ? ? ? ? ? ? ? 1.402 ? 
-covale3  covale ? ? E NAG .   O6 ? ? ? 1_555 F FUL .   C1  ? ? B NAG 475 B FUL 476 1_555 ? ? ? ? ? ? ? 1.393 ? 
-covale4  covale ? ? G NDG .   O4 ? ? ? 1_555 H BMA .   C1  ? ? B NDG 477 B BMA 478 1_555 ? ? ? ? ? ? ? 1.392 ? 
-covale5  covale ? ? H BMA .   O3 ? ? ? 1_555 L MAN .   C1  ? ? B BMA 478 B MAN 482 1_555 ? ? ? ? ? ? ? 1.410 ? 
-covale6  covale ? ? H BMA .   O6 ? ? ? 1_555 I MAN .   C1  ? ? B BMA 478 B MAN 479 1_555 ? ? ? ? ? ? ? 1.400 ? 
-covale7  covale ? ? I MAN .   O2 ? ? ? 1_555 J NAG .   C1  ? ? B MAN 479 B NAG 480 1_555 ? ? ? ? ? ? ? 1.379 ? 
-covale8  covale ? ? J NAG .   O4 ? ? ? 1_555 K GAL .   C1  ? ? B NAG 480 B GAL 481 1_555 ? ? ? ? ? ? ? 1.392 ? 
-covale9  covale ? ? L MAN .   O2 ? ? ? 1_555 M NAG .   C1  ? ? B MAN 482 B NAG 483 1_555 ? ? ? ? ? ? ? 1.391 ? 
-covale10 covale ? ? N NAG .   C1 ? ? ? 1_555 D ASN 288 ND2 ? ? D NAG 475 D ASN 314 1_555 ? ? ? ? ? ? ? 1.457 ? 
-covale11 covale ? ? N NAG .   O4 ? ? ? 1_555 P NDG .   C1  ? ? D NAG 475 D NDG 477 1_555 ? ? ? ? ? ? ? 1.391 ? 
-covale12 covale ? ? N NAG .   O6 ? ? ? 1_555 O FUC .   C1  ? ? D NAG 475 D FUC 476 1_555 ? ? ? ? ? ? ? 1.396 ? 
-covale13 covale ? ? P NDG .   O4 ? ? ? 1_555 Q BMA .   C1  ? ? D NDG 477 D BMA 478 1_555 ? ? ? ? ? ? ? 1.392 ? 
-covale14 covale ? ? Q BMA .   O3 ? ? ? 1_555 U MAN .   C1  ? ? D BMA 478 D MAN 482 1_555 ? ? ? ? ? ? ? 1.412 ? 
-covale15 covale ? ? Q BMA .   O6 ? ? ? 1_555 R MAN .   C1  ? ? D BMA 478 D MAN 479 1_555 ? ? ? ? ? ? ? 1.397 ? 
-covale16 covale ? ? R MAN .   O2 ? ? ? 1_555 S NAG .   C1  ? ? D MAN 479 D NAG 480 1_555 ? ? ? ? ? ? ? 1.381 ? 
-covale17 covale ? ? S NAG .   O4 ? ? ? 1_555 T GAL .   C1  ? ? D NAG 480 D GAL 481 1_555 ? ? ? ? ? ? ? 1.389 ? 
-covale18 covale ? ? U MAN .   O2 ? ? ? 1_555 V NAG .   C1  ? ? D MAN 482 D NAG 483 1_555 ? ? ? ? ? ? ? 1.395 ? 
+_struct_conn.pdbx_role 
+disulf1  disulf ?    ? A CYS 22  SG  ? ? ? 1_555 A CYS 87  SG ? ? A CYS 23  A CYS 88  1_555 ? ? ? ? ? ? ? 2.025 ? ?               
+disulf2  disulf ?    ? A CYS 133 SG  ? ? ? 1_555 A CYS 193 SG ? ? A CYS 134 A CYS 194 1_555 ? ? ? ? ? ? ? 2.034 ? ?               
+disulf3  disulf ?    ? A CYS 213 SG  ? ? ? 1_555 B CYS 216 SG ? ? A CYS 214 B CYS 235 1_555 ? ? ? ? ? ? ? 2.035 ? ?               
+disulf4  disulf ?    ? B CYS 21  SG  ? ? ? 1_555 B CYS 95  SG ? ? B CYS 22  B CYS 92  1_555 ? ? ? ? ? ? ? 2.006 ? ?               
+disulf5  disulf ?    ? B CYS 141 SG  ? ? ? 1_555 B CYS 196 SG ? ? B CYS 142 B CYS 208 1_555 ? ? ? ? ? ? ? 2.028 ? ?               
+disulf6  disulf ?    ? B CYS 218 SG  ? ? ? 1_555 D CYS 218 SG ? ? B CYS 237 D CYS 237 1_555 ? ? ? ? ? ? ? 2.038 ? ?               
+disulf7  disulf ?    ? B CYS 221 SG  ? ? ? 1_555 D CYS 221 SG ? ? B CYS 240 D CYS 240 1_555 ? ? ? ? ? ? ? 2.045 ? ?               
+disulf8  disulf ?    ? B CYS 223 SG  ? ? ? 1_555 D CYS 223 SG ? ? B CYS 242 D CYS 242 1_555 ? ? ? ? ? ? ? 2.032 ? ?               
+disulf9  disulf ?    ? B CYS 252 SG  ? ? ? 1_555 B CYS 312 SG ? ? B CYS 274 B CYS 340 1_555 ? ? ? ? ? ? ? 2.034 ? ?               
+disulf10 disulf ?    ? B CYS 358 SG  ? ? ? 1_555 B CYS 416 SG ? ? B CYS 390 B CYS 456 1_555 ? ? ? ? ? ? ? 2.032 ? ?               
+disulf11 disulf ?    ? C CYS 22  SG  ? ? ? 1_555 C CYS 87  SG ? ? C CYS 23  C CYS 88  1_555 ? ? ? ? ? ? ? 2.026 ? ?               
+disulf12 disulf ?    ? C CYS 133 SG  ? ? ? 1_555 C CYS 193 SG ? ? C CYS 134 C CYS 194 1_555 ? ? ? ? ? ? ? 2.036 ? ?               
+disulf13 disulf ?    ? C CYS 213 SG  ? ? ? 1_555 D CYS 216 SG ? ? C CYS 214 D CYS 235 1_555 ? ? ? ? ? ? ? 2.048 ? ?               
+disulf14 disulf ?    ? D CYS 21  SG  ? ? ? 1_555 D CYS 95  SG ? ? D CYS 22  D CYS 92  1_555 ? ? ? ? ? ? ? 2.021 ? ?               
+disulf15 disulf ?    ? D CYS 141 SG  ? ? ? 1_555 D CYS 196 SG ? ? D CYS 142 D CYS 208 1_555 ? ? ? ? ? ? ? 2.041 ? ?               
+disulf16 disulf ?    ? D CYS 221 SG  ? ? ? 1_555 D CYS 223 SG ? ? D CYS 240 D CYS 242 1_555 ? ? ? ? ? ? ? 2.994 ? ?               
+disulf17 disulf ?    ? D CYS 252 SG  ? ? ? 1_555 D CYS 312 SG ? ? D CYS 274 D CYS 340 1_555 ? ? ? ? ? ? ? 2.033 ? ?               
+disulf18 disulf ?    ? D CYS 358 SG  ? ? ? 1_555 D CYS 416 SG ? ? D CYS 390 D CYS 456 1_555 ? ? ? ? ? ? ? 2.036 ? ?               
+covale1  covale one  ? B ASN 288 ND2 ? ? ? 1_555 E NAG .   C1 ? ? B ASN 314 E NAG 1   1_555 ? ? ? ? ? ? ? 1.463 ? N-Glycosylation 
+covale2  covale one  ? D ASN 288 ND2 ? ? ? 1_555 F NAG .   C1 ? ? D ASN 314 F NAG 1   1_555 ? ? ? ? ? ? ? 1.457 ? N-Glycosylation 
+covale3  covale both ? E NAG .   O4  ? ? ? 1_555 E NDG .   C1 ? ? E NAG 1   E NDG 2   1_555 ? ? ? ? ? ? ? 1.402 ? ?               
+covale4  covale both ? E NAG .   O6  ? ? ? 1_555 E FUL .   C1 ? ? E NAG 1   E FUL 9   1_555 ? ? ? ? ? ? ? 1.393 ? ?               
+covale5  covale both ? E NDG .   O4  ? ? ? 1_555 E BMA .   C1 ? ? E NDG 2   E BMA 3   1_555 ? ? ? ? ? ? ? 1.392 ? ?               
+covale6  covale both ? E BMA .   O6  ? ? ? 1_555 E MAN .   C1 ? ? E BMA 3   E MAN 4   1_555 ? ? ? ? ? ? ? 1.400 ? ?               
+covale7  covale both ? E BMA .   O3  ? ? ? 1_555 E MAN .   C1 ? ? E BMA 3   E MAN 7   1_555 ? ? ? ? ? ? ? 1.410 ? ?               
+covale8  covale both ? E MAN .   O2  ? ? ? 1_555 E NAG .   C1 ? ? E MAN 4   E NAG 5   1_555 ? ? ? ? ? ? ? 1.379 ? ?               
+covale9  covale both ? E NAG .   O4  ? ? ? 1_555 E GAL .   C1 ? ? E NAG 5   E GAL 6   1_555 ? ? ? ? ? ? ? 1.392 ? ?               
+covale10 covale both ? E MAN .   O2  ? ? ? 1_555 E NAG .   C1 ? ? E MAN 7   E NAG 8   1_555 ? ? ? ? ? ? ? 1.391 ? ?               
+covale11 covale both ? F NAG .   O4  ? ? ? 1_555 F NDG .   C1 ? ? F NAG 1   F NDG 2   1_555 ? ? ? ? ? ? ? 1.391 ? ?               
+covale12 covale both ? F NAG .   O6  ? ? ? 1_555 F FUC .   C1 ? ? F NAG 1   F FUC 9   1_555 ? ? ? ? ? ? ? 1.396 ? ?               
+covale13 covale both ? F NDG .   O4  ? ? ? 1_555 F BMA .   C1 ? ? F NDG 2   F BMA 3   1_555 ? ? ? ? ? ? ? 1.392 ? ?               
+covale14 covale both ? F BMA .   O6  ? ? ? 1_555 F MAN .   C1 ? ? F BMA 3   F MAN 4   1_555 ? ? ? ? ? ? ? 1.397 ? ?               
+covale15 covale both ? F BMA .   O3  ? ? ? 1_555 F MAN .   C1 ? ? F BMA 3   F MAN 7   1_555 ? ? ? ? ? ? ? 1.412 ? ?               
+covale16 covale both ? F MAN .   O2  ? ? ? 1_555 F NAG .   C1 ? ? F MAN 4   F NAG 5   1_555 ? ? ? ? ? ? ? 1.381 ? ?               
+covale17 covale both ? F NAG .   O4  ? ? ? 1_555 F GAL .   C1 ? ? F NAG 5   F GAL 6   1_555 ? ? ? ? ? ? ? 1.389 ? ?               
+covale18 covale both ? F MAN .   O2  ? ? ? 1_555 F NAG .   C1 ? ? F MAN 7   F NAG 8   1_555 ? ? ? ? ? ? ? 1.395 ? ?               
 # 
 loop_
 _struct_conn_type.id 
@@ -1774,107 +1763,6 @@ W 2 3 O VAL D 354 ? O VAL D 386 N VAL D 403 ? N VAL D 443
 W 3 4 O LYS D 400 ? O LYS D 440 N LYS D 383 ? N LYS D 420 
 X 1 2 O THR D 369 ? O THR D 401 N LEU D 419 ? N LEU D 459 
 X 2 3 O CYS D 416 ? O CYS D 456 N LYS D 430 ? N LYS D 470 
-# 
-loop_
-_struct_site.id 
-_struct_site.pdbx_evidence_code 
-_struct_site.pdbx_auth_asym_id 
-_struct_site.pdbx_auth_comp_id 
-_struct_site.pdbx_auth_seq_id 
-_struct_site.pdbx_auth_ins_code 
-_struct_site.pdbx_num_residues 
-_struct_site.details 
-AC1 Software ? ? ? ? 6 'BINDING SITE FOR RESIDUE NAG B 475' 
-AC2 Software ? ? ? ? 6 'BINDING SITE FOR RESIDUE NDG B 477' 
-AC3 Software ? ? ? ? 3 'BINDING SITE FOR RESIDUE BMA B 478' 
-AC4 Software ? ? ? ? 3 'BINDING SITE FOR RESIDUE MAN B 479' 
-AC5 Software ? ? ? ? 4 'BINDING SITE FOR RESIDUE NAG B 480' 
-AC6 Software ? ? ? ? 5 'BINDING SITE FOR RESIDUE GAL B 481' 
-AC7 Software ? ? ? ? 1 'BINDING SITE FOR RESIDUE MAN B 482' 
-AC8 Software ? ? ? ? 7 'BINDING SITE FOR RESIDUE NAG D 475' 
-AC9 Software ? ? ? ? 3 'BINDING SITE FOR RESIDUE FUC D 476' 
-BC1 Software ? ? ? ? 6 'BINDING SITE FOR RESIDUE NDG D 477' 
-BC2 Software ? ? ? ? 3 'BINDING SITE FOR RESIDUE BMA D 478' 
-BC3 Software ? ? ? ? 3 'BINDING SITE FOR RESIDUE MAN D 479' 
-BC4 Software ? ? ? ? 4 'BINDING SITE FOR RESIDUE NAG D 480' 
-BC5 Software ? ? ? ? 5 'BINDING SITE FOR RESIDUE GAL D 481' 
-BC6 Software ? ? ? ? 1 'BINDING SITE FOR RESIDUE MAN D 482' 
-# 
-loop_
-_struct_site_gen.id 
-_struct_site_gen.site_id 
-_struct_site_gen.pdbx_num_res 
-_struct_site_gen.label_comp_id 
-_struct_site_gen.label_asym_id 
-_struct_site_gen.label_seq_id 
-_struct_site_gen.pdbx_auth_ins_code 
-_struct_site_gen.auth_comp_id 
-_struct_site_gen.auth_asym_id 
-_struct_site_gen.auth_seq_id 
-_struct_site_gen.label_atom_id 
-_struct_site_gen.label_alt_id 
-_struct_site_gen.symmetry 
-_struct_site_gen.details 
-1  AC1 6 VAL B 255 ? VAL B 277 . ? 1_555 ? 
-2  AC1 6 ASP B 256 ? ASP B 278 . ? 1_555 ? 
-3  AC1 6 PHE B 287 ? PHE B 313 . ? 1_555 ? 
-4  AC1 6 ASN B 288 ? ASN B 314 . ? 1_555 ? 
-5  AC1 6 THR B 290 ? THR B 318 . ? 1_555 ? 
-6  AC1 6 NDG G .   ? NDG B 477 . ? 1_555 ? 
-7  AC2 6 PHE B 232 ? PHE B 254 . ? 1_555 ? 
-8  AC2 6 VAL B 255 ? VAL B 277 . ? 1_555 ? 
-9  AC2 6 ARG B 292 ? ARG B 320 . ? 1_555 ? 
-10 AC2 6 NAG E .   ? NAG B 475 . ? 1_555 ? 
-11 AC2 6 BMA H .   ? BMA B 478 . ? 1_555 ? 
-12 AC2 6 MAN I .   ? MAN B 479 . ? 1_555 ? 
-13 AC3 3 NDG G .   ? NDG B 477 . ? 1_555 ? 
-14 AC3 3 MAN I .   ? MAN B 479 . ? 1_555 ? 
-15 AC3 3 MAN L .   ? MAN B 482 . ? 1_555 ? 
-16 AC4 3 NDG G .   ? NDG B 477 . ? 1_555 ? 
-17 AC4 3 BMA H .   ? BMA B 478 . ? 1_555 ? 
-18 AC4 3 NAG J .   ? NAG B 480 . ? 1_555 ? 
-19 AC5 4 PHE B 234 ? PHE B 256 . ? 1_555 ? 
-20 AC5 4 ARG B 292 ? ARG B 320 . ? 1_555 ? 
-21 AC5 4 MAN I .   ? MAN B 479 . ? 1_555 ? 
-22 AC5 4 GAL K .   ? GAL B 481 . ? 1_555 ? 
-23 AC6 5 PHE B 234 ? PHE B 256 . ? 1_555 ? 
-24 AC6 5 PRO B 235 ? PRO B 257 . ? 1_555 ? 
-25 AC6 5 LYS B 249 ? LYS B 271 . ? 1_555 ? 
-26 AC6 5 THR B 251 ? THR B 273 . ? 1_555 ? 
-27 AC6 5 NAG J .   ? NAG B 480 . ? 1_555 ? 
-28 AC7 1 BMA H .   ? BMA B 478 . ? 1_555 ? 
-29 AC8 7 VAL D 255 ? VAL D 277 . ? 1_555 ? 
-30 AC8 7 ASP D 256 ? ASP D 278 . ? 1_555 ? 
-31 AC8 7 PHE D 287 ? PHE D 313 . ? 1_555 ? 
-32 AC8 7 ASN D 288 ? ASN D 314 . ? 1_555 ? 
-33 AC8 7 THR D 290 ? THR D 318 . ? 1_555 ? 
-34 AC8 7 FUC O .   ? FUC D 476 . ? 1_555 ? 
-35 AC8 7 NDG P .   ? NDG D 477 . ? 1_555 ? 
-36 AC9 3 ILE B 222 ? ILE B 241 . ? 1_555 ? 
-37 AC9 3 NAG N .   ? NAG D 475 . ? 1_555 ? 
-38 AC9 3 NDG P .   ? NDG D 477 . ? 1_555 ? 
-39 BC1 6 VAL D 255 ? VAL D 277 . ? 1_555 ? 
-40 BC1 6 ARG D 292 ? ARG D 320 . ? 1_555 ? 
-41 BC1 6 NAG N .   ? NAG D 475 . ? 1_555 ? 
-42 BC1 6 FUC O .   ? FUC D 476 . ? 1_555 ? 
-43 BC1 6 BMA Q .   ? BMA D 478 . ? 1_555 ? 
-44 BC1 6 MAN R .   ? MAN D 479 . ? 1_555 ? 
-45 BC2 3 NDG P .   ? NDG D 477 . ? 1_555 ? 
-46 BC2 3 MAN R .   ? MAN D 479 . ? 1_555 ? 
-47 BC2 3 MAN U .   ? MAN D 482 . ? 1_555 ? 
-48 BC3 3 NDG P .   ? NDG D 477 . ? 1_555 ? 
-49 BC3 3 BMA Q .   ? BMA D 478 . ? 1_555 ? 
-50 BC3 3 NAG S .   ? NAG D 480 . ? 1_555 ? 
-51 BC4 4 PHE D 234 ? PHE D 256 . ? 1_555 ? 
-52 BC4 4 ARG D 292 ? ARG D 320 . ? 1_555 ? 
-53 BC4 4 MAN R .   ? MAN D 479 . ? 1_555 ? 
-54 BC4 4 GAL T .   ? GAL D 481 . ? 1_555 ? 
-55 BC5 5 PHE D 234 ? PHE D 256 . ? 1_555 ? 
-56 BC5 5 PRO D 235 ? PRO D 257 . ? 1_555 ? 
-57 BC5 5 LYS D 249 ? LYS D 271 . ? 1_555 ? 
-58 BC5 5 THR D 251 ? THR D 273 . ? 1_555 ? 
-59 BC5 5 NAG S .   ? NAG D 480 . ? 1_555 ? 
-60 BC6 1 BMA Q .   ? BMA D 478 . ? 1_555 ? 
 # 
 _database_PDB_matrix.entry_id          1IGY 
 _database_PDB_matrix.origx[1][1]       1.000000 
@@ -14258,432 +14146,435 @@ ATOM   12321 O OXT  . HIS D 2 434 ? 41.550  19.877  9.106   1.00 80.99  ? 474 HI
 ATOM   12322 H H    . HIS D 2 434 ? 37.858  18.078  9.737   1.00 15.00  ? 474 HIS D H    1 
 ATOM   12323 H HD1  . HIS D 2 434 ? 42.041  19.388  11.490  1.00 15.00  ? 474 HIS D HD1  1 
 ATOM   12324 H HE2  . HIS D 2 434 ? 44.253  16.189  12.372  1.00 15.00  ? 474 HIS D HE2  1 
-HETATM 12325 C C1   . NAG E 3 .   ? 0.924   29.195  47.741  1.00 100.00 ? 475 NAG B C1   1 
-HETATM 12326 C C2   . NAG E 3 .   ? 0.488   28.178  46.650  1.00 100.00 ? 475 NAG B C2   1 
-HETATM 12327 C C3   . NAG E 3 .   ? 1.629   27.220  46.287  1.00 100.00 ? 475 NAG B C3   1 
-HETATM 12328 C C4   . NAG E 3 .   ? 2.956   27.994  46.269  1.00 100.00 ? 475 NAG B C4   1 
-HETATM 12329 C C5   . NAG E 3 .   ? 3.298   28.446  47.710  1.00 100.00 ? 475 NAG B C5   1 
-HETATM 12330 C C6   . NAG E 3 .   ? 4.302   29.596  47.859  1.00 100.00 ? 475 NAG B C6   1 
-HETATM 12331 C C7   . NAG E 3 .   ? -1.541  26.930  46.218  1.00 100.00 ? 475 NAG B C7   1 
-HETATM 12332 C C8   . NAG E 3 .   ? -2.714  26.140  46.780  1.00 100.00 ? 475 NAG B C8   1 
-HETATM 12333 N N2   . NAG E 3 .   ? -0.668  27.413  47.099  1.00 100.00 ? 475 NAG B N2   1 
-HETATM 12334 O O3   . NAG E 3 .   ? 1.380   26.629  45.015  1.00 100.00 ? 475 NAG B O3   1 
-HETATM 12335 O O4   . NAG E 3 .   ? 4.029   27.162  45.725  1.00 100.00 ? 475 NAG B O4   1 
-HETATM 12336 O O5   . NAG E 3 .   ? 2.098   28.774  48.494  1.00 100.00 ? 475 NAG B O5   1 
-HETATM 12337 O O6   . NAG E 3 .   ? 3.895   30.731  47.070  1.00 100.00 ? 475 NAG B O6   1 
-HETATM 12338 O O7   . NAG E 3 .   ? -1.426  27.111  45.007  1.00 100.00 ? 475 NAG B O7   1 
-HETATM 12339 H H1   . NAG E 3 .   ? 0.182   29.169  48.551  1.00 15.00  ? 475 NAG B H1   1 
-HETATM 12340 H H2   . NAG E 3 .   ? 0.229   28.729  45.735  1.00 15.00  ? 475 NAG B H2   1 
-HETATM 12341 H H3   . NAG E 3 .   ? 1.693   26.436  47.055  1.00 15.00  ? 475 NAG B H3   1 
-HETATM 12342 H H4   . NAG E 3 .   ? 2.833   28.891  45.646  1.00 15.00  ? 475 NAG B H4   1 
-HETATM 12343 H H5   . NAG E 3 .   ? 3.823   27.630  48.225  1.00 15.00  ? 475 NAG B H5   1 
-HETATM 12344 H H61  . NAG E 3 .   ? 5.289   29.248  47.522  1.00 15.00  ? 475 NAG B H61  1 
-HETATM 12345 H H62  . NAG E 3 .   ? 4.354   29.883  48.918  1.00 15.00  ? 475 NAG B H62  1 
-HETATM 12346 H H81  . NAG E 3 .   ? -3.480  26.835  47.152  1.00 15.00  ? 475 NAG B H81  1 
-HETATM 12347 H H82  . NAG E 3 .   ? -2.375  25.511  47.615  1.00 15.00  ? 475 NAG B H82  1 
-HETATM 12348 H H83  . NAG E 3 .   ? -3.158  25.517  45.991  1.00 15.00  ? 475 NAG B H83  1 
-HETATM 12349 H HN2  . NAG E 3 .   ? -0.804  27.253  48.056  1.00 15.00  ? 475 NAG B HN2  1 
-HETATM 12350 H HO3  . NAG E 3 .   ? 2.096   26.028  44.798  1.00 15.00  ? 475 NAG B HO3  1 
-HETATM 12351 C C1   . FUL F 4 .   ? 4.719   30.935  45.965  0.00 0.00   ? 476 FUL B C1   1 
-HETATM 12352 C C2   . FUL F 4 .   ? 4.018   31.901  45.012  0.00 0.00   ? 476 FUL B C2   1 
-HETATM 12353 O O2   . FUL F 4 .   ? 3.851   33.157  45.654  0.00 0.00   ? 476 FUL B O2   1 
-HETATM 12354 C C3   . FUL F 4 .   ? 4.823   32.086  43.726  0.00 0.00   ? 476 FUL B C3   1 
-HETATM 12355 O O3   . FUL F 4 .   ? 4.074   32.865  42.803  0.00 0.00   ? 476 FUL B O3   1 
-HETATM 12356 C C4   . FUL F 4 .   ? 5.145   30.723  43.114  0.00 0.00   ? 476 FUL B C4   1 
-HETATM 12357 O O4   . FUL F 4 .   ? 3.942   30.080  42.716  0.00 0.00   ? 476 FUL B O4   1 
-HETATM 12358 C C5   . FUL F 4 .   ? 5.865   29.862  44.144  0.00 0.00   ? 476 FUL B C5   1 
-HETATM 12359 C C6   . FUL F 4 .   ? 6.188   28.465  43.639  0.00 0.00   ? 476 FUL B C6   1 
-HETATM 12360 O O5   . FUL F 4 .   ? 5.034   29.713  45.306  0.00 0.00   ? 476 FUL B O5   1 
-HETATM 12361 H H1   . FUL F 4 .   ? 5.677   31.370  46.283  0.00 0.00   ? 476 FUL B H1   1 
-HETATM 12362 H H2   . FUL F 4 .   ? 3.037   31.487  44.740  0.00 0.00   ? 476 FUL B H2   1 
-HETATM 12363 H HO2  . FUL F 4 .   ? 4.712   33.511  45.888  0.00 0.00   ? 476 FUL B HO2  1 
-HETATM 12364 H H3   . FUL F 4 .   ? 5.766   32.596  43.966  0.00 0.00   ? 476 FUL B H3   1 
-HETATM 12365 H HO3  . FUL F 4 .   ? 4.585   32.983  41.999  0.00 0.00   ? 476 FUL B HO3  1 
-HETATM 12366 H H4   . FUL F 4 .   ? 5.796   30.869  42.241  0.00 0.00   ? 476 FUL B H4   1 
-HETATM 12367 H HO4  . FUL F 4 .   ? 3.379   29.956  43.483  0.00 0.00   ? 476 FUL B HO4  1 
-HETATM 12368 H H5   . FUL F 4 .   ? 6.802   30.351  44.444  0.00 0.00   ? 476 FUL B H5   1 
-HETATM 12369 H H61  . FUL F 4 .   ? 5.260   27.953  43.348  0.00 0.00   ? 476 FUL B H61  1 
-HETATM 12370 H H62  . FUL F 4 .   ? 6.879   28.530  42.787  0.00 0.00   ? 476 FUL B H62  1 
-HETATM 12371 H H63  . FUL F 4 .   ? 6.670   27.900  44.449  0.00 0.00   ? 476 FUL B H63  1 
-HETATM 12372 C C1   . NDG G 5 .   ? 4.403   26.019  46.445  1.00 100.00 ? 477 NDG B C1   1 
-HETATM 12373 C C2   . NDG G 5 .   ? 5.903   25.741  46.546  1.00 100.00 ? 477 NDG B C2   1 
-HETATM 12374 C C3   . NDG G 5 .   ? 6.391   24.795  45.433  1.00 100.00 ? 477 NDG B C3   1 
-HETATM 12375 C C4   . NDG G 5 .   ? 5.491   23.550  45.387  1.00 100.00 ? 477 NDG B C4   1 
-HETATM 12376 C C5   . NDG G 5 .   ? 4.033   23.972  45.150  1.00 100.00 ? 477 NDG B C5   1 
-HETATM 12377 C C6   . NDG G 5 .   ? 3.079   22.786  45.157  1.00 100.00 ? 477 NDG B C6   1 
-HETATM 12378 C C7   . NDG G 5 .   ? 7.832   27.086  47.123  1.00 100.00 ? 477 NDG B C7   1 
-HETATM 12379 C C8   . NDG G 5 .   ? 8.500   28.453  47.046  1.00 100.00 ? 477 NDG B C8   1 
-HETATM 12380 O O    . NDG G 5 .   ? 3.561   24.873  46.189  1.00 100.00 ? 477 NDG B O    1 
-HETATM 12381 O O3   . NDG G 5 .   ? 7.728   24.409  45.716  1.00 100.00 ? 477 NDG B O3   1 
-HETATM 12382 O O4   . NDG G 5 .   ? 5.894   22.643  44.323  1.00 100.00 ? 477 NDG B O4   1 
-HETATM 12383 O O6   . NDG G 5 .   ? 3.425   21.830  44.166  1.00 100.00 ? 477 NDG B O6   1 
-HETATM 12384 O O7   . NDG G 5 .   ? 8.380   26.132  47.689  1.00 100.00 ? 477 NDG B O7   1 
-HETATM 12385 N N2   . NDG G 5 .   ? 6.644   26.992  46.530  1.00 100.00 ? 477 NDG B N2   1 
-HETATM 12386 H H1   . NDG G 5 .   ? 4.022   26.121  47.470  1.00 15.00  ? 477 NDG B H1   1 
-HETATM 12387 H H2   . NDG G 5 .   ? 6.104   25.207  47.485  1.00 15.00  ? 477 NDG B H2   1 
-HETATM 12388 H H3   . NDG G 5 .   ? 6.346   25.319  44.468  1.00 15.00  ? 477 NDG B H3   1 
-HETATM 12389 H H4   . NDG G 5 .   ? 5.562   23.033  46.354  1.00 15.00  ? 477 NDG B H4   1 
-HETATM 12390 H H5   . NDG G 5 .   ? 3.962   24.497  44.187  1.00 15.00  ? 477 NDG B H5   1 
-HETATM 12391 H H6C1 . NDG G 5 .   ? 2.062   23.157  44.966  1.00 15.00  ? 477 NDG B H6C1 1 
-HETATM 12392 H H6C2 . NDG G 5 .   ? 3.119   22.313  46.148  1.00 15.00  ? 477 NDG B H6C2 1 
-HETATM 12393 H H8C1 . NDG G 5 .   ? 7.730   29.238  47.041  1.00 15.00  ? 477 NDG B H8C1 1 
-HETATM 12394 H H8C2 . NDG G 5 .   ? 9.087   28.531  46.120  1.00 15.00  ? 477 NDG B H8C2 1 
-HETATM 12395 H H8C3 . NDG G 5 .   ? 9.148   28.602  47.921  1.00 15.00  ? 477 NDG B H8C3 1 
-HETATM 12396 H HB   . NDG G 5 .   ? 7.755   23.952  46.560  1.00 15.00  ? 477 NDG B HB   1 
-HETATM 12397 H H6   . NDG G 5 .   ? 4.377   21.829  44.043  1.00 15.00  ? 477 NDG B H6   1 
-HETATM 12398 H HA   . NDG G 5 .   ? 6.265   27.774  46.078  1.00 15.00  ? 477 NDG B HA   1 
-HETATM 12399 C C1   . BMA H 6 .   ? 7.120   21.989  44.400  1.00 100.00 ? 478 BMA B C1   1 
-HETATM 12400 C C2   . BMA H 6 .   ? 7.108   20.693  43.553  1.00 100.00 ? 478 BMA B C2   1 
-HETATM 12401 C C3   . BMA H 6 .   ? 8.492   20.028  43.648  1.00 100.00 ? 478 BMA B C3   1 
-HETATM 12402 C C4   . BMA H 6 .   ? 9.557   21.021  43.194  1.00 100.00 ? 478 BMA B C4   1 
-HETATM 12403 C C5   . BMA H 6 .   ? 9.443   22.337  43.986  1.00 100.00 ? 478 BMA B C5   1 
-HETATM 12404 C C6   . BMA H 6 .   ? 10.382  23.412  43.475  1.00 100.00 ? 478 BMA B C6   1 
-HETATM 12405 O O2   . BMA H 6 .   ? 6.816   21.002  42.191  1.00 100.00 ? 478 BMA B O2   1 
-HETATM 12406 O O3   . BMA H 6 .   ? 8.572   18.830  42.831  1.00 100.00 ? 478 BMA B O3   1 
-HETATM 12407 O O4   . BMA H 6 .   ? 10.844  20.450  43.391  1.00 100.00 ? 478 BMA B O4   1 
-HETATM 12408 O O5   . BMA H 6 .   ? 8.110   22.878  43.885  1.00 100.00 ? 478 BMA B O5   1 
-HETATM 12409 O O6   . BMA H 6 .   ? 10.551  24.436  44.479  1.00 100.00 ? 478 BMA B O6   1 
-HETATM 12410 H H1   . BMA H 6 .   ? 7.329   21.723  45.446  1.00 15.00  ? 478 BMA B H1   1 
-HETATM 12411 H H2   . BMA H 6 .   ? 6.341   20.015  43.952  1.00 15.00  ? 478 BMA B H2   1 
-HETATM 12412 H H3   . BMA H 6 .   ? 8.679   19.764  44.698  1.00 15.00  ? 478 BMA B H3   1 
-HETATM 12413 H H4   . BMA H 6 .   ? 9.406   21.247  42.129  1.00 15.00  ? 478 BMA B H4   1 
-HETATM 12414 H H5   . BMA H 6 .   ? 9.656   22.144  45.046  1.00 15.00  ? 478 BMA B H5   1 
-HETATM 12415 H H61  . BMA H 6 .   ? 9.955   23.853  42.563  1.00 15.00  ? 478 BMA B H61  1 
-HETATM 12416 H H62  . BMA H 6 .   ? 11.354  22.954  43.244  1.00 15.00  ? 478 BMA B H62  1 
-HETATM 12417 H HO2  . BMA H 6 .   ? 5.957   21.427  42.138  1.00 15.00  ? 478 BMA B HO2  1 
-HETATM 12418 H HO4  . BMA H 6 .   ? 11.516  21.071  43.100  1.00 15.00  ? 478 BMA B HO4  1 
-HETATM 12419 C C1   . MAN I 7 .   ? 11.895  24.812  44.584  1.00 100.00 ? 479 MAN B C1   1 
-HETATM 12420 C C2   . MAN I 7 .   ? 12.073  25.905  45.634  1.00 100.00 ? 479 MAN B C2   1 
-HETATM 12421 C C3   . MAN I 7 .   ? 11.450  27.228  45.153  1.00 100.00 ? 479 MAN B C3   1 
-HETATM 12422 C C4   . MAN I 7 .   ? 12.001  27.601  43.774  1.00 100.00 ? 479 MAN B C4   1 
-HETATM 12423 C C5   . MAN I 7 .   ? 11.820  26.430  42.800  1.00 100.00 ? 479 MAN B C5   1 
-HETATM 12424 C C6   . MAN I 7 .   ? 12.467  26.676  41.451  1.00 100.00 ? 479 MAN B C6   1 
-HETATM 12425 O O2   . MAN I 7 .   ? 13.484  26.090  45.835  1.00 100.00 ? 479 MAN B O2   1 
-HETATM 12426 O O3   . MAN I 7 .   ? 11.750  28.269  46.079  1.00 100.00 ? 479 MAN B O3   1 
-HETATM 12427 O O4   . MAN I 7 .   ? 11.320  28.751  43.283  1.00 100.00 ? 479 MAN B O4   1 
-HETATM 12428 O O5   . MAN I 7 .   ? 12.429  25.237  43.337  1.00 100.00 ? 479 MAN B O5   1 
-HETATM 12429 O O6   . MAN I 7 .   ? 13.885  26.640  41.545  1.00 100.00 ? 479 MAN B O6   1 
-HETATM 12430 H H1   . MAN I 7 .   ? 12.498  23.941  44.877  1.00 15.00  ? 479 MAN B H1   1 
-HETATM 12431 H H2   . MAN I 7 .   ? 11.592  25.594  46.572  1.00 15.00  ? 479 MAN B H2   1 
-HETATM 12432 H H3   . MAN I 7 .   ? 10.361  27.101  45.076  1.00 15.00  ? 479 MAN B H3   1 
-HETATM 12433 H H4   . MAN I 7 .   ? 13.075  27.814  43.864  1.00 15.00  ? 479 MAN B H4   1 
-HETATM 12434 H H5   . MAN I 7 .   ? 10.748  26.236  42.655  1.00 15.00  ? 479 MAN B H5   1 
-HETATM 12435 H H61  . MAN I 7 .   ? 12.150  27.663  41.086  1.00 15.00  ? 479 MAN B H61  1 
-HETATM 12436 H H62  . MAN I 7 .   ? 12.127  25.898  40.753  1.00 15.00  ? 479 MAN B H62  1 
-HETATM 12437 H HO3  . MAN I 7 .   ? 11.355  29.089  45.775  1.00 15.00  ? 479 MAN B HO3  1 
-HETATM 12438 H HO4  . MAN I 7 .   ? 11.449  29.482  43.892  1.00 15.00  ? 479 MAN B HO4  1 
-HETATM 12439 H HO6  . MAN I 7 .   ? 14.139  26.404  42.440  1.00 15.00  ? 479 MAN B HO6  1 
-HETATM 12440 C C1   . NAG J 3 .   ? 13.987  25.946  47.111  1.00 96.95  ? 480 NAG B C1   1 
-HETATM 12441 C C2   . NAG J 3 .   ? 15.422  25.439  46.985  1.00 96.95  ? 480 NAG B C2   1 
-HETATM 12442 C C3   . NAG J 3 .   ? 16.165  25.500  48.311  1.00 96.95  ? 480 NAG B C3   1 
-HETATM 12443 C C4   . NAG J 3 .   ? 16.059  26.917  48.881  1.00 96.95  ? 480 NAG B C4   1 
-HETATM 12444 C C5   . NAG J 3 .   ? 14.567  27.271  49.021  1.00 96.95  ? 480 NAG B C5   1 
-HETATM 12445 C C6   . NAG J 3 .   ? 14.305  28.655  49.599  1.00 96.95  ? 480 NAG B C6   1 
-HETATM 12446 C C7   . NAG J 3 .   ? 15.908  23.745  45.330  1.00 96.95  ? 480 NAG B C7   1 
-HETATM 12447 C C8   . NAG J 3 .   ? 15.840  22.263  44.968  1.00 96.95  ? 480 NAG B C8   1 
-HETATM 12448 N N2   . NAG J 3 .   ? 15.409  24.064  46.520  1.00 96.95  ? 480 NAG B N2   1 
-HETATM 12449 O O3   . NAG J 3 .   ? 17.524  25.151  48.086  1.00 96.95  ? 480 NAG B O3   1 
-HETATM 12450 O O4   . NAG J 3 .   ? 16.731  27.013  50.162  1.00 96.95  ? 480 NAG B O4   1 
-HETATM 12451 O O5   . NAG J 3 .   ? 13.942  27.239  47.725  1.00 96.95  ? 480 NAG B O5   1 
-HETATM 12452 O O6   . NAG J 3 .   ? 13.023  29.137  49.218  1.00 96.95  ? 480 NAG B O6   1 
-HETATM 12453 O O7   . NAG J 3 .   ? 16.391  24.579  44.555  1.00 96.95  ? 480 NAG B O7   1 
-HETATM 12454 H H1   . NAG J 3 .   ? 13.390  25.218  47.677  1.00 15.00  ? 480 NAG B H1   1 
-HETATM 12455 H H2   . NAG J 3 .   ? 15.964  26.068  46.265  1.00 15.00  ? 480 NAG B H2   1 
-HETATM 12456 H H3   . NAG J 3 .   ? 15.706  24.793  49.016  1.00 15.00  ? 480 NAG B H3   1 
-HETATM 12457 H H4   . NAG J 3 .   ? 16.522  27.616  48.171  1.00 15.00  ? 480 NAG B H4   1 
-HETATM 12458 H H5   . NAG J 3 .   ? 14.071  26.533  49.666  1.00 15.00  ? 480 NAG B H5   1 
-HETATM 12459 H H61  . NAG J 3 .   ? 15.079  29.341  49.228  1.00 15.00  ? 480 NAG B H61  1 
-HETATM 12460 H H62  . NAG J 3 .   ? 14.362  28.593  50.695  1.00 15.00  ? 480 NAG B H62  1 
-HETATM 12461 H H81  . NAG J 3 .   ? 14.878  22.048  44.483  1.00 15.00  ? 480 NAG B H81  1 
-HETATM 12462 H H82  . NAG J 3 .   ? 15.920  21.652  45.878  1.00 15.00  ? 480 NAG B H82  1 
-HETATM 12463 H H83  . NAG J 3 .   ? 16.650  22.012  44.269  1.00 15.00  ? 480 NAG B H83  1 
-HETATM 12464 H HN2  . NAG J 3 .   ? 15.028  23.363  47.090  1.00 15.00  ? 480 NAG B HN2  1 
-HETATM 12465 H HO3  . NAG J 3 .   ? 18.002  25.179  48.918  1.00 15.00  ? 480 NAG B HO3  1 
-HETATM 12466 H HO6  . NAG J 3 .   ? 12.618  29.588  49.963  1.00 15.00  ? 480 NAG B HO6  1 
-HETATM 12467 C C1   . GAL K 8 .   ? 18.058  26.596  50.202  1.00 100.00 ? 481 GAL B C1   1 
-HETATM 12468 C C2   . GAL K 8 .   ? 18.877  27.496  51.126  1.00 100.00 ? 481 GAL B C2   1 
-HETATM 12469 C C3   . GAL K 8 .   ? 20.336  26.984  51.117  1.00 100.00 ? 481 GAL B C3   1 
-HETATM 12470 C C4   . GAL K 8 .   ? 20.358  25.520  51.578  1.00 100.00 ? 481 GAL B C4   1 
-HETATM 12471 C C5   . GAL K 8 .   ? 19.432  24.678  50.685  1.00 100.00 ? 481 GAL B C5   1 
-HETATM 12472 C C6   . GAL K 8 .   ? 19.311  23.227  51.155  1.00 100.00 ? 481 GAL B C6   1 
-HETATM 12473 O O2   . GAL K 8 .   ? 18.807  28.843  50.666  1.00 100.00 ? 481 GAL B O2   1 
-HETATM 12474 O O3   . GAL K 8 .   ? 21.166  27.779  51.957  1.00 100.00 ? 481 GAL B O3   1 
-HETATM 12475 O O4   . GAL K 8 .   ? 19.933  25.433  52.936  1.00 100.00 ? 481 GAL B O4   1 
-HETATM 12476 O O5   . GAL K 8 .   ? 18.094  25.241  50.676  1.00 100.00 ? 481 GAL B O5   1 
-HETATM 12477 O O6   . GAL K 8 .   ? 18.443  22.472  50.316  1.00 100.00 ? 481 GAL B O6   1 
-HETATM 12478 H H1   . GAL K 8 .   ? 18.489  26.642  49.192  1.00 15.00  ? 481 GAL B H1   1 
-HETATM 12479 H H2   . GAL K 8 .   ? 18.469  27.428  52.144  1.00 15.00  ? 481 GAL B H2   1 
-HETATM 12480 H H3   . GAL K 8 .   ? 20.714  27.024  50.086  1.00 15.00  ? 481 GAL B H3   1 
-HETATM 12481 H H4   . GAL K 8 .   ? 21.382  25.133  51.483  1.00 15.00  ? 481 GAL B H4   1 
-HETATM 12482 H H5   . GAL K 8 .   ? 19.815  24.680  49.655  1.00 15.00  ? 481 GAL B H5   1 
-HETATM 12483 H H61  . GAL K 8 .   ? 18.917  23.226  52.181  1.00 15.00  ? 481 GAL B H61  1 
-HETATM 12484 H H62  . GAL K 8 .   ? 20.312  22.774  51.144  1.00 15.00  ? 481 GAL B H62  1 
-HETATM 12485 H HO2  . GAL K 8 .   ? 17.891  29.130  50.662  1.00 15.00  ? 481 GAL B HO2  1 
-HETATM 12486 H HO3  . GAL K 8 .   ? 22.064  27.439  51.931  1.00 15.00  ? 481 GAL B HO3  1 
-HETATM 12487 H HO4  . GAL K 8 .   ? 19.954  24.515  53.218  1.00 15.00  ? 481 GAL B HO4  1 
-HETATM 12488 H HO6  . GAL K 8 .   ? 18.501  22.804  49.417  1.00 15.00  ? 481 GAL B HO6  1 
-HETATM 12489 C C1   . MAN L 7 .   ? 8.699   17.607  43.522  1.00 100.00 ? 482 MAN B C1   1 
-HETATM 12490 C C2   . MAN L 7 .   ? 9.661   16.651  42.772  1.00 100.00 ? 482 MAN B C2   1 
-HETATM 12491 C C3   . MAN L 7 .   ? 8.994   16.117  41.494  1.00 100.00 ? 482 MAN B C3   1 
-HETATM 12492 C C4   . MAN L 7 .   ? 7.648   15.493  41.843  1.00 100.00 ? 482 MAN B C4   1 
-HETATM 12493 C C5   . MAN L 7 .   ? 6.783   16.556  42.514  1.00 100.00 ? 482 MAN B C5   1 
-HETATM 12494 C C6   . MAN L 7 .   ? 5.386   16.065  42.877  1.00 100.00 ? 482 MAN B C6   1 
-HETATM 12495 O O2   . MAN L 7 .   ? 10.015  15.541  43.634  1.00 100.00 ? 482 MAN B O2   1 
-HETATM 12496 O O3   . MAN L 7 .   ? 9.818   15.142  40.870  1.00 100.00 ? 482 MAN B O3   1 
-HETATM 12497 O O4   . MAN L 7 .   ? 7.017   15.008  40.667  1.00 100.00 ? 482 MAN B O4   1 
-HETATM 12498 O O5   . MAN L 7 .   ? 7.431   16.993  43.730  1.00 100.00 ? 482 MAN B O5   1 
-HETATM 12499 O O6   . MAN L 7 .   ? 4.553   17.131  43.316  1.00 100.00 ? 482 MAN B O6   1 
-HETATM 12500 H H1   . MAN L 7 .   ? 9.101   17.793  44.528  1.00 15.00  ? 482 MAN B H1   1 
-HETATM 12501 H H2   . MAN L 7 .   ? 10.566  17.206  42.488  1.00 15.00  ? 482 MAN B H2   1 
-HETATM 12502 H H3   . MAN L 7 .   ? 8.830   16.957  40.804  1.00 15.00  ? 482 MAN B H3   1 
-HETATM 12503 H H4   . MAN L 7 .   ? 7.813   14.663  42.545  1.00 15.00  ? 482 MAN B H4   1 
-HETATM 12504 H H5   . MAN L 7 .   ? 6.672   17.420  41.845  1.00 15.00  ? 482 MAN B H5   1 
-HETATM 12505 H H61  . MAN L 7 .   ? 5.477   15.320  43.680  1.00 15.00  ? 482 MAN B H61  1 
-HETATM 12506 H H62  . MAN L 7 .   ? 4.940   15.597  41.988  1.00 15.00  ? 482 MAN B H62  1 
-HETATM 12507 H HO3  . MAN L 7 .   ? 9.386   14.823  40.074  1.00 15.00  ? 482 MAN B HO3  1 
-HETATM 12508 H HO4  . MAN L 7 .   ? 7.578   14.348  40.254  1.00 15.00  ? 482 MAN B HO4  1 
-HETATM 12509 H HO6  . MAN L 7 .   ? 4.160   16.900  44.161  1.00 15.00  ? 482 MAN B HO6  1 
-HETATM 12510 C C1   . NAG M 3 .   ? 11.322  15.066  43.613  0.00 0.00   ? 483 NAG B C1   1 
-HETATM 12511 C C2   . NAG M 3 .   ? 11.406  13.807  44.480  0.00 0.00   ? 483 NAG B C2   1 
-HETATM 12512 C C3   . NAG M 3 .   ? 12.795  13.174  44.385  0.00 0.00   ? 483 NAG B C3   1 
-HETATM 12513 C C4   . NAG M 3 .   ? 13.118  12.906  42.919  0.00 0.00   ? 483 NAG B C4   1 
-HETATM 12514 C C5   . NAG M 3 .   ? 12.989  14.201  42.116  0.00 0.00   ? 483 NAG B C5   1 
-HETATM 12515 C C6   . NAG M 3 .   ? 13.224  13.986  40.631  0.00 0.00   ? 483 NAG B C6   1 
-HETATM 12516 C C7   . NAG M 3 .   ? 11.757  14.975  46.584  0.00 0.00   ? 483 NAG B C7   1 
-HETATM 12517 C C8   . NAG M 3 .   ? 11.273  15.170  48.010  0.00 0.00   ? 483 NAG B C8   1 
-HETATM 12518 N N2   . NAG M 3 .   ? 11.064  14.098  45.863  0.00 0.00   ? 483 NAG B N2   1 
-HETATM 12519 O O3   . NAG M 3 .   ? 12.817  11.953  45.113  0.00 0.00   ? 483 NAG B O3   1 
-HETATM 12520 O O4   . NAG M 3 .   ? 14.439  12.394  42.803  0.00 0.00   ? 483 NAG B O4   1 
-HETATM 12521 O O5   . NAG M 3 .   ? 11.661  14.746  42.258  0.00 0.00   ? 483 NAG B O5   1 
-HETATM 12522 O O6   . NAG M 3 .   ? 13.022  15.184  39.896  0.00 0.00   ? 483 NAG B O6   1 
-HETATM 12523 O O7   . NAG M 3 .   ? 12.733  15.589  46.151  0.00 0.00   ? 483 NAG B O7   1 
-HETATM 12524 H H1   . NAG M 3 .   ? 12.005  15.827  44.016  0.00 0.00   ? 483 NAG B H1   1 
-HETATM 12525 H H2   . NAG M 3 .   ? 10.705  13.059  44.083  0.00 0.00   ? 483 NAG B H2   1 
-HETATM 12526 H H3   . NAG M 3 .   ? 13.534  13.871  44.805  0.00 0.00   ? 483 NAG B H3   1 
-HETATM 12527 H H4   . NAG M 3 .   ? 12.399  12.174  42.524  0.00 0.00   ? 483 NAG B H4   1 
-HETATM 12528 H H5   . NAG M 3 .   ? 13.709  14.940  42.495  0.00 0.00   ? 483 NAG B H5   1 
-HETATM 12529 H H61  . NAG M 3 .   ? 12.524  13.217  40.275  0.00 0.00   ? 483 NAG B H61  1 
-HETATM 12530 H H62  . NAG M 3 .   ? 14.257  13.640  40.488  0.00 0.00   ? 483 NAG B H62  1 
-HETATM 12531 H H81  . NAG M 3 .   ? 10.724  14.276  48.337  0.00 0.00   ? 483 NAG B H81  1 
-HETATM 12532 H H82  . NAG M 3 .   ? 10.597  16.035  48.060  0.00 0.00   ? 483 NAG B H82  1 
-HETATM 12533 H H83  . NAG M 3 .   ? 12.132  15.319  48.679  0.00 0.00   ? 483 NAG B H83  1 
-HETATM 12534 H HN2  . NAG M 3 .   ? 10.304  13.636  46.274  0.00 0.00   ? 483 NAG B HN2  1 
-HETATM 12535 H HO3  . NAG M 3 .   ? 13.692  11.563  45.054  0.00 0.00   ? 483 NAG B HO3  1 
-HETATM 12536 H HO4  . NAG M 3 .   ? 14.509  11.577  43.303  0.00 0.00   ? 483 NAG B HO4  1 
-HETATM 12537 H HO6  . NAG M 3 .   ? 12.151  15.167  39.492  0.00 0.00   ? 483 NAG B HO6  1 
-HETATM 12538 C C1   . NAG N 3 .   ? -3.609  10.834  37.491  1.00 89.19  ? 475 NAG D C1   1 
-HETATM 12539 C C2   . NAG N 3 .   ? -3.312  11.933  38.524  1.00 89.19  ? 475 NAG D C2   1 
-HETATM 12540 C C3   . NAG N 3 .   ? -2.701  13.171  37.862  1.00 89.19  ? 475 NAG D C3   1 
-HETATM 12541 C C4   . NAG N 3 .   ? -1.716  12.725  36.787  1.00 89.19  ? 475 NAG D C4   1 
-HETATM 12542 C C5   . NAG N 3 .   ? -2.494  12.068  35.646  1.00 89.19  ? 475 NAG D C5   1 
-HETATM 12543 C C6   . NAG N 3 .   ? -1.698  11.163  34.711  1.00 89.19  ? 475 NAG D C6   1 
-HETATM 12544 C C7   . NAG N 3 .   ? -4.492  12.760  40.469  1.00 89.19  ? 475 NAG D C7   1 
-HETATM 12545 C C8   . NAG N 3 .   ? -5.826  13.142  41.104  1.00 89.19  ? 475 NAG D C8   1 
-HETATM 12546 N N2   . NAG N 3 .   ? -4.534  12.308  39.215  1.00 89.19  ? 475 NAG D N2   1 
-HETATM 12547 O O3   . NAG N 3 .   ? -2.038  13.963  38.835  1.00 89.19  ? 475 NAG D O3   1 
-HETATM 12548 O O4   . NAG N 3 .   ? -0.946  13.856  36.291  1.00 89.19  ? 475 NAG D O4   1 
-HETATM 12549 O O5   . NAG N 3 .   ? -3.658  11.320  36.125  1.00 89.19  ? 475 NAG D O5   1 
-HETATM 12550 O O6   . NAG N 3 .   ? -0.990  10.164  35.471  1.00 89.19  ? 475 NAG D O6   1 
-HETATM 12551 O O7   . NAG N 3 .   ? -3.439  12.864  41.102  1.00 89.19  ? 475 NAG D O7   1 
-HETATM 12552 H H1   . NAG N 3 .   ? -4.659  10.531  37.602  1.00 15.00  ? 475 NAG D H1   1 
-HETATM 12553 H H2   . NAG N 3 .   ? -2.581  11.552  39.251  1.00 15.00  ? 475 NAG D H2   1 
-HETATM 12554 H H3   . NAG N 3 .   ? -3.504  13.756  37.392  1.00 15.00  ? 475 NAG D H3   1 
-HETATM 12555 H H4   . NAG N 3 .   ? -1.036  11.979  37.221  1.00 15.00  ? 475 NAG D H4   1 
-HETATM 12556 H H5   . NAG N 3 .   ? -2.854  12.850  34.963  1.00 15.00  ? 475 NAG D H5   1 
-HETATM 12557 H H61  . NAG N 3 .   ? -0.981  11.777  34.148  1.00 15.00  ? 475 NAG D H61  1 
-HETATM 12558 H H62  . NAG N 3 .   ? -2.393  10.675  34.014  1.00 15.00  ? 475 NAG D H62  1 
-HETATM 12559 H H81  . NAG N 3 .   ? -6.638  12.971  40.383  1.00 15.00  ? 475 NAG D H81  1 
-HETATM 12560 H H82  . NAG N 3 .   ? -5.818  14.206  41.379  1.00 15.00  ? 475 NAG D H82  1 
-HETATM 12561 H H83  . NAG N 3 .   ? -6.008  12.521  41.992  1.00 15.00  ? 475 NAG D H83  1 
-HETATM 12562 H HN2  . NAG N 3 .   ? -5.396  12.228  38.756  1.00 15.00  ? 475 NAG D HN2  1 
-HETATM 12563 H HO3  . NAG N 3 .   ? -2.668  14.236  39.506  1.00 15.00  ? 475 NAG D HO3  1 
-HETATM 12564 C C1   . FUC O 9 .   ? 0.392   10.362  35.453  1.00 100.00 ? 476 FUC D C1   1 
-HETATM 12565 C C2   . FUC O 9 .   ? 1.024   9.484   36.535  1.00 100.00 ? 476 FUC D C2   1 
-HETATM 12566 C C3   . FUC O 9 .   ? 2.527   9.746   36.660  1.00 100.00 ? 476 FUC D C3   1 
-HETATM 12567 C C4   . FUC O 9 .   ? 2.777   11.246  36.834  1.00 100.00 ? 476 FUC D C4   1 
-HETATM 12568 C C5   . FUC O 9 .   ? 2.133   12.009  35.675  1.00 100.00 ? 476 FUC D C5   1 
-HETATM 12569 C C6   . FUC O 9 .   ? 2.297   13.518  35.777  1.00 100.00 ? 476 FUC D C6   1 
-HETATM 12570 O O2   . FUC O 9 .   ? 0.805   8.118   36.208  1.00 100.00 ? 476 FUC D O2   1 
-HETATM 12571 O O3   . FUC O 9 .   ? 3.056   9.035   37.777  1.00 100.00 ? 476 FUC D O3   1 
-HETATM 12572 O O4   . FUC O 9 .   ? 2.221   11.689  38.066  1.00 100.00 ? 476 FUC D O4   1 
-HETATM 12573 O O5   . FUC O 9 .   ? 0.724   11.733  35.646  1.00 100.00 ? 476 FUC D O5   1 
-HETATM 12574 H H1   . FUC O 9 .   ? 0.801   10.079  34.473  1.00 15.00  ? 476 FUC D H1   1 
-HETATM 12575 H H2   . FUC O 9 .   ? 0.561   9.717   37.504  1.00 15.00  ? 476 FUC D H2   1 
-HETATM 12576 H H3   . FUC O 9 .   ? 3.023   9.411   35.738  1.00 15.00  ? 476 FUC D H3   1 
-HETATM 12577 H H4   . FUC O 9 .   ? 3.861   11.429  36.828  1.00 15.00  ? 476 FUC D H4   1 
-HETATM 12578 H H5   . FUC O 9 .   ? 2.574   11.678  34.724  1.00 15.00  ? 476 FUC D H5   1 
-HETATM 12579 H H61  . FUC O 9 .   ? 1.778   13.987  34.930  1.00 15.00  ? 476 FUC D H61  1 
-HETATM 12580 H H62  . FUC O 9 .   ? 3.364   13.778  35.732  1.00 15.00  ? 476 FUC D H62  1 
-HETATM 12581 H H63  . FUC O 9 .   ? 1.849   13.876  36.714  1.00 15.00  ? 476 FUC D H63  1 
-HETATM 12582 H HO2  . FUC O 9 .   ? -0.139  7.951   36.156  1.00 15.00  ? 476 FUC D HO2  1 
-HETATM 12583 H HO3  . FUC O 9 .   ? 2.904   8.095   37.656  1.00 15.00  ? 476 FUC D HO3  1 
-HETATM 12584 H HO4  . FUC O 9 .   ? 1.275   11.526  38.065  1.00 15.00  ? 476 FUC D HO4  1 
-HETATM 12585 C C1   . NDG P 5 .   ? -1.623  14.870  35.621  1.00 41.09  ? 477 NDG D C1   1 
-HETATM 12586 C C2   . NDG P 5 .   ? -0.922  15.436  34.389  1.00 41.09  ? 477 NDG D C2   1 
-HETATM 12587 C C3   . NDG P 5 .   ? -0.052  16.662  34.713  1.00 41.09  ? 477 NDG D C3   1 
-HETATM 12588 C C4   . NDG P 5 .   ? -0.887  17.668  35.509  1.00 41.09  ? 477 NDG D C4   1 
-HETATM 12589 C C5   . NDG P 5 .   ? -1.411  17.005  36.792  1.00 41.09  ? 477 NDG D C5   1 
-HETATM 12590 C C6   . NDG P 5 .   ? -2.299  17.936  37.602  1.00 41.09  ? 477 NDG D C6   1 
-HETATM 12591 C C7   . NDG P 5 .   ? 0.132   14.459  32.449  1.00 41.09  ? 477 NDG D C7   1 
-HETATM 12592 C C8   . NDG P 5 .   ? 0.969   13.315  31.885  1.00 41.09  ? 477 NDG D C8   1 
-HETATM 12593 O O    . NDG P 5 .   ? -2.221  15.832  36.508  1.00 41.09  ? 477 NDG D O    1 
-HETATM 12594 O O3   . NDG P 5 .   ? 0.388   17.246  33.497  1.00 41.09  ? 477 NDG D O3   1 
-HETATM 12595 O O4   . NDG P 5 .   ? -0.101  18.836  35.870  1.00 41.09  ? 477 NDG D O4   1 
-HETATM 12596 O O6   . NDG P 5 .   ? -1.619  19.134  37.959  1.00 41.09  ? 477 NDG D O6   1 
-HETATM 12597 O O7   . NDG P 5 .   ? -0.265  15.378  31.731  1.00 41.09  ? 477 NDG D O7   1 
-HETATM 12598 N N2   . NDG P 5 .   ? -0.127  14.403  33.753  1.00 41.09  ? 477 NDG D N2   1 
-HETATM 12599 H H1   . NDG P 5 .   ? -2.595  14.477  35.293  1.00 15.00  ? 477 NDG D H1   1 
-HETATM 12600 H H2   . NDG P 5 .   ? -1.681  15.803  33.684  1.00 15.00  ? 477 NDG D H2   1 
-HETATM 12601 H H3   . NDG P 5 .   ? 0.813   16.342  35.311  1.00 15.00  ? 477 NDG D H3   1 
-HETATM 12602 H H4   . NDG P 5 .   ? -1.741  17.979  34.892  1.00 15.00  ? 477 NDG D H4   1 
-HETATM 12603 H H5   . NDG P 5 .   ? -0.557  16.685  37.405  1.00 15.00  ? 477 NDG D H5   1 
-HETATM 12604 H H6C1 . NDG P 5 .   ? -2.612  17.410  38.515  1.00 15.00  ? 477 NDG D H6C1 1 
-HETATM 12605 H H6C2 . NDG P 5 .   ? -3.182  18.186  36.998  1.00 15.00  ? 477 NDG D H6C2 1 
-HETATM 12606 H H8C1 . NDG P 5 .   ? 0.704   12.380  32.398  1.00 15.00  ? 477 NDG D H8C1 1 
-HETATM 12607 H H8C2 . NDG P 5 .   ? 2.037   13.516  32.050  1.00 15.00  ? 477 NDG D H8C2 1 
-HETATM 12608 H H8C3 . NDG P 5 .   ? 0.766   13.197  30.812  1.00 15.00  ? 477 NDG D H8C3 1 
-HETATM 12609 H HB   . NDG P 5 .   ? 0.938   18.009  33.691  1.00 15.00  ? 477 NDG D HB   1 
-HETATM 12610 H H6   . NDG P 5 .   ? -2.249  19.858  37.997  1.00 15.00  ? 477 NDG D H6   1 
-HETATM 12611 H HA   . NDG P 5 .   ? 0.222   13.659  34.287  1.00 15.00  ? 477 NDG D HA   1 
-HETATM 12612 C C1   . BMA Q 6 .   ? 0.335   19.710  34.878  1.00 69.97  ? 478 BMA D C1   1 
-HETATM 12613 C C2   . BMA Q 6 .   ? 0.584   21.126  35.455  1.00 69.97  ? 478 BMA D C2   1 
-HETATM 12614 C C3   . BMA Q 6 .   ? 1.102   22.043  34.329  1.00 69.97  ? 478 BMA D C3   1 
-HETATM 12615 C C4   . BMA Q 6 .   ? 2.349   21.410  33.696  1.00 69.97  ? 478 BMA D C4   1 
-HETATM 12616 C C5   . BMA Q 6 .   ? 2.065   19.966  33.252  1.00 69.97  ? 478 BMA D C5   1 
-HETATM 12617 C C6   . BMA Q 6 .   ? 3.307   19.253  32.760  1.00 69.97  ? 478 BMA D C6   1 
-HETATM 12618 O O2   . BMA Q 6 .   ? 1.542   21.063  36.505  1.00 69.97  ? 478 BMA D O2   1 
-HETATM 12619 O O3   . BMA Q 6 .   ? 1.420   23.376  34.829  1.00 69.97  ? 478 BMA D O3   1 
-HETATM 12620 O O4   . BMA Q 6 .   ? 2.759   22.180  32.573  1.00 69.97  ? 478 BMA D O4   1 
-HETATM 12621 O O5   . BMA Q 6 .   ? 1.552   19.185  34.350  1.00 69.97  ? 478 BMA D O5   1 
-HETATM 12622 O O6   . BMA Q 6 .   ? 2.932   18.092  31.987  1.00 69.97  ? 478 BMA D O6   1 
-HETATM 12623 H H1   . BMA Q 6 .   ? -0.429  19.782  34.091  1.00 15.00  ? 478 BMA D H1   1 
-HETATM 12624 H H2   . BMA Q 6 .   ? -0.365  21.524  35.842  1.00 15.00  ? 478 BMA D H2   1 
-HETATM 12625 H H3   . BMA Q 6 .   ? 0.324   22.119  33.557  1.00 15.00  ? 478 BMA D H3   1 
-HETATM 12626 H H4   . BMA Q 6 .   ? 3.154   21.383  34.444  1.00 15.00  ? 478 BMA D H4   1 
-HETATM 12627 H H5   . BMA Q 6 .   ? 1.311   19.973  32.453  1.00 15.00  ? 478 BMA D H5   1 
-HETATM 12628 H H61  . BMA Q 6 .   ? 3.907   18.944  33.627  1.00 15.00  ? 478 BMA D H61  1 
-HETATM 12629 H H62  . BMA Q 6 .   ? 3.890   19.944  32.135  1.00 15.00  ? 478 BMA D H62  1 
-HETATM 12630 H HO2  . BMA Q 6 .   ? 1.215   20.487  37.200  1.00 15.00  ? 478 BMA D HO2  1 
-HETATM 12631 H HO4  . BMA Q 6 .   ? 2.051   22.199  31.925  1.00 15.00  ? 478 BMA D HO4  1 
-HETATM 12632 C C1   . MAN R 7 .   ? 3.714   18.006  30.833  1.00 100.00 ? 479 MAN D C1   1 
-HETATM 12633 C C2   . MAN R 7 .   ? 3.335   16.784  30.011  1.00 100.00 ? 479 MAN D C2   1 
-HETATM 12634 C C3   . MAN R 7 .   ? 3.739   15.498  30.734  1.00 100.00 ? 479 MAN D C3   1 
-HETATM 12635 C C4   . MAN R 7 .   ? 5.219   15.551  31.097  1.00 100.00 ? 479 MAN D C4   1 
-HETATM 12636 C C5   . MAN R 7 .   ? 5.515   16.827  31.889  1.00 100.00 ? 479 MAN D C5   1 
-HETATM 12637 C C6   . MAN R 7 .   ? 6.987   17.014  32.180  1.00 100.00 ? 479 MAN D C6   1 
-HETATM 12638 O O2   . MAN R 7 .   ? 4.040   16.866  28.762  1.00 100.00 ? 479 MAN D O2   1 
-HETATM 12639 O O3   . MAN R 7 .   ? 3.501   14.380  29.889  1.00 100.00 ? 479 MAN D O3   1 
-HETATM 12640 O O4   . MAN R 7 .   ? 5.560   14.409  31.868  1.00 100.00 ? 479 MAN D O4   1 
-HETATM 12641 O O5   . MAN R 7 .   ? 5.098   17.980  31.135  1.00 100.00 ? 479 MAN D O5   1 
-HETATM 12642 O O6   . MAN R 7 .   ? 7.696   17.328  30.989  1.00 100.00 ? 479 MAN D O6   1 
-HETATM 12643 H H1   . MAN R 7 .   ? 3.561   18.904  30.218  1.00 15.00  ? 479 MAN D H1   1 
-HETATM 12644 H H2   . MAN R 7 .   ? 2.250   16.781  29.837  1.00 15.00  ? 479 MAN D H2   1 
-HETATM 12645 H H3   . MAN R 7 .   ? 3.144   15.404  31.653  1.00 15.00  ? 479 MAN D H3   1 
-HETATM 12646 H H4   . MAN R 7 .   ? 5.813   15.568  30.173  1.00 15.00  ? 479 MAN D H4   1 
-HETATM 12647 H H5   . MAN R 7 .   ? 4.957   16.810  32.835  1.00 15.00  ? 479 MAN D H5   1 
-HETATM 12648 H H61  . MAN R 7 .   ? 7.382   16.083  32.610  1.00 15.00  ? 479 MAN D H61  1 
-HETATM 12649 H H62  . MAN R 7 .   ? 7.102   17.833  32.904  1.00 15.00  ? 479 MAN D H62  1 
-HETATM 12650 H HO3  . MAN R 7 .   ? 4.023   14.469  29.089  1.00 15.00  ? 479 MAN D HO3  1 
-HETATM 12651 H HO4  . MAN R 7 .   ? 6.493   14.443  32.091  1.00 15.00  ? 479 MAN D HO4  1 
-HETATM 12652 H HO6  . MAN R 7 .   ? 7.268   18.066  30.549  1.00 15.00  ? 479 MAN D HO6  1 
-HETATM 12653 C C1   . NAG S 3 .   ? 3.301   16.847  27.596  1.00 93.71  ? 480 NAG D C1   1 
-HETATM 12654 C C2   . NAG S 3 .   ? 4.051   17.667  26.544  1.00 93.71  ? 480 NAG D C2   1 
-HETATM 12655 C C3   . NAG S 3 .   ? 3.460   17.492  25.156  1.00 93.71  ? 480 NAG D C3   1 
-HETATM 12656 C C4   . NAG S 3 .   ? 3.383   15.997  24.835  1.00 93.71  ? 480 NAG D C4   1 
-HETATM 12657 C C5   . NAG S 3 .   ? 2.545   15.311  25.926  1.00 93.71  ? 480 NAG D C5   1 
-HETATM 12658 C C6   . NAG S 3 .   ? 2.358   13.810  25.725  1.00 93.71  ? 480 NAG D C6   1 
-HETATM 12659 C C7   . NAG S 3 .   ? 5.099   19.740  27.219  1.00 93.71  ? 480 NAG D C7   1 
-HETATM 12660 C C8   . NAG S 3 .   ? 4.902   21.212  27.558  1.00 93.71  ? 480 NAG D C8   1 
-HETATM 12661 N N2   . NAG S 3 .   ? 3.996   19.073  26.892  1.00 93.71  ? 480 NAG D N2   1 
-HETATM 12662 O O3   . NAG S 3 .   ? 4.285   18.171  24.220  1.00 93.71  ? 480 NAG D O3   1 
-HETATM 12663 O O4   . NAG S 3 .   ? 2.796   15.776  23.529  1.00 93.71  ? 480 NAG D O4   1 
-HETATM 12664 O O5   . NAG S 3 .   ? 3.188   15.480  27.203  1.00 93.71  ? 480 NAG D O5   1 
-HETATM 12665 O O6   . NAG S 3 .   ? 2.054   13.156  26.955  1.00 93.71  ? 480 NAG D O6   1 
-HETATM 12666 O O7   . NAG S 3 .   ? 6.213   19.214  27.264  1.00 93.71  ? 480 NAG D O7   1 
-HETATM 12667 H H1   . NAG S 3 .   ? 2.311   17.293  27.767  1.00 15.00  ? 480 NAG D H1   1 
-HETATM 12668 H H2   . NAG S 3 .   ? 5.098   17.336  26.511  1.00 15.00  ? 480 NAG D H2   1 
-HETATM 12669 H H3   . NAG S 3 .   ? 2.445   17.914  25.140  1.00 15.00  ? 480 NAG D H3   1 
-HETATM 12670 H H4   . NAG S 3 .   ? 4.400   15.581  24.855  1.00 15.00  ? 480 NAG D H4   1 
-HETATM 12671 H H5   . NAG S 3 .   ? 1.549   15.773  25.972  1.00 15.00  ? 480 NAG D H5   1 
-HETATM 12672 H H61  . NAG S 3 .   ? 3.287   13.395  25.311  1.00 15.00  ? 480 NAG D H61  1 
-HETATM 12673 H H62  . NAG S 3 .   ? 1.534   13.653  25.015  1.00 15.00  ? 480 NAG D H62  1 
-HETATM 12674 H H81  . NAG S 3 .   ? 5.031   21.360  28.639  1.00 15.00  ? 480 NAG D H81  1 
-HETATM 12675 H H82  . NAG S 3 .   ? 3.887   21.527  27.279  1.00 15.00  ? 480 NAG D H82  1 
-HETATM 12676 H H83  . NAG S 3 .   ? 5.648   21.821  27.029  1.00 15.00  ? 480 NAG D H83  1 
-HETATM 12677 H HN2  . NAG S 3 .   ? 3.134   19.539  26.886  1.00 15.00  ? 480 NAG D HN2  1 
-HETATM 12678 H HO3  . NAG S 3 .   ? 5.168   17.795  24.242  1.00 15.00  ? 480 NAG D HO3  1 
-HETATM 12679 H HO6  . NAG S 3 .   ? 1.123   13.276  27.158  1.00 15.00  ? 480 NAG D HO6  1 
-HETATM 12680 C C1   . GAL T 8 .   ? 3.389   16.441  22.463  1.00 100.00 ? 481 GAL D C1   1 
-HETATM 12681 C C2   . GAL T 8 .   ? 3.411   15.553  21.212  1.00 100.00 ? 481 GAL D C2   1 
-HETATM 12682 C C3   . GAL T 8 .   ? 4.079   16.350  20.079  1.00 100.00 ? 481 GAL D C3   1 
-HETATM 12683 C C4   . GAL T 8 .   ? 3.302   17.662  19.854  1.00 100.00 ? 481 GAL D C4   1 
-HETATM 12684 C C5   . GAL T 8 .   ? 3.221   18.462  21.171  1.00 100.00 ? 481 GAL D C5   1 
-HETATM 12685 C C6   . GAL T 8 .   ? 2.365   19.724  21.058  1.00 100.00 ? 481 GAL D C6   1 
-HETATM 12686 O O2   . GAL T 8 .   ? 4.141   14.358  21.477  1.00 100.00 ? 481 GAL D O2   1 
-HETATM 12687 O O3   . GAL T 8 .   ? 4.125   15.584  18.879  1.00 100.00 ? 481 GAL D O3   1 
-HETATM 12688 O O4   . GAL T 8 .   ? 1.986   17.374  19.390  1.00 100.00 ? 481 GAL D O4   1 
-HETATM 12689 O O5   . GAL T 8 .   ? 2.639   17.644  22.214  1.00 100.00 ? 481 GAL D O5   1 
-HETATM 12690 O O6   . GAL T 8 .   ? 2.319   20.432  22.291  1.00 100.00 ? 481 GAL D O6   1 
-HETATM 12691 H H1   . GAL T 8 .   ? 4.423   16.706  22.724  1.00 15.00  ? 481 GAL D H1   1 
-HETATM 12692 H H2   . GAL T 8 .   ? 2.377   15.303  20.935  1.00 15.00  ? 481 GAL D H2   1 
-HETATM 12693 H H3   . GAL T 8 .   ? 5.101   16.610  20.388  1.00 15.00  ? 481 GAL D H3   1 
-HETATM 12694 H H4   . GAL T 8 .   ? 3.835   18.267  19.107  1.00 15.00  ? 481 GAL D H4   1 
-HETATM 12695 H H5   . GAL T 8 .   ? 4.232   18.756  21.485  1.00 15.00  ? 481 GAL D H5   1 
-HETATM 12696 H H61  . GAL T 8 .   ? 1.347   19.430  20.768  1.00 15.00  ? 481 GAL D H61  1 
-HETATM 12697 H H62  . GAL T 8 .   ? 2.798   20.371  20.282  1.00 15.00  ? 481 GAL D H62  1 
-HETATM 12698 H HO2  . GAL T 8 .   ? 3.723   13.884  22.200  1.00 15.00  ? 481 GAL D HO2  1 
-HETATM 12699 H HO3  . GAL T 8 .   ? 3.231   15.358  18.611  1.00 15.00  ? 481 GAL D HO3  1 
-HETATM 12700 H HO4  . GAL T 8 .   ? 2.039   16.887  18.564  1.00 15.00  ? 481 GAL D HO4  1 
-HETATM 12701 H HO6  . GAL T 8 .   ? 1.430   20.765  22.434  1.00 15.00  ? 481 GAL D HO6  1 
-HETATM 12702 C C1   . MAN U 7 .   ? 0.600   24.431  34.374  1.00 100.00 ? 482 MAN D C1   1 
-HETATM 12703 C C2   . MAN U 7 .   ? 1.441   25.705  34.099  1.00 100.00 ? 482 MAN D C2   1 
-HETATM 12704 C C3   . MAN U 7 .   ? 1.888   26.338  35.424  1.00 100.00 ? 482 MAN D C3   1 
-HETATM 12705 C C4   . MAN U 7 .   ? 0.671   26.571  36.310  1.00 100.00 ? 482 MAN D C4   1 
-HETATM 12706 C C5   . MAN U 7 .   ? -0.002  25.236  36.550  1.00 100.00 ? 482 MAN D C5   1 
-HETATM 12707 C C6   . MAN U 7 .   ? -1.202  25.321  37.464  1.00 100.00 ? 482 MAN D C6   1 
-HETATM 12708 O O2   . MAN U 7 .   ? 0.653   26.664  33.344  1.00 100.00 ? 482 MAN D O2   1 
-HETATM 12709 O O3   . MAN U 7 .   ? 2.547   27.574  35.185  1.00 100.00 ? 482 MAN D O3   1 
-HETATM 12710 O O4   . MAN U 7 .   ? 1.067   27.146  37.542  1.00 100.00 ? 482 MAN D O4   1 
-HETATM 12711 O O5   . MAN U 7 .   ? -0.451  24.702  35.294  1.00 100.00 ? 482 MAN D O5   1 
-HETATM 12712 O O6   . MAN U 7 .   ? -1.681  24.025  37.793  1.00 100.00 ? 482 MAN D O6   1 
-HETATM 12713 H H1   . MAN U 7 .   ? 0.100   24.132  33.442  1.00 15.00  ? 482 MAN D H1   1 
-HETATM 12714 H H2   . MAN U 7 .   ? 2.335   25.424  33.524  1.00 15.00  ? 482 MAN D H2   1 
-HETATM 12715 H H3   . MAN U 7 .   ? 2.574   25.646  35.933  1.00 15.00  ? 482 MAN D H3   1 
-HETATM 12716 H H4   . MAN U 7 .   ? -0.021  27.248  35.791  1.00 15.00  ? 482 MAN D H4   1 
-HETATM 12717 H H5   . MAN U 7 .   ? 0.716   24.533  36.993  1.00 15.00  ? 482 MAN D H5   1 
-HETATM 12718 H H61  . MAN U 7 .   ? -1.994  25.886  36.952  1.00 15.00  ? 482 MAN D H61  1 
-HETATM 12719 H H62  . MAN U 7 .   ? -0.907  25.848  38.382  1.00 15.00  ? 482 MAN D H62  1 
-HETATM 12720 H HO3  . MAN U 7 .   ? 1.944   28.175  34.741  1.00 15.00  ? 482 MAN D HO3  1 
-HETATM 12721 H HO4  . MAN U 7 .   ? 1.505   27.984  37.376  1.00 15.00  ? 482 MAN D HO4  1 
-HETATM 12722 H HO6  . MAN U 7 .   ? -0.987  23.380  37.637  1.00 15.00  ? 482 MAN D HO6  1 
-HETATM 12723 C C1   . NAG V 3 .   ? 1.266   27.391  32.324  0.00 0.00   ? 483 NAG D C1   1 
-HETATM 12724 C C2   . NAG V 3 .   ? 0.274   28.428  31.784  0.00 0.00   ? 483 NAG D C2   1 
-HETATM 12725 C C3   . NAG V 3 .   ? 0.945   29.347  30.762  0.00 0.00   ? 483 NAG D C3   1 
-HETATM 12726 C C4   . NAG V 3 .   ? 2.177   29.980  31.397  0.00 0.00   ? 483 NAG D C4   1 
-HETATM 12727 C C5   . NAG V 3 .   ? 3.106   28.885  31.925  0.00 0.00   ? 483 NAG D C5   1 
-HETATM 12728 C C6   . NAG V 3 .   ? 4.319   29.455  32.641  0.00 0.00   ? 483 NAG D C6   1 
-HETATM 12729 C C7   . NAG V 3 .   ? -0.803  26.947  30.183  0.00 0.00   ? 483 NAG D C7   1 
-HETATM 12730 C C8   . NAG V 3 .   ? -2.117  26.358  29.703  0.00 0.00   ? 483 NAG D C8   1 
-HETATM 12731 N N2   . NAG V 3 .   ? -0.898  27.788  31.211  0.00 0.00   ? 483 NAG D N2   1 
-HETATM 12732 O O3   . NAG V 3 .   ? 0.037   30.363  30.360  0.00 0.00   ? 483 NAG D O3   1 
-HETATM 12733 O O4   . NAG V 3 .   ? 2.860   30.774  30.437  0.00 0.00   ? 483 NAG D O4   1 
-HETATM 12734 O O5   . NAG V 3 .   ? 2.410   28.054  32.877  0.00 0.00   ? 483 NAG D O5   1 
-HETATM 12735 O O6   . NAG V 3 .   ? 5.126   28.424  33.188  0.00 0.00   ? 483 NAG D O6   1 
-HETATM 12736 O O7   . NAG V 3 .   ? 0.264   26.660  29.638  0.00 0.00   ? 483 NAG D O7   1 
-HETATM 12737 H H1   . NAG V 3 .   ? 1.562   26.717  31.508  0.00 0.00   ? 483 NAG D H1   1 
-HETATM 12738 H H2   . NAG V 3 .   ? -0.038  29.080  32.612  0.00 0.00   ? 483 NAG D H2   1 
-HETATM 12739 H H3   . NAG V 3 .   ? 1.246   28.750  29.890  0.00 0.00   ? 483 NAG D H3   1 
-HETATM 12740 H H4   . NAG V 3 .   ? 1.859   30.608  32.241  0.00 0.00   ? 483 NAG D H4   1 
-HETATM 12741 H H5   . NAG V 3 .   ? 3.437   28.252  31.090  0.00 0.00   ? 483 NAG D H5   1 
-HETATM 12742 H H61  . NAG V 3 .   ? 3.970   30.113  33.449  0.00 0.00   ? 483 NAG D H61  1 
-HETATM 12743 H H62  . NAG V 3 .   ? 4.909   30.037  31.919  0.00 0.00   ? 483 NAG D H62  1 
-HETATM 12744 H H81  . NAG V 3 .   ? -2.896  27.133  29.723  0.00 0.00   ? 483 NAG D H81  1 
-HETATM 12745 H H82  . NAG V 3 .   ? -2.422  25.536  30.366  0.00 0.00   ? 483 NAG D H82  1 
-HETATM 12746 H H83  . NAG V 3 .   ? -2.009  25.995  28.671  0.00 0.00   ? 483 NAG D H83  1 
-HETATM 12747 H HN2  . NAG V 3 .   ? -1.781  27.980  31.591  0.00 0.00   ? 483 NAG D HN2  1 
-HETATM 12748 H HO3  . NAG V 3 .   ? 0.463   30.933  29.715  0.00 0.00   ? 483 NAG D HO3  1 
-HETATM 12749 H HO4  . NAG V 3 .   ? 3.134   30.220  29.703  0.00 0.00   ? 483 NAG D HO4  1 
-HETATM 12750 H HO6  . NAG V 3 .   ? 4.679   28.038  33.945  0.00 0.00   ? 483 NAG D HO6  1 
+HETATM 12325 C C1   . NAG E 3 .   ? 0.924   29.195  47.741  1.00 100.00 ? 1   NAG E C1   1 
+HETATM 12326 C C2   . NAG E 3 .   ? 0.488   28.178  46.650  1.00 100.00 ? 1   NAG E C2   1 
+HETATM 12327 C C3   . NAG E 3 .   ? 1.629   27.220  46.287  1.00 100.00 ? 1   NAG E C3   1 
+HETATM 12328 C C4   . NAG E 3 .   ? 2.956   27.994  46.269  1.00 100.00 ? 1   NAG E C4   1 
+HETATM 12329 C C5   . NAG E 3 .   ? 3.298   28.446  47.710  1.00 100.00 ? 1   NAG E C5   1 
+HETATM 12330 C C6   . NAG E 3 .   ? 4.302   29.596  47.859  1.00 100.00 ? 1   NAG E C6   1 
+HETATM 12331 C C7   . NAG E 3 .   ? -1.541  26.930  46.218  1.00 100.00 ? 1   NAG E C7   1 
+HETATM 12332 C C8   . NAG E 3 .   ? -2.714  26.140  46.780  1.00 100.00 ? 1   NAG E C8   1 
+HETATM 12333 N N2   . NAG E 3 .   ? -0.668  27.413  47.099  1.00 100.00 ? 1   NAG E N2   1 
+HETATM 12334 O O3   . NAG E 3 .   ? 1.380   26.629  45.015  1.00 100.00 ? 1   NAG E O3   1 
+HETATM 12335 O O4   . NAG E 3 .   ? 4.029   27.162  45.725  1.00 100.00 ? 1   NAG E O4   1 
+HETATM 12336 O O5   . NAG E 3 .   ? 2.098   28.774  48.494  1.00 100.00 ? 1   NAG E O5   1 
+HETATM 12337 O O6   . NAG E 3 .   ? 3.895   30.731  47.070  1.00 100.00 ? 1   NAG E O6   1 
+HETATM 12338 O O7   . NAG E 3 .   ? -1.426  27.111  45.007  1.00 100.00 ? 1   NAG E O7   1 
+HETATM 12339 H H1   . NAG E 3 .   ? 0.182   29.169  48.551  1.00 15.00  ? 1   NAG E H1   1 
+HETATM 12340 H H2   . NAG E 3 .   ? 0.229   28.729  45.735  1.00 15.00  ? 1   NAG E H2   1 
+HETATM 12341 H H3   . NAG E 3 .   ? 1.693   26.436  47.055  1.00 15.00  ? 1   NAG E H3   1 
+HETATM 12342 H H4   . NAG E 3 .   ? 2.833   28.891  45.646  1.00 15.00  ? 1   NAG E H4   1 
+HETATM 12343 H H5   . NAG E 3 .   ? 3.823   27.630  48.225  1.00 15.00  ? 1   NAG E H5   1 
+HETATM 12344 H H61  . NAG E 3 .   ? 5.289   29.248  47.522  1.00 15.00  ? 1   NAG E H61  1 
+HETATM 12345 H H62  . NAG E 3 .   ? 4.354   29.883  48.918  1.00 15.00  ? 1   NAG E H62  1 
+HETATM 12346 H H81  . NAG E 3 .   ? -3.480  26.835  47.152  1.00 15.00  ? 1   NAG E H81  1 
+HETATM 12347 H H82  . NAG E 3 .   ? -2.375  25.511  47.615  1.00 15.00  ? 1   NAG E H82  1 
+HETATM 12348 H H83  . NAG E 3 .   ? -3.158  25.517  45.991  1.00 15.00  ? 1   NAG E H83  1 
+HETATM 12349 H HN2  . NAG E 3 .   ? -0.804  27.253  48.056  1.00 15.00  ? 1   NAG E HN2  1 
+HETATM 12350 H HO3  . NAG E 3 .   ? 2.096   26.028  44.798  1.00 15.00  ? 1   NAG E HO3  1 
+HETATM 12351 C C1   . NDG E 3 .   ? 4.403   26.019  46.445  1.00 100.00 ? 2   NDG E C1   1 
+HETATM 12352 C C2   . NDG E 3 .   ? 5.903   25.741  46.546  1.00 100.00 ? 2   NDG E C2   1 
+HETATM 12353 C C3   . NDG E 3 .   ? 6.391   24.795  45.433  1.00 100.00 ? 2   NDG E C3   1 
+HETATM 12354 C C4   . NDG E 3 .   ? 5.491   23.550  45.387  1.00 100.00 ? 2   NDG E C4   1 
+HETATM 12355 C C5   . NDG E 3 .   ? 4.033   23.972  45.150  1.00 100.00 ? 2   NDG E C5   1 
+HETATM 12356 C C6   . NDG E 3 .   ? 3.079   22.786  45.157  1.00 100.00 ? 2   NDG E C6   1 
+HETATM 12357 C C7   . NDG E 3 .   ? 7.832   27.086  47.123  1.00 100.00 ? 2   NDG E C7   1 
+HETATM 12358 C C8   . NDG E 3 .   ? 8.500   28.453  47.046  1.00 100.00 ? 2   NDG E C8   1 
+HETATM 12359 O O5   . NDG E 3 .   ? 3.561   24.873  46.189  1.00 100.00 ? 2   NDG E O5   1 
+HETATM 12360 O O3   . NDG E 3 .   ? 7.728   24.409  45.716  1.00 100.00 ? 2   NDG E O3   1 
+HETATM 12361 O O4   . NDG E 3 .   ? 5.894   22.643  44.323  1.00 100.00 ? 2   NDG E O4   1 
+HETATM 12362 O O6   . NDG E 3 .   ? 3.425   21.830  44.166  1.00 100.00 ? 2   NDG E O6   1 
+HETATM 12363 O O7   . NDG E 3 .   ? 8.380   26.132  47.689  1.00 100.00 ? 2   NDG E O7   1 
+HETATM 12364 N N2   . NDG E 3 .   ? 6.644   26.992  46.530  1.00 100.00 ? 2   NDG E N2   1 
+HETATM 12365 H H1   . NDG E 3 .   ? 4.022   26.121  47.470  1.00 15.00  ? 2   NDG E H1   1 
+HETATM 12366 H H2   . NDG E 3 .   ? 6.104   25.207  47.485  1.00 15.00  ? 2   NDG E H2   1 
+HETATM 12367 H H3   . NDG E 3 .   ? 6.346   25.319  44.468  1.00 15.00  ? 2   NDG E H3   1 
+HETATM 12368 H H4   . NDG E 3 .   ? 5.562   23.033  46.354  1.00 15.00  ? 2   NDG E H4   1 
+HETATM 12369 H H5   . NDG E 3 .   ? 3.962   24.497  44.187  1.00 15.00  ? 2   NDG E H5   1 
+HETATM 12370 H H61  . NDG E 3 .   ? 2.062   23.157  44.966  1.00 15.00  ? 2   NDG E H61  1 
+HETATM 12371 H H62  . NDG E 3 .   ? 3.119   22.313  46.148  1.00 15.00  ? 2   NDG E H62  1 
+HETATM 12372 H H81  . NDG E 3 .   ? 7.730   29.238  47.041  1.00 15.00  ? 2   NDG E H81  1 
+HETATM 12373 H H82  . NDG E 3 .   ? 9.087   28.531  46.120  1.00 15.00  ? 2   NDG E H82  1 
+HETATM 12374 H H83  . NDG E 3 .   ? 9.148   28.602  47.921  1.00 15.00  ? 2   NDG E H83  1 
+HETATM 12375 H HO3  . NDG E 3 .   ? 7.755   23.952  46.560  1.00 15.00  ? 2   NDG E HO3  1 
+HETATM 12376 H HO6  . NDG E 3 .   ? 4.377   21.829  44.043  1.00 15.00  ? 2   NDG E HO6  1 
+HETATM 12377 H HN2  . NDG E 3 .   ? 6.265   27.774  46.078  1.00 15.00  ? 2   NDG E HN2  1 
+HETATM 12378 C C1   . BMA E 3 .   ? 7.120   21.989  44.400  1.00 100.00 ? 3   BMA E C1   1 
+HETATM 12379 C C2   . BMA E 3 .   ? 7.108   20.693  43.553  1.00 100.00 ? 3   BMA E C2   1 
+HETATM 12380 C C3   . BMA E 3 .   ? 8.492   20.028  43.648  1.00 100.00 ? 3   BMA E C3   1 
+HETATM 12381 C C4   . BMA E 3 .   ? 9.557   21.021  43.194  1.00 100.00 ? 3   BMA E C4   1 
+HETATM 12382 C C5   . BMA E 3 .   ? 9.443   22.337  43.986  1.00 100.00 ? 3   BMA E C5   1 
+HETATM 12383 C C6   . BMA E 3 .   ? 10.382  23.412  43.475  1.00 100.00 ? 3   BMA E C6   1 
+HETATM 12384 O O2   . BMA E 3 .   ? 6.816   21.002  42.191  1.00 100.00 ? 3   BMA E O2   1 
+HETATM 12385 O O3   . BMA E 3 .   ? 8.572   18.830  42.831  1.00 100.00 ? 3   BMA E O3   1 
+HETATM 12386 O O4   . BMA E 3 .   ? 10.844  20.450  43.391  1.00 100.00 ? 3   BMA E O4   1 
+HETATM 12387 O O5   . BMA E 3 .   ? 8.110   22.878  43.885  1.00 100.00 ? 3   BMA E O5   1 
+HETATM 12388 O O6   . BMA E 3 .   ? 10.551  24.436  44.479  1.00 100.00 ? 3   BMA E O6   1 
+HETATM 12389 H H1   . BMA E 3 .   ? 7.329   21.723  45.446  1.00 15.00  ? 3   BMA E H1   1 
+HETATM 12390 H H2   . BMA E 3 .   ? 6.341   20.015  43.952  1.00 15.00  ? 3   BMA E H2   1 
+HETATM 12391 H H3   . BMA E 3 .   ? 8.679   19.764  44.698  1.00 15.00  ? 3   BMA E H3   1 
+HETATM 12392 H H4   . BMA E 3 .   ? 9.406   21.247  42.129  1.00 15.00  ? 3   BMA E H4   1 
+HETATM 12393 H H5   . BMA E 3 .   ? 9.656   22.144  45.046  1.00 15.00  ? 3   BMA E H5   1 
+HETATM 12394 H H61  . BMA E 3 .   ? 9.955   23.853  42.563  1.00 15.00  ? 3   BMA E H61  1 
+HETATM 12395 H H62  . BMA E 3 .   ? 11.354  22.954  43.244  1.00 15.00  ? 3   BMA E H62  1 
+HETATM 12396 H HO2  . BMA E 3 .   ? 5.957   21.427  42.138  1.00 15.00  ? 3   BMA E HO2  1 
+HETATM 12397 H HO4  . BMA E 3 .   ? 11.516  21.071  43.100  1.00 15.00  ? 3   BMA E HO4  1 
+HETATM 12398 C C1   . MAN E 3 .   ? 11.895  24.812  44.584  1.00 100.00 ? 4   MAN E C1   1 
+HETATM 12399 C C2   . MAN E 3 .   ? 12.073  25.905  45.634  1.00 100.00 ? 4   MAN E C2   1 
+HETATM 12400 C C3   . MAN E 3 .   ? 11.450  27.228  45.153  1.00 100.00 ? 4   MAN E C3   1 
+HETATM 12401 C C4   . MAN E 3 .   ? 12.001  27.601  43.774  1.00 100.00 ? 4   MAN E C4   1 
+HETATM 12402 C C5   . MAN E 3 .   ? 11.820  26.430  42.800  1.00 100.00 ? 4   MAN E C5   1 
+HETATM 12403 C C6   . MAN E 3 .   ? 12.467  26.676  41.451  1.00 100.00 ? 4   MAN E C6   1 
+HETATM 12404 O O2   . MAN E 3 .   ? 13.484  26.090  45.835  1.00 100.00 ? 4   MAN E O2   1 
+HETATM 12405 O O3   . MAN E 3 .   ? 11.750  28.269  46.079  1.00 100.00 ? 4   MAN E O3   1 
+HETATM 12406 O O4   . MAN E 3 .   ? 11.320  28.751  43.283  1.00 100.00 ? 4   MAN E O4   1 
+HETATM 12407 O O5   . MAN E 3 .   ? 12.429  25.237  43.337  1.00 100.00 ? 4   MAN E O5   1 
+HETATM 12408 O O6   . MAN E 3 .   ? 13.885  26.640  41.545  1.00 100.00 ? 4   MAN E O6   1 
+HETATM 12409 H H1   . MAN E 3 .   ? 12.498  23.941  44.877  1.00 15.00  ? 4   MAN E H1   1 
+HETATM 12410 H H2   . MAN E 3 .   ? 11.592  25.594  46.572  1.00 15.00  ? 4   MAN E H2   1 
+HETATM 12411 H H3   . MAN E 3 .   ? 10.361  27.101  45.076  1.00 15.00  ? 4   MAN E H3   1 
+HETATM 12412 H H4   . MAN E 3 .   ? 13.075  27.814  43.864  1.00 15.00  ? 4   MAN E H4   1 
+HETATM 12413 H H5   . MAN E 3 .   ? 10.748  26.236  42.655  1.00 15.00  ? 4   MAN E H5   1 
+HETATM 12414 H H61  . MAN E 3 .   ? 12.150  27.663  41.086  1.00 15.00  ? 4   MAN E H61  1 
+HETATM 12415 H H62  . MAN E 3 .   ? 12.127  25.898  40.753  1.00 15.00  ? 4   MAN E H62  1 
+HETATM 12416 H HO3  . MAN E 3 .   ? 11.355  29.089  45.775  1.00 15.00  ? 4   MAN E HO3  1 
+HETATM 12417 H HO4  . MAN E 3 .   ? 11.449  29.482  43.892  1.00 15.00  ? 4   MAN E HO4  1 
+HETATM 12418 H HO6  . MAN E 3 .   ? 14.139  26.404  42.440  1.00 15.00  ? 4   MAN E HO6  1 
+HETATM 12419 C C1   . NAG E 3 .   ? 13.987  25.946  47.111  1.00 96.95  ? 5   NAG E C1   1 
+HETATM 12420 C C2   . NAG E 3 .   ? 15.422  25.439  46.985  1.00 96.95  ? 5   NAG E C2   1 
+HETATM 12421 C C3   . NAG E 3 .   ? 16.165  25.500  48.311  1.00 96.95  ? 5   NAG E C3   1 
+HETATM 12422 C C4   . NAG E 3 .   ? 16.059  26.917  48.881  1.00 96.95  ? 5   NAG E C4   1 
+HETATM 12423 C C5   . NAG E 3 .   ? 14.567  27.271  49.021  1.00 96.95  ? 5   NAG E C5   1 
+HETATM 12424 C C6   . NAG E 3 .   ? 14.305  28.655  49.599  1.00 96.95  ? 5   NAG E C6   1 
+HETATM 12425 C C7   . NAG E 3 .   ? 15.908  23.745  45.330  1.00 96.95  ? 5   NAG E C7   1 
+HETATM 12426 C C8   . NAG E 3 .   ? 15.840  22.263  44.968  1.00 96.95  ? 5   NAG E C8   1 
+HETATM 12427 N N2   . NAG E 3 .   ? 15.409  24.064  46.520  1.00 96.95  ? 5   NAG E N2   1 
+HETATM 12428 O O3   . NAG E 3 .   ? 17.524  25.151  48.086  1.00 96.95  ? 5   NAG E O3   1 
+HETATM 12429 O O4   . NAG E 3 .   ? 16.731  27.013  50.162  1.00 96.95  ? 5   NAG E O4   1 
+HETATM 12430 O O5   . NAG E 3 .   ? 13.942  27.239  47.725  1.00 96.95  ? 5   NAG E O5   1 
+HETATM 12431 O O6   . NAG E 3 .   ? 13.023  29.137  49.218  1.00 96.95  ? 5   NAG E O6   1 
+HETATM 12432 O O7   . NAG E 3 .   ? 16.391  24.579  44.555  1.00 96.95  ? 5   NAG E O7   1 
+HETATM 12433 H H1   . NAG E 3 .   ? 13.390  25.218  47.677  1.00 15.00  ? 5   NAG E H1   1 
+HETATM 12434 H H2   . NAG E 3 .   ? 15.964  26.068  46.265  1.00 15.00  ? 5   NAG E H2   1 
+HETATM 12435 H H3   . NAG E 3 .   ? 15.706  24.793  49.016  1.00 15.00  ? 5   NAG E H3   1 
+HETATM 12436 H H4   . NAG E 3 .   ? 16.522  27.616  48.171  1.00 15.00  ? 5   NAG E H4   1 
+HETATM 12437 H H5   . NAG E 3 .   ? 14.071  26.533  49.666  1.00 15.00  ? 5   NAG E H5   1 
+HETATM 12438 H H61  . NAG E 3 .   ? 15.079  29.341  49.228  1.00 15.00  ? 5   NAG E H61  1 
+HETATM 12439 H H62  . NAG E 3 .   ? 14.362  28.593  50.695  1.00 15.00  ? 5   NAG E H62  1 
+HETATM 12440 H H81  . NAG E 3 .   ? 14.878  22.048  44.483  1.00 15.00  ? 5   NAG E H81  1 
+HETATM 12441 H H82  . NAG E 3 .   ? 15.920  21.652  45.878  1.00 15.00  ? 5   NAG E H82  1 
+HETATM 12442 H H83  . NAG E 3 .   ? 16.650  22.012  44.269  1.00 15.00  ? 5   NAG E H83  1 
+HETATM 12443 H HN2  . NAG E 3 .   ? 15.028  23.363  47.090  1.00 15.00  ? 5   NAG E HN2  1 
+HETATM 12444 H HO3  . NAG E 3 .   ? 18.002  25.179  48.918  1.00 15.00  ? 5   NAG E HO3  1 
+HETATM 12445 H HO6  . NAG E 3 .   ? 12.618  29.588  49.963  1.00 15.00  ? 5   NAG E HO6  1 
+HETATM 12446 C C1   . GAL E 3 .   ? 18.058  26.596  50.202  1.00 100.00 ? 6   GAL E C1   1 
+HETATM 12447 C C2   . GAL E 3 .   ? 18.877  27.496  51.126  1.00 100.00 ? 6   GAL E C2   1 
+HETATM 12448 C C3   . GAL E 3 .   ? 20.336  26.984  51.117  1.00 100.00 ? 6   GAL E C3   1 
+HETATM 12449 C C4   . GAL E 3 .   ? 20.358  25.520  51.578  1.00 100.00 ? 6   GAL E C4   1 
+HETATM 12450 C C5   . GAL E 3 .   ? 19.432  24.678  50.685  1.00 100.00 ? 6   GAL E C5   1 
+HETATM 12451 C C6   . GAL E 3 .   ? 19.311  23.227  51.155  1.00 100.00 ? 6   GAL E C6   1 
+HETATM 12452 O O2   . GAL E 3 .   ? 18.807  28.843  50.666  1.00 100.00 ? 6   GAL E O2   1 
+HETATM 12453 O O3   . GAL E 3 .   ? 21.166  27.779  51.957  1.00 100.00 ? 6   GAL E O3   1 
+HETATM 12454 O O4   . GAL E 3 .   ? 19.933  25.433  52.936  1.00 100.00 ? 6   GAL E O4   1 
+HETATM 12455 O O5   . GAL E 3 .   ? 18.094  25.241  50.676  1.00 100.00 ? 6   GAL E O5   1 
+HETATM 12456 O O6   . GAL E 3 .   ? 18.443  22.472  50.316  1.00 100.00 ? 6   GAL E O6   1 
+HETATM 12457 H H1   . GAL E 3 .   ? 18.489  26.642  49.192  1.00 15.00  ? 6   GAL E H1   1 
+HETATM 12458 H H2   . GAL E 3 .   ? 18.469  27.428  52.144  1.00 15.00  ? 6   GAL E H2   1 
+HETATM 12459 H H3   . GAL E 3 .   ? 20.714  27.024  50.086  1.00 15.00  ? 6   GAL E H3   1 
+HETATM 12460 H H4   . GAL E 3 .   ? 21.382  25.133  51.483  1.00 15.00  ? 6   GAL E H4   1 
+HETATM 12461 H H5   . GAL E 3 .   ? 19.815  24.680  49.655  1.00 15.00  ? 6   GAL E H5   1 
+HETATM 12462 H H61  . GAL E 3 .   ? 18.917  23.226  52.181  1.00 15.00  ? 6   GAL E H61  1 
+HETATM 12463 H H62  . GAL E 3 .   ? 20.312  22.774  51.144  1.00 15.00  ? 6   GAL E H62  1 
+HETATM 12464 H HO2  . GAL E 3 .   ? 17.891  29.130  50.662  1.00 15.00  ? 6   GAL E HO2  1 
+HETATM 12465 H HO3  . GAL E 3 .   ? 22.064  27.439  51.931  1.00 15.00  ? 6   GAL E HO3  1 
+HETATM 12466 H HO4  . GAL E 3 .   ? 19.954  24.515  53.218  1.00 15.00  ? 6   GAL E HO4  1 
+HETATM 12467 H HO6  . GAL E 3 .   ? 18.501  22.804  49.417  1.00 15.00  ? 6   GAL E HO6  1 
+HETATM 12468 C C1   . MAN E 3 .   ? 8.699   17.607  43.522  1.00 100.00 ? 7   MAN E C1   1 
+HETATM 12469 C C2   . MAN E 3 .   ? 9.661   16.651  42.772  1.00 100.00 ? 7   MAN E C2   1 
+HETATM 12470 C C3   . MAN E 3 .   ? 8.994   16.117  41.494  1.00 100.00 ? 7   MAN E C3   1 
+HETATM 12471 C C4   . MAN E 3 .   ? 7.648   15.493  41.843  1.00 100.00 ? 7   MAN E C4   1 
+HETATM 12472 C C5   . MAN E 3 .   ? 6.783   16.556  42.514  1.00 100.00 ? 7   MAN E C5   1 
+HETATM 12473 C C6   . MAN E 3 .   ? 5.386   16.065  42.877  1.00 100.00 ? 7   MAN E C6   1 
+HETATM 12474 O O2   . MAN E 3 .   ? 10.015  15.541  43.634  1.00 100.00 ? 7   MAN E O2   1 
+HETATM 12475 O O3   . MAN E 3 .   ? 9.818   15.142  40.870  1.00 100.00 ? 7   MAN E O3   1 
+HETATM 12476 O O4   . MAN E 3 .   ? 7.017   15.008  40.667  1.00 100.00 ? 7   MAN E O4   1 
+HETATM 12477 O O5   . MAN E 3 .   ? 7.431   16.993  43.730  1.00 100.00 ? 7   MAN E O5   1 
+HETATM 12478 O O6   . MAN E 3 .   ? 4.553   17.131  43.316  1.00 100.00 ? 7   MAN E O6   1 
+HETATM 12479 H H1   . MAN E 3 .   ? 9.101   17.793  44.528  1.00 15.00  ? 7   MAN E H1   1 
+HETATM 12480 H H2   . MAN E 3 .   ? 10.566  17.206  42.488  1.00 15.00  ? 7   MAN E H2   1 
+HETATM 12481 H H3   . MAN E 3 .   ? 8.830   16.957  40.804  1.00 15.00  ? 7   MAN E H3   1 
+HETATM 12482 H H4   . MAN E 3 .   ? 7.813   14.663  42.545  1.00 15.00  ? 7   MAN E H4   1 
+HETATM 12483 H H5   . MAN E 3 .   ? 6.672   17.420  41.845  1.00 15.00  ? 7   MAN E H5   1 
+HETATM 12484 H H61  . MAN E 3 .   ? 5.477   15.320  43.680  1.00 15.00  ? 7   MAN E H61  1 
+HETATM 12485 H H62  . MAN E 3 .   ? 4.940   15.597  41.988  1.00 15.00  ? 7   MAN E H62  1 
+HETATM 12486 H HO3  . MAN E 3 .   ? 9.386   14.823  40.074  1.00 15.00  ? 7   MAN E HO3  1 
+HETATM 12487 H HO4  . MAN E 3 .   ? 7.578   14.348  40.254  1.00 15.00  ? 7   MAN E HO4  1 
+HETATM 12488 H HO6  . MAN E 3 .   ? 4.160   16.900  44.161  1.00 15.00  ? 7   MAN E HO6  1 
+HETATM 12489 C C1   . NAG E 3 .   ? 11.322  15.066  43.613  0.00 0.00   ? 8   NAG E C1   1 
+HETATM 12490 C C2   . NAG E 3 .   ? 11.406  13.807  44.480  0.00 0.00   ? 8   NAG E C2   1 
+HETATM 12491 C C3   . NAG E 3 .   ? 12.795  13.174  44.385  0.00 0.00   ? 8   NAG E C3   1 
+HETATM 12492 C C4   . NAG E 3 .   ? 13.118  12.906  42.919  0.00 0.00   ? 8   NAG E C4   1 
+HETATM 12493 C C5   . NAG E 3 .   ? 12.989  14.201  42.116  0.00 0.00   ? 8   NAG E C5   1 
+HETATM 12494 C C6   . NAG E 3 .   ? 13.224  13.986  40.631  0.00 0.00   ? 8   NAG E C6   1 
+HETATM 12495 C C7   . NAG E 3 .   ? 11.757  14.975  46.584  0.00 0.00   ? 8   NAG E C7   1 
+HETATM 12496 C C8   . NAG E 3 .   ? 11.273  15.170  48.010  0.00 0.00   ? 8   NAG E C8   1 
+HETATM 12497 N N2   . NAG E 3 .   ? 11.064  14.098  45.863  0.00 0.00   ? 8   NAG E N2   1 
+HETATM 12498 O O3   . NAG E 3 .   ? 12.817  11.953  45.113  0.00 0.00   ? 8   NAG E O3   1 
+HETATM 12499 O O4   . NAG E 3 .   ? 14.439  12.394  42.803  0.00 0.00   ? 8   NAG E O4   1 
+HETATM 12500 O O5   . NAG E 3 .   ? 11.661  14.746  42.258  0.00 0.00   ? 8   NAG E O5   1 
+HETATM 12501 O O6   . NAG E 3 .   ? 13.022  15.184  39.896  0.00 0.00   ? 8   NAG E O6   1 
+HETATM 12502 O O7   . NAG E 3 .   ? 12.733  15.589  46.151  0.00 0.00   ? 8   NAG E O7   1 
+HETATM 12503 H H1   . NAG E 3 .   ? 12.005  15.827  44.016  0.00 0.00   ? 8   NAG E H1   1 
+HETATM 12504 H H2   . NAG E 3 .   ? 10.705  13.059  44.083  0.00 0.00   ? 8   NAG E H2   1 
+HETATM 12505 H H3   . NAG E 3 .   ? 13.534  13.871  44.805  0.00 0.00   ? 8   NAG E H3   1 
+HETATM 12506 H H4   . NAG E 3 .   ? 12.399  12.174  42.524  0.00 0.00   ? 8   NAG E H4   1 
+HETATM 12507 H H5   . NAG E 3 .   ? 13.709  14.940  42.495  0.00 0.00   ? 8   NAG E H5   1 
+HETATM 12508 H H61  . NAG E 3 .   ? 12.524  13.217  40.275  0.00 0.00   ? 8   NAG E H61  1 
+HETATM 12509 H H62  . NAG E 3 .   ? 14.257  13.640  40.488  0.00 0.00   ? 8   NAG E H62  1 
+HETATM 12510 H H81  . NAG E 3 .   ? 10.724  14.276  48.337  0.00 0.00   ? 8   NAG E H81  1 
+HETATM 12511 H H82  . NAG E 3 .   ? 10.597  16.035  48.060  0.00 0.00   ? 8   NAG E H82  1 
+HETATM 12512 H H83  . NAG E 3 .   ? 12.132  15.319  48.679  0.00 0.00   ? 8   NAG E H83  1 
+HETATM 12513 H HN2  . NAG E 3 .   ? 10.304  13.636  46.274  0.00 0.00   ? 8   NAG E HN2  1 
+HETATM 12514 H HO3  . NAG E 3 .   ? 13.692  11.563  45.054  0.00 0.00   ? 8   NAG E HO3  1 
+HETATM 12515 H HO4  . NAG E 3 .   ? 14.509  11.577  43.303  0.00 0.00   ? 8   NAG E HO4  1 
+HETATM 12516 H HO6  . NAG E 3 .   ? 12.151  15.167  39.492  0.00 0.00   ? 8   NAG E HO6  1 
+HETATM 12517 C C1   . FUL E 3 .   ? 4.719   30.935  45.965  0.00 0.00   ? 9   FUL E C1   1 
+HETATM 12518 C C2   . FUL E 3 .   ? 4.018   31.901  45.012  0.00 0.00   ? 9   FUL E C2   1 
+HETATM 12519 O O2   . FUL E 3 .   ? 3.851   33.157  45.654  0.00 0.00   ? 9   FUL E O2   1 
+HETATM 12520 C C3   . FUL E 3 .   ? 4.823   32.086  43.726  0.00 0.00   ? 9   FUL E C3   1 
+HETATM 12521 O O3   . FUL E 3 .   ? 4.074   32.865  42.803  0.00 0.00   ? 9   FUL E O3   1 
+HETATM 12522 C C4   . FUL E 3 .   ? 5.145   30.723  43.114  0.00 0.00   ? 9   FUL E C4   1 
+HETATM 12523 O O4   . FUL E 3 .   ? 3.942   30.080  42.716  0.00 0.00   ? 9   FUL E O4   1 
+HETATM 12524 C C5   . FUL E 3 .   ? 5.865   29.862  44.144  0.00 0.00   ? 9   FUL E C5   1 
+HETATM 12525 C C6   . FUL E 3 .   ? 6.188   28.465  43.639  0.00 0.00   ? 9   FUL E C6   1 
+HETATM 12526 O O5   . FUL E 3 .   ? 5.034   29.713  45.306  0.00 0.00   ? 9   FUL E O5   1 
+HETATM 12527 H H1   . FUL E 3 .   ? 5.677   31.370  46.283  0.00 0.00   ? 9   FUL E H1   1 
+HETATM 12528 H H2   . FUL E 3 .   ? 3.037   31.487  44.740  0.00 0.00   ? 9   FUL E H2   1 
+HETATM 12529 H HO2  . FUL E 3 .   ? 4.712   33.511  45.888  0.00 0.00   ? 9   FUL E HO2  1 
+HETATM 12530 H H3   . FUL E 3 .   ? 5.766   32.596  43.966  0.00 0.00   ? 9   FUL E H3   1 
+HETATM 12531 H HO3  . FUL E 3 .   ? 4.585   32.983  41.999  0.00 0.00   ? 9   FUL E HO3  1 
+HETATM 12532 H H4   . FUL E 3 .   ? 5.796   30.869  42.241  0.00 0.00   ? 9   FUL E H4   1 
+HETATM 12533 H HO4  . FUL E 3 .   ? 3.379   29.956  43.483  0.00 0.00   ? 9   FUL E HO4  1 
+HETATM 12534 H H5   . FUL E 3 .   ? 6.802   30.351  44.444  0.00 0.00   ? 9   FUL E H5   1 
+HETATM 12535 H H61  . FUL E 3 .   ? 5.260   27.953  43.348  0.00 0.00   ? 9   FUL E H61  1 
+HETATM 12536 H H62  . FUL E 3 .   ? 6.879   28.530  42.787  0.00 0.00   ? 9   FUL E H62  1 
+HETATM 12537 H H63  . FUL E 3 .   ? 6.670   27.900  44.449  0.00 0.00   ? 9   FUL E H63  1 
+HETATM 12538 C C1   . NAG F 4 .   ? -3.609  10.834  37.491  1.00 89.19  ? 1   NAG F C1   1 
+HETATM 12539 C C2   . NAG F 4 .   ? -3.312  11.933  38.524  1.00 89.19  ? 1   NAG F C2   1 
+HETATM 12540 C C3   . NAG F 4 .   ? -2.701  13.171  37.862  1.00 89.19  ? 1   NAG F C3   1 
+HETATM 12541 C C4   . NAG F 4 .   ? -1.716  12.725  36.787  1.00 89.19  ? 1   NAG F C4   1 
+HETATM 12542 C C5   . NAG F 4 .   ? -2.494  12.068  35.646  1.00 89.19  ? 1   NAG F C5   1 
+HETATM 12543 C C6   . NAG F 4 .   ? -1.698  11.163  34.711  1.00 89.19  ? 1   NAG F C6   1 
+HETATM 12544 C C7   . NAG F 4 .   ? -4.492  12.760  40.469  1.00 89.19  ? 1   NAG F C7   1 
+HETATM 12545 C C8   . NAG F 4 .   ? -5.826  13.142  41.104  1.00 89.19  ? 1   NAG F C8   1 
+HETATM 12546 N N2   . NAG F 4 .   ? -4.534  12.308  39.215  1.00 89.19  ? 1   NAG F N2   1 
+HETATM 12547 O O3   . NAG F 4 .   ? -2.038  13.963  38.835  1.00 89.19  ? 1   NAG F O3   1 
+HETATM 12548 O O4   . NAG F 4 .   ? -0.946  13.856  36.291  1.00 89.19  ? 1   NAG F O4   1 
+HETATM 12549 O O5   . NAG F 4 .   ? -3.658  11.320  36.125  1.00 89.19  ? 1   NAG F O5   1 
+HETATM 12550 O O6   . NAG F 4 .   ? -0.990  10.164  35.471  1.00 89.19  ? 1   NAG F O6   1 
+HETATM 12551 O O7   . NAG F 4 .   ? -3.439  12.864  41.102  1.00 89.19  ? 1   NAG F O7   1 
+HETATM 12552 H H1   . NAG F 4 .   ? -4.659  10.531  37.602  1.00 15.00  ? 1   NAG F H1   1 
+HETATM 12553 H H2   . NAG F 4 .   ? -2.581  11.552  39.251  1.00 15.00  ? 1   NAG F H2   1 
+HETATM 12554 H H3   . NAG F 4 .   ? -3.504  13.756  37.392  1.00 15.00  ? 1   NAG F H3   1 
+HETATM 12555 H H4   . NAG F 4 .   ? -1.036  11.979  37.221  1.00 15.00  ? 1   NAG F H4   1 
+HETATM 12556 H H5   . NAG F 4 .   ? -2.854  12.850  34.963  1.00 15.00  ? 1   NAG F H5   1 
+HETATM 12557 H H61  . NAG F 4 .   ? -0.981  11.777  34.148  1.00 15.00  ? 1   NAG F H61  1 
+HETATM 12558 H H62  . NAG F 4 .   ? -2.393  10.675  34.014  1.00 15.00  ? 1   NAG F H62  1 
+HETATM 12559 H H81  . NAG F 4 .   ? -6.638  12.971  40.383  1.00 15.00  ? 1   NAG F H81  1 
+HETATM 12560 H H82  . NAG F 4 .   ? -5.818  14.206  41.379  1.00 15.00  ? 1   NAG F H82  1 
+HETATM 12561 H H83  . NAG F 4 .   ? -6.008  12.521  41.992  1.00 15.00  ? 1   NAG F H83  1 
+HETATM 12562 H HN2  . NAG F 4 .   ? -5.396  12.228  38.756  1.00 15.00  ? 1   NAG F HN2  1 
+HETATM 12563 H HO3  . NAG F 4 .   ? -2.668  14.236  39.506  1.00 15.00  ? 1   NAG F HO3  1 
+HETATM 12564 C C1   . NDG F 4 .   ? -1.623  14.870  35.621  1.00 41.09  ? 2   NDG F C1   1 
+HETATM 12565 C C2   . NDG F 4 .   ? -0.922  15.436  34.389  1.00 41.09  ? 2   NDG F C2   1 
+HETATM 12566 C C3   . NDG F 4 .   ? -0.052  16.662  34.713  1.00 41.09  ? 2   NDG F C3   1 
+HETATM 12567 C C4   . NDG F 4 .   ? -0.887  17.668  35.509  1.00 41.09  ? 2   NDG F C4   1 
+HETATM 12568 C C5   . NDG F 4 .   ? -1.411  17.005  36.792  1.00 41.09  ? 2   NDG F C5   1 
+HETATM 12569 C C6   . NDG F 4 .   ? -2.299  17.936  37.602  1.00 41.09  ? 2   NDG F C6   1 
+HETATM 12570 C C7   . NDG F 4 .   ? 0.132   14.459  32.449  1.00 41.09  ? 2   NDG F C7   1 
+HETATM 12571 C C8   . NDG F 4 .   ? 0.969   13.315  31.885  1.00 41.09  ? 2   NDG F C8   1 
+HETATM 12572 O O5   . NDG F 4 .   ? -2.221  15.832  36.508  1.00 41.09  ? 2   NDG F O5   1 
+HETATM 12573 O O3   . NDG F 4 .   ? 0.388   17.246  33.497  1.00 41.09  ? 2   NDG F O3   1 
+HETATM 12574 O O4   . NDG F 4 .   ? -0.101  18.836  35.870  1.00 41.09  ? 2   NDG F O4   1 
+HETATM 12575 O O6   . NDG F 4 .   ? -1.619  19.134  37.959  1.00 41.09  ? 2   NDG F O6   1 
+HETATM 12576 O O7   . NDG F 4 .   ? -0.265  15.378  31.731  1.00 41.09  ? 2   NDG F O7   1 
+HETATM 12577 N N2   . NDG F 4 .   ? -0.127  14.403  33.753  1.00 41.09  ? 2   NDG F N2   1 
+HETATM 12578 H H1   . NDG F 4 .   ? -2.595  14.477  35.293  1.00 15.00  ? 2   NDG F H1   1 
+HETATM 12579 H H2   . NDG F 4 .   ? -1.681  15.803  33.684  1.00 15.00  ? 2   NDG F H2   1 
+HETATM 12580 H H3   . NDG F 4 .   ? 0.813   16.342  35.311  1.00 15.00  ? 2   NDG F H3   1 
+HETATM 12581 H H4   . NDG F 4 .   ? -1.741  17.979  34.892  1.00 15.00  ? 2   NDG F H4   1 
+HETATM 12582 H H5   . NDG F 4 .   ? -0.557  16.685  37.405  1.00 15.00  ? 2   NDG F H5   1 
+HETATM 12583 H H61  . NDG F 4 .   ? -2.612  17.410  38.515  1.00 15.00  ? 2   NDG F H61  1 
+HETATM 12584 H H62  . NDG F 4 .   ? -3.182  18.186  36.998  1.00 15.00  ? 2   NDG F H62  1 
+HETATM 12585 H H81  . NDG F 4 .   ? 0.704   12.380  32.398  1.00 15.00  ? 2   NDG F H81  1 
+HETATM 12586 H H82  . NDG F 4 .   ? 2.037   13.516  32.050  1.00 15.00  ? 2   NDG F H82  1 
+HETATM 12587 H H83  . NDG F 4 .   ? 0.766   13.197  30.812  1.00 15.00  ? 2   NDG F H83  1 
+HETATM 12588 H HO3  . NDG F 4 .   ? 0.938   18.009  33.691  1.00 15.00  ? 2   NDG F HO3  1 
+HETATM 12589 H HO6  . NDG F 4 .   ? -2.249  19.858  37.997  1.00 15.00  ? 2   NDG F HO6  1 
+HETATM 12590 H HN2  . NDG F 4 .   ? 0.222   13.659  34.287  1.00 15.00  ? 2   NDG F HN2  1 
+HETATM 12591 C C1   . BMA F 4 .   ? 0.335   19.710  34.878  1.00 69.97  ? 3   BMA F C1   1 
+HETATM 12592 C C2   . BMA F 4 .   ? 0.584   21.126  35.455  1.00 69.97  ? 3   BMA F C2   1 
+HETATM 12593 C C3   . BMA F 4 .   ? 1.102   22.043  34.329  1.00 69.97  ? 3   BMA F C3   1 
+HETATM 12594 C C4   . BMA F 4 .   ? 2.349   21.410  33.696  1.00 69.97  ? 3   BMA F C4   1 
+HETATM 12595 C C5   . BMA F 4 .   ? 2.065   19.966  33.252  1.00 69.97  ? 3   BMA F C5   1 
+HETATM 12596 C C6   . BMA F 4 .   ? 3.307   19.253  32.760  1.00 69.97  ? 3   BMA F C6   1 
+HETATM 12597 O O2   . BMA F 4 .   ? 1.542   21.063  36.505  1.00 69.97  ? 3   BMA F O2   1 
+HETATM 12598 O O3   . BMA F 4 .   ? 1.420   23.376  34.829  1.00 69.97  ? 3   BMA F O3   1 
+HETATM 12599 O O4   . BMA F 4 .   ? 2.759   22.180  32.573  1.00 69.97  ? 3   BMA F O4   1 
+HETATM 12600 O O5   . BMA F 4 .   ? 1.552   19.185  34.350  1.00 69.97  ? 3   BMA F O5   1 
+HETATM 12601 O O6   . BMA F 4 .   ? 2.932   18.092  31.987  1.00 69.97  ? 3   BMA F O6   1 
+HETATM 12602 H H1   . BMA F 4 .   ? -0.429  19.782  34.091  1.00 15.00  ? 3   BMA F H1   1 
+HETATM 12603 H H2   . BMA F 4 .   ? -0.365  21.524  35.842  1.00 15.00  ? 3   BMA F H2   1 
+HETATM 12604 H H3   . BMA F 4 .   ? 0.324   22.119  33.557  1.00 15.00  ? 3   BMA F H3   1 
+HETATM 12605 H H4   . BMA F 4 .   ? 3.154   21.383  34.444  1.00 15.00  ? 3   BMA F H4   1 
+HETATM 12606 H H5   . BMA F 4 .   ? 1.311   19.973  32.453  1.00 15.00  ? 3   BMA F H5   1 
+HETATM 12607 H H61  . BMA F 4 .   ? 3.907   18.944  33.627  1.00 15.00  ? 3   BMA F H61  1 
+HETATM 12608 H H62  . BMA F 4 .   ? 3.890   19.944  32.135  1.00 15.00  ? 3   BMA F H62  1 
+HETATM 12609 H HO2  . BMA F 4 .   ? 1.215   20.487  37.200  1.00 15.00  ? 3   BMA F HO2  1 
+HETATM 12610 H HO4  . BMA F 4 .   ? 2.051   22.199  31.925  1.00 15.00  ? 3   BMA F HO4  1 
+HETATM 12611 C C1   . MAN F 4 .   ? 3.714   18.006  30.833  1.00 100.00 ? 4   MAN F C1   1 
+HETATM 12612 C C2   . MAN F 4 .   ? 3.335   16.784  30.011  1.00 100.00 ? 4   MAN F C2   1 
+HETATM 12613 C C3   . MAN F 4 .   ? 3.739   15.498  30.734  1.00 100.00 ? 4   MAN F C3   1 
+HETATM 12614 C C4   . MAN F 4 .   ? 5.219   15.551  31.097  1.00 100.00 ? 4   MAN F C4   1 
+HETATM 12615 C C5   . MAN F 4 .   ? 5.515   16.827  31.889  1.00 100.00 ? 4   MAN F C5   1 
+HETATM 12616 C C6   . MAN F 4 .   ? 6.987   17.014  32.180  1.00 100.00 ? 4   MAN F C6   1 
+HETATM 12617 O O2   . MAN F 4 .   ? 4.040   16.866  28.762  1.00 100.00 ? 4   MAN F O2   1 
+HETATM 12618 O O3   . MAN F 4 .   ? 3.501   14.380  29.889  1.00 100.00 ? 4   MAN F O3   1 
+HETATM 12619 O O4   . MAN F 4 .   ? 5.560   14.409  31.868  1.00 100.00 ? 4   MAN F O4   1 
+HETATM 12620 O O5   . MAN F 4 .   ? 5.098   17.980  31.135  1.00 100.00 ? 4   MAN F O5   1 
+HETATM 12621 O O6   . MAN F 4 .   ? 7.696   17.328  30.989  1.00 100.00 ? 4   MAN F O6   1 
+HETATM 12622 H H1   . MAN F 4 .   ? 3.561   18.904  30.218  1.00 15.00  ? 4   MAN F H1   1 
+HETATM 12623 H H2   . MAN F 4 .   ? 2.250   16.781  29.837  1.00 15.00  ? 4   MAN F H2   1 
+HETATM 12624 H H3   . MAN F 4 .   ? 3.144   15.404  31.653  1.00 15.00  ? 4   MAN F H3   1 
+HETATM 12625 H H4   . MAN F 4 .   ? 5.813   15.568  30.173  1.00 15.00  ? 4   MAN F H4   1 
+HETATM 12626 H H5   . MAN F 4 .   ? 4.957   16.810  32.835  1.00 15.00  ? 4   MAN F H5   1 
+HETATM 12627 H H61  . MAN F 4 .   ? 7.382   16.083  32.610  1.00 15.00  ? 4   MAN F H61  1 
+HETATM 12628 H H62  . MAN F 4 .   ? 7.102   17.833  32.904  1.00 15.00  ? 4   MAN F H62  1 
+HETATM 12629 H HO3  . MAN F 4 .   ? 4.023   14.469  29.089  1.00 15.00  ? 4   MAN F HO3  1 
+HETATM 12630 H HO4  . MAN F 4 .   ? 6.493   14.443  32.091  1.00 15.00  ? 4   MAN F HO4  1 
+HETATM 12631 H HO6  . MAN F 4 .   ? 7.268   18.066  30.549  1.00 15.00  ? 4   MAN F HO6  1 
+HETATM 12632 C C1   . NAG F 4 .   ? 3.301   16.847  27.596  1.00 93.71  ? 5   NAG F C1   1 
+HETATM 12633 C C2   . NAG F 4 .   ? 4.051   17.667  26.544  1.00 93.71  ? 5   NAG F C2   1 
+HETATM 12634 C C3   . NAG F 4 .   ? 3.460   17.492  25.156  1.00 93.71  ? 5   NAG F C3   1 
+HETATM 12635 C C4   . NAG F 4 .   ? 3.383   15.997  24.835  1.00 93.71  ? 5   NAG F C4   1 
+HETATM 12636 C C5   . NAG F 4 .   ? 2.545   15.311  25.926  1.00 93.71  ? 5   NAG F C5   1 
+HETATM 12637 C C6   . NAG F 4 .   ? 2.358   13.810  25.725  1.00 93.71  ? 5   NAG F C6   1 
+HETATM 12638 C C7   . NAG F 4 .   ? 5.099   19.740  27.219  1.00 93.71  ? 5   NAG F C7   1 
+HETATM 12639 C C8   . NAG F 4 .   ? 4.902   21.212  27.558  1.00 93.71  ? 5   NAG F C8   1 
+HETATM 12640 N N2   . NAG F 4 .   ? 3.996   19.073  26.892  1.00 93.71  ? 5   NAG F N2   1 
+HETATM 12641 O O3   . NAG F 4 .   ? 4.285   18.171  24.220  1.00 93.71  ? 5   NAG F O3   1 
+HETATM 12642 O O4   . NAG F 4 .   ? 2.796   15.776  23.529  1.00 93.71  ? 5   NAG F O4   1 
+HETATM 12643 O O5   . NAG F 4 .   ? 3.188   15.480  27.203  1.00 93.71  ? 5   NAG F O5   1 
+HETATM 12644 O O6   . NAG F 4 .   ? 2.054   13.156  26.955  1.00 93.71  ? 5   NAG F O6   1 
+HETATM 12645 O O7   . NAG F 4 .   ? 6.213   19.214  27.264  1.00 93.71  ? 5   NAG F O7   1 
+HETATM 12646 H H1   . NAG F 4 .   ? 2.311   17.293  27.767  1.00 15.00  ? 5   NAG F H1   1 
+HETATM 12647 H H2   . NAG F 4 .   ? 5.098   17.336  26.511  1.00 15.00  ? 5   NAG F H2   1 
+HETATM 12648 H H3   . NAG F 4 .   ? 2.445   17.914  25.140  1.00 15.00  ? 5   NAG F H3   1 
+HETATM 12649 H H4   . NAG F 4 .   ? 4.400   15.581  24.855  1.00 15.00  ? 5   NAG F H4   1 
+HETATM 12650 H H5   . NAG F 4 .   ? 1.549   15.773  25.972  1.00 15.00  ? 5   NAG F H5   1 
+HETATM 12651 H H61  . NAG F 4 .   ? 3.287   13.395  25.311  1.00 15.00  ? 5   NAG F H61  1 
+HETATM 12652 H H62  . NAG F 4 .   ? 1.534   13.653  25.015  1.00 15.00  ? 5   NAG F H62  1 
+HETATM 12653 H H81  . NAG F 4 .   ? 5.031   21.360  28.639  1.00 15.00  ? 5   NAG F H81  1 
+HETATM 12654 H H82  . NAG F 4 .   ? 3.887   21.527  27.279  1.00 15.00  ? 5   NAG F H82  1 
+HETATM 12655 H H83  . NAG F 4 .   ? 5.648   21.821  27.029  1.00 15.00  ? 5   NAG F H83  1 
+HETATM 12656 H HN2  . NAG F 4 .   ? 3.134   19.539  26.886  1.00 15.00  ? 5   NAG F HN2  1 
+HETATM 12657 H HO3  . NAG F 4 .   ? 5.168   17.795  24.242  1.00 15.00  ? 5   NAG F HO3  1 
+HETATM 12658 H HO6  . NAG F 4 .   ? 1.123   13.276  27.158  1.00 15.00  ? 5   NAG F HO6  1 
+HETATM 12659 C C1   . GAL F 4 .   ? 3.389   16.441  22.463  1.00 100.00 ? 6   GAL F C1   1 
+HETATM 12660 C C2   . GAL F 4 .   ? 3.411   15.553  21.212  1.00 100.00 ? 6   GAL F C2   1 
+HETATM 12661 C C3   . GAL F 4 .   ? 4.079   16.350  20.079  1.00 100.00 ? 6   GAL F C3   1 
+HETATM 12662 C C4   . GAL F 4 .   ? 3.302   17.662  19.854  1.00 100.00 ? 6   GAL F C4   1 
+HETATM 12663 C C5   . GAL F 4 .   ? 3.221   18.462  21.171  1.00 100.00 ? 6   GAL F C5   1 
+HETATM 12664 C C6   . GAL F 4 .   ? 2.365   19.724  21.058  1.00 100.00 ? 6   GAL F C6   1 
+HETATM 12665 O O2   . GAL F 4 .   ? 4.141   14.358  21.477  1.00 100.00 ? 6   GAL F O2   1 
+HETATM 12666 O O3   . GAL F 4 .   ? 4.125   15.584  18.879  1.00 100.00 ? 6   GAL F O3   1 
+HETATM 12667 O O4   . GAL F 4 .   ? 1.986   17.374  19.390  1.00 100.00 ? 6   GAL F O4   1 
+HETATM 12668 O O5   . GAL F 4 .   ? 2.639   17.644  22.214  1.00 100.00 ? 6   GAL F O5   1 
+HETATM 12669 O O6   . GAL F 4 .   ? 2.319   20.432  22.291  1.00 100.00 ? 6   GAL F O6   1 
+HETATM 12670 H H1   . GAL F 4 .   ? 4.423   16.706  22.724  1.00 15.00  ? 6   GAL F H1   1 
+HETATM 12671 H H2   . GAL F 4 .   ? 2.377   15.303  20.935  1.00 15.00  ? 6   GAL F H2   1 
+HETATM 12672 H H3   . GAL F 4 .   ? 5.101   16.610  20.388  1.00 15.00  ? 6   GAL F H3   1 
+HETATM 12673 H H4   . GAL F 4 .   ? 3.835   18.267  19.107  1.00 15.00  ? 6   GAL F H4   1 
+HETATM 12674 H H5   . GAL F 4 .   ? 4.232   18.756  21.485  1.00 15.00  ? 6   GAL F H5   1 
+HETATM 12675 H H61  . GAL F 4 .   ? 1.347   19.430  20.768  1.00 15.00  ? 6   GAL F H61  1 
+HETATM 12676 H H62  . GAL F 4 .   ? 2.798   20.371  20.282  1.00 15.00  ? 6   GAL F H62  1 
+HETATM 12677 H HO2  . GAL F 4 .   ? 3.723   13.884  22.200  1.00 15.00  ? 6   GAL F HO2  1 
+HETATM 12678 H HO3  . GAL F 4 .   ? 3.231   15.358  18.611  1.00 15.00  ? 6   GAL F HO3  1 
+HETATM 12679 H HO4  . GAL F 4 .   ? 2.039   16.887  18.564  1.00 15.00  ? 6   GAL F HO4  1 
+HETATM 12680 H HO6  . GAL F 4 .   ? 1.430   20.765  22.434  1.00 15.00  ? 6   GAL F HO6  1 
+HETATM 12681 C C1   . MAN F 4 .   ? 0.600   24.431  34.374  1.00 100.00 ? 7   MAN F C1   1 
+HETATM 12682 C C2   . MAN F 4 .   ? 1.441   25.705  34.099  1.00 100.00 ? 7   MAN F C2   1 
+HETATM 12683 C C3   . MAN F 4 .   ? 1.888   26.338  35.424  1.00 100.00 ? 7   MAN F C3   1 
+HETATM 12684 C C4   . MAN F 4 .   ? 0.671   26.571  36.310  1.00 100.00 ? 7   MAN F C4   1 
+HETATM 12685 C C5   . MAN F 4 .   ? -0.002  25.236  36.550  1.00 100.00 ? 7   MAN F C5   1 
+HETATM 12686 C C6   . MAN F 4 .   ? -1.202  25.321  37.464  1.00 100.00 ? 7   MAN F C6   1 
+HETATM 12687 O O2   . MAN F 4 .   ? 0.653   26.664  33.344  1.00 100.00 ? 7   MAN F O2   1 
+HETATM 12688 O O3   . MAN F 4 .   ? 2.547   27.574  35.185  1.00 100.00 ? 7   MAN F O3   1 
+HETATM 12689 O O4   . MAN F 4 .   ? 1.067   27.146  37.542  1.00 100.00 ? 7   MAN F O4   1 
+HETATM 12690 O O5   . MAN F 4 .   ? -0.451  24.702  35.294  1.00 100.00 ? 7   MAN F O5   1 
+HETATM 12691 O O6   . MAN F 4 .   ? -1.681  24.025  37.793  1.00 100.00 ? 7   MAN F O6   1 
+HETATM 12692 H H1   . MAN F 4 .   ? 0.100   24.132  33.442  1.00 15.00  ? 7   MAN F H1   1 
+HETATM 12693 H H2   . MAN F 4 .   ? 2.335   25.424  33.524  1.00 15.00  ? 7   MAN F H2   1 
+HETATM 12694 H H3   . MAN F 4 .   ? 2.574   25.646  35.933  1.00 15.00  ? 7   MAN F H3   1 
+HETATM 12695 H H4   . MAN F 4 .   ? -0.021  27.248  35.791  1.00 15.00  ? 7   MAN F H4   1 
+HETATM 12696 H H5   . MAN F 4 .   ? 0.716   24.533  36.993  1.00 15.00  ? 7   MAN F H5   1 
+HETATM 12697 H H61  . MAN F 4 .   ? -1.994  25.886  36.952  1.00 15.00  ? 7   MAN F H61  1 
+HETATM 12698 H H62  . MAN F 4 .   ? -0.907  25.848  38.382  1.00 15.00  ? 7   MAN F H62  1 
+HETATM 12699 H HO3  . MAN F 4 .   ? 1.944   28.175  34.741  1.00 15.00  ? 7   MAN F HO3  1 
+HETATM 12700 H HO4  . MAN F 4 .   ? 1.505   27.984  37.376  1.00 15.00  ? 7   MAN F HO4  1 
+HETATM 12701 H HO6  . MAN F 4 .   ? -0.987  23.380  37.637  1.00 15.00  ? 7   MAN F HO6  1 
+HETATM 12702 C C1   . NAG F 4 .   ? 1.266   27.391  32.324  0.00 0.00   ? 8   NAG F C1   1 
+HETATM 12703 C C2   . NAG F 4 .   ? 0.274   28.428  31.784  0.00 0.00   ? 8   NAG F C2   1 
+HETATM 12704 C C3   . NAG F 4 .   ? 0.945   29.347  30.762  0.00 0.00   ? 8   NAG F C3   1 
+HETATM 12705 C C4   . NAG F 4 .   ? 2.177   29.980  31.397  0.00 0.00   ? 8   NAG F C4   1 
+HETATM 12706 C C5   . NAG F 4 .   ? 3.106   28.885  31.925  0.00 0.00   ? 8   NAG F C5   1 
+HETATM 12707 C C6   . NAG F 4 .   ? 4.319   29.455  32.641  0.00 0.00   ? 8   NAG F C6   1 
+HETATM 12708 C C7   . NAG F 4 .   ? -0.803  26.947  30.183  0.00 0.00   ? 8   NAG F C7   1 
+HETATM 12709 C C8   . NAG F 4 .   ? -2.117  26.358  29.703  0.00 0.00   ? 8   NAG F C8   1 
+HETATM 12710 N N2   . NAG F 4 .   ? -0.898  27.788  31.211  0.00 0.00   ? 8   NAG F N2   1 
+HETATM 12711 O O3   . NAG F 4 .   ? 0.037   30.363  30.360  0.00 0.00   ? 8   NAG F O3   1 
+HETATM 12712 O O4   . NAG F 4 .   ? 2.860   30.774  30.437  0.00 0.00   ? 8   NAG F O4   1 
+HETATM 12713 O O5   . NAG F 4 .   ? 2.410   28.054  32.877  0.00 0.00   ? 8   NAG F O5   1 
+HETATM 12714 O O6   . NAG F 4 .   ? 5.126   28.424  33.188  0.00 0.00   ? 8   NAG F O6   1 
+HETATM 12715 O O7   . NAG F 4 .   ? 0.264   26.660  29.638  0.00 0.00   ? 8   NAG F O7   1 
+HETATM 12716 H H1   . NAG F 4 .   ? 1.562   26.717  31.508  0.00 0.00   ? 8   NAG F H1   1 
+HETATM 12717 H H2   . NAG F 4 .   ? -0.038  29.080  32.612  0.00 0.00   ? 8   NAG F H2   1 
+HETATM 12718 H H3   . NAG F 4 .   ? 1.246   28.750  29.890  0.00 0.00   ? 8   NAG F H3   1 
+HETATM 12719 H H4   . NAG F 4 .   ? 1.859   30.608  32.241  0.00 0.00   ? 8   NAG F H4   1 
+HETATM 12720 H H5   . NAG F 4 .   ? 3.437   28.252  31.090  0.00 0.00   ? 8   NAG F H5   1 
+HETATM 12721 H H61  . NAG F 4 .   ? 3.970   30.113  33.449  0.00 0.00   ? 8   NAG F H61  1 
+HETATM 12722 H H62  . NAG F 4 .   ? 4.909   30.037  31.919  0.00 0.00   ? 8   NAG F H62  1 
+HETATM 12723 H H81  . NAG F 4 .   ? -2.896  27.133  29.723  0.00 0.00   ? 8   NAG F H81  1 
+HETATM 12724 H H82  . NAG F 4 .   ? -2.422  25.536  30.366  0.00 0.00   ? 8   NAG F H82  1 
+HETATM 12725 H H83  . NAG F 4 .   ? -2.009  25.995  28.671  0.00 0.00   ? 8   NAG F H83  1 
+HETATM 12726 H HN2  . NAG F 4 .   ? -1.781  27.980  31.591  0.00 0.00   ? 8   NAG F HN2  1 
+HETATM 12727 H HO3  . NAG F 4 .   ? 0.463   30.933  29.715  0.00 0.00   ? 8   NAG F HO3  1 
+HETATM 12728 H HO4  . NAG F 4 .   ? 3.134   30.220  29.703  0.00 0.00   ? 8   NAG F HO4  1 
+HETATM 12729 H HO6  . NAG F 4 .   ? 4.679   28.038  33.945  0.00 0.00   ? 8   NAG F HO6  1 
+HETATM 12730 C C1   . FUC F 4 .   ? 0.392   10.362  35.453  1.00 100.00 ? 9   FUC F C1   1 
+HETATM 12731 C C2   . FUC F 4 .   ? 1.024   9.484   36.535  1.00 100.00 ? 9   FUC F C2   1 
+HETATM 12732 C C3   . FUC F 4 .   ? 2.527   9.746   36.660  1.00 100.00 ? 9   FUC F C3   1 
+HETATM 12733 C C4   . FUC F 4 .   ? 2.777   11.246  36.834  1.00 100.00 ? 9   FUC F C4   1 
+HETATM 12734 C C5   . FUC F 4 .   ? 2.133   12.009  35.675  1.00 100.00 ? 9   FUC F C5   1 
+HETATM 12735 C C6   . FUC F 4 .   ? 2.297   13.518  35.777  1.00 100.00 ? 9   FUC F C6   1 
+HETATM 12736 O O2   . FUC F 4 .   ? 0.805   8.118   36.208  1.00 100.00 ? 9   FUC F O2   1 
+HETATM 12737 O O3   . FUC F 4 .   ? 3.056   9.035   37.777  1.00 100.00 ? 9   FUC F O3   1 
+HETATM 12738 O O4   . FUC F 4 .   ? 2.221   11.689  38.066  1.00 100.00 ? 9   FUC F O4   1 
+HETATM 12739 O O5   . FUC F 4 .   ? 0.724   11.733  35.646  1.00 100.00 ? 9   FUC F O5   1 
+HETATM 12740 H H1   . FUC F 4 .   ? 0.801   10.079  34.473  1.00 15.00  ? 9   FUC F H1   1 
+HETATM 12741 H H2   . FUC F 4 .   ? 0.561   9.717   37.504  1.00 15.00  ? 9   FUC F H2   1 
+HETATM 12742 H H3   . FUC F 4 .   ? 3.023   9.411   35.738  1.00 15.00  ? 9   FUC F H3   1 
+HETATM 12743 H H4   . FUC F 4 .   ? 3.861   11.429  36.828  1.00 15.00  ? 9   FUC F H4   1 
+HETATM 12744 H H5   . FUC F 4 .   ? 2.574   11.678  34.724  1.00 15.00  ? 9   FUC F H5   1 
+HETATM 12745 H H61  . FUC F 4 .   ? 1.778   13.987  34.930  1.00 15.00  ? 9   FUC F H61  1 
+HETATM 12746 H H62  . FUC F 4 .   ? 3.364   13.778  35.732  1.00 15.00  ? 9   FUC F H62  1 
+HETATM 12747 H H63  . FUC F 4 .   ? 1.849   13.876  36.714  1.00 15.00  ? 9   FUC F H63  1 
+HETATM 12748 H HO2  . FUC F 4 .   ? -0.139  7.951   36.156  1.00 15.00  ? 9   FUC F HO2  1 
+HETATM 12749 H HO3  . FUC F 4 .   ? 2.904   8.095   37.656  1.00 15.00  ? 9   FUC F HO3  1 
+HETATM 12750 H HO4  . FUC F 4 .   ? 1.275   11.526  38.065  1.00 15.00  ? 9   FUC F HO4  1 
+# 
+_database_PDB_caveat.id     1 
+_database_PDB_caveat.text   'FUC F 9 HAS WRONG CHIRALITY AT ATOM C1' 
 # 
 loop_
 _pdbx_poly_seq_scheme.asym_id 
@@ -16015,7 +15906,7 @@ _pdbx_struct_assembly.oligomeric_count     4
 # 
 _pdbx_struct_assembly_gen.assembly_id       1 
 _pdbx_struct_assembly_gen.oper_expression   1 
-_pdbx_struct_assembly_gen.asym_id_list      A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V 
+_pdbx_struct_assembly_gen.asym_id_list      A,B,C,D,E,F 
 # 
 loop_
 _pdbx_struct_assembly_prop.biol_id 
@@ -16052,13 +15943,18 @@ _pdbx_audit_revision_history.revision_date
 1 'Structure model' 1 0 1998-04-15 
 2 'Structure model' 1 1 2008-03-03 
 3 'Structure model' 1 2 2011-07-13 
+4 'Structure model' 2 0 2020-07-29 
 # 
-_pdbx_audit_revision_details.ordinal             1 
-_pdbx_audit_revision_details.revision_ordinal    1 
-_pdbx_audit_revision_details.data_content_type   'Structure model' 
-_pdbx_audit_revision_details.provider            repository 
-_pdbx_audit_revision_details.type                'Initial release' 
-_pdbx_audit_revision_details.description         ? 
+loop_
+_pdbx_audit_revision_details.ordinal 
+_pdbx_audit_revision_details.revision_ordinal 
+_pdbx_audit_revision_details.data_content_type 
+_pdbx_audit_revision_details.provider 
+_pdbx_audit_revision_details.type 
+_pdbx_audit_revision_details.description 
+_pdbx_audit_revision_details.details 
+1 1 'Structure model' repository 'Initial release' ?                          ? 
+2 4 'Structure model' repository Remediation       'Carbohydrate remediation' ? 
 # 
 loop_
 _pdbx_audit_revision_group.ordinal 
@@ -16068,6 +15964,87 @@ _pdbx_audit_revision_group.group
 1 2 'Structure model' 'Version format compliance' 
 2 3 'Structure model' 'Non-polymer description'   
 3 3 'Structure model' 'Version format compliance' 
+4 4 'Structure model' Advisory                    
+5 4 'Structure model' 'Atomic model'              
+6 4 'Structure model' 'Data collection'           
+7 4 'Structure model' 'Database references'       
+8 4 'Structure model' 'Derived calculations'      
+9 4 'Structure model' 'Structure summary'         
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1  4 'Structure model' atom_site                       
+2  4 'Structure model' chem_comp                       
+3  4 'Structure model' database_PDB_caveat             
+4  4 'Structure model' entity                          
+5  4 'Structure model' pdbx_branch_scheme              
+6  4 'Structure model' pdbx_chem_comp_identifier       
+7  4 'Structure model' pdbx_entity_branch              
+8  4 'Structure model' pdbx_entity_branch_descriptor   
+9  4 'Structure model' pdbx_entity_branch_link         
+10 4 'Structure model' pdbx_entity_branch_list         
+11 4 'Structure model' pdbx_entity_nonpoly             
+12 4 'Structure model' pdbx_nonpoly_scheme             
+13 4 'Structure model' pdbx_struct_assembly_gen        
+14 4 'Structure model' pdbx_unobs_or_zero_occ_residues 
+15 4 'Structure model' pdbx_validate_chiral            
+16 4 'Structure model' pdbx_validate_close_contact     
+17 4 'Structure model' struct_asym                     
+18 4 'Structure model' struct_conn                     
+19 4 'Structure model' struct_ref_seq_dif              
+20 4 'Structure model' struct_site                     
+21 4 'Structure model' struct_site_gen                 
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1  4 'Structure model' '_atom_site.B_iso_or_equiv'                   
+2  4 'Structure model' '_atom_site.Cartn_x'                          
+3  4 'Structure model' '_atom_site.Cartn_y'                          
+4  4 'Structure model' '_atom_site.Cartn_z'                          
+5  4 'Structure model' '_atom_site.auth_asym_id'                     
+6  4 'Structure model' '_atom_site.auth_atom_id'                     
+7  4 'Structure model' '_atom_site.auth_comp_id'                     
+8  4 'Structure model' '_atom_site.auth_seq_id'                      
+9  4 'Structure model' '_atom_site.label_asym_id'                    
+10 4 'Structure model' '_atom_site.label_atom_id'                    
+11 4 'Structure model' '_atom_site.label_comp_id'                    
+12 4 'Structure model' '_atom_site.label_entity_id'                  
+13 4 'Structure model' '_atom_site.occupancy'                        
+14 4 'Structure model' '_atom_site.type_symbol'                      
+15 4 'Structure model' '_chem_comp.name'                             
+16 4 'Structure model' '_chem_comp.type'                             
+17 4 'Structure model' '_pdbx_struct_assembly_gen.asym_id_list'      
+18 4 'Structure model' '_pdbx_validate_chiral.auth_asym_id'          
+19 4 'Structure model' '_pdbx_validate_chiral.auth_seq_id'           
+20 4 'Structure model' '_pdbx_validate_close_contact.auth_asym_id_1' 
+21 4 'Structure model' '_pdbx_validate_close_contact.auth_asym_id_2' 
+22 4 'Structure model' '_pdbx_validate_close_contact.auth_atom_id_1' 
+23 4 'Structure model' '_pdbx_validate_close_contact.auth_seq_id_1'  
+24 4 'Structure model' '_pdbx_validate_close_contact.auth_seq_id_2'  
+25 4 'Structure model' '_struct_conn.pdbx_dist_value'                
+26 4 'Structure model' '_struct_conn.pdbx_leaving_atom_flag'         
+27 4 'Structure model' '_struct_conn.pdbx_role'                      
+28 4 'Structure model' '_struct_conn.ptnr1_auth_asym_id'             
+29 4 'Structure model' '_struct_conn.ptnr1_auth_comp_id'             
+30 4 'Structure model' '_struct_conn.ptnr1_auth_seq_id'              
+31 4 'Structure model' '_struct_conn.ptnr1_label_asym_id'            
+32 4 'Structure model' '_struct_conn.ptnr1_label_atom_id'            
+33 4 'Structure model' '_struct_conn.ptnr1_label_comp_id'            
+34 4 'Structure model' '_struct_conn.ptnr1_label_seq_id'             
+35 4 'Structure model' '_struct_conn.ptnr2_auth_asym_id'             
+36 4 'Structure model' '_struct_conn.ptnr2_auth_comp_id'             
+37 4 'Structure model' '_struct_conn.ptnr2_auth_seq_id'              
+38 4 'Structure model' '_struct_conn.ptnr2_label_asym_id'            
+39 4 'Structure model' '_struct_conn.ptnr2_label_atom_id'            
+40 4 'Structure model' '_struct_conn.ptnr2_label_comp_id'            
+41 4 'Structure model' '_struct_conn.ptnr2_label_seq_id'             
+42 4 'Structure model' '_struct_ref_seq_dif.details'                 
 # 
 loop_
 _software.name 
@@ -16081,16 +16058,17 @@ X-PLOR    'model building' 3.8 ? 3
 X-PLOR    refinement       3.8 ? 4 
 X-PLOR    phasing          3.8 ? 5 
 # 
-_pdbx_entry_details.entry_id             1IGY 
-_pdbx_entry_details.compound_details     ? 
-_pdbx_entry_details.source_details       ? 
-_pdbx_entry_details.nonpolymer_details   ? 
-_pdbx_entry_details.sequence_details     
+_pdbx_entry_details.entry_id                 1IGY 
+_pdbx_entry_details.compound_details         ? 
+_pdbx_entry_details.source_details           ? 
+_pdbx_entry_details.nonpolymer_details       ? 
+_pdbx_entry_details.sequence_details         
 ;THE INTACT ANTIBODY IS NUMBERED ACCORDING TO THE CONVENTION
 OF E. KABAT [KABAT ET AL. (1991) SEQUENCES OF PROTEINS OF
 IMMUNOLOGICAL INTEREST, 5TH ED., NATIONAL INSTITUTES OF
 HEALTH, BETHESDA, MD].
 ;
+_pdbx_entry_details.has_ligand_of_interest   ? 
 # 
 loop_
 _pdbx_validate_close_contact.id 
@@ -16116,7 +16094,7 @@ _pdbx_validate_close_contact.dist
 6 1 HD1 A HIS 198 ? ? HG1  A THR 200 ? ? 1.29 
 7 1 HD1 C HIS 198 ? ? HG1  C THR 200 ? ? 1.31 
 8 1 HG  D SER 251 ? ? H    D SER 252 ? ? 1.33 
-9 1 HB  D NDG 477 ? ? O5   D BMA 478 ? ? 1.48 
+9 1 HO3 F NDG 2   ? ? O5   F BMA 3   ? ? 1.48 
 # 
 loop_
 _pdbx_validate_symm_contact.id 
@@ -16429,72 +16407,164 @@ _pdbx_validate_chiral.id              1
 _pdbx_validate_chiral.PDB_model_num   1 
 _pdbx_validate_chiral.auth_atom_id    C1 
 _pdbx_validate_chiral.label_alt_id    ? 
-_pdbx_validate_chiral.auth_asym_id    D 
+_pdbx_validate_chiral.auth_asym_id    F 
 _pdbx_validate_chiral.auth_comp_id    FUC 
-_pdbx_validate_chiral.auth_seq_id     476 
+_pdbx_validate_chiral.auth_seq_id     9 
 _pdbx_validate_chiral.PDB_ins_code    ? 
 _pdbx_validate_chiral.details         'WRONG HAND' 
 _pdbx_validate_chiral.omega           . 
 # 
 loop_
-_pdbx_unobs_or_zero_occ_residues.id 
-_pdbx_unobs_or_zero_occ_residues.PDB_model_num 
-_pdbx_unobs_or_zero_occ_residues.polymer_flag 
-_pdbx_unobs_or_zero_occ_residues.occupancy_flag 
-_pdbx_unobs_or_zero_occ_residues.auth_asym_id 
-_pdbx_unobs_or_zero_occ_residues.auth_comp_id 
-_pdbx_unobs_or_zero_occ_residues.auth_seq_id 
-_pdbx_unobs_or_zero_occ_residues.PDB_ins_code 
-_pdbx_unobs_or_zero_occ_residues.label_asym_id 
-_pdbx_unobs_or_zero_occ_residues.label_comp_id 
-_pdbx_unobs_or_zero_occ_residues.label_seq_id 
-1 1 Y 0 B VAL 244 ? B VAL 225 
-2 1 Y 0 B PRO 245 ? B PRO 226 
-3 1 Y 0 B GLU 249 ? B GLU 227 
-4 1 Y 0 B VAL 250 ? B VAL 228 
-5 1 N 0 B FUL 476 ? F FUL ?   
-6 1 N 0 B NAG 483 ? M NAG ?   
-7 1 N 0 D NAG 483 ? V NAG ?   
+_pdbx_branch_scheme.asym_id 
+_pdbx_branch_scheme.entity_id 
+_pdbx_branch_scheme.mon_id 
+_pdbx_branch_scheme.num 
+_pdbx_branch_scheme.pdb_asym_id 
+_pdbx_branch_scheme.pdb_mon_id 
+_pdbx_branch_scheme.pdb_seq_num 
+_pdbx_branch_scheme.auth_asym_id 
+_pdbx_branch_scheme.auth_mon_id 
+_pdbx_branch_scheme.auth_seq_num 
+_pdbx_branch_scheme.hetero 
+E 3 NAG 1 E NAG 1 B NAG 1 n 
+E 3 NDG 2 E NDG 2 B NAG 3 n 
+E 3 BMA 3 E BMA 3 B MAN 4 n 
+E 3 MAN 4 E MAN 4 B MAN 5 n 
+E 3 NAG 5 E NAG 5 B NAG 6 n 
+E 3 GAL 6 E GAL 6 B GAL 7 n 
+E 3 MAN 7 E MAN 7 B MAN 8 n 
+E 3 NAG 8 E NAG 8 B NAG 9 n 
+E 3 FUL 9 E FUL 9 B FUC 2 n 
+F 4 NAG 1 F NAG 1 D NAG 1 n 
+F 4 NDG 2 F NDG 2 D NAG 3 n 
+F 4 BMA 3 F BMA 3 D MAN 4 n 
+F 4 MAN 4 F MAN 4 D MAN 5 n 
+F 4 NAG 5 F NAG 5 D NAG 6 n 
+F 4 GAL 6 F GAL 6 D GAL 7 n 
+F 4 MAN 7 F MAN 7 D MAN 8 n 
+F 4 NAG 8 F NAG 8 D NAG 9 n 
+F 4 FUC 9 F FUC 9 D FUC 2 n 
 # 
 loop_
-_pdbx_entity_nonpoly.entity_id 
-_pdbx_entity_nonpoly.name 
-_pdbx_entity_nonpoly.comp_id 
-3 N-ACETYL-D-GLUCOSAMINE                      NAG 
-4 BETA-L-FUCOSE                               FUL 
-5 '2-(ACETYLAMINO)-2-DEOXY-A-D-GLUCOPYRANOSE' NDG 
-6 BETA-D-MANNOSE                              BMA 
-7 ALPHA-D-MANNOSE                             MAN 
-8 BETA-D-GALACTOSE                            GAL 
-9 ALPHA-L-FUCOSE                              FUC 
+_pdbx_chem_comp_identifier.comp_id 
+_pdbx_chem_comp_identifier.type 
+_pdbx_chem_comp_identifier.program 
+_pdbx_chem_comp_identifier.program_version 
+_pdbx_chem_comp_identifier.identifier 
+BMA 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 DManpb                         
+BMA 'COMMON NAME'                         GMML     1.0 b-D-mannopyranose              
+BMA 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 b-D-Manp                       
+BMA 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 Man                            
+FUC 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 LFucpa                         
+FUC 'COMMON NAME'                         GMML     1.0 a-L-fucopyranose               
+FUC 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 a-L-Fucp                       
+FUC 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 Fuc                            
+FUL 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 LFucpb                         
+FUL 'COMMON NAME'                         GMML     1.0 b-L-fucopyranose               
+FUL 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 b-L-Fucp                       
+FUL 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 Fuc                            
+GAL 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 DGalpb                         
+GAL 'COMMON NAME'                         GMML     1.0 b-D-galactopyranose            
+GAL 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 b-D-Galp                       
+GAL 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 Gal                            
+MAN 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 DManpa                         
+MAN 'COMMON NAME'                         GMML     1.0 a-D-mannopyranose              
+MAN 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 a-D-Manp                       
+MAN 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 Man                            
+NAG 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 DGlcpNAcb                      
+NAG 'COMMON NAME'                         GMML     1.0 N-acetyl-b-D-glucopyranosamine 
+NAG 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 b-D-GlcpNAc                    
+NAG 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 GlcNAc                         
+NDG 'CONDENSED IUPAC CARBOHYDRATE SYMBOL' GMML     1.0 DGlcpNAca                      
+NDG 'COMMON NAME'                         GMML     1.0 N-acetyl-a-D-glucopyranosamine 
+NDG 'IUPAC CARBOHYDRATE SYMBOL'           PDB-CARE 1.0 a-D-GlcpNAc                    
+NDG 'SNFG CARBOHYDRATE SYMBOL'            GMML     1.0 GlcNAc                         
 # 
 loop_
-_pdbx_nonpoly_scheme.asym_id 
-_pdbx_nonpoly_scheme.entity_id 
-_pdbx_nonpoly_scheme.mon_id 
-_pdbx_nonpoly_scheme.ndb_seq_num 
-_pdbx_nonpoly_scheme.pdb_seq_num 
-_pdbx_nonpoly_scheme.auth_seq_num 
-_pdbx_nonpoly_scheme.pdb_mon_id 
-_pdbx_nonpoly_scheme.auth_mon_id 
-_pdbx_nonpoly_scheme.pdb_strand_id 
-_pdbx_nonpoly_scheme.pdb_ins_code 
-E 3 NAG 1 475 1 NAG NAG B . 
-F 4 FUL 2 476 2 FUL FUC B . 
-G 5 NDG 3 477 3 NDG NAG B . 
-H 6 BMA 4 478 4 BMA MAN B . 
-I 7 MAN 5 479 5 MAN MAN B . 
-J 3 NAG 6 480 6 NAG NAG B . 
-K 8 GAL 7 481 7 GAL GAL B . 
-L 7 MAN 8 482 8 MAN MAN B . 
-M 3 NAG 9 483 9 NAG NAG B . 
-N 3 NAG 1 475 1 NAG NAG D . 
-O 9 FUC 2 476 2 FUC FUC D . 
-P 5 NDG 3 477 3 NDG NAG D . 
-Q 6 BMA 4 478 4 BMA MAN D . 
-R 7 MAN 5 479 5 MAN MAN D . 
-S 3 NAG 6 480 6 NAG NAG D . 
-T 8 GAL 7 481 7 GAL GAL D . 
-U 7 MAN 8 482 8 MAN MAN D . 
-V 3 NAG 9 483 9 NAG NAG D . 
+_pdbx_entity_branch.entity_id 
+_pdbx_entity_branch.type 
+3 oligosaccharide 
+4 oligosaccharide 
+# 
+loop_
+_pdbx_entity_branch_descriptor.ordinal 
+_pdbx_entity_branch_descriptor.entity_id 
+_pdbx_entity_branch_descriptor.descriptor 
+_pdbx_entity_branch_descriptor.type 
+_pdbx_entity_branch_descriptor.program 
+_pdbx_entity_branch_descriptor.program_version 
+1 3 'DGalpb1-4DGlcpNAcb1-2DManpa1-6[DGlcpNAcb1-2DManpa1-3]DManpb1-4DGlcpNAca1-4[LFucpb1-6]DGlcpNAcb1-' 'Glycam Condensed Sequence' 
+GMML       1.0   
+2 3 
+;WURCS=2.0/6,9,8/[a2122h-1b_1-5_2*NCC/3=O][a2122h-1a_1-5_2*NCC/3=O][a1122h-1b_1-5][a1122h-1a_1-5][a2112h-1b_1-5][a1221m-1b_1-5]/1-2-3-4-1-4-1-5-6/a4-b1_a6-i1_b4-c1_c3-d1_c6-f1_d2-e1_f2-g1_g4-h1
+;
+WURCS                       PDB2Glycan 1.1.0 
+3 3 
+;[]{[(4+1)][b-D-GlcpNAc]{[(4+1)][a-D-GlcpNAc]{[(4+1)][b-D-Manp]{[(3+1)][a-D-Manp]{[(2+1)][b-D-GlcpNAc]{}}[(6+1)][a-D-Manp]{[(2+1)][b-D-GlcpNAc]{[(4+1)][b-D-Galp]{}}}}}[(6+1)][b-L-Fucp]{}}}
+;
+LINUCS                      PDB-CARE   ?     
+4 4 'DGalpb1-4DGlcpNAcb1-2DManpa1-6[DGlcpNAcb1-2DManpa1-3]DManpb1-4DGlcpNAca1-4[LFucpa1-6]DGlcpNAcb1-' 'Glycam Condensed Sequence' 
+GMML       1.0   
+5 4 
+;WURCS=2.0/6,9,8/[a2122h-1b_1-5_2*NCC/3=O][a2122h-1a_1-5_2*NCC/3=O][a1122h-1b_1-5][a1122h-1a_1-5][a2112h-1b_1-5][a1221m-1a_1-5]/1-2-3-4-1-4-1-5-6/a4-b1_a6-i1_b4-c1_c3-d1_c6-f1_d2-e1_f2-g1_g4-h1
+;
+WURCS                       PDB2Glycan 1.1.0 
+6 4 
+;[]{[(4+1)][b-D-GlcpNAc]{[(4+1)][a-D-GlcpNAc]{[(4+1)][b-D-Manp]{[(3+1)][a-D-Manp]{[(2+1)][b-D-GlcpNAc]{}}[(6+1)][a-D-Manp]{[(2+1)][b-D-GlcpNAc]{[(4+1)][b-D-Galp]{}}}}}[(6+1)][b-L-Fucp]{}}}
+;
+LINUCS                      PDB-CARE   ?     
+# 
+loop_
+_pdbx_entity_branch_link.link_id 
+_pdbx_entity_branch_link.entity_id 
+_pdbx_entity_branch_link.entity_branch_list_num_1 
+_pdbx_entity_branch_link.comp_id_1 
+_pdbx_entity_branch_link.atom_id_1 
+_pdbx_entity_branch_link.leaving_atom_id_1 
+_pdbx_entity_branch_link.entity_branch_list_num_2 
+_pdbx_entity_branch_link.comp_id_2 
+_pdbx_entity_branch_link.atom_id_2 
+_pdbx_entity_branch_link.leaving_atom_id_2 
+_pdbx_entity_branch_link.value_order 
+_pdbx_entity_branch_link.details 
+1  3 2 NDG C1 O1 1 NAG O4 HO4 sing ? 
+2  3 3 BMA C1 O1 2 NDG O4 HO4 sing ? 
+3  3 4 MAN C1 O1 3 BMA O6 HO6 sing ? 
+4  3 5 NAG C1 O1 4 MAN O2 HO2 sing ? 
+5  3 6 GAL C1 O1 5 NAG O4 HO4 sing ? 
+6  3 7 MAN C1 O1 3 BMA O3 HO3 sing ? 
+7  3 8 NAG C1 O1 7 MAN O2 HO2 sing ? 
+8  3 9 FUL C1 O1 1 NAG O6 HO6 sing ? 
+9  4 2 NDG C1 O1 1 NAG O4 HO4 sing ? 
+10 4 3 BMA C1 O1 2 NDG O4 HO4 sing ? 
+11 4 4 MAN C1 O1 3 BMA O6 HO6 sing ? 
+12 4 5 NAG C1 O1 4 MAN O2 HO2 sing ? 
+13 4 6 GAL C1 O1 5 NAG O4 HO4 sing ? 
+14 4 7 MAN C1 O1 3 BMA O3 HO3 sing ? 
+15 4 8 NAG C1 O1 7 MAN O2 HO2 sing ? 
+16 4 9 FUC C1 O1 1 NAG O6 HO6 sing ? 
+# 
+loop_
+_pdbx_entity_branch_list.entity_id 
+_pdbx_entity_branch_list.comp_id 
+_pdbx_entity_branch_list.num 
+_pdbx_entity_branch_list.hetero 
+3 NAG 1 n 
+3 NDG 2 n 
+3 BMA 3 n 
+3 MAN 4 n 
+3 NAG 5 n 
+3 GAL 6 n 
+3 MAN 7 n 
+3 NAG 8 n 
+3 FUL 9 n 
+4 NAG 1 n 
+4 NDG 2 n 
+4 BMA 3 n 
+4 MAN 4 n 
+4 NAG 5 n 
+4 GAL 6 n 
+4 MAN 7 n 
+4 NAG 8 n 
+4 FUC 9 n 
 # 

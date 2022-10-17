@@ -12,6 +12,11 @@ Writing input files and reading output files is handled internally.
 The user only needs to provide objects like a :class:`Sequence`
 and will receive objects like an :class:`Alignment`.
 
+Note that in order to use an interface in :mod:`biotite.application`
+the corresponding software must be installed or the web server must be
+reachable, respectively.
+These programs are not shipped with the *Biotite* package.
+
 Each application is represented by its respective :class:`Application`
 class.
 :class:`Application` objects are created, started and after the run has
@@ -26,7 +31,7 @@ be collected after :class:`Application` has finished.
 The execution of an :class:`Application` can run in parallel:
 In the time between starting the run and collecting the results can be
 used to run other code, similar to the *Python* :class:`Thread` or
-class:`Process` classes.
+:class:`Process` classes.
 """
 
 __name__ = "biotite.application"

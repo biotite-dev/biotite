@@ -1,3 +1,9 @@
+div.body {
+    max-width: 850px  !important;
+}
+
+
+
 body, div.sphinxsidebar input{
     font-family: "Fira Sans", "Helvetica", "Sans-Serif";
 }
@@ -21,7 +27,7 @@ a.toc-backref {
     color: #3E4349;
     text-decoration-line: none
 }
-div.body p, div.body dd, div.body li {
+div.body p, div.body dd, div.body ul li {
     list-style-type: square;
 }
 hr.docutils {
@@ -44,4 +50,41 @@ div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
 .toctree-wrapper li.toctree-l1 {
     margin-bottom: 1em;
     font-weight: bold;
+}
+
+
+/* Separation between methods in the API reference */
+.py.method, .py.attribute{
+    border-top: 1px solid #cccccc;
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+
+.sphx-glr-multi-img{
+    max-width: 99% !important;
+}
+
+.sphx-glr-thumbcontainer {
+    font-size: 0.9em !important;
+    width: 200px !important;
+    height: 200px !important;
+}
+
+div.sphx-glr-download {
+    width: auto !important;
+}
+
+div.sphx-glr-download a {
+   background-color: #ffb569ff !important;
+   border: 1px solid #ff982dff !important;
+   background-image: none !important;
+}
+
+div.sphx-glr-download-link-note {
+   display: none !important;
+}
+
+.sphx-glr-thumbcontainer a.internal {
+    font-weight: 400;
 }

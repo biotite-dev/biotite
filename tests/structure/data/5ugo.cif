@@ -3,7 +3,7 @@ data_5UGO
 _entry.id   5UGO 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.286 
+_audit_conform.dict_version    5.320 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
@@ -72,10 +72,11 @@ loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.ordinal 
-primary 'Shock, D.D.'       1 
-primary 'Freudenthal, B.D.' 2 
-primary 'Beard, W.A.'       3 
-primary 'Wilson, S.H.'      4 
+_citation_author.identifier_ORCID 
+primary 'Shock, D.D.'       1 ? 
+primary 'Freudenthal, B.D.' 2 ? 
+primary 'Beard, W.A.'       3 ? 
+primary 'Wilson, S.H.'      4 ? 
 # 
 _cell.angle_alpha                  90.00 
 _cell.angle_alpha_esd              ? 
@@ -6065,6 +6066,7 @@ _pdbx_audit_revision_history.revision_date
 2 'Structure model' 1 1 2017-08-02 
 3 'Structure model' 1 2 2017-08-16 
 4 'Structure model' 1 3 2017-10-04 
+5 'Structure model' 1 4 2019-12-18 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -6072,6 +6074,7 @@ _pdbx_audit_revision_details.data_content_type   'Structure model'
 _pdbx_audit_revision_details.provider            repository 
 _pdbx_audit_revision_details.type                'Initial release' 
 _pdbx_audit_revision_details.description         ? 
+_pdbx_audit_revision_details.details             ? 
 # 
 loop_
 _pdbx_audit_revision_group.ordinal 
@@ -6081,6 +6084,7 @@ _pdbx_audit_revision_group.group
 1 2 'Structure model' 'Author supporting evidence' 
 2 3 'Structure model' 'Database references'        
 3 4 'Structure model' 'Database references'        
+4 5 'Structure model' 'Author supporting evidence' 
 # 
 loop_
 _pdbx_audit_revision_category.ordinal 
@@ -6090,6 +6094,7 @@ _pdbx_audit_revision_category.category
 1 2 'Structure model' pdbx_audit_support 
 2 3 'Structure model' citation           
 3 4 'Structure model' citation           
+4 5 'Structure model' pdbx_audit_support 
 # 
 loop_
 _pdbx_audit_revision_item.ordinal 
@@ -6109,6 +6114,7 @@ _pdbx_audit_revision_item.item
 11 4 'Structure model' '_citation.journal_volume'                 
 12 4 'Structure model' '_citation.page_first'                     
 13 4 'Structure model' '_citation.page_last'                      
+14 5 'Structure model' '_pdbx_audit_support.funding_organization' 
 # 
 loop_
 _software.citation_id 
@@ -6383,7 +6389,8 @@ _ndb_struct_na_base_pair_step.j_PDB_ins_code_2
 1 A DG 15 1_555 B DC 2  1_555 A DC 16 1_555 B DG 1  1_555 0.482  -0.787 3.134 -0.098 6.963  35.058 -2.225 -0.799 2.928 11.420 
 0.160   35.721 14 TT_DG15DC16:DG1DC2_PP T 15 ? P 2  ? T 16 ? P 1  ? 
 # 
-_pdbx_audit_support.funding_organization   'National Institutes of Health/National Institute of Environmental Health Sciences' 
+_pdbx_audit_support.funding_organization   
+'National Institutes of Health/National Institute of Environmental Health Sciences (NIH/NIEHS)' 
 _pdbx_audit_support.country                'United States' 
 _pdbx_audit_support.grant_number           ES024431 
 _pdbx_audit_support.ordinal                1 

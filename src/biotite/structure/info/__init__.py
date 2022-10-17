@@ -15,7 +15,7 @@ repository.
 """
 
 __name__ = "biotite.structure.info"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Tom David Müller"
 
 from .atoms import *
 from .bonds import *
@@ -24,3 +24,5 @@ from .misc import *
 from .radii import *
 from .standardize import *
 from .nucleotides import *
+from .amino_acids import *
+from .carbohydrates import *

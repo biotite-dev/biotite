@@ -19,17 +19,12 @@ from biotite.structure import partial_charges
 # the relevant information is the BondList
 
 # Creating atoms to build molecules with
-carbon = Atom([0, 0, 0], element="C")
-
-hydrogen = Atom([0, 0, 0], element ="H")
-
-oxygen = Atom([0, 0, 0], element ="O")
-
-nitrogen = Atom([0, 0, 0], element ="N")
-
-fluorine = Atom([0, 0, 0], element ="F")
-
-sulfur = Atom([0, 0, 0], element="S")
+carbon   = Atom([0, 0, 0], element="C")
+hydrogen = Atom([0, 0, 0], element="H")
+oxygen   = Atom([0, 0, 0], element="O")
+nitrogen = Atom([0, 0, 0], element="N")
+fluorine = Atom([0, 0, 0], element="F")
+sulfur   = Atom([0, 0, 0], element="S")
 
 
 # Building molecules
@@ -293,7 +288,7 @@ def test_total_charge_zero(molecule):
     dealing with uncharged molecules).
     """
     total_charge = np.sum(partial_charges(molecule))
-    assert total_charge == pytest.approx(0, abs=1e-15)
+    assert total_charge == pytest.approx(0, abs=1e-6)
 
 
 def test_pos_formal_charge():

@@ -9,7 +9,7 @@ tetrahydrocannabinol (THC).
 Two types of *cannabis sativa* are distinguished: While the *drug-type*
 strains produce high levels of THCA, *fiber-type* strains produce a low
 amount. One molecular difference between these two types are
-polymorphisms in THCA synthase gene [1]_.
+polymorphisms in THCA synthase gene :footcite:`Kojoma2006`.
 
 This script takes THCA synthase gene sequences from different
 *cannabis sativa* strains, translates them into protein sequences and
@@ -17,10 +17,7 @@ creates a consensus sequence for each of the two strain types.
 Eventually, an alignment is plotted depicting the polymorphic positions
 between the two consensus sequences.
 
-.. [1] M Kojoma, H Seki, S Yoshida and T Muranaka,
-       "DNA polymorphisms in the tetrahydrocannabinolic acid (THCA) synthase
-       gene in 'drug-type' and 'fiber-type' Cannabis sativa L."
-       Forensic Sci Int, 159, 132-140 (2006).
+.. footbibliography::
 """
 
 # Code source: Patrick Kunzmann

@@ -2,15 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import sys
 import re
-import shlex
-import glob
 from os.path import join, abspath, dirname, normpath
 import fnmatch
 import os
 from setuptools import setup, find_packages, Extension
-from setuptools.command.test import test as TestCommand
 import numpy
 from Cython.Build import cythonize
 
@@ -110,8 +106,9 @@ setup(
     },
     
     install_requires = ["requests >= 2.12",
-                        "numpy >= 1.13",
-                        "msgpack >= 0.5.6"],
+                        "numpy >= 1.19",
+                        "msgpack >= 0.5.6",
+                        "networkx >= 2.0"],
     python_requires = ">=3.6",
     
     tests_require = ["pytest"],

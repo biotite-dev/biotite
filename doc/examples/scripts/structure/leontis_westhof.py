@@ -3,8 +3,8 @@ Leontis-Westhof Nomenclature
 ============================
 
 In this example we plot a secondary structure diagram annotated with 
-Leontis-Westhof nomenclature [1]_ of the sarcin-ricin loop from E. coli 
-(PDB ID: 6ZYB).
+Leontis-Westhof nomenclature :footcite:`Leontis2001` of the sarcin-ricin
+loop from E. coli (PDB ID: 6ZYB).
 """
 
 # Code source: Tom David Müller
@@ -98,6 +98,4 @@ plt.show()
 # References
 # ----------
 # 
-# .. [1] NB Leontis and E Westhof,
-#    "Geometric nomenclature and classification of RNA base pairs.",
-#    RNA, 7(4), 499-512 (2001).
+# .. footbibliography::

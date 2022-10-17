@@ -8,9 +8,9 @@ that can be applied on structures.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann", "Claude J. Rogers"
 __all__ = ["translate", "rotate", "rotate_centered", "rotate_about_axis",
-           "align_vectors"]
+           "orient_principal_components", "align_vectors"]
 
 import numpy as np
 from .geometry import centroid
@@ -234,6 +234,105 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     return _put_back(atoms, positions)
 
 
+def orient_principal_components(atoms, order=None):
+    """
+    Translate and rotate the atoms to be centered at the origin with
+    the principal axes aligned to the Cartesian axes, as specified by
+    the `order` parameter. By default, x, y, z.
+
+    By default, the resulting coordinates have the highest variance in
+    the x-axis and the lowest variance on the z-axis. Setting the `order`
+    parameter will change the direction of the highest variance.
+    For example, ``order=(2, 1, 0)`` results in highest variance along the
+    z-axis and lowest along the x-axis.
+
+    Parameters
+    ----------
+    atoms : AtomArray or ndarray, shape=(n,3)
+        The atoms of which the coordinates are transformed.
+        The coordinates can be directly provided as :class:`ndarray`.
+    order : array-like, length=3
+        The order of decreasing variance. Setting `order` to ``(2, 0, 1)``
+        results in highest variance along the y-axis and lowest along
+        the x-axis. Default = ``(0, 1, 2)``.
+
+    Returns
+    -------
+    AtomArray or ndarray, shape=(n,3)
+        The atoms with coordinates centered at the orgin and aligned with
+        xyz axes.
+
+    See Also
+    --------
+    rotate_centered
+    rotate_about_axis
+
+    Examples
+    --------
+    Align principal components to xyz axes (default), or specify the order
+    of variance.
+
+    >>> print("original variance =", atom_array.coord.var(axis=0))
+    original variance = [26.517 20.009  9.325]
+    >>> moved = orient_principal_components(atom_array)
+    >>> print("moved variance =", moved.coord.var(axis=0))
+    moved variance = [28.906 18.495  8.450]
+    >>> # Note the increase in variance along the x-axis
+    >>> # Specifying the order keyword changes the orientation
+    >>> moved_z = orient_principal_components(atom_array, order=(2, 1, 0))
+    >>> print("moved (zyx) variance =", moved_z.coord.var(axis=0))
+    moved (zyx) variance = [ 8.450 18.495 28.906]
+    """
+    # Check user input
+    coords = coord(atoms)
+    if coords.ndim != 2:
+        raise ValueError(f"Expected input shape of (n, 3), got {coords.shape}.")
+    row, col = coords.shape
+    if (row < 3) or (col != 3):
+        raise ValueError(
+            f"Expected at least 3 entries, {row} given,"
+            f" and 3 dimensions, {col} given."
+        )
+    if order is None:
+        order = np.array([0, 1, 2])
+    else:
+        order = np.asarray(order, dtype=int)
+        if order.shape != (3,):
+            raise ValueError(
+                f"Expected order to have shape (3,), not {order.shape}"
+            )
+        if not (np.sort(order) == np.arange(3)).all():
+            raise ValueError("Expected order to contain [0, 1, 2].")
+
+    # place centroid of the atoms at the origin
+    centered = coords - coords.mean(axis=0)
+
+    # iterate a few times to ensure the ideal rotation has been applied
+    identity = np.eye(3)
+    MAX_ITER = 50
+    for _ in range(MAX_ITER):
+        # PCA, W is the component matrix, s ~ explained variance
+        _, sigma, components = np.linalg.svd(centered)
+
+        # sort 1st, 2nd, 3rd pca compontents along x, y, z
+        idx = sigma.argsort()[::-1][order]
+        ident = np.eye(3)[:, idx]
+
+        # Run the Kabsch algorithm to orient principal components
+        # along the x, y, z axes
+        v, _, wt = np.linalg.svd(components.T @ ident)
+
+        if np.linalg.det(v) * np.linalg.det(wt) < -0:
+            v[:, -1] *= -1
+        # Calculate rotation matrix
+        rotation = v @ wt
+        if np.isclose(rotation, identity, atol=1e-5).all():
+            break
+        # Apply rotation, keep molecule centered on the origin
+        centered = centered @ rotation
+    return _put_back(atoms, centered)
+
+
 def align_vectors(atoms, origin_direction, target_direction,
                   origin_position=None, target_position=None):
     """
@@ -329,8 +428,23 @@ def align_vectors(atoms, origin_direction, target_direction,
         A       2  LEU HD22   H        -6.255    7.544   -2.657
         A       2  LEU HD23   H        -5.592    8.445   -1.281
     """
-    origin_direction = np.asarray(origin_direction, dtype=np.float32)
-    target_direction = np.asarray(target_direction, dtype=np.float32)
+    origin_direction = np.asarray(
+        origin_direction, dtype=np.float32
+    ).squeeze()
+    target_direction = np.asarray(
+        target_direction, dtype=np.float32
+    ).squeeze()
+    # check that original and target direction are vectors of shape (3,)
+    if origin_direction.shape != (3,):
+        raise ValueError(
+            f"Expected origin vector to have shape (3,), "
+            f"got {origin_direction.shape}"
+        )
+    if target_direction.shape != (3,):
+        raise ValueError(
+            f"Expected target vector to have shape (3,), "
+            f"got {target_direction.shape}"
+        )
     if np.linalg.norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")
     if np.linalg.norm(target_direction) == 0:
@@ -353,11 +467,11 @@ def align_vectors(atoms, origin_direction, target_direction,
     norm_vector(target_direction)
     # Formula is taken from
     # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/476311#476311
-    v = np.cross(origin_direction, target_direction)
+    vx, vy, vz = np.cross(origin_direction, target_direction)
     v_c = np.array([
-        [         0, -v[..., 2],  v[..., 1]],
-        [ v[..., 2],          0, -v[..., 0]],
-        [-v[..., 1],  v[..., 0],          0]
+        [  0, -vz,  vy],
+        [ vz,   0, -vx],
+        [-vy,  vx,   0]
     ], dtype=float)
     cos_a = vector_dot(origin_direction, target_direction)
     if np.all(cos_a == -1):
@@ -365,7 +479,7 @@ def align_vectors(atoms, origin_direction, target_direction,
             "Direction vectors are point into opposite directions, "
             "cannot calculate rotation matrix"
         )
-    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1+cos_a)
+    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
     
     positions = matrix_rotate(positions, rot_matrix)
     

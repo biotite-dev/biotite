@@ -4,7 +4,7 @@ Annual releases of PDB structures
 
 This script creates a plot showing the number of annually released PDB
 structures since 1990, very similar to the
-`official statistics <https://www.rcsb.org/stats/growth/overall>`_.
+`official statistics <https://www.rcsb.org/stats/growth/growth-released-structures>`_.
 """
 
 # Code source: Patrick Kunzmann

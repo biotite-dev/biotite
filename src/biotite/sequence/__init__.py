@@ -70,3 +70,4 @@ from .seqtypes import *
 from .sequence import *
 from .codon import *
 from .annotation import *
+from .profile import *

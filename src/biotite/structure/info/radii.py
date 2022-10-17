@@ -66,7 +66,8 @@ def vdw_radius_protor(res_name, atom_name):
     """
     Estimate the Van-der-Waals radius of an non-hydrogen atom,
     that includes the radius added by potential bonded hydrogen atoms.
-    The respective radii are taken from the ProtOr dataset. [1]_.
+    The respective radii are taken from the ProtOr dataset.
+    :footcite:`Tsai1999`
 
     This is especially useful for macromolecular structures where no
     hydrogen atoms are resolved, e.g. crystal structures.
@@ -93,10 +94,8 @@ def vdw_radius_protor(res_name, atom_name):
     
     References
     ----------
-   
-    .. [1] J Tsai R Taylor, C Chotia and M Gerstein,
-       "The packing densitiy in proteins: standard radii and volumes."
-       J Mol Biol, 290, 253-299 (1999).
+    
+    .. footbibliography::
     
     Examples
     --------
@@ -167,7 +166,8 @@ def _calculate_protor_radii(res_name):
 
 def vdw_radius_single(element):
     """
-    Get the Van-der-Waals radius of an atom from the given element. [1]_
+    Get the Van-der-Waals radius of an atom from the given element.
+    :footcite:`Bondi1964`
 
     Parameters
     ----------
@@ -185,10 +185,8 @@ def vdw_radius_single(element):
     
     References
     ----------
-       
-    .. [1] A Bondi,
-       "Van der Waals volumes and radii."
-       J Phys Chem, 86, 441-451 (1964).
+    
+    .. footbibliography::
     
     Examples
     --------

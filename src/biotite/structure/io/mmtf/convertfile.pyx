@@ -82,10 +82,10 @@ def get_structure(file, model=None, altloc="first",
         that should be stored in the output array or stack.
         These are valid values:
         ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
-    include_bonds : bool
-        If set to true, an :class:`BondList` will be created for the resulting
-        :class:`AtomArray` containing the bond information from the file.
-        (Default: False)
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
     
     Returns
     -------
@@ -144,7 +144,7 @@ def get_structure(file, model=None, altloc="first",
     cdef int32 max_atoms_per_res = np.max(atoms_per_res)
     #Create the arrays
     cdef np.ndarray res_names = np.zeros(len(group_list), dtype="U3")
-    cdef np.ndarray hetero_res = np.zeros(len(group_list), dtype=np.bool)
+    cdef np.ndarray hetero_res = np.zeros(len(group_list), dtype=bool)
     cdef np.ndarray atom_names = np.zeros((len(group_list), max_atoms_per_res),
                                           dtype="U6")
     cdef np.ndarray elements = np.zeros((len(group_list), max_atoms_per_res),

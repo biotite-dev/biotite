@@ -10,14 +10,14 @@ channels:
   - bioconda
 
 dependencies:
-  - python =3.8
+  - python =3.9
   - setuptools >=30.0
   - pip >=10.0
   - wheel >=0.30
   - requests >=2.12
-  - numpy >=1.13
-  - scipy >=0.14
-  - scikit-learn >= 0.18.0
+  - numpy >=1.15
+  - scipy >=1.8.0
+  - scikit-learn >=0.18
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
@@ -25,12 +25,15 @@ dependencies:
   - mdtraj >=1.9.3
   - matplotlib >=3.3
   - pytest >=5.2
-  - sphinx >=1.7
-  - sphinx-gallery =0.7.0
+  - sphinx >=5.0
+  - sphinx-gallery =0.11.1
+  - sphinxcontrib-bibtex >=2.3
   - numpydoc >=0.8
   - dssp
   - clustalo
   - mafft
-  - muscle
+  - muscle =3
   - sra-tools
+  - autodock-vina
   - viennarna
+  - tantan

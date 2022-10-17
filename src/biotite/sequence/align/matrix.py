@@ -54,14 +54,15 @@ class SubstitutionMatrix(object):
             - **GONNET** - Not usable with default protein alphabet
             - **DAYHOFF**
         
-        - Corrected protein substitution matrices [1]_, <BLOCKS>
-          is the BLOCKS version, the matrix is based on
+        - Corrected protein substitution matrices :footcite:`Hess2016`,
+          **<BLOCKS>** is the BLOCKS version, the matrix is based on
             
             - **BLOSUM<n>_<BLOCKS>**
             - **RBLOSUM<n>_<BLOCKS>**
             - **CorBLOSUM<n>_<BLOCKS>**
     
-    A list of all available matrix names is returned by `list_db()`.
+    A list of all available matrix names is returned by
+    :meth:`list_db()`.
     
     Since this class can handle two different alphabets, it is possible
     to align two different types of sequences.
@@ -83,6 +84,11 @@ class SubstitutionMatrix(object):
     ------
     KeyError
         If the matrix dictionary misses a symbol given in the alphabet.
+    
+    References
+    ----------
+    
+    .. footbibliography::
     
     Examples
     --------
@@ -118,14 +124,6 @@ class SubstitutionMatrix(object):
         
     >>> alph = ProteinSequence.alphabet
     >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
-    
-    References
-    ----------
-    
-    .. [1] M Hess, F Keul, M Goesele and K Hamacher,
-       "Addressing inaccuracies in BLOSUM computation improves homology
-       search performance."
-       BMC Bioinformatics, 17 (2016).
     """
     
     # Directory of matrix files
@@ -154,7 +152,26 @@ class SubstitutionMatrix(object):
         # This class is immutable and has a getter function for the
         # score matrix -> make the score matrix read-only
         self._matrix.setflags(write=False)
-    
+
+    def __repr__(self):
+        """Represent SubstitutionMatrix as a string for debugging."""
+        return f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, " \
+               f"np.{np.array_repr(self._matrix)})"
+
+    def __eq__(self, item):
+        if not isinstance(item, SubstitutionMatrix):
+            return False
+        if self._alph1 != item.get_alphabet1():
+            return False
+        if self._alph2 != item.get_alphabet2():
+            return False
+        if not np.array_equal(self.score_matrix(), item.score_matrix()):
+            return False
+        return True
+
+    def __ne__(self, item):
+        return not self == item
+
     def _fill_with_matrix_dict(self, matrix_dict):
         self._matrix = np.zeros(( len(self._alph1), len(self._alph2) ),
                                 dtype=np.int32)
@@ -316,7 +333,7 @@ class SubstitutionMatrix(object):
         matrix_dict = {}
         for i in range(len(symbols1)):
             for j in range(len(symbols2)):
-                matrix_dict[(symbols1[i], symbols1[j])] = scores[i,j]
+                matrix_dict[(symbols1[i], symbols2[j])] = scores[i,j]
         return matrix_dict
     
     @staticmethod

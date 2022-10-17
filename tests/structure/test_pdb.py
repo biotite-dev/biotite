@@ -28,19 +28,22 @@ def test_get_model_count():
 
 
 @pytest.mark.parametrize(
-    "path, model, hybrid36",
+    "path, model, hybrid36, include_bonds",
     itertools.product(
         glob.glob(join(data_dir("structure"), "*.pdb")),
         [None, 1, -1],
+        [False, True],
         [False, True]
     )
 )
-def test_array_conversion(path, model, hybrid36):
+def test_array_conversion(path, model, hybrid36, include_bonds):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     try:
-        array1 = pdb.get_structure(pdb_file, model=model)
+        array1 = pdb.get_structure(
+            pdb_file, model=model, include_bonds=include_bonds
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -50,7 +53,7 @@ def test_array_conversion(path, model, hybrid36):
         else:
             raise
     
-    if hybrid36 and (array1.res_id < 1).any():
+    if hybrid36 and (array1.res_id < 0).any():
         with pytest.raises(
             ValueError,
             match="Only positive integers can be converted "
@@ -63,7 +66,9 @@ def test_array_conversion(path, model, hybrid36):
         pdb_file = pdb.PDBFile()
         pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
     
-    array2 = pdb.get_structure(pdb_file, model=model)
+    array2 = pdb.get_structure(
+        pdb_file, model=model, include_bonds=include_bonds
+    )
     
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
@@ -119,6 +124,11 @@ def test_extra_fields(hybrid36):
 
     with pytest.raises(ValueError):
         pdb_file.get_structure(extra_fields=["unsupported_field"])
+    
+    # Add non-neutral charge values,
+    # as the input PDB has only neutral charges
+    stack1.charge[0] = -1
+    stack1.charge[1] = 2
 
     pdb_file = pdb.PDBFile()
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
@@ -304,3 +314,21 @@ def test_hybrid36_codec(number, length):
 def test_max_hybrid36_number():
     assert hybrid36.max_hybrid36_number(4) == 2436111
     assert hybrid36.max_hybrid36_number(5) == 87440031
+
+
+def test_bond_parsing():
+    """
+    Compare parsing of bonds from PDB with output from
+    :func:`connect_via_residue_names()`.
+    """
+    # Choose a structure with CONECT records to test these as well
+    path = join(data_dir("structure"), "3o5r.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    atoms = pdb.get_structure(pdb_file, model=1, include_bonds=True)
+    
+    test_bonds = atoms.bonds
+
+    ref_bonds = struc.connect_via_residue_names(atoms)
+    ref_bonds.remove_bond_order()
+
+    assert test_bonds.as_set() == ref_bonds.as_set()

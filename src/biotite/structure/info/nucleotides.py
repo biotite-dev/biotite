@@ -14,13 +14,14 @@ from os.path import join, dirname, realpath
 _info_dir = dirname(realpath(__file__))
 # Data is taken from
 # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
-# (2020/10/21)
+# (2022/09/17)
 # The json-file contains all three-letter-codes of the components where
 # the data item `_chem_comp.type` is equal to one of the following
 # values:
-# DNA OH 3 prime terminus, DNA OH 5 prime terminus, DNA linking,
-# RNA OH 3 prime terminus, RNA OH 5 prime terminus, RNA linking,
-# L-RNA LINKING, L-DNA LINKING
+# DNA LINKING; DNA OH 3 PRIME TERMINUS; DNA OH 3 prime terminus; 
+# DNA OH 5 prime terminus; DNA linking; L-DNA LINKING; L-DNA linking; 
+# L-RNA LINKING; L-RNA linking; RNA LINKING; RNA OH 3 prime terminus; 
+# RNA OH 5 prime terminus; RNA linking
 with open(join(_info_dir, "nucleotides.json"), "r") as file:
     _nucleotides = json.load(file)
 
@@ -33,6 +34,6 @@ def nucleotide_names():
     -------
     nucleotide_names : list
         A list of three-letter-codes containing residues that are
-        DNA/RNA-Linking.
+        DNA/RNA monomers.
     """
     return _nucleotides

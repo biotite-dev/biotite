@@ -10,6 +10,7 @@ The instantiation can be quite simple as
 """
 
 import biotite.sequence as seq
+from biotite.sequence.align.matrix import SubstitutionMatrix
 
 dna = seq.NucleotideSequence("AACTGCTA")
 print(dna)
@@ -295,6 +296,9 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # Sequence alignments
 # -------------------
 # 
+# Pairwise alignments
+# ^^^^^^^^^^^^^^^^^^^
+# 
 # .. currentmodule:: biotite.sequence.align 
 #
 # When comparing two (or more) sequences, usually an alignment needs
@@ -306,10 +310,11 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # alignment, but are quite slow.
 # 
 # The :mod:`biotite.sequence.align` package provides the function
-# :func:`align_optimal()`, which either performs an optimal global
-# alignment, using the *Needleman-Wunsch* algorithm, or an optimal local
+# :func:`align_optimal()`, which fits into the latter category.
+# It either performs an optimal global alignment, using the
+# *Needleman-Wunsch* algorithm, or an optimal local
 # alignment, using the *Smith-Waterman* algorithm.
-# By default it uses a general gap penalty, but an affine gap penalty
+# By default it uses a linear gap penalty, but an affine gap penalty
 # can be used, too.
 # 
 # Most functions in :mod:`biotite.sequence.align` can align any two
@@ -318,12 +323,13 @@ print("Occurences of 'C':", seq.find_symbol(main_seq, "C"))
 # :class:`Sequence` subclasses and therefore may have different
 # alphabets.
 # The only condition that must be satisfied, is that the
-# :class:`SubstitutionMatrix` alphabets matches the alphabets of the
+# :class:`SubstitutionMatrix` alphabets match the alphabets of the
 # sequences to be aligned.
 # 
 # But wait, what's a :class:`SubstitutionMatrix`?
-# This class maps a similarity score to two symbols, one from the first
-# sequence the other from the second sequence.
+# This class maps a combination of two symbols, one from the first
+# sequence the other one from the second sequence, to a similarity
+# score.
 # A :class:`SubstitutionMatrix` object contains two alphabets with
 # length *n* or *m*, respectively, and an *(n,m)*-shaped
 # :class:`ndarray` storing the similarity scores.
@@ -407,7 +413,7 @@ fig.tight_layout()
 # You can also do some simple analysis on these objects, like
 # determining the sequence identity or calculating the score.
 # For further custom analysis, it can be convenient to have directly the
-# aligned symbos codes instead of the trace.
+# aligned symbols codes instead of the trace.
 
 alignment = alignments[0]
 print("Score: ", alignment.score)
@@ -422,16 +428,310 @@ print(align.get_codes(alignment))
 #
 # .. currentmodule:: biotite.sequence.io.fasta
 #
-# You wonder, why you should recalculate the score, when the score has
-# already been directly calculated via :func:`align_optimal()`.
+# You might wonder, why you should recalculate the score, when the score
+# has already been directly calculated via :func:`align_optimal()`.
 # The answer is that you might load an alignment from a FASTA file
 # using :func:`get_alignment()`, where the score is not provided.
+#
+#
+# Advanced sequence alignments
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # 
 # .. currentmodule:: biotite.sequence.align
+# 
+# While the former alignment method returns the optimal alignment of two
+# sequences, it is not recommended to use this method to align a short
+# query sequence (e.g a gene) to an extremely long sequence
+# (e.g. the human genome):
+# The computation time and memory space requirements scale
+# linearly with the length of both sequences, so even if your RAM does
+# not overflow, you might need to wait a very long time for your
+# alignment results.
 #
-# If you want to perform a multiple sequence alignment, have a look at
-# the :func:`align_multiple()` function or the interfaces to external
-# MSA software in the :mod:`biotite.application` subpackage.
+# But there is another method: You could look for local *k-mer* matches
+# of the long (reference) sequence and the short (query) sequence and
+# perform a sequence alignment restricted to the position of the match.
+# Although this approach might not give the optimal result in some
+# cases, it works well enough, so that popular programs like *BLAST* are
+# based on it.
+#
+# *Biotite* provides a modular system to build such an alignment search
+# method yourself. At least four steps are necessary:
+#
+#    #. Creating an index table mapping *k-mers* to their position in
+#       the reference sequence
+#    #. Find match positions between this *k-mer* index table and the
+#       *k-mers* of the query sequence
+#    #. Perform gapped alignments restricted to the match positions
+#    #. Evaluate the significance of the created alignments 
+#
+# In the following example the short query protein sequence ``BIQTITE``
+# is aligned to a longer reference sequence containing the 'homologous'
+# ``NIQBITE`` in its middle.
+# While both sequences are relatively short and they could be easily
+# aligned with the :func:`align_optimal()` function, the following
+# general approach scales well for real world applications, where the 
+# reference could be a large genome or where you have a database of
+# thousands of sequences.
+
+query = seq.ProteinSequence("BIQTITE")                                                          
+reference = seq.ProteinSequence(
+    # This toy sequence is adapted from the first sentence of the
+    # Wikipedia 'Niobite' article
+    "CQLVMBITEALSQCALLEDNIQBITEANDCQLVMBATEISAMINERALGRQVPTHATISANQREQFNIQBIVM"
+    #                   ^^^^^^^
+    # Here is the 'homologous' mineral
+)
+
+########################################################################
+# 1. Indexing the reference sequence
+# """"""""""""""""""""""""""""""""""
+# In the first step the *k-mers* of the reference sequence needs to be
+# indexed into a :class:`KmerTable`.
+# The *k-mers* (also called *words* or *k-tuples*) of a sequence are all
+# overlapping subsequences with a given length *k*.
+# Indexing means creating a table that maps each *k-mer* to the position
+# where this *k-mer* appears in the sequence - similar to the index of a
+# book.
+# Here the first decision needs to be made:
+# Which *k* is desired?
+# A small *k* improves the sensitivity, a large *k* decreases the
+# computation time in the later steps.
+# In this case we choose 3-mers.
+
+# Create a k-mer index table from the k-mers of the reference sequence
+kmer_table = align.KmerTable.from_sequences(
+    # Use 3-mers
+    k=3,
+    # Add only the reference sequence to the table
+    sequences=[reference],
+    # The purpose of the reference ID is to identify the sequence
+    ref_ids=[0]
+)
+
+########################################################################
+# The purpose of the reference ID is to identify not only the
+# position of a *k-mer* in a sequence, but also which sequence is
+# involved, if you add multiple sequences to the table. In this case
+# there is only a single sequence in the table, so the reference ID
+# is arbitrary.
+#
+# Let's have a deeper look under the hood:
+# The :class:`KmerTable` creates a :class:`KmerAlphabet` that encodes a
+# *k-mer* symbol, i.e. a tuple of *k* symbols from the base alphabet,
+# into a *k-mer* code.
+# Importantly, this *k-mer* code can be uniquely decoded back into
+# a *k-mer* symbol.
+
+# Access the internal *k-mer* alphabet.
+kmer_alphabet = kmer_table.kmer_alphabet
+print("Base alphabet:", kmer_alphabet.base_alphabet)
+print("k:", kmer_alphabet.k)
+print("k-mer code for 'BIQ':", kmer_alphabet.encode("BIQ"))
+
+########################################################################
+
+for code in range(5):
+    print(kmer_alphabet.decode(code))
+print("...")
+
+########################################################################
+# Furthermore the :class:`KmerAlphabet` can encode all overlapping
+# *k-mers* of a sequence.
+
+kmer_codes = kmer_alphabet.create_kmers(seq.ProteinSequence("BIQTITE").code)
+print("k-mer codes:", kmer_codes)
+print("k-mers:")
+for kmer in kmer_alphabet.decode_multiple(kmer_codes):
+    print("".join(kmer))
+
+########################################################################
+# Now we get back to the :class:`KmerTable`.
+# When the table is created, it uses :meth:`KmerAlphabet.create_kmers()`
+# to get all *k-mers* in the sequence and stores for each *k-mer* the
+# position(s) where the respective *k-mer* appears.
+
+# Get all positions for the 'ITE' k-mer
+for ref_id, position in kmer_table[kmer_alphabet.encode("ITE")]:
+    print(position)
+
+########################################################################
+# 2. Matching the query sequence
+# """"""""""""""""""""""""""""""
+# In the second step we would like to find *k-mer* matches of our 
+# reference :class:`KmerTable` with the query sequence.
+# A match is a *k-mer* that appears in both, the table and the query
+# sequence.
+# The :meth:`KmerTable.match()` method iterates over all
+# overlapping *k-mers* in the query and checks whether the
+# :class:`KmerTable` has at least one position for this k-mer.
+# If it does, it adds the position in the query and all corresponding
+# positions saved in the :class:`KmerTable` to the matches.
+
+matches = kmer_table.match(query)
+# Filter out the reference ID, because we have only one sequence
+# in the table anyway
+matches = matches[:, [0,2]]
+for query_pos, ref_pos in matches:
+    print(f"Match at query position {query_pos}, reference position {ref_pos}")
+    # Print the reference sequence at the match position including four
+    # symbols before and after the matching k-mer
+    print("...", reference[ref_pos - 4 : ref_pos + kmer_table.k + 4], "...")
+    print()
+
+########################################################################
+# We see that the ``'ITE'`` of ``'BIQTITE'`` matches the ``'ITE'`` of
+# ``'CQLVMBITE'`` and ``'NIQBITE'``.
+#
+# 3. Alignments at the match positions
+# """"""""""""""""""""""""""""""""""""
+# Now that we have found the match positions, we can perform an
+# alignment restricted to each match position.
+# Currently *Biotite* offers three functions for this purpose:
+# :func:`align_local_ungapped()`, :func:`align_local_gapped()` and
+# :func:`align_banded()`.
+#
+# :func:`align_local_ungapped()` and :func:`align_local_gapped()`
+# perform fast local alignments expanding from a given *seed* position,
+# which is typically set to a match position from the previous step.
+# The alignment stops, if the current similarity score drops a given
+# threshold below the maximum score already found, a technique that is
+# also called *X-Drop*.
+# While :func:`align_local_ungapped()` is much faster than
+# :func:`align_local_gapped()`, it does not insert gaps into the
+# alignment.
+# In contrast :func:`align_banded()` performs a local or global
+# alignment, where the alignment space is restricted to a defined
+# diagonal band, allowing only a certain number of insertions/deletions
+# in each sequence.
+#
+# The presented methods have in common, that they ideally only traverse
+# through a small fraction of the possible alignment space, allowing
+# them to run much faster than :func:`align_optimal()`.
+# However they might not find the optimal alignment, if such an
+# alignment would have an intermediate low scoring region or too many
+# gaps in either sequence, respectively.
+# In this tutorial we will focus on using :func:`align_banded()` to
+# perform a global alignment of our two sequences.
+# 
+# :func:`align_banded()` requires two diagonals that define the lower
+# and upper limit of the alignment band.
+# A diagonal is an integer defined as :math:`D = j - i`, where *i* and
+# *j* are sequence positions in the first and second sequence,
+# respectively.
+# This means that two symbols at position *i* and *j* can only be
+# aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
+#
+# In our case we center the diagonal band to the diagonal of the match
+# and use a fixed band width :math:`W = D_U - D_L`.
+
+BAND_WIDTH = 4
+
+matrix = SubstitutionMatrix.std_protein_matrix()
+alignments = []
+for query_pos, ref_pos in matches:
+    diagonal = ref_pos - query_pos
+    alignment = align.align_banded(
+        query, reference, matrix, gap_penalty=-5, max_number=1,
+        # Center the band at the match diagonal and extend the band by
+        # one half of the band width in each direction
+        band=(diagonal - BAND_WIDTH//2, diagonal + BAND_WIDTH//2)
+    )[0]
+    alignments.append(alignment)
+
+for alignment in alignments:
+    print(alignment)
+    print("\n")
+
+########################################################################
+# 4. Significance evaluation
+# """"""""""""""""""""""""""
+# We have obtained two alignments, but which one of them is the
+# 'correct' one?
+# in this simple example we could simply select the one with the highest
+# similarity score, but this approach is not sound in general:
+# A reference sequence might contain multiple regions, that are
+# homologous to the query, or none at all.
+# A better approach is a statistical measure, like the
+# `BLAST E-value <https://www.ncbi.nlm.nih.gov/BLAST/tutorial/Altschul-1.html>`_.
+# It gives the number of alignments expected by chance with a score at
+# least as high as the score obtained from the alignment of interest.
+# Hence, a value close to zero means a very significant homology.
+# We can calculate the E-value using the :class:`EValueEstimator`, that
+# needs to be initialized with the same scoring scheme used for our
+# alignments.
+# For the sake of simplicity we choose uniform background frequencies
+# for each symbol, but usually you would choose values that reflect
+# the amino acid/nucleotide composition in your sequence database.
+
+estimator = align.EValueEstimator.from_samples(
+    seq.ProteinSequence.alphabet, matrix, gap_penalty=-5,
+    frequencies=np.ones(len(seq.ProteinSequence.alphabet)),
+    # Trade accuracy for a lower runtime
+    sample_length=200
+)
+
+########################################################################
+# Now we can calculate the E-value for the alignments.
+# Since we have aligned the query only to the reference sequence shown
+# above, we use its length to calculate the E-value.
+# If you have an entire sequence database you align against, you would
+# take the total sequence length of the database instead.
+
+scores = [alignment.score for alignment in alignments]
+evalues = 10 ** estimator.log_evalue(scores, len(query), len(reference))
+for alignment, evalue in zip(alignments, evalues):
+    print(f"E-value = {evalue:.2e}")
+    print(alignment)
+    print("\n")
+
+########################################################################
+# Finally, we can see that the expected alignment of ``BIQTITE`` to
+# ``NIQBITE`` is more significant than the unspecific match.
+#
+# |
+#
+# The setup shown here is a very simple one compared to the methods
+# popular software like *BLAST* use.
+# Since the *k-mer* matching step is very fast and the gapped alignments
+# take the largest part of the time, you usually want to have additional
+# filters before you trigger a gapped alignment:
+# Commonly a gapped alignment is only started at a match, if there is
+# another match on the same diagonal in proximity and if a fast
+# local ungapped alignment (seed extension) exceeds a defined threshold
+# score.
+# Furthermore, the parameter selection, e.g. the *k-mer* length, is key
+# to a fast but also sensitive alignment procedure.
+# However, you can find suitable parameters in literature or run
+# benchmarks by yourself to find appropriate parameters for your
+# application.
+#
+# 
+# Multiple sequence alignments
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# If you want to perform a multiple sequence alignment (MSA), have a
+# look at the :func:`align_multiple()` function:
+
+seq1 = seq.ProteinSequence("BIQTITE")
+seq2 = seq.ProteinSequence("TITANITE")
+seq3 = seq.ProteinSequence("BISMITE")
+seq4 = seq.ProteinSequence("IQLITE")
+alignment, order, guide_tree, distance_matrix = align.align_multiple(
+    [seq1, seq2, seq3, seq4],
+    matrix=align.SubstitutionMatrix.std_protein_matrix(),
+    gap_penalty=-5,
+    terminal_penalty=False
+)
+print(alignment)
+
+########################################################################
+# This function is only recommended for strongly related sequences or
+# exotic sequence types.
+# When high accuracy or computation time matters, other MSA programs
+# deliver better results.
+# External MSA software can accessed via the :mod:`biotite.application`
+# subpackage.
 #
 # Sequence features
 # -----------------
@@ -745,8 +1045,8 @@ fig.tight_layout()
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # When you want to create a :class:`Tree` from distances obtained for
-# example from sequence alignments, you can use the UPGMA algorithm
-# implemented in the function of the same name :func:`upgma()`.
+# example from sequence alignments, you can use the *UPGMA* or
+# *neighbour joining* algorithm.
 
 distances = np.array([
     [ 0, 17, 21, 31, 23],

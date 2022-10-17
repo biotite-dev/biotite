@@ -4,12 +4,27 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord"]
+__all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
 import abc
 from collections import OrderedDict
 import numpy as np
 from numpy.linalg import norm
+
+
+# Biotite themed colors
+colors = OrderedDict([
+    ("brightorange" , "#ffb569ff"),
+    ("lightorange"  , "#ff982dff"),
+    ("orange"       , "#ff8405ff"),
+    ("dimorange"    , "#dc7000ff"),
+    ("darkorange"   , "#b45c00ff"),
+    ("brightgreen"  , "#98e97fff"),
+    ("lightgreen"   , "#6fe04cff"),
+    ("green"        , "#52da2aff"),
+    ("dimgreen"     , "#45bc20ff"),
+    ("darkgreen"    , "#389a1aff"),
+])
 
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
@@ -61,7 +76,6 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
     from matplotlib.transforms import Bbox
-    from matplotlib.text import Text
     from matplotlib.patheffects import AbstractPathEffect
 
     class TextScaler(AbstractPathEffect):
@@ -73,8 +87,16 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
         def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
             ax = self._text.axes
-            renderer = ax.get_figure().canvas.get_renderer()
-            bbox = text.get_window_extent(renderer=renderer)
+            try:
+                renderer = ax.get_figure().canvas.get_renderer()
+            except:
+                # Use cached renderer for backends, where
+                # `get_renderer()` is not available
+                # Based on the strategy from `Text.get_window_extent()`
+                renderer = ax.get_figure()._cachedRenderer
+            if renderer is None:
+                raise
+            bbox = text.get_window_extent(renderer)
             bbox = Bbox(ax.transData.inverted().transform(bbox))
             
             if self._mode == "proportional":
@@ -125,6 +147,7 @@ try:
     from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
     from matplotlib.patheffects import AbstractPathEffect
+    import matplotlib.pyplot as plt
 
     class AdaptiveFancyArrow(FancyArrow):
         """
@@ -159,7 +182,6 @@ try:
         def __init__(self, x, y, dx, dy,
                      tail_width, head_width, head_ratio, draw_head=True,
                      shape="full", **kwargs):
-            import matplotlib.pyplot as plt
             self._x = x
             self._y = y
             self._dx = dx
@@ -221,23 +243,11 @@ try:
             """
             """
             return super().set_in_layout(in_layout)
-    
-    __all__.append("AdaptiveFancyArrow")
 
 except ImportError:
-    pass
     
-
-# Biotite themed colors
-colors = OrderedDict([
-    ("brightorange" , "#ffb569ff"),
-    ("lightorange"  , "#ff982dff"),
-    ("orange"       , "#ff8405ff"),
-    ("dimorange"    , "#dc7000ff"),
-    ("darkorange"   , "#b45c00ff"),
-    ("brightgreen"  , "#98e97fff"),
-    ("lightgreen"   , "#6fe04cff"),
-    ("green"        , "#52da2aff"),
-    ("dimgreen"     , "#45bc20ff"),
-    ("darkgreen"    , "#389a1aff"),
-])
+    # Dummy class that propagates a meaningful error,
+    # i.e. that Matplotlib is not installed
+    class AdaptiveFancyArrow():
+        def __init__(*args, **kwargs):
+            raise ModuleNotFoundError(f"No module named 'matplotlib'")

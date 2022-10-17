@@ -1,8 +1,8 @@
 """
-Plasmid map of a pet28a vector
+Plasmid map of a pET15 vector
 ==============================
 
-This script downloads the GenBank file for a *pET28a* plasmid from
+This script downloads the GenBank file for a *pET15* plasmid from
 *AddGene* and draws a plasmid map using a custom feature formatter.
 
 - **Promoters** - green arrow
@@ -27,9 +27,9 @@ import biotite.sequence.graphics as graphics
 import biotite.database.entrez as entrez
 
 
-PLASMID_URL = "https://media.addgene.org/snapgene-media/" \
-              "v1.6.2-0-g4b4ed87/sequences/67/17/246717/" \
-              "addgene-plasmid-26094-sequence-246717.gbk"
+PLASMID_URL = "https://media.addgene.org/snapgene-media/v1.7.9-0-g88a3305/"\
+              "sequences/12250/9998fdbe-051f-4dc6-ba0f-24e65127a0c5/" \
+              "addgene-plasmid-26092-sequence-12250.gbk"
 
 
 response = requests.get(PLASMID_URL)

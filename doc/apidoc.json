@@ -87,9 +87,12 @@
             "SubstitutionMatrix"
         ],
         "Aligners" : [
+            "align_ungapped",
             "align_optimal",
-            "align_multiple",
-            "align_ungapped"
+            "align_local_ungapped",
+            "align_local_gapped",
+            "align_banded",
+            "align_multiple"
         ],
         "Alignments" : [
             "Alignment",
@@ -98,6 +101,12 @@
             "get_sequence_identity",
             "get_pairwise_sequence_identity",
             "score"
+        ],
+        "K-mers" : [
+            "KmerAlphabet",
+            "KmerTable",
+            "SimilarityRule",
+            "ScoreThresholdRule"
         ]
     },
 
@@ -172,7 +181,8 @@
             "BondType",
             "connect_via_residue_names",
             "connect_via_distances",
-            "find_connected"
+            "find_connected",
+            "find_rotatable_bonds"
         ],
         "Geometry" : [
             "displacement",
@@ -194,12 +204,16 @@
             "rotate_centered",
             "rotate_about_axis",
             "align_vectors",
+            "orient_principal_components",
             "superimpose",
             "superimpose_apply"
         ],
         "Filters" : [
+            "filter_canonical_nucleotides",
             "filter_nucleotides",
+            "filter_canonical_amino_acids",
             "filter_amino_acids",
+            "filter_carbohydrates",
             "filter_backbone",
             "filter_solvent",
             "filter_monoatomic_ions",
@@ -227,6 +241,12 @@
         ],
         "Chain level utility" : [
             "get_chain_starts",
+            "apply_chain_wise",
+            "spread_chain_wise",
+            "get_chain_masks",
+            "get_chain_starts_for",
+            "get_chain_positions",
+            "chain_iter",
             "get_chains",
             "get_chain_count",
             "chain_iter"

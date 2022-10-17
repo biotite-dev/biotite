@@ -6,6 +6,7 @@ from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io as strucio
 import biotite.structure.io.mmtf as mmtf
 from ..util import data_dir
@@ -101,8 +102,8 @@ def test_invalid_creation():
         struc.BondList(
             5,
             np.array([
-                # BondType '6' does not exist
-                [1,2,6]
+                # BondType '8' does not exist
+                [1,2,8]
             ])
         )
 
@@ -404,7 +405,7 @@ def test_atom_array_consistency():
     
     # Some random boolean mask as index,
     # but all bonded atoms are included
-    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=np.bool)
+    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=bool)
     masked_ca = ca[mask]
     test_ids = masked_ca.res_id[masked_ca.bonds.as_array()[:,:2].flatten()]
     
@@ -429,11 +430,14 @@ def test_connect_via_residue_names(single_model):
     ref_bonds = atoms.bonds
 
     test_bonds = struc.connect_via_residue_names(atoms)
+    # MMTF format does not represent aromaticity
+    test_bonds.remove_aromaticity()
 
     assert test_bonds == ref_bonds
 
 
-def test_connect_via_distances():
+@pytest.mark.parametrize("periodic", [False, True])
+def test_connect_via_distances(periodic):
     """
     Test whether the created bond list is equal to the bonds deposited
     in the MMTF file.
@@ -443,6 +447,11 @@ def test_connect_via_distances():
     # Remove termini to solve the issue that the reference bonds do not
     # contain proper bonds for the protonated/deprotonated termini
     atoms = atoms[(atoms.res_id > 1) & (atoms.res_id < 20)]
+
+    if periodic:
+        # Add large dummy box to test parameter
+        # No actual bonds over the periodic boundary are expected
+        atoms.box = np.identity(3) * 100
     
     ref_bonds = atoms.bonds
     # Convert all bonds to BondType.ANY
@@ -450,7 +459,7 @@ def test_connect_via_distances():
         ref_bonds.get_atom_count(), ref_bonds.as_array()[:, :2]
     )
 
-    test_bonds = struc.connect_via_distances(atoms)
+    test_bonds = struc.connect_via_distances(atoms, periodic=periodic)
 
     assert test_bonds == ref_bonds
 
@@ -462,3 +471,53 @@ def test_find_connected(bond_list):
     for index in (0,1,2,3,4,6):
         assert struc.find_connected(bond_list, index).tolist() == [0,1,2,3,4,6]
     assert struc.find_connected(bond_list, 5).tolist() == [5]
+
+
+@pytest.mark.parametrize(
+    "res_name, expected_bonds",
+    [
+        # Easy ligand visualization at:
+        # https://www.rcsb.org/ligand/<ABC>
+        ("TYR", [
+            ("N",   "CA" ),
+            ("CA",  "C"  ),
+            ("CA",  "CB" ),
+            ("C",   "OXT"),
+            ("CB",  "CG" ),
+            ("CZ",  "OH" ),
+        ]),
+        ("CEL", [
+            ("C1",   "C4" ),
+            ("C8",   "C11"),
+            ("C15",  "S1" ),
+            ("N3",   "S1" )
+        ]),
+        ("LEO", [
+            ("C3",   "C8" ),
+            ("C6",   "C17"),
+            ("C17",  "C22"),
+        ]),
+    ]
+)
+def test_find_rotatable_bonds(res_name, expected_bonds):
+    """
+    Check the :func:`find_rotatable_bonds()` function based on
+    known examples.
+    """
+    molecule = info.residue(res_name)
+    
+    ref_bond_set = {
+        tuple(sorted((name_i, name_j))) for name_i, name_j in expected_bonds
+    }
+
+    rotatable_bonds = struc.find_rotatable_bonds(molecule.bonds)
+    test_bond_set = set()
+    for i, j, _ in rotatable_bonds.as_array():
+        test_bond_set.add(
+            tuple(sorted((molecule.atom_name[i], molecule.atom_name[j])))
+        )
+    
+    # Compare with reference bonded atom names
+    assert test_bond_set == ref_bond_set
+    # All rotatable bonds must be single bonds
+    assert np.all(rotatable_bonds.as_array()[:, 2] == struc.BondType.SINGLE)

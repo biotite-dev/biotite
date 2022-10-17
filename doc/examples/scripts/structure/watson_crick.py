@@ -96,7 +96,7 @@ for purine, pyrimidine in pairs:
 heavy_atoms = atoms[atoms.element != "H"]
 for name, coord in zip(heavy_atoms.atom_name, heavy_atoms.coord):
     coord = coord + [0.3, 0.15, 0]
-    ax.text(*coord, name, fontsize="4")
+    ax.text(*coord, name, fontsize="6")
 
 # Label bases
 for pair in pairs:

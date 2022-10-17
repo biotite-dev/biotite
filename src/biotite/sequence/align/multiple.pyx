@@ -71,7 +71,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
                    guide_tree=None)
     
     Perform a multiple sequence alignment using a progressive
-    alignment algorithm. [1]_
+    alignment algorithm. :footcite:`Feng1987`
 
     Based on pairwise sequence distances a guide tree is constructed.
     The sequences are progessively aligned according to the tree,
@@ -86,7 +86,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     matrix : SubstitutionMatrix
         The substitution matrix used for scoring.
         Must be symmetric.
-    gap_penalty : int or (tuple, dtype=int), optional
+    gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         general gap penalty. If a tuple is provided, an affine gap
         penalty is used. The first integer in the tuple is the gap
@@ -104,7 +104,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
         similarities obtained from optimal global pairwise alignments
         (:func:`align_optimal()`).
         The similarities are converted into distances using the method
-        proposed by Feng & Doolittle [2]_.
+        proposed by Feng & Doolittle :footcite:`Feng1996`.
     guide_tree : Tree
         The guide tree to be used for the progressive alignment.
         By default the guide tree is constructed from `distances`
@@ -170,15 +170,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     References
     ----------
     
-    .. [1] DF Feng, RF Doolittle,
-       "Progressive sequence alignment as a prerequisite to correct
-       phylogenetic trees"
-       J Mol Evol, 25, 351-360 (1987).
-    
-    .. [2] DF Feng, RF Doolittle,
-       "Progressive alignment of amino acid sequences and construction
-       of phylogenetic trees from them"
-       Methods Enzymol, 266, 368-382 (1996).
+    .. footbibliography::
 
     Examples
     --------
@@ -476,7 +468,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     Then the sub-MSAs are combined to one MSA by aligning the two
     sequences from both sub-MSAs with the lowest distance to each other,
     taken from the pairwise distance matrix.
-    The gaps introduced in this pairwise alignment are also introduced
+    The gaps inserted in this pairwise alignment are also inserted
     into all other sequences in the respective sub-MSA at the same
     position.
     

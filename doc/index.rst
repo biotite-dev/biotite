@@ -42,8 +42,9 @@ small analysis scripts to entire bioinformatics software packages.
 
 If you use *Biotite* in a scientific publication, please cite:
 
-| Kunzmann, P. & Hamacher, K. BMC Bioinformatics (2018) 19:346.
-| `<https://doi.org/10.1186/s12859-018-2367-z>`_
+.. bibliography::
+
+   Kunzmann2018
 
 ----
 
@@ -89,7 +90,7 @@ accessible surface area calculation, structure superimposition and more.
 
 .. image:: /examples/gallery/structure/images/sphx_glr_sheet_arrangement_001.png
    :width: 48 %
-   :target: examples/gallery/structure/adjacency_matrix.html
+   :target: examples/gallery/structure/sheet_arrangement.html
 
 ----
 
@@ -104,7 +105,7 @@ You do not have to write input files and read output files, you only have to
 input *Python* objects and you get *Python* objects.
 It is basically very similar to using normal *Python* functions.
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_001.png
+.. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_002.png
    :width: 48 %
    :target: examples/gallery/sequence/lexa_conservation.html
 

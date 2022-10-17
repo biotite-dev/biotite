@@ -81,7 +81,8 @@ files = rcsb.fetch(pdb_ids, "mmtf", gettempdir())
 # :class:`FieldQuery`.
 # A complete list of the available fields and its supported operators
 # is documented
-# `on this page <https://search.rcsb.org/search-attributes.html>`_.
+# `on this page <https://search.rcsb.org/structure-search-attributes.html>`_
+# and `on that page <https://search.rcsb.org/chemical-search-attributes.html>`.
 
 # Query for 'lacA' gene
 query1 = rcsb.FieldQuery(

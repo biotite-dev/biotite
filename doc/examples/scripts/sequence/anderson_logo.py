@@ -52,7 +52,8 @@ alignment = align.Alignment(
 # Create sequence logo from alignment
 fig = plt.figure(figsize=(8.0, 1.5))
 ax = fig.add_subplot(111)
-graphics.plot_sequence_logo(ax, alignment)
+profile = seq.SequenceProfile.from_alignment(alignment)
+graphics.plot_sequence_logo(ax, profile)
 # Remove the entire frame
 ax.axis("off")
 fig.tight_layout()

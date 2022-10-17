@@ -25,7 +25,8 @@ with open(join(_info_dir, "residue_masses.msgpack"), "rb") as file:
 
 def mass(item, is_residue=None):
     """
-    Calculate the mass for the given object. [1]_
+    Calculate the mass for the given object.
+    :footcite:`Meija2016`
 
     If a residue name is given, the mass values refer to the masses of
     the complete molecule without additional or missing protons.
@@ -57,12 +58,8 @@ def mass(item, is_residue=None):
     
     References
     ----------
-
-    .. [1] J Meija, TB Coplen, M Berglund, WA Brand, P De Bièvre,
-        M Gröning, NE Holden, J Irrgeher, RD Loss, T Walczyk
-        and T Prohaska
-        "Atomic weights of the elements 2013 (IUPAC Technical Report)."
-        Pure Appl Chem, 88, 265-291 (2016).
+    
+    .. footbibliography::
     
     Examples
     --------

@@ -2,35 +2,67 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__author__ = "Patrick Kunzmann"
-__all__ = ["find_actual_module", "index_source"]
+"""
+Links source code in API reference to corresponding source files and
+lines at GitHub.
+"""
 
+__author__ = "Patrick Kunzmann"
+__all__ = ["linkcode_resolve"]
+
+import sys
+from importlib import import_module
 from os.path import dirname, join, isdir, splitext
 from os import listdir
-from importlib import import_module
-import biotite
+import inspect
 
 
 def _index_attributes(package_name, src_path):
-    attribute_index = {}
-    file_index = {}
+    """
+    Assign a Python module to each combination of (sub)package and
+    attribute (e.g. function, class, etc.) in a given (sub)package.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the (sub)package.
+    src_path : str
+        File path to `package_name`.
     
+    Parameters
+    ----------
+    attribute_index : dict( tuple(str, str) -> (str, bool))
+        Maps the combination of (sub)package name and attribute to
+        the name of a Python module and to a boolean value that
+        indicates, whether it is a Cython module.
+    cython_line_index : dict( tuple(str, str) -> tuple(int, int) ) )
+        Maps the combination of (sub)package name and attribute to
+        the first and last line in a Cython module.
+        Does not contain entries for attributes that are not part of a
+        Cython module.
+    """
     if not _is_package(src_path):
         # Directory is not a Python package/subpackage
         # -> Nothing to do
-        return attribute_index, file_index
+        return {}, {}
     
+    attribute_index = {}
+    cython_line_index = {}
+
     # Identify all subdirectories...
     directory_content = listdir(src_path)
     dirs = [f for f in directory_content if isdir(join(src_path, f))]
     # ... and index them recursively 
     for directory in dirs:
-        sub_attribute_index, sub_file_index = _index_attributes(
+        sub_attribute_index, sub_cython_line_index = _index_attributes(
             f"{package_name}.{directory}",
             join(src_path, directory),
         )
         attribute_index.update(sub_attribute_index)
-        file_index.update(sub_file_index)
+        cython_line_index.update(sub_cython_line_index)
+    
+    # Import package
+    package = import_module(package_name)
     
     # Import all modules in directory and index attributes
     source_files = [
@@ -44,52 +76,34 @@ def _index_attributes(package_name, src_path):
     ]
     for source_file in source_files:
         module_name = f"{package_name}.{splitext(source_file)[0]}"
-        file_index[module_name] = join(src_path, source_file)
         module = import_module(module_name)
-        for attribute in module.__all__:
-            attribute_index[(package_name, attribute)] = module_name
-    
-    return attribute_index, file_index
-
-
-def _is_package(path):
-    content = listdir(path)
-    return "__init__.py" in content
-
-
-_attribute_index, _file_index = _index_attributes(
-    "biotite",
-    # Directory to src/biotite
-    join(dirname(dirname(__file__)), "src", "biotite")
-)
-
-
-
-
-def find_actual_module(app, modname, attribute):
-    top_attribute = attribute.split(".")[0]
-    return _attribute_index[(modname, top_attribute)]
-
-
-def index_source(app, modname):
-    source_file = _file_index[modname]
-    
-    if source_file.endswith(".pyx"):
-        with open(source_file) as file:
-            code = file.read()
-        code_lines = code.split("\n")
-        tags = _analyze_cython_code(code_lines)
-        return code, tags
         
-    else:
-        # For normal Python files return None to tell Sphinx viewcode
-        # to do the default handling for these files 
-        return None
+        # Only index attributes from modules that are available
+        # via respective Biotite (sub-)package
+        # If a the attribute is vailable, the module was imported in the
+        # '__init__.py' -> Expect that all attributes from module are
+        # available in package
+        # For example 'biotite.structure.util' is only used for internal
+        # purposes and is not imported in the '__init__.py'
+        if not all([hasattr(package, attr) for attr in module.__all__]):
+            continue
+        
+        is_cython = source_file.endswith(".pyx")
+        for attribute in module.__all__:
+            attribute_index[(package_name, attribute)] \
+                = (module_name, is_cython)
+        if is_cython:
+            with open(join(src_path, source_file), "r") as cython_file:
+                lines = cython_file.read().splitlines()
+            for attribute, (first, last) in _index_cython_code(lines).items():
+                cython_line_index[(package_name, attribute)] = (first, last)
+    
+    return attribute_index, cython_line_index
 
 
-def _analyze_cython_code(code_lines):
+def _index_cython_code(code_lines):
     """
-    Find the position of classes and functions in *Cython* files.
+    Find the line position of classes and functions in *Cython* files.
 
     This analyzer works in a very simple way:
     It looks for the `def` and `class` keywords at zero-indentation
@@ -104,16 +118,14 @@ def _analyze_cython_code(code_lines):
     ----------
     code_lines : list of str
         The *Cython* source code splitted into lines.
-    indent : int
-        Attributes are The indentation level.
     
     Returns
     -------
-    tags : dict
-        The tag dictionary, as expected by the *Sphinx*
-        ``viewcode-find-source`` event.
+    line_index : dict (str -> tuple(int, int))
+        Maps an attribute name to its first and last line in a Cython
+        module.
     """
-    tags = {}
+    line_index = {}
 
     for i in range(len(code_lines)):
         line = code_lines[i]
@@ -165,12 +177,70 @@ def _analyze_cython_code(code_lines):
                 # Exclusive stop -> +1
                 attr_line_stop = j + 1
         
-        tags[attr_name] = (
-            attr_type,
+        line_index[attr_name] = (
             # 'One' based indexing
             attr_line_start + 1,
             # 'One' based indexing and inclusive stop
             attr_line_stop
         )
         
-    return tags
+    return line_index
+
+
+def _is_package(path):
+    content = listdir(path)
+    return "__init__.py" in content
+
+
+_attribute_index, _cython_line_index = _index_attributes(
+    "biotite",
+    # Directory to src/biotite
+    join(dirname(dirname(__file__)), "src", "biotite")
+)
+
+
+
+
+def linkcode_resolve(domain, info):
+    if domain != "py":
+        return None
+    
+    package_name = info["module"]
+    attr_name = info["fullname"]
+    try:
+        module_name, is_cython = _attribute_index[(package_name, attr_name)]
+    except KeyError:
+        # The attribute is not defined within Biotite
+        # It may be e.g. in inherited method from an external source
+        return None
+
+    if is_cython:
+        if (package_name, attr_name) in _cython_line_index:
+            first, last = _cython_line_index[(package_name, attr_name)]
+            return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
+                   f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
+        else:
+            # In case the attribute is not found
+            # by the Cython code analyzer
+            return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
+                   f"{module_name.replace('.', '/')}.pyx"
+    
+    else:
+        module = import_module(module_name)
+        
+        # Get the object defined by the attribute name,
+        # by traversing the 'attribute tree' to the leaf
+        obj = module
+        for attr_name_part in attr_name.split("."):
+            obj = getattr(obj, attr_name_part)
+        
+        # Temporarily change the '__module__' attribute, which is set
+        # to the subpackage in Biotite, back to the actual module in
+        # order to fool Python's inspect module
+        obj.__module__ = module_name
+
+        source_lines, first = inspect.getsourcelines(obj)
+        last = first + len(source_lines) - 1
+
+        return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
+               f"{module_name.replace('.', '/')}.py#L{first}-L{last}"

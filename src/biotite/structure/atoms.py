@@ -146,7 +146,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 f"Expected array length {self._array_length}, "
                 f"but got {len(array)}"
             )
-        self._annot[category] = np.asarray(array)
+        if category in self._annot:
+            # Keep the dtype if the annotation already exists
+            self._annot[category] = np.asarray(
+                array, dtype=self._annot[category].dtype
+            )
+        else:
+            self._annot[category] = np.asarray(array)
         
     def get_annotation_categories(self):
         """
@@ -259,7 +265,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             return self._bonds
         if attr == "box":
             return self._box
-        elif attr in self._annot:
+        # Call method of 'object' superclass to avoid infinite recursive
+        # calls of '__getattr__()'
+        elif attr in super().__getattribute__("_annot"):
             return self._annot[attr]
         else:
             raise AttributeError(
@@ -295,7 +303,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 )
             if value.shape[-1] != 3:
                 raise TypeError("Expected 3 coordinates for each atom")
-            self._coord = value.astype(np.float32, copy=False)
+            super().__setattr__("_coord", value.astype(np.float32, copy=False))
         
         elif attr == "bonds":
             if isinstance(value, BondList):
@@ -304,41 +312,37 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                         f"Array length is {self._array_length}, "
                         f"but bond list has {value.get_atom_count()} atoms"
                     )
-                self._bonds = value
+                super().__setattr__("_bonds", value)
             elif value is None:
                 # Remove bond list
-                self._bonds = None
+                super().__setattr__("_bonds", None)
             else:
                 raise TypeError("Value must be 'BondList'")
         
         elif attr == "box":
-            if value is None:
-                self._box = None
-            elif isinstance(self, AtomArray):
-                if value.ndim != 2:
-                    raise ValueError(
-                        "A 2-dimensional ndarray is expected "
-                        "for an AtomArray"
-                )
-            elif isinstance(self, AtomArrayStack):
-                if value.ndim != 3:
-                    raise ValueError(
-                        "A 3-dimensional ndarray is expected "
-                        "for an AtomArrayStack"
-                )
             if isinstance(value, np.ndarray):
+                if isinstance(self, AtomArray):
+                    if value.ndim != 2:
+                        raise ValueError(
+                            "A 2-dimensional ndarray is expected "
+                            "for an AtomArray"
+                    )
+                else:   # AtomArrayStack
+                    if value.ndim != 3:
+                        raise ValueError(
+                            "A 3-dimensional ndarray is expected "
+                            "for an AtomArrayStack"
+                    )
                 if value.shape[-2:] != (3,3):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
-                self._box = value.astype(np.float32, copy=False)
+                box = value.astype(np.float32, copy=False)
+                super().__setattr__("_box", box)
             elif value is None:
                 # Remove box
-                self._box = None
+                super().__setattr__("_box", None)
             else:
                 raise TypeError("Box must be ndarray of floats or None")
         
-        # This condition is required, since otherwise 
-        # call of the next one would result
-        # in indefinite calls of __setattr__
         elif attr == "_annot":
             super().__setattr__(attr, value)
         elif attr in self._annot:
@@ -491,13 +495,24 @@ class Atom(Copyable):
         if coord.shape != (3,):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
-    
+
+    def __repr__(self):
+        """Represent Atom as a string for debugging."""
+        annot = 'chain_id="' + self._annot["chain_id"] + '"'
+        annot = annot + ', res_id=' + str(self._annot["res_id"])
+        annot = annot + ', ins_code="' + self._annot["ins_code"] + '"'
+        annot = annot + ', res_name="' + self._annot["res_name"] + '"'
+        annot = annot + ', hetero=' + str(self._annot["hetero"])
+        annot = annot + ', atom_name="' + self._annot["atom_name"] + '"'
+        annot = annot + ', element="' + self._annot["element"] + '"'
+        return f'Atom(np.{np.array_repr(self.coord)}, {annot})'
+
     @property
     def shape(self):
         return ()
         
     def __getattr__(self, attr):
-        if attr in self._annot:
+        if attr in super().__getattribute__("_annot"):
             return self._annot[attr]
         else:
             raise AttributeError(
@@ -505,14 +520,12 @@ class Atom(Copyable):
             )
         
     def __setattr__(self, attr, value):
-        # First condition is required, since call of the second would
-        # result in indefinite calls of __getattr__
         if attr == "_annot":
             super().__setattr__(attr, value)
-        elif attr in self._annot:
-            self._annot[attr] = value
-        else:
+        elif attr == "coord":
             super().__setattr__(attr, value)
+        else:
+            self._annot[attr] = value
     
     def __str__(self):
         hetero = "HET" if self.hetero else ""
@@ -660,7 +673,17 @@ class AtomArray(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
-    
+
+    def __repr__(self):
+        """Represent AtomArray as a string for debugging."""
+        atoms = ''
+        for i in range(0, self.array_length()):
+            if len(atoms) == 0:
+                atoms = '\n\t' + self.get_atom(i).__repr__()
+            else:
+                atoms = atoms + ',\n\t' + self.get_atom(i).__repr__()
+        return f'array([{atoms}\n])'
+
     @property
     def shape(self):
         """
@@ -909,7 +932,17 @@ class AtomArrayStack(_AtomArrayBase):
             self._coord = None
         else:
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
-    
+
+    def __repr__(self):
+        """Represent AtomArrayStack as a string for debugging."""
+        arrays = ''
+        for i in range(0, self.stack_depth()):
+            if len(arrays) == 0:
+                arrays = '\n\t' + self.get_array(i).__repr__()
+            else:
+                arrays = arrays + ',\n\t' + self.get_array(i).__repr__()
+        return f'stack([{arrays}\n])'
+
     def get_array(self, index):
         """
         Obtain the atom array instance of the stack at the specified
@@ -1168,8 +1201,11 @@ def array(atoms):
                 f"The atom at index {i} does not share the same "
                 f"annotation categories as the atom at index 0"
             )
-    # Add all atoms to AtomArray
     array = AtomArray(len(atoms))
+    # Add all (also optional) annotation categories
+    for name in names:
+        array.add_annotation(name, dtype=type(atoms[0]._annot[name])) 
+    # Add all atoms to AtomArray
     for i in range(len(atoms)):
         for name in names:
             array._annot[name][i] = atoms[i]._annot[name]
@@ -1256,7 +1292,7 @@ def repeat(atoms, coord):
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The atoms to be repeated.
     coord : ndarray, dtype=float, shape=(k,n,3) or shape=(k,m,n,3)
-        The coordinates to be used fr the repeated atoms.
+        The coordinates to be used for the repeated atoms.
         The length of first dimension determines the number of repeats.
         If `atoms` is an :class:`AtomArray` 3 dimensions, otherwise
         4 dimensions are required.
@@ -1403,7 +1439,7 @@ def coord(item):
     item : Atom or AtomArray or AtomArrayStack or ndarray
         Returns the :attr:`coord` attribute, if `item` is an
         :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
-        Directly returns the input, if `item` is an :class:`ndarray`.
+        Directly returns the input, if `item` is a :class:`ndarray`.
     
     Returns
     -------

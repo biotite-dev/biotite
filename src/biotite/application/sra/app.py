@@ -27,7 +27,7 @@ class FastqDumpApp(LocalApp):
         The prefix of the path to store the downloaded FASTQ file.
         ``.fastq`` is appended to this prefix if the run contains
         a single read per spot.
-        ``_1.fastq``, `_2.fastq``, etc. is appended if it contains
+        ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
         multiple reads per spot.
         By default, the files are created in a temporary directory and
         deleted after the files have been read.
@@ -65,21 +65,33 @@ class FastqDumpApp(LocalApp):
     
     def evaluate(self):
         super().evaluate()
-        file_names = (
+        self._file_names = (
             # For entries with one read per spot
             glob.glob(self._prefix +   ".fastq") + 
             # For entries with multiple reads per spot
             glob.glob(self._prefix + "_*.fastq")
         )
-        self._fastq_files = [
-            FastqFile.read(file_name, offset=self._offset)
-            for file_name in file_names
-        ]
+        # Only load FASTQ files into memory when needed
+        self._fastq_files = None
     
     def clean_up(self):
         super().clean_up()
         if self._out_file is not None:
+            # This file was only created to reserve a unique file name
+            # Now it is not needed anymore
             self._out_file.close()
+    
+    @requires_state(AppState.JOINED)
+    def get_file_paths(self):
+        """
+        Get the file paths to the downloaded FASTQ files.
+        
+        Returns
+        -------
+        paths : list of str
+            The file paths to the downloaded files.
+        """
+        return self._file_names
     
     @requires_state(AppState.JOINED)
     def get_sequences(self):
@@ -96,7 +108,8 @@ class FastqDumpApp(LocalApp):
             Each item in the list is a dictionary mapping identifiers to its
             corresponding sequence and score values.
         """
-        return [get_sequences(fastq_file) for fastq_file in self._fastq_files]
+        fastq_files = self.get_fastq()
+        return [get_sequences(fastq_file) for fastq_file in fastq_files]
 
     @requires_state(AppState.JOINED)
     def get_fastq(self):
@@ -111,6 +124,11 @@ class FastqDumpApp(LocalApp):
             second item contains the second read for each spot (if existing),
             etc.
         """
+        if self._fastq_files is None:
+            self._fastq_files = [
+                FastqFile.read(file_name, offset=self._offset)
+                for file_name in self.get_file_paths()
+            ]
         return self._fastq_files
     
     @staticmethod
@@ -128,7 +146,7 @@ class FastqDumpApp(LocalApp):
             The prefix of the path to store the downloaded FASTQ file.
             ``.fastq`` is appended to this prefix if the run contains
             a single read per spot.
-            ``_1.fastq``, `_2.fastq``, etc. is appended if it contains
+            ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
             multiple reads per spot.
             By default, the files are created in a temporary directory and
             deleted after the files have been read.

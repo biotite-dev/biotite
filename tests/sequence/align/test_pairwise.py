@@ -2,109 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import itertools
-import shutil
 import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
-import biotite.sequence.io.fasta as fasta
 import biotite.application.muscle as muscle
-from ..util import data_dir, is_not_installed
+from biotite.application import VersionError
+from ...util import is_not_installed
+from .util import sequences
 
-
-@pytest.fixture
-def sequences():
-    """
-    10 Cas9 sequences.
-    """
-    fasta_file = fasta.FastaFile.read(join(data_dir("sequence"), "cas9.fasta"))
-    return [seq.ProteinSequence(sequence) for sequence in fasta_file.values()]
-
-def test_alignment_str():
-    """
-    Test reading alignments from string.
-    """
-    seq1 = seq.NucleotideSequence("ACCTGA")
-    seq2 = seq.NucleotideSequence("TATGCT")
-    ali_str = ["A-CCTGA----",
-               "----T-ATGCT"]
-    trace = align.Alignment.trace_from_strings(ali_str)
-    alignment = align.Alignment([seq1, seq2], trace, None)
-    assert str(alignment).split("\n") == ali_str
-
-def test_conversion_to_symbols():
-    """
-    Test conversion of alignments to strings.
-    """
-    seq_str1 = "HAKLPRDD--WKL--"
-    seq_str2 = "HA--PRDDADWKLHH"
-    seq_str3 = "HA----DDADWKLHH"
-    seq_strings = [seq_str1, seq_str2, seq_str3]
-    sequences = [seq.ProteinSequence(seq_str.replace("-",""))
-                 for seq_str in seq_strings]
-    trace = align.Alignment.trace_from_strings(seq_strings)
-    alignment = align.Alignment(sequences, trace, score=None)
-    # Test the conversion bach to strings of symbols
-    symbols = align.get_symbols(alignment)
-    symbols = ["".join([sym if sym is not None else "-" for sym in sym_list])
-               for sym_list in symbols]
-    assert symbols == seq_strings
-
-def test_identity():
-    """
-    Test correct calculation of `get_sequence_identity()` via a known
-    test case.
-    """
-    seq_str1 = "--HAKLPRDD--WL--"
-    seq_str2 = "FRHA--QRTDADWLHH"
-    seq_strings = [seq_str1, seq_str2]
-    sequences = [seq.ProteinSequence(seq_str.replace("-",""))
-                 for seq_str in seq_strings]
-    trace = align.Alignment.trace_from_strings(seq_strings)
-    alignment = align.Alignment(sequences, trace, score=None)
-    # Assert correct sequence identity calculation
-    modes = ["all", "not_terminal", "shortest"]
-    values = [6/16, 6/12, 6/10]
-    for mode, value in zip(modes, values):
-        assert align.get_sequence_identity(alignment, mode=mode) == value
-
-@pytest.mark.parametrize("mode", ["all", "not_terminal", "shortest"])
-def test_pairwise_identity(sequences, mode):
-    """
-    Test correct calculation of `get_pairwise_sequence_identity()` via
-    pairwise calls of `get_sequence_identity()`.
-    """
-    sequences = sequences
-    msa, _, _, _ = align.align_multiple(
-        sequences,
-        matrix=align.SubstitutionMatrix.std_protein_matrix()
-    )
-    
-    ref_identity_matrix = np.zeros((len(sequences), len(sequences)))
-    for i in range(len(sequences)):
-        for j in range(len(sequences)):
-            ref_identity_matrix[i,j] = align.get_sequence_identity(
-                msa[:, [i,j]], mode=mode
-            )
-    
-    test_identity_matrix = align.get_pairwise_sequence_identity(msa, mode=mode)
-    
-    # Identity of two equal sequences should be 1, if only the length of
-    # the sequence is counted
-    if mode == "shortest":
-        assert (np.diag(test_identity_matrix) == 1).all()
-    # Identity must be between 0 and 1
-    assert ((test_identity_matrix <= 1) & (test_identity_matrix >= 0)).all()
-    # Identity matrix is symmetric
-    assert (test_identity_matrix == test_identity_matrix.T).all()
-    # Pairwise identity must be equal in the two functions
-    assert (test_identity_matrix == ref_identity_matrix).all()
 
 def test_align_ungapped():
     """
-    Test `align_ungapped()` function.
+    Test `align_ungapped()` function via a known test case.
     """
     seq1 = seq.NucleotideSequence("ACCTGA")
     seq2 = seq.NucleotideSequence("ACTGGT")
@@ -112,6 +23,7 @@ def test_align_ungapped():
     ali = align.align_ungapped(seq1, seq2, matrix)
     assert ali.score == 3
     assert str(ali) == "ACCTGA\nACTGGT"
+
 
 # [local, gap_penalty, input1, input2, expect]
 align_cases = [(False,True, -7,      "TATGGGTATCC","TATGTATAA",
@@ -151,6 +63,7 @@ def test_align_optimal_simple(local, term, gap_penalty,
                        matrix,
                        gap_penalty=gap_penalty, terminal_penalty=term,
                        local=local)
+    
     for ali in alignments:
         assert str(ali) in expect
     # Test if separate score function calculates the same score
@@ -158,6 +71,7 @@ def test_align_optimal_simple(local, term, gap_penalty,
         score = align.score(ali, matrix,
                             gap_penalty=gap_penalty, terminal_penalty=term)
         assert score == ali.score
+
 
 @pytest.mark.skipif(
     is_not_installed("muscle"),
@@ -177,32 +91,90 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     index1, index2 = seq_indices
     seq1 = sequences[index1]
     seq2 = sequences[index2]
-    alignment = align.align_optimal(
+    test_alignment = align.align_optimal(
         seq1, seq2, matrix,
         gap_penalty=gap_penalty, terminal_penalty=True, max_number=1
     )[0]
-    ref_alignment = muscle.MuscleApp.align(
-        [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
-    )
+
+    try:
+        ref_alignment = muscle.MuscleApp.align(
+            [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
+        )
+    except VersionError:
+        pytest.skip(f"Invalid Muscle software version")
+
     # Check whether the score of the optimal alignments is the same
     # or higher as the MUSCLE alignment
     # Direct alignment comparison is not feasible,
     # since the treatment of terminal gaps is different in MUSCLE
-    score = align.score(alignment, matrix, gap_penalty, terminal_penalty=True)
+    test_score = align.score(
+        test_alignment, matrix, gap_penalty, terminal_penalty=True
+    )
     ref_score = align.score(
         ref_alignment, matrix, gap_penalty, terminal_penalty=True
     )
     try:
-        assert score >= ref_score
+        assert test_score >= ref_score
     except AssertionError:
         print("Alignment:")
         print()
-        print(alignment)
+        print(test_alignment)
         print("\n")
         print("Reference alignment:")
         print()
-        print(alignment)
+        print(ref_alignment)
         raise
+
+
+@pytest.mark.parametrize(
+    "local, term, gap_penalty, seed", itertools.product(
+        [True, False], [True, False], [-5, -8, -10, -15], range(10)
+    )
+)
+def test_affine_gap_penalty(local, term, gap_penalty, seed):
+    """
+    Expect the same alignment results for a linear gap penalty and an
+    affine gap penalty with the same gap open and extension penalty.
+    """
+    LENGTH_RANGE = (10, 100)
+    MAX_NUMBER = 1000
+
+    np.random.seed(seed)
+    sequences = []
+    for _ in range(2):
+        sequence = seq.NucleotideSequence()
+        length = np.random.randint(*LENGTH_RANGE)
+        sequence.code = np.random.randint(
+            len(sequence.alphabet), size=length
+        )
+        sequences.append(sequence)
+    
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+
+    ref_alignments = align.align_optimal(
+        *sequences, matrix, gap_penalty, term, local, MAX_NUMBER
+    )
+
+    test_alignments = align.align_optimal(
+        *sequences, matrix, (gap_penalty, gap_penalty), term, local, MAX_NUMBER
+    )
+
+    assert test_alignments[0].score == ref_alignments[0].score
+    assert len(test_alignments) == len(ref_alignments)
+    # We can only expect to get the same alignments in the test and
+    # reference, if we get all optimal alignments
+    if len(test_alignments) < MAX_NUMBER:
+        for alignment in test_alignments:
+            try:
+                assert alignment in ref_alignments
+            except:
+                print("Test alignment:")
+                print(alignment)
+                print()
+                print("First reference alignment")
+                print(ref_alignments[0])
+                raise
+
 
 @pytest.mark.parametrize(
     "local, term, gap_penalty, seq_indices", itertools.product(
@@ -235,6 +207,7 @@ def test_align_optimal_symmetry(sequences, local, term, gap_penalty,
     # Instead the scores are compared
     assert alignment1.score == alignment2.score
 
+
 @pytest.mark.parametrize(
     "gap_penalty, term, seq_indices", itertools.product(
         [-10, (-10,-1)], [False, True],
@@ -243,7 +216,8 @@ def test_align_optimal_symmetry(sequences, local, term, gap_penalty,
 )
 def test_scoring(sequences, gap_penalty, term, seq_indices):
     """
-    Test `score()` function.
+    The result of the :func:`score()` function should be equal to the
+    score calculated in :func:`align_optimal()`.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     index1, index2 = seq_indices
@@ -259,56 +233,3 @@ def test_scoring(sequences, gap_penalty, term, seq_indices):
     except AssertionError:
         print(alignment)
         raise
-
-@pytest.mark.skipif(
-    is_not_installed("muscle"),
-    reason="MUSCLE is not installed"
-)
-@pytest.mark.parametrize("gap_penalty", [-10, (-10,-1)])
-def test_align_multiple(sequences, gap_penalty):
-    r"""
-    Test `align_multiple()` function using actual long sequences,
-    compared to the output of MUSCLE.
-    Both alignment methods are heuristic, the exact same result is not
-    expected.
-    Just assert that the resulting score is at least the 50 % of the
-    score of the MUSCLE alignment.
-    """
-    matrix = align.SubstitutionMatrix.std_protein_matrix()
-    alignment, order, tree, distances = align.align_multiple(
-        sequences, matrix, gap_penalty=gap_penalty, terminal_penalty=True
-    )
-    ref_alignment = muscle.MuscleApp.align(
-        sequences, matrix=matrix, gap_penalty=gap_penalty
-    )
-    score = align.score(alignment, matrix, gap_penalty, terminal_penalty=True)
-    ref_score = align.score(
-        ref_alignment, matrix, gap_penalty, terminal_penalty=True
-    )
-    assert score >= ref_score * 0.5
-
-@pytest.mark.parametrize("db_entry", [entry for entry
-                                      in align.SubstitutionMatrix.list_db()
-                                      if entry not in ["NUC","GONNET"]])
-def test_matrices(db_entry):
-    """
-    Test reading of matrix files.
-    """
-    alph1 = seq.ProteinSequence.alphabet
-    alph2 = seq.ProteinSequence.alphabet
-    matrix = align.SubstitutionMatrix(alph1, alph2, db_entry)
-
-def test_matrix_str():
-    """
-    Test conversion of substitution matrix to string.
-    """
-    alph1 = seq.Alphabet("abc")
-    alph2 = seq.Alphabet("def")
-    score_matrix = np.arange(9).reshape((3,3))
-    matrix = align.SubstitutionMatrix(alph1, alph2, score_matrix)
-    assert str(matrix) == "\n".join(
-        ["    d   e   f",
-         "a   0   1   2",
-         "b   3   4   5",
-         "c   6   7   8"]
-    )

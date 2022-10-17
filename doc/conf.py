@@ -7,12 +7,16 @@ __author__ = "Patrick Kunzmann"
 # Setup Cython for import of uncompiled *.pyx files
 import pyximport
 import numpy as np
-pyximport.install(setup_args={'include_dirs': np.get_include()})
+pyximport.install(
+    setup_args={'include_dirs': np.get_include()},
+    build_in_temp=False,
+    language_level=3
+)
 
 from os.path import realpath, dirname, join, basename
 import sys
-import types
 import warnings
+import pybtex
 from sphinx_gallery.sorting import FileNameSortKey
 import matplotlib
 
@@ -28,9 +32,10 @@ import apidoc
 import viewcode
 import tutorial
 import scraper
+import bibliography
 
 
-#Reset matplotlib params
+# Reset matplotlib params
 matplotlib.rcdefaults()
 
 # Creation of API documentation
@@ -43,6 +48,15 @@ if not "plot_gallery=0" in sys.argv:
         join("tutorial", "target")
     )
 
+
+# Use custom citation sytle
+pybtex.plugin.register_plugin(
+    "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
+)
+
+#### Source code link ###
+
+linkcode_resolve = viewcode.linkcode_resolve
 
 #### General ####
 
@@ -60,7 +74,8 @@ extensions = ["sphinx.ext.autodoc",
               "sphinx.ext.autosummary",
               "sphinx.ext.doctest",
               "sphinx.ext.mathjax",
-              "sphinx.ext.viewcode",
+              "sphinx.ext.linkcode",
+              "sphinxcontrib.bibtex",
               "sphinx_gallery.gen_gallery",
               "numpydoc"]
 
@@ -83,7 +98,14 @@ todo_include_todos = False
 # properly due to Biotite's import system
 numpydoc_show_class_members = False
 
+# Prevent autosummary from using sphinx-autogen, since it would
+# overwrite the document structure given by apidoc.json
+autosummary_generate = False
+
 autodoc_member_order = "bysource"
+
+bibtex_bibfiles = ["references.bib"]
+bibtex_default_style = "ieee"
 
 
 #### HTML ####
@@ -92,8 +114,7 @@ html_theme = "alabaster"
 html_static_path = ["static"]
 html_css_files = [
     "biotite.css",
-    "https://fonts.googleapis.com/css?" \
-        "family=Crete+Round|Fira+Sans|&display=swap",
+    "fonts.css"
 ]
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 htmlhelp_basename = "BiotiteDoc"
@@ -126,7 +147,7 @@ sphinx_gallery_conf = {
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
     "backreferences_dir"        : None,
-    "download_section_examples" : False,
+    "download_all_examples" : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
@@ -147,5 +168,3 @@ sphinx_gallery_conf = {
 
 def setup(app):
     app.connect("autodoc-skip-member", apidoc.skip_non_methods)
-    app.connect("viewcode-follow-imported", viewcode.find_actual_module)
-    app.connect("viewcode-find-source", viewcode.index_source)
