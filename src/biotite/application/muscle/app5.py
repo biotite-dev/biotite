@@ -145,7 +145,7 @@ class Muscle5App(MSAApp):
         return False
     
     @classmethod
-    def align(cls, sequences, bin_path=None):
+    def align(cls, sequences, bin_path="muscle"):
         """
         Perform a multiple sequence alignment.
         
