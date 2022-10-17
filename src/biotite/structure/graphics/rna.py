@@ -139,11 +139,16 @@ def plot_nucleotide_secondary_structure(
         bond_linestyle[pseudoknot_order != 0] = 'dashed'
     # If `bond_linestyle` is a string, extrapolate
     elif isinstance(bond_linestyle, str):
-        bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle)
+        bond_linestyle = np.full(
+            base_pairs.shape[0], bond_linestyle, dtype='object'
+        )
 
     # If pseudoknots are not to be drawn, remove pseudoknotted bonds,
     # regardless of the given linestyles
     if not draw_pseudoknots:
+        # Ensure that the array can hold the 'None' value
+        # (not possible with 'U1' dtype for example)
+        bond_linestyle = np.asarray(bond_linestyle, dtype='object')
         bond_linestyle[pseudoknot_order != 0] = 'None'
 
     # Set the default properties of the base labels
