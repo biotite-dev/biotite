@@ -6,14 +6,13 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAfoldApp"]
 
-from tempfile import NamedTemporaryFile
-from ..localapp import LocalApp, cleanup_tempfile
+from .basefold import BaseFoldApp
 from ..application import AppState, requires_state
 from ...sequence.io.fasta import FastaFile, set_sequence
 from ...sequence import NucleotideSequence
 from ...structure.dotbracket import base_pairs_from_dot_bracket
 
-class RNAfoldApp(LocalApp):
+class RNAfoldApp(BaseFoldApp):
     """
     Compute the minimum free energy secondary structure of a ribonucleic
     acid sequence using *ViennaRNA's* *RNAfold* software.
@@ -44,19 +43,13 @@ class RNAfoldApp(LocalApp):
     """
 
     def __init__(self, sequence, temperature=37, bin_path="RNAfold"):
-        super().__init__(bin_path)
-        self._sequence = sequence
-        self._in_file  = NamedTemporaryFile("w", suffix=".fa",  delete=False)
+        fasta_file = FastaFile()
+        set_sequence(fasta_file, sequence)
+        super().__init__(fasta_file, temperature, bin_path)
         self._temperature = str(temperature)
 
     def run(self):
-        in_file = FastaFile()
-        set_sequence(in_file, self._sequence)
-        in_file.write(self._in_file)
-        self._in_file.flush()
-        self.set_arguments(
-            [self._in_file.name, "--noPS", "-T", self._temperature]
-        )
+        self.set_arguments(["--noPS"])
         super().run()
 
     def evaluate(self):
@@ -69,27 +62,12 @@ class RNAfoldApp(LocalApp):
         self._mfe = mfe
         self._dotbracket = dotbracket
 
-    def clean_up(self):
-        super().clean_up()
-        cleanup_tempfile(self._in_file)
-
-    @requires_state(AppState.CREATED)
-    def set_temperature(self, temperature):
-        """
-        Adjust the energy parameters according to a temperature in
-        degrees Celsius.
-
-        Parameters
-        ----------
-        temperature : int
-            The temperature.
-        """
-        self._temperature = str(temperature)
-
     @requires_state(AppState.JOINED)
     def get_mfe(self):
         """
         Get the minimum free energy of the input sequence.
+
+        The energy is given in *kcal/mol*.
 
         Returns
         -------
