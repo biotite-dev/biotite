@@ -6,11 +6,13 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAfoldApp"]
 
+import warnings
 from .basefold import BaseFoldApp
 from ..application import AppState, requires_state
 from ...sequence.io.fasta import FastaFile, set_sequence
 from ...sequence import NucleotideSequence
 from ...structure.dotbracket import base_pairs_from_dot_bracket
+
 
 class RNAfoldApp(BaseFoldApp):
     """
@@ -47,6 +49,10 @@ class RNAfoldApp(BaseFoldApp):
         set_sequence(fasta_file, sequence)
         super().__init__(fasta_file, temperature, bin_path)
         self._temperature = str(temperature)
+    
+    @staticmethod
+    def accepts_stdin():
+        return True
 
     def run(self):
         self.set_arguments(["--noPS"])
@@ -54,20 +60,44 @@ class RNAfoldApp(BaseFoldApp):
 
     def evaluate(self):
         super().evaluate()
-        lines = self.get_stdout().split("\n")
+        lines = self.get_stdout().splitlines()
         content = lines[2]
-        dotbracket, mfe = content.split(" ", maxsplit=1)
-        mfe = float(mfe[1:-1])
+        dotbracket, free_energy = content.split(" ", maxsplit=1)
+        free_energy = float(free_energy[1:-1])
 
-        self._mfe = mfe
+        self._free_energy = free_energy
         self._dotbracket = dotbracket
+    
+    @requires_state(AppState.JOINED)
+    def get_free_energy(self):
+        """
+        Get the free energy (kcal/mol) of the suggested
+        secondary structure.
+
+        Returns
+        -------
+        free_energy : float
+            The free energy.
+
+        Examples
+        --------
+
+        >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
+        >>> app = RNAfoldApp(sequence)
+        >>> app.start()
+        >>> app.join()
+        >>> print(app.get_free_energy())
+        -1.3
+        """
+        return self._free_energy
 
     @requires_state(AppState.JOINED)
     def get_mfe(self):
         """
-        Get the minimum free energy of the input sequence.
+        Get the free energy (kcal/mol) of the suggested
+        secondary structure.
 
-        The energy is given in *kcal/mol*.
+        DEPRECATED: Use :meth:`get_free_energy()` instead.
 
         Returns
         -------
@@ -84,6 +114,10 @@ class RNAfoldApp(BaseFoldApp):
         >>> print(app.get_mfe())
         -1.3
         """
+        warnings.warn(
+            "'get_mfe()' is deprecated, use 'get_free_energy()' instead",
+            DeprecationWarning
+        )
         return self._mfe
 
     @requires_state(AppState.JOINED)
@@ -165,10 +199,10 @@ class RNAfoldApp(BaseFoldApp):
         -------
         dotbracket : str
             The secondary structure in dot bracket notation.
-        mfe : float
-            The minimum free energy.
+        free_energy : float
+            The free energy.
         """
         app = RNAfoldApp(sequence, bin_path=bin_path)
         app.start()
         app.join()
-        return app.get_dot_bracket(), app.get_mfe()
+        return app.get_dot_bracket(), app.get_free_energy()
