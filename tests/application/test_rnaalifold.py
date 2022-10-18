@@ -5,38 +5,41 @@
 import numpy as np
 import pytest
 import biotite.sequence as seq
-from biotite.application.viennarna import RNAfoldApp
+import biotite.sequence.align as align
+from biotite.application.viennarna import RNAalifoldApp
 from ..util import is_not_installed
 
 
 @pytest.fixture
 def sample_app():
     """
-    Provide a `RNAfoldApp` object, where *RNAfold* has been executed
-    for a sample sequence.
+    Provide a `RNAalifold` object, where *RNAalifold* has been executed for
+    a sample alignment.
     """
     sequence = seq.NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
-    app = RNAfoldApp(sequence)
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+    alignment = align.align_ungapped(sequence, sequence, matrix)
+    app = RNAalifoldApp(alignment)
     app.start()
     app.join()
     return app
 
 
 @pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
+    is_not_installed("RNAalifold"), reason="RNAalifold is not installed"
 )
 def test_get_dot_bracket(sample_app):
     assert sample_app.get_dot_bracket() ==  "(((.((((.......)).)))))...."
 
 
 @pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
+    is_not_installed("RNAalifold"), reason="RNAalifold is not installed"
 )
 def test_get_free_energy(sample_app):
     assert sample_app.get_free_energy() == -1.3
 
 @pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
+    is_not_installed("RNAalifold"), reason="RNAalifold is not installed"
 )
 def test_get_base_pairs(sample_app):
     expected_basepairs = np.array([[ 0, 22],
@@ -48,17 +51,18 @@ def test_get_base_pairs(sample_app):
                                    [ 7, 15]])
     assert np.all(sample_app.get_base_pairs() == expected_basepairs)
 
-
 @pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
+    is_not_installed("RNAalifold"), reason="RNAalifold is not installed"
 )
 def test_constraints():
     """
-    Constrain every position of the input sequence and expect that the
+    Constrain every position of the input alignment and expect that the
     same base pairs are returned independent of the sequence.
     """
     # Sequence should not matter
     sequence = seq.NucleotideSequence("A" * 20)
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+    alignment = align.align_ungapped(sequence, sequence, matrix)
     
     # An arbitrary secondary structure
     # The loop in the center must probably comprise at least 5 bases
@@ -66,7 +70,7 @@ def test_constraints():
     ref_dotbracket = "xxx(((((xxxxxx)))x))"
     ref_dotbracket_array = np.array(list(ref_dotbracket), dtype="U1")
 
-    app = RNAfoldApp(sequence)
+    app = RNAalifoldApp(alignment)
     app.set_constraints(
         pairs=np.stack([
             np.where(ref_dotbracket_array == "(")[0],

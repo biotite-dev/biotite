@@ -44,7 +44,7 @@ def build_constraint_string(sequence_length,
         if (pseudoknots(pairs, max_pseudoknot_order=1) == -1).any():
             raise ValueError("Given pairs include pseudoknots")
         # Ensure the lower base comes first for each pair
-        pairs = np.sort(pairs, axis=1)
+        pairs = np.sort(pairs, axis=-1)
         _set_constraints(constraints, pairs[:,0], "(")
         _set_constraints(constraints, pairs[:,1], ")")
 

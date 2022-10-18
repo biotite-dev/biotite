@@ -40,7 +40,7 @@ class RNAfoldApp(LocalApp):
     >>> app = RNAfoldApp(sequence)
     >>> app.start()
     >>> app.join()
-    >>> print(app.get_mfe())
+    >>> print(app.get_free_energy())
     -1.3
     >>> print(app.get_dot_bracket())
     (((.((((.......)).)))))....
@@ -131,7 +131,7 @@ class RNAfoldApp(LocalApp):
             If set to true, the given constraints are enforced, i.e. a
             the respective base pairs must form.
             By default (false), a constraint does only forbid formation
-            of a pair that would conflict with this constraint
+            of a pair that would conflict with this constraint.
         """
         self._constraints = build_constraint_string(
             len(self._sequence),
@@ -189,7 +189,7 @@ class RNAfoldApp(LocalApp):
             "'get_mfe()' is deprecated, use 'get_free_energy()' instead",
             DeprecationWarning
         )
-        return self._mfe
+        return self.get_free_energy()
 
     @requires_state(AppState.JOINED)
     def get_dot_bracket(self):
