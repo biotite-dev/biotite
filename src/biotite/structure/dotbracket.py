@@ -209,5 +209,6 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     # Sort the base pair indices in ascending order
     basepairs = np.array(basepairs)
-    basepairs = basepairs[np.argsort(basepairs[:, 0])]
+    if len(basepairs) > 0:
+        basepairs = basepairs[np.argsort(basepairs[:, 0])]
     return basepairs

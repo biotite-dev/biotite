@@ -113,6 +113,10 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     .. footbibliography::
 
     """
+    if len(base_pairs) == 0:
+        # No base pairs -> empty pseudoknot order array
+        return np.array([[]], dtype=np.int32)
+
     # List containing the results
     results = [np.full(len(base_pairs), -1, dtype='int32')]
 

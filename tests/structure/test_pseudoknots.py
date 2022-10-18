@@ -147,3 +147,10 @@ def test_pseudoknot_orders(seed):
             if previous_order != -1:
                 assert this_order <= previous_order
             previous_order = this_order
+
+def test_empty_base_pairs():
+    """
+    Assert than an empty array of base pairs generates an empty array of
+    pseudoknot orders. 
+    """
+    assert struc.pseudoknots([]).shape == (1,0)
