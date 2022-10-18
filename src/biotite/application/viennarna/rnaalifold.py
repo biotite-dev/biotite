@@ -86,10 +86,10 @@ class RNAalifoldApp(LocalApp):
 
     def evaluate(self):
         super().evaluate()
-        print(self.get_stdout())
         lines = self.get_stdout().splitlines()
-        content = lines[1]
-        dotbracket, total_energy = content.split(" ", maxsplit=1)
+        self._consensus = lines[0].strip()
+        result = lines[1]
+        dotbracket, total_energy = result.split(" ", maxsplit=1)
         # Energy has the form:
         # (<total> = <free> + <covariance>)
         total_energy = total_energy[1:-1]
@@ -137,12 +137,18 @@ class RNAalifoldApp(LocalApp):
             If set to true, the given constraints are enforced, i.e. a
             the respective base pairs must form.
             By default (false), a constraint does only forbid formation
-            of a pair that would conflict with this constraint
+            of a pair that would conflict with this constraint.
+        
+        Warnings
+        --------
+        If a constraint is given for a gap position in the consensus sequence,
+        the software may find no base pairs at all.
         """
         self._constraints = build_constraint_string(
             len(self._alignment),
             pairs, paired, unpaired, downstream, upstream
         )
+        self._enforce = enforce
 
     @requires_state(AppState.JOINED)
     def get_free_energy(self):
@@ -189,6 +195,21 @@ class RNAalifoldApp(LocalApp):
         get_free_energy
         """
         return self._covariance_energy
+    
+    @requires_state(AppState.JOINED)
+    def get_consensus_sequence_string(self):
+        """
+        Get the consensus sequence.
+
+        As the consensus may contain gaps, the sequence is returned as
+        string.
+
+        Returns
+        -------
+        consensus : str
+            The consensus sequence.
+        """
+        return self._consensus
 
     @requires_state(AppState.JOINED)
     def get_dot_bracket(self):
