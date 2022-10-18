@@ -8,17 +8,19 @@ __all__ = ["RNAalifoldApp"]
 
 import copy
 from tempfile import NamedTemporaryFile
+import numpy as np
 from ..application import AppState, requires_state
 from ..localapp import LocalApp, cleanup_tempfile
 from ...sequence.io.fasta import FastaFile, set_alignment
 from ...structure.dotbracket import base_pairs_from_dot_bracket
 from ...structure.bonds import BondList
+from .util import build_constraint_string
 
 
 class RNAalifoldApp(LocalApp):
     """
-    Predict the secondary structure of a ribonucleic acid sequence using
-    *ViennaRNA's* *RNAalifold* software.
+    Predict the consensus secondary structure from a ribonucleic acid alignment
+    using *ViennaRNA's* *RNAalifold* software.
 
     In contrast to :class:`RNAfoldApp`, the energy function includes
     a term that includes coevolution information extracted from an
@@ -41,32 +43,50 @@ class RNAalifoldApp(LocalApp):
         super().__init__(bin_path)
         self._alignment = copy.deepcopy(alignment)
         self._temperature = str(temperature)
+        self._constraints = None
+        self._enforce = None
         self._in_file = NamedTemporaryFile(
             "w", suffix=".fa", delete=False
         )
+        self._constraints_file = NamedTemporaryFile(
+            "w+", suffix=".constraints", delete=False
+        )
 
     def run(self):
-        fasta_file = FastaFile()
+        # Insert no line breaks
+        # -> Extremely high value for characters per line
+        fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
         set_alignment(
             fasta_file, self._alignment,
             seq_names=[str(i) for i in range(len(self._alignment.sequences))]
         )
         fasta_file.write(self._in_file)
         self._in_file.flush()
-        
-        self.set_arguments([
+
+        options = [
             "--noPS",
             "-T", self._temperature,
-            self._in_file.name
-        ])
+        ]
+        if self._enforce is True:
+            options.append("--enforceConstraint")
+        if self._constraints is not None:
+            options.append("-C")
+            self._constraints_file.write(self._constraints)
+            self._constraints_file.flush()
+            self._constraints_file.seek(0)
+            self.set_stdin(self._constraints_file)
+
+        self.set_arguments(options + [self._in_file.name])
         super().run()
     
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
+        cleanup_tempfile(self._constraints_file)
 
     def evaluate(self):
         super().evaluate()
+        print(self.get_stdout())
         lines = self.get_stdout().splitlines()
         content = lines[1]
         dotbracket, total_energy = content.split(" ", maxsplit=1)
@@ -90,6 +110,39 @@ class RNAalifoldApp(LocalApp):
             The temperature.
         """
         self._temperature = str(temperature)
+    
+    @requires_state(AppState.CREATED)
+    def set_constraints(self, pairs=None, paired=None, unpaired=None,
+                        downstream=None, upstream=None, enforce=False):
+        """
+        Add constraints of known paired or unpaired bases to the folding
+        algorithm.
+
+        Constraints forbid pairs conflicting with the respective
+        constraint.
+
+        Parameters
+        ----------
+        pairs : ndarray, shape=(n,2), dtype=int, optional
+            Positions of constrained base pairs.
+        paired : ndarray, shape=(n,), dtype=int or dtype=bool, optional
+            Positions of bases that are paired with any other base.
+        unpaired : ndarray, shape=(n,), dtype=int or dtype=bool, optional
+            Positions of bases that are unpaired.
+        downstream : ndarray, shape=(n,), dtype=int or dtype=bool, optional
+            Positions of bases that are paired with any downstream base.
+        upstream : ndarray, shape=(n,), dtype=int or dtype=bool, optional
+            Positions of bases that are paired with any upstream base.
+        enforce : bool, optional
+            If set to true, the given constraints are enforced, i.e. a
+            the respective base pairs must form.
+            By default (false), a constraint does only forbid formation
+            of a pair that would conflict with this constraint
+        """
+        self._constraints = build_constraint_string(
+            len(self._alignment),
+            pairs, paired, unpaired, downstream, upstream
+        )
 
     @requires_state(AppState.JOINED)
     def get_free_energy(self):
