@@ -34,7 +34,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._exec_dir = getcwd()
         self._process = None
         self._command = None
-        self._in_file = None
+        self._stdin_file = None
     
     @requires_state(AppState.CREATED)
     def set_arguments(self, arguments):
@@ -64,7 +64,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             Must have a valid file descriptor, e.g. file-like objects
             such as `StringIO` are invalid.
         """
-        self._in_file = file
+        self._stdin_file = file
     
     @requires_state(AppState.CREATED)
     def add_additional_options(self, options):
@@ -224,7 +224,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         chdir(self._exec_dir) 
         self._command = [self._bin_path] + self._options + self._arguments
         self._process = Popen(
-            self._command, stdin=self._in_file, stdout=PIPE, stderr=PIPE,
+            self._command, stdin=self._stdin_file, stdout=PIPE, stderr=PIPE,
             encoding="UTF-8"
         )
         chdir(cwd)

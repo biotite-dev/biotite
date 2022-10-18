@@ -3,18 +3,18 @@
 # information.
 
 __name__ = "biotite.application.viennarna"
-__author__ = "Tom David Müller"
+__author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["RNAfoldApp"]
 
 import warnings
-from .basefold import BaseFoldApp
+from tempfile import NamedTemporaryFile
 from ..application import AppState, requires_state
+from ..localapp import LocalApp, cleanup_tempfile
 from ...sequence.io.fasta import FastaFile, set_sequence
-from ...sequence import NucleotideSequence
 from ...structure.dotbracket import base_pairs_from_dot_bracket
 
 
-class RNAfoldApp(BaseFoldApp):
+class RNAfoldApp(LocalApp):
     """
     Compute the minimum free energy secondary structure of a ribonucleic
     acid sequence using *ViennaRNA's* *RNAfold* software.
@@ -45,21 +45,29 @@ class RNAfoldApp(BaseFoldApp):
     """
 
     def __init__(self, sequence, temperature=37, bin_path="RNAfold"):
-        fasta_file = FastaFile()
-        set_sequence(fasta_file, sequence)
-        super().__init__(fasta_file, temperature, bin_path)
+        self._sequence = sequence.copy()
         self._temperature = str(temperature)
-    
-    @staticmethod
-    def accepts_stdin():
-        return True
+        self._in_file = NamedTemporaryFile(
+            "w", suffix=".fa", delete=False
+        )
+        super().__init__(bin_path)
 
     def run(self):
-        self.set_arguments(["--noPS"])
+        fasta_file = FastaFile()
+        set_sequence(fasta_file, self._sequence)
+        fasta_file.write(self._in_file)
+        self._in_file.flush()
+        
+        self.set_arguments([
+            "--noPS",
+            "-T", self._temperature,
+            self._in_file.name
+        ])
         super().run()
 
     def evaluate(self):
         super().evaluate()
+        print(self.get_stdout())
         lines = self.get_stdout().splitlines()
         content = lines[2]
         dotbracket, free_energy = content.split(" ", maxsplit=1)
@@ -67,6 +75,23 @@ class RNAfoldApp(BaseFoldApp):
 
         self._free_energy = free_energy
         self._dotbracket = dotbracket
+    
+    def clean_up(self):
+        super().clean_up()
+        cleanup_tempfile(self._in_file)
+    
+    @requires_state(AppState.CREATED)
+    def set_temperature(self, temperature):
+        """
+        Adjust the energy parameters according to a temperature in
+        degrees Celsius.
+
+        Parameters
+        ----------
+        temperature : int
+            The temperature.
+        """
+        self._temperature = str(temperature)
     
     @requires_state(AppState.JOINED)
     def get_free_energy(self):

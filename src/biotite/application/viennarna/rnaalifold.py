@@ -6,13 +6,16 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAalifoldApp"]
 
-from .basefold import BaseFoldApp
+import copy
+from tempfile import NamedTemporaryFile
 from ..application import AppState, requires_state
+from ..localapp import LocalApp, cleanup_tempfile
 from ...sequence.io.fasta import FastaFile, set_alignment
 from ...structure.dotbracket import base_pairs_from_dot_bracket
 from ...structure.bonds import BondList
 
-class RNAalifoldApp(BaseFoldApp):
+
+class RNAalifoldApp(LocalApp):
     """
     Predict the secondary structure of a ribonucleic acid sequence using
     *ViennaRNA's* *RNAalifold* software.
@@ -35,22 +38,32 @@ class RNAalifoldApp(BaseFoldApp):
     """
 
     def __init__(self, alignment, temperature=37, bin_path="RNAalifold"):
-        fasta_file = FastaFile()
-        set_alignment(
-            fasta_file, alignment,
-            seq_names=[str(i) for i in range(len(alignment.sequences))]
-        )
-        super().__init__(fasta_file, temperature, bin_path)
-        self._alignment = alignment
+        super().__init__(bin_path)
+        self._alignment = copy.deepcopy(alignment)
         self._temperature = str(temperature)
-
-    @staticmethod
-    def accepts_stdin():
-        return False
+        self._in_file = NamedTemporaryFile(
+            "w", suffix=".fa", delete=False
+        )
 
     def run(self):
-        self.set_arguments(["--noPS"])
+        fasta_file = FastaFile()
+        set_alignment(
+            fasta_file, self._alignment,
+            seq_names=[str(i) for i in range(len(self._alignment.sequences))]
+        )
+        fasta_file.write(self._in_file)
+        self._in_file.flush()
+        
+        self.set_arguments([
+            "--noPS",
+            "-T", self._temperature,
+            self._in_file.name
+        ])
         super().run()
+    
+    def clean_up(self):
+        super().clean_up()
+        cleanup_tempfile(self._in_file)
 
     def evaluate(self):
         super().evaluate()
@@ -64,6 +77,19 @@ class RNAalifoldApp(BaseFoldApp):
         self._free_energy = float(energy_contributions[0])
         self._covariance_energy = float(energy_contributions[1])
         self._dotbracket = dotbracket
+    
+    @requires_state(AppState.CREATED)
+    def set_temperature(self, temperature):
+        """
+        Adjust the energy parameters according to a temperature in
+        degrees Celsius.
+
+        Parameters
+        ----------
+        temperature : int
+            The temperature.
+        """
+        self._temperature = str(temperature)
 
     @requires_state(AppState.JOINED)
     def get_free_energy(self):
