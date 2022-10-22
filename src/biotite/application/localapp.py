@@ -34,6 +34,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._exec_dir = getcwd()
         self._process = None
         self._command = None
+        self._stdin_file = None
     
     @requires_state(AppState.CREATED)
     def set_arguments(self, arguments):
@@ -48,6 +49,22 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             A list of strings representing the command line options.
         """
         self._arguments = copy.copy(arguments)
+    
+    @requires_state(AppState.CREATED)
+    def set_stdin(self, file):
+        """
+        Set a file as standard input for the application run.
+        
+        PROTECTED: Do not call from outside.
+        
+        Parameters
+        ----------
+        file : file object
+            The file for the standard input.
+            Must have a valid file descriptor, e.g. file-like objects
+            such as `StringIO` are invalid.
+        """
+        self._stdin_file = file
     
     @requires_state(AppState.CREATED)
     def add_additional_options(self, options):
@@ -184,7 +201,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         Returns
         -------
         stdout : str
-            The standard outpout.
+            The standard output.
         """
         return self._stdout
     
@@ -207,7 +224,8 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         chdir(self._exec_dir) 
         self._command = [self._bin_path] + self._options + self._arguments
         self._process = Popen(
-            self._command, stdout=PIPE, stderr=PIPE, encoding="UTF-8"
+            self._command, stdin=self._stdin_file, stdout=PIPE, stderr=PIPE,
+            encoding="UTF-8"
         )
         chdir(cwd)
     

@@ -13,5 +13,6 @@ Secondary structures can be predicted using *RNAfold* and plotted using
 __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 
+from .rnaalifold import *
 from .rnafold import *
 from .rnaplot import *

@@ -50,8 +50,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     sequences : iterable object of Sequence
         The sequences to be aligned.
     bin_path : str, optional
-        Path of the MSA software binary. By default, the default path
-        will be used.
+        Path of the MSA software binary.
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
     """
