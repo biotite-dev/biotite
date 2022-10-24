@@ -19,6 +19,7 @@ _error_messages = [
     "Service unavailable",
     "Server Error",
     "ID list is empty",
+    "Supplied id parameter is empty",
     "Resource temporarily unavailable",
     "Failed to retrieve sequence",
     "Failed to understand id",
@@ -40,7 +41,10 @@ def check_for_errors(message):
         If the message contains an error message.
     """
     # Error always appear at the end of message
-    message_end = message[-100:]
+    message_end = message[-200:]
+    # Seemingly arbitrary '+' characters are in NCBI error messages
+    message_end = message_end.replace("+", "")
     for error_msg in _error_messages:
-        if error_msg in message_end:
+        # Often whitespace is also replaced by '+' in error message
+        if error_msg.replace(" ", "") in message_end:
             raise RequestError(error_msg)

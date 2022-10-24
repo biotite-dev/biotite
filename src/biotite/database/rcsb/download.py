@@ -157,6 +157,7 @@ def _assert_valid_file(response_text, pdb_id):
     if any(err_msg in response_text for err_msg in [
         "404 Not Found",
         "<title>RCSB Protein Data Bank Error Page</title>",
-        "No fasta files were found."
+        "No fasta files were found.",
+        "No valid PDB IDs were submitted.",
     ]):
         raise RequestError("PDB ID {:} is invalid".format(pdb_id))
