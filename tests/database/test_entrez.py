@@ -62,5 +62,11 @@ def test_fetch_single_file(as_file_like):
 )
 def test_fetch_invalid():
     with pytest.raises(RequestError):
-        file = entrez.fetch("xxxx", tempfile.gettempdir(), "fa", "protein",
-                            "fasta", overwrite=True)
+        # Empty ID list
+        file = entrez.fetch_single_file(
+            [], None, "protein", "fasta", overwrite=True)
+    with pytest.raises(RequestError):
+        # Nonexisting ID
+        file = entrez.fetch(
+            "xxxx", None, "fa", "protein", "fasta", overwrite=True
+        )

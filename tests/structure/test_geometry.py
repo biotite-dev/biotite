@@ -83,6 +83,11 @@ def _assert_plausible_omega(omega):
 )
 def test_dihedral_backbone_result(file_name):
     import mdtraj
+
+    if "5eil" in file_name:
+        # Structure contains non-canonical amino acid
+        # with missing backbone atoms
+        pytest.skip("Structure contains non-canonical amino acid")
     
     mmtf_file = mmtf.MMTFFile.read(file_name)
     array = mmtf.get_structure(mmtf_file, model=1)

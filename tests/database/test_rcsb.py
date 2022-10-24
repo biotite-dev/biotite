@@ -71,7 +71,7 @@ def test_search_basic():
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
             False,
             {},
-            ["6IG7", "6IG6", "7JRI", "7JR5"]
+            ["6IG7", "6IG6", "7JRI", "7JR5", "7QX4", "7QX5", "7QX6", "7QX7"]
         ),
         (
             "audit_author.name",
@@ -98,7 +98,7 @@ def test_search_basic():
             False,
             {"less_or_equal": 0.6},
             ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "2GLT",
-             "7ATG"]
+             "7ATG", "7R0H"]
         ),
         (
             "rcsb_entry_info.deposited_model_count",
