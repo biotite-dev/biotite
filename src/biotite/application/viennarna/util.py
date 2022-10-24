@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.application"
+__name__ = "biotite.application.viennarna"
 __author__ = "Patrick Kunzmann"
 __all__ = ["build_constraint_string"]
 
