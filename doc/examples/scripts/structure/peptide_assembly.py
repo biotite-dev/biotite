@@ -29,7 +29,6 @@ import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.info as info
-import ammolite
 
 
 C_N_LENGTH   = 1.34
