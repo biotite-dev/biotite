@@ -311,7 +311,7 @@ del matches
 #
 # .. math::
 #
-#    \sigma = \sqrt{4 N (p_i + p_d - p_i^2 - p_i^2)}
+#    \sigma = \sqrt{4 N (p_i + p_d - p_i^2 - p_d^2)}
 #
 # where :math:`N` is the read length.
 # We choose :math:`3 \sigma` as the deviation from the center of the
