@@ -14,15 +14,16 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_amino_acids", "filter_carbohydrates", 
            "filter_backbone", "filter_intersection", "filter_first_altloc", 
            "filter_highest_occupancy_altloc", "filter_peptide_backbone",
-           "filter_phosphate_backbone", "filter_linear_bond_continuity"]
+           "filter_phosphate_backbone", "filter_linear_bond_continuity",
+           "filter_polymer"]
 
 import warnings
 
 import numpy as np
 import operator as op
-from functools import reduce
-from .atoms import Atom, AtomArray, AtomArrayStack
-from .residues import get_residue_starts
+from functools import partial, reduce
+from .atoms import Atom, AtomArray, AtomArrayStack, array as atom_array
+from .residues import get_residue_starts, get_residue_count
 from .info.nucleotides import nucleotide_names
 from .info.amino_acids import amino_acid_names
 from .info.carbohydrates import carbohydrate_names
@@ -329,6 +330,53 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
     dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
     mask = (dist >= min_len) & (dist <= max_len)
     return np.append(mask, True)
+
+
+def _is_polymer(array, min_size, pol_type):
+
+    if pol_type.startswith('p'):
+        filt_fn = filter_amino_acids
+    elif pol_type.startswith('n'):
+        filt_fn = filter_nucleotides
+    elif pol_type.startswith('c'):
+        filt_fn = filter_carbohydrates
+    else:
+        raise ValueError(f'Unsupported polymer type {pol_type}')
+
+    mask = filt_fn(array)
+    return get_residue_count(array[mask]) >= min_size
+
+
+def filter_polymer(array, min_size=2, pol_type='peptide'):
+    """
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to filter.
+    min_size : int
+        The minimum number of monomers.
+    pol_type : str
+        The polymer type, either "peptide", "nucleotide", or "carbohydrate".
+        Abbreviations are supported: "p", "pep", "n", etc.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where atoms belong to
+        consecutive polymer entity having at least `min_size` monomers.
+
+    """
+    # Duplicates `check_res_id_continuity` to avoid circular imports
+    diff = np.diff(array.res_id)
+    split_idx = np.where(((diff != 0) & (diff != 1)))[0] + 1
+
+    check_pol = partial(_is_polymer, min_size=min_size, pol_type=pol_type)
+    bool_idx = map(
+        lambda a: np.full(len(a), check_pol(atom_array(a)), dtype=bool),
+        np.split(array, split_idx)
+    )
+    return np.concatenate(list(bool_idx))
 
 
 def filter_intersection(array, intersect):

@@ -133,6 +133,30 @@ def test_linear_bond_continuity_filter(canonical_sample_protein):
     assert len(pro[struc.filter_linear_bond_continuity(pro)]) == 6
 
 
+def test_polymer_filter(canonical_sample_nucleotide, sample_carbohydrate):
+    a = canonical_sample_nucleotide
+
+    # Check for nucleotide filtering
+    a_nuc = a[struc.filter_polymer(a, pol_type='n')]
+    assert len(a_nuc) == 651
+    assert set(a_nuc.chain_id) == {'D', 'P', 'T'}
+    # chain D should be absent
+    a_nuc = a_nuc[struc.filter_polymer(a_nuc, min_size=6, pol_type='n')]
+    assert set(a_nuc.chain_id) == {'P', 'T'}
+
+    # Single protein chain A: residues 10-335
+    a_pep = a[struc.filter_polymer(a, pol_type='p')]
+    assert len(a_pep) == len(a[(a.res_id >= 10) & (a.res_id <= 335) & (a.chain_id == 'A')])
+
+    # Chain B has five carbohydrate residues
+    # Chain C has four
+    # => Only chain B is selected
+    a = sample_carbohydrate
+    a_carb = a[struc.filter_polymer(a, min_size=4, pol_type='carb')]
+    assert set(a_carb.chain_id) == {'B'}
+    assert struc.get_residue_count(a_carb) == 5
+
+
 def test_intersection_filter(canonical_sample_protein):
     assert (
         len(canonical_sample_protein[:200][
