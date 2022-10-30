@@ -10,14 +10,15 @@ errors in the structure.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["check_id_continuity", "check_atom_id_continuity",
-           "check_res_id_continuity", "check_backbone_bond_continuity",
+           "check_res_id_continuity", "check_backbone_continuity",
            "check_duplicate_atoms", "check_bond_continuity",
-           "renumber_atom_ids", "renumber_res_ids"]
+           "check_linear_continuity", "renumber_atom_ids", "renumber_res_ids"]
 
 import numpy as np
 import warnings
-from .atoms import Atom, AtomArray, AtomArrayStack
-from .filter import filter_backbone
+from .atoms import AtomArray, AtomArrayStack
+from .filter import (
+    filter_peptide_backbone, filter_phosphate_backbone, filter_linear_bond_continuity)
 from .box import coord_to_fraction
 
 
@@ -98,15 +99,38 @@ def check_res_id_continuity(array):
     return _check_continuity(ids)
 
 
-def _filter_bond_continuity(array, min_len=1.2, max_len=1.8):
-    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
-    mask = (dist < min_len) | (dist > max_len)
-    return np.insert(mask, False, 0)
-
-
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
-    Check bond continuity of atoms in atom array.
+    Check if the peptide backbone atoms have a non-reasonable distance to the next atom.
+
+    A large or very small distance is a very strong clue, that there is
+    no bond between those atoms, therefore the chain is discontinued.
+
+    DEPRECATED: Please use :func:`check_backbone_continuity` for the same functionality.
+
+    Parameters
+    ----------
+    array : AtomArray
+        The array to be checked.
+    min_len, max_len : float, optional
+        The interval in which the atom-atom distance is evaluated as
+        bond.
+
+    Returns
+    -------
+    discontinuity : ndarray, dtype=bool
+         Contains the indices of atoms after a discontinuity.
+    """
+    warnings.warn(
+        "Reimplemented into `check_backbone_continuity()`",
+        DeprecationWarning
+    )
+    return check_backbone_continuity(array, min_len, max_len)
+
+
+def check_linear_continuity(array, min_len=1.2, max_len=1.8):
+    """
+    Check linear (consecutive) bond continuity of atoms in atom array.
 
     Parameters
     ----------
@@ -121,20 +145,32 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     -------
     discontinuity : ndarray, dtype=int
         Indices of `array` corresponding to atoms where the bond
-        with the next atom is beyond the provided bounds.
+        with the preceding atom is beyond the provided bounds.
+
+    See Also
+    --------
+    biotite.structure.filter.filter_linear_bond_continuity :
+        A function to filter for atoms preserving the continuity (used here).
+    biotite.structure.bonds.BondList :
+        A class that doesn't depend on the atoms' order to identify bonds.
     """
-    mask = _filter_bond_continuity(array, min_len, max_len)
-    return np.where(mask)[0]
+    con_mask = filter_linear_bond_continuity(array, min_len, max_len)
+    # The continuity mask `con_mask` points to atoms for which the next atom is continuous.
+    # We invert this mask and shift-extend by one from the left.
+    # The resulting discontinuity mask points to atoms having the preceding atom exceeding
+    # the bond length requirements.
+    discon_mask = np.insert(~con_mask[:-1], 0, False)
+    return np.where(discon_mask)[0]
 
 
-def check_backbone_bond_continuity(array, min_len=1.2, max_len=1.8):
+def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
     """
-    Check if the peptide backbone atoms ("N","CA","C") have a
+    Check if the (peptide or phosphate) backbone atoms have
     non-reasonable distance to the next atom.
     
     A large or very small distance is a very strong clue, that there is
     no bond between those atoms, therefore the chain is discontinued.
-    
+
     Parameters
     ----------
     array : AtomArray
@@ -142,14 +178,26 @@ def check_backbone_bond_continuity(array, min_len=1.2, max_len=1.8):
     min_len, max_len : float, optional
         The interval in which the atom-atom distance is evaluated as
         bond.
-    
+
     Returns
     -------
     discontinuity : ndarray, dtype=bool
          Contains the indices of atoms after a discontinuity.
+
+    See Also
+    --------
+    biotite.structure.filter.filter_linear_bond_continuity :
+        A function to filter for atoms preserving the continuity.
+    biotite.structure.filter.filter_peptide_backbone:
+        A function to filter for peptide backbone atoms.
+    biotite.structure.filter.filter_phosphate_backbone:
+        A function to filter for phosphate backbone atoms.
     """
-    backbone_mask = filter_backbone(array)
-    discon_mask = _filter_bond_continuity(array[backbone_mask], min_len, max_len)
+    backbone_mask = filter_peptide_backbone(array) | filter_phosphate_backbone(array)
+    con_mask = filter_linear_bond_continuity(array[backbone_mask], min_len, max_len)
+
+    # See the comments for `check_linear_continuity()`
+    discon_mask = np.insert(~con_mask[:-1], 0, False)
     discon_mask_full = np.full_like(backbone_mask, False)
     discon_mask_full[backbone_mask] = discon_mask
 
