@@ -98,6 +98,12 @@ def check_res_id_continuity(array):
     return _check_continuity(ids)
 
 
+def _filter_bond_continuity(array, min_len=1.2, max_len=1.8):
+    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
+    mask = (dist < min_len) | (dist > max_len)
+    return np.insert(mask, False, 0)
+
+
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
     Check bond continuity of atoms in atom array.
@@ -107,7 +113,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     array : AtomArray
         Arbitrary structure.
     min_len : float, optional
-        Mininmum bond length.
+        Minimum bond length.
     max_len : float, optional
         Maximum bond length.
 
@@ -117,10 +123,8 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
         Indices of `array` corresponding to atoms where the bond
         with the next atom is beyond the provided bounds.
     """
-    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
-    mask = (dist < min_len) | (dist > max_len)
-
-    return np.where(mask)[0] + 1
+    mask = _filter_bond_continuity(array, min_len, max_len)
+    return np.where(mask)[0]
 
 
 def check_backbone_bond_continuity(array, min_len=1.2, max_len=1.8):
@@ -144,10 +148,12 @@ def check_backbone_bond_continuity(array, min_len=1.2, max_len=1.8):
     discontinuity : ndarray, dtype=bool
          Contains the indices of atoms after a discontinuity.
     """
-    backbone_idx = np.where(filter_backbone(array))[0]
-    discont_idx = check_bond_continuity(array, min_len, max_len)
+    backbone_mask = filter_backbone(array)
+    discon_mask = _filter_bond_continuity(array[backbone_mask], min_len, max_len)
+    discon_mask_full = np.full_like(backbone_mask, False)
+    discon_mask_full[backbone_mask] = discon_mask
 
-    return discont_idx[np.isin(discont_idx, backbone_idx)]
+    return np.where(discon_mask_full)[0]
 
 
 def check_duplicate_atoms(array):
