@@ -155,15 +155,29 @@ def test_saving_with_extra_args(suffix):
     temp.close()
 
 
-def test_small_molecule():
+
+@pytest.mark.parametrize(
+    "path", 
+    glob.glob(join(data_dir("structure"), "molecules", "*.sdf"))
+    +
+    glob.glob(join(data_dir("structure"), "molecules", "*.mol"))
+    +
+    glob.glob(join(data_dir("structure"), "molecules", "*.xyz"))    
+    +
+    glob.glob(join(data_dir("structure"), "molecules", "*.mol2"))        
+    
+)
+def test_small_molecule(path):
     """
     Check if loading a small molecule file written via
     :func:`save_structure()` gives the same result as the input to
     :func:`save_structure()`.
     """
-    path = join(data_dir("structure"), "molecules", "TYR.sdf")
+#    path = join(data_dir("structure"), "molecules", "TYR.sdf")
+    suffix = path.split(".")[-1]
     ref_array = strucio.load_structure(path)
-    temp = NamedTemporaryFile("w", suffix=".sdf", delete=False)
+    #temp = NamedTemporaryFile("w", suffix=".sdf", delete=False)
+    temp = NamedTemporaryFile("w", suffix=f".{suffix}", delete=False)
     strucio.save_structure(temp.name, ref_array)
     temp.close()
     

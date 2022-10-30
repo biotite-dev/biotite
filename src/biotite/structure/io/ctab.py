@@ -61,6 +61,8 @@ def read_structure_from_ctab(ctab_lines):
     .. footbibliography::
     """
     n_atoms, n_bonds = _get_counts(ctab_lines[0])
+ 
+                   
     atom_lines = ctab_lines[1 : 1 + n_atoms]
     bond_lines = ctab_lines[1 + n_atoms : 1 + n_atoms + n_bonds]
 

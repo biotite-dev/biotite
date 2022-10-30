@@ -1,0 +1,14 @@
+@<TRIPOS>MOLECULE
+CYN - Ideal conformer
+ 2 1 0 0 0
+SMALL
+GASTEIGER
+
+@<TRIPOS>ATOM
+      1 C           0.0000    0.0000   -0.6110 C.2     1  UNL1       -0.5149
+      2 N           0.0000    0.0000    0.5240 N.1     1  UNL1       -0.4851
+@<TRIPOS>UNITY_ATOM_ATTR
+1 1
+charge -1
+@<TRIPOS>BOND
+     1     1     2    3
