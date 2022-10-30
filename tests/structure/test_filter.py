@@ -110,15 +110,27 @@ def test_phosphate_backbone_filter(canonical_sample_nucleotide):
 
 def test_linear_bond_continuity_filter(canonical_sample_protein):
     # Since there are no discontinuities within the sample protein's backbone
-    # the output should differ from `filter_peptide_backbone` by a single atom.
+    # the output shouldn't differ from `filter_peptide_backbone`.
     a = canonical_sample_protein
     a_bb = a[struc.filter_peptide_backbone(a)]
-    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == 383
+    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == 384
 
-    # For the Gly-Ala dipeptide, the order of atoms is N, CA, C, O
-    # => the molecule is linear, so three atoms shall be positive
+    # For the Gly residue, the order of atoms is N, CA, C, O
+    # => the molecule is linear, so all four atoms shall be positive.
     gly = a[a.res_id == 13]
-    assert len(gly[struc.filter_linear_bond_continuity(gly)]) == 3
+    assert len(gly[struc.filter_linear_bond_continuity(gly)]) == 4
+
+    # For an Ala residue, the order is N, CA, C, O, CB
+    # Hence, the last atom breaks the continuity
+    ala = a[a.res_id == 14]
+    assert len(ala[struc.filter_linear_bond_continuity(ala)]) == 4
+
+    # For a Pro residue, there are two groups of consecutive atoms:
+    # (1) N, CA, C
+    # (2) CB, CG, CD
+    # and the O between them breaks the continuity => 6 atoms in total
+    pro = a[a.res_id == 15]
+    assert len(pro[struc.filter_linear_bond_continuity(pro)]) == 6
 
 
 def test_intersection_filter(canonical_sample_protein):
