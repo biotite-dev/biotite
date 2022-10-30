@@ -13,9 +13,14 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_nucleotides", "filter_amino_acids", 
            "filter_canonical_amino_acids", "filter_carbohydrates", 
            "filter_backbone", "filter_intersection", "filter_first_altloc", 
-           "filter_highest_occupancy_altloc"]
+           "filter_highest_occupancy_altloc", "filter_peptide_backbone",
+           "filter_phosphate_backbone"]
+
+import warnings
 
 import numpy as np
+import operator as op
+from functools import reduce
 from .atoms import Atom, AtomArray, AtomArrayStack
 from .residues import get_residue_starts
 from .info.nucleotides import nucleotide_names
@@ -33,6 +38,9 @@ _amino_acid_list = amino_acid_names()
 _carbohydrate_list = carbohydrate_names()
 
 _solvent_list = ["HOH","SOL"]
+
+_peptide_backbone_atoms = ['N', 'CA', 'C']
+_phosphate_backbone_atoms = ['P', 'O5\'', 'C5\'', 'C4\'', 'C3\'', 'O3\'']
 
 
 def filter_monoatomic_ions(array):
@@ -210,6 +218,9 @@ def filter_backbone(array):
 
     This includes the "N", "CA" and "C" atoms of amino acids.
 
+    DEPRECATED: Please, use :func:`filter_peptide_backbone` to filter
+    for protein backbone atoms.
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -221,10 +232,66 @@ def filter_backbone(array):
         This array is `True` for all indices in `array`, where the atom
         as an backbone atom.
     """
+    warnings.warn(
+        "Please, use `filter_peptide_backbone()` to filter "
+        "for protein backbone atoms.",
+        DeprecationWarning
+    )
     return ( ((array.atom_name == "N") |
               (array.atom_name == "CA") |
               (array.atom_name == "C")) &
               filter_amino_acids(array) )
+
+
+def _chain_filter_atom_names(array, atom_names):
+    filt_arrays = map(
+        lambda name: array.atom_name == name,
+        atom_names)
+    return reduce(op.or_, filt_arrays)
+
+
+def filter_peptide_backbone(array):
+    """
+    Filter all peptide backbone atoms of one array.
+
+    This includes the "N", "CA" and "C" atoms of amino acids.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where an atom
+        is a part of the peptide backbone.
+    """
+
+    return (_chain_filter_atom_names(array, _peptide_backbone_atoms) &
+            filter_amino_acids(array))
+
+
+def filter_phosphate_backbone(array):
+    """
+    Filter all phosphate backbone atoms of one array.
+
+    This includes the P, O5', C5', C4', C3', and O3' atoms.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where an atom
+        is a part of the phosphate backbone.
+    """
+
+    return (_chain_filter_atom_names(array, _phosphate_backbone_atoms) &
+            filter_nucleotides(array))
 
 
 def filter_intersection(array, intersect):
