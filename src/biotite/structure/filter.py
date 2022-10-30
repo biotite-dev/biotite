@@ -14,7 +14,7 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_amino_acids", "filter_carbohydrates", 
            "filter_backbone", "filter_intersection", "filter_first_altloc", 
            "filter_highest_occupancy_altloc", "filter_peptide_backbone",
-           "filter_phosphate_backbone"]
+           "filter_phosphate_backbone", "filter_linear_bond_continuity"]
 
 import warnings
 
@@ -292,6 +292,43 @@ def filter_phosphate_backbone(array):
 
     return (_chain_filter_atom_names(array, _phosphate_backbone_atoms) &
             filter_nucleotides(array))
+
+
+def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
+    """
+    Filter for atoms such that their bond length with the preceeding atom
+    lies within the provided boundaries.
+
+    The result will depend on the atoms' order.
+    For instance, consider a molecule
+
+       C3
+       |
+    C1-C2-C4
+
+    If the order corresponds to [C1, C2, C4, C3], the output will be
+    [False, True, True, False].
+
+    Parameters
+    ----------
+    array: AtomArray
+        The array to filter.
+    min_len: float
+        Minmum bond length
+    max_len: float
+        Maximum bond length
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where an atom
+        has a bond length with a preceeding atom within [`min_len`, `max_len`]
+        boundaries.
+
+    """
+    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
+    mask = (dist >= min_len) | (dist <= max_len)
+    return np.insert(mask, False, 0)
 
 
 def filter_intersection(array, intersect):

@@ -91,6 +91,7 @@ def test_carbohydrate_filter(sample_carbohydrate):
         ])) == 8
     )
 
+
 def test_peptide_backbone_filter(canonical_sample_protein):
     assert (
         len(canonical_sample_protein[
@@ -98,12 +99,26 @@ def test_peptide_backbone_filter(canonical_sample_protein):
         ]) == 384
     )
 
+
 def test_phosphate_backbone_filter(canonical_sample_nucleotide):
     # take a chain D with five canonical nucleotides
     # => there should be 5 x 6 = 30 backbone atoms
     chain_d = canonical_sample_nucleotide[
         canonical_sample_nucleotide.chain_id == 'D']
     assert len(chain_d[struc.filter_phosphate_backbone(chain_d)]) == 30
+
+
+def test_linear_bond_continuity_filter(canonical_sample_protein):
+    # Since there are no discontinuities within the sample protein's backbone
+    # the output should differ from `filter_peptide_backbone` by a single atom.
+    a = canonical_sample_protein
+    a_bb = a[struc.filter_peptide_backbone(a)]
+    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == 383
+
+    # For the Gly-Ala dipeptide, the order of atoms is N, CA, C, O
+    # => the molecule is linear, so three atoms shall be positive
+    gly = a[a.res_id == 13]
+    assert len(gly[struc.filter_linear_bond_continuity(gly)]) == 3
 
 
 def test_intersection_filter(canonical_sample_protein):
