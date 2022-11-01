@@ -16,7 +16,7 @@ __all__ = ["displacement", "index_displacement", "distance", "index_distance",
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
 from .util import vector_dot, norm_vector
-from .filter import filter_backbone
+from .filter import filter_peptide_backbone
 from .chains import chain_iter
 from .box import (coord_to_fraction, fraction_to_coord,
                   move_inside_box, is_orthogonal)
@@ -539,7 +539,7 @@ def dihedral_backbone(atom_array):
      [ -77.264  124.223]
      [ -78.100      nan]]
     """
-    bb_filter = filter_backbone(atom_array)
+    bb_filter = filter_peptide_backbone(atom_array)
     backbone = atom_array[..., bb_filter]
     
     if backbone.array_length() % 3 != 0 \
