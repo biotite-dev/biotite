@@ -101,7 +101,8 @@ def check_res_id_continuity(array):
 
 def check_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
-    Check if the peptide backbone atoms have a non-reasonable distance to the next atom.
+    Check if the peptide or phosphate backbone atoms have a
+    non-reasonable distance to the next residue.
 
     A large or very small distance is a very strong clue, that there is
     no bond between those atoms, therefore the chain is discontinued.
@@ -186,12 +187,9 @@ def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
 
     See Also
     --------
-    biotite.structure.filter.filter_linear_bond_continuity :
-        A function to filter for atoms preserving the continuity.
-    biotite.structure.filter.filter_peptide_backbone:
-        A function to filter for peptide backbone atoms.
-    biotite.structure.filter.filter_phosphate_backbone:
-        A function to filter for phosphate backbone atoms.
+    filter_linear_bond_continuity : A function to filter for atoms preserving the continuity.
+    filter_peptide_backbone : A function to filter for peptide backbone atoms.
+    filter_phosphate_backbone : A function to filter for phosphate backbone atoms.
     """
     backbone_mask = filter_peptide_backbone(array) | filter_phosphate_backbone(array)
     con_mask = filter_linear_bond_continuity(array[backbone_mask], min_len, max_len)

@@ -104,7 +104,8 @@ def test_phosphate_backbone_filter(canonical_sample_nucleotide):
     # take a chain D with five canonical nucleotides
     # => there should be 5 x 6 = 30 backbone atoms
     chain_d = canonical_sample_nucleotide[
-        canonical_sample_nucleotide.chain_id == 'D']
+        canonical_sample_nucleotide.chain_id == 'D'
+    ]
     assert len(chain_d[struc.filter_phosphate_backbone(chain_d)]) == 30
 
 

@@ -219,7 +219,7 @@ def filter_backbone(array):
 
     This includes the "N", "CA" and "C" atoms of amino acids.
 
-    DEPRECATED: Please, use :func:`filter_peptide_backbone` to filter
+    DEPRECATED: Please use :func:`filter_peptide_backbone` to filter
     for protein backbone atoms.
 
     Parameters
@@ -234,7 +234,7 @@ def filter_backbone(array):
         as an backbone atom.
     """
     warnings.warn(
-        "Please, use `filter_peptide_backbone()` to filter "
+        "Please use `filter_peptide_backbone()` to filter "
         "for protein backbone atoms.",
         DeprecationWarning
     )
@@ -287,7 +287,7 @@ def filter_phosphate_backbone(array):
     Returns
     -------
     filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where an atom
+        This array is ``True`` for all indices in `array`, where an atom
         is a part of the phosphate backbone.
     """
 
@@ -301,15 +301,15 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
     lies within the provided boundaries.
 
     The result will depend on the atoms' order.
-    For instance, consider a molecule
+    For instance, consider a molecule::
+    
+           C3
+           |
+        C1-C2-C4
 
-       C3
-       |
-    C1-C2-C4
-
-    If the order corresponds to [C1, C2, C4, C3], the output will be
-    [`True`, `True`, `False`, `True`].
-    Note that the trailing atom will always evaluate to `True`.
+    If the order corresponds to ``[C1, C2, C4, C3]``, the output will be
+    ``[True, True, False, True]``.
+    Note that the trailing atom will always evaluate to ``True``.
 
     Parameters
     ----------
@@ -326,6 +326,10 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
         This array is `True` for all indices in `array`, where an atom
         has a bond length with the next atom within [`min_len`, `max_len`]
         boundaries.
+    Notes
+    -----
+    Note that this function purely uses distances between consecutive atoms.
+    A potential ``BondList`` is not considered here.
     """
     dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
     mask = (dist >= min_len) & (dist <= max_len)
@@ -357,8 +361,8 @@ def filter_polymer(array, min_size=2, pol_type='peptide'):
     min_size : int
         The minimum number of monomers.
     pol_type : str
-        The polymer type, either "peptide", "nucleotide", or "carbohydrate".
-        Abbreviations are supported: "p", "pep", "n", etc.
+        The polymer type, either ``"peptide"``, ``"nucleotide"``, or ``"carbohydrate"``.
+        Abbreviations are supported: ``"p"``, ``"pep"``, ``"n"``, etc.
 
     Returns
     -------
