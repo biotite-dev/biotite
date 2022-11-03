@@ -111,7 +111,8 @@ def test_phosphate_backbone_filter(canonical_sample_nucleotide):
 
 def test_linear_bond_continuity_filter(canonical_sample_protein):
     # Since there are no discontinuities within the sample protein's backbone
-    # the output shouldn't differ from `filter_peptide_backbone`.
+    # the output shouldn't differ from `filter_peptide_backbone` and evaluates
+    # to the number of backbone atoms in the protein chain.
     a = canonical_sample_protein
     a_bb = a[struc.filter_peptide_backbone(a)]
     assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == 384
@@ -139,7 +140,11 @@ def test_polymer_filter(canonical_sample_nucleotide, sample_carbohydrate):
 
     # Check for nucleotide filtering
     a_nuc = a[struc.filter_polymer(a, pol_type='n')]
-    assert len(a_nuc) == 651
+    # Take three nucleic acids chains and remove solvent => the result should
+    # encompass all nucleotide polymer atoms, which is exactly the output of the
+    # `filter_polymer()`. In the structure file, the filtered atoms are 1-651.
+    a_nuc_manual = a[np.isin(a.chain_id, ['D', 'P', 'T']) & ~struc.filter_solvent(a)]
+    assert len(a_nuc) == len(a_nuc_manual) == 651
     assert set(a_nuc.chain_id) == {'D', 'P', 'T'}
     # chain D should be absent
     a_nuc = a_nuc[struc.filter_polymer(a_nuc, min_size=6, pol_type='n')]

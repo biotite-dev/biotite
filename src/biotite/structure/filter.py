@@ -350,6 +350,8 @@ def _is_polymer(array, min_size, pol_type):
 
 def filter_polymer(array, min_size=2, pol_type='peptide'):
     """
+    Filter for atoms that are a part of a consecutive standard macromolecular
+    polymer entity.
 
     Parameters
     ----------
