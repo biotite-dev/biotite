@@ -41,8 +41,22 @@ def test_res_id_continuity_check(gapped_sample_array):
     discon_array = gapped_sample_array[discon]
     assert discon_array.res_id.tolist() == [6]
 
+def test_linear_continuity_check(gapped_sample_array):
+    # Take the first ASN residue and remove hydrogens
+    asn = gapped_sample_array[
+        (gapped_sample_array.res_id == 1) & (gapped_sample_array.element != 'H')]
+    # The consecutive atom groups are
+    # (1) N, CA, C, O
+    # - break
+    # (2) CB, CG, OD1
+    # - break
+    # (3) ND2
+    # => Indices must be 4 and 7
+    discon = struc.check_linear_continuity(asn)
+    assert discon.tolist() == [4, 7]
+
 def test_bond_continuity_check(gapped_sample_array):
-    discon = struc.check_bond_continuity(gapped_sample_array)
+    discon = struc.check_backbone_continuity(gapped_sample_array)
     discon_array = gapped_sample_array[discon]
     assert discon_array.res_id.tolist() == [6,9]
 

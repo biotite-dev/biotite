@@ -527,7 +527,7 @@ substack = stack[:, 0]
 # that create boolean masks from an atom array using specific criteria.
 # Here is a small example.
 
-backbone = array[struc.filter_backbone(array)]
+backbone = array[struc.filter_peptide_backbone(array)]
 print(backbone.atom_name)
 
 ########################################################################

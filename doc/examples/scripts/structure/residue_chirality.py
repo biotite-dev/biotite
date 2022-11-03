@@ -36,7 +36,9 @@ def get_enantiomer(n, ca, c, cb):
 def analyze_chirality(array):
     # Filter backbone + CB
     array = array[struc.filter_amino_acids(array)]
-    array = array[(array.atom_name == "CB") | (struc.filter_backbone(array))]
+    array = array[
+        (array.atom_name == "CB") | (struc.filter_peptide_backbone(array))
+    ]
     # Iterate over each residue
     ids, names = struc.get_residues(array)
     enantiomers = np.zeros(len(ids), dtype=int)

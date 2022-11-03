@@ -91,12 +91,77 @@ def test_carbohydrate_filter(sample_carbohydrate):
         ])) == 8
     )
 
-def test_backbone_filter(canonical_sample_protein):
+
+def test_peptide_backbone_filter(canonical_sample_protein):
     assert (
         len(canonical_sample_protein[
-            struc.filter_backbone(canonical_sample_protein)
+            struc.filter_peptide_backbone(canonical_sample_protein)
         ]) == 384
     )
+
+
+def test_phosphate_backbone_filter(canonical_sample_nucleotide):
+    # take a chain D with five canonical nucleotides
+    # => there should be 5 x 6 = 30 backbone atoms
+    chain_d = canonical_sample_nucleotide[
+        canonical_sample_nucleotide.chain_id == 'D'
+    ]
+    assert len(chain_d[struc.filter_phosphate_backbone(chain_d)]) == 30
+
+
+def test_linear_bond_continuity_filter(canonical_sample_protein):
+    # Since there are no discontinuities within the sample protein's backbone
+    # the output shouldn't differ from `filter_peptide_backbone` and evaluates
+    # to the number of backbone atoms in the protein chain.
+    a = canonical_sample_protein
+    a_bb = a[struc.filter_peptide_backbone(a)]
+    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == len(a_bb)
+
+    # For the Gly residue, the order of atoms is N, CA, C, O
+    # => the molecule is linear, so all four atoms shall be positive.
+    gly = a[a.res_id == 13]
+    assert len(gly[struc.filter_linear_bond_continuity(gly)]) == 4
+
+    # For an Ala residue, the order is N, CA, C, O, CB
+    # Hence, the last atom breaks the continuity
+    ala = a[a.res_id == 14]
+    assert len(ala[struc.filter_linear_bond_continuity(ala)]) == 4
+
+    # For a Pro residue, there are two groups of consecutive atoms:
+    # (1) N, CA, C
+    # (2) CB, CG, CD
+    # and the O between them breaks the continuity => 6 atoms in total
+    pro = a[a.res_id == 15]
+    assert len(pro[struc.filter_linear_bond_continuity(pro)]) == 6
+
+
+def test_polymer_filter(canonical_sample_nucleotide, sample_carbohydrate):
+    a = canonical_sample_nucleotide
+
+    # Check for nucleotide filtering
+    a_nuc = a[struc.filter_polymer(a, pol_type='n')]
+    # Take three nucleic acids chains and remove solvent => the result should
+    # encompass all nucleotide polymer atoms, which is exactly the output of the
+    # `filter_polymer()`. In the structure file, the filtered atoms are 1-651.
+    a_nuc_manual = a[np.isin(a.chain_id, ['D', 'P', 'T']) & ~struc.filter_solvent(a)]
+    assert len(a_nuc) == len(a_nuc_manual) == 651
+    assert set(a_nuc.chain_id) == {'D', 'P', 'T'}
+    # chain D should be absent
+    a_nuc = a_nuc[struc.filter_polymer(a_nuc, min_size=6, pol_type='n')]
+    assert set(a_nuc.chain_id) == {'P', 'T'}
+
+    # Single protein chain A: residues 10-335
+    a_pep = a[struc.filter_polymer(a, pol_type='p')]
+    assert len(a_pep) == len(a[(a.res_id >= 10) & (a.res_id <= 335) & (a.chain_id == 'A')])
+
+    # Chain B has five carbohydrate residues
+    # Chain C has four
+    # => Only chain B is selected
+    a = sample_carbohydrate
+    a_carb = a[struc.filter_polymer(a, min_size=4, pol_type='carb')]
+    assert set(a_carb.chain_id) == {'B'}
+    assert struc.get_residue_count(a_carb) == 5
+
 
 def test_intersection_filter(canonical_sample_protein):
     assert (

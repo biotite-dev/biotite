@@ -13,11 +13,17 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_nucleotides", "filter_amino_acids", 
            "filter_canonical_amino_acids", "filter_carbohydrates", 
            "filter_backbone", "filter_intersection", "filter_first_altloc", 
-           "filter_highest_occupancy_altloc"]
+           "filter_highest_occupancy_altloc", "filter_peptide_backbone",
+           "filter_phosphate_backbone", "filter_linear_bond_continuity",
+           "filter_polymer"]
+
+import warnings
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack
-from .residues import get_residue_starts
+import operator as op
+from functools import partial, reduce
+from .atoms import Atom, AtomArray, AtomArrayStack, array as atom_array
+from .residues import get_residue_starts, get_residue_count
 from .info.nucleotides import nucleotide_names
 from .info.amino_acids import amino_acid_names
 from .info.carbohydrates import carbohydrate_names
@@ -33,6 +39,9 @@ _amino_acid_list = amino_acid_names()
 _carbohydrate_list = carbohydrate_names()
 
 _solvent_list = ["HOH","SOL"]
+
+_peptide_backbone_atoms = ['N', 'CA', 'C']
+_phosphate_backbone_atoms = ['P', 'O5\'', 'C5\'', 'C4\'', 'C3\'', 'O3\'']
 
 
 def filter_monoatomic_ions(array):
@@ -210,6 +219,9 @@ def filter_backbone(array):
 
     This includes the "N", "CA" and "C" atoms of amino acids.
 
+    DEPRECATED: Please use :func:`filter_peptide_backbone` to filter
+    for protein backbone atoms.
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -221,10 +233,153 @@ def filter_backbone(array):
         This array is `True` for all indices in `array`, where the atom
         as an backbone atom.
     """
+    warnings.warn(
+        "Please use `filter_peptide_backbone()` to filter "
+        "for protein backbone atoms.",
+        DeprecationWarning
+    )
     return ( ((array.atom_name == "N") |
               (array.atom_name == "CA") |
               (array.atom_name == "C")) &
               filter_amino_acids(array) )
+
+
+def _filter_atom_names(array, atom_names):
+    return np.isin(array.atom_name, atom_names)
+
+
+def filter_peptide_backbone(array):
+    """
+    Filter all peptide backbone atoms of one array.
+
+    This includes the "N", "CA" and "C" atoms of amino acids.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where an atom
+        is a part of the peptide backbone.
+    """
+
+    return (_filter_atom_names(array, _peptide_backbone_atoms) &
+            filter_amino_acids(array))
+
+
+def filter_phosphate_backbone(array):
+    """
+    Filter all phosphate backbone atoms of one array.
+
+    This includes the P, O5', C5', C4', C3', and O3' atoms.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is ``True`` for all indices in `array`, where an atom
+        is a part of the phosphate backbone.
+    """
+
+    return (_filter_atom_names(array, _phosphate_backbone_atoms) &
+            filter_nucleotides(array))
+
+
+def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
+    """
+    Filter for atoms such that their bond length with the next atom
+    lies within the provided boundaries.
+
+    The result will depend on the atoms' order.
+    For instance, consider a molecule::
+    
+           C3
+           |
+        C1-C2-C4
+
+    If the order corresponds to ``[C1, C2, C4, C3]``, the output will be
+    ``[True, True, False, True]``.
+    Note that the trailing atom will always evaluate to ``True``.
+
+    Parameters
+    ----------
+    array: AtomArray
+        The array to filter.
+    min_len: float
+        Minmum bond length
+    max_len: float
+        Maximum bond length
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where an atom
+        has a bond length with the next atom within [`min_len`, `max_len`]
+        boundaries.
+    Notes
+    -----
+    Note that this function purely uses distances between consecutive atoms.
+    A potential ``BondList`` is not considered here.
+    """
+    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
+    mask = (dist >= min_len) & (dist <= max_len)
+    return np.append(mask, True)
+
+
+def _is_polymer(array, min_size, pol_type):
+
+    if pol_type.startswith('p'):
+        filt_fn = filter_amino_acids
+    elif pol_type.startswith('n'):
+        filt_fn = filter_nucleotides
+    elif pol_type.startswith('c'):
+        filt_fn = filter_carbohydrates
+    else:
+        raise ValueError(f'Unsupported polymer type {pol_type}')
+
+    mask = filt_fn(array)
+    return get_residue_count(array[mask]) >= min_size
+
+
+def filter_polymer(array, min_size=2, pol_type='peptide'):
+    """
+    Filter for atoms that are a part of a consecutive standard macromolecular
+    polymer entity.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to filter.
+    min_size : int
+        The minimum number of monomers.
+    pol_type : str
+        The polymer type, either ``"peptide"``, ``"nucleotide"``, or ``"carbohydrate"``.
+        Abbreviations are supported: ``"p"``, ``"pep"``, ``"n"``, etc.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where atoms belong to
+        consecutive polymer entity having at least `min_size` monomers.
+
+    """
+    # Import `check_res_id_continuity` here to avoid circular imports
+    from .integrity import check_res_id_continuity
+    split_idx = check_res_id_continuity(array)
+
+    check_pol = partial(_is_polymer, min_size=min_size, pol_type=pol_type)
+    bool_idx = map(
+        lambda a: np.full(len(a), check_pol(atom_array(a)), dtype=bool),
+        np.split(array, split_idx)
+    )
+    return np.concatenate(list(bool_idx))
 
 
 def filter_intersection(array, intersect):

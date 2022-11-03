@@ -109,7 +109,7 @@ rotamers = struc.from_template(residue, rotamer_coord)
 
 ### Superimpose backbone onto first model for better visualization ###
 rotamers, _ = struc.superimpose(
-    rotamers[0], rotamers, atom_mask=struc.filter_backbone(rotamers)
+    rotamers[0], rotamers, atom_mask=struc.filter_peptide_backbone(rotamers)
 )
 
 
