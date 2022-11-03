@@ -115,7 +115,7 @@ def test_linear_bond_continuity_filter(canonical_sample_protein):
     # to the number of backbone atoms in the protein chain.
     a = canonical_sample_protein
     a_bb = a[struc.filter_peptide_backbone(a)]
-    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == 384
+    assert len(a_bb[struc.filter_linear_bond_continuity(a_bb)]) == len(a_bb)
 
     # For the Gly residue, the order of atoms is N, CA, C, O
     # => the molecule is linear, so all four atoms shall be positive.
