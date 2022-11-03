@@ -244,11 +244,8 @@ def filter_backbone(array):
               filter_amino_acids(array) )
 
 
-def _chain_filter_atom_names(array, atom_names):
-    filt_arrays = map(
-        lambda name: array.atom_name == name,
-        atom_names)
-    return reduce(op.or_, filt_arrays)
+def _filter_atom_names(array, atom_names):
+    return np.isin(array.atom_name, atom_names)
 
 
 def filter_peptide_backbone(array):
@@ -269,7 +266,7 @@ def filter_peptide_backbone(array):
         is a part of the peptide backbone.
     """
 
-    return (_chain_filter_atom_names(array, _peptide_backbone_atoms) &
+    return (_filter_atom_names(array, _peptide_backbone_atoms) &
             filter_amino_acids(array))
 
 
@@ -291,7 +288,7 @@ def filter_phosphate_backbone(array):
         is a part of the phosphate backbone.
     """
 
-    return (_chain_filter_atom_names(array, _phosphate_backbone_atoms) &
+    return (_filter_atom_names(array, _phosphate_backbone_atoms) &
             filter_nucleotides(array))
 
 
@@ -371,9 +368,9 @@ def filter_polymer(array, min_size=2, pol_type='peptide'):
         consecutive polymer entity having at least `min_size` monomers.
 
     """
-    # Duplicates `check_res_id_continuity` to avoid circular imports
-    diff = np.diff(array.res_id)
-    split_idx = np.where(((diff != 0) & (diff != 1)))[0] + 1
+    # Import `check_res_id_continuity` here to avoid circular imports
+    from .integrity import check_res_id_continuity
+    split_idx = check_res_id_continuity(array)
 
     check_pol = partial(_is_polymer, min_size=min_size, pol_type=pol_type)
     bool_idx = map(
