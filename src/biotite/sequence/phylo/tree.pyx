@@ -3,7 +3,7 @@
 # information.
 
 __name__ = "biotite.sequence.phylo"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["Tree", "TreeNode", "as_binary", "TreeError"]
 
 cimport cython
@@ -243,7 +243,8 @@ class Tree(Copyable):
             self._leaves[index2], topological
         )
     
-    def to_newick(self, labels=None, bint include_distance=True):
+    def to_newick(self, labels=None, bint include_distance=True, 
+                  round_distance=None):
         """
         to_newick(labels=None, include_distance=True)
 
@@ -256,6 +257,9 @@ class Tree(Copyable):
         include_distance : bool
             If true, the distances are displayed in the newick notation,
             otherwise they are omitted.
+        round_distance : int, optional
+            If set, the distances are rounded to the given number of
+            digits.
         
         Returns
         -------
@@ -279,7 +283,9 @@ class Tree(Copyable):
         >>> print(tree.to_newick(labels=labels, include_distance=False))
         ((foo,bar),foobar);
         """
-        return self._root.to_newick(labels, include_distance) + ";"
+        return self._root.to_newick(
+            labels, include_distance, round_distance
+        ) + ";"
     
     @staticmethod
     def from_newick(str newick, list labels=None):
@@ -726,7 +732,8 @@ cdef class TreeNode:
         """
         return _get_leaf_count(self)
     
-    def to_newick(self, labels=None, bint include_distance=True):
+    def to_newick(self, labels=None, bint include_distance=True, 
+                  round_distance=None):
         """
         to_newick(labels=None, include_distance=True)
         
@@ -741,6 +748,9 @@ cdef class TreeNode:
         include_distance : bool
             If true, the distances are displayed in the newick notation,
             otherwise they are omitted.
+        round_distance : int, optional
+            If set, the distances are rounded to the given number of
+            digits.
         
         Returns
         -------
@@ -779,15 +789,25 @@ cdef class TreeNode:
             else:
                 label = str(self._index)
             if include_distance:
-                return f"{label}:{self._distance}"
+                if round_distance is None:
+                    return f"{label}:{self._distance}"
+                else:
+                    return f"{label}:{self._distance:.{round_distance}f}"
             else:
                 return f"{label}"
         else:
             # Build string in a recursive way
-            child_strings = [child.to_newick(labels, include_distance)
-                             for child in self._children]
+            child_strings = [child.to_newick(
+                labels, include_distance, round_distance
+            ) for child in self._children]
             if include_distance:
-                return f"({','.join(child_strings)}):{self._distance}"
+                if round_distance is None:
+                    return f"({','.join(child_strings)}):{self._distance}"
+                else:
+                    return (
+                        f"({','.join(child_strings)}):"
+                        f"{self._distance:.{round_distance}f}"
+                    )
             else:
                 return f"({','.join(child_strings)})"
     
