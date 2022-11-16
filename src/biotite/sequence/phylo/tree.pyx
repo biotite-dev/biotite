@@ -257,9 +257,9 @@ class Tree(Copyable):
         include_distance : bool
             If true, the distances are displayed in the newick notation,
             otherwise they are omitted.
-        round_distance : None or integer, optional (default: None)
-            The number of digits the distances in the newick notation
-            should be rounded to.
+        round_distance : int, optional
+            If set, the distances are rounded to the given number of
+            digits.
         
         Returns
         -------
