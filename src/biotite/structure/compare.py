@@ -9,10 +9,11 @@ comparing multiple structures with each other.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["rmsd", "rmsf", "average"]
+__all__ = ["rmsd", "pdrmsd", "rmsf", "average"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
+from .geometry import index_distance
 from .util import vector_dot
 
 
@@ -70,6 +71,46 @@ def rmsd(reference, subject):
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
+def pdrmsd(reference, subject):
+    r"""
+    Calculate the RMSD of atom pair distances for given structures 
+    relative to those found in a reference structure.
+
+    Unlike the standard RMSD, the *pair distance root-mean-square 
+    deviation for atoms* (PDRMSD) is a fit-free method to determine
+    deviations between a structure and a preset reference.
+
+    .. math:: PDRMSD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j=1; j\neqi}^n (d_{ij} - d_{ref,ij})^2}  
+
+    Parameters
+    ----------
+    reference : AtomArray or ndarray, dtype=float, shape=(n,3)
+        The reference structure.
+        Alternatively, coordinates can be provided directly as
+        :class:`ndarray`.
+    subject : AtomArray or AtomArrayStack or ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        Structure(s) to be compared with `reference`.
+        Alternatively, coordinates can be provided directly as
+        :class:`ndarray`.
+    
+    Returns
+    -------
+    pdrmsd : float or ndarray, dtype=float, shape=(m,)
+        Atom pair distance RMSD between subject and reference.
+        If subject is an :class:`AtomArray` a float is returned.
+        If subject is an :class:`AtomArrayStack` a :class:`ndarray`
+        containing the RMSD for each model is returned.
+    """
+    # Compute index pairs in reference structure -> pair_ij for j < i
+    reflen = reference.array_length()
+    index_i = np.repeat(np.arange(reflen), reflen)
+    index_j = np.tile(np.arange(reflen), reflen)
+    pairs = np.stack([index_i, index_j]).T
+    refdist = index_distance(reference, pairs)
+    subjdist = index_distance(subject, pairs)
+
+    pdrmsd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/(10 * reflen)
+    return pdrmsd
 
 def rmsf(reference, subject):
     r"""
