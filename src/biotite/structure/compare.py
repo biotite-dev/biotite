@@ -71,7 +71,7 @@ def rmsd(reference, subject):
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
-def pdrmsd(reference, subject):
+def pdrmsd(reference, subject, periodic=False, box=None):
     r"""
     Calculate the RMSD of atom pair distances for given structures 
     relative to those found in a reference structure.
@@ -92,6 +92,16 @@ def pdrmsd(reference, subject):
         Structure(s) to be compared with `reference`.
         Alternatively, coordinates can be provided directly as
         :class:`ndarray`.
+    periodic : bool, optional
+        If set to true, periodic boundary conditions are taken into
+        account (minimum-image convention).
+        The `box` attribute of the `atoms` parameter is used for
+        calculation.
+        An alternative box can be provided via the `box` parameter.
+        By default, periodicity is ignored.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, the given box is used instead of the
+        `box` attribute of `atoms`.
     
     Returns
     -------
@@ -100,6 +110,20 @@ def pdrmsd(reference, subject):
         If subject is an :class:`AtomArray` a float is returned.
         If subject is an :class:`AtomArrayStack` a :class:`ndarray`
         containing the RMSD for each model is returned.
+    
+    Warnings
+    --------
+    Internally the function uses :func:`index_distance()`.
+    For non-orthorombic boxes (at least one angle deviates from
+    90 degrees), periodic boundary conditions have to be corrected
+    prior to the computation of PDRMSDs with `periodic`set to false.
+    (e.g. with :func:`remove_pbc()`).
+    
+    See also
+    --------
+    index_distance
+    remove_pbc
+    rmsd
     """
     # Compute index pairs in reference structure -> pair_ij for j < i
     reflen = reference.array_length()
