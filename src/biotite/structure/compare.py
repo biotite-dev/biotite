@@ -80,7 +80,7 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     deviation for atoms* (PDRMSD) is a fit-free method to determine
     deviations between a structure and a preset reference.
 
-    .. math:: PDRMSD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j=1; j\neqi}^n (d_{ij} - d_{ref,ij})^2}  
+    .. math:: PDRMSD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}  
 
     Parameters
     ----------
@@ -113,7 +113,7 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     
     Warnings
     --------
-    Internally the function uses :func:`index_distance()`.
+    Internally, this function uses :func:`index_distance()`.
     For non-orthorombic boxes (at least one angle deviates from
     90 degrees), periodic boundary conditions have to be corrected
     prior to the computation of PDRMSDs with `periodic`set to false.
