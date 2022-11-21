@@ -133,7 +133,7 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     refdist = index_distance(reference, pairs, periodic=periodic, box=box)
     subjdist = index_distance(subject, pairs, periodic=periodic, box=box)
 
-    pdrmsd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/(10 * reflen)
+    pdrmsd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/reflen
     return pdrmsd
 
 def rmsf(reference, subject):

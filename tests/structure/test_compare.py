@@ -75,7 +75,7 @@ def test_pdrmsd_gmx():
     with results obtained from GROMACS 2021.5.
     """
     stack, _ = load_stack_superimpose()
-    pdrmsd = struc.pdrmsd(stack[0], stack)
+    pdrmsd = struc.pdrmsd(stack[0], stack)/10
     
     # Gromacs RMSDist:
     # echo "Protein" | \
