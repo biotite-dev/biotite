@@ -78,7 +78,8 @@ def test_pdrmsd_gmx():
     pdrmsd = struc.pdrmsd(stack[0], stack)
     
     # Gromacs RMSDist:
-    # echo "C-alpha" | gmx rmsf -s 1l2y.gro -f 1l2y.xtc -o rmsf.xvg -res                    
+    # echo "Protein" | \
+    # gmx rmsdist -f 1l2y.xtc -s 1l2y.gro -o rmsdist.xvg -sumh no -pbc no                    
     pdrmsd_gmx = np.array([
                             0.000401147, 0.125482, 0.138913, 0.138847, 0.113917, 
                             0.132915, 0.173084, 0.103089, 0.156309, 0.114694, 
