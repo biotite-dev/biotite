@@ -130,8 +130,8 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     index_i = np.repeat(np.arange(reflen), reflen)
     index_j = np.tile(np.arange(reflen), reflen)
     pairs = np.stack([index_i, index_j]).T
-    refdist = index_distance(reference, pairs)
-    subjdist = index_distance(subject, pairs)
+    refdist = index_distance(reference, pairs, periodic=periodic, box=box)
+    subjdist = index_distance(subject, pairs, periodic=periodic, box=box)
 
     pdrmsd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/(10 * reflen)
     return pdrmsd
