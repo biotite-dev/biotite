@@ -9,7 +9,7 @@ comparing multiple structures with each other.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["rmsd", "pdrmsd", "rmsf", "average"]
+__all__ = ["rmsd", "rmspd", "rmsf", "average"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
@@ -71,16 +71,16 @@ def rmsd(reference, subject):
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
-def pdrmsd(reference, subject, periodic=False, box=None):
+def rmspd(reference, subject, periodic=False, box=None):
     r"""
     Calculate the RMSD of atom pair distances for given structures 
     relative to those found in a reference structure.
 
-    Unlike the standard RMSD, the *pair distance root-mean-square 
-    deviation for atoms* (PDRMSD) is a fit-free method to determine
-    deviations between a structure and a preset reference.
+    Unlike the standard RMSD, the *root-mean-square-pairwise-deviation* 
+    (RMSPD) is a fit-free method to determine deviations between 
+    a structure and a preset reference.
 
-    .. math:: PDRMSD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}  
+    .. math:: RMSPD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}  
 
     Parameters
     ----------
@@ -105,7 +105,7 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     
     Returns
     -------
-    pdrmsd : float or ndarray, dtype=float, shape=(m,)
+    rmspd : float or ndarray, dtype=float, shape=(m,)
         Atom pair distance RMSD between subject and reference.
         If subject is an :class:`AtomArray` a float is returned.
         If subject is an :class:`AtomArrayStack` a :class:`ndarray`
@@ -115,7 +115,7 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     --------
     Internally, this function uses :func:`index_distance()`.
     For non-orthorombic boxes (at least one angle deviates from
-    90 degrees), periodic boundary conditions should to be corrected
+    90 degrees), periodic boundary conditions should be corrected
     prior to the computation of RMSPDs with `periodic` set to false
     to ensure correct results.
     (e.g. with :func:`remove_pbc()`).
@@ -134,8 +134,8 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     refdist = index_distance(reference, pairs, periodic=periodic, box=box)
     subjdist = index_distance(subject, pairs, periodic=periodic, box=box)
 
-    pdrmsd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/reflen
-    return pdrmsd
+    rmspd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/reflen
+    return rmspd
 
 def rmsf(reference, subject):
     r"""

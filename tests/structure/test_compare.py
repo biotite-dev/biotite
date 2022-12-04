@@ -34,6 +34,7 @@ def test_rmsf(stack, as_coord):
     assert struc.rmsf(struc.average(stack), stack).tolist() \
            == pytest.approx([21.21320344] * 5)
 
+@pytest.fixture
 def load_stack_superimpose():
     stack = strucio.load_structure(join(
         data_dir("structure"), "1l2y.mmtf"
@@ -43,12 +44,12 @@ def load_stack_superimpose():
     supimp, _ = struc.superimpose(stack[0], stack, atom_mask=bb_mask)
     return stack, supimp
 
-def test_rmsd_gmx():
+def test_rmsd_gmx(load_stack_superimpose):
     """
     Comparison of RMSD values computed with Biotite with results 
     obtained from GROMACS 2021.5. 
     """
-    stack, supimp = load_stack_superimpose()
+    stack, supimp = load_stack_superimpose
     rmsd = struc.rmsd(stack[0], supimp)/10
     
     # Gromacs RMSDs -> Without mass-weighting:
@@ -67,18 +68,18 @@ def test_rmsd_gmx():
     
     assert np.allclose(rmsd, rmsd_gmx, atol=1e-03)
 
-def test_pdrmsd_gmx():
+def test_rmspd_gmx(load_stack_superimpose):
     """
-    Comparison of the atom pair distance RMSD computed with Biotite
-    with results obtained from GROMACS 2021.5.
+    Comparison of the RMSPD computed with Biotite with results 
+    obtained from GROMACS 2021.5.
     """
-    stack, _ = load_stack_superimpose()
-    pdrmsd = struc.pdrmsd(stack[0], stack)/10
+    stack, _ = load_stack_superimpose
+    rmspd = struc.rmspd(stack[0], stack)/10
     
     # Gromacs RMSDist:
     # echo "Protein" | \
     # gmx rmsdist -f 1l2y.xtc -s 1l2y.gro -o rmsdist.xvg -sumh no -pbc no                    
-    pdrmsd_gmx = np.array([
+    rmspd_gmx = np.array([
         0.000401147, 0.125482, 0.138913, 0.138847, 0.113917, 
         0.132915, 0.173084, 0.103089, 0.156309, 0.114694, 
         0.12964, 0.15875, 0.12876, 0.128983, 0.137031, 
@@ -89,14 +90,14 @@ def test_pdrmsd_gmx():
         0.116638, 0.169524, 0.15953
     ])
 
-    assert np.allclose(pdrmsd, pdrmsd_gmx, atol=1e-03)
+    assert np.allclose(rmspd, rmspd_gmx, atol=1e-03)
 
-def test_rmsf_gmx():
+def test_rmsf_gmx(load_stack_superimpose):
     """
     Comparison of RMSF values computed with Biotite with results 
     obtained from GROMACS 2021.5.     
     """
-    stack, supimp = load_stack_superimpose()
+    stack, supimp = load_stack_superimpose
     ca_mask = ((stack[0].atom_name == "CA") & (stack[0].element == "C"))
     rmsf = struc.rmsf(struc.average(supimp[:, ca_mask]), supimp[:, ca_mask])/10
     
