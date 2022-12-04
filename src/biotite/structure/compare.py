@@ -115,8 +115,9 @@ def pdrmsd(reference, subject, periodic=False, box=None):
     --------
     Internally, this function uses :func:`index_distance()`.
     For non-orthorombic boxes (at least one angle deviates from
-    90 degrees), periodic boundary conditions have to be corrected
-    prior to the computation of PDRMSDs with `periodic`set to false.
+    90 degrees), periodic boundary conditions should to be corrected
+    prior to the computation of RMSPDs with `periodic` set to false
+    to ensure correct results.
     (e.g. with :func:`remove_pbc()`).
     
     See also
