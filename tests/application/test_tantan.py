@@ -42,8 +42,7 @@ def test_nucleotide(simple_matrix, use_custom_matrix):
 
     ref_mask = [True if char.islower() else False for char in seq_string]
 
-    assert len(test_mask) == len(ref_mask)
-    assert np.all(test_mask.tolist() == ref_mask)
+    assert test_mask.tolist() == ref_mask
 
 
 @pytest.mark.skipif(
@@ -66,5 +65,27 @@ def test_protein(use_custom_matrix):
 
     ref_mask = [True if char.islower() else False for char in seq_string]
 
-    assert len(test_mask) == len(ref_mask)
-    assert np.all(test_mask.tolist() == ref_mask)
+    assert test_mask.tolist() == ref_mask
+
+
+def test_multiple_sequences():
+    """
+    Test masking multiple sequences in a single run.
+    """
+    seq_strings = [
+        "CANYQVcanacanasacannercancanACAN",
+        "NEARAnearanearerearanearlyeerieear"
+    ]
+
+    sequences = [seq.ProteinSequence(seq_string) for seq_string in seq_strings]
+
+    test_masks = TantanApp.mask_repeats(sequences)
+
+    ref_masks = [
+        [True if char.islower() else False for char in seq_string]
+        for seq_string in seq_strings
+    ]
+
+    assert len(test_masks) == len(ref_masks)
+    for test_mask, ref_mask in zip(test_masks, ref_masks):
+        assert test_mask.tolist() == ref_mask
