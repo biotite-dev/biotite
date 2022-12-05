@@ -14,7 +14,7 @@ from cpython.mem cimport PyMem_Free as free
 from libc.string cimport memcpy
 
 import numpy as np
-from ..alphabet import LetterAlphabet
+from ..alphabet import LetterAlphabet, common_alphabet
 from .kmeralphabet import KmerAlphabet
 
 
@@ -339,9 +339,11 @@ cdef class KmerTable:
 
         # Check for alphabet compatibility
         if alphabet is None:
-            alphabet = _determine_common_alphabet(
-                [seq.alphabet for seq in sequences]
-            )
+            alphabet = common_alphabet((seq.alphabet for seq in sequences))
+            if alphabet is None:
+                raise ValueError(
+                    "There is no common alphabet that extends all alphabets"
+                )
         else:
             for alph in (seq.alphabet for seq in sequences):
                 if not alphabet.extends(alph):
@@ -1442,20 +1444,3 @@ def _to_kmer_mask(uint8[:] mask not None, kmer_alphabet):
             kmer_mask[i] = is_retained
     
     return np.asarray(kmer_mask)
-    
-
-def _determine_common_alphabet(alphabets):
-    """
-    Determine the common alphabet from a list of alphabets, that
-    extends all alphabets.
-    """
-    common_alphabet = alphabets[0]
-    for alphabet in alphabets[1:]:
-        if not common_alphabet.extends(alphabet):
-            if alphabet.extends(common_alphabet):
-                common_alphabet = alphabet
-            else:
-                raise ValueError(
-                    "There is no common alphabet that extends all alphabets"
-                )
-    return common_alphabet

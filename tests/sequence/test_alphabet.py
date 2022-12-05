@@ -135,6 +135,7 @@ def test_contains(alphabet_symbols, use_letter_alphabet):
         alph = seq.Alphabet(alphabet_symbols)
     assert "D" in alph
 
+
 @pytest.mark.parametrize(
     "source_alph_symbols, target_alph_symbols", 
     [
@@ -161,3 +162,39 @@ def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
     test_sequence.code = mapper[ref_sequence.code]
 
     assert test_sequence.symbols == ref_sequence.symbols
+
+
+@pytest.mark.parametrize("alphabets, common_alph", [
+    (
+        [
+            seq.NucleotideSequence.alphabet_amb,
+            seq.NucleotideSequence.alphabet_unamb,
+        ],
+        seq.NucleotideSequence.alphabet_amb
+    ),
+    (
+        [
+            seq.NucleotideSequence.alphabet_unamb,
+            seq.NucleotideSequence.alphabet_amb,
+        ],
+        seq.NucleotideSequence.alphabet_amb
+    ),
+])
+def test_common_alphabet(alphabets, common_alph):
+    """
+    Check if :func:`common_alphabet()` correctly identifies the common
+    alphabet in a simple known test cases
+    """
+    seq.common_alphabet(alphabets) == common_alph
+
+
+
+def test_common_alphabet_no_common():
+    """
+    Check if :func:`common_alphabet()` correctly identifies that no
+    common alphabet exists in a simple known test case.
+    """
+    assert seq.common_alphabet([
+        seq.NucleotideSequence.alphabet_unamb,
+        seq.ProteinSequence.alphabet
+    ]) is None
