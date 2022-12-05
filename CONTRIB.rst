@@ -10,3 +10,4 @@ CONTRIBUTORS
 - Maximilian Greil <https://github.com/MaxGreil>
 - Claude J. Rogers <https://github.com/claudejrogers>
 - Ivan Reveguk <https://github.com/edikedik>
+- Jan H. Krumbach <https://github.com/JHKru>

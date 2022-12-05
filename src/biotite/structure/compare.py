@@ -9,10 +9,11 @@ comparing multiple structures with each other.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["rmsd", "rmsf", "average"]
+__all__ = ["rmsd", "rmspd", "rmsf", "average"]
 
 import numpy as np
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
+from .geometry import index_distance
 from .util import vector_dot
 
 
@@ -70,6 +71,71 @@ def rmsd(reference, subject):
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
+def rmspd(reference, subject, periodic=False, box=None):
+    r"""
+    Calculate the RMSD of atom pair distances for given structures 
+    relative to those found in a reference structure.
+
+    Unlike the standard RMSD, the *root-mean-square-pairwise-deviation* 
+    (RMSPD) is a fit-free method to determine deviations between 
+    a structure and a preset reference.
+
+    .. math:: RMSPD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}  
+
+    Parameters
+    ----------
+    reference : AtomArray or ndarray, dtype=float, shape=(n,3)
+        The reference structure.
+        Alternatively, coordinates can be provided directly as
+        :class:`ndarray`.
+    subject : AtomArray or AtomArrayStack or ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+        Structure(s) to be compared with `reference`.
+        Alternatively, coordinates can be provided directly as
+        :class:`ndarray`.
+    periodic : bool, optional
+        If set to true, periodic boundary conditions are taken into
+        account (minimum-image convention).
+        The `box` attribute of the `atoms` parameter is used for
+        calculation.
+        An alternative box can be provided via the `box` parameter.
+        By default, periodicity is ignored.
+    box : ndarray, shape=(3,3) or shape=(m,3,3), optional
+        If this parameter is set, the given box is used instead of the
+        `box` attribute of `atoms`.
+    
+    Returns
+    -------
+    rmspd : float or ndarray, dtype=float, shape=(m,)
+        Atom pair distance RMSD between subject and reference.
+        If subject is an :class:`AtomArray` a float is returned.
+        If subject is an :class:`AtomArrayStack` a :class:`ndarray`
+        containing the RMSD for each model is returned.
+    
+    Warnings
+    --------
+    Internally, this function uses :func:`index_distance()`.
+    For non-orthorombic boxes (at least one angle deviates from
+    90 degrees), periodic boundary conditions should be corrected
+    prior to the computation of RMSPDs with `periodic` set to false
+    to ensure correct results.
+    (e.g. with :func:`remove_pbc()`).
+    
+    See also
+    --------
+    index_distance
+    remove_pbc
+    rmsd
+    """
+    # Compute index pairs in reference structure -> pair_ij for j < i
+    reflen = reference.array_length()
+    index_i = np.repeat(np.arange(reflen), reflen)
+    index_j = np.tile(np.arange(reflen), reflen)
+    pairs = np.stack([index_i, index_j]).T
+    refdist = index_distance(reference, pairs, periodic=periodic, box=box)
+    subjdist = index_distance(subject, pairs, periodic=periodic, box=box)
+
+    rmspd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/reflen
+    return rmspd
 
 def rmsf(reference, subject):
     r"""
