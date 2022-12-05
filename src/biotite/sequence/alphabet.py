@@ -324,6 +324,8 @@ class LetterAlphabet(Alphabet):
         if alphabet is self:
             return True
         elif type(alphabet) == LetterAlphabet:
+            if len(alphabet._symbols) > len(self._symbols):
+                return False
             return np.all(
                 alphabet._symbols == self._symbols[:len(alphabet._symbols)]
             )
