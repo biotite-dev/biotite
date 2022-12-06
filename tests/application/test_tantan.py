@@ -68,6 +68,9 @@ def test_protein(use_custom_matrix):
     assert test_mask.tolist() == ref_mask
 
 
+@pytest.mark.skipif(
+    is_not_installed("tantan"), reason="tantan is not installed"
+)
 def test_multiple_sequences():
     """
     Test masking multiple sequences in a single run.

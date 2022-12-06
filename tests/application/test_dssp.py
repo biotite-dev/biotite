@@ -49,10 +49,21 @@ def test_dssp(path):
     
     chain = array[array.chain_id == first_chain_id]
     sse_from_app = DsspApp.annotate_sse(chain)
-    np.set_printoptions(threshold=10000)
     # PDB uses different DSSP version -> slight differences possible
     # -> only 90% must be identical
     assert np.count_nonzero(sse_from_app == sse) / len(sse) > 0.9
+
+
+@pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
+def test_multiple_chains():
+    atoms = mmtf.get_structure(
+        mmtf.MMTFFile.read(join(data_dir("structure"), "1igy.mmtf")),
+        model=1
+    )
+    atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
+    sse = DsspApp.annotate_sse(atoms)
+    assert np.all(np.isin(sse, ["C", "H", "B", "E", "G", "I", "T", "S"])) 
+    assert len(sse) == struc.get_residue_count(atoms)
 
 
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
@@ -62,4 +73,3 @@ def test_invalid_structure():
     chain = array[array.chain_id == "T"]
     with pytest.raises(SubprocessError):
         DsspApp.annotate_sse(chain)
-
