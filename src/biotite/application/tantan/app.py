@@ -6,15 +6,15 @@ __name__ = "biotite.application.tantan"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TantanApp"]
 
+from collections.abc import Sequence as SequenceABC
 import io
 from tempfile import NamedTemporaryFile
 import numpy as np
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
-from ...sequence.sequence import Sequence
 from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
+from ...sequence.alphabet import common_alphabet
 from ...sequence.io.fasta.file import FastaFile
-from ...sequence.io.fasta.convert import set_sequence
 from ..util import map_sequence, map_matrix
 
 
@@ -23,12 +23,16 @@ MASKING_LETTER = "!"
 
 class TantanApp(LocalApp):
     r"""
-    Mask sequence reapeat regions using *tantan*. :footcite:`Frith2011`
+    Mask sequence repeat regions using *tantan*. :footcite:`Frith2011`
 
     Parameters
     ----------
-    sequence : NucleotideSequence or ProteinSequence
-        The sequence to be masked.
+    sequence : (list of) NucleotideSequence or ProteinSequence
+        The sequence(s) to be masked.
+        Either a single sequence or multiple sequences can be masked.
+        Masking multiple sequences in a single run decreases the
+        run time compared to multiple runs with a single sequence.
+        All sequences must be of the same type.
     matrix : SubstitutionMatrix, optional
         The substitution matrix to use for repeat identification.
         A sequence segment is considered to be a repeat of another
@@ -62,42 +66,69 @@ class TantanApp(LocalApp):
     def __init__(self, sequence, matrix=None, bin_path="tantan"):
         super().__init__(bin_path)
 
-        if not isinstance(sequence, Sequence):
-            raise TypeError("A 'Sequence' object is expected")
+        if isinstance(sequence, SequenceABC):
+            self._as_list = True
+            self._sequences = sequence
+        else:
+            # Convert to list of sequences anyway for consistent handling
+            self._as_list = False
+            self._sequences = [sequence]
+
+        self._is_protein = None
+        for seq in self._sequences:
+            if isinstance(seq, NucleotideSequence):
+                if self._is_protein is True:
+                    # Already protein sequences in the list
+                    raise ValueError(
+                        "List of sequences contains mixed "
+                        "nucleotide and protein sequences"
+                    )
+                self._is_protein = False
+            elif isinstance(seq, ProteinSequence):
+                if self._is_protein is False:
+                    # Already nucleotide sequences in the list
+                    raise ValueError(
+                        "List of sequences contains mixed "
+                        "nucleotide and protein sequences"
+                    )
+                self._is_protein = True
+            else:
+                raise TypeError(
+                    "A NucleotideSequence or ProteinSequence is required"
+                )
         
         if matrix is None:
             self._matrix_file = None
         else:
-            if not matrix.get_alphabet1().extends(sequence.alphabet):
+            common_alph = common_alphabet(
+                (seq.alphabet for seq in self._sequences)
+            )
+            if common_alph is None:
                 raise ValueError(
-                    "The sequence's alphabet does not fit the matrix"
+                    "There is no common alphabet within the sequences"
+                )
+            if not matrix.get_alphabet1().extends(common_alph):
+                raise ValueError(
+                    "The alphabet of the sequence(s) do not fit the matrix"
                 )
             if not matrix.is_symmetric():
                 raise ValueError("A symmetric matrix is required")
             self._matrix_file = NamedTemporaryFile(
                 "w", suffix=".mat", delete=False
             )
-        
-        if isinstance(sequence, NucleotideSequence):
-            self._is_protein=False
-            self._sequence = sequence
-            self._matrix = matrix
-        elif isinstance(sequence, ProteinSequence):
-            self._is_protein=True
-        else:
-            raise TypeError(
-                "A NucleotideSequence or ProteinSequence is required"
-            )
-        self._sequence = sequence
         self._matrix = matrix
         
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
 
     def run(self):
-        sequence_file = FastaFile()
-        set_sequence(sequence_file, self._sequence)
-        sequence_file.write(self._in_file)
+        FastaFile.write_iter(
+            self._in_file,
+            (
+                (f"sequence_{i:d}", str(seq))
+                for i, seq in enumerate(self._sequences)
+            )
+        )
         self._in_file.flush()
         if self._matrix is not None:
             self._matrix_file.write(str(self._matrix))
@@ -118,10 +149,15 @@ class TantanApp(LocalApp):
 
     def evaluate(self):
         super().evaluate()
-        masked_file = FastaFile.read(io.StringIO(self.get_stdout()))
-        masked_sequence = masked_file["sequence"]
-        array = np.frombuffer(masked_sequence.encode("ASCII"), dtype=np.ubyte)
-        self._mask = (array == MASKING_LETTER.encode("ASCII")[0])
+
+        out_file = io.StringIO(self.get_stdout())
+        self._masks = []
+        encoded_masking_letter = MASKING_LETTER.encode("ASCII")[0]
+        for _, masked_seq_string in FastaFile.read_iter(out_file):
+            array = np.frombuffer(
+                masked_seq_string.encode("ASCII"), dtype=np.ubyte
+            )
+            self._masks.append(array == encoded_masking_letter)
     
 
     def clean_up(self):
@@ -134,27 +170,36 @@ class TantanApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_mask(self):
         """
-        Get a boolean mask covering identified repeat regions of the
+        Get a boolean mask covering identified repeat regions of each
         input sequence.
 
         Returns
         -------
-        repeat_mask : ndarray, shape=(n,), dtype=bool
+        repeat_mask : (list of) ndarray, shape=(n,), dtype=bool
             A boolean mask that is true for each sequence position that
             is identified as repeat.
+            If a list of sequences were given as input, a list of masks
+            is returned instead.
         """
-        return self._mask
+        if self._as_list:
+            return self._masks
+        else:
+            return self._masks[0]
 
 
     @staticmethod
     def mask_repeats(sequence, matrix=None, bin_path="tantan"):
         """
-        Mask repeat regions of the given input sequence.
+        Mask repeat regions of the given input sequence(s).
 
         Parameters
         ----------
-        sequence : NucleotideSequence or ProteinSequence
-            The sequence to be masked.
+        sequence : (list of) NucleotideSequence or ProteinSequence
+            The sequence(s) to be masked.
+            Either a single sequence or multiple sequences can be masked.
+            Masking multiple sequences in a single run decreases the
+            run time compared to multiple runs with a single sequence.
+            All sequences must be of the same type.
         matrix : SubstitutionMatrix, optional
             The substitution matrix to use for repeat identification.
             A sequence segment is considered to be a repeat of another
@@ -165,9 +210,11 @@ class TantanApp(LocalApp):
 
         Returns
         -------
-        repeat_mask : ndarray, shape=(n,), dtype=bool
+        repeat_mask : (list of) ndarray, shape=(n,), dtype=bool
             A boolean mask that is true for each sequence position that
             is identified as repeat.
+            If a list of sequences were given as input, a list of masks
+            is returned instead.
         """
         app = TantanApp(sequence, matrix, bin_path)
         app.start()

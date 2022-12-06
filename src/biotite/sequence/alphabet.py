@@ -4,7 +4,8 @@
 
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError"]
+__all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError",
+           "common_alphabet"]
 
 import copy
 from numbers import Integral
@@ -37,7 +38,7 @@ class Alphabet(object):
     
     If an alphabet *1* contains the same symbols and the same
     symbol-code-mappings like another alphabet *2*, but alphabet *1*
-    introdues also new symbols, then alphabet *1* *extends* alphabet
+    introduces also new symbols, then alphabet *1* *extends* alphabet
     *2*.
     Per definition, every alphabet also extends itself.
     
@@ -323,6 +324,8 @@ class LetterAlphabet(Alphabet):
         if alphabet is self:
             return True
         elif type(alphabet) == LetterAlphabet:
+            if len(alphabet._symbols) > len(self._symbols):
+                return False
             return np.all(
                 alphabet._symbols == self._symbols[:len(alphabet._symbols)]
             )
@@ -533,3 +536,31 @@ class AlphabetError(Exception):
     :class:`Alphabet`.
     """
     pass
+
+
+def common_alphabet(alphabets):
+    """
+    Determine the alphabet from a list of alphabets, that
+    extends all alphabets.
+
+    Parameters
+    ----------
+    alphabets : iterable of Alphabet
+        The alphabets from which the common one should be identified.
+
+    Returns
+    -------
+    common_alphabet : Alphabet or None
+        The alphabet from `alphabets` that extends all alphabets.
+        ``None`` if no such common alphabet exists. 
+    """
+    common_alphabet = None
+    for alphabet in alphabets:
+        if common_alphabet is None:
+            common_alphabet = alphabet
+        elif not common_alphabet.extends(alphabet):
+            if alphabet.extends(common_alphabet):
+                common_alphabet = alphabet
+            else:
+                return None
+    return common_alphabet
