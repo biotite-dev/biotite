@@ -12,10 +12,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["annotate_sse"]
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord
+from .celllist import CellList
 from .geometry import distance, angle, dihedral
 from .filter import filter_amino_acids
-from .error import BadStructureError
 
 
 _r_helix = (np.deg2rad(89-12), np.deg2rad(89+12))
@@ -114,19 +113,23 @@ def annotate_sse(atom_array, chain_id=None):
         ca_coord[2 : length-1],
         ca_coord[3 : length-0]
     )
-
-    
-    sse = np.full(length, "c", dtype="U1")
     
     # Find CA that meet criteria for potential helices and strands
-    is_potential_helix = (
+    relaxed_helix = (
+        (d3i >= _d3_helix[0]) & (d3i <= _d3_helix[1])
+    ) | (
+        (ri  >= _r_helix[0] ) & ( ri <=  _r_helix[1])
+    )
+    strict_helix = (
         (d3i >= _d3_helix[0]) & (d3i <= _d3_helix[1]) &
         (d4i >= _d4_helix[0]) & (d4i <= _d4_helix[1])
     ) | (
         (ri  >= _r_helix[0] ) & ( ri <=  _r_helix[1]) &
         (ai  >= _a_helix[0] ) & ( ai <=  _a_helix[1])
     )
-    is_potential_strand = (
+
+    relaxed_strand = (d3i >= _d3_strand[0]) & (d3i <= _d3_strand[1])
+    strict_strand = (
         (d2i >= _d2_strand[0]) & (d2i <= _d2_strand[1]) &
         (d3i >= _d3_strand[0]) & (d3i <= _d3_strand[1]) &
         (d4i >= _d4_strand[0]) & (d4i <= _d4_strand[1])
@@ -139,68 +142,138 @@ def annotate_sse(atom_array, chain_id=None):
         )
     )
 
-    # Real helices are 5 consecutive helix elements
-    is_helix = np.zeros(len(sse), dtype=bool)
-    counter = 0
-    for i in range(len(sse)):
-        if is_potential_helix[i]:
-            counter += 1
-        else:
-            if counter >= 5:
-                is_helix[i-counter : i] = True
-            counter = 0
-    # Extend the helices by one at each end if CA meets extension criteria
-    i = 0
-    while i < length:
-        if is_helix[i]:
-            sse[i] = "a"
-            if (
-                d3i[i-1] >= _d3_helix[0] and d3i[i-1] <= _d3_helix[1]
-               ) or (
-                ri[i-1] >= _r_helix[0] and ri[i-1] <= _r_helix[1]
-               ):
-                    sse[i-1] = "a"
-            sse[i] = "a"
-            if (
-                d3i[i+1] >= _d3_helix[0] and d3i[i+1] <= _d3_helix[1]
-               ) or (
-                ri[i+1] >= _r_helix[0] and ri[i+1] <= _r_helix[1]
-               ):
-                    sse[i+1] = "a"
-        i += 1
+
+    print("".join(["a" if m else "." for m in strict_helix[:70]]))
+    helix_mask = _mask_consecutive(strict_helix, 5)
+    print("".join(["a" if m else "." for m in helix_mask[:70]]))
+    helix_mask = _extend_region(helix_mask, relaxed_helix)
+    print("".join(["a" if m else "." for m in helix_mask[:70]]))
+    print()
     
-    # Real strands are 5 consecutive strand elements,
-    # or shorter fragments of at least 3 consecutive strand residues,
-    # if they are in hydrogen bond proximity to 5 other residues
-    is_strand = np.zeros(len(sse), dtype=bool)
-    counter = 0
-    contacts = 0
-    for i in range(len(sse)):
-        if is_potential_strand[i]:
-            counter += 1
-            coord = ca_coord[i]
-            for strand_coord in ca_coord:
-                dist = distance(coord, strand_coord)
-                if dist >= 4.2 and dist <= 5.2:
-                    contacts += 1
-        else:
-            if counter >= 4:
-                is_strand[i-counter : i] = True
-            elif counter == 3 and contacts >= 5:
-                is_strand[i-counter : i] = True
-            counter = 0
-            contacts = 0
-    # Extend the strands by one at each end if CA meets extension criteria
-    i = 0
-    while i < len(sse):
-        if is_strand[i]:
-            sse[i] = "b"
-            if d3i[i-1] >= _d3_strand[0] and d3i[i-1] <= _d3_strand[1]:
-                sse[i-1] = "b"
-            sse[i] = "b"
-            if d3i[i+1] >= _d3_strand[0] and d3i[i+1] <= _d3_strand[1]:
-                sse[i+1] = "b"
-        i += 1
-    
+    print("".join(["b" if m else "." for m in strict_strand[:70]]))
+    strand_mask = _mask_consecutive(strict_strand, 4)
+    short_strand_mask = _mask_regions_with_contacts(
+        ca_coord,
+        _mask_consecutive(strict_strand, 3),
+        min_contacts=5, min_distance=4.2, max_distance=5.2
+    )
+    print("".join(["b" if m else "." for m in strand_mask[:70]]))
+    strand_mask = _extend_region(
+        strand_mask | short_strand_mask, relaxed_strand
+    )
+    print("".join(["b" if m else "." for m in strand_mask[:70]]))
+
+    sse = np.full(length, "c", dtype="U1")
+    sse[helix_mask] = "a"
+    sse[strand_mask] = "b"
+
+    print()
     return sse
             
+
+def _mask_consecutive(mask, number):
+    """
+    Find all regions in a mask with `number` consecutive ``True``
+    values.
+    Return a mask that is ``True`` for all indices in such a region and
+    ``False`` otherwise.
+    """
+    # An element is in a consecutive region,
+    # if it and the following `number-1` elements are True
+    # The elements `mask[-(number-1):]` cannot have the sufficient count
+    # by this definition, as they are at the end of the array
+    counts = np.zeros(len(mask) - (number-1), dtype=int)
+    for i in range(number):
+        counts[mask[i : i + len(counts)]] += 1
+    consecutive_seed = (counts == number)
+    
+    # Not only that element, but also the
+    # following `number-1` elements are in a consecutive region
+    consecutive_mask = np.zeros(len(mask), dtype=bool)
+    for i in range(number):
+        consecutive_mask[i : i + len(consecutive_seed)] |= consecutive_seed
+    
+    return consecutive_mask
+
+
+def _extend_region(base_condition_mask, extension_condition_mask):
+    """
+    Extend a ``True`` region in `base_condition_mask` by at maximum of
+    one element at each side, if such element fulfills
+    `extension_condition_mask.`
+    """
+    # This mask always marks the start
+    # of either a 'True' or 'False' region
+    # Prepend absent region to the start to capture the event,
+    # that the first element is already the start of a region
+    region_change_mask = np.diff(np.append([False], base_condition_mask))
+    
+    # These masks point to the first `False` element
+    # left and right of a 'True' region
+    # The left end is the element before the first element of a 'True' region
+    left_end_mask = region_change_mask & base_condition_mask
+    # Therefore the mask needs to be shifted to the left
+    left_end_mask = np.append(left_end_mask[1:], [False])
+    # The right end is first element of a 'False' region
+    right_end_mask = region_change_mask & ~base_condition_mask
+
+    print("".join(["E" if m else "." for m in (left_end_mask | right_end_mask)[:70]]))
+    print("".join(["R" if m else "." for m in extension_condition_mask[:70]]))
+    
+    # The 'base_condition_mask' gets additional 'True' elements
+    # at left or right ends, which meet the extension criterion
+    return base_condition_mask | (
+        (left_end_mask | right_end_mask) & extension_condition_mask
+    )
+
+
+def _mask_regions_with_contacts(coord, candidate_mask,
+                               min_contacts, min_distance, max_distance):
+    """
+    Mask regions of `candidate_mask` that have at least `min_contacts`
+    contacts with `coord` in the range `min_distance` to `max_distance`.
+    """
+    cell_list = CellList(coord, max_distance)
+    # For each candidate position,
+    # get all contacts within maximum distance
+    all_within_max_dist_indices = cell_list.get_atoms(
+        coord[candidate_mask], max_distance
+    )
+   
+    contacts = np.zeros(len(coord), dtype=int)
+    for i, atom_index in enumerate(np.where(candidate_mask)[0]):
+        within_max_dist_indices = all_within_max_dist_indices[i]
+        # Remove padding values
+        within_max_dist_indices = within_max_dist_indices[
+            within_max_dist_indices != -1
+        ]
+        # Now count all contacts within maximum distance 
+        # that also satisfy the minimum distance
+        contacts[atom_index] = np.count_nonzero(
+            distance(
+                coord[atom_index], coord[within_max_dist_indices]
+            ) > min_distance
+        )
+    #!#
+    assert np.all(contacts < 10)
+    print("".join([f"{c}" for c in contacts[:70]]))
+    #!#
+    
+    # Count the number of contacts per region
+    # These indices mark the start of either a 'True' or 'False' region
+    # Prepend absent region to the start to capture the event,
+    # that the first element is already the start of a region
+    region_change_indices = np.where(
+        np.diff(np.append([False], candidate_mask))
+    )[0]
+    # Add exclusive stop
+    region_change_indices = np.append(region_change_indices, [len(coord)])
+    output_mask = np.zeros(len(candidate_mask), dtype=bool)
+    for i in range(len(region_change_indices) - 1):
+        start = region_change_indices[i]
+        stop = region_change_indices[i+1]
+        total_contacts = np.sum(contacts[start : stop])
+        if total_contacts >= min_contacts:
+            output_mask[start : stop] = True
+    
+    return output_mask
