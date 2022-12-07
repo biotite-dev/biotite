@@ -512,6 +512,9 @@ cdef class CellList:
             :class:`ndarray`.
             By default atoms are searched in the cell of `coord`
             and directly adjacent cells (cell_radius = 1).
+        as_mask : bool, optional
+            If true, the result is returned as boolean mask, instead
+            of an index array.
         
         Returns
         -------
@@ -577,7 +580,7 @@ cdef class CellList:
         
         Returns
         -------
-        array_indices : ndarray, dtype=int32, shape=
+        array_indices : ndarray, dtype=int32, shape=(m,p)
             Indices of adjancent atoms.
         """
 
