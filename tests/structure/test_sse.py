@@ -12,8 +12,10 @@ import pytest
 
 def test_sse():
     array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
-    sse = struc.annotate_sse(array, "A")
-    sse_str = "".join(sse.tolist())
-    assert sse_str == ("caaaaaacccccccccccccbbbbbccccccbbbbccccccccccccccc"
-                       "ccccccccccccbbbbbbcccccccaaaaaaaaaccccccbbbbbccccc"
-                       "ccccccccccccbbbbbbbccccccccc")
+    test_sse = struc.annotate_sse(array, "A")
+    ref_sse = (
+        "caaaaaacccccccccccccbbbbbccccccbbbbccccccccccccccc"
+        "ccccccccccccbbbbbbcccccccaaaaaaaaaccccccbbbbbccccc"
+        "ccccccccccccbbbbbbbccccccccc"
+    )
+    assert "".join(test_sse.tolist()) == ref_sse
