@@ -15,6 +15,8 @@ import numpy as np
 from .celllist import CellList
 from .geometry import distance, angle, dihedral
 from .filter import filter_amino_acids
+from .residues import get_residue_starts
+from .integrity import check_res_id_continuity
 
 
 _r_helix = (np.deg2rad(89-12), np.deg2rad(89+12))
@@ -33,19 +35,23 @@ _d4_strand = ((12.4-1.1), (12.4+1.1))
 
 def annotate_sse(atom_array, chain_id=None):
     r"""
-    Calculate the secondary structure elements (SSE) of a
+    Calculate the secondary structure elements (SSEs) of a
     peptide chain based on the `P-SEA` algorithm.
     :footcite:`Labesse1997`
     
     The annotation is based CA coordinates only, specifically
     distances and dihedral angles.
+    Discontinuities between chains are detected by residue ID.
     
     Parameters
     ----------
     atom_array : AtomArray
         The atom array to annotate for.
+        Non-peptide residues are also allowed and obtain a ``''``
+        SSE.
     chain_id : str, optional
-        The atoms belonging to this chain are filtered and annotated.
+        The peptide atoms belonging to this chain are filtered and
+        annotated.
         DEPRECATED: By now multiple chains can be annotated at once.
         To annotate only a certain chain, filter the `atom_array` before
         giving it as input to this function.
@@ -55,9 +61,12 @@ def annotate_sse(atom_array, chain_id=None):
     -------
     sse : ndarray
         An array containing the secondary structure elements,
-        where the index corresponds to the index of the CA-filtered
-        `atom_array`. 'a' means :math:`{\alpha}`-helix, 'b' means
-        :math:`{\beta}`-strand/sheet, 'c' means coil.
+        where the index corresponds to a residue of  `atom_array`
+        (see e.g. :func:`get_residues()`).
+        ``'a'`` means :math:`{\alpha}`-helix, ``'b'`` means
+        :math:`{\beta}`-strand/sheet, ``'c'`` means coil.
+        ``''`` indicates that a residue is not an amino acid or it
+        comprises no ``CA`` atom.
     
     Notes
     -----
@@ -82,11 +91,52 @@ def annotate_sse(atom_array, chain_id=None):
      'c' 'c']
     
     """
-    # Filter all CA atoms in the relevant chain.
-    mask = filter_amino_acids(atom_array) & (atom_array.atom_name == "CA")
     if chain_id is not None:
-        mask &= atom_array.chain_id == chain_id
-    ca_coord = atom_array[mask].coord
+        # Filter all CA atoms in the relevant chain
+        atom_array = atom_array[
+            (atom_array.chain_id == chain_id) & filter_amino_acids(atom_array)
+        ]
+    
+
+    residue_starts = get_residue_starts(atom_array)
+    # Sort CA coord into the coord array at the respective residue index
+    # If a residue has no CA, e.g. because it is not an amino acid,
+    # the coordinates for that residue remain NaN
+    ca_coord = np.full((len(residue_starts), 3), np.nan, dtype=np.float32)
+    ca_indices = np.where(
+        filter_amino_acids(atom_array) & (atom_array.atom_name == "CA")
+    )[0]
+    ca_coord[
+        np.searchsorted(residue_starts, ca_indices, "right") - 1
+    ] = atom_array.coord[ca_indices]
+
+    if len(ca_coord) <= 5:
+        # The number of atoms is too small #
+        # to measure the distances/angles
+        # -> Return an SSE array where each amino acid is 'coil'
+        sse = np.full(len(ca_coord), "c", dtype="U1")
+        # Residues where coord are NaN do not belong to amino acids
+        # (or at least they have no CA)
+        sse[np.isnan(ca_coord).any(axis=-1)] = ""
+        return sse
+
+    # Add virtual residues w/o CA coord at chain discontinuity indices
+    # This ensures that such discontinuities are recognized for the
+    # purpose of geometric measurements
+    # -> the distances/angles spanning discontinuities are NaN
+    discont_indices = check_res_id_continuity(atom_array)
+    discont_res_indices = np.searchsorted(
+        residue_starts, discont_indices, "right"
+    ) - 1
+    ca_coord = np.insert(
+        ca_coord, discont_res_indices,
+        np.full((len(discont_res_indices),3), np.nan), axis=0
+    )
+    # Later the SSE for virtual residues are removed again
+    # via this mask
+    no_virtual_mask = np.ones(len(residue_starts), dtype=bool)
+    no_virtual_mask = np.insert(no_virtual_mask, discont_res_indices, False)
+
     length = len(ca_coord)
 
 
@@ -143,32 +193,28 @@ def annotate_sse(atom_array, chain_id=None):
     )
 
 
-    print("".join(["a" if m else "." for m in strict_helix[:70]]))
     helix_mask = _mask_consecutive(strict_helix, 5)
-    print("".join(["a" if m else "." for m in helix_mask[:70]]))
     helix_mask = _extend_region(helix_mask, relaxed_helix)
-    print("".join(["a" if m else "." for m in helix_mask[:70]]))
-    print()
     
-    print("".join(["b" if m else "." for m in strict_strand[:70]]))
     strand_mask = _mask_consecutive(strict_strand, 4)
     short_strand_mask = _mask_regions_with_contacts(
         ca_coord,
         _mask_consecutive(strict_strand, 3),
         min_contacts=5, min_distance=4.2, max_distance=5.2
     )
-    print("".join(["b" if m else "." for m in strand_mask[:70]]))
     strand_mask = _extend_region(
         strand_mask | short_strand_mask, relaxed_strand
     )
-    print("".join(["b" if m else "." for m in strand_mask[:70]]))
+
 
     sse = np.full(length, "c", dtype="U1")
     sse[helix_mask] = "a"
     sse[strand_mask] = "b"
-
-    print()
-    return sse
+    # Residues where coord are NaN do not belong to amino acids
+    # (or at least they have no CA)
+    sse[np.isnan(ca_coord).any(axis=-1)] = ""
+    # Remove SSE for virtual atoms and return
+    return sse[no_virtual_mask]
             
 
 def _mask_consecutive(mask, number):
@@ -216,9 +262,6 @@ def _extend_region(base_condition_mask, extension_condition_mask):
     left_end_mask = np.append(left_end_mask[1:], [False])
     # The right end is first element of a 'False' region
     right_end_mask = region_change_mask & ~base_condition_mask
-
-    print("".join(["E" if m else "." for m in (left_end_mask | right_end_mask)[:70]]))
-    print("".join(["R" if m else "." for m in extension_condition_mask[:70]]))
     
     # The 'base_condition_mask' gets additional 'True' elements
     # at left or right ends, which meet the extension criterion
@@ -233,7 +276,15 @@ def _mask_regions_with_contacts(coord, candidate_mask,
     Mask regions of `candidate_mask` that have at least `min_contacts`
     contacts with `coord` in the range `min_distance` to `max_distance`.
     """
-    cell_list = CellList(coord, max_distance)
+    potential_contact_coord = coord[~np.isnan(coord).any(axis=-1)]
+    if len(potential_contact_coord) == 0:
+        # No potential contacts -> no contacts
+        # -> no residue can satisfy 'min_contacts'
+        return np.zeros(len(candidate_mask), dtype=bool)
+    
+    cell_list = CellList(
+        potential_contact_coord, max_distance
+    )
     # For each candidate position,
     # get all contacts within maximum distance
     all_within_max_dist_indices = cell_list.get_atoms(
@@ -251,13 +302,10 @@ def _mask_regions_with_contacts(coord, candidate_mask,
         # that also satisfy the minimum distance
         contacts[atom_index] = np.count_nonzero(
             distance(
-                coord[atom_index], coord[within_max_dist_indices]
+                coord[atom_index],
+                potential_contact_coord[within_max_dist_indices]
             ) > min_distance
         )
-    #!#
-    assert np.all(contacts < 10)
-    print("".join([f"{c}" for c in contacts[:70]]))
-    #!#
     
     # Count the number of contacts per region
     # These indices mark the start of either a 'True' or 'False' region
