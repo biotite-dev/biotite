@@ -238,7 +238,7 @@ cdef class CellList:
         
         Returns
         -------
-        matrix : ndarray, dtype=bool
+        matrix : ndarray, dtype=bool, shape=(n,n)
             An *n x n* adjacency matrix.
             If a `selection` was given to the constructor of the
             :class:`CellList`, the rows and columns corresponding to
@@ -324,13 +324,13 @@ cdef class CellList:
         
         Returns
         -------
-        indices : ndarray, dtype=int32, shape=(n,) or shape=(m,n)
+        indices : ndarray, dtype=int32, shape=(p,) or shape=(m,p)
             The indices of the atom array, where the atoms are in the
             defined `radius` around `coord`.
             If `coord` contains multiple positions, this return value is
             two-dimensional with trailing `-1` values for empty values.
             Only returned with `as_mask` set to false.
-        mask : ndarray, dtype=bool, shape=(m,p) or shape=(p,)
+        mask : ndarray, dtype=bool, shape=(m,n) or shape=(n,)
             Same as `indices`, but as boolean mask.
             The values are true for atoms in the atom array,
             that are in the defined vicinity.
@@ -407,6 +407,9 @@ cdef class CellList:
         cdef int[:,:] all_indices
         cdef int[:,:] indices
         cdef float32[:,:] coord_v
+
+        if len(coord) == 0:
+            return _empty_result(as_mask)
         
         # Handle periodicity for the input coordinates
         if self._periodic:
@@ -518,13 +521,13 @@ cdef class CellList:
         
         Returns
         -------
-        indices : ndarray, dtype=int32, shape=(n,) or shape=(m,n)
+        indices : ndarray, dtype=int32, shape=(p,) or shape=(m,p)
             The indices of the atom array, where the atoms are in the
             defined `radius` around `coord`.
             If `coord` contains multiple positions, this return value is
             two-dimensional with trailing `-1` values for empty values.
             Only returned with `as_mask` set to false.
-        mask : ndarray, dtype=bool, shape=(m,p) or shape=(p,)
+        mask : ndarray, dtype=bool, shape=(m,n) or shape=(n,)
             Same as `indices`, but as boolean mask.
             The values are true for atoms in the atom array,
             that are in the defined vicinity.
@@ -545,6 +548,9 @@ cdef class CellList:
         # This function is a thin wrapper around the private method
         # with the same name, with addition of handling periodicty
         # and the ability to return a mask instead of indices
+
+        if len(coord) == 0:
+            return _empty_result(as_mask)
 
         # Handle periodicity for the input coordinates
         if self._periodic:
@@ -743,6 +749,17 @@ cdef class CellList:
                 return False
         except AttributeError:
             return False
+
+
+def _empty_result(as_mask):
+    """
+    Create return value for :func:`get_atoms()` and
+    :func:`get_atoms_in_cells()`, if no coordiantes are given.
+    """
+    if as_mask:
+        return np.array([], dtype=bool)
+    else:
+        return np.array([], dtype=np.int32)
 
 
 def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
