@@ -46,7 +46,7 @@ cdef class CellList:
     ----------
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
         The :class:`AtomArray` to create the :class:`CellList` for.
-        Alternatively the atom coordiantes are accepted directly.
+        Alternatively the atom coordinates are accepted directly.
         In this case `box` must be set, if `periodic` is true.
     cell_size : float
         The coordinate interval each cell has for x, y and z axis.
@@ -679,7 +679,7 @@ cdef class CellList:
         # Handle periodicity for the output indices
         if self._periodic:
             # Map indices of repeated coordinates to original
-            # coordinates, i.e. the coordiantes in the central box
+            # coordinates, i.e. the coordinates in the central box
             # -> Remainder of dividing index by original array length
             # Furthermore this ensures, that the indices have valid
             # values for '_as_mask()'
@@ -754,7 +754,7 @@ cdef class CellList:
 def _empty_result(as_mask):
     """
     Create return value for :func:`get_atoms()` and
-    :func:`get_atoms_in_cells()`, if no coordiantes are given.
+    :func:`get_atoms_in_cells()`, if no coordinates are given.
     """
     if as_mask:
         return np.array([], dtype=bool)
