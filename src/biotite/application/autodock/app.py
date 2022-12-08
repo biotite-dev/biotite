@@ -45,6 +45,8 @@ class VinaApp(LocalApp):
         By default, the receptor has no flexibility.
     bin_path : str, optional
         Path to the *Vina* binary.
+    temp_dir : str, optional
+        Path that will be used instead of /tmp for creating temporary files.
 
     Examples
     --------
@@ -63,7 +65,7 @@ class VinaApp(LocalApp):
     ... )
     """
     def __init__(self, ligand, receptor, center, size, flexible=None,
-                 bin_path="vina"):
+                 bin_path="vina", temp_dir=None):
         super().__init__(bin_path)
 
         if ligand.bonds is None:
@@ -88,16 +90,16 @@ class VinaApp(LocalApp):
             ))
         
         self._ligand_file  = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
+            "w", suffix=".pdbqt", delete=False, dir=temp_dir
         )
         self._receptor_file  = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
+            "w", suffix=".pdbqt", delete=False, dir=temp_dir
         )
         self._receptor_flex_file  = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
+            "w", suffix=".pdbqt", delete=False, dir=temp_dir
         )
         self._out_file  = NamedTemporaryFile(
-            "r", suffix=".pdbqt", delete=False
+            "r", suffix=".pdbqt", delete=False, dir=temp_dir
         )
     
     @requires_state(AppState.CREATED)
