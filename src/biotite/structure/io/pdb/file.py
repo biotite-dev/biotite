@@ -20,8 +20,6 @@ from ...filter import (
     filter_solvent,
 )
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
-import copy
-from warnings import warn
 
 # slice objects for readability
 # ATOM/HETATM
@@ -420,7 +418,9 @@ class PDBFile(TextFile):
                     atom_name = array.atom_name[idx]
                     array.element[idx] = guess_element(atom_name)
                     rep_num += 1
-            warn("{} elements were guessed from atom_name.".format(rep_num))
+            warnings.warn(
+                "{} elements were guessed from atom_name.".format(rep_num)
+            )
         
         # Fill in coordinates
         if isinstance(array, AtomArray):
@@ -563,9 +563,9 @@ class PDBFile(TextFile):
         else:
             max_atoms, max_residues = 99999, 9999
         if array.array_length() > max_atoms:
-            warn(f"More then {max_atoms:,} atoms per model")
+            warnings.warn(f"More then {max_atoms:,} atoms per model")
         if (array.res_id > max_residues).any():
-            warn(f"Residue IDs exceed {max_residues:,}")
+            warnings.warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
             raise ValueError("Coordinates contain 'NaN' values")
         if any([len(name) > 1 for name in array.chain_id]):
