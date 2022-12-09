@@ -45,7 +45,7 @@ def check_id_continuity(array):
     
     Returns
     -------
-    discontinuity : ndarray, dtype=bool
+    discontinuity : ndarray, dtype=int
         Contains the indices of atoms after a discontinuity
     """
     warnings.warn(
@@ -70,7 +70,7 @@ def check_atom_id_continuity(array):
     
     Returns
     -------
-    discontinuity : ndarray, dtype=bool
+    discontinuity : ndarray, dtype=int
         Contains the indices of atoms after a discontinuity
     """
     ids = array.atom_id
@@ -92,7 +92,7 @@ def check_res_id_continuity(array):
     
     Returns
     -------
-    discontinuity : ndarray, dtype=bool
+    discontinuity : ndarray, dtype=int
         Contains the indices of atoms after a discontinuity
     """
     ids = array.res_id
@@ -119,7 +119,7 @@ def check_bond_continuity(array, min_len=1.2, max_len=1.8):
 
     Returns
     -------
-    discontinuity : ndarray, dtype=bool
+    discontinuity : ndarray, dtype=int
          Contains the indices of atoms after a discontinuity.
     """
     warnings.warn(
@@ -182,7 +182,7 @@ def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
 
     Returns
     -------
-    discontinuity : ndarray, dtype=bool
+    discontinuity : ndarray, dtype=int
          Contains the indices of atoms after a discontinuity.
 
     See Also
@@ -218,7 +218,7 @@ def check_duplicate_atoms(array):
     
     Returns
     -------
-    duplicate : ndarray, dtype=bool
+    duplicate : ndarray, dtype=int
         Contains the indices of duplicate atoms.
         The first occurence of an atom is not counted as duplicate.
     """
@@ -258,7 +258,7 @@ def check_in_box(array):
     
     Returns
     -------
-    outside : ndarray, dtype=bool
+    outside : ndarray, dtype=int
         Contains the indices of atoms outside the atom array's box.
     """
     if array.box is None:

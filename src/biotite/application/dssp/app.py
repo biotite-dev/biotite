@@ -96,13 +96,15 @@ class DsspApp(LocalApp):
                 sse_start = i+1
         if sse_start is None:
             raise ValueError("DSSP file does not contain SSE records")
-        lines = [line for line in lines[sse_start:] if len(line) != 0]
+        # Remove "!" for missing residues
+        lines = [
+            line for line in lines[sse_start:]
+            if len(line) != 0 and line[13] != "!"
+        ]
         self._sse = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters
         for i, line in enumerate(lines):
             self._sse[i] = line[16]
-        # Remove "!" for missing residues
-        self._sse = self._sse[self._sse != "!"]
         self._sse[self._sse == " "] = "C"
     
     def clean_up(self):

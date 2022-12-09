@@ -135,3 +135,22 @@ def test_selection():
     test_near_atoms = array[cell_list.get_atoms(array.coord[0], 20.0)]
 
     assert test_near_atoms == ref_near_atoms
+
+
+def test_empty_coordinates():
+    """
+    Test whether empty input coordinates result in an empty output
+    array/mask.
+    """
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    cell_list = struc.CellList(array, cell_size=10)
+    
+    for method in (
+        struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells
+    ):
+        indices = method(cell_list, np.array([]), 1, as_mask=False)
+        mask = method(cell_list, np.array([]), 1, as_mask=True)
+        assert len(indices) == 0
+        assert len(mask) == 0
+        assert indices.dtype == np.int32
+        assert mask.dtype == bool
