@@ -8,7 +8,7 @@ __all__ = ["PDBFile"]
 
 import warnings
 import numpy as np
-from ...atoms import AtomArray, AtomArrayStack
+from ...atoms import AtomArray, AtomArrayStack, repeat
 from ...bonds import BondList, connect_via_residue_names
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
@@ -19,7 +19,9 @@ from ...filter import (
     filter_highest_occupancy_altloc,
     filter_solvent,
 )
+from ...util import matrix_rotate
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
+
 
 # slice objects for readability
 # ATOM/HETATM
@@ -56,6 +58,7 @@ class PDBFile(TextFile):
     This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
+    Additionally, *REMARK* records can be read
     
     See also
     --------
@@ -81,6 +84,64 @@ class PDBFile(TextFile):
         # than the required 80 characters
         file.lines = [line.ljust(80) for line in file.lines]
         return file
+    
+
+    def get_remark(self, number):
+        """
+        Get the lines containing the *REMARK* records with the given
+        `number`.
+
+        Parameters
+        ----------
+        number : int
+            The *REMARK* number, i.e. the `XXX` in ``REMARK XXX``.
+        
+        Returns
+        -------
+        remark_lines : None or list of str
+            The content of the selected *REMARK* lines.
+            Each line is an element of this list.
+            The ``REMARK XXX `` part of each line is omitted.
+            Furthermore, the first line, which always must be empty, is
+            not included.
+            ``None`` is returned, if the selected *REMARK* records do not
+            exist in the file.
+
+        Examples
+        --------
+
+        >>> import os.path
+        >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
+        >>> remarks = file.get_remark(900)
+        >>> print("\n".join(remarks))
+        RELATED ENTRIES                                                      
+        RELATED ID: 5292   RELATED DB: BMRB                                  
+        BMRB 5292 IS CHEMICAL SHIFTS FOR TC5B IN BUFFER AND BUFFER           
+        CONTAINING 30 VOL-% TFE.                                             
+        RELATED ID: 1JRJ   RELATED DB: PDB                                   
+        1JRJ IS AN ANALAGOUS C-TERMINAL STRUCTURE.
+        >>> nonexistent_remark = file.get_remark(999)
+        >>> print(nonexistent_remark)
+        None
+        """
+        CONTENT_START_COLUMN = 11
+
+        # in case a non-integer is accidentally given
+        number = int(number)
+        if number < 0 or number > 999:
+            raise ValueError("The number must be in range 0-999")
+        
+        remark_string = f"REMARK {number:>d}"
+        # Find lines and omit ``REMARK XXX `` part
+        remark_lines = [
+            line[CONTENT_START_COLUMN:] for line in self.lines
+            if line.startswith(remark_string)
+        ]
+        if len(remark_lines) == 0:
+            return None
+        # Remove first empty line
+        remark_lines = remark_lines[1:]
+        return remark_lines
 
 
     def get_model_count(self):
@@ -107,6 +168,7 @@ class PDBFile(TextFile):
         else:
             return model_count
     
+
     def get_coord(self, model=None):
         """
         Get only the coordinates of the PDB file.
@@ -243,6 +305,7 @@ class PDBFile(TextFile):
                 coord[i,1] = float(line[38:46])
                 coord[i,2] = float(line[46:54])
             return coord
+
 
     def get_structure(self, model=None, altloc="first", extra_fields=[],
                       include_bonds=False):
@@ -504,6 +567,7 @@ class PDBFile(TextFile):
         
         return array
 
+
     def set_structure(self, array, hybrid36=False):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
@@ -668,6 +732,99 @@ class PDBFile(TextFile):
             self._set_bonds(
                 BondList(array.array_length(), bond_array), atom_id
             )
+    
+
+    def list_assemblies(self):
+        # Get remarks listing available assemblies
+        remark_lines = self.get_remark(350)
+        if remark_lines is None:
+            raise InvalidFileError(
+                "File does not contain assembly information (REMARK 300)"
+            )
+        return [
+            assembly_id.strip() 
+            for assembly_id in remark_lines[0][12:].split(",")
+        ]
+        
+    
+    def get_assembly(self, assembly_id=None, model=None, altloc="first",
+                     extra_fields=[], include_bonds=False):
+        # Get base structure
+        structure = self.get_structure(
+            model,
+            altloc,
+            extra_fields,
+            include_bonds,
+        )
+
+        # Get lines containing transformations for chosen assembly
+        remark_lines = self.get_remark(350)
+        if remark_lines is None:
+            raise InvalidFileError(
+                "File does not contain assembly information (REMARK 350)"
+            )
+        # Get lines corresponding to selected assembly ID
+        assembly_start_i = None
+        assembly_stop_i = None
+        for i, line in enumerate(remark_lines):
+            if line.startswith("BIOMOLECULE"):
+                current_assembly_id = line[12:].strip()
+                if assembly_start_i is not None:
+                    # Start was already found -> this is the next entry
+                    # -> this is the stop
+                    assembly_stop_i = i
+                    break
+                if current_assembly_id == assembly_id or assembly_id is None:
+                    assembly_start_i = i
+        # In case of the final assembly of the file,
+        # the 'stop' is the end of REMARK 350 lines
+        assembly_stop_i = len(remark_lines) if assembly_stop_i is None else i
+        if assembly_start_i is None:
+            if assembly_id is None:
+                raise InvalidFileError(
+                    "File does not transformation expression for assemblies"
+                )
+            else:
+                raise IndexError(
+                    f"The assembly ID '{assembly_id}' is not found"
+                )
+        assembly_lines = remark_lines[assembly_start_i : assembly_stop_i]
+
+        # Get transformations for a set of chains
+        chain_set_start_indices = [
+            i for i, line in enumerate(assembly_lines)
+            if line.startswith("APPLY THE FOLLOWING TO CHAINS")
+        ]
+        # Add exclusive stop at end of records
+        chain_set_start_indices.append(len(assembly_lines))
+        assembly = None
+        for i in range(len(chain_set_start_indices) - 1):
+            start = chain_set_start_indices[i]
+            stop = chain_set_start_indices[i+1]
+            affected_chain_ids = [
+                chain_id.strip() 
+                for chain_id in assembly_lines[start][30:].split(",")
+            ]
+            # Parse transformations from BIOMT lines
+            rotations, translations = _parse_transformations(
+                assembly_lines[start + 1 : stop]
+            )
+            # Filter affected chains
+            sub_structure = structure[
+                ..., np.isin(structure.chain_id, affected_chain_ids)
+            ]
+            sub_assembly = _apply_transformations(
+                sub_structure, rotations, translations
+            )
+            # Merge the chains with IDs for this transformation
+            # with chains from other transformations
+            if assembly is None:
+                assembly = sub_assembly
+            else:
+                assembly += sub_assembly
+
+        return assembly
+
 
     def _get_model_length(self, model_start_i, atom_line_i):
         """
@@ -691,6 +848,7 @@ class PDBFile(TextFile):
                     f"but model 1 has {length} atoms, must be equal"
                 )
         return length
+
 
     def _get_bonds(self, atom_ids):
         conect_lines = [line for line in self.lines
@@ -722,6 +880,7 @@ class PDBFile(TextFile):
         # is equal to the length of the AtomArray
         return BondList(len(atom_ids), np.array(bonds, dtype=np.uint32))
 
+
     def _set_bonds(self, bond_list, atom_ids):
         # Bond type is unused since PDB does not support bond orders
         bonds, _ = bond_list.get_all_bonds()
@@ -745,3 +904,60 @@ class PDBFile(TextFile):
                     self.lines.append(line)
             if n_added > 0:
                 self.lines.append(line)
+
+
+def _parse_transformations(lines):
+    """
+    Parse the rotation and translation transformations from
+    *REMARK* 290 or 350.
+    Return as array of matrices and vectors respectively
+    """
+    # Each transformation requires 3 lines for the (x,y,z) components
+    if len(lines) % 3 != 0:
+        raise InvalidFileError("Invalid number of transformation vectors")
+    n_transformations = len(lines) // 3
+
+    rotations = np.zeros((n_transformations, 3, 3), dtype=float)
+    translations = np.zeros((n_transformations, 3), dtype=float)
+
+    transformation_i = 0
+    component_i = 0
+    for line in lines:
+        # The first two elements (component and
+        # transformation index) are not used
+        transformations = [float(e) for e in line.split()[2:]]
+        if len(transformations) != 4:
+            raise InvalidFileError(
+                "Invalid number of transformation vector elements"
+            )
+        rotations[transformation_i, component_i, :] = transformations[:3]
+        translations[transformation_i, component_i] = transformations[3]
+
+        component_i += 1
+        if component_i == 3:
+            # All (x,y,z) components were parsed
+            # -> head to the next transformation 
+            transformation_i += 1
+            component_i = 0
+    
+    return rotations, translations
+
+
+def _apply_transformations(structure, rotations, translations):
+    """
+    Get subassembly by applying the given transformations to the input
+    structure containing affected chains.
+    """
+    # Additional first dimesion for 'structure.repeat()'
+    assembly_coord = np.zeros((len(rotations),) + structure.coord.shape)
+
+    # Apply corresponding transformation for each copy in the assembly
+    for i, (rotation, translation) in enumerate(zip(rotations, translations)):
+        coord = structure.coord
+        # Rotate
+        coord = matrix_rotate(coord, rotation)
+        # Translate
+        coord += translation
+        assembly_coord[i] = coord
+
+    return repeat(structure, assembly_coord)
