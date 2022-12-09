@@ -776,7 +776,6 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
             operations = _parse_operation_expression(op_expr)
             asym_ids = asym_id_expr.split(",")
             # Filter affected asym IDs
-            sub_structure = structure
             sub_structure = structure[
                 ..., np.isin(structure.label_asym_id, asym_ids)
             ]
