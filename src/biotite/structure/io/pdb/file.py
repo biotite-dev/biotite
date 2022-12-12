@@ -801,13 +801,28 @@ class PDBFile(TextFile):
         for i in range(len(chain_set_start_indices) - 1):
             start = chain_set_start_indices[i]
             stop = chain_set_start_indices[i+1]
-            affected_chain_ids = [
-                chain_id.strip() 
-                for chain_id in assembly_lines[start][30:].split(",")
-            ]
+            # Read affected chain IDs from the following line(s)
+            affected_chain_ids = []
+            transform_start = None
+            for j, line in enumerate(assembly_lines[start : stop]):
+                if line.startswith("APPLY THE FOLLOWING TO CHAINS:") or \
+                   line.startswith("                   AND CHAINS:"):
+                        affected_chain_ids += [
+                            chain_id.strip() 
+                            for chain_id in line[30:].split(",")
+                        ]
+                else:
+                    # Chain specification has finished
+                    # BIOMT lines start directly after chain specification
+                    transform_start = j
+                    break
             # Parse transformations from BIOMT lines
+            if transform_start is None:
+                raise InvalidFileError(
+                    "No 'BIOMT' records found for chosen assembly"
+                )
             rotations, translations = _parse_transformations(
-                assembly_lines[start + 1 : stop]
+                assembly_lines[transform_start + 1 : stop]
             )
             # Filter affected chains
             sub_structure = structure[
@@ -824,6 +839,37 @@ class PDBFile(TextFile):
                 assembly += sub_assembly
 
         return assembly
+    
+
+    def get_symmetry_mates(self, model=None, altloc="first",
+                           extra_fields=[], include_bonds=False):
+        """
+        Build a structure model containing all symmetric copies
+        of the structure within a unit cell.
+        """
+        # Get base structure
+        structure = self.get_structure(
+            model,
+            altloc,
+            extra_fields,
+            include_bonds,
+        )
+        # Get lines containing transformations for crystallographic symmetry
+        remark_lines = self.get_remark(290)
+        if remark_lines is None:
+            raise InvalidFileError(
+                "File does not contain crystallographic symmetry "
+                "information (REMARK 350)"
+            )
+        transform_lines = [
+            line for line in remark_lines if line.startswith("  SMTRY")
+        ]
+        rotations, translations = _parse_transformations(
+            transform_lines
+        )
+        return _apply_transformations(
+            structure, rotations, translations
+        )
 
 
     def _get_model_length(self, model_start_i, atom_line_i):
