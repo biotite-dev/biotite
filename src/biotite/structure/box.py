@@ -19,8 +19,7 @@ from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
 from .util import vector_dot
-from .residues import get_residue_starts
-from .atoms import AtomArray, AtomArrayStack
+from .atoms import repeat
 from .error import BadStructureError
 
 
@@ -230,36 +229,18 @@ def repeat_box(atoms, amount=1):
      1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1]
     """
     if atoms.box is None:
-        raise TypeError("Structure has no box")
-    if not isinstance(amount, Integral):
-        raise TypeError("The amount must be an integer")
-    box_count = (1 + 2 * amount) ** 3
-    if isinstance(atoms, AtomArray):
-        repeat_atoms = AtomArray(
-            box_count * atoms.array_length()
-        )
-    elif isinstance(atoms, AtomArrayStack):
-        repeat_atoms = AtomArrayStack(
-            atoms.stack_depth(), box_count * atoms.array_length()
-        )
-    else:
-        raise TypeError("An atom array or stack is required")
-    
-    repeat_atoms.box = atoms.box.copy()
-    if atoms.bonds is not None:
-        repeat_bonds = atoms.bonds.copy()
-        # Repeat the bonds list 'box_count' times
-        for i in range(box_count-1):
-            repeat_bonds += repeat_bonds
-        repeat_atoms.bonds = atoms.repeat_bonds
-    for category in atoms.get_annotation_categories():
-        annot_array = atoms.get_annotation(category)
-        # The atoms have the same annotation in all boxes
-        repeat_atoms.set_annotation(category, np.tile(annot_array, box_count))
+        raise BadStructureError("Structure has no box")
     
     repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box)
-    repeat_atoms.coord = repeat_coord
-    return repeat_atoms, indices
+    # Unroll repeated coordinates for input to 'repeat()'
+    if repeat_coord.ndim == 2:
+        repeat_coord = repeat_coord.reshape(-1, atoms.array_length(), 3)
+    else: # ndim == 3
+        repeat_coord = repeat_coord.reshape(
+            atoms.stack_depth(), -1, atoms.array_length(), 3
+        )
+        repeat_coord = np.swapaxes(repeat_coord, 0, 1)
+    return repeat(atoms, repeat_coord), indices
 
 
 def repeat_box_coord(coord, box, amount=1):
@@ -286,13 +267,13 @@ def repeat_box_coord(coord, box, amount=1):
 
     Returns
     -------
-    repeated : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
-        The repeated coordinates, with the same shape as the input
+    repeated : ndarray, dtype=float, shape=(p,3) or shape=(m,p,3)
+        The repeated coordinates, with the same dimension as the input
         `coord`.
         Includes the original coordinates (central box) in the beginning
         of the array.
-    indices : ndarray, dtype=int, shape=(n,3)
-        Indices to the coordiantes in the original array.
+    indices : ndarray, dtype=int, shape=(p,3)
+        Indices to the coordinates in the original array.
         Equal to
         ``numpy.tile(np.arange(coord.shape[-2]), (1 + 2 * amount) ** 3)``.
     """
