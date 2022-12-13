@@ -87,7 +87,7 @@ class PDBFile(TextFile):
     
 
     def get_remark(self, number):
-        """
+        r"""
         Get the lines containing the *REMARK* records with the given
         `number`.
 
@@ -180,7 +180,7 @@ class PDBFile(TextFile):
             2D coordinate array from the atoms corresponding to the
             given model number (starting at 1).
             Negative values are used to index models starting from the
-            last model insted of the first model.
+            last model instead of the first model.
             If this parameter is omitted, an 2D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
@@ -322,7 +322,7 @@ class PDBFile(TextFile):
             :class:`AtomArray` from the atoms corresponding to the given
             model number (starting at 1).
             Negative values are used to index models starting from the
-            last model insted of the first model.
+            last model instead of the first model.
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
@@ -735,8 +735,28 @@ class PDBFile(TextFile):
     
 
     def list_assemblies(self):
+        """
+        List the biological assemblies that are available for the
+        structure in the given file.
+
+        This function receives the data from the ``REMARK 300`` records
+        in the file.
+        Consequently, this remark must be present in the file.
+
+        Returns
+        -------
+        assemblies : list of str
+            A list that contains the available assembly IDs.
+        
+        Examples
+        --------
+        >>> import os.path
+        >>> file = PDBFile.read(os.path.join(path_to_structures, "1f2n.pdb"))
+        >>> print(file.list_assemblies())
+        ['1']
+        """
         # Get remarks listing available assemblies
-        remark_lines = self.get_remark(350)
+        remark_lines = self.get_remark(300)
         if remark_lines is None:
             raise InvalidFileError(
                 "File does not contain assembly information (REMARK 300)"
@@ -749,6 +769,64 @@ class PDBFile(TextFile):
     
     def get_assembly(self, assembly_id=None, model=None, altloc="first",
                      extra_fields=[], include_bonds=False):
+        """
+        Build the given biological assembly.
+
+        This function receives the data from ``REMARK 350`` records in
+        the file.
+        Consequently, this remark must be present in the file.
+
+        Parameters
+        ----------
+        assembly_id : str
+            The assembly to build.
+            Available assembly IDs can be obtained via
+            :func:`list_assemblies()`.
+        model : int, optional
+            If this parameter is given, the function will return an
+            :class:`AtomArray` from the atoms corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model instead of the first model.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
+        altloc : {'first', 'occupancy', 'all'}
+            This parameter defines how *altloc* IDs are handled:
+                - ``'first'`` - Use atoms that have the first
+                  *altloc* ID appearing in a residue.
+                - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                  with the highest occupancy for a residue.
+                - ``'all'`` - Use all atoms.
+                  Note that this leads to duplicate atoms.
+                  When this option is chosen, the ``altloc_id``
+                  annotation array is added to the returned structure.
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the output array or stack.
+            These are valid values:
+            ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+            ``'charge'``.
+        include_bonds : bool, optional
+            If set to true, a :class:`BondList` will be created for the
+            resulting :class:`AtomArray` containing the bond information
+            from the file.
+            All bonds have :attr:`BondType.ANY`, since the PDB format
+            does not support bond orders.
+
+        Returns
+        -------
+        assembly : AtomArray or AtomArrayStack
+            The assembly.
+            The return type depends on the `model` parameter.
+        
+        Examples
+        --------
+
+        >>> import os.path
+        >>> file = PDBFile.read(os.path.join(path_to_structures, "1f2n.pdb"))
+        >>> assembly = file.get_assembly(model=1)
+        """
         # Get base structure
         structure = self.get_structure(
             model,
@@ -845,7 +923,66 @@ class PDBFile(TextFile):
                            extra_fields=[], include_bonds=False):
         """
         Build a structure model containing all symmetric copies
-        of the structure within a unit cell.
+        of the structure within a single unit cell, given by the space
+        group.
+
+        This function receives the data from ``REMARK 290`` records in
+        the file.
+        Consequently, this remark must be present in the file, which is
+        usually only true for crystal structures.
+
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return an
+            :class:`AtomArray` from the atoms corresponding to the given
+            model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model instead of the first model.
+            If this parameter is omitted, an :class:`AtomArrayStack`
+            containing all models will be returned, even if the
+            structure contains only one model.
+        altloc : {'first', 'occupancy', 'all'}
+            This parameter defines how *altloc* IDs are handled:
+                - ``'first'`` - Use atoms that have the first
+                  *altloc* ID appearing in a residue.
+                - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                  with the highest occupancy for a residue.
+                - ``'all'`` - Use all atoms.
+                  Note that this leads to duplicate atoms.
+                  When this option is chosen, the ``altloc_id``
+                  annotation array is added to the returned structure.
+        extra_fields : list of str, optional
+            The strings in the list are optional annotation categories
+            that should be stored in the output array or stack.
+            These are valid values:
+            ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+            ``'charge'``.
+        include_bonds : bool, optional
+            If set to true, a :class:`BondList` will be created for the
+            resulting :class:`AtomArray` containing the bond information
+            from the file.
+            All bonds have :attr:`BondType.ANY`, since the PDB format
+            does not support bond orders.
+
+        Returns
+        -------
+        symmetry_mates : AtomArray or AtomArrayStack
+            All atoms within a single unit cell.
+            The return type depends on the `model` parameter.
+        
+        Notes
+        -----
+        To expand the structure beyond a single unit cell, use
+        :func:`repeat_box()` with the return value as its
+        input.
+        
+        Examples
+        --------
+
+        >>> import os.path
+        >>> file = PDBFile.read(os.path.join(path_to_structures, "1aki.pdb"))
+        >>> atoms_in_unit_cell = file.get_symmetry_mates(model=1)
         """
         # Get base structure
         structure = self.get_structure(

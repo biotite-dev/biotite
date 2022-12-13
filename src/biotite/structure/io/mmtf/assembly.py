@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_assembly"]
+__all__ = ["list_assemblies", "get_assembly"]
 
 
 import numpy as np
@@ -15,11 +15,113 @@ from ....file import InvalidFileError
 
 
 def list_assemblies(file):
+    """
+    List the biological assemblies that are available for the
+    structure in the given file.
+
+    This function receives the data from the ``"bioAssemblyList"`` field
+    in the file.
+    Consequently, this field must be present in the file.
+
+    Parameters
+    ----------
+    file : MMTFFile
+        The file object.
+
+    Returns
+    -------
+    assemblies : list of str
+        A list that contains the available assembly IDs.
+    
+    Examples
+    --------
+    >>> import os.path
+    >>> file = MMTFFile.read(os.path.join(path_to_structures, "1f2n.mmtf"))
+    >>> print(list_assemblies(file))
+    ['1', '2', '3', '4', '5', '6']
+    """
     return [assembly["name"] for assembly in file["bioAssemblyList"]]
 
 
 def get_assembly(file, assembly_id=None, model=None, altloc="first",
                  extra_fields=[], include_bonds=False):
+    """
+    Build the given biological assembly.
+
+    This function receives the data from ``bioAssemblyList`` field in
+    the file.
+    Consequently, this field must be present in the file.
+
+    Parameters
+    ----------
+    file : MMTFFile
+        The file object.
+    assembly_id : str
+        The assembly to build.
+        Available assembly IDs can be obtained via
+        :func:`list_assemblies()`.
+    model : int, optional
+        If this parameter is given, the function will return an
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number (starting at 1).
+        Negative values are used to index models starting from the
+        last model instead of the first model.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the
+        structure contains only one model.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first
+                *altloc* ID appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+                Note that this leads to duplicate atoms.
+                When this option is chosen, the ``altloc_id``
+                annotation array is added to the returned structure.
+    extra_fields : list of str, optional
+        The strings in the list are optional annotation categories
+        that should be stored in the output array or stack.
+        These are valid values:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+        ``'charge'``.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
+        All bonds have :attr:`BondType.ANY`, since the PDB format
+        does not support bond orders.
+    
+    Raises
+    ------
+    NotImplementedError
+       If any transformation required by the assembly only affects a
+       part of the atoms (not every chain) and the number of chains
+       as detected by :func:`get_chain_count()` is different from
+       the ``chainNameList`` field.
+       This limitation of this function exists, as the
+       :class:`AtomArray` of the asymmetric unit used for constructing
+       the assembly has not the chain index information required by the
+       ``bioAssemblyList`` field.
+       In short, :func:`get_assembly()` does not work for a significant
+       portion of the PDB.
+       If you require reliable assembly building for any PDB entry,
+       you should use the analogous function for PDB or mmCIF files
+       instead.
+
+    Returns
+    -------
+    assembly : AtomArray or AtomArrayStack
+        The assembly.
+        The return type depends on the `model` parameter.
+    
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = MMTFFile.read(os.path.join(path_to_structures, "1f2n.mmtf"))
+    >>> assembly = get_assembly(file, model=1)
+    """
     structure = get_structure(
         file, model, altloc, extra_fields, include_bonds
     )

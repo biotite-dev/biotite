@@ -644,6 +644,20 @@ def list_assemblies(pdbx_file, data_block=None):
     assemblies : dict of str -> str
         A dictionary that maps an assembly ID to a description of the
         corresponding assembly.
+    
+    Examples
+    --------
+    >>> import os.path
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1f2n.cif"))
+    >>> assembly_ids = list_assemblies(file)
+    >>> for key, val in assembly_ids.items():
+    ...     print(f"'{key}' : '{val}'")
+    '1' : 'complete icosahedral assembly'
+    '2' : 'icosahedral asymmetric unit'
+    '3' : 'icosahedral pentamer'
+    '4' : 'icosahedral 23 hexamer'
+    '5' : 'icosahedral asymmetric unit, std point frame'
+    '6' : 'crystal asymmetric unit, crystal frame'
     """
     assembly_category = pdbx_file.get_category(
         "pdbx_struct_assembly", data_block, expect_looped=True
@@ -673,7 +687,9 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     pdbx_file : PDBxFile
         The file object.
     assembly_id : str
-        The assembly to build
+        The assembly to build.
+        Available assembly IDs can be obtained via
+        :func:`list_assemblies()`.
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
@@ -723,6 +739,13 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     -------
     assembly : AtomArray or AtomArrayStack
         The assembly. The return type depends on the `model` parameter.
+    
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1f2n.cif"))
+    >>> assembly = get_assembly(file, model=1)
     """
     assembly_gen_category = pdbx_file.get_category(
         "pdbx_struct_assembly_gen", data_block, expect_looped=True
