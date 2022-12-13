@@ -785,7 +785,7 @@ class PDBFile(TextFile):
                     "File does not transformation expression for assemblies"
                 )
             else:
-                raise IndexError(
+                raise KeyError(
                     f"The assembly ID '{assembly_id}' is not found"
                 )
         assembly_lines = remark_lines[assembly_start_i : assembly_stop_i]
@@ -814,7 +814,7 @@ class PDBFile(TextFile):
                 else:
                     # Chain specification has finished
                     # BIOMT lines start directly after chain specification
-                    transform_start = j
+                    transform_start = start + j
                     break
             # Parse transformations from BIOMT lines
             if transform_start is None:
@@ -822,7 +822,7 @@ class PDBFile(TextFile):
                     "No 'BIOMT' records found for chosen assembly"
                 )
             rotations, translations = _parse_transformations(
-                assembly_lines[transform_start + 1 : stop]
+                assembly_lines[transform_start : stop]
             )
             # Filter affected chains
             sub_structure = structure[
