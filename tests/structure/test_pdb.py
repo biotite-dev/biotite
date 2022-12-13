@@ -369,3 +369,44 @@ def test_bond_parsing():
     ref_bonds.remove_bond_order()
 
     assert test_bonds.as_set() == ref_bonds.as_set()
+
+
+@pytest.mark.parametrize("model", [1, None])
+def test_get_symmetry_mates(model):
+    """
+    Test generated symmetry mates on a known example with a simple
+    space group and a single chain.
+    """
+    INVERSION_AXES   = [(0,0,0), (0,0,1), (0,1,0), (1,0,0)]
+    TRANSLATION_AXES = [(0,0,0), (1,0,1), (0,1,1), (1,1,0)]
+
+    path = join(data_dir("structure"), "1aki.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    original_structure = pdb_file.get_structure(model=model)
+    cell_sizes = np.diagonal(original_structure.box)
+    if model is None:
+        # The unit cell is the same for every model
+        cell_sizes = cell_sizes[0]
+
+    symmetry_mates = pdb_file.get_symmetry_mates(model=model)
+    
+    # Space group has 4 copies in a unit cell
+    assert symmetry_mates.array_length() \
+        == original_structure.array_length() * 4
+    if model is None:
+        assert symmetry_mates.stack_depth() == original_structure.stack_depth()
+    for chain, inv_axes, trans_axes in zip(
+        struc.chain_iter(symmetry_mates), INVERSION_AXES, TRANSLATION_AXES
+    ):
+        # Superimpose symmetry mates
+        # by applying the appropriate transformations
+        translation_vector = -0.5 * cell_sizes * trans_axes
+        chain = struc.translate(chain, translation_vector)
+        angles = np.array(inv_axes) * np.pi
+        chain = struc.rotate(chain, angles)
+        # Now both mates should be equal
+        for category in original_structure.get_annotation_categories():
+            assert chain.get_annotation(category).tolist() == \
+                   original_structure.get_annotation(category).tolist()
+        assert chain.coord.flatten().tolist() == \
+               approx(original_structure.coord.flatten().tolist(), abs=1e-3)
