@@ -140,6 +140,50 @@ def test_pdbx_consistency(path, model):
            approx(a2.coord.flatten().tolist(), abs=1e-3)
 
 
+@pytest.mark.parametrize(
+    "path, model",
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "*.mmtf")),
+        [None, 1]
+    )
+)
+def test_pdbx_consistency_assembly(path, model):
+    """
+    Check whether :func:`get_assembly()` gives the same result for the
+    PDBx/mmCIF and MMTF reader.
+    """
+    mmtf_file = mmtf.MMTFFile.read(path)
+    try:
+        test_assembly = mmtf.get_assembly(mmtf_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    except NotImplementedError:
+        pytest.skip(
+            "The limitation of the function does not support this structure"
+        )
+    
+    cif_path = splitext(path)[0] + ".cif"
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
+    ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
+
+    # MMTF might assign some residues, that PDBx assigns as 'hetero',
+    # as 'non-hetero' if they are RNA/DNA or peptide linking
+    # -> skip 'hetero' category
+    for category in [
+        c for c in ref_assembly.get_annotation_categories() if c != "hetero"
+    ]:
+        assert test_assembly.get_annotation(category).tolist() == \
+                ref_assembly.get_annotation(category).tolist()
+    assert test_assembly.coord.flatten().tolist() == \
+           approx(ref_assembly.coord.flatten().tolist(), abs=1e-3)
+
+
 def test_extra_fields():
     path = join(data_dir("structure"), "1l2y.mmtf")
     mmtf_file = mmtf.MMTFFile.read(path)

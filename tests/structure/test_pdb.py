@@ -112,6 +112,41 @@ def test_pdbx_consistency(path, model):
     assert a1.coord.tolist() == a2.coord.tolist()
 
 
+@pytest.mark.parametrize(
+    "path, model",
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1]
+    )
+)
+def test_pdbx_consistency_assembly(path, model):
+    """
+    Check whether :func:`get_assembly()` gives the same result for the
+    PDBx/mmCIF and PDB reader.
+    """
+    pdb_file = pdb.PDBFile.read(path)
+    try:
+        test_assembly = pdb.get_assembly(pdb_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
+    cif_path = splitext(path)[0] + ".cif"
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
+    ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
+
+    for category in ref_assembly.get_annotation_categories():
+        assert test_assembly.get_annotation(category).tolist() == \
+                ref_assembly.get_annotation(category).tolist()
+    assert test_assembly.coord.flatten().tolist() == \
+           approx(ref_assembly.coord.flatten().tolist(), abs=1e-3)
+
+
 @pytest.mark.parametrize("hybrid36", [False, True])
 def test_extra_fields(hybrid36):
     path = join(data_dir("structure"), "1l2y.pdb")
