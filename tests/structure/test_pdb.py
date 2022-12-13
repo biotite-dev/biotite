@@ -3,6 +3,7 @@
 # information.
 
 from tempfile import TemporaryFile
+import warnings
 import itertools
 import glob
 from os.path import join, splitext
@@ -263,7 +264,8 @@ def test_id_overflow():
     a.element = np.full(length, "C")
     
     # Write stack to pdb file and make sure a warning is thrown
-    with pytest.warns(UserWarning):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         temp = TemporaryFile("w+")
         pdb_file = pdb.PDBFile()
         pdb_file.set_structure(a)
