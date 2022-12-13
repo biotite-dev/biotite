@@ -12,6 +12,7 @@ performance, than the text based file formats.
 __name__ = "biotite.structure.io.mmtf"
 __author__ = "Patrick Kunzmann"
 
+from .assembly import *
 from .file import *
 from .convertfile import *
 from .convertarray import *

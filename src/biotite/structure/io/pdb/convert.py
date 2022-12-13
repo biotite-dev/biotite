@@ -9,7 +9,8 @@ subpackages.
 
 __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_model_count", "get_structure", "set_structure"]
+__all__ = ["get_model_count", "get_structure", "set_structure",
+           "list_assemblies", "get_assembly"]
 
 
 def get_model_count(pdb_file):
@@ -113,3 +114,14 @@ def set_structure(pdb_file, array, hybrid36=False):
     and all inter-residue connections.
     """
     pdb_file.set_structure(array, hybrid36)
+
+
+def list_assemblies(pdb_file):
+    return pdb_file.list_assemblies()
+
+
+def get_assembly(pdb_file, assembly_id=None, model=None, altloc="first",
+                 extra_fields=[], include_bonds=False):
+    return pdb_file.get_assembly(
+        assembly_id, model, altloc, extra_fields, include_bonds
+    )
