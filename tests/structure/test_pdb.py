@@ -383,10 +383,12 @@ def test_get_symmetry_mates(model):
     path = join(data_dir("structure"), "1aki.pdb")
     pdb_file = pdb.PDBFile.read(path)
     original_structure = pdb_file.get_structure(model=model)
-    cell_sizes = np.diagonal(original_structure.box)
     if model is None:
         # The unit cell is the same for every model
-        cell_sizes = cell_sizes[0]
+        box = original_structure.box[0]
+    else:
+        box = original_structure.box
+    cell_sizes = np.diagonal(box)
 
     symmetry_mates = pdb_file.get_symmetry_mates(model=model)
     
