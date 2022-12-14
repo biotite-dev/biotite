@@ -264,8 +264,7 @@ def test_id_overflow():
     a.element = np.full(length, "C")
     
     # Write stack to pdb file and make sure a warning is thrown
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
+    with pytest.warns(UserWarning):
         temp = TemporaryFile("w+")
         pdb_file = pdb.PDBFile()
         pdb_file.set_structure(a)
@@ -285,12 +284,12 @@ def test_id_overflow():
     temp.close()
     
     # Write stack as hybrid-36 pdb file: no warning should be thrown
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         temp = TemporaryFile("w+")
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a, hybrid36=True)
         tmp_pdb_file.write(temp)
-    assert len(record) == 0
 
     # Manually check if the output is written as correct hybrid-36
     temp.seek(0)
