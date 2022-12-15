@@ -3,6 +3,7 @@
 # information.
 
 from tempfile import TemporaryFile
+import warnings
 import itertools
 import glob
 from os.path import join, splitext
@@ -110,6 +111,41 @@ def test_pdbx_consistency(path, model):
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
     assert a1.coord.tolist() == a2.coord.tolist()
+
+
+@pytest.mark.parametrize(
+    "path, model",
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "*.pdb")),
+        [None, 1]
+    )
+)
+def test_pdbx_consistency_assembly(path, model):
+    """
+    Check whether :func:`get_assembly()` gives the same result for the
+    PDBx/mmCIF and PDB reader.
+    """
+    pdb_file = pdb.PDBFile.read(path)
+    try:
+        test_assembly = pdb.get_assembly(pdb_file, model=model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # The file cannot be parsed into an AtomArrayStack,
+            # as the models contain different numbers of atoms
+            # -> skip this test case
+            return
+        else:
+            raise
+    
+    cif_path = splitext(path)[0] + ".cif"
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
+    ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
+
+    for category in ref_assembly.get_annotation_categories():
+        assert test_assembly.get_annotation(category).tolist() == \
+                ref_assembly.get_annotation(category).tolist()
+    assert test_assembly.coord.flatten().tolist() == \
+           approx(ref_assembly.coord.flatten().tolist(), abs=1e-3)
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])
@@ -248,12 +284,12 @@ def test_id_overflow():
     temp.close()
     
     # Write stack as hybrid-36 pdb file: no warning should be thrown
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         temp = TemporaryFile("w+")
         tmp_pdb_file = pdb.PDBFile()
         tmp_pdb_file.set_structure(a, hybrid36=True)
         tmp_pdb_file.write(temp)
-    assert len(record) == 0
 
     # Manually check if the output is written as correct hybrid-36
     temp.seek(0)
@@ -332,3 +368,46 @@ def test_bond_parsing():
     ref_bonds.remove_bond_order()
 
     assert test_bonds.as_set() == ref_bonds.as_set()
+
+
+@pytest.mark.parametrize("model", [1, None])
+def test_get_symmetry_mates(model):
+    """
+    Test generated symmetry mates on a known example with a simple
+    space group and a single chain.
+    """
+    INVERSION_AXES   = [(0,0,0), (0,0,1), (0,1,0), (1,0,0)]
+    TRANSLATION_AXES = [(0,0,0), (1,0,1), (0,1,1), (1,1,0)]
+
+    path = join(data_dir("structure"), "1aki.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    original_structure = pdb_file.get_structure(model=model)
+    if model is None:
+        # The unit cell is the same for every model
+        box = original_structure.box[0]
+    else:
+        box = original_structure.box
+    cell_sizes = np.diagonal(box)
+
+    symmetry_mates = pdb_file.get_symmetry_mates(model=model)
+    
+    # Space group has 4 copies in a unit cell
+    assert symmetry_mates.array_length() \
+        == original_structure.array_length() * 4
+    if model is None:
+        assert symmetry_mates.stack_depth() == original_structure.stack_depth()
+    for chain, inv_axes, trans_axes in zip(
+        struc.chain_iter(symmetry_mates), INVERSION_AXES, TRANSLATION_AXES
+    ):
+        # Superimpose symmetry mates
+        # by applying the appropriate transformations
+        translation_vector = -0.5 * cell_sizes * trans_axes
+        chain = struc.translate(chain, translation_vector)
+        angles = np.array(inv_axes) * np.pi
+        chain = struc.rotate(chain, angles)
+        # Now both mates should be equal
+        for category in original_structure.get_annotation_categories():
+            assert chain.get_annotation(category).tolist() == \
+                   original_structure.get_annotation(category).tolist()
+        assert chain.coord.flatten().tolist() == \
+               approx(original_structure.coord.flatten().tolist(), abs=1e-3)

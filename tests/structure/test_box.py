@@ -7,6 +7,7 @@ import itertools
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.io.mmtf as mmtf
 from biotite.structure.io import load_structure
 from ..util import data_dir, cannot_import
 
@@ -113,10 +114,16 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
     assert np.allclose(coords, new_coords)
 
 
-def test_repeat_box():
-    array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_repeat_box(multi_model):
+    model = None if multi_model else 1
+    array = mmtf.get_structure(
+        mmtf.MMTFFile.read(join(data_dir("structure"), "3o5r.mmtf")),
+        model=model, include_bonds=True
+    )
     repeat_array, _ = struc.repeat_box(array)
-    assert repeat_array[:array.array_length()] == array
+    assert repeat_array.array_length() == array.array_length() * 27
+    assert repeat_array[..., :array.array_length()] == array
 
 
 def test_remove_pbc_unsegmented():
