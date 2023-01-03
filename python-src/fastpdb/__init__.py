@@ -6,7 +6,6 @@ __version__ = "1.0.1"
 import numpy as np
 import biotite
 import biotite.structure as struc
-import biotite.structure.io.pdb as pdb
 from .fastpdb import PDBFile as RustPDBFile
 
 

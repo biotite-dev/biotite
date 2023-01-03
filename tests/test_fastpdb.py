@@ -7,7 +7,6 @@ All functionalities are tested against equivalent calls in
 :class:`biotite.structure.io.pdb.PDBFile`.
 """
 
-from tempfile import TemporaryFile
 import itertools
 import glob
 from io import StringIO

@@ -12,7 +12,6 @@ use numpy::PyArray;
 
 
 create_exception!(fastpdb, InvalidFileError, exceptions::PyException);
-create_exception!(fastpdb, BadStructureError, exceptions::PyException);
 
 
 /// Used to allow a function to process both, `AtomArray` and `AtomArrayStack` objects,
