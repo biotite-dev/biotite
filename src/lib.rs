@@ -7,11 +7,13 @@ use std::cmp::Ordering;
 use ndarray::{Array, Ix1, Ix2, Ix3};
 use pyo3::prelude::*;
 use pyo3::exceptions;
-use pyo3::create_exception;
 use numpy::PyArray;
 
-
-create_exception!(fastpdb, InvalidFileError, exceptions::PyException);
+// Label as a separate module to indicate that this exception comes
+// from biotite
+mod biotite {
+    pyo3::import_exception!(biotite, InvalidFileError);
+}
 
 
 /// Used to allow a function to process both, `AtomArray` and `AtomArrayStack` objects,
@@ -58,7 +60,7 @@ impl PDBFile {
         for line in self.lines.iter() {
             if line.starts_with("CRYST1") {
                 if line.len() < 80 {
-                    return Err(InvalidFileError::new_err("Line is too short"))
+                    return Err(biotite::InvalidFileError::new_err("Line is too short"))
                 }
                 let len_a = parse_number(&line[ 6..15])?;
                 let len_b = parse_number(&line[15..24])?;
@@ -184,7 +186,7 @@ impl PDBFile {
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
             if line.len() < 80 {
-                return Err(InvalidFileError::new_err("Line is too short"))
+                return Err(biotite::InvalidFileError::new_err("Line is too short"))
             }
             write_string_to_array(&mut chain_id,  atom_i, line[21..22].trim());
             res_id[atom_i] = parse_number(&line[22..26])?;
@@ -215,7 +217,7 @@ impl PDBFile {
                 }
                 else {
                     number = raw_number.to_digit(10).ok_or_else( ||
-                        InvalidFileError::new_err(format!(
+                        biotite::InvalidFileError::new_err(format!(
                             "'{}' cannot be parsed into a number", raw_number
                         ))
                     )?;
@@ -462,20 +464,20 @@ impl PDBFile {
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
             if line.len() < 80 {
-                return Err(InvalidFileError::new_err("Line is too short"))
+                return Err(biotite::InvalidFileError::new_err("Line is too short"))
             }
             coord[[atom_i, 0]] = line[30..38].trim().parse().map_err(|_|
-                InvalidFileError::new_err(format!(
+                biotite::InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[30..38].trim()
                 ))
             )?;
             coord[[atom_i, 1]] = line[38..46].trim().parse().map_err(|_|
-                InvalidFileError::new_err(format!(
+                biotite::InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[38..46].trim()
                 ))
             )?;
             coord[[atom_i, 2]] = line[46..54].trim().parse().map_err(|_|
-                InvalidFileError::new_err(format!(
+                biotite::InvalidFileError::new_err(format!(
                     "'{}' cannot be parsed into a float", line[46..54].trim()
                 ))
             )?;
@@ -570,7 +572,7 @@ impl PDBFile {
                 .count();
             match length {
                 None => length = Some(model_length),
-                Some(l) => if model_length != l { return Err(InvalidFileError::new_err(
+                Some(l) => if model_length != l { return Err(biotite::InvalidFileError::new_err(
                     "Inconsistent number of models"
                 )); }
             };
@@ -618,7 +620,7 @@ fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<St
 #[inline(always)]
 fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
     string.trim().parse().map_err(|_|
-        InvalidFileError::new_err(format!(
+        biotite::InvalidFileError::new_err(format!(
             "'{}' cannot be parsed into a number", string.trim()
         ))
     )
