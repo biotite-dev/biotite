@@ -300,7 +300,7 @@ impl PDBFile {
                  alpha: f32, beta: f32, gamma: f32) {
         self.lines.push(
             format!(
-                "CRYST1{:>9.3}{:>9.3}{:>9.3}{:>7.2}{:>7.2}{:>7.2} P 1           1",
+                "CRYST1{:>9.3}{:>9.3}{:>9.3}{:>7.2}{:>7.2}{:>7.2} P 1           1          ",
                 len_a, len_b, len_c, alpha, beta, gamma
             )
         );
