@@ -69,7 +69,7 @@ jobs:
         with:
           platforms: all
 
-      - name: Build wheels
+      - name: Build & (optionally) Test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
         uses: pypa/cibuildwheel@v2.11.4
         with:
