@@ -1,0 +1,134 @@
+---
+name: "CI & CD"
+
+on:
+  workflow_dispatch:
+  pull_request:
+  release:
+    types:
+    - published
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CIBW_TEST_REQUIRES: pytest
+  CIBW_TEST_COMMAND: "pytest {project} --ignore={project}//tests//structure//test_trajectory.py --ignore={project}//tests//sequence//align//test_statistics.py --ignore={project}//tests//application --ignore={project}//tests//database  --ignore={project}//tests//test_doctest.py --ignore={project}//tests//test_modname.py --durations=50"
+  CIBW_DEPENDENCY_VERSIONS: "pinned"
+  # Once GHA and cibuildwheel are updated this can be removed
+  # mussllinux takes 6+ hrs to build and test so ignore it
+  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
+
+jobs:
+  generate-wheels-matrix:
+    name: "Generate wheels matrix"
+    runs-on: "ubuntu-latest"
+    outputs:
+      include: ${{ steps.set-matrix.outputs.include }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install cibuildwheel
+        # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
+        run: pipx install cibuildwheel==2.11.4
+      - id: set-matrix
+        run: |
+          MATRIX=$(
+            {
+              cibuildwheel --print-build-identifiers --platform linux \
+              | jq -nRc '{"only": inputs, "os": "ubuntu-20.04"}' \
+              && cibuildwheel --print-build-identifiers --platform macos \
+              | jq -nRc '{"only": inputs, "os": "macos-11"}' \
+              && cibuildwheel --print-build-identifiers --platform windows \
+              | jq -nRc '{"only": inputs, "os": "windows-2019"}'
+            } | jq -sc
+          )
+          echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
+        env:
+          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_WINDOWS: "x86 AMD64"
+          CIBW_SKIP: "*-manylinux_i686 *-musllinux_i686 *-win32 pp*"
+
+  test-biotite-and-build-wheels:
+    name: "Build & Test"
+    needs: "generate-wheels-matrix"
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.generate-wheels-matrix.outputs.include) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Build wheels
+        # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
+        uses: pypa/cibuildwheel@v2.11.4
+        with:
+          only: ${{ matrix.only }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+  
+
+  test-muscle5:
+    name: Testing Biotite's interface for Muscle 5
+
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: biotite-dev
+          python-version: 3.9
+          channels: conda-forge,defaults
+      - name: Installing dependencies
+        run: conda install -c bioconda "muscle=5"
+      - name: Building distribution
+        run: pip wheel --no-deps -w dist .
+      - name: Installing distribution
+        run: pip install .//dist//*.whl pytest
+      - name: Testing code
+        run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=10 && cd .. && rm -r tmp
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - name: Build SDist
+      run: pipx run build --sdist
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+  upload_to_pypi_if_release:
+    needs: [test-biotite-and-build-wheels, make_sdist, test-muscle5]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
+
+    - name: ls dir
+      run: ls dist
+
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}

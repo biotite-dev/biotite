@@ -11,3 +11,4 @@ CONTRIBUTORS
 - Claude J. Rogers <https://github.com/claudejrogers>
 - Ivan Reveguk <https://github.com/edikedik>
 - Jan H. Krumbach <https://github.com/JHKru>
+- Danny P. Farrell <https://github.com/danpf>

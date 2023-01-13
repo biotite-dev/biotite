@@ -104,9 +104,14 @@ setup(
         # Structure data (masses, bonds, etc.)
         "biotite.structure.info"    : ["*.json", "*.msgpack"]
     },
-    
+
+    # Based on https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
+    # When updating our minimum supported python version follow minimums set in this setup.cfg
+    # 1.13.3 is required for 3.6
+    # as of 2022-01 for 3.7 "numpy >= 1.14.5", for 3.8 "numpy >= 1.17.3", for 3.9 "numpy >= 1.19.3"
+    # this should be manually updated as the minimum python version increases
     install_requires = ["requests >= 2.12",
-                        "numpy >= 1.19",
+                        "numpy >= 1.13.3",
                         "msgpack >= 0.5.6",
                         "networkx >= 2.0"],
     python_requires = ">=3.6",
