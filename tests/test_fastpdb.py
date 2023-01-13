@@ -157,14 +157,3 @@ def test_set_structure(path, model, altloc, extra_fields, include_bonds):
 
 
     assert test_file_content.getvalue() == ref_file_content.getvalue()
-
-@pytest.mark.parametrize(
-    "filename, exception",
-    [
-        ("missing_elements.pdb", biotite.InvalidFileError),
-    ]
-)
-def test_invalid_pdb_raises(filename, exception):
-    path = join(DATA_PATH, "bad_inputs", filename)
-    with pytest.raises(exception):
-        _ = fastpdb.PDBFile.read(path).get_structure()

@@ -43,6 +43,9 @@ class PDBFile(biotite.TextFile):
     @classmethod
     def read(cls, file):
         file = super().read(file)
+        # Pad lines with whitespace if lines are shorter
+        # than the required 80 characters
+        file.lines = [line.ljust(80) for line in file.lines]
         file._pdb_file = RustPDBFile(file.lines)
         return file
     
