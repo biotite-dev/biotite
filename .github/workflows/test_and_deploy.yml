@@ -48,7 +48,10 @@ jobs:
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "x86 AMD64"
-          CIBW_SKIP: "*-manylinux_i686 *-musllinux_i686 *-win32 pp*"
+          # Skip musllinux because it takes too long to compile on GHA
+          # since it is emulated. (6+ hours)
+          # *note* most of the build time is actually numpy for musllinux
+          CIBW_SKIP: "*musllinux* *-manylinux_i686 *-musllinux_i686 *-win32 pp*"
 
   test-biotite-and-build-wheels:
     name: "Build & Test"
