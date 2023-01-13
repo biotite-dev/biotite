@@ -240,7 +240,6 @@ def test_newick_complex(upgma_newick, use_labels):
     assert tree1 == tree2
 
 
-@pytest.mark.xfail(reason="Rounding errors on various platforms/pythons")
 def test_newick_rounding():
     # Create the distance matrix
     distances = np.array(
