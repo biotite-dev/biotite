@@ -13,10 +13,10 @@ class PDBFile(biotite.TextFile):
     r"""
     This class represents a PDB file.
     
-    This class only provides support for reading/writing the pure atom
-    information (``ATOM``, ``HETATM``, ``MODEL`` and ``ENDMDL``
-    records).
-    ``TER`` records cannot be written.
+    This class provides support for reading/writing the pure atom
+    information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
+    records cannot be written.
+    Additionally, *REMARK* records can be read
     
     See also
     --------

@@ -208,22 +208,20 @@ impl PDBFile {
                 occupancy[atom_i] = parse_number(&line[54..60])?;
             }
             if include_charge {
-                let mut charge_raw = line[78..80].chars();
-                let raw_number = charge_raw.next().unwrap();
-                let raw_sign = charge_raw.next().unwrap();
-                let number;
-                if raw_number == ' ' {
-                    number = 0;
+                let charge_raw = line[78..80].as_bytes();
+                // Allow both "X+" and "+X"
+                charge[atom_i] = match charge_raw[0] {
+                    b' ' => 0,
+                    b'+' => parse_digit(&charge_raw[1])?,
+                    b'-' => -parse_digit(&charge_raw[1])?,
+                    _ => match charge_raw[1] {
+                        b'+' => parse_digit(&charge_raw[0])?,
+                        b'-' => -parse_digit(&charge_raw[0])?,
+                        _ => Err(biotite::InvalidFileError::new_err(format!(
+                            "'{}' is not a valid charge identifier", &line[78..80]
+                        )))?,
+                    }
                 }
-                else {
-                    number = raw_number.to_digit(10).ok_or_else( ||
-                        biotite::InvalidFileError::new_err(format!(
-                            "'{}' cannot be parsed into a number", raw_number
-                        ))
-                    )?;
-                }
-                let sign = if raw_sign == '-' { -1 } else { 1 };
-                charge[atom_i] = number as i64 * sign;
             }
         }
         
@@ -623,6 +621,18 @@ fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
         biotite::InvalidFileError::new_err(format!(
             "'{}' cannot be parsed into a number", string.trim()
         ))
+    )
+}
+
+/// Parse a byte into a digit.
+/// Returns a ``PyErr`` if the parsing fails.
+#[inline(always)]
+fn parse_digit(digit: &u8) -> PyResult<i64> {
+    (*digit as char).to_digit(10).map_or_else(
+        || Err(biotite::InvalidFileError::new_err(format!(
+            "'{}' cannot be parsed into a number", digit)
+        )),
+        |v| Ok(v as i64)
     )
 }
 
