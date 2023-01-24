@@ -131,7 +131,7 @@ class PDBFile(TextFile):
         if number < 0 or number > 999:
             raise ValueError("The number must be in range 0-999")
         
-        remark_string = f"REMARK {number:>d}"
+        remark_string = f"REMARK {number:>3d}"
         # Find lines and omit ``REMARK XXX `` part
         remark_lines = [
             line[CONTENT_START_COLUMN:] for line in self.lines
