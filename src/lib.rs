@@ -70,6 +70,26 @@ impl PDBFile {
     }
 
 
+    /// Parse the given `REMARK` record of the PDB file to obtain its content as strings
+    fn parse_remark(&self, number: i64) -> PyResult<Option<Vec<String>>> {
+        const CONTENT_START_COLUMN: usize = 11;
+
+        if number < 0 || number > 999 {
+            return Err(exceptions::PyValueError::new_err("The number must be in range 0-999"));
+        }
+        let remark_string = format!("REMARK {:>3}", number);
+        let mut remark_lines: Vec<String> = self.lines.iter()
+                           .filter(|line| line.starts_with(&remark_string))
+                           .map(|line| line[CONTENT_START_COLUMN..].to_owned())
+                           .collect();
+        match remark_lines.len() {
+            0 => Ok(None),
+            // Remove first empty line
+            _ => { remark_lines.remove(0); Ok(Some(remark_lines)) }
+        }
+    }
+
+
     /// Parse the `CRYST1` record of the PDB file to obtain the unit cell lengths
     /// and angles (in degrees).
     fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
@@ -97,7 +117,7 @@ impl PDBFile {
     fn parse_coord_single_model(&self, model: isize) -> PyResult<Py<PyArray<f32, Ix2>>> {
         let array = self.parse_coord(Some(model))?;
         Python::with_gil(|py| {
-            match array{
+            match array {
                 CoordArray::Single(array) => Ok(PyArray::from_array(py, &array).to_owned()),
                 CoordArray::Multi(_) => panic!("No multi-model coordinates should be returned"),
             }
@@ -110,7 +130,7 @@ impl PDBFile {
     fn parse_coord_multi_model(&self) -> PyResult<Py<PyArray<f32, Ix3>>> {
         let array = self.parse_coord(None)?;
         Python::with_gil(|py| {
-            match array{
+            match array {
                 CoordArray::Single(_) => panic!("No single-model coordinates should be returned"),
                 CoordArray::Multi(array) => Ok(PyArray::from_array(py, &array).to_owned()),
             }
