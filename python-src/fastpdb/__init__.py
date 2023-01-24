@@ -37,6 +37,9 @@ class PDBFile(BiotitePDBFile):
     
     def get_model_count(self):
         return self._pdb_file.get_model_count()
+    
+    def get_remark(self, number):
+        return self._pdb_file.parse_remark(int(number))
 
     def get_coord(self, model=None):
         if model is None:
