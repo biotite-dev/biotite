@@ -1,5 +1,6 @@
 //! Low-level PDB file parsing and writing.
 
+use std::fs;
 use std::str::FromStr;
 use std::convert::TryInto;
 use std::collections::HashMap;
@@ -9,6 +10,8 @@ use pyo3::prelude::*;
 use pyo3::exceptions;
 use numpy::PyArray;
 
+
+pyo3::import_exception!(biotite, InvalidFileError);
 // Label as a separate module to indicate that this exception comes
 // from biotite
 mod biotite {
@@ -44,13 +47,46 @@ impl PDBFile {
     /// An empty `Vec` represents and empty PDB file.
     #[new]
     fn new(lines: Vec<String>) -> Self {
-        PDBFile { lines }
+        //let ljust_lines = lines.iter().map(|line| format!("{:<80}", line)).collect();
+        PDBFile { lines: lines }
+    }
+
+
+    /// Read a [`PDBFile`] from a file.
+    /// The file is indicated by its file path as `String`.
+    #[staticmethod]
+    fn read(file_path: &str) -> PyResult<Self> {
+        let contents = fs::read_to_string(file_path).map_err(
+            |_| exceptions::PyOSError::new_err(format!("'{}' cannot be read", file_path))
+        )?;
+        let lines = contents.lines().map(|line| format!("{:<80}", line)).collect();
+        Ok(PDBFile { lines: lines })
     }
 
     
     /// Get the number of models contained in the file.
     fn get_model_count(&self) -> usize {
         self.get_model_start_indices().len()
+    }
+
+
+    /// Parse the given `REMARK` record of the PDB file to obtain its content as strings
+    fn parse_remark(&self, number: i64) -> PyResult<Option<Vec<String>>> {
+        const CONTENT_START_COLUMN: usize = 11;
+
+        if number < 0 || number > 999 {
+            return Err(exceptions::PyValueError::new_err("The number must be in range 0-999"));
+        }
+        let remark_string = format!("REMARK {:>3}", number);
+        let mut remark_lines: Vec<String> = self.lines.iter()
+                           .filter(|line| line.starts_with(&remark_string))
+                           .map(|line| line[CONTENT_START_COLUMN..].to_owned())
+                           .collect();
+        match remark_lines.len() {
+            0 => Ok(None),
+            // Remove first empty line
+            _ => { remark_lines.remove(0); Ok(Some(remark_lines)) }
+        }
     }
 
 
@@ -81,7 +117,7 @@ impl PDBFile {
     fn parse_coord_single_model(&self, model: isize) -> PyResult<Py<PyArray<f32, Ix2>>> {
         let array = self.parse_coord(Some(model))?;
         Python::with_gil(|py| {
-            match array{
+            match array {
                 CoordArray::Single(array) => Ok(PyArray::from_array(py, &array).to_owned()),
                 CoordArray::Multi(_) => panic!("No multi-model coordinates should be returned"),
             }
@@ -94,7 +130,7 @@ impl PDBFile {
     fn parse_coord_multi_model(&self) -> PyResult<Py<PyArray<f32, Ix3>>> {
         let array = self.parse_coord(None)?;
         Python::with_gil(|py| {
-            match array{
+            match array {
                 CoordArray::Single(_) => panic!("No single-model coordinates should be returned"),
                 CoordArray::Multi(array) => Ok(PyArray::from_array(py, &array).to_owned()),
             }
@@ -208,22 +244,20 @@ impl PDBFile {
                 occupancy[atom_i] = parse_number(&line[54..60])?;
             }
             if include_charge {
-                let mut charge_raw = line[78..80].chars();
-                let raw_number = charge_raw.next().unwrap();
-                let raw_sign = charge_raw.next().unwrap();
-                let number;
-                if raw_number == ' ' {
-                    number = 0;
+                let charge_raw = line[78..80].as_bytes();
+                // Allow both "X+" and "+X"
+                charge[atom_i] = match charge_raw[0] {
+                    b' ' => 0,
+                    b'+' => parse_digit(&charge_raw[1])?,
+                    b'-' => -parse_digit(&charge_raw[1])?,
+                    _ => match charge_raw[1] {
+                        b'+' => parse_digit(&charge_raw[0])?,
+                        b'-' => -parse_digit(&charge_raw[0])?,
+                        _ => Err(biotite::InvalidFileError::new_err(format!(
+                            "'{}' is not a valid charge identifier", &line[78..80]
+                        )))?,
+                    }
                 }
-                else {
-                    number = raw_number.to_digit(10).ok_or_else( ||
-                        biotite::InvalidFileError::new_err(format!(
-                            "'{}' cannot be parsed into a number", raw_number
-                        ))
-                    )?;
-                }
-                let sign = if raw_sign == '-' { -1 } else { 1 };
-                charge[atom_i] = number as i64 * sign;
             }
         }
         
@@ -623,6 +657,18 @@ fn parse_number<T: FromStr>(string: &str) -> PyResult<T> {
         biotite::InvalidFileError::new_err(format!(
             "'{}' cannot be parsed into a number", string.trim()
         ))
+    )
+}
+
+/// Parse a byte into a digit.
+/// Returns a ``PyErr`` if the parsing fails.
+#[inline(always)]
+fn parse_digit(digit: &u8) -> PyResult<i64> {
+    (*digit as char).to_digit(10).map_or_else(
+        || Err(biotite::InvalidFileError::new_err(format!(
+            "'{}' cannot be parsed into a number", digit)
+        )),
+        |v| Ok(v as i64)
     )
 }
 

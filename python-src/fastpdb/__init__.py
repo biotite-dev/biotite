@@ -3,137 +3,45 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["PDBFile"]
 __version__ = "1.0.1"
 
+import os
 import numpy as np
-import biotite
+from biotite.file import is_text
 import biotite.structure as struc
+from biotite.structure.io.pdb import PDBFile as BiotitePDBFile
 from .fastpdb import PDBFile as RustPDBFile
 
 
-class PDBFile(biotite.TextFile):
-    r"""
-    This class represents a PDB file.
-    
-    This class only provides support for reading/writing the pure atom
-    information (``ATOM``, ``HETATM``, ``MODEL`` and ``ENDMDL``
-    records).
-    ``TER`` records cannot be written.
-    
-    See also
-    --------
-    PDBxFile
-    
-    Examples
-    --------
-    Load a ``\\*.pdb`` file, modify the structure and save the new
-    structure into a new file:
-    
-    >>> import os.path
-    >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
-    >>> array_stack = file.get_structure()
-    >>> array_stack_mod = rotate(array_stack, [1,2,3])
-    >>> file = PDBFile()
-    >>> file.set_structure(array_stack_mod)
-    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
-    """
+class PDBFile(BiotitePDBFile):
 
     def __init__(self):
         super().__init__()
         self._pdb_file = RustPDBFile([])
     
-    @classmethod
-    def read(cls, file):
-        file = super().read(file)
-        # Pad lines with whitespace if lines are shorter
-        # than the required 80 characters
-        file.lines = [line.ljust(80) for line in file.lines]
-        file._pdb_file = RustPDBFile(file.lines)
-        return file
+    @staticmethod
+    def read(file):
+        pdb_file = PDBFile()
+        if isinstance(file, str):
+            pdb_file._pdb_file = RustPDBFile.read(file)
+        elif isinstance(file, bytes):
+            pdb_file._pdb_file = RustPDBFile.read(file.decode("utf-8"))
+        elif isinstance(file, os.PathLike):
+            pdb_file._pdb_file = RustPDBFile.read(str(file))
+        else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            pdb_file._pdb_file = RustPDBFile(file.read().splitlines())
+    
+        # Synchronize with PDB file representation in Rust            
+        pdb_file.lines = pdb_file._pdb_file.lines
+        return pdb_file
     
     def get_model_count(self):
-        """
-        Get the number of models contained in the PDB file.
-
-        Returns
-        -------
-        model_count : int
-            The number of models.
-        """
         return self._pdb_file.get_model_count()
+    
+    def get_remark(self, number):
+        return self._pdb_file.parse_remark(int(number))
 
     def get_coord(self, model=None):
-        """
-        Get only the coordinates of the PDB file.
-        
-        Parameters
-        ----------
-        model : int, optional
-            If this parameter is given, the function will return a
-            2D coordinate array from the atoms corresponding to the
-            given model number (starting at 1).
-            Negative values are used to index models starting from the
-            last model insted of the first model.
-            If this parameter is omitted, an 2D coordinate array
-            containing all models will be returned, even if
-            the structure contains only one model.
-        
-        Returns
-        -------
-        coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
-            The coordinates read from the ``ATOM`` and ``HETATM``
-            records of the file.
-        
-        Notes
-        -----
-        Note that :func:`get_coord()` may output more coordinates than
-        the atom array (stack) from the corresponding
-        :func:`get_structure()` call has.
-        The reason for this is, that :func:`get_structure()` filters
-        *altloc* IDs, while `get_coord()` does not.
-        
-        Examples
-        --------
-        Read an :class:`AtomArrayStack` from multiple PDB files, where
-        each PDB file contains the same atoms but different positions.
-        This is an efficient approach when a trajectory is spread into
-        multiple PDB files, as done e.g. by the *Rosetta* modeling
-        software. 
-
-        For the purpose of this example, the PDB files are created from
-        an existing :class:`AtomArrayStack`.
-        
-        >>> import os.path
-        >>> from tempfile import gettempdir
-        >>> file_names = []
-        >>> for i in range(atom_array_stack.stack_depth()):
-        ...     pdb_file = PDBFile()
-        ...     pdb_file.set_structure(atom_array_stack[i])
-        ...     file_name = os.path.join(gettempdir(), f"model_{i+1}.pdb")
-        ...     pdb_file.write(file_name)
-        ...     file_names.append(file_name)
-        >>> print(file_names)
-        ['...model_1.pdb', '...model_2.pdb', ..., '...model_38.pdb']
-
-        Now the PDB files are used to create an :class:`AtomArrayStack`,
-        where each model represents a different model.
-
-        Construct a new :class:`AtomArrayStack` with annotations taken
-        from one of the created files used as template and coordinates
-        from all of the PDB files.
-
-        >>> template_file = PDBFile.read(file_names[0])
-        >>> template = template_file.get_structure()
-        >>> coord = []
-        >>> for i, file_name in enumerate(file_names):
-        ...     pdb_file = PDBFile.read(file_name)
-        ...     coord.append(pdb_file.get_coord(model=1))
-        >>> new_stack = from_template(template, np.array(coord))
-
-        The newly created :class:`AtomArrayStack` should now be equal to
-        the :class:`AtomArrayStack` the PDB files were created from.
-
-        >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
-        True
-        """
         if model is None:
             coord = self._pdb_file.parse_coord_multi_model()
         else:
@@ -409,5 +317,5 @@ class PDBFile(biotite.TextFile):
                 bonds.astype(np.int32, copy=False), atom_id
             )
 
-            
+        # Synchronize with PDB file representation in Rust            
         self.lines = self._pdb_file.lines

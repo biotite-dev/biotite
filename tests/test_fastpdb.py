@@ -21,6 +21,15 @@ DATA_PATH = join(dirname(realpath(__file__)), "data")
 TEST_STRUCTURES = glob.glob(join(DATA_PATH, "*.pdb"))
 
 
+def test_get_remark():
+    ref_file = pdb.PDBFile.read(join(DATA_PATH, "1aki.pdb"))
+    
+    test_file = fastpdb.PDBFile.read(join(DATA_PATH, "1aki.pdb"))
+
+    for remark in np.arange(0, 1000):
+        assert test_file.get_remark(remark) == ref_file.get_remark(remark)
+
+
 @pytest.mark.parametrize(
     "path", TEST_STRUCTURES
 )
@@ -157,3 +166,16 @@ def test_set_structure(path, model, altloc, extra_fields, include_bonds):
 
 
     assert test_file_content.getvalue() == ref_file_content.getvalue()
+
+
+def test_get_assembly():
+    """
+    Effectively, this test checks whether inheritance works properly,
+    as `get_assembly()` is not explicitly implemented in
+    `fastpdb.PDBFile`.
+    """
+    ref_file = pdb.PDBFile.read(join(DATA_PATH, "1aki.pdb"))
+    
+    test_file = fastpdb.PDBFile.read(join(DATA_PATH, "1aki.pdb"))
+
+    assert test_file.get_assembly() == ref_file.get_assembly()
