@@ -1,5 +1,6 @@
 //! Low-level PDB file parsing and writing.
 
+use std::fs;
 use std::str::FromStr;
 use std::convert::TryInto;
 use std::collections::HashMap;
@@ -9,6 +10,8 @@ use pyo3::prelude::*;
 use pyo3::exceptions;
 use numpy::PyArray;
 
+
+pyo3::import_exception!(biotite, InvalidFileError);
 // Label as a separate module to indicate that this exception comes
 // from biotite
 mod biotite {
@@ -44,7 +47,20 @@ impl PDBFile {
     /// An empty `Vec` represents and empty PDB file.
     #[new]
     fn new(lines: Vec<String>) -> Self {
-        PDBFile { lines }
+        //let ljust_lines = lines.iter().map(|line| format!("{:<80}", line)).collect();
+        PDBFile { lines: lines }
+    }
+
+
+    /// Read a [`PDBFile`] from a file.
+    /// The file is indicated by its file path as `String`.
+    #[staticmethod]
+    fn read(file_path: &str) -> PyResult<Self> {
+        let contents = fs::read_to_string(file_path).map_err(
+            |_| exceptions::PyOSError::new_err(format!("'{}' cannot be read", file_path))
+        )?;
+        let lines = contents.lines().map(|line| format!("{:<80}", line)).collect();
+        Ok(PDBFile { lines: lines })
     }
 
     
