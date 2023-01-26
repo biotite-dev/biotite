@@ -129,7 +129,7 @@ jobs:
         name: artifact
         path: dist
 
-    - name: ls dir
+    - name: List distributions to be uploaded
       run: ls dist
 
     - uses: pypa/gh-action-pypi-publish@release/v1
