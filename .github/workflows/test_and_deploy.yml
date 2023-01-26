@@ -106,7 +106,7 @@ jobs:
         run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=10 && cd .. && rm -r tmp
 
   make_sdist:
-    name: Make SDist
+    name: Build source distribution
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
