@@ -113,7 +113,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - name: Build SDist
+    - name: Build source distribution
       run: pipx run build --sdist
     - uses: actions/upload-artifact@v3
       with:
