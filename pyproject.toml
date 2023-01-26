@@ -6,3 +6,9 @@ requires = [
     "oldest-supported-numpy",
     "cython >= 0.29"
 ]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "mdtraj"
+]

@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CIBW_TEST_REQUIRES: pytest
+  CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: "pytest {project} --ignore={project}//tests//structure//test_trajectory.py --ignore={project}//tests//sequence//align//test_statistics.py --ignore={project}//tests//application --ignore={project}//tests//database  --ignore={project}//tests//test_doctest.py --ignore={project}//tests//test_modname.py --durations=50"
   CIBW_DEPENDENCY_VERSIONS: "pinned"
   # Once GHA and cibuildwheel are updated this can be removed
@@ -63,6 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # QEMU enables building/testing for non-native architectures (ie arm64)
       - name: Set up QEMU
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v2
