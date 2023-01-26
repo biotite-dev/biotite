@@ -21,6 +21,7 @@ with open("README.rst") as readme:
 # Parse the top level package for the version
 # Do not use an import to prevent side effects
 # e.g. required runtime dependencies
+version = None
 with open(join("src", "biotite", "__init__.py")) as init_file:
     for line in init_file.read().splitlines():
         if line.lstrip().startswith("__version__"):
@@ -30,6 +31,8 @@ with open(join("src", "biotite", "__init__.py")) as init_file:
                 version = version_match.group(0)[1 : -1]
             else:
                 raise ValueError("No version is specified in '__init__.py'")
+if version is None:
+    raise ValueError("Unable to identify 'version' in __init__.py")
 
 # Compile Cython into C
 try:
@@ -61,32 +64,13 @@ def get_extensions():
 
 
 setup(
-    name="biotite",
     version = version,
-    description = ("A comprehensive library for "
-                   "computational molecular biology"),
     long_description = long_description,
-    author = "The Biotite contributors",
-    license = "BSD 3-Clause",
-    classifiers = [
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: BSD License",
-        "Natural Language :: English",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: Implementation :: CPython",
-        "Topic :: Scientific/Engineering :: Bio-Informatics",
-    ],
     url = "https://www.biotite-python.org",
     project_urls = {
         "Documentation": "https://biotite.biotite-python.org",
         "Repository": "https://github.com/biotite-dev/biotite",
     },
-    
     zip_safe = False,
     packages = find_packages("src"),
     package_dir = {"" : "src"},
@@ -104,18 +88,6 @@ setup(
         # Structure data (masses, bonds, etc.)
         "biotite.structure.info"    : ["*.json", "*.msgpack"]
     },
-
-    # Based on https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
-    # When updating our minimum supported python version follow minimums set in this setup.cfg
-    # as of 2022-01 for 3.7 "numpy >= 1.14.5", for 3.8 "numpy >= 1.17.3", for 3.9 "numpy >= 1.19.3"
-    # this should be manually updated as the minimum python version increases
-    install_requires = ["requests >= 2.12",
-                        "numpy >= 1.14.5",
-                        "msgpack >= 0.5.6",
-                        "networkx >= 2.0"],
-    python_requires = ">=3.7",
-    
-    tests_require = ["pytest"],
 )
 
 
