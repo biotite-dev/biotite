@@ -1,3 +1,37 @@
+[project]
+name = "biotite"
+requires-python = ">=3.7"
+description = "A comprehensive library for computational molecular biology"
+authors = [{name = "The Biotite contributors", email = "none@none.com"}]
+license = {"file" = "LICENSE.rst"}
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+# Based on https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
+# When updating our minimum supported python version follow minimums set in this setup.cfg
+# as of 2022-01 for 3.7 "numpy >= 1.14.5", for 3.8 "numpy >= 1.17.3", for 3.9 "numpy >= 1.19.3"
+# this should be manually updated as the minimum python version increases
+dependencies = [
+  "requests >= 2.12",
+  "numpy >= 1.14.5",
+  "msgpack >= 0.5.6",
+  "networkx >= 2.0",
+]
+dynamic = ["version"]
+
+#
 [build-system]
 # Minimum requirements for the build system to execute.
 requires = [
@@ -6,7 +40,8 @@ requires = [
     "oldest-supported-numpy",
     "cython >= 0.29"
 ]
-
+build-backend = "setuptools.build_meta"
+#
 [project.optional-dependencies]
 test = [
   "pytest",
