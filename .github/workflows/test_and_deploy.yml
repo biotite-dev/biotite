@@ -120,6 +120,7 @@ jobs:
         path: dist/*.tar.gz
 
   upload_to_pypi_if_release:
+    name: Upload to PyPI
     needs: [test-biotite-and-build-wheels, make_sdist, test-muscle5]
     runs-on: ubuntu-latest
     steps:
