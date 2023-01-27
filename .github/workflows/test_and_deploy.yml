@@ -101,7 +101,7 @@ jobs:
       - name: Building distribution
         run: pip wheel --no-deps -w dist .
       - name: Installing distribution
-        run: pip install .//dist//*.whl pytest
+        run: pip install .//dist//*.whl pytest mdtraj
       - name: Testing muscle5
         run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=50 && cd .. && rm -r tmp
       - name: Testing mdtraj
