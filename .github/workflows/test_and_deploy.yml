@@ -81,8 +81,8 @@ jobs:
           path: ./wheelhouse/*.whl
   
 
-  test-muscle5:
-    name: Testing Biotite's interface for Muscle 5
+  test-optional-application-interfaces:
+    name: Testing Biotite's interface for Optional applications
 
     runs-on: ubuntu-20.04
     defaults:
@@ -102,8 +102,8 @@ jobs:
         run: pip wheel --no-deps -w dist .
       - name: Installing distribution
         run: pip install .//dist//*.whl pytest
-      - name: Testing code
-        run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=10 && cd .. && rm -r tmp
+      - name: Testing muscle5 and mdtraj
+        run: mkdir tmp && cd tmp && pytest ..//tests --durations=50 && cd .. && rm -r tmp
 
   make_sdist:
     name: Build source distribution
