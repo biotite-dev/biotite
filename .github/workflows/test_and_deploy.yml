@@ -64,6 +64,7 @@ jobs:
       - uses: actions/checkout@v3
 
       # QEMU enables building/testing for non-native architectures (ie arm64)
+      # at the cost of speed
       - name: Set up QEMU
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v2
@@ -103,9 +104,9 @@ jobs:
       - name: Installing distribution
         run: pip install .//dist//*.whl pytest mdtraj
       - name: Testing muscle5
-        run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=50 && cd .. && rm -r tmp
+        run: pytest tests//application//test_msa.py --durations=50
       - name: Testing mdtraj
-        run: mkdir tmp && cd tmp && pytest ..//tests//structure//test_generalio.py ..//tests//structure//test_sasa.py ..//tests//structure//test_box.py ..//tests//structure//test_hbond.py ..//tests//structure//test_hbond.py ..//tests//structure//test_trajectory.py ..//tests//structure//test_geometry.py ..//tests//structure//test_rdf.py --durations=50 && cd .. && rm -r tmp
+        run: pytest tests//structure//test_generalio.py tests//structure//test_sasa.py tests//structure//test_box.py tests//structure//test_hbond.py tests//structure//test_hbond.py tests//structure//test_trajectory.py tests//structure//test_geometry.py tests//structure//test_rdf.py --durations=50
 
   make-sdist:
     name: Build source distribution
