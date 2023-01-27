@@ -105,7 +105,7 @@ jobs:
       - name: Testing muscle5 and mdtraj
         run: mkdir tmp && cd tmp && pytest ..//tests --durations=50 && cd .. && rm -r tmp
 
-  make_sdist:
+  make-sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
@@ -121,7 +121,7 @@ jobs:
 
   upload_to_pypi_if_release:
     name: Upload to PyPI
-    needs: [test-biotite-and-build-wheels, make_sdist, test-muscle5]
+    needs: [test-biotite-and-build-wheels, make-sdist, test-optional-application-interfaces]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
