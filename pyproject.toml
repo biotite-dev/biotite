@@ -45,4 +45,5 @@ build-backend = "setuptools.build_meta"
 [project.optional-dependencies]
 test = [
   "pytest",
+  "mdtraj",
 ]
