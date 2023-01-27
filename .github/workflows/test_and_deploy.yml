@@ -70,14 +70,6 @@ jobs:
         with:
           platforms: all
 
-      # zlib.h is required for mdtraj to install on windows
-      - name: "Set up MSYS2 (Windows)"
-        uses: msys2/setup-msys2@v2
-        if: startsWith(matrix.os, 'windows')
-        with:
-          update: true
-          install: zlib
-
       - name: Build & (optionally) Test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
         uses: pypa/cibuildwheel@v2.11.4
