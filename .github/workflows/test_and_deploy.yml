@@ -102,8 +102,10 @@ jobs:
         run: pip wheel --no-deps -w dist .
       - name: Installing distribution
         run: pip install .//dist//*.whl pytest
-      - name: Testing muscle5 and mdtraj
-        run: mkdir tmp && cd tmp && pytest ..//tests --durations=50 && cd .. && rm -r tmp
+      - name: Testing muscle5
+        run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=50 && cd .. && rm -r tmp
+      - name: Testing mdtraj
+        run: mkdir tmp && cd tmp && pytest ..//tests//application//test_generalio.py ..//tests//application//test_sasa.py ..//tests//application//test_box.py ..//tests//application//test_hbond.py ..//tests//application//test_hbond.py ..//tests//application//test_trajectory.py ..//tests//application//test_geometry.py ..//tests//application//test_rdf.py --durations=50 && cd .. && rm -r tmp
 
   make-sdist:
     name: Build source distribution
