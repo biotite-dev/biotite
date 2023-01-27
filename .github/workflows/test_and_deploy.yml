@@ -105,7 +105,7 @@ jobs:
       - name: Testing muscle5
         run: mkdir tmp && cd tmp && pytest ..//tests//application//test_msa.py --durations=50 && cd .. && rm -r tmp
       - name: Testing mdtraj
-        run: mkdir tmp && cd tmp && pytest ..//tests//structure//test_generalio.py ..//tests//application//test_sasa.py ..//tests//application//test_box.py ..//tests//application//test_hbond.py ..//tests//application//test_hbond.py ..//tests//application//test_trajectory.py ..//tests//application//test_geometry.py ..//tests//application//test_rdf.py --durations=50 && cd .. && rm -r tmp
+        run: mkdir tmp && cd tmp && pytest ..//tests//structure//test_generalio.py ..//tests//structure//test_sasa.py ..//tests//structure//test_box.py ..//tests//structure//test_hbond.py ..//tests//structure//test_hbond.py ..//tests//structure//test_trajectory.py ..//tests//structure//test_geometry.py ..//tests//structure//test_rdf.py --durations=50 && cd .. && rm -r tmp
 
   make-sdist:
     name: Build source distribution
