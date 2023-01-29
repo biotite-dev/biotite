@@ -91,7 +91,7 @@ jobs:
   
 
   test-interfaces:
-    name: Testing interfaces to databases and applications
+    name: Test interfaces to databases and applications
 
     runs-on: ubuntu-20.04
     defaults:
@@ -120,7 +120,7 @@ jobs:
   
 
   test-muscle5:
-    name: Testing interface to Muscle 5
+    name: Test interface to Muscle 5
 
     runs-on: ubuntu-20.04
     defaults:
