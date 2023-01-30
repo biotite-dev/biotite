@@ -112,8 +112,8 @@ jobs:
         run: >
           pytest
           --durations=50
-          --ignore="tests//application//blast.py"
-          --ignore="tests//application//sra.py"
+          --ignore="tests//application//test_blast.py"
+          --ignore="tests//application//test_sra.py"
           tests//test_doctest.py
           tests//database
           tests//application
