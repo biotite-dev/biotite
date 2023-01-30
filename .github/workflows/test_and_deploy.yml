@@ -22,6 +22,7 @@ env:
     --ignore={project}//tests//application
     --ignore={project}//tests//database 
     --ignore={project}//tests//test_doctest.py
+    --ignore={project}//tests//test_modname.py
   CIBW_DEPENDENCY_VERSIONS: "pinned"
   # Once GHA and cibuildwheel are updated this can be removed
   # mussllinux takes 6+ hrs to build and test so ignore it
@@ -115,6 +116,7 @@ jobs:
           --ignore="tests//application//test_blast.py"
           --ignore="tests//application//test_sra.py"
           tests//test_doctest.py
+          tests//test_modname.py
           tests//database
           tests//application
   
