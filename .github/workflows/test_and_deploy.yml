@@ -105,8 +105,9 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environment.yml
-          auto-update-conda: true
-          mamba-version: "*"
+          # Use Mambaforge to circumvent conflict issue:
+          # https://github.com/conda-incubator/setup-miniconda/issues/274
+          miniforge-variant: Mambaforge
       - name: Build distribution
         run: pip wheel --no-deps -w dist .
       - name: Install distribution
@@ -137,8 +138,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: biotite-dev
-          auto-update-conda: true
-          mamba-version: "*"
+          miniforge-variant: Mambaforge
           python-version: 3.10
           channels: conda-forge,defaults
       - name: Install Muscle 5
