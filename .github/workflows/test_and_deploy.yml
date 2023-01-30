@@ -139,7 +139,7 @@ jobs:
         with:
           activate-environment: biotite-dev
           miniforge-variant: Mambaforge
-          python-version: 3.10
+          python-version: "3.10"
           channels: conda-forge,defaults
       - name: Install Muscle 5
         run: conda install -c bioconda "muscle=5"
