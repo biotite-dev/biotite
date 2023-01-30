@@ -105,6 +105,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environment.yml
+          auto-update-conda: true
           mamba-version: "*"
       - name: Build distribution
         run: pip wheel --no-deps -w dist .
@@ -136,6 +137,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: biotite-dev
+          auto-update-conda: true
           mamba-version: "*"
           python-version: 3.10
           channels: conda-forge,defaults
