@@ -6,7 +6,7 @@ import pkgutil
 from os.path import dirname, join, isdir, splitext
 import importlib
 import pytest
-from ..util import cannot_import
+from .util import cannot_import
 
 
 def find_all_modules(package_name, src_dir):
