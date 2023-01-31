@@ -114,11 +114,13 @@ jobs:
         run: pip install .//dist//*.whl
       - name: Run tests
         # Running NCBI BLAST and SRA takes too long
+        # The tests on the NCBI Entrez database are not reliable enough
         run: >
           pytest
           --durations=50
           --ignore="tests//application//test_blast.py"
           --ignore="tests//application//test_sra.py"
+          --ignore="tests//database//test_entrez.py"
           tests//test_doctest.py
           tests//test_modname.py
           tests//database
