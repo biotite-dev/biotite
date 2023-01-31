@@ -30,6 +30,7 @@ env:
   # The tests on AARCH64 take 2 hours and are hence skipped
   CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64 *-*linux_aarch64"
 
+
 jobs:
   generate-wheels-matrix:
     name: "Generate wheels matrix"
@@ -62,6 +63,7 @@ jobs:
           # since it is emulated. (6+ hours)
           # *note* most of the build time is actually numpy for musllinux
           CIBW_SKIP: "*musllinux* *-manylinux_i686 *-musllinux_i686 *-win32 pp*"
+
 
   test-and-build:
     name: "Build & Test"
@@ -168,8 +170,10 @@ jobs:
         path: dist/*.tar.gz
 
 
-  upload_to_pypi:
-    name: Upload to PyPI
+  upload:
+    name: Upload to GitHub Releases & PyPI
+    permissions:
+      contents: write
     needs: [test-and-build, make-sdist, test-interfaces, test-muscle5]
     runs-on: ubuntu-latest
     steps:
@@ -177,12 +181,15 @@ jobs:
       with:
         name: artifact
         path: dist
-
     - name: List distributions to be uploaded
       run: ls dist
-
-    - uses: pypa/gh-action-pypi-publish@release/v1
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
-        user: __token__
-        password: ${{ secrets.pypi_password }}
+        files: dist//*
+    - name: Upload to PyPI
+      uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        password: ${{ secrets.PYPI_TOKEN }}
