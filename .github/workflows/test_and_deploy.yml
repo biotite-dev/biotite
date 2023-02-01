@@ -27,8 +27,7 @@ env:
   CIBW_DEPENDENCY_VERSIONS: "pinned"
   # Once GHA and cibuildwheel are updated this can be removed
   # mussllinux takes 6+ hrs to build and test so ignore it
-  # The tests on AARCH64 take 2 hours and are hence skipped
-  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64 *-*linux_aarch64"
+  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64
 
 
 jobs:
@@ -56,7 +55,7 @@ jobs:
           )
           echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
         env:
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "x86 AMD64"
           # Skip musllinux because it takes too long to compile on GHA
