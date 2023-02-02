@@ -6,6 +6,7 @@ import pkgutil
 from os.path import dirname, join, isdir, splitext
 import importlib
 import pytest
+from .util import cannot_import
 
 
 def find_all_modules(package_name, src_dir):
@@ -26,6 +27,10 @@ def find_all_modules(package_name, src_dir):
     return module_names
 
 
+@pytest.mark.skipif(
+    cannot_import("matplotlib") | cannot_import("mdtraj"),
+    reason="Optional dependencies are not met"
+)
 @pytest.mark.parametrize(
     "module_name",
     find_all_modules(
