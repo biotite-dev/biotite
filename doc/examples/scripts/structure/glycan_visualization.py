@@ -218,7 +218,7 @@ graph = nx.Graph()
 graph.add_nodes_from(struc.get_residue_starts(structure))
 # Convert BondList to array and omit bond order
 bonds = structure.bonds.as_array()[:, :2]
-# Convert indices pointing connected atoms to indices pointing to the
+# Convert indices pointing to connected atoms to indices pointing to the
 # starting atom of the respective residue
 connected = struc.get_residue_starts_for(
     structure, bonds.flatten()
@@ -258,9 +258,10 @@ for atom_i, atom_j in list(graph.edges):
 
 # Get connected subgraphs containing glycans
 # -> any subgraph with more than one node
-glycan_graphs = [graph.subgraph(nodes).copy()
-                 for nodes in nx.connected_components(graph)
-                 if len(nodes) > 1]
+glycan_graphs = [
+    graph.subgraph(nodes).copy() for nodes in nx.connected_components(graph)
+    if len(nodes) > 1
+]
 
 for g in glycan_graphs:
     print([structure.res_name[atom_i] for atom_i in sorted(g.nodes())])
@@ -321,7 +322,9 @@ for glycan_graph in glycan_graphs:
     # so that each glycan graph is at the correct position and the
     # node distances are equal
     pos = graphviz_layout(glycan_graph, prog="dot")
-    nodes = list(pos.keys())
+    # 'graphviz_layout()' converts the nodes from integers to string
+    # -> revert this conversion
+    nodes = [int(key) for key in pos.keys()]
     # Convert dictionary to array
     pos_array = np.array(list(pos.values()))
     # Position the root at coordinate origin
