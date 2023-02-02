@@ -27,7 +27,7 @@ env:
   CIBW_DEPENDENCY_VERSIONS: "pinned"
   # Once GHA and cibuildwheel are updated this can be removed
   # mussllinux takes 6+ hrs to build and test so ignore it
-  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64
+  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
 
 
 jobs:
