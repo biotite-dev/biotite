@@ -11,10 +11,6 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.8'
-            numpy: '1.16'
-            source: false
-          - os: ubuntu-latest
             python: '3.9'
             numpy: '1.19'
             source: false
@@ -22,9 +18,9 @@ jobs:
             python: '3.10'
             numpy: '1.21'
             source: true
-          - os: macos-latest
-            python: '3.8'
-            numpy: '1.16'
+          - os: ubuntu-latest
+            python: '3.11'
+            numpy: '1.23'
             source: false
           - os: macos-latest
             python: '3.9'
@@ -34,9 +30,9 @@ jobs:
             python: '3.10'
             numpy: '1.21'
             source: false
-          - os: windows-latest
-            python: '3.8'
-            numpy: '1.16'
+          - os: macos-latest
+            python: '3.11'
+            numpy: '1.23'
             source: false
           - os: windows-latest
             python: '3.9'
@@ -45,6 +41,10 @@ jobs:
           - os: windows-latest
             python: '3.10'
             numpy: '1.21'
+            source: false
+          - os: windows-latest
+            python: '3.11'
+            numpy: '1.23'
             source: false
 
     runs-on: ${{ matrix.os }}
