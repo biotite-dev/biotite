@@ -131,7 +131,7 @@ class PDBFile(TextFile):
         if number < 0 or number > 999:
             raise ValueError("The number must be in range 0-999")
         
-        remark_string = f"REMARK {number:>d}"
+        remark_string = f"REMARK {number:>3d}"
         # Find lines and omit ``REMARK XXX `` part
         remark_lines = [
             line[CONTENT_START_COLUMN:] for line in self.lines
@@ -860,7 +860,8 @@ class PDBFile(TextFile):
         if assembly_start_i is None:
             if assembly_id is None:
                 raise InvalidFileError(
-                    "File does not transformation expression for assemblies"
+                    "File does not contain transformation "
+                    "expressions for assemblies"
                 )
             else:
                 raise KeyError(
@@ -1131,7 +1132,7 @@ def _apply_transformations(structure, rotations, translations):
     Get subassembly by applying the given transformations to the input
     structure containing affected chains.
     """
-    # Additional first dimesion for 'structure.repeat()'
+    # Additional first dimension for 'structure.repeat()'
     assembly_coord = np.zeros((len(rotations),) + structure.coord.shape)
 
     # Apply corresponding transformation for each copy in the assembly
