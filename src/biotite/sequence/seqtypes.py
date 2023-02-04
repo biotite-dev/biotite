@@ -253,15 +253,13 @@ class NucleotideSequence(Sequence):
         ML*
         
         """
-        if self._alphabet == NucleotideSequence.alphabet_amb:
+        if self._alphabet != NucleotideSequence.alphabet_unamb:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
         if codon_table is None:
             # Import at this position to avoid circular import
             from .codon import CodonTable
             codon_table = CodonTable.default_table()
-        stop_code = ProteinSequence.alphabet.encode("*")
-        met_code  = ProteinSequence.alphabet.encode("M")
         
         if complete:
             if len(self) % 3 != 0:
@@ -274,6 +272,8 @@ class NucleotideSequence(Sequence):
             return protein_seq
         
         else:
+            stop_code = ProteinSequence.alphabet.encode("*")
+            met_code  = ProteinSequence.alphabet.encode("M")
             protein_seqs = []
             pos = []
             code = self.code
