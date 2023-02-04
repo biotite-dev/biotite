@@ -1,0 +1,194 @@
+---
+name: "CI & CD"
+
+on:
+  workflow_dispatch:
+  pull_request:
+  release:
+    types:
+    - published
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CIBW_BUILD: cp39-* cp310-* cp311-*
+  CIBW_TEST_EXTRAS: test
+  CIBW_TEST_COMMAND: >
+    pytest {project}
+    --durations=50
+    --ignore={project}//tests//structure//test_trajectory.py
+    --ignore={project}//tests//sequence//align//test_statistics.py
+    --ignore={project}//tests//application
+    --ignore={project}//tests//database 
+    --ignore={project}//tests//test_doctest.py
+    --ignore={project}//tests//test_modname.py
+  CIBW_DEPENDENCY_VERSIONS: "pinned"
+  # Once GHA and cibuildwheel are updated this can be removed
+  # mussllinux takes 6+ hrs to build and test so ignore it
+  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
+
+
+jobs:
+  generate-wheels-matrix:
+    name: "Generate wheels matrix"
+    runs-on: "ubuntu-latest"
+    outputs:
+      include: ${{ steps.set-matrix.outputs.include }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install cibuildwheel
+        # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
+        run: pipx install cibuildwheel==2.11.4
+      - id: set-matrix
+        run: |
+          MATRIX=$(
+            {
+              cibuildwheel --print-build-identifiers --platform linux \
+              | jq -nRc '{"only": inputs, "os": "ubuntu-20.04"}' \
+              && cibuildwheel --print-build-identifiers --platform macos \
+              | jq -nRc '{"only": inputs, "os": "macos-11"}' \
+              && cibuildwheel --print-build-identifiers --platform windows \
+              | jq -nRc '{"only": inputs, "os": "windows-2019"}'
+            } | jq -sc
+          )
+          echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
+        env:
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_WINDOWS: "x86 AMD64"
+          # Skip musllinux because it takes too long to compile on GHA
+          # since it is emulated. (6+ hours)
+          # *note* most of the build time is actually numpy for musllinux
+          CIBW_SKIP: "*musllinux* *-manylinux_i686 *-musllinux_i686 *-win32 pp*"
+
+
+  test-and-build:
+    name: "Build & Test"
+    needs: "generate-wheels-matrix"
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.generate-wheels-matrix.outputs.include) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      # QEMU enables building/testing for non-native architectures (ie arm64)
+      # at the cost of speed
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Build & (optionally) test wheels
+        # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
+        uses: pypa/cibuildwheel@v2.11.4
+        with:
+          only: ${{ matrix.only }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+  
+
+  test-interfaces:
+    name: Test interfaces to databases and applications
+
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: environment.yml
+          # Use Mambaforge to circumvent conflict issue:
+          # https://github.com/conda-incubator/setup-miniconda/issues/274
+          miniforge-variant: Mambaforge
+      - name: Build distribution
+        run: pip wheel --no-deps -w dist .
+      - name: Install distribution
+        run: pip install .//dist//*.whl
+      - name: Run tests
+        # Running NCBI BLAST and SRA takes too long
+        # The tests on the NCBI Entrez database are not reliable enough
+        run: >
+          pytest
+          --durations=50
+          --ignore="tests//application//test_blast.py"
+          --ignore="tests//application//test_sra.py"
+          --ignore="tests//database//test_entrez.py"
+          tests//test_doctest.py
+          tests//test_modname.py
+          tests//database
+          tests//application
+  
+
+  test-muscle5:
+    name: Test interface to Muscle 5
+
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: biotite-dev
+          miniforge-variant: Mambaforge
+          python-version: "3.10"
+          channels: conda-forge,defaults
+      - name: Install Muscle 5
+        run: conda install -c bioconda "muscle=5"
+      - name: Build distribution
+        run: pip wheel -w dist .
+      - name: Install distribution
+        run: pip install .//dist//*.whl pytest
+      - name: Test Muscle 5 interface
+        run: pytest --durations=50 tests//application//test_msa.py
+
+
+  make-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - name: Build source distribution
+      run: pipx run build --sdist
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+
+  upload:
+    name: Upload to GitHub Releases & PyPI
+    permissions:
+      contents: write
+    needs: [test-and-build, make-sdist, test-interfaces, test-muscle5]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
+    - name: List distributions to be uploaded
+      run: ls dist
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        files: dist//*
+    - name: Upload to PyPI
+      uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        password: ${{ secrets.PYPI_TOKEN }}

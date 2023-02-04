@@ -116,20 +116,17 @@ def test_pdbx_consistency(path, model):
     # (all vector elements = {0, 1})
     if a2.box is not None and not ((a2.box == 0) | (a2.box == 1)).all():
         assert np.allclose(a1.box, a2.box)
+    assert a2.hetero is not None
     # MMTF might assign some residues, that PDBx assigns as 'hetero',
     # as 'non-hetero' if they are RNA/DNA or peptide linking
-    try:
-        assert a1.hetero.tolist() == \
-               a2.hetero.tolist()
-    except AssertionError:
-        conflict_residues = np.unique(
-            a1.res_name[a1.hetero != a2.hetero]
-        )
-        for res in conflict_residues:
-            assert info.link_type(res) in [
-                "L-PEPTIDE LINKING", "PEPTIDE LINKING",
-                "DNA LINKING", "RNA LINKING"
-            ]
+    conflict_residues = np.unique(
+        a1.res_name[a1.hetero != a2.hetero]
+    )
+    for res in conflict_residues:
+        assert info.link_type(res) in [
+            "L-PEPTIDE LINKING", "PEPTIDE LINKING",
+            "DNA LINKING", "RNA LINKING"
+        ]
     # Test the remaining categories
     for category in [
         c for c in a1.get_annotation_categories() if c != "hetero"

@@ -700,7 +700,7 @@ class PDBFile(TextFile):
             self.lines.append(
                 f"CRYST1{a:>9.3f}{b:>9.3f}{c:>9.3f}"
                 f"{np.rad2deg(alpha):>7.2f}{np.rad2deg(beta):>7.2f}"
-                f"{np.rad2deg(gamma):>7.2f} P 1           1"
+                f"{np.rad2deg(gamma):>7.2f} P 1           1          "
             )
         is_stack = coords.shape[0] > 1
         for model_num, coord_i in enumerate(coords, start=1):

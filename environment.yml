@@ -35,5 +35,5 @@ dependencies:
   - muscle =3
   - sra-tools
   - autodock-vina
-  - viennarna
+  - viennarna >=2.5.0
   - tantan
