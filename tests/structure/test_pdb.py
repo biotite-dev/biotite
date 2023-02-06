@@ -342,6 +342,10 @@ LENGTHS = [3, 4, 5]
     )
 )
 def test_hybrid36_codec(number, length):
+    """
+    Test whether hybrid-36 encoding and subsequent decoding restores the
+    same number.
+    """
     string = hybrid36.encode_hybrid36(number, length)
     test_number = hybrid36.decode_hybrid36(string)
     assert test_number == number
@@ -350,6 +354,39 @@ def test_hybrid36_codec(number, length):
 def test_max_hybrid36_number():
     assert hybrid36.max_hybrid36_number(4) == 2436111
     assert hybrid36.max_hybrid36_number(5) == 87440031
+
+
+
+@pytest.mark.parametrize("hybrid36", [False, True])
+def test_bond_records(hybrid36):
+    """
+    Writing a structure with randomized bonds and reading them again
+    should give a structure with the same bonds.
+    """
+    # Generate enough atoms to test the hybrid-36 encoding
+    n_atoms = 200000 if hybrid36 else 10000
+    atoms = struc.AtomArray(n_atoms)
+    # NaN values cannot be written to PDB
+    atoms.coord[...] = 0
+    # Only the bonds of 'HETATM' atoms records are written 
+    atoms.hetero[:] = True
+    # Omit time consuming element guessing
+    atoms.element[:] = "NA"
+
+    np.random.seed(0)
+    # Create random bonds four times the number of atoms
+    bond_array = np.random.randint(n_atoms, size=(4*n_atoms, 2))
+    # Remove bonds of atoms to themselves
+    bond_array = bond_array[bond_array[:, 0] != bond_array[:, 1]]
+    ref_bonds = struc.BondList(n_atoms, bond_array)
+    atoms.bonds = ref_bonds
+
+    pdb_file = pdb.PDBFile()
+    pdb_file.set_structure(atoms, hybrid36)
+    parsed_atoms = pdb_file.get_structure(model=1, include_bonds=True)
+    test_bonds = parsed_atoms.bonds
+
+    assert test_bonds == ref_bonds
 
 
 def test_bond_parsing():

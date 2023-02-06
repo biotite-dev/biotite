@@ -730,7 +730,7 @@ class PDBFile(TextFile):
                 (array.chain_id[bond_array[:,0]] != array.chain_id[bond_array[:,1]])
             ]
             self._set_bonds(
-                BondList(array.array_length(), bond_array), atom_id
+                BondList(array.array_length(), bond_array), pdb_atom_id
             )
     
 
@@ -1050,11 +1050,11 @@ class PDBFile(TextFile):
 
         bonds = []
         for line in conect_lines:
-            center_id = atom_id_to_index[int(line[6 : 11])]
+            center_id = atom_id_to_index[decode_hybrid36(line[6 : 11])]
             for i in range(11, 31, 5):
                 id_string = line[i : i+5]
                 try:
-                    id = atom_id_to_index[int(id_string)]
+                    id = atom_id_to_index[decode_hybrid36(id_string)]
                 except ValueError:
                     # String is empty -> no further IDs
                     break
@@ -1077,8 +1077,8 @@ class PDBFile(TextFile):
                     break
                 if n_added == 0:
                     # Add new record
-                    line = f"CONECT{atom_ids[center_i]:>5d}"
-                line += f"{atom_ids[bonded_i]:>5d}"
+                    line = f"CONECT{atom_ids[center_i]:>5}"
+                line += f"{atom_ids[bonded_i]:>5}"
                 n_added += 1
                 if n_added == 4:
                     # Only a maximum of 4 bond partners can be put
