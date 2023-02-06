@@ -249,6 +249,8 @@ def _guess_element(atom_name):
     # remove digits (1H -> H)
     elem = "".join([i for i in atom_name if not i.isdigit()])
     elem = elem.upper()
+    if len(elem) == 0:
+        return ""
 
     # Some often used elements for biomolecules
     if elem.startswith("C") or elem.startswith("N") or \
