@@ -3,8 +3,8 @@
    :alt: Biotite at PyPI
 .. image:: https://img.shields.io/pypi/pyversions/biotite.svg
    :alt: Python version
-.. image:: https://github.com/biotite-dev/biotite/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/biotite-dev/biotite/actions/workflows/test.yml
+.. image:: https://github.com/biotite-dev/biotite/actions/workflows/test_and_deploy.yml/badge.svg
+   :target: https://github.com/biotite-dev/biotite/actions/workflows/test_and_deploy.yml
    :alt: Test status
 
 .. image:: https://www.biotite-python.org/_static/assets/general/biotite_logo_m.png
