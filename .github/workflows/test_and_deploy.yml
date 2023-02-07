@@ -32,6 +32,9 @@ jobs:
             toolchain: stable
             override: true
 
+      - name: Test Cargo
+        run: 'cargo "$HOME/.cargo/bin/cargo" --help'
+
       - name: Install cibuildwheel
         run: pipx install cibuildwheel==2.12.0
 
