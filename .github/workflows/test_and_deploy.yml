@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: pip install "maturin>=0.14,<0.15" "oldest-supported-numpy" pytest
       - name: Build wheel
-        run: maturin build --release --no-sdist -i python -o dist
+        run: maturin build --release -i python -o dist
       - name: Install wheel
         run: pip install .//dist//*.whl
       - name: Test wheel
@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: pip install "maturin>=0.14,<0.15" pytest
       - name: Build source distribution
-        run: maturin build --release --sdist -i python -o dist
+        run: maturin sdist -o dist
       - name: Install source distribution
         run: pip install .//dist//*.tar.gz
       - name: Test source distribution
