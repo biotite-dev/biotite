@@ -38,7 +38,7 @@ jobs:
       - name: Build and test wheels
         run: cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ENVIRONMENT: PATH=$PATH:$HOME//.cargo//bin
+          CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64"
