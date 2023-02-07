@@ -1,0 +1,88 @@
+# This action is based on a contribution of the user https://github.com/danpf to
+# https://github.com/biotite-dev/biotite published under the same license
+# (https://github.com/biotite-dev/biotite/pull/451)
+
+---
+name: "CI & CD"
+
+on:
+  workflow_dispatch:
+  pull_request:
+  release:
+    types:
+    - published
+
+
+jobs:
+  test-and-build:
+    name: "Build & Test"
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macOS-11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v3
+
+      - name: Install cibuildwheel
+        run: pipx install cibuildwheel==2.12.0
+
+      - name: Build and test wheels
+        run: cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          # Skip musllinux because it takes too long to compile on GHA
+          # since it is emulated. (6+ hours)
+          # *note* most of the build time is actually numpy for musllinux
+          #CIBW_SKIP: "*musllinux* *-win32*"
+          CIBW_BUILD: cp39-* cp310-* cp311-*
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: pytest {project}
+          #CIBW_TEST_SKIP: "*-macosx_arm64"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+
+  make-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install maturin
+      run: pipx install maturin
+    - name: Build source distribution
+      run: maturin build --release --sdist -i python -o dist
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+
+  upload:
+    name: Upload to GitHub Releases & PyPI
+    permissions:
+      contents: write
+    needs: [test-and-build, make-sdist]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: artifact
+        path: dist
+    - name: List distributions to be uploaded
+      run: ls dist
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        files: dist//*
+    - name: Upload to PyPI
+      uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        password: ${{ secrets.PYPI_TOKEN }}
