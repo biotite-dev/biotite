@@ -1,7 +1,3 @@
-# This action is based on a contribution of the user https://github.com/danpf to
-# https://github.com/biotite-dev/biotite published under the same license
-# (https://github.com/biotite-dev/biotite/pull/451)
-
 ---
 name: "CI & CD"
 
@@ -14,70 +10,62 @@ on:
 
 
 jobs:
-  test-and-build:
-    name: "Build & Test"
+  wheels:
+    name: "Build & test wheel"
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2019, macOS-11]
+        py-version: ["3.9", "3.10", "3.11"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-
-      # Used to host cibuildwheel
       - uses: actions/setup-python@v3
-
+        with:
+          python-version: ${{ matrix.py-version }}
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
             override: true
-
-      - name: Test Cargo
-        run: '"$HOME/.cargo/bin/cargo" --help'
-
-      - name: Install cibuildwheel
-        run: pipx install cibuildwheel==2.12.0
-
-      - name: Build and test wheels
-        run: cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_ENVIRONMENT: 'PATH="$HOME/.cargo/bin:$PATH"'
-          CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_ARCHS_WINDOWS: "AMD64"
-          # Skip musllinux because it takes too long to compile on GHA
-          # since it is emulated. (6+ hours)
-          # *note* most of the build time is actually numpy for musllinux
-          #CIBW_SKIP: "*musllinux* *-win32*"
-          CIBW_BUILD: cp39-* cp310-* cp311-*
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {project}
-          #CIBW_TEST_SKIP: "*-macosx_arm64"
-
+      - name: Install dependencies
+        run: pip install "maturin>=0.14,<0.15" "oldest-supported-numpy" pytest
+      - name: Build wheel
+        run: maturin build --release --no-sdist -i python -o dist
+      - name: Install wheel
+        run: pip install .//dist//*.whl
+      - name: Test wheel
+        run: pytest --assert=plain
       - uses: actions/upload-artifact@v3
         with:
-          path: ./wheelhouse/*.whl
+          path: .//dist//*.whl
 
 
-  make-sdist:
+  sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Install maturin
-      run: pipx install maturin
-    - name: Build source distribution
-      run: maturin build --release --sdist -i python -o dist
-    - uses: actions/upload-artifact@v3
-      with:
-        path: dist/*.tar.gz
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install "maturin>=0.14,<0.15" pytest
+      - name: Build source distribution
+        run: maturin build --release --sdist -i python -o dist
+      - name: Install source distribution
+        run: pip install .//dist//*.tar.gz
+      - name: Test source distribution
+        run: pytest --assert=plain
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist//*.tar.gz
 
 
   upload:
     name: Upload to GitHub Releases & PyPI
     permissions:
       contents: write
-    needs: [test-and-build, make-sdist]
+    needs: [wheels, sdist]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3

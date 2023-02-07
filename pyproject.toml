@@ -35,5 +35,8 @@ repository = "https://github.com/biotite-dev/fastpdb"
 exclude = ["*.svg", "tests/"]
 
 [build-system]
-requires = ["maturin>=0.14,<0.15"]
+requires = [
+    "maturin>=0.14,<0.15",
+    "oldest-supported-numpy"
+]
 build-backend = "maturin"
