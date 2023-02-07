@@ -31,6 +31,8 @@ dependencies = [
 homepage = "https://github.com/biotite-dev/fastpdb"
 repository = "https://github.com/biotite-dev/fastpdb"
 
+[tool.maturin]
+exclude = ["*.svg"]
 
 [build-system]
 requires = ["maturin>=0.14,<0.15"]
