@@ -14,7 +14,7 @@ jobs:
     name: "Build & test wheel"
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macOS-11]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         py-version: ["3.9", "3.10", "3.11"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -41,7 +41,7 @@ jobs:
 
 
   sdist:
-    name: Build source distribution
+    name: Build & test source distribution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
