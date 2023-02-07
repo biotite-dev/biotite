@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
