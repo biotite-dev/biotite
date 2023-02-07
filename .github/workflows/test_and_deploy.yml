@@ -26,6 +26,12 @@ jobs:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v3
 
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+
       - name: Install cibuildwheel
         run: pipx install cibuildwheel==2.12.0
 
