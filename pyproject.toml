@@ -1,6 +1,6 @@
 [project]
 name = "fastpdb"
-version = "1.0.1"
+version = "1.1.0"
 description = "A high performance drop-in replacement for Biotite's PDBFile."
 readme = "README.rst"
 requires-python = ">=3.7"
@@ -31,7 +31,13 @@ dependencies = [
 homepage = "https://github.com/biotite-dev/fastpdb"
 repository = "https://github.com/biotite-dev/fastpdb"
 
+[tool.maturin]
+exclude = ["*.svg", "tests/"]
+python-source = "python-src"
 
 [build-system]
-requires = ["maturin>=0.14,<0.15"]
+requires = [
+    "maturin>=0.14,<0.15",
+    "oldest-supported-numpy"
+]
 build-backend = "maturin"
