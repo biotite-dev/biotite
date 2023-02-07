@@ -33,6 +33,7 @@ repository = "https://github.com/biotite-dev/fastpdb"
 
 [tool.maturin]
 exclude = ["*.svg", "tests/"]
+python-source = "python-src"
 
 [build-system]
 requires = [
