@@ -8,6 +8,7 @@ license = {file = "LICENSE"}
 keywords = ["pdb-files"]
 authors = [
   {name = "Patrick Kunzmann"},
+  {name = "Nick Coish"}
 ]
 maintainers = [
   {name = "Patrick Kunzmann"}

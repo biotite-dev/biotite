@@ -174,12 +174,12 @@ class PDBFile(BiotitePDBFile):
                 len_a, len_b, len_c,
                 np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
             )
-        if isinstance(atoms, struc.AtomArray):
-            atoms.box = box
-        else:
-            atoms.box = np.repeat(
-                box[np.newaxis, ...], atoms.stack_depth(), axis=0
-            )
+            if isinstance(atoms, struc.AtomArray):
+                atoms.box = box
+            else:
+                atoms.box = np.repeat(
+                    box[np.newaxis, ...], atoms.stack_depth(), axis=0
+                )
         
 
         # Filter altloc IDs
