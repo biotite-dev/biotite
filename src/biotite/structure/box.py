@@ -22,7 +22,6 @@ from .util import vector_dot
 from .atoms import repeat
 from .molecules import get_molecule_masks
 from .chains import get_chain_masks
-from .geometry import centroid
 from .error import BadStructureError
 
 
@@ -392,6 +391,9 @@ def remove_pbc(atoms, selection=None):
     each other, i.e. their distance to each other is be smaller than the
     half box size.
     """
+    # Avoid circular import
+    from .geometry import centroid
+    
     if atoms.box is None:
         raise BadStructureError(
             "The 'box' attribute must be set in the structure"
