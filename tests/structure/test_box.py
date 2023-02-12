@@ -221,7 +221,7 @@ def test_remove_pbc_restore(multi_model, translation_vector):
         array = stack[0]
 
     # Use adjacency matrices instead of pairwise distances
-    # for compuational efficiency
+    # for computational efficiency
     ref_matrix, ref_matrix_pbc = get_matrices(array)
 
     array = struc.translate(array, translation_vector)
