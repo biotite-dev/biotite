@@ -21,7 +21,7 @@ import numpy.linalg as linalg
 from .util import vector_dot
 from .atoms import repeat
 from .molecules import get_molecule_masks
-from .chains import get_chain_masks
+from .chains import get_chain_masks, get_chain_starts
 from .error import BadStructureError
 
 
@@ -403,21 +403,21 @@ def remove_pbc(atoms, selection=None):
     if atoms.bonds is not None:
         molecule_masks = get_molecule_masks(atoms)
     else:
-        molecule_masks = get_chain_masks(atoms)
+        molecule_masks = get_chain_masks(atoms, get_chain_starts(atoms))
 
     for mask in molecule_masks:
         if selection is not None:
             mask &= selection
         # Remove segmentation in molecule
-        new_atoms.coord[..., mask] = remove_pbc_from_coord(
-            new_atoms.coord[..., mask]
+        new_atoms.coord[..., mask, :] = remove_pbc_from_coord(
+            new_atoms.coord[..., mask, :], atoms.box
         )
         # Put center of molecule into box
-        center = centroid(atoms.coord[..., mask])[..., np.newaxis, :]
+        center = centroid(atoms.coord[..., mask, :])[..., np.newaxis, :]
         center_in_box = move_inside_box(
             center, atoms.box
         )
-        new_atoms.coord[..., mask] += (center_in_box - center)
+        new_atoms.coord[..., mask, :] += (center_in_box - center)
 
     return new_atoms
 
