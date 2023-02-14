@@ -4,6 +4,7 @@
 
 from os.path import join
 import itertools
+import warnings
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -126,23 +127,26 @@ def test_repeat_box(multi_model):
     assert repeat_array[..., :array.array_length()] == array
 
 
-def test_remove_pbc_unsegmented():
+@pytest.mark.parametrize("multi_model", [True, False])
+def test_remove_pbc_unsegmented(multi_model):
     """
     `remove_pbc()` should not alter unsegmented structures,
     when the structure is entirely in the box.
-    Exclude the solvent, due to high distances between each atom. 
     """
-    ref_array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    model = None if multi_model else 1
+    ref_array = load_structure(
+        join(data_dir("structure"), "3o5r.mmtf"),
+        model=model,
+        include_bonds=True
+    )
     # Center structure in box
     centroid = struc.centroid(ref_array)
     box_center = np.diag(ref_array.box) / 2
     ref_array = struc.translate(ref_array, box_center-centroid)
-    # Remove solvent
-    ref_array = ref_array[~struc.filter_solvent(ref_array)]
-    array = struc.remove_pbc(ref_array)
+    test_array = struc.remove_pbc(ref_array)
 
-    assert ref_array.equal_annotation_categories(array)
-    assert np.allclose(ref_array.coord, array.coord)
+    assert ref_array.equal_annotation_categories(test_array)
+    assert np.allclose(ref_array.coord, test_array.coord)
 
 
 @pytest.mark.parametrize(
@@ -209,7 +213,12 @@ def test_remove_pbc_restore(multi_model, translation_vector):
                 print(f"Model {m}, Atoms {i} and {j}")
                 raise
     
-    stack = load_structure(join(data_dir("structure"), "1gya.mmtf"))
+    stack = load_structure(
+        join(data_dir("structure"), "1gya.mmtf"), include_bonds=True
+    )
+    #!#
+    #stack = stack[..., struc.filter_amino_acids(stack)]
+    #!#
     stack.box = np.array([
         np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + 10)
         for coord in stack.coord
@@ -245,7 +254,7 @@ def test_remove_pbc_restore(multi_model, translation_vector):
 
 
 @pytest.mark.parametrize("multi_model", [True, False])
-def test_remove_pbc_selections(multi_model):
+def test_remove_pbc_selection(multi_model):
     """
     This test makes no assertions, it only test whether an exception
     occurs, when the `selection` parameter is given in `remove_pbc()`.
@@ -254,12 +263,11 @@ def test_remove_pbc_selections(multi_model):
     if multi_model:
         array = struc.stack([array, array])
     
-    struc.remove_pbc(array)
-    struc.remove_pbc(array, array.chain_id[0])
-    struc.remove_pbc(array, struc.filter_amino_acids(array))
-    struc.remove_pbc(array, [struc.filter_amino_acids(array),
-                       (array.res_name == "FK5")])
-    # Expect error when selectinf an atom multiple times
-    with pytest.raises(ValueError):
-        struc.remove_pbc(array, [struc.filter_amino_acids(array),
-                                 (array.atom_name == "CA")])
+    select_all = np.ones(array.array_length(), dtype=bool)
+    select_none = np.zeros(array.array_length(), dtype=bool)
+    assert struc.remove_pbc(array, select_all) == struc.remove_pbc(array)
+    with warnings.catch_warnings():
+        # A warning due to a zero-division (centroid of empty list of
+        # atoms) is raised here
+        warnings.simplefilter("ignore")
+        assert struc.remove_pbc(array, select_none) == array
