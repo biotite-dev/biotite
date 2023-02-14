@@ -14,10 +14,6 @@ original_wd = os.getcwd()
 # Change directory to setup directory to ensure correct file identification
 os.chdir(dirname(abspath(__file__)))
 
-# Simply import long description from README file
-with open("README.rst") as readme:
-    long_description = readme.read()
-
 # Parse the top level package for the version
 # Do not use an import to prevent side effects
 # e.g. required runtime dependencies
@@ -65,12 +61,6 @@ def get_extensions():
 
 setup(
     version = version,
-    long_description = long_description,
-    url = "https://www.biotite-python.org",
-    project_urls = {
-        "Documentation": "https://biotite.biotite-python.org",
-        "Repository": "https://github.com/biotite-dev/biotite",
-    },
     zip_safe = False,
     packages = find_packages("src"),
     package_dir = {"" : "src"},
