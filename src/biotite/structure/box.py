@@ -413,9 +413,9 @@ def remove_pbc(atoms, selection=None):
             new_atoms.coord[..., mask, :], atoms.box
         )
         # Put center of molecule into box
-        center = centroid(atoms.coord[..., mask, :])[..., np.newaxis, :]
+        center = centroid(new_atoms.coord[..., mask, :])[..., np.newaxis, :]
         center_in_box = move_inside_box(
-            center, atoms.box
+            center, new_atoms.box
         )
         new_atoms.coord[..., mask, :] += (center_in_box - center)
 

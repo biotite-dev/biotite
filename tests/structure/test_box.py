@@ -150,107 +150,86 @@ def test_remove_pbc_unsegmented(multi_model):
 
 
 @pytest.mark.parametrize(
-    "multi_model, translation_vector",
+    "multi_model, seed",
     itertools.product(
         [False, True],
-        [(20,30,40), (-11, 33, 22), (-40, -50, -60)]
+        range(10)
     )
 )
-def test_remove_pbc_restore(multi_model, translation_vector):
-    CUTOFF = 5.0
-    
-    def get_matrices(array):
-        """
-        Create a periodic and non-periodic adjacency matrix.
-        """
-        nonlocal CUTOFF
+def test_remove_pbc_restore(multi_model, seed):
+    BUFFER = 5
+
+    def get_distance_matrices(array):
         if isinstance(array, struc.AtomArray):
-            matrix     = struc.CellList(array, CUTOFF, periodic=False) \
-                        .create_adjacency_matrix(CUTOFF)
-            matrix_pbc = struc.CellList(array, CUTOFF, periodic=True) \
-                        .create_adjacency_matrix(CUTOFF)
-        elif isinstance(array, struc.AtomArrayStack):
-            matrix = np.array(
-                [struc.CellList(model, CUTOFF, periodic=False)
-                 .create_adjacency_matrix(CUTOFF)
-                 for model in array]
-                )
-            matrix_pbc = np.array(
-                [struc.CellList(model, CUTOFF, periodic=True)
-                 .create_adjacency_matrix(CUTOFF)
-                 for model in array]
+            matrix = struc.distance(
+                array.coord[:, np.newaxis, :],
+                array.coord[np.newaxis, :, :],
+                box=None
             )
+            matrix_pbc = struc.distance(
+                array.coord[:, np.newaxis, :],
+                array.coord[np.newaxis, :, :],
+                box=array.box
+            )
+        elif isinstance(array, struc.AtomArrayStack):
+            matrices = [get_distance_matrices(model) for model in array]
+            matrix = np.stack([m[0] for m in matrices])
+            matrix_pbc = np.stack([m[1] for m in matrices])
         return matrix, matrix_pbc
     
-    def assert_equal_matrices(array, matrix1, matrix2, periodic):
-        """
-        Due to numerical instability, entries in both matrices might
-        be different, when the distance of atoms is almost equal to
-        the cutoff distance of the matrix.
-        This function checks, whether two atoms with unequal entries
-        in the matrices are near the cutoff distance.
-        """
-        nonlocal CUTOFF
-        indices = np.where(matrix1 != matrix2)
-        for index in range(len(indices[0])):
-            if len(indices) == 2:
-                # multi_model = False -> AtomArray
-                m = None
-                i = indices[0][index]
-                j = indices[1][index]
-                box = array.box if periodic else None
-                distance = struc.distance(array[i], array[j], box=box)
-            if len(indices) == 3:
-                # multi_model = True -> AtomArrayStack
-                m = indices[0][index]
-                i = indices[1][index]
-                j = indices[2][index]
-                box = array.box[m] if periodic else None
-                distance = struc.distance(array[m,i], array[m,j], box=box)
-            try:
-                assert distance == pytest.approx(CUTOFF, abs=1e-4)
-            except AssertionError:
-                print(f"Model {m}, Atoms {i} and {j}")
-                raise
-    
     stack = load_structure(
-        join(data_dir("structure"), "1gya.mmtf"), include_bonds=True
+        join(data_dir("structure"), "1l2y.mmtf"), include_bonds=True
     )
-    #!#
-    #stack = stack[..., struc.filter_amino_acids(stack)]
-    #!#
+    
+    # Only consider a single molecule
+    # -> remove all other atoms (in this case some unbound hydrogen)
+    mol_masks = struc.get_molecule_masks(stack)
+    largest_mask = mol_masks[np.argmax(np.count_nonzero(mol_masks, axis=-1))]
+    stack = stack[..., largest_mask]
+
+    # Create a relatively tight box around the protein
     stack.box = np.array([
-        np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + 10)
+        np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + BUFFER)
         for coord in stack.coord
     ])
-    stack.coord -= np.min(stack.coord, axis=-2)[:, np.newaxis, :] - 5
+    stack.coord -= np.min(stack.coord, axis=-2)[:, np.newaxis, :] + BUFFER / 2
     if multi_model:
         array = stack
     else:
         array = stack[0]
+    ref_matrix, ref_matrix_pbc = get_distance_matrices(array)
 
-    # Use adjacency matrices instead of pairwise distances
-    # for computational efficiency
-    ref_matrix, ref_matrix_pbc = get_matrices(array)
-
+    ## Segment protein
+    np.random.seed(seed)
+    size = (array.stack_depth(), 3) if isinstance(array, struc.AtomArrayStack) else 3
+    translation_vector = np.sum(
+        np.random.uniform(-5, 5, size)[:, np.newaxis] * array.box,
+        axis=-2
+    )[..., np.newaxis, :]
+    # Move atoms over periodic boundary...
     array = struc.translate(array, translation_vector)
+    # ... and enforce segmentation
     array.coord = struc.move_inside_box(array.coord, array.box)
-    moved_matrix, moved_matrix_pbc = get_matrices(array)
-    # The translation and the periodic move should not
-    # alter PBC-aware pairwise distances
-    assert_equal_matrices(array, ref_matrix_pbc, moved_matrix_pbc, True)
-    # Non-PBC-aware distances should change,
-    # otherwise the atoms do not go over the periodic boundary
-    # and the test does not make sense
-    with pytest.raises(AssertionError):
-        assert_equal_matrices(array, ref_matrix, moved_matrix, False)
+    # Check if segmentation was achieved
+    # This is a prerequisite to properly test 'remove_pbc()'
+    segment_matrix, segment_matrix_pbc = get_distance_matrices(array)
+    assert not np.allclose(segment_matrix, ref_matrix, atol=1e-4)
+    assert np.allclose(segment_matrix_pbc, ref_matrix_pbc, atol=1e-4)
 
+    ## Remove segmentation again via 'remove_pbc()'
     array = struc.remove_pbc(array)
-    restored_matrix, restored_matrix_pbc = get_matrices(array)
-    # Both adjacency matrices should be equal to the original ones,
-    # as the structure should be completely restored
-    assert_equal_matrices(array, ref_matrix_pbc, restored_matrix_pbc, True)
-    assert_equal_matrices(array, ref_matrix,     restored_matrix,     False)
+    # Now the pairwise atom distances should be the same
+    # as in the beginning again
+    test_matrix, test_matrix_pbc = get_distance_matrices(array)
+    assert np.allclose(test_matrix, ref_matrix, atol=1e-4)
+    assert np.allclose(test_matrix_pbc, ref_matrix_pbc, atol=1e-4)
+
+    # The centroid of the structure should be inside the box dimensions
+    centroid = struc.centroid(array)
+    assert np.all(
+        (centroid > np.zeros(3)) &
+        (centroid < np.sum(array.box, axis=-2))
+    )
 
 
 @pytest.mark.parametrize("multi_model", [True, False])
