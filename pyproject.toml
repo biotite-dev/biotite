@@ -2,7 +2,8 @@
 name = "biotite"
 requires-python = ">=3.7"
 description = "A comprehensive library for computational molecular biology"
-authors = [{name = "The Biotite contributors", email = "none@none.com"}]
+readme = "README.rst"
+authors = [{name = "The Biotite contributors"}]
 license = {"file" = "LICENSE.rst"}
 
 classifiers = [
@@ -31,9 +32,13 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-#
+[project.urls]
+homepage = "https://www.biotite-python.org"
+repository = "https://github.com/biotite-dev/biotite"
+documentation = "https://www.biotite-python.org"
+
+
 [build-system]
-# Minimum requirements for the build system to execute.
 requires = [
     "setuptools >= 0.30",
     "wheel >= 0.30",
@@ -41,7 +46,7 @@ requires = [
     "cython >= 0.29"
 ]
 build-backend = "setuptools.build_meta"
-#
+
 [project.optional-dependencies]
 test = [
   "pytest",
