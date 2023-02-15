@@ -20,6 +20,8 @@ import numpy as np
 import numpy.linalg as linalg
 from .util import vector_dot
 from .atoms import repeat
+from .molecules import get_molecule_masks
+from .chains import get_chain_masks, get_chain_starts
 from .error import BadStructureError
 
 
@@ -353,38 +355,30 @@ def move_inside_box(coord, box):
 
 def remove_pbc(atoms, selection=None):
     """
-    Remove segmentation caused by periodic boundary conditions from a
-    given structure.
+    Remove segmentation caused by periodic boundary conditions from each
+    molecule in the given structure.
 
-    In this process the first atom (of the selection) is taken as origin
-    and is moved inside the box.
-    All other coordinates are assembled relative to the origin.
+    In this process the centroid of each molecule is moved into the
+    dimensions of the box.
+    To determine the molecules the structure is required to have an
+    associated `BondList`.
+    Otherwise segmentation removal is performed on a per-chain basis.
     
     Parameters
     ----------
-    atoms : AtomArray or AtomArrayStack
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The potentially segmented structure.
         The :attr:`box` attribute must be set in the structure.
-    selection : str or (iterable object of) ndarray, dtype=bool, shape=(n,), optional
-        Specifies which part(s) of structure are sanitized, i.e the
+        An associated :attr:`bonds` attribute is recommended.
+    selection : ndarray, dtype=bool, shape=(n,)
+        Specifies which parts of `atoms` are sanitized, i.e the
         segmentation is removed.
-        If a string is given, the value is interpreted as the chain ID
-        to be selected.
-        If a boolean mask is given, the corresponding atoms are
-        selected. 
-        If multiple boolean masks are given, each selection
-        is treated as separate assembly process, independent of all
-        other selections.
-        Consequently, giving multiple boolean masks has the same result
-        as calling the functions multiple times with each mask
-        separately.
-        An atom must not be selected more than one time.
-
     
     Returns
     -------
     sanitized_atoms : AtomArray or AtomArrayStack
-        The input structure with removed periodic boundary conditions.
+        The input structure with removed segmentation over periodic
+        boundaries.
     
     See also
     --------
@@ -392,54 +386,38 @@ def remove_pbc(atoms, selection=None):
 
     Notes
     -----
-    It is not recommended to select regions of the
-    structure with distances from one atom to the next atom that are
-    larger than half of the box size
-    (e.g. the solvent, chain transitions).
-    In this case, multiple selections should be given, with a single
-    molecule selected in each selection.
-
-    Internally the function uses :func:`remove_pbc_from_coord()`.
+    This function ensures that adjacent atoms in the input
+    :class:`AtomArray`/:class:`AtomArrayStack` are spatially close to
+    each other, i.e. their distance to each other is be smaller than the
+    half box size.
     """
+    # Avoid circular import
+    from .geometry import centroid
+    
     if atoms.box is None:
         raise BadStructureError(
             "The 'box' attribute must be set in the structure"
         )
     new_atoms = atoms.copy()
-    
-    if selection is None:
-        new_atoms.coord = remove_pbc_from_coord(
-            atoms.coord, atoms.box
-        )
 
-    elif isinstance(selection, str):
-        # Chain ID
-        selection = (atoms.chain_id == selection)
-        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
-            atoms.coord[..., selection, :], atoms.box
+    if atoms.bonds is not None:
+        molecule_masks = get_molecule_masks(atoms)
+    else:
+        molecule_masks = get_chain_masks(atoms, get_chain_starts(atoms))
+
+    for mask in molecule_masks:
+        if selection is not None:
+            mask &= selection
+        # Remove segmentation in molecule
+        new_atoms.coord[..., mask, :] = remove_pbc_from_coord(
+            new_atoms.coord[..., mask, :], atoms.box
         )
-    
-    elif isinstance(selection, np.ndarray) and selection.ndim == 1:
-        # Single boolean mask
-        new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
-            atoms.coord[..., selection, :], atoms.box
+        # Put center of molecule into box
+        center = centroid(new_atoms.coord[..., mask, :])[..., np.newaxis, :]
+        center_in_box = move_inside_box(
+            center, new_atoms.box
         )
-    
-    elif isinstance(selection, Iterable):
-        # Iterable of boolean masks
-        selections = np.stack(list(selection))
-        # Test whether an atom was selected multiple times
-        sel_count = np.count_nonzero(selections, axis=0)
-        if (sel_count > 1).any():
-            first_pos = np.where((sel_count > 1))[0][0]
-            raise ValueError(
-                f"Atom at index {first_pos} was selected "
-                f"{sel_count[first_pos]} times"
-            )
-        for selection in selections:
-            new_atoms.coord[..., selection, :] = remove_pbc_from_coord(
-                atoms.coord[..., selection, :], atoms.box
-            )
+        new_atoms.coord[..., mask, :] += (center_in_box - center)
 
     return new_atoms
 
