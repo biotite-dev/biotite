@@ -1,7 +1,7 @@
 BSD 3-Clause License
 --------------------
 
-Copyright 2017 - 2021, The Biotite contributors
+Copyright 2017, The Biotite contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
