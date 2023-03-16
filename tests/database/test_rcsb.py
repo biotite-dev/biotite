@@ -141,6 +141,7 @@ def test_search_sequence():
         ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
     )
     test_ids = rcsb.search(query)
+    assert test_ids >= 2
 
     for id in test_ids:
         fasta_file = fasta.FastaFile.read(rcsb.fetch(id, "fasta"))
@@ -172,7 +173,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query)
-    assert test_count == pytest.approx(558, rel=0.1)
+    assert test_count == pytest.approx(580, rel=0.1)
 
 
 @pytest.mark.skipif(
@@ -256,6 +257,36 @@ def test_search_sort():
     
     # Check if values are sorted in descending order
     assert resolutions == list(reversed(sorted(resolutions)))
+
+
+def test_search_content_types():
+    # Query to limit the number of returned results
+    # for improved performance
+    query = rcsb.FieldQuery(
+        "rcsb_entity_host_organism.scientific_name",
+        exact_match="Homo sapiens"
+    )
+    experimental_set =  set(rcsb.search(query, content_types=["experimental"]))
+    computational_set = set(rcsb.search(query, content_types=["computational"]))
+    combined_set =      set(rcsb.search(query, content_types=["experimental", "computational"]))
+
+    # If there are no results, the following tests make no sense
+    assert len(combined_set) > 0
+    # There should be no common elements
+    assert len(experimental_set & computational_set) == 0
+    # The combined search should include the contents of both searches
+    assert len(experimental_set | computational_set) == len(combined_set)
+
+    assert rcsb.count(query, content_types=["experimental"]) == len(experimental_set)
+    assert rcsb.count(query, content_types=["computational"]) == len(computational_set)
+    assert rcsb.count(query, content_types=["experimental", "computational"]) == len(combined_set)
+
+    # Expect an exception if no content_type
+    with pytest.raises(ValueError):
+        rcsb.search(query, content_types=[])
+    with pytest.raises(ValueError):
+        rcsb.count(query, content_types=[])
+
 
 
 @pytest.mark.skipif(

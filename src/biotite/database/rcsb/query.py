@@ -33,6 +33,7 @@ class Query(metaclass=abc.ABCMeta):
     
     This is the abstract base class for all queries.
     """
+
     @abc.abstractmethod
     def get_content(self):
         """
@@ -41,6 +42,11 @@ class Query(metaclass=abc.ABCMeta):
 
         This content is converted into JSON by the :func:`search`
         and :func:`count` methods.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'query'`` attributes.
         """
         pass
 
@@ -449,7 +455,7 @@ class StructureQuery(SingleQuery):
         return content
 
 
-def count(query, return_type="entry"):
+def count(query, return_type="entry", content_types=("experimental",)):
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
@@ -470,6 +476,14 @@ def count(query, return_type="entry"):
         - ``'non_polymer_entity'``: All matching non-polymeric entities
           are counted.
         - ``'polymer_instance'``: All matching chains are counted.
+    content_types : iterable of {"experimental", "computational"}, optional
+        Specify whether experimental and computational structures should
+        be included.
+        At least one of them needs to be specified.
+        By default only experimental structures are included.
+        Note, that identifiers for computational structures cannot be
+        downloaded via :func:`biotite.database.rcsb.fetch()` as they
+        point to *AlphaFold DB* and *ModelArchive*.
 
     Returns
     -------
@@ -492,13 +506,20 @@ def count(query, return_type="entry"):
         "polymer_entity", "non_polymer_entity",
     ]:
         raise ValueError(f"'{return_type}' is an invalid return type")
+
+    request_options = {"return_counts": True}
+
+    if len(content_types) == 0:
+        raise ValueError("At least one content type must be specified")
+    for content_type in content_types:
+        if content_type not in ("experimental", "computational"):
+            raise ValueError(f"Unknown content type '{content_type}'")
+    request_options["results_content_type"] = content_types
     
     query_dict = {
         "query": query.get_content(),
         "return_type": return_type,
-        "request_options": {
-            "return_counts": True
-        }
+        "request_options": request_options
     }
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
@@ -515,7 +536,7 @@ def count(query, return_type="entry"):
             raise RequestError(f"Error {r.status_code}")
 
 
-def search(query, return_type="entry", range=None, sort_by=None):
+def search(query, return_type="entry", range=None, sort_by=None, content_types=("experimental",)):
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
@@ -547,11 +568,22 @@ def search(query, return_type="entry", range=None, sort_by=None):
         The range is zero-indexed and the stop value is exclusive.
     sort_by : str, optional
         If specified, the returned PDB IDs are sorted by the values
-        of the given field name in descending order.
+        of the given field name.
         A complete list of the available fields is documented at
         `<https://search.rcsb.org/structure-search-attributes.html>`_.
         and
         `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    content_types : iterable of {"experimental", "computational"}, optional
+        Specify whether experimental and computational structures should
+        be included.
+        At least one of them needs to be specified.
+        By default only experimental structures are included.
+        Note, that identifiers for computational structures cannot be
+        downloaded via :func:`biotite.database.rcsb.fetch()` as they
+        point to *AlphaFold DB* and *ModelArchive*.
 
     Returns
     -------
@@ -584,6 +616,13 @@ def search(query, return_type="entry", range=None, sort_by=None):
 
     if sort_by is not None:
         request_options["sort"] = [{"sort_by": sort_by}]
+    
+    if len(content_types) == 0:
+        raise ValueError("At least one content type must be specified")
+    for content_type in content_types:
+        if content_type not in ("experimental", "computational"):
+            raise ValueError(f"Unknown content type '{content_type}'")
+    request_options["results_content_type"] = content_types
 
     if range is None:
         request_options["return_all_hits"] = True
