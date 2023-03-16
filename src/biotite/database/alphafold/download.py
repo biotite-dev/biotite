@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.database.rcsb"
+__name__ = "biotite.database.alphafold"
 __author__ = "Jonathan Funk"
 __all__ = ["fetch"]
 
@@ -13,7 +13,7 @@ import io
 _standard_url = 'https://alphafold.ebi.ac.uk/files/AF-'
 
 
-def fetch(uniprot_ids, target_path=None, format='pdb', overwrite=False, verbose=False):
+def fetch(uniprot_ids, format, target_path=None, overwrite=False, verbose=False):
     """
     Downloads file from EBI AlphaFold database in various formats.
 
@@ -26,7 +26,7 @@ def fetch(uniprot_ids, target_path=None, format='pdb', overwrite=False, verbose=
     target_path: str
         Path for saving the file to. If path does not exist it will be created.
     format: {'pdb', 'cif', 'mmcif', 'pdbx'}
-        format of file to be downloaded. Default pdb
+        Format of the file to be downloaded.
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
@@ -58,7 +58,6 @@ def fetch(uniprot_ids, target_path=None, format='pdb', overwrite=False, verbose=
     --------
 
     >>> import os.path
-    >>> import requests
     >>> file = fetch("P0DPA9", "cif", path_to_directory)
     >>> print(os.path.basename(file))
     P0DPA9-F1-model_v3..cif
@@ -111,8 +110,7 @@ def fetch(uniprot_ids, target_path=None, format='pdb', overwrite=False, verbose=
                 file = io.StringIO(content)
 
             else:
-                mode = "wb+" if format in _binary_formats else "w+"
-                with open(file, mode) as f:
+                with open(file, "w+") as f:
                     f.write(content)
 
         files.append(file)
