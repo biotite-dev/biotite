@@ -7,6 +7,8 @@ __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "SingleQuery", "CompositeQuery",
            "BasicQuery", "FieldQuery",
            "SequenceQuery", "StructureQuery", "MotifQuery",
+           "Sorting",
+           "Grouping", "DepositGrouping", "IdentityGrouping", "UniprotGrouping",
            "search", "count"]
 
 import abc
@@ -33,7 +35,6 @@ class Query(metaclass=abc.ABCMeta):
     
     This is the abstract base class for all queries.
     """
-
     @abc.abstractmethod
     def get_content(self):
         """
@@ -41,7 +42,7 @@ class Query(metaclass=abc.ABCMeta):
         ``'query'`` attribute in the RCSB search API.
 
         This content is converted into JSON by the :func:`search`
-        and :func:`count` methods.
+        and :func:`count` functions.
 
         Returns
         -------
@@ -68,7 +69,6 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     This is the abstract base class for all queries that are
     terminal nodes.
     """
-
     @abc.abstractmethod
     def get_content(self):
         return {"parameters": {}}
@@ -455,7 +455,164 @@ class StructureQuery(SingleQuery):
         return content
 
 
-def count(query, return_type="entry", content_types=("experimental",)):
+
+
+class Sorting:
+
+    def __init__(self, field, descending=True):
+        self._field = field
+        self._descending = descending
+    
+    @property
+    def field(self):
+        return self._field
+
+    @property
+    def descending(self):
+        return self._descending
+    
+    def get_content(self):
+        """
+        Get the sorting content, i.e. the data belonging to the
+        ``'sort'`` and ``'ranking_criteria_type'`` attributes in the
+        RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        function.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'sort'`` and
+            ``'ranking_criteria_type'`` attributes.
+        """
+        direction = "desc" if self._descending else "asc"
+        return {
+            "sort_by" : self._field,
+            "direction" : direction
+        }
+
+
+
+
+class Grouping(metaclass=abc.ABCMeta):
+    """
+    A representation of the JSON grouping options of the RCSB search 
+    API.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs are sorted by the values
+        of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    
+    Attributes
+    ----------
+    sorting : Sorting
+        The sorting of the :class:`Grouping`.
+    """
+
+    def __init__(self, sort_by=None):
+        if sort_by is None:
+            self._sorting = None
+        elif isinstance(sort_by, Sorting):
+            self._sorting = sort_by
+        else:
+            self._sorting = Sorting(sort_by)
+    
+    @abc.abstractmethod
+    def get_content(self):
+        """
+        Get the grouping content, i.e. the data belonging to the
+        ``'group_by'`` attribute in the RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        and :func:`count` functions.
+
+        ABSTRACT: Override when inheriting.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'group_by'`` attributes.
+        """
+        if self._sorting is not None:
+            return {"ranking_criteria_type" : self.sorting}
+        else:
+            return {}
+    
+    @abc.abstractmethod
+    def is_compatible_return_type(self, return_type):
+        """
+        Check whether this :class:`Group` is compatible with the
+        RCSB search API ``return_type``.
+
+        ABSTRACT: Override when inheriting.
+
+        Parameter
+        ---------
+        return_type : str
+            The ``return_type`` attribute to be checked.
+        
+        Returns
+        -------
+        is_compatible : bool
+            True, if this :class:`Group` is compatible with the
+            `return_type`, false otherwise.
+        """
+        pass
+
+
+class DepositGrouping(Grouping):
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "matching_deposit_group_id"
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "entry"
+
+
+class IdentityGrouping(Grouping):
+
+    def __init__(self, similarity_cutoff, sort_by=None):
+        super().__init__(sort_by)
+        self._similarity_cutoff = similarity_cutoff
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "sequence_identity"
+        content["similarity_cutoff"] = str(self.self._similarity_cutoff)
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "polymer_entity"
+
+
+class UniprotGrouping(Grouping):
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "matching_uniprot_accession"
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "polymer_entity"
+
+
+
+
+
+def count(query, return_type="entry", group_by=None,
+          content_types=("experimental",)):
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
@@ -501,26 +658,12 @@ def count(query, return_type="entry", content_types=("experimental",)):
     >>> print(sorted(ids))
     ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
     """
-    if return_type not in [
-        "entry", "polymer_instance", "assembly",
-        "polymer_entity", "non_polymer_entity",
-    ]:
-        raise ValueError(f"'{return_type}' is an invalid return type")
+    query_dict = _initialize_query_dict(
+        query, return_type, group_by, content_types
+    )
 
-    request_options = {"return_counts": True}
-
-    if len(content_types) == 0:
-        raise ValueError("At least one content type must be specified")
-    for content_type in content_types:
-        if content_type not in ("experimental", "computational"):
-            raise ValueError(f"Unknown content type '{content_type}'")
-    request_options["results_content_type"] = content_types
+    query_dict["request_options"]["return_counts"] = True
     
-    query_dict = {
-        "query": query.get_content(),
-        "return_type": return_type,
-        "request_options": request_options
-    }
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
@@ -536,7 +679,8 @@ def count(query, return_type="entry", content_types=("experimental",)):
             raise RequestError(f"Error {r.status_code}")
 
 
-def search(query, return_type="entry", range=None, sort_by=None, content_types=("experimental",)):
+def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
+           return_groups=False, content_types=("experimental",)):
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
@@ -562,11 +706,11 @@ def search(query, return_type="entry", range=None, sort_by=None, content_types=(
           (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
     
     range : tuple(int, int), optional
-        If this parameter is specified, the only PDB IDs in this range
+        If this parameter is specified, only PDB IDs in this range
         are selected from all matching PDB IDs and returned
         (pagination).
         The range is zero-indexed and the stop value is exclusive.
-    sort_by : str, optional
+    sort_by : str or Sorting, optional
         If specified, the returned PDB IDs are sorted by the values
         of the given field name.
         A complete list of the available fields is documented at
@@ -574,7 +718,7 @@ def search(query, return_type="entry", range=None, sort_by=None, content_types=(
         and
         `<https://search.rcsb.org/chemical-search-attributes.html>`_.
         If a string is given sorting is performed in descending order.
-        To choose the order a :class:`Sorting` object needs to be
+        To choose the order, a :class:`Sorting` object needs to be
         provided.
     content_types : iterable of {"experimental", "computational"}, optional
         Specify whether experimental and computational structures should
@@ -606,39 +750,31 @@ def search(query, return_type="entry", range=None, sort_by=None, content_types=(
     >>> print(sorted(search(query, return_type="polymer_instance")))
     ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A', '7ATG.A', '7ATG.B', '7R0H.A']
     """
-    if return_type not in [
-        "entry", "polymer_instance", "assembly",
-        "polymer_entity", "non_polymer_entity",
-    ]:
-        raise ValueError(f"'{return_type}' is an invalid return type")
-    
-    request_options = {}
+    query_dict = _initialize_query_dict(
+        query, return_type, group_by, content_types
+    )
+
+    if return_groups is True:
+        query_dict["request_options"]["group_by_return_type"] = "groups"
+    else:
+        query_dict["request_options"]["group_by_return_type"] = "representatives"
 
     if sort_by is not None:
-        request_options["sort"] = [{"sort_by": sort_by}]
-    
-    if len(content_types) == 0:
-        raise ValueError("At least one content type must be specified")
-    for content_type in content_types:
-        if content_type not in ("experimental", "computational"):
-            raise ValueError(f"Unknown content type '{content_type}'")
-    request_options["results_content_type"] = content_types
+        if isinstance(sort_by, Sorting):
+            sorting = sort_by
+        else:
+            sorting = Sorting(sort_by)
+        query_dict["request_options"]["sort"] = [sorting.get_content()]
 
     if range is None:
-        request_options["return_all_hits"] = True
+        query_dict["request_options"]["return_all_hits"] = True
     elif range[1] <= range[0]:
         raise ValueError("Range stop must be greater than range start")
     else:
-        request_options["paginate"] = {
+        query_dict["request_options"]["paginate"] = {
             "start": int(range[0]),
             "rows": int(range[1]) - int(range[0])
         }
-
-    query_dict = {
-        "query": query.get_content(),
-        "return_type": return_type,
-        "request_options": request_options
-    }
 
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
@@ -653,6 +789,37 @@ def search(query, return_type="entry", range=None, sort_by=None, content_types=(
         except json.decoder.JSONDecodeError:
             # In case there an error response without message
             raise RequestError(f"Error {r.status_code}")
+
+
+def _initialize_query_dict(query, return_type, group_by, return_groups, content_types):
+    """
+    Initialize the request parameter dictionary with attributes that
+    `count()` and `search()` have in common.
+    """
+    if return_type not in [
+        "entry", "polymer_instance", "assembly",
+        "polymer_entity", "non_polymer_entity",
+    ]:
+        raise ValueError(f"'{return_type}' is an invalid return type")
+    
+    request_options = {}
+    
+    if len(content_types) == 0:
+        raise ValueError("At least one content type must be specified")
+    for content_type in content_types:
+        if content_type not in ("experimental", "computational"):
+            raise ValueError(f"Unknown content type '{content_type}'")
+    request_options["results_content_type"] = content_types
+
+    if group_by is not None:
+        request_options["group_by"] = group_by.get_content()
+
+    query_dict = {
+        "query": query.get_content(),
+        "return_type": return_type,
+        "request_options": request_options
+    }
+    return query_dict
 
 
 def _to_isoformat(object):

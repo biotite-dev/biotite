@@ -141,7 +141,7 @@ def test_search_sequence():
         ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
     )
     test_ids = rcsb.search(query)
-    assert test_ids >= 2
+    assert len(test_ids) >= 2
 
     for id in test_ids:
         fasta_file = fasta.FastaFile.read(rcsb.fetch(id, "fasta"))
@@ -286,7 +286,6 @@ def test_search_content_types():
         rcsb.search(query, content_types=[])
     with pytest.raises(ValueError):
         rcsb.count(query, content_types=[])
-
 
 
 @pytest.mark.skipif(
