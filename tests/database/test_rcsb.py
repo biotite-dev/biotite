@@ -243,22 +243,35 @@ def test_search_range(seed):
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-def test_search_sort():
+@pytest.mark.parametrize("as_sorting_object", [False, True])
+def test_search_sort(as_sorting_object):
     query = rcsb.FieldQuery(
         "rcsb_entity_host_organism.scientific_name",
         exact_match="Homo sapiens"
     )
-    entries = rcsb.search(query, sort_by="reflns.d_resolution_high")
+    if as_sorting_object:
+        sort_by = rcsb.Sorting("reflns.d_resolution_high", descending=False)
+    else:
+        sort_by = "reflns.d_resolution_high"
+    entries = rcsb.search(query, sort_by=sort_by)
     
     resolutions = []
     for pdb_id in entries[:5]:
         pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
         resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
     
-    # Check if values are sorted in descending order
-    assert resolutions == list(reversed(sorted(resolutions)))
+    if as_sorting_object:
+        # In the tested case the Sorting object uses ascending order
+        assert resolutions == list(sorted(resolutions))
+    else:
+        # Check if values are sorted in descending order
+        assert resolutions == list(reversed(sorted(resolutions)))
 
 
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
 def test_search_content_types():
     # Query to limit the number of returned results
     # for improved performance
@@ -286,6 +299,70 @@ def test_search_content_types():
         rcsb.search(query, content_types=[])
     with pytest.raises(ValueError):
         rcsb.count(query, content_types=[])
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_identity_grouping():
+    """
+    Expect the same result as the example in the RCSB search API
+    tutorial.
+    """
+    REF_GROUPS = set([
+        ('1ZHM_1',),
+        (
+            '3P8X_1', '7QPP_1', '3X36_1', '3CS6_1', '3CS4_1', '3A78_1',
+            '3A40_1', '3A3Z_1', '2HB8_1', '2HB7_1', '2HAS_1', '2HAR_1',
+            '2HAM_1', '1TXI_1', '4G2I_1', '3TKC_1', '3OGT_1', '3KPZ_1',
+            '1IE9_1', '1IE8_1', '1DB1_1', '5YT2_1', '5YSY_1', '5GT4_1',
+            '3WGP_1', '3W0Y_1', '3W0C_1', '3W0A_1', '3AZ3_1', '3AZ2_1',
+            '3AZ1_1'
+        ),
+        ('3D44_1',),
+        ('6RA4_1',),
+        ('3B9V_1',),
+        ('2FC0_1', '2FBY_1'),
+        ('5GJH_1',),
+        ('2IGP_1',),
+        ('5LF7_13', '5LF4_13', '5LF1_13', '5LEY_13', '5LE5_13'),
+        ('1GBU_2',)
+    ])
+    REF_COUNT = 9597
+
+    query = (
+        rcsb.FieldQuery(
+            "rcsb_entity_source_organism.taxonomy_lineage.name",
+            exact_match="Homo sapiens"
+        )
+        & rcsb.FieldQuery(
+            "exptl.method",
+            exact_match="X-RAY DIFFRACTION"
+        )
+        & rcsb.FieldQuery(
+            "rcsb_entry_info.resolution_combined",
+            range_closed=(1.0, 2.0)
+        )
+    )
+    grouping = rcsb.IdentityGrouping(
+        100, sort_by="entity_poly.rcsb_sample_sequence_length"
+    )
+
+    test_groups = rcsb.search(
+        query, "polymer_entity",
+        group_by=grouping, return_groups=True
+    )
+    test_representatives = rcsb.search(
+        query, "polymer_entity",
+        group_by=grouping, return_groups=False
+    )
+    test_count = rcsb.count(query, "polymer_entity", group_by=grouping)
+    
+    # List is not hashable
+    assert set([tuple(group) for group in test_groups]) == REF_GROUPS
+    assert set(test_representatives) == [group[0] for group in REF_GROUPS]
+    assert test_count == pytest.approx(REF_COUNT, rel = 0.1)
 
 
 @pytest.mark.skipif(

@@ -544,7 +544,7 @@ class Grouping(metaclass=abc.ABCMeta):
             The content dictionary for the ``'group_by'`` attributes.
         """
         if self._sorting is not None:
-            return {"ranking_criteria_type" : self.sorting}
+            return {"ranking_criteria_type" : self._sorting.get_content()}
         else:
             return {}
     
@@ -585,12 +585,16 @@ class IdentityGrouping(Grouping):
 
     def __init__(self, similarity_cutoff, sort_by=None):
         super().__init__(sort_by)
+        if similarity_cutoff not in (100, 95, 90, 70, 50, 30):
+            raise ValueError(
+                f"A similarity cutoff of {similarity_cutoff}% is not supported"
+            )
         self._similarity_cutoff = similarity_cutoff
 
     def get_content(self):
         content = super().get_content()
         content["aggregation_method"] = "sequence_identity"
-        content["similarity_cutoff"] = str(self.self._similarity_cutoff)
+        content["similarity_cutoff"] = self._similarity_cutoff
         return content
     
     def is_compatible_return_type(self, return_type):
@@ -667,7 +671,10 @@ def count(query, return_type="entry", group_by=None,
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
-        return r.json()["total_count"]
+        if group_by is None:
+            return r.json()["total_count"]
+        else:
+            return r.json()["group_by_count"]
     elif r.status_code == 204:
         # Search did not return any results
         return 0
@@ -754,10 +761,13 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
         query, return_type, group_by, content_types
     )
 
-    if return_groups is True:
-        query_dict["request_options"]["group_by_return_type"] = "groups"
-    else:
-        query_dict["request_options"]["group_by_return_type"] = "representatives"
+    if group_by is not None:
+        if return_groups:
+            query_dict["request_options"]["group_by_return_type"] \
+                = "groups"
+        else:
+            query_dict["request_options"]["group_by_return_type"] \
+                = "representatives"
 
     if sort_by is not None:
         if isinstance(sort_by, Sorting):
@@ -779,7 +789,13 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
-        return [result["identifier"] for result in r.json()["result_set"]]
+        if group_by is None or not return_groups:
+            return [result["identifier"] for result in r.json()["result_set"]]
+        else:
+            return [
+                [result["identifier"] for result in group["result_set"]]
+                for group in r.json()["group_set"]
+            ]
     elif r.status_code == 204:
         # Search did not return any results
         return []
@@ -791,7 +807,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
             raise RequestError(f"Error {r.status_code}")
 
 
-def _initialize_query_dict(query, return_type, group_by, return_groups, content_types):
+def _initialize_query_dict(query, return_type, group_by, content_types):
     """
     Initialize the request parameter dictionary with attributes that
     `count()` and `search()` have in common.
