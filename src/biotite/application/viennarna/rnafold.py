@@ -174,16 +174,6 @@ class RNAfoldApp(LocalApp):
         -------
         mfe : float
             The minimum free energy.
-
-        Examples
-        --------
-
-        >>> sequence = NucleotideSequence("CGACGTAGATGCTAGCTGACTCGATGC")
-        >>> app = RNAfoldApp(sequence)
-        >>> app.start()
-        >>> app.join()
-        >>> print(app.get_mfe())
-        -1.3
         """
         warnings.warn(
             "'get_mfe()' is deprecated, use 'get_free_energy()' instead",
