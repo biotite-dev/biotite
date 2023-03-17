@@ -305,64 +305,94 @@ def test_search_content_types():
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-def test_search_identity_grouping():
-    """
-    Expect the same result as the example in the RCSB search API
-    tutorial.
-    """
-    REF_GROUPS = set([
-        ('1ZHM_1',),
+@pytest.mark.parametrize(
+    "grouping, resolution_threshold, return_type, ref_groups",
+    [
         (
-            '3P8X_1', '7QPP_1', '3X36_1', '3CS6_1', '3CS4_1', '3A78_1',
-            '3A40_1', '3A3Z_1', '2HB8_1', '2HB7_1', '2HAS_1', '2HAR_1',
-            '2HAM_1', '1TXI_1', '4G2I_1', '3TKC_1', '3OGT_1', '3KPZ_1',
-            '1IE9_1', '1IE8_1', '1DB1_1', '5YT2_1', '5YSY_1', '5GT4_1',
-            '3WGP_1', '3W0Y_1', '3W0C_1', '3W0A_1', '3AZ3_1', '3AZ2_1',
-            '3AZ1_1'
+            rcsb.IdentityGrouping(
+                100, sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.7,
+            "polymer_entity",
+            set([
+                ("3X2M_1",),
+                ("6E6O_1",),
+                ("1YK4_1",),
+                ("5NW3_1",),
+                ("1US0_1",),
+                ("4HP2_1",),
+                ("2DSX_1",),
+                ("2VB1_1",),
+                ("7VOS_1", "5D8V_1", "3A38_1"),
+                ("1UCS_1",),
+                ("3NIR_1", "1EJG_1"),
+            ])
         ),
-        ('3D44_1',),
-        ('6RA4_1',),
-        ('3B9V_1',),
-        ('2FC0_1', '2FBY_1'),
-        ('5GJH_1',),
-        ('2IGP_1',),
-        ('5LF7_13', '5LF4_13', '5LF1_13', '5LEY_13', '5LE5_13'),
-        ('1GBU_2',)
-    ])
-    REF_COUNT = 9597
 
+        (
+            rcsb.UniprotGrouping(
+                sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.7,
+            "polymer_entity",
+            set([
+                ("3X2M_1",),
+                ("6E6O_1",),
+                ("1YK4_1",),
+                ("5NW3_1",),
+                ("1US0_1",),
+                ("4HP2_1",),
+                ("2DSX_1",),
+                ("2VB1_1",),
+                ("7VOS_1", "5D8V_1", "3A38_1"),
+                ("1UCS_1",),
+                ("3NIR_1", "1EJG_1"),
+            ])
+        ),
+
+        (
+            rcsb.DepositGrouping(
+                sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.9,
+            "entry",
+            set([
+                ("5R32",),
+                ("5RDH", "5RBR"),
+            ])
+        )
+    ]
+)
+def test_search_grouping(grouping, resolution_threshold, return_type,
+                         ref_groups):
+    """
+    Check whether the same result as in a known example is achieved.
+    """
     query = (
         rcsb.FieldQuery(
-            "rcsb_entity_source_organism.taxonomy_lineage.name",
-            exact_match="Homo sapiens"
-        )
-        & rcsb.FieldQuery(
             "exptl.method",
             exact_match="X-RAY DIFFRACTION"
         )
         & rcsb.FieldQuery(
             "rcsb_entry_info.resolution_combined",
-            range_closed=(1.0, 2.0)
+            range_closed=(0.0, resolution_threshold)
         )
     )
-    grouping = rcsb.IdentityGrouping(
-        100, sort_by="entity_poly.rcsb_sample_sequence_length"
-    )
 
-    test_groups = rcsb.search(
-        query, "polymer_entity",
+    test_groups = list(rcsb.search(
+        query, return_type,
         group_by=grouping, return_groups=True
-    )
+    ).values())
     test_representatives = rcsb.search(
-        query, "polymer_entity",
+        query, return_type,
         group_by=grouping, return_groups=False
     )
-    test_count = rcsb.count(query, "polymer_entity", group_by=grouping)
+    test_count = rcsb.count(query, return_type, group_by=grouping)
     
     # List is not hashable
-    assert set([tuple(group) for group in test_groups]) == REF_GROUPS
-    assert set(test_representatives) == [group[0] for group in REF_GROUPS]
-    assert test_count == pytest.approx(REF_COUNT, rel = 0.1)
+    assert set([tuple(group) for group in test_groups]) == ref_groups
+    assert set(test_representatives) == set([group[0] for group in ref_groups])
+    assert test_count == len(ref_groups)
 
 
 @pytest.mark.skipif(
