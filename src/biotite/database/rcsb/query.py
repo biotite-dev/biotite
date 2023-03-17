@@ -17,7 +17,7 @@ import copy
 from datetime import datetime
 import numpy as np
 import requests
-from ...sequence.seqtypes import ProteinSequence, NucleotideSequence
+from ...sequence.seqtypes import NucleotideSequence
 from ..error import RequestError
 
 
@@ -503,8 +503,8 @@ class Grouping(metaclass=abc.ABCMeta):
     Parameters
     ----------
     sort_by : str or Sorting, optional
-        If specified, the returned PDB IDs are sorted by the values
-        of the given field name.
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
         A complete list of the available fields is documented at
         `<https://search.rcsb.org/structure-search-attributes.html>`_.
         and
@@ -512,11 +512,6 @@ class Grouping(metaclass=abc.ABCMeta):
         If a string is given, sorting is performed in descending order.
         To choose the order a :class:`Sorting` object needs to be
         provided.
-    
-    Attributes
-    ----------
-    sorting : Sorting
-        The sorting of the :class:`Grouping`.
     """
 
     def __init__(self, sort_by=None):
@@ -571,6 +566,28 @@ class Grouping(metaclass=abc.ABCMeta):
 
 
 class DepositGrouping(Grouping):
+    """
+    This class groups PDB entries if they were deposited as a
+    collection.
+    Such a group usually contain the same protein with e.g. a different
+    bound molecule.
+
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to ``entry``.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
 
     def get_content(self):
         content = super().get_content()
@@ -582,7 +599,34 @@ class DepositGrouping(Grouping):
 
 
 class IdentityGrouping(Grouping):
+    """
+    This class groups protein chains with a given sequence identity
+    with each other.
 
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to
+    ``polymer_entity``.
+
+    Parameters
+    ----------
+    similarity_cutoff : {100, 95, 90, 70, 50, 30}
+        The sequence identity in percent at which the structures are
+        grouped.
+        In other words, a returned group contains sequences that have
+        `similarity_cutoff` sequence identity with each other.
+        Since the PDB uses precalculated clusters, only certain values
+        are available.
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
     def __init__(self, similarity_cutoff, sort_by=None):
         super().__init__(sort_by)
         if similarity_cutoff not in (100, 95, 90, 70, 50, 30):
@@ -602,6 +646,27 @@ class IdentityGrouping(Grouping):
 
 
 class UniprotGrouping(Grouping):
+    """
+    This class groups protein chains that point to the same *Uniprot*
+    accession ID.
+
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to
+    ``polymer_entity``.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
 
     def get_content(self):
         content = super().get_content()
@@ -637,6 +702,9 @@ def count(query, return_type="entry", group_by=None,
         - ``'non_polymer_entity'``: All matching non-polymeric entities
           are counted.
         - ``'polymer_instance'``: All matching chains are counted.
+    group_by : Grouping
+        If this parameter is set, the number of groups is returned
+        instead.
     content_types : iterable of {"experimental", "computational"}, optional
         Specify whether experimental and computational structures should
         be included.
@@ -648,9 +716,16 @@ def count(query, return_type="entry", group_by=None,
 
     Returns
     -------
-    ids : list of str
-        A list of strings containing all PDB IDs that meet the query
-        requirements.
+    count : int
+        The total number of PDB IDs (or groups) that would be returned
+        by calling :func:`search()` using the same parameters.
+    
+    Notes
+    -----
+    If `group_by` is set, the number of results may be lower than in an
+    ungrouped query, as grouping is not applicable to all structures.
+    For example a DNA structure has no associated *Uniprot* accession
+    and hence is omitted by :class:`UniprotGrouping`.
     
     Examples
     --------
@@ -727,6 +802,17 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
         If a string is given sorting is performed in descending order.
         To choose the order, a :class:`Sorting` object needs to be
         provided.
+    group_by : Grouping
+        If this parameter is set, the PDB IDs that meet the query
+        requirements, are grouped according to the given criterion.
+    return_groups : boolean, optional
+        Only has effect, if `group_by` is set.
+        By default the representative with the highest rank in each
+        group is returned.
+        The rank is determined by the `sort_by` parameter of
+        :class:`Grouping` provided in `group_by`.
+        If set to true, groups containing all structures belonging to
+        the group are returned instead.
     content_types : iterable of {"experimental", "computational"}, optional
         Specify whether experimental and computational structures should
         be included.
@@ -738,9 +824,25 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
 
     Returns
     -------
-    ids : list of str
-        A list of strings containing all PDB IDs that meet the query
-        requirements.
+    ids : list of str or dict (str -> list of str)
+        If `return_groups` is false (default case), a list of strings
+        containing all PDB IDs that meet the query requirements is
+        returned.
+        If `return_groups` is set to true a dictionary of groups is
+        returned.
+        This dictionary maps group identifiers to a list of all PDB IDs
+        belonging to this group.
+    
+    Notes
+    -----
+    If `group_by` is set, the number of results may be lower than in an
+    ungrouped query, as grouping is not applicable to all structures.
+    For example a DNA structure has no associated *Uniprot* accession
+    and hence is omitted by :class:`UniprotGrouping`.
+
+    Also note that `sort_by` does not affect the order within a group.
+    This order is determined by the `sort_by` parameter of the
+    :class:`Grouping`.
 
     Examples
     --------
@@ -756,6 +858,11 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
     ['7ATG', '5NW3', '5D8V']
     >>> print(sorted(search(query, return_type="polymer_instance")))
     ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A', '7ATG.A', '7ATG.B', '7R0H.A']
+    >>> print(search(
+    ...     query, return_type="polymer_entity", return_groups=True,
+    ...     group_by=UniprotGrouping(sort_by="rcsb_accession_info.initial_release_date"),
+    ... ))
+    {'P24297': ['5NW3_1'], 'P04425': ['2GLT_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1', '1EJG_1']}
     """
     query_dict = _initialize_query_dict(
         query, return_type, group_by, content_types
@@ -792,10 +899,12 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
         if group_by is None or not return_groups:
             return [result["identifier"] for result in r.json()["result_set"]]
         else:
-            return [
-                [result["identifier"] for result in group["result_set"]]
+            return {
+                group["identifier"] : [
+                    result["identifier"] for result in group["result_set"]
+                ]
                 for group in r.json()["group_set"]
-            ]
+            }
     elif r.status_code == 204:
         # Search did not return any results
         return []
@@ -828,6 +937,11 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
     request_options["results_content_type"] = content_types
 
     if group_by is not None:
+        if not group_by.is_compatible_return_type(return_type):
+            raise ValueError(
+                f"Return type '{return_type}' is not compatible "
+                f"with the given Grouping"
+            )
         request_options["group_by"] = group_by.get_content()
 
     query_dict = {
