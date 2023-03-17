@@ -105,6 +105,30 @@ composite_query = query1 & ~query2
 print(rcsb.search(composite_query))
 
 ########################################################################
+# Often the structures behind the obtained PDB IDs have degree of
+# redundancy.
+# For example they may represent the same protein sequences or result
+# from the same set of experiments.
+# You may use :class:`Grouping` of structures to group redundant
+# entries or even return only single representatives of each group.
+
+query = rcsb.BasicQuery("Transketolase")
+# Group PDB IDs from the same collection
+print(rcsb.search(
+    query, group_by=rcsb.DepositGrouping(), return_groups=True
+))
+# Get only a single representative of each group
+print(rcsb.search(
+    query, group_by=rcsb.DepositGrouping(), return_groups=False
+))
+
+########################################################################
+# Note that grouping may omit PDB IDs in search results, if such PDB IDs
+# cannot be grouped.
+# In the example shown above, not all structures 
+# For example in the case shown above only a few PDB entries were
+# uploaded as collection and hence are part of the search results.
+#
 # Fetching files from the NCBI Entrez database
 # --------------------------------------------
 # 
