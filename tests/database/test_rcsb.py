@@ -141,6 +141,7 @@ def test_search_sequence():
         ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
     )
     test_ids = rcsb.search(query)
+    assert len(test_ids) >= 2
 
     for id in test_ids:
         fasta_file = fasta.FastaFile.read(rcsb.fetch(id, "fasta"))
@@ -172,7 +173,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query)
-    assert test_count == pytest.approx(558, rel=0.1)
+    assert test_count == pytest.approx(580, rel=0.1)
 
 
 @pytest.mark.skipif(
@@ -242,20 +243,156 @@ def test_search_range(seed):
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-def test_search_sort():
+@pytest.mark.parametrize("as_sorting_object", [False, True])
+def test_search_sort(as_sorting_object):
     query = rcsb.FieldQuery(
         "rcsb_entity_host_organism.scientific_name",
         exact_match="Homo sapiens"
     )
-    entries = rcsb.search(query, sort_by="reflns.d_resolution_high")
+    if as_sorting_object:
+        sort_by = rcsb.Sorting("reflns.d_resolution_high", descending=False)
+    else:
+        sort_by = "reflns.d_resolution_high"
+    entries = rcsb.search(query, sort_by=sort_by)
     
     resolutions = []
     for pdb_id in entries[:5]:
         pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
         resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
     
-    # Check if values are sorted in descending order
-    assert resolutions == list(reversed(sorted(resolutions)))
+    if as_sorting_object:
+        # In the tested case the Sorting object uses ascending order
+        assert resolutions == list(sorted(resolutions))
+    else:
+        # Check if values are sorted in descending order
+        assert resolutions == list(reversed(sorted(resolutions)))
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+def test_search_content_types():
+    # Query to limit the number of returned results
+    # for improved performance
+    query = rcsb.FieldQuery(
+        "rcsb_entity_host_organism.scientific_name",
+        exact_match="Homo sapiens"
+    )
+    experimental_set =  set(rcsb.search(query, content_types=["experimental"]))
+    computational_set = set(rcsb.search(query, content_types=["computational"]))
+    combined_set =      set(rcsb.search(query, content_types=["experimental", "computational"]))
+
+    # If there are no results, the following tests make no sense
+    assert len(combined_set) > 0
+    # There should be no common elements
+    assert len(experimental_set & computational_set) == 0
+    # The combined search should include the contents of both searches
+    assert len(experimental_set | computational_set) == len(combined_set)
+
+    assert rcsb.count(query, content_types=["experimental"]) == len(experimental_set)
+    assert rcsb.count(query, content_types=["computational"]) == len(computational_set)
+    assert rcsb.count(query, content_types=["experimental", "computational"]) == len(combined_set)
+
+    # Expect an exception if no content_type
+    with pytest.raises(ValueError):
+        rcsb.search(query, content_types=[])
+    with pytest.raises(ValueError):
+        rcsb.count(query, content_types=[])
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(RCSB_URL),
+    reason="RCSB PDB is not available"
+)
+@pytest.mark.parametrize(
+    "grouping, resolution_threshold, return_type, ref_groups",
+    [
+        (
+            rcsb.IdentityGrouping(
+                100, sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.7,
+            "polymer_entity",
+            set([
+                ("3X2M_1",),
+                ("6E6O_1",),
+                ("1YK4_1",),
+                ("5NW3_1",),
+                ("1US0_1",),
+                ("4HP2_1",),
+                ("2DSX_1",),
+                ("2VB1_1",),
+                ("7VOS_1", "5D8V_1", "3A38_1"),
+                ("1UCS_1",),
+                ("3NIR_1", "1EJG_1"),
+            ])
+        ),
+
+        (
+            rcsb.UniprotGrouping(
+                sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.7,
+            "polymer_entity",
+            set([
+                ("3X2M_1",),
+                ("6E6O_1",),
+                ("1YK4_1",),
+                ("5NW3_1",),
+                ("1US0_1",),
+                ("4HP2_1",),
+                ("2DSX_1",),
+                ("2VB1_1",),
+                ("7VOS_1", "5D8V_1", "3A38_1"),
+                ("1UCS_1",),
+                ("3NIR_1", "1EJG_1"),
+            ])
+        ),
+
+        (
+            rcsb.DepositGrouping(
+                sort_by="rcsb_accession_info.initial_release_date"
+            ),
+            0.9,
+            "entry",
+            set([
+                ("5R32",),
+                ("5RDH", "5RBR"),
+            ])
+        )
+    ]
+)
+def test_search_grouping(grouping, resolution_threshold, return_type,
+                         ref_groups):
+    """
+    Check whether the same result as in a known example is achieved.
+    """
+    query = (
+        rcsb.FieldQuery(
+            "exptl.method",
+            exact_match="X-RAY DIFFRACTION"
+        )
+        & rcsb.FieldQuery(
+            "rcsb_entry_info.resolution_combined",
+            range_closed=(0.0, resolution_threshold)
+        )
+    )
+
+    test_groups = list(rcsb.search(
+        query, return_type,
+        group_by=grouping, return_groups=True
+    ).values())
+    test_representatives = rcsb.search(
+        query, return_type,
+        group_by=grouping, return_groups=False
+    )
+    test_count = rcsb.count(query, return_type, group_by=grouping)
+    
+    # List is not hashable
+    assert set([tuple(group) for group in test_groups]) == ref_groups
+    assert set(test_representatives) == set([group[0] for group in ref_groups])
+    assert test_count == len(ref_groups)
 
 
 @pytest.mark.skipif(

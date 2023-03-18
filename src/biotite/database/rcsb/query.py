@@ -7,6 +7,8 @@ __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["Query", "SingleQuery", "CompositeQuery",
            "BasicQuery", "FieldQuery",
            "SequenceQuery", "StructureQuery", "MotifQuery",
+           "Sorting",
+           "Grouping", "DepositGrouping", "IdentityGrouping", "UniprotGrouping",
            "search", "count"]
 
 import abc
@@ -15,7 +17,7 @@ import copy
 from datetime import datetime
 import numpy as np
 import requests
-from ...sequence.seqtypes import ProteinSequence, NucleotideSequence
+from ...sequence.seqtypes import NucleotideSequence
 from ..error import RequestError
 
 
@@ -40,7 +42,12 @@ class Query(metaclass=abc.ABCMeta):
         ``'query'`` attribute in the RCSB search API.
 
         This content is converted into JSON by the :func:`search`
-        and :func:`count` methods.
+        and :func:`count` functions.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'query'`` attributes.
         """
         pass
 
@@ -62,7 +69,6 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     This is the abstract base class for all queries that are
     terminal nodes.
     """
-
     @abc.abstractmethod
     def get_content(self):
         return {"parameters": {}}
@@ -449,7 +455,233 @@ class StructureQuery(SingleQuery):
         return content
 
 
-def count(query, return_type="entry"):
+
+
+class Sorting:
+
+    def __init__(self, field, descending=True):
+        self._field = field
+        self._descending = descending
+    
+    @property
+    def field(self):
+        return self._field
+
+    @property
+    def descending(self):
+        return self._descending
+    
+    def get_content(self):
+        """
+        Get the sorting content, i.e. the data belonging to the
+        ``'sort'`` and ``'ranking_criteria_type'`` attributes in the
+        RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        function.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'sort'`` and
+            ``'ranking_criteria_type'`` attributes.
+        """
+        direction = "desc" if self._descending else "asc"
+        return {
+            "sort_by" : self._field,
+            "direction" : direction
+        }
+
+
+
+
+class Grouping(metaclass=abc.ABCMeta):
+    """
+    A representation of the JSON grouping options of the RCSB search 
+    API.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
+
+    def __init__(self, sort_by=None):
+        if sort_by is None:
+            self._sorting = None
+        elif isinstance(sort_by, Sorting):
+            self._sorting = sort_by
+        else:
+            self._sorting = Sorting(sort_by)
+    
+    @abc.abstractmethod
+    def get_content(self):
+        """
+        Get the grouping content, i.e. the data belonging to the
+        ``'group_by'`` attribute in the RCSB search API.
+
+        This content is converted into JSON by the :func:`search`
+        and :func:`count` functions.
+
+        ABSTRACT: Override when inheriting.
+
+        Returns
+        -------
+        content : dict
+            The content dictionary for the ``'group_by'`` attributes.
+        """
+        if self._sorting is not None:
+            return {"ranking_criteria_type" : self._sorting.get_content()}
+        else:
+            return {}
+    
+    @abc.abstractmethod
+    def is_compatible_return_type(self, return_type):
+        """
+        Check whether this :class:`Group` is compatible with the
+        RCSB search API ``return_type``.
+
+        ABSTRACT: Override when inheriting.
+
+        Parameter
+        ---------
+        return_type : str
+            The ``return_type`` attribute to be checked.
+        
+        Returns
+        -------
+        is_compatible : bool
+            True, if this :class:`Group` is compatible with the
+            `return_type`, false otherwise.
+        """
+        pass
+
+
+class DepositGrouping(Grouping):
+    """
+    This class groups PDB entries if they were deposited as a
+    collection.
+    Such a group usually contain the same protein with e.g. a different
+    bound molecule.
+
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to ``entry``.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "matching_deposit_group_id"
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "entry"
+
+
+class IdentityGrouping(Grouping):
+    """
+    This class groups protein chains with a given sequence identity
+    with each other.
+
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to
+    ``polymer_entity``.
+
+    Parameters
+    ----------
+    similarity_cutoff : {100, 95, 90, 70, 50, 30}
+        The sequence identity in percent at which the structures are
+        grouped.
+        In other words, a returned group contains sequences that have
+        `similarity_cutoff` sequence identity with each other.
+        Since the PDB uses precalculated clusters, only certain values
+        are available.
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
+    def __init__(self, similarity_cutoff, sort_by=None):
+        super().__init__(sort_by)
+        if similarity_cutoff not in (100, 95, 90, 70, 50, 30):
+            raise ValueError(
+                f"A similarity cutoff of {similarity_cutoff}% is not supported"
+            )
+        self._similarity_cutoff = similarity_cutoff
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "sequence_identity"
+        content["similarity_cutoff"] = self._similarity_cutoff
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "polymer_entity"
+
+
+class UniprotGrouping(Grouping):
+    """
+    This class groups protein chains that point to the same *Uniprot*
+    accession ID.
+
+    This :class:`Grouping` is only applicable, if the
+    :func:`count()`/:func:`search()` return type is set to
+    ``polymer_entity``.
+
+    Parameters
+    ----------
+    sort_by : str or Sorting, optional
+        If specified, the returned PDB IDs within each group are sorted
+        by the values of the given field name.
+        A complete list of the available fields is documented at
+        `<https://search.rcsb.org/structure-search-attributes.html>`_.
+        and
+        `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given, sorting is performed in descending order.
+        To choose the order a :class:`Sorting` object needs to be
+        provided.
+    """
+
+    def get_content(self):
+        content = super().get_content()
+        content["aggregation_method"] = "matching_uniprot_accession"
+        return content
+    
+    def is_compatible_return_type(self, return_type):
+        return return_type == "polymer_entity"
+
+
+
+
+
+def count(query, return_type="entry", group_by=None,
+          content_types=("experimental",)):
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
@@ -470,12 +702,30 @@ def count(query, return_type="entry"):
         - ``'non_polymer_entity'``: All matching non-polymeric entities
           are counted.
         - ``'polymer_instance'``: All matching chains are counted.
+    group_by : Grouping
+        If this parameter is set, the number of groups is returned
+        instead.
+    content_types : iterable of {"experimental", "computational"}, optional
+        Specify whether experimental and computational structures should
+        be included.
+        At least one of them needs to be specified.
+        By default only experimental structures are included.
+        Note, that identifiers for computational structures cannot be
+        downloaded via :func:`biotite.database.rcsb.fetch()` as they
+        point to *AlphaFold DB* and *ModelArchive*.
 
     Returns
     -------
-    ids : list of str
-        A list of strings containing all PDB IDs that meet the query
-        requirements.
+    count : int
+        The total number of PDB IDs (or groups) that would be returned
+        by calling :func:`search()` using the same parameters.
+    
+    Notes
+    -----
+    If `group_by` is set, the number of results may be lower than in an
+    ungrouped query, as grouping is not applicable to all structures.
+    For example a DNA structure has no associated *Uniprot* accession
+    and hence is omitted by :class:`UniprotGrouping`.
     
     Examples
     --------
@@ -487,23 +737,19 @@ def count(query, return_type="entry"):
     >>> print(sorted(ids))
     ['1EJG', '1I0T', '2GLT', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
     """
-    if return_type not in [
-        "entry", "polymer_instance", "assembly",
-        "polymer_entity", "non_polymer_entity",
-    ]:
-        raise ValueError(f"'{return_type}' is an invalid return type")
+    query_dict = _initialize_query_dict(
+        query, return_type, group_by, content_types
+    )
+
+    query_dict["request_options"]["return_counts"] = True
     
-    query_dict = {
-        "query": query.get_content(),
-        "return_type": return_type,
-        "request_options": {
-            "return_counts": True
-        }
-    }
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
-        return r.json()["total_count"]
+        if group_by is None:
+            return r.json()["total_count"]
+        else:
+            return r.json()["group_by_count"]
     elif r.status_code == 204:
         # Search did not return any results
         return 0
@@ -515,7 +761,8 @@ def count(query, return_type="entry"):
             raise RequestError(f"Error {r.status_code}")
 
 
-def search(query, return_type="entry", range=None, sort_by=None):
+def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
+           return_groups=False, content_types=("experimental",)):
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
@@ -541,23 +788,61 @@ def search(query, return_type="entry", range=None, sort_by=None):
           (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
     
     range : tuple(int, int), optional
-        If this parameter is specified, the only PDB IDs in this range
+        If this parameter is specified, only PDB IDs in this range
         are selected from all matching PDB IDs and returned
         (pagination).
         The range is zero-indexed and the stop value is exclusive.
-    sort_by : str, optional
+    sort_by : str or Sorting, optional
         If specified, the returned PDB IDs are sorted by the values
-        of the given field name in descending order.
+        of the given field name.
         A complete list of the available fields is documented at
         `<https://search.rcsb.org/structure-search-attributes.html>`_.
         and
         `<https://search.rcsb.org/chemical-search-attributes.html>`_.
+        If a string is given sorting is performed in descending order.
+        To choose the order, a :class:`Sorting` object needs to be
+        provided.
+    group_by : Grouping
+        If this parameter is set, the PDB IDs that meet the query
+        requirements, are grouped according to the given criterion.
+    return_groups : boolean, optional
+        Only has effect, if `group_by` is set.
+        By default the representative with the highest rank in each
+        group is returned.
+        The rank is determined by the `sort_by` parameter of
+        :class:`Grouping` provided in `group_by`.
+        If set to true, groups containing all structures belonging to
+        the group are returned instead.
+    content_types : iterable of {"experimental", "computational"}, optional
+        Specify whether experimental and computational structures should
+        be included.
+        At least one of them needs to be specified.
+        By default only experimental structures are included.
+        Note, that identifiers for computational structures cannot be
+        downloaded via :func:`biotite.database.rcsb.fetch()` as they
+        point to *AlphaFold DB* and *ModelArchive*.
 
     Returns
     -------
-    ids : list of str
-        A list of strings containing all PDB IDs that meet the query
-        requirements.
+    ids : list of str or dict (str -> list of str)
+        If `return_groups` is false (default case), a list of strings
+        containing all PDB IDs that meet the query requirements is
+        returned.
+        If `return_groups` is set to true a dictionary of groups is
+        returned.
+        This dictionary maps group identifiers to a list of all PDB IDs
+        belonging to this group.
+    
+    Notes
+    -----
+    If `group_by` is set, the number of results may be lower than in an
+    ungrouped query, as grouping is not applicable to all structures.
+    For example a DNA structure has no associated *Uniprot* accession
+    and hence is omitted by :class:`UniprotGrouping`.
+
+    Also note that `sort_by` does not affect the order within a group.
+    This order is determined by the `sort_by` parameter of the
+    :class:`Grouping`.
 
     Examples
     --------
@@ -573,38 +858,53 @@ def search(query, return_type="entry", range=None, sort_by=None):
     ['7ATG', '5NW3', '5D8V']
     >>> print(sorted(search(query, return_type="polymer_instance")))
     ['1EJG.A', '1I0T.A', '1I0T.B', '2GLT.A', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A', '7ATG.A', '7ATG.B', '7R0H.A']
+    >>> print(search(
+    ...     query, return_type="polymer_entity", return_groups=True,
+    ...     group_by=UniprotGrouping(sort_by="rcsb_accession_info.initial_release_date"),
+    ... ))
+    {'P24297': ['5NW3_1'], 'P04425': ['2GLT_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1', '1EJG_1']}
     """
-    if return_type not in [
-        "entry", "polymer_instance", "assembly",
-        "polymer_entity", "non_polymer_entity",
-    ]:
-        raise ValueError(f"'{return_type}' is an invalid return type")
-    
-    request_options = {}
+    query_dict = _initialize_query_dict(
+        query, return_type, group_by, content_types
+    )
+
+    if group_by is not None:
+        if return_groups:
+            query_dict["request_options"]["group_by_return_type"] \
+                = "groups"
+        else:
+            query_dict["request_options"]["group_by_return_type"] \
+                = "representatives"
 
     if sort_by is not None:
-        request_options["sort"] = [{"sort_by": sort_by}]
+        if isinstance(sort_by, Sorting):
+            sorting = sort_by
+        else:
+            sorting = Sorting(sort_by)
+        query_dict["request_options"]["sort"] = [sorting.get_content()]
 
     if range is None:
-        request_options["return_all_hits"] = True
+        query_dict["request_options"]["return_all_hits"] = True
     elif range[1] <= range[0]:
         raise ValueError("Range stop must be greater than range start")
     else:
-        request_options["paginate"] = {
+        query_dict["request_options"]["paginate"] = {
             "start": int(range[0]),
             "rows": int(range[1]) - int(range[0])
         }
 
-    query_dict = {
-        "query": query.get_content(),
-        "return_type": return_type,
-        "request_options": request_options
-    }
-
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
     
     if r.status_code == 200:
-        return [result["identifier"] for result in r.json()["result_set"]]
+        if group_by is None or not return_groups:
+            return [result["identifier"] for result in r.json()["result_set"]]
+        else:
+            return {
+                group["identifier"] : [
+                    result["identifier"] for result in group["result_set"]
+                ]
+                for group in r.json()["group_set"]
+            }
     elif r.status_code == 204:
         # Search did not return any results
         return []
@@ -614,6 +914,42 @@ def search(query, return_type="entry", range=None, sort_by=None):
         except json.decoder.JSONDecodeError:
             # In case there an error response without message
             raise RequestError(f"Error {r.status_code}")
+
+
+def _initialize_query_dict(query, return_type, group_by, content_types):
+    """
+    Initialize the request parameter dictionary with attributes that
+    `count()` and `search()` have in common.
+    """
+    if return_type not in [
+        "entry", "polymer_instance", "assembly",
+        "polymer_entity", "non_polymer_entity",
+    ]:
+        raise ValueError(f"'{return_type}' is an invalid return type")
+    
+    request_options = {}
+    
+    if len(content_types) == 0:
+        raise ValueError("At least one content type must be specified")
+    for content_type in content_types:
+        if content_type not in ("experimental", "computational"):
+            raise ValueError(f"Unknown content type '{content_type}'")
+    request_options["results_content_type"] = content_types
+
+    if group_by is not None:
+        if not group_by.is_compatible_return_type(return_type):
+            raise ValueError(
+                f"Return type '{return_type}' is not compatible "
+                f"with the given Grouping"
+            )
+        request_options["group_by"] = group_by.get_content()
+
+    query_dict = {
+        "query": query.get_content(),
+        "return_type": return_type,
+        "request_options": request_options
+    }
+    return query_dict
 
 
 def _to_isoformat(object):

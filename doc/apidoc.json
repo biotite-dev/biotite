@@ -48,6 +48,13 @@
             "MotifQuery",
             "StructureQuery"
         ],
+        "Sorting and grouping" : [
+            "Sorting",
+            "Grouping",
+            "DepositGrouping",
+            "IdentityGrouping",
+            "UniprotGrouping"
+        ],
         "Search and fetch" : [
             "count",
             "search",
