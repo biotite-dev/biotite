@@ -9,6 +9,8 @@ __all__ = [
     "get_model_count",
     "get_structure",
     "set_structure",
+    "get_component",
+    "set_component",
     "list_assemblies",
     "get_assembly",
 ]
@@ -20,9 +22,29 @@ import numpy as np
 from ....file import InvalidFileError
 from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...atoms import AtomArray, AtomArrayStack, repeat
+from ...bonds import BondList, BondType
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
+from ...residues import get_residue_count
+from ...error import BadStructureError
 from ...util import matrix_rotate
+
+
+# Map 'chem_comp_bond' bond orders to 'BondType'...
+BOND_ORDER_TO_BOND_TYPE = {
+    ("SING", "N") : BondType.SINGLE,
+    ("DOUB", "N") : BondType.DOUBLE,
+    ("TRIP", "N") : BondType.TRIPLE,
+    ("QUAD", "N") : BondType.QUADRUPLE,
+    ("SING", "Y") : BondType.AROMATIC_SINGLE,
+    ("DOUB", "Y") : BondType.AROMATIC_DOUBLE,
+    ("TRIP", "Y") : BondType.AROMATIC_TRIPLE,
+}
+# ...and vice versa
+BOND_TYPE_TO_BOND_ORDER = {
+    bond_type: order for order, bond_type in BOND_ORDER_TO_BOND_TYPE.items()
+}
+
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -152,6 +174,8 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         If `use_author_fields` is true, the annotation arrays will be
         read from the ``auth_xxx`` fields (if applicable),
         otherwise from the the ``label_xxx`` fields.
+        If the requested field is not available, the respective other
+        field is taken as fallback.
 
     Returns
     -------
@@ -171,6 +195,9 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     extra_fields = [] if extra_fields is None else extra_fields
 
     atom_site_dict = pdbx_file.get_category("atom_site", data_block)
+    if atom_site_dict is None:
+        raise InvalidFileError("Missing 'atom_site' category in file")
+    
     models = atom_site_dict["pdbx_PDB_model_num"]
     model_starts = _get_model_starts(models)
     model_count = len(model_starts)
@@ -518,9 +545,7 @@ def set_structure(pdbx_file, array, data_block=None):
     atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
 
     if "atom_id" in annot_categories:
-        atom_site_dict["id"] = np.array([str(e) for e in array.atom_id])
-    else:
-        atom_site_dict["id"] = None
+        atom_site_dict["id"] = array.atom_id.astype(str)
     if "b_factor" in annot_categories:
         atom_site_dict["B_iso_or_equiv"] = np.array(
             [f"{b:.2f}" for b in array.b_factor]
@@ -576,14 +601,6 @@ def set_structure(pdbx_file, array, data_block=None):
         atom_site_dict["id"] = np.arange(
             1, len(atom_site_dict["group_PDB"]) + 1
         ).astype("U6")
-    if data_block is None:
-        data_blocks = pdbx_file.get_block_names()
-        if len(data_blocks) == 0:
-            raise TypeError(
-                "No data block is existent in PDBx file, must be specified"
-            )
-        else:
-            data_block = data_blocks[0]
     pdbx_file.set_category("atom_site", atom_site_dict, data_block)
 
     # Write box into file
@@ -619,6 +636,125 @@ def _determine_entity_id(chain_id):
             entity_id[i] = id_translation[chain_id[i]]
             id += 1
     return entity_id.astype(str)
+
+
+def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
+                  include_bonds=False):
+    """
+    Create an :class:`AtomArray` for a chemical component from the
+    ``chem_comp_atom`` and optionally the ``chem_comp_bond`` categories
+    in a :class:`PDBxFile`.
+    """
+    atom_dict = pdbx_file.get_category(
+        "chem_comp_atom", block=data_block, expect_looped=True
+    )
+    if atom_dict is None:
+        raise InvalidFileError("Missing 'chem_comp_atom' category in file")
+    bond_dict = pdbx_file.get_category(
+        "chem_comp_bond", block=data_block, expect_looped=True
+    )
+
+    array = AtomArray(len(list(atom_dict.values())[0]))
+
+    array.res_name = atom_dict["comp_id"]
+    array.atom_name = atom_dict["atom_id"]
+    array.element = atom_dict["type_symbol"]
+    array.add_annotation("charge", int)
+    array.charge = np.array(
+        [int(c) if c != "?" else 0 for c in atom_dict["charge"]]
+    )
+    
+    coord_fields = [f"pdbx_model_Cartn_{dim}_ideal" for dim in ("x", "y", "z")]
+    alt_coord_fields = [f"model_Cartn_{dim}" for dim in ("x", "y", "z")]
+    if not use_ideal_coord:
+        # Swap with the fallback option
+        coord_fields, alt_coord_fields = alt_coord_fields, coord_fields
+    try:
+        for i, field in enumerate(coord_fields):
+            array.coord[:,i] = atom_dict[field]
+    except KeyError as err:
+        key = err.args[0]
+        warnings.warn(
+            f"Attribute '{key}' not found within 'chem_comp_atom' category. "
+            f"The fallback coordinates will be used instead",
+            UserWarning
+        )
+        for i, field in enumerate(alt_coord_fields):
+            array.coord[:,i] = atom_dict[field]
+    
+    if include_bonds:
+        if bond_dict is None:
+            warnings.warn(
+                f"Category 'chem_comp_bond' not found. "
+                f"No bonds will be parsed",
+                UserWarning
+            )
+        else:
+            bonds = BondList(array.array_length())
+            for atom1, atom2, order, aromatic_flag in zip(
+                bond_dict["atom_id_1"], bond_dict["atom_id_2"],
+                bond_dict["value_order"], bond_dict["pdbx_aromatic_flag"]
+            ):
+                atom_i = np.where(array.atom_name == atom1)[0][0]
+                atom_j = np.where(array.atom_name == atom2)[0][0]
+                bond_type = BOND_ORDER_TO_BOND_TYPE[order, aromatic_flag]
+                bonds.add_bond(atom_i, atom_j, bond_type)
+            array.bonds = bonds
+
+    return array
+
+
+def set_component(pdbx_file, array, data_block=None):
+    if get_residue_count(array) > 1:
+        raise BadStructureError(
+            "The input atom array must comprise only one residue"
+        )
+    res_name = array.res_name[0]
+
+    annot_categories = array.get_annotation_categories()
+    if "charge" in annot_categories:
+        charge = array.charge.astype("U2")
+    else:
+        charge = np.full(array.array_length(), "?", dtype="U2")
+
+    chem_comp_dict = OrderedDict()
+    chem_comp_dict["comp_id"] = np.full(array.array_length(), res_name)
+    chem_comp_dict["atom_id"] = np.copy(array.atom_name)
+    chem_comp_dict["alt_atom_id"] = chem_comp_dict["atom_id"]
+    chem_comp_dict["type_symbol"] = np.copy(array.element)
+    chem_comp_dict["charge"] = charge
+    chem_comp_dict["model_Cartn_x"] = np.copy(array.coord[:, 0])
+    chem_comp_dict["model_Cartn_y"] = np.copy(array.coord[:, 1])
+    chem_comp_dict["model_Cartn_z"] = np.copy(array.coord[:, 2])
+    chem_comp_dict["pdbx_model_Cartn_x_ideal"] = chem_comp_dict["model_Cartn_x"]
+    chem_comp_dict["pdbx_model_Cartn_y_ideal"] = chem_comp_dict["model_Cartn_y"]
+    chem_comp_dict["pdbx_model_Cartn_z_ideal"] = chem_comp_dict["model_Cartn_z"]
+    chem_comp_dict["pdbx_component_atom_id"] = chem_comp_dict["atom_id"]
+    chem_comp_dict["pdbx_component_comp_id"] = chem_comp_dict["comp_id"]
+    chem_comp_dict["pdbx_ordinal"] = np.arange(
+        1, array.array_length() + 1
+    ).astype(str)
+    pdbx_file.set_category("chem_comp_atom", chem_comp_dict, data_block)
+
+    if array.bonds is not None:
+        bond_array = array.bonds.as_array()
+        order_flags = []
+        aromatic_flags = []
+        for bond_type in bond_array[:,2]:
+            order_flag, aromatic_flag = BOND_TYPE_TO_BOND_ORDER[bond_type]
+            order_flags.append(order_flag)
+            aromatic_flags.append(aromatic_flag)
+
+        chem_comp_bond_dict = OrderedDict()
+        chem_comp_bond_dict["comp_id"] = np.full(len(bond_array), res_name)
+        chem_comp_bond_dict["atom_id_1"] = array.atom_name[bond_array[:,0]]
+        chem_comp_bond_dict["atom_id_2"] = array.atom_name[bond_array[:,1]]
+        chem_comp_bond_dict["value_order"] = np.array(order_flags)
+        chem_comp_bond_dict["pdbx_aromatic_flag"] = np.array(aromatic_flags)
+        chem_comp_bond_dict["pdbx_ordinal"] = np.arange(
+            1, len(bond_array) + 1
+        ).astype(str)
+        pdbx_file.set_category("chem_comp_bond", chem_comp_bond_dict, data_block)
 
 
 def list_assemblies(pdbx_file, data_block=None):

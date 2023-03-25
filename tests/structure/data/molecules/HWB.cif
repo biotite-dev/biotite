@@ -1,0 +1,150 @@
+data_HWB
+#
+
+_chem_comp.id                                   HWB
+_chem_comp.name                                 cyanidin
+_chem_comp.type                                 NON-POLYMER
+_chem_comp.pdbx_type                            HETAIN
+_chem_comp.formula                              "C15 H11 O6"
+_chem_comp.mon_nstd_parent_comp_id              ?
+_chem_comp.pdbx_synonyms                        ?
+_chem_comp.pdbx_formal_charge                   1
+_chem_comp.pdbx_initial_date                    2018-12-29
+_chem_comp.pdbx_modified_date                   2019-12-20
+_chem_comp.pdbx_ambiguous_flag                  N
+_chem_comp.pdbx_release_status                  REL
+_chem_comp.pdbx_replaced_by                     ?
+_chem_comp.pdbx_replaces                        ?
+_chem_comp.formula_weight                       287.244
+_chem_comp.one_letter_code                      ?
+_chem_comp.three_letter_code                    HWB
+_chem_comp.pdbx_model_coordinates_details       ?
+_chem_comp.pdbx_model_coordinates_missing_flag  N
+_chem_comp.pdbx_ideal_coordinates_details       Corina
+_chem_comp.pdbx_ideal_coordinates_missing_flag  N
+_chem_comp.pdbx_model_coordinates_db_code       6QCH
+_chem_comp.pdbx_subcomponent_list               ?
+_chem_comp.pdbx_processing_site                 EBI
+#   #
+loop_
+_chem_comp_atom.comp_id
+_chem_comp_atom.atom_id
+_chem_comp_atom.alt_atom_id
+_chem_comp_atom.type_symbol
+_chem_comp_atom.charge
+_chem_comp_atom.pdbx_align
+_chem_comp_atom.pdbx_aromatic_flag
+_chem_comp_atom.pdbx_leaving_atom_flag
+_chem_comp_atom.pdbx_stereo_config
+_chem_comp_atom.model_Cartn_x
+_chem_comp_atom.model_Cartn_y
+_chem_comp_atom.model_Cartn_z
+_chem_comp_atom.pdbx_model_Cartn_x_ideal
+_chem_comp_atom.pdbx_model_Cartn_y_ideal
+_chem_comp_atom.pdbx_model_Cartn_z_ideal
+_chem_comp_atom.pdbx_component_atom_id
+_chem_comp_atom.pdbx_component_comp_id
+_chem_comp_atom.pdbx_ordinal
+HWB  O01  O1   O  0  1  N  N  N  -26.706  30.470  22.096  -4.652  -2.732   0.069  O01  HWB   1  
+HWB  C02  C1   C  0  1  Y  N  N  -25.913  29.989  21.043  -3.892  -1.607   0.030  C02  HWB   2  
+HWB  C03  C2   C  0  1  Y  N  N  -25.230  30.851  20.156  -4.512  -0.363  -0.094  C03  HWB   3  
+HWB  C04  C3   C  0  1  Y  N  N  -24.450  30.336  19.106  -3.768   0.784  -0.135  C04  HWB   4  
+HWB  O05  O2   O  0  1  N  N  N  -23.796  31.253  18.260  -4.379   1.990  -0.254  O05  HWB   5  
+HWB  C06  C4   C  0  1  Y  N  N  -24.350  28.896  18.957  -2.366   0.706  -0.052  C06  HWB   6  
+HWB  C07  C5   C  0  1  Y  N  N  -23.580  28.200  17.918  -1.559   1.862  -0.089  C07  HWB   7  
+HWB  C08  C6   C  0  1  Y  N  N  -23.575  26.746  17.893  -0.202   1.643   0.003  C08  HWB   8  
+HWB  O09  O3   O  0  1  N  N  N  -22.841  26.095  16.898   0.679   2.678  -0.021  O09  HWB   9  
+HWB  C10  C7   C  0  1  Y  N  N  -24.310  26.063  18.887   0.242   0.313   0.122  C10  HWB  10  
+HWB  O11  O4   O  1  1  Y  N  N  -24.982  26.758  19.760  -0.515  -0.630   0.147  O11  HWB  11  
+HWB  C12  C8   C  0  1  Y  N  N  -25.023  28.090  19.838  -1.728  -0.554   0.074  C12  HWB  12  
+HWB  C13  C9   C  0  1  Y  N  N  -25.821  28.621  20.892  -2.520  -1.711   0.118  C13  HWB  13  
+HWB  C14  C10  C  0  1  Y  N  N  -24.534  24.563  19.126   1.696   0.058   0.221  C14  HWB  14  
+HWB  C15  C11  C  0  1  Y  N  N  -25.686  24.294  19.849   2.314   0.013   1.471  C15  HWB  15  
+HWB  C16  C12  C  0  1  Y  N  N  -26.107  23.023  20.231   3.670  -0.226   1.562  C16  HWB  16  
+HWB  C17  C13  C  0  1  Y  N  N  -25.330  21.968  19.807   4.422  -0.420   0.412  C17  HWB  17  
+HWB  O18  O5   O  0  1  N  N  N  -25.797  20.722  20.114   5.757  -0.654   0.507  O18  HWB  18  
+HWB  C19  C14  C  0  1  Y  N  N  -24.207  22.172  18.990   3.810  -0.375  -0.839  C19  HWB  19  
+HWB  O20  O6   O  0  1  N  N  N  -23.481  21.047  18.564   4.549  -0.566  -1.965  O20  HWB  20  
+HWB  C21  C15  C  0  1  Y  N  N  -23.785  23.467  18.688   2.451  -0.143  -0.936  C21  HWB  21  
+HWB  H1   H1   H  0  1  N  N  N  -27.077  29.737  22.574  -4.823  -3.121  -0.800  H1   HWB  22  
+HWB  H2   H2   H  0  1  N  N  N  -25.308  31.920  20.286  -5.589  -0.305  -0.157  H2   HWB  23  
+HWB  H3   H3   H  0  1  N  N  N  -23.998  32.139  18.536  -4.604   2.402   0.591  H3   HWB  24  
+HWB  H4   H4   H  0  1  N  N  N  -23.024  28.761  17.181  -1.977   2.854  -0.183  H4   HWB  25  
+HWB  H5   H5   H  0  1  N  N  N  -22.928  25.155  17.003   0.885   3.039   0.852  H5   HWB  26  
+HWB  H6   H6   H  0  1  N  N  N  -26.348  27.960  21.565  -2.056  -2.681   0.213  H6   HWB  27  
+HWB  H7   H7   H  0  1  N  N  N  -26.303  25.133  20.137   1.732   0.164   2.368  H7   HWB  28  
+HWB  H8   H8   H  0  1  N  N  N  -26.995  22.873  20.827   4.147  -0.260   2.530  H8   HWB  29  
+HWB  H9   H9   H  0  1  N  N  N  -26.560  20.799  20.675   5.987  -1.591   0.579  H9   HWB  30  
+HWB  H10  H10  H  0  1  N  N  N  -23.917  20.257  18.861   4.608  -1.490  -2.245  H10  HWB  31  
+HWB  H11  H11  H  0  1  N  N  N  -22.882  23.622  18.117   1.976  -0.109  -1.905  H11  HWB  32  
+#   #
+loop_
+_chem_comp_bond.comp_id
+_chem_comp_bond.atom_id_1
+_chem_comp_bond.atom_id_2
+_chem_comp_bond.value_order
+_chem_comp_bond.pdbx_aromatic_flag
+_chem_comp_bond.pdbx_stereo_config
+_chem_comp_bond.pdbx_ordinal
+HWB  O09  C08  SING  N  N   1  
+HWB  C08  C07  DOUB  Y  N   2  
+HWB  C08  C10  SING  Y  N   3  
+HWB  C07  C06  SING  Y  N   4  
+HWB  O05  C04  SING  N  N   5  
+HWB  O20  C19  SING  N  N   6  
+HWB  C21  C19  DOUB  Y  N   7  
+HWB  C21  C14  SING  Y  N   8  
+HWB  C10  C14  SING  N  N   9  
+HWB  C10  O11  DOUB  Y  N  10  
+HWB  C06  C04  DOUB  Y  N  11  
+HWB  C06  C12  SING  Y  N  12  
+HWB  C19  C17  SING  Y  N  13  
+HWB  C04  C03  SING  Y  N  14  
+HWB  C14  C15  DOUB  Y  N  15  
+HWB  O11  C12  SING  Y  N  16  
+HWB  C17  O18  SING  N  N  17  
+HWB  C17  C16  DOUB  Y  N  18  
+HWB  C12  C13  DOUB  Y  N  19  
+HWB  C15  C16  SING  Y  N  20  
+HWB  C03  C02  DOUB  Y  N  21  
+HWB  C13  C02  SING  Y  N  22  
+HWB  C02  O01  SING  N  N  23  
+HWB  O01  H1   SING  N  N  24  
+HWB  C03  H2   SING  N  N  25  
+HWB  O05  H3   SING  N  N  26  
+HWB  C07  H4   SING  N  N  27  
+HWB  O09  H5   SING  N  N  28  
+HWB  C13  H6   SING  N  N  29  
+HWB  C15  H7   SING  N  N  30  
+HWB  C16  H8   SING  N  N  31  
+HWB  O18  H9   SING  N  N  32  
+HWB  O20  H10  SING  N  N  33  
+HWB  C21  H11  SING  N  N  34  
+#   #
+loop_
+_pdbx_chem_comp_descriptor.comp_id
+_pdbx_chem_comp_descriptor.type
+_pdbx_chem_comp_descriptor.program
+_pdbx_chem_comp_descriptor.program_version
+_pdbx_chem_comp_descriptor.descriptor
+HWB  InChI             InChI                 1.03   "InChI=1S/C15H10O6/c16-8-4-11(18)9-6-13(20)15(21-14(9)5-8)7-1-2-10(17)12(19)3-7/h1-6H,(H4-,16,17,18,19,20)/p+1"  
+HWB  InChIKey          InChI                 1.03   VEVZSMAEJFVWIL-UHFFFAOYSA-O  
+HWB  SMILES_CANONICAL  CACTVS                3.385  "Oc1cc(O)c2cc(O)c([o+]c2c1)c3ccc(O)c(O)c3"  
+HWB  SMILES            CACTVS                3.385  "Oc1cc(O)c2cc(O)c([o+]c2c1)c3ccc(O)c(O)c3"  
+HWB  SMILES_CANONICAL  "OpenEye OEToolkits"  2.0.6  "c1cc(c(cc1c2c(cc3c(cc(cc3[o+]2)O)O)O)O)O"  
+HWB  SMILES            "OpenEye OEToolkits"  2.0.6  "c1cc(c(cc1c2c(cc3c(cc(cc3[o+]2)O)O)O)O)O"  
+#
+_pdbx_chem_comp_identifier.comp_id          HWB
+_pdbx_chem_comp_identifier.type             "SYSTEMATIC NAME"
+_pdbx_chem_comp_identifier.program          "OpenEye OEToolkits"
+_pdbx_chem_comp_identifier.program_version  2.0.6
+_pdbx_chem_comp_identifier.identifier       "2-[3,4-bis(oxidanyl)phenyl]chromenylium-3,5,7-triol"
+#   #
+loop_
+_pdbx_chem_comp_audit.comp_id
+_pdbx_chem_comp_audit.action_type
+_pdbx_chem_comp_audit.date
+_pdbx_chem_comp_audit.processing_site
+HWB  "Create component"  2018-12-29  EBI   
+HWB  "Initial release"   2019-12-25  RCSB  
+##
