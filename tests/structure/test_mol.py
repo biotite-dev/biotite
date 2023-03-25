@@ -93,7 +93,7 @@ def test_pdbx_consistency(path):
     cif_path = splitext(path)[0] + ".cif"
 
     pdbx_file = pdbx.PDBxFile.read(cif_path)
-    ref_atoms = pdbx.get_component(pdbx_file, include_bonds=True)
+    ref_atoms = pdbx.get_component(pdbx_file)
     # The PDBx test files contain information about aromatic bond types,
     # but the SDF test files do not
     ref_atoms.bonds.remove_aromaticity()

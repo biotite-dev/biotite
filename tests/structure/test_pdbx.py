@@ -251,17 +251,14 @@ def test_component_conversion(path, use_ideal_coord):
     structure.
     """
     pdbx_file = pdbx.PDBxFile.read(path)
-    print(pdbx_file)
-    print("\n\nNEW FILE\n\n")
     ref_atoms = pdbx.get_component(
-        pdbx_file, use_ideal_coord=use_ideal_coord, include_bonds=True
+        pdbx_file, use_ideal_coord=use_ideal_coord
     )
 
     pdbx_file = pdbx.PDBxFile()
     pdbx.set_component(pdbx_file, ref_atoms, data_block="test")
-    print(pdbx_file)
     test_atoms = pdbx.get_component(
-        pdbx_file, use_ideal_coord=use_ideal_coord, include_bonds=True,
+        pdbx_file, use_ideal_coord=use_ideal_coord
     )
 
     assert test_atoms == ref_atoms

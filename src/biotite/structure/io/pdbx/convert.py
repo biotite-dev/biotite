@@ -491,7 +491,7 @@ def _get_box(pdbx_file, data_block):
 
 def set_structure(pdbx_file, array, data_block=None):
     """
-    Set the `atom_site` category with an
+    Set the ``atom_site`` category with atom information from an
     :class:`AtomArray` or :class:`AtomArrayStack`.
 
     This will save the coordinates, the mandatory annotation categories
@@ -638,12 +638,62 @@ def _determine_entity_id(chain_id):
     return entity_id.astype(str)
 
 
-def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
-                  include_bonds=False):
+def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
     """
     Create an :class:`AtomArray` for a chemical component from the
-    ``chem_comp_atom`` and optionally the ``chem_comp_bond`` categories
-    in a :class:`PDBxFile`.
+    ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
+    category in a :class:`PDBxFile`.
+
+    Parameters
+    ----------
+    data_block : str, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+    use_ideal_coord : bool, optional
+        If true, the *ideal* coordinates are read from the file
+        (``pdbx_model_Cartn_<dim>_ideal``fields), typically
+        originating from computations.
+        If set to false, alternative coordinates are read
+        (``model_Cartn_<dim>_``fields).
+    
+    Returns
+    -------
+    array : AtomArray
+        The parsed chemical component.
+    
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = PDBxFile.read(
+    ...     os.path.join(path_to_structures, "molecules", "TYR.cif")
+    ... )
+    >>> comp = get_component(file)
+    >>> print(comp)
+    HET         0  TYR N      N         1.320    0.952    1.428
+    HET         0  TYR CA     C        -0.018    0.429    1.734
+    HET         0  TYR C      C        -0.103    0.094    3.201
+    HET         0  TYR O      O         0.886   -0.254    3.799
+    HET         0  TYR CB     C        -0.274   -0.831    0.907
+    HET         0  TYR CG     C        -0.189   -0.496   -0.559
+    HET         0  TYR CD1    C         1.022   -0.589   -1.219
+    HET         0  TYR CD2    C        -1.324   -0.102   -1.244
+    HET         0  TYR CE1    C         1.103   -0.282   -2.563
+    HET         0  TYR CE2    C        -1.247    0.210   -2.587
+    HET         0  TYR CZ     C        -0.032    0.118   -3.252
+    HET         0  TYR OH     O         0.044    0.420   -4.574
+    HET         0  TYR OXT    O        -1.279    0.184    3.842
+    HET         0  TYR H      H         1.977    0.225    1.669
+    HET         0  TYR H2     H         1.365    1.063    0.426
+    HET         0  TYR HA     H        -0.767    1.183    1.489
+    HET         0  TYR HB2    H         0.473   -1.585    1.152
+    HET         0  TYR HB3    H        -1.268   -1.219    1.134
+    HET         0  TYR HD1    H         1.905   -0.902   -0.683
+    HET         0  TYR HD2    H        -2.269   -0.031   -0.727
+    HET         0  TYR HE1    H         2.049   -0.354   -3.078
+    HET         0  TYR HE2    H        -2.132    0.523   -3.121
+    HET         0  TYR HH     H        -0.123   -0.399   -5.059
+    HET         0  TYR HXT    H        -1.333   -0.030    4.784
     """
     atom_dict = pdbx_file.get_category(
         "chem_comp_atom", block=data_block, expect_looped=True
@@ -656,6 +706,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
 
     array = AtomArray(len(list(atom_dict.values())[0]))
 
+    array.hetero[:] = True
     array.res_name = atom_dict["comp_id"]
     array.atom_name = atom_dict["atom_id"]
     array.element = atom_dict["type_symbol"]
@@ -682,29 +733,48 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
         for i, field in enumerate(alt_coord_fields):
             array.coord[:,i] = atom_dict[field]
     
-    if include_bonds:
-        if bond_dict is None:
-            warnings.warn(
-                f"Category 'chem_comp_bond' not found. "
-                f"No bonds will be parsed",
-                UserWarning
-            )
-        else:
-            bonds = BondList(array.array_length())
-            for atom1, atom2, order, aromatic_flag in zip(
-                bond_dict["atom_id_1"], bond_dict["atom_id_2"],
-                bond_dict["value_order"], bond_dict["pdbx_aromatic_flag"]
-            ):
-                atom_i = np.where(array.atom_name == atom1)[0][0]
-                atom_j = np.where(array.atom_name == atom2)[0][0]
-                bond_type = BOND_ORDER_TO_BOND_TYPE[order, aromatic_flag]
-                bonds.add_bond(atom_i, atom_j, bond_type)
-            array.bonds = bonds
+    if bond_dict is None:
+        warnings.warn(
+            f"Category 'chem_comp_bond' not found. "
+            f"No bonds will be parsed",
+            UserWarning
+        )
+    else:
+        bonds = BondList(array.array_length())
+        for atom1, atom2, order, aromatic_flag in zip(
+            bond_dict["atom_id_1"], bond_dict["atom_id_2"],
+            bond_dict["value_order"], bond_dict["pdbx_aromatic_flag"]
+        ):
+            atom_i = np.where(array.atom_name == atom1)[0][0]
+            atom_j = np.where(array.atom_name == atom2)[0][0]
+            bond_type = BOND_ORDER_TO_BOND_TYPE[order, aromatic_flag]
+            bonds.add_bond(atom_i, atom_j, bond_type)
+        array.bonds = bonds
 
     return array
 
 
 def set_component(pdbx_file, array, data_block=None):
+    """
+    Set the ``chem_comp_atom`` and, if bonds are available,
+    ``chem_comp_bond`` category with atom information from an
+    :class:`AtomArray`.
+
+    This will save the coordinates, the mandatory annotation categories
+    and the optional ``charge`` category as well as an associated
+    :class:`BondList`, if available.
+
+    Parameters
+    ----------
+    pdbx_file : PDBxFile
+        The file object.
+    array : AtomArray
+        The chemical component to be written.
+        Must contain only a single residue.
+    data_block : str, optional
+        The name of the data block. Default is the first
+        (and most times only) data block of the file.
+    """
     if get_residue_count(array) > 1:
         raise BadStructureError(
             "The input atom array must comprise only one residue"
