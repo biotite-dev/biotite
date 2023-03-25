@@ -83,6 +83,7 @@ class PDBFile(TextFile):
         # Pad lines with whitespace if lines are shorter
         # than the required 80 characters
         file.lines = [line.ljust(80) for line in file.lines]
+        file._index_models_and_atoms()
         return file
     
 
@@ -153,25 +154,12 @@ class PDBFile(TextFile):
         model_count : int
             The number of models.
         """
-        model_count = 0
-        for line in self.lines:
-            if line.startswith("MODEL"):
-                model_count += 1
-        
-        if model_count == 0:
-            # It could be an empty file or a file with a single model,
-            # where the 'MODEL' line is missing
-            for line in self.lines:
-                if line.startswith(("ATOM", "HETATM")):
-                    return 1
-            return 0
-        else:
-            return model_count
+        return len(self._model_start_i)
     
 
     def get_coord(self, model=None):
         """
-        Get only the coordinates of the PDB file.
+        Get only the coordinates from the PDB file.
         
         Parameters
         ----------
@@ -181,13 +169,13 @@ class PDBFile(TextFile):
             given model number (starting at 1).
             Negative values are used to index models starting from the
             last model instead of the first model.
-            If this parameter is omitted, an 2D coordinate array
+            If this parameter is omitted, an 3D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
         
         Returns
         -------
-        coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
+        coord : ndarray, shape=(m,n,3) or shape=(n,3), dtype=float
             The coordinates read from the ATOM and HETATM records of the
             file.
         
@@ -243,68 +231,94 @@ class PDBFile(TextFile):
         >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
         True
         """
-        # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith("MODEL")],
-                                 dtype=int)
-        # Line indices with ATOM or HETATM records
-        atom_line_i = np.array([i for i in range(len(self.lines)) if
-                                self.lines[i].startswith(("ATOM", "HETATM"))],
-                                dtype=int)
-        # Structures containing only one model may omit MODEL record
-        # In these cases model starting index is set to 0
-        if len(model_start_i) == 0:
-            model_start_i = np.array([0])
-        
         if model is None:
-            depth = len(model_start_i)
-            length = self._get_model_length(model_start_i, atom_line_i)
-            coord_i = atom_line_i
-        
-        else:
-            last_model = len(model_start_i)
-            if model == 0:
-                raise ValueError("The model index must not be 0")
-            # Negative models mean index starting from last model
-            model = last_model + model + 1 if model < 0 else model
-
-            if model < last_model:
-                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
-                                ( atom_line_i <  model_start_i[model  ] ) )
-            elif model == last_model:
-                line_filter = (atom_line_i >= model_start_i[model-1])
-            else:
-                raise ValueError(
-                    f"The file has {last_model} models, "
-                    f"the given model {model} does not exist"
-                )
-            coord_i = atom_line_i[line_filter]
-            length = len(coord_i)
-        
-        # Fill in coordinates
-        if model is None:
-            coord = np.zeros((depth, length, 3), dtype=np.float32)
+            coord = np.zeros(
+                (len(self._model_start_i), self._get_model_length(), 3),
+                dtype=np.float32
+            )
             m = 0
             i = 0
-            for line_i in atom_line_i:
-                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+            for line_i in self._atom_line_i:
+                if (
+                    m < len(self._model_start_i)-1
+                    and line_i > self._model_start_i[m+1]
+                ):
                     m += 1
                     i = 0
                 line = self.lines[line_i]
-                coord[m,i,0] = float(line[30:38])
-                coord[m,i,1] = float(line[38:46])
-                coord[m,i,2] = float(line[46:54])
+                coord[m,i,0] = float(line[_coord_x])
+                coord[m,i,1] = float(line[_coord_y])
+                coord[m,i,2] = float(line[_coord_z])
                 i += 1
             return coord
         
         else:
-            coord = np.zeros((length, 3), dtype=np.float32)
+            coord_i = self._get_atom_record_indices_for_model(model)
+            coord = np.zeros((len(coord_i), 3), dtype=np.float32)
             for i, line_i in enumerate(coord_i):
                 line = self.lines[line_i]
-                coord[i,0] = float(line[30:38])
-                coord[i,1] = float(line[38:46])
-                coord[i,2] = float(line[46:54])
+                coord[i,0] = float(line[_coord_x])
+                coord[i,1] = float(line[_coord_y])
+                coord[i,2] = float(line[_coord_z])
             return coord
+    
+
+    def get_b_factor(self, model=None):
+        """
+        Get only the B-factors from the PDB file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return a
+            1D B-factor array from the atoms corresponding to the
+            given model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model instead of the first model.
+            If this parameter is omitted, an 2D B-factor array
+            containing all models will be returned, even if
+            the structure contains only one model.
+        
+        Returns
+        -------
+        b_factor : ndarray, shape=(m,n) or shape=(n,), dtype=float
+            The B-factors read from the ATOM and HETATM records of the
+            file.
+        
+        Notes
+        -----
+        Note that :func:`get_b_factor()` may output more B-factors
+        than the atom array (stack) from the corresponding
+        :func:`get_structure()` call has atoms.
+        The reason for this is, that :func:`get_structure()` filters
+        *altloc* IDs, while `get_b_factor()` does not.
+        """
+        if model is None:
+            b_factor = np.zeros(
+                (len(self._model_start_i), self._get_model_length()),
+                dtype=np.float32
+            )
+            m = 0
+            i = 0
+            for line_i in self._atom_line_i:
+                if (
+                    m < len(self._model_start_i)-1
+                    and line_i > self._model_start_i[m+1]
+                ):
+                    m += 1
+                    i = 0
+                line = self.lines[line_i]
+                b_factor[m,i] = float(line[_temp_f])
+                i += 1
+            return b_factor
+        
+        else:
+            b_factor_i = self._get_atom_record_indices_for_model(model)
+            b_factor = np.zeros(len(b_factor_i), dtype=np.float32)
+            for i, line_i in enumerate(b_factor_i):
+                line = self.lines[line_i]
+                b_factor[i] = float(line[_temp_f])
+            return b_factor
 
 
     def get_structure(self, model=None, altloc="first", extra_fields=[],
@@ -354,51 +368,18 @@ class PDBFile(TextFile):
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-        # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
-                                 dtype=int)
-        # Line indices with ATOM or HETATM records
-        atom_line_i = np.array([i for i in range(len(self.lines)) if
-                                self.lines[i].startswith(("ATOM", "HETATM"))],
-                               dtype=int)
-        # Structures containing only one model may omit MODEL record
-        # In these cases model starting index is set to 0
-        if len(model_start_i) == 0:
-            model_start_i = np.array([0])
-        
         if model is None:
-            depth = len(model_start_i)
-            length = self._get_model_length(model_start_i, atom_line_i)
+            depth = len(self._model_start_i)
+            length = self._get_model_length()
             array = AtomArrayStack(depth, length)
-            # Line indices for annotation determination
-            # Annotation is determined from model 1,
-            # therefore from ATOM records before second MODEL record
-            if len(model_start_i) == 1:
-                annot_i = atom_line_i
-            else:
-                annot_i = atom_line_i[atom_line_i < model_start_i[1]]
-            # Line indices for coordinate determination
-            coord_i = atom_line_i
+            # Record indices for annotation determination
+            # Annotation is determined from model 1
+            annot_i = self._get_atom_record_indices_for_model(1)
+            # Record indices for coordinate determination
+            coord_i = self._atom_line_i
         
         else:
-            last_model = len(model_start_i)
-            if model == 0:
-                raise ValueError("The model index must not be 0")
-            # Negative models mean index starting from last model
-            model = last_model + model + 1 if model < 0 else model
-
-            if model < last_model:
-                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
-                                ( atom_line_i <  model_start_i[model  ] ) )
-            elif model == last_model:
-                line_filter = (atom_line_i >= model_start_i[model-1])
-            else:
-                raise ValueError(
-                    f"The file has {last_model} models, "
-                    f"the given model {model} does not exist"
-                )
-            annot_i = coord_i = atom_line_i[line_filter]
+            annot_i = coord_i = self._get_atom_record_indices_for_model(model)
             array = AtomArray(len(coord_i))
         
         # Create mandatory and optional annotation arrays
@@ -496,8 +477,8 @@ class PDBFile(TextFile):
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
-            for line_i in atom_line_i:
-                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+            for line_i in self._atom_line_i:
+                if m < len(self._model_start_i)-1 and line_i > self._model_start_i[m+1]:
                     m += 1
                     i = 0
                 line = self.lines[line_i]
@@ -732,6 +713,8 @@ class PDBFile(TextFile):
             self._set_bonds(
                 BondList(array.array_length(), bond_array), pdb_atom_id
             )
+        
+        self._index_models_and_atoms()
     
 
     def list_assemblies(self):
@@ -1008,21 +991,74 @@ class PDBFile(TextFile):
         return _apply_transformations(
             structure, rotations, translations
         )
+    
 
 
-    def _get_model_length(self, model_start_i, atom_line_i):
+
+    def _index_models_and_atoms(self):
+        # Line indices where a new model starts
+        self._model_start_i = np.array(
+            [
+                i for i in range(len(self.lines))
+                if self.lines[i].startswith(("MODEL"))
+            ],
+            dtype=int
+        )
+        if len(self._model_start_i) == 0:
+            # It could be an empty file or a file with a single model,
+            # where the 'MODEL' line is missing
+            for line in self.lines:
+                if line.startswith(("ATOM", "HETATM")):
+                    # Single model
+                    self._model_start_i = np.array([0])
+                    break
+        
+        # Line indices with ATOM or HETATM records
+        self._atom_line_i = np.array(
+            [
+                i for i in range(len(self.lines))
+                if self.lines[i].startswith(("ATOM", "HETATM"))
+            ],
+            dtype=int
+        )
+
+
+    def _get_atom_record_indices_for_model(self, model):
+        last_model = len(self._model_start_i)
+        if model == 0:
+            raise ValueError("The model index must not be 0")
+        # Negative models mean index starting from last model
+        model = last_model + model + 1 if model < 0 else model
+
+        if model < last_model:
+            line_filter = (
+                (self._atom_line_i >= self._model_start_i[model-1]) &
+                (self._atom_line_i <  self._model_start_i[model  ])
+            )
+        elif model == last_model:
+            line_filter = (self._atom_line_i >= self._model_start_i[model-1])
+        else:
+            raise ValueError(
+                f"The file has {last_model} models, "
+                f"the given model {model} does not exist"
+            )
+        return self._atom_line_i[line_filter]
+
+
+    def _get_model_length(self):
         """
         Determine length of models and check that all models
         have equal length.
         """
-        n_models = len(model_start_i)
+        n_models = len(self._model_start_i)
         length = None
-        for model_i in range(len(model_start_i)):
-            model_start = model_start_i[model_i]
-            model_stop = model_start_i[model_i+1] if model_i+1 < n_models \
-                            else len(self.lines)
+        for model_i in range(len(self._model_start_i)):
+            model_start = self._model_start_i[model_i]
+            model_stop = self._model_start_i[model_i+1] \
+                         if model_i+1 < n_models else len(self.lines)
             model_length = np.count_nonzero(
-                (atom_line_i >= model_start) & (atom_line_i < model_stop)
+                (self._atom_line_i >= model_start) &
+                (self._atom_line_i < model_stop)
             )
             if length is None:
                 length = model_length
