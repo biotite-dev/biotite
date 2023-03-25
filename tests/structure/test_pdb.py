@@ -309,21 +309,40 @@ def test_get_coord(model):
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
     
-    try:
-        ref_coord = pdb_file.get_structure(model=model).coord
-    except biotite.InvalidFileError:
-        if model is None:
-            # The file cannot be parsed into an AtomArrayStack,
-            # as the models contain different numbers of atoms
-            # -> skip this test case
-            return
-        else:
-            raise
+    ref_coord = pdb_file.get_structure(model=model).coord
     
     test_coord = pdb_file.get_coord(model=model)
     
     assert test_coord.shape == ref_coord.shape
     assert (test_coord == ref_coord).all()
+
+
+@pytest.mark.parametrize("model", [None, 1, 10])
+def test_get_b_factor(model):
+    # Choose a structure without inscodes and altlocs
+    # to avoid atom filtering in reference atom array (stack)
+    path = join(data_dir("structure"), "1l2y.pdb")
+    pdb_file = pdb.PDBFile.read(path)
+    
+    if model is None:
+        # The B-factor is an annotation category
+        # -> it can only be extracted in a per-model basis
+        ref_b_factor = np.stack([
+            pdb_file.get_structure(
+                model=m, extra_fields=["b_factor"]
+            ).b_factor
+            for m in range(1, pdb_file.get_model_count() + 1)
+        ])
+    else:
+        ref_b_factor = pdb_file.get_structure(
+            model=model, extra_fields=["b_factor"]
+        ).b_factor
+    
+    test_b_factor= pdb_file.get_b_factor(model=model)
+    
+    assert test_b_factor.shape == ref_b_factor.shape
+    assert (test_b_factor == ref_b_factor).all()
+
 
 
 np.random.seed(0)

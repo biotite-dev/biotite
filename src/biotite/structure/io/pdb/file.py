@@ -159,7 +159,7 @@ class PDBFile(TextFile):
 
     def get_coord(self, model=None):
         """
-        Get only the coordinates of the PDB file.
+        Get only the coordinates from the PDB file.
         
         Parameters
         ----------
@@ -169,13 +169,13 @@ class PDBFile(TextFile):
             given model number (starting at 1).
             Negative values are used to index models starting from the
             last model instead of the first model.
-            If this parameter is omitted, an 2D coordinate array
+            If this parameter is omitted, an 3D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
         
         Returns
         -------
-        coord : ndarray, shape=(m,n,3) or shape=(n,2), dtype=float
+        coord : ndarray, shape=(m,n,3) or shape=(n,3), dtype=float
             The coordinates read from the ATOM and HETATM records of the
             file.
         
@@ -232,38 +232,93 @@ class PDBFile(TextFile):
         True
         """
         if model is None:
-            depth = len(self._model_start_i)
-            length = self._get_model_length()
-            coord_i = self._atom_line_i
-        
-        else:
-            coord_i = self._get_atom_record_indices_for_model(model)
-            length = len(coord_i)
-        
-        # Fill in coordinates
-        if model is None:
-            coord = np.zeros((depth, length, 3), dtype=np.float32)
+            coord = np.zeros(
+                (len(self._model_start_i), self._get_model_length(), 3),
+                dtype=np.float32
+            )
             m = 0
             i = 0
             for line_i in self._atom_line_i:
-                if m < len(self._model_start_i)-1 and line_i > self._model_start_i[m+1]:
+                if (
+                    m < len(self._model_start_i)-1
+                    and line_i > self._model_start_i[m+1]
+                ):
                     m += 1
                     i = 0
                 line = self.lines[line_i]
-                coord[m,i,0] = float(line[30:38])
-                coord[m,i,1] = float(line[38:46])
-                coord[m,i,2] = float(line[46:54])
+                coord[m,i,0] = float(line[_coord_x])
+                coord[m,i,1] = float(line[_coord_y])
+                coord[m,i,2] = float(line[_coord_z])
                 i += 1
             return coord
         
         else:
-            coord = np.zeros((length, 3), dtype=np.float32)
+            coord_i = self._get_atom_record_indices_for_model(model)
+            coord = np.zeros((len(coord_i), 3), dtype=np.float32)
             for i, line_i in enumerate(coord_i):
                 line = self.lines[line_i]
-                coord[i,0] = float(line[30:38])
-                coord[i,1] = float(line[38:46])
-                coord[i,2] = float(line[46:54])
+                coord[i,0] = float(line[_coord_x])
+                coord[i,1] = float(line[_coord_y])
+                coord[i,2] = float(line[_coord_z])
             return coord
+    
+
+    def get_b_factor(self, model=None):
+        """
+        Get only the B-factors from the PDB file.
+        
+        Parameters
+        ----------
+        model : int, optional
+            If this parameter is given, the function will return a
+            1D B-factor array from the atoms corresponding to the
+            given model number (starting at 1).
+            Negative values are used to index models starting from the
+            last model instead of the first model.
+            If this parameter is omitted, an 2D B-factor array
+            containing all models will be returned, even if
+            the structure contains only one model.
+        
+        Returns
+        -------
+        b_factor : ndarray, shape=(m,n) or shape=(n,), dtype=float
+            The B-factors read from the ATOM and HETATM records of the
+            file.
+        
+        Notes
+        -----
+        Note that :func:`get_b_factor()` may output more B-factors
+        than the atom array (stack) from the corresponding
+        :func:`get_structure()` call has atoms.
+        The reason for this is, that :func:`get_structure()` filters
+        *altloc* IDs, while `get_b_factor()` does not.
+        """
+        if model is None:
+            b_factor = np.zeros(
+                (len(self._model_start_i), self._get_model_length()),
+                dtype=np.float32
+            )
+            m = 0
+            i = 0
+            for line_i in self._atom_line_i:
+                if (
+                    m < len(self._model_start_i)-1
+                    and line_i > self._model_start_i[m+1]
+                ):
+                    m += 1
+                    i = 0
+                line = self.lines[line_i]
+                b_factor[m,i] = float(line[_temp_f])
+                i += 1
+            return b_factor
+        
+        else:
+            b_factor_i = self._get_atom_record_indices_for_model(model)
+            b_factor = np.zeros(len(b_factor_i), dtype=np.float32)
+            for i, line_i in enumerate(b_factor_i):
+                line = self.lines[line_i]
+                b_factor[i] = float(line[_temp_f])
+            return b_factor
 
 
     def get_structure(self, model=None, altloc="first", extra_fields=[],
