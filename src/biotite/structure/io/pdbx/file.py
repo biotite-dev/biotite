@@ -10,7 +10,7 @@ import copy
 import shlex
 from collections.abc import MutableMapping
 import numpy as np
-from ....file import TextFile
+from ....file import TextFile, InvalidFileError
 
 
 class PDBxFile(TextFile, MutableMapping):
@@ -214,7 +214,10 @@ class PDBxFile(TextFile, MutableMapping):
             category.
         """
         if block is None:
-            block = self.get_block_names()[0]
+            try:
+                block = self.get_block_names()[0]
+            except IndexError:
+                raise InvalidFileError("File is empty")
         category_info = self._categories.get((block, category))
         if category_info is None:
             return None
@@ -308,7 +311,12 @@ class PDBxFile(TextFile, MutableMapping):
             appended at the end of the file.
         """
         if block is None:
-            block = self.get_block_names()[0]
+            try:
+                block = self.get_block_names()[0]
+            except IndexError:
+                raise InvalidFileError(
+                    "File is empty, give an explicit data block"
+                )
 
         # Determine whether the category is a looped category
         sample_category_value = list(category_dict.values())[0]

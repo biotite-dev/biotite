@@ -237,6 +237,33 @@ def test_get_assembly(pdb_id, model):
         assert assembly.array_length() % monomer_atom_count == 0
 
 
+@pytest.mark.parametrize(
+    "path, use_ideal_coord",
+    itertools.product(
+        glob.glob(join(data_dir("structure"), "molecules", "*.cif")),
+        [False, True]
+    ),
+)
+def test_component_conversion(path, use_ideal_coord):
+    """
+    After reading a component from a PDBx file, writing the component
+    back to a new file and reading it again should give the same
+    structure.
+    """
+    pdbx_file = pdbx.PDBxFile.read(path)
+    ref_atoms = pdbx.get_component(
+        pdbx_file, use_ideal_coord=use_ideal_coord
+    )
+
+    pdbx_file = pdbx.PDBxFile()
+    pdbx.set_component(pdbx_file, ref_atoms, data_block="test")
+    test_atoms = pdbx.get_component(
+        pdbx_file, use_ideal_coord=use_ideal_coord
+    )
+
+    assert test_atoms == ref_atoms
+
+
 def test_get_sequence():
     file = pdbx.PDBxFile.read(join(data_dir("structure"), "5ugo.cif"))
     sequences = pdbx.get_sequence(file)

@@ -9,8 +9,8 @@ from os.path import join, split, splitext
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
-import biotite.structure.info as info
 import biotite.structure.io.mol as mol
+import biotite.structure.io.pdbx as pdbx
 from biotite.structure.bonds import BondType
 from biotite.structure.io.ctab import BOND_TYPE_MAPPING_REV
 from ..util import data_dir
@@ -85,15 +85,16 @@ def test_structure_conversion(path, omit_charge):
 def test_pdbx_consistency(path):
     """
     Check if the structure parsed from a MOL file is equal to the same
-    structure read from the *Chemical Component Dictionary* in PDBx
-    format.
+    structure read in PDBx format.
 
     In this case an SDF file is used, but it is compatible with the
     MOL format.
     """
-    mol_name = split(splitext(path)[0])[1]
-    ref_atoms = info.residue(mol_name)
-    # The CCD contains information about aromatic bond types,
+    cif_path = splitext(path)[0] + ".cif"
+
+    pdbx_file = pdbx.PDBxFile.read(cif_path)
+    ref_atoms = pdbx.get_component(pdbx_file)
+    # The PDBx test files contain information about aromatic bond types,
     # but the SDF test files do not
     ref_atoms.bonds.remove_aromaticity()
 
