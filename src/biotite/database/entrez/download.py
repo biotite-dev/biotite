@@ -4,7 +4,7 @@
 
 __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_database_name", "fetch", "fetch_single_file"]
+__all__ = ["fetch", "fetch_single_file"]
 
 from os.path import isdir, isfile, join, getsize
 import os
@@ -12,71 +12,11 @@ import glob
 import io
 import requests
 from .check import check_for_errors
+from .dbnames import sanitize_database_name
 from ..error import RequestError
 
 
 _fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-
-
-_databases = {"BioProject"        : "bioproject",
-              "BioSample"         : "biosample",
-              "Biosystems"        : "biosystems",
-              "Books"             : "books",
-              "Conserved Domains" : "cdd",
-              "dbGaP"             : "gap",
-              "dbVar"             : "dbvar",
-              "Epigenomics"       : "epigenomics",
-              "EST"               : "nucest",
-              "Gene"              : "gene",
-              "Genome"            : "genome",
-              "GEO Datasets"      : "gds",
-              "GEO Profiles"      : "geoprofiles",
-              "GSS"               : "nucgss",
-              "HomoloGene"        : "homologene",
-              "MeSH"              : "mesh",
-              "NCBI C++ Toolkit"  : "toolkit",
-              "NCBI Web Site"     : "ncbisearch",
-              "NLM Catalog"       : "nlmcatalog",
-              "Nucleotide"        : "nuccore",
-              "OMIA"              : "omia",
-              "PopSet"            : "popset",
-              "Probe"             : "probe",
-              "Protein"           : "protein",
-              "Protein Clusters"  : "proteinclusters",
-              "PubChem BioAssay"  : "pcassay",
-              "PubChem Compound"  : "pccompound",
-              "PubChem Substance" : "pcsubstance",
-              "PubMed"            : "pubmed",
-              "PubMed Central"    : "pmc",
-              "SNP"               : "snp",
-              "SRA"               : "sra",
-              "Structure"         : "structure",
-              "Taxonomy"          : "taxonomy",
-              "UniGene"           : "unigene",
-              "UniSTS"            : "unists"}
-
-def get_database_name(database):
-    """
-    Map a common NCBI Entrez database name to an E-utility database
-    name.
-    
-    Parameters
-    ----------
-    database : str
-        Entrez database name.
-    
-    Returns
-    -------
-    name : str
-        E-utility database name.
-    
-    Examples
-    --------
-    
-    >>> print(get_database_name("Nucleotide"))
-    nuccore
-    """
-    return _databases[database]
 
 
 def fetch(uids, target_path, suffix, db_name, ret_type,
@@ -175,7 +115,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
            or getsize(file) == 0 \
            or overwrite:
                 param_dict = {
-                    "db" : _sanitize_db_name(db_name),
+                    "db" : sanitize_database_name(db_name),
                     "id" : id,
                     "rettype" : ret_type,
                     "retmode" : ret_mode,
@@ -256,7 +196,7 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     # Remove terminal comma
     uid_list_str = uid_list_str[:-1]
     param_dict = {
-        "db" : _sanitize_db_name(db_name),
+        "db" : sanitize_database_name(db_name),
         "id" : uid_list_str,
         "rettype" : ret_type,
         "retmode" : ret_mode,
@@ -274,14 +214,3 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
         with open(file_name, "w+") as f:
             f.write(content)
         return file_name
-
-
-def _sanitize_db_name(db_name):
-    if db_name in _databases.keys():
-        # Convert into E-utility database name
-        return _databases[db_name]
-    elif db_name in _databases.values():
-        # Is already E-utility database name
-        return db_name
-    else:
-        raise ValueError("Database '{db_name}' is not existing")
