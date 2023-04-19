@@ -20,7 +20,8 @@ _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 _binary_formats = ["png", "asnb"]
 
 
-def fetch(cids, format="sdf", target_path=None, overwrite=False, verbose=False,
+def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
+          overwrite=False, verbose=False,
           throttle_threshold=0.5, return_throttle_status=False):
     """
     Download structure files (or sequence files) from the RCSB PDB in
@@ -112,9 +113,10 @@ def fetch(cids, format="sdf", target_path=None, overwrite=False, verbose=False,
            or not isfile(file) \
            or getsize(file) == 0 \
            or overwrite:
+                record_type = "2d" if as_structural_formula else "3d"
                 r = requests.get(
-                    _base_url
-                    + f"compound/cid/{cid}/{format.upper()}"
+                    _base_url + f"compound/cid/{cid}/{format.upper()}",
+                    params={"record_type": record_type}
                 )
                 if not r.ok:
                     raise RequestError(parse_error_details(r.text))

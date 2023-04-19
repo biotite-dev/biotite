@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
+import re
 import itertools
 import tempfile
 import pytest
@@ -10,7 +10,7 @@ import numpy as np
 import biotite.database.pubchem as pubchem
 import biotite.structure.io.mol as mol
 from biotite.database import RequestError
-from ..util import cannot_connect_to, data_dir
+from ..util import cannot_connect_to
 
 
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
@@ -40,6 +40,26 @@ def test_fetch(format, as_file_like):
         mol_file.get_structure()
 
 
+@pytest.mark.parametrize("as_structural_formula", [False, True])
+def test_fetch_structural_formula(as_structural_formula):
+    """
+    Check download of structure as structural formula and 3D conformer.
+    The 3D conformer should expand into the z-dimension while the
+    structural formula must not.
+    """
+    CID = 2244
+
+    mol_file = mol.MOLFile.read(pubchem.fetch(
+        2244, as_structural_formula=as_structural_formula
+    ))
+    atoms = mol_file.get_structure()
+    
+    if as_structural_formula:
+        assert np.all(atoms.coord[:, 2] == 0)
+    else:
+        assert np.any(atoms.coord[:, 2] != 0)
+
+
 @pytest.mark.skipif(
     cannot_connect_to(PUBCHEM_URL),
     reason="RCSB PDB is not available"
@@ -48,7 +68,9 @@ def test_fetch_invalid():
     """
     An exception is expected when the CID is not available.
     """
-    with pytest.raises(RequestError, match="No record data for CID 1234567890"):
+    with pytest.raises(
+        RequestError, match=re.escape("No records found for the given CID(s)")
+    ):
         pubchem.fetch(1234567890)
 
 
