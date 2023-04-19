@@ -79,10 +79,6 @@ class InchiKeyQuery(Query):
 
 class FormulaQuery(Query):
     """
-    Notes
-    -----
-    As this query can be time-consuming, request timeouts may be
-    expected.
     """
 
     def __init__(self, formula, allow_other_elements=False, number=None):
@@ -127,7 +123,7 @@ def _format_element(element, count):
         return element.capitalize() + str(count)
 
 
-def search(query, return_throttle_status=False):
+def search(query, throttle_threshold=0.5, return_throttle_status=False):
     """
     Get all CIDs that meet the given query requirements,
     via the PubChem REST API.
@@ -151,8 +147,10 @@ def search(query, return_throttle_status=False):
     if not r.ok:
         raise RequestError(parse_error_details(r.text))
     throttle_status = ThrottleStatus.from_response(r)
-    cids = [int(cid) for cid in r.text.splitlines()]
+    if throttle_threshold is not None:
+        throttle_status.wait_if_busy(throttle_threshold)
 
+    cids = [int(cid) for cid in r.text.splitlines()]
     if return_throttle_status:
         return cids, throttle_status
     else:
