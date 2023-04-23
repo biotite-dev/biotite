@@ -222,4 +222,4 @@ def test_search_identity(from_atoms):
         query = pubchem.IdentityQuery(cid=CID)
     cids = pubchem.search(query)
 
-    assert CID in cids
+    assert cids == [CID]
