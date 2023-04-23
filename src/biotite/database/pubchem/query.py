@@ -5,15 +5,18 @@
 __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Query", "NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery",
-           "FormulaQuery", 
+           "FormulaQuery", "SuperstructureQuery", "SubstructureQuery",
+           "SimilarityQuery", "IdentityQuery",
            "search"]
 
+import copy
 import abc
 import collections
 import requests
 from .error import parse_error_details
 from .throttle import ThrottleStatus
 from ..error import RequestError
+from ...structure.io.mol.file import MOLFile
 
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
@@ -44,12 +47,23 @@ class Query(metaclass=abc.ABCMeta):
 
     def get_params(self):
         """
-        Get the URL parameters for this query.
+        Get the POST payload for this query.
 
         Returns
         -------
-        params : dict
-            The URL parameters.
+        params : dict (str -> object)
+            The payload.
+        """
+        return {}
+
+    def get_files(self):
+        """
+        Get the POST file payload for this query.
+
+        Returns
+        -------
+        params : dict (str -> object)
+            The file payload.
         """
         return {}
 
@@ -255,6 +269,200 @@ def _format_element(element, count):
         return element.capitalize() + str(count)
 
 
+class StructureQuery(Query, metaclass=abc.ABCMeta):
+    """
+    Abstract superclass for all structure based searches.
+    This class handles structure inputs and option formatting.
+
+    Parameters
+    ----------
+    smiles : str, optional
+    smarts : str, optional
+    inchi : str, optional
+    sdf : str, optional
+    cid : int, optional
+    number : int, optional
+    """
+
+    _query_keys = ("smiles", "smarts", "inchi", "sdf", "cid")
+
+    def __init__(self, **kwargs):
+        query_key_found = False
+        for query_key in StructureQuery._query_keys:
+            if query_key in kwargs:
+                if not query_key_found:
+                    self._query_key = query_key
+                    self._query_val = kwargs[query_key]
+                    # Delete parameter from kwargs for later check for
+                    # unused (invalid) parameters
+                    del kwargs[query_key]
+                    query_key_found = True
+                else:
+                    # A query key was already found,
+                    # duplicates are not allowed
+                    raise TypeError(
+                        "Only one of 'smiles', 'smarts', 'inchi', 'sdf' or "
+                        "'cid' may be given"
+                    )
+        if not query_key_found:
+            raise TypeError(
+                "Expected exactly one of 'smiles', 'smarts', 'inchi', 'sdf' "
+                "or 'cid'")
+        if "number" in kwargs:
+            self._number = kwargs["number"]
+            del kwargs["number"]
+        # If there are still remaining parameters that were not handled
+        # by this superclass or the inheriting class, they are invalid
+        for key in kwargs:
+            raise TypeError(f"'{key}' is an invalid keyword argument")
+
+    @classmethod
+    def from_atoms(cls, atoms, **kwargs):
+        mol_file = MOLFile()
+        mol_file.set_structure(atoms)
+        # Every MOL string with "$$$$" is a valid SDF string
+        # Important: USE MS-style new lines
+        return cls(
+            sdf = "\r\n".join(mol_file.lines) + "\r\n$$$$\r\n",
+            **kwargs
+        )
+    
+    def get_input_url_path(self):
+        input_string =  f"compound/{self.search_type()}/{self._query_key}"
+        if self._query_key == "cid":
+            # Put CID in URL and not in POST payload,
+            # as PubChem is confused otherwise
+            input_string += "/" + str(self._query_val)
+        return input_string
+
+    def get_params(self):
+        if self._query_key not in ("cid", "sdf"):
+            # CID is in URL
+            # SDF is given as file
+            params = {self._query_key: self._query_val}
+        else:
+            params = {}
+        # Only set maximum number, if provided by the user
+        # The PubChem default value for this might change over time
+        if self._number is not None:
+           params["MaxRecords"] = self._number
+        for key, val in self.search_options().items():
+            # Convert 'snake case' Python parameters
+            # to 'camel case' request parameters
+            key = "".join([word.capitalize() for word in key.split("_")])
+            params[key] = val
+        return params
+
+    def get_files(self):
+        # Multi-line SDF string requires payload as file
+        if self._query_key == "sdf":
+            return {"sdf": self._query_val}
+        else:
+            return {}
+    
+    @abc.abstractmethod
+    def search_type(self):
+        """
+        Get the type of performed search for the request input part.
+
+        PROTECTED: Override when inheriting.
+
+        Returns
+        -------
+        search_type : str
+            The search type for the input part, i.e. the part directly
+            after ``compound/``.
+        """
+        pass
+
+    def search_options(self):
+        """
+        Get additional options for the POST options.
+
+        PROTECTED: Override when inheriting.
+
+        Returns
+        -------
+        options : dict (str -> object)
+            They keys are automatically converted from *snake case* to
+            *camel case* required by the request parameters.
+        """
+        return {}
+
+
+class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
+
+    _option_defaults = {
+        "match_isotopes" : False,
+        "match_isotopes" : False,
+        "match_charges" : False,
+        "match_tautomers" : False,
+        "rings_not_embedded" : False,
+        "single_double_bonds_match" : True,
+        "chains_match_rings" : True,
+        "strip_hydrogen" : False,
+        "stereo" : "ignore",
+    }
+
+    def __init__(self, **kwargs):
+        self._options = copy.copy(SuperOrSubstructureQuery._option_defaults)
+        for option, value in kwargs.items():
+            if option in SuperOrSubstructureQuery._option_defaults.keys():
+                self._options[option] = value
+                del kwargs[option]
+        super().__init__(**kwargs)
+    
+    def search_options(self):
+        return self._options
+
+
+class SuperstructureQuery(SuperOrSubstructureQuery):
+
+    def search_type(self):
+        return "fastsuperstructure"
+
+
+class SubstructureQuery(SuperOrSubstructureQuery):
+
+    def search_type(self):
+        return "fastsubstructure"
+
+
+class SimilarityQuery(StructureQuery):
+
+    def __init__(self, threshold=0.9, include_conformation=False, **kwargs):
+        self._threshold = threshold
+        self._include_conformation = include_conformation
+        super().__init__(**kwargs)
+    
+    def search_type(self):
+        dim = "3d" if self._include_conformation else "2d"
+        return f"fastsimilarity_{dim}"
+    
+    def search_options(self):
+        return {"threshold" : int(self._threshold * 100)}
+
+
+class IdentityQuery(StructureQuery):
+
+    def __init__(self, identity_type="same_stereo_isotope", **kwargs):
+        self._identity_type = identity_type
+        super().__init__(**kwargs)
+    
+    def search_type(self):
+        return "fastidentity"
+    
+    def get_params(self):
+        # Use 'get_params()' instead of 'search_options()', since the
+        # parameter 'identity_type' in the REST API is *snake case*
+        # -> Conversion to *camel case* is undesirable
+        params = super().get_params()
+        params["identity_type"] = self._identity_type
+        return params
+    
+
+
+
 def search(query, throttle_threshold=0.5, return_throttle_status=False):
     """
     Get all CIDs that meet the given query requirements,
@@ -290,9 +498,16 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     >>> print(search(NameQuery("Alanine")))
     [5950, 449619, 7311724, 155817681]
     """
-    r = requests.get(
+    # Use POST to be compatible with the larger payloads
+    # of structure searches
+    if query.get_files():
+        files = {key: file for key, file in query.get_files().items()}
+    else:
+        files = None
+    r = requests.post(
         _base_url + query.get_input_url_path() + "/cids/TXT",
-        params=query.get_params()
+        data=query.get_params(),
+        files=files
     )
     if not r.ok:
         raise RequestError(parse_error_details(r.text))

@@ -31,7 +31,7 @@ def test_fetch(format, as_file_like):
     CID = 2244
 
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = pubchem.fetch(2244, format, path, overwrite=True)
+    file_path_or_obj = pubchem.fetch(CID, format, path, overwrite=True)
     if format == "sdf":
         mol_file = mol.MOLFile.read(file_path_or_obj)
         mol_name, _, _, _, _, _, _, _, _ = mol_file.get_header()
@@ -40,6 +40,10 @@ def test_fetch(format, as_file_like):
         mol_file.get_structure()
 
 
+@pytest.mark.skipif(
+    cannot_connect_to(PUBCHEM_URL),
+    reason="PubChem is not available"
+)
 @pytest.mark.parametrize("as_structural_formula", [False, True])
 def test_fetch_structural_formula(as_structural_formula):
     """
@@ -62,7 +66,7 @@ def test_fetch_structural_formula(as_structural_formula):
 
 @pytest.mark.skipif(
     cannot_connect_to(PUBCHEM_URL),
-    reason="RCSB PDB is not available"
+    reason="PubChem is not available"
 )
 def test_fetch_invalid():
     """
@@ -76,7 +80,7 @@ def test_fetch_invalid():
 
 @pytest.mark.skipif(
     cannot_connect_to(PUBCHEM_URL),
-    reason="RCSB PDB is not available"
+    reason="PubChem is not available"
 )
 @pytest.mark.parametrize(
     "query, ref_ids",
@@ -96,7 +100,7 @@ def test_search_simple(query, ref_ids):
 
 @pytest.mark.skipif(
     cannot_connect_to(PUBCHEM_URL),
-    reason="RCSB PDB is not available"
+    reason="PubChem is not available"
 )
 @pytest.mark.parametrize("number", [None, 10])
 def test_search_formula(number):
@@ -116,3 +120,47 @@ def test_search_formula(number):
     if number is not None:
         # This request would normally give more than 10 results
         assert len(test_cids) == number
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(PUBCHEM_URL),
+    reason="PubChem is not available"
+)
+@pytest.mark.parametrize(
+    "cid, from_atoms, query_type", itertools.product(
+        [2244],
+        [False, True],
+        [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
+    )
+)
+def test_search_super_and_substructure(cid, from_atoms, query_type):
+    NUMBER = 5
+
+    original_atoms = mol.MOLFile.read(pubchem.fetch(cid)).get_structure()
+
+    if from_atoms:
+        query = query_type.from_atoms(original_atoms, number=NUMBER)
+    else:
+        query = query_type(cid=cid, number=NUMBER)
+    cids = pubchem.search(query)
+    
+    # Expect number of returned CIDs to be limited by given max number
+    assert len(cids) == NUMBER
+    if query_type == pubchem.SubstructureQuery:
+        # Expect that the input itself is the top hit 
+        assert cid in cids
+
+    for result_cid in cids:
+        atoms = mol.MOLFile.read(
+            # The compound might only be available as structural formula
+            pubchem.fetch(result_cid, as_structural_formula=True)
+        ).get_structure()
+        if query_type == pubchem.SuperstructureQuery:
+            # Expect that the input is the superstructure
+            # of the query result
+            # Simple test based of number of atoms
+            assert atoms.array_length() <= original_atoms.array_length()
+        else:
+            # Expect that the input is the substructure
+            # of the query result
+            assert atoms.array_length() >= original_atoms.array_length()
