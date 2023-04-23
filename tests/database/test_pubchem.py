@@ -134,6 +134,10 @@ def test_search_formula(number):
     )
 )
 def test_search_super_and_substructure(cid, from_atoms, query_type):
+    """
+    Super- and substructure searches should return structures with less
+    or more atoms than the input structure, respectively.
+    """
     NUMBER = 5
 
     original_atoms = mol.MOLFile.read(pubchem.fetch(cid)).get_structure()
@@ -164,3 +168,58 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
             # Expect that the input is the substructure
             # of the query result
             assert atoms.array_length() >= original_atoms.array_length()
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(PUBCHEM_URL),
+    reason="PubChem is not available"
+)
+@pytest.mark.parametrize(
+    "conformation_based, from_atoms",
+    itertools.product(
+        [False, True],
+        [False, True]
+    )
+)
+def test_search_similarity(conformation_based, from_atoms):
+    """
+    The input structure should have a similarity of 1.0 to itself.
+    Since different isotopes have the same *Tanimoto*, results also
+    include other compounds.
+    """
+    CID = 2244
+
+    if from_atoms:
+        original_atoms = mol.MOLFile.read(pubchem.fetch(CID)).get_structure()
+        query = pubchem.SimilarityQuery.from_atoms(
+            original_atoms, threshold=1.0,
+            conformation_based=conformation_based
+        )
+    else:
+        query = pubchem.SimilarityQuery(
+            cid=CID, threshold=1.0, conformation_based=conformation_based
+        )
+    cids = pubchem.search(query)
+
+    assert CID in cids
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(PUBCHEM_URL),
+    reason="PubChem is not available"
+)
+@pytest.mark.parametrize("from_atoms", [False, True])
+def test_search_identity(from_atoms):
+    """
+    The input structure should be identical to itself.
+    """
+    CID = 2244
+
+    if from_atoms:
+        original_atoms = mol.MOLFile.read(pubchem.fetch(CID)).get_structure()
+        query = pubchem.IdentityQuery.from_atoms(original_atoms)
+    else:
+        query = pubchem.IdentityQuery(cid=CID)
+    cids = pubchem.search(query)
+
+    assert CID in cids

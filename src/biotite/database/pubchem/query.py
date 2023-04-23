@@ -323,6 +323,8 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         if "number" in kwargs:
             self._number = kwargs["number"]
             del kwargs["number"]
+        else:
+            self._number = None
         # If there are still remaining parameters that were not handled
         # by this superclass or the inheriting class, they are invalid
         for key in kwargs:
