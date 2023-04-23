@@ -37,6 +37,25 @@
         ]
     },
 
+    "biotite.database.pubchem" : {
+        "Queries" : [
+            "Query",
+            "NameQuery",
+            "SmilesQuery",
+            "InchiQuery",
+            "InchiKeyQuery",
+            "FormulaQuery",
+            "SuperstructureQuery",
+            "SubstructureQuery",
+            "SimilarityQuery",
+            "IdentityQuery"
+        ],
+        "Search and fetch" : [
+            "search",
+            "fetch"
+        ]
+    },
+
     "biotite.database.rcsb" : {
         "Queries" : [
             "Query",
@@ -273,7 +292,7 @@
         "Structure comparison" : [
             "average",
             "rmsd",
-	    "rmspd",
+	        "rmspd",
             "rmsf"
         ],
         "General analysis" : [

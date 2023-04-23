@@ -232,7 +232,6 @@ class FormulaQuery(Query):
             The maximum number of matches that this query may return.
             By default, the *PubChem* default value is used, which can
             be considered unlimited.
-        
         """
         element_counter = collections.Counter(atoms.element)
         formula = ""
@@ -274,14 +273,27 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
     Abstract superclass for all structure based searches.
     This class handles structure inputs and option formatting.
 
+    Exactly one of the input structure parameters `smiles`, `smarts`,
+    `inchi`, `sdf` or `cid` must be given.
+
     Parameters
     ----------
     smiles : str, optional
+        The query *SMILES* string.
     smarts : str, optional
+        The query *SMARTS* pattern.
     inchi : str, optional
+        The query *InChI* string.
     sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
     cid : int, optional
+        The query structure given as CID.
     number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
     """
 
     _query_keys = ("smiles", "smarts", "inchi", "sdf", "cid")
@@ -318,6 +330,16 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
 
     @classmethod
     def from_atoms(cls, atoms, **kwargs):
+        """
+        Create a query using the given query structure.
+
+        Parameters
+        ----------
+        atoms : AtomArray or AtomArrayStack
+            The query structure.
+        **kwargs : dict, optional
+            See the constructor for additional options.
+        """
         mol_file = MOLFile()
         mol_file.set_structure(atoms)
         # Every MOL string with "$$$$" is a valid SDF string
@@ -391,10 +413,62 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
 
 
 class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
+    """
+    Abstract superclass for super- and substructure searches.
+    This class handles specific options for these searches.
+
+    Exactly one of the input structure parameters `smiles`, `smarts`,
+    `inchi`, `sdf` or `cid` must be given.
+
+    Parameters
+    ----------
+    smiles : str, optional
+        The query *SMILES* string.
+    smarts : str, optional
+        The query *SMARTS* pattern.
+    inchi : str, optional
+        The query *InChI* string.
+    sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
+    cid : int, optional
+        The query structure given as CID.
+    number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
+    match_charges : bool, optional
+        If set to true, atoms must match the specified charge.
+        (Default: False)
+    match_tautomers : bool, optional
+        If set to true, allow match to tautomers of the given structure.
+        (Default: False)
+    rings_not_embedded : bool, optional
+        If set to true, rings may not be embedded in a larger system.
+        (Default: False)
+    single_double_bonds_match : bool, optional
+        If set to true, single or double bonds match aromatic bonds.
+        (Default: True)
+    chains_match_rings : bool, optional
+        If set to true, chain bonds in the query may match rings in
+        hits.
+        (Default: True)
+    strip_hydrogen : bool, optional
+        If set to true, remove any explicit hydrogens before searching.
+        (Default: False)
+    stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
+        How to handle stereo.
+        (Default: 'ignore')
+    
+    Notes
+    -----
+    Optional parameter descriptions are taken from the *PubChem* REST
+    API
+    `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Substructure-Superstructure>`_.
+    """
 
     _option_defaults = {
-        "match_isotopes" : False,
-        "match_isotopes" : False,
         "match_charges" : False,
         "match_tautomers" : False,
         "rings_not_embedded" : False,
@@ -417,26 +491,172 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
 
 
 class SuperstructureQuery(SuperOrSubstructureQuery):
+    """
+    A query that searches for all structures, where the given
+    input structure is a superstructure.
+    In other words, this query matches substructures of the input
+    structure.
+
+    Exactly one of the input structure parameters `smiles`, `smarts`,
+    `inchi`, `sdf` or `cid` must be given.
+
+    Parameters
+    ----------
+    smiles : str, optional
+        The query *SMILES* string.
+    smarts : str, optional
+        The query *SMARTS* pattern.
+    inchi : str, optional
+        The query *InChI* string.
+    sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
+    cid : int, optional
+        The query structure given as CID.
+    number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
+    match_charges : bool, optional
+        If set to true, atoms must match the specified charge.
+        (Default: False)
+    match_tautomers : bool, optional
+        If set to true, allow match to tautomers of the given structure.
+        (Default: False)
+    rings_not_embedded : bool, optional
+        If set to true, rings may not be embedded in a larger system.
+        (Default: False)
+    single_double_bonds_match : bool, optional
+        If set to true, single or double bonds match aromatic bonds.
+        (Default: True)
+    chains_match_rings : bool, optional
+        If set to true, chain bonds in the query may match rings in
+        hits.
+        (Default: True)
+    strip_hydrogen : bool, optional
+        If set to true, remove any explicit hydrogens before searching.
+        (Default: False)
+    stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
+        How to handle stereo.
+        (Default: 'ignore')
+    
+    Notes
+    -----
+    Optional parameter descriptions are taken from the *PubChem* REST
+    API
+    `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Substructure-Superstructure>`_.
+    """
 
     def search_type(self):
         return "fastsuperstructure"
 
 
 class SubstructureQuery(SuperOrSubstructureQuery):
+    """
+    A query that searches for all structures, where the given
+    input structure is a substructure.
+    In other words, this query matches superstructures of the input
+    structure.
+
+    Exactly one of the input structure parameters `smiles`, `smarts`,
+    `inchi`, `sdf` or `cid` must be given.
+
+    Parameters
+    ----------
+    smiles : str, optional
+        The query *SMILES* string.
+    smarts : str, optional
+        The query *SMARTS* pattern.
+    inchi : str, optional
+        The query *InChI* string.
+    sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
+    cid : int, optional
+        The query structure given as CID.
+    number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
+    match_charges : bool, optional
+        If set to true, atoms must match the specified charge.
+        (Default: False)
+    match_tautomers : bool, optional
+        If set to true, allow match to tautomers of the given structure.
+        (Default: False)
+    rings_not_embedded : bool, optional
+        If set to true, rings may not be embedded in a larger system.
+        (Default: False)
+    single_double_bonds_match : bool, optional
+        If set to true, single or double bonds match aromatic bonds.
+        (Default: True)
+    chains_match_rings : bool, optional
+        If set to true, chain bonds in the query may match rings in
+        hits.
+        (Default: True)
+    strip_hydrogen : bool, optional
+        If set to true, remove any explicit hydrogens before searching.
+        (Default: False)
+    stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
+        How to handle stereo.
+        (Default: 'ignore')
+    
+    Notes
+    -----
+    Optional parameter descriptions are taken from the *PubChem* REST
+    API
+    `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Substructure-Superstructure>`_.
+    """
 
     def search_type(self):
         return "fastsubstructure"
 
 
 class SimilarityQuery(StructureQuery):
+    """
+    A query that searches for all structures similar to the given
+    input structure.
 
-    def __init__(self, threshold=0.9, include_conformation=False, **kwargs):
+    Exactly one of the input structure parameters `smiles`, `smarts`,
+    `inchi`, `sdf` or `cid` must be given.
+
+    Parameters
+    ----------
+    threshold : float, optional
+        The minimum required *Tanimoto* similarity for a match.
+        Must be between 0 (no similarity) and 1 (complete match).
+    conformation_based : bool, optional
+        If set to true, the similarity is computed based on the
+        3D conformation.
+        By default, only the elements and bonds between the atoms are
+        considered for similarity computation.
+    smiles : str, optional
+        The query *SMILES* string.
+    smarts : str, optional
+        The query *SMARTS* pattern.
+    inchi : str, optional
+        The query *InChI* string.
+    sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
+    cid : int, optional
+        The query structure given as CID.
+    number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
+    """
+
+    def __init__(self, threshold=0.9, conformation_based=False, **kwargs):
         self._threshold = threshold
-        self._include_conformation = include_conformation
+        self._conformation_based = conformation_based
         super().__init__(**kwargs)
     
     def search_type(self):
-        dim = "3d" if self._include_conformation else "2d"
+        dim = "3d" if self._conformation_based else "2d"
         return f"fastsimilarity_{dim}"
     
     def search_options(self):
@@ -444,6 +664,34 @@ class SimilarityQuery(StructureQuery):
 
 
 class IdentityQuery(StructureQuery):
+    """
+    A query that searches for all structures that are identical to the
+    given input structure.
+
+    Exactly one of the input structure parameters `smiles`, `smarts`, `inchi`,
+    `sdf` or `cid` must be given.
+
+    Parameters
+    ----------
+    identity_type : {'same_connectivity', 'same_tautomer', 'same_stereo', 'same_isotope', 'same_stereo_isotope', 'nonconflicting_stereo', 'same_isotope_nonconflicting_stereo'}, optional
+        The type of identity search.
+    smiles : str, optional
+        The query *SMILES* string.
+    smarts : str, optional
+        The query *SMARTS* pattern.
+    inchi : str, optional
+        The query *InChI* string.
+    sdf : str, optional
+        A query structure as SDF formatted string.
+        Usually :meth:`from_atoms()` is used to create the SDF from an
+        :class:`AtomArray`. 
+    cid : int, optional
+        The query structure given as CID.
+    number : int, optional
+        The maximum number of matches that this query may return.
+        By default, the *PubChem* default value is used, which can
+        be considered unlimited.
+    """
 
     def __init__(self, identity_type="same_stereo_isotope", **kwargs):
         self._identity_type = identity_type
