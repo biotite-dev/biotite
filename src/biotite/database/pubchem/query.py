@@ -648,6 +648,16 @@ class SimilarityQuery(StructureQuery):
         The maximum number of matches that this query may return.
         By default, the *PubChem* default value is used, which can
         be considered unlimited.
+    
+    Notes
+    -----
+    The conformation based similarity measure uses *shape-Tanimoto* and
+    *color-Tanimoto* scores :footcite:`Kim2018`.
+
+    References
+    ----------
+    
+    .. footbibliography::
     """
 
     def __init__(self, threshold=0.9, conformation_based=False, **kwargs):
