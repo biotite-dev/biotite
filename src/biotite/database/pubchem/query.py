@@ -331,7 +331,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             raise TypeError(f"'{key}' is an invalid keyword argument")
 
     @classmethod
-    def from_atoms(cls, atoms, **kwargs):
+    def from_atoms(cls, atoms, *args, **kwargs):
         """
         Create a query using the given query structure.
 
@@ -347,6 +347,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         # Every MOL string with "$$$$" is a valid SDF string
         # Important: USE MS-style new lines
         return cls(
+            *args,
             sdf = "\r\n".join(mol_file.lines) + "\r\n$$$$\r\n",
             **kwargs
         )
@@ -548,6 +549,17 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
     Optional parameter descriptions are taken from the *PubChem* REST
     API
     `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Substructure-Superstructure>`_.
+
+    Examples
+    --------
+
+    >>> # CID of alanine
+    >>> print(search(SuperstructureQuery(cid=5950, number=5)))
+    [1032, 887, 712, 702, 284]
+    >>> # AtomArray of alanine
+    >>> atom_array = residue("ALA")
+    >>> print(search(SuperstructureQuery.from_atoms(atom_array, number=5)))
+    [1032, 887, 712, 702, 284]
     """
 
     def search_type(self):
@@ -610,6 +622,17 @@ class SubstructureQuery(SuperOrSubstructureQuery):
     Optional parameter descriptions are taken from the *PubChem* REST
     API
     `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Substructure-Superstructure>`_.
+
+    Examples
+    --------
+
+    >>> # CID of alanine
+    >>> print(search(SubstructureQuery(cid=5950, number=5)))
+    [5950, 602, 3081884, 449619, 71080]
+    >>> # AtomArray of alanine
+    >>> atom_array = residue("ALA")
+    >>> print(search(SubstructureQuery.from_atoms(atom_array, number=5)))
+    [5950, 602, 3081884, 449619, 71080]
     """
 
     def search_type(self):
@@ -660,6 +683,17 @@ class SimilarityQuery(StructureQuery):
     ----------
     
     .. footbibliography::
+
+    Examples
+    --------
+
+    >>> # CID of alanine
+    >>> print(search(SimilarityQuery(cid=5950, threshold=1.0, number=5)))
+    [5950, 602, 71080, 16213421, 16213420]
+    >>> # AtomArray of alanine
+    >>> atom_array = residue("ALA")
+    >>> print(search(SimilarityQuery.from_atoms(atom_array, threshold=1.0, number=5)))
+    [5950, 602, 71080, 16213421, 16213420]
     """
 
     def __init__(self, threshold=0.9, conformation_based=False, **kwargs):
@@ -703,6 +737,17 @@ class IdentityQuery(StructureQuery):
         The maximum number of matches that this query may return.
         By default, the *PubChem* default value is used, which can
         be considered unlimited.
+    
+    Examples
+    --------
+
+    >>> # CID of alanine
+    >>> print(search(IdentityQuery(cid=5950)))
+    [5950]
+    >>> # AtomArray of alanine
+    >>> atom_array = residue("ALA")
+    >>> print(search(IdentityQuery.from_atoms(atom_array)))
+    [5950]
     """
 
     def __init__(self, identity_type="same_stereo_isotope", **kwargs):
