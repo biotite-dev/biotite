@@ -24,61 +24,70 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
           overwrite=False, verbose=False,
           throttle_threshold=0.5, return_throttle_status=False):
     """
-    Download structure files (or sequence files) from the RCSB PDB in
-    various formats.
+    Download structure files from *PubChem* in various formats.
     
     This function requires an internet connection.
     
     Parameters
     ----------
     cids : int or iterable object or int
-        A single PDB ID or a list of PDB IDs of the structure(s)
-        to be downloaded .
+        A single compound ID (CID) or a list of CIDs of the structure(s)
+        to be downloaded.
     format : {'sdf', 'asnt' 'asnb', 'xml', 'json', 'jsonp', 'png'}
         The format of the files to be downloaded.
-        ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
-        the same format.
+    as_structural_formula : bool, optional
+        If set to true, the structural formula is download instead of
+        an 3D conformer.
+        This means that coordinates lie in th xy-plane and represent
+        the positions atoms would have an a structural formula
+        representation.
     target_path : str, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
-        (`StringIO` or `BytesIO`, respectively).
+        (:class:`StringIO` or :class:`BytesIO`, respectively).
     overwrite : bool, optional
-        If true, existing files will be overwritten. Otherwise the
-        respective file will only be downloaded if the file does not
-        exist yet in the specified target directory or if the file is
-        empty. (Default: False)
+        If true, existing files will be overwritten.
+        Otherwise the respective file will only be downloaded, if the
+        file does not exist yet in the specified target directory or if
+        the file is empty.
     verbose: bool, optional
-        If true, the function will output the download progress.
-        (Default: False)
+        If set to true, the function will output the download progress.
+    throttle_threshold : float or None, optional
+        A value between 0 and 1.
+        If the load of either the request time or count exceeds this
+        value the execution is halted.
+        See :class:`ThrottleStatus` for more information.
+        If ``None`` is given, the execution is never halted.
+    return_throttle_status : float, optional
+        If set to true, the :class:`ThrottleStatus` of the final request
+        is also returned.
     
     Returns
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
-        If a single string (a single ID) was given in `pdb_ids`,
+        If a single CID was given in `cids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
         If no `target_path` was given, the file contents are stored in
-        either `StringIO` or `BytesIO` objects.
-    
-    Warnings
-    --------
-    Even if you give valid input to this function, in rare cases the
-    database might return no or malformed data to you.
-    In these cases the request should be retried.
-    When the issue occurs repeatedly, the error is probably in your
-    input.
+        either :class:`StringIO` or :class:`BytesIO` objects.
+    throttle_status : ThrottleStatus
+        The :class:`ThrottleStatus` obtained from the server response.
+        If multiple CIDs are requested, the :class:`ThrottleStatus` of
+        of the final response is returned.
+        This can be used for custom request throttling, for example.
+        Only returned, if `return_throttle_status` is set to true.
     
     Examples
     --------
     
     >>> import os.path
-    >>> file = fetch("1l2y", "cif", path_to_directory)
+    >>> file = fetch(2244, "sdf", path_to_directory)
     >>> print(os.path.basename(file))
-    1l2y.cif
-    >>> files = fetch(["1l2y", "3o5r"], "cif", path_to_directory)
+    2244.sdf
+    >>> files = fetch([2244, 5950], "sdf", path_to_directory)
     >>> print([os.path.basename(file) for file in files])
-    ['1l2y.cif', '3o5r.cif']
+    ['2244.sdf', '5950.sdf']
     """
     # If only a single CID is present,
     # put it into a single element list
@@ -139,7 +148,6 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
                 throttle_status = ThrottleStatus.from_response(r)
                 if throttle_threshold is not None:
                     throttle_status.wait_if_busy(throttle_threshold)
-                
         
         files.append(file)
     if verbose:
