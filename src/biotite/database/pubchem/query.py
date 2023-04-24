@@ -706,7 +706,7 @@ class SimilarityQuery(StructureQuery):
         return f"fastsimilarity_{dim}"
     
     def search_options(self):
-        return {"threshold" : int(self._threshold * 100)}
+        return {"threshold" : int(round(self._threshold * 100))}
 
 
 class IdentityQuery(StructureQuery):
