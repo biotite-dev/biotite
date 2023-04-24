@@ -4,13 +4,14 @@
 
 __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
-__all__ = ["fetch"]
+__all__ = ["fetch", "fetch_property"]
 
 import numbers
 import requests
 from os.path import isdir, isfile, join, getsize
 import os
 import io
+import numpy as np
 from .throttle import ThrottleStatus
 from .error import parse_error_details
 from ..error import RequestError
@@ -157,6 +158,103 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
         return_value = files[0]
     else:
         return_value = files
+    if return_throttle_status:
+        return return_value, throttle_status
+    else:
+        return return_value
+
+
+def fetch_property(cids, name,
+                   throttle_threshold=0.5, return_throttle_status=False):
+    """
+    Download the given property for the given CID(s).
+    
+    This function requires an internet connection.
+    
+    Parameters
+    ----------
+    cids : int or iterable object or int
+        A single compound ID (CID) or a list of CIDs to get the property
+        for.
+    name : str
+        The name of the desired property.
+        Valid properties are given in the *PubChem* REST API
+        `documentation <https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest#section=Compound-Property-Tables>`_.
+    throttle_threshold : float or None, optional
+        A value between 0 and 1.
+        If the load of either the request time or count exceeds this
+        value the execution is halted.
+        See :class:`ThrottleStatus` for more information.
+        If ``None`` is given, the execution is never halted.
+    return_throttle_status : float, optional
+        If set to true, the :class:`ThrottleStatus` of the final request
+        is also returned.
+    
+    Returns
+    -------
+    property : str or list of str
+        The requested property for each given CID.
+        If a single CID was given in `cids`,
+        a single string is returned.
+        If a list (or other iterable
+        object) was given, a list of strings is returned.
+    throttle_status : ThrottleStatus
+        The :class:`ThrottleStatus` obtained from the server response.
+        This can be used for custom request throttling, for example.
+        Only returned, if `return_throttle_status` is set to true.
+    
+    Examples
+    --------
+    
+    >>> butane_cids = np.array(search(FormulaQuery("C4H10")))
+    >>> # Filter natural isotopes...
+    >>> n_iso = np.array(fetch_property(butane_cids, "IsotopeAtomCount"), dtype=int)
+    >>> # ...and neutral compounds
+    >>> charge = np.array(fetch_property(butane_cids, "Charge"), dtype=int)
+    >>> butane_cids = butane_cids[(n_iso == 0) & (charge == 0)]
+    >>> print(butane_cids.tolist())
+    [7843, 6360, 161897780, 161295599, 158934736, 158271732, 157632982, 19048342, 19029854, 18402699]
+    >>> # Get the IUPAC names for each compound
+    >>> # Compounds with multiple moelcules
+    >>> iupac_names = fetch_property(butane_cids, "IUPACName")
+    >>> # Compounds with multiple molecules use ';' as separator
+    >>> print(iupac_names)
+    ['butane', '2-methylpropane', 'methylcyclopropane;molecular hydrogen', 'carbanylium;propane', 'carbanide;propane', 'acetylene;methane', 'cyclobutane;molecular hydrogen', 'cyclopropane;methane', 'ethane;ethene', 'methane;prop-1-ene']
+    """
+    # If only a single CID is present,
+    # put it into a single element list
+    if isinstance(cids, numbers.Integral):
+        cids = [cids]
+        single_element = True
+    else:
+        single_element = False
+    
+    # Property names may only contain letters and numbers
+    if not name.isalnum():
+        raise ValueError(
+            f"Property '{name}' contains invalid characters"
+        )
+    
+    # Use TXT format instead of CSV to avoid issues with ',' characters
+    # within table elements
+    r = requests.get(
+        _base_url + f"compound/cid/property/{name}/TXT",
+        params={"cid": ','.join([str(cid) for cid in cids])}
+    )
+    if not r.ok:
+        raise RequestError(parse_error_details(r.text))
+    throttle_status = ThrottleStatus.from_response(r)
+    if throttle_threshold is not None:
+        throttle_status.wait_if_busy(throttle_threshold)
+    
+    # Each line contains the property for one CID
+    properties = r.text.splitlines()
+
+    # If input was a single ID, return only a single value
+    if single_element:
+        return_value = properties[0]
+    else:
+        return_value = properties
     if return_throttle_status:
         return return_value, throttle_status
     else:

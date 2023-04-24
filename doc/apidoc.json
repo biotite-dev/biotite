@@ -52,7 +52,8 @@
         ],
         "Search and fetch" : [
             "search",
-            "fetch"
+            "fetch",
+            "fetch_property"
         ]
     },
 
