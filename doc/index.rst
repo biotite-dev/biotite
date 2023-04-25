@@ -125,6 +125,10 @@ databases, including the arguably most important ones: the *RCSB PDB* and the
    :width: 48 %
    :target: examples/gallery/structure/pdb_statistics.html
 
+.. image:: /examples/gallery/structure/images/sphx_glr_alkane_isomers_002.png
+   :width: 48 %
+   :target: examples/gallery/structure/alkane_isomers.html
+
 
 
 .. toctree::
