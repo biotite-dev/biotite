@@ -72,8 +72,11 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        All bonds have :attr:`BondType.ANY`, since the PDB format
-        does not support bond orders.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
         
     Returns
     -------
@@ -191,8 +194,11 @@ def get_assembly(pdb_file, assembly_id=None, model=None, altloc="first",
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        All bonds have :attr:`BondType.ANY`, since the PDB format
-        does not support bond orders.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
 
     Returns
     -------
@@ -257,8 +263,11 @@ def get_symmetry_mates(pdb_file, model=None, altloc="first",
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        All bonds have :attr:`BondType.ANY`, since the PDB format
-        does not support bond orders.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
 
     Returns
     -------
