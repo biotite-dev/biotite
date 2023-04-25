@@ -1693,7 +1693,7 @@ def _connect_inter_residue(atoms, residue_starts):
         
         # Get link type for this residue from RCSB components.cif
         curr_link = link_type(res_names[curr_start_i])
-        next_link = link_type(res_names[curr_start_i+1])
+        next_link = link_type(res_names[next_start_i])
         
         if curr_link in _PEPTIDE_LINKS and next_link in _PEPTIDE_LINKS:
             curr_connect_atom_name = "C"
