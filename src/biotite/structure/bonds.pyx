@@ -937,8 +937,8 @@ class BondList(Copyable):
         :class:`BondType` from the given `bond_list` takes precedence.
 
         The internal :class:`ndarray` instances containg the bonds are
-        simply concatenated and the new atom count is the maximum atom
-        count of the merged bond lists.
+        simply concatenated and the new atom count is the maximum of
+        both bond lists.
 
         Parameters
         ----------
@@ -960,7 +960,7 @@ class BondList(Copyable):
 
         >>> bond_list1 = BondList(3, np.array([(0,1),(1,2)]))
         >>> bond_list2 = BondList(5, np.array([(2,3),(3,4)]))
-        >>> merged_list = bond_list1.merge(bond_list2)
+        >>> merged_list = bond_list2.merge(bond_list1)
         >>> print(merged_list.get_atom_count())
         5
         >>> print(merged_list)
@@ -968,6 +968,23 @@ class BondList(Copyable):
          [1 2 0]
          [2 3 0]
          [3 4 0]]
+        
+        The BondList given as parameter takes precedence:
+
+        # Specifiy bond type to see where a bond is taken from
+        >>> bond_list1 = BondList(4, np.array([
+        ...     (0, 1, BondType.SINGLE),
+        ...     (1, 2, BondType.SINGLE)
+        ... ]))
+        >>> bond_list2 = BondList(4, np.array([
+        ...     (1, 2, BondType.DOUBLE),    # This one is a duplicate
+        ...     (2, 3, BondType.DOUBLE)
+        ... ]))
+        >>> merged_list = bond_list2.merge(bond_list1)
+        >>> print(merged_list)
+        [[0 1 1]
+         [1 2 1]
+         [2 3 2]]
         """
         return BondList( 
             max(self._atom_count, bond_list._atom_count), 
