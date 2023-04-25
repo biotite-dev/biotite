@@ -542,8 +542,6 @@ class PDBFile(TextFile):
                 # are not part of CONECT records
                 (~array.hetero) | filter_solvent(array)
             ))
-            # Remove bond order from inter residue bonds for consistency
-            bond_list.remove_bond_order()
             array.bonds = bond_list  
         
         return array
