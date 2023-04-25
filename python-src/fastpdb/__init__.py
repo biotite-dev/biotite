@@ -1,7 +1,7 @@
 __name__ = "fastpdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PDBFile"]
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 import os
 import numpy as np
@@ -33,6 +33,7 @@ class PDBFile(BiotitePDBFile):
     
         # Synchronize with PDB file representation in Rust            
         pdb_file.lines = pdb_file._pdb_file.lines
+        pdb_file._index_models_and_atoms()
         return pdb_file
     
     def get_model_count(self):
@@ -174,12 +175,12 @@ class PDBFile(BiotitePDBFile):
                 len_a, len_b, len_c,
                 np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
             )
-        if isinstance(atoms, struc.AtomArray):
-            atoms.box = box
-        else:
-            atoms.box = np.repeat(
-                box[np.newaxis, ...], atoms.stack_depth(), axis=0
-            )
+            if isinstance(atoms, struc.AtomArray):
+                atoms.box = box
+            else:
+                atoms.box = np.repeat(
+                    box[np.newaxis, ...], atoms.stack_depth(), axis=0
+                )
         
 
         # Filter altloc IDs
@@ -312,3 +313,10 @@ class PDBFile(BiotitePDBFile):
 
         # Synchronize with PDB file representation in Rust            
         self.lines = self._pdb_file.lines
+        self._index_models_and_atoms()
+    
+
+    def _index_models_and_atoms(self):
+        self._pdb_file.index_models_and_atoms()
+        self._model_start_i = self._pdb_file.model_start_i
+        self._atom_line_i = self._pdb_file.atom_line_i

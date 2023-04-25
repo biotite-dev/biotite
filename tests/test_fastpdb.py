@@ -108,7 +108,7 @@ def test_get_structure(path, model, altloc, extra_fields, include_bonds):
     if ref_atoms.box is not None:
         assert np.allclose(test_atoms.box, ref_atoms.box)
     else:
-        assert test_atoms == None
+        assert test_atoms.box is None
     
     assert test_atoms.bonds == ref_atoms.bonds
     
