@@ -172,7 +172,7 @@ def test_merge(bond_list):
     """
     Test merging two `BondList` objects on a known example.
     """
-    merged_list = bond_list.merge(struc.BondList(8, np.array([(4,6),(6,7)])))
+    merged_list = struc.BondList(8, np.array([(4,6),(6,7)])).merge(bond_list)
     assert merged_list.as_array().tolist() == [[0, 1, 0],
                                                [1, 2, 0],
                                                [1, 3, 0],

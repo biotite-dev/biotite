@@ -360,8 +360,11 @@ class PDBFile(TextFile):
             If set to true, a :class:`BondList` will be created for the
             resulting :class:`AtomArray` containing the bond information
             from the file.
-            All bonds have :attr:`BondType.ANY`, since the PDB format
-            does not support bond orders.
+            Bonds, whose order could not be determined from the
+            *Chemical Component Dictionary*
+            (e.g. especially inter-residue bonds),
+            have :attr:`BondType.ANY`, since the PDB format itself does
+            not support bond orders.
         
         Returns
         -------
@@ -536,15 +539,8 @@ class PDBFile(TextFile):
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
-            bond_list = bond_list.merge(connect_via_residue_names(
-                array,
-                # The information for non-hetero residues and water
-                # are not part of CONECT records
-                (~array.hetero) | filter_solvent(array)
-            ))
-            # Remove bond order from inter residue bonds for consistency
-            bond_list.remove_bond_order()
-            array.bonds = bond_list  
+            bond_list = bond_list.merge(connect_via_residue_names(array))
+            array.bonds = bond_list
         
         return array
 
@@ -794,8 +790,11 @@ class PDBFile(TextFile):
             If set to true, a :class:`BondList` will be created for the
             resulting :class:`AtomArray` containing the bond information
             from the file.
-            All bonds have :attr:`BondType.ANY`, since the PDB format
-            does not support bond orders.
+            Bonds, whose order could not be determined from the
+            *Chemical Component Dictionary*
+            (e.g. especially inter-residue bonds),
+            have :attr:`BondType.ANY`, since the PDB format itself does
+            not support bond orders.
 
         Returns
         -------
@@ -946,8 +945,11 @@ class PDBFile(TextFile):
             If set to true, a :class:`BondList` will be created for the
             resulting :class:`AtomArray` containing the bond information
             from the file.
-            All bonds have :attr:`BondType.ANY`, since the PDB format
-            does not support bond orders.
+            Bonds, whose order could not be determined from the
+            *Chemical Component Dictionary*
+            (e.g. especially inter-residue bonds),
+            have :attr:`BondType.ANY`, since the PDB format itself does
+            not support bond orders.
 
         Returns
         -------
