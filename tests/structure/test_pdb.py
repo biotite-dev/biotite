@@ -419,6 +419,7 @@ def test_bond_parsing():
     atoms = pdb.get_structure(pdb_file, model=1, include_bonds=True)
     
     test_bonds = atoms.bonds
+    test_bonds.remove_bond_order()
 
     ref_bonds = struc.connect_via_residue_names(atoms)
     ref_bonds.remove_bond_order()
