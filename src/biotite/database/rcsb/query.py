@@ -551,8 +551,8 @@ class Grouping(metaclass=abc.ABCMeta):
 
         ABSTRACT: Override when inheriting.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         return_type : str
             The ``return_type`` attribute to be checked.
         

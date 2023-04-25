@@ -32,7 +32,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     ----------
     pdb_ids : str or iterable object of str
         A single PDB ID or a list of PDB IDs of the structure(s)
-        to be downloaded .
+        to be downloaded.
     format : {'pdb', 'pdbx', 'cif', 'mmcif', 'mmtf', 'fasta'}
         The format of the files to be downloaded.
         ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
@@ -40,25 +40,24 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     target_path : str, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
-        (`StringIO` or `BytesIO`, respectively).
+        (:class:`StringIO` or :class:`BytesIO`, respectively).
     overwrite : bool, optional
-        If true, existing files will be overwritten. Otherwise the
-        respective file will only be downloaded if the file does not
-        exist yet in the specified target directory or if the file is
-        empty. (Default: False)
+        If true, existing files will be overwritten.
+        Otherwise the respective file will only be downloaded, if the
+        file does not exist yet in the specified target directory or if
+        the file is empty.
     verbose: bool, optional
-        If true, the function will output the download progress.
-        (Default: False)
+        If set to true, the function will output the download progress.
     
     Returns
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
-        If a single string (a single ID) was given in `pdb_ids`,
+        If a single PDB ID was given in `pdb_ids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
         If no `target_path` was given, the file contents are stored in
-        either `StringIO` or `BytesIO` objects.
+        either :class:`StringIO` or :class:`BytesIO` objects.
     
     Warnings
     --------

@@ -18,7 +18,7 @@ from ...bonds import BondType
 
 # Number of header lines
 N_HEADER = 3
-DATE_FORMAT = "%d%m%y%H%M"
+DATE_FORMAT = "%m%d%y%H%M"
 
 
 class MOLFile(TextFile):

@@ -18,6 +18,7 @@ from .util import is_not_installed, cannot_import, cannot_connect_to
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 RCSB_URL = "https://www.rcsb.org/"
 UNIPROT_URL = "https://www.uniprot.org/"
+PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
 
 @pytest.mark.parametrize("package_name, context_package_names", [
@@ -130,6 +131,13 @@ UNIPROT_URL = "https://www.uniprot.org/"
         [],
         marks = pytest.mark.skipif(
             cannot_connect_to(UNIPROT_URL), reason="UniProt is not available"
+        )
+    ),
+    pytest.param(
+        "biotite.database.pubchem",
+        ["biotite.structure.info"],
+        marks = pytest.mark.skipif(
+            cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available"
         )
     ),
     pytest.param(
