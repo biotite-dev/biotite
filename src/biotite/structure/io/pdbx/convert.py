@@ -651,10 +651,10 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
         (and most times only) data block of the file.
     use_ideal_coord : bool, optional
         If true, the *ideal* coordinates are read from the file
-        (``pdbx_model_Cartn_<dim>_ideal``fields), typically
+        (``pdbx_model_Cartn_<dim>_ideal`` fields), typically
         originating from computations.
         If set to false, alternative coordinates are read
-        (``model_Cartn_<dim>_``fields).
+        (``model_Cartn_<dim>_`` fields).
     
     Returns
     -------

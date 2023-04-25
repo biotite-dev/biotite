@@ -323,6 +323,7 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
         This array is `True` for all indices in `array`, where an atom
         has a bond length with the next atom within [`min_len`, `max_len`]
         boundaries.
+        
     Notes
     -----
     Note that this function purely uses distances between consecutive atoms.
