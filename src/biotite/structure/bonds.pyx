@@ -931,10 +931,10 @@ class BondList(Copyable):
         """
         merge(bond_list)
         
-        Merge this instance with another :class:`BondList` into a new
+        Merge another :class:`BondList` with this instance into a new
         object.
-        If a bond appears in both :class:`BondList`'s, the bonds from
-        the given `bond_list` takes precedence.
+        If a bond appears in both :class:`BondList`'s, the
+        :class:`BondType` from the given `bond_list` takes precedence.
 
         The internal :class:`ndarray` instances containg the bonds are
         simply concatenated and the new atom count is the maximum atom
