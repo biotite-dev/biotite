@@ -1421,8 +1421,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
         still taken from the default dictionary.
         The default bond distances are taken from :footcite:`Allen1987`.
     atom_mask : ndarray, dtype=bool, shape=(n,), optional
-        If set, only the atoms, where this mask is ``True``, are
-        connected.
+        DEPRECATED: This option has no effect.
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
@@ -1461,7 +1460,6 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     from .residues import get_residue_starts
 
     cdef list bonds = []
-    cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())
     cdef int i
     cdef int curr_start_i, next_start_i
     cdef np.ndarray coord = atoms.coord
@@ -1513,9 +1511,6 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
         )
         for atom_index1 in range(len(elements_in_res)):
             for atom_index2 in range(atom_index1):
-                if not mask[atom_index1] or not mask[atom_index2]:
-                    # Do not connect atoms that were filtered out
-                    continue
                 dist_range = dist_ranges.get((
                     elements_in_res[atom_index1],
                     elements_in_res[atom_index2]
@@ -1565,8 +1560,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The structure to create the :class:`BondList` for.
     atom_mask : ndarray, dtype=bool, shape=(n,), optional
-        If set, only the atoms, where this mask is ``True``, are
-        connected.
+        DEPRECATED: This option has no effect.
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
@@ -1596,7 +1590,6 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     from .residues import get_residue_starts
 
     cdef list bonds = []
-    cdef uint8[:] mask = _prepare_mask(atom_mask, atoms.array_length())
     cdef int i
     cdef int curr_start_i, next_start_i
     cdef np.ndarray atom_names = atoms.atom_name
@@ -1642,20 +1635,6 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
         return bond_list.merge(inter_bonds)
     else:
         return bond_list
-
-
-def _prepare_mask(atom_mask, array_length):
-    # Prepare masked atoms
-    cdef uint8[:] mask
-    if atom_mask is not None:
-        if len(atom_mask) != array_length:
-            raise IndexError(
-                f"Atom mask has length {len(atom_mask)}, "
-                f"but there are {array_length} atoms"
-            )
-        return np.frombuffer(atom_mask, dtype=np.uint8)
-    else:
-        return np.ones(array_length, dtype=np.uint8)
 
 
 
