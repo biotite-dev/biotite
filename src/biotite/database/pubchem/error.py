@@ -17,4 +17,4 @@ def parse_error_details(response_text):
             if line.startswith(message_line_indicator):
                 return line[len(message_line_indicator):]
     # No 'Detail: ...' or 'Message: ' line found
-    raise ValueError("Response contains no error details")
+    return "Unknown error"
