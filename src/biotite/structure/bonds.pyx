@@ -74,8 +74,8 @@ class BondType(IntEnum):
         """
         Remove aromaticity from the bond type.
         
-        :attr:`BondType.AROMATIC_<ORDER>` is converted into
-        :attr:`BondType.<ORDER>`.
+        :attr:`BondType.AROMATIC_{ORDER}` is converted into
+        :attr:`BondType.{ORDER}`.
 
         Returns
         -------
@@ -157,6 +157,8 @@ class BondList(Copyable):
     sanitized: Redundant bonds are removed, and each bond entry is
     sorted so that the lower one of the two atom indices is in the first
     column.
+    If a bond appears multiple times with different bond types, the
+    first bond takes precedence.
     
     Examples
     --------
@@ -436,8 +438,8 @@ class BondList(Copyable):
         """
         Remove aromaticity from the bond types.
         
-        :attr:`BondType.AROMATIC_<ORDER>` is converted into
-        :attr:`BondType.<ORDER>`.
+        :attr:`BondType.AROMATIC_{ORDER}` is converted into
+        :attr:`BondType.{ORDER}`.
 
         Examples
         --------
@@ -931,6 +933,8 @@ class BondList(Copyable):
         
         Merge this instance with another :class:`BondList` into a new
         object.
+        If a bond appears in both :class:`BondList`'s, the bonds from
+        the given `bond_list` takes precedence.
 
         The internal :class:`ndarray` instances containg the bonds are
         simply concatenated and the new atom count is the maximum atom
@@ -967,9 +971,10 @@ class BondList(Copyable):
         """
         return BondList( 
             max(self._atom_count, bond_list._atom_count), 
-            np.concatenate([self.as_array(), 
-                            bond_list.as_array()], 
-                            axis=0) 
+            np.concatenate(
+                [bond_list.as_array(), self.as_array()], 
+                axis=0
+            ) 
         ) 
 
     def __add__(self, bond_list):
