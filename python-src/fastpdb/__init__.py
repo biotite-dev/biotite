@@ -203,14 +203,7 @@ class PDBFile(BiotitePDBFile):
             bond_list = struc.BondList(
                 atoms.array_length(), self._pdb_file.parse_bonds(atom_id)
             )
-            bond_list = bond_list.merge(struc.connect_via_residue_names(
-                atoms,
-                # The information for non-hetero residues and water
-                # are not part of CONECT records
-                (~atoms.hetero) | struc.filter_solvent(atoms)
-            ))
-            # Remove bond order from inter residue bonds for consistency
-            bond_list.remove_bond_order()
+            bond_list = bond_list.merge(struc.connect_via_residue_names(atoms))
             atoms.bonds = bond_list
 
 
