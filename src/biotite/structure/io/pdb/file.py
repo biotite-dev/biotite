@@ -539,13 +539,8 @@ class PDBFile(TextFile):
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
-            bond_list = bond_list.merge(connect_via_residue_names(
-                array,
-                # The information for non-hetero residues and water
-                # are not part of CONECT records
-                (~array.hetero) | filter_solvent(array)
-            ))
-            array.bonds = bond_list  
+            bond_list = bond_list.merge(connect_via_residue_names(array))
+            array.bonds = bond_list
         
         return array
 
