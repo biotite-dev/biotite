@@ -215,7 +215,6 @@ def fetch_property(cids, name,
     >>> print(butane_cids.tolist())
     [7843, 6360, 161897780, 161295599, 158934736, 158271732, 157632982, 19048342, 19029854, 18402699]
     >>> # Get the IUPAC names for each compound
-    >>> # Compounds with multiple moelcules
     >>> iupac_names = fetch_property(butane_cids, "IUPACName")
     >>> # Compounds with multiple molecules use ';' as separator
     >>> print(iupac_names)
@@ -237,9 +236,9 @@ def fetch_property(cids, name,
     
     # Use TXT format instead of CSV to avoid issues with ',' characters
     # within table elements
-    r = requests.get(
+    r = requests.post(
         _base_url + f"compound/cid/property/{name}/TXT",
-        params={"cid": ','.join([str(cid) for cid in cids])}
+        data={"cid": ','.join([str(cid) for cid in cids])}
     )
     if not r.ok:
         raise RequestError(parse_error_details(r.text))
