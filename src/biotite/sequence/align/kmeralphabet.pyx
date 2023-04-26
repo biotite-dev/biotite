@@ -78,6 +78,14 @@ class KmerAlphabet(Alphabet):
     spacing : None or ndarray, dtype=int
         The *k-mer* model in array form, if spaced *k-mers* are used,
         ``None`` otherwise.
+    
+    Notes
+    -----
+    If the length of the `base_alphabet` is a multiple of 2 and no
+    spacing is given, :meth:`create_kmers()` employs a faster method
+    using bit shifts.
+    This method can be multiple times faster and requires constant time
+    with regard to the size of *k*. 
 
     Examples
     --------
@@ -148,9 +156,24 @@ class KmerAlphabet(Alphabet):
 
         if spacing is None:
             self._spacing = None
+            shift = np.log2(base_alph_len)
+            if shift.is_integer():
+                # Alphabet length is a power of 2 (e.g. ACGT)
+                # Fast k-mer decomposition using bit shifts can be
+                # performed
+                self._create_kmers_func = self._create_continuous_kmers_fast
+                # The number of bit shifts
+                # to achieve integer division by 'base_alph_len'
+                self._shift = shift
+            else:
+                self._create_kmers_func = self._create_continuous_kmers
+        
         elif isinstance(spacing, str):
+            self._create_kmers_func = self._create_spaced_kmers
             self._spacing = _to_array_form(spacing)
+        
         else:
+            self._create_kmers_func = self._create_spaced_kmers
             self._spacing = np.array(spacing, dtype=np.int64)
             self._spacing.sort()
             if (self._spacing < 0).any():
@@ -411,16 +434,18 @@ class KmerAlphabet(Alphabet):
         >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
         ['AT', 'TT', 'TG', 'GC', 'CT']
         """
-        if self._spacing is None:
-            return self._create_continuous_kmers(seq_code)
-        else:
-            return self._create_spaced_kmers(seq_code)
+        return self._create_kmers_func(seq_code)
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def _create_continuous_kmers(self, CodeType[:] seq_code not None):
+        """
+        Implementation of k-mer decomposition using a naive algorithm,
+        where each k-mer ais calculated independently.
+        Requires looping over sequence length AND k.
+        """
         cdef int64 i, j
-
+        
         cdef int k = self._k
         cdef uint64 alphabet_length = len(self._base_alph)
         cdef int64[:] radix_multiplier = self._radix_multiplier
@@ -444,6 +469,68 @@ class KmerAlphabet(Alphabet):
                     raise AlphabetError(f"Symbol code {code} is out of range")
                 kmer += radix_multiplier[j] * code
             kmers[i] = kmer
+        
+        return np.asarray(kmers)
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def _create_continuous_kmers_fast(self, CodeType[:] seq_code not None):
+        """
+        Faster implementation of k-mer decomposition.
+        Each k-mer is computed from the previous one by removing
+        a symbol shifting the remaining values and add the new symbol.
+        Requires looping only over sequence length.
+        The shift requires an integer division, that is only fast enough
+        in the form of a bit shift.
+        Hence, this function is only available for alphabet whose
+        length is a power of 10.
+        """
+        cdef int64 i
+
+        cdef int64 shift = self._shift
+        cdef int k = self._k
+        cdef uint64 alphabet_length = len(self._base_alph)
+        cdef int64[:] radix_multiplier = self._radix_multiplier
+        cdef int64 end_radix_multiplier = alphabet_length**(k-1)
+
+        if len(seq_code) < <unsigned int>k:
+            raise ValueError(
+                "The length of the sequence code is shorter than k"
+            )
+
+        cdef int64[:] kmers = np.empty(
+            self.kmer_array_length(len(seq_code)), dtype=np.int64
+        )
+        
+        cdef CodeType code
+        cdef int64 kmer, prev_kmer
+        # Compute first k-mer using naive approach
+        kmer = 0
+        for i in range(k):
+            code = seq_code[i]
+            if code >= alphabet_length:
+                raise AlphabetError(f"Symbol code {code} is out of range")
+            kmer += radix_multiplier[i] * code
+        kmers[0] = kmer
+        
+        # Compute all following k-mers from the previous one
+        prev_kmer = kmer
+        for i in range(1, kmers.shape[0]):
+            code = seq_code[i + k - 1]
+            if code >= alphabet_length:
+                raise AlphabetError(f"Symbol code {code} is out of range")
+            kmer = (
+                (
+                    # Remove first symbol
+                    (prev_kmer - seq_code[i - 1])   
+                    # Fast division -> shift k-mer to left
+                    >> shift
+                )
+                # Add new symbol
+                + (end_radix_multiplier * code)
+            )
+            kmers[i] = kmer
+            prev_kmer = kmer
         
         return np.asarray(kmers)
     
