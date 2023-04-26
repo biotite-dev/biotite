@@ -96,7 +96,7 @@ def test_create_continuous_kmers_fast(seed):
     LENGTH = 1000
     K = 5
 
-    # The alphabet must be multiple of 2 -> NucleotideSequence
+    # The alphabet must be power of 2 -> NucleotideSequence
     sequence = seq.NucleotideSequence(ambiguous=False)
     np.random.seed(seed)
     sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)

@@ -81,7 +81,7 @@ class KmerAlphabet(Alphabet):
     
     Notes
     -----
-    If the length of the `base_alphabet` is a multiple of 2 and no
+    If the length of the `base_alphabet` is a power of 2 and no
     spacing is given, :meth:`create_kmers()` employs a faster method
     using bit shifts.
     This method can be multiple times faster and requires constant time
