@@ -36,7 +36,8 @@ class KmerAlphabet(Alphabet):
     
     It's primary use is its :meth:`create_kmers()` method, that iterates
     over all overlapping *k-mers* in a :class:`Sequence` and encodes
-    each one into its corresponding *k-mer* symbol code.
+    each one into its corresponding *k-mer* symbol code
+    (*k-mer* code in short).
     This functionality is prominently used by a :class:`KmerTable` to
     find *k-mer* matches between two sequences.
 
