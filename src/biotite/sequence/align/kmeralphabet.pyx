@@ -165,17 +165,7 @@ class KmerAlphabet(Alphabet):
 
         if spacing is None:
             self._spacing = None
-            shift = np.log2(base_alph_len)
-            if shift.is_integer():
-                # Alphabet length is a power of 2 (e.g. ACGT)
-                # Fast k-mer decomposition using bit shifts can be
-                # performed
-                self._create_kmers_func = self._create_continuous_kmers_fast
-                # The number of bit shifts
-                # to achieve integer division by 'base_alph_len'
-                self._shift = shift
-            else:
-                self._create_kmers_func = self._create_continuous_kmers
+            self._create_kmers_func = self._create_continuous_kmers
         
         elif isinstance(spacing, str):
             self._create_kmers_func = self._create_spaced_kmers
@@ -449,54 +439,13 @@ class KmerAlphabet(Alphabet):
     @cython.wraparound(False)
     def _create_continuous_kmers(self, CodeType[:] seq_code not None):
         """
-        Implementation of k-mer decomposition using a naive algorithm,
-        where each k-mer ais calculated independently.
-        Requires looping over sequence length AND k.
-        """
-        cdef int64 i, j
-        
-        cdef int k = self._k
-        cdef uint64 alphabet_length = len(self._base_alph)
-        cdef int64[:] radix_multiplier = self._radix_multiplier
-
-        if len(seq_code) < <unsigned int>k:
-            raise ValueError(
-                "The length of the sequence code is shorter than k"
-            )
-
-        cdef int64[:] kmers = np.empty(
-            self.kmer_array_length(len(seq_code)), dtype=np.int64
-        )
-        
-        cdef CodeType code
-        cdef int64 kmer
-        for i in range(kmers.shape[0]):
-            kmer = 0
-            for j in range(k):
-                code = seq_code[i + j]
-                if code >= alphabet_length:
-                    raise AlphabetError(f"Symbol code {code} is out of range")
-                kmer += radix_multiplier[j] * code
-            kmers[i] = kmer
-        
-        return np.asarray(kmers)
-    
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def _create_continuous_kmers_fast(self, CodeType[:] seq_code not None):
-        """
-        Faster implementation of k-mer decomposition.
+        Fast implementation of k-mer decomposition.
         Each k-mer is computed from the previous one by removing
         a symbol shifting the remaining values and add the new symbol.
         Requires looping only over sequence length.
-        The shift requires an integer division, that is only fast enough
-        in the form of a bit shift.
-        Hence, this function is only available for alphabet whose
-        length is a power of 10.
         """
         cdef int64 i
 
-        cdef int64 shift = self._shift
         cdef int k = self._k
         cdef uint64 alphabet_length = len(self._base_alph)
         cdef int64[:] radix_multiplier = self._radix_multiplier
@@ -532,9 +481,8 @@ class KmerAlphabet(Alphabet):
                 (
                     # Remove first symbol
                     (prev_kmer - seq_code[i - 1] * end_radix_multiplier)   
-                    # Fast multiplication -> shift k-mer to left
-                    << shift
-                    #* alphabet_length
+                    # Shift k-mer to left
+                    * alphabet_length
                 )
                 # Add new symbol
                 + code

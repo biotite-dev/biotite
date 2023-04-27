@@ -85,32 +85,6 @@ def test_create_continuous_kmers(kmer_alphabet):
     assert test_kmers.tolist() == ref_kmers
 
 
-N = 10
-@pytest.mark.parametrize("seed", range(N))
-def test_create_continuous_kmers_fast(seed):
-    """
-    Test :meth:`create_kmers()` using the fast bit shift method.
-    against the naive implementation.
-    The input sequence code is randomly created.
-    """
-    LENGTH = 1000
-    K = 5
-
-    # The alphabet must be power of 2 -> NucleotideSequence
-    sequence = seq.NucleotideSequence(ambiguous=False)
-    np.random.seed(seed)
-    sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
-    kmer_alphabet = align.KmerAlphabet(sequence.alphabet, K)
-    
-    test_kmer_codes = kmer_alphabet.create_kmers(sequence.code)
-
-    # Replace the fast method by the naive method
-    kmer_alphabet._create_kmers_func = kmer_alphabet._create_continuous_kmers
-    ref_kmer_codes = kmer_alphabet.create_kmers(sequence.code)
-
-    assert test_kmer_codes.tolist() == ref_kmer_codes.tolist()
-
-
 N = 50
 @pytest.mark.parametrize("seed", range(N))
 def test_create_spaced_kmers(kmer_alphabet, spaced_kmer_alphabet, seed):
