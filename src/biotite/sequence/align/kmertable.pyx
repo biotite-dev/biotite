@@ -158,10 +158,10 @@ cdef class KmerTable:
     (reference ID, sequence position) tuples:
 
     >>> print(table)
-    TA: (0, 1), (0, 3), (1, 1)
     AG: (1, 2)
     AT: (0, 2)
     CT: (1, 0)
+    TA: (0, 1), (0, 3), (1, 1)
     TT: (0, 0)
 
     Find matches of the table with a sequence:
@@ -301,10 +301,10 @@ cdef class KmerTable:
         ...     2, sequences, ref_ids=[100, 101]
         ... )
         >>> print(table)
-        TA: (100, 1), (100, 3), (101, 1)
         AG: (101, 2)
         AT: (100, 2)
         CT: (101, 0)
+        TA: (100, 1), (100, 3), (101, 1)
         TT: (100, 0)
 
         Give an explicit compatible alphabet:
@@ -321,9 +321,9 @@ cdef class KmerTable:
         ...     2, [sequence], ignore_masks=[sequence.symbols == "N"]
         ... )
         >>> print(table)
-        TA: (0, 4)
         AC: (0, 0)
         CC: (0, 1)
+        TA: (0, 4)
         """
         # Check length of input lists
         if ref_ids is not None and len(ref_ids) != len(sequences):
@@ -431,21 +431,21 @@ cdef class KmerTable:
         >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
         >>> for code in kmer_codes:
         ...     print(code)
-        [7676 9535 4429 9400 2119]
-        [ 7667 11839  4525  9404  2119]
+        [11701  4360  7879  9400  4419]
+        [ 6517  4364  7975 11704  4419]
         >>> table = KmerTable.from_kmers(
         ...     kmer_alphabet, kmer_codes
         ... )
         >>> print(table)
-        ITE: (0, 4), (1, 4)
-        QTI: (0, 2)
-        QBI: (1, 2)
-        NIQ: (1, 0)
-        BIQ: (0, 0)
-        TIT: (0, 3)
-        BIT: (1, 3)
         IQT: (0, 1)
         IQB: (1, 1)
+        ITE: (0, 4), (1, 4)
+        NIQ: (1, 0)
+        QTI: (0, 2)
+        QBI: (1, 2)
+        TIT: (0, 3)
+        BIQ: (0, 0)
+        BIT: (1, 3)
         """
         if not isinstance(kmer_alphabet, KmerAlphabet):
             raise TypeError(
@@ -534,10 +534,10 @@ cdef class KmerTable:
         ... )
         >>> merged_table = KmerTable.from_tables([table1, table2])
         >>> print(merged_table)
-        TA: (100, 1), (100, 3), (101, 1)
         AG: (101, 2)
         AT: (100, 2)
         CT: (101, 0)
+        TA: (100, 1), (100, 3), (101, 1)
         TT: (100, 0)
         """
         # Check for alphabet compatibility
@@ -597,21 +597,21 @@ cdef class KmerTable:
         >>> sequence = ProteinSequence("BIQTITE")
         >>> table = KmerTable.from_sequences(3, [sequence], ref_ids=[100])
         >>> print(table)
+        IQT: (100, 1)
         ITE: (100, 4)
         QTI: (100, 2)
-        BIQ: (100, 0)
         TIT: (100, 3)
-        IQT: (100, 1)
+        BIQ: (100, 0)
         >>> data = {kmer: table[kmer] for kmer in table}
         >>> print(data)
-        {2119: array([[100,   4]], dtype=uint32), 4429: array([[100,   2]], dtype=uint32), 7676: array([[100,   0]], dtype=uint32), 9400: array([[100,   3]], dtype=uint32), 9535: array([[100,   1]], dtype=uint32)}
+        {4360: array([[100,   1]], dtype=uint32), 4419: array([[100,   4]], dtype=uint32), 7879: array([[100,   2]], dtype=uint32), 9400: array([[100,   3]], dtype=uint32), 11701: array([[100,   0]], dtype=uint32)}
         >>> restored_table = KmerTable.from_positions(table.kmer_alphabet, data)
         >>> print(restored_table)
+        IQT: (100, 1)
         ITE: (100, 4)
         QTI: (100, 2)
-        BIQ: (100, 0)
         TIT: (100, 3)
-        IQT: (100, 1)
+        BIQ: (100, 0)
         """
         cdef int64 length
         cdef uint32* kmer_ptr
@@ -711,19 +711,19 @@ cdef class KmerTable:
         >>> sequence1 = ProteinSequence("BIQTITE")
         >>> table1 = KmerTable.from_sequences(3, [sequence1], ref_ids=[100])
         >>> print(table1)
+        IQT: (100, 1)
         ITE: (100, 4)
         QTI: (100, 2)
-        BIQ: (100, 0)
         TIT: (100, 3)
-        IQT: (100, 1)
+        BIQ: (100, 0)
         >>> sequence2 = ProteinSequence("TITANITE")
         >>> table2 = KmerTable.from_sequences(3, [sequence2], ref_ids=[101])
         >>> print(table2)
+        ANI: (101, 3)
         ITA: (101, 1)
         ITE: (101, 5)
-        ANI: (101, 3)
-        TAN: (101, 2)
         NIT: (101, 4)
+        TAN: (101, 2)
         TIT: (101, 0)
         >>> print(table1.match_table(table2))
         [[101   5 100   4]
@@ -870,11 +870,11 @@ cdef class KmerTable:
         >>> sequence1 = ProteinSequence("BIQTITE")
         >>> table = KmerTable.from_sequences(3, [sequence1], ref_ids=[100])
         >>> print(table)
+        IQT: (100, 1)
         ITE: (100, 4)
         QTI: (100, 2)
-        BIQ: (100, 0)
         TIT: (100, 3)
-        IQT: (100, 1)
+        BIQ: (100, 0)
         >>> sequence2 = ProteinSequence("TITANITE")
         >>> print(table.match(sequence2))
         [[  0 100   3]
@@ -986,21 +986,21 @@ cdef class KmerTable:
         >>> sequence = ProteinSequence("BIQTITE")
         >>> table = KmerTable.from_sequences(3, [sequence], ref_ids=[100])
         >>> print(table)
+        IQT: (100, 1)
         ITE: (100, 4)
         QTI: (100, 2)
-        BIQ: (100, 0)
         TIT: (100, 3)
-        IQT: (100, 1)
+        BIQ: (100, 0)
         >>> kmer_codes = table.get_kmers()
         >>> print(kmer_codes)
-        [2119 4429 7676 9400 9535]
+        [ 4360  4419  7879  9400 11701]
         >>> for code in kmer_codes:
         ...     print(table[code])
+        [[100   1]]
         [[100   4]]
         [[100   2]]
-        [[100   0]]
         [[100   3]]
-        [[100   1]]
+        [[100   0]]
         """
         cdef int64 kmer
         cdef ptr[:] ptr_array = self._ptr_array

@@ -54,7 +54,7 @@ class KmerAlphabet(Alphabet):
         *k-mers*.
     spacing : None or str or list or ndarray, dtype=int, shape=(k,)
         If provided, spaced *k-mers* are used instead of continuous
-        ones.
+        ones :footcite:`Ma2002`.
         The value contains the *informative* positions relative to the
         start of the *k-mer*, also called the *model*.
         The number of *informative* positions must equal *k*.
@@ -81,11 +81,20 @@ class KmerAlphabet(Alphabet):
     
     Notes
     -----
-    If the length of the `base_alphabet` is a power of 2 and no
-    spacing is given, :meth:`create_kmers()` employs a faster method
-    using bit shifts.
-    This method can be multiple times faster and requires constant time
-    with regard to the size of *k*. 
+    The symbol code for a *k-mer* :math:`s` calculates as
+
+    .. math:: RMSD = \sum_{i=0}^{k-1} n^{k-i-1} s_i
+
+    where :math:`n` is the length of the base alphabet.
+
+    Hence the :class:`KmerAlphabet` sorts *k-mers* in the order of the
+    base alphabet, where leading positions within the *k-mer* take
+    precedence.
+
+    References
+    ----------
+    
+    .. footbibliography::
 
     Examples
     --------
@@ -96,13 +105,13 @@ class KmerAlphabet(Alphabet):
     ['A', 'C', 'G', 'T']
     >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
     >>> print(kmer_alphabet.get_symbols())
-    ['AA', 'CA', 'GA', 'TA', 'AC', 'CC', 'GC', 'TC', 'AG', 'CG', 'GG', 'TG', 'AT', 'CT', 'GT', 'TT']
+    ['AA', 'AC', 'AG', 'AT', 'CA', 'CC', 'CG', 'CT', 'GA', 'GC', 'GG', 'GT', 'TA', 'TC', 'TG', 'TT']
     
     Encode and decode *k-mers*:
 
     >>> print(kmer_alphabet.encode("TC"))
-    7
-    >>> print(kmer_alphabet.decode(7))
+    13
+    >>> print(kmer_alphabet.decode(13))
     ['T' 'C']
 
     Fuse symbol codes from the base alphabet into a *k-mer* code
@@ -112,8 +121,8 @@ class KmerAlphabet(Alphabet):
     >>> print(symbol_codes)
     [3 1]
     >>> print(kmer_alphabet.fuse(symbol_codes))
-    7
-    >>> print(kmer_alphabet.split(7))
+    13
+    >>> print(kmer_alphabet.split(13))
     [3 1]
 
     Encode all overlapping continuous k-mers of a sequence:
@@ -121,7 +130,7 @@ class KmerAlphabet(Alphabet):
     >>> sequence = NucleotideSequence("ATTGCT")
     >>> kmer_codes = kmer_alphabet.create_kmers(sequence.code)
     >>> print(kmer_codes)
-    [12 15 11 6 13]
+    [ 3 15 14  9  7]
     >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
     ['AT', 'TT', 'TG', 'GC', 'CT']
 
@@ -150,7 +159,7 @@ class KmerAlphabet(Alphabet):
         
         base_alph_len = len(self._base_alph)
         self._radix_multiplier = np.array(
-            [base_alph_len**n for n in range(self._k)],
+            [base_alph_len**n for n in reversed(range(0, self._k))],
             dtype=np.int64
         )
 
@@ -284,8 +293,8 @@ class KmerAlphabet(Alphabet):
         >>> print(symbol_codes)
         [3 1]
         >>> print(kmer_alphabet.fuse(symbol_codes))
-        7
-        >>> print(kmer_alphabet.split(7))
+        13
+        >>> print(kmer_alphabet.split(13))
         [3 1]
         """
         if codes.shape[-1] != self._k:
@@ -336,8 +345,8 @@ class KmerAlphabet(Alphabet):
         >>> print(symbol_codes)
         [3 1]
         >>> print(kmer_alphabet.fuse(symbol_codes))
-        7
-        >>> print(kmer_alphabet.split(7))
+        13
+        >>> print(kmer_alphabet.split(13))
         [3 1]
         """
         if np.any(kmer_code >= len(self)) or np.any(kmer_code < 0):
@@ -367,7 +376,7 @@ class KmerAlphabet(Alphabet):
         cdef int k = self._k
         for i in range(codes.shape[0]):
             code = codes[i]
-            for n in reversed(range(k)):
+            for n in range(k):
                 val = radix_multiplier[n]
                 symbol_code = code // val
                 split_codes[i,n] = symbol_code
@@ -430,7 +439,7 @@ class KmerAlphabet(Alphabet):
         >>> sequence = NucleotideSequence("ATTGCT")
         >>> kmer_codes = kmer_alphabet.create_kmers(sequence.code)
         >>> print(kmer_codes)
-        [12 15 11 6 13]
+        [ 3 15 14  9  7]
         >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
         ['AT', 'TT', 'TG', 'GC', 'CT']
         """
@@ -522,12 +531,13 @@ class KmerAlphabet(Alphabet):
             kmer = (
                 (
                     # Remove first symbol
-                    (prev_kmer - seq_code[i - 1])   
-                    # Fast division -> shift k-mer to left
-                    >> shift
+                    (prev_kmer - seq_code[i - 1] * end_radix_multiplier)   
+                    # Fast multiplication -> shift k-mer to left
+                    << shift
+                    #* alphabet_length
                 )
                 # Add new symbol
-                + (end_radix_multiplier * code)
+                + code
             )
             kmers[i] = kmer
             prev_kmer = kmer
