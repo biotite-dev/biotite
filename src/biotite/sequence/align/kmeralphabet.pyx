@@ -165,14 +165,11 @@ class KmerAlphabet(Alphabet):
 
         if spacing is None:
             self._spacing = None
-            self._create_kmers_func = self._create_continuous_kmers
         
         elif isinstance(spacing, str):
-            self._create_kmers_func = self._create_spaced_kmers
             self._spacing = _to_array_form(spacing)
         
         else:
-            self._create_kmers_func = self._create_spaced_kmers
             self._spacing = np.array(spacing, dtype=np.int64)
             self._spacing.sort()
             if (self._spacing < 0).any():
@@ -433,7 +430,10 @@ class KmerAlphabet(Alphabet):
         >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
         ['AT', 'TT', 'TG', 'GC', 'CT']
         """
-        return self._create_kmers_func(seq_code)
+        if self._spacing is None:
+            return self._create_continuous_kmers(seq_code)
+        else:
+            return self._create_spaced_kmers(seq_code)
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
