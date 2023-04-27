@@ -72,6 +72,43 @@ def test_from_kmers(k, random_sequences):
     assert test_table == ref_table
 
 
+def test_from_kmer_subset(k, alphabet, random_sequences):
+    """
+    Test the :meth:`test_from_kmer_subset()` constructor, by checking
+    for each stored k-mer position, whether it is found at that position
+    in the sequences.
+    """
+    N_POSITIONS = 100
+    
+    kmer_alph = align.KmerAlphabet(alphabet, k)
+    kmer_arrays = [
+        kmer_alph.create_kmers(sequence.code) for sequence in random_sequences
+    ]
+    np.random.seed(0)
+    filtered_pos_arrays = [
+        np.random.randint(len(kmers), size=N_POSITIONS)
+        for kmers in kmer_arrays
+    ]
+    filtered_kmer_arrays = [
+        kmers[filtered_pos]
+        for filtered_pos, kmers in zip(filtered_pos_arrays, kmer_arrays)
+    ]
+    kmer_table = align.KmerTable.from_kmer_subset(
+        kmer_alph, filtered_pos_arrays, filtered_kmer_arrays
+    )
+
+    # The total number of k-mers in the table
+    # should be the total number of input k-mers
+    assert np.sum(kmer_table.count()) \
+        == np.sum([len(kmers) for kmers in filtered_kmer_arrays])
+    # Each k-mer in the table should be found
+    # in the original k-mer sequences
+    for kmer in kmer_table.get_kmers():
+        positions = kmer_table[kmer]
+        for ref_id, pos in positions:
+            assert kmer_arrays[ref_id][pos] == kmer
+
+
 def test_from_tables(k, random_sequences):
     """
     Test :meth:`from_tables()` constructor by comparing the merge of
@@ -188,6 +225,39 @@ def test_match(k, random_sequences, use_similarity_rule):
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
+def test_match_kmer_subset(k, random_sequences):
+    """
+    Same as :func:`test_match()` but with a subset of positions.
+    """
+    N_POS = 100
+
+    query_sequence = random_sequences[0]
+    table_sequences = random_sequences[1:]   
+    table = align.KmerTable.from_sequences(k, table_sequences)
+    
+    kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
+    np.random.seed(0)
+    positions = np.random.randint(len(kmers), size=N_POS)
+    ref_matches = []
+    for pos in positions:
+        kmer = kmers[pos]
+        matches = table[kmer]
+        matches = np.stack(
+            [
+                np.full(len(matches), pos, dtype=np.uint32), 
+                matches[:,0],
+                matches[:,1]
+            ],
+            axis=1
+        )
+        ref_matches.append(matches)
+    ref_matches = np.concatenate(ref_matches)
+
+    test_matches = table.match_kmer_subset(positions, kmers[positions])
+
+    assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
+
+
 @pytest.mark.parametrize("use_mask", [False, True])
 def test_match_equivalence(k, random_sequences, use_mask):
     """
@@ -274,6 +344,32 @@ def test_masking(k, input_mask, ref_output_mask):
         test_output_mask[seq_indices] = True
     
     assert test_output_mask.tolist() == ref_output_mask.tolist()
+
+
+@pytest.mark.parametrize("selected_kmers", [False, True])
+def test_count(k, random_sequences, selected_kmers):
+    """
+    Test :meth:`count()` against an inefficient solution using a list
+    comprehension.
+    """
+    N_KMERS = 100
+    
+    table = align.KmerTable.from_sequences(
+        k, random_sequences
+    )
+
+    if selected_kmers:
+        np.random.seed(0)
+        kmers = np.random.randint(len(table.kmer_alphabet), size=N_KMERS)
+        ref_counts = [len(table[kmer]) for kmer in kmers]
+        test_counts = table.count(kmers)
+    else:
+        ref_counts = [
+            len(table[kmer]) for kmer in range(len(table.kmer_alphabet))
+        ]
+        test_counts = table.count()
+    
+    assert test_counts.tolist() == ref_counts
 
 
 def test_get_kmers():

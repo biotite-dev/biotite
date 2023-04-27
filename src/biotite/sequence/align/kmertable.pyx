@@ -14,7 +14,7 @@ from cpython.mem cimport PyMem_Free as free
 from libc.string cimport memcpy
 
 import numpy as np
-from ..alphabet import LetterAlphabet, common_alphabet
+from ..alphabet import LetterAlphabet, common_alphabet, AlphabetError
 from .kmeralphabet import KmerAlphabet
 
 
@@ -253,18 +253,17 @@ cdef class KmerTable:
         ----------
         k : int
             The length of the *k-mers*.
-        sequences : iterable object of Sequence
+        sequences : sized iterable object of Sequence, length=m
             The sequences to get the *k-mer* positions from.
             These sequences must have equal alphabets, or one of these
             sequences must have an alphabet that extends the alphabets
             of all other sequences.
-        ref_ids : iterable object of int, optional
+        ref_ids : sized iterable object of int, length=m, optional
             The reference IDs for the given sequences.
             These are used to identify the corresponding sequence for a
             *k-mer* match.
-            By default the IDs are counted from *0* to *n* for *n*
-            input `sequences`.
-        ignore_masks : iterable object of (ndarray, dtype=bool), optional
+            By default the IDs are counted from *0* to *m*.
+        ignore_masks : sized iterable object of (ndarray, dtype=bool), length=m, optional
             Sequence positions to ignore.
             *k-mers* that involve these sequence positions are not added
             to the table.
@@ -287,6 +286,10 @@ cdef class KmerTable:
             the start of the *k-mer*, also called the *model*.
             The number of *informative* positions must equal *k*.
             Refer to :class:`KmerAlphabet` for more details.
+        
+        See also
+        --------
+        from_kmers : The same functionality based on already created *k-mers*
         
         Returns
         -------
@@ -375,7 +378,7 @@ cdef class KmerTable:
         # Count the number of appearances of each k-mer and store the
         # result in the pointer array, that is now used a count array
         for kmers, mask in zip(kmers_list, masks):
-            table._count_kmers(kmers, mask)
+            table._count_masked_kmers(kmers, mask)
         
         # Transfrom count array into pointer array with C-array of
         # appropriate size
@@ -402,22 +405,25 @@ cdef class KmerTable:
             The :class:`KmerAlphabet` to use for the new table.
             Should be the same alphabet that was used to calculate the
             input *kmers*.
-        kmers : iterable object of (ndarray, dtype=np.int64)
-            Arrays containing the symbol codes for *k-mers* from a
+        kmers : sized iterable object of (ndarray, dtype=np.int64), length=m
+            List where each array contains the *k-mer* codes from a
             sequence.
-            For each array the index of the *k-mer* code in the array,
-            is stored in the table.
-        ref_ids : iterable object of int, optional
+            For each array the index of the *k-mer* code in the array
+            is stored in the table as sequence position.
+        ref_ids : sized iterable object of int, length=m, optional
             The reference IDs for the sequences.
             These are used to identify the corresponding sequence for a
             *k-mer* match.
-            By default the IDs are counted from *0* to *n* for *n*
-            input `kmers`.
-        masks : iterable object of (ndarray, dtype=bool), optional
+            By default the IDs are counted from *0* to *m*.
+        masks : sized iterable object of (ndarray, dtype=bool), length=m, optional
             A *k-mer* code at a position, where the corresponding mask
             is false, is not added to the table.
             By default, all positions are added.
         
+        See also
+        --------
+        from_sequences : The same functionality based on undecomposed sequences
+
         Returns
         -------
         table : KmerTable
@@ -467,10 +473,9 @@ cdef class KmerTable:
 
         # Check given k-mers for out-of-bounds values
         for arr in kmers:
-            if np.any((arr < 0) | (arr >= len(kmer_alphabet))):
-                raise IndexError(
-                    "Given *k-mer* codes contain out-of-bounds values for the "
-                    "given KmerAlphabet"
+            if np.any(arr < 0) or np.any(arr >= len(kmer_alphabet)):
+                raise AlphabetError(
+                    "Given k-mer codes do not represent valid k-mers"
                 )
         
         table = KmerTable(kmer_alphabet)
@@ -493,12 +498,132 @@ cdef class KmerTable:
             ]
 
         for arr, mask in zip(kmers, masks):
-            table._count_kmers(arr, mask)
+            table._count_masked_kmers(arr, mask)
         
         table._init_c_arrays()
 
         for arr, ref_id, mask in zip(kmers, ref_ids, masks):
             table._add_kmers(arr, ref_id, mask)
+        
+        return table
+    
+
+    @staticmethod
+    def from_kmer_subset(kmer_alphabet, positions, kmers, ref_ids=None):
+        """
+        from_kmer_subset(kmer_alphabet, positions, kmers, ref_ids=None)
+        
+        Create a :class:`KmerTable` by storing the positions of a
+        filtered subset of input *k-mers*.
+
+        This can be used to reduce the number of stored *k-mers* using
+        a *submer* rule such as :class:`MinimizerRule`.
+
+        Parameters
+        ----------
+        kmer_alphabet : KmerAlphabet
+            The :class:`KmerAlphabet` to use for the new table.
+            Should be the same alphabet that was used to calculate the
+            input *kmers*.
+        positions : sized iterable object of (ndarray, shape=(n,), dtype=uint32), length=m
+            List where each array contains the sequence positions of
+            the filtered subset of *k-mers* given in `kmers`.
+            The list may contain multiple elements for multiple
+            sequences.
+        kmers : sized iterable object of (ndarray, shape=(n,), dtype=np.int64), length=m
+            List where each array contains the filtered subset of
+            *k-mer* codes from a sequence.
+            For each array the index of the *k-mer* code in the array,
+            is stored in the table as sequence position.
+            The list may contain multiple elements for multiple
+            sequences.
+        ref_ids : sized iterable object of int, length=m, optional
+            The reference IDs for the sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *m*.
+        
+        Returns
+        -------
+        table : KmerTable
+            The newly created table.
+        
+        Examples
+        --------
+
+        Reduce the size of sequence data in the table using minimizers:
+
+        >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
+        >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
+        >>> minimizer = MinimizerRule(kmer_alph, window=4)
+        >>> minimizer_pos, minimizers = minimizer.select(sequence1)
+        >>> kmer_table = KmerTable.from_kmer_subset(
+        ...     kmer_alph, [minimizer_pos], [minimizers]
+        ... )
+
+        Use the same :class:`MinimizerRule` to select the minimizers
+        from the query sequence and match them against the table.
+        Although the amount of *k-mers* is reduced, matching is still
+        guanrateed to work, if the two sequences share identity in the
+        given window:
+
+        >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
+        >>> minimizer_pos, minimizers = minimizer.select(sequence2)
+        >>> matches = kmer_table.match_kmer_subset(minimizer_pos, minimizers)
+        >>> print(matches)
+        [[ 9  0 11]
+         [12  0 14]]
+        >>> for query_pos, _, db_pos in matches:
+        ...     print(sequence1)
+        ...     print(" " * (db_pos-1) + "^" * kmer_table.k)
+        ...     print(sequence2)
+        ...     print(" " * (query_pos-1) + "^" * kmer_table.k)
+        ...     print()
+        THIS*IS*A*SEQVENCE
+          ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        THIS*IS*A*SEQVENCE
+                    ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        """
+        if not isinstance(kmer_alphabet, KmerAlphabet):
+            raise TypeError(
+                f"Got {type(kmer_alphabet).__name__}, "
+                f"but KmerAlphabet was expected"
+            )
+        
+        # Check length of input lists
+        if ref_ids is not None and len(ref_ids) != len(kmers):
+            raise IndexError(
+                f"{len(ref_ids)} reference IDs were given, "
+                f"but there are {len(kmers)} k-mer arrays"
+            )
+
+        # Check given k-mers for out-of-bounds values
+        for arr in kmers:
+            if np.any(arr < 0) or np.any(arr >= len(kmer_alphabet)):
+                raise AlphabetError(
+                    "Given k-mer codes do not represent valid k-mers"
+                )
+        
+        table = KmerTable(kmer_alphabet)
+
+        if ref_ids is None:
+            ref_ids = np.arange(len(kmers))
+
+        for arr in kmers:
+            table._count_kmers(arr)
+        
+        table._init_c_arrays()
+
+        for pos, arr, ref_id in zip(positions, kmers, ref_ids):
+            table._add_kmer_subset(
+                pos.astype(np.uint32, copy=False), arr, ref_id
+            )
         
         return table
     
@@ -626,10 +751,9 @@ cdef class KmerTable:
 
         for kmer, position_array in kmer_positions.items():
             if kmer < 0 or kmer >= alph_length:
-                raise IndexError(
-                    f"*k-mer* code {kmer} is out of bounds "
-                    f"for the given KmerAlphabet"
-            )
+                raise AlphabetError(
+                    f"k-mer code {kmer} does not represent a valid k-mer"
+                )
             positions = position_array.astype(np.uint32, copy=False)
             if positions.shape[0] == 0:
                 # No position to add -> jump to the next k-mer
@@ -824,7 +948,7 @@ cdef class KmerTable:
     @cython.wraparound(False)
     def match(self, sequence, similarity_rule=None, ignore_mask=None):
         """
-        match(self, sequence, similarity_rule=None, ignore_mask=None)
+        match(sequence, similarity_rule=None, ignore_mask=None)
 
         Find matches between the *k-mers* in this table with all
         overlapping *k-mers* in the given `sequence`.
@@ -966,6 +1090,237 @@ cdef class KmerTable:
 
         # Trim to correct size and return
         return np.asarray(matches[:match_i])
+    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def match_kmer_subset(self, positions, kmers):
+        """
+        match_kmer_subset(positions, kmers)
+
+        Find matches between the *k-mers* in this table with the given
+        input *k-mers*.
+
+        It is intended to use this method to find matches in a table
+        that was created using :meth:`from_kmer_subset()`.
+
+        Parameters
+        ----------
+        positions : ndarray, shape=(n,), dtype=uint32
+            Sequence positions of the filtered subset of *k-mers* given
+            in `kmers`.
+        kmers : ndarray, shape=(n,), dtype=np.int64
+            Filtered subset of *k-mer* codes to match against.
+        
+        Returns
+        -------
+        matches : ndarray, shape=(n,3), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one *k-mer* match.
+            Each match has the following columns:
+
+                0. The sequence position in the input *k-mer*, taken
+                   from `positions`
+                1. The reference ID of the matched sequence in the table
+                2. The sequence position of the matched *k-mer* in the
+                   table
+
+        Examples
+        --------
+
+        Reduce the size of sequence data in the table using minimizers:
+
+        >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
+        >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
+        >>> minimizer = MinimizerRule(kmer_alph, window=4)
+        >>> minimizer_pos, minimizers = minimizer.select(sequence1)
+        >>> kmer_table = KmerTable.from_kmer_subset(
+        ...     kmer_alph, [minimizer_pos], [minimizers]
+        ... )
+
+        Use the same :class:`MinimizerRule` to select the minimizers
+        from the query sequence and match them against the table.
+        Although the amount of *k-mers* is reduced, matching is still
+        guanrateed to work, if the two sequences share identity in the
+        given window:
+
+        >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
+        >>> minimizer_pos, minimizers = minimizer.select(sequence2)
+        >>> matches = kmer_table.match_kmer_subset(minimizer_pos, minimizers)
+        >>> print(matches)
+        [[ 9  0 11]
+         [12  0 14]]
+        >>> for query_pos, _, db_pos in matches:
+        ...     print(sequence1)
+        ...     print(" " * (db_pos-1) + "^" * kmer_table.k)
+        ...     print(sequence2)
+        ...     print(" " * (query_pos-1) + "^" * kmer_table.k)
+        ...     print()
+        THIS*IS*A*SEQVENCE
+          ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        THIS*IS*A*SEQVENCE
+                    ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        """
+        cdef int INIT_SIZE = 1
+        
+        cdef int64 i, j
+
+        cdef int64 kmer
+        cdef int64 match_i
+        cdef int64 seq_pos
+        cdef int64 length
+        cdef uint32* kmer_ptr
+
+        # Store in new variable
+        # to disable repetitive initialization checks
+        cdef ptr[:] ptr_array = self._ptr_array
+
+
+        if positions.shape[0] != kmers.shape[0]:
+            raise IndexError(
+                f"{positions.shape[0]} positions were given "
+                f"for {kmers.shape[0]} k-mers"
+            )
+        if np.any(kmers < 0) or np.any(kmers >= len(self._kmer_alph)):
+            raise AlphabetError(
+                "Given k-mer codes do not represent valid k-mers"
+            )
+        cdef uint32[:] pos_array = positions.astype(np.uint32, copy=False)
+        cdef int64[:] kmer_array = kmers.astype(np.int64, copy=False)
+
+        # This array will store the match positions
+        # As the final number of matches is unknown, a list-like
+        # approach is used:
+        # The array is initialized with a relatively small inital size
+        # and every time the limit would be exceeded its size is doubled
+        cdef int64[:,:] matches = np.empty((INIT_SIZE, 3), dtype=np.int64)
+        match_i = 0
+        for i in range(kmer_array.shape[0]):
+            kmer = kmer_array[i]
+            seq_pos = pos_array[i]
+            kmer_ptr = <uint32*>ptr_array[kmer]
+            if kmer_ptr != NULL:
+                # There is at least one entry for the k-mer
+                length = (<int64*>kmer_ptr)[0]
+                for j in range(2, length, 2):
+                        if match_i >= matches.shape[0]:
+                            # The 'matches' array is full
+                            # -> double its size
+                            matches = expand(np.asarray(matches))
+                        matches[match_i, 0] = seq_pos
+                        matches[match_i, 1] = kmer_ptr[j]
+                        matches[match_i, 2] = kmer_ptr[j+1]
+                        match_i += 1
+
+        # Trim to correct size and return
+        return np.asarray(matches[:match_i])
+
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def count(self, kmers=None):
+        """
+        count(kmers=None)
+
+        Count the number of occurences for each *k-mer* in the table.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64, optional
+            The count is returned for these *k-mer* codes.
+            By default all *k-mers* are counted in ascending order, i.e.
+            ``count_for_kmer = counts[kmer]``.
+        
+        Returns
+        -------
+        counts : ndarray, dtype=np.int64, optional
+            The counts for each given *k-mer*.
+        
+        Examples
+        --------
+        >>> table = KmerTable.from_sequences(
+        ...     k = 2,
+        ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
+        ...     ref_ids = [0, 1]
+        ... )
+        >>> print(table)
+        AG: (1, 2)
+        AT: (0, 2)
+        CT: (1, 0)
+        TA: (0, 1), (0, 3), (1, 1)
+        TT: (0, 0)
+
+        Count two selected *k-mers*:
+
+        >>> print(table.count(table.kmer_alphabet.encode_multiple(["TA", "AG"])))
+        [3 1]
+
+        Count all *k-mers*:
+
+        >>> counts = table.count()
+        >>> print(counts)
+        [0 0 1 1 0 0 0 1 0 0 0 0 3 0 0 1]
+        >>> for kmer, count in zip(table.kmer_alphabet.get_symbols(), counts):
+        ...     print(kmer, count)
+        AA 0
+        AC 0
+        AG 1
+        AT 1
+        CA 0
+        CC 0
+        CG 0
+        CT 1
+        GA 0
+        GC 0
+        GG 0
+        GT 0
+        TA 3
+        TC 0
+        TG 0
+        TT 1
+        """
+        cdef int64 i
+
+        cdef int64 length
+        cdef int64 kmer
+        cdef int64* kmer_ptr
+        cdef ptr[:] ptr_array = self._ptr_array
+        cdef int64[:] kmer_array
+        cdef int64[:] counts
+        
+        if kmers is None:
+            counts = np.zeros(ptr_array.shape[0], dtype=np.int64)
+            for kmer in range(ptr_array.shape[0]):
+                kmer_ptr = <int64*> ptr_array[kmer]
+                if kmer_ptr != NULL:
+                    # First 64 bytes are length of C-array
+                    length = kmer_ptr[0]
+                    # Array length is measured in uint32
+                    # length = 2 * count + 2 -> rearrange formula
+                    counts[kmer] = (length - 2) // 2
+        
+        else:
+            if np.any(kmers < 0) or np.any(kmers >= len(self._kmer_alph)):
+                raise AlphabetError(
+                    "Given k-mer codes do not represent valid k-mers"
+                )
+
+            kmer_array = kmers.astype(np.int64, copy=False)
+            counts = np.zeros(kmer_array.shape[0], dtype=np.int64)
+            for i in range(kmer_array.shape[0]):
+                kmer = kmer_array[i]
+                kmer_ptr = <int64*> ptr_array[kmer]
+                if kmer_ptr != NULL:
+                    length = kmer_ptr[0]
+                    counts[i] = (length - 2) // 2
+        
+        return np.asarray(counts)
 
 
     @cython.boundscheck(False)
@@ -1029,9 +1384,9 @@ cdef class KmerTable:
         cdef uint32[:,:] positions
         
         if kmer >= len(self):
-            raise IndexError(
-                f"k-mer {kmer} is out of bounds for this table "
-                f"containing {len(self)} k-mers"
+            raise AlphabetError(
+                f"k-mer code {kmer} is out of bounds "
+                f"for the given KmerAlphabet"
             )
         
         kmer_ptr = <uint32*>self._ptr_array[kmer]
@@ -1094,9 +1449,9 @@ cdef class KmerTable:
             if self_kmer_ptr != NULL or other_kmer_ptr != NULL:
                 if self_kmer_ptr == NULL or other_kmer_ptr == NULL:
                     # One of the tables has entries for this k-mer
-                    # while the other has not
+                    # while the other one has not
                     return False
-                # This kmer exists for both tables
+                # This k-mer exists in both tables
                 self_length  = (<int64*>self_kmer_ptr )[0]
                 other_length = (<int64*>other_kmer_ptr)[0]
                 if self_length != other_length:
@@ -1187,16 +1542,31 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _count_kmers(self, int64[:] kmers, uint8[:] mask):
+    def _count_kmers(self, int64[:] kmers):
         """
         Repurpose the pointer array as count array and add the
-        number of positions for the given kmers to the values in the
-        count array.
+        total number of positions for the given kmers to the values in
+        the count array.
 
         This can be safely done, because in this step the pointers are
         not initialized yet.
         This may save a lot of memory because no extra array is required
         to count the number of positions for each *k-mer*.
+        """
+        cdef uint32 seq_pos
+        cdef int64 kmer
+
+        cdef ptr[:] count_array = self._ptr_array
+
+        for seq_pos in range(kmers.shape[0]):
+            kmer = kmers[seq_pos]
+            count_array[kmer] += 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def _count_masked_kmers(self, int64[:] kmers, uint8[:] mask):
+        """
+        Same as above, but with mask.
         """
         cdef uint32 seq_pos
         cdef int64 kmer
@@ -1214,7 +1584,7 @@ cdef class KmerTable:
     def _count_table_entries(self, KmerTable table):
         """
         Repurpose the pointer array as count array and add the
-        number of positions in the table entries to the values in the
+        number of positions in the `table` entries to the values in the
         count array.
 
         This can be safely done, because in this step the pointers are
@@ -1262,8 +1632,8 @@ cdef class KmerTable:
                 kmer_ptr = <uint32*>malloc((2*count + 2) * sizeof(uint32))
                 if not kmer_ptr:
                     raise MemoryError
-                # The initial length is 2:
-                # the size of array length value (int64)
+                # The initial length is 2,
+                # which is the size of the array length value (int64)
                 (<int64*> kmer_ptr)[0] = 2
                 ptr_array[kmer] = <ptr>kmer_ptr
     
@@ -1272,22 +1642,23 @@ cdef class KmerTable:
     @cython.wraparound(False)
     def _add_kmers(self, int64[:] kmers, uint32 ref_id, uint8[:] mask):
         """
-        Add the k-mer reference IDs and positions to the C-arrays
-        and update the length of each C-array.
+        For each *k-mer* in `kmers` add the reference ID and the
+        position in the array to the corresponding C-array and update
+        the length of the C-array.
         """
         cdef uint32 seq_pos
         cdef int64 current_size
         cdef int64 kmer
         cdef uint32* kmer_ptr
 
-        # Store in new variables
+        # Store in new variable
         # to disable repetitive initialization checks
         cdef ptr[:] ptr_array = self._ptr_array
 
-        if len(mask) != len(kmers):
+        if mask.shape[0] != kmers.shape[0]:
             raise IndexError(
-                f"Mask has length {len(mask)}, "
-                f"but there are {len(kmers)} k-mers"
+                f"Mask has length {mask.shape[0]}, "
+                f"but there are {kmers.shape[0]} k-mers"
             )
 
         for seq_pos in range(kmers.shape[0]):
@@ -1300,6 +1671,42 @@ cdef class KmerTable:
                 kmer_ptr[current_size    ] = ref_id
                 kmer_ptr[current_size + 1] = seq_pos
                 (<int64*> kmer_ptr)[0] = current_size + 2
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def _add_kmer_subset(self, uint32[:] positions, int64[:] kmers,
+                         uint32 ref_id):
+        """
+        For each *k-mer* in `kmers` add the reference ID and the
+        position from `positions` to the corresponding C-array and
+        update the length of the C-array.
+        """
+        cdef uint32 i
+        cdef uint32 seq_pos
+        cdef int64 current_size
+        cdef int64 kmer
+        cdef uint32* kmer_ptr
+
+        if positions.shape[0] != kmers.shape[0]:
+            raise IndexError(
+                f"{positions.shape[0]} positions were given "
+                f"for {kmers.shape[0]} k-mers"
+            )
+
+        # Store in new variable
+        # to disable repetitive initialization checks
+        cdef ptr[:] ptr_array = self._ptr_array
+
+        for i in range(positions.shape[0]):
+            kmer = kmers[i]
+            seq_pos = positions[i]
+            kmer_ptr = <uint32*> ptr_array[kmer]
+
+            # Append k-mer reference ID and position
+            current_size = (<int64*> kmer_ptr)[0]
+            kmer_ptr[current_size    ] = ref_id
+            kmer_ptr[current_size + 1] = seq_pos
+            (<int64*> kmer_ptr)[0] = current_size + 2
     
 
     @cython.boundscheck(False)

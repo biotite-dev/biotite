@@ -156,7 +156,7 @@ class ScoreThresholdRule(SimilarityRule):
         cdef int64[:] split_kmer = kmer_alphabet.split(kmer).astype(np.int64)
         # This array will hold the current kmer to be tested
         cdef int64[:] current_split_kmer = np.zeros(k, dtype=np.int64)
-        # This array will store the accpeted k-mers
+        # This array will store the accepted k-mers
         # i.e. k-mers that reach the threshold score
         cdef int64[:,:] similar_split_kmers = np.zeros(
             (INIT_SIZE, k), dtype=np.int64
