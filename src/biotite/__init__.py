@@ -9,7 +9,7 @@ it does provide utilities and base classes used by a lot of *Biotite*'s
 modules.
 """
 
-__version__ = "0.36.1"
+__version__ = "0.37.0"
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 
