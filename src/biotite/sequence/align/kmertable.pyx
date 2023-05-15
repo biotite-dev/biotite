@@ -41,6 +41,9 @@ cdef class KmerTable:
           each *kmer* in the table.
         - :meth:`from_kmers()` is similar to :meth:`from_sequences()`
           but directly accepts *k-mers* as input instead of sequences.
+        - :meth:`from_kmer_subset()` takes a comnination of *k-mers*
+          and their positions in a sequence, which can be used to
+          apply subset rules, such as :class:`MinimizerRule`.
         - :meth:`from_tables()` merges the entries from multiple
           :class:`KmerTable` objects into a new table.
         - :meth:`from_positions()` let's the user provide manual
@@ -517,7 +520,7 @@ cdef class KmerTable:
         filtered subset of input *k-mers*.
 
         This can be used to reduce the number of stored *k-mers* using
-        a *submer* rule such as :class:`MinimizerRule`.
+        a *k-mer* subset rule such as :class:`MinimizerRule`.
 
         Parameters
         ----------

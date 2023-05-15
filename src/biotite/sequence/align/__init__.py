@@ -44,4 +44,4 @@ from .multiple import *
 from .pairwise import *
 from .permutation import *
 from .statistics import *
-from .submer import *
+from .subset import *
